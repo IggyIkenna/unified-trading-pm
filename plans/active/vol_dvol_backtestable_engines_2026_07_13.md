@@ -137,3 +137,12 @@ what's missing.
 ## Progress Log
 
 (loop handoff lands here)
+
+- 2026-07-13 (slot-13): Dispatched the `[SCRIPT] P1. Once the historical DVOL series is available (post-operator-go)...`
+  todo, but its predecessor `[OPERATOR] P1. BLOCKED-OPERATOR-DECISION` todo is still unchecked and explicitly "Not
+  dispatchable — stays visible, never auto-ingested." No historical DVOL series has been pulled yet, and I can't grant
+  the operator-go myself. Skipping for this slot rather than working around the missing decision. Note for whoever
+  authors the next backlog-affecting plan edit: this todo has no `depends_on`/`conditions` gate tying it to the OPERATOR
+  todo above it, so `sequential: true` alone didn't stop it from being dispatched independently — worth adding a
+  `prereqs.conditions` gate (e.g. `dvol-historical-pull-approved`, flipped true once the operator go lands) if this
+  recurs.

@@ -1847,3 +1847,87 @@ code-complete). **The only remaining blocker for full-year completion on ALL THR
 possible), and full-year backfill completion for these 3 venues still needs either the concurrent-IP lease enabled
 fleet-wide or a genuinely solo window to land beyond a single verified day each. Full detail for both closed VERIFY
 todos: `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`.
+
+---
+
+### G4 Re-Verification Run #5 — 2026-07-13T22:34-22:50Z (GATE NOT MET — data_engineering slot-2)
+
+**BLK-afc672cf now CLOSED** (confirmed via issue doc, resolved 2026-07-13 by slot-6): all 6 live-only tuples now write
+typed `empty_confirmed` rows; Layer-1 rose 90.4%→93.2% per that session.
+
+**Live coverage re-run** (`measure_honest_coverage.py --asset-group cefi`, 2026-07-13T22:34Z,
+`gs://central-element-323112-honest-coverage`-equivalent local output `/tmp/cefi_coverage_slot2.json`): Layer-1
+**91.78%** (6 missing tuples: BITGET-FUTURES×3 [book_snapshot_5/derivative_ticker/trades, `future` itype],
+COINBASE-CDE/future/trades, COINBASE-FUTURES/spot_pair/trades, DERIBIT-COMBO/options_chain/trades). Layer-2:
+captured=2,255,264, af=1,829, eu=213,672 (both must be 0 — NOT MET), coverage=91.28%.
+
+**New P0 discovered/corroborated this session (not filed by me — already open, filed ~1h earlier by a peer slot):
+`issues/cefi_backfill_no_instruments_found_all_venues_2026_07_13.md`.** The `instruments-store-cefi-prd` availability
+index is being ACTIVELY rewritten by the in-flight `aster_cefi_data_defi_bucket_migration_2026_07_13.md` migration
+(live-checked: `_index/availability_index.parquet` blob `Update time` within seconds of wall-clock, repeatedly, across
+this session) — every backfill VM launched into this window resolves ZERO instruments per (venue, date) and
+stall-watchdog-kills. **Deliberately did NOT launch any VM this session** (collision risk on another workstream's active
+migration surface, per that issue doc's own "deliberately not actioned" guidance) — instead did non-VM, in-craft code
+work while waiting for it to settle.
+
+**Fixed the P0's secondary finding**: `_emit_skipped_venue_sentinels` (mtds `engine/orchestrator/sentinels.py`)
+unconditionally stamped `"chain": _skip_chain` into `record_expected_unattempted`'s row_key, even when `_skip_chain`
+stayed `""` for non-DeFi (CeFi/TradFi/sports/prediction) venues — UTL's Phase-4 `hard_schema_enforcement` guard raises
+`MalformedRowKeyError` on an explicitly-present-but-empty shard-atom key (`chain`/`instrument_id`); omitting the key
+entirely is the correct "not applicable" signal. Every honest-skip write for a non-chain venue was silently failing
+(`Manifest write failed (non-blocking): ...`) instead of landing — a silent denominator gap stacked on top of the "NO
+INSTRUMENTS FOUND" skip itself. Fixed to omit the key when unpopulated; added a regression test, verified it fails
+against the pre-fix code (git-stash checked) and passes post-fix. **Concurrent convergence**: while shipping (3 QG
+re-runs chasing a fast-moving HEAD on this heavily-trafficked repo), a peer (`main·laptop`) landed a functionally
+identical fix first — `market-tick-data-service@be087cd8` ("omit empty chain from honest-skip expected_unattempted
+row_keys", same conditional-key-insertion approach, equivalent regression test). Verified line-by-line equivalence, then
+discarded my own duplicate commit (`git reset --hard origin/live-defi-rollout`) rather than double-shipping — no unique
+content lost. **Fixed + confirmed live at `market-tick-data-service@be087cd8`.**
+
+**Investigated the COINBASE-FUTURES/spot_pair/trades "missing" tuple — NOT data loss, an aggregation/read anomaly.**
+This tuple was independently VERIFIED captured in the 2026-07-12T21:44Z session (Addendum 4, slot-3: 4 real rows,
+BTC-USDC/ETH-USDC × {trades, book_snapshot_5}). Direct row-group-pushdown query against the primary prd manifest this
+session confirms **the rows are still there**: `SPOT_PAIR/trades/captured=2`, `SPOT_PAIR/book_snapshot_5/captured=2` —
+unchanged. But `measure_honest_coverage.py`'s live run reports COINBASE-FUTURES absent from `by_venue` /
+`by_venue_data_type` / `by_venue_instrument_type_data_type` entirely, and Layer-1 flags
+`(COINBASE-FUTURES, spot_pair, trades)` as missing. Reproduced `check_enumeration_completeness.py`'s own
+`_canon_instrument_type` standalone: it correctly normalizes `SPOT_PAIR`→`spot_pair` and the canonical tuple
+`('COINBASE-FUTURES', 'spot_pair', 'trades')` exactly matches one of `_build_expected_tuples('cefi')`'s entries — so the
+standalone canonicalization logic does NOT reproduce the mismatch. The discrepancy is somewhere in
+`measure_honest_coverage.py`'s full pipeline (merge/dedup or MVP read-time gate) between the raw manifest and what
+Layer-1 actually sees — not yet root-caused to a specific line. **Not filed as a new issue doc this session**
+(time-boxed; the underlying data is confirmed safe, so this is a measurement artifact, not a correctness risk) — flagged
+here for the next session to pick up the trace where this entry leaves off (start: instrument `SPOT_PAIR/trades` rows
+exist in the primary bucket per the row-group-pushdown query above; the merge step in `measure_honest_coverage.py`
+dedupes primary+secondary on `(date, venue, instrument_id, data_type)` — NOT including `instrument_type` in the key —
+worth checking whether the secondary/legacy bucket independently carries an instrument_type-blank or -stale row for the
+same `(date, venue, instrument_id, data_type)` key that the dedup could be preferring over the correctly-tagged primary
+row).
+
+**Addendum — 2026-07-13T22:59Z: P0 root-caused + fixed by a peer, now `status: resolved`.** While this entry's fix was
+shipping, `market-tick-data-service@0da8be67` ("layout-tolerant instrument-availability reads across all six read
+sites") landed the actual root cause: the 2026-07-09 binancefix migration re-homed `instrument_availability/by_date`
+objects to a source-aware hive layout, leaving `.bak` files at the legacy flat paths — six MTDS readers (incl. the batch
+preflight gate that caused every "NO INSTRUMENTS FOUND" skip this session) still opened the legacy path exactly. **This
+is a DIFFERENT root cause than the ASTER migration collision I had assumed** — the new resolver is layout-tolerant
+(matches the hive path wherever its segments sit, prefers hive over stale flat) so it should work correctly regardless
+of whether `aster_cefi_data_defi_bucket_migration_2026_07_13.md` is still rewriting the instruments-service index
+(confirmed still churning, `Update time` 22:58:42Z). Live-verified against PROD by the fix's author (BINANCE-FUTURES
+2024-01-01/06-15 now resolve). This unblocks backfill launches — attempting a scoped verification launch against the
+remaining Layer-1 gaps below in this same session.
+
+**Gate verdict:** ❌ **NOT MET** — Layer-1 91.78% (6 missing); Layer-2 af=1,829/eu=213,672. **Blocking items
+remaining:**
+
+1. ~~`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md`
+   (P0)`~~ — **RESOLVED** (see addendum above); `market-tick-data-service@0da8be67`.
+2. **BITGET-FUTURES ×3 / COINBASE-CDE/trades / DERIBIT-COMBO/options_chain-trades** — genuine remaining Layer-1 gaps,
+   attempting relaunch now that the P0 above is resolved.
+3. **COINBASE-FUTURES/spot_pair/trades measurement anomaly** — data confirmed safe; root-cause not yet found (see
+   above); worth a dedicated pass once the P0 migration-collision clears and launches resume.
+4. **Phantom reconcile + manifest hygiene** — still not re-run this session (same recurring time-budget note as every
+   prior session).
+
+**Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the code fix shipped this session. Genuinely blocked on the P0
+migration collision for any further backfill launches — deliberately not fought this session, consistent with the "don't
+touch another workstream's active migration surface" guidance already recorded in that issue doc.

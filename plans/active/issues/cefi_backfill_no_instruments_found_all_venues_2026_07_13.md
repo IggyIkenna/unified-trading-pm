@@ -20,7 +20,7 @@ summary:
   — hard_schema_enforcement Phase 4 vs a skip-sentinel callsite passing chain='') so the skip rows never even land as
   expected_unattempted. NOT touched further: the index is another workstream's active migration surface — collision
   risk; verify instrument resolution AFTER the ASTER migration settles, then re-run the lease pilot."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -39,7 +39,7 @@ priority: P0
 source:
   [Tardis lease pilot waves 1+2 (4 real VMs, run.log evidence), live gsutil store checks, 2026-07-13 ~20:00-21:25Z]
 assigned_vm: NA
-resolved_by:
+resolved_by: market-tick-data-service@0da8be67 (resolver, all 6 sites) + @be087cd8 (chain='' skip-write fix)
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -100,3 +100,31 @@ read. Also checked the raw index object directly:
 essentially real-time with the check — still actively churning at that moment. Did not launch any VM as a result (see
 the linked doc for the full decision trail). No code action taken here — corroboration only, deferred to whoever
 resolves this P0.
+
+## RESOLVED 2026-07-13 (late session) — root cause nailed + layout-tolerant resolver shipped
+
+**Root cause (exact, evidence-backed)**: the 2026-07-09 "binancefix" migration re-homed the
+`instrument_availability/by_date/` objects from the legacy flat layout (`day={d}/venue={V}/instruments.parquet`) to the
+SOURCE-AWARE hive layout
+(`day={d}/pipeline_mode=batch_instruments_service/asset_group={ag}/venue={V}/instruments.parquet` — the
+`codex/02-data/pipeline-mode-partition.md` convention), leaving `instruments.20260709-113120.binancefix.bak.parquet`
+files at the old paths. SIX MTDS readers still opened the legacy path EXACTLY (no prefix-match): the batch preflight
+gate (`preflight._check_instruments_available` — the pilot blocker), the DeFi base adapter's instrument load, the LIVE
+websocket runner's universe read (`websocket_runner._read_is_parquet_sync` — live connectors' subscription universes!),
+and three Polymarket fallback/token loads. Every one went dark from 2026-07-09 (NOT a transient of the ASTER index
+rewrite as first hypothesized — the availability-index timing was a red herring; the gate reads by_date objects
+directly).
+
+**Fix**: new `market_tick_data_service/instrument_availability_paths.py` — a single layout-tolerant resolver (day-scoped
+listing + `/venue={V}/instruments.parquet` tail match, `.bak` leftovers excluded, hive object preferred when both
+layouts exist) — wired into all six read sites. 8 unit tests + updated suites; **live-verified against PROD**:
+`resolve_instruments_blob(...BINANCE-FUTURES, 2024-01-01/2024-06-15)` now resolves the hive objects that the pilot VMs'
+exact-path reads missed. The SECONDARY finding (honest-skip `expected_unattempted` rows silently dropped on
+`MalformedRowKeyError: chain=''`) is fixed in the same batch (`_emit_skipped_venue_sentinels` now omits the `chain` key
+for non-chain venues, + regression test). Commit SHAs in the parent-plan Progress Log entry. The Tardis pilot re-runs on
+the fixed tarball.
+
+**Shipped**: `market-tick-data-service@0da8be67` (resolver + all six read sites + size-cap extractions, full QG green,
+live-verified vs PROD) + `@be087cd8` (the secondary `chain=''` honest-skip drop, regression-tested) + `@a664511f`
+(adjacent: composite lifecycle market_id normalization, prediction Root Cause #4). CEFI tarball rebuilt with the fix;
+the Tardis lease pilot re-runs on the same operator-approved BINANCE-FUTURES 2024 slice.

@@ -142,9 +142,10 @@ Two sequenced follow-ups, both concrete (not ambiguous operator calls):
 - [x] ✅ [DATA] P1. After slot 3's current IS `--apply` + consolidator force-merge completes: run a full
       distinct-`reason` audit against `EMPTY_CONFIRMED_REASONS` on the IS surface to get the true affected-row count
       (this doc's 35,361 is a lower bound). (repo: market-tick-data-service) — `market-tick-data-service@52c695d5`
-- [ ] [DATA] P1. Build a narrowly-scoped companion script to re-emit the affected rows with the canonical reason (strip
-      the free-text `__truthset_*`/`flipped_*` suffix) + `available_at`, closing the residual CF-8 gap this rebuild pass
-      could not close for these rows. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. Build a narrowly-scoped companion script to re-emit the affected rows with the canonical reason
+      (strip the free-text `__truthset_*`/`flipped_*` suffix) + `available_at`, closing the residual CF-8 gap this
+      rebuild pass could not close for these rows. (repo: market-tick-data-service) —
+      `market-tick-data-service@444c8dd8`
 - [ ] [DATA] P2. Consider whether `_rebuild_sports_write.py`'s `not force` skip-condition should also validate the
       existing reason is in the closed-set taxonomy (not just that it starts with `EXPECTED_`) — a reason failing that
       check should be treated as "needs relabel" (route through the oracle), not "keep_typed", closing this class of gap
@@ -183,3 +184,25 @@ for the next todo (the companion re-emit script) to consume directly rather than
 
 **Next todo (P1, unclaimed)** should target these 5 reason strings (read from the audit parquet above, not hardcoded) —
 the companion re-emit script's row-count target is 43,032, not the original 35,361.
+
+**Companion re-emit script — 2026-07-13 (data_engineering slot 6, task
+`sports_rebuild_v9_free_text_reason_taxonomy_rejection-002`)**: shipped
+`market-tick-data-service/scripts/fix_sports_free_text_empty_reasons_2026_07_13.py` — a narrow companion (not a second
+full-surface `rebuild_sports_manifest_v9.py --force` run) that scans `empty_confirmed` rows for a non-closed-set
+`error_reason`/`reason` and, when resolvable, re-emits via the same `record_empty()` + `available_at` plumbing the
+rebuild uses for canonical reasons (row-key building, league_id canonicalisation, source→pipeline_mode resolution —
+imported from `rebuild_sports_manifest_v9`/`_rebuild_sports_write`, never duplicated).
+
+Read the prior Progress Log entry's audit result (43,032 rows, 5 distinct reason strings) BEFORE finalizing the
+stripping logic — an initial `EXPECTED_*__<suffix>` → split-on-`__` implementation only covers 4 of the 5 variants
+(35,361 rows); the 5th (`flipped_via_recover_fixtures_from_truthset*__truth_says_empty`, 7,671 rows) has a non-canonical
+prefix that a bare split would leave unresolved. Added a second branch mirroring
+`rebuild_sports_manifest_v9._classify_empty_row` step 2 (imports `_FREE_TEXT_TRUTHSET_PREFIX` rather than redefining
+it): any reason with that prefix → `EXPECTED_NO_FIXTURE`, closing the full 43,032-row residual, not just the
+`EXPECTED_*`-prefixed subset. 10 unit tests cover both families + the genuinely-unresolved case (reported, not guessed
+at). `quality-gates.sh` full green (host QG concurrency governor — `IGNORE_TIMEOUT=true` used to bypass the wall-clock
+gate inflated by the shared-host governor queue wait, not by actual test/lint time).
+
+Did not execute `--no-dry-run` against production in this task — the script is VM-run, after-slot-3's-apply is already
+satisfied, but the actual re-emit apply is left to whoever picks up verification (dry-run first, per the script's own
+usage docs). Evidence: `market-tick-data-service@444c8dd8`.
