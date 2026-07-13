@@ -83,8 +83,20 @@ drift_direction: advance-code
       contention — see `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — resolved via its
       sanctioned `IGNORE_TIMEOUT=true` workaround after the token-queue-inflated wall-clock gate false-failed an
       otherwise-green run).
-- [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
-      `quality-gates.sh` green; quickmerge.
+- [x] ✅ [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
+      `quality-gates.sh` green; quickmerge. — VERIFIED. `instruments-service@d88991d7`:
+      `tests/unit/test_base_adapter_comprehensive.py` 17/17 pass (retry-on-429-then-success, all-retries-exhausted,
+      persistent-retryable-status-exhaustion, params/headers passthrough). `market-tick-data-service`:
+      `tests/market_interface/unit/test_base_adapter_and_rate_limiter.py` 22/22 pass (`handle_api_errors` sync+async
+      retry/no-retry/exhaustion paths). `execution-service@348385ad` (health-router migration, shipped earlier in this
+      plan): 8 new health-endpoint tests green + full `quality-gates.sh` exit 0 at ship time (sentinel-verified) —
+      re-confirmation blocked this session by the host root-disk-full recurrence
+      (`plans/active/issues/host_root_disk_full_transient_2026_07_13.md`, `scripts/setup.sh` couldn't provision a fresh
+      `.venv`); relying on the ship-time green run as evidence rather than re-running under a disk-constrained host. No
+      new code needed for this todo — an independent `_get_with_retry` consolidation attempt on instruments-service
+      (this session, discarded before push) turned out redundant with `d88991d7` (already-shipped by a concurrent slot
+      with a more faithful preservation of the original's two distinct give-up messages); confirmed clean via
+      `git reset --hard origin/live-defi-rollout`, no local trace, no rework needed.
 
 ## Success criteria
 
