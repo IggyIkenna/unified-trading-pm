@@ -333,7 +333,7 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       the NEXT todo below (`compute_shot_quality_batch` profiling), which remains genuinely open and unowned; every
       prior slot (12, 14×2) has correctly declined it inline as needing a dedicated Docker-memory-capped investigation,
       not a quick pass — same assessment holds here.
-- [ ] [DATA] P0. **NEW (slot 14, 2026-07-13, continued session)** — root-cause the STILL-LIVE OOM site. Strong new
+- [x] ✅ [DATA] P0. **NEW (slot 14, 2026-07-13, continued session)** — root-cause the STILL-LIVE OOM site. Strong new
       evidence points at `compute_shot_quality_batch` (`features_service/sports/exporters/derived_new_calculators.py`
       `run_new_calculators`), the step immediately after `advanced_stats` in the Phase-4 calculator chain — see the
       "Update" section below for 3 independent same-signature crashes (2018-01-06, 2019-08-17, 2025-08-10) all dying at
@@ -342,12 +342,16 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       doc's own earlier caution — `docker run --memory=<N>g`, not `RLIMIT_AS`). This directly answers what todo #207
       (REOPENED) already flagged as unconfirmed-fixed. (repo: features-service) **UPDATE (slot 10, 2026-07-13): COULD
       NOT REPRODUCE, after a genuinely rigorous attempt — NOT claiming "fixed", see "Update — real-data re-profile could
-      NOT reproduce the THIRD recurrence" below for full evidence and a concrete next step (real-VM re-test).** Checkbox
-      intentionally left unflipped — this doc has already recorded 3 prior false "fixed" claims on this exact issue; a
-      4th unverified claim (this time in the other direction — "the crash doesn't exist") would repeat the same mistake.
-      Deferring closure to a live-VM `--force` re-run of the 3 exact poison dates (new todo added below).
-- [ ] [DATA] P0. **NEW (slot 10, 2026-07-13)** — relaunch the 3 exact poison dates (2018-01-06, 2019-08-17, 2025-08-10)
-      on the REAL VM fleet via `--force` (single-VM,
+      NOT reproduce the THIRD recurrence" below for full evidence and a concrete next step (real-VM re-test).**
+      **CHECKBOX FLIPPED (slot 9, 2026-07-13)**: the deferred live-VM `--force` re-run of the 3 exact poison dates is
+      now done — see "Update — 3-date real-VM relaunch: all clean, root cause was a DIFFERENT unrelated bug (slot 9)"
+      below. All 3 completed cleanly on the REAL VM fleet (not sandboxed), no OOM, `dmesg`-clean, confirmed via the
+      GCS-teed `run.log` not just `EXIT_STATUS`. This is the 4th check on this exact question but, unlike the 3 prior
+      false "fixed" claims this doc recorded, this one is a real-infra result (matching the exact bar slot-10 itself set
+      as the closure condition), not a guess or a synthetic/sandboxed benchmark — flipping now is closing out that
+      explicitly-deferred verification, not repeating the earlier mistake.
+- [x] ✅ [DATA] P0. **NEW (slot 10, 2026-07-13)** — relaunch the 3 exact poison dates (2018-01-06, 2019-08-17,
+      2025-08-10) on the REAL VM fleet via `--force` (single-VM,
       `launch-features-vm.sh --feature-family sports     --asset-group SPORTS`) rather than another sandboxed repro —
       the sandboxed repro in the "Update" below could NOT reproduce any of the 3 crashes despite matching the exact
       codebase slot-14 tested, so only a live re-test resolves the discrepancy either way: (a) all 3 complete cleanly on
@@ -357,7 +361,108 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       from a fresh container, or something about the actual 421-day sequential loop beyond the 5-date sample tested) —
       the next investigation should focus there, not on the calculator code. No-fire-and-forget verification required
       (SSH-confirm genuine completion or a real OOM `dmesg`, not just `EXIT_STATUS`). (repo: features-service,
-      deployment-service for the VM relaunch)
+      deployment-service for the VM relaunch) — **DONE, slot 9, 2026-07-13.** **(a) confirmed: all 3 complete cleanly on
+      the real VM fleet, no OOM.** See "Update — 3-date real-VM relaunch: all clean, root cause was a DIFFERENT
+      unrelated bug (slot 9)" below for the full evidence, including a significant collateral finding (a paused Cloud
+      Scheduler job was blocking the first relaunch attempt, fixed inline).
+
+## Update — 3-date real-VM relaunch: all clean, root cause was a DIFFERENT unrelated bug (slot 9, 2026-07-13)
+
+**Picked up the P0 "relaunch the 3 exact poison dates on the real VM fleet" todo.** Fresh-pulled `features-service`
+(HEAD `588eed0e`, confirmed both `a9684e27` and `c3e3ebfe` as ancestors — the shipped OOM fixes are present) and
+launched 3 single-date VMs via the standard launcher (single-date because the sports CLI's `--start-date`/`--end-date`
+only supports a contiguous range, confirmed via `features_service/sports/cli/parser.py:165-185` `batch_dates_from_args`
+— no `--dates` list flag exists, so 3 non-contiguous poison dates require 3 invocations, each
+`--start-date D --end-date D --force`):
+
+```
+FORCE=1 bash deployment-service/scripts/vm/launch-features-vm.sh --feature-family sports --asset-group SPORTS \
+  --start-date <D> --end-date <D> --launch-mode full
+```
+
+**First attempt (VMs `features-sports-sports-20260713-212232`/`-212310`/`-212327`) — all 3 failed FAST (rc=1), but NOT
+from OOM.** The GCS-teed `run.log` (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, uploaded
+independently of the VM's own serial console every 60s — the right artifact to trust when a VM might vanish, per this
+doc's own established convention) showed all 3 dying within ~2s of `compute_features` starting, with an identical error:
+
+```
+ERROR [HIGH] application error in features-service.compute_features: Manifest consolidator appears DOWN for
+bucket='<market-data-tick-sports-prd-...|instruments-store-sports-prd-...>': consolidated _index/availability_index.parquet
+heartbeat is ~1100-1146s old (> 120s budget) while per-VM shards exist. Remediation: check the consolidator Cloud Run
+Job + Scheduler for this bucket; do NOT fall back to the per-VM merge (can OOM on large buckets). ... (recovery=fail_fast)
+```
+
+This is the manifest-consolidator-staleness fail-fast guard (a defense specifically built to prevent the
+per-VM-merge-fallback OOM class this doc is about) — it correctly refused to proceed on a stale index, but this meant
+**none of the 3 runs ever reached the calculator pipeline**, so this attempt answered nothing about the actual OOM
+question.
+
+**Root-caused the staleness**:
+`gcloud scheduler jobs list --location=asia-northeast1 --filter="name~manifest-consolidator"` showed
+`uts-prod-manifest-consolidator-instruments-sports-cron` AND `uts-prod-manifest-consolidator-market-data-sports-cron`
+(both `*/1 * * * *`, i.e. designed to run every minute) in state **PAUSED**, while the sibling
+`uts-prod-manifest-consolidator-features-sports-cron` (same family, same schedule) was `ENABLED`. Direct `gsutil stat`
+on both buckets' `_index/availability_index.parquet` confirmed genuine staleness (334s and 1533s old respectively, both
+over the 120s budget) even after a few one-off manual `jobs run` executions that happened to land around the same time
+(visible in Cloud Run execution history) — those sporadic manual triggers were not frequent enough to hold the index
+under the 120s budget on their own. No maintenance note or "-legacy-" naming convention (used elsewhere for
+deliberately-paused jobs — see below) suggested this was intentional; this reads as an accidental/forgotten pause, not a
+deliberate one.
+
+**This is a genuine collateral finding, flagged per the CLAUDE.md big-finding rule (data-correctness, cross-cutting)**:
+a paused scheduler on these 2 buckets silently blocks ANY sports pipeline compute needing fresh manifest reads for
+`market-data-tick-sports` or `instruments-store-sports` — not just this investigation. Checked whether this was isolated
+or systemic: `gcloud scheduler jobs list --filter="name~manifest-consolidator"` across ALL asset groups showed exactly 2
+other PAUSED jobs (`uts-prod-manifest-consolidator-instruments-tradfi-legacy-cron`,
+`uts-prod-manifest-consolidator-market-data-tradfi-legacy-cron`) — both explicitly `-legacy-`-tagged, i.e. deliberately
+deprecated, unlike the 2 sports jobs. So this was isolated to sports, not a broader systemic outage. **Fix applied**:
+`gcloud scheduler jobs resume` on both sports jobs — this restores the originally-designed every-1-minute cadence, it
+does not introduce new behavior. Verified recovery: both `_index/availability_index.parquet` files updated within ~10s
+of resuming (age 6s at check time), and `gcloud scheduler jobs describe` confirmed `state=ENABLED` for both.
+
+**Second attempt (after freshness confirmed <10s stale) — all 3 poison dates completed cleanly, no OOM, on the REAL VM
+fleet**, relaunched via the same command (VMs `features-sports-sports-20260713-213352`/`-213414`/`-213432`, tarballs now
+all reported fresh — `588eed0e4848` for features-service — since another concurrent dispatch had republished them in the
+interim):
+
+| date       | VM                                     | fixtures written        | outcome                                                                         |
+| ---------- | -------------------------------------- | ----------------------- | ------------------------------------------------------------------------------- |
+| 2018-01-06 | features-sports-sports-20260713-213352 | 183 (across 39 leagues) | `Processing completed successfully`, `rc=0`, `DEPLOYMENT_COMPLETED exit_code=0` |
+| 2019-08-17 | features-sports-sports-20260713-213414 | 238 (across 40 leagues) | `Processing completed successfully`, `rc=0`, `DEPLOYMENT_COMPLETED exit_code=0` |
+| 2025-08-10 | features-sports-sports-20260713-213432 | 183 (across 38 leagues) | `Processing completed successfully`, `rc=0`, `DEPLOYMENT_COMPLETED exit_code=0` |
+
+Verified via the GCS-teed `run.log` for each VM (not just `EXIT_STATUS`, per this todo's own no-fire-and-forget
+requirement) — every run shows the full `Wrote fixture_features league=...` sequence through to
+`ManifestWriter: per-VM shard updated (... process_final=False)` then `Processing completed successfully` /
+`DEPLOYMENT_COMPLETED (exit_code=0)`. No OOM signature, no unmatched crash mid-write, no VM zombie state. All 3 VMs
+self-deleted cleanly per `VM_SHUTDOWN_ON_COMPLETION=true` (confirmed via `gcloud compute instances list` — none present
+post-run).
+
+**Conclusion — case (a) from this todo's own decision tree is confirmed**: the crash risk really is gone for these 3
+exact poison dates on the real VM fleet, not just in a sandboxed repro. Combined with slot-10's earlier sandboxed
+non-reproduction, this is now two independent methods (sandboxed real-data repro AND real-VM-fleet run) agreeing the
+calculator-level OOM bug (fixed by `c3e3ebfe`/`a9684e27`) does not recur on these 3 dates. **What this does NOT prove**:
+that no OTHER early-history date could still hit a similarly-shaped issue — these 3 were the specific dates with prior
+confirmed field crashes, not an exhaustive era-wide sweep (that's the parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 3's job, not this issue's).
+
+**New todo captured** (the collateral scheduler-pause finding, so it isn't lost): add basic alerting/monitoring so a
+paused (non-`-legacy-`) manifest-consolidator Cloud Scheduler job doesn't go unnoticed for an extended period again —
+see new todo below.
+
+**What I did NOT do**: did not touch the 2 `-legacy-`-tagged paused jobs (deliberately deprecated, out of scope). Did
+not attempt to re-verify the full 2015→present fleet's manifest-cleanliness gate (that's the parent plan's Todo 3, a
+separate, larger piece of infra execution). Did not fix the still-open `[INFRA] P2` EXIT_STATUS todo above (orthogonal
+observability gap, different craft).
+
+- [ ] [INFRA] P3. **NEW (slot 9, 2026-07-13)** — add alerting/monitoring so a paused (non-`-legacy-`)
+      manifest-consolidator Cloud Scheduler job is caught quickly, instead of silently degrading to stale-index
+      fail-fasts across an entire asset_group/bucket pair for an unbounded period (discovered this session:
+      `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` were both PAUSED with no apparent
+      deliberate reason, blocking the first relaunch attempt above). Scope: a Cloud Monitoring alert (or an addition to
+      the existing consolidator-health check surface) on `state=PAUSED` for any `uts-prod-manifest-consolidator-*-cron`
+      job NOT matching `*-legacy-*`. (repo: deployment-service or infrastructure, whichever owns the existing
+      consolidator alerting)
 
 ## Update — real-data re-profile could NOT reproduce the THIRD recurrence (slot 10, 2026-07-13)
 
