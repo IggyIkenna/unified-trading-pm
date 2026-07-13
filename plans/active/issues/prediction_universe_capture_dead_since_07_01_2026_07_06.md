@@ -232,3 +232,60 @@ and Phase 4 waits on Ikenna's access answer.
   against the IS-side bucket/manifest in this pass (out of scope for the MTDS shard triage this evidence was gathered
   during) — flagging here per the "add corroborating evidence to the existing open doc" rule rather than filing a
   duplicate.
+
+- 2026-07-13 (corroborating evidence — clean 452-shard `pipeline_e2e_check` re-sweep, PREDICTION cluster triage;
+  `data_pipeline_e2e_check_2026_07_10.md` Progress Log 2026-07-13): re-verified all 11 PREDICTION leg-results the
+  re-sweep flagged as "genuine, undocumented" (IS `PREDICTION/KALSHI` force/skip/live + MTDS
+  `PREDICTION:KALSHI:book_snapshot_5/trades` and `PREDICTION:POLYMARKET:book_snapshot_5/trades` force/skip) against real
+  `gsutil`-pulled `run.log` evidence, not just the abstracted `reason` string. **Confirmed: same failure signature,
+  still live today, not yet fixed.**
+  - **IS `PREDICTION/KALSHI` force leg** (`instr-backfill-pred-pchk-0713101533-f-kalshi`, real run.log): the adapter
+    genuinely fetched and wrote **1,422 real Kalshi event-contract rows**
+    (`_write_market_lifecycle: 1422 rows venue=KALSHI group=OTHER date=2026-07-09` — real NFL/MLB/politics markets, e.g.
+    `KXNFLGAME-26AUG15DALSEA-DAL`, `KXFEDERALCHARGE-27JAN01-…`; NOT the KALSHI-PERP contamination pattern), but the
+    orchestrator's shard-completeness stage then classified KALSHI as `empty_ok` and wrote a `SOURCE_RETURNED_ZERO`
+    empty_confirmed row instead of a real `instrument_availability` cell — **byte-identical log messages** to this doc's
+    Root Cause #2 evidence:
+    `Shard completeness: 1 venue(s) fetched OK but 0 records after filtering (excluded from expected): ['KALSHI']` →
+    `Honest-coverage: wrote SOURCE_RETURNED_ZERO empty_confirmed for 1 empty-ok venue(s)`. This is the SAME bug
+    reproducing today for the real (non-PERP) `PREDICTION:KALSHI` venue, still unfixed. New detail for whoever picks
+    this up: the 1,422 real rows all landed under composite manifest key `KALSHI/OTHER` (`process_write.py`'s
+    `counts[f"{_manifest_venue}/{_group_str}"]`), while the shard-completeness check's
+    `expected_venues`/`written_venues` comparison (`process_completeness.py`) uses BARE venue names — so a
+    canonical-question-group classifier that buckets everything into the `OTHER` catch-all (the same `OTHER` group the
+    existing `scripts/purge_prediction_other_group_rows.py` treats as junk) would make `written_venues` never contain
+    bare `KALSHI`, regardless of how much real data was written. Not confirmed as the root mechanism, but a concrete
+    lead worth checking against the canonical-question-group classifier.
+  - **MTDS `PREDICTION:KALSHI:book_snapshot_5` force leg**
+    (`mtds-backfill-prediction-pipelinecheck-20260713-140342-1cead6`, real run.log): identical to the 2026-07-12
+    corroboration above —
+    `WARNING KalshiAdapter: no Kalshi tickers found in market_lifecycle for 2026-07-09 — IS may not have enumerated this date yet; run IS backfill if needed`
+    → `SHARD_INCOMPLETE … expected 1 venues, wrote 0, missing: ['KALSHI']`. Same for `trades` (byte-identical log line,
+    different VM). **New, precise evidence on the "missed-window backfill" this doc's Root Cause #1 fix status already
+    flagged as residual**: direct `gsutil ls` against the PROD bucket
+    `instruments-store-pred-prd-central-element-323112` (checked 2026-07-13, live) shows
+    `instrument_availability/by_date/` has day partitions for 07-01/04/06/07/08/**10**/12/13/14/… — **`day=2026-07-09`
+    is the one missing day** in that immediate window — and `market_lifecycle/by_canonical_group/` jumps straight from
+    `day=2026-07-06` to `day=2026-07-13`, i.e. **`day=2026-07-07` through `day=2026-07-12` (6 days) have zero
+    market_lifecycle partitions in PROD**. This is the first time the missed-window's exact boundaries have been pinned
+    down with a real bucket listing rather than described generically — whoever runs the "missed-window backfill"
+    residual item should target at least `2026-07-07..2026-07-12` for `market_lifecycle` and confirm `2026-07-09`
+    specifically for `instrument_availability`.
+  - **MTDS `PREDICTION:POLYMARKET:book_snapshot_5` force leg**
+    (`mtds-backfill-prediction-pipelinecheck-20260713-140303-234c7f`, real run.log) — **new corroboration, not
+    previously confirmed with real evidence for POLYMARKET specifically** (the 2026-07-12 entry above only sampled
+    KALSHI): same root-cause family, adapter-specific wording —
+    `INFO PolymarketAdapter: no clob_token_ids for 2026-07-09 — skipping book_snapshot_5` →
+    `SHARD_INCOMPLETE … expected 1 venues, wrote 0, missing: ['POLYMARKET']`. Consistent with the same PROD
+    market_lifecycle gap above (Polymarket's `clob_token_ids` come from the same IS prediction enumeration path).
+    `trades` shows the identical signature (separate VM, not individually re-quoted here).
+  - **Net**: all 11 leg-results are confirmed corroborations of this already-open doc's Root Cause #2 / missed-window
+    gap, not a new/different bug — no new issue doc filed for the PREDICTION cluster. `status: open` unchanged;
+    escalating this corroboration since it's now reproduced identically across three separate sessions (2026-07-06
+    origin, 2026-07-12 partial re-verify, 2026-07-13 full re-sweep) with zero forward progress on the missed-window
+    backfill or the KALSHI empty-confirmed-but-real-data bug specifically (the dtype/consolidator Root-Cause-#1 fixes
+    shipped 2026-07-06 are unrelated to this residual). Possible (unconfirmed) link:
+    `kalshi_live_capture_regression_and_drift_2026_07_13.md` independently found live `raw_tick_data` capture stalled
+    since `day=2026-06-28` — if IS's prediction market_lifecycle enumeration is this unreliable, MTDS's live capture
+    (which also depends on IS-enumerated tickers) silently losing its subscription universe is a plausible shared root
+    cause, not yet verified either way.

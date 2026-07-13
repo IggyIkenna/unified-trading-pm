@@ -229,6 +229,42 @@ reading `success: true` alone and calling it healthy. No fix attempted (out of s
 Cloud Run consolidator-fleet image redeploy); flagging with fresh, dated evidence per the data-pipeline-correctness HARD
 RULE.
 
+## Corroborating evidence (2026-07-13, `pipeline_e2e_check` clean 452-shard re-sweep — DEFI:AAVE_V3-POLYGON outlier)
+
+Independently investigating the re-sweep's single `launcher_script_timeout`-reasoned outlier
+(`DEFI:AAVE_V3-POLYGON:lending_indices`, force+skip legs — `data_pipeline_e2e_check_2026_07_10.md` Progress Log
+2026-07-13) traced it to THIS issue, not a new/unrelated launcher bug. Real evidence:
+
+- **The checker's `launcher_script_timeout` classification is a real but secondary surface effect, not the actual
+  cause.** UTL's `pipeline_e2e_check.launcher.launch_vm_and_wait()` wraps the LOCAL `bash launch-mtds-backfill-vm.sh`
+  invocation in `subprocess.run(..., timeout=120)` (`_LAUNCHER_SCRIPT_TIMEOUT_SEC=120`); the driver's own log shows the
+  force-leg launch call at (UTC) `13:05:16` and the very next log line — launching the SKIP leg — at `13:07:16`, exactly
+  120s later, with no intervening `"launcher exited N"` confirmation line ever printed for the force leg. That confirms
+  the CLIENT-SIDE subprocess call genuinely exceeded its 120s ceiling (consistent with this module's own documented
+  precedent of transient `gcloud` API slowness under the sustained concurrent load of a 452-job sweep — see
+  `_LAUNCHER_SCRIPT_MAX_ATTEMPTS`'s comment). This is a real but minor timing wrinkle in the checker's launcher wrapper,
+  not a data-pipeline bug.
+- **The VM WAS actually created and booted for both legs** — `gsutil ls` on
+  `gs://deployment-scripts-central-element-323112/vm-logs/{mtds-backfill-defi-pipelinecheck-20260713-130516-6beb17, …-130716-6beb17}/`
+  shows a `vm-setup.log` + `SETUP_EXIT_STATUS` for each (no `run.log`/`EXIT_STATUS` — the Python workload never
+  started). Real `vm-setup.log` content for BOTH VMs:
+  ```
+  OOM preflight: checking gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet mtime against budget 86400s
+  OOM preflight FAIL: … is 228423s stale (budget 86400s) — exiting 78 to skip Python startup; EXIT trap will self-delete VM.
+    Diagnosis: manifest-consolidator for asset_group=defi is degraded. Reader would fall back to merging per-VM shards → OOM at startup. Fix consolidator + relaunch.
+  SETUP FAILED rc=78 — uploading log + scheduling self-delete
+  ```
+  — i.e. **this shard's real failure is the exact same OOM-preflight self-guard this doc's 2026-07-12/07-13 entries
+  already document**, just surfaced through `launcher_script_timeout` instead of `vm_exit_nonzero=78` because the
+  client-side subprocess call ALSO happened to time out first under concurrent load. Had the client not timed out, this
+  shard would have reported the same `vm_exit_nonzero=78` as its siblings.
+- **Directly reconfirmed the canonical is still stuck at the exact same timestamp** cited in the 2026-07-12/07-13
+  entries above: `gsutil stat gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
+  (checked 2026-07-13T14:52Z, live) → `Update time: Fri, 10 Jul 2026 21:42:30 GMT` — unchanged, now **~65h / ~2.7 days
+  stale**, confirming zero successful consolidator merges since the 07-13 entry above was written. No new fix attempted
+  (out of scope for the PREDICTION+DEFI-outlier triage task this evidence was gathered during); no new issue doc filed —
+  this is the same already-open, already-comprehensively-diagnosed problem, not a new bug.
+
 **Aside — a small, separate watchdog gap noticed in the same investigation**: the newly-redeployed
 `uts-prod-consolidator-liveness-watchdog` (carrying the `PubSubEventSink` alerting fix from
 `reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md` item 4) correctly flags this
