@@ -109,19 +109,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-          > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-          > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-          > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-          > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-          > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-          > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-          > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-          > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-          > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-          > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-          > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-          > — it caused no canonical-form regression. Recorded in
-          > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+              > — it caused no canonical-form regression. Recorded in
+              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -4765,13 +4765,14 @@ Picked up a prior VERIFIED (read-only, live-checked) investigation's findings fo
       incremental-merge + full-rebuild `COPY` projections (~lines 1926/1942-1952) — was **not implemented this pass**:
       that SQL is shared cross-AG infra (cefi/tradfi/sports/pred all flow through the same merge), out of this session's
       defi-only scope, and a `SELECT *`→explicit-cast rewrite of a live merge path used by every asset group's
-      consolidator needs its own reviewed change + test pass, not a same-session bolt-on. Flagging as a follow-up
-      todo: - [ ] [CODE] P2. Add explicit `CAST(schema_version AS BIGINT)` / `CAST(instrument_count AS BIGINT)` to the
-      final SELECT projections in `unified-trading-library/unified_trading_library/manifest_consolidator.py`
-      `_duckdb_merge_payload` (incremental-merge COPY ~line 1926, full-rebuild COPY ~lines 1942-1952) so a future
-      consolidator cycle cannot silently re-widen either column back to string. Cross-cutting (affects
-      cefi/tradfi/sports/pred too, not just defi) — needs its own reviewed change, not a same-session bolt-on.
-      parent_epic: mtds_mdps_master.
+      consolidator needs its own reviewed change + test pass, not a same-session bolt-on. Flagging as a follow-up todo
+      (see the dedicated `[CODE] P2` item immediately below).
+
+- [ ] [CODE] P2. Add explicit `CAST(schema_version AS BIGINT)` / `CAST(instrument_count AS BIGINT)` to the final SELECT
+      projections in `unified-trading-library/unified_trading_library/manifest_consolidator.py` `_duckdb_merge_payload`
+      (incremental-merge COPY ~line 1926, full-rebuild COPY ~lines 1942-1952) so a future consolidator cycle cannot
+      silently re-widen either column back to string. Cross-cutting (affects cefi/tradfi/sports/pred too, not just defi)
+      — needs its own reviewed change, not a same-session bolt-on. parent_epic: mtds_mdps_master.
 - [x] [DATA] P0. **VM check — `mtds-lending-indices-20260712-112557` still RUNNING** (not yet shut down/complete;
       `VM_SHUTDOWN_ON_COMPLETION=true` means absence = completion, and it is still present). No action taken per
       instructions (report only) — lending-indices buckets untouched.
