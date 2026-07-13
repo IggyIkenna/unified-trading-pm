@@ -24,6 +24,7 @@ related:
     instruments_completion_tracker_2026_07_06.md,
     ../infra_capture_and_devops_leftovers_2026_07_06.md,
     ../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-07
@@ -154,6 +155,12 @@ drift_direction: advance-code
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-13** — Checked against a separate operator-reported gap ("operator rulings never reach the AO
+  blocked-question queue", proven on `BLK-f2bb67c2`). Confirmed the 3 remaining open prevention todos here (AutoSpawn
+  per-task-tier spawning, monitor/main-agent gate over-generalization, Opus/Sonnet plan-mixing guidance) are all about
+  dispatch/tiering, NOT `blocked_queue` — none satisfied by the fix. Filed + shipped as its own issue:
+  `ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md` (`BlockedQueueReconciler`,
+  agent-orchestrator@bec9373a99fb49793efbb874339dcaf81a3ae009). No todos here flipped — genuinely a different gap.
 - **2026-07-07** — Filed from the fleet-idle investigation. RC-1 (regen no-propagate → whole backlog frozen Opus/max) is
   the primary finding; RC-2 (no craft filter) + RC-3 (slot_skips thrash) compound it. Remediation applied: plans
   retiered/re-homed (`pm@65e5d01ee`), 145 queued-task slot_skips cleared (fleet resuming). Backlog tier-correction +
