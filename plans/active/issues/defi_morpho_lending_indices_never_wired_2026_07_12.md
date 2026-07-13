@@ -746,9 +746,9 @@ ineffective and mildly harmful. Deletion NOT performed; checkbox flipped `RESOLV
 2. **Live code consumer in deployment-api.**
    `deployment-api/deployment_api/services/tarball_staleness.py:114,127,141,150,160` — `_ASSET_GROUP_TARBALLS` lists
    `market-tick-data-service-code.tar.gz` as the expected MTDS tarball for **all 5** asset groups (its docstring: bundle
-   membership mirrors `create-code-tarballs.sh`'s per-asset_group repo lists — which it correctly does, because the
+   membership mirrors `create-code-tarballs.sh`'s per-asset*group repo lists — which it correctly does, because the
    category arrays DO derive that name). The module is Phase-2-pending (not yet wired into a route), so deleting the
-   object has no runtime effect _today_, but leaves a landmine: once wired, `compute_bundle_oldest_mtime` treats a
+   object has no runtime effect \_today*, but leaves a landmine: once wired, `compute_bundle_oldest_mtime` treats a
    missing tarball as "stale by definition" → every bundle reads stale → spurious Cloud Build refresh triggers.
 3. **Regenerated after the "orphaned" audit.** The object's own manifest
    (`gsutil cat .../code/market-tick-data-service-code.manifest.json`) reads
@@ -800,3 +800,15 @@ parking blocked-questions — `BLK-0c06a5c6`/`BLK-66f6516d`/`BLK-c7e188e2` — e
 essay bloat. **Required action is main/operator-only**: gate this `…-001` backlog entry with a `prereqs.conditions`
 (e.g. `consolidator-fresh-and-vm-complete`) so it stops bouncing for the ~6h until the VM completes AND the consolidator
 (`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`) resumes. `skip-current-task`'d.
+
+### Orphan `market-tick-data-service-code.tar.gz` + `.manifest.json` DELETED from GCS — 2026-07-13T~20:0xZ (tarball-sync sub-agent)
+
+Follow-up to the option (c) closing note above ("they'll simply stop being refreshed and age out"): with the producer
+guard (`create-code-tarballs.sh` seen-set, 2026-07-12), the `refresh_code_tarballs.sh`
+`market-tick-data-service:mtds-code` mapping, and the `tarball_staleness.py` de-listing (`deployment-api@3bdca82`) all
+confirmed in place, re-verified zero live consumers (workspace `rg` hits = comments/docs only) and ran
+`gsutil rm gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code.{tar.gz,manifest.json}`
+(last-built 2026-07-12T14:00Z @91ac1caa — never refreshed since, proving the guard holds). Post-delete `gsutil ls` on
+both names → no objects. The remaining SHA-versioned old-name objects (5× `market-tick-data-service-code@<sha>.tar.gz`,
+all ≤2026-07-12, + historic manifests) are left to the nightly `uts-prod-tarball-cleanup-cron` age-out. Canonical
+`mtds-code.tar.gz` unaffected (rebuilt 2026-07-13T19:28Z @01f23b8c, contains MTDS@b11199cb).

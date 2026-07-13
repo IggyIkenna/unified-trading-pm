@@ -131,6 +131,44 @@ determine unilaterally:
   to handle both without destroying either (e.g. try numeric first, fall back to the raw string instead of `""` on
   coercion failure).
 
+## Decision (ruled 2026-07-13, slot 4 data_engineering — informed by the P1 VERIFY audit above plus a follow-up empirical crosswalk check)
+
+**Ruling: neither Option A/B/C as originally framed — a refined position, closest to "A applied to the right column."**
+No new crosswalk table and no new API-Football ingest are needed. Evidence:
+
+- `venues.parquet`'s own `venue_id` is 100% self-consistent with UAC's existing
+  `unified_api_contracts.canonical.domain.sports.canonical_ids.build_venue_id(name)` (`_slug()`, SCREAMING_SNAKE_CASE) —
+  verified by direct GCS read: `_slug(row.name) == row.venue_id` for 591/591 rows, 0 mismatches. This is the SAME
+  function `instruments-service/instruments_service/engine/orchestrator/writers.py:490-537` (`_write_venues_from_teams`)
+  and `unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:151,165` already use to construct
+  `venues.parquet`'s canonical ids — it's not a new derivation, just not yet applied on the fixtures side.
+- Raw `fixtures.parquet` files DO carry a `venue_name` column alongside the (legacy-numeric-or-null) `venue_id` —
+  confirmed 0% null rate on `venue_name` across 3 sampled eras (2019-01-16, 2021-05-01, 2024-01-15) + a 2026-01-01
+  sample (40 rows).
+- Applying `build_venue_id(fixture.venue_name)` and checking membership in `venues.parquet`'s venue_id set gives
+  **partial but correct matches** (18/42 = 43% on 2021-05-01, 7/13 = 54% on 2024-01-15, 28/40 = 70% on 2026-01-01, 0/1
+  on a lower-league Argentine 2019 sample) — NOT because the crosswalk logic is wrong (it's provably deterministic and
+  correct for every entry that exists in both), but because **`venues.parquet` (591 rows) does not yet cover every
+  stadium referenced in the fixture corpus** — e.g. "Brentford Community Stadium" (EPL, appears in the 2026-01-01
+  sample) has NO row in `venues.parquet` at all, not a naming mismatch. This is a genuine, separate coverage gap in
+  `venues.parquet` (captured as a new todo below), not a defect in the join key.
+
+**Fix per site** (for the P1 CODE todo below):
+
+1. `gcs_normalizers.py:188-190` (`normalize_fixtures`) — the only site that needs real derivation. Replace the
+   `pd.to_numeric`/`int()` round-trip with: if `venue_name` is present and non-null, set
+   `venue_id = build_venue_id(venue_name)` (import from `unified_api_contracts.canonical.domain.sports.canonical_ids`);
+   else honest-absence `""` (do NOT keep the stale numeric `venue_id`, it's a different id-space and will silently
+   mismatch downstream joins).
+2. `gcs_mappings.py:158-160` (`read_venues`) — **delete the coercion entirely.** `venues.parquet`'s `venue_id` is
+   already the canonical string form; coercing it through `pd.to_numeric` is what destroys it today. No replacement
+   logic needed, just remove lines 158-160 (the `if "venue_id" in df.columns:` block).
+3. `travel_calculator.py:182-184` — **delete the coercion entirely**, same reasoning as (2): by the time this runs,
+   `venues` already carries the correct string `venue_id` (once `read_venues` is fixed per (2)); this block is now
+   actively harmful, not just redundant.
+
+Grep `venue_id` + `to_numeric` fleet-wide (per the existing P1 CODE todo's own instruction) to confirm no fourth site.
+
 ## Todos
 
 - [x] ✅ [VERIFY] P1. Audit `venues.parquet`'s venue_id history — is it consistently string-coded across the whole
@@ -157,18 +195,27 @@ determine unilaterally:
     corpus, not just be "missing from these 3 call sites" — this could be a genuinely bigger fix (build/backfill a
     crosswalk table, or match venues by `name`+`city` fuzzy-join as a fallback) than Option B's original text implied.
     Flagging this refined finding for the operator decision below.
-- [ ] [DECISION] P1. Rule on Option A/B/C above with the operator/data-engineering owner, informed by the audit above —
-      **note the audit found Option B confirmed but bigger than originally scoped: no crosswalk column exists in
-      `venues.parquet` at all, so the fix may require building one (via `name`/`city` matching or a new upstream ingest
-      of API-Football's venue-id mapping), not just wiring an existing crosswalk into the 3 call sites.**
-- [ ] [CODE] P1. Apply the chosen fix at all three sites (`gcs_normalizers.py:188-190`, `gcs_mappings.py:158-160`,
-      `travel_calculator.py:182-184`) — keep them consistent with each other (a fourth site could exist; grep
-      `venue_id` + `to_numeric` fleet-wide before closing this out).
+- [x] ✅ [DECISION] P1. Rule on Option A/B/C above with the operator/data-engineering owner, informed by the audit above
+      — **DONE, slot 4, 2026-07-13. See "Decision" section above: no new crosswalk table/API ingest needed —
+      `build_venue_id(venue_name)` (existing UAC function, already used to build `venues.parquet`'s own ids) IS the
+      crosswalk, empirically verified deterministic (591/591 self-consistent) and correct wherever the venue exists in
+      `venues.parquet`. The partial match rate observed (43-70%) is a separate `venues.parquet` coverage gap, not a
+      crosswalk defect — tracked as a new VERIFY todo below.**
+- [ ] [CODE] P1. Apply the fix at all three sites per the "Decision" section's per-site guidance above
+      (`gcs_normalizers.py:188-190` derive via `build_venue_id(venue_name)`; `gcs_mappings.py:158-160` and
+      `travel_calculator.py:182-184` delete the coercion entirely) — keep them consistent with each other (a fourth site
+      could exist; grep `venue_id` + `to_numeric` fleet-wide before closing this out). (repo: features-service)
 - [ ] [VERIFY] P2. Once fixed, re-run `export_derived_features` for a representative sample of dates (including
       2018-06-17/06-18) and confirm `VENUE_CONTEXT_COLUMNS` are populated with real (non-NaN-everywhere) values; compare
       against a hand-computed expectation for at least one venue.
 - [ ] [VERIFY] P3. Check whether any downstream ML model/strategy already trained on the broken (all-NaN) venue-context
       columns — if so, flag for a retrain, this is out of scope for this issue to fix directly.
+- [ ] [VERIFY] P2. New finding from the Decision audit (2026-07-13): `venues.parquet` (591 rows) does NOT cover every
+      stadium referenced in the fixture corpus (e.g. "Brentford Community Stadium" has zero rows; only 43-70% of
+      distinct `venue_name` values per sampled day matched, worse on lower-league/international fixtures). Quantify the
+      true corpus-wide coverage gap (distinct unmatched `venue_name` count) and decide whether to backfill
+      `venues.parquet` from `venue_name`/`venue_city`/lat-lon already present on fixtures, or accept honest-absence NaN
+      for unmatched venues as correct behavior going forward. (repo: instruments-service, features-service)
 
 ## Secondary finding (noise, not fixed here)
 

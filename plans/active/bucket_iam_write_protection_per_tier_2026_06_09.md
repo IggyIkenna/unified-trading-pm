@@ -3,10 +3,9 @@ doc_type: plan
 title: Bucket IAM write-protection — per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 summary: >-
   Implements bucket-isolation-model §8 credential-level write-protection: replaces the project-wide god-SA
-  (unified-trading-sa holds roles/storage.objectAdmin over all buckets) with per-tier/per-domain service
-  accounts (batch/live SAs write only their domain; CI/CD + dev SAs read-only on prod) plus a dedicated
-  migration SA. Keys off the actual -dev-/-stg-/-prd- suffix from resolve_bucket_name; Group B phase blocked
-  on the env-split rollout plan.
+  (unified-trading-sa holds roles/storage.objectAdmin over all buckets) with per-tier/per-domain service accounts
+  (batch/live SAs write only their domain; CI/CD + dev SAs read-only on prod) plus a dedicated migration SA. Keys off
+  the actual -dev-/-stg-/-prd- suffix from resolve_bucket_name; Group B phase blocked on the env-split rollout plan.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -14,7 +13,13 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, ssot-audit, migration, data-correctness, canonicalisation, quality-gates]
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_env_split_rollout_2026_06.md]
+related:
+  [
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
+    plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+  ]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -30,7 +35,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+Codex SSOTs:
+  [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 drift_direction: advance-code
 ---
 
@@ -94,10 +100,11 @@ Two independent gates because Group A and Group B are at different stages:
    (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` + the per-AG
    `*_manifest_canonicalisation_2026_06_01` plans) — they do cross-tier whole-corpus writes on the `-prd-` buckets with
    the current broad-grant SA; scoping mid-migration breaks them. Gate = P0.1.
-2. **Group B (derived, env-split rolled back)**: BLOCKED on the bucket env-split rollout landing first — the buckets do
-   not carry a tier suffix today, so there is nothing to scope by. Successor
-   [`bucket_env_split_rollout_2026_06.md`](bucket_env_split_rollout_2026_06.md) (created 2026-06-09) provisions +
-   migrates Group B to the `-{env}-` shape; this plan's Group B IAM follows its Phase 1/2.
+2. **Group B (derived, env-split rolled back)**: BLOCKED on Group B gaining tier suffixes — the buckets do not carry one
+   today, so there is nothing to scope by. **RE-GATED 2026-07-13**: `bucket_env_split_rollout_2026_06.md` was unlocked +
+   archived (superseded); Group B becomes env-tiered via the Wave-3 folds of
+   [`bucket_estate_consolidation_to_sub100_2026_07_13.md`](bucket_estate_consolidation_to_sub100_2026_07_13.md)
+   (consolidated buckets env-tiered from birth, operator ruling) — this plan's Group B IAM follows those folds.
 
 ## Open design decisions (resolve before terraform)
 
@@ -144,8 +151,8 @@ Two independent gates because Group A and Group B are at different stages:
 
 - [ ] [TERRAFORM] P2.1. Apply `-prd-` write-scope; remove the god-SA `objectAdmin`. Verify live/batch prod workloads
       retain `-prd-` write; verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just
-      name-resolver). **Group B buckets join here only after `bucket_env_split_rollout_2026_06.md` provisions their
-      `-{env}-` form.**
+      name-resolver). **Group B buckets join here only after the consolidation plan's Wave-3 folds provision their
+      `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
 - [ ] [CODE] P2.2. Wire each runtime to its tier SA (deployment-service launchers / Cloud Run service identities);
       migration scripts opt into `uts-migration-sa` explicitly.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →

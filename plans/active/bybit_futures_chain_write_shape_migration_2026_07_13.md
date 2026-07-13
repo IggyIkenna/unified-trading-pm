@@ -206,6 +206,66 @@ venues, or change instrument_type classification? Phase 1 owns this).
       (mirrors the pattern in `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 3) — dedup any rows that
       collapse to the same canonical key.
 
+## Finding (2026-07-13, discovered while re-dispatched to this plan's Phase 2 build todo — a DUPLICATE dispatch of
+
+## already-completed work): the original `--apply` (Phase 3 Todo 1) used a script with a real correctness bug, and
+
+## the already-mutated production data needs remediation
+
+**What happened**: `bybit_futures_chain_write_shape_migration-003` was re-dispatched even though Phase 2's build+dry-run
+todos were already DONE (slot 14). Rather than ship a duplicate second reshape script, I read the already-shipped
+`scripts/reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py` (slot 14, `market-tick-data-service@6f0efb52`) and
+found it had TWO real bugs, both since fixed in `market-tick-data-service@3b5d9b91`:
+
+1. **The `underlying`/`instrument_id` COLUMN VALUES were never corrected** — the script did a plain `gcs_copy_object`
+   server-side rename (fix the PATH, not the content). Confirmed on real data: a glued file's own `underlying` column
+   literally holds the same wrong glued token the filename does (e.g.
+   `underlying="SOLUSDT"`/`instrument_id="BYBIT:FUTURE:SOLUSDT-20250404"` instead of `"SOL"`/`"BYBIT:FUTURE:SOL-...`).
+   **This means all 793 objects Phase 3 Todo 1 reports as `'copied'` now sit at the canonical
+   `underlying={U}/ticks.parquet` path with WRONG denomination in their `underlying`/`instrument_id` columns** — the
+   physical location looks canonical but the content doesn't match it. Any downstream reader filtering/grouping by
+   `underlying` or `instrument_id` on these 793 "canonical" files will still see the pre-migration corruption.
+2. **The `(size, crc32c)` parity-conflict-skip silently drops real coexistence-window rows** instead of merging —
+   confirmed as ALREADY MANIFESTED in production: Phase 3 Todo 2's own post-apply verification flagged
+   `day=2025-03-13 SOLUSDT` as an anomaly (source 1,087 rows vs target 694 rows — source LARGER, i.e. genuinely NEW rows
+   never merged in) but did not investigate further. This is exactly the failure mode the parity-skip design causes: of
+   the 42 `parity_conflict_not_overwritten` objects, this is the ONE the 25-sample spot-check happened to catch — the
+   other 41 were not confirmed either way (the spot-check found 24/25 were subsets, by chance not including more of the
+   true positives). **The 2025-02-11 → ~2025-03-22 hive/glued coexistence window (the exact period Phase 1 documented)
+   is where every one of the 42 conflicts live, and is the highest-risk zone for more undetected cases like this one.**
+
+**Why it matters**: this is a live data-correctness bug already applied against production GCS
+(`market-data-tick-cefi-prd-central-element-323112`), not a caught-before-ship issue — it needs the same "fixed in full"
+treatment as any RED data-pipeline finding, not a deadline deferral. Source objects were never deleted (Phase 4 is
+separately gated), so nothing is IRRECOVERABLY lost — but the canonical-path files themselves are wrong until repaired.
+
+**Fix already shipped** (`market-tick-data-service@3b5d9b91`, this session): the script now downloads the glued source,
+corrects `underlying`/`instrument_id` via a vectorized string-replace (asserts full-row coverage or refuses to write),
+and does a real concat+dedupe MERGE against any existing canonical target rather than a parity-skip. Validated against
+real data: BYBIT SOLUSDT day 2025-02-12 (1007 existing hive rows + 1963 new glued rows correctly merge to 2970 — this
+exact day was one of the untouched coexistence-window days, not yet confirmed as one of the 42 conflicts or not, see
+remediation todo below).
+
+## Phase 3.5 — Remediate the already-applied migration (P0, blocks Phase 4)
+
+- [ ] [DATA] P0. Re-run the now-fixed `reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py --apply` (script already
+      idempotent by design) across the FULL originally-audited scope (not just the 42 conflicts) — since the 793
+      `'copied'` objects have their canonical PATH already correct, the fixed script's download-correct-merge-upload
+      path will re-process every one of them: for a `'copied'` day, the corrected script downloads the (still
+      column-wrong) canonical file, corrects its columns in place, and re-uploads (no separate "repair-only" mode needed
+      — same code path, same idempotent design, just a second full pass). Verify the run report shows the
+      previously-`copied` days now landing as `created`-equivalent (content actually rewritten) and the 42
+      `parity_conflict`-classified days landing as `merged` (recovering any real coexistence-window rows, matching the
+      day=2025-03-13 SOLUSDT case and any siblings).
+- [ ] [DATA] P0. Re-run Phase 3 Todo 2's post-apply verification script
+      (`scripts/verify_bybit_futures_chain_reshape_2026_07_13.py`) against the remediated result — confirm 0 remaining
+      column-value mismatches (spot-check `underlying`/`instrument_id` content, not just path/existence) and 0 remaining
+      source-larger-than-target anomalies across all 42 former conflicts (not just a 25-sample spot-check this time,
+      given the day=2025-03-13 case proves the sampling missed at least one real positive).
+- [ ] [DATA] P1. Once Phase 3.5 is fully green, re-verify this doesn't change Phase 4's gating (still
+      BLOCKED-OPERATOR-DECISION, but the "parity verification is fully green" precondition now refers to the
+      Phase-3.5-remediated result, not the original Phase 3 Todo 2 pass which is now known-incomplete).
+
 ## Phase 4 — Cleanup (gated, separate from the reshape — P1)
 
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — only after Phase 3's parity verification is fully green: delete the

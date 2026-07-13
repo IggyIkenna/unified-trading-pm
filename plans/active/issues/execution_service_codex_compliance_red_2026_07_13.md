@@ -145,11 +145,13 @@ tracked here per findings-triage rather than left in agent chat output. None are
       (`spot_price_pre`, `execution_price`, etc.) into the returned `FillResult`, which
       `_log_and_build_solana_amm_result` already consumes — nothing downstream needed a standalone `SwapQuote`, so
       removal (not wiring-in) was correct. Full `quality-gates.sh` green, sentinel `c494bb75`. (repo: execution-service)
-- [ ] [CLEANUP] P3. execution-service: `LiveExecutionHandler._execute_instructions`
+- [x] ✅ [CLEANUP] P3. execution-service: `LiveExecutionHandler._execute_instructions`
       (`execution_service/cli/handlers/live_execution_handler.py`) has two `except` clauses (`ValueError` vs.
       `TypeError/KeyError/AttributeError/RuntimeError`) with byte-identical bodies calling `classify_and_emit_error` —
-      collapsible into one `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` clause. (repo:
-      execution-service)
+      collapsible into one `except (ValueError, TypeError, KeyError, AttributeError, RuntimeError)` clause. — DONE
+      `execution-service@2828f299`: collapsed into one
+      `except (ValueError, TypeError, KeyError, AttributeError,     RuntimeError)` clause. Full `quality-gates.sh`
+      green, sentinel `2828f299`. (repo: execution-service)
 - [x] ✅ [CLEANUP] P3. execution-service: `TransferCoordinator._run_handler`'s
       (`execution_service/transfer_coordinator.py`) bare `except Exception` is broader than sibling handlers in the same
       file which enumerate specific exception types — outlier pattern, worth narrowing for consistency. — VERIFIED

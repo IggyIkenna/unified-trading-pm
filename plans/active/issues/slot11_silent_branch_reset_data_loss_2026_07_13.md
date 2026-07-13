@@ -304,3 +304,20 @@ selection criterion directly rather than assume repo-name targeting.
       unified-api-contracts + unified-trading-library specifically (see UPDATE section — 3 hits on UAC, 2 on UTL, 0 on 4
       sibling repos touched in the same session) — if found, it MUST check for local-commits-ahead-of-origin before
       resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling)
+
+## Update 2026-07-13 (slot 8, heartbeat nudge — a much older AT_RISK_REFLOG_ONLY hit, still unrecovered)
+
+A `/heartbeat` message flagged `instruments-service@0c466a97`
+(`fix(scripts): rank manifest candidates by content freshness, not blob.updated`, authored by this same slot 8 on
+2026-07-06) as still recoverable via reflog on this slot's clone — one of the 18 `AT_RISK_REFLOG_ONLY` hits from the
+fleet-wide audit above, this one **7 days old** (oldest confirmed case so far, well past this doc's "~2 weeks" outer
+estimate for the gc window — worth revisiting whether 90 days, the git default, is the real ceiling rather than
+something shorter, since this one survived 7 days intact). Attempted `git cherry-pick 0c466a97` onto current HEAD: real
+content conflicts in both changed files (`scripts/measure_honest_coverage.py`,
+`tests/unit/test_measure_honest_coverage.py` — the function has legitimately evolved in the 7 days since), not a
+mechanical fast-forward. Aborted the cherry-pick rather than force a rushed manual resolution — this specific recovery
+needs a dedicated pass to reconcile the 2026-07-06 fix's logic (content-freshness-based PRIMARY ranking, `--pin-primary`
+escape hatch) against whatever changed `measure_honest_coverage.py` since, not a mechanical `--theirs`/`--ours` pick.
+Flagging as its own recoverable-but-stale data point (not re-running the fleet audit script again for one instance) — if
+nobody claims this within the reflog window, the original bug-3 fix (`cefi_layer1_denominator_gaps` item 011) is lost
+and would need to be re-derived from scratch rather than recovered.
