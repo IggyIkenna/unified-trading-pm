@@ -157,6 +157,22 @@ one.
 
 ## Progress log
 
+- **2026-07-13 ~23:16Z (sink amendment EXECUTED per operator ruling, logsink-enum-diagnosis leg)** — **Observability gap
+  CLOSED.** Operator ruled (2026-07-13 interactive Q&A) to amend the `_Default` sink exclusion. Pre-delete/before state:
+  exclusion `debug-filter` filter = `severity <= "DEBUG"` (sink updateTime 2023-01-31T10:50:51Z). After:
+  `severity <= "DEBUG" AND NOT resource.type="cloud_run_job"` (sink updateTime 2026-07-13T23:15:53Z). Execution note:
+  `unified-trading-sa` (the only local credential) LACKS `logging.sinks.update` (verified via `testIamPermissions`;
+  Cloud Build default SA `1060025368044@cloudbuild` and compute default SA also lack it) — executed via **Cloud Build
+  running as `logging@central-element-323112.iam.gserviceaccount.com`**
+  (`gcloud builds submit --no-source --service-account=…/logging@…` — build `9a838983-464c-4f45-b703-c436e8ad058e`
+  SUCCESS; two failed permission-probe builds `21d51648…`/`6749d15f…` precede it). VERIFIED WORKING: a fresh
+  `is-daily-enum-prediction` execution launched 23:16Z now streams full app stdout to Cloud Logging
+  (`resource.type="cloud_run_job"`, INFO lines visible 23:20Z). Also: 22:22Z verification executions terminal states —
+  `is-daily-enum-prediction-djjm7` FAILED (failedCount=1, retriedCount=1, completed 22:48:30Z);
+  `is-daily-enum-sports-6dnq9` still running at 23:16Z. Canonical prediction `_index/availability_index.parquet`
+  dtype-dumped 23:19Z: **no longer string-poisoned** (numerics int64/float64, expected/available bool) and NO per-VM
+  shard exists for `vm=is-daily-enum-prediction` (only `_legacy_seed.parquet`), so the "second poisoned column in the
+  job's own shard" lead is stale for prediction.
 - **2026-07-13 (fresh-image verification + observability root cause, is-daily-enum leg sub-agent)** — **STILL OPEN: the
   2026-07-13 double rebuild does NOT fix it.** (a) Today's 13:30Z scheduled runs failed on the pre-rebuild image
   `sha256:01507aee…` (`is-daily-enum-sports-jqrjc` failedCount=1, completion 16:00:59Z; `…-prediction-tbkj7`
