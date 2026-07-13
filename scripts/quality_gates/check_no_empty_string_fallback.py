@@ -260,14 +260,17 @@ def find_empty_string_fallbacks(source_path: Path) -> list[tuple[int, str]]:
 def _has_empty_fallback_noqa(line: str) -> bool:
     """Whether *line* carries a `qg-empty-fallback` code inside a `# noqa: ...` comment.
 
-    Handles both a single-code comment (`# noqa: qg-empty-fallback`) and a
-    multi-code one (`# noqa: qg-os-environ qg-empty-fallback`, or comma-separated)
-    — a plain substring check on ``NOQA_MARKER`` only matches the single-code form.
+    Handles a single-code comment (`# noqa: qg-empty-fallback`), a multi-code one
+    (`# noqa: qg-os-environ qg-empty-fallback`, or comma-separated) in ONE cluster,
+    AND two (or more) SEPARATE `# noqa: ...` clusters on the same line
+    (`# noqa: qg-os-env  # noqa: qg-empty-fallback`) — scans every cluster via
+    ``finditer`` and unions their codes, since ``.search()`` alone only sees the
+    first cluster and misses a code stacked in a later one
+    (`qg_empty_string_fallback_checker_misses_stacked_noqa_2026_07_13.md`).
     """
-    match = _NOQA_CODES_PATTERN.search(line)
-    if not match:
-        return False
-    codes = re.split(r"[,\s]+", match.group(1).strip())
+    codes: set[str] = set()
+    for match in _NOQA_CODES_PATTERN.finditer(line):
+        codes.update(re.split(r"[,\s]+", match.group(1).strip()))
     return "qg-empty-fallback" in codes
 
 
