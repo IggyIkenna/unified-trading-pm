@@ -23,7 +23,7 @@ summary:
   currently violate that assumption in production. The lending_indices data_type schema itself is fine (already carries
   both supply+borrow rate/index fields per reserve on one row) — this is an instrument-identity gap, not a market-data
   schema gap.'
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data, meta]
@@ -44,7 +44,7 @@ source:
   the lending and debt venues." Verified via direct read of the real production instrument catalogue + code trace across
   instruments-service/unified-api-contracts, not guessed.'
 assigned_vm: NA
-resolved_by:
+resolved_by: instruments-service@72e0113+5226818, unified-api-contracts@48bfadff5
 locked_by:
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -132,21 +132,29 @@ pattern or MORPHO's gap; each needs the same real-catalogue read before conclusi
 
 ## Todos
 
-- [ ] [FIX] P1. **AAVE_V3 + SPARK: fix the `instrument_type` mislabel** — change `aave_v3.py:400` (and SPARK's
-      equivalent) to stamp `InstrumentType.A_TOKEN`/`DEBT_TOKEN` instead of the hardcoded `LENDING`, now that the enum
-      members exist. Low-risk since the key already encodes the correct split and downstream ledger resolution already
-      reads the key, not this field — mostly a cleanup to stop the field from lying, but confirm no consumer reads the
-      raw `instrument_type` field directly for these two protocols before shipping (if one does, this becomes a
-      coordinated migration, not a solo fix).
-- [ ] [FIX] P0. **COMPOUND_V3: fix the invalid-enum crash risk** — rename `SUPPLY`/`BORROW` (not real `InstrumentType`
-      members) to `A_TOKEN`/`DEBT_TOKEN` in `compound_v3.py:263,272`, matching AAVE_V3's pattern, including the
-      key-segment rename. This is a P0 because it's a live `UnknownInstrumentTypeError` waiting to fire, not just a
-      hygiene issue — needs a GCS partition migration for the existing 26 rows (key shape changes), plan the migration
-      before flipping the writer.
-- [ ] [CODE] P1. **MORPHO: add the missing A_TOKEN/DEBT_TOKEN split** — replace the flat 465 `LENDING_MARKET` rows with
-      two records per (collateral, loan, marketId) triple (`MORPHO-{CHAIN}:A_TOKEN:{coll}-{loan}:{key8}` /
-      `:DEBT_TOKEN:...`), following `aave_v3.py`'s pattern for emitting two `InstrumentRecord`s per position-bearing
-      entity. This is a real model change, not a relabel — size accordingly.
+- [x] ✅ [FIX] P1. **AAVE_V3 + SPARK: fix the `instrument_type` mislabel** — `aave_v3.py`/`spark.py` now stamp
+      `InstrumentType.A_TOKEN`/`DEBT_TOKEN` per record (key was already correct, field-only fix). Verified no consumer
+      read the raw field directly beyond the two already-audited coupled dicts (below) — safe solo fix as predicted.
+      instruments-service@72e0113. Live-verified against the real subgraph + production catalogue 2026-07-13: 167/171
+      AAVE_V3 rows self-healed via the unchanged key (upsert), remaining 4 are pre-existing delisted rows migrated
+      separately (see the 2026-07-13 Progress Log entry).
+- [x] ✅ [FIX] P0. **COMPOUND_V3: fix the invalid-enum crash risk** — **correction to this todo's own diagnosis**: the
+      `instrument_type` FIELD was actually always `LENDING` (a real, valid enum member) for both compound_v3.py records
+      — verified via direct code read 2026-07-13, contradicting this doc's original "13 SUPPLY + 13 BORROW as the
+      instrument_type value" claim. The REAL crash risk was the KEY segment (`:SUPPLY:`/`:BORROW:`, not a valid
+      `InstrumentType`, would raise `UnknownInstrumentTypeError` the moment `InstrumentKey.from_string()` ever parsed
+      it) — same crash-risk class, different exact mechanism. Fixed: key segment SUPPLY→A_TOKEN/BORROW→DEBT_TOKEN +
+      field now matches. instruments-service@72e0113. The 26 pre-existing SUPPLY/BORROW-keyed rows were migrated (see
+      below), not just left to age out.
+- [x] ✅ [CODE] P1. **MORPHO: add the missing A_TOKEN/DEBT_TOKEN split** — **found already done** by an earlier,
+      undocumented change (not tracked back to this issue) discovered while re-verifying against the real production
+      catalogue 2026-07-13: `morpho.py::_market_to_records` already emits two records per market
+      (`MORPHO-{CHAIN}:A_TOKEN:A{pair_key}` / `:DEBT_TOKEN:DEBT{pair_key}`, `build_canonical_instrument_id`-routed),
+      with 435 real correct pairs already live in the catalogue. Only remaining gap: 898 pre-existing
+      `LENDING_MARKET`-keyed rows from before that fix (the catalogue had grown to 1,768 Morpho rows by 2026-07-13, not
+      the 465 this doc originally measured on 2026-07-07) — migrated, see below. Also fixed the one loose end:
+      `morpho.py`'s `get_instruments(instrument_type=...)` guard still only accepted `(None, InstrumentType.LENDING)` —
+      updated to accept `A_TOKEN`/`DEBT_TOKEN`, matching what it actually emits. instruments-service@72e0113.
 - [x] [VERIFY] P1. **Checked FLUID/VENUS/BENQI/RADIANT/EULER_V2 (EVM) and MARGINFI/SOLEND (Solana)** against the real
       production catalogue via the full adapter smoke-test workflow, 2026-07-07 — see
       [[mtds_is_full_adapter_smoketest_findings_2026_07_07]] for the full report. **Result: none of the 7 has a real
@@ -162,17 +170,76 @@ pattern or MORPHO's gap; each needs the same real-catalogue read before conclusi
       end-state) per protocol, with each protocol's current implementation status (already correct / mislabeled /
       crash-risk / missing) as an explicit note. Evidence:
       https://claude.ai/code/artifact/e2824e52-3a51-43e0-b4b1-933bee469f9d (round-9).
-- [ ] [CODE] P1. **OPERATOR DECISION 2026-07-08: canonicalize ALL lending protocols to A_TOKEN/DEBT_TOKEN** — not just
-      AAVE_V3/SPARK (already there)/COMPOUND_V3/MORPHO (already-planned target state), but
-      FLUID/VENUS/RADIANT/EULER_V2/BENQI too, and MARGINFI/SOLEND once an IS adapter exists for either. This generalizes
-      the P0/P1 fixes above from "per-protocol, case-by-case" to "one canonical model, workspace-wide" — every lending
-      protocol's reference-data adapter should emit exactly two `InstrumentRecord`s per position-bearing entity
-      (`A_TOKEN` for the supply side, `DEBT_TOKEN` for the borrow side), full stop. No protocol keeps a bespoke type
-      name (`SUPPLY`/`BORROW`, `LENDING_MARKET`, `LENDING`) once this lands. Mockup already updated to reflect this as
-      the documented target state for every protocol in scope.
+- [x] ✅ [CODE] P1. **OPERATOR DECISION 2026-07-08: canonicalize ALL lending protocols to A_TOKEN/DEBT_TOKEN** — **found
+      FLUID/VENUS/RADIANT/EULER_V2/BENQI's adapter code already canonical** (another undocumented earlier fix, same
+      pattern as Morpho — all 5 already emit `A_TOKEN`/`DEBT_TOKEN` pairs via a `_build_market_records` helper mirroring
+      `aave_v3.py`). The real remaining gap was DATA, not code: VENUS/RADIANT/EULER_V2/BENQI had 0 real catalogue rows
+      despite `DEFI_VENUE_PHASE` already flipped to `"live"` on 2026-07-10 (per `defi_venues.py` comments citing
+      `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` P1) — the phase flip had landed but no backfill had run
+      since. Fixed by actually running one: triggered a real
+      `python -m instruments_service --operation instruments --mode batch --asset-group DEFI --force` against
+      `ENVIRONMENT=prod` 2026-07-13 (the default `ENVIRONMENT=dev` silently targets a dev bucket — caught before wasting
+      the run), which fetched real data for all 4 (VENUS 6, RADIANT 8, EULER_V2 6, BENQI 2 instrument rows, 100%
+      correctly typed) plus refreshed AAVE_V3/SPARK/COMPOUND_V3/FLUID/MORPHO. Ran
+      `build_instrument_catalogue.py --mode incremental` to roll the new by_date writes into `catalog.parquet`
+      (9,298→9,456 rows, monotonic guard ACCEPT) — confirmed this correctly ages out every row the fixed writers stopped
+      producing into `available_to`-capped history automatically (no manual deletion needed for the live/current view).
+      MARGINFI/SOLEND still have no reference-data adapter at all — out of scope for a canonicalization pass (that's
+      new-capability work, not a migration); left untouched, not silently dropped from scope.
 
 ## Progress Log
 
+- **2026-07-13 (RESOLVED — canonicalized workspace-wide, code + real data + historical catalogue, all 9 protocols)** —
+  Operator: "still should fix it migrating to the canonical A_TOKEN/DEBT_TOKEN across everything and update the allowed
+  enums to avoid confusion" then "Trigger live re-fetch... Migrate/delete stale catalog rows... Check
+  FLUID/VENUS/RADIANT/EULER_V2/BENQI... do these but not forward fix only also backfills and migrations." **Stage 1
+  (code)**: fixed AAVE_V3/SPARK (field-only relabel) + COMPOUND_V3 (key+field, real crash-risk fix) writers, plus the
+  two coupled UAC dicts that would otherwise have silently broken on the relabel:
+  `instrument_validation.py::_SINGLE_ASSET_DEFI_TYPES` was missing `DEBT_TOKEN` (would have write-time-REJECTED every
+  debt-token record — A_TOKEN was there, DEBT_TOKEN wasn't, an asymmetry that only mattered once the field stopped being
+  the shared `LENDING` value) and `venue_constants.py::INSTRUMENT_TYPES_BY_VENUE`/`INSTRUCTION_VALID_INSTRUMENT_TYPES`
+  hardcoded `{"LENDING"}` for AAVE_V3/AAVE_V3_ETH. Also updated the 4 adapters' `get_instruments(instrument_type=...)`
+  guards (aave_v3/spark/compound_v3/morpho) to accept `A_TOKEN`/`DEBT_TOKEN` instead of the no-longer-real `LENDING` —
+  confirmed via a full workspace grep that every real caller invokes `get_instruments()` bare (no type filter), so this
+  was zero-risk, done for correctness/clarity per the operator's "avoid confusion" ask. 342 tests updated+passing across
+  4 test files (including one regression-guard file whose "single-type adapter" assumption no longer held for these 4 —
+  split into a dedicated dual-type test). Shipped unified-api-contracts@48bfadff5 + instruments-service@72e0113, both
+  quality-gates green. **Stage 2 (real data, not forward-fix-only)**: triggered a real live instrument refresh
+  (`python -m instruments_service --operation instruments --mode batch --asset-group DEFI --force`) — first attempt
+  silently ran against `ENVIRONMENT=dev` (the framework's default when unset; caught before treating it as a real
+  verification), re-ran with `ENVIRONMENT=prod` explicitly. Confirmed the code fix end-to-end against the real
+  `instrument_availability/by_date/day=2026-07-13/` raw writes (AAVE_V3-ETHEREUM and COMPOUND_V3-ETHEREUM both correctly
+  emitting `A_TOKEN`/`DEBT_TOKEN`). Discovered along the way that VENUS/RADIANT/EULER_V2/BENQI's adapter code was ALSO
+  already canonical (another undocumented prior fix) and their `DEFI_VENUE_PHASE` had already been flipped
+  `pipeline→live` on 2026-07-10 — but zero real catalogue rows existed because no backfill had actually run since. This
+  one refresh run backfilled all 4 for the first time (real data, correctly typed, verified below) — this IS the
+  "backfills, not just forward-fix" the operator asked for. **Stage 3 (catalogue rollup)**: `catalog.parquet` is a
+  separate, `instrument_availability/by_date/` roll-up (`scripts/build_instrument_catalogue.py`), not written directly
+  by the live refresh — ran `--mode incremental` for real (dry-run first), 9,298→9,456 rows, monotonic guard ACCEPT.
+  Confirmed this is a lifecycle catalogue by design ("cumulative, all-instruments-ever... NOT a current snapshot" per
+  the script's own docstring): every row the fixed writers stopped producing under its old key/type got correctly
+  `available_to`-capped automatically — AAVE_V3 self-healed 167/171 rows via its unchanged key (pure upsert),
+  COMPOUND_V3's 26 old `SUPPLY`/`BORROW`-keyed rows aged into delisted history the moment the new
+  `A_TOKEN`/`DEBT_TOKEN`-keyed rows appeared, same for MORPHO/FLUID's old `LENDING_MARKET`-keyed rows. No LIVE row
+  anywhere was left mislabeled after this step alone. **Stage 4 (historical migration — operator confirmed: "yeah but
+  you can migrate to fix it right")**: the DELISTED rows still carried the legacy shape (crash-risk key/type for any
+  historical/backtest consumer), so wrote `scripts/canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py` — a
+  pure relabel/split of already-catalogued rows (no field guessed): AAVE_V3 (4 rows, key already
+  `A_TOKEN`/`DEBT_TOKEN`-shaped, field-only fix), COMPOUND_V3 (26 rows, key+field rewrite, symbol segment verified
+  byte-identical to what the live writer emits), MORPHO+FLUID (904 rows — 898 Morpho + 6 Fluid — 1:2 SPLIT into
+  A_TOKEN+DEBT_TOKEN pairs per market, every other column verified identical between a market's two live rows before
+  assuming that shape for the split). Dry-run verified exact predicted counts (9,456→10,360 rows) and sample transforms
+  against known real rows before applying. Applied with an automatic timestamped backup
+  (`prod/catalog.20260713-123709.atokendebttoken.bak.parquet`). **Final verified state: all 9 protocols (AAVE_V3 171,
+  SPARK 14, COMPOUND_V3 52, MORPHO 2,666, FLUID 24, VENUS 6, RADIANT 8, EULER_V2 6, BENQI 2 — 2,949 rows total) are 100%
+  A_TOKEN/DEBT_TOKEN, zero non-canonical rows anywhere, live or historical.** Shipped instruments-service@5226818,
+  quality-gates green. **False-alarm caught and NOT filed**: mid-investigation, Morpho's `venue` column appeared to
+  mismatch its `instrument_id`'s embedded chain-suffixed prefix (bare `"MORPHO"` vs `"MORPHO-BASE"`/`"MORPHO-ETHEREUM"`)
+  across 100% of rows — checked before writing an issue doc, and confirmed this is deliberate catalogue-wide schema
+  (verified the same bare-protocol-family-name pattern on UNISWAP_V3/BALANCER/CURVE, none of which are in scope here):
+  `venue` = protocol family, `chain` = a separate column, full chain-specific identity lives in `instrument_id`. Not a
+  bug, correctly not touched. **Deliberately out of scope**: MARGINFI/SOLEND (no reference-data adapter exists at all —
+  building one is new-capability work, not a canonicalization migration).
 - **2026-07-07 (verification closed)** — The full 17-cluster adapter smoke test confirmed all 7 not-yet-verified lending
   protocols (FLUID/VENUS/BENQI/RADIANT/EULER_V2/MARGINFI/SOLEND) share MORPHO's exact gap — no A_TOKEN/DEBT_TOKEN split
   anywhere, same invalid-`InstrumentType` crash-risk class on 5 of them. Full detail in
