@@ -6,7 +6,7 @@ summary: |
   slot 7) hard-failed with "Codex compliance FAILED: 4 violations (max allowed: 3)". Verified pre-existing via
   clean-tree comparison (git stash) — none of the 4 violation classes touch any file in the diff. Filed per RULES.md
   §4b (repo-blocker protocol) so the fix is tracked and other slots don't independently re-discover the same red.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,7 +38,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "execution-service@fed242e4 + @8987a365 (decompose), verified 0 violations by slot-5 2026-07-13"
 ---
 
 # execution-service codex compliance breaches its own ratchet ceiling
@@ -116,12 +116,18 @@ Fix each bucket to get `V` back to ≤3 (or ideally 0, continuing the ratchet-do
 - [x] ✅ [AGENT] P2. **Reword the "(backward compatible)" comment — DONE.** `execution-service@0832049c` —
       `smart_fill_replay.py:442` now reads "...and the older timed/mark/benchmark fallback tiers below still apply."
       (same meaning, no longer matches the `no-backward-compat-shims` grep).
-- [ ] [AUDIT] P3. Triage the 25 oversized functions from the QG log (full list in the Pass-1 output referenced above):
-      for each, either extract helpers to get under the line limit, or — if genuinely irreducible — get an
-      operator-approved per-function `# noqa`-equivalent exemption. **Status (2026-07-13): with every other bucket now
-      fixed (`execution-service@348385ad`), this P3 audit is the ONLY remaining violation** —
-      `Codex compliance: 1     violation (within tolerance of 3)`. 0 remains the target but nothing is currently
-      blocking. (repo: execution-service)
+- [x] ✅ [AUDIT] P3. Triage the 25 oversized functions from the QG log (full list in the Pass-1 output referenced
+      above): for each, either extract helpers to get under the line limit, or — if genuinely irreducible — get an
+      operator-approved per-function `# noqa`-equivalent exemption. — RESOLVED (2026-07-13, slot-5, verification only —
+      the actual decomposition was already shipped by another slot: `execution-service@fed242e4` "decompose 26 oversized
+      functions/methods below line budget" + `execution-service@8987a365` "shave the last 2 near-budget methods to
+      genuine 0 violations"). No operator-approved exemption was needed — every flagged function/method got under the
+      line limit via helper extraction, 0 remaining. Verified by reproducing the exact QG AST check
+      (function/class/method size, `MAX_FUNCTION_LINES=200`/`MAX_METHOD_LINES=50`/`MAX_CLASS_LINES=900`, same exclusion
+      globs) directly against the current tree: 0 violations. Also re-ran the full `quality-gates.sh` end-to-end (exit
+      0): all 4 of this issue's original buckets are now green — hardcoded-project-id ✅, function/class/method size ✅,
+      pip-audit ✅ (cached, deps unchanged), backward-compat stubs ✅. This was the last open todo in this issue — all 6
+      are now done.
 
 ## Repo-blocker
 
