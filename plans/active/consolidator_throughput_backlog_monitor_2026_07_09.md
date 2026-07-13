@@ -177,14 +177,21 @@ drift_direction: advance-code
       (consolidator per (kind,AG), enumerator per AG, catalogue per AG) — NOT the watchers/audits (they write no
       pipeline data → liveness is their whole story). SINGLE-WALK-SAFE: reuse the consolidated-index blob metadata + the
       per-VM prefix list already fetched (`per_vm_shard_backlog`); NEVER a whole-corpus walk.
-- [ ] [BACKEND] P1. **Fired-but-produced-nothing detection** — a run whose Scheduler/execution says it fired (exit 0)
-      but `rows_written ≈ 0` while backlog > 0 → `fired_but_empty`. Reuse the index row-count delta
-      (`object_delta_for_asset_group`, already built) across the run window. This is the silent failure a liveness-only
-      view shows as "succeeded".
-- [ ] [BACKEND] P1. **Stale-output detection** — newest output partition older than the job's OWN cadence →
-      `stale_output`. Generalize the per-AG staleness budget already added for the cefi false-degraded fix
-      (`_AG_STALENESS_BUDGET_SEC` / `_budget_for`) into a per-(kind,AG) cadence budget, so each job is judged against
-      its schedule, not a uniform 120 s.
+- [ ] [BACKEND] P1. **Fired-but-produced-nothing detection (operator GO 2026-07-11 — the data sources ALREADY EXIST,
+      this is a JOIN not new infra).** A run whose Cloud Run execution says it fired (exit 0, recent `last_run_at`) but
+      the index row-count did NOT grow while backlog > 0 → `fired_but_empty`. Building blocks confirmed present:
+      `latest_execution_by_job()` (`_cloud_run_executions.py`, `run_v2.ExecutionsClient` → per-job
+      `{status, exit_code, last_run_at}`) + `object_delta_for_asset_group()` (index row/object delta) + the absolute
+      `index_row_count` shipped this session. Join on the Cloud Run **job short-name** (the agreed key the catalog
+      carries per (kind,AG)); add a real `fired_but_empty` branch to `_verdict()` (today it explicitly punts). The
+      silent failure a liveness-only view shows as "succeeded".
+- [ ] [BACKEND] P1. **Stale-output detection — per-(kind,AG) cadence budget (operator GO 2026-07-11; UI already renders
+      the per-job threshold, so this is BACKEND-ONLY).** Newest output older than the job's OWN cadence →
+      `stale_output`. Generalize `_AG_STALENESS_BUDGET_SEC` / `_budget_for` (today keyed by asset_group, only cefi
+      overridden) into a per-(kind,AG) cadence budget SOURCED FROM THE CATALOG (each consolidator's Cloud Scheduler
+      cadence → its budget), so each job is judged against its schedule, not a uniform 120 s. The card already shows
+      `index-age / budget` + colours when over (`Cockpit.tsx`), so no UI change — it renders whatever budget the backend
+      sends.
 - [x] [BACKEND] P1. ✅ **Coverage-expansion — DYNAMIC enumeration of ALL consolidators (operator-DECIDED 2026-07-10: all
       25, NOT market-data-first).** Endpoint now returns one `ConsolidatorHealth` per (kind,AG) across the full estate,
       driven by `consolidator_catalog.generated.json` (a projection of the deployment-service terraform consolidator
@@ -214,25 +221,39 @@ drift_direction: advance-code
       `docs/consolidators-help.md` (`.md?raw`), documenting every metric (rows / size / fed-by / index-age / backlog /
       verdict). Per-metric hover titles kept on the verdict + job/bucket where cheap. — `deployment-ui@15832cd`
       (`Markdown.tsx`, `consolidators-help.md`). Supersedes the per-metric-tooltip approach.
-- [ ] [DOCS] P2. **Update the consolidator/manifest docs — DEFERRED to AFTER the UI exercise (operator).** Codify the
-      per-consolidator view model + the dynamic-enumeration contract + the metric definitions (the tooltip copy) in
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` + `codex/02-data/availability-manifest-and-data-status.md`
-      (+ the deployment-observability doc). Do it once the UI lands so docs match shipped reality, not a draft.
+- [ ] [DOCS] P2. **Update the consolidator/manifest docs (operator GO 2026-07-11 — the UI has landed; extend the help
+      doc + mirror to codex).** The metric definitions already live in the shipped `docs/consolidators-help.md`; extend
+      it as new metrics land (fired-but-empty, oldest-pending age, phantom/reprobe) and mirror the view model +
+      dynamic-enumeration contract + metric definitions into `codex/05-infrastructure/manifest-consolidator-ssot.md` +
+      `codex/02-data/availability-manifest-and-data-status.md` (+ the deployment-observability doc). One source (the
+      help doc), two renderings.
 
-### Fan-in — which VMs feed the index (✅ operator-AGREED 2026-07-10 — wire it; rec #4; contributor↔live-VM correlation)
+### Fan-in — oldest-unmerged-shard age (operator-SCOPED-DOWN 2026-07-11)
 
-- [ ] [BACKEND] P2. **Contributor-VM fan-in from the shard filenames (EXACT, single-walk-cheap).** Each per-VM shard is
-      `_index/per_vm/{instance}.parquet` → the filename IS the VM instance name; the SAME prefix list we already do for
-      backlog yields, per (kind,AG), EXACT: N contributor VMs, WHICH VMs, and each VM's last-flush age (shard
-      `last_modified`). Return `contributor_count` + `stale_contributor_count` (last flush > cadence). DEFER per-VM
-      `rows_written` (needs a shard content-read → breaks single-walk; blob-size proxy is too rough).
-- [ ] [UI] P2. **Fan-in headline + drill.** Card headline "fed by N VMs · M stale (>{cadence})"; drill lists contributor
-      VM names + last-flush age, each **cross-linked to the Fleet/Deployments row**. The correlation that matters at
-      scale: shard stale + VM stopped = data frozen (expected); shard stale + VM still RUNNING = the VM is stalled and
-      silently not flushing (a bug). `pw:L2` on the fan-in cell.
+> **Operator (2026-07-11): "fed by N VMs" is ALREADY LIVE + backlog is already shown; the ONLY remaining fan-in signal
+> is the AGE OF THE OLDEST UNMERGED SHARD — how long has a written-but-not-yet-absorbed shard been waiting, so we can
+> tell how long the consolidator has been failing to merge properly.** The per-VM contributor NAME drill + Fleet
+> cross-link is NOT wanted (at backfill scale it's thousands of VMs; the aggregate + this age signal is the useful
+> part). Cheap: the SAME `_index/per_vm/*.parquet` prefix list already walked for backlog also carries each pending
+> shard's `last_modified` → oldest-pending age = `now - min(pending shard mtimes)`.
+
+- [ ] [BACKEND] P2. **Oldest-unmerged-shard age from the shard mtimes (single-walk-cheap, same list as backlog).**
+      Extend the backlog walk (`per_vm_shard_backlog` in UTL `_state.py`, or a sibling) to also return the OLDEST
+      pending shard's `last_modified`; surface `oldest_pending_shard_age_seconds` on `ConsolidatorHealth`. Reuses the
+      exact list already done — no new walk. `None` when backlog is 0 (nothing pending).
+- [ ] [UI] P2. **Show oldest-unmerged-shard age on the card.** Next to backlog, render "oldest pending Xm" (colour to
+      grab attention when it exceeds the job's cadence budget — a shard waiting >> cadence means the merge has been
+      stuck that long). Update the help doc entry. `pw:L2` on the age cell.
 
 ### Dark data-correctness actors — VISIBILITY only; detection ALREADY EXISTS (deep-audited 2026-07-10)
 
+> **Operator GO (2026-07-11): build the visibility (persist `latest.json` → read endpoint → surface). Confirmed this is
+> INDEPENDENT of the still-OPEN estate-coverage issue** (`issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
+> `status: open`, `resolved_by:` empty as of 2026-07-11 — Ikenna has NOT addressed it). Whether the phantom audit walks
+> 5 or all 47 buckets is a SEPARATE concern (the open issue); we wire the plumbing to surface whatever it CURRENTLY
+> covers, and when coverage expands the same UI shows more. The one requirement: the card states honest coverage/cadence
+> so partial-or-weekly never reads as a false "all clear".
+>
 > **Confirmed: the phantom-audit + reprobe DETECTION already exists and is mature — the ONLY gap is that results aren't
 > queryable (Slack-only). So this is "wire a thin persist + read endpoint", NOT "build detection".** Phantom =
 > `dp-manifest-hygiene-full` (weekly `0 8 * * 0`) → `e2e-testing/scripts/audit/manifest_hygiene_daily.py --mode full` →
