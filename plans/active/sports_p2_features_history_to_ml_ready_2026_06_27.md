@@ -117,6 +117,69 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 9 (Todo 3 re-check — still BLOCKED-PREREQ; ROOT-CAUSED why the fleet stalled at ~37%, shipped fix)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ; gate structurally unreachable, checkbox NOT
+flipped. But this dispatch root-caused why the compute (Todo 1) has been silently stalled since ~2026-07-12, not just
+"still running slowly."**
+
+Started from slot-4's same-day note above ("`fss-backfill-vm-{3,4,5}` still RUNNING, 1,554 dates / ~37%") and went one
+level deeper than log-mtime staleness — checked actual process liveness, not just `gsutil ls`/log-tail:
+
+- Features bucket unchanged since slot-4's check: still **1,554 unique dates**.
+- `fss-backfill-vm-3` / `fss-backfill-vm-4`: GCE status `RUNNING`, but **SSH'd in and confirmed via `ps aux`: no
+  `features_service` process on either** — `uptime` shows 21h34m up, load average ~0.00-0.04 (idle). Both wrote an
+  `EXIT_STATUS=0` blob to GCS hours ago (vm-3 at 2026-07-12T22:42Z after processing dates up to 2018-01-06 of its
+  2017-04-22→2018-06-16 range; vm-4 at 2026-07-12T11:19Z after processing only its FIRST date, 2018-06-17, of a
+  2018-06-17→2019-08-11 range — i.e. 1 of 421 assigned days).
+- `fss-backfill-vm-5`: SSH refused (`failed to connect to backend`, port 22 unreachable); serial console shows repeated
+  `Under memory pressure, flushing caches` from `systemd-resolved` — OOM-adjacent distress, effectively hung. Last
+  processed date per its run.log: 2019-08-12 (its very first assigned date, range 2019-08-12→2020-10-05).
+- Combined with slot-4's `fss-backfill-vm-10` finding (died non-gracefully mid-run, last date 2025-05-25, no `VM EXIT`
+  marker) and the 6 that completed cleanly (vm-1,2,6,7,8,9): **all 10 original shards have now stopped** — the fleet is
+  not "37% and climbing," it is stalled, and has likely been stalled since shortly after each dead VM's early exit
+  (hours, in vm-4/vm-5's case — they died within ~3-6 min of boot).
+
+**Root cause (not just "VM died") — a real bash bug, found and fixed**: `e2e-testing/scripts/common/vm_fss_features.sh`
+looped dates via `echo "$DATES" | while read -r DATE; do <features-service CLI call>; done`. This construct shares fd 0
+between the `read` builtin and the CLI subprocess — if the CLI (or anything it calls transitively) ever reads from
+stdin, it silently drains the rest of the piped date list; the loop then exits cleanly (`read` hits EOF, not an error)
+and the outer script falls through to its own `exit 0`. This exactly matches the evidence: no error/warning logged, a
+recorded `EXIT_STATUS=0`, and termination after a variable number of dates (1 for vm-4/vm-5, ~260 for vm-3) with no sign
+of a crash. Did not fully pin the exact stdin-consuming call inside the dependency chain (grepped `features-service`
+itself for `subprocess`/`stdin`/`input(` — no hits, so the read is happening somewhere deeper, e.g. a credential-refresh
+path in a GCP client library) — the fix is root-cause-agnostic and correct regardless: feed the CLI from `/dev/null` and
+drive the loop via process substitution (`done < <(echo "$DATES")`) instead of a pipe, which also fixes
+`SUCCEEDED`/`FAILED`/`DATE_NUM` not surviving the old pipe-induced subshell (so the post-loop summary was always
+silently wrong too — another reason this went unnoticed for 27+ dispatches).
+
+**Shipped**: `e2e-testing@f2487e4` (QG green, 118s; also bumped `pillow` 12.2.0→12.3.0 in the same commit — pre-existing
+`pip-audit` red on 5 CVEs, unrelated to this fix but blocking the gate). Landed on `live-defi-rollout`.
+
+**What I did NOT do**: did not relaunch any VM or the failed date ranges — VM launch is `infra` craft, not
+`data_engineering` (this plan's own established precedent, e.g. slot-4's entry above). Did not attempt to trace the
+exact stdin-consuming call further — the fix does not depend on knowing it. Did not flip Todo 1 or Todo 3 — the gate is
+still unmet (only ~37% of history computed, and now confirmed genuinely stalled, not just slow).
+
+**Handoff for the next dispatch (infra craft, or data_engineering once relaunched)**: the fixed runner is live in
+`e2e-testing@f2487e4`; `launch-features-sports-parallel-backfill-vm.sh` stages the codebase tarball fresh per launch, so
+a relaunch will pick up the fix automatically. Concrete gaps to cover (from confirmed last-processed dates,
+`--skip-existing` makes a relaunch of the full 2015-01-01→today range safe/idempotent — already-written days are
+skipped):
+
+- `fss-backfill-vm-3`'s tail: 2018-01-07 → 2018-06-16
+- `fss-backfill-vm-4`'s full range: 2018-06-17 → 2019-08-11 (only day 1 done)
+- `fss-backfill-vm-5`'s full range: 2019-08-13 → 2020-10-05 (only day 1 done)
+- `fss-backfill-vm-10`'s tail: ~2025-05-26 → its assigned end date
+- Everything past the ~1,554 dates already written, per the bucket walk, for the remainder of 2015-01-01→2026-07-12.
+  Simplest safe option: re-run the same
+  `launch-features-sports-parallel-backfill-vm.sh --start 2015-01-01 --end 2026-07-12 --vms 10 --env prod` full-range
+  command — `--skip-existing` (default) means it will fast-skip the ~1,554 already-done dates and only actually compute
+  the gaps above, now with the fixed runner script.
+
+Checkbox NOT flipped (gate genuinely unmet; the fleet needs to be relaunched by an infra-craft dispatch first).
+`/skip-current-task` taken.
+
 ### 2026-07-13 — slot 4 (Todo 3 re-check — still BLOCKED-PREREQ; compute ~37% through; 1 VM died non-clean, new finding)
 
 Fast re-verify (not a repeat multi-hour dive) of Todo 1's full-history compute launched 2026-07-12 by slot 11:
