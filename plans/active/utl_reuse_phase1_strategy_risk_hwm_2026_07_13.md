@@ -97,14 +97,28 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       false-positive risk once real drawdown data is wired into execution-service's live order path. See
       `plans/active/issues/global_data_staleness_halt_drawdown_field_collision_2026_07_13.md`
       (`unified-trading-pm@8acd22e5d`).
-- [ ] [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
-      `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
-      `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
-      diverging. **Delete the superseded `RiskLimits`-config-sourced threshold comparison for these 6 checks once UTL
-      `evaluate_rule` is wired in** — no parallel old+new comparison path left standing (CLAUDE.md "delete deprecated
-      code"; flagged during Phase 0 SPEC confirmation, 2026-07-13, as the one under-specified deletion in this plan).
-      Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours, cash-reserve,
-      VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
+- [x] ✅ [AGENT] P0. **Route the 6 comparison checks through UTL rules — PARTIAL, RE-SCOPED 2026-07-13 (slot-10).**
+      Investigation (escalated via `/blocked` BLK-9db4a748, main's ruling) found: (1) the plan text is internally
+      inconsistent — headline says "6 comparison checks" but the body names only 5
+      (`position_size/leverage/gross/net/concentration`); (2) `concentration` has no already-computed source in
+      `pre_trade_check_engine.py` (no percentage-of-NAV computation exists anywhere in the file today) — routing it
+      would mean inventing new, unspecified NAV/equity-proxy logic on a CRITICAL pre-trade gate, not wiring through an
+      existing value; (3) routing threshold **numbers** from the static per-axis UAC registry
+      (`unified_api_contracts.risk.iter_applicable_rules`) — the literal reading of "UAC caps" — would silently change
+      pre-trade enforcement (e.g. `binance` `MAX_POSITION_SIZE_PER_VENUE`=$20,000,000 vs the Phase 0 golden fixture's
+      `RiskLimits.max_position_size`=100 raw units) and drop the check entirely for unregistered clients/venues (no
+      fallback), breaking this plan's own "Golden risk-eval identical" acceptance gate. Main's ruling: unify the
+      COMPARISON DISPATCH via ad-hoc UAC-typed `RiskRule` objects built per-call, sourcing cap **values** from the
+      existing `RiskLimits` config (not the static registry) — same `evaluate_rule` path `risk_preflight_gate.py`
+      already uses, preserving the golden-fixture numeric output exactly. SHIPPED for the 4 checks with a clean 1:1 UAC
+      `RiskRuleTrigger` match: `position_value` (`MaxPositionSizeTrigger`), `leverage` (`MaxLeverageTrigger`),
+      `gross_exposure` (`MaxGrossExposureTrigger`), `net_exposure` (`MaxNetExposureTrigger`) — deleted the superseded
+      raw-`>`-comparison for these 4, no parallel old+new path — `strategy-service@1cc449d3` | `quality-gates.sh` exit 0
+      (sentinel verified) | Phase 0 golden fixture green (unchanged — cap sourcing preserved) | 731 pre-existing risk
+      tests green. **Kept local by design** (no matching UAC trigger type): raw-quantity `position_size` (units, not
+      USD), `margin_ratio` (no `MinMarginRatio` trigger in UTL's closed union). **Deferred as a follow-up SPEC todo**
+      (not silently dropped): `concentration` + the "6 vs 5" count resolution — see
+      `plans/active/issues/pre_trade_check_engine_utl_routing_concentration_gap_2026_07_13.md`.
 - [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing** — SHIPPED `strategy-service@67ecc156` | 60 risk
       tests ✓ | basedpyright 0 ✓ | full `quality-gates.sh` exit 0 ✓ | regression:
       `tests/risk/unit/test_pre_trade_check_engine.py::test_leverage_estimate_is_upnl_sensitive_not_constant`.
