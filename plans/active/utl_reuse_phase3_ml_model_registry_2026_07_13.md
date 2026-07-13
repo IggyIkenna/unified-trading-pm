@@ -70,7 +70,11 @@ drift_direction: advance-code
       UTL's correct `== training_period`. Added 2 regression tests: a multi-entry manifest lookup that returns the entry
       matching the requested period, and an upsert that inserts a new entry for an unseen period instead of overwriting
       an unrelated one (verified fail-before/pass-after via a deliberate temporary revert). Full `tests/training/`
-      suite: 1666 passed, 2 skipped. `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`.
+      suite: 1666 passed, 2 skipped. `quality-gates.sh` green, quickmerge landed on `live-defi-rollout`. **Superseded
+      2026-07-13 (slot-3)**: the local-registry deletion below (`ml-service@40f45d8`) landed shortly after and deletes
+      `model_registry.py` + its regression tests entirely — the bug is gone because the buggy code no longer exists, not
+      because it was patched. This entry's fix served its purpose transiently; no action needed, keeping it as
+      historical record.
 - [x] ✅ [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard +
       AWS S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
       deployment depends on them, add the equivalent local/S3 path to UTL first; else confirm `config.ml_source_bucket`
@@ -97,12 +101,23 @@ drift_direction: advance-code
   - **`config.ml_source_bucket` always set on the training path** — confirmed: UTL resolves
     `ml_gcs_bucket or unified_config.ml_gcs_bucket or resolve_bucket_name(cloud="gcp", kind="ml-models-store")`, so the
     training path always has a concrete bucket with no local-only special-casing required.
-- [ ] [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
+- [x] ✅ [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
       `final_training_handler.py`, `model_loader.py` (loader already uses UTL) to
       `from unified_trading_library import ModelRegistry`. Also delete the 3 AWS-path tests identified in the audit
       above (`test_uses_aws_bucket_when_cloud_provider_is_aws`, `test_uses_aws_s3_bucket_when_configured`, and the AWS
       case in `test_model_registry_full.py`) — they test a capability with no live UTL equivalent and no live AWS
-      deployment; do not carry them forward as skipped/xfail (CLAUDE.md "delete deprecated code", no shims).
+      deployment; do not carry them forward as skipped/xfail (CLAUDE.md "delete deprecated code", no shims). — SHIPPED
+      `ml-service@40f45d8` (+ QG false-positive fix `ml-service@e007793`). Deleted the local registry + all 5 of its
+      dedicated test files (2198 lines, redundant with UTL's own coverage, not just the 3 AWS ones — deleting the whole
+      module obsoletes the whole local test suite). Repointed 4 constructor call sites (`training_orchestrator.py`,
+      `final_training_handler.py`, `evaluate_handler.py`, `training/ml/__init__.py`) to UTL, renaming the
+      `ml_source_bucket=` kwarg to UTL's `ml_gcs_bucket=`. `StorableModel` (an empty, structurally-vacuous Protocol)
+      replaced with `object` to match UTL's own signature. Hit + resolved a real merge conflict with `3d6fe65` (slot-4's
+      in-place manifest-match fix) — my deletion subsumes it. Hit + fixed a QG false-positive: STEP 5.12's `gcs_bucket=`
+      substring match flagged the legitimate `ml_gcs_bucket=` UTL param name; added the 2 new call sites to the existing
+      `HARDCODED_PROTO_EXCLUDE_GLOBS` pattern. Golden fixture (`get_model_for_inference_date`) repointed to UTL,
+      reproduces identically. Full training (1504) + inference (568) suites green, `quality-gates.sh` exit 0 with
+      sentinel verified.
 - [x] ✅ [AGENT] P1. ~~Delete the **dead** `inference/types.py:ModelMetadata` TypedDict~~ — **already done**, verified
       stale during Phase 0 SPEC confirmation (2026-07-13): `ml-service@00855f6` ("schema-provenance class cleared
       honestly … 4 dead TypedDicts deleted") already removed this TypedDict;
