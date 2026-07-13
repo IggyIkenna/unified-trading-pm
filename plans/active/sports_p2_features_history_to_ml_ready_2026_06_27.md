@@ -117,6 +117,48 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 10 (Todo 1 re-dispatch — fast re-verify, fleet healthy post-recovery, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Picked up right after slot-14's same-day recovery + operator escalation (3 OOM-zombie shards gap-filled, `/blocked`
+filed on the still-unresolved `compute_shot_quality_batch` root cause). Re-verified via non-snap gcloud
+(`ikenna@odum-research.com`, `central-element-323112`, `/home/ubuntu/google-cloud-sdk/bin/`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: **3** VMs running — the exact 3 collision-free
+  gap-fill relaunches slot-14 created (`features-sports-sports-20260713-200043` [vm-10's range, 2025-08-11→2026-07-13],
+  `-200456` [vm-3's range, 2018-01-07→2018-06-16], `-200525` [vm-5's range, 2019-08-18→2020-10-05]). The other 7
+  original shards are absent with no zombie signature — consistent with clean completion, matching every prior
+  dispatch's accounting.
+- Features bucket unique-date count: **2,216** (up from slot-14's 2,202) — steady forward progress, no stall.
+- **Went past `RUNNING` status** (this plan's own established standard) for all 3: tailed each VM's `run.log` via GCS —
+  all 3 wall-clock-fresh (within ~2 min of check time, `date -u` = 2026-07-13T20:18:57Z) and each past its own poison
+  date without incident: `-200043` on 2025-08-16 (past 2025-08-10), `-200456` on 2018-01-10 (past 2018-01-06), `-200525`
+  mid-calculator-chain on a later date (past 2019-08-17). No new OOM/crash signature on any of the 3.
+- Confirmed via `git log` on `features-service` that no commit has landed addressing `compute_shot_quality_batch` since
+  `c3e3ebfe` (the venue_context fix) — the P0 root-cause profiling todo slot-14 filed is still unowned; no operator
+  response to the `/blocked` escalation surfaced on this dispatch's `/boot`/`/heartbeat` (`messages: []`).
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling myself — the issue doc's own explicit
+safety note (cartesian-join-class explosions reproduce in low single-digit seconds and need a real kernel-enforced
+`docker run --memory=<N>g` cap, not a userspace watchdog) makes this a dedicated, higher-risk investigation, not a quick
+check between other backend tasks; every prior slot that found the same still-open profiling gap reached the same
+conclusion. Did not relaunch or touch any of the 3 healthy shards. Did not flip Todo 1 — compute is still genuinely
+multi-day and in progress, now with 3 confirmed-healthy recovery shards and no new poison dates found.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,216);
+watch the 3 recovery shards for the SAME `advanced_stats`→crash signature recurring on other dates — if it does, that's
+further evidence for the `compute_shot_quality_batch` P0 profiling todo in
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md),
+not a new finding. Whoever has budget for a real profiling session (Docker memory cap, memray/tracemalloc against real
+GCS data for one of the 3 known poison dates: 2018-01-06 / 2019-08-17 / 2025-08-10) should pick up that P0 todo directly
+rather than another fast re-verify cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-13 — slot 14 (Todo 1 re-dispatch, same session continued — found 3 OOM-zombie shards across 3 different eras; REOPENED the "OOM-crash risk is closed" claim from this session's own earlier entry; gap-filled all 3, escalating to operator)
 
 **Todo 1 (compute features 2015→present) — took concrete action (3 shard recoveries) and produced a critical correctness
