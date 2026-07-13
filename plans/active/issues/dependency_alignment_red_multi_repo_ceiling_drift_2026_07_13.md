@@ -150,6 +150,7 @@ in one commit under a gate I can't currently ship through anyway.
       pillow/click floor-lag — todo below). STAGE 1.5 is unblocked for the fastapi-ceiling class. (repo:
       unified-trading-pm + the 6 named repos)
 - [x] ✅ [BACKEND] P1. `fix_external_dependency_alignment.py --apply` scoped to execution-service, strategy-service
+<<<<<<< Updated upstream
       (pillow) and features-service (click) to pick up the already-bumped canonical floor. **Status correction
       (2026-07-13, slot 7): the `d4ad81d40` commit message claims execution-service + strategy-service's pillow
       floor-lag was "fixed directly in those repos" — verified this did NOT actually land**
@@ -168,5 +169,31 @@ in one commit under a gate I can't currently ship through anyway.
       `client-reporting-api/pyproject.toml:52` = `pillow>=12.3.0,<13.0.0`; `features-service` click already `>=8.3.3`).
       Fresh `check-dependency-alignment.py --json` confirms **0 issues fleet-wide** — STAGE 1.5 fully green. (repo:
       unified-trading-pm, execution-service)
+=======
+      (pillow) and features-service (click) to pick up the already-bumped canonical floor. **DONE (2026-07-13, slot
+      7)**: all 5 repos flagged in the prior status-correction are now off the floor-lag —
+      `strategy-service@10943bfd` (shipped this task, pillow>=12.3.0 merged with a concurrent fleet-wide
+      `cryptography>=47.0.0,<50.0.0` bump that landed on the same pull), `execution-service@f481ba08` (shipped
+      independently by slot-9 while my own fix was governor-queued — verified identical target state, abandoned my
+      redundant local diff rather than duplicate), `ml-service`/`features-service`/`client-reporting-api` already
+      fixed by peer slots (verified via direct grep of each repo's `pyproject.toml`). `fix_external_dependency_alignment.py
+      --apply`'s clause-reordering bug (produces `"pillow<13.0.0,>=12.3.0"` instead of canonical
+      `"pillow>=12.3.0,<13.0.0"`) does NOT trip `check-dependency-alignment.py`'s comparison — confirmed empirically,
+      no clause-order fix needed. `uv.lock` regenerated for both repos I touched.
+      **Second, larger blocker found + fixed in passing**: post-fix, `check-dependency-alignment.py --json` still
+      showed **13 fresh `cryptography` mismatches** (unified-trading-pm, execution-service, market-data-processing-service,
+      market-tick-data-service, strategy-service, trading-agent-service, client-reporting-api, unified-trading-api,
+      batch-live-reconciliation-service, deployment-api, ibkr-gateway-infra, system-integration-tests) — root cause:
+      `canonical-dependency-manifest.json` was never regenerated after `fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`
+      bumped the SOURCE `workspace-constraints.toml` floor to `cryptography>=47.0.0,<50.0.0`, so the derived JSON the
+      checker actually reads was still pinned to the old `>=46.0.7,<47.0.0` line — every repo that correctly followed
+      the new floor was misreported as drifted. Fixed via
+      `.venv/bin/python scripts/manifest/generate_canonical_dependency_manifest.py` (one-line diff, no manual edit).
+      Also found + fixed a genuinely new (not previously flagged) `unified-trading-api` fastapi-ceiling case, same
+      shape as the `d4ad81d40` batch (locked resolution `fastapi==0.135.1`, safely below the confirmed-broken
+      `0.137.x` line) — added the missing `PER_REPO_EXTERNAL_EXCEPTIONS` entry.
+      `check-dependency-alignment.py --json` now reports `"aligned": true`, zero issues, fleet-wide. QG-verified,
+      shipping as `unified-trading-pm@<pending>`. (repo: unified-trading-pm, execution-service, strategy-service)
+>>>>>>> Stashed changes
 - [ ] [INFRA] P2. Evaluate a lighter-weight per-repo-exception process (YAML + justification) so this doesn't require a
       hand-edited Python dict entry every time a repo patches a CVE ahead of canonical. (repo: unified-trading-pm)
