@@ -12,7 +12,7 @@ summary: >
   nothing else. perp_funding_handler.py's contract-call count dropped from a LEGITIMATE refactor — commit ba6df0ac
   (2026-07-08, "retire standalone perp_funding for HYPERLIQUID/ASTER/PACIFICA-SOLANA/LIGHTER-ZKSYNC in favor of
   derivative_ticker.funding_rate") — that landed 5 days ago and the baseline was never regenerated afterward.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -33,7 +33,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@ba098a7cc (slot 3)
 ---
 
 # market-tick-data-service QG RED — adapter-contract-regression baseline stale
@@ -89,7 +89,20 @@ individually).
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Confirm `book_microstructure_handler.py`'s deletion/rename is intentional (git log the deletion
+- [x] [SCRIPT] P1. Confirm `book_microstructure_handler.py`'s deletion/rename is intentional (git log the deletion
       commit), confirm `unified-api-contracts` `honest_coverage.py`/`source_priority.py`'s count drops are intentional,
       then regenerate `adapter_contract_baseline.yaml` for all 4 files via `--regenerate-baseline`. Verify
-      `bash scripts/quality-gates.sh` is green afterward. (repo: unified-trading-pm + market-tick-data-service)
+      `bash scripts/quality-gates.sh` is green afterward. (repo: unified-trading-pm + market-tick-data-service) — ✅
+      unified-trading-pm@ba098a7cc. All 4 drops confirmed intentional via git history: `book_microstructure_handler.py`
+      deleted in `a4fb3d13` ("retire order_flow_imbalance feature — zero real consumers, zero production rows ever
+      captured"); `perp_funding_handler.py` 10→9 from `ba6df0ac` ("retire standalone perp_funding for
+      HYPERLIQUID/ASTER/PACIFICA-SOLANA/LIGHTER-ZKSYNC in favor of derivative_ticker.funding_rate");
+      `honest_coverage.py` 41→38 + `source_priority.py` 1→0 from `06edd868` (900-line file-size split — counts verified
+      landing exactly in the new `_honest_coverage_empty_reasons.py` (3 calls) and `_source_priority_provenance.py` (1
+      call), nothing lost). Regenerated baseline confirmed to contain no OTHER decreases (workspace-wide diff showed
+      only increases/new-files elsewhere — non-shrinking ratchet intact). `bash scripts/quality-gates.sh` full run green
+      on both market-tick-data-service (sentinel 01f23b8c) and unified-trading-pm (sentinel re-verified green 3x across
+      rebases: ae9083c/9ca5de6/1a14713). Landed via direct push under CLAUDE.md carve-out (3) ("PM scripts/** & any
+      .github/** change that must reach main to unblock the pipeline") after 8 quickmerge attempts were structurally
+      outraced by branch churn (QG runtime 400-900s under host-wide qg-governor K=1 contention vs. ~60-180s commit
+      cadence on live-defi-rollout) — confirmed via `/blocked` (BLK-b6ed5e28), operator approved.
