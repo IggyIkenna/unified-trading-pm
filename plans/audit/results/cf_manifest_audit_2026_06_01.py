@@ -71,28 +71,29 @@ def _ls_shallow(uri: str, limit: int = 60) -> list[str]:
     return [ln.rstrip("/") for ln in res.stdout.splitlines() if ln.startswith("gs://")]
 
 
-def _probe_paths(bucket: str, depth: int = 6) -> list[str]:
-    """Descend the object tree ONE level at a time to discover the path scheme without ever
-    recursive-listing a multi-million-object bucket. Returns the deepest sample leaf paths."""
-    cur = f"gs://{bucket}/"
+def _non_meta_children(kids: list[str]) -> list[str]:
+    """Filter meta trees out of a shallow listing: any leaf whose final path segment starts
+    with "_" (``_index``/``_vm_staging``/``_migration_backup``/``_backups``/…) or is a known
+    non-"_" meta dir. Data partitions (``by_date``/``day=``/``pipeline_mode=``/``asset_group=``/…)
+    never start with "_", so this cannot skip real data."""
+    return [
+        k
+        for k in kids
+        if not (
+            (_seg := k.rstrip("/").rsplit("/", 1)[-1]).startswith("_")
+            or _seg in ("backfill-logs", "snapshots", "configs", "databento-batch-registry")
+        )
+    ]
+
+
+def _probe_one(cur: str, depth: int) -> list[str]:
+    """Descend ONE branch, one level at a time, without ever recursive-listing a
+    multi-million-object bucket. Returns the deepest sample leaf paths reached."""
     seen: list[str] = []
     for _ in range(depth):
         kids = _ls_shallow(cur)
         seen = kids or seen
-        # Skip ALL meta trees, not just a hardcoded few: any leaf whose final path
-        # segment starts with "_" (``_index``/``_vm_staging``/``_migration_backup``/
-        # ``_backups``/…) or is a known non-"_" meta dir. Data partitions
-        # (``by_date``/``day=``/``pipeline_mode=``/``asset_group=``/…) never start with
-        # "_", so this cannot skip real data — but it stops the probe descending into a
-        # non-partitioned backup parquet and falsely reporting CF-2-paths/CF-3-partition RED.
-        data_kids = [
-            k
-            for k in kids
-            if not (
-                (_seg := k.rstrip("/").rsplit("/", 1)[-1]).startswith("_")
-                or _seg in ("backfill-logs", "snapshots", "configs", "databento-batch-registry")
-            )
-        ]
+        data_kids = _non_meta_children(kids)
         if not data_kids:
             break
         # Prefer the canonical `by_date` root or an already-hive-partitioned child
@@ -106,6 +107,25 @@ def _probe_paths(bucket: str, depth: int = 6) -> list[str]:
         if nxt.endswith(".parquet"):
             break
         cur = nxt + "/"
+    return seen
+
+
+def _probe_paths(bucket: str, depth: int = 6) -> list[str]:
+    """Sample EVERY top-level data tree at the bucket root, not just whichever one a single
+    greedy descent happens to pick first. Different top-level trees can have genuinely
+    different (both valid, by-design) partition schemes — e.g. tradfi-prd's `raw_tick_data/`
+    carries an `asset_group=` segment, `processed_candles/` does not — so probing only one
+    branch produces a false CF-2-paths RED whenever the branch lacking that segment happens to
+    list before the one that has it (`processed_candles` < `raw_tick_data` alphabetically;
+    tradfi-prd, 2026-07-13). Still bounded, non-recursive, single-level listings per branch —
+    does not violate single-walk discipline (a handful of top-level branches, not a corpus
+    walk)."""
+    root_kids = _non_meta_children(_ls_shallow(f"gs://{bucket}/"))
+    branches = root_kids or [f"gs://{bucket}/"]
+    seen: list[str] = []
+    for branch in branches:
+        cur = branch if branch.endswith("/") else branch + "/"
+        seen += _probe_one(cur, depth)
     return seen
 
 
