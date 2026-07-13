@@ -498,6 +498,22 @@ verified (not log-inferred):**
   (cefi/defi/tradfi/sports) legacy consolidator crons remain PAUSED-not-removed and their buckets untouched — out of
   scope for this pass, tracked separately above.
 
+**Terraform resource-declaration cleanup (parallel slot-3 session, 2026-07-13, same day) — the gap the above pass
+left**: after both bucket shells were confirmed 404, the `google_storage_bucket.market_data_prediction` /
+`instruments_prediction` resource declarations + the `market_data_prediction` import block in
+`deployment-service/terraform/gcp/{main.tf,_imports_reconcile.tf}` still declared them, which would have made the next
+`tofu apply` try to recreate two buckets that are supposed to stay decommissioned. Removed both resource blocks + the
+import block — `terraform plan` confirmed 0 create/destroy for either afterward (refresh detected the 404, and with
+config also removed, state dropped them silently). Also removed the `market-data-prediction-legacy` /
+`instruments-prediction-legacy` entries from `manifest_consolidator_scheduler.tf`'s bucket + timeout maps (the actual
+mechanism behind the "confirmed removed from live Cloud Scheduler + Terraform" claim above) and the two flat prediction
+`gcs_volumes` mounts from `market-data-processing-service/gcp/main.tf` (found that per-service terraform root to be an
+unapplied scaffold — MDPS's real runtime deployment goes through `backends/cloud_run.py`, which does no GCS volume
+mounting, so there was no live mount to fix there). Evidence: deployment-service@2cc51d4 (consolidator + MDPS mount
+removal), @eb5f660 (bucket resource + import removal); `terraform state list` post-apply shows neither
+`market_data_prediction` nor `instruments_prediction` present. Decommission note:
+`gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/decommission_2026_07_13.md`.
+
 ## Phase 8 — Governance + codex (P1)
 
 - [ ] [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check (legacy
