@@ -20,12 +20,13 @@ tags: [sports, features, oom, memory-leak, backfill, honest-absence, data-correc
 related:
   [
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md,
     codex/02-data/feature-formula-versioning.md,
     codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-13
 parent_epic: sports_master
-priority: P0
+priority: P1
 source:
   sports_p2_features_history_to_ml_ready-002 dispatch, slot 6, 2026-07-13 (full-history features backfill fleet);
   reopened same day by slot 12 after the shipped fix (features-service@b05f48ad) failed to reproduce-fix on real data
@@ -236,7 +237,7 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       but still large enough to explain the observed steady multi-minute RSS climb toward the OOM ceiling. The
       `_read_per_league_subpartitions` fallback was considered and ruled out as the dominant cost — it's a same-day,
       one-time 33-shard read, not something repeated across the 400-day historical window.
-- [ ] [DATA] P0. Add a duplicate-key merge guard to `_compute_venue_features`
+- [x] ✅ [DATA] P0. Add a duplicate-key merge guard to `_compute_venue_features`
       (`features_service/sports/exporters/derived_features_helpers.py:501-699`) —
       `.drop_duplicates(subset=["venue_id"])` before the `venue_coords` merge (line ~516-527) and
       `.drop_duplicates(subset=["away_venue_id"])` before the `away_coords` merge (line ~561-572), mirroring the
@@ -244,7 +245,14 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       (`features_service/sports/exporters/_weather_fetcher.py:42`). Without this, a degenerate `venue_id` value (see
       next todo) turns these `pd.merge(..., how="left")` calls into a cartesian product — confirmed 149×591=88,059 rows
       then 88,059×591≈52M rows, exhausting host memory. Add `validate="many_to_one"` too so any future recurrence fails
-      loudly instead of silently ballooning. (repo: features-service)
+      loudly instead of silently ballooning. (repo: features-service) — **DONE, slot 14, features-service@c3e3ebfe.**
+      Shipped a `_dropna_key()` guard instead of plain `.drop_duplicates(subset=["venue_id"])`: a blank/NaN join key is
+      now dropped from the merge's right side entirely (never matches, same as pandas' native NaN behavior), which is
+      strictly safer than dedup-to-one-row — dedup-to-one-row would still let 149/24 target fixtures all silently match
+      the SAME arbitrary `""` venue (bounded rows, but wrong data); `_dropna_key` makes them honestly non-matching
+      (NaN-filled venue columns) instead. Applied at all 4 vulnerable merge/groupby sites in the function (venue_coords,
+      away_coords, the home_win_pct venue_stats groupby, and the clean-sheet-rate venue_hist groupby), not just the 2
+      named here. See "Update — real root cause confirmed + fix shipped (slot 14)" below for full verification evidence.
 - [ ] [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
       (`features_service/sports/data/gcs_mappings.py`) returns `venue_id=""` for all 591 rows even though the raw source
       parquet (`gs://instruments-store-sports-prd-central-element-323112/sports_reference/venues/venues.parquet`) has
@@ -254,15 +262,39 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       cartesian join explodes from ~1.4GB to 40GB+ RSS in low single-digit seconds — too fast for a userspace
       RSS-polling watchdog; use a real kernel-enforced cap (`docker run --memory=<N>g --memory-swap=<N>g`), not
       `RLIMIT_AS` (caps virtual memory, not RSS — false-triggers on numpy/grpc before real growth). (repo:
-      features-service)
-- [ ] [DATA] P1. After the above two todos land, re-verify the 2018-06-17 AND 2018-06-18 OOMs are actually resolved
+      features-service) — **EXACT SITES NOW PINNED (slot 14, 2026-07-13):** both call sites named here plus a THIRD
+      (`travel_calculator.py:182-184`) all carry the identical pattern —
+      `pd.to_numeric(df["venue_id"], errors="coerce")` then `str(int(v)) if notna else ""`. The comments at all 3 sites
+      say this normalizes a numeric id (`"173.0 → '173'"`) — but the real production `venue_id` is a non-numeric string
+      code (`"OLD_TRAFFORD"` etc, confirmed 591/591 unique via direct raw-parquet read), so `pd.to_numeric` returns NaN
+      for every row → collapses to `""` everywhere. This is NOT a quick fix I could take unilaterally: it's ambiguous
+      whether the string code is now the sole canonical venue_id (delete the numeric round-trip) or whether a real
+      numeric↔string id-space crosswalk is missing (bigger fix). Filed as a separate issue doc with the
+      operator-decision framed as 3 options:
+      `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`. The OOM-crash risk this todo
+      partly motivated is CLOSED regardless (see Todo above) — this remaining piece is a correctness-only gap (venue
+      features silently NaN, not a crash risk) tracked in the new issue doc, not blocking here.
+- [x] ✅ [DATA] P1. After the above two todos land, re-verify the 2018-06-17 AND 2018-06-18 OOMs are actually resolved
       end-to-end (not just the `shot_quality_calculator` site fixed in Todo 2) — the pipeline must reach and complete
       `shot_quality_calculator` without first OOM-ing in `venue_context`, since venue_context runs several
       calculator-groups earlier in `export_derived_features`. Use `scripts/sports/profile_2018_06_17_memory.py` (this
       issue's committed profiling harness). Then `--force`-recompute both dates plus audit for other similarly-shaped
       dense-lookback dates across the full 2015-2019 era (not just these two — the 2018-06-18 finding suggests this is
       endemic to the era), and re-run `check_pipeline_completeness.py` / the manifest-cleanliness query for the full
-      2015→present range. (repo: features-service)
+      2015→present range. (repo: features-service) — **OOM-resolution half DONE (slot 14, features-service@c3e3ebfe)**:
+      both `export_derived_features("2018-06-17")` and `("2018-06-18")` now complete fully against REAL production GCS
+      data (149 rows × 578 cols and 24 rows × 578 cols respectively, ~620MB peak RSS each, reaching `shot_quality` and
+      every other calculator with no crash). The `--force`-recompute-to-manifest half (actually running this against the
+      live backfill fleet + the 2015-2019 era-wide dense-lookback audit + `check_pipeline_completeness.py`) is **NOT
+      done** — that's real infra execution, tracked as a fresh todo below rather than silently implied by this
+      checkmark.
+- [ ] [DATA] P1. **NEW (slot 14, 2026-07-13)** — now that the OOM-crash risk is closed (features-service@c3e3ebfe
+      verified against real GCS data for both poison dates), resume
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1's full-history 2015→present compute fleet
+      (excluded/killed shards can re-include 2018-06-17/06-18), let it run to completion, then re-run
+      `check_pipeline_completeness.py` / the manifest-cleanliness query for the full range to confirm no other
+      dense-lookback date still crashes. This is the actual infra-execution half of the todo above. (repo:
+      features-service, deployment-service for the VM relaunch)
 
 ## Update — production re-test (2026-07-13, slot 12, same day the b05f48ad fix landed)
 
@@ -316,3 +348,59 @@ actual mechanism is `_compute_venue_features`'s cartesian-join explosion, which 
 with the 400-day lookback's row count directly), fully explaining why 24-fixture 2018-06-18 also climbs toward the same
 ceiling as 149-fixture 2018-06-17. See "Additional finding" above for the exact root cause and the two new P0 todos for
 the fix.
+
+## Update — fix shipped + verified against real GCS data (slot 14, 2026-07-13)
+
+Independently reproduced slot-8's root cause via a different method (in-process instrumentation of the real
+`_run_calc`/merge call sites rather than a Docker-memory-capped bisection script — no repo scripts committed, kept as
+scratchpad-only tooling since the finding itself is what matters) and confirmed the identical numbers: real-pipeline
+`venues['venue_id'].nunique()==1` (value `''`), `target_fixtures['venue_id']` `''` for all rows, `home_venues` merge
+14,184 rows exactly (`24 × 591` for the -18 date), `away_coords` merge 8,382,744 rows exactly (`14,184 × 591`) —
+matching slot-8's `149 × 591 = 88,059` then `88,059 × 591 ≈ 52M` for -17 (both are the same mechanism, just scaled by
+the date's target-fixture count).
+
+**Traced the venue_id corruption to its exact root**, extending slot-8's "not yet traced to its exact source file" note
+on the fixtures side: THREE call sites (`gcs_normalizers.py:188-190` `normalize_fixtures`, `gcs_mappings.py:158-160`
+`read_venues`, `travel_calculator.py:182-184`) all force `venue_id` through `pd.to_numeric(errors="coerce")` →
+`str(int(v)) if notna else ""`, with comments assuming venue_id is numeric (`"173.0 → '173'"`). Real production venue_id
+is a non-numeric string code (`OLD_TRAFFORD` etc, confirmed 591/591 unique via direct raw-parquet read bypassing all
+three normalizers) — `pd.to_numeric` returns NaN for every row, so every site collapses venue_id to `""`. This is the
+root of BOTH slot-8's findings #1 (`read_venues`) and #2 (fixtures normalizer) — same bug, same shape, three sites.
+
+**Shipped a fix scoped to the OOM-crash risk** (`features-service@c3e3ebfe`, quickmerged to `live-defi-rollout`): added
+`_dropna_key()` to `_compute_venue_features` so a blank/NaN join key is dropped from a merge's right side before joining
+— the merge behaves the way pandas' native NaN join-key semantics already do (never matches), making every
+`venue_id`/`away_venue_id` merge in the function cartesian-proof **independent of whether the upstream normalization bug
+is ever fixed**. This is deliberately NOT the same as slot-8's suggested `.drop_duplicates(subset=["venue_id"])` —
+dedup-to-one-row would still let every fixture silently match the single arbitrary `""`-keyed venue row (bounded, but
+wrong data); dropping the blank key entirely gives honest-absence NaN instead, consistent with
+`codex/02-data/honest-absence-downstream-handling.md`. Also fixed two secondary allocation sites the same profiling pass
+surfaced in the same function: two `.groupby().apply(lambda...)` calls (home_win_pct, clean_sheet_rate) and a
+raw-GroupBy-iteration dict comprehension (`_away_games_cache`) — all replaced with vectorized groupby aggregations.
+
+**Verified against real production GCS data** (not synthetic): `export_derived_features()` now completes fully for BOTH
+poison dates —
+
+- `2018-06-17` (149 target fixtures, the original incident date): 149 rows × 578 columns, final peak RSS 617.7MB.
+- `2018-06-18` (24 target fixtures, the "still climbs with 6x fewer fixtures" date): 24 rows × 578 columns, final peak
+  RSS 616.6MB.
+
+Both previously never completed at all — unbounded RSS growth past 12GB (-18) and past 32GB confirmed OOM-killed on both
+e2-standard-4 and e2-standard-8 (-17). 101/101 existing `test_derived_features_helpers.py` unit tests still pass; full
+`quality-gates.sh` green on the shipped commit (sentinel-verified).
+
+**The deeper venue_id normalization defect is NOT fixed** — `_dropna_key()` makes the crash impossible regardless, but
+venue-context features (`home_win_pct`, `home_venue_clean_sheet_rate`, `travel_distance_km`, etc. — the
+`VENUE_CONTEXT_COLUMNS` set) are still silently NaN for every date, not just these two, since the join key is still
+blank. This is a genuine correctness defect (likely present since whenever `venues.parquet` moved to string codes, not
+just for 2018 dates) that needs an architecture decision on the canonical venue_id format before a real fix — filed as
+`plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md` per the CLAUDE.md big-finding rule
+(data-correctness, cross-cutting, silent). The OOM this issue doc tracks is resolved; the venue_id correctness gap is
+tracked separately so it isn't lost, but is not this issue's remaining blocker.
+
+**Secondary noise finding** (not investigated further, flagged for whoever picks up the venue_id issue): while
+re-verifying on 2018-06-17, the `elo`/`manager`/`travel` calculator group printed a large volume of full
+`Traceback (most recent call last):` output for
+`Skipping fixture row N: Cannot compare tz-naive and tz-aware timestamps` — caught and skipped per-row (not a crash),
+but logging the full traceback on every occurrence instead of a one-line warning is noisy/expensive at scale and could
+mask real errors in the same log stream.
