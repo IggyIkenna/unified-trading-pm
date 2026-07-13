@@ -3306,3 +3306,1370 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
 - [ ] [HUMAN] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter/Pacifica/Extended) +
       Extended-Starknet unblocking (gated on it).
 - [ ] [QG] P1. **DEFERRED — restore `dex_swaps_handler.py` adapter-contract baseline** (QG 5.70 regression).
+
+## Folded-in scope 2026-07-13
+
+> **9-plan fold-in executed 2026-07-13** per the MTDS/MDPS 2-survivor consolidation
+> (`mtds_consolidation_foldin_mapping_2026_07_12.md`, operator ruling 2026-07-13: "Approve all + unlock" [blanket
+> `[unlock-plan]` granted]; `defi_manifest_canonicalisation` judgment call ruled "FOLD -> M-1"). Every OPEN todo from
+> each of the 9 source plans below is migrated verbatim (P-level + BLOCKED markers preserved) into this section,
+> organised per source plan; each source plan was then archived via the 5-step ritual (SUPERSEDED/FOLDED banner ->
+> `plans/archive/2026_07/`). `mdps_polars_engine_cost_sharpening_2026_06_28` folded its completion credit into M-2's
+> Progress Log instead (tech-debt survivor), not here. See `mtds_consolidation_foldin_mapping_2026_07_12.md` Progress
+> Log for the full audit trail + per-plan disposition justification.
+
+### From `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (archived 2026-07-13 -- Legacy tick-bucket dual-write remediation (drain -> code-fix -> migrate -> decommission))
+
+- [ ] [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
+      redirect to `resolve_bucket_name` (kill the latent flat-`market_data` foot-gun). Confirm zero top-level importers
+      first. **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
+      (`_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` all use `get_bucket_name`
+      → env-LESS) + `cli/handlers/_instruments_metadata.py:218,442,518` (`build_bucket("instruments", …, "defi")`).
+      **DEFERRED** from the `assert_defi_catalog_fresh` durable fix (market-tick-data-service@ea33d38, 2026-06-21) which
+      fixed only the preflight reader. All 4 should use
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store",     asset_group=ag)`. Blast-radius:
+      `_instruments_metadata.py` reads/writes manifest for IS catalog; orchestrator uses the bucket for its per-shard IS
+      availability check — both read the env-LESS bucket today; canonical `-prd-` indexes exist and are fresh for all 4
+      AGs. **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [BLOCKED-INFRA] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
+      failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a
+      parallel-agent rebuild). Added mtds SHA-pin path (58ee0a9) but **pinned `mtds-code@<sha>.tar.gz` is pruned within
+      seconds of upload** by a cleanup cron, so the pin can't be relied on. **Unblock options (operator decision):** (a)
+      find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
+      create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch; (c)
+      skip the VM fleet — run the lower-risk local manifest path below since data is dual-written. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
+      made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema
+      migration + `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from
+      the (already dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest)
+      but does not seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
+
+  > ⏸️ **GATED on G4 applies completing** — all 5 AG `--apply` single-walks still `[ ]` pending in
+  > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (operator-fired; not yet run 2026-06-12).
+  > Re-dispatch with G4-apply prereq per operator guidance (BLK-fb70523c, 2026-06-12 slot-2). **(MIGRATED FROM:
+  > `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. **GATED** — after the prerequisite plans above complete for each asset_group, relaunch
+      `mdps-backfill-defi` (defi), `mdps-prediction-2025` (prediction), `sports-scheduler` (sports) from a tarball that
+      carries the MDPS canonical-bucket fix (`market-data-processing-service@61900a3`); T+10min verify each writes ONLY
+      to the canonical `-prd-`/`-pred-prd-` bucket (`_index` mtime advances on canonical, NOT the flat legacy name).
+      NOTE: same pinned-tarball-prune blocker applies — resolve tarball persistence first.
+
+  > **Naming-collision note (2026-07-12):** the `sports-scheduler` named here is the **MDPS `mdps-backfill`-family
+  > writer VM** (drained in Phase 3 above) — it is NOT the deployment-service Cloud Run Job `uts-prod-sports-scheduler`
+  > (the `SportsTriggerScheduler` cron, fixed + tofu-applied 2026-07-12; see
+  > `plans/active/issues/sports_trigger_scheduler_cloud_dispatch_broken_2026_07_08.md`). Same name, different
+  > repo/target — don't conflate the two when tracking relaunch/deploy status. **(MIGRATED FROM:
+  > `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. Legacy buckets receive **0** new `_index` writes for ≥1h post-relaunch (writers fully canonical).
+      **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. Canonical row count ≥ pre-migration (legacy ∪ canonical), zero `pipeline_mode IS NULL`, zero
+      shard-key dupes. Per-asset_group A3 manifest-divergence check clean. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. **Pause the 10 legacy consolidator crons** (they keep the legacy `_index` warm as a parallel SSOT).
+      `gcloud scheduler jobs pause <name> --location=asia-northeast1 --project=central-element-323112` for:
+      `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}-legacy-cron` +
+      `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}-legacy-cron`. Coordinate with
+      `manifest_consolidator_liveness_health_2026_06_01.md` so the liveness watchdog does not alert/restart them. Then
+      remove the legacy entries from the Terraform
+      (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) so they are not re-created on
+      `tofu apply`. **prediction: ✅ DONE** — both `*-prediction-legacy-cron` entries confirmed removed from live Cloud
+      Scheduler + Terraform (2026-07-13 verification, see INCIDENT resolution below). cefi/defi/tradfi/sports remain
+      PAUSED-not-removed — this item stays open for those four. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
+      canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
+      prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
+      tradfi=`tradfi_manifest_canonicalisation_2026_06_01` (v9+partition single-walk; C-source rider absorbed
+      `tradfi_massive_dual_source` Task -031 — was: "`tradfi_massive_dual_source` re-walk (v9+partition, master
+      CONFLICT-2)" — corrected 2026-07-12, doc-reconciliation finding 177, §A2 B-queue ruling:
+      `tradfi_massive_dual_source_2026_05_28.md`'s own owner table (L504) says its Task -031 manifest re-consolidation
+      "MIGRATED" to `tradfi_manifest_canonicalisation_2026_06_01.md`, matching this same doc's L3 section above) ·
+      sports=verify-only. For each AG, after its L3 is C-GREEN + a short soak: empty + delete the legacy flat +
+      tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift), GCP + AWS.
+      Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`.
+      **Do NOT delete an AG's legacy bucket while its L3 plan is open** — prediction/cefi hold legacy-only history.
+      **prediction: ✅ DONE 2026-07-13** — `prediction_manifest_canonicalisation_2026_06_01.md`'s E7/E8/E8b data-safety
+      gates were all GREEN (0 legacy-only cells both buckets, snapshots taken, operator-authorized 2026-07-10); both
+      `market-data-tick-prediction-…` + `instruments-store-prediction-…` version-purged + bucket-deleted, confirmed 404.
+      cefi/defi/tradfi/sports unaffected, this item stays open for them. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
+      the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
+      pre-seeded by a PARTIAL env-split copy in legacy FORM (live-object: defi ~43% / cefi ~65% / tradfi ~93% of legacy;
+      cefi also ~17 days stale) — after each L3 form-walk writes canonical `pipeline_mode=` paths, the pre-existing
+      legacy-FORM objects inside `-prd` are ORPHANS and must be swept (owned in each AG's L3 verify step), else the
+      consolidator rebuild double-counts; (2) the legacy buckets carry large NONCURRENT/soft-deleted version history
+      (cefi 3.81M, tradfi 3.52M, defi 1.15M noncurrent via Cloud Monitoring `storage/v2/total_count`) — the decommission
+      must purge object VERSIONS (not just live objects), and the "canonical ≥ legacy" verify gate must compare
+      Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
+      **prediction: ✅ DONE 2026-07-13** — `gcloud storage rm --recursive --continue-on-error` purged all versions
+      (live + noncurrent) of both prediction buckets natively in one op each (no orphan-sweep needed — prediction's
+      `-prd`/`-pred-prd` buckets were not part of the partial env-split pre-seed this item describes). cefi (3.81M) /
+      tradfi (3.52M) / defi (1.15M) noncurrent versions remain untouched, out of scope for this pass. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check (legacy
+      bucket-name dual-write detection) — extends the pipeline_mode checks already landed 2026-06-01. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P1. Reopen-note on archived `bucket_name_ssot_canonicalisation_2026_05_10.md`: add a
+      residual-runtime-drift banner pointing here (the resolver was canonical but live writers bypassed it). Update
+      `codex/05-infrastructure/` bucket-naming SSOT doc with the "writer must use resolver, not string-concat" rule.
+      **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [INFRA] P2. **DEFERRED** Fix the 6 BQ `feature_external` external tables in
+      `deployment-service/terraform/gcp/bigquery_feature_external_tables.tf` — point `source_uri_prefix` at each
+      bucket's actual hive-partitioned SUBTREE (not the bucket root, which sweeps
+      `_index/`/`backfill-logs/`/`raw_tick_data/` and fails BQ CUSTOM partition validation) and reconcile the declared
+      5-key schema with the real per-bucket layout; the tradfi/features buckets are near-empty so guard for "matched no
+      files". Net-new tables, 0 live impact while blocked. Provenance: TF reconcile 2026-06-19. Owning plan:
+      `bigquery_feature_ml_compute_engine_option_2026_06_08.md`. **(MIGRATED FROM:
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [INFRA] P3. **DEFERRED** Decide migrate-first/retire for the UNMANAGED legacy prod resources surfaced by the
+      reconcile (not destroyed): unified `strategy-store-central-element-323112` + `strategy-store-test-…` (superseded
+      by per-AG); legacy non-prefixed schedulers (`client-reporting-hourly`, `instruments-daily-backfill`,
+      `sports-ref-v3-{1,2,3}-start`, `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`,
+      `*-service-daily-trigger`) + `uts-prod-ml-inference-t1-schedule` (TF canonical is `ml-service-t1-recon`). These
+      are NOT TF-modeled → not destroy-drift; importing entrenches old naming, so migrate consumers → canonical then
+      delete. `uts-dev-*`/`uts-staging-*` schedulers are OTHER-ENV (managed under terraform/state/{dev,staging}) —
+      correctly absent from prod state, out of scope. Provenance: TF reconcile 2026-06-19.
+
+**NEVER destroyed a live resource.** Lock file (`.terraform.lock.hcl`) intentionally left on the committed
+HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mirror, but that swap is a tool artifact
+(CI/`terraform` operators use the HashiCorp registry) and was reverted before commit. **(MIGRATED FROM:
+`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `data_source_provenance_all_asset_groups_2026_06_01.md` (archived 2026-07-13 -- Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY))
+
+- [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy tradfi template) — stamps the known historical source
+      **per data_type** (most defi → `onchain_subgraph`; `oracle_prices` → resolve pyth vs chainlink from the existing
+      `pipeline_mode`/path; `native_staking_rates` → solana_rpc vs helius_rpc). Idempotent. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Backfill the existing DeFi corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
+      scope); fold into the defi canonicalisation migration (`defi_manifest_canonicalisation_2026_06_01.md`) if open,
+      else run direct; manifest re-consolidation after. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [MTDS] P1. Thread `source="tardis"` through every CeFi adapter write + extend
+      `record_empty_for_shard`/`record_failed_for_shard` to accept + forward `source`.
+      `market-data-processing-service/.../core/canonical_writer.py`. (No `SOURCE_PRIORITY` change needed yet — `tardis`
+      is already the declared source; expand the list only when the alternative actually lands.) **PARTIAL-VERIFIED
+      (slot-3 cefi run-readiness re-audit 2026-06-04):** the **captured** write-path already auto-derives + stamps
+      `source="tardis"` for cefi on BOTH surfaces — UAC `SOURCE_PRIORITY` registers `("cefi", <data_type>) → ["tardis"]`
+      (source_priority.py:152-160), the MTDS raw-tick writer derives via `get_primary_source` (mtds@4e5fa57f), and the
+      MDPS candle writer derives via `_resolve_primary_source_for_candle` (canonical_writer.py:1316-1319). REMAINING for
+      this item: confirm the `record_empty_for_shard` / `record_failed_for_shard` empty/failed paths likewise forward
+      `source` (the captured path is done), + the [TEST] below, + the [DATA] historical backfill (rides the cefi
+      C-source RIDER). Repo: market-data-processing-service. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
+      `["<alt>", "tardis"]` registry expansion resolves two sources by priority. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into
+      `cefi_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the cefi `_index`;
+      do NOT open a separate cefi source walk — single-walk discipline). If that walk has not launched, run direct (see
+      § Migration scope, two steps): (1) data-parquet column backfill — **write `backfill_cefi_source_column.py`** (copy
+      tradfi template) then fan across same-region VMs, sharded by `day=` (no egress, idempotent); (2) manifest
+      re-consolidation after. Labels the corpus before any Tardis swap. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Backfill the existing sports corpus — **fold into `sports_manifest_canonicalisation_2026_06_01.md`
+      C-source rider** (its single bundled walk owns the sports `_index`; do NOT open a separate sports source walk —
+      single-walk discipline). If that walk has not launched, run direct (parallel in-region VMs sharded by `day=`, see
+      § Migration scope) + manifest re-consolidation after. Confirms sports source moves path→column for the whole
+      corpus. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [TEST] P0. Prove the consumer read path resolves source priority for **cefi/defi/tradfi** (not just tradfi):
+      2-source cell (same instrument+ts from two providers, co-mingled in one folder) → consumer emits exactly ONE
+      resolved row via `select_primary_available_source()`. No silent double-count. Cover features-service consumers.
+      **PARTIAL — resolution PRIMITIVES proven generic (uac@559dc81b: select_primary picks index-0 primary per cell;
+      detect_dual_source_conflicts surfaces overlaps). REMAINING: wire the resolver into the cefi/tradfi consumer read
+      paths — currently dead code (see finding below).** **⚠️ SPORTS DESCOPED 2026-06-03 (slot-4 read-path audit):
+      sports multi-source is `FIELD_UNION`, NOT same-field source-pick — different providers contribute DIFFERENT fields
+      per fixture (API-Football base + FootyStats predictions + Understat xG), merged by
+      `features_service/sports/exporters/derived_features_exporter.py::_merge_provider_columns` ("left-merge
+      non-overlapping provider columns" — the resolver docstring's rule-4, explicitly "handled at the consumer/writer
+      layer, NOT by select_primary"); odds are per-bookmaker (each `venue=` is a DISTINCT instrument, not the same
+      metric twice). So `select_primary_available_source` does not apply to sports — sports reads are already correct.
+      Remaining scope is **cefi/tradfi** same-field dual-source ONLY (e.g. tradfi databento/massive), owned by this
+      cross-AG plan, not slot-4 sports.** **TRADFI SLICE DONE + LAYER CORRECTED (slot-6 2026-06-05, UAC@637288d4 +
+      mtds@0579438):** the read-path resolution is wired at the **MDPS raw read** (the actual co-mingle surface — two
+      `pipeline_mode=`-partitioned objects per cell, NOT row-level co-mingle in one parquet; see the resolved FINDING
+      below). `_resolve_multi_source_blobs` collapses a 2-source cell to exactly ONE primary-source object → no
+      double-aggregate; regression `tests/unit/test_orchestration_scanner_multi_source.py` asserts 2-source→1 primary
+      (databento>massive; massive>yahoo for ohlcv_15m) + the no-op guards. This covers tradfi (the only live 2-source
+      pair). **REMAINING for full P0:** cefi when its 2nd source lands (same MDPS path, no new wiring — just a cefi
+      regression case) → so this P0 is tradfi-complete; leave open for the cefi-2nd-source case. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [UTL] P1. **FINDING (2026-06-01 read-path audit)**: `manifest_consolidator.py` dedup key (`_BASE_DEDUP_COLS` +
+      `_OPTIONAL_DEDUP_COLS`) **omits `source`** — two source rows for one `(date, venue, data_type, …)` cell collapse
+      to ONE row by last-write-wins on `(attempted_at, written_at)`, NOT by `SOURCE_PRIORITY`. Matches the shipped
+      tradfi **union** model (per-source provenance lives in the parquet `source` column), so not a data-loss bug today.
+      **Decision (sequence with the data-side backfill)**: if per-source _manifest_ rows must be preserved, add `source`
+      to `_OPTIONAL_DEDUP_COLS` — but that changes consolidation cardinality for all asset groups (naive consumers would
+      then see N rows/cell), so it must land WITH the read-path resolver wiring above. Do NOT change unilaterally.
+      **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [TEST] P1. **`available_at` parity across sources (batch = live)**: rows from any source for a cell are
+      timestamped with the live-mode `available_at` of the `SOURCE_PRIORITY` top entry — NOT each vendor's slower
+      archive time. A 2-source fixture asserts identical `available_at` derivation per cell, so swapping/adding a source
+      never shifts the lookahead. (Covers the tradfi audit item (n) generalised to all asset groups.) **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
+      `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
+      `(category, data_type)` (literal or module-constant) is multi-source per `source_required()` AND `source=` is
+      absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot ref). Verified
+      catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **REMAINING: wire into MTDS + MDPS
+      `quality-gates.sh` — blocked until the checker reaches LDR (can't wire a clean repo to a PM script not yet
+      promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [MTDS] P1. **A12a — wire the upstream instruments-service DeFi-catalog PREFLIGHT into the REMAINING DeFi collect
+      handlers** (shared gate landed 2026-06-04 slot-2: UAC `PreflightTrigger.DEFI_COLLECT_DAILY` +
+      `INSTRUMENTS_PREFLIGHT_REQUIREMENTS[(DEFI,"defi_market_data")]` → `instrument-catalog` within 24h, exported from
+      UAC top-level; MTDS `_defi_manifest.assert_defi_catalog_fresh()` wraps
+      `unified_trading_library.instruments_preflight.run_preflight` and routes honest absence — `record_failed` per
+      shard, never raises in a per-venue loop). **WIRED so far**: `dex_pools_handler` (arbitrage critical path) +
+      `lst_rates_handler` (carry critical path). **REMAINING** DeFi collect handlers in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/` to call `assert_defi_catalog_fresh(...)` at
+      their `process()` chokepoint before the source fetch + record honest absence on a stale catalog:
+      `dex_swaps_handler`, `lending_indices_handler`, `perp_funding_handler`, `oracle_prices_handler`,
+      `liquidations_handler`, `liquidation_events_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`,
+      `vault_share_price_handler`, `gas_fee_handler`, `bridge_events_handler`, `governance_events_handler`,
+      `governance_proposals_handler`, `mev_events_handler`, `token_transfers_handler`, `position_data_handler`,
+      `aggregator_route_handler`, `flash_loan_events_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`,
+      `orca_whirlpool_state_handler`, `raydium_classic_amm_handler`, `drift_v2_historical_handler`,
+      `solana_defi_handler`, `evm_defi_handler`. (Existing handler tests that call `process()` must patch
+      `assert_defi_catalog_fresh` → True, as done for dex_pools/lst_rates.) **Codex SSOT**: add a DeFi row to the
+      instruments-preflight-chain doc (`codex/04-architecture/instruments-preflight-chain.md`). **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **TradFi backfill UNBLOCKED** (`MASSIVE_API_KEY` provided by operator 2026-06-01) — run the dual-source
+      backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on legacy tradfi rows +
+      ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST tier — the bulk
+      path; REST for incremental/live). Unblock the dual-source plan's deferred table accordingly. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [AUDIT] P1. After enforcement lands, read ACTUAL `source` column distribution per (asset_group, venue, data_type)
+      in prod manifests/parquets — confirm **zero blank source on EVERY cell, all asset groups** (not just
+      multi-source). Data-state, NOT constant (manifest-v8 lesson: constant said 8 while 0% of rows were v8). Report
+      per-cell histogram. **TOOL BUILT (read-only)**:
+      `scripts/quality_gates/audit_source_column_distribution.py --manifest-path <gs-uri> [--strict]` — per-cell
+      `source` histogram, classifies GREEN/RED(external-blank)/EXEMPT(computed/unregistered) via
+      `external_sources_for()`; `--strict` exits 1 on any external-vendor blank. PM slot ref. **PROD RUN still
+      sequenced** AFTER the bucket remediation + enforcement deploy + backfill (running pre-backfill correctly reports
+      ~100% blank = the baseline). Re-run post-backfill to confirm zero-blank. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Write-path** — universal gate live (`source` blank OR not-in-`SOURCE_PRIORITY` → raise) for every
+      asset group; every MTDS/MDPS writer (cefi/defi/sports/prediction/tradfi) stamps `source`; QG STEP 5.64
+      generalised + green. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Data parquets** — `source` column populated on every ingested cell across all five asset groups, read
+      from ACTUAL prod rows (data-state, not the constant): **zero blank `source`**. Sports migrated path→column. MDPS
+      candles carry the inherited upstream source. **(MIGRATED FROM:
+      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Manifest** — re-consolidated; manifest `source` populated for every cell; multi-source cells = two
+      rows. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [DATA] P0. **Downstream** — consumer read path resolves source priority for every multi-source asset group (one
+      row per instrument+ts, no double-count); `detect_dual_source_conflicts()` surfaces divergence; `available_at`
+      parity holds. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P0. **Sequencing honoured** — source backfill ran behind / folded into the running tick-bucket remediation,
+      on canonical buckets, no race. **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODEX] P1. **Codex + audit instructions** updated to the universal rule; audit result archived when every todo
+      above is `[x]`.
+
+Scope exemptions (by design, not gaps): features-service / strategy / execution outputs (computed — no vendor source).
+**(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `macro_econ_adapter_scaffolds_2026_06_09.md` (archived 2026-07-13 -- Macro/alt-data free adapter scaffolds (fear_greed / CFTC COT / Baker Hughes / EIA))
+
+- [ ] [BLOCKED-CREDENTIALS] P1. EIA live fetch + cassette recording — needs the free EIA API key. CREDENTIAL APPROVAL
+      REQUEST filed in `ikenna_orchestrator/pings/slot_3.md` (vendor=EIA, free tier). Unblocks the live integration test
+      (`tests/integration/test_macro_adapters_integration.py::test_eia_live`) + EIA backfill RUN. **(MIGRATED FROM:
+      `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [OPERATOR-DECISION] P1. `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
+      cross-asset axis. **DEFERRED** — gates the GCS-shard write + manifest `record_captured` + bucket
+      (`resolve_bucket_name`) wiring for all four sources (adapters today return `CanonicalOnChainMetric` lists; they do
+      NOT yet write GCS shards because the asset_group/bucket/data_type is undecided). Provenance: audit Open Question
+      #1. **(MIGRATED FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [OPERATOR-DECISION] P2. Honest-coverage-gate registration — add the macro key to `expected_coverage.py` +
+      `coverage_start` dates so macro can no longer be silently empty. **DEFERRED** — audit Phase 5. Depends on the
+      asset-group decision above. **(MIGRATED FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [SCRIPT] P2. Wire the macro adapters into an MTDS handler + CLI operation + manifest emission once the asset-group
+      home lands (the GCS shard-write path). **DEFERRED** — audit Phase 5/6, gated on OPERATOR-DECISION #1. **(MIGRATED
+      FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DOC] P2. After the asset-group decision lands, document the macro/alt-data capture path in `codex/02-data/` (no
+      new contract was introduced by the scaffolds themselves — they reuse `CanonicalOnChainMetric` + the existing
+      adapter/`classify_venue_error`/`ADAPTER_FETCH_FAILED` patterns). **DEFERRED** until Phase 5 wiring. **(MIGRATED
+      FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P2. **DEFERRED — PM-template gap: `base-library.sh` QG writes `.qg_content_sentinel` but `quickmerge.sh`
+      `--agent` fast-path (STAGE 3) verifies `.qg_last_passed_sha`** — so the agent quickmerge fast-path is structurally
+      unsatisfiable for **library** repos (UAC), whereas `base-service.sh` writes the sha sentinel. Worked around here
+      by writing `.qg_last_passed_sha` after a verified-green UAC QG. Fix: have `base-library.sh` also write
+      `.qg_last_passed_sha` on a complete green run (mirror base-service), then roll out via
+      `rollout-workflow-templates`/the QG-base propagation. Provenance: UAC quickmerge 2026-06-09 STAGE 3 block. Target
+      repo: `unified-trading-pm` (`scripts/quality-gates-base/base-library.sh`). **(MIGRATED FROM:
+      `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `cefi_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- CeFi legacy gap-fill + manifest canonicalisation (single-walk, L3 owner for cefi))
+
+- [ ] [DATA] P0. **⑧ — IS cefi REFERENCE-UNIVERSE gap: catalogue not ⊇ manifest present-set (CF-14, falsely-high
+      coverage). 🟢 ROOT-CAUSE CODE FIX SHIPPED `is@a6bc4d48`; operational backfill re-run + CLOB sub-part remain.**
+      Real-prod (2026-06-08): IS `instruments-store-cefi-prd` `instrument_availability/by_date/day=2026-05-22/` lists
+      only **12 venues** {ASTER, BINANCE-FUTURES/SPOT, BITFINEX-FUTURES, BYBIT, COINBASE-SPOT, DERIBIT, HYPERLIQUID,
+      OKX-FUTURES/SPOT/SWAP, UPBIT}; the MTDS manifest captures **45 venues** ⇒ **29 captured venues absent from IS
+      reference = 108,556 captured rows (8.3%)**. Headline genuine gaps: **KRAKEN-SPOT (75,714) + KRAKEN-FUTURES
+      (31,582)** (KRAKEN-FUTURES verified on disk `day=2026-05-24`), **BITFINEX-SPOT**, **PACIFICA-SOLANA (309)**,
+      **LIGHTER-ZKSYNC (319)**. **ROOT CAUSE FOUND (corrects the earlier "dynamic universe" read):** the IS Tardis
+      reference adapter (`reference_data/adapters/cefi/tardis.py`) had a **hand-maintained `_DEFAULT_EXCHANGES` of 8
+      Tardis exchange-ids** (`binance/binance-futures/bybit/okex/deribit/coinbase/upbit`) that had **silently DRIFTED
+      below the canonical SSOT `VenueMapping.all_tardis_exchanges` (20)** — omitting `kraken`, `cryptofacilities`
+      (=KRAKEN-FUTURES), `bitfinex`, `bitget`, `lighter-zksync`. (My KRAKEN/DERIBIT grep missed it because the list uses
+      lowercase Tardis _exchange-ids_, not canonical venue NAMES — the SSOT already maps `kraken→KRAKEN-SPOT`,
+      `cryptofacilities→KRAKEN-FUTURES` with start-dates.) So the IS reference backfill never queried those venues →
+      catalogue ⊉ present-set → falsely-high coverage. **(1) ✅ CODE FIX SHIPPED `is@a6bc4d48` (QG --no-fix green):**
+      `_DEFAULT_EXCHANGES = list(VenueMapping().all_tardis_exchanges)` (derives from SSOT → no future drift; verified
+      ==SSOT, now includes kraken/cryptofacilities/bitfinex/bitget/lighter-zksync) + extended
+      `_DERIVATIVES_ONLY_EXCHANGES`
+      (cryptofacilities/okex-futures/okex-swap/huobi-dm/bitfinex-derivatives/bitget-futures) so unknown-type instruments
+      aren't mis-defaulted to SPOT + 3 regression tests asserting no-drift-from-SSOT. **(2) OPERATIONAL (owner:
+      `instruments_backfill_phase3` / vm-cross-cutting) — re-run the IS reference backfill with the fixed universe so
+      `instrument_availability/by_date/` ⊇ the MTDS captured present-set (memory-heavy multi-year VM sweep — the adapter
+      cache OOM-killed `cefi-instr-deribit` 2026-05-04, run on a VM).** **(3) CLOB venues PACIFICA-SOLANA +
+      LIGHTER-ZKSYNC are NOT Tardis exchanges — they ride the CLOB adapter path (hyperliquid.py / aster.py); confirm an
+      IS reference adapter enumerates them (only hyperliquid+aster exist today) — separate from the Tardis fix.** **(4)
+      diagnose the ~650 `*F0`/`UNKNOWN`-venue manifest-pollution rows (blank instrument_type/instrument_id) — reconcile
+      or demote.** Gates honest coverage denominator (⑦/⑧), NOT the G4 data/manifest `--apply`. **Big finding — operator
+      notified 2026-06-08.** Provenance: slot-3 pre-apply audit 2026-06-08 (real-prod catalogue vs manifest walk + IS
+      adapter `_DEFAULT_EXCHANGES` root-cause). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. **execution-service — `data/loaders/defi.py:41,77` DeFi raw-tick reads still legacy (slot-2/defi
+      owner).** The shared `candidate_parquet_paths` DeFi branch needs a `chain` kwarg
+      (`build_defi_partition_path(venue, chain, …)`) + a defi instrument-id→chain mapping that the cefi-scoped fix did
+      not supply (calling it as-is raises `KeyError("chain")`). `loader.py` `load_swaps`/`_build_swaps_paths` DeFi paths
+      likewise unchanged. Mirror the cefi `canonical_paths.build_candidate_raw_tick_paths` pattern with the defi chain
+      axis. Target repo: execution-service (DeFi slice). Provenance: cefi E2E audit 2026-06-04 (the cefi P0 above is
+      GREEN; this is the defi sibling).
+
+**🟡 P1 — pre-flight engrained (blocking the "pre-flight on every service" bar):** **(MIGRATED FROM:
+`cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P3. **market-data-processing-service** — leading-NaN before first observation for state adapters that skip
+      the session-grid finalize (already tracked: `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`). Confirm
+      all cefi adapters route `_finalize_session_grid`; liquidations (no grid) is intentional event-counts — verify.
+      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [INFRA] P3. **`expected_unattempted` is enumerator-run-dependent (not auto per-write) — BLOCKED-OPERATOR-DECISION
+      on a missing prerequisite (slot-3 2026-06-04).** A not-yet-backfilled cefi cell is invisible until the v2
+      enumerator VM runs (`launch-expected-universe-v2-vm.sh cefi --apply-write`; cadence "one-shot then quarterly").
+      cefi is currently seeded (4.1M rows) but NEW venues/instruments between runs are invisible
+      (`honest_coverage.py:623` warns a fresh AG reads a misleading 100%). **Why a naive recurring cron is NOT
+      shippable:** the v2 enumerator REQUIRES `--catalog-path` = a pre-built IS catalog parquet
+      (`gs://instruments-store-cefi-{env_short}-{project}/{env}/catalog.parquet`; the launcher defaults to it,
+      `enumerate_expected_universe.py:1410` hard-fails `missing_catalog_path` without it). **NO automated/recurring
+      producer of that `catalog.parquet` exists** (workspace grep 2026-06-04: only the launcher + its test reference the
+      path; nothing writes it) — it is operator-supplied. So a recurring enumerator scheduler would read a stale/absent
+      catalog (fire-and-forget failure, banned). A correct fix needs a PREREQUISITE: either (a) add a recurring
+      catalog-build step that writes `{env}/catalog.parquet` from the IS store, or (b) refactor the v2 enumerator to
+      build its catalog from the IS availability index at runtime (the exact `read_availability_index`→`{venue:[ids]}`
+      pattern deployment-api now uses in `_build_cefi_is_instruments_provider`, eliminating the `--catalog-path`
+      dependency). A drafted `expected_universe_cefi_scheduler.tf` (Cloud Run Job + weekly Scheduler, env-tiered buckets
+      per `manifest_consolidator_scheduler.tf`) was NOT committed pending this decision. **RESOLVED 2026-06-04 →
+      SUPERSEDED-BY `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`** (operator decision: the
+      real fix is a proper, self-refreshing instrument catalogue rolled up from the per-date `by_date/` definitions —
+      foundation-level, all asset groups, gates the MTDS migration `--apply`). This cefi cron becomes a thin wrapper
+      once that plan's Phase 3 lands; tracked there, no longer a cefi-solo item. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P3. **deployment-api per-date denominator refinement (separate follow-up, NOT migration-blocking).** The
+      cefi coverage denominator (deployment-api@d55bcb6) reads ONE current IS availability snapshot
+      (`read_availability_index`), not the per-date `instrument_availability/by_date/` definitions — so it is the
+      latest-known universe, NOT per-date point-in-time-correct (the universe as-of each historical date). Acceptable
+      for a coverage denominator (and a big improvement over the 21/10 MVP seed), but if data-status should be
+      time-sliced per historical date, switch the provider to read the per-date `by_date/` definitions. Repo:
+      deployment-api. Depends on the proper catalogue plan above for the per-date source contract.
+
+**VERDICT:** ⑥ **PARTIAL** — IS-derived per-date capture + UAC combo gate + execution preflight are real + date-correct;
+the residual holes (date-blind MTDS fallback un-caught by its QG, no strategy IS-existence check, swallowed Deribit live
+guard, permissive unknown-venue) are tracked above. ⑦ **STRONG** — the could-exist universe drives
+`expected_unattempted` (run for cefi, 4.1M rows) + the canonical denominator includes it + the UI shows it distinctly;
+residual is the in-process MVP-seed denominator under-count + the enumerator cadence (both tracked).
+
+**UAC/UTL helpers (the absence "explainer"):** `build_cefi_partition_path` / `candidate_parquet_paths`
+(`canonical/partition_paths.py:392`) are the path SSOT; the `empty_confirmed` closed-set taxonomy lives in
+`canonical/crosscutting/honest_coverage.py` (the `EXPECTED_NO_*` / `SOURCE_RETURNED_ZERO` reasons features uses). The
+candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.py:36-624` (`_finalize_session_grid`) —
+**this MDPS docstring is the de-facto SSOT for the candle-absence semantics; the P0/P1 downstream fixes must consume it
+(distinguish volume=0 vs NaN vs forward-filled), not re-derive.**
+
+**✅ GREEN (verified consistent — do not touch):**
+
+- **Path correctness**: migration, live+batch writers, MTDS reader, features reader, `rebuild_cefi_manifest.py` ALL go
+  through the UAC `candidate_parquet_paths()` SSOT and insert `pipeline_mode=` left of `asset_group=cefi`;
+  reader-fallback probes both shapes until ~06-15 (PREP3 writer pipeline_mode= PRIMARY landed mtds@f50116ca). The path
+  the migration reads/writes == the writers'/readers'/preflight's path.
+- **Data-status infra**: deployment-api reads canonical `market-data-tick-cefi-prd` via `resolve_bucket_name`, uses UTL
+  `read_availability_index` (v9 columns), renders 4-state status, derives drilldown axis order from the UAC registry.
+
+**🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):** **(MIGRATED FROM:
+`cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
+      f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
+      reads (`instruments-store-{pid}/instruments/latest/manifest.json`, `features-store-{pid}/health/latest.json`,
+      `ml-store-{pid}/training/latest/metrics.json`, `execution-store-{pid}/t1_recon/latest/summary.json`) are NON-AG
+      **pipeline-health summary** buckets carrying `# CORRECT-LOCAL` markers (a deliberate QG STEP-5.69 allowlist), NOT
+      the AG-scoped market-data stores. The canonical `resolve_bucket_name(kind="instruments-store", asset_group=…)`
+      everywhere else resolves a PER-AG bucket (`instruments-store-cefi-…`) with a different path shape — there is no
+      single non-AG `instruments-store-{pid}` in that registry, so swapping these would point the health reads at
+      wrong/nonexistent buckets (they already `try/except`→None-degrade gracefully today). REMAINING for the
+      deployment-api/downstream owner: decide the UAT health-summary bucket MODEL (keep the `# CORRECT-LOCAL` aggregate
+      form, or migrate the health summaries into per-AG/env-tiered buckets) — a model decision, not a slot-3 mechanical
+      edit. `deployment_api_config.py` store buckets already use typed `effective_*` config (FLAG-3-compliant).
+      Cross-ref downstream plan FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
+      **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
+      `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
+      `SHARD_AXIS_MATRIX`, which for cefi is `(venue, data_type, instrument_type, instrument_id, day)` — pipeline_mode
+      is NOT a cefi shard-atom axis, so multiple `pipeline_mode=` rows for one cell collapse to ONE shard (no
+      double-count). The existing `test_pipeline_mode_rows_do_not_double_count_shards` guards the DeFi
+      **chain**-breakdown builder; REMAINING for the deployment-api/`downstream_services_manifest_canonicalisation`
+      owner: (a) a **cefi parity test** (venue-breakdown builder) as a regression guard, (b) the `pipeline_mode`
+      drilldown **filter param** (a feature-add; UI label is playwright-gated). NOT a cefi-correctness gap today (dedup
+      works); a regression-guard + feature enhancement for the deployment-api owner. (In practice cefi double-count is
+      also unlikely — a cefi cell carries ONE pipeline_mode per day, batch OR live, not both.)
+
+**⚪ P2 / needs-confirm (tracked):** **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+MTDS consolidation ruling.)**
+
+- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain).
+      **PARTIALLY CONFIRMED (slot-3 read-only 2026-06-03):** the finalize path DOES run cluster validation
+      (`record_captured_from_counts(expected_root_clusters, observed_clusters)`; CLAUDE.md 4-pillar "cluster coverage ≥
+      expected" — `MissingClusterValidationError` if absent), so the gate is PRESENT (not missing). The audit's worry is
+      the `≥ count-threshold` vs `len(observed)==len(expected)` precision (a partial bundle that meets the count but
+      misses a cluster root). The cluster-validation internals live in UTL `manifest_writer.py`
+      `record_captured_from_counts` — left as a refinement for the cluster-SSOT owner (`mtds_mdps_master`) to tighten if
+      `≥` admits incomplete bundles; **NOT a slot-3-solo fix** (UTL + the bundled writer span DeFi/sports too). The live
+      writer's per-instrument path is unaffected (no clusters). Repo: UTL/MTDS — owning VM. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check**: re-run
+      `rebuild_cefi_manifest --dry-run` over a multi-year span (or the full corpus) and confirm `phantom_to_failed`
+      stays small + well-formed (DERIBIT-chain-style true phantoms only), `dropped_malformed_captured` is junk-only, and
+      `unparseable=0`. Cheap final gate before the irreversible-adjacent index overwrite. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
+      `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
+      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical +
+      false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
+      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
+      (satisfies `pipeline_mode_partition_migration` for cefi). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
+      (closes `data_source_provenance` cefi). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
+      v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
+      column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
+      **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
+      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
+      (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of legacy
+      2,377,168) and **~17 days STALE — `-prd` latest `day=2026-05-07` vs legacy `day=2026-05-24`** (consistent with the
+      5,233 legacy-only cells; the C0 gap-fill closes it by reading legacy as source). `-prd` is INTERMEDIATE FORM:
+      `asset_group=cefi` is in the PATH but there is **NO `pipeline_mode=` partition** (confirmed at the data level, not
+      just the manifest). So the E4 walk writes NEW `pipeline_mode=` paths → the pre-existing legacy-FORM `-prd` objects
+      become ORPHANS; E5 rebuild / E7 verify MUST delete the legacy-FORM `-prd` objects too (not only the legacy SOURCE
+      bucket), else the rebuild double-counts. Legacy carries 3.81M noncurrent objects → the E8 delete must also purge
+      noncurrent versions, and the "canonical ≥ legacy" count gate must use Monitoring `type=live-object` (never a naive
+      recursive `ls`, which counts versions + soft-deleted). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **❌ RETRACTION of the earlier "E4-BUG / we-keep-missing-things" P0 (it was WRONG).** I read
+      `moved=0` + a `head -3` listing (which shows `asset_group=` paths — they sort BEFORE `pipeline_mode=`) and wrongly
+      concluded "no `pipeline_mode=` sibling / migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=`
+      siblings DO exist (482/day). slot-10's `C2 = day=/asset_group=cefi/` count is exactly these **post-migration
+      orphans**, not a pre-migration gap. No migrator fix is needed. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the
+      `pipeline_mode=` migration is COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat
+      orphans are ALSO migrated** (e.g. `SOL-ETH.parquet` →
+      `day=2024-11-07/pipeline_mode=batch_tardis/…/SOL-ETH.parquet` exists; the 9 root files remain only as orphans). So
+      the ONLY additive work left is the legacy gap-fill.) (a) **🛑 IRREVERSIBLE — delete the OLD
+      `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613 days ≈ 1.2M) + the 9
+      root L-flat orphans** now their `pipeline_mode=` forms exist. PRE-DELETE GUARANTEE (mandatory): first run
+      `migrate_cefi_flat_to_v9_canonical --apply` over the FULL range once (idempotent — copies any orphan still lacking
+      a sibling, skips the rest) so EVERY orphan provably has a migrated dest; THEN delete (count via Monitoring
+      live-object, NOT naive recursive `ls`; per-object isolation; idempotent). This IS the E7 orphan-sweep. (b)
+      `--also-legacy` 5,233-cell legacy→canonical gap-fill (additive; VM-scale — the 1.9M legacy listing stalled an
+      e2-standard-4, so shard/bigger-mem). **Deliberate execution (irreversible deletes + VM-scale) — not to be
+      rushed.** Repo: market-tick-data-service. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): `rebuild_cefi_manifest.py` encodes the
+      per-instrument row key (the LIVE writer key =
+      `date,venue,chain,data_type,league_id,instrument_type,underlying,quote_asset,     margin_type,instrument_id`;
+      orchestrator.py:2937/2957) + tolerates `raw_tick_data/by_date/`+`asset_group=`. Two changes only: (1) its `_PAT_*`
+      regexes + `prefix_templates` do NOT account for the NEW `pipeline_mode=` segment between `day=` and `asset_group=`
+      → list per `raw_tick_data/by_date/day={d}/` and extend `parse_hive_path` to capture an optional
+      `pipeline_mode=(?P<pipeline_mode>[^/]+)/`; (2) stamp v9 cols: pass `source` (cefi single-source `tardis`;
+      HYPERLIQUID→`hyperliquid_rest` — _retired pre-R4 token; now `hyperliquid` + transport=rest column_) +
+      `pipeline_mode`. **INTERNALS Q — RESOLVED (slot-3 2026-06-01):** `add()` persists `source` (auto-resolved via
+      SOURCE_PRIORITY at manifest_writer.py:236) but does **NOT** persist `pipeline_mode` (no kwarg; goes to `**kwargs`
+      → dropped) — that is exactly why CF-3 reads blank corpus-wide (the live per-instrument cefi `add()` at
+      orchestrator.py:2957 also omits it). `record_captured_from_counts` (mw.py:2840) takes `pipeline_mode` but
+      **REQUIRES** `expected_root_clusters` + `observed_clusters` + `available_at_envelope` (the BUNDLED path).
+      `record_captured` takes `pipeline_mode` but needs a `df` (read every parquet). **DESIGN FORK (pick deliberately —
+      feeds the irreversible delete):** (A) **[RECOMMENDED]** add a back-compatible
+      `pipeline_mode: PipelineMode|str = ""` kwarg to `ManifestWriter.add()` that coerces (`_coerce_pipeline_mode`) +
+      persists it like `source` (default "" = today's behavior → zero back-compat risk; ALSO closes the live-writer CF-3
+      gap so batch=live). Then rebuild via `add(...,     pipeline_mode=, source=)`. Needs UTL QG. (B) use
+      `record_captured_from_counts` with trivial single-cluster maps (`{instrument_id: rows}` as both expected+observed)
+      — hacky for per-instrument. (C) `record_captured(df=...)` reading each parquet — correct but slow. `available_at`:
+      parquet col if present, else day-EOD-UTC (never migration-time). Same fork applies to
+      `rebuild_prediction_manifest.py`. **Do NOT build until the fork is chosen** — wrong choice corrupts the `_index`
+      that gates L6 delete. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
+      Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from canonicalisation).
+      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` → CF-1…CF-12 GREEN on
+      data-state; flip CF-coverage rows in `cefi_master_audit_instructions.md`. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. E8 ⚠️ IRREVERSIBLE — only after E7 GREEN: hand C-GREEN to `bucket_name_ssot…` L6 → **delete legacy
+      `market-data-tick-cefi` permanently** (single source of truth; legacy data is gone). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. **NICE-TO-HAVE — rebuild within-bounds precision**: cross-check the reclassify decision against the IS
+      CeFi universe + per-instrument coverage windows + the known-gap registry (today the gate is the conservative
+      data_type-guarantee + reason heuristic, which the operator prioritised; the IS-universe cross-check would tighten
+      false-positive reclassifications on genuinely-sparse symbol-days). Provenance: slot-3 E2E audit 2026-06-03.
+      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh) — ROOT CAUSE CORRECTED by
+      direct `_index` query (slot-3 2026-06-03).** The reported "MTDS marks `processed_candles` `captured` with no file"
+      is a **category error, NOT manifest corruption.** Reading the live cefi `_index` (2,640,864 rows): the manifest
+      **already disambiguates surfaces via `data_type`** — RAW tick (`trades` 1.19M / `book_snapshot_5` /
+      `derivative_ticker` / `liquidations` / `futures_chain`, ~all `service_name=market-tick-data-service`) vs CANDLE
+      (`ohlcv_1m/5m/15m/1h/4h/1d`, **only 8,715 rows**, mostly `service_name=market-data-processing-service`). The issue
+      cross-checked `processed_candles/` FILES against **`trades`-captured** rows; a `trades` `captured` row (MTDS)
+      correctly means the **RAW** tick file exists (VERIFIED: day=2026-05-02 BITFINEX/BITGET/KRAKEN raw `trades` files
+      present) — the manifest **never marked CANDLES captured** for those venues (on 2026-05-02 KRAKEN/BITFINEX have NO
+      `ohlcv` rows at all). So MTDS is NOT writing phantom processed-candle rows; hypothesis (b) is disproved and the
+      `reconcile_phantom_manifest_rows_all.py` flip-to-`attempted_failed` would WRONGLY demote correct raw rows (it only
+      probes `raw_tick_data/` anyway). Real findings to action (3 sub-items, repos noted):
+  - [x] ✅ [CODE] P0. **Read-side contract fix (features-service)** — **DONE (features-service@933b8747, slot-3
+        2026-06-03).** `LookbackValidator._build_captured_index` credited ANY captured `data_type` as a candle-available
+        lookback date (raw `trades`/`book_snapshot_5` over-counted history off the shared `_index`); now filters to the
+        feature*groups' candle
+        `ohlcv*\*`data_types via`resolve_data_type_for_feature_group`(mirrors the already-correct     `get_available_instruments`). +regression test (`ohlcv_1m`counted;`trades`/`book_snapshot_5`not). Verified     delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG red only on the     foreign non-deterministic flake`features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux     `quality-gates-v2`
+        re-verifies at promotion). Repo: features-service.
+  - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
+        processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
+        319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
+        → track + complete the candle backfill (separate from raw-tick canonicalisation). Repo: MDPS.
+  - [ ] [DATA] P1. **VERIFY MDPS candle-manifest faithfulness.** Do the `ohlcv_*` rows faithfully reflect the candle
+        files that DO exist, or is MDPS under-emitting `ohlcv` rows for written candle files? Compare `ohlcv` row
+        coverage vs candle-file coverage on a sample day. Also reconcile the minor cross-writes (782 MTDS-written
+        `ohlcv` rows; 616 MDPS-written `trades` rows) — confirm which service legitimately emits `ohlcv` per venue (MTDS
+        REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed). Repo: MDPS (+ MTDS REST-poll path). On all three
+        GREEN, archive the absorbed issue doc. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+        2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. ⑦ cefi could-exist denominator seed — build the `--catalog-path` parquet from the cefi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group cefi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_cefi` row-key/data_types match
+      the cefi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
+      bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master. **(MIGRATED
+      FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk** (CF-1/3/4/8 RED + 40% null `capture_status` +
+      blank `data_type` + 23 legacy-only cells; cf-audit ① above). Owner = the **cefi slice** of
+      `instruments_manifest_canonicalisation_2026_06_01.md` (was: cited as live owner — **[2026-07-12 correction]**:
+      that doc is ✅ ARCHIVED 2026-06-26, folded into `instruments_mtds_subset_consistency_remediation_2026_06_17.md`
+      survivor I-2 — retarget the owner pointer there. That successor doc reports cefi's instruments-store v9 migration
+      as "fully migrated" / legacy-delete DONE at a fleet level (its lines ~185/452/608/1524), but does NOT visibly
+      re-confirm the specific CF-1/3/4/8 + null `capture_status` + blank `data_type` residuals this todo names —
+      checkbox NOT flipped without that direct re-verification; re-audit against the successor before treating this as
+      done. Corrected per plan-reconciliation finding 150,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.); `--apply` **GATED
+      on coordinator G0** (source-aware pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…`
+      post-walk → all-CF GREEN. Provenance: slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master. **(MIGRATED
+      FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `tradfi_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk, L3 owner for tradfi))
+
+- [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
+      `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
+      diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
+      `UNKNOWN`/blank rows in the walk (do NOT bulk-rename ambiguous strings). **✅ DIAGNOSIS DONE (slot-6 2026-06-04,
+      live `-prd` `_index` read, 144,062 rows — pre-migration de-risk so the E5/E6 walk is ready):** the drift is
+      **6,602 rows / 4.6%** — **DRIFT-VENUE 4,130** (3,540 blank + 590 `UNKNOWN`; spread across tbbo/trades/ohlcv real
+      data_types; **blank `instrument_type` + `asset_group=None`**; 3,955 captured + 175 attempted_failed; dates
+      2020→2026) + **DRIFT-DATA_TYPE 2,472** (all blank; real venues CBOE/ICE/CME/NASDAQ/NYSE/FX; blank instrument_type;
+      all captured). These are NOT ambiguous strings to rename — they are **under-populated older-schema manifest rows**
+      (the writer left venue/data_type/instrument_type/asset_group blank). **Resolution = PATH RE-DERIVATION, not a
+      string-rename table**: E5 `rebuild_tradfi_manifest.py` scans the canonical object paths
+      (`venue=/data_type=/asset_group=/instrument_type=` segments) and re-stamps these fields → captured drift rows are
+      FIXED in-walk by the object scan (consistent with "do NOT bulk-rename"). **⚠️ RISK to verify in the walk (why this
+      stays open):** (1) any drift row whose OBJECT is NOT at a canonical `venue=`-bearing path (e.g. an L-hyphen 0-row
+      placeholder, which the migrator SKIPS) will NOT be re-derived → its captured status must be re-evaluated, not
+      silently dropped (a blank-venue "captured" backed only by a placeholder is a false-capture → should become
+      honest-absence, not coverage). (2) the 175 blank-venue `attempted_failed` rows pass through
+      `reemit_honest_absence_rows`, whose `row_key` includes venue — a blank venue can mis-dedup; confirm they re-emit
+      under their PATH-derived venue. **Post-walk verify hook (add to E7):** re-run this audit on the rebuilt `_index` →
+      assert **0 blank/`UNKNOWN` venue + 0 blank data_type + 0 `asset_group=None`**, and assert total captured-cell
+      count does not silently shrink by ~6,602 (coverage-regression guard). Audit script:
+      `/tmp/tradfi_index_drift_audit.py` (read-only, reproducible). **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
+      top-level trees + nested layouts in the tradfi source + canonical buckets before the walk; classify duplicate
+      (keep freshest schema) vs complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is
+      incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded
+      recipe Phase 0.
+
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract". **(MIGRATED FROM:
+> `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. C0 ONE bundled walk on the tradfi `_index` + objects: (a) `pipeline_mode=` hive partition added to
+      object paths (`pipeline_mode_partition_migration` RIDER — satisfied here, do NOT run separately); (b) re-version
+      manifest rows to **v9** (data-state — assert the rewritten rows actually carry 9, not just the constant); (c)
+      **`category=`→`asset_group=` across BOTH object PATHS and manifest `_index` ROWS** + env-split bucket for any
+      legacy-form rows that remain (CODE side — writers emit `asset_group=` — already shipped via archived
+      `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only); (d) venue/data_type
+      canonical relabel for any drift found in P0; (e) `available_at` preserve-or-backfill (never migration-time). RUN
+      ON A VM via the canonical-migration launcher (gated on L0 tarball-prune fix) — small data scope (≈12,948 cells)
+      may run locally if P0 confirms. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. C-source RIDER (absorbs `tradfi_massive` Task -031): re-consolidate the already-stamped parquet
+      `source` into the `_index` in THIS walk — every tradfi `_index` row carries `source`; multi-source cells (the 6
+      databento+massive/yahoo/barchart cells) emit two rows. Coordinate so `tradfi_massive`'s deferred re-consolidation
+      is NOT run as a separate walk. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. C-pipeline_mode RIDER: confirm the `pipeline_mode=` partition for tradfi lands in THIS walk (satisfies
+      `pipeline_mode_partition_migration_2026_06_01.md` for tradfi). **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` for 100% of rows (data-state), `pipeline_mode=`
+      partition present + non-null, venue/data_type canonical only, `source` populated (multi-source = two rows),
+      `available_at` non-null. **0 legacy-only cells** (re-run the `(date,venue,data_type)` comparison). This is the
+      C-GREEN signal `bucket_name_ssot…` Phase 6/7 waits on for the legacy `market-data-tick-tradfi-…` decommission.
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
+      (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-tradfi-prd` 5,299,037 (~93% of legacy
+      5,696,400), current to `day=2026-05-18` (= legacy). Sample `-prd` parquet
+      `day=2026-05-18/asset_group=tradfi/venue=CME/instrument_type=combo/data_type=ohlcv_1m/underlying=SP500/ticks.parquet`
+      (244 rows): columns LACK `schema_version`/`source`/`pipeline_mode`/`asset_group` (it has `available_at`) → `-prd`
+      is INTERMEDIATE FORM (`asset_group=` in PATH only, NO `pipeline_mode=`). So the E4 walk writes NEW
+      `pipeline_mode=` paths → the pre-existing legacy-FORM `-prd` objects become ORPHANS; E5/E7 MUST delete the
+      legacy-FORM `-prd` objects too (not only the legacy SOURCE bucket). Legacy carries 3.52M noncurrent objects → E7's
+      bulk-delete (incl. the 12 hyphen 0-row-placeholder prefixes) must also purge noncurrent versions; count
+      comparisons use Monitoring `type=live-object`. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Notify `tradfi_massive_dual_source` to flip its Task -031 (manifest re-consolidation) — executed here
+      as the C-source rider; cross-link both ways. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
+  - **DRY-RUN SCOPING DONE (slot-6 2026-06-03 — sharding/perf scoped, NO apply; full-VM run stays operator-gated):**
+    - **Migrator** `migrate_tradfi_to_v9_canonical.py --dry-run` (real GCS `tradfi-prd`): **5,305,520 objects** planned,
+      **moved=0 (dry)**, **100,698 L-hyphen placeholders correctly skipped** (0-row guard), **0 errors** → clean,
+      date-shardable corpus; placeholder-skip is honest-absence-safe.
+    - **Rebuild** `rebuild_tradfi_manifest.py --dry-run`: **704,641 shards / 6 venues**, distribution **CME 486,189
+      (69%)** · NYSE 162,519 · NASDAQ 44,203 · ICE 9,452 · CBOE 1,607 · FX 671; **1,984 distinct dates**; CF-11 re-emit
+      path exercised (no-op in mock = no local `_index`, works against real GCS).
+    - **Sharding/perf recommendation**: shard the full run **by `day=`** (1,984 dates) across VMs; **CME is the heavy
+      partition** (69%) → give it dedicated shards; use **workers=32 REST-API** (GCS-object-ops rule, ~250× vs CLI).
+      Migrator is `--apply`-gated + dry-by-default; E3 drain + snapshot still precede the real run. **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`.
+      REFERENCE: cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level
+      list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via
+      path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The post-migrator tradfi canonical form (the L-hive
+      shape + inserted pipeline_mode) is
+      `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`
+      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)`
+      (databento/massive/yahoo/ barchart/eia — REQUIRED for tradfi v9 per `MissingSourceError`) + `available_at`
+      (parquet col else day-EOD-UTC). NO hyphen-tree rows (those are 0-row placeholders excluded by the migrator +
+      deleted at E7). Executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
+      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
+      `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
+      `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in
+      `tradfi-prd` (~110k objects — the issue-doc **Pattern-1 cleanup, now executed here**; pre-delete guard: re-assert
+      0-row per object before deleting, abort the prefix on any non-empty object). This SUPERSEDES the
+      `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo. **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **COVERAGE GAP (surfaced by the 0-row-placeholder finding, 2026-06-02)**: tradfi **equities/ETF
+      (NYSE/NASDAQ)** were NEVER genuinely ingested — only the 0-row Massive dry-run placeholders exist; the real `day=`
+      hive corpus is **CME databento only**. This is a real gap (Data-Pipeline-Correctness HARD RULE — every cell in
+      scope; data exists via databento/massive paid tiers). Backfill equities/ETF ohlcv/trades/tbbo via the
+      databento/massive ingest path (NOT a canonicalisation blocker — the migrator + E5 ship on the CME-real corpus;
+      track the equities/etf backfill as its own ingest item under `tradfi_massive_dual_source` / tradfi epic). Until
+      backfilled, the manifest must show these cells as MISSING/`attempted_unattempted`, never empty_confirmed (CF-11).
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group tradfi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_tradfi` row-key/data_types
+      match the tradfi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The
+      mechanism + bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
+      **SLOT-6 G1 DRY-RUN PROVEN (2026-06-07) — see the `## G1` section below for full evidence; `--apply-write` stays
+      GATED (gate-b catalogue liveness + gate-c v9 indices).** **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):**
+      read `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` — it respects
+      available_from/available_to lifecycle (date<af → EXPECTED_INSTRUMENT_NOT_LISTED; date>at →
+      EXPECTED_INSTRUMENT_DELISTED; alive + no manifest row → `expected_unattempted`) and builds the row_key from
+      `(venue, chain="", data_type, instrument_type, instrument_id, league_id="", date)` = the tradfi per-instrument
+      captured atom. Logic CONFIRMED correct. **Remaining is genuinely VM + POST-MIGRATION gated**: `--apply-write`
+      hard-requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<tag>` (per-VM shard isolation, refuses locally) AND must
+      seed the v9 `_index` AFTER the canonical `--apply` migration (seeding the pre-migration v8 corpus would be
+      rewritten by the walk). So this rides post-migration on a VM — not a local task. Open work = catalog-parquet
+      build + VM `--apply-write` run + the IS-universe⊃manifest regression test. **✅ CODE PIECE DONE (slot-6
+      2026-06-08, is@7ac22635):** the IS-universe⊇manifest regression
+      `test_tradfi_v2_denominator_is_could_exist_universe_not_just_manifest` is shipped (mixed captured/uncaptured
+      tradfi catalog → enumerator seeds `expected_unattempted` for the un-captured instrument + SKIPS (does not drop)
+      the captured one → seeded universe ∪ manifest ⊇ manifest, denominator never shrinks; the tradfi mirror of the
+      proven defi `test_defi_v2_denominator_is_could_exist_universe_not_just_manifest`). IS `quality-gates.sh --no-fix`
+      exit 0 (268s, sentinel 7ac22635). **Item stays `- [ ]` — the catalog-parquet build + the gated VM `--apply-write`
+      seed are OPERATIONAL/apply-time (bucket-B), not code.** **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. **G1.run `--apply-write` for tradfi — GATED, NOT runnable this wave.** Per-gate readiness:
+  - **(a) Slot-7 PART C G1-foundation code: 🟢 GREEN (RESOLVED 2026-06-08, slot-6).** Era-B bundle rollup LANDED
+    (uac@ae70338d options_chain/futures_chain are instrument_types→{trades} + is@74df991d/687d1443 per-underlying
+    rollup) + my tradfi `future`/`spot_pair` validity rows (uac@576f8fa8). Enumerate re-run (scan-only, 2026-06-04..05):
+    **587,990 → 24,914 (Era-B bundle) → 17,928 (matrix fix)** — the ~563K false per-contract OPTION/COMBO candidates are
+    GONE; report verified 0 per-contract OPTION/COMBO, 0 data_type=options_chain (Era-B trades model), 0 impossible
+    pairs, FUTURE now 6 data_types; 17,928 = exact Σ(alive × valid-dts × 2 days). Original RED ↓ retained for context.
+  - **(a-orig) Slot-7 PART C G1-foundation code: 🔴 RED (re-validated 2026-06-07)** — the G1-ENUM shape-aware producer
+    LANDED (@6ea46565) and I RE-RAN tradfi enumerate on it, but the count barely moved (588,798→587,990) because
+    tradfi's dominant types (OPTION/COMBO/FUTURE/SPOT_PAIR) are UNMAPPED in the validity matrix AND — the real blocker —
+    **tradfi options/combos are captured at BUNDLE grain (options_chain/combo/futures_chain) while the catalogue +
+    enumerate are per-contract → ~563K false candidates (grain mismatch).** Gate-(a) needs the **G1-ENUM bundle-grain
+    rollup for tradfi** (catalogue emits options_chain/futures_chain bundles + the matrix entries) — see the 🔴
+    ROOT-CAUSE FINDING todo above. Not green until that lands and the re-run drops to a sane count.
+    - **RE-VERIFIED slot-6 2026-06-07 session-2 — gate-(a) STILL RED, PART A still the blocker.** (1) Live UAC accessor
+      confirms the matrix gap: `valid_data_types_for_instrument_type("tradfi", X)` returns **None** for `option` /
+      `combo` / `options_chain` / `futures_chain` / `future`
+      (equity/etf/index/bond/cds/event_contract/commodity/currency ARE mapped). (2) The catalogue instrument_type
+      distribution (sampled day=2026-06-07, 33,258 rows) is **OPTION 31,282 (94%)** · FUTURE 1,163 · EQUITY 197 · ETF 67
+      · INDEX 1 · SPOT_PAIR 1 → the over-fan is per-contract OPTION. (3) `build_instrument_catalogue.py` STILL emits NO
+      `options_chain`/`futures_chain` bundle rows (only prediction multi-grain) and the master coordinator confirms
+      "PART A NOT shipped" — slot-7's `dd7fa100 grain_for_instrument_type SSOT` is progress, not the catalogue emission.
+      The matrix fix (above) MUST co-land with PART A (a lone `option→frozenset()` makes options vanish =
+      false-absence). **Per the operator gate, the enumerate re-validation stays HELD until slot-7 confirms PART A
+      green.** The MTDS migrator + instruments-store v9 prep are GREEN (below).
+  - **(b) tradfi IS instrument backfill complete: ❌ UNMET** — IS `by_date` capture **degraded 16-18K→~2/day after
+    2026-05-04, stopped after 2026-05-22** (freeze FINDING in
+    `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`); the catalogue marks **651,661/684,372 (95%) delisted** →
+    liveness PROVISIONAL. Seeding `expected_unattempted` against a frozen catalogue would write a WRONG could-exist
+    denominator. **Unblock = the Massive IS reference adapter (gate-b remediation, shipped this session — see below) →
+    re-feed `by_date/` → regenerate the catalogue → THEN seed.**
+  - **(c) accurate UAC + v9 indices: ⏳ TOOL-READY (UPDATED slot-6 2026-06-07 session-2) — the G1-V8 migrator is now
+    BUILT (is@febb899e) + tradfi dry-run GREEN (20,388 `_index` rows → v9 100%, all CF stamps; see Step-1 UPDATE).** The
+    `instruments-store-tradfi` `_index` is still v8 ON DISK (the dry-run only PROJECTS v9) AND the
+    `market-data-tick-tradfi-prd` `_index` the seed writes is still v8 (CONFLICT-2). So gate-c is no longer "blocked on
+    a migrator that doesn't exist" — the tool is ready; what remains is the gated `--apply` RUN. Once G0 is green, run
+    `migrate_instruments_store_v9 --asset-group tradfi --apply` on `instruments-store-tradfi-prd` (pre-migration drain +
+    snapshot first). `--apply-write` must seed the **post-migration v9 `_index`** (seeding the v8 corpus would be
+    rewritten by the walk) — so G1.run rides AFTER that v9 walk. It also hard-requires a VM
+    (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`).
+  - **Disposition**: dry-run PROVEN (Step 2); the irreversible seed waits on (b)+(c). NOT `DEFERRED` — gated with named
+    unblocks (Massive capture-restore + the v9 walks). parent_epic: mtds_mdps_master. **(MIGRATED FROM:
+    `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [INFRA] P1. **Wire the tradfi `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture
+      restore).** FINDING (slot-6 2026-06-07): the G1 lifecycle producer `build_instrument_catalogue.py` has **NO
+      terraform scheduler for ANY asset group** (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` [INFRA] P1
+      "Trigger on every instruments update" is still `[ ]`, owner vm-cross-cutting). The two TFs that DO exist —
+      `deployment-service/terraform/gcp/{catalogue_regen_scheduler,instrument_catalogue_scheduler}.tf` — run a DIFFERENT
+      artefact (`generate_instrument_catalogue.py`, the availability-matrix), and their instruments-store `for_each`
+      **OMITS tradfi** (only cefi/defi/sports/prediction) AND uses legacy no-env bucket names (`-central-element-…` not
+      `-prd-`). So even the matrix regen never reads tradfi. **Gated** behind gate-b (a scheduler over a frozen
+      `by_date/` self-perpetuates a stale catalogue) — wire once Massive capture restores `by_date/`. Owner:
+      vm-cross-cutting (shared producer scheduler) + slot-6 (confirm tradfi inclusion). Repo: deployment-service
+      (terraform). parent_epic: mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [SCRIPT] P2. **⑫ FOLLOW — re-run `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` AFTER the
+      tradfi v9 object `--apply`** to confirm 0 false phantoms across all 5 source pipeline_modes
+      (batch_databento/massive/barchart/yahoo/eia). The prefix_tpls fix (is@5e8d192d) is verified by inspection +
+      `batch_massive` presence; the live re-run is gated on the apply. Repo: instruments-service. parent_epic:
+      manifest_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P1. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
+      cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
+      canonical copy is G7-verified. Without the flag, 2,008 legacy days orphan. Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master. Provenance: orphan-coverage drill-down, slot-6 2026-06-08. **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of the
+      old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
+      without `pipeline_mode=`, the 12 `day-*` hyphen dirs, old processed_candles, the whole legacy bucket, the
+      instruments-store E6 bare paths). Capture the migrator dry-run's planned-copy counts per source/branch into a G7
+      ledger so the delete set == the verified copy set (no orphan, no premature delete). Repos:
+      market-tick-data-service + instruments-service. parent_epic: mtds_mdps_master. Provenance: orphan-coverage
+      drill-down, slot-6 2026-06-08.
+
+**Chain data_types beyond `trades` (operator's tardis/implied-vol question, 2026-06-08):** the migrator is **path-only —
+it copies EVERY object under a day regardless of `data_type`** (`_list_day` lists all `.parquet`; `_canon_rel` preserves
+`instrument_type`+`data_type`), so **NO `data_type` is ever dropped by the migration** — whatever a chain bundle carries
+survives byte-for-byte. **tradfi (Databento) chains carry only `{trades, ohlcv_1m}`** (probed
+`instrument_type=options_chain` → trades 19 / ohlcv_1m 3; `futures_chain` → trades 9 / ohlcv_1m 13; Databento does NOT
+compute implied vols) — so there is no IV data at risk in tradfi. The ONLY place a chain's non-`trades` data_types
+matter is the **validity matrix could-exist SEED** (`options_chain/futures_chain → {trades}`), which is exactly the ⑥/⑦
+G1.run-seed finding (the matrix is too narrow for chain bundles that also hold `ohlcv_1m`/`tbbo`) — a denominator
+concern, NOT data loss. **Tardis/cefi caveat flagged to slot-3 + the matrix owner**: if tardis options_chain bundles
+carry `derivative_ticker` (mark IV / greeks) or `book_snapshot_5` as distinct data_types, the SAME matrix-too-narrow gap
+applies there with first-class IV data — folded into the coordinator ⑥/⑦ finding for cefi verification (migration still
+preserves it; the seed must admit it). **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13
+per MTDS consolidation ruling.)**
+
+- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
+      → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
+      (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
+      `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
+      (schema_version provider-status drift). **Proven PRE-EXISTING** (stash-test: fails identically on clean LDR
+      without my matrix change) + **unrelated** to the G1-ENUM data_type validity matrix + **outside the tradfi AG**
+      (the schema_version provider subsystem is cefi/cross-cutting). My `uac@576f8fa8` adds ZERO net-new failures (8,617
+      pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
+      schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
+      → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
+      (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
+      `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
+      (schema_version provider-status drift). **Proven PRE-EXISTING** (stash-test: fails identically on clean LDR
+      without my matrix change) + **unrelated** to the G1-ENUM data_type validity matrix + **outside the tradfi AG**
+      (the schema_version provider subsystem is cefi/cross-cutting). My `uac@576f8fa8` adds ZERO net-new failures (8,617
+      pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
+      schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
+      live `MASSIVE_API_KEY`).** With the adapter shipped (above), run IS instrument capture with `--source massive` to
+      refill `instrument_availability/by_date/` to today → regenerate the catalogue
+      (`build_instrument_catalogue     --asset-group tradfi --apply`, monotonic guard accepts growth) → liveness no
+      longer marks ~651K instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable.
+      VM-gated (live creds + per-VM shard isolation). Repo: instruments-service. parent_epic: mtds_mdps_master.
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `prediction_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- Prediction manifest + data canonicalisation (legacy->canonical single-walk, L3 owner for prediction))
+
+- [ ] [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd`
+      at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed
+      empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this
+      walk** (CODE side — writers emit `asset_group=` — already shipped via archived
+      `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only). Server-side
+      `gcs_copy_object` (layout-aware: prediction = `raw_tick_data/`/`processed_candles/`). RUN ON A VM via
+      `VM_TASK=canonical-migration` (gated on L0 tarball-prune fix) OR locally if object count is small (P0 audit
+      decides). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
+      `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately). **(MIGRATED FROM:
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
+      `kalshi_*`) on every prediction cell in THIS walk (path/pipeline*mode → `source` column), re-consolidate into the
+      `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
+      `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
+      VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
+      addition AND its cells stamp
+      `kalshi*\*`as source. Do NOT open a separate prediction source walk. **[CODE-WIRED —     slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is already in place:     UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`, `("prediction","book_snapshot")`,     `("prediction","prediction_canonical_question_group")`, and     `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the     UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for     single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp     `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow     the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change needed.     The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance`row (slot-5 2026-06-03). **(MIGRATED FROM:`prediction_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)\*\*
+
+- [ ] [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
+      `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; the API source
+      per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal `bucket_name_ssot…`
+      Phase 6/7 waits on for the prediction legacy bucket decommission. **(MIGRATED FROM:
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
+      path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
+      born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
+      operator-requested overlap verification (2026-06-01): clean `(POLYMARKET,trades)` overlap is **byte-identical**
+      between legacy + canon (401 common dates; sampled days had identical condition*id sets + identical per-object row
+      counts) → legacy-wins + relabel loses nothing; canon's apparent 22 'canon-only' cells are venue=UNKNOWN/blank
+      DRIFT (not unique data — canon has NO ohlcv*\*/question_group that legacy has). **Residual (object-level,
+      small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
+      parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
+      (honest drop). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
+      verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
+      options_chain/futures_chain underlying-bundle), and **INERT today** — prediction's enumerator/catalogue do NOT
+      consume `grain_for_instrument_type`; they drive cqg enumeration via the per-row `instr.data_type` grain-binding
+      (the G1-ENUM reference). **Latent trap**: prediction's MANIFEST/atom grain is the cqg BUNDLE
+      (`prediction_canonical_question_group`), NOT a per-market leaf — so IF a future refactor unifies the grain
+      mechanisms and treats `grain_for_instrument_type` as THE enumeration-grain SSOT for prediction, it would over-fan
+      per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
+      cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
+      SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
+      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert) — and NOT a deferred fix:**
+      `leaf` is the CORRECT value for the instrument axis (changing it would be wrong), and the trap is already guarded
+      by the existing grain-bound round-trip test (is@ec75c4e9) that asserts every prediction catalogue row carries
+      `data_type` (so the `_row_data_types` short-circuit can't be silently bypassed). There is nothing to safely change
+      today; this is a CONDITIONAL note for IF a future refactor ever unifies the two grain mechanisms (owned by the
+      cross-cutting G1-ENUM SSOT, not prediction). **(MIGRATED FROM:
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
+      verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
+      options_chain/futures_chain underlying-bundle), and **INERT today** — prediction's enumerator/catalogue do NOT
+      consume `grain_for_instrument_type`; they drive cqg enumeration via the per-row `instr.data_type` grain-binding
+      (the G1-ENUM reference). **Latent trap**: prediction's MANIFEST/atom grain is the cqg BUNDLE
+      (`prediction_canonical_question_group`), NOT a per-market leaf — so IF a future refactor unifies the grain
+      mechanisms and treats `grain_for_instrument_type` as THE enumeration-grain SSOT for prediction, it would over-fan
+      per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
+      cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
+      SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
+      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).** **(MIGRATED FROM:
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+### From `downstream_services_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution))
+
+- [ ] [CODE] P1. **FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets, `-prd`
+      initial.** The `instruments-store` / `features-store` / `ml-store` / `execution-store` (+ `ml-configs-store`,
+      `deployment_api_config.py:547`) buckets get **env-tiered** (split env-wise: prd/stg/dev), with `-prd` as the
+      initial migration tier. So the `# CORRECT-LOCAL` markers are NO LONGER correct — route every ref through
+      `resolve_bucket_name(kind=…, env=…)` so reads resolve to the env-tiered canonical name (`-prd` now; the no-env
+      bucket becomes legacy → deleted post-cutover). Work: (1) **bucket-SSOT owner** registers the env-tiered `*-store`
+      bucket names (prd/stg/dev) in `deployment-service/configs/cloud-providers.yaml` (coordinate via
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`); (2) **deployment-api** replaces the hardcoded
+      f-strings at `commentary/pipeline_uat.py:167/181/195/211` + `deployment_api_config.py:547` with
+      `resolve_bucket_name(...)` and removes the `# CORRECT-LOCAL` markers; (3) the prd-store data migrates to the
+      `-prd` bucket as part of the initial migration. Coordinate with the active deployment-api agent. Repo:
+      **deployment-api** (+ deployment-service cloud-providers.yaml). Home: this plan FLAG-3 + `bucket_name_ssot…`. (No
+      longer operator-blocked.) **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. Per-AG (cefi/tradfi/prediction): Phase-0 layout audit → re-tarball+pin SHAs → **G1 full-corpus
+      dry-run** (`launch-canonical-migration-vm.sh <ag> <start> <end> dry`; confirm `TOTAL planned` ≈ full-corpus object
+      count) → writer drain + `_index` snapshot → `--apply` additive copy → **E5 rebuild RUN** → CF-1…CF-12 verify →
+      completeness COUNT gate → strategically-sampled cross-shard verify → fleet drain → **DELETE legacy (END-only,
+      irreversible)**. Home: each AG plan §C/§E + `cf_data_state_audit_slot3_2026_06_01.md` GATES G1–G8. (E6 CF-7
+      relabel + E7 verify + E8 delete ride here.) **(MIGRATED FROM:
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Downstream service C-walks (MDPS rides the AG tick walk; features/strategy/execution =
+      writer-fix-first, re-audit when input C-GREEN + first batch runs). Home: this plan § C. **(MIGRATED FROM:
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. **FLAG 3 (bucket-SSOT, deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets,
+      `-prd` initial.** `commentary/pipeline_uat.py:167/181/195/211` (+ `deployment_api_config.py:547`
+      `ml-configs-store`) hardcode no-env `instruments-store`/`features-store`/`ml-store`/`execution-store` (NOT in
+      cloud-providers.yaml). These buckets ARE in scope for env-tiering → `# CORRECT-LOCAL` markers come off; route
+      through `resolve_bucket_name(kind=…,     env=…)` (resolves to `-prd` initially). Prereq: bucket-SSOT owner
+      registers the env-tiered `*-store` names (prd/stg/dev) in cloud-providers.yaml (`bucket_name_ssot…`). prd-store
+      data migrates to `-prd` in the initial migration; no-env buckets become legacy → deleted post-cutover. Coordinate
+      with the active deployment-api agent. **(MIGRATED FROM:
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. **FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot): `_BUCKET_CATEGORY_OVERRIDES`**
+      (data_status_service.py:2902) hardcodes 6 DeFi sub-buckets
+      (`gas-fees`/`oracle-prices`/`perp-funding`/`lending-indices`/`lst-rates`/`liquidations`) bypassing
+      `resolve_bucket_name` + absent from yaml → post-delete silent-empty (swallowed except). **DEFI=slot-2 — tracked in
+      `defi_manifest_canonicalisation_2026_06_01.md` §H** (five-slot asset-group split, operator 2026-06-03) +
+      `bucket_name_ssot…` L6. Not in another AG slice's scope. **(MIGRATED FROM:
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index`
+      backfills missing v9 cols as NULL on a v8 manifest → consumers silently read NULL
+      `asset_group`/`pipeline_mode`/`source`. Add a `schema_version`/`asset_group`-present assertion (or
+      `assert_consolidator_healthy`) in `manifest_window_guard`
+      (features-service@`features_service/common/manifest_window_guard.py:85` — after `read_availability_index`),
+      `manifest_allocation_guard` (strategy-service@`strategy_service/manifest_allocation_guard.py`), MDPS
+      `dependency_checker` so a non-v9 upstream is caught loud, not silently consumed. **⚠️ DESIGN NUANCE (slot-3
+      2026-06-02 — why deferred, not shipped half-baked):** the prod corpus is **100% v8 TODAY** (pre-migration), so a
+      hard `schema_version==9` assert would break EVERY consumer immediately, and an unconditional warn would fire on
+      100% of reads (pure noise). Ship it as a **loud WARN that fires only on MIXED-version drift** (some rows v9, some
+      not, within one read) OR an `asset_group`-column-absent-on-a-supposedly-migrated-bucket signal — the real
+      post-migration regression — NOT a blanket "not v9" warn. Becomes a hard assert only AFTER each AG's G3 migration
+      flips its corpus to v9. P2 + warn-only → low value pre-migration; real value is the post-migration regression
+      catch. (slot-3 2026-06-02: deferred under context budget with this design spec so the next agent ships the
+      non-noisy form.) **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **MDPS** C-walk: bundle any `processed_candles/` debt into the SAME AG tick-bucket walk (no second walk
+      on an AG `_index` — single-walk discipline); ensure CF-4 source PROPAGATION + CF-1/2/3/5/8 land there. **(MIGRATED
+      FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **features** C-walk: ONE bundled walk per `features-*-{ag}` index for any P0 debt (v9 +
+      `asset_group=` + `pipeline_mode=` partition + typed reasons + `available_at`); CF-4 stays exempt. **(MIGRATED
+      FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **strategy** C-walk: ONE bundled walk for strategy output `_index` debt (v9 + `asset_group=` + typed
+      reasons + `available_at`). Small corpus → likely local, fast. **(MIGRATED FROM:
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. **execution** C-walk: ONE bundled walk for execution-record/ledger `_index` debt (same set). Small
+      corpus → likely local, fast. **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. Post-walk per service: re-run the P0 CF audit → all applicable CF GREEN (data-state). Each service's
+      canonical-form section in its audit-instruction file goes GREEN. Hands C-GREEN to `bucket_name_ssot…` L6 for any
+      downstream legacy buckets. **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+### From `defi_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation (operator judgment-call ruling 2026-07-13: FOLD -> M-1))
+
+- [~] [DATA] P1. A2 pre-venue-launch reason — manifest migration (operator: "captured in UAC if genuinely pre venue +
+  migrated in manifest"). **UAC ALREADY HAS** most launch dates in `DEFI_VENUE_LAUNCH_DATES` keyed `VENUE-CHAIN`
+  (MARINADE-SOLANA 2021-08-02, JITO-SOLANA 2022-08-16, LIDO-ETHEREUM 2020-12-19, ETHERFI/ETHENA, …) — my earlier "None"
+  was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
+  `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows →
+  `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted. **(MIGRATED FROM:
+  `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
+      confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
+      `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed
+      rows generate; validate the denominator. **GATED on C-GREEN** — the owed rows must land in the canonical structure
+      (env-split/`pipeline_mode`/`asset_group=`), so migrate first. Closes deferred
+      `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. parent_epic: manifest_master. **(MIGRATED
+      FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
+      2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
+      VENUE-CHAIN→flat (C3), data*type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
+      instrument_id — that step is DONE; the current dedicated-bucket objects are in the flat
+      `day=/category=defi/venue={FLAT}/chain=/…` form. The C0/**v9** step is a NEW, separate read+rewrite tool —
+      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired 2026-06-01**,
+      proper home beside the other
+      `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
+      bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
+      below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
+  - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
+        supersedes the "no new buckets/VMs" pause): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`,
+        `perp-funding-prd`, `gas-fees-prd` — all `*-prd-central-element-323112`, ASIA-NORTHEAST1, NEARLINE@90d +
+        versioning + UBLA + prod labels. Via `terraform apply -target` against `terraform/state/prod` (clean-create:
+        plan = 5 add / 0 change / 0 destroy; backend reset to dev after; `gcloud storage buckets describe` verified all
+        5). `evm-defi-prd`/`solana-defi-prd`/`eigenlayer-rewards-prd` + `dex-pools`/`dex-swaps` `-prd` already existed.
+        **Residual (P1)**: `liquidations-prd` is absent + has no TF resource (`liquidations_handler` resolves it via
+        cloud-providers.yaml:186) → future liquidations backfills would fail-write; add the TF resource + apply. —
+        deployment-service (TF resources applied). parent_epic: manifest_master.
+  - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
+        dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
+        slice (rolls into C0b dry VM).
+  - [x] ✅ [DATA] P0. C0b — **dry VM DONE** — discover + plan dry-runs validated as described below (unchanged
+        evidence), superseded by the real full VM run (C0d).
+  - [x] ✅ [DATA] P0. C0c — **pre-migration drain DONE** (folded into the C0d apply run — no evidence of a fleet
+        collision found during verification).
+  - [x] ✅ [DATA] P0. C0d — **full VM DONE** — `canonical-migration-defi-20260618-180603` (launched via
+        `launch-canonical-migration-vm.sh defi ... full`), completed `rc=0`. Cross-confirmed in
+        `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` ("G4 apply run 2026-06-29 — 4/5
+        AGs COMPLETE") and `plans/active/instruments_completion_tracker_2026_07_06.md` (defi → Canonical? ✅ yes).
+        Found + flipped 2026-07-12 (`gcs_bucket_estate_cleanup_2026_07_10.md` §5f) — this checklist was never updated
+        when the work actually landed; the coordinator + tracker docs had the accurate state throughout.
+  - [x] ✅ [DATA] P0. C0e — **consolidator verify DONE** — live GCS evidence: `market-data-tick-defi-prd-*`'s
+        `raw_tick_data/by_date/day=2022-06-01/` shows populated `pipeline_mode=batch_onchain_rpc/`+
+        `pipeline_mode=batch_onchain_subgraph/` partitions under `asset_group=defi/venue=<CHAIN>/` (source-aware
+        canonical form, post-GATE-0); canonical index confirmed comprehensive (27.4M rows, all 8 in-scope data_types
+        present with full historical date ranges) via direct download+inspection 2026-07-12.
+  - [ ] [DATA] P0. C0f — **delete legacy originals** — operator authorized 2026-07-12 ("delet legacy buckets if data is
+        migrated"); mostly executed, 1 kind deferred. **Correction to this todo's own original framing**: not all 8
+        kinds' `-prd` buckets are "legacy originals" — `migrate_defi_full_v9_canonical.py`'s own
+        `base_prd = f"{stem}-prd-{project_id}"` write target IS the live canonical production bucket for
+        `dex-pools`/`lst-rates`/`perp-funding` (real callers confirmed: strategy-service, `e2e-testing`), not a rollback
+        copy — deleting those would have been a regression, caught before it happened (see
+        `gcs_bucket_estate_cleanup_2026_07_10.md` §5i). **Deleted 2026-07-12** (12 of 14 genuinely-legacy buckets):
+        `dex-swaps` + `dex-swaps-prd`, `oracle-prices` + `oracle-prices-prd`, `gas-fees` + `gas-fees-prd`,
+        `liquidations` (no `-prd` variant), plus the FLAT (source-only) forms of `dex-pools`/`lst-rates`/ `perp-funding`
+        — their `-prd` forms correctly KEPT (live). **Deferred**: `lending-indices` + `lending-indices-prd` (2 of 14) —
+        a live GCE VM (`mtds-lending-indices-20260712-112557`, `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s Morpho
+        follow-up) was actively running against this kind at deletion time; revisit once it completes. See
+        `gcs_bucket_estate_cleanup_2026_07_10.md` §5f + §5i for the full re-verification and execution log. **(MIGRATED
+        FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. C2 data_type alias dedup across buckets — **canonical is the ON-DISK form (operator-locked 2026-06-01,
+      see C0-CN + codex `defi-canonical-naming-ssot.md`)**: hyphen→underscore (`lending-indices`→`lending_indices`),
+      `staking_yields`→`lst_rates`, and the pool/swap data_type collapses to `dex_pool_state`/`dex_pool_swaps`
+      EVERYWHERE (NOT the logical `dex_pools`/`dex_swaps` — that was the regression the naming audit caught). Rides the
+      C0 walk (the migration already writes `dex_pool_state`/`dex_pool_swaps`). ONE walk. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. C3 VENUE-CHAIN→flat: legacy `UNISWAPV3-ETHEREUM` venue strings → flat `venue` + populated `chain`. Same
+      walk. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [DATA] P1. C4 schema v4–v8 → v9 re-version across the dedicated DeFi buckets. Same walk. parent_epic:
+      manifest_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P1. C5 phantom-grid delete: remove the cartesian `data_type × venue` empty grid in `market-data-tick-defi`;
+      point data-status at the dedicated indexes. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P2. C6 Pyth ~5-week backfill (2026-04-15→present, Hermes API) on a VM. **GATED on C0/C-GREEN** (backfill
+      into the canonical env-split/`pipeline_mode`/`asset_group=` structure, never the legacy layout). **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
+      14/22, lending 6/21, perp 5/8; genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. parent_epic:
+      defi_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [DATA] P1. C9 legacy DeFi bucket object paths are pre-canonical —
+      `day=/category=defi/venue=/chain=/instrument_type=/data_type=/file.parquet`: **`category=` not `asset_group=`**
+      AND **no `pipeline_mode=` partition** (canonical raw_tick_data layout is
+      `…/day=/pipeline_mode={mode}/asset_group={ag}/…`). The manifest ROWS carry pipeline_mode (handlers pass it); the
+      object PATHS don't. Normalise the dedicated DeFi bucket paths in the same single-walk as C2–C4. parent_epic:
+      manifest_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P0. C11 **deeper phantom audit — are the POST-launch dex `captured` rows object-backed?** Date-impossible
+      ones are done (C10/C10b); the remaining question is whether post-launch captured rows have real objects.
+      Spot-check 2026-06-01: `dex-pools day=2025-06-01` HAS objects ✅ but `day=2024-01-01` returned 0 (inconclusive —
+      read flaked). The uniform `2021-01-01` first-captured still warrants a full **captured-vs-objects walk**
+      (dex-pools/dex-swaps), relabeling any captured row with no object honest. **NOTE 2026-06-01**: an initial walk
+      falsely reported 74% phantom — that was an index-venue↔object-venue MISMATCH (`UNISWAPV3` vs `UNISWAP_V3`), now
+      fixed for those venues by C12. Re-run the walk AFTER C12 lands everywhere, WITHOUT any read-path normalisation.
+      **VM job** (object listing at scale). parent_epic: manifest_master. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [~] [DATA] P0. C12 **venue-name `{VENUE}_V{N}` canonicalisation — EVERYWHERE (code + manifest + data + docs)**
+  (operator 2026-06-01: "switched to canonical form with `_V2` etc everywhere … TRADER_JOEV2/VELODROMEV2 is wrong").
+  Canonical = underscore before the version (`UNISWAP_V3`, `TRADER_JOE_V2`, `VELODROME_V2`, `AERODROME_V3`, …).
+  Surfaces: - **UAC** (the SSOT — fix first): `registry/defi_venues.py`, `defi_venue_capabilities.py`,
+  `defi_protocol_registry.py`, `expected_coverage.py`, `venue_mapping.py`, `chain_env.py`,
+  `capability_declarations/_defi*.py`, `internal/reference/instrument_validation.py` + the `canonicalize_defi_venue`
+  function + its tests (`test_venue_key_parity.py`, `test_canonicalize_defi_venue_combined.py`).
+  `TRADER_JOEV2`→`TRADER_JOE_V2`, `VELODROMEV2`→`VELODROME_V2` (and confirm all `*V{N}` use the underscore). - **Code
+  (writers)**: MTDS `_instruments_metadata.py` + any handler that emits a venue string. - **Data (objects)**: rename
+  object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0). - **Manifest index**:
+  `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 + dex-swaps); TODO
+  TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object). - **Docs**:
+  `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated cross-repo
+  migration (all surfaces together; objects = VM). parent_epic: manifest_master. **(MIGRATED FROM:
+  `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. D1 features-onchain-defi is near-empty (3 rows); features-delta-one-defi + features-volatility-defi
+      have NO index → derived features (staking*apy_bps/funding_rate_apy_bps/basis_bps/realized_vol*\*) absent. Run the
+      features backfill for the in-scope DeFi instruments over the captured window. **GATED on C-GREEN** (features must
+      read canonical raw, else they inherit the mess). parent_epic: features_and_ml_master. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P1. D2 **MDPS swaps_ohlcv reprocess for the stale chain-column `attempted_failed` rows** (MIGRATED FROM
+      archived `issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`, slot-2 2026-06-02). 28,634
+      `UNISWAP_V3-ETHEREUM` `swaps_ohlcv_*` rows on the **consolidated `market-data-tick-defi` `_index`**
+      (`processed_candles` layer) are `attempted_failed`/`SCHEMA_VALIDATION_FAILED` — **stale point-in-time records**
+      from the 2026-05-23/24 chain-propagation fix-deploy window (root cause = blank `chain`; the canonical migration
+      removes it source-side). Code fix already live (`mdps@7f1a5b5`+`3799c8d`); slot-7 pre-flight verified live candles
+      now carry `chain`. **No code change** — needs an MDPS reprocess rerun once our C0 canonicalises the source (rows
+      flip `captured`). Companion chain-column venues to reprocess in the SAME pass (do NOT race the migration with a
+      one-venue VM): UNISWAP_V2-ETHEREUM 3,444 · AAVEV3-OPTIMISM 2,820 · EIGENLAYER 1,311 · CURVE-ETHEREUM 1,281 · MAKER
+      1,113 · FRAX 1,032 · DRIFT-SOLANA 200 · KAMINO/JITO/MARGINFI ~75. **GATED on C-GREEN.** Verify post-retry:
+      `attempted_failed` for these venues → 0 (now `captured` or legit `empty_confirmed`). Repos:
+      market-data-processing-service. parent_epic: mtds_mdps_master. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [DATA] P0. E1 CeFi `derivative_ticker` (funding carrier) fetch failures: OKX-FUTURES + ASTER 100%
+      attempted_failed; refresh to current (stale ~3–5 weeks) (was: both venues cited as 100% failed — **[2026-07-12
+      correction]**: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s 2026-06-22 runtime/manifest audit
+      (last_updated 2026-06-27, same date as this doc) shows **ASTER `derivative_ticker` (funding) at 62% captured,
+      annotated "ok"** — ASTER's E1 failure claim is stale, superseded by that audit. OKX-FUTURES is NOT re-verified by
+      that issue doc (not addressed either way) — do not assume it is also fixed; re-check OKX-FUTURES independently
+      before dispatching this item. Checkbox NOT flipped — ASTER-only partial resolution, OKX-FUTURES still unverified.
+      Corrected per plan-reconciliation finding 156,
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.). parent_epic:
+      cefi_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [DATA] P0. G1 Launch the full 2024-06-01 → 2026-06-01 backfill VM (Drift V2 historical + Solana spot DEX state).
+      Operator-launched from laptop OR `vm-defi`. Recipe: the four CLI scripts in
+      `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp*funding + perp_trades) +
+      `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated ~36GB
+      total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold these
+      writes (env-split + source-aware
+      `pipeline_mode=batch*<source>`per`derive*pipeline_mode_for_row`+     `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual Completion"):     `gsutil
+      ls
+      gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=\*/pipeline_mode=batch*\*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`     returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty     `funding_rate`, `oracle_price_twap`, `mark_price_twap`columns; manifest-verified row count > 0 per day-shard;     equivalent checks for`perp_trades`(active days only; allow`empty_confirmed[SOURCE_RETURNED_ZERO]`on quiet     days) +`dex_pool_state`for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed     `empty_confirmed`reason (not`attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long     wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)\*\*
+
+- [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
+      Terminal A:
+      `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live     --continuous --interval-seconds 3600 --data-types funding`
+      (hourly). Terminal B:
+      `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium --live --continuous     --interval-seconds 60 --samples-per-day 60 --data-types pool_state`
+      (1-min). These run as long-lived VMs on `vm-defi` (lifecycle*class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT).
+      **GATED on G1** (need backfilled history to be loadable as warmup) + **C-GREEN** (writes target canonical
+      structure). Verification (per CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs
+      RUNNING in `gcloud compute instances describe`; ≥1 parquet under
+      `day=<TODAY>/pipeline_mode=live*\*/asset*group=defi/…`(the transitional`live_websocket`alias until the gated     `live*<source>`tranche lands — never coarse`live`) within the first interval (1 min for DEX, 1 h for Drift     funding); manifest `capture_status=captured`rows generated. Symptom of regression:`SolanaBasisGcsLoader`logs     `no
+      perp_funding rows for
+      live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful     history. parent_epic: mtds_mdps_master. **Operator-launched.** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)\*\*
+
+- [ ] [PLAY] P0. G3 Run 24h paper trade via `e2e-testing/scripts/defi/run-paper.sh --strategy SOL_BASIS`. Recipe:
+      `bash     cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider solana-devnet --initial-capital-usd 100000     `
+      Engine flows `--strategy SOL_BASIS` → `colocated_engine.py` → `SolanaBasisGcsLoader` → fill-sim on devnet (signed,
+      not broadcast). **GATED on G2** (live data must be flowing so the engine reads a non-stale tape). Verification
+      (per CLAUDE.md "Plans Run To Actual Completion" + Promote Workflow Path SSOT): 24h wall-clock session writes a
+      non-empty trade log + PnL series; Firestore `MinimalCandidateManifest` populated; Sharpe ratio + realised funding
+      earnings − slippage computed; sample-inspect 3 trades for honest fill simulation (no NaN/inf, no fictional fills
+      against zero-liquidity ticks); manifest path `gs://market-data-tick-defi-prd-${PID}/paper_trade/…` (or whichever
+      sink the engine writes to) has the session's full output. **DART `ManualTradeGateDialog` enforces first-3-days
+      hand-confirmation per CLAUDE.md Promote Workflow Path.** parent_epic: mtds_mdps_master. **Operator-launched (long
+      wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
+
+- [ ] [HUMAN] P0. G4 Promote to live wallet — **HUMAN-ONLY per CLAUDE.md hard-stop list**
+      (`## Plans Run To Actual     Completion`: wallet keys + kill-switch arming are human-only; agent never runs
+      `run-live.sh`). Valid promote target per CLAUDE.md Promote Workflow Path is `paper_1d → live_early`; `live_full`
+      is post-cutover. Operator runs:
+      `bash     cd e2e-testing && bash scripts/defi/run-live.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider <copper|ceffu|cloud_kms_encrypted> --capital <amount> --wallet <KMS_KEY_ALIAS>     `
+      **GATED on G3** (Sharpe-positive ack required) + **C-GREEN** + **G2 live data flowing**. Verification: real wallet
+      ≥7-day session per CLAUDE.md Master Plan (live DeFi 2026-05-23 gate already shipped — this is a
+      Solana-archetype-specific operational gate, not a master-plan blocker). The agent **never** ticks G4 — the
+      operator does after the live run completes. parent_epic: mtds_mdps_master. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P1. G5 **Phoenix radix-slab decode (top-of-book bid + ask + size).** The market account is 1.7MB; the
+      top-of-book decode is ~50-100 LOC of binary parsing against Phoenix's documented slab layout. Full L2 (deeper
+      levels) is harder + can ship later. Current state: `PhoenixOrderbookIngester` (mtds@d3d26f56) fetches the market
+      account successfully (proves the RPC path) but routes via
+      `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")`. Acceptance: top-of-book parsed;
+      `best_bid_price + best_ask_price + their sizes + spread_bps + mid_price` populated; `record_captured` instead of
+      `record_failed`; 5+ unit tests cover the binary decode against known slab states. parent_epic: mtds_mdps_master.
+      Not GATED on G1–G4 (independent feature add). **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. G6 **Jupiter historical reconstruction.** `JupiterQuoteIngester` (mtds@d3d26f56) is forward-only —
+      Jupiter doesn't expose historical quote endpoints. For the 2024-06-01 → today backtest window, reconstruct
+      historical Jupiter routes by simulating Jupiter's routing algorithm against the underlying Orca/Raydium pool
+      states at the same timestamps. Acceptance: per (timestamp, size-bucket) row matching forward-collected quote
+      structure within ±5%; backtest harness can read Jupiter quotes for any day in window. parent_epic:
+      mtds_mdps_master. GATED on G1 (need Orca + Raydium pool states backfilled). **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. G7 **Orca tick-array decode** (concentrated-liquidity depth visualisation). Current MVP uses
+      `sqrt_price` + `liquidity` scalars (sufficient for next-tick slippage approximation). Full tick-array decode
+      enables tick-distribution depth maps + better mid-size-fill simulation. ~150-200 LOC binary parsing of the 3
+      nearest tick arrays around `tick_current_index`. Acceptance: per-snapshot tick array state captured alongside pool
+      state; downstream consumers can compute fill slippage at arbitrary sizes. parent_epic: mtds_mdps_master. Not GATED
+      on G1–G4 (independent depth improvement). **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [ ] [CODE] P2. G8 **Raydium second WSOL/USDC pool** — extend `RaydiumClassicAmmIngester` defaults if a meaningful TVL
+      pool materialises. The plan-time secondary Raydium pool dropped to $4.6K TVL by 2026-06-01 (below noise
+      threshold); current default ingestion is just the top $8.8M pool. The constant scaffold is forward-compat — adding
+      a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a second SOL/USDC Raydium pool reaches > $1M
+      TVL, add it; ingest from the canonical date; backtest harness reads both. parent_epic: mtds_mdps_master. Trigger:
+      TVL probe shows > $1M. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
+
+- [ ] [DATA] P0. **`instruments-store-defi` reference-surface canonical-form walk** (the DeFi slice of
+      `instruments_manifest_canonicalisation_2026_06_01.md`, whose §C excludes defi). Phase-0 layout audit → single
+      bundled walk on the `instruments-store-defi` `_index` + objects to v9 + `asset_group=` + `pipeline_mode=`
+      partition + `source` column + typed `EmptyConfirmedReason`, same target form as the MTDS DeFi C0 walk. Re-run
+      CF-1…CF-12 → GREEN before any DeFi instruments writer relaunch (master L3-gates-L5). NEVER a second walk on this
+      `_index`. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
+
+- [ ] [CODE] P2. **FLAG 2 — `_BUCKET_CATEGORY_OVERRIDES` DeFi scope** (the DeFi slice flagged to slot-2 in the
+      downstream plan): a DeFi `category` override absent from `cloud-providers.yaml` / unresolved by
+      `resolve_bucket_name` → post-delete silent-empty. Resolve with
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` L6 (owns the bucket-name SSOT + the actual delete).
+      **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+- [~] [CODE] P1. ⑦ defi could-exist denominator seed — **CODE-READY (slot-2 2026-06-05, is@bb8fb203); only the VM
+  `--apply-write` run is operator/VM-gated.** Grep-then-read found the catalog-build is ALREADY shipped:
+  `instruments-service/scripts/build_instrument_catalogue.py` is the defi-capable lifecycle roll-up — it unions the
+  per-date `instrument_availability/by_date/day=…/venue=…/instruments.parquet` defns into one catalogue parquet with
+  exactly the `instrument_id`/`instrument_type`/`venue`/`chain`/`available_from`/`available_to` columns
+  `enumerate_expected_universe._catalog_from_dataframe` consumes. `_enumerate_v2_defi` (chain-genesis + listing + delist
+  lifecycle) + the `--asset-group/--catalog-path/--apply-write` flags + the `resolve_bucket_name` env-tier fix already
+  ship. **Added the missing denominator-monotonicity regression**
+  (`test_defi_v2_denominator_is_could_exist_universe_not_just_manifest`): an alive-but-uncaptured DeFi instrument is
+  seeded `expected_unattempted` (denominator grows), a captured one is skipped (not dropped) → could-exist ⊇ manifest,
+  never shrinks. **REMAINING (operator/VM, NOT code)**: run `build_instrument_catalogue.py --asset-group     defi` then
+  `enumerate_expected_universe.py --asset-group defi --catalog-path <catalog> --apply-write` on a VM against the
+  canonical `_index` (gated on C-GREEN + the cross-AG `proper_instrument_catalogue_lifecycle_rollup` foundation).
+  parent_epic: mtds_mdps_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+  consolidation ruling.)**
+
+### From `bar_edge_left_vs_right_remediation_2026_06_08.md` (archived 2026-07-13 -- Bar-edge (open/left vs close/right) systemic remediation)
+
+- [ ] [CODE] P1. Massive: `tradfi/massive_tradfi_rest_connector.py:490` (`t` open) — **coordinate with
+      `tradfi_massive_dual_source_2026_05_28.md` Phase 4b** (Massive #5 already requires interval-aware right-edge
+      conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
+      normalizes both identically. ALSO fold in: batch rows pre-stamp `available_at=now(UTC)` (`:472/:484/:503`) which
+      the writer persists (orchestrator stamps only when the column is absent) — must become `t_close`-anchored.
+      **(MIGRATED FROM: `bar_edge_left_vs_right_remediation_2026_06_08.md`, 2026-07-13 per MTDS consolidation ruling.)**

@@ -8,10 +8,23 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: [manifest, pipeline, data-status, mtds, mdps, features, verification]
-related: [../02-data/availability-manifest-and-data-status.md, ../02-data/data-status-drilldown.md, features-service-architecture.md]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/data-status-drilldown.md,
+    features-service-architecture.md,
+  ]
 created: 2026-06-02
 authoritative_for: [E2E pipeline manifest-wiring three-layer verification]
 referenced_by:
@@ -116,9 +129,9 @@ event bus; a future batch-execution preflight can now call `check_all_upstream("
 ## Coordination
 
 Active in-flight work on the data-status canonicalisation/migration surface lives in
-`plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md` (deployment-api/UI preflight, "agent B", +
-slot-2 DeFi sub-bucket scope). The gaps named here (G-EXEC, G-TRACE, G-UI) are **additive** and must not collide with
-that migration scope.
+`plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md` (deployment-api/UI preflight, "agent
+B", + slot-2 DeFi sub-bucket scope). The gaps named here (G-EXEC, G-TRACE, G-UI) are **additive** and must not collide
+with that migration scope.
 
 ## What is machine-checked
 

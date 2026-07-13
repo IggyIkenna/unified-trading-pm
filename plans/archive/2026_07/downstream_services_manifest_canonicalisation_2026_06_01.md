@@ -8,7 +8,7 @@ summary: >-
   strategy, execution) not covered by the per-AG walks: audit-first, low-data single-walk. Drives the CF-1…CF-12
   cross-service canonical-form checklist to QG-green BEFORE the migration run (CF-11 empty-vs- failed write-path, E5
   3-way manifest-rebuild decision tree, v9 re-emit). Coordinated under the defi_manifest_canonicalisation MASTER.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,10 +33,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on:
 source:
   [
@@ -46,6 +44,13 @@ source:
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution)
 

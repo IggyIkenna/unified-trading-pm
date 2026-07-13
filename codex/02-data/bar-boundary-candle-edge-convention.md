@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Bar-Boundary / Candle-Edge Convention — RIGHT edge (`t_close`) everywhere
 summary:
-  HARD RULE that a closed OHLCV candle is timestamped on its RIGHT edge (t_close, half-open [t_open,t_close))
-  via compute_bar_close_boundary — never consume raw open-edge ohlcv; enforced by STEP 5.92/5.74 and the
-  row-level bar_edge="close" marker to prevent look-ahead leakage.
+  HARD RULE that a closed OHLCV candle is timestamped on its RIGHT edge (t_close, half-open [t_open,t_close)) via
+  compute_bar_close_boundary — never consume raw open-edge ohlcv; enforced by STEP 5.92/5.74 and the row-level
+  bar_edge="close" marker to prevent look-ahead leakage.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,12 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer]
 tags: [features, mdps, data-correctness, bar-edge, validation, quality-gates]
-related: [availability-manifest-and-data-status.md, chart-candle-delivery-flow.md, ../../plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md]
+related:
+  [
+    availability-manifest-and-data-status.md,
+    chart-candle-delivery-flow.md,
+    ../../plans/archive/2026_07/bar_edge_left_vs_right_remediation_2026_06_08.md,
+  ]
 created: 2026-06-08
 authoritative_for: [bar-boundary / candle right-edge (t_close) convention]
 referenced_by:
@@ -24,7 +29,7 @@ code_refs:
 # Bar-Boundary / Candle-Edge Convention — RIGHT edge (`t_close`) everywhere
 
 Codified 2026-06-08 (plan:
-[`bar_edge_left_vs_right_remediation_2026_06_08.md`](../../plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md);
+[`bar_edge_left_vs_right_remediation_2026_06_08.md`](../../plans/archive/2026_07/bar_edge_left_vs_right_remediation_2026_06_08.md);
 surfacing issue:
 [`bar_edge_left_vs_right_systemic_2026_06_08.md`](../../plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md)).
 

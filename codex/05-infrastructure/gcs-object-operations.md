@@ -171,7 +171,8 @@ break it:
    all output objects. **A migration that leaves the old layout in place is NOT done** — it re-creates the dual-SSOT.
    Done-definition: **exactly one canonical v9 SSOT remains**, verifiable by data-status showing a single source.
 
-SSOT for the concrete unified-migration spec: `plans/active/defi_manifest_canonicalisation_2026_06_01.md` §C0-RD1…RD5.
+SSOT for the concrete unified-migration spec: `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md`
+§C0-RD1…RD5.
 
 ## Incident history
 

@@ -221,7 +221,7 @@ The Solana basis instance of this archetype runs:
   funding-positive regime (mirrored on backtest harness e2e-testing@3d02c74).
 - **Promote path**: per CLAUDE.md Promote Workflow Path SSOT, valid May-23 target is `paper_1d → live_early`;
   `live_full` is post-cutover. Solana basis MVP G3 (paper) → G4 (live wallet, HUMAN-ONLY) flow tracked in
-  `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G.
+  `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md` § G.
 
 Capital efficiency note: Drift + Orca are NOT same-venue cross-margin netting (different programs). LEADER_HEDGE applies
 — sequential, not atomic. Solana same-block atomicity (sub-second) is the saving grace vs cross-chain sequential

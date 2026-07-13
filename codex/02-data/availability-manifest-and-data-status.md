@@ -1772,8 +1772,8 @@ Idempotent + safe to run concurrently with the scheduled cycle.
 
 ### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
 
-> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK`
-> opt-in described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
+> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
 > `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
 > from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
 > current SSOT.
@@ -1889,7 +1889,7 @@ Current write-wiring status per asset group (snapshot; update when an AG is wire
 | -------------- | ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **tradfi**     | ✅ WIRED   | `databento`, `massive`                    | Multi-source; `SOURCE_PRIORITY[("tradfi", data_type)] = ["databento", "massive"]`; `select_primary_available_source()` picks winner. Databento is primary (2026-06-24 coordinator decision).                                                                                                                                                                               |
 | **prediction** | ✅ WIRED   | `polymarket_clob`, `polymarket_gamma_api` | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already. |
-| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                                   |
+| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                          |
 | **defi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                         |
 | **sports**     | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                         |
 
@@ -1897,7 +1897,7 @@ Current write-wiring status per asset group (snapshot; update when an AG is wire
 columns (returns the first available entry; does not raise). RED-gap cells still satisfy all other manifest integrity
 rules (4-state taxonomy, cluster validation, `available_at`). The RED-gap label is a provenance-completeness gap, not a
 correctness gap for current consumers — but it blocks multi-source disambiguation for those AGs if a second source is
-ever added. The SSOT tracking plan is `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
+ever added. The SSOT tracking plan is `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.
 
 ### Per-source `capture_status` semantics in a dual-source cell
 

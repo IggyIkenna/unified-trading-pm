@@ -1,15 +1,30 @@
 ---
 doc_type: plan
 title: Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY)
-summary: Enforce source-column provenance across all asset groups — stamp source on MTDS writes, consolidate SOURCE_PRIORITY, and backfill existing objects.
-status: active
+summary:
+  Enforce source-column provenance across all asset groups — stamp source on MTDS writes, consolidate SOURCE_PRIORITY,
+  and backfill existing objects.
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [data-source, provenance, source-column, source-priority, backfill, mtds, all-asset-groups]
-related: [plans/epics/mtds_mdps_master.md, plans/active/tradfi_massive_dual_source_2026_05_28.md, plans/epics/defi_master.md, plans/epics/sports_master.md]
+related:
+  [
+    plans/epics/mtds_mdps_master.md,
+    plans/active/tradfi_massive_dual_source_2026_05_28.md,
+    plans/epics/defi_master.md,
+    plans/epics/sports_master.md,
+  ]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
@@ -19,21 +34,26 @@ estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on:
 source:
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: features-service, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: features-service, code: C0, deployment: none, business: none }
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # Data-source provenance enforced across all asset groups
 
@@ -315,10 +335,9 @@ column is RED, not exempt.
       writer `orchestrator.py:3298-3305` (`record_captured_from_counts(..., asset_group="prediction")`) AND the BATCH
       `rebuild_prediction_manifest.py:456` (re-confirmed this session by the ⑪ keystone commit mtds@202f5e0b, which
       reads the same emit). `MARKET_LIFECYCLE` resolves `polymarket_gamma_api` via SOURCE*PRIORITY (utl@01ca49ea removed
-      the POLYMARKET venue-override). Kalshi lands born-canonical (`kalshi*\*`) as a venue addition. **Historical
-      `\_index` re-consolidation folds into`prediction_manifest_canonicalisation_2026_06_01.md`C-source rider** (its
-      single bundled walk owns the prediction`\_index`, GATED `--apply` — do NOT open a separate prediction source
-      walk).
+      the POLYMARKET venue-override). Kalshi lands born-canonical
+      (`kalshi*\*`) as a venue addition. **Historical     `\_index` re-consolidation folds into`prediction_manifest_canonicalisation_2026_06_01.md`C-source rider** (its     single bundled walk owns the prediction`\_index`, GATED `--apply`
+      — do NOT open a separate prediction source walk).
 - [x] ✅ [CODEX] P2. **Document the prediction invariant precisely — DONE (slot-5 2026-06-04).** Added a "Source vs
       Venue invariant (HARD)" section to `codex/02-data/prediction-data-types-catalog.md`: stamping `source` ≠ treating
       venues as sources — Polymarket/Kalshi stay separate **venues** (cross-venue dispersion is a feature-layer concern,
@@ -329,12 +348,8 @@ column is RED, not exempt.
 - [x] ✅ [MTDS] P1. **A12c — DeFi `source=` provenance write-path CONFIRMED shipped** (audit 2026-06-04 slot-2): the
       multi-source DeFi cells already thread `source=` at every `record_captured` — `oracle_prices_handler`
       (`pyth_hermes`/`chainlink`) + `native_staking_handler` (`solana_rpc`/`helius_rpc`); every other DeFi data*type is
-      single-source per UAC `SOURCE_PRIORITY[(defi,*)]`(all entries present) → the UTL`ManifestWriter.add()`gate
-      auto-stamps via`default\*source`/ raises`MissingSourceError`on a blank multi-source cell. Added the MTDS
-      integration guard exercising the REAL writer gate through`DefiManifestRecorder`(single-source auto-stamp +
-      multi-source blank-raise + multi-source explicit-stamp) —`market-tick-data-service`@
-      `tests/unit/test_defi_manifest_recorder.py::test_defi_recorder_real_writer\**`. UAC + UTL gate tests already exist
-      (`test*manifest_writer_source.py::test_record_captured_defi\*\_`).
+      single-source per UAC
+      `SOURCE_PRIORITY[(defi,*)]`(all entries present) → the UTL`ManifestWriter.add()`gate     auto-stamps via`default\*source`/ raises`MissingSourceError`on a blank multi-source cell. Added the MTDS     integration guard exercising the REAL writer gate through`DefiManifestRecorder`(single-source auto-stamp +     multi-source blank-raise + multi-source explicit-stamp) —`market-tick-data-service`@     `tests/unit/test_defi_manifest_recorder.py::test_defi_recorder_real_writer\**`. UAC + UTL gate tests already exist     (`test*manifest_writer_source.py::test_record_captured_defi\*\_`).
 - [ ] [MTDS] P1. **A12a — wire the upstream instruments-service DeFi-catalog PREFLIGHT into the REMAINING DeFi collect
       handlers** (shared gate landed 2026-06-04 slot-2: UAC `PreflightTrigger.DEFI_COLLECT_DAILY` +
       `INSTRUMENTS_PREFLIGHT_REQUIREMENTS[(DEFI,"defi_market_data")]` → `instrument-catalog` within 24h, exported from

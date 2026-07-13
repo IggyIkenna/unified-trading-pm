@@ -2,9 +2,8 @@
 doc_type: codex-ssot
 title: Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
 summary:
-  SUPERSEDED redirect stub — the legacy {bucket_prefix}-{gcp_project_id} env-var bucket-naming pattern is BANNED;
-  use resolve_bucket_name(cloud, kind, asset_group, env) per the Bucket-name SSOT (b+) and the QG STEP 5.69
-  ratchet.
+  SUPERSEDED redirect stub — the legacy {bucket_prefix}-{gcp_project_id} env-var bucket-naming pattern is BANNED; use
+  resolve_bucket_name(cloud, kind, asset_group, env) per the Bucket-name SSOT (b+) and the QG STEP 5.69 ratchet.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +11,19 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [bucket-naming, canonicalisation, ssot-audit, migration, infrastructure]
-related: [../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../05-infrastructure/gcs-object-operations.md]
+related:
+  [
+    ../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
+    ../05-infrastructure/gcs-object-operations.md,
+  ]
 created: 2026-03-27
 authoritative_for: [legacy bucket-prefix env-var pattern deletion-gate stub]
-referenced_by: [codex/02-data/README.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/is-test-run-audit-2026-04-20.md]
+referenced_by:
+  [
+    codex/02-data/README.md,
+    codex/02-data/data-lineage-MTDS-features-ml.md,
+    codex/02-data/is-test-run-audit-2026-04-20.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -49,7 +57,8 @@ bucket = resolve_bucket_name(
   since UTL is T0 and reads it via `importlib.resources`; relocated 2026-06-10 to fix the T0→T4 sibling-walk that broke
   standalone CI clones). The `deployment-service/configs/cloud-providers.yaml` copy is the authoring location + the
   local `deployment_service.env_substitutor` read; `unified-trading-pm/configs/cloud-providers.yaml` is a byte-identical
-  mirror. All three stay in sync. SSOT: `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+  mirror. All three stay in sync. SSOT:
+  `plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 - **Env tier** (`${DEPLOYMENT_ENV}` → staging/prod/development) extends to ALL buckets across both clouds.
 - **`pipeline_mode` lives in PATH**, NOT in bucket name.
 - **Region-pinned**: GCP `asia-northeast1`, AWS `ap-northeast-1` (Tokyo same-metro, ~5× cheaper egress).

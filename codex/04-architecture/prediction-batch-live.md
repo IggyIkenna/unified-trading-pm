@@ -22,13 +22,20 @@ related:
     sports-batch-live.md,
   ]
 created: 2026-05-16
-authoritative_for:
-  [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
+authoritative_for: [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
+referenced_by:
+  [
+    codex/04-architecture/batch-live-architecture.md,
+    codex/04-architecture/sports-batch-live.md,
+    codex/04-architecture/tradfi-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
-plan: plans/active/prediction_manifest_canonicalisation_2026_06_01.md + pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16 placeholder)
+plan:
+  plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md +
+  pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
+  placeholder)
 ---
 
 # Prediction Batch/Live Architecture
@@ -211,7 +218,7 @@ Prediction ticks follow the same MTDS → Redis Stream → MDPS → features-ser
   [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
 - **Mode-axis discipline**:
   [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md)
-- **Source provenance plan**: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`
-- **Prediction canonicalisation walk**: `plans/active/prediction_manifest_canonicalisation_2026_06_01.md`
+- **Source provenance plan**: `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`
+- **Prediction canonicalisation walk**: `plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md`
 - **CQG migration**: `plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`
 - **Predictions epic**: `plans/epics/predictions_master.md`
