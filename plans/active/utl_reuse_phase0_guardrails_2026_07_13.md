@@ -57,10 +57,10 @@ behaviour-preserving, not just compiling.
 
 ## Todos
 
-- [ ] [AUDIT] P0. Add the cross-plan banner `> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**` to the 5 epic
+- [x] ✅ [AUDIT] P0. Add the cross-plan banner `> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**` to the 5 epic
       plans previously in the tracker's `related_plans` (`infrastructure_master`, `strategy_master`,
       `features_and_ml_master`, `execution_master`, `orchestrator_master`), so concurrent slots don't re-touch the same
-      risk/auth/registry surfaces.
+      risk/auth/registry surfaces. — unified-trading-pm (this commit)
 - [ ] [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
       golden-output fixture (one client risk eval, one inference-date model selection, one `resolve_build_order` per
       family) so each merge is provably behaviour-preserving, not just compiling.
