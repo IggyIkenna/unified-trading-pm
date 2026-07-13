@@ -174,9 +174,25 @@ consolidation).
 
 ## Todos
 
-- [ ] [INFRA] P0. Root-cause the `available_at` drop in the CF-8 rebuild+consolidate write path (see "Investigation
+- [x] ✅ [INFRA] P0. Root-cause the `available_at` drop in the CF-8 rebuild+consolidate write path (see "Investigation
       trail" above) — likely needs a small synthetic repro rather than debugging on the full corpus. (repo:
-      unified-trading-library, market-tick-data-service)
+      unified-trading-library, market-tick-data-service) — **ROOT-CAUSED + FIXED, slot 11, 2026-07-13**:
+      `unified-trading-library@f5f15e3a`. `ManifestWriter._records_to_dataframe()`
+      (`unified_trading_library/manifest_writer/_writer_io.py`) — the ONE serializer every write path (legacy
+      single-blob, per-VM shard, runtime live+batch) funnels through before anything reaches GCS — never included
+      `available_at` in its per-row dict. Same class of bug as the pre-2026-06-16 v6-v9 column drop its own docstring
+      warns about, just for a column added 2026-06-26 and threaded through `record_empty`/`record_failed` only THIS SAME
+      DAY (2026-07-13) — never caught. Every row written via `write()` silently lost the value regardless of what the
+      caller passed; the DuckDB consolidator's `union_by_name` merge then padded it with NULL, matching the exact traced
+      symptom (fresh `attempted_at`/`written_at` on the winning row, yet `available_at` is None). Verified via a
+      synthetic DuckDB repro of the isolated merge SQL (ruled OUT the consolidator merge itself as the cause — it
+      preserves values correctly in isolation) before tracing to the serializer. Fix confirmed by reverting it and
+      re-running the new regression test (`test_serialized_dataframe_carries_available_at_on_record_empty`,
+      `tests/unit/test_manifest_writer_serialized_columns.py`): fails on old code, passes on new. Also closed the
+      parallel `_V4_BACKFILL_COLUMNS` gap. Full `quality-gates.sh` green (166s). **Not yet done**: re-running the actual
+      CF-8 backfill on production data (todo 2 below) to confirm the fix holds at the real 5.5M-row scale — the fix is
+      proven correct at the code/unit-test level but the production canonical is still at the restored 62.9% baseline
+      pending that re-attempt.
 - [ ] [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
       surfaces (IS still at 62.9%, MDPS still at ~0%) — coordinate the maintenance window with the operator first to
       avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service)
