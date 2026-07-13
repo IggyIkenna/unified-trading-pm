@@ -141,12 +141,23 @@ in one commit under a gate I can't currently ship through anyway.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Investigate each of the 6 fastapi-`<0.138.0` repos (unified-trading-library, alerting-service,
-      greeks-service, market-tick-data-service, deployment-api, agent-orchestrator): confirm locked resolution is safely
-      below `0.137.0` (add a `PER_REPO_EXTERNAL_EXCEPTIONS` entry, ml-service pattern) or reproduces the routing break
-      (downgrade that repo's own ceiling to `<0.137.0`). Unblocks STAGE 1.5 for real. (repo: unified-trading-pm + the 6
-      named repos)
-- [ ] [BACKEND] P1. `fix_external_dependency_alignment.py --apply` scoped to execution-service, strategy-service
-      (pillow) and features-service (click) to pick up the already-bumped canonical floor. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P0. Investigate each of the fastapi-`<0.138.0` repos (unified-trading-library, alerting-service,
+      greeks-service, market-tick-data-service, deployment-api, agent-orchestrator, + features-service — a 7th found
+      mid-fix once the derived-dependency-manifest cache was refreshed): confirmed via each repo's own `uv.lock` that
+      the actual locked `fastapi` resolution (0.135.1-0.136.3) is safely below the confirmed-broken `0.137.x` threshold,
+      same method + same result as the ml-service investigation. Added all 7 to `PER_REPO_EXTERNAL_EXCEPTIONS` —
+      `unified-trading-pm@d4ad81d40`, merged via PR #989. STAGE 1.5 unblocked for real (verified
+      `check-dependency-alignment.py` green fleet-wide post-merge).
+- [ ] [BACKEND] P1. IN PROGRESS. `fix_external_dependency_alignment.py --apply` scoped to execution-service,
+      strategy-service (pillow) and features-service (click): features-service's click was already fixed by another
+      slot's independent push before this todo ran (confirmed via manifest regen — no action needed there).
+      execution-service (pillow floor-only, no relock needed) and strategy-service (pillow + relock, CVE
+      PYSEC-2026-2253/2254/2255/2256/2257) are both fixed and **committed locally** in slot 15
+      (execution-service@865145a2, strategy-service@16f71e66) but **not yet pushed** — both are queued behind the
+      `qg-host-governor` `QG_HOST_CONCURRENCY=1` token (see `qg_host_governor_severe_contention_2026_07_13.md`; 15+
+      concurrent fleet-wide `quality-gates.sh` runs observed at time of writing). Will ship via quickmerge the moment
+      each clears QG — whichever slot/agent picks this up next should check
+      `git -C execution-service log -1 --format=%H` / `git -C strategy-service log -1 --format=%H` against these SHAs
+      first; if still unpushed, just re-run `bash scripts/quality-gates.sh` in each and quickmerge once green.
 - [ ] [INFRA] P2. Evaluate a lighter-weight per-repo-exception process (YAML + justification) so this doesn't require a
       hand-edited Python dict entry every time a repo patches a CVE ahead of canonical. (repo: unified-trading-pm)
