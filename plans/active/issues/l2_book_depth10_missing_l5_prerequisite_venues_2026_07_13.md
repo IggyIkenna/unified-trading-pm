@@ -82,11 +82,23 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
    it differs from the futures `fstream` host), wire into `binance_spot_ws.py`'s factory (currently has none).
 2. **OKX-SPOT**: mirror `OKXFuturesBookWSConnector`/`OKXFuturesDepth10WSConnector`'s `books5`/`books` channel pattern
    with `instType: SPOT` instId format, wire into `okx_spot_ws.py`'s factory (currently has none).
-3. **OKX-FUTURES**: needs a design decision first — does this venue key mean OKX's actual dated-futures contracts (a
-   genuinely different instrument universe from SWAP), and if so what does IS/UAC's instrument universe registry already
-   know about them? Read `codex/04-architecture/instrument-universe-registry-consolidation.md` and check whether
-   OKX-FUTURES has ANY instrument-universe presence before building a connector for it — it may be that this venue key
-   was never meant to carry live data at all (per the 2026-07-09 fix's framing).
+3. **OKX-FUTURES**: **DECIDED (2026-07-13, slot 8) — real venue, in scope.** `OKX-FUTURES` is a fully-registered UAC
+   canonical venue (`registry/venue_constants.py::OKX_FUTURES`), NOT a leftover/mistaken key: it has its own adapter-key
+   (`venue_adapter_keys.py`: `"OKX-FUTURES": "tardis"`), coverage start `2020-01-01`
+   (`venue_mapping.py::VENUE_COVERAGE_START`), full capability declarations
+   (`PERP_TRADE`/`FUTURES_TRADE`/`OPTIONS_TRADE` in `venue_constants.py`), collateral-acceptance rows
+   (`venue_collateral.py`), and an explicit expected-`data_types` list (`expected_coverage.py`:
+   `"OKX-FUTURES": ["trades", "book_snapshot_5", "derivative_ticker"]`). A code comment at
+   `market_data_categories.py:2089-2092` spells out the exact relationship to OKX-SWAP: _"OKX-FUTURES is dated futures
+   but the MVP universe seeds with perps (the linear ones live under OKX-SWAP, the dated ones under OKX-FUTURES; both
+   write trades for the MVP perp basket)"_ — i.e. OKX-FUTURES = OKX's genuinely distinct DATED (expiry) futures
+   contracts, a real, separately-expected instrument universe, not a duplicate/wrong-tag of OKX-SWAP's perpetuals. The
+   2026-07-09 live-connector fix (`okx_ws.py::register()`) only decided the SHARED perp-shaped `_okx_factory` must not
+   be reused for it (that would mistag dated-futures frames as perpetual/SWAP) — it did NOT decide OKX-FUTURES is out of
+   scope for live capture. **Conclusion: build a real OKX-FUTURES connector** (own `instId` resolution for OKX's
+   dated-contract naming, e.g. `BTC-USD-250328`-style expiry symbols — check `venue_mapping.py`'s OKX helpers + the
+   Tardis `okex-futures` exchange-name mapping for the exact format before writing the parser), following the same
+   `books5`/`books` channel pattern as OKX-SWAP/OKX-SPOT once built.
 4. **UPBIT**: mirror `UpbitSpotWSFeedConnector`'s subscribe pattern with a new `orderbook.{count}` message type
    (`{market_code}.30` per docs/L2_BOOK_DEPTH_RESEARCH_2026_07_13.md — 30 is UPBIT's hard cap, so build
    `book_snapshot_5` AND `depth_of_book_10` in one pass off the same 30-level channel, slicing 5 vs up-to-10 levels),
@@ -94,13 +106,18 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
 
 ## Todos
 
-- [ ] [DATA] P2. Decide OKX-FUTURES's scope (real dated-futures venue vs. never-meant-to-carry-live-data) before any
-      connector work — read the instrument-universe registry docs first. (repo: unified-trading-pm, decision only)
+- [x] ✅ [DATA] P2. Decide OKX-FUTURES's scope (real dated-futures venue vs. never-meant-to-carry-live-data) before any
+      connector work — read the instrument-universe registry docs first. (repo: unified-trading-pm, decision only) —
+      **DONE, slot 8**: real venue, in scope. See the "Recommended fix" section item 3 above for the full evidence trail
+      (UAC adapter-key + coverage-start + capability + expected-data_types all present; the 2026-07-09 fix only barred
+      reusing OKX-SWAP's factory, not a scope exclusion).
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for BINANCE-SPOT (combined-stream
       depth5/depth20, mirrors BinanceFuturesBookWSConnector). (repo: market-tick-data-service)
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-SPOT (books5/books channels, mirrors
       OKXFuturesBookWSConnector/OKXFuturesDepth10WSConnector). (repo: market-tick-data-service)
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for UPBIT (single `{market_code}.30` channel
       backs both data_types since 30 is the venue's hard depth cap). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Once OKX-FUTURES's scope decision lands, build its connector if in scope (needs dated-contract
-      instrument resolution design, not a copy of the SWAP connector). (repo: market-tick-data-service)
+- [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-FUTURES (own dated-contract `instId`
+      resolution — check `venue_mapping.py`'s OKX helpers + the Tardis `okex-futures` exchange-name mapping for the
+      exact expiry-symbol format first; then the same `books5`/`books` channel pattern as OKX-SWAP/OKX-SPOT). Scope
+      decision above already resolved this to in-scope, real work — no longer P3/gated. (repo: market-tick-data-service)
