@@ -363,6 +363,41 @@ degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_live
 Per-asset-group consolidation freshness is audited in each asset-group audit instruction (`(consolidation-health)`
 item) + the engine invariant in `manifest_master_audit_instructions.md` (h2/h3/h4).
 
+## Cockpit data-correctness signals + `_index/latest.json` run summary (WS-3, 2026-07-11)
+
+The deployment cockpit's Consolidators tab (`deployment-api /api/health/consolidator` → `deployment-ui` Cockpit) reads
+this estate through a **data-correctness lens** ("did each run PRODUCE its data?"), complementing the Deployments tab's
+liveness lens. One card per (kind, asset_group), sourced from `consolidator_catalog.generated.json` (a projection of the
+terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-appears on catalog regen).
+
+- **`_index/latest.json` — the AUTHORITATIVE self-reported run summary (SSOT for "did it produce").** Every cycle
+  `manifest_consolidator.main()` overwrites `_index/latest.json` with
+  `{last_run_at, verdict(produced|empty|failed), shards_scanned, shards_changed, rows_in, rows_out, rows_added, dedup_dropped, duration_ms, incremental, no_op}`
+  (from the `ConsolidationReport`). Written on EVERY run — success, failure, or no-op — so `last_run_at` is a liveness
+  heartbeat. Best-effort (`_write_latest_run_summary`, mirrors `_write_stall_state`): a write failure logs, never
+  crashes the cycle. **A consolidator that has never run the reporting code publishes no `latest.json`** → the cockpit
+  shows it as **"not reporting" (dead / not yet fired up)**, never a fabricated all-clear. All ~25 Cloud Run jobs run
+  this one shared module, so a dead consolidator starts reporting the moment it is fired — zero per-job change. Shipped
+  `unified-trading-library@111592eb`.
+- **Verdict vocabulary** (`deployment-api` `_verdict` / `_authoritative_verdict`): `produced` · `producing` (fresh +
+  absorbing a backlog) · `fired_but_empty` (a recent SUCCEEDED run — `latest.json`=empty, or the Cloud Run execution
+  join — against a stale index: ran green, wrote nothing) · `stale_output` (index older than budget while shards wait) ·
+  `empty` (genuinely empty bucket) · `unknown`. When `latest.json` is present its verdict is authoritative; absent, the
+  endpoint derives it from index freshness + the Cloud Run execution join (`latest_execution_by_job`).
+- **Per-(kind, AG) cadence staleness budget** — the Cloud Scheduler cron is a uniform `*/1` for every consolidator, so
+  the real budget is the `MANIFEST_CONSOLIDATED_STALENESS_SEC` each producer VM sets: **live market-data ticks
+  (defi/tradfi/sports/prediction) = 120s; every other consolidator = 86400s** (matches all producer launchers + cefi's
+  daily batch). Carried per catalog entry (`gen_consolidator_catalog.py` `_staleness_budget`), read by `_entry_budget`;
+  each job is judged against its own cadence, not a uniform 120s.
+- **Backlog + oldest-pending** — `per_vm_shard_backlog` returns `(pending, total, oldest_pending_at)` from ONE prefix
+  list: pending shards, fan-in width, and the oldest un-absorbed shard's age ("how long has the merge been behind").
+- **Absolute index snapshot** — row count (cheap parquet-footer ranged read, never downloads the whole index) + file
+  size.
+
+Shipped `deployment-api@{022bfebc,1a505c16,14650f9}`, `deployment-ui@{c97a769e,368ea8e6,15832cd}`. The estate redeploy
+that makes `latest.json` appear in prod is DEFERRED to the end-of-cockpit-plans deploy window; until then the endpoint +
+UI degrade honestly to "not reporting". Plan: `plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md`.
+
 ## Composes with
 
 - CLAUDE.md § "Manifest + Honest Absence" — every row in canonical OR per_vm shard is either `captured` /

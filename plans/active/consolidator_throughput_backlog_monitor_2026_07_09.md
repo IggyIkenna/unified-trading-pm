@@ -221,12 +221,13 @@ drift_direction: advance-code
       `docs/consolidators-help.md` (`.md?raw`), documenting every metric (rows / size / fed-by / index-age / backlog /
       verdict). Per-metric hover titles kept on the verdict + job/bucket where cheap. — `deployment-ui@15832cd`
       (`Markdown.tsx`, `consolidators-help.md`). Supersedes the per-metric-tooltip approach.
-- [ ] [DOCS] P2. **Update the consolidator/manifest docs (operator GO 2026-07-11 — the UI has landed; extend the help
-      doc + mirror to codex).** The metric definitions already live in the shipped `docs/consolidators-help.md`; extend
-      it as new metrics land (fired-but-empty, oldest-pending age, phantom/reprobe) and mirror the view model +
-      dynamic-enumeration contract + metric definitions into `codex/05-infrastructure/manifest-consolidator-ssot.md` +
-      `codex/02-data/availability-manifest-and-data-status.md` (+ the deployment-observability doc). One source (the
-      help doc), two renderings.
+- [x] [DOCS] P2. ✅ **Consolidator/manifest docs updated — DONE 2026-07-11.** The shipped `docs/consolidators-help.md`
+      documents every metric (rows/size/fed-by/index-age/backlog/oldest-pending/verdict incl. fired-but-empty + the
+      run-summary/not-reporting state). Mirrored to codex: `codex/05-infrastructure/manifest-consolidator-ssot.md`
+      gained a "Cockpit data-correctness signals + `_index/latest.json` run summary" section (verdict vocabulary,
+      per-cadence budget, backlog+oldest-pending, absolute snapshot, the latest.json contract + dynamic-enumeration
+      source), and `codex/02-data/availability-manifest-and-data-status.md` gained the sibling-`latest.json` note
+      pointing to it. — PM plan flip (this commit). Phantom/reprobe docs stay with that separate, still-open item.
 
 ### Fan-in — oldest-unmerged-shard age (operator-SCOPED-DOWN 2026-07-11)
 
