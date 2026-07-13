@@ -5,7 +5,7 @@ summary:
   test_deployment_service_cross_repo_invariant.py::test_deployment_service_registry_surface_stable fails because
   deployment-service@b665123e deleted deployments_registry.py (intending to relocate it to unified-trading-library) but
   the module does not exist yet in unified-trading-library — the migration is only half-landed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,7 +20,7 @@ execution_scope: orchestrator-agent
 priority: P1
 author: slot-11
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
-resolved_by:
+resolved_by: slot-3
 locked_by:
 ---
 
@@ -68,13 +68,28 @@ cross-repo move.
 
 ## Todos
 
-- [ ] [CODE] P1. Land `deployments_registry.py` (or its renamed equivalent) in `unified-trading-library`, matching what
-      `deployment-service@b665123e` already assumes exists there — OR revert that deletion until the UTL side is ready.
-      (repo: unified-trading-library or deployment-service)
-- [ ] [CODE] P2. Update
-      `unified-api-contracts/tests/test_deployment_service_cross_repo_invariant.py::     test_deployment_service_registry_surface_stable`
+- [x] ✅ [CODE] P1. Land `deployments_registry.py` (or its renamed equivalent) in `unified-trading-library`, matching
+      what `deployment-service@b665123e` already assumes exists there — OR revert that deletion until the UTL side is
+      ready. (repo: unified-trading-library or deployment-service) — Already landed by another slot before I picked this
+      up: `unified-trading-library@5926c6f0` ("feat(deployment-registry): relocate deployments_registry.py from
+      deployment-service"), as `unified_trading_library/deployment_registry.py` (589 lines, all 12 symbols exported
+      including `DEFAULT_BUCKET`/`DeploymentRegistryEntry`/`DeploymentsRegistry`/`coerce_host_metrics_window`/
+      `vm_serial_rolling_uri`/`InMemoryStorageClient`), with its own 544-line test suite. Verified deployment-api's
+      consumers (`deployments_inventory.py`, `monitor_scheduled.py`, `monitor_backfill.py`, `vm_deployments.py`,
+      `monitor_experiments.py`, `vm_admin.py`, `_vm_health.py`, `monitor_live.py`) already import from
+      `unified_trading_library` directly — the migration's consumer side was already fully complete too.
+- [x] ✅ [CODE] P2. Update
+      `unified-api-contracts/tests/test_deployment_service_cross_repo_invariant.py::test_deployment_service_registry_surface_stable`
       to check the NEW location once landed (mirror the `_module_level_import_names` re-export-recognition pattern
       already added for the VM_PREFIX_TO_BUCKET sibling test in `unified-api-contracts@4bbc7276` if the new home also
-      re-exports rather than directly assigning). (repo: unified-api-contracts)
-- [ ] [VERIFY] P1. Once landed, re-run `bash scripts/quality-gates.sh` in unified-api-contracts full-green, then resolve
-      the repo-blocker / flip the `repo-unified-api-contracts-qg-green` condition. (repo: unified-api-contracts)
+      re-exports rather than directly assigning). (repo: unified-api-contracts) — SHIPPED
+      `unified-api-contracts@de13f4bc`: added a `_utl_root()` helper + a UTL-sibling skip guard (mirroring the existing
+      `_skip_if_absent()` pattern), repointed the test at
+      `unified-trading-library/unified_trading_library/deployment_registry.py`, updated the file's module docstring.
+      UTL's file defines the 5 expected names directly (no re-export layer needed — the
+      `_module_level_assign_names`/`_function_names`/`_class_names` union already used for this test covers it).
+- [x] ✅ [VERIFY] P1. Once landed, re-run `bash scripts/quality-gates.sh` in unified-api-contracts full-green, then
+      resolve the repo-blocker / flip the `repo-unified-api-contracts-qg-green` condition. (repo: unified-api-contracts)
+      — All 6 tests in `test_deployment_service_cross_repo_invariant.py` pass. Full `quality-gates.sh` exit 0, sentinel
+      verified matching HEAD (`de13f4bc`). Shipped via quickmerge, landed on `live-defi-rollout`. No open repo-blocker
+      was found registered for this condition at resolution time.
