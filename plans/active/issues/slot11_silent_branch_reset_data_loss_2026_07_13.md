@@ -113,14 +113,34 @@ are hit, repeatedly, at irregular intervals, regardless of my own heartbeat cade
 to minimize the unpushed-commit exposure window; UTL shipped successfully at commit `ff387620` (safe on origin now). UAC
 has been recovered a 3rd time (`ac361e26`) and is mid-race as of this update.
 
+## UPDATE 2 (13:26 UTC) — 4th occurrence, now hits a 3rd repo, confirmed SIMULTANEOUS across repos
+
+The reset fired again — this time on BOTH `unified-api-contracts` (reflog: `Reset to origin/live-defi-rollout` at
+`2026-07-13 13:26:25`) AND `execution-service` (same event at `2026-07-13 13:26:23`) — **2 seconds apart**. This is no
+longer explainable as independent per-repo timers; it's a single coordinated sweep that hit 2 (of my session's 6
+touched) repos in the same instant. `execution-service` had NOT been hit in any prior occurrence — this is a 3rd
+distinct repo now affected (UTL 2x, UAC 3x, execution-service 1x; strategy-service/system-integration-tests/
+unified-trading-pm — 0x each).
+
+**New data point — already-pushed repos are immune**: at the moment of this 4th reset, `unified-trading-library`,
+`strategy-service`, `unified-trading-pm`, and `system-integration-tests` all had `HEAD == origin` (already shipped via
+quickmerge/push) and were completely unaffected — only the 2 repos with LOCAL commits not yet on origin
+(`unified-api-contracts`, `execution-service`) got reset. This confirms the mechanism's trigger condition is
+specifically "local HEAD ahead of origin," not a blanket per-repo timer, and validates that racing each fix to `origin`
+ASAP (as this session has been doing) is the correct mitigation until the root cause is fixed. Both commits recovered
+again via `git cherry-pick` (`unified-api-contracts@1729c3de`, `execution-service@5eafbcc2`) — no permanent loss.
+
 ## Recommended decision
 
-Operator/main to investigate what actually issued the two `Reset to origin/live-defi-rollout` reflog entries (likely
+Operator/main to investigate what actually issued the `Reset to origin/live-defi-rollout` reflog entries (likely
 candidates: a per-slot cron health-check / drift-repair script, or a respawn/restart routine that resets a clone
 believed-idle back to origin before reassigning it). Once identified: the repair path for "ahead of origin" must NEVER
 be a `reset --hard` — it should either no-op (agent is mid-task, has local commits to push) or, at most, `git stash` the
 divergent state somewhere recoverable (never silently discard). Given this can destroy real work fleet-wide with no
-operator visibility unless the affected agent happens to notice (as I did here), this is a P0 data-safety gap.
+operator visibility unless the affected agent happens to notice (as I did here), this is a P0 data-safety gap. The
+"already-pushed repos are immune" data point above should make this quick to isolate — it's a health-check job that
+scans SPECIFICALLY for `HEAD != origin` clones and resets them, evidently on some sub-hourly cadence with more than one
+repo processed per sweep.
 
 ## Todos
 
