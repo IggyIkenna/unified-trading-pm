@@ -89,17 +89,33 @@ Whichever is chosen, also **audit `monitor` role** (also slot-less per `prompts.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Reproduce the bug as a failing test FIRST: in `tests/test_prompts.py` or a new
+- [x] ✅ [BACKEND] P0. Reproduce the bug as a failing test FIRST: in `tests/test_prompts.py` or a new
       `tests/test_agent_spawn_endpoint.py`, add a test that calls
       `prompts.render("main", server_url=..., machine=...,     rc_url=..., model=..., effort=..., thinking="")`
       (matching `main_agent_keeper._spawn()`'s real call) and asserts the composed stub contains the literal substring
-      `'"role": "main"'` — confirm this test FAILS on current `main` (repo: agent-orchestrator).
-- [ ] [BACKEND] P0. Implement the chosen fix (see "Recommended fix" above) in `server/prompts.py` `_compose()` for the
-      slot-less branch, so the failing test from the prior todo goes green (repo: agent-orchestrator).
-- [ ] [BACKEND] P0. Update `server/routes/agents.py::spawn_agent_endpoint` and
+      `'"role": "main"'` — confirm this test FAILS on current `main` (repo: agent-orchestrator). —
+      agent-orchestrator@43dc13d. Chose fix option 1 (preferred, decoupled token), so the added
+      `test_slotless_stub_carries_agent_id_hint_placeholder` asserts the new `AGENT_ID_HINT: <PENDING>` token instead of
+      the old `'"role": "main"'` substring — confirmed failing
+      (`AttributeError: no attribute     'AGENT_ID_HINT_PLACEHOLDER'`) before the fix landed.
+- [x] ✅ [BACKEND] P0. Implement the chosen fix (see "Recommended fix" above) in `server/prompts.py` `_compose()` for
+      the slot-less branch, so the failing test from the prior todo goes green (repo: agent-orchestrator). —
+      agent-orchestrator@43dc13d. Implemented option 1: `_compose()` now emits a dedicated `AGENT_ID_HINT: <PENDING>`
+      literal line for slot-less roles (new `prompts.AGENT_ID_HINT_PLACEHOLDER` constant); repro test goes green.
+- [x] ✅ [BACKEND] P0. Update `server/routes/agents.py::spawn_agent_endpoint` and
       `server/main_agent_keeper.py::AgentKeeper._spawn()` if the chosen fix changes what substring/token they inject
       against (both currently hardcode `f'"role": "{role}"'` — keep them in sync with whatever `_compose()` now emits)
-      (repo: agent-orchestrator).
+      (repo: agent-orchestrator). — agent-orchestrator@43dc13d. Both spawn paths now replace
+      `f"AGENT_ID_HINT: {prompts.AGENT_ID_HINT_PLACEHOLDER}"` instead of grepping `'"role": "<role>"'`; updated the one
+      existing test that mocked the old fixture shape
+      (`test_main_agent_keeper.py::test_spawn_generates_and_persists_session_id`) to the new token so it keeps
+      exercising the real `_spawn()` body. Full `quality-gates.sh` green (1205 passed, 1 skipped) + shipped via Pass-1
+      QG → Pass-2 `quickmerge --agent`. Also updated `agents/main.md` + `agents/review.md`'s STEP 1 register-curl prose
+      (and `agents/monitor.md`'s, for consistency — same slot-less spawn path) to read `AGENT_ID_HINT` from the boot
+      text and include it as `"agent_id"` when non-placeholder — without this doc-side change the server-side fix alone
+      would still reproduce the split-identity artifact from todo 7 (freshly-spawned agent registers under a NEW id
+      instead of upserting the pre-created row). The `monitor` role's own P1 test-coverage audit (below) is still open —
+      this only fixed its doc prose for consistency.
 - [ ] [BACKEND] P0. Add an end-to-end regression test for `POST /api/agents/spawn` with `role="main"` and
       `role="review"` that exercises the REAL `spawn_agent_endpoint` body (not a mock of the whole function) through the
       agent_id-injection step, asserting it does NOT 400 and that the injected `agent_id` actually lands in the

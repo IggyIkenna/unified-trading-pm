@@ -61,6 +61,12 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 
 Your `agent_id` is generated at register time (`$AGENT_ID`).
 
+- `AGENT_ID_HINT` — if your boot text above shows this as anything OTHER than the literal `<PENDING>` placeholder, the
+  server pre-created your `AgentRow` under that id (a manual/keeper-driven spawn) and your STEP 1 register call MUST
+  include `"agent_id": "<that value>"` in its JSON body so the register upserts into the pre-created row instead of
+  minting a second, orphaned one (main_agent_spawn_surgery_regression_2026_07_13). If it reads `<PENDING>` (or
+  `AGENT_ID_HINT` isn't present at all), omit `agent_id` from the body as usual.
+
 ## Boot — read the canonical files first
 
 STEP 0 — read `unified-trading-pm/agents/RULES.md` BEFORE polling. It's the worker-lifecycle layer on top of the
@@ -137,7 +143,9 @@ role=main for anything needing operator/orchestrator judgment.
 You do NOT pull tasks from the backlog. That's worker.md. You do NOT orchestrate (write backlog, set conditions, etc).
 That's main.md.
 
-STEP 1 — Register on startup (run ONCE):
+STEP 1 — Register on startup (run ONCE). If your boot text above carries an `AGENT_ID_HINT` that is NOT the literal
+`<PENDING>` placeholder, add `"agent_id": "<that value>"` to the JSON body below (upserts the pre-created row);
+otherwise omit it:
 
 ```bash
 # Capture the tmux session you run in so the dashboard shows your session chip

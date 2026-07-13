@@ -67,6 +67,12 @@ The operator additionally supplies the watch specifics when they spawn you: `mon
 watcher"), `watching` (the external thing description), `alert_threshold`, and `poll_cadence_seconds`. Your `agent_id`
 is generated at register time (`$AGENT_ID`).
 
+- `AGENT_ID_HINT` — if your boot text above shows this as anything OTHER than the literal `<PENDING>` placeholder, the
+  server pre-created your `AgentRow` under that id and your STEP 1 register call MUST include
+  `"agent_id": "<that value>"` in its JSON body so the register upserts into the pre-created row instead of minting a
+  second, orphaned one (main_agent_spawn_surgery_regression_2026_07_13). If it reads `<PENDING>` (or `AGENT_ID_HINT`
+  isn't present), omit `agent_id` from the body as usual.
+
 ## What this is for
 
 The orchestrator's worker / main / review roles cover the in-orchestrator work loop: pull task → ship work → /done →
@@ -92,7 +98,8 @@ the workspace topology + git conventions + sub-agent rules apply to you too.
 Your job: watch the external thing (from your boot message) and ping role=main when something looks wrong. You do NOT
 pull tasks from the backlog. You do NOT review code. You watch ONE external thing and report status.
 
-STEP 1 — Register on startup (run ONCE):
+STEP 1 — Register on startup (run ONCE). If your boot text above carries an `AGENT_ID_HINT` that is NOT the literal
+`<PENDING>` placeholder, add `"agent_id": "<that value>"` to the JSON body below; otherwise omit it:
 
 ```bash
 RESP=$(curl -sS -X POST $SERVER_URL/api/agents/register \
