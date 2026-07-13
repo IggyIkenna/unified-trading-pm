@@ -87,17 +87,30 @@ disk). Impact is honest-coverage % + foundation-gate / P2d final-gate risk.
 
 ## Approved remediation (operator, 2026-07-13) — executing via workflow wf_8f931d1a-08f
 
-- [ ] [DATA] P1. Index safety snapshot to `_index/snapshots/` BEFORE any writes (gates all mutations).
-- [ ] [DATA] P1. Truthset-evidenced flip of the 30,892 no-fixture cells → `empty_confirmed` with
+- [x] [DATA] P1. Index safety snapshot to `_index/snapshots/` BEFORE any writes (gates all mutations). ✅ —
+      `_index/snapshots/availability_index_20260713_141117.parquet` (crc32c `N9pFJg==` matches source, size 94,505,080
+      bytes verified via gcs_describe_object).
+- [x] [DATA] P1. Truthset-evidenced flip of the 30,892 no-fixture cells → `empty_confirmed` with
       `error_reason=EXPECTED_NO_FIXTURE__truthset_20260628_confirms_no_fixtures`, via the manifest-writer per-VM shard
       path (never a hand-edit of the consolidated index), capped at dates ≤ 2026-06-28 (truthset snapshot date). One-off
-      script mirrors `flip_residual_attempted_failed_2026_06_29.py`, committed with lifecycle markers.
-- [ ] [DATA] P1. Reconcile the 9 real-fixture cells from the parquet already on disk (record_captured + .write());
-      re-fetch any remainder.
-- [ ] [DATA] P2. Extend the truthset audit (`audit_fixtures_via_api_football.py`) to the 7,354 outside-coverage cells
+      script mirrors `flip_residual_attempted_failed_2026_06_29.py`, committed with lifecycle markers. ✅ —
+      instruments-service@e95838d5 (`scripts/fixtures_eu_truthset_flip_2026_07_13.py`, dry-run then real). Flipped
+      exactly **30,183**: the join reproduces 30,892 without a date filter; the ≤06-28 cap itself excludes 709 cells
+      dated 06-29→07-13 (verified to the row). Shard `fixtures-eu-flip-20260713-142325.parquet` merged via
+      `uts-prod-manifest-consolidator-instruments-sports` (execution -llb88); pairs provenance at
+      `_audits/fixtures_eu_flip_pairs_20260713.parquet`.
+- [x] [DATA] P1. Reconcile the 9 real-fixture cells from the parquet already on disk (record_captured + .write());
+      re-fetch any remainder. ✅ — 8/9 reconciled from on-disk parquet; EMPEROR_CUP 2018-01-01 re-fetched live from
+      api_football (af_league_id=102 season=2017, 1 fixture) + canonical parquet written, then record_captured. 9/9
+      `captured` post-consolidation. NOTE: first reconcile9 shard was pruned without merging (consolidator race, see
+      linked issue); idempotent re-run at 14:31Z landed all 9.
+- [x] [DATA] P2. Extend the truthset audit (`audit_fixtures_via_api_football.py`) to the 7,354 outside-coverage cells
       (small API budget); evidenced flips only (no blanket flip — would fabricate absence); return keep/remove
       recommendation for the 22 non-registry leagues incl. denominator impact on other data_types (**operator decision,
-      not auto-applied**).
+      not auto-applied**). ✅ — 66 (league,season) pairs audited, 114 API calls, 0 failures; **4,494** evidenced flips
+      applied (`EXPECTED_NO_FIXTURE__truthset_20260713-*`); 20 cells proven fetch_needed; 49 proven-empty held by the
+      7-day in-progress-season caution. Recommendation returned (see follow-up todo below): REMOVE all **24**
+      non-registry league_ids (21 numeric af/FootyStats-ambiguous ids + LA_LIGA_2 + RFPL + SCOTTISH_LEAGUE_CUP_185).
 - [x] [CODE] P1. Structural: season-fixture-calendar gate for FIXTURES in `_enumerate_v2_sports` (mirroring the
       footystats/understat gates; alive-day fallback where no calendar evidence exists — never silently shrink the
       denominator) + surface the raw EU pending metric in `run_fixture_completeness_audit_2026_06_25.py` so the depth
@@ -111,11 +124,42 @@ disk). Impact is honest-coverage % + foundation-gate / P2d final-gate risk.
       reproduces the 38,255 forensics count on the 2026-07-13 index copy; 8 new unit tests. Nightly pickup: Cloud
       Scheduler `expected-universe-v2-sports-daily` (`30 1 * * *` UTC) → Cloud Run job on `instruments-service:latest` —
       effective after LDR→main promote rebuilds the image (next run ≥ 2026-07-14 01:30 UTC).
-- [ ] [VERIFY] P1. Post-consolidation verification: in-truthset ≤06-28 no-fixture pending == 0; the 9 cells resolved;
-      captured count did not decrease; depth audit still green; report the honest-coverage delta.
+- [x] [VERIFY] P1. Post-consolidation verification: in-truthset ≤06-28 no-fixture pending == 0; the 9 cells resolved;
+      captured count did not decrease; depth audit still green; report the honest-coverage delta. ✅ — all assertions
+      PASS on the re-downloaded consolidated index (14:56Z): target class 30,183 → **0**; 9/9 captured; raw captured
+      1,064,351 → 1,064,360 (+9 only, zero decreases in any data_type; atom-level set check found 0 lost captured
+      atoms); depth gate exit 0 (194.50% — registry expected-counts undercount actual fixtures; the plan's earlier
+      "~100.1%" phrasing measured a different registry snapshot) with the new raw-metric line printing
+      `SUMMARY: depth 194.4989% | raw pending-fetch rows: 3569`. **Delta: pending 38,255 → 3,569 (−90.7%)** = 30,183
+      truthset flips + 9 captured + 4,494 audit-ext flips. Residual 3,569 is fully decomposed and contains ZERO
+      dishonest in-truthset cells: 2,471 non-registry-league cells awaiting the de-registration ruling + 1,098
+      post-cutoff trickle (2026-06-29→07-13; ages out via daily capture; includes the 20 fetch_needed + 49
+      caution-held). empty_confirmed 280,946 → 315,623 (+34,677, every row carries an EXPECTED\_-prefixed per-cell
+      evidence reason).
+
+Follow-ups (post-remediation):
+
+- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION: rule on + execute the 24-league de-registration (recommendation: REMOVE from
+      the FIXTURES/enumeration universe — numeric ids are af-id↔FootyStats-season-id ambiguous, several are phantom
+      twins of covered canonical leagues; removes 60,364 phantom denominator rows across all data_types and stops ~89
+      new phantom cells/day still minted by the enum cron). MUST re-key, not delete, 1,647 captured rows:
+      LA_LIGA_2→SEGUNDA_DIVISION (667 footystats ODDS + 25 MATCHES; `_LEAGUE_ALIASES`),
+      SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP (16 FIXTURE_STATS; ≥100-suffix rule), RFPL (868 understat XG —
+      preserve under a defined key or park until the curated-set definition). Mirror the UNKNOWN-league precedent
+      (`backfill_remove_unknown_league_phantom_2026_07_09.py`: snapshot-first, hard-abort on real captured data).
+- [ ] [DATA] P3. Fetch the 20 proven fetch_needed post-cutoff cells (enumerated in `_audits/` audit-extension
+      provenance) if the daily pipeline has not captured them by ~2026-07-20; re-check the 49 caution-held cells then
+      too.
 
 ## Progress log
 
 - 2026-07-13: Diagnosis confirmed (workflow wf_3a605ad4-958); operator approved the 4-step remediation; execution
   dispatched (workflow wf_8f931d1a-08f: snapshot → flip+reconcile ∥ truthset-extension ∥ structural fix → final verify).
   This doc filed at dispatch time; checkboxes flip with evidence as legs complete.
+- 2026-07-13 (later): Remediation COMPLETE — all 4 approved steps executed + verified (5/5 workflow legs green, 0
+  errors). Pending 38,255 → 3,569 (−90.7%), zero clobbers, depth gate green, structural gate shipped
+  (instruments-service@e95838d5 + @c03a95dd; nightly enum pickup after next LDR→main promote rebuilds the image, ≥
+  2026-07-14 01:30 UTC). Open: the 24-league de-registration ruling (BLOCKED-OPERATOR-DECISION above) + the 20
+  fetch_needed cells. Side-finding filed separately: manifest-consolidator prune race (shard pruned without merging when
+  two executions overlap) — [[manifest_consolidator_prune_race_overlapping_executions_2026_07_13]]
+  (plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md).
