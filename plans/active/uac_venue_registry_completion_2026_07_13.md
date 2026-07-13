@@ -107,7 +107,19 @@ code.
       `BitgetCeFiAdapter` (execution-service) is also `BLOCKED-CREDENTIALS` with every trading method raising
       `NotImplementedError`, so empty frozenset entries were added there too. Full `quality-gates.sh` green (297s),
       sentinel verified at `21dde0f8ce9e860e4115cb30845a5eb35e9b6938`.
-- [ ] [REGISTRY] P1. Add `KRAKEN-SPOT` + `KRAKEN-FUTURES` to both dicts, same capability pattern as bitfinex.
+- [x] ✅ [REGISTRY] P1. Add `KRAKEN-SPOT` + `KRAKEN-FUTURES` to both dicts, same capability pattern as bitfinex. —
+      SHIPPED `unified-api-contracts@7c9c1a0a`. Category `"cefi"`; capabilities `{SPOT_TRADE}` /
+      `{PERP_TRADE,     FUTURES_TRADE}`. `VENUE_ORDER_CAPABILITIES` deliberately did NOT copy the Bitfinex/Bitget
+      empty-set pattern: `KrakenCeFiAdapter` (execution-service `kraken_rest_adapter.py`) is a REAL implementation —
+      `place_order` genuinely POSTs to Kraken's `AddOrder` endpoint (not a `NotImplementedError` stub) — supporting
+      MARKET/LIMIT/STOP_LIMIT/STOP_LOSS/TAKE_PROFIT via its outbound order-type mapping, with no post-only/ reduce-only
+      oflags and no batch or cancel-replace endpoint wired. Added a custom `frozenset({STOP_LIMIT})` entry (not empty,
+      not any `_CEFI_*` tier — those all require `POST_ONLY`, which isn't implemented). Full `quality-gates.sh` green
+      (748s, run with `IGNORE_TIMEOUT=true` — the documented override in `base-service.sh`/`base-library.sh` for exactly
+      this queue-contention wall-clock false-fail, see
+      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — after two prior attempts tripped the
+      `<720s` gate by 11-18s purely from governor queue-wait), sentinel verified at
+      `7c9c1a0a9c8c009f3e5ad3fcc9e2318ce0da54a3`.
 - [ ] [REGISTRY] P1. Wire archetype-leg eligibility for `FX`, `BITFINEX-SPOT`, `BITFINEX-FUTURES`, `NASDAQ`, `NYSE` into
       `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
       (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py`) — confirmed 0
