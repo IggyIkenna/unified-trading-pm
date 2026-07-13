@@ -3086,3 +3086,20 @@ todos below lands or CF-8's schema change ships.
       stays above the last-real-progress baseline (a quiet bucket with no new shards never advances past its baseline,
       so it never false-pages; a first-ever observation adopts the baseline without counting, so rollout onto an
       already-caught-up bucket can't false-positive either). 5 new unit tests + full QG green.
+
+## E8 Verify — re-dispatch check 2026-07-13T07:4{0-5}Z (data_engineering slot-9, task -003, twentieth touch)
+
+Dispatched to the CF-3/CF-4-residual checkbox (line ~3066). Fresh-pulled `unified-trading-pm` (clean FF to `f548978a5`)
+— no plan change since the nineteenth touch. Checked `GET /api/state` → `blocked_queue` before doing any GCS work:
+`BLK-d48acae4` (filed by slot-3 2026-07-13T07:30:09Z) already carries this exact question — "IS CF-3/CF-4 residual:
+19,274 … rows … How should this residual be resolved?", options A (accept as permanently-untyped legacy rows) / B (fund
+a historical-reconstruction pass), `recommendation: "A"` — and is still `answered_at: null`.
+
+**Not filing a duplicate blocked-question** — `BLK-d48acae4` already states the decision needed, matches this checkbox
+word-for-word, and remains live in the queue. No new information to add (the nineteenth touch's confirmation that these
+rows predate 2026-07-08 and are unreachable by the real E3/E4 `--apply` run already stands; re-running the full
+`cf_manifest_audit_2026_06_01.py` would spend real GCS-read cost for zero new information since neither surface's
+canonical index has changed since the nineteenth touch's force-consolidate). `skip-current-task`'d. Next toucher: check
+`BLK-d48acae4.answered_at` first; if still null, this is the same cheap check — don't re-run the audit. If answered,
+`codex/02-data/availability-manifest-and-data-status.md` needs the exception documented (Option A) or a
+historical-reconstruction pass needs scoping (Option B) before this checkbox can flip.
