@@ -117,6 +117,65 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 14 (Todo 1 re-dispatch, same session continued — found 3 OOM-zombie shards across 3 different eras; REOPENED the "OOM-crash risk is closed" claim from this session's own earlier entry; gap-filled all 3, escalating to operator)
+
+**Todo 1 (compute features 2015→present) — took concrete action (3 shard recoveries) and produced a critical correctness
+finding that CONTRADICTS this same session's own earlier claim below that the OOM-crash risk was closed. Checkbox NOT
+flipped (multi-day operation, not yet complete).**
+
+Fresh-pulled all repos (clean), then fast re-verified the 10-VM fleet (launched ~09:18-09:25 UTC today, per the entry
+below) via non-snap gcloud: features bucket at **2,202 unique dates** (up from the handoff's 2,159). Consolidator health
+check first (the recovery VM below had failed on this): `instruments-store-sports-prd` blob was fresh (`updateTime` ~70s
+old) — the transient staleness that killed my prior dispatch's recovery VM (`features-sports-sports-20260713-170017`,
+`DEPLOYMENT_FAILED exit_code=1` on a `ManifestConsolidatorStaleError` fail-fast gate, self-deleted) had already
+self-healed by this check, consistent with the July-12 precedent for the same gate (see
+`sports_manifest_consolidator_duckdb_crash_and_silent_empty_read_2026_07_12.md`, already closed).
+
+**Went deeper than the instance-list `RUNNING` status** (this plan's own established standard) on the 3 shards still
+listed: **all 3 (`fss-backfill-vm-3`, `-vm-5`, `-vm-10`) were OOM-zombies** — confirmed via SSH (`ps aux` showed no
+`features_service` process, load average ~0.00 on all 3) + `dmesg` (identical OOM signature, ~15.8GB/~32GB anon-rss,
+same as every prior OOM finding in
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)).
+**Critical: all 3 died at the IDENTICAL log position** (immediately after `Calculator advanced_stats: 62 columns added`,
+right before `compute_shot_quality_batch` per `run_new_calculators`'s calculator order) — on 3 unrelated dates spanning
+3 different eras: `vm-10` on **2025-08-10** (modern, non-history — 85 dates completed cleanly first), `vm-3` on
+**2018-01-06** (a SECOND independent crash at this exact date — an earlier same-day dispatch by slot-12 already
+gap-filled this shard past one crash, and it died again at the same date 254 dates later), `vm-5` on **2019-08-17**
+(within 6 dates of a fresh restart). All 3 were running `features-service@c3e3ebfe` or later (the venue_context fix this
+same plan's own earlier entry claimed "closes the OOM-crash risk") — so this is hard evidence that claim was **wrong**:
+c3e3ebfe fixed ONE real bug (venue_id cartesian join) but did not bound the actual unbounded site, which the
+log-position evidence now points at `compute_shot_quality_batch` instead (matching the issue doc's own already-reopened,
+not-yet-closed todo).
+
+**Recovery (not a fix)**: deleted all 3 zombie VMs, gap-filled each shard's remaining range excluding its poison date
+via the collision-free `launch-features-vm.sh` (all 5 code tarballs fresh at each launch): `2025-08-11→2026-07-13`
+(`features-sports-sports-20260713-200043`), `2018-01-07→2018-06-16` (`-200456`), `2019-08-18→2020-10-05` (`-200525`).
+All 3 confirmed genuinely computing within minutes (not just booted) via SSH process check / log tail. The 6 other
+original shards (`vm-1,2,6,7,8,9`) all show clean `EXIT_STATUS=0` — unaffected, not part of this finding.
+
+**What I did NOT do**: did not attempt to guess-fix `compute_shot_quality_batch` inline — this doc's own history shows
+guessed fixes here (b05f48ad) don't hold without real profiling; filed a new P0 profiling todo instead. Did not re-scan
+the full fleet beyond the 3 shards this fast re-verify covered. Did not flip Todo 1 — compute is still genuinely in
+progress and now has 3 known-poison dates pending a real fix.
+
+**Filed** full evidence (crash table, log-position analysis, calculator-chain trace) in the issue doc's new "Update —
+THIRD recurrence" section + a new P0 todo. **Escalating to operator via `/blocked`**: this is the SECOND time this
+session (and the fourth+ time across this plan's history) an "OOM resolved" claim was made and then contradicted by
+production evidence — flagging so the operator can decide whether to pause new full-history relaunches on this plan
+until the shot_quality root cause actually lands, rather than each dispatch independently rediscovering the same
+pattern.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,202
+with contributions from the 3 new gap-fill VMs above); watch for the SAME crash signature (dies right after
+`advanced_stats`) recurring on OTHER dates in the now-9-shard-effective fleet — if it does, that's further evidence for
+the shot_quality root-cause todo, not a new finding. Do NOT blindly relaunch 2018-01-06 / 2019-08-17 / 2025-08-10 with
+`--skip-existing` until the issue doc's new P0 profiling todo lands a real fix.
+
+Checkbox NOT flipped (compute genuinely in progress, and now has 3 confirmed-poison dates blocking full-history
+completion). Repo code commit: none (VM operations + issue-doc/plan-doc updates only); ships via the `docs(plans):`
+carve-out.
+
 ### 2026-07-13 — slot 14 (Todo 1 dispatch — fast re-verify triggered a self-inflicted VM-deletion collision; recovered cleanly, no data lost; flagging the launcher footgun)
 
 **Todo 1 (compute features 2015→present) — took concrete action (vm-8 gap-fill relaunch), then a SEPARATE relaunch
