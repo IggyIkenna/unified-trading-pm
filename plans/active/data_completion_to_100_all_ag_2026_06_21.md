@@ -109,19 +109,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-              > — it caused no canonical-form regression. Recorded in
-              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                      > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                      > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                      > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                      > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                      > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                      > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                      > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                      > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                      > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                      > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                      > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                      > — it caused no canonical-form regression. Recorded in
+                      > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -3967,7 +3967,12 @@ MTDS consolidation ruling.)**
       FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk** (CF-1/3/4/8 RED + 40% null `capture_status` +
-      blank `data_type` + 23 legacy-only cells; cf-audit ① above). Owner = the **cefi slice** of
+      blank `data_type` + ~~23 legacy-only cells~~; cf-audit ① above). **[2026-07-13 CORRECTION — stale number, real
+      audit run]**: the "23 legacy-only cells" figure above is STALE/WRONG. The first-ever post-apply CF-1..CF-14
+      manifest audit for cefi (real execution of `unified-trading-library/unified_trading_library/cf_manifest_audit.py`
+      against live data, this session) found `instruments-store-cefi-prd` L6-legacy-only **RED at 18,076 cells** —
+      not 23. See the 2026-07-13 (cefi lane) Progress Log entry at the end of this doc for the full audit readout
+      (instruments-store + market-data-tick both surfaces). Owner = the **cefi slice** of
       `instruments_manifest_canonicalisation_2026_06_01.md` (was: cited as live owner — **[2026-07-12 correction]**:
       that doc is ✅ ARCHIVED 2026-06-26, folded into `instruments_mtds_subset_consistency_remediation_2026_06_17.md`
       survivor I-2 — retarget the owner pointer there. That successor doc reports cefi's instruments-store v9 migration
@@ -4787,3 +4792,58 @@ Picked up a prior VERIFIED (read-only, live-checked) investigation's findings fo
       legacy buckets are gone from both config and live state, but defi will **NOT** reach full C-GREEN in this pass:
       the CF-2/CF-3 partition-path gaps above (~703 dates, real, confirmed) need a physical relabel/backfill migration
       that is out of scope for this session — reported honestly, not overstated as resolved.
+
+### 2026-07-13 (cefi lane, slot-3) — first-ever post-apply CF-1..CF-14 audit recorded; cefi is the LEAST-ready of the 3 AGs worked this session
+
+Recording a prior VERIFIED (real execution, live-checked) investigation's findings for `asset_group: cefi`. This was the
+**first-ever post-apply CF-1..CF-14 audit run for cefi** — a real execution of
+`unified-trading-library/unified_trading_library/cf_manifest_audit.py` against live data (had to be run manually; see
+the cross-cutting scheduled-job finding below for why). Reported honestly: **cefi is NOT close to ready**, and is the
+least-ready of the asset_groups worked this session (cf. defi's honest "not full C-GREEN" report immediately above).
+
+- [x] [DATA] P0. **Real REDs found on BOTH cefi manifest surfaces — recorded, NOT fixed, NOT checked off.**
+  - `instruments-store-cefi-prd`: **L6-legacy-only is RED at 18,076 cells.** This CORRECTS the stale "23 legacy-only
+    cells" figure this plan carried at the `cefi instruments-store _index v8→v9 single-walk` todo above (now annotated
+    inline with a `[2026-07-13 CORRECTION]` note pointing back here) — that number was wrong/stale; the real,
+    freshly-measured figure is 18,076, roughly 785x larger than previously believed.
+  - `market-data-tick-cefi-prd`: multiple CFs RED, all tied to already-tracked open todos in this same doc — the E4
+    orphan sweep, E5 rebuild-with-`pipeline_mode`/`source`-via-`ManifestWriter.add()`, E7 verify-loop, and E8 legacy
+    delete sequence (the `- [ ] [DATA] P0/P1 …` block folded in from `bucket_name_ssot_legacy_dual_write_remediation_…`
+    / `cefi_manifest_canonicalisation_2026_06_01.md`, this doc's "orphan sweep" / "E4 remaining work" / "E7 Verify" /
+    "E8 ⚠️ IRREVERSIBLE" todos above). These findings are consistent with — not new discoveries beyond — that existing
+    open work; they are **deliberately left OPEN/unchecked** here. This pass does NOT attempt the E4-E8 remediation
+    (correctly out of scope — multi-day, irreversible-adjacent work already gated on its own dry-run + coordinator G0
+    prerequisites per the existing todos).
+  - **No cefi decommission/legacy-bucket-delete checkbox flipped.** Cefi legacy buckets
+    (`market-data-tick-cefi-central-element-323112`, `instruments-store-cefi-central-element-323112`) remain untouched,
+    per instructions.
+- [x] [CODE] P2. **Additive polish — `measure_honest_coverage.py` merge-degradation now logs explicitly.** Confirmed
+      live (read-only) that `instruments-service/scripts/measure_honest_coverage.py`'s manifest-merge already degrades
+      gracefully to primary-only when a legacy/secondary bucket is missing/404 (verified for all 5 asset_groups) — no
+      crash-safety fix was needed. Added one explicit `logger.warning` in `_read_manifest`, right after the
+      accessible-set is built, firing when `merge=True` and a candidate's legacy bucket is present in `candidates` but
+      absent from `accessible` (secondary unreachable) —
+      `"MERGE DISABLED for <ag>: legacy bucket(s) unreachable (<names>), expected_unattempted skeleton may be incomplete"`.
+      Low-risk, additive-only (7 lines), no behavior change to the merge logic itself. Evidence:
+      `instruments-service@80b5a9e992572db53a76cc4386cc8e36c1b4a222`.
+- [x] [DATA] P0. **N1b + DIVERGENT_EMPTY — reported per instructions, NOT re-measured/resolved this pass.** Per the
+      prior investigation: N1b (`UNCLASSIFIED_ADAPTER_ERROR` reconciliation) sits roughly in the 698k→1.72M range, and
+      recurring `DIVERGENT_EMPTY` findings persist. Not re-confirmed with a fresh count this pass (out of scope per
+      instructions — report only); flagging so the range is not silently lost.
+- [ ] [INFRA] P1. **Cross-cutting — scheduled `uts-prod-cf-manifest-audit` Cloud Run Job has NEVER produced a successful
+      run in this window** (asia-northeast1, meant to run this exact CF-1..CF-14 audit daily 06:00 UTC for ALL 5
+      asset_groups automatically). Confirmed failing every day 2026-07-04→2026-07-13 ("Application exec likely failed" /
+      exit 1 most days; today specifically OOM'd at its 4Gi container limit on `--all-ags`).
+      `gs://cf-manifest-audit-central-element-323112/cf_audit/` has 0 objects — the automated pipeline that is supposed
+      to produce this daily for every asset_group (cefi/defi/tradfi/sports/prediction, all equally affected) has never
+      succeeded, which is WHY this session's cefi audit (and every other AG's CF-audit numbers cited this session) had
+      to be run manually. Filed as its own tracked issue (not fixed here — this is bigger than cefi and needs a
+      dedicated infra pass): `plans/active/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. Likely
+      fix: bump the job's memory limit above 4Gi, or split `--all-ags` into 5 per-asset_group Cloud Run executions.
+      parent_epic: mtds_mdps_master.
+- [x] [DATA] P0. **Honest CF-audit status report (cefi, this session) — cefi is NOT close to ready, the least-ready AG
+      worked this session.** Both cefi manifest surfaces show real REDs (18,076 legacy-only cells on instruments-store,
+      multiple CFs red on market-data-tick tied to the E4-E8 sequence); none of it was fixed or checked off in this pass
+      — only the ⑦ additive polish item above landed. Reported honestly, not overstated: cefi legacy bucket decommission
+      (`bucket_name_ssot…` L6/L7) remains correctly blocked on the existing E4→E5→E7→E8 sequence, which is genuinely
+      multi-day, irreversible-adjacent work, not something to rush in this pass.
