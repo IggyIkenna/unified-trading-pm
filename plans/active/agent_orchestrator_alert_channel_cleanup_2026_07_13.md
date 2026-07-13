@@ -203,6 +203,14 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       (Since / Total events / N failure event(s) / Activity / Footer) + a "Digest event glossary" grouping all ~25 event
       types by lifecycle stage (boot·spawn / task / git-health / liveness·self-healing / plan-health·escalation) with
       their `log_activity` code refs. Frontmatter-schema + prettier green. — unified-trading-pm (this commit).
+- [x] 11. ✅ [BACKEND] P1. WS-B bug (operator: "4 different summary alerts already"): the digest fired **once per server
+      restart**, not once per interval. `DailySummaryLoop._loop` called `_tick_and_report()` immediately (30 s) on every
+      start; prod runs uvicorn `--reload`, so each code change reaching the VM restarted the server → a boot digest. The
+      channel showed 5 digests on 2026-07-13 (07:15 scheduled, then 10:45/11:27/11:31/11:46 as AO code landed) — windows
+      non-overlapping (cursor kept the data honest), so noise not double-counting. Fixed: anchored the wait to the
+      persisted cursor via `_seconds_until_due()` (0 when overdue/never-summarised → fire; >0 → a restart waits out the
+      remainder). First-boot + genuinely-overdue still post. Tests: recent-cursor defer, absent/stale due; full
+      `quality-gates.sh` green (1219 pytest). — agent-orchestrator@d5c5cae.
 
 ## Progress Log
 
@@ -223,6 +231,12 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (digest-per-restart bug)** — Operator: "4 different summary alerts already". Pulled the channel — **5**
+  digests in one morning (07:15, 10:45, 11:27, 11:31, 11:46), windows non-overlapping so the cursor was fine; the loop
+  was firing on **every server restart** (uvicorn `--reload` restarts per code change reaching the VM; AO code landed
+  repeatedly today). Fixed `DailySummaryLoop` to anchor the wait to the persisted cursor (`_seconds_until_due`), so a
+  mid-interval restart resumes the countdown instead of posting — **agent-orchestrator@d5c5cae** (QG green, 1219
+  pytest). First-boot + server-down-past-interval still post.
 - **2026-07-13 (first live digest + follow-up)** — WS-B went live: the first `AO daily activity digest` posted (1706
   events / 5 failures since 07:15 UTC), confirming `DailySummaryLoop` runs in prod. Operator flagged a readability gap —
   the "5 failure event(s)" line pointed "see the counts below" but the failures ranked below the shown top-25 and were
