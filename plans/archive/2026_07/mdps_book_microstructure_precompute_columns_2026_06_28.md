@@ -26,8 +26,6 @@ estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
 last_updated: 2026-06-28
-locked_by:
-locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -37,6 +35,10 @@ model_tier: opus-required
 thinking_tier: high
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS consolidation
+> plan-hygiene-debt sweep).** All todos confirmed 0 open (functionally complete); no fold-in needed. Archived per
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`.
 
 # MDPS — precompute book-microstructure summaries into candle columns
 

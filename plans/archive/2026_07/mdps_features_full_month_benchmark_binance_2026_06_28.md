@@ -28,8 +28,6 @@ estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
 last_updated: 2026-06-28
-locked_by:
-locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, honest_coverage_smoke_harness_2026_06_28]
@@ -38,6 +36,10 @@ assigned_role: data_engineering
 drift_direction: advance-code
 gate_on_depends: true
 ---
+
+> **✅ ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS consolidation
+> plan-hygiene-debt sweep).** All todos confirmed 0 open (functionally complete); no fold-in needed. Archived per
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`.
 
 # Full-month MDPS+features benchmark on Binance
 
@@ -95,13 +97,11 @@ harness — pick the RUNNABLE Binance shard, confirm a genuine full-month window
       and USE_POLARS=true); operator decision 2026-06-29: accept Plan 8 evidence as sufficient. OOM finding documented
       at `plans/audit/results/benchmarks/mdps_fullpipeline_oom_finding_2026_06_29.md`. Script extension (--end-date)
       shipped at market-data-processing-service@02b480c.
-- [x] [IMPLEMENT] P1. Build the **per-shard cost model**:
-      $/shard-month and RSS/shard for the artifact, with the formula
+- [x] [IMPLEMENT] P1. Build the **per-shard cost model**: $/shard-month and RSS/shard for the artifact, with the formula
       to extrapolate across the MVP universe (shard count × per-shard cost). — Gate: a cost-model table + total-universe
-      estimate; egress $
-      cites the cost-analysis rate. ✅ Cost model built 2026-06-29; see **Per-shard cost model** section below. Egress
-      rate $0.09/GB per `aws_migration_cost_analysis_2026_05_07.md`; universe size ~14K cefi shards from
-      `mvp_backfill_cefi_tick_v10_2026_06_27.md`. No new code shipped (arithmetic model).
+      estimate; egress $ cites the cost-analysis rate. ✅ Cost model built 2026-06-29; see **Per-shard cost model**
+      section below. Egress rate $0.09/GB per `aws_migration_cost_analysis_2026_05_07.md`; universe size ~14K cefi
+      shards from `mvp_backfill_cefi_tick_v10_2026_06_27.md`. No new code shipped (arithmetic model).
 - [x] [AGENT] P1. Commit the benchmark report + cost model (no `*_SUMMARY.md` doc — results live in this plan's Progress
       Log + a committed results artifact); quickmerge any benchmark-runner code `--agent --files`. — Gate: QG green on
       touched repos; report committed. ✅ Results artifact:
@@ -124,12 +124,10 @@ and RSS measurements.
 | `derivative_ticker` | `cefi_carry_funding_24h_200p` (200×24h) | 200 calendar days                  |
 
 The benchmark's _outer_ required window is the **max** of the three = **200 calendar days**. We measure **wall-time /
-peak+retained RSS / output bytes / object count / egress
-$** over that full 200-day span, but report-aggregate the
+peak+retained RSS / output bytes / object count / egress $** over that full 200-day span, but report-aggregate the
 per-day numbers as a **30-day "report month"** (the 30 most recent fully-captured calendar days inside the 200-day
-window). This gives the operator a $/shard-month +
-RSS/shard number that extrapolates linearly to the universe (per Plan 6's `shard_count × per-shard cost` formula)
-without losing the heavy-lookback runtime characterization.
+window). This gives the operator a $/shard-month + RSS/shard number that extrapolates linearly to the universe (per Plan
+6's `shard_count × per-shard cost` formula) without losing the heavy-lookback runtime characterization.
 
 **Month / reporting window.** The 200-day pull anchors at **today − 200 days** through **today**, evaluated by the
 benchmark runner at execution time. The 30-day report-month is the trailing 30 calendar days at the same anchor;

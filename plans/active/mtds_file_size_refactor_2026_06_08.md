@@ -170,3 +170,16 @@ byte-identical output before/after).
   file-size/coverage work here.
 - `issues/mtds_cefi_mvp_gate_and_thegraph_shard_test_fleet_red_2026_06_23.md` — cefi MVP-gate + thegraph 9-key shard
   test reds on LDR (mostly resolved; 1 residual aster perp-funding red on the cefi owner's track).
+
+## Progress Log
+
+- **2026-07-13** — Per the MTDS/MDPS 2-survivor consolidation (`mtds_consolidation_foldin_mapping_2026_07_12.md`,
+  operator ruling 2026-07-13: "Approve all + unlock"), `mdps_polars_engine_cost_sharpening_2026_06_28.md`
+  (`status: complete`, 0 open todos, all 6 items shipped) is archived to `plans/archive/2026_07/` and its completion
+  CREDIT is folded into this M-2 Progress Log rather than migrating any open work (there was none). That plan
+  un-deferred the Polars portion of this survivor's parked seam (see the "🟢 ENGINE-INTERNAL POLARS LAZY CHAIN SHIPPED
+  2026-06-29" banner above): pure-Polars lazy candle aggregation, subprocess-per-date default, manifest double-read fix,
+  canonical-ID CLI matcher — measured 10.35× wall / 6.11× peak RSS / 8.88× retention on a full-month Binance benchmark
+  (all above the audited 3×/5×/7.8× targets). Shas: market-data-processing-service@c7e0437/85060ff/eee8433/2dd13db,
+  unified-trading-pm@68bf2c85c/be1f7633c. The remaining M-2 scope (file-size splits, adapter-protocol pandas→polars,
+  coverage/QG residuals) stays parked/⏸️ DEFERRED — unaffected by this fold.
