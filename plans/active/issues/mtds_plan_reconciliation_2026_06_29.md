@@ -707,8 +707,17 @@ Everything else is mechanical/alignment.
   active and no operator NOTIFY is warranted; the only surviving action is the optional defensive hardening tracked
   below. Ruling recorded in `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding
   171).
-- [ ] [CODE] P3. LOW-priority — `manifest_consolidator.py` optional defensive hardening: make the dual-source collapse
+- [x] [CODE] P3. LOW-priority — `manifest_consolidator.py` optional defensive hardening: make the dual-source collapse
       status-aware (`captured` wins over `attempted_failed` in `_stale_drop_predicate`/`order_by`) as
       belt-and-suspenders for the narrow concurrent-race edge case (two workers both pass the skip-already-captured
       check before either writes). Not required for correctness today — idempotent skip-if-captured already prevents the
-      divergence in normal operation (Section F, M-C2). No owner assigned; pick up opportunistically.
+      divergence in normal operation (Section F, M-C2). No owner assigned; pick up opportunistically. —
+      **unified-trading-library@a05d69c7** (2026-07-13): implemented per the M-C2 design (status-aware tie-break on
+      collapse, NOT source-in-dedup-key) as a leading ORDER BY CASE in the window-dedup `order_by` —
+      `capture_status='captured'` outranks any non-captured status in the same dedup-key group regardless of recency;
+      no-op tie for all-captured / all-non-captured groups so the cf2e196b cross-source row_count tie-break, the
+      bb17638e TRY_CAST guard, and plain recency engage exactly as before. Evidence: new regression test
+      `test_consolidate_captured_survives_later_non_captured_duplicate` (verified fails pre-fix on recency keeping the
+      later `attempted_failed` row, passes post-fix); cf2e196b/2ba20527/bb17638e regression tests re-run green
+      (test_manifest_consolidator.py 59/59, +test_factory.py 82/82); full `quality-gates.sh --no-fix` green at
+      utl@22885e3f before ship (`ALL QUALITY GATES PASSED (137s)`).
