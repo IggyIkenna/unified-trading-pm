@@ -3,9 +3,8 @@ doc_type: codex-ssot
 title: Availability Manifest & Data Status — SSOT
 summary:
   SSOT for the GCS availability manifest — the 4-state capture_status ledger (captured / empty_confirmed /
-  attempted_failed / expected_unattempted), schema-v9 AvailabilityRecord + universal source column, per-service
-  shard atoms, the honest-coverage % denominator, the proof-of-honest-absence gate, and the DeFi multi-bucket
-  read rule.
+  attempted_failed / expected_unattempted), schema-v9 AvailabilityRecord + universal source column, per-service shard
+  atoms, the honest-coverage % denominator, the proof-of-honest-absence gate, and the DeFi multi-bucket read rule.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,27 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: [manifest, data-status, capture-status, honest-coverage, single-walk, data-correctness, defi]
-related: [honest-absence-downstream-handling.md, pipeline-mode-partition.md, chart-candle-delivery-flow.md, data-status-drilldown.md, ../05-infrastructure/manifest-consolidator-ssot.md]
+related:
+  [
+    honest-absence-downstream-handling.md,
+    pipeline-mode-partition.md,
+    chart-candle-delivery-flow.md,
+    data-status-drilldown.md,
+    ../05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 created: 2026-04-13
 authoritative_for: [availability manifest schema + capture_status 4-state ledger]
-referenced_by: [codex/02-data/bar-boundary-candle-edge-convention.md, codex/02-data/cefi-capture-universe.md, codex/02-data/chart-candle-delivery-flow.md, codex/02-data/chunk-safe-manifest-migrations.md, codex/02-data/contract-failure-handling.md, codex/02-data/cross-asset-rescan-protocol.md, codex/02-data/data-catalogue-schema.md, codex/02-data/data-lineage-MTDS-features-ml.md]
+referenced_by:
+  [
+    codex/02-data/bar-boundary-candle-edge-convention.md,
+    codex/02-data/cefi-capture-universe.md,
+    codex/02-data/chart-candle-delivery-flow.md,
+    codex/02-data/chunk-safe-manifest-migrations.md,
+    codex/02-data/contract-failure-handling.md,
+    codex/02-data/cross-asset-rescan-protocol.md,
+    codex/02-data/data-catalogue-schema.md,
+    codex/02-data/data-lineage-MTDS-features-ml.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -64,6 +80,13 @@ code_refs:
 
 Every GCS data bucket has an `_index/availability_index.parquet` file. This parquet file is the **index of what data
 exists** in that bucket. Each row represents one shard — a unit of data written atomically.
+
+> **Sibling `_index/latest.json` = the consolidator's self-reported run summary** (WS-3, 2026-07-11). Alongside the
+> index, each consolidation cycle overwrites `_index/latest.json` with
+> `{last_run_at, verdict(produced|empty|failed), shards_changed, rows_in/out/added, duration_ms, …}` — the authoritative
+> "did this consolidator produce its data" record the deployment cockpit reads. Absent = that consolidator has never run
+> the reporting code (dead / not yet fired) → shown as "not reporting", never a fake all-clear. Contract SSOT:
+> `../05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals + `_index/latest.json`".
 
 > **Annotate-once, read-everywhere (governing principle; F2).** The manifest is the canonical honest **4-state** ledger
 > (`captured` / `empty_confirmed[typed reason]` / `attempted_failed` / **`expected_unattempted`**). Every cell is
@@ -1031,17 +1054,17 @@ The `instruments-service/scripts/` directory contains ~40 operator-runnable one-
 "Runbook Execution-Owner SSOT" HARD RULE every operator-runnable runbook MUST declare owner / cadence / verifier /
 last_executed. Closed-set inventory + per-script disposition (annotated for the May-23 cutover wave):
 
-| Script                                      | Class                              | Runner                                     | Cadence        | Delete-after-run?  |
-| ------------------------------------------- | ---------------------------------- | ------------------------------------------ | -------------- | ------------------ |
-| `reconcile_phantom_manifest_rows_all.py`    | multi-asset-group                  | (see Phantom-audit § above)                | weekly → daily | NO (recurring)     |
-| `reconcile_phantom_manifest_rows.py`        | sports-only legacy                 | phased out                                 | n/a            | YES (post-cutover) |
-| `reconcile_blank_error_reason_rows.py`      | legacy-to-typed-reason backfill    | one-shot per asset-group                   | one-shot       | YES (post-run)     |
-| `reconcile_legacy_blank_to_typed_reason.py` | as above (alias)                   | one-shot                                   | one-shot       | YES (post-run)     |
-| `reconcile_expected_absence_reasons.py`     | reason-taxonomy backfill           | one-shot                                   | one-shot       | YES (post-run)     |
-| `flip_phantom_to_attempted_failed.py`       | one-shot remediation               | per phantom-audit run                      | per-incident   | YES (post-run)     |
-| `purge_pre_launch_manifest_rows.py`         | pre-launch sweep                   | per venue-launch-date update               | per-incident   | YES (post-run)     |
-| `dedupe_manifest_schema_drift.py`           | schema-drift sweep                 | one-shot per migration                     | per-migration  | YES (post-run)     |
-| ~~`fix_manifest_venue_casing.py`~~           | CF-3/SP-3 case-folding remediation | DELETED 2026-07-07 — dead (broken `args.category` typo) + its groupby omitted `instrument_type`, which would have re-collapsed the multi-type CeFi/TradFi manifest fix | n/a | DELETED |
+| Script                                      | Class                              | Runner                                                                                                                                                                 | Cadence        | Delete-after-run?  |
+| ------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------ |
+| `reconcile_phantom_manifest_rows_all.py`    | multi-asset-group                  | (see Phantom-audit § above)                                                                                                                                            | weekly → daily | NO (recurring)     |
+| `reconcile_phantom_manifest_rows.py`        | sports-only legacy                 | phased out                                                                                                                                                             | n/a            | YES (post-cutover) |
+| `reconcile_blank_error_reason_rows.py`      | legacy-to-typed-reason backfill    | one-shot per asset-group                                                                                                                                               | one-shot       | YES (post-run)     |
+| `reconcile_legacy_blank_to_typed_reason.py` | as above (alias)                   | one-shot                                                                                                                                                               | one-shot       | YES (post-run)     |
+| `reconcile_expected_absence_reasons.py`     | reason-taxonomy backfill           | one-shot                                                                                                                                                               | one-shot       | YES (post-run)     |
+| `flip_phantom_to_attempted_failed.py`       | one-shot remediation               | per phantom-audit run                                                                                                                                                  | per-incident   | YES (post-run)     |
+| `purge_pre_launch_manifest_rows.py`         | pre-launch sweep                   | per venue-launch-date update                                                                                                                                           | per-incident   | YES (post-run)     |
+| `dedupe_manifest_schema_drift.py`           | schema-drift sweep                 | one-shot per migration                                                                                                                                                 | per-migration  | YES (post-run)     |
+| ~~`fix_manifest_venue_casing.py`~~          | CF-3/SP-3 case-folding remediation | DELETED 2026-07-07 — dead (broken `args.category` typo) + its groupby omitted `instrument_type`, which would have re-collapsed the multi-type CeFi/TradFi manifest fix | n/a            | DELETED            |
 
 Per the IN-22 QG ratchet (in-flight): one-shot reconcilers + flip scripts should be MOVED to `scripts/_one_shot/` +
 deleted on archive-boundary per the "Plans Run To Actual Completion" rule (operationally-shipped =
@@ -1749,8 +1772,8 @@ Idempotent + safe to run concurrently with the scheduled cycle.
 
 ### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
 
-> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
-> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK`
+> opt-in described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
 > `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
 > from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
 > current SSOT.

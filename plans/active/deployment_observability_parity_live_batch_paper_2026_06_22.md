@@ -178,8 +178,30 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
       (`rules/deployment_rules.py` routes UTL DEPLOYMENT_STARTED/COMPLETED/FAILED via the shared
       `_route_data_pipeline_event` path → #data-pipeline-alerts mirror with umbrella/cloud fields + `/deployments/{vm}`
       deep-link; FAILED=CRITICAL also pages. Folded into #data-pipeline-alerts per the notifier reuse.)
-- [ ] [CODE] P2. Per-umbrella daily Slack digest (live up / batch completion / paper status) — reuse the daily-digest
-      cron pattern. — **e2e-testing / deployment-service**
+- [x] [CODE] P2. Per-umbrella daily Slack digest (live up / batch completion / paper status) — reuse the daily-digest
+      cron pattern. — **e2e-testing / deployment-service** — DONE 2026-07-13. Emits the per-umbrella deployment-estate
+      digest to Slack over the **PROVEN Pub/Sub relay** — the SAME path parity #3 (deployment lifecycle) + the
+      data-pipeline fleet monitors use: UTL `log_event("DEPLOYMENT_DIGEST", INFO, details={message,…})` →
+      `lifecycle-events` Pub/Sub topic → ni-service `alert_subscriber` → `deployment_rule_for` → mirror to
+      `#data-pipeline-alerts` (INFO, never pages). **No HTTP URL to configure** (an earlier httpx-POST cut needed an
+      `ALERTING_SERVICE_URL` nobody sets — client-reporting's own digest URL is unwired too; switched to the relay so
+      nobody writes a URL). Evidence: • unified-trading-library@22885e3 — `DEPLOYMENT_DIGEST` lifecycle event constant
+      (added to `DEPLOYMENT_EVENT_TYPES` + `STANDARD_LIFECYCLE_EVENTS`; set-size ratchet 6→7; UTL QG green). •
+      unified-api-contracts@bd8a46e9 — reverted the now-unused `AlertCode.DEPLOYMENT_DIGEST` (event-name path, not an
+      AlertEvent; UAC QG green). • alerting-service@3bee248 — `deployment_rules.py` routes `DEPLOYMENT_DIGEST` as an
+      INFO deployment event + routing test (`test_deployment_rules.py`); reverted the parity-ratchet entry (109 passed;
+      only QG red is the pre-existing `click` pip-audit vuln). • deployment-api@b2694c0 — `routes/deployment_digest.py`
+      (`build_deployment_digest_message` folds the per-umbrella rollups; `build_estate_summaries` loads
+      `_load_inventory` once + `build_umbrella_summary` for LIVE/BATCH/PAPER; `run_deployment_digest` emits via
+      `log_event` wrapped in `run_lifecycle` after best-effort `_ensure_live_events` wires the `PubSubEventSink` to
+      `lifecycle-events` — mirrors the monitor CLI; `POST /api/deployments/digest/run` on-demand endpoint) +
+      `scripts/deployment_digest_worker.py` (isolated Cloud Run Job entrypoint, exit-0-always) + 5 unit tests (QG
+      green). • deployment-service@a01202d — `terraform/gcp/deployment_digest_scheduler.tf`: isolated Cloud Run Job
+      (deployment-api image, 4Gi/cpu2) + daily 07:30 UTC Cloud Scheduler via the Jobs `:run` API (modeled on the
+      data-pipeline fleet monitors, so the census load stays off the memory-sensitive live service); the
+      `unified_trading` runtime SA already holds `pubsub.publisher` on `lifecycle-events`. `terraform validate` Success.
+      Tier-safe: deployment-api never imports alerting-service — it publishes an event to Pub/Sub. **No apply-time
+      knob** — the digest reaches Slack the moment the cron runs (nothing for the operator to configure).
 
 ## Phase 4 — GCP completion (operator: GCP first, to completion + documented)
 

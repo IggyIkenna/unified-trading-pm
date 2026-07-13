@@ -186,12 +186,67 @@ repo-coverage / gh-rate 60s; kill-switch tab 5s.
    rollup fast-path (`uts-prod-data-status-rollup` Cloud Run job writing `full.json.gz` every 5 min) is the
    already-built cheap read path to prefer where fresh-enough.
 
-## 3. Fit-in-4GB verdict (working hypothesis for § 4)
+### 2.7 Measured benchmark results (2026-07-13 benchmark session, slot-1)
 
-**Yes — fits, with headroom.** Steady-state projection at `WORKERS=2` + bounded caches ≈ 2 × (350–450MB base + 250–350MB
-bounded caches) ≈ **1.2–1.6GiB**, leaving ~2.4GiB for spikes (which also shrink once the deepcopy and whole-blob dumps
-go). 8GB would only mask the leak class (B1/B3/B5 grow without bound — they'd OOM an 8GB box too, just later) and is NOT
-recommended; revisit only if § 4 decisions demand keeping 4 workers AND per-worker mega-caches.
+Three suites run by the agent per operator direction — latency vs the DEPLOYED service, page-level Playwright vs the
+deployed SPA, memory vs a LOCAL 4-worker replica (same gunicorn config, real GCS/ADC read paths, per-2s RSS sampling of
+the whole process tree with phase attribution). Raw CSVs/JSON in the session scratchpad; summaries below are the
+findings of record.
+
+**(a) Deployed API latency — bimodal + actively failing** (sequential curls, cold vs warm, during the live crash-loop):
+
+| Endpoint                | Observed sequence (status:seconds)                      | Reading                                                   |
+| ----------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| `/api/health`           | 200:0.2–1.2s                                            | fine standalone                                           |
+| `…/inventory`           | 503:29.4 → 200:46.3 → 503:69.9 → **200:1.0** → 503:69.8 | warm-worker hit is SUB-SECOND; cold 46s; 503s = OOM churn |
+| `…/umbrella/*/summary`  | mix of 503:34–77s and 200:0.7–75s                       | same bimodality (`BATCH` warm hit 0.7s)                   |
+| `/api/vm-deployments`   | 500:29.3 → 503:62.9 → 503:43.2 — **never succeeded**    | uncached + heaviest endpoint                              |
+| `/api/costs/summary`    | 503:61.0 → 503:36.4                                     | 60s+ then dies                                            |
+| `/api/repo-ci/overview` | 200:13.3 → 200:6.6 → 200:3.8 → 200:2.3                  | warms gradually (per-worker copies)                       |
+
+**(b) Real-browser page experience** (Playwright chromium, 6 pages, 90s observation each):
+
+| Page                         | Shell paint (FCP) | Data reality                                                            |
+| ---------------------------- | ----------------- | ----------------------------------------------------------------------- |
+| `/cockpit?tab=deployments`   | 2.2s              | **ALL 5 data calls failed** (503/500 after 29–38s) — page renders empty |
+| `/cockpit?tab=consolidators` | 4.1s              | OK; consolidator 1.8–7.8s                                               |
+| `/vm-deployments`            | 8.1s              | main call 503 after 43s                                                 |
+| `/deployments`               | 6.3s              | succeeds but 44–57s per data call — ~1 min blank                        |
+| `/ops/live-deployments`      | 6.0s              | vm-deployments 500 after 42s                                            |
+| `/ops/costs`                 | 2.6s              | breakdown 72–82s (200); summary/timeseries 503 after ~60s               |
+
+Also observed: `/api/health` intermittently 6–28s while heavy sync handlers run — worker starvation under
+`containerConcurrency=80` with 4 workers × threadpool'd sync `def` handlers (input to D1).
+
+**(c) Local memory — per-surface RSS attribution** (4 workers, tree = master+workers+forks, unconstrained host RAM so
+the TRUE footprint is visible):
+
+| Phase                                               | Tree RSS (min → peak)                          | Reading                                                                                                           |
+| --------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Idle after startup                                  | **2,481MB** flat                               | matches deployed 64–65% baseline exactly — startup state × 4 workers                                              |
+| Inventory + umbrellas (×3 rounds)                   | 2,482 → **4,173MB**                            | +1.7GB; already crosses the 4GiB Cloud Run limit on its own                                                       |
+| `/api/vm-deployments` (2 hits; local: 300s timeout) | 3,917 → **6,657MB**                            | +2.5GB more; matches prod dying mid-vm-deployments; leaves ~4.5GB residue                                         |
+| repo-ci round                                       | 4,459 → 5,335MB                                | modest                                                                                                            |
+| turbo instruments (small + 3 date-range keys)       | 4,502 → 4,837MB                                | ~90KB responses; ~100MB-class per-worker growth — instruments is NOT the elephant                                 |
+| turbo warm repeats ×4 (same key)                    | **0.006s ×3, 1.28s ×1**                        | cache hit = 6ms; the 4th landed on a cold worker — fragmentation quantified                                       |
+| **turbo MTDS (ONE query — 16 days, cefi only)**     | 4,862 → **15,968MB** peak, settles **8,416MB** | **+11GB transient, +3.5GB PERMANENT from a single query** (71.2s); process-pool forks + index build + B1/B2 store |
+| Post-idle (60s)                                     | 8,416MB flat                                   | the growth never comes back — held by caches/heap                                                                 |
+
+**Implications that supersede earlier estimates:** (1) the MTDS data-status path is the memory elephant — the
+`_INDEX_CACHE` "~30MB/bucket" code comment is off by an order of magnitude for MTDS buckets; a single UI data-status
+query for MTDS is an instant OOM at 4GiB under current code REGARDLESS of worker count. (2) vm-deployments and the
+inventory census are the cockpit killers (transient GBs, uncached / per-worker). (3) Warm-path performance is already
+excellent (6ms–1.0s) — the entire UX problem is hit-rate (×4 workers) and the uncached/unbounded paths.
+
+## 3. Fit-in-4GB verdict (REVISED per § 2.7 measurements)
+
+**Fits — but only with the data-status load path fixed, not by worker count alone.** Measured composition: baseline
+2.48GB (4 workers) halves to ~1.24GB at `WORKERS=2`; inventory/vm-deployments transients shrink to one worker's share
+once SWR + single-flight land; but the MTDS turbo path must be re-engineered (bounded/gzipped B1, `_INDEX_CACHE`
+byte-budget or column-pruned/lazy index reads, process-pool memory cap) because its measured +11GB transient / +3.5GB
+permanent OOMs ANY worker topology at 4GiB — and would OOM an 8GiB box on the second MTDS query. Post-remediation
+steady-state projection stands at **~1.2–1.8GiB** with the MTDS query bounded to a &lt;1GB transient. 8GB remains NOT
+recommended (masks the leak class, doesn't survive the elephant either).
 
 ## 4. Joint walkthrough — decide per UI page / per API (operator + agent, fill in place)
 
@@ -200,16 +255,18 @@ recommended; revisit only if § 4 decisions demand keeping 4 workers AND per-wor
 >
 > - cockpit tabs; add rows as discovered.
 
-| Page / surface                       | Backing APIs                                                                                 | Today (cache / latency)                                  | Decision — caching                                  | Decision — UX/polling |
-| ------------------------------------ | -------------------------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- | --------------------- |
-| Cockpit — deployments tab            | `/api/deployments/inventory`, `/api/deployments/umbrella/{U}/summary`, `/api/vm-deployments` | B4 45s SWR (per-worker); vm-deployments UNCACHED avg 94s | _TBD_                                               | _TBD_                 |
-| Cockpit — consolidators tab          | `/api/health/consolidator`                                                                   | 30s poll                                                 | _TBD_                                               | _TBD_                 |
-| Live deployments page                | `/api/deployments*`, logs endpoints                                                          | B9 bounded logs caches (correct pattern)                 | _TBD_                                               | _TBD_                 |
-| Data-status tab (turbo + drill-down) | `/api/.../data-status*`, drilldown, downloads                                                | B1 unbounded mega-cache + B2 turbo + B3 drilldown        | _TBD_ (gzip? entry caps? rollup fast-path default?) | _TBD_                 |
-| Ops / costs                          | `/api/costs/{summary,breakdown,timeseries}`                                                  | B11 1h/worker; 60–80s cold                               | _TBD_ (pre-warm? longer TTL? persist?)              | _TBD_                 |
-| Repo CI / coverage / escalations     | `/api/repo-ci/*`, `/api/repos/gh-rate-limit`                                                 | B6 unbounded URL cache, B13                              | _TBD_                                               | _TBD_                 |
-| Kill-switch tab                      | kill-switch status APIs                                                                      | 5s poll                                                  | _TBD_                                               | _TBD_                 |
-| Launch consoles / readiness          | `/api/services/*`, `/api/deployments/validate*`                                              | B9/B10                                                   | _TBD_                                               | _TBD_                 |
+| Page / surface                       | Backing APIs                                                                                 | Today (MEASURED 2026-07-13, § 2.7)                                                                                                                       | Decision — caching                                  | Decision — UX/polling |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------- |
+| Cockpit — deployments tab            | `/api/deployments/inventory`, `/api/deployments/umbrella/{U}/summary`, `/api/vm-deployments` | FCP 2.2s but ALL 5 data calls 503/500 (29–38s); warm hit 0.7–1.0s vs cold 46s; vm-deployments UNCACHED, never succeeded; +1.7GB / +2.5GB RSS per surface | _TBD_                                               | _TBD_                 |
+| Cockpit — consolidators tab          | `/api/health/consolidator`                                                                   | OK — 1.8–7.8s; 30s poll                                                                                                                                  | _TBD_                                               | _TBD_                 |
+| VM deployments page                  | `/api/vm-deployments?days=7`, venue-\*                                                       | main call 503 @43s; venue-\* endpoints all &lt;1s                                                                                                        | _TBD_                                               | _TBD_                 |
+| Deployments page                     | inventory + umbrellas + regions                                                              | succeeds but 44–57s per call — ~1 min blank page                                                                                                         | _TBD_                                               | _TBD_                 |
+| Live deployments page                | `/api/vm-deployments?days=1`, logs endpoints                                                 | vm-deployments 500 @42s; logs caches (B9) fine                                                                                                           | _TBD_                                               | _TBD_                 |
+| Data-status tab (turbo + drill-down) | `/api/data-status/turbo`, drilldown, downloads                                               | instruments turbo — cold 1.2–5s, **warm 6ms** (¼ hit rate); **MTDS turbo 71.2s + 11GB transient / +3.5GB permanent RSS — OOMs prod on ONE query**        | _TBD_ (gzip? entry caps? rollup fast-path default?) | _TBD_                 |
+| Ops / costs                          | `/api/costs/{summary,breakdown,timeseries}`                                                  | breakdown 72–82s (200); summary/timeseries 503 @~60s; B11 1h/worker                                                                                      | _TBD_ (pre-warm? longer TTL? persist?)              | _TBD_                 |
+| Repo CI / coverage / escalations     | `/api/repo-ci/*`, `/api/repos/gh-rate-limit`                                                 | overview warms 13.3→2.3s across repeats (per-worker copies); escalations 0.5s                                                                            | _TBD_                                               | _TBD_                 |
+| Kill-switch tab                      | kill-switch status APIs                                                                      | 5s poll                                                                                                                                                  | _TBD_                                               | _TBD_                 |
+| Launch consoles / readiness          | `/api/services/*`, `/api/deployments/validate*`                                              | B9/B10 — not yet measured (add during walkthrough)                                                                                                       | _TBD_                                               | _TBD_                 |
 
 Cross-cutting decisions to settle in the same session:
 
@@ -231,9 +288,11 @@ Phase A — walkthrough + decisions (operator-joint; blocks Phase B):
 
 - [ ] [OPERATOR] P0. § 4 walkthrough session — open each deployment-ui page against live backend, fill every Decision
       cell + settle D1–D6 in place. `BLOCKED-OPERATOR-DECISION` until scheduled.
-- [ ] [BACKEND] P0. During walkthrough — capture per-page network timings (browser devtools HAR or timed curls) into § 4
-      "Today" column where still approximate; verify the B1 entry-size estimate live via `/api/.../cache-stats`
-      (`size_estimate` fields, B2) + a one-off RSS probe per worker.
+- [x] ✅ [BACKEND] P0. Benchmark session (2026-07-13, agent-run per operator direction) — deployed-API curl suite (39
+      reqs, cold/warm/503 sequences), Playwright page-level timings (6 pages), local 4-worker replica with
+      phase-attributed RSS monitoring incl. the turbo data-status path. Results = § 2.7; § 4 "Today" column filled with
+      measured numbers; § 3 verdict revised (MTDS turbo = +11GB transient/+3.5GB permanent from ONE query). Evidence —
+      raw CSV/JSON in session scratchpad; summaries in § 2.7 are the findings of record.
 
 Phase B — implementation (gated on Phase A decisions; each lands via quickmerge with QG-green tree):
 
@@ -275,3 +334,11 @@ Phase C — verification + guardrails:
   sub-agent B1–B18 report); latency table measured from request logs (§ 2.5); fit-in-4GB analysis written (§ 3); plan
   authored. Immediate-relief option (`WORKERS=2` env-only change) surfaced to operator — **not applied**; operator
   directed plan-first + joint walkthrough before any change.
+- 2026-07-13 (slot-1, later same session): Benchmark session executed (operator delegated measurement to agent):
+  deployed curl suite + Playwright 6-page run + local 4-worker memory replica. § 2.7 added; § 3 REVISED — headline
+  discovery: **one MTDS `/api/data-status/turbo` query = +11GB transient / +3.5GB permanent RSS** (instant OOM at 4GiB
+  under current code, any worker count) — the data-status load path re-engineering is now the load-bearing fix, worker
+  count alone is insufficient. Cockpit deployments tab currently renders with ZERO data (all 5 calls 503/500). Local
+  benchmark backend + monitors stopped and verified stopped (port 8081 closed). Discovery also logged:
+  `deployment-dashboard` Cloud Run service does NOT serve the SPA routes (/cockpit 404) — the API service serves the UI
+  itself; dashboard service is possibly dead weight (check during walkthrough; potential cost saving).
