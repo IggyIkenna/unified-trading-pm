@@ -534,7 +534,7 @@
         "large_file_count": 0,
         "qg_red_reason": "ruff"
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -1008,7 +1008,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 85.24,
@@ -1208,7 +1208,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": 96.21,
         "large_file_count": 25,
