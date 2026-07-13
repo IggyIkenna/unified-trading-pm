@@ -6,7 +6,7 @@ summary:
   (a01202d), unrelated to any in-flight diff — data_pipeline_monitors/cli.py is 930 lines (900-line ceiling) and
   cli/utils/manifest_reader.py has 5 undocumented `except Exception` broad-catches. Blocks every commit to this repo
   under the green-tree-before-commit HARD RULE.
-status: open
+status: resolved
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -17,7 +17,7 @@ related: []
 created: 2026-07-13
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: deployment-service@534de4b (file-size split), deployment-service@d089f24 (broad-except audit)
 source: [defi_morpho_lending_indices_never_wired-002 dispatch, slot-10 infra]
 priority: P1
 execution_scope: orchestrator-agent
@@ -76,7 +76,7 @@ resolved.
       `deployment_digest_scheduler.tf` (stem `deployment-digest`) — this is the same gap slot-10's dispatch had already
       diagnosed but couldn't ship (blocked by this very wall). `quality-gates.sh` now exits 0 (codex-compliance down to
       1 violation — the broad-except WARN below — within the `CODEX_MAX_VIOLATIONS=1` tolerance).
-- [ ] [SCRIPT] P2. Document the 5 `except Exception:` blocks in `deployment_service/cli/utils/manifest_reader.py` in
+- [x] ✅ [SCRIPT] P2. Document the 5 `except Exception:` blocks in `deployment_service/cli/utils/manifest_reader.py` in
       `QUALITY_GATE_BYPASS_AUDIT.md` (follow the existing entries' format) if they are intentionally broad, or narrow
       each to the specific exception type(s) actually expected if not. (repo: `deployment-service`) — **re-scoped
       2026-07-13 (agt-9d01d7)**: the QG's broad-except check (`base-service.sh`
@@ -88,4 +88,10 @@ resolved.
       closing it requires an audit-and-fix (or a sanctioned `QUALITY_GATE_BYPASS_AUDIT.md` + `BE_EXCLUDE_GLOBS` bypass)
       across every `except Exception:` site in the repo, which is out of scope for a CI-wall fix. Downgraded P1→P2 and
       demoted to informational since the gate now PASSES (1 violation ≤ `CODEX_MAX_VIOLATIONS=1`); re-prioritize if the
-      ceiling is ever ratcheted to 0.
+      ceiling is ever ratcheted to 0. **DONE 2026-07-13 (slot-8 sonnet/high)** — did the full audit-and-fix rather than
+      leaving it at "tolerated": a full-repo scan (`grep -rn '^\s*except Exception:\s*$' deployment_service/`) found 31
+      bare `except Exception:` sites across 8 files (not just manifest_reader.py's 5), every one the same "best-effort
+      GCS/S3 read, never raise, safe-default fallback" pattern already explained per-callsite in its own docstring.
+      Documented all 31 in `QUALITY_GATE_BYPASS_AUDIT.md` §§2.18-2.20 and excluded them via `BE_EXCLUDE_GLOBS` in
+      `scripts/quality-gates.sh`. `quality-gates.sh` now exits 0 with the broad-except check fully GREEN (not just
+      within tolerance) — `deployment-service@d089f24`.
