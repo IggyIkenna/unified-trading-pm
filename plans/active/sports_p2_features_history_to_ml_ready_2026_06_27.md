@@ -117,6 +117,221 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 9 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, ~37% done, no new action)
+
+Fast re-verify only (not a repeat investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as the relaunch slot-11 performed — no death, no
+  new preemption since.
+- Features bucket unique-date count: **1,560** (up from 1,557/1,556/1,555/1,554 at the last several checks) — small but
+  real forward movement, consistent cadence.
+- Tailed `run.log` for `vm-1` and `vm-7`: both wall-clock-fresh (`2026-07-13 09:50:5x`, matching `date -u` = `09:51:06`)
+  with genuine per-date progress — `vm-1` finishing date 129/421 (2015-05-09), `vm-7` actively SKIP-confirming entities
+  for 2022-06-05. Live compute, not a hang.
+
+Gate ("compute features 2015→present") remains structurally unmet (~37% of ~4,210-day span) — genuine multi-day
+operation, now confirmed healthy across many checks today and yesterday. No new finding, nothing for `data_engineering`
+craft to act on beyond monitoring (fleet is fine, no relaunch needed). Checkbox NOT flipped. Not filing a new BLK.
+`/skip-current-task` taken so this slot moves to other dispatchable work instead of re-verifying an
+already-confirmed-healthy multi-day compute again.
+
+**Handoff unchanged**: watch
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` climb toward ~4,210; once
+all 10 VMs report `EXIT_STATUS=0` (or the count approaches full span), re-run `check_pipeline_completeness.py` (Todo 2)
+then reassess Todo 1 + Todo 3.
+
+### 2026-07-13 — slot 7 (Todo 3 dispatch — partial manifest-cleanliness check, real finding, self-heals, no fix needed)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion); ran a
+partial check against the currently-computed subset instead of re-diagnosing the well-established compute-in-progress
+state.**
+
+Picked up right after this same slot's own Todo 1 re-verify (bucket 1,557/~4,210 dates, all 10 VMs healthy — see entry
+below). Rather than log a second near-duplicate "still waiting" entry for Todo 3, ran the manifest-cleanliness query
+early (correctness craft north-star) against the availability_index for `features-sports-prd-central-element-323112` via
+a synced `.venv` (`uv sync --frozen`) + `read_availability_index`:
+
+- **77,704 total manifest rows** across capture_status: `captured` 42,929, `empty_confirmed` 34,644, `attempted_failed`
+  **131**. All 131 have a non-blank `error_reason` (130 `ValueError`, 1 `AvailableAtStampingError`) — so the literal "0
+  blank-reason" sub-gate already holds.
+- **Traced the 131 `attempted_failed(ValueError)` rows**: all 14 unique dates (2025-09-01→2025-09-13 + 2025-10-01, the
+  P1 golden window) with `written_at` between 2026-06-27 and 2026-07-08 — **none from today's running compute**. This is
+  the exact bug slot-3's 2026-07-08 20th-dispatch root-caused and fixed (`features-service@12816d87`, int64 vs
+  stringified `fixture_id` merge on the post-match join).
+- **Checked whether `--skip-existing` would strand these rows forever** (read `batch_handler.py`
+  `_should_skip_attempted`): it skips `captured`/`empty_confirmed` only — `ATTEMPTED_FAILED` and missing rows always
+  fall through to retry, force or not (`_run_reference_tables` line 409, `_run_feature_group` line 507). So no manual
+  `--force` re-run is needed: when the running 10-VM fleet's assigned chunk reaches Sept/Oct 2025, these 14 dates will
+  be recomputed automatically with the fixed code and should resolve to `captured`/`empty_confirmed`.
+
+**What I did NOT do**: did not force-recompute these 14 dates manually — the retry-on-attempted-failed logic already
+guarantees a correct outcome once the fleet reaches that date range, so a manual re-run would just be duplicate, wasted
+work (efficiency craft north-star). Did not re-verify Todo 1's fleet health a second time in this same session (already
+confirmed moments earlier). Did not flip Todo 3's checkbox — the overall gate is full-history coverage and compute is
+only ~37% done; this was a partial-subset check to catch a correctness regression early, not a full-history verify.
+
+**Handoff for the next dispatch**: once the full-history compute (Todo 1) reaches completion, re-run this same
+manifest-cleanliness query (or `check_pipeline_completeness.py`) over the full 2015→present range — expect
+`attempted_failed` count to have dropped from 131 toward 0 as the Sept/Oct-2025 chunk gets naturally reprocessed by the
+fixed code; if any `attempted_failed` rows remain after full-history completion, THAT would be a genuine new finding
+worth a targeted `--force --date <D>` re-run. Checkbox NOT flipped. `/skip-current-task` taken (no further
+data_engineering action available until the compute progresses).
+
+### 2026-07-13 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, genuinely mid-compute, no new action)
+
+Re-dispatched shortly after this same slot's own prior entry below (same day). Fast re-verify only (not a repeat
+investigation) via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as the relaunch logged below — no restart, no new
+  death.
+- Features bucket unique-date count: **1,556** (up from 1,555 at slot-8's check, 1,554 at the check before that) — small
+  but real forward movement.
+- Tailed `run.log` for 4 VMs (`vm-1`, `vm-3`, `vm-6`, `vm-9`): all show **wall-clock-fresh** lines
+  (`2026-07-13 09:33:0x–09:33:14`, matching `date -u` = `09:33:22`) with genuine per-date progress (`vm-3` at "Date
+  70/421: 2017-06-30", `vm-6` at "Date 26/421: 2020-10-31", `vm-9` finishing `2024-05-25`, `vm-1` working `2015-02-02`)
+  — live compute across early/mid/late date ranges, not a hang.
+
+Gate ("compute features 2015→present") remains structurally unmet — this is a genuine multi-day operation, now confirmed
+healthy across three checks today (slot-3 → slot-8 → this dispatch). No new finding, no relaunch needed (fleet is fine),
+nothing for `data_engineering` craft to act on beyond monitoring. Checkbox NOT flipped. Not filing a new BLK.
+`/skip-current-task` taken so this slot moves to other dispatchable work instead of re-verifying an
+already-confirmed-healthy multi-day compute again.
+
+**Handoff unchanged from the entries below**: watch
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` climb toward ~4,210; once
+all 10 VMs report `EXIT_STATUS=0` (or the count approaches full span), re-run `check_pipeline_completeness.py` (Todo 2)
+then reassess Todo 1 + Todo 3.
+
+### 2026-07-13 — slot 8 (Todo 3 re-check — still BLOCKED-PREREQ, fleet confirmed live/progressing ~7h into the relaunch, no material change)
+
+Fast re-verify (not a repeat of slot-3's investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`), a few hours after slot-3's check:
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **1,555 unique dates** (up
+  1 from slot-3's 1,554) — expected, since `--skip-existing` fast-skips already-written days and most of this window's
+  SKIP-heavy log output is per-entity re-confirmation, not new date writes.
+- `gcloud compute instances list --filter="name~fss OR name~features"`: all **10** `fss-backfill-vm-{1..10}` still
+  `RUNNING`, same `creationTimestamp` (2026-07-13T02:18–02:25 -07:00) as slot-3's relaunch — no VM has died or been
+  replaced in the ~7h since.
+- **Confirmed genuinely live, not the earlier false-`EXIT_STATUS=0`-hang pattern**: tailed `run.log` for `vm-2` and
+  `vm-7` — both show log lines timestamped `2026-07-13 09:29:4x/09:29:5x UTC`, i.e. within seconds of the check
+  wall-clock (`date -u` → `09:30:09 UTC`). `vm-2` is at date 67/421 of its assigned range (2016-05-02 next); genuine
+  per-date SKIP/capture cadence, not stalled.
+
+Gate ("features manifest clean over history") remains structurally unmet — this is the same genuine multi-day compute
+slot-3 found healthy, now ~7h further in (~67/421 days per VM at this cadence implies multi-day completion, consistent
+with every prior estimate in this plan). Checkbox NOT flipped. Not filing a new BLK — no operator decision needed, fleet
+is healthy and progressing on its own. `/skip-current-task` taken so this slot moves to other dispatchable work instead
+of idling on a multi-day compute.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` and VM per-date progress
+(e.g. `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/fss-backfill-vm-2/run.log | tail -5` for the
+`Date N/421` counter) — once VMs report `EXIT_STATUS=0` across the fleet (or the date counters approach 421/421), re-run
+`check_pipeline_completeness.py` (Todo 2) then re-assess Todo 1 + Todo 3 for real.
+
+### 2026-07-13 — slot 3 (Todo 3 re-check — still BLOCKED-PREREQ, but fleet materially changed: full 10-VM relaunch is now LIVE and healthy)
+
+> Note (slot 11, same day): the relaunch slot-3 observed below ("someone... relaunched") was this slot's own dispatch —
+> see the entry immediately following for the full action log (kill 3 hung VMs, relaunch, gap-fill 2 SPOT preemptions).
+
+Fast re-verify (not a repeat of slot-9's multi-hour investigation) via non-snap gcloud (`ikenna@odum-research.com`,
+`central-element-323112`), a few hours after slot-5's check:
+
+- **Fleet state changed since slot-5**: `gcloud compute instances list --filter="name~fss OR name~features"` now shows
+  **all 10** `fss-backfill-vm-{1..10}` `RUNNING` with `creationTimestamp` **2026-07-13T02:18–02:25 -07:00** — a
+  brand-new full relaunch (~5-7 min old at check time), distinct from the old 2026-07-12T04:15 fleet slot-5/slot-9 found
+  hung/stalled. Someone (infra craft, per this plan's own handoff note in slot-9's entry) acted on the root-caused
+  stdin-fix (`e2e-testing@f2487e4`) and relaunched the full 2015-01-01→2026-07-12 range.
+- **Confirmed genuinely live, not another false `EXIT_STATUS=0`-with-hang**: tailed `run.log` for 3 VMs — `vm-2`
+  mid-date "Date 32/421: 2016-03-28" with real per-entity SKIP/capture lines timestamped seconds before the check;
+  `vm-5` deep in active feature-calculator output (team_form/team_xg/h2h/etc.) at fixture 2019-08-12; `vm-10` actively
+  writing `odds_features` near 2025-05-26. All three show wall-clock-fresh log lines (within the same minute as the
+  check), so this is live compute, not a repeat of the earlier false-idle pattern.
+- Features bucket unique-date count: still **1,554** (unchanged from slot-4/slot-5/slot-9's checks) — expected, since
+  the relaunch is only ~5-7 min old; `--skip-existing` means the already-written 1,554 dates are fast-skipped and the
+  fleet is now working the real gaps (vm-3's tail, vm-4's + vm-5's near-full ranges, vm-10's tail, plus everything past
+  the original 1,554).
+
+Gate ("features manifest clean over history") remains structurally unmet — full-history compute is a genuine multi-day
+operation that just restarted from a healthy state, not complete. Checkbox NOT flipped. Not filing a new BLK — no
+operator decision needed, this is progressing correctly now that the earlier stall is resolved; the wait is now a
+genuine multi-day compute duration, not an infra-inaction problem. `/skip-current-task` taken so this slot moves to
+other dispatchable work instead of idling on a multi-day compute.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` — should climb from 1,554
+toward the full ~4,210-day span. Once all 10 VMs report `EXIT_STATUS=0` (or the count approaches ~4,210), re-run
+`check_pipeline_completeness.py` (Todo 2) then re-assess Todo 1 + Todo 3 for real.
+
+### 2026-07-13 — slot 11 (Todo 1 dispatch — UNBLOCKED the stalled fleet: killed 3 hung VMs, relaunched full range with the shipped fix, gap-filled 2 immediate SPOT-preemptions; 10/10 VMs now genuinely computing)
+
+**Todo 1 (compute features 2015→present) — RELAUNCHED and verified healthy across all 10 shards. Checkbox NOT flipped
+(multi-day operation, not yet complete).**
+
+Picked up from slot-5's re-check moments earlier (byte-identical state: 1,554 dates, `fss-backfill-vm-{3,4,5}` still
+`RUNNING` but hung/idle since 2026-07-12T04:15, per slot-9's SSH-verified root-cause). Re-verified independently via
+non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`, `/home/ubuntu/google-cloud-sdk/bin/gcloud` — snap
+gcloud is broken in this slot with `cap_dac_override` errors): bucket unchanged at 1,554 dates, same 3 VMs, same
+creation timestamps as slot-4/5/9's reports.
+
+**Departed from the last 3 dispatches' precedent of re-diagnosing and skipping**: the stdin-siphon fix
+(`e2e-testing@f2487e4`, shipped by slot-9) is present, the unblocking action (kill hung VMs, relaunch with
+`--skip-existing`) is documented in this plan's own § Mechanics as the way to execute this exact todo, and this slot
+(11) is the one that originally launched the fleet successfully on 2026-07-12 — so this dispatch acted rather than
+re-filing a 4th duplicate finding:
+
+1. Killed `fss-backfill-vm-{3,4,5}` (confirmed hung, doing no useful work).
+2. Relaunched:
+   `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2015-01-01 --end 2026-07-13 --vms 10 --env prod`
+   (dry-run first to confirm chunking — 10×421-day chunks, full range, no gaps). All 10 `fss-backfill-vm-{1..10}`
+   created within ~3 min (2026-07-13T02:18–02:21 -07:00).
+3. **No-fire-and-forget verification caught a real problem**: at T+~3min, `fss-backfill-vm-1` and `fss-backfill-vm-4`
+   were MISSING from `gcloud compute instances list` — traced via `gcloud compute operations list` to
+   `compute.instances.preempted` events ~2 min after each VM's `insert` (immediate SPOT reclaim in `asia-northeast1-c`;
+   `--instance-termination-action=DELETE` means they self-deleted rather than restarting). The other 8
+   (`vm-2,3,5,6,7,8,9,10`) survived and were confirmed genuinely computing real dates via `run.log` tails (not just
+   booted) — e.g. vm-3 at date 16/421, vm-9 at date 4/421 — so did NOT restart the whole fleet (would have wasted their
+   head start).
+4. **Gap-filled the 2 preempted shards individually** rather than a full-fleet restart: wrote a small script reusing the
+   exact tarball+runner already staged in GCS by this run's launch
+   (`gs://features-sports-central-element-323112/_vm_staging/fss_backfill/`) and the shared `lc_log_upload_trap_block`
+   observability helper from `deployment-service/scripts/vm/lib/launcher_common.sh`, to recreate `fss-backfill-vm-1`
+   (2015-01-01→2016-02-25) and `fss-backfill-vm-4` (2018-06-17→2019-08-11) with the same SPOT+DELETE provisioning. Both
+   came up RUNNING and were confirmed computing real dates at T+2min (vm-1 date 6/421, vm-4 date 1/421) — no further
+   preemptions observed on any of the 10 through this check.
+
+**Final verified state (T+~10min from relaunch)**: all 10 `fss-backfill-vm-{1..10}` `RUNNING`, every one confirmed
+processing real per-date output (not stalled/booting) — vm-1:6/421, vm-2:55/421, vm-3:41/421, vm-4:1/421, vm-5:1/421,
+vm-6:21/421, vm-7:40/421, vm-8:34/421, vm-9:36/421, vm-10:11/423. Features bucket at 1,555 dates (climbing from the
+1,554 baseline — first new date landed already).
+
+**What I did NOT do**: did not wait for full completion (multi-day operation across ~2,656 remaining days, consistent
+with every prior dispatch's own handoff precedent, e.g. this same slot's 2026-07-12 entry). Did not re-litigate "infra
+craft vs data_engineering" — the plan's own Mechanics section names this launcher as Todo 1's execution path, and this
+slot already has direct precedent of doing this successfully. Did not attempt to prevent future SPOT preemptions
+(inherent to the provisioning model per this plan's own `SPOT VMs (HARD)` banner — "a reclaimed VM relaunches +
+resumes"); any future preemption converges via the next `--skip-existing` dispatch of this same todo, same as the
+recovery just performed here.
+
+**Handoff for the next dispatch**: check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 1,555
+toward the ~4,210-day full-history target as the 10 VMs complete their ~421-day chunks each) and
+`gcloud compute instances list --filter="name~fss-backfill"` for fleet health (non-snap gcloud:
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`, account `ikenna@odum-research.com`). If any shard goes hung/idle again
+(RUNNING but no progress in `run.log` for a long stretch) or gets preempted (missing from the instance list, confirm via
+`gcloud compute operations list --filter="targetLink~<vm-name>\$"` for a `compute.instances.preempted` event), the fix
+is either a targeted single-shard gap-fill (reuse the staged tarball, pattern in this entry) or a full `--skip-existing`
+re-run of the launcher — both idempotent and safe. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and re-assess Todo 1/Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress). No repo code commit this entry (VM operations, not a code change);
+this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other
+dispatchable work while the fleet runs.
+
 ### 2026-07-13 — slot 5 (Todo 3 re-check — still BLOCKED-PREREQ, byte-identical to slot-9's dispatch moments earlier; no infra relaunch yet)
 
 Fast re-verify (not a repeat of slot-9's multi-hour SSH investigation) via non-snap gcloud (`ikenna@odum-research.com`,

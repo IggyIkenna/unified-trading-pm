@@ -27,8 +27,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 last_updated: 2026-06-28
-locked_by:
-locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -36,6 +34,10 @@ source: [../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS consolidation
+> plan-hygiene-debt sweep).** All todos confirmed 0 open (functionally complete); no fold-in needed. Archived per
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`.
 
 # MDPS — TradFi processed-candle passthrough + dependency-checker fix
 

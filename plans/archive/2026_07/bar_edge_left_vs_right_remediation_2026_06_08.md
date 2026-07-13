@@ -1,16 +1,26 @@
 ---
 doc_type: plan
-title: Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion, recompute the left-edge features corpus
+title:
+  Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion,
+  recompute the left-edge features corpus
 summary: >-
   Systemic remediation to enforce one canonical candle edge (RIGHT = t_close) everywhere: closes the
-  assert_bar_boundary_contract blind-spot with a new check_bar_edge_open_ingestion.py AST gate (STEP 5.92),
-  fixes the two features-service left-edge re-resamplers (candle_resampler/flow_interaction, fixed
-  @7a4fafd9), hardens latent pre-agg fetchers, and recomputes the pre-fix left-edge features corpus.
-status: active
+  assert_bar_boundary_contract blind-spot with a new check_bar_edge_open_ingestion.py AST gate (STEP 5.92), fixes the
+  two features-service left-edge re-resamplers (candle_resampler/flow_interaction, fixed @7a4fafd9), hardens latent
+  pre-agg fetchers, and recomputes the pre-fix left-edge features corpus.
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [book-microstructure, features, data-correctness, quality-gates, mdps, backfill, verification]
 related: []
@@ -23,14 +33,25 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
 last_updated: 2026-06-29
-locked_by: live-defi-rollout
-locked_since: 2026-06-08
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on:
-source: ['plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md (harsh, data-verified 2026-06-08)', plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (one instance of the class), operator 2026-06-08 ("file it so it blocks us; closed-candle stamped on the open/left is lookahead → leakage for MDPS + features")]
+source:
+  [
+    "plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md (harsh, data-verified 2026-06-08)",
+    plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (one instance of the class),
+    operator 2026-06-08 ("file it so it blocks us; closed-candle stamped on the open/left is lookahead → leakage for
+    MDPS + features"),
+  ]
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # Bar-edge systemic remediation — one canonical edge (RIGHT = `t_close`) everywhere
 

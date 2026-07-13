@@ -209,16 +209,25 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       operator decision (both `trades` and `book_snapshot_5` for LIGHTER-ZKSYNC are still in the 6-tuple live-only set
       either way, since this todo's actual question — can Tardis serve `book_snapshot_5` — is answered). No code change
       — investigation only; issue doc ships via the PM `docs(plans):` carve-out.
-- [ ] [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi` to
-      confirm Layer-1 tuple count drops accordingly. (repo: instruments-service) — **UNBLOCKED 2026-07-13**: (b) is
-      implemented (`market-tick-data-service@3dd28d5e`, see P1 above), but this todo is still NOT actionable yet — the
-      fix is going-forward only (no historical backfill of the typed-empty rows), so `measure_honest_coverage.py` run
-      right now would show the SAME 6 missing tuples it did before, since no shard-day has actually been (re)processed
-      with the new code yet. Needs either: a fresh `collect-onchain-perp-batch` run for at least one date per affected
-      venue (my own attempt this session got queued behind heavy `ManifestWriter` CAS contention on the shared cefi
-      manifest and didn't complete within a reasonable wait — see P1's live-verify note), or the next
-      regularly-scheduled backfill picking up the new code naturally. Re-run this todo's coverage measurement AFTER that
-      lands, not before.
+- [x] ✅ [SCRIPT] P3. Once (a) or (b) is decided and implemented, re-run `measure_honest_coverage.py --asset-group cefi`
+      to confirm Layer-1 tuple count drops accordingly. (repo: instruments-service) — **DONE 2026-07-13 (slot-6)**: ran
+      a real
+      `collect-onchain-perp-batch --venues ASTER PACIFICA-SOLANA EXTENDED-STARKNET LIGHTER-ZKSYNC --start-date     2026-07-11 --end-date 2026-07-11 --onchain-perp-symbols BTC`
+      (scoped to 1 symbol to bound the shared-manifest contention this session hit repeatedly). All 6 live-only
+      exclusion log lines fired + all 6 typed `empty_confirmed` rows landed in the manifest (verified by direct query,
+      not just the log). Re-ran `measure_honest_coverage.py --asset-group cefi`: Layer-1 missing-tuple count dropped and
+      Layer-1 completeness rose from 90.4% → 93.2% (73 EXPECTED, missing 7→5). **Confirmed via full missing-tuple list
+      (not just the logged first-5)**: none of the 6 original live-only tuples (ASTER book_snapshot_5/liquidations,
+      PACIFICA-SOLANA book_snapshot_5, EXTENDED-STARKNET book_snapshot_5, LIGHTER-ZKSYNC trades/book_snapshot_5) remain
+      missing — the 5 tuples still missing are all pre-existing, unrelated gaps (BITGET-FUTURES x3, COINBASE-CDE/trades,
+      DERIBIT-COMBO/trades). **Sub-finding**: the first pass showed 2 of the 6 rows (EXTENDED-STARKNET/book_snapshot_5,
+      LIGHTER-ZKSYNC/book_snapshot_5) logged as successfully written but verifiably ABSENT on direct manifest query —
+      root-caused to a `ManifestWriter._write_unconditional` race condition (no generation-check on the retry-exhausted
+      fallback path), NOT a defect in this fix's code (a narrow re-run of just those 2 tuples landed cleanly and is what
+      closed this todo). Filed as its own issue doc + NOTIFIED via this todo per the data-correctness/cross-repo
+      big-finding rule: `manifestwriter_unconditional_write_race_data_loss_2026_07_13.md`. Evidence: coverage.json
+      written to `gs://central-element-323112-honest-coverage/2026-07-13/coverage.json` (09:42 UTC run); manifest row
+      counts 7465459→7465500 across the two runs.
 
 ## Progress Log
 
@@ -230,3 +239,11 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
   until the operator actually decides (a) vs (b). Raised the decision itself via `/blocked` (options + recommendation
   per RULES.md's escalation format) rather than silently re-skipping. Did not implement (a) or (b) myself — that's the
   operator's call per this doc's own "Recommended decision" section. unified-trading-pm@(this commit).
+- **2026-07-13 (slot-6, data_engineering, sonnet/high)** — Closed out the final P3 todo: ran a real
+  `collect-onchain-perp-batch` for 2026-07-11 across all 4 affected venues, confirmed all 6 live-only tuples now write
+  typed `empty_confirmed` rows, and re-ran `measure_honest_coverage.py --asset-group cefi` to confirm Layer-1
+  completeness rose 90.4%→93.2% with none of the 6 tuples remaining in the missing list. All 3 todos in this issue doc
+  are now done. Discovered + filed a separate cross-cutting finding
+  (`manifestwriter_unconditional_write_race_data_loss_2026_07_13.md`) for a `ManifestWriter` race condition that
+  silently dropped 2 of the 6 rows on the first pass (root-caused, not a defect in this fix — a narrow re-run closed
+  it). No code changes this session (batch run only) — unified-trading-pm@(this commit).

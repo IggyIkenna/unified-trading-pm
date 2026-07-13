@@ -60,6 +60,17 @@ together to green-light dispatch.
 > `status: draft` / "not dispatched" framing is left unchanged here — that call is for whoever owns closing this
 > tracker, not this pass.
 
+> **2026-07-13 (MTDS/MDPS consolidation, `mtds_consolidation_foldin_mapping_2026_07_12.md`, operator ruling "Approve
+> all + unlock")** — the 4 mini-plans flagged complete above are now formally **archived** (all 0 open todos): Plan 1
+> `mdps_book_microstructure_precompute_columns`, Plan 5 `tradfi_mdps_passthrough_dependency_gap`, and Plan 7
+> `mdps_features_full_month_benchmark_binance` moved to `plans/archive/2026_07/` as simple archives (nothing to fold —
+> genuinely 0 residual work). Plan 8 `mdps_polars_engine_cost_sharpening` also archived to `plans/archive/2026_07/`,
+> with its completion **credit folded into M-2** (`plans/active/mtds_file_size_refactor_2026_06_08.md` Progress Log)
+> since it un-deferred M-2's parked Polars seam. This tracker itself is **KEPT** ("Keep as tracker" ruling) — it is a
+> live 9-mini-plan coordination tracker spanning 4 parent epics, not a stub; Plans 2/3/4/6/9 (the other 5, living under
+> `features_and_ml_master` / `batch_live_symmetry_master` / `execution_master`) are unaffected by this fold and remain
+> tracked here as before. Re-visit this tracker's own closure once all 9 mini-plans resolve.
+
 ## The thesis (operator framing 2026-06-28)
 
 - **Ticks never leave GCP.** All tick→candle work and feature calculation happen GCP-side. The **portable artifact is
@@ -155,17 +166,17 @@ Not every instrument gets features. Codified in UAC (Plan 3):
 
 ## The mini-plans
 
-| #   | Plan                                        | Repo(s)          | Role          | Model                         | Parent epic                |
-| --- | ------------------------------------------- | ---------------- | ------------- | ----------------------------- | -------------------------- |
-| 1   | mdps_book_microstructure_precompute_columns | MDPS, UAC        | data-pipeline | **Opus/xhigh**                | mtds_mdps_master           |
-| 2   | features_read_book_columns_not_snapshots    | features         | data-pipeline | Sonnet                        | features_and_ml_master     |
-| 3   | mvp_for_mdps_and_features_universe_uac      | UAC              | backend       | **Opus**                      | features_and_ml_master     |
-| 4   | features_no_lookahead_reaggregation_guard   | features         | data-pipeline | Sonnet                        | batch_live_symmetry_master |
-| 5   | tradfi_mdps_passthrough_dependency_gap      | MDPS             | data-pipeline | Sonnet                        | mtds_mdps_master           |
-| 6   | honest_coverage_smoke_harness               | e2e-testing, UAC | data-pipeline | **Opus** design / Sonnet impl | batch_live_symmetry_master |
-| 7   | mdps_features_full_month_benchmark_binance  | MDPS, features   | data-pipeline | Sonnet run / Opus analysis    | mtds_mdps_master           |
-| 8   | mdps_polars_engine_cost_sharpening          | MDPS             | data-pipeline | **Opus/xhigh**                | mtds_mdps_master           |
-| 9   | execution_fidelity_tiers_uac_governed       | execution, UAC   | backend       | **Opus**                      | execution_master           |
+| #   | Plan                                        | Repo(s)          | Role          | Model                         | Parent epic                | Status (2026-07-13)                                                      |
+| --- | ------------------------------------------- | ---------------- | ------------- | ----------------------------- | -------------------------- | ------------------------------------------------------------------------ |
+| 1   | mdps_book_microstructure_precompute_columns | MDPS, UAC        | data-pipeline | **Opus/xhigh**                | mtds_mdps_master           | ✅ ARCHIVED (simple, 0 open) → `plans/archive/2026_07/`                  |
+| 2   | features_read_book_columns_not_snapshots    | features         | data-pipeline | Sonnet                        | features_and_ml_master     | complete (unaffected by this fold)                                       |
+| 3   | mvp_for_mdps_and_features_universe_uac      | UAC              | backend       | **Opus**                      | features_and_ml_master     | not yet authored (unaffected)                                            |
+| 4   | features_no_lookahead_reaggregation_guard   | features         | data-pipeline | Sonnet                        | batch_live_symmetry_master | active (unaffected)                                                      |
+| 5   | tradfi_mdps_passthrough_dependency_gap      | MDPS             | data-pipeline | Sonnet                        | mtds_mdps_master           | ✅ ARCHIVED (simple, 0 open) → `plans/archive/2026_07/`                  |
+| 6   | honest_coverage_smoke_harness               | e2e-testing, UAC | data-pipeline | **Opus** design / Sonnet impl | batch_live_symmetry_master | exists (status not re-checked here, unaffected)                          |
+| 7   | mdps_features_full_month_benchmark_binance  | MDPS, features   | data-pipeline | Sonnet run / Opus analysis    | mtds_mdps_master           | ✅ ARCHIVED (simple, 0 open) → `plans/archive/2026_07/`                  |
+| 8   | mdps_polars_engine_cost_sharpening          | MDPS             | data-pipeline | **Opus/xhigh**                | mtds_mdps_master           | ✅ ARCHIVED, credit folded → M-2 `mtds_file_size_refactor_2026_06_08.md` |
+| 9   | execution_fidelity_tiers_uac_governed       | execution, UAC   | backend       | **Opus**                      | execution_master           | active (unaffected)                                                      |
 
 ## Prior art folded in (do not re-derive)
 

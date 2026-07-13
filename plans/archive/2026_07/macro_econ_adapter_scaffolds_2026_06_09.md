@@ -1,8 +1,10 @@
 ---
 doc_type: plan
 title: Macro/alt-data free adapter scaffolds — fear_greed / CFTC COT / Baker Hughes / EIA
-summary: Build MTDS fetch-adapter scaffolds for four free macro/alt-data sources (fear_greed, CFTC COT, Baker Hughes, EIA) that have UAC capability declarations but no adapter implementation.
-status: active
+summary:
+  Build MTDS fetch-adapter scaffolds for four free macro/alt-data sources (fear_greed, CFTC COT, Baker Hughes, EIA) that
+  have UAC capability declarations but no adapter implementation.
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -19,14 +21,19 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-09
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on: []
 source: [plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md (Phase 2 — free quick-win adapters)]
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # Macro/alt-data free adapter scaffolds (2026-06-09)
 

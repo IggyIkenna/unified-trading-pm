@@ -50,6 +50,14 @@ drift_direction: advance-code
 ratified: 2026-06-05 (operator — all 6 decisions + refinements)
 ---
 
+> **🟢 KEPT STANDALONE per operator ruling 2026-07-13 (MTDS/MDPS consolidation,
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`).** This plan is a P0 prerequisite-gate/foundation plan (not a
+> backfill task) that GATES the per-AG canonicalisation walks — folding a gate INTO the plan(s) it gates would be an
+> unusual shape, so the operator overrode the seed mapping's proposed "FOLD → M-1" and kept it independent. **M-1**
+> ([`data_completion_to_100_all_ag_2026_06_21.md`](./data_completion_to_100_all_ag_2026_06_21.md)) references this plan
+> as a prerequisite (its folded-in cefi/tradfi/prediction/downstream/defi canonicalisation scope all cite Phase 0 of
+> this plan as the gate) rather than absorbing it. Remains `locked_by: live-defi-rollout`, in-flight.
+
 # pipeline_mode standardisation — source-aware live + batch/live/replay continuity
 
 > **✅ RATIFIED (operator 2026-06-05)** — all 6 decisions + the #4 (manifest-column) / #6 (CLI-mode + mock/dev) /

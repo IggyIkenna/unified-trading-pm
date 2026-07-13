@@ -3,7 +3,7 @@ doc_type: plan
 title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
 summary:
   Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -28,10 +28,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on:
 source:
   - { defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk) }
@@ -42,6 +40,13 @@ drift_direction: advance-code
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 

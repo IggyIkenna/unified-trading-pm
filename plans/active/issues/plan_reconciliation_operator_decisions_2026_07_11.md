@@ -3712,6 +3712,32 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-13 (§A2 findings 175/142/146 — MTDS/MDPS 2-survivor consolidation EXECUTED): the fold-in/archive mapping
+  authored in `mtds_consolidation_foldin_mapping_2026_07_12.md` (per the "ENFORCE 2 survivors" ruling) received its HARD
+  GATE approval — operator ruling verbatim: "Approve all + unlock" (blanket `[unlock-plan]` for every locked candidate);
+  todo-5 judgment call (`defi_manifest_canonicalisation_2026_06_01`) = "FOLD → M-1";
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` = "KEEP standalone";
+  `mdps_features_reduced_artifact_tracker_2026_06_28` = "Keep as tracker"; `sports_manifest_canonicalisation_2026_06_01`
+  = KEEP per this same ruling's original 175/142/146 text (unchanged). Executed in full: **9 plans folded into M-1**
+  (`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`, `data_source_provenance_all_asset_groups_2026_06_01`,
+  `macro_econ_adapter_scaffolds_2026_06_09`, `cefi_manifest_canonicalisation_2026_06_01`,
+  `tradfi_manifest_canonicalisation_2026_06_01`, `prediction_manifest_canonicalisation_2026_06_01`,
+  `downstream_services_manifest_canonicalisation_2026_06_01`, `defi_manifest_canonicalisation_2026_06_01`,
+  `bar_edge_left_vs_right_remediation_2026_06_08` — 130 open todos migrated verbatim with provenance into M-1's new
+  "Folded-in scope 2026-07-13" section, each archived to `plans/archive/2026_07/` — unified-trading-pm@e4dd7871e); **1
+  plan credited into M-2** (`mdps_polars_engine_cost_sharpening_2026_06_28`) + **4 plan-hygiene-debt plans
+  simple-archived** (`mdps_book_microstructure_precompute_columns_2026_06_28`,
+  `mdps_features_full_month_benchmark_binance_2026_06_28`, `tradfi_mdps_passthrough_dependency_gap_2026_06_28`,
+  `solana_defi_legacy_migration_2026_05_27` — stale `status: active` corrected to `complete` + unlocked —
+  unified-trading-pm@4336c38f6); 10 codex docs repointed off the now-archived paths +
+  `pipeline_mode_source_batch_live_replay_standardisation` banner + tracker rows + `epics/mtds_mdps_master.md`
+  consolidation-executed banner (unified-trading-pm@8eb5293b3). **"sports_master wording fixed" pointer** (the paired
+  item from the original 175/142/146 ruling, not executed by the foldin-mapping plan per its own scope note):
+  `sports_manifest_canonicalisation_2026_06_01.md` itself was confirmed untouched (correct — KEEP-WITH-JUSTIFICATION);
+  the `sports_master` epic-body wording fix referenced by the original ruling still needs a direct edit to
+  `plans/epics/sports_master.md` by whoever next touches that epic — filed here as the pointer since this plan's scope
+  explicitly excluded executing it directly. Full mapping + per-plan justification:
+  `mtds_consolidation_foldin_mapping_2026_07_12.md` (now `status: complete`).
 - 2026-07-12 (dev sports-fixtures OOM todo CLOSED — mirrored, not descoped): confirmed dev is genuinely consumed, not
   dead weight — `uts-dev-{sports,features,instruments,cefi}-*-t1-schedule` Cloud Scheduler entries (4x/day: midnight,
   6am, noon, 6pm, matching prod's cadence exactly) are ENABLED and firing every 6h in the SAME `central-element-323112`
@@ -3757,14 +3783,18 @@ tracked in the Progress Log.
   re-verified BACKED, no regression. All 4 codex SSOT docs exist/current (contradicts the epic's "DEFERRED-POST-CUTOVER"
   framing); one codex-internal stale sub-claim found (`global-ledger-architecture.md` still calls
   `build_attribution_rows()` a "stub") and flagged CODEX-GATED (not edited — operator-gated, new todo filed in the
-  re-audit plan for a follow-up session). **GOVERNANCE-GATE FINDING escalated to operator (not adjudicated)**: no
-  explicit operator-ack record was found for the discovery plan's 3 gated decisions (Phase 3 late-arriving-data / Phase
-  5 greeks-home / Phase 6 TreasuryLedger split) despite the Citadel plan's shipped code making de-facto choices on all 3
-  axes — read as a cross-plan visibility gap (two plans, two epics, one gated ledger-taxonomy surface, no closing
-  cross-reference) rather than proven unauthorized action, but exactly the pattern the operator asked this audit to
-  surface. Epic synced in place (`last_updated` bumped to 2026-07-12, all STALE/CONTRADICTED-BY-CODE claims corrected
-  with "(was: …)" + evidence citations) — commit pending via the orchestrator (this agent runs no git commands per its
-  instructions).
+  re-audit plan for a follow-up session). **GOVERNANCE-GATE: NO BREACH (initial suspicion overturned on deeper
+  verification)**: the audit's first pass found no operator-ack record for the discovery plan's 3 gated decisions (Phase
+  3 late-arriving-data / Phase 5 greeks-home / Phase 6 TreasuryLedger split) and provisionally escalated; a
+  PM-git-history search then FOUND the ack — `unified-trading-pm@351a47b61` (2026-05-23 20:42 +0100, "6 operator-ACK'd
+  decisions"), recorded in `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` § "Operator decisions
+  (ACK'd 2026-05-23)". Gate properly cleared ~4 weeks before any Phase 7/8 code shipped; shipped code CONSISTENT with
+  the acks; escalation WITHDRAWN. Real finding = doc-sync: the ack lived only in the MTDS plan while the epic +
+  discovery archival banner said "[ack] pending" for 7 weeks (now fixed in the epic with citations). Bonus discovery
+  from the ack record: the acked `ledger_type=treasury/` partition (fund-administration-service writer) is itself still
+  unimplemented at HEAD — forward-carried as a second epic P3 todo. Epic synced in place (`last_updated` bumped to
+  2026-07-12, all STALE/CONTRADICTED-BY-CODE claims corrected with "(was: …)" + evidence citations) — commit pending via
+  the orchestrator (this agent runs no git commands per its instructions).
 
 - 2026-07-12 (LEFTOVER QUEUE CLOSED, final Q&A round): operator ruled all 4 remaining items. (1) codex finding 346 FIXED
   — shard-level-failure-isolation.md synced to the 4-category taxonomy, validation-and-errors.md §1 named SSOT. (2)

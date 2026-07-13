@@ -271,6 +271,38 @@ BLOCKED.
 
 ## Progress Log
 
+### Legacy-bucket purge — independent re-verification pass — 2026-07-13T09:20Z (data_engineering)
+
+**Re-dispatch note**: this exact directive (snapshot-first PURGE of the legacy-bucket Deribit per-strike skeleton,
+option A) arrived a second time after the work below (2026-07-13T01:34Z) had already landed and pushed
+(`instruments-service@31c7f3e4`, plan-flip `unified-trading-pm@04e24cfe0` — confirmed via
+`git merge-base --is-ancestor 04e24cfe0 origin/live-defi-rollout` = true, HEAD 0-ahead/0-behind origin). Rather than
+re-running a mutating purge against an already-empty target (the script's STOP-ON-SURPRISE guard would reject it anyway
+— 0 rows falls outside both the prd [200,5000] and legacy [6.0M,7.0M] bounds by design), this pass **independently
+re-verified every claim below is true on live infra**, not just read from the doc:
+
+- Both commits (`6986e8e4`, `31c7f3e4`) confirmed present + ancestors of current `instruments-service` HEAD.
+- Snapshot blob
+  `gs://market-data-tick-cefi-central-element-323112/_index/snapshots/pre_purge_deribit_option_availability_index_20260713T013034Z.parquet`
+  confirmed to exist and independently re-read: 35,815,825 total rows, 6,650,624 target rows,
+  `empty_confirmed`=5,771,968 / `expected_unattempted`=878,656 (zero `captured`), `book_snapshot_5`=3,325,312 /
+  `trades`=3,325,312, dates 2025-05-24→2026-02-21 — exact match to the figures recorded below.
+- Live dry-run re-run of
+  `purge_deribit_option_per_strike_trades_book5_2026_07_12.py --bucket market-data-tick-cefi-central-element-323112 --legacy-scale`
+  against the current legacy index: **0/29,165,201** target rows in `_index/availability_index.parquet` (matches
+  35,815,825 − 6,650,624 = 29,165,201 exactly) and **0** in both `_index/per_vm/_legacy_seed*.parquet` shards — no
+  residual, no resurrection risk.
+- `measure_honest_coverage.py --asset-group cefi` re-run live (merged view, primary prd + secondary legacy, 10,440,828
+  merged rows): `by_venue_instrument_type_data_type.cefi.DERIBIT` has **no `OPTION` key at all** — i.e. zero
+  `(DERIBIT, OPTION, trades|book_snapshot_5)` cells reach the merged G4 view, confirming the legacy skeleton no longer
+  feeds through.
+- P1 todo checkbox + `BLK-cbee81bc` annotation (both here and at the todo line) were already flipped/closed in the prior
+  pass — no further edit needed there.
+
+**Verdict: no new mutation required — prior pass's purge, snapshot, and plan-flip are genuine, complete, and already on
+`origin/live-defi-rollout`.** This entry exists only to record the independent re-check so a third dispatch of the same
+directive isn't needed.
+
 ### Legacy-bucket Deribit per-strike purge — 2026-07-13T01:34Z (data_engineering slot-9)
 
 **Follow-up to the scale-discrepancy finding below**: operator answered `BLK-cbee81bc` (option A — proceed) live in chat

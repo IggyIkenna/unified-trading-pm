@@ -4,7 +4,7 @@ title: Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/
 summary:
   Migrate Solana DeFi (Kamino/Solend lending + Kamino/Orca/Raydium pools) from legacy prefixes to canonical dedicated
   split buckets, coordinated with the DeFi C0 single-walk.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -29,8 +29,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-05-27
 supersedes:
 superseded_by:
 depends_on:
@@ -44,6 +42,12 @@ drift_direction: correct-codex
 master:
   defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
 ---
+
+> **✅ ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS consolidation
+> plan-hygiene-debt sweep).** All todos confirmed 0 open (functionally complete); no fold-in needed. Archived per
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`. Frontmatter `status:` was stale (`active` despite 0 open todos,
+> 32/32 done) — corrected to `complete` as part of this archival. Was `locked_by: live-defi-rollout` — cleared via the
+> operator's blanket `[unlock-plan]` grant 2026-07-13.
 
 # Solana DeFi legacy→canonical migration
 

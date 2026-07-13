@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-12 # (was: 2026-07-10 -- finding-77 removal execution attempt STOPPED this session: conflicts with uac@3652f99f VENUE_DATA_TYPE_CAPABILITIES for 3 of 4 targeted pairs; see STOP annotation + BLOCKED-OPERATOR-DECISION todo)
+last_updated: 2026-07-13 # (was: 2026-07-12 -- finding-77 RESOLVED this session: operator ruled option A (narrowed scope), only (HYPERLIQUID, liquidations) removed; shipped unified-api-contracts@2088324c)
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)
@@ -181,11 +181,20 @@ primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). 
 > book_snapshot_5) are actually receiving non-empty ticks today; let that observation (not either doc's prose) settle
 > which pairs are genuinely dead. Other: operator can type a custom answer.
 
-- [ ] [CODE] P2. **BLOCKED-OPERATOR-DECISION (2026-07-12, this session).** Remove aster + hyperliquid from
-      SOURCE_PRIORITY for cefi book_snapshot/liquidations in UAC — ruling as literally scoped conflicts with
-      `VENUE_DATA_TYPE_CAPABILITIES` (uac@3652f99f) + its own regression test for 3 of the 4 targeted pairs; see the
-      STOP annotation above for the pair-by-pair verdict + escalation options. Awaiting operator ruling on options A/B/C
-      before any `unified-api-contracts` change ships. Repo: unified-api-contracts.
+- [x] [CODE] P2. **RESOLVED 2026-07-13 — operator ruling verbatim: "OPERATOR RULING 2026-07-13 (resolving the finding-77
+      escalation, option A): remove ONLY the (HYPERLIQUID, liquidations) SOURCE_PRIORITY registration — the one pair
+      with no real feed. The other three pairs (ASTER book_snapshot_5, ASTER liquidations, HYPERLIQUID book_snapshot_5)
+      STAY — they are real feeds per uac@3652f99f."** Matches escalation option A (`[WORKER REC]`) exactly — the
+      narrowest of the three offered options. Shipped: removed `hyperliquid` from `("cefi", "liquidations")` in
+      `_source_priority_data.py` ONLY; the other three pairs (`("cefi",     "book_snapshot")` keeps
+      `aster`+`hyperliquid`, `("cefi", "liquidations")` keeps `aster`) are untouched, plus a code comment on the
+      remaining aster/HL entries recording this ruling. Verified no `VENUE_DATA_TYPE_CAPABILITIES` entry claims HL
+      liquidations (`HYPERLIQUID` capability dict has `trades`/`book_snapshot_5`/`derivative_ticker` only — no
+      `liquidations` key). Added regression tests: `test_cefi_liquidations_excludes_hyperliquid_finding77` +
+      `test_cefi_book_liq_pairs_kept_by_finding77_narrowed_ruling` (`tests/unit/test_source_priority.py`) +
+      `test_hyperliquid_liquidations_resolves_empty_no_crash_finding77` (`tests/unit/test_mtds_venue_coverage.py`,
+      confirms `get_expected_instruments_for_venue("HYPERLIQUID", "liquidations") == []`, expect-nothing/no-crash
+      semantics). `quality-gates.sh` green (full suite, 3570+ tests). Evidence: `unified-api-contracts@2088324c`.
 
 **Correction to issue `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (STALE PREMISE):** that doc says the
 cefi download "STRIPS HL/ASTER (they're defi in VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP`

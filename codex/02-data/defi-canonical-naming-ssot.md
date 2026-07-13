@@ -3,21 +3,50 @@ doc_type: codex-ssot
 title: DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)
 summary: >-
   Operator-locked SSOT for the DeFi canonical wire/storage vocabulary — data_type
-  (dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/oracle_prices/perp_funding), chain (HYPERLIQUID
-  not HYPERLIQUID_L1), instrument_type (incl. perpetual), bare venue + separate chain= path segment,
-  pipeline_mode= partition, and the consolidated market-data-tick-defi-prd-{pid} bucket; every writer/reader
-  must converge or the surface is review-blocking.
+  (dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/oracle_prices/perp_funding), chain (HYPERLIQUID not
+  HYPERLIQUID_L1), instrument_type (incl. perpetual), bare venue + separate chain= path segment, pipeline_mode=
+  partition, and the consolidated market-data-tick-defi-prd-{pid} bucket; every writer/reader must converge or the
+  surface is review-blocking.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [defi, canonicalisation, pipeline-mode, manifest, data-correctness, ssot-audit, migration]
-related: [defi-data-pipeline.md, defi-data-types-catalog.md, defi-data-type-taxonomy.md, pipeline-mode-partition.md, ../../plans/active/defi_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    defi-data-pipeline.md,
+    defi-data-types-catalog.md,
+    defi-data-type-taxonomy.md,
+    pipeline-mode-partition.md,
+    ../../plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-01
-authoritative_for: [DeFi canonical naming vocabulary, DeFi data_type/chain/instrument_type/path/bucket canonical forms, on-chain perp CLOB cefi-vs-defi asset_group boundary]
-referenced_by: [codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/04-architecture/solana-defi-coverage.md, codex/04-architecture/token-wrapping-and-collateral.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md, plans/audit/results/defi_c0_datastate_audit_2026_06_01.md]
+authoritative_for:
+  [
+    DeFi canonical naming vocabulary,
+    DeFi data_type/chain/instrument_type/path/bucket canonical forms,
+    on-chain perp CLOB cefi-vs-defi asset_group boundary,
+  ]
+referenced_by:
+  [
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    codex/04-architecture/solana-defi-coverage.md,
+    codex/04-architecture/token-wrapping-and-collateral.md,
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
+  ]
 owner:
 last_reviewed: 2026-06-27
 code_refs:
@@ -107,13 +136,14 @@ buckets/paths to fit code" regression this SSOT prevents.
 
 ## Cross-plan
 
-- `plans/active/defi_manifest_canonicalisation_2026_06_01.md` §C/C2 + C0-RD — the migration owner (this codex is its
-  naming SSOT).
+- `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md` §C/C2 + C0-RD — the migration owner (this codex
+  is its naming SSOT).
 - `plans/active/pipeline_mode_partition_migration_2026_06_01.md` — owns making `pipeline_mode=` canonical in the
   writer/reader (lands WITH C0, not after).
-- `plans/active/solana_defi_legacy_migration_2026_05_27.md` — dedicated-bucket directive; uses `dex_pool_state`.
-- `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` — owns the legacy DELETE (RD5), gated
-  per-AG on C-GREEN.
+- `plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md` — dedicated-bucket directive; uses
+  `dex_pool_state`.
+- `plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` — owns the legacy DELETE (RD5),
+  gated per-AG on C-GREEN.
 
 ## DeFi data-pipeline DURABLE gotchas (codified 2026-06-21 — root causes that kept defi MTDS stuck at 6% honest-cov)
 

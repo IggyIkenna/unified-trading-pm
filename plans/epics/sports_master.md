@@ -1328,8 +1328,10 @@ script keeps it in sync from frontmatter._
 [`sports_manifest_canonicalisation_2026_06_01`](../active/sports_manifest_canonicalisation_2026_06_01.md) (manifest FORM
 canonicalisation / honest-absence relabel / source-stamp; delegates the bookmaker-coverage _enumeration_ back to the
 net-new child plan below) ·
-[`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](../active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md)
-(Phase 3 drain + Phase 4 GATED `sports-scheduler` relaunch) ·
+[`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](../archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md)
+(Phase 3 drain + Phase 4 GATED `sports-scheduler` relaunch — **FOLDED → M-1 2026-07-13** per the MTDS consolidation; its
+open items now live in `data_completion_to_100_all_ag_2026_06_21.md` §"Folded-in scope 2026-07-13"; ruling 146
+confirmed: delegated visibility row, not a direct `parent_epic` child) ·
 [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
 (sports `available_at` stamping + feature-required-inputs) ·
 [`trigger_based_reference_data_2026_04_13`](../archive/2026_05/trigger_based_reference_data_2026_04_13.md)

@@ -22,12 +22,18 @@ related:
   ]
 created: 2026-05-16
 authoritative_for: [TradFi (asset_group=tradfi) batch/live per-AG architecture]
-referenced_by: [codex/02-data/tradfi-databento-sourcing-ssot.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md]
+referenced_by:
+  [
+    codex/02-data/tradfi-databento-sourcing-ssot.md,
+    codex/04-architecture/batch-live-architecture.md,
+    codex/04-architecture/prediction-batch-live.md,
+    codex/04-architecture/sports-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
 plan:
-  plans/active/tradfi_manifest_canonicalisation_2026_06_01.md +
+  plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md +
   pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
   placeholder)
 ---
@@ -149,7 +155,7 @@ deployment-UI drilldown must carry the identical atom. SSOT:
 ## §5 Dual-source provenance — databento + massive
 
 TradFi is the reference implementation of the crosscutting `source=` provenance rule
-(`plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`):
+(`plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`):
 
 - Every captured cell carries a row-level `source` column + a per-source manifest row; `record_captured(source=...)` is
   REQUIRED; blank/unregistered → `MissingSourceError`.
@@ -215,5 +221,5 @@ TradFi ticks follow the same MTDS → Redis Stream → MDPS → features-service
 - **Empty-record taxonomy**:
   [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) +
   [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
-- **Source provenance plan**: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`
-- **TradFi canonicalisation walk**: `plans/active/tradfi_manifest_canonicalisation_2026_06_01.md`
+- **Source provenance plan**: `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`
+- **TradFi canonicalisation walk**: `plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md`

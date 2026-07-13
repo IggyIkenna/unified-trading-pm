@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Prediction Market Schema Paths
 summary: >-
-  Prediction market schema-paths SSOT — Polymarket/Kalshi venues, canonical instrument-ID formats,
-  legacy vs post-Plan-A GCS hive paths (raw objects stay PER-CID; prediction_canonical_question_group
-  is a MANIFEST-ONLY bundle re-computed at rebuild), the CanonicalQuestionGroup cadence taxonomy +
-  expected market_ids, per-market lifecycle bounds, and the Polymarket API endpoints +
-  soccer/team/underlying mappings.
+  Prediction market schema-paths SSOT — Polymarket/Kalshi venues, canonical instrument-ID formats, legacy vs post-Plan-A
+  GCS hive paths (raw objects stay PER-CID; prediction_canonical_question_group is a MANIFEST-ONLY bundle re-computed at
+  rebuild), the CanonicalQuestionGroup cadence taxonomy + expected market_ids, per-market lifecycle bounds, and the
+  Polymarket API endpoints + soccer/team/underlying mappings.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +22,16 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [prediction GCS schema paths, canonical_question_group shard atom and taxonomy]
-referenced_by: [codex/02-data/prediction-data-types-catalog.md, codex/02-data/prediction-perps-sourcing.md, codex/02-data/prediction-settlement-availability-convention.md, codex/04-architecture/instruments-live-architecture.md, codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md, codex/15-runbooks/backfill-completion-playbook.md, plans/epics/predictions_master.md]
+referenced_by:
+  [
+    codex/02-data/prediction-data-types-catalog.md,
+    codex/02-data/prediction-perps-sourcing.md,
+    codex/02-data/prediction-settlement-availability-convention.md,
+    codex/04-architecture/instruments-live-architecture.md,
+    codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
+    codex/15-runbooks/backfill-completion-playbook.md,
+    plans/epics/predictions_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -130,7 +138,7 @@ surface as honest absence.
 > with `observed_clusters={conditionId: rows}`. This was a deliberate choice — bundle at the manifest layer WITHOUT
 > touching the streaming-write (per-cid) architecture (MTDS `orchestrator.py`). The shard ATOM below is correct as the
 > MANIFEST row-key; only the raw-object path shape in the code block is superseded. SSOT:
-> `plans/active/prediction_manifest_canonicalisation_2026_06_01.md` § E5/E6b.
+> `plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md` § E5/E6b.
 
 ```
 instruments-store-pred-prd-{project}/

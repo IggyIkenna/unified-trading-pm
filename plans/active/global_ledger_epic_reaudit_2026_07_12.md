@@ -90,65 +90,95 @@ Read these before verifying claims — they are the target-state the epic's clai
 
 ## Todos
 
-- [ ] [AUDIT] P0. **Finalize the claim manifest** — walk `plans/epics/global_ledger_pnl_attribution_master.md` line by
+- [x] [AUDIT] P0. **Finalize the claim manifest** — walked `plans/epics/global_ledger_pnl_attribution_master.md` line by
       line (frontmatter + body: status line, "Assigned active plans," "Archived plans," "VM assignment notes,"
-      "Continuous-verification path") and extend the seed table above into the complete claim-by-claim checklist with
-      source line numbers. Gate: table has ≥1 row per distinct factual claim in the epic.
-- [ ] [AUDIT] P0. **Verify claim #2 (UAC schema-shipped)** — read
-      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/ledger/` in full: confirm `LedgerRow` fields,
-      count `EventType`/`AssetClass` enum members against the claimed 37/17, and read
-      `CrossClientTransferForbiddenError`'s raise condition against `codex/04-architecture/client-funds-isolation.md`.
-      Gate: verdict (BACKED/PARTIAL/STALE) + repo@sha citation.
-- [ ] [AUDIT] P0. **Verify claim #4 Phase 8 (PassiveLedger)** — read
+      "Continuous-verification path"). Full claim-by-claim checklist is the Per-Phase Verdict Table in the Progress Log
+      below (10 distinct claims + 2 epic-internal-consistency findings).
+- [x] [AUDIT] P0. **Verify claim #2 (UAC schema-shipped)** — read
+      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/ledger/` in full. Verdict: **PARTIAL/STALE** —
+      `LedgerRow` + `CrossClientTransferForbiddenError` BACKED as described, but `EventType` is now **39** values at
+      HEAD (`unified-api-contracts@a2751f36`), not 37 (`+2` from margin-traceability PR `dc67ae6f`, additive);
+      `AssetClass` still 17. See verdict table row 2.
+- [x] [AUDIT] P0. **Verify claim #4 Phase 8 (PassiveLedger)** — read
       `strategy-service/strategy_service/engine/backtest/paper_run_passive.py` +
-      `strategy_service/engine/backtest/paper_run_attribution.py` + their tests in full. Determine: is this the real
-      Phase 8 "PassiveLedger synthesiser... per-event divergence check path" the epic describes, or an unrelated
-      backtest-only construct that happens to share the name? If real, the epic's "Phase 8 DEFERRED-POST-CUTOVER, gate:
-      Phase 3/4/5 ack" framing is FALSE and the archived migration plan's "0/27" count is wrong. Gate: verdict +
-      file:line evidence either way.
-- [ ] [AUDIT] P0. **Verify claim #4 Phase 7 (InstructionLedger writer)** — read
+      `strategy_service/engine/backtest/paper_run_attribution.py` + their tests in full. Verdict: **CONTRADICTED-BY-CODE
+      (paper/backtest leg) / PARTIAL overall** — the paper-mode PassiveLedger synthesiser is REAL (constructs canonical
+      `event_origin=PASSIVE` `LedgerRow`s, writes via UTL `write_run_passive_ledger`, tested) and shipped via
+      `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`, NOT the frozen migration plan. The LIVE
+      per-event divergence-check listener is genuinely NOT shipped (grepped strategy-service for a live
+      on-chain/venue-emission listener; none found). See verdict table row 4b.
+- [x] [AUDIT] P0. **Verify claim #4 Phase 7 (InstructionLedger writer)** — read
       `execution-service/execution_service/pnl_attribution/rows.py` + `build_attribution_rows` +
-      `tests/unit/pnl_attribution/test_build_attribution_rows.py` in full. Determine whether this is the Phase 7
-      "`attribution_builder.build_attribution_rows` → emit via writegate path" work the epic claims is
-      DEFERRED-POST-CUTOVER. Gate: verdict + file:line evidence.
-- [ ] [AUDIT] P0. **Verify claim #3 — operator-[ack] gate status.** Grep `plans/active/_agent_pings.md` history and this
-      epic's own commit log for any operator ack of discovery Phase 3 (late-arriving-data) / Phase 4 (greeks-home) /
-      Phase 5/6 (TreasuryLedger split) since 2026-05-23. If todos above confirm Phase 7/8 code shipped WITHOUT a
-      recorded ack, this is a governance-gate breach (code shipped past an operator-gated decision point) — flag
-      explicitly, do not silently normalize it as "the gate must have been informally cleared."
-- [ ] [AUDIT] P1. **Verify claim #5 (greeks P2 item)** — confirm `greeks-service@b0b702d` exists in git history; read
-      the current HEAD state of the Pub/Sub subscription + IS API integration + PricingLedger write-back described;
-      confirm no regression/removal since that SHA. Gate: verdict + repo@sha.
-- [ ] [AUDIT] P1. **Verify claim #6 (VM prefixes)** — grep the live `VM_PREFIX_TO_BUCKET` registry
-      (`deployment-service/scripts/vm/` per CLAUDE.md § Launching VMs) for `ledger-reconcile-` / `passive-listener-` and
-      confirm the epic's claimed absorption targets (`batch-live-recon-cron-`, `strategy-live-*`, `strategy-paper-*`,
-      `client-reporting-cutover-*`) actually run the described workloads, not just that no new prefix string was
-      registered.
-- [ ] [AUDIT] P1. **Verify claim #7 (4 Codex SSOTs)** — for each of the 4 codex docs in the "Codex SSOTs" table above,
-      confirm the file exists at HEAD and its content is not a stub; if any is missing/stub, note it as a real
-      deferred-doc gap rather than assuming the epic's "DEFERRED-POST-CUTOVER" framing self-resolves it.
-- [ ] [AUDIT] P0. **Produce the per-phase verdict table** — one row per claim from todo 1, verdict ∈ {BACKED, PARTIAL,
-      STALE, CONTRADICTED-BY-CODE}, with repo@sha or file:line evidence per row. This is the audit's primary
-      deliverable; embed it in this plan's Progress Log.
-- [ ] [CODE] P0. **Sync the epic** — edit `plans/epics/global_ledger_pnl_attribution_master.md`: bump `last_updated`,
-      correct the status line and any STALE/CONTRADICTED-BY-CODE body claims found above (esp. the Phase 7/Phase 8
-      framing if todos 3/4 confirm real shipped work), with evidence citations inline. Do not leave the 7-week-stale
-      date unfixed even if every individual claim turns out BACKED.
-- [ ] [CODE] P1. **Un-gate or forward-carry real shipped scope.** If todos 3/4 confirm genuine Phase 7/8 progress, the
-      archived `plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md` cannot be edited (archives
-      are frozen) — decide whether to (a) spawn a fresh small active plan under
-      `parent_epic: global_ledger_pnl_attribution_master` carrying the residual real scope forward with credit for what
-      already shipped, or (b) fold the residual into this epic's existing P2/P3 sections directly. Document the choice +
-      execute it.
-- [ ] [AUDIT] P1. **Escalate any governance-gate breach found in todo 5** to the operator using the structured options
-      format (`SUB_AGENT_MANDATORY_RULES.md` § "When escalating") — do not silently resolve a finding that code shipped
-      past an un-acked operator decision point.
-- [ ] [DOCS] P1. **Post-phase codex-alignment check** — for each of the 4 Codex SSOTs, file a corrective `[DOCS]`
-      follow-up todo in THIS plan (not a silent chat deferral) if todo 7 found it missing/stale; do not close this plan
-      with a known codex gap left undocumented.
-- [ ] [DOCS] P0. **Wire findings into the reconciliation issue doc** — append a dated Progress Log entry to
+      `tests/unit/pnl_attribution/test_build_attribution_rows.py` in full, plus the actual InstructionLedger write path
+      (`unified-trading-library/unified_trading_library/ledger/run_writer.py` +
+      `strategy-service/strategy_service/engine/backtest/ledger_emit.py`). Verdict: **CONTRADICTED-BY-CODE** — real
+      InstructionLedger/PricingLedger/TransferLedger GCS writers are shipped + wired live (paper leg), plus a real,
+      tested `build_attribution_rows` (the derived PnLAttribution view, a related but distinct artifact from the
+      InstructionLedger SSOT writer). All shipped via the Citadel plan, not the frozen migration plan. See verdict table
+      row 4a.
+- [x] [AUDIT] P0. **Verify claim #3 — operator-[ack] gate status.** Searched `plans/active/_agent_pings.md` (retired +
+      emptied 2026-07-04 — history is in git),
+      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`, the Citadel plan, AND (post-restart
+      continuation) the PM git history (`git log --grep`). **VERDICT REVERSED from the initial pass**: the operator ACK
+      **EXISTS** — `unified-trading-pm@351a47b61` (2026-05-23 20:42 +0100, "6 operator-ACK'd decisions... Per operator")
+      recorded ALL gated decisions in `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` § "Operator
+      decisions (ACK'd 2026-05-23)": Phase 3 → Option A event-sourced append-only; Phase 4/6 treasury → separate
+      `ledger_type=treasury/` partition (writer fund-administration-service); Phase 5a greeks home → new greeks-service
+      repo; + 5b cadence + 5c dividend_yield/rebase_rate. The ack landed the same evening the epic's "pending" status
+      line was written and was never synced back — a doc-sync failure, NOT a governance breach. (Also corrected an
+      epic-internal numbering error: the epic mixed "Phase 3/4/5" and "Phase 3/5/6" — the archived discovery plan's own
+      phase headers confirm 3/5/6 is correct.)
+- [x] [AUDIT] P1. **Verify claim #5 (greeks P2 item)** — confirmed `greeks-service@b0b702d` exists (`git cat-file -t` +
+      `git merge-base --is-ancestor` against `origin/live-defi-rollout` both pass); read HEAD (`ac4ed0f`) state of
+      `mark_update_sub.py` / `pricing_ledger_writer.py` / `mark_update_handler.py`, all wired live in `__main__.py`;
+      only touched since by an unrelated typecheck fix (`f41a12d`). Verdict: **BACKED**.
+- [x] [AUDIT] P1. **Verify claim #6 (VM prefixes)** — grepped the live `VM_PREFIX_TO_BUCKET` registry
+      (`deployment-service/scripts/vm/vm_zombie_watchdog.py`): zero `ledger-reconcile-` / `passive-listener-` entries
+      (BACKED, no net-new prefixes); `strategy-paper-` / `strategy-live-` / `client-reporting-cutover-` all present.
+      Found + corrected one naming error: registry key is `batch-live-recon-`, not `batch-live-recon-cron-` (that's the
+      launcher script's name). Verdict: **BACKED with 1 cosmetic correction**.
+- [x] [AUDIT] P1. **Verify claim #7 (4 Codex SSOTs)** — confirmed all 4 exist at HEAD, `status: current`, substantial
+      (185-864 lines, not stubs), last git-touched 2026-07-04. Found ONE residual codex-internal staleness:
+      `global-ledger-architecture.md`'s own "Current-State Gaps" table still calls `build_attribution_rows()` a "stub" —
+      contradicted by the real, tested 140-line implementation found in the Phase-7 check above. Verdict: **docs
+      exist/current (CONTRADICTS epic's "DEFERRED-POST-CUTOVER" framing); 1 codex-internal stale sub-claim flagged
+      CODEX-GATED** (new todo below, not edited by this audit).
+- [x] [AUDIT] P0. **Produce the per-phase verdict table** — embedded in the Progress Log below (10 claim rows + 2
+      epic-internal-consistency findings, each with repo@sha or file:line evidence).
+- [x] [CODE] P0. **Sync the epic** — edited `plans/epics/global_ledger_pnl_attribution_master.md`: bumped `last_updated`
+      2026-05-23→2026-07-12, corrected the summary + status line + Codex-SSOTs section + P2 item + Archived-plans
+      Phase-7/8/numbering claims + VM-assignment-notes naming, all with "(was: …)" originals + inline evidence
+      citations, and added a new P3 forward-carry todo for the live PassiveLedger listener gap. Evidence:
+      `unified-trading-pm` working tree edit (uncommitted at authoring time — orchestrator commits per this plan's
+      instructions).
+- [x] [CODE] P1. **Un-gate or forward-carry real shipped scope.** Decision: **(b) folded into this epic's existing
+      sections directly** — added TWO new `- [ ] [CODE] P3` todos to the epic's P3 section ("Live (non-paper)
+      PassiveLedger per-event divergence-check listener", strategy-service; + post-restart discovery "TreasuryLedger
+      SSOT partition `ledger_type=treasury/`", fund-administration-service), plus inline "CORRECTED 2026-07-12" credit
+      notes on the Phase 7/8 Archived-plans bullets crediting the Citadel plan's shipped scope. No new sibling plan
+      spawned (each residual is a single well-scoped component, trackable as an epic-level todo rather than warranting
+      its own plan doc).
+- [x] [AUDIT] P1. **Escalate any governance-gate breach found in todo 5** — **CLOSED: NO BREACH** (post-restart
+      continuation). The initial pass provisionally escalated a suspected breach; deeper verification (PM git-history
+      search) found the operator ack landed 2026-05-23 (`pm@351a47b61`) — the gate was properly cleared BEFORE any Phase
+      7/8 code shipped (Citadel plan created 2026-06-19). The escalation is WITHDRAWN; what remains is a doc-sync
+      finding (the epic + discovery archival banner never recorded the ack), which this audit fixed directly in the
+      epic. No operator adjudication required.
+- [x] [DOCS] P1. **Post-phase codex-alignment check** — filed the corrective follow-up as a new todo immediately below
+      (codex doc `global-ledger-architecture.md`'s stale `build_attribution_rows()` "stub" claim + its
+      "DEFERRED-POST-CUTOVER" framing needs a sync pass) — not closing this plan with the gap silently undocumented.
+- [ ] [DOCS] P2. **NEW (discovered this audit) — codex-alignment follow-up**:
+      `codex/04-architecture/global-ledger-architecture.md` needs a sync pass (operator-gated codex edit, out of this
+      plan's authority per the task brief's "No codex edits" instruction): (a) its "Current-State Gaps (Audit
+      2026-05-23)" table's `execution-service` row still says `build_attribution_rows() stub` — false at HEAD, it's a
+      real 140-line tested implementation; (b) the doc doesn't yet document the Citadel-plan-shipped
+      InstructionLedger/PricingLedger/TransferLedger/PassiveLedger(paper) writers living in
+      `unified-trading-library/unified_trading_library/ledger/` + `strategy-service` `engine/backtest/`; (c) the "VM
+      Prefix Additions" section's `batch-live-recon-cron-` naming should match the real registry key
+      `batch-live-recon-`. CODEX-GATED — flagged for the operator/next codex-touching session, not actioned here.
+- [x] [DOCS] P0. **Wire findings into the reconciliation issue doc** — appended a dated Progress Log entry to
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 citing finding 366 and this plan's
-      verdict table (repo@sha for the epic-sync commit), so the reconciliation record stays authoritative.
+      verdict table.
 
 ## Progress Log
 
@@ -157,3 +187,73 @@ Read these before verifying claims — they are the target-state the epic's clai
   epic... authored as HUMAN plan (assigned_vm: NA)"). Seed claim table populated from this session's read of the epic
   - a same-session grep confirming `PassiveLedger` in strategy-service and `build_attribution_rows` in execution-service
     — both areas the epic claims are 0% shipped. No verification or epic edits performed yet; that is this plan's scope.
+
+- **2026-07-12 (full re-audit executed)** — All todos completed except the newly-filed CODEX-GATED follow-up (left open
+  by design — operator-gated). Method: grep-then-READ every claim, verify every cited sha via read-only
+  `git cat-file`/`git log`/`git merge-base --is-ancestor` in the named repos, live-grep infra registries. **Per-Phase
+  Verdict Table** (primary deliverable):
+
+  | #   | Claim (epic location)                                                                                                                       | Verdict                                                                | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+  | --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 1   | Frontmatter `last_updated: 2026-05-23`, `assigned_vm: vm-trading-core`                                                                      | STALE                                                                  | 7 weeks stale; `vm-trading-core` references a per-epic VM model superseded 2026-06-27 (already partially corrected in-body 2026-07-12, frontmatter date was not). FIXED: `last_updated` bumped to 2026-07-12.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+  | 2   | "UAC LedgerRow + EventType(37)/AssetClass(17) + CrossClientTransferForbiddenError SHIPPED"                                                  | PARTIAL/STALE                                                          | `LedgerRow` + validator BACKED (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/ledger/_ledger_row.py:399-403` matches `codex/04-architecture/client-funds-isolation.md` HARD RULE). `EventType` = **39** at HEAD `a2751f36` (AST-counted), not 37 (`+2` via `dc67ae6f` margin-traceability, additive). `AssetClass` = 17, unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+  | 3   | "Discovery 36/38 BACKED+2/38 PARTIAL, operator [ack] pending on Phase 3/5/6"                                                                | STALE ("[ack] pending" is FALSE — ack EXISTS) + internal numbering bug | **REVERSED post-restart** (initial pass wrongly concluded "no ack found"): the ack EXISTS at `unified-trading-pm@351a47b61` (2026-05-23 20:42 +0100) — all 6 gated decisions recorded in `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` § "Operator decisions (ACK'd 2026-05-23)". The epic + discovery archival banner were never synced with it (pure doc-sync failure). Epic also internally said both "Phase 3/4/5" (2 places) and "Phase 3/5/6" (2 places) — archived discovery plan's own headers confirm 3/5/6 is correct; "3/4/5" occurrences fixed.                                                                                                                                                                                                                         |
+  | 4a  | "Phase 7 (execution-service InstructionLedger writer) DEFERRED-POST-CUTOVER, gate Phase 3/4/5"                                              | CONTRADICTED-BY-CODE                                                   | Real, tested, shipped: `unified-trading-library@41d50461` `ledger/run_writer.py` (`write_run_ledger`/`write_run_pricing_ledger`/`write_run_transfer_ledger`/`write_run_passive_ledger`) wired live via `strategy-service/strategy_service/engine/backtest/ledger_emit.py::write_paper_run`; plus `execution-service/execution_service/pnl_attribution/rows.py::build_attribution_rows` (`execution-service@a4145838`→`49f42f77`, tested `tests/unit/pnl_attribution/test_build_attribution_rows.py`, 342 lines) — the derived PnLAttribution view, distinct from but related to the InstructionLedger writer. **Shipped via `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`** (`parent_epic: batch_live_symmetry_master`), NOT the frozen migration plan (which correctly stays 0/27). |
+  | 4b  | "Phase 8 (strategy-service PassiveLedger synthesiser) DEFERRED-POST-CUTOVER, per-event divergence check"                                    | PARTIAL — paper leg CONTRADICTED-BY-CODE, live leg genuinely missing   | `strategy-service/strategy_service/engine/backtest/paper_run_passive.py::build_paper_run_passive`/`emit_paper_run_passive` build real `event_origin=PASSIVE` `LedgerRow`s (STAKING_REWARD/LENDING_INTEREST/FUNDING_ACCRUAL), write to `ledger_type=passive/{run_id}.jsonl`, tested (`test_paper_run_passive.py`) — shipped via the same Citadel plan. The LIVE per-event divergence-check listener (epic's own VM-notes: "runs inside `StrategySupervisor` per-client subprocess") was NOT found anywhere in strategy-service — genuinely unshipped, forward-carried as a new epic P3 todo.                                                                                                                                                                                                                 |
+  | 5   | "greeks-service@b0b702d shipped: Pub/Sub sub + IS API + PricingLedger write-back"                                                           | BACKED                                                                 | sha exists (`git cat-file -t`), is ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor`); commit msg matches exactly. At HEAD `ac4ed0f`, `mark_update_sub.py`/`pricing_ledger_writer.py`/`mark_update_handler.py` still wired live in `__main__.py`; only touched since by unrelated typecheck fix `f41a12d` — no regression.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+  | 6   | "No new VM prefixes; ledger-reconcile-/passive-listener- ABSORB into batch-live-recon-cron-/strategy-live-\*"                               | BACKED, 1 naming correction                                            | Live grep of `deployment-service/scripts/vm/vm_zombie_watchdog.py`: zero `ledger-reconcile-`/`passive-listener-` entries. Real registry key is **`batch-live-recon-`**, not `batch-live-recon-cron-` (that's the launcher script's filename). `strategy-paper-`/`strategy-live-`/`client-reporting-cutover-` all confirmed registered.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+  | 7   | "4 Codex SSOT docs DEFERRED-POST-CUTOVER"                                                                                                   | CONTRADICTED-BY-CODE (docs exist), 1 stale sub-claim found             | All 4 exist at HEAD, `status: current`, 185-864 lines (non-stub), last git-touched 2026-07-04. `global-ledger-architecture.md`'s own "Current-State Gaps" table still calls `build_attribution_rows()` a "stub" — itself stale per row 4a's evidence. Flagged CODEX-GATED (new plan todo, not edited — out of this plan's authority).                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+  | 8   | Cross-epic handshake table (`execution_master`: "InstructionLedger + PassiveLedger writers (`attribution_builder.build_attribution_rows`)") | BACKED (module path nuance)                                            | The function name/purpose match exactly what shipped; the module is `execution_service/pnl_attribution/rows.py`, not literally a file named `attribution_builder.py` — a naming shorthand, not a false claim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+  | 9   | VM-assignment-notes tier/epic-count self-correction (finding 10003)                                                                         | BACKED (already fixed)                                                 | Verified current; no further action needed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+  | 10  | Continuous-verification path table (5 rows, post-migration)                                                                                 | UNVERIFIED/aspirational, out of required scope                         | The Citadel plan's `batch-live-reconciliation-service@7a84db8c` `reconcile_day` (9 tests) is a real, shipped determinism-PROOF mechanism (paper≡batch), which substantially realizes the SPIRIT of rows 1/4 but proves a different pair (paper vs batch-rerun, not InstructionLedger vs venue execution reports). Not row-by-row verified; not adjudicated.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+  **GOVERNANCE-GATE FINDING — RESOLVED: NO BREACH (initial suspicion overturned by deeper verification post-restart)**:
+  the discovery plan required operator [ack] on 3 decision axes — Phase 3 (late-arriving-data handling), Phase 5
+  (greeks-computation home), Phase 6 (TreasuryLedger own-table-vs-filter-view) — before migration implementation. The
+  initial audit pass found no ack in `_agent_pings.md` (retired + emptied 2026-07-04), the Citadel plan, or the
+  2026-07-11 issue doc, and provisionally escalated a suspected breach. The post-restart continuation searched the PM
+  git history (`git log --grep`) and FOUND the ack: **`unified-trading-pm@351a47b61`** (2026-05-23 20:42 +0100, commit
+  message "Per operator... 6 operator-ACK'd decisions"), which wrote the section "Operator decisions (ACK'd 2026-05-23 —
+  folded from archived discovery plan Phase 11)" into the then-active MTDS carry-rates plan (now
+  `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md`): Phase 3 → **Option A event-sourced
+  append-only** (+ pre-join view at API boundary, closed enrichment set); Phase 4/6 → **separate partition
+  `ledger_type=treasury/client_id={cid}/`, writer = fund-administration-service**; Phase 5a greeks home → **new
+  `greeks-service/` repo**; Phase 5b cadence per-asset_group; Phase 5c dividend_yield + rebase_rate BOTH-paths. The gate
+  was therefore properly cleared ~4 weeks BEFORE the Citadel plan (created 2026-06-19) shipped any Phase 7/8 code, and
+  the shipped code is CONSISTENT with the acked decisions (append-only enrichment convention in the `LedgerRow`
+  docstring; greeks in greeks-service; treasury as its own partition). **The real finding is doc-sync, not governance**:
+  the ack was recorded ONLY in the MTDS plan — the epic, the discovery plan's archival banner, and the migration plan's
+  deferral bullets all kept saying "[ack] pending" for 7 weeks (and the initial pass of THIS audit was itself misled by
+  that, wrongly concluding "no ack found" until the git-history search — a live demonstration of why the doc-sync
+  failure matters). Epic now corrected with the ack citation. Two genuine residual implementation gaps forward-carried
+  as epic P3 todos: (1) the live PassiveLedger per-event divergence-check listener; (2) the acked
+  `ledger_type=treasury/` partition (fund-administration-service writer) — zero code hits for `ledger_type=treasury` at
+  HEAD across UTL / strategy-service / execution-service / fund-administration-service / client-reporting-api (the
+  shipped `ledger_type=transfer` run tape is a distinct run-scoped construct). Escalation WITHDRAWN — no operator
+  adjudication required.
+
+- **2026-07-12 (epic synced)** — `plans/epics/global_ledger_pnl_attribution_master.md` edited in place: frontmatter
+  `last_updated` bumped; summary + status line + Codex-SSOTs section + P2 greeks item + Archived-plans Phase 7/8/9 +
+  phase-numbering + VM-assignment-notes all corrected with "(was: …)" originals + inline evidence citations; new P3 todo
+  added (live PassiveLedger listener, forward-carried). Decision executed for todo 11: folded residual scope into the
+  epic directly (option b) rather than spawning a new plan — the one remaining real gap (live listener) is small enough
+  to track as a single epic todo. `unified-trading-pm` working tree — commit is the orchestrator's per this plan's
+  operating instructions (no git commands run by this agent).
+
+- **2026-07-12 (post-restart continuation — governance verdict REVERSED, residual verifications closed)** — a session
+  restart interrupted the run; on resume, all prior file edits were verified intact on disk, then the four verification
+  gaps the initial pass had left were closed: (1) `unified-trading-library@41d50461` git-verified (exists,
+  "feat(ledger): Phase 3 — materialize InstructionLedger + PositionLedger from fills", ancestor of
+  `origin/live-defi-rollout`); (2) both test suites READ, confirmed real + substantive (9 tests in
+  `test_paper_run_passive.py` incl. funds-isolation + honest-zero + UTL-writer wiring; 15+ tests in
+  `test_build_attribution_rows.py` incl. signed-slippage semantics both sides); (3) live-path grep-then-READ
+  (`client_worker.py` / `colocated_engine.py` / `supervisor/`) — zero passive-accrual synthesis in the live path,
+  live-listener-absent conclusion CONFIRMED; (4) the ack search extended to PM git history — **found `pm@351a47b61`
+  (2026-05-23), the operator ACK of all Phase 3/5/6 gated decisions**, REVERSING the initial "no ack found" verdict:
+  **no governance breach — escalation withdrawn** (see the corrected GOVERNANCE-GATE paragraph above). New discovery
+  from the ack record: the acked `ledger_type=treasury/` partition (fund-administration-service writer) is itself still
+  unimplemented at HEAD — added as a second forward-carried P3 todo in the epic. Epic re-corrected accordingly (ack
+  citations replace the escalation framing in the correction callout, the Archived-plans Phase 3/5/6 bullets, both
+  discovery status lines, and the frontmatter summary); issue-doc entry updated to match. NOTE for the record:
+  mid-session the epic + this plan were re-wrapped by prettier and the checkout was ff-advanced
+  (`234445078`→`94ae1f24b`) by concurrent workspace activity; content re-verified intact both times.

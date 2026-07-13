@@ -7,7 +7,7 @@ summary: >-
   (tradfi/sports/instruments/downstream), sequences them top-down (L0 infra → L1 code SSOT → L2 stop legacy → L3 per-AG
   single-walk → L3.5 catalogue foundation → L5 backfill → L6 decommission). Invariant: one single-walk per _index;
   delete legacy only after canonical + v9 manifest hold all data.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -29,10 +29,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 3.6
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on:
 source:
   [
@@ -42,6 +40,13 @@ source:
 umbrella: true
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED/FOLDED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13: "Approve all + unlock", MTDS/MDPS
+> 2-survivor consolidation).** Every open todo from this plan was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md (M-1)`](../../active/data_completion_to_100_all_ag_2026_06_21.md) §
+> "Folded-in scope 2026-07-13" (provenance: `mtds_consolidation_foldin_mapping_2026_07_12.md`). This plan is now
+> historical/frozen — do NOT dispatch further work here; the live todos are in M-1. Unlocked via the operator's blanket
+> `[unlock-plan]` grant 2026-07-13 (was `locked_by: live-defi-rollout`).
 
 # MASTER: Canonical-SSOT for Data + Manifest (cross-plan coordinator) + DeFi Manifest Canonicalisation
 
@@ -844,13 +849,10 @@ What to verify/wire (B0 corrected scope):
   - [x] ✅ [CODE] P1. **A11d — DONE (slot-2 2026-06-04, mtds@aa92be0f).** Grep-then-read corrected the framing: the
         `OPERATIONS` `bucket_type` values (`dex-pools`/`dex-swaps`/`lending-indices`) are the **correct `kind=`
         strings** for `resolve_bucket_name` (hyphen bucket NAMES, not data*types) + the `OPERATIONS` list is dead
-        metadata (never iterated) → no change. The REAL physical bug was in the same file: the 3 `\_scan*\*`functions
-        wrote the availability-index`data*type`as`prefix.replace("*",     "-")`, which **hyphenated EVERY prefix**
-        (`lending_indices`→`lending-indices`, `lst_rates`→`lst-rates`, `oracle_prices`→`oracle-prices`, …) AND used the
-        legacy pool/swap names — so a reader pointed at this index post-migration would see a data_type that does NOT
-        match the canonical consolidated `\_index`. Fixed: new
-        `\_canonical_data_type()`maps`dex_pools`→`dex_pool_state`, `dex_swaps`→`dex_pool_swaps`, all others
-        identity-underscore; 3 callsites + venue-derivation updated; +3 regression tests. Repo:
+        metadata (never iterated) → no change. The REAL physical bug was in the same file: the 3
+        `\_scan*\*`functions     wrote the availability-index`data*type`as`prefix.replace("*",
+        "-")`, which **hyphenated EVERY prefix**     (`lending_indices`→`lending-indices`, `lst_rates`→`lst-rates`, `oracle_prices`→`oracle-prices`, …) AND used the     legacy pool/swap names — so a reader pointed at this index post-migration would see a data_type that does NOT     match the canonical consolidated `\_index`. Fixed: new     `\_canonical_data_type()`maps`dex_pools`→`dex_pool_state`, `dex_swaps`→`dex_pool_swaps`,
+        all others identity-underscore; 3 callsites + venue-derivation updated; +3 regression tests. Repo:
         market-tick-data-service.
   - [~] [DATA] P1. **A11e — PARTIAL (slot-2 2026-06-04, mtds@aa92be0f): the genuinely-wrong tests fixed.**
     `test_curve_defi_ws_connector.py` was asserting `dex_pools`/`dex_swaps` — strings the **production connector does
@@ -1013,9 +1015,9 @@ What to verify/wire (B0 corrected scope):
         recorders pass fine `PipelineMode` enum to record*\*). Path-match (the deliverable) is closed; column-vocab is a
         forward-compat consistency item. Repo: market-tick-data-service. parent*epic: mtds_mdps_master. \*\*⚠️
         LEGACY-STATE record (annotated 2026-06-11, R6-codex): the coarse `pipeline_mode=batch/` this item shipped was
-        the PRE-G0 state — SUPERSEDED by the source-aware `{mode}*{source}`standard (migrator+rebuild mtds@f80c50f1; the
-        41 live-handler coarse literals mtds@57242af5 per M-COORD-7). The TARGET is`batch\_<source>`; this record stays
-        as history, not spec.\*\*
+        the PRE-G0 state — SUPERSEDED by the source-aware
+        `{mode}*{source}`standard (migrator+rebuild mtds@f80c50f1; the     41 live-handler coarse literals mtds@57242af5 per M-COORD-7). The TARGET is`batch\_<source>`;
+        this record stays as history, not spec.\*\*
   - [x] ✅ [CODE] P2. A12f-col — **pipeline_mode COLUMN vocab reconcile — RESOLVED BY RATIFICATION (G0 standard
         2026-06-05 + operator R4 2026-06-07; closed 2026-06-11 R6-codex)**: the vocab decision this item left open is
         DECIDED — the manifest `pipeline_mode` COLUMN carries the SAME source-aware `{mode}_{source}` value as the path
@@ -1247,17 +1249,10 @@ What to verify/wire (B0 corrected scope):
 >       unified-api-contracts + market-data-processing-service. **⚠️ BLOCKER FOUND 2026-06-02 (slot-2) — needs a schema
 >       SPLIT, not a flat drop**: the candle-output `DEX_SWAPS_SCHEMA` is `_candle_contracts.py`
 >       `_DEX_EXT = [swap_count, volume_quote_usd]`, but `_DEX_EXT` is **SHARED** — it is applied to BOTH
->       `swaps_ohlcv*{tf}`(dex_pool_swaps) AND`state*ohlcv*{tf}`(dex_pool_state)
->       via`extra_cols=\_DEX_EXT`(L375/L390/L401). The docstring
->       says`dex_pool_state     → OHLCV(mid) +     swap_count`(state legitimately keeps`swap_count`), so a flat drop of
->       both cols from `\_DEX_EXT`would over-reach and strip `swap_count`from`dex_pool_state`too. C0-RD6 therefore
->       requires SPLITTING`\_DEX_EXT`into a swaps-ext (drop both dup aliases) vs state-ext (keep`swap_count`only — note
->       state never had`volume_quote_usd` per the docstring, so there is also a pre-existing
->       state/`\_DEX_EXT`inconsistency to fix). The swap_adapter`swap_count=`/`volume_quote_usd=` emission was
->       provisionally added then **reverted** by slot-2 (kept ONLY the A11c`dex_pool_swaps`re-registration) so C0-RD6
->       can land as its own careful unit. Also still owed: the RAW migration superset-union exclusion (31→29) in
->       `migrate_defi_full_v9_canonical.py` `\_VENUE_SCHEMA["dex_pool_swaps"]` before apply. DECOUPLED from the A11c
->       landing.
+>       `swaps_ohlcv*{tf}`(dex_pool_swaps) AND`state*ohlcv*{tf}`(dex_pool_state)     via`extra_cols=\_DEX_EXT`(L375/L390/L401). The docstring     says`dex_pool_state
+>       → OHLCV(mid) +
+>       swap_count`(state legitimately keeps`swap_count`), so a flat drop of     both cols from `\_DEX_EXT`would over-reach and strip `swap_count`from`dex_pool_state`too. C0-RD6 therefore     requires SPLITTING`\_DEX_EXT`into a swaps-ext (drop both dup aliases) vs state-ext (keep`swap_count`only — note     state never had`volume_quote_usd` per the docstring, so there is also a pre-existing     state/`\_DEX_EXT`inconsistency to fix). The swap_adapter`swap_count=`/`volume_quote_usd=` emission was     provisionally added then **reverted** by slot-2 (kept ONLY the A11c`dex_pool_swaps`re-registration) so C0-RD6     can land as its own careful unit. Also still owed: the RAW migration superset-union exclusion (31→29) in     `migrate_defi_full_v9_canonical.py` `\_VENUE_SCHEMA["dex_pool_swaps"]`
+>       before apply. DECOUPLED from the A11c landing.
 
 ### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
 
@@ -1311,11 +1306,8 @@ What to verify/wire (B0 corrected scope):
       instrument_id — that step is DONE; the current dedicated-bucket objects are in the flat
       `day=/category=defi/venue={FLAT}/chain=/…` form. The C0/**v9** step is a NEW, separate read+rewrite tool —
       `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired 2026-06-01**,
-      proper home beside the other `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the
-      flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +
-      schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl
-      TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only
-      missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
+      proper home beside the other
+      `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
       bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
       below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
   - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
@@ -1378,8 +1370,9 @@ What to verify/wire (B0 corrected scope):
       `plans/audit/results/` (PM docs dir) → **`market-tick-data-service/scripts/`** (mtds@712aa01: oracle*relabel /
       chain_genesis / venue_launch / phantom_captured / captured_pre_existence / captured_vs_objects /
       index_venue_canonicalise / object_path; ruff-cleaned 16 trivial F541, mtds QG green) + removed from PM here. The
-      `.md` audit RESULTS + the coverage QUERY (`defi_strategy_coverage_query*\_`) + the a1–a6/cf\__ audit harnesses
-      STAY in `plans/audit/results/`. parent_epic: manifest_master.
+      `.md` audit RESULTS + the coverage QUERY
+      (`defi_strategy_coverage_query*\_`) + the a1–a6/cf\__ audit harnesses     STAY in `plans/audit/results/`.
+      parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
@@ -1534,15 +1527,11 @@ What to verify/wire (B0 corrected scope):
       `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp*funding + perp_trades) +
       `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated ~36GB
       total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold these
-      writes (env-split + source-aware `pipeline_mode=batch*<source>`per`derive*pipeline_mode_for_row`+
-      `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual Completion"):
-      `gsutil     ls     gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=\*/pipeline_mode=batch*\*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
-      returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-      `funding_rate`, `oracle_price_twap`, `mark_price_twap`columns; manifest-verified row count > 0 per day-shard;
-      equivalent checks for`perp_trades`(active days only; allow`empty_confirmed[SOURCE_RETURNED_ZERO]`on quiet
-      days) +`dex_pool_state`for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
-      `empty_confirmed`reason (not`attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
-      wall-clock; not a dispatch).**
+      writes (env-split + source-aware
+      `pipeline_mode=batch*<source>`per`derive*pipeline_mode_for_row`+     `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual Completion"):     `gsutil
+      ls
+      gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=\*/pipeline_mode=batch*\*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`     returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty     `funding_rate`, `oracle_price_twap`, `mark_price_twap`columns; manifest-verified row count > 0 per day-shard;     equivalent checks for`perp_trades`(active days only; allow`empty_confirmed[SOURCE_RETURNED_ZERO]`on quiet     days) +`dex_pool_state`for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed     `empty_confirmed`reason (not`attempted_failed`).
+      parent_epic: mtds_mdps_master. **Operator-launched (long wall-clock; not a dispatch).**
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
       Terminal A:
       `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live     --continuous --interval-seconds 3600 --data-types funding`
@@ -1552,11 +1541,9 @@ What to verify/wire (B0 corrected scope):
       **GATED on G1** (need backfilled history to be loadable as warmup) + **C-GREEN** (writes target canonical
       structure). Verification (per CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs
       RUNNING in `gcloud compute instances describe`; ≥1 parquet under
-      `day=<TODAY>/pipeline_mode=live*\*/asset*group=defi/…`(the transitional`live_websocket`alias until the gated
-      `live*<source>`tranche lands — never coarse`live`) within the first interval (1 min for DEX, 1 h for Drift
-      funding); manifest `capture_status=captured`rows generated. Symptom of regression:`SolanaBasisGcsLoader`logs
-      `no     perp_funding rows for live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful
-      history. parent_epic: mtds_mdps_master. **Operator-launched.**
+      `day=<TODAY>/pipeline_mode=live*\*/asset*group=defi/…`(the transitional`live_websocket`alias until the gated     `live*<source>`tranche lands — never coarse`live`) within the first interval (1 min for DEX, 1 h for Drift     funding); manifest `capture_status=captured`rows generated. Symptom of regression:`SolanaBasisGcsLoader`logs     `no
+      perp_funding rows for live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful history.
+      parent_epic: mtds_mdps_master. **Operator-launched.**
 - [ ] [PLAY] P0. G3 Run 24h paper trade via `e2e-testing/scripts/defi/run-paper.sh --strategy SOL_BASIS`. Recipe:
       `bash     cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider solana-devnet --initial-capital-usd 100000     `
       Engine flows `--strategy SOL_BASIS` → `colocated_engine.py` → `SolanaBasisGcsLoader` → fill-sim on devnet (signed,
@@ -1607,12 +1594,9 @@ What to verify/wire (B0 corrected scope):
       state; downstream consumers can compute fill slippage at arbitrary sizes. parent_epic: mtds_mdps_master. Not GATED
       on G1–G4 (independent depth improvement).
 - [ ] [CODE] P2. G8 **Raydium second WSOL/USDC pool** — extend `RaydiumClassicAmmIngester` defaults if a meaningful TVL
-      pool materialises. The plan-time secondary Raydium pool dropped to
-      $4.6K TVL by 2026-06-01 (below noise
-      threshold); current default ingestion is just the top $8.8M pool. The
-      constant scaffold is forward-compat — adding a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a
-      second SOL/USDC Raydium pool reaches >
-      $1M
+      pool materialises. The plan-time secondary Raydium pool dropped to $4.6K TVL by 2026-06-01 (below noise
+      threshold); current default ingestion is just the top $8.8M pool. The constant scaffold is forward-compat — adding
+      a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a second SOL/USDC Raydium pool reaches > $1M
       TVL, add it; ingest from the canonical date; backtest harness reads both. parent_epic: mtds_mdps_master. Trigger:
       TVL probe shows > $1M.
 

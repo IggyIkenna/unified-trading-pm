@@ -41,6 +41,11 @@ thinking_tier: high
 drift_direction: advance-code
 ---
 
+> **✅ ARCHIVED 2026-07-13 [unlock-plan] (operator ruling 2026-07-13, MTDS/MDPS 2-survivor consolidation).** All 6 todos
+> were already `[x]` complete (0 open) — no work migrated. Completion CREDIT folded into
+> [`mtds_file_size_refactor_2026_06_08.md`](../active/mtds_file_size_refactor_2026_06_08.md) (M-2)'s Progress Log per
+> `mtds_consolidation_foldin_mapping_2026_07_12.md`. This plan is now historical/frozen.
+
 # MDPS engine cost-sharpening — pure-Polars seam
 
 > **Status-flip note (2026-07-12, doc-reconciliation finding 182, §A2 "50 reclassified" blanket ruling):** all 6 todos
