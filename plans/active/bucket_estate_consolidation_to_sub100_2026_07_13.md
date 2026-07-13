@@ -108,11 +108,14 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
       lifecycle'd" claim for tick buckets is superseded). Operator verbatim "nearlcoldline nmove after 60d" — if a
       NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing.
-- [ ] [SCRIPT] P1. **Retire the stale provisioning surfaces**: `deployment-service/scripts/setup-buckets.py` (reads
-      `dependencies.yaml`'s pre-canonical scheme, emits literal `{category_lower}`) — delete or rewrite on
-      `resolve_bucket_name`; fix `e2e-testing/scripts/common/setup-gcp-fixtures.sh:39-53` (provisions transposed
-      non-canonical names — active pollution source) and `deployment-service/scripts/setup-gcs-lifecycle-policies.sh`
-      (targets legacy flat names).
+- [x] ✅ [SCRIPT] P1. **Retire the stale provisioning surfaces** — `e2e-testing@16efd49`: deleted
+      `e2e-testing/scripts/common/setup-gcp-fixtures.sh` (zero callers workspace-wide — grepped every
+      `*.sh/*.py/*.yml/     *.yaml/*.md` in e2e-testing + Makefile/docker-compose/GHA, none reference it; the modern,
+      actively-used SSOT replacement is `deployment-service/scripts/provision-test-buckets.sh` wrapping
+      `setup-buckets.py`, already KEPT + documented below). All three sub-items now resolved: `setup-buckets.py` KEPT
+      (prior tick, live consumers documented above); `setup-gcs-lifecycle-policies.sh` deleted (prior tick); e2e
+      fixtures script deleted (this tick) — no other `gsutil mb`/bucket-create call exists elsewhere in e2e-testing
+      (repo-wide grep clean).
 
 ## Wave 1 — delete the 81 confirmed-empty buckets (AFTER Wave-0 terraform reconcile)
 
@@ -209,6 +212,47 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-13, S3 BLRS recon repoint + e2e fixtures fix landed (autonomous tick).**
+  `batch-live-reconciliation-service@2f0380b` — `config.py` repointed: `recon_bucket` now
+  `resolve_bucket_name(kind="recon")` (the fix for [[recon_bucket_missing_nightly_recon_failing_2026_07_13]]'s broken
+  default), `events_bucket` → `kind="events"` and `execution_store_bucket` →
+  `kind="execution-store", asset_group="cefi"` (both behavior-identical refactors — verified via direct import:
+  local-mode f-string fallback preserved byte-for-byte for `test_config.py`'s assertions; GCP/prod mode resolves
+  `recon-prd-central-element-323112` / `central-element-323112-events` / `execution-store-cefi-central-element-323112`;
+  `RECON_BUCKET` env override still wins). Extracted `_derive_cross_cutting_buckets()` to keep `model_post_init` under
+  the 50-line method-size ceiling (the inline version hit 59L, a new codex-compliance violation). QG green (45s),
+  quickmerge → live-defi-rollout. **Image rebuild/redeploy path for whoever runs Stage 5** (this fix does NOT reach the
+  prod Cloud Run job until the image is rebuilt with a base image that carries the recon kind): verified live via
+  `gcloud builds`/`gcloud artifacts` — UTL's own Cloud Build trigger `unified-trading-library-live-defi-rollout` clones
+  **UAC's `live-defi-rollout` branch directly** (not `main`) in its `clone-uac-source` step, so it already picked up
+  `unified-api-contracts@f84e5b37` (the recon-kind yaml) the moment that trigger next fired — build `dcfbc5c0`
+  (2026-07-13 20:17:42→20:24:19Z) SUCCEEDED and produced base image digest
+  `sha256:3772351a7fb24893860373aaa1aa9e9136c76e67aadaa03834b7cc1d74b720c4` (confirmed = current
+  `unified-trading-library:latest`). BUT `batch-live-reconciliation-service/Dockerfile:5`'s `ARG BASE_IMAGE_DIGEST=` is
+  still pinned to `sha256:b7e391f8...` — the PRIOR base build (17:37→17:44Z), which predates the recon-kind fix
+  (confirmed by commit timestamps: base-pin-bump commit landed 20:05:01Z, UAC's recon-kind commit landed 20:11:34Z — so
+  `sha256:b7e391f8` does NOT contain it). **So: my config.py fix + a fresh BLRS Cloud Build alone is NOT sufficient —
+  the Dockerfile digest pin must be bumped to `sha256:3772351a...` FIRST** (or to whatever
+  `unified-trading-library:latest` digest is current at execution time — re-verify with
+  `gcloud artifacts docker images describe asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library:latest --format='value(image_summary.digest)'`),
+  then a BLRS rebuild picks up both the digest bump and this commit. BLRS's own Cloud Build trigger
+  (`batch-live-reconciliation-service-build`) fires automatically on push to **`main`** (not LDR) — so once the
+  Dockerfile bump + this fix are both promoted LDR→main (existing Tier-C drain, ≤15min, or force via `gh workflow run`
+  on the promote workflow), the image rebuild is automatic; no manual `gcloud builds submit` needed. If a synchronous
+  rebuild is wanted instead:
+  `gcloud builds triggers run batch-live-reconciliation-service-build --branch=main --project=central-element-323112 --region=asia-northeast1`.
+  The Cloud Run JOB `uts-prod-batch-live-reconciliation-service` was NOT inspected for how it picks up the new image
+  (tag vs digest pin) — that's the remaining unknown for Stage 5 to confirm before/after the rebuild.
+  `e2e-testing@16efd49` — `scripts/common/setup-gcp-fixtures.sh` **DELETED** (not fixed): grepped every
+  `*.sh/*.py/*.yml/*.yaml/*.md` in e2e-testing + Makefile/docker-compose/GHA workflows, zero callers anywhere (its own
+  `teardown.sh` doesn't even reference the same bucket names); the canonical, actively maintained replacement already
+  exists and is already KEPT/wired to the yaml SSOT: `deployment-service/scripts/provision-test-buckets.sh` wrapping
+  `setup-buckets.py` (derives `-test-` siblings from `dependencies.yaml`+`cloud-providers.yaml`, `--test-only` never
+  touches prod). Repo-wide grep for other `gsutil mb`/bucket-create calls in e2e-testing: clean (only this one file had
+  any). Wave-0 "retire the stale provisioning surfaces" todo flipped — all 3 sub-items (setup-buckets.py KEPT,
+  setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
+  live-defi-rollout.
 
 - **2026-07-13, S2/S3 landings + S4 started (autonomous tick).** `deployment-service@ccfaca26` (+266/−1547) — TF
   reconcile: 42 REMOVE_STALE + 11 double-declare hand blocks removed; module Group-B section removed (module WAS live:
