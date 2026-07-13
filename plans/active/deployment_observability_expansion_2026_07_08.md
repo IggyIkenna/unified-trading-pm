@@ -259,9 +259,11 @@ uses ready-state + revision health in place of desired/running.
 - [x] ✅ [UI] P1. **Health column = composite** (chip text = state, colour = 3-tier severity). — done in UI-popover.
 - [x] ✅ [BACKEND] P2. **Alerts** on `oom-risk` + `stalled` wired into the alert ledger. — done in Plan 1
       (deployment-api@5e25dce, slot 15).
-- [ ] [OPERATOR] P2. Decide Cloud-Run-job live cpu/mem — **(b)** bucket-truth + exit-137 now (rec), or **(a)** a cgroup
-      self-sampler later. **OPEN — (b) effectively adopted** (LIVE/PAPER `stalled` deferred with bucket-truth as v1);
-      formal operator sign-off outstanding.
+- [x] [OPERATOR] P2. Decide Cloud-Run-job live cpu/mem — **(b)** bucket-truth + exit-137 now (rec), or **(a)** a cgroup
+      self-sampler later. **✅ (b) ADOPTED — operator sign-off 2026-07-11.** Verified in `deployments_inventory.py`:
+      `object_delta_for_asset_group` / `_batched_object_deltas` supply the BATCH bucket-truth signal + exit-code
+      capture; **no cgroup self-sampler on Cloud Run jobs** (option (a) stays deferred). LIVE/PAPER `stalled` remains
+      the tracked P3 deferral in `deployment_obs_backend_kinds_health_2026_07_09`.
 
 ## WS-E — Cost-per-target (reuse the billing work)
 
@@ -273,10 +275,15 @@ uses ready-state + revision health in place of desired/running.
 
 ## WS-F — Mock→real cutover + polish
 
-- [ ] [UI] P2. Commit the richer-estate mock once the shape is agreed. **OPEN — now largely MOOT** (the real census + UI
-      landed via Plan 1 + UI-popover; the mock is no longer the contract). Close on next touch.
-- [ ] [UI] P3. Decide the standalone `/deployments` route — keep vs fold. **OPEN — "keep" effectively chosen** (the
-      standalone `Deployments()` route still ships alongside the cockpit tab); flip when formally confirmed.
+- [x] [UI] P2. Commit the richer-estate mock once the shape is agreed. **✅ SUPERSEDED (2026-07-11)** — the real
+      census + UI landed (Plan 1 full-estate + UI-popover); `deployment-ui/src/lib/mock-api.ts` now carries the
+      full-estate shape (VM + CLOUD_RUN_JOB / CLOUD_RUN_SERVICE + ECS_SERVICE + LAMBDA + CLOUD_FUNCTION + SCHEDULER +
+      DISK + STATIC_IP fixtures), so the mock tracks the live contract rather than a placeholder. No separate "richer
+      mock" deliverable.
+- [x] [UI] P3. Decide the standalone `/deployments` route — keep vs fold. **✅ KEEP (operator-confirmed 2026-07-11)** —
+      the standalone route ships (`deployment-ui/src/App.tsx:155` —
+      `<Route path="/deployments" element={<Deployments />}` \+ the `/deployments/:name` detail route) alongside the
+      cockpit tab. Decision: KEEP.
 - [x] ✅ [UI] P3. EXPERIMENT badge label — kept as `batch·exp` (`ModeBadge` renders it). — done in UI-popover.
 - [x] ✅ [REVIEW] P1. Gate `/freshness` fetches to VM kinds only (services use error-rate health). — done
       (deployment-ui@e9b77ac; `Cockpit.tsx` + `Deployments.tsx` filter `kind === "VM"`).
