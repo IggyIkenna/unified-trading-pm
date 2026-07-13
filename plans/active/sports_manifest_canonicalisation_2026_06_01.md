@@ -2701,3 +2701,24 @@ All three preconditions are identical to the twelfth touch. A full audit re-run 
 real GCS-read cost for zero new information. **Not filing a duplicate blocked-question** — `BLK-f2bb67c2` still carries
 the exact decision needed and remains live in the queue. `skip-current-task`'d. Next toucher: same check — only re-run
 the full audit once an E3/E4 VM has actually executed or the operator has ruled on BLK-f2bb67c2.
+
+## E8 Verify — re-dispatch check 2026-07-13T04:07Z (data_engineering slot-8, task -001, fourteenth touch)
+
+Re-dispatched to the same E8-verify checkbox (~9 min after the thirteenth-touch entry above, plan file last committed
+2026-07-13T03:58:17Z). Checked the same three preconditions rather than re-paying a full GCS corpus scan:
+
+- **E3 drain / E4 VM apply**: `gcloud compute instances list --project central-element-323112` (non-snap SDK at
+  `/home/ubuntu/google-cloud-sdk/bin/gcloud`) shows 19 instances (cefi/tradfi/fss/onchain/footystats-fwd backfills + 1
+  zombie-watchdog) — **no** sports/E3-drain/E4-migration VM running, completed, or ever launched. Unchanged.
+- **BLK-f2bb67c2**: confirmed via `GET /api/state` → `blocked_queue` — still `answered_at: null`, `answer: null`,
+  `answered_by: null`. The operator decision (schedule E3/E4 now vs. keep parked vs. fix-forward the write-path gap
+  first) remains outstanding.
+- **Write-path landings**: `git log --since="2026-07-13T03:58:17"` on both `instruments-service` and
+  `market-tick-data-service` (both fresh-pulled to `origin/live-defi-rollout` this session) — **zero commits** on either
+  repo since the plan file's last commit. No write-path fix, no migration code, nothing has moved.
+
+All three preconditions are identical to the thirteenth touch. A full audit re-run would reproduce the same RED verdict
+at real GCS-read cost for zero new information — same reasoning as touches ten, twelve, and thirteen. **Not filing a
+duplicate blocked-question** — `BLK-f2bb67c2` still carries the exact decision needed and remains live in the queue.
+`skip-current-task`'d. Next toucher: same check — only re-run the full audit once an E3/E4 VM has actually executed or
+the operator has ruled on BLK-f2bb67c2.
