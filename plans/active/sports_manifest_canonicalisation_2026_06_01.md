@@ -3175,53 +3175,53 @@ todos below lands or CF-8's schema change ships.
       `rebuild_sports_manifest_v9._write_captured_rows` helper.
 
       **Gotcha #1 — incremental-vs-force consolidator inconsistency**: the first plain incremental `manifest_consolidator`
-                  cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
-                  pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
-                  Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
-                  COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
-                  every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
-                  recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
-                  brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
-                  batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
-                  `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
-                  `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
-                  consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
-                  `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
-                  (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
-                  Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
-                  that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
+                      cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
+                      pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
+                      Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
+                      COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
+                      every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
+                      recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
+                      brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
+                      batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
+                      `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
+                      `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
+                      consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
+                      `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
+                      (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
+                      Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
+                      that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
 
-                  **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
-                  build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
-                  taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
-                  rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
-                  `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
-                  mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
-                  (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
-                  not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
-                  (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
-                  the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
-                  cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
-                  canonical; legacy-only dropped **154 → 140**.
+                      **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
+                      build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
+                      taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
+                      rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
+                      `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
+                      mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
+                      (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
+                      not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
+                      (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
+                      the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
+                      cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
+                      canonical; legacy-only dropped **154 → 140**.
 
-                  **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
-                  gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
-                  captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
-                  re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
-                  (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
-                  error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
-                  canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
-                  genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
-                  `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
-                  its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
-                  phantom disposition.
+                      **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
+                      gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
+                      captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
+                      re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
+                      (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
+                      error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
+                      canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
+                      genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
+                      `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
+                      its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
+                      phantom disposition.
 
-                  **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
-                  finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
-                  RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
-                  todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
-                  `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
-                  from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
+                      **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
+                      finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
+                      RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
+                      todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
+                      `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
+                      from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
 
 - [x] ✅ [DATA] P2. **IS 60-cell `instrument_count=0`-but-real-data anomaly** (repo: instruments-service +
       market-tick-data-service, discovered 2026-07-13 during the L6-legacy-only targeted re-migration above) —
@@ -3238,9 +3238,17 @@ todos below lands or CF-8's schema change ships.
       working the same repo this session with byte-identical fix content — verified, cited, not re-committed); (2) 16
       WEATHER rows from an older bare-path writer whose exact script could not be pinned (likely already deleted,
       "Lifecycle: oneoff" convention) but the empirical bug shape is identical and fully GCS-verified regardless of
-      provenance. Copied 17/49 missing backing objects into canonical (32 already present from the earlier E4 walk) +
-      re-emitted 49 corrected `captured` rows with the TRUE `instrument_count` via `ManifestWriter` (mirroring the
-      established re-emission pattern) —
+      provenance. **Correlation check requested by the 25th touch — checked, NOT correlated**: the
+      `sports_index_recency_masked_captured_atoms_2026_07_13.md` oscillation issue is a DIFFERENT mechanism (a later
+      bare `empty_confirmed` row winning a reader-side recency tie-break over a still-present `captured` row at read
+      time — a dedup/read-collapse problem where BOTH rows exist and the wrong one wins) vs this anomaly (the manifest's
+      OWN `captured` row has a wrong `instrument_count` value baked in at write time — a single-row data-correctness
+      bug, no competing row involved). Same surface-level symptom ("manifest disagrees with real row count") but
+      distinct root causes needing distinct fixes; confirmed via the actual row data (the 60-cell anomaly rows have no
+      competing captured/empty pair at their exact identity, unlike the oscillation issue's contested atoms) rather than
+      assumed from the symptom alone. Copied 17/49 missing backing objects into canonical (32 already present from the
+      earlier E4 walk) + re-emitted 49 corrected `captured` rows with the TRUE `instrument_count` via `ManifestWriter`
+      (mirroring the established re-emission pattern) —
       `market_tick_data_service/scripts/fix_sports_instrument_count_zero_anomaly_2026_07_13.py`. Force-consolidated
       (pause-cron/confirm-no-in-flight/`--force`/resume recipe); verified **49/49** rows correct in canonical
       post-consolidate (not sampled). **Final honest IS L6-legacy-only count: 28** (down from 140 pre-session), all
