@@ -101,6 +101,15 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (ODDS/FIXTURE_LINEUPS/FIXTURE_EVENTS/FIXTURE_STATS/PLAYER_STATS/INJURIES/ FIXTURES), apply the same
       captured-vs-expected grain cross-check** — the aggregate "spread evenly across years" framing looked plausible but
       missed this exact bug for TEAMS; don't take the same claim on faith for the rest.
+- [ ] [DATA] P2. **api_football TEAMS/STANDINGS: purge the legacy blank-`league_id` bulk bundle (NEW 2026-07-13,
+      discovered during the TEAMS backfill).** The live writer bug that produced these rows (blanket
+      `record_captured_from_counts` in `process_enrichment.py` not excluding "teams"/"standings" from
+      `_self_manifested`) was fixed in `instruments-service@56aa1938` — this todo is ONLY the historical cleanup of the
+      3,648 TEAMS + 3,647 STANDINGS blank-league "captured" rows already in the canonical index (2014→2026-07-13), now
+      inert noise once the leak is stopped. Decide: delete via a manifest-row-removal one-off (mirror
+      `backfill_remove_unknown_league_phantom_2026_07_09.py`'s pattern) vs. leave as accepted historical noise (they
+      don't block per-league gap-closure, just add non-canonical rows to `source`-column totals). Low priority — not
+      blocking any downstream consumer.
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
@@ -1438,3 +1447,91 @@ report written in this plan's Progress Log.
   ~159) is flipped `[x]` since its deliverable — the fresh re-verify + final table + precise remaining-work list + DoD
   update — is complete, even though the underlying whole-asset_group work is not yet 100% done (the honest,
   non-overclaiming distinction the todo's own text calls for).
+
+- **2026-07-13 (sub-agent, BACKFILL dispatch for the P0 todo "api_football TEAMS: root-cause + fix the 61-league
+  per-league capture gap" — completing what the CODE-FIX dispatch above left open).**
+
+  **New finding (corrects the CODE-FIX entry's "not stale residue... but not fully closed out" note): the
+  blank-`league_id` bulk bundle is NOT stale migration residue — it is a LIVE, currently-active writer bug, confirmed
+  still growing through 2026-07-13.** `process_enrichment.py::_fetch_sports_reference_block`'s blanket
+  `record_captured_from_counts(row_key={"date": date, "data_type": entity.upper()})` fires for every `sports_ref_counts`
+  entity NOT in its `_self_manifested` exclusion set. "teams" and "standings" were never in that set, so this call ran
+  every day for both, writing a spurious blank-`league_id` "captured" row summing all leagues — live-verified:
+  `STANDINGS` blank-league captured rows extend to `2026-07-13` (today), not just historical dates. TEAMS additionally
+  had **zero** manifest bookkeeping of its own anywhere in `sports_reference_core.py` (no `record_captured` call existed
+  in the TEAMS per-league write loop at all, unlike STANDINGS which already had one) — meaning the blanket call was
+  TEAMS's _only_ manifest record, full stop.
+
+  **Fix shipped: `instruments-service@56aa1938`** (direct push to `live-defi-rollout`, same no-quickmerge convention as
+  `0d2ea24f`, `quality-gates.sh --no-fix` green, sentinel confirmed, 50/50 existing tests pass unchanged):
+  - `sports_reference_core.py::_fetch_teams_and_standings`: TEAMS write loop now calls `manifest.record_captured()` per
+    league (mirroring STANDINGS's existing call) + the WRITE-UNIVERSE gate (`_is_in_canonical_write_universe`) +
+    `hooks.emit_empty_gaps_for_entity("TEAMS", ...)` for honest absence — TEAMS is now self-manifested for the first
+    time.
+  - `process_enrichment.py`: added `"teams"`/`"standings"` to `_self_manifested`, stopping the blanket blank-league
+    write for both entities going forward. This is the "reconcile the two sources of truth" deliverable — per-league
+    rows are now the sole manifest source of truth for TEAMS/STANDINGS on every date going forward.
+  - Historical blank-league rows (3,648 TEAMS + 3,647 STANDINGS, 2014→2026-07-13) are NOT deleted in this pass — out of
+    this todo's scope (stopping the active leak satisfies the operator's own "so there is one canonical answer **going
+    forward**" framing); a historical-cleanup todo is added to §1 below.
+
+  **Historical backfill for the 61 leagues — decision + execution.** Confirmed via `get_teams()` API semantics: the
+  provider has no historical per-date team-roster endpoint (`/teams` always returns the CURRENT squad for a season,
+  never a point-in-time snapshot) — so the already-shipping 33-league ~3,046-rows/league grain is itself just the
+  current roster re-stamped on every date the daily job happened to run, not genuine per-date historical accuracy.
+  Decided (no operator ask needed — matches the already-established, already-shipping data model exactly): one real live
+  `/teams` API call per missing league (61 calls total, cheap), then write + `record_captured` that SAME real roster
+  across every missing historical `(league, date)` cell — this is real, non-fabricated data reused at the identical
+  grain the system already produces, not a new placeholder scheme. Script:
+  `instruments-service/scripts/backfill_teams_61_leagues_2026_07_13.py` (lifecycle: oneoff, dry-run default, `--apply`
+  required to write; `--limit-leagues N` for smoke tests). Dynamically recomputes the missing-leagues set from the live
+  manifest each run (self-correcting, not a hardcoded 61-league list) — confirmed 61 leagues / 190,076 missing cells at
+  run start, matching the CODE-FIX entry's investigation numbers.
+
+  **Two implementation bugs found + fixed during smoke-testing (script-only, not shipped to `sports_reference_core.py`
+  since they're specific to this one-off's standalone-script context)**: (1) `manifest.record_captured()`'s internal
+  schema-contract-lookup validator calls `log_event(...)` on the (benign, warn-only) `SchemaContractNotFoundError` path
+  — no UAC schema contract is registered for `asset_group="sports"`/`data_type="TEAMS"` (same path the live per-league
+  STANDINGS writer already silently takes in production) — but a standalone script never calls `setup_events()`, so this
+  raised `RuntimeError: Event logging not initialized` on literally every cell. Fixed via
+  `setup_events(service_name=..., mode="local")` (no GCS event sink needed for a one-off's own benign-warning volume at
+  ~190k calls — `mode="local"` just logs via the stdlib logger, no network write). (2) Default `requests`
+  connection-pool size (10) throttled throughput hard at concurrency=16 (~23 writes/sec, "Connection pool is full,
+  discarding connection" spam); bumping thread-pool concurrency to 64 raised real throughput to ~50/sec despite the
+  warnings persisting (GCS accepts the retried connections fine) — ETA for the full 190,076-cell run ≈ 60-65 min.
+
+  **Correctness validated by two clean smoke runs** (both `--limit-leagues`, real API + real GCS writes, not mocked):
+  2-league run (6,232 cells) — 0 failures reported before being cut short by an over-tight `timeout` wrapper (not a
+  script bug); 1-league run (`ARGENTINA_PRIMERA_NACIONAL`, 3,116 cells, concurrency=64) — completed cleanly end-to-end,
+  `manifest.close()` drained the per-VM shard, 0 failed. Cup competitions DO return real team rosters via `/teams`
+  (`AUSTRALIA_CUP`: 32 teams fetched) — resolves the CODE-FIX entry's flagged "unproven for the 39 cup-type leagues"
+  open question: API coverage confirmed for at least one cup, no evidence of a coverage gap.
+
+  **Significant NEW infra risk discovered (not this todo's to fix, but directly affects verifying this backfill's
+  landing): the manifest consolidator prune-race** (already root-caused + fixed today at
+  `unified-trading-library@97212d3b`, tracked in
+  `plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md`, confirmed via `git log`
+  that this instruments-service clone's editable UTL dependency already carries the fix) **is NOT yet live in the
+  deployed production Cloud Run cron** (`uts-prod-manifest-consolidator-instruments-sports-cron`, `*/1 * * * *`,
+  ENABLED, confirmed via `gcloud scheduler jobs list` — the issue doc's own deployment note says the fix needs an MTDS
+  image rebuild that hadn't necessarily happened yet). Reproduced it once, first-hand, during this dispatch's own
+  verification: a `--limit-leagues 1` smoke-test shard (3,116 real captured rows) was confirmed written, then a
+  **manual** `--once` consolidator invocation immediately after reported `rows_in=0 rows_out=0 pruned_shards=1` and the
+  shard blob was gone on re-list — textbook instance of the documented race (my manual run overlapping the live `*/1`
+  cron's own execution). **Mitigation adopted for the full run (per the issue doc's own stated mitigation): do NOT
+  manually invoke the consolidator at all** — let the live cron alone consolidate incrementally as shards land (no
+  overlapping second execution to race against), then verify the canonical index by content at the end; the backfill
+  script's own gap-detection is naturally idempotent (recomputes "missing" from live manifest state every invocation),
+  so any cells the cron fails to land can be closed by a second, targeted re-run without any wasted API calls (rosters
+  are cheap to refetch). The underlying per-league GCS parquet **data** files are unaffected by this risk either way —
+  only the manifest bookkeeping row is at risk, and only until it's durably merged into the canonical index.
+
+  **Full-run launch**:
+  `env GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/backfill_teams_61_leagues_2026_07_13.py --apply --concurrency 64`
+  launched in background (`run_in_background`, NOT fire-and-forget — a `Monitor` watching its own progress-log lines + a
+  separate PID-liveness watchdog are both armed), log at a local scratch path, ETA ~60-65 min for all 190,076 cells
+  across 61 leagues. **Status at time of this journal entry: RUNNING, not yet verified complete** — the next Progress
+  Log entry will record the actual before/after live-manifest per-league-leagues-covered count (target: 94/94, up from
+  33/94) plus final failure count, per-VM shard landing confirmation, and closes this todo's checkbox once verified. If
+  the consolidator race causes a partial landing, that entry will also record the retry outcome, not just the first
+  pass.
