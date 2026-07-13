@@ -117,6 +117,46 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 9 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap gcloud/gsutil (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-4 found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`, same `creationTimestamp` — no new death, no
+  new preemption.
+- Features bucket unique-date count: **2,258** (up from slot-4's 2,246) — steady forward progress, no stall.
+- Checked `features-service` git log for any new `compute_shot_quality_batch` commit since slot-4's check: **none** —
+  `b05f48ad` (already known-insufficient) is still the latest touch on `shot_quality_calculator.py`. The P0 root-cause
+  todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  remains unowned
+  (`- [ ] [DATA] P0. NEW (slot 14, 2026-07-13, continued session) — root-cause the STILL-LIVE OOM site`).
+- **Went past `RUNNING` status** (SSH on vm-200043, GCS run.log tail on all 3): `-200043` confirmed genuinely alive via
+  SSH (`ps aux` shows the real `features_service` process, PID 8011, 28.4% CPU / ~1.09GB RSS / 16:34 accumulated
+  CPU-time, on date 2025-08-30 — past its 2025-08-26 start point at slot-4's check, and found the real GCS log path
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, correcting the guessed path from earlier
+  dispatches' entries). `-200456` and `-200525` confirmed via that log path — both wall-clock-fresh (within ~1 min of
+  check time, `date -u` = 2026-07-13T21:00:57Z): `-200456` on 2018-01-24 (past 2018-01-20), `-200525` mid
+  calculator-chain (`team_derived`, not the crash-adjacent `advanced_stats`→`compute_shot_quality_batch` boundary). All
+  three RSS/progress values nowhere near the OOM ceiling — no crash risk observed.
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling (same reasoning as every prior slot —
+needs a dedicated Docker-memory-capped investigation against real data). Did not relaunch or touch any of the 3 healthy
+shards. Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,258).
+Unchanged from every prior handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo. Correct GCS
+run.log path for future dispatches: `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log` (the
+bucket path guessed in some earlier entries, `features-sports-prd-.../\_vm_logs/`, does not exist).
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-13 — slot 4 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
