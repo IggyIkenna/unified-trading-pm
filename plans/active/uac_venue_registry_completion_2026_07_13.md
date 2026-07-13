@@ -120,11 +120,25 @@ code.
       `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — after two prior attempts tripped the
       `<720s` gate by 11-18s purely from governor queue-wait), sentinel verified at
       `7c9c1a0a9c8c009f3e5ad3fcc9e2318ce0da54a3`.
-- [ ] [REGISTRY] P1. Wire archetype-leg eligibility for `FX`, `BITFINEX-SPOT`, `BITFINEX-FUTURES`, `NASDAQ`, `NYSE` into
-      `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
+- [x] ✅ [REGISTRY] P1. Wire archetype-leg eligibility for `FX`, `BITFINEX-SPOT`, `BITFINEX-FUTURES`, `NASDAQ`, `NYSE`
+      into `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
       (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_leg_spec_seeds.py`) — confirmed 0
       hits for all 5 as of 2026-07-13. `BITGET`/`KRAKEN` do NOT need this (already leg-eligible) — do not touch their
-      entries.
+      entries. — SHIPPED `unified-api-contracts@61ba5239`. Per-site additions, each citing a real engine adapter or
+      codex archetype-doc example instance (the module's own "NEVER invented" sourcing rule): `bitfinex` (SPOT-only,
+      `bitfinex_native.py:167` has no futures adapter) → `CARRY_BASIS_PERP` spot leg, `CARRY_BASIS_DATED`(+INV) spot
+      leg; `nasdaq`/`nyse` → `CARRY_BASIS_DATED`(+INV), `STAT_ARB_PAIRS_FIXED`, `STAT_ARB_CROSS_SECTIONAL`; `fx` +
+      `nasdaq`/`nyse` → `ML_DIRECTIONAL_CONTINUOUS` + `RULES_DIRECTIONAL_CONTINUOUS` (via a new
+      `continuous_tradfi_venues` tuple, NOT mutating the shared `continuous_venues` — that tuple also feeds
+      `TSMOM_BTC_CTA`, whose own codex doc states "BTC-only CeFi archetype by design"); `fx`/`nasdaq` (not `nyse`) →
+      `EVENT_DRIVEN`. **Deliberately NOT wired** (would be inventing a leg per the module's sourcing rule, not a gap
+      left for later): `bitfinex` on `CARRY_BASIS_PERP`'s perp leg, `CARRY_FUNDING_DISPERSION`, the shared
+      `_CEFI_CLOB_VENUES` tuple, and `ARBITRAGE_PRICE_DISPERSION` (no `BITFINEX-FUTURES` adapter exists to back a perp
+      claim); `nyse` on `EVENT_DRIVEN` (no NYSE-ticker example found in either codex doc, only AAPL/MSFT/NVDA on
+      NASDAQ). Full `quality-gates.sh` green (285s, `IGNORE_TIMEOUT=true`; also survived one host root-disk-full
+      transient mid-commit — self-recovered per `plans/active/issues/host_root_disk_full_transient_2026_07_13.md` — and
+      one quickmerge sentinel-invalidating rebase from a concurrent unrelated sports-venue commit), sentinel verified at
+      `61ba523906afc462943b24db83d40bf16ff90695`.
 - [ ] [REGISTRY] P2. Regenerate + commit `capability-verdict-matrix.json` and confirm: (a) all 6 venues above now
       resolve a non-`(unknown)` category in `openapi/venue-coverage-report.md`, (b) `FX`/`BITFINEX-SPOT`/
       `BITFINEX-FUTURES`/`NASDAQ`/`NYSE` show `leg_eligible=yes`, (c) `split_scope_tokens` does not raise for any of
