@@ -101,7 +101,12 @@ code.
       gate purely from queue-time being counted as work time — see
       `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md`), sentinel verified at
       `85b4ea015c65f56d0777d6a8a2b65117e848ce6f`.
-- [ ] [REGISTRY] P1. Add `BITGET-SPOT` + `BITGET-FUTURES` to both dicts, same capability pattern as bitfinex.
+- [x] ✅ [REGISTRY] P1. Add `BITGET-SPOT` + `BITGET-FUTURES` to both dicts, same capability pattern as bitfinex. —
+      SHIPPED `unified-api-contracts@21dde0f8`. Category `"cefi"`; capabilities `{SPOT_TRADE}` /
+      `{PERP_TRADE,     FUTURES_TRADE}`. Same `VENUE_ORDER_CAPABILITIES` discovery as BITFINEX applied —
+      `BitgetCeFiAdapter` (execution-service) is also `BLOCKED-CREDENTIALS` with every trading method raising
+      `NotImplementedError`, so empty frozenset entries were added there too. Full `quality-gates.sh` green (297s),
+      sentinel verified at `21dde0f8ce9e860e4115cb30845a5eb35e9b6938`.
 - [ ] [REGISTRY] P1. Add `KRAKEN-SPOT` + `KRAKEN-FUTURES` to both dicts, same capability pattern as bitfinex.
 - [ ] [REGISTRY] P1. Wire archetype-leg eligibility for `FX`, `BITFINEX-SPOT`, `BITFINEX-FUTURES`, `NASDAQ`, `NYSE` into
       `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
