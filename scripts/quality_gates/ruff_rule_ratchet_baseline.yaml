@@ -61,7 +61,7 @@ repos:
     dtz: 7
     tid251: 9
   market-tick-data-service:
-    dtz: 32
+    dtz: 30
     tid251: 38
   ml-service:
     dtz: 3
