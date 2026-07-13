@@ -151,7 +151,7 @@ class TestGetPathDeps:
         # table form, so its market-tick-data-service path dep was never seen.
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
-            "[build-system]\nrequires = [\"hatchling\"]\n\n"
+            '[build-system]\nrequires = ["hatchling"]\n\n'
             "[tool.uv.sources.unified-trading-library]\n"
             'path = "../unified-trading-library"\n'
             "editable = true\n\n"
@@ -171,8 +171,8 @@ class TestGetPathDeps:
         pyproject.write_text(
             '[project]\nname = "deployment-api"\n\n'
             "[tool.uv.sources]\n"
-            "unified-trading-library = { path = \"../unified-trading-library\", editable = true}\n"
-            "strategy-service = { path = \"../strategy-service\", editable = true}\n\n"
+            'unified-trading-library = { path = "../unified-trading-library", editable = true}\n'
+            'strategy-service = { path = "../strategy-service", editable = true}\n\n'
             "[tool.ruff]\nline-length = 120\n"
         )
         result = MOD.get_path_deps(pyproject)
@@ -181,12 +181,7 @@ class TestGetPathDeps:
 
     def test_dotted_table_closed_by_next_section(self, tmp_path: Path) -> None:
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text(
-            "[tool.uv.sources.dep-a]\n"
-            'path = "../dep-a"\n\n'
-            "[tool.ruff]\n"
-            'some-key = "../not-a-dep"\n'
-        )
+        pyproject.write_text('[tool.uv.sources.dep-a]\npath = "../dep-a"\n\n[tool.ruff]\nsome-key = "../not-a-dep"\n')
         result = MOD.get_path_deps(pyproject)
         assert result == ["dep-a"]
 
@@ -209,3 +204,135 @@ class TestFindManifest:
         monkeypatch.chdir(tmp_path)
         result = MOD.find_manifest()
         assert result is None
+
+
+# ── Tests: _service_package_name ─────────────────────────────────────────
+
+
+class TestServicePackageName:
+    def test_dashes_become_underscores(self) -> None:
+        assert MOD._service_package_name("strategy-service") == "strategy_service"
+
+    def test_no_dashes_unchanged(self) -> None:
+        assert MOD._service_package_name("mlservice") == "mlservice"
+
+
+# ── Tests: find_raw_service_imports ──────────────────────────────────────
+# REGRESSION-GUARD (utl_reuse_phase9, 2026-07-13, additive-hardening deferred item):
+# this scanner is WARN-only in main() — a fleet probe found ~39 pre-existing, already
+# reviewed/tracked raw cross-service imports (tests + a few source files across
+# deployment-service/execution-service/strategy-service/features-service), none of
+# which carry a path dep, so hard-failing on them today would break those repos'
+# quality-gates.sh with no way to tell "new accidental coupling" from "sanctioned debt."
+
+
+class TestFindRawServiceImports:
+    def test_detects_plain_import(self, tmp_path: Path) -> None:
+        (tmp_path / "mod.py").write_text("import strategy_service\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == [("mod.py", 1, "strategy-service")]
+
+    def test_detects_from_import(self, tmp_path: Path) -> None:
+        (tmp_path / "mod.py").write_text("from strategy_service.engine import foo\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == [("mod.py", 1, "strategy-service")]
+
+    def test_ignores_own_package_not_in_map(self, tmp_path: Path) -> None:
+        # Caller excludes `current` from other_service_packages before calling; simulate
+        # that here by simply not including it in the map.
+        (tmp_path / "mod.py").write_text("import execution_service\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+    def test_ignores_library_imports(self, tmp_path: Path) -> None:
+        (tmp_path / "mod.py").write_text("from unified_trading_library import get_params\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+    def test_ignores_substring_package_name(self, tmp_path: Path) -> None:
+        # `strategy_service_utils` must NOT match `strategy_service` (exact top-level
+        # component match only, not a substring/prefix match).
+        (tmp_path / "mod.py").write_text("import strategy_service_utils\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+    def test_excludes_venv_directory(self, tmp_path: Path) -> None:
+        venv_dir = tmp_path / ".venv" / "lib"
+        venv_dir.mkdir(parents=True)
+        (venv_dir / "vendored.py").write_text("import strategy_service\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+    def test_skips_unparseable_file(self, tmp_path: Path) -> None:
+        (tmp_path / "broken.py").write_text("this is not : valid python (((\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+    def test_no_violations_returns_empty_list(self, tmp_path: Path) -> None:
+        (tmp_path / "mod.py").write_text("import os\nimport sys\n")
+        result = MOD.find_raw_service_imports(tmp_path, {"strategy_service": "strategy-service"})
+        assert result == []
+
+
+# ── Tests: main (end-to-end, WARN-only raw-import behaviour) ─────────────
+
+
+def _make_workspace(tmp_path: Path) -> Path:
+    """Build a fake workspace: unified-trading-pm/workspace-manifest.json declaring
+    svc-a + svc-b as services; caller adds svc-a's own pyproject.toml + source."""
+    pm_dir = tmp_path / "unified-trading-pm"
+    pm_dir.mkdir()
+    (pm_dir / "workspace-manifest.json").write_text(
+        json.dumps({"repositories": {"svc-a": {"type": "service"}, "svc-b": {"type": "service"}}})
+    )
+    return tmp_path
+
+
+class TestMainWarnOnlyRawImport:
+    def test_raw_import_warns_but_exit_zero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        workspace = _make_workspace(tmp_path)
+        svc_a = workspace / "svc-a"
+        svc_a.mkdir()
+        (svc_a / "pyproject.toml").write_text('[project]\nname = "svc-a"\n')
+        (svc_a / "app.py").write_text("import svc_b\n")
+        monkeypatch.setenv("REPO_ROOT", str(workspace))
+        monkeypatch.chdir(svc_a)
+        exit_code = MOD.main()
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "[WARN]" in captured.err
+        assert "svc-b" in captured.err
+
+    def test_path_dep_still_hard_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        workspace = _make_workspace(tmp_path)
+        svc_a = workspace / "svc-a"
+        svc_a.mkdir()
+        (svc_a / "pyproject.toml").write_text(
+            '[project]\nname = "svc-a"\n\n[tool.uv.sources]\nsvc-b = { path = "../svc-b" }\n'
+        )
+        monkeypatch.setenv("REPO_ROOT", str(workspace))
+        monkeypatch.chdir(svc_a)
+        exit_code = MOD.main()
+        captured = capsys.readouterr()
+        assert exit_code == 1
+        assert "[WARN]" not in captured.err
+        assert "path deps" in captured.err
+
+    def test_no_violations_clean_exit(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        workspace = _make_workspace(tmp_path)
+        svc_a = workspace / "svc-a"
+        svc_a.mkdir()
+        (svc_a / "pyproject.toml").write_text('[project]\nname = "svc-a"\n')
+        (svc_a / "app.py").write_text("import os\n")
+        monkeypatch.setenv("REPO_ROOT", str(workspace))
+        monkeypatch.chdir(svc_a)
+        exit_code = MOD.main()
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert captured.err == ""
