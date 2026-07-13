@@ -17,6 +17,7 @@ tags: [alerts, slack, agent-orchestrator, observability, dedup, notifications]
 related: [autonomous-recovery-matrix.md, runtime-deployment-topology.md]
 created: 2026-07-13
 authoritative_for: [agent-orchestrator Slack alert routing, daily-summary digest, git-health guard dedup]
+referenced_by:
 owner:
 last_reviewed: 2026-07-13
 code_refs:
