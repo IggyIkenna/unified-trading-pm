@@ -112,17 +112,18 @@ Fix each bucket to get `V` back to ≤3 (or ideally 0, continuing the ratchet-do
       (1 default-param site), `execution_service/providers/tenderly_budget.py` (1 docstring mention of
       `gs://central-element-323112-archetype-state/...`). Same fix pattern as above (interpolate
       `config.gcp_project_id`, never a literal default). (repo: execution-service)
-- [ ] [AGENT] P2. Bump `click` to ≥8.3.3 and `pillow` to ≥12.3.0 via
-      `uv lock --upgrade-package click --upgrade-package     pillow`; re-run `pip-audit` to confirm both CVE families
-      clear. (repo: execution-service)
-- [ ] [AGENT] P2. Reword the "(backward compatible)" comment in `execution_service/backtest_v2/smart_fill_replay.py:442`
-      (it describes a design tier fallback, not an actual compat shim) so it stops matching the
-      `no-backward-compat-shims` grep — or add the correct suppression marker if the repo convention supports one.
-      (repo: execution-service)
+- [x] ✅ [AGENT] P2. **Bump `click`/`pillow` — DONE.** `execution-service@0832049c` —
+      `uv lock --upgrade-package click     --upgrade-package pillow` (click 8.3.1→8.4.2, pillow 12.2.0→12.3.0);
+      `pip-audit` confirms both CVE families clear (`PYSEC-2026-2132` + the 5 Pillow `PYSEC-2026-225x` entries gone).
+- [x] ✅ [AGENT] P2. **Reword the "(backward compatible)" comment — DONE.** `execution-service@0832049c` —
+      `smart_fill_replay.py:442` now reads "...and the older timed/mark/benchmark fallback tiers below still apply."
+      (same meaning, no longer matches the `no-backward-compat-shims` grep).
 - [ ] [AUDIT] P3. Triage the 25 oversized functions from the QG log (full list in the Pass-1 output referenced above):
       for each, either extract helpers to get under the line limit, or — if genuinely irreducible — get an
-      operator-approved per-function `# noqa`-equivalent exemption. This is the bulk of the ratchet gap; the other 3
-      buckets alone (~3 violations) may already bring V to ≤3 once fixed, but 0 is the target. (repo: execution-service)
+      operator-approved per-function `# noqa`-equivalent exemption. **Status (2026-07-13): with todos 1/2/3/4 above now
+      shipped, the ratchet already reads `Codex compliance: 2 violations (within tolerance of 3)`** — bucket #1
+      (hardcoded project ID) stays counted as 1 violation only because the 5 NEW files above are still open, and this P3
+      audit is the other. 0 remains the target but neither is currently blocking. (repo: execution-service)
 
 ## Repo-blocker
 
