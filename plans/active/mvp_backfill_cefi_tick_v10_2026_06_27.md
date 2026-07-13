@@ -244,14 +244,17 @@ BLOCKED.
       1,048/1,048 deleted, post-delete gate confirmed 0 residual. Scope = prd bucket only — see Progress Log "Deribit
       purge scale discrepancy" entry for the much larger legacy-bucket residual discovered + the new P1 todo below
       tracking it.
-- [ ] [DATA] P1. Purge the LEGACY (non-`-prd`) cefi bucket's ~6.65M DERIBIT/OPTION `trades`/`book_snapshot_5`
+- [x] ✅ [DATA] P1. Purge the LEGACY (non-`-prd`) cefi bucket's ~6.65M DERIBIT/OPTION `trades`/`book_snapshot_5`
       `empty_confirmed`/`expected_unattempted` skeleton rows — discovered 2026-07-12 while executing the todo above;
       required for G4's merged-view "0 per-strike cells" gate (measure_honest_coverage.py merges the legacy bucket's
-      expected-unattempted skeleton into the prd view by default). NOT yet operator-confirmed at this scale (the
-      original "~536" estimate covered only the prd bucket) — see Progress Log entry + the open blocked-question before
-      running `--apply` at this size. Snapshot-first, mirror
-      `instruments-service/scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py` (add a `--bucket`
-      override or extend it) against `market-data-tick-cefi-central-element-323112`.
+      expected-unattempted skeleton into the prd view by default). — **DONE 2026-07-13** — operator confirmed via
+      `BLK-cbee81bc` (option A, proceed); `instruments-service@31c7f3e4` added `--legacy-scale` to
+      `scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`. Live dry-run measured exactly 6,650,624
+      matching rows (independently verified 100% `empty_confirmed` (5,771,968) / `expected_unattempted` (878,656), zero
+      `captured` rows at risk); snapshot-first purge applied
+      (`gs://market-data-tick-cefi-central-element-323112/_index/snapshots/pre_purge_deribit_option_availability_index_20260713T013034Z.parquet`),
+      6,650,624/6,650,624 rows deleted from `_index/availability_index.parquet` (35,815,825 → 29,165,201), both
+      `_index/per_vm/*` shards confirmed 0 hits (no resurrection risk), post-delete gate re-verified 0 residual.
 - [x] ✅ [TEST] P2. Regression-assert the Deribit options capture grain is CHAIN-LEVEL (options_chain/book snapshots at
       chain grain; no per-strike rows can re-enter — writer-side guard or test). — market-tick-data-service@361ed90f.
       Found a REAL gap (not just missing test coverage): `TardisAdapter.download_batch()`'s Deribit option-symbol strip
@@ -267,6 +270,29 @@ BLOCKED.
 ---
 
 ## Progress Log
+
+### Legacy-bucket Deribit per-strike purge — 2026-07-13T01:34Z (data_engineering slot-9)
+
+**Follow-up to the scale-discrepancy finding below**: operator answered `BLK-cbee81bc` (option A — proceed) live in chat
+on 2026-07-13 after a full risk briefing. Extended
+`instruments-service/scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py` with a `--legacy-scale` flag
+(widens the STOP-ON-SURPRISE bound to 6.0M-7.0M for this specific ruled-on scope, rather than loosening the prd guard
+generally) — shipped `instruments-service@31c7f3e4`, QG green, quickmerge --agent.
+
+**Dry-run** against `--bucket market-data-tick-cefi-central-element-323112 --legacy-scale`: 6,650,624 / 35,815,825 rows
+match in `_index/availability_index.parquet` (exact match to the scale-discrepancy finding below); both
+`_index/per_vm/_legacy_seed*.parquet` shards show 0 matches (no consolidator-resurrection risk).
+
+**Independent safety verification** (separate read-only script, not the purge tool itself): of the 6,650,624 target
+rows, `capture_status` breaks down as `empty_confirmed`=5,771,968 + `expected_unattempted`=878,656 — **zero** rows in
+any other status (i.e. zero `captured` rows at risk). `data_type` splits evenly `book_snapshot_5`=3,325,312 /
+`trades`=3,325,312. Date range 2025-05-24→2026-02-21.
+
+**Apply**: snapshot written first
+(`gs://market-data-tick-cefi-central-element-323112/_index/snapshots/pre_purge_deribit_option_availability_index_20260713T013034Z.parquet`),
+6,650,624/6,650,624 rows deleted from the canonical index (35,815,825 → 29,165,201, Δ matches), post-delete gate
+re-verified 0 residual `(DERIBIT, OPTION, trades|book_snapshot_5)` cells in the legacy bucket. `BLK-cbee81bc` answered
+and closed.
 
 ### Deribit per-strike purge + scale discrepancy — 2026-07-12T10:50Z (data_engineering slot-9)
 

@@ -458,3 +458,12 @@ this exact gate is still live and still the dominant confound for this venue clu
    recommendation: a trustworthy per-venue verdict for this whole cluster needs either the fleet-wide lease enablement
    or a genuine solo window (the 4 production VMs finishing/being paused) — re-running into contention just produces
    more of the same 403-dominated noise, not new signal.
+
+### 2026-07-13T01:16-01:40Z — fresh corroboration (slot-7 data_engineering, DERIBIT-COMBO `[VERIFY]` re-attempt)
+
+Still no operator enablement decision on the lease; 3 of the 4 production `cefi-binance-futures-2020/2021-heavy/light`
+VMs were confirmed still RUNNING (~24h elapsed). A solo `opt-deribit-combo-2024` diagnostic VM sampled 4 consecutive
+dates: 2/4 hit `code=274 concurrent-IP-lock` directly, 1 hit an unrelated transient `Tardis HTTP 500`, and 1
+(2024-01-03) got a full real stream through (59.7M rows) despite the contention — consistent with this doc's own
+"retriable, not a hard block" framing rather than a 100% lockout. No change to the underlying blocker or its resolution
+path. Full trail: `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`'s "VERIFY re-attempt" section.
