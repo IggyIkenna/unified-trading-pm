@@ -19,7 +19,7 @@ summary:
   cycle — so the 'shot'-tagged row and the unset row land in DIFFERENT dedup-key partitions and both survive the
   window-dedup, even though they represent the same underlying fact (XG_SHOTS EPL/BUNDESLIGA/LA_LIGA/LIGUE_1/SERIE_A
   2024-12-14, 126 rows captured)."
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -127,3 +127,16 @@ deduping against the newly-tagged rows.
   consolidator retires a per-VM shard after merging it or leaves it to be re-applied indefinitely; (3) do not re-close
   this doc until the recurrence mechanism is actually identified — another one-off relabel without understanding WHY it
   recurred will likely just recur again.
+- **2026-07-13 (same session, later) — RE-CLOSED. Root cause was NOT a recurrence of this doc's own bug — it was
+  collateral damage from an unrelated migration bug in a different repo.** Full root-cause: today's 16-VM
+  `sports_manifest_canonicalisation_2026_06_01.md` E4 apply-pass ran `market-tick-data-service`'s
+  `rebuild_sports_manifest_v9.py --surface instruments` against instruments-service's own manifest, and that script had
+  a real bug (hardcoded `service_name`, no `asset_group` threading) that re-emitted 684,158 rows fleet-wide (understat
+  XG/XG_SHOTS included) under `service_name="market-tick-data-service"` at `2026-07-13T06:16:51Z`– `06:23:04Z` — exactly
+  matching the "fresh 06:21Z twin" observed above. This was never a lingering-shard/consolidator issue and this doc's
+  2026-07-09 fix DID stick (verified: 0 `instrument_type='shot'` rows remain) — the "recurrence" was a same-day,
+  one-off, unrelated mass-write landing on top of it. Full detail, fix (`market-tick-data-service@55f9e961`), and
+  cleanup (`instruments-service@2f56038e`, direct canonical rewrite dropping 683,592 confirmed duplicates) are tracked
+  in `plans/active/sports_manifest_canonicalisation_2026_06_01.md` (E3/E4 entry) — that is now the durable home for this
+  finding. Re-verified live: 0 duplicate groups remain for understat XG/XG_SHOTS big-5. Flipping `status` back to
+  `resolved`.

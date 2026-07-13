@@ -242,25 +242,25 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       never blank-reason-seeds a no-fixture date in the first place — this is the actual root cause per the script's own
       docstring ("This script does NOT fix the writer — that is the deeper, still-open durable fix"); scheduling the
       typing script closes the lag NOW, the writer fix prevents needing a typing script at all going forward.
-- [ ] [DATA] P0. **NEW (2026-07-13, slot-3) — re-run + durably fix the XG_SHOTS `instrument_type` dedup, it has RECURRED
-      after being marked resolved.**
-      `plans/active/issues/sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md` claims
-      `status: resolved` (2026-07-09, `instruments-service@f136eec0`+`57d8b937`, verified "0 `instrument_type='shot'`
-      XG_SHOTS rows remain, 0 duplicate `(date, league_id)` XG_SHOTS groups remain system-wide") — but a fresh
-      live-manifest read THIS session (2026-07-13) found the SAME 2024-12-14 big-5 residual still present (10 XG_SHOTS
-      dup rows / 5 groups) **plus a NEW instance on XG itself** (2 duplicate `captured` rows per big-5 league, one from
-      2026-07-08 and a fresh twin written 2026-07-13T06:21Z). First: dry-run then `--apply`
-      `instruments-service/scripts/fix_xg_shots_instrument_type_dedup_2026_07_09.py` + re-run
-      `manifest_consolidator --force` against `instruments-store-sports-prd-central-element-323112` to collapse the
-      current residual. **Then — do not stop at the one-off** — root-cause WHY a fix independently verified clean 4 days
-      ago has fresh duplicates again: check `_index/per_vm/` on the sports bucket for a lingering/zombie corrective
-      shard that keeps getting re-merged every consolidator cycle instead of being cleaned up post-merge, and
-      cross-check against the STILL-OPEN, never-root-caused gap in
-      `plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` ("Update 2026-07-08": the
-      deployed Cloud Run consolidator's incremental cycles were NOT applying the NULL/`''` dedup fix continuously in
-      production — cause never identified, only mitigated via periodic manual `--force` rebuilds). This todo is NOT done
-      until (a) 0 dup dedup-key groups verified for understat XG+XG_SHOTS on the big-5, AND (b) a plausible root-cause +
-      durable fix (not another manual rebuild) is identified and shipped for why dedup fixes aren't sticking.
+- [x] ✅ [DATA] P0. **DONE 2026-07-13 (slot-3, same session).** The suspected "RECURRENCE" was a misdiagnosis — full
+      root-cause turned out to be unrelated to `sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md`'s
+      own bug (that fix DID hold; re-verified 0 `instrument_type='shot'` rows). Actual cause: today's
+      `sports_manifest_canonicalisation_2026_06_01.md` E4 migration apply-pass ran a buggy `market-tick-data-service`
+      rebuild script (`rebuild_sports_manifest_v9.py --surface instruments`, hardcoded `service_name` + no `asset_group`
+      threading) that re-emitted **684,158 rows fleet-wide** (all sports data_types, not just understat) under the wrong
+      `service_name` at `06:16:51Z`–`06:23:04Z` — exactly matching the observed "fresh 06:21Z twin." Fixed going
+      forward: `market-tick-data-service@55f9e961`. Cleaned up the 683,592 already-written duplicates via a direct
+      canonical rewrite: `instruments-service@2f56038e`
+      (`scripts/dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py`, dropped every mislabeled row with a
+      confirmed canonical `instruments-service` twin, left 88 orphans untouched for review). A first cleanup attempt
+      using the standard shard-merge convention was tried and confirmed NOT to work for this class of duplicate
+      (`--force` rebuild, `dedup_dropped=0`) — `service_name` is a `_BASE_DEDUP_COLS` member, so only a direct canonical
+      rewrite can remove a mis-keyed row (same lesson as `drop_stale_xg_shots_shot_rows_2026_07_09.py`). **Verified**:
+      understat XG/XG_SHOTS big-5 dup groups now 0 (was 7,645/6,666); XG captured=6,673, XG_SHOTS captured=6,666. Full
+      detail in `plans/active/sports_manifest_canonicalisation_2026_06_01.md` (E3/E4 entry, the durable home for this
+      finding) and in the corrected `plans/active/issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md`
+      / `sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md` (both updated same session to remove the
+      misdiagnosis).
 - [ ] [VERIFY] P1. **NEW (2026-07-13, slot-3) — verify the 6 parked sports tasks / backlog.yaml unblock.** This
       session's interactive slot has no network reachability to the agent-orchestrator API (13.113.200.22:8765
       connection refused) and `backlog.yaml` is gitignored host-state not present in this clone — a planning-VM-resident
