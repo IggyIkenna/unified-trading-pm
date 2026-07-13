@@ -1166,3 +1166,99 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   known/architectural; 2 new real bugs found and filed (ODDS_API league-scope, TradFi Databento silent-zero); 1 new
   high-priority tooling bug found and fixed (VM-name collision); 1 new open architecture question filed (KRX
   registry-vs-adapter).
+
+- 2026-07-13 (autonomous session continuation — operator decisions on both open questions + a full close-out workflow
+  for every remaining diagnosed-not-fixed bug) — Operator resolved both open architecture questions from the prior entry
+  directly, then asked to close out the remaining known real bugs via a dedicated `Workflow` run plus follow-up direct
+  work. Full results:
+
+  **KRX registry decision — narrow to `ohlcv_24h` only** (operator: Yahoo doesn't have reliable intraday granularity
+  over long backfill windows). Shipped `unified-api-contracts@a2751f36`: narrowed `expected_coverage.py`'s KRX entry
+  from `[ohlcv_1m, ohlcv_15m, ohlcv_24h]` to `[ohlcv_24h]`. **Found and closed a related cross-registry inconsistency in
+  the same pass**: KRX is also hardcoded as a TradFi "equity-basis" MVP venue (`_mvp_scope_predicate.py`) whose MVP
+  data_type was the shared `rule.data_types = {ohlcv_1m}` — meaning the MVP layer would have kept claiming KRX ohlcv_1m
+  is business-critical (for Binance tradfi-perp basis tracking) even after `expected_coverage.py` stopped expecting it.
+  Operator confirmed: drop KRX from that MVP data_type too — same commit narrows KRX's equity-basis carve-out to
+  `ohlcv_24h` specifically (US-listed venues NASDAQ/NYSE/ARCA/AMEX/ BATS keep `ohlcv_1m`), with 2 tests updated to
+  match. `krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` closed (`status: resolved`).
+
+  **ODDS_API league scope — confirmed intentional** (operator: "~30+ prediction leagues," the `tier<=2 AND PREDICTION`
+  scope is the deliberate full universe, not an accidental narrowing). Closed
+  `sports_odds_api_league_registry_scope_undercapture_2026_07_12.md` as `resolved`/working-as-intended — no fix needed;
+  the debug-level "no fixtures, skipping" log staying non-classified is noted as a cheap, optional future observability
+  nice-to-have, not tracked as a todo.
+
+  **`close_remaining_e2e_bugs` Workflow** (4 phases: Discover → Fix → Retriage → Verify, 10 agents,
+  `SUB_AGENT_MANDATORY_RULES.md` injected at every spawn) — closed out every remaining diagnosed-not-fixed bug from
+  `cefi_aster_hyperliquid_bitget_bitfinex_adapter_bugs_2026_07_12.md`:
+  - **ASTER `trades`/`derivative_ticker`** — fixed (`market-tick-data-service@99ac3d64`, stamped missing
+    `instrument_id`/`instrument_type` on all 3 REST row-dict producers), **conclusively verified via 3 independent real
+    VM runs** (2 symbols, 2 days) — the original `missing_column` error never reproduced post-fix. 2 new, smaller
+    follow-on findings surfaced and documented (not fixed): a checker-side instrument-id-format mismatch for bare-coin
+    REST venues, and a separate ASTER day-boundary off-by-one.
+  - **BITGET-FUTURES + BITFINEX-FUTURES `trades`** — fixed (`market-tick-data-service@2cd02409`, a pandas `.dt.date`
+    all-NaT dtype gotcha in Tardis symbol resolution — genuinely different from an earlier, byte-identical-error bug
+    fixed 2026-06-16, not a regression of it), **conclusively verified** via local reproduction + 2 real VM runs (both
+    venues resolve their full symbol universe now instead of crashing pre-fetch; remaining 0-records is separate,
+    already-tracked Tardis concurrent-IP-lock contention). A **5th venue, BINANCE-DELIVERY, found hitting the identical
+    bug** during the Retriage pass below and confirmed fixed by the same general fix, no new code needed.
+  - **HYPERLIQUID `trades`** — fixed (`market-tick-data-service@db635632`, `_clip_rows_to_day` was computing a correct
+    tz-aware datetime internally then discarding it and returning the raw epoch-ms int, which pandas' default nanosecond
+    unit misread as ~1.75 seconds past epoch). First real-VM verification attempt was a false negative from a stale
+    pre-fix code tarball (MTDS deploys from a prebuilt tarball, not live git state — the same discovery ASTER's
+    verification made independently); rebuilt the tarball from a clean 4-repo worktree and re-ran — **confirmed fixed**,
+    `derivative_ticker` wrote 24 real rows with correct timestamps, no epoch collapse. One new, separate, unfixed
+    finding surfaced by the same run: `trades` specifically still shows 0 captured even though `derivative_ticker`
+    succeeds in the same run (a `data_types`-ignored dispatch bug, same class as the already-fixed FX/KRX one, or an
+    honest fallback-symbol absence — not distinguished, flagged for a dedicated trace).
+    `cefi_aster_hyperliquid_bitget_bitfinex_adapter_bugs_2026_07_12.md` closed (`status: resolved`) — all 3 original
+    findings fixed and real-VM-verified.
+  - **TradFi Databento CME/CBOE/NYSE/NASDAQ silent-zero-rows** — the dispatched Workflow agent crashed mid-response (API
+    server error) but left 2 real, uncommitted diffs. A direct follow-up completed and evaluated both: (1) a genuine
+    `DatabentoBaseClient._resolve_api_key_for_index` secret-name bug (fixed + tested,
+    `market-tick-data-service@68c3bb9d`) that turned out to be **dead code on the actual TradFi fetch path** (confirmed
+    via full call-chain trace + a real post-fix VM re-run that still showed 0 rows) — shipped honestly as its own fix,
+    NOT claimed to resolve this issue. (2) the doc's own recommended `DATABENTO_EMPTY_BUT_VALID` observability addition
+    — finished, tested, shipped (`market-tick-data-service@58530378`). **Then ran the doc's originally-recommended live
+    diagnostic directly**: `client.symbology.resolve()` for `ES.FUT`/GLBX.MDP3 returned a full real mapping (39
+    contracts, `not_found: []`) — ruling out the symbol-resolution hypothesis; a direct `client.timeseries.get_range()`
+    call using the EXACT request shape production code builds
+    (`dataset="GLBX.MDP3", schema="ohlcv-1m", symbols=["ES.FUT"], stype_in="parent"`) returned **1628 real rows** for
+    2026-07-09 — ruling out the entitlement/date-window hypothesis too (cross-checked against 4 other days, all
+    consistent with a normal trading calendar). **Real data demonstrably exists and is fetchable with the registry's own
+    declared request shape** — the actual bug must be a narrower discrepancy between this working manual call and
+    production's real runtime args (ruled out `mvp_mode`, which defaults `False` at both entry points). Root cause is
+    now much more tightly scoped than "unknown," but still open — documented with a precise next step (diff production's
+    real runtime args, either via temporary logging or the just-shipped `DATABENTO_EMPTY_BUT_VALID` event's own metadata
+    payload) in `tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md` (kept `status: open`, re-scoped from "root cause
+    unknown" to "root cause narrowed to a specific, likely-solvable code discrepancy").
+  - **CEFI futures/derivatives retriage** (redoing the lost 2026-07-12 agent's scope: DERIBIT, DERIBIT-COMBO, OKX,
+    OKX-SPOT, KRAKEN-FUTURES, BYBIT, BINANCE-DELIVERY) — thorough, real-evidence pass, real findings:
+    - **Fixed**: BINANCE-DELIVERY (above), BYBIT futures_chain (by analogy to DERIBIT's confirmed fix, not independently
+      re-verified for BYBIT specifically — flagged as a small residual gap).
+    - **Known gaps, corroborated onto existing docs, no new fix needed**: DERIBIT liquidations (Tardis IP-lock 403,
+      already P0-tracked), PACIFICA-SOLANA (upstream HTTP 429 rate-limiting, already-documented dormant-venue finding).
+      DERIBIT futures_chain confirmed honest-absence post-fix (not fully ruled out on a second day, minor residual).
+    - **New P1 finding**: bare `OKX`'s regular (non-options) MTDS data_types are ALSO blocked by the same
+      instruments-service Tardis-exchange-resolution gap the existing `cefi_deribit_combo_and_okx_bare_venue_gaps` doc
+      only scoped to `options_chain` — a genuinely new scope extension, filed as a new P1 IS-side todo on that doc (not
+      a new doc).
+    - **Still genuinely open, contention-blocked not diagnosis-blocked**: DERIBIT-COMBO, OKX-SPOT, KRAKEN-FUTURES — all
+      corroborated onto `tardis_concurrent_ip_lockout_2026_07_12.md` (P0, already tracked) after concretely proving (not
+      just inferring) that 4 real production Tardis-heavy VMs held the single-concurrent-IP lock throughout the retriage
+      session, making a clean read impossible without either the already-built-but- disabled `TardisConcurrencyLease`
+      mitigation or a real solo window.
+    - **Concretely validated the plan's own flagged VM-name-collision caveat**: directly proved (via real run.log, not
+      inference) that the ORIGINAL 2026-07-09 sweep's `DERIBIT-COMBO:trades` and `BYBIT:liquidations` results were
+      genuine collision artifacts — the labeled VMs' logs show them processing entirely different shards
+      (`UPBIT:book_snapshot_5` and `BYBIT:trades` respectively). Confirms the "not retroactively re-audited" risk
+      flagged 2026-07-12 was real for at least these two.
+
+  **Current state of todo 25**: every diagnosed real bug from this session's triage rounds is now either fixed +
+  real-VM-verified, or corroborated onto an already-tracked doc with real evidence, or narrowed to a specific, scoped,
+  still-open finding (TradFi Databento, OKX regular data_types, DERIBIT-COMBO/OKX-SPOT/KRAKEN-FUTURES contention). No
+  further venue clusters remain completely unsampled that this session is aware of, but a **clean, trustworthy full
+  re-sweep has still NOT been run** with all of this session's fixes (VM-name-collision, TradFi `--source`, FX/KRX
+  dispatch, ASTER/HYPERLIQUID/BITGET-FUTURES/BITFINEX-FUTURES/BINANCE-DELIVERY, 9 DEFI venues) live simultaneously — the
+  honest, still-open prerequisite for fully closing todo 25 with a trustworthy final count, not attempted this session
+  (real infra cost + time for a 452-shard re-run).
