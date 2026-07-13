@@ -186,4 +186,102 @@ report written in this plan's Progress Log.
     (mirroring the existing step-1 `_RETIRED_DATA_TYPES` relabel pattern at line 421) that relabels exactly
     `(source=odds_api, data_type=ODDS, date<2020-06-06)` to a new reason (e.g. `EXPECTED_LEGACY_SOURCE_MISMATCH`, NOT
     `EXPECTED_DEPRECATED_DATA_TYPE`) — optional polish, not required, given the 6-row scale and the understat precedent
-    of accepting a documented-equivalent residual.
+
+- 2026-07-13 (slot-3, investigation-only sub-agent, live-manifest re-read of `api_football` slice, no code/data
+  changes): full root-cause on the P0 api_football investigation todo above. **Verified exact live counts**: captured
+  365,592 · empty_confirmed 1,696,130 · expected_unattempted 453,961 · attempted_failed 3,257. **(1)
+  expected_unattempted (453,961) is a legitimate could-exist seed, evenly spread 2018-2026 (~28.5k-57.6k/yr, no cliff)**
+  — by data_type: TEAMS 192,384 · ODDS 82,749 · FIXTURE_LINEUPS 47,282 · FIXTURE_EVENTS 47,028 · FIXTURE_STATS 36,677 ·
+  PLAYER_STATS 26,363 · INJURIES 20,700 · FIXTURES 778. Per `enumerate_expected_universe.py` `_enumerate_v2_sports`
+  (line 1735), this is the per-LEAGUE cross-product against `SPORTS_DATA_TYPE_TO_SOURCE`'s coverage-start-gated axis —
+  the low FIXTURES count (only 778, vs TEAMS' 192k) confirms the enumerator's
+  `_build_af_fixture_calendar`/`EXPECTED_NO_FIXTURE` truthset carve-out (docstring line ~1777) is doing its job for the
+  primary data_type; no action needed, this is denominator, not a gap. **(2) attempted_failed root causes, by
+  error_reason**: `ApiFootballResponseError` 1,642 (INJURIES 1,600 / TEAMS 24 / PLAYER_STATS 10 / FIXTURE_STATS 7 /
+  FIXTURE_LINEUPS 1) · `FIXTURES_FETCH_FAILED` 665 · `phantom_captured_no_parquet_at_canonical_path` 487 (INJURIES 346 /
+  PLAYER_STATS 64 / FIXTURE_STATS 39 / FIXTURE_LINEUPS 29 / FIXTURE_EVENTS 11) · `UNCLASSIFIED_ADAPTER_ERROR` 461 (100%
+  blank data_type) · `phantom_re_attempt_after_writer_fix_f36651c` 2.
+  - **(a) INJURIES `ApiFootballResponseError` — CONFIRMED misclassification bug, not rate-limiting.** The exception is
+    raised at `instruments_service/reference_data/adapters/sports/adapters/api_football.py:948` (`_raise_on_api_errors`)
+    whenever API-Football's JSON envelope carries a non-empty `errors` dict with `is_rate_limit=False` (i.e. NOT the
+    `rateLimit` key — genuine rate-limit responses are already retried transparently by `_fetch_and_extract`, lines
+    707-750, and never reach `attempted_failed`). The failure is written via `_AfManifestHooks.note_failed` →
+    `sports_reference_core.py:62` → `_classify_adapter_failure(exc, "api_football")`
+    (`instruments_service/engine/orchestrator/failure.py:33-46`), which passes `type(exc).__name__` (the literal string
+    `"ApiFootballResponseError"`) into UAC `classify_venue_error("api_football", "ApiFootballResponseError")`. But UAC's
+    `VENUE_ERRORS_SPORTS["api_football"]` table
+    (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/sports.py:9-82`) is keyed by
+    HTTP-status/domain codes (`"429"`,`"401"`,`"400"`,`"500"`,`"FREE_PLAN_DATE_LIMIT"`,`"SEASON_NOT_FOUND"`,
+    `"LEAGUE_NOT_FOUND"`,`"RATE_LIMIT_DAILY"`,`"FIXTURE_NOT_FOUND"`) — the exception CLASS NAME never matches any of
+    those keys, so `classify_venue_error` always returns `None` and the code falls back to the raw class name. This
+    means the manifest can NEVER distinguish which of API-Football's real hard-error categories (plan/token/param/
+    season/league) actually fired — it's a lookup-key-type bug, not a rate-limit problem. Evidence the failures are a
+    handful of systemic runs, not per-date organic failures: only 3 distinct `attempted_at` values across all 1,642 rows
+    (2026-06-25, 2026-06-26, 2026-07-13T16:24:30 — the last one alone contributing 2,182 rows across ALL api_football
+    failure classes, including 100% of the 487 phantom rows), and INJURIES failures are evenly spread 2019-2026 (not
+    concentrated in old/new dates), ruling out a simple date-window plan restriction. **Root cause is almost certainly a
+    real API-Football envelope error (`_raise_on_api_errors`, `api_football.py:932-953`) — most likely a
+    plan/entitlement error specific to the INJURIES endpoint (API-Football gates INJURIES behind a paid-plan tier) —
+    being raised and immediately misclassified**, not investigated further because `_raise_on_api_errors` discards the
+    raw `errors` dict content once it builds the exception message string (only preserved in `str(exc)`, which the
+    manifest never persists — only `error_reason` is stored). **Concrete fix**: (i) thread the raw envelope `errors`
+    dict's key (`"plan"`/`"token"`/`"requests"`/etc, whichever populated) through as the `error_code` passed to
+    `_classify_adapter_failure`/`record_failed` instead of the exception class name (the
+    `ApiFootballResponseError.__init__` already receives the raw message — extend it to also carry a structured
+    `error_key` attribute the caller reads); (ii) add the missing UAC `VENUE_ERRORS_SPORTS["api_football"]` entries for
+    whatever concrete key surfaces (likely a plan/entitlement code) so `classify_venue_error` resolves it; (iii) only
+    THEN re-attempt INJURIES — re-attempting blind today would just reproduce the same misclassified failures if it's
+    truly a plan/entitlement gate (a credential/plan upgrade ask, not a code bug, in that case — confirm by making ONE
+    manual `GET /injuries?date=...` call with the live key and inspecting the raw `errors` body before re-running the
+    backfill).
+  - **(b) FIXTURES `FIXTURES_FETCH_FAILED` (665)** — not yet root-caused to adapter code in this pass (no
+    `FIXTURES_FETCH_FAILED`-literal raise site found in `api_football.py`; likely raised in
+    `sports_reference_fixtures.py`/`sports.py`'s date-wide fixtures-list call site as a wrapper `RecordFailedReason`,
+    analogous to `UNCLASSIFIED_ADAPTER_ERROR` below). Left for the implementing agent — grep
+    `RecordFailedReason.FIXTURES_FETCH_FAILED` call sites and inspect `attempted_at`/date clustering the same way as (a)
+    above before re-attempting.
+  - **(c) blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` (461) — CONFIRMED write-path bug, root cause is NOT the
+    api_football adapter itself.** All 461 rows: `service_name=instruments-service`, blank `league_id`, dates spread
+    2017-2020ish (sampled). Traced to `instruments_service/engine/orchestrator/process_completeness.py`'s
+    `_finalize_completeness` (lines 494-501) and `_detect_thin_day_venues`'s corrective-write call (lines 532-538) — a
+    GENERIC, venue-grain shard-completeness gate (built for CeFi/TradFi venue-shaped shards:
+    `row_key={"date": date, "venue": _failed_venue}`) that writes a corrective `record_failed` with **no `data_type` key
+    in `row_key` at all**. Sports' captured atom is league-grain (`data_type`, `league_id`, `date` — confirmed in
+    `_SPORTS_PRESENT_COLS`, `enumerate_expected_universe.py:149`), not venue-grain, so when this generic completeness
+    gate's missing-shard logic fires for an api_football pseudo-shard it stamps a row with a blank `data_type` (and
+    blank `league_id`) that can never match any real sports cell — a permanently-orphaned, non-reconcilable manifest
+    row. **Fix**: exclude `asset_group=sports` (and any other non-venue-shaped asset_group) from
+    `_finalize_completeness`'s missing-shard `record_failed` path, mirroring the CeFi-only scope
+    `_detect_thin_day_venues` already declares in its own docstring — OR require the caller to pass a `data_type` in
+    `row_key` for any asset_group whose present-set columns include `data_type` (reuse `_present_cols_for` from
+    `enumerate_expected_universe.py` as the SSOT for what row_key keys are valid per asset_group).
+  - **(d) `phantom_captured_no_parquet_at_canonical_path` (487)** — 100% share the single
+    `attempted_at = 2026-07-13T16:24:30.871968+00:00` timestamp (the same run that produced 2,182 of the day's
+    failures), concentrated in INJURIES (346)/PLAYER_STATS(64)/FIXTURE_STATS(39)/FIXTURE_LINEUPS(29)/FIXTURE_EVENTS(11)
+    — i.e. a single consolidator/reconciliation run stamped these as "claimed captured, no parquet found at the resolved
+    canonical path" in one pass. Given the correlation with the exact same run-timestamp as the INJURIES
+    misclassification finding above, this is very plausibly the SAME root incident (a run that hit a systemic issue —
+    API/auth failure or a path-resolution regression — mid-fetch and the manifest ended up in a claimed-but-unwritten
+    state for whatever cells were in flight). Not independently root-caused to a specific path-computation-vs-write
+    mismatch in this pass (budget); the implementing agent should diff the GCS-write helper's computed path
+    (`instruments_service`'s sports writer, likely `writers.py`) against `candidate_parquet_paths()` (per CLAUDE.md's
+    "Sports paths" pointer) for the exact prefix template used at that timestamp, since a `prefix_tpls` drift is the
+    documented failure class for this reason code workspace-wide. **(3) non-instruments-service rows — both resolved, no
+    action needed**: `fill-missing-player-stats` (8,678 rows, 100% PLAYER_STATS) is a **sanctioned, already-marked
+    one-off** — confirmed via `instruments-service/scripts/fill_missing_player_stats.py` (`# Epic: instruments_master`,
+    `# Lifecycle: oneoff`, `# Delete-when: after fill confirmed in live consolidated _index`), a deliberate gap-fill
+    script that calls the same orchestrator fetch + `ManifestWriter.record_captured/_empty/_failed` path as the main
+    pipeline, just with its own `service_name` string and a bypassed date-iteration for efficiency. Not a
+    service_name-drift bug — leave as-is (delete the script only once its Delete-when condition is met). The 88
+    `market-tick-data-service` rows: 100% `capture_status=captured`, 100% `data_type=PLAYER_STATS`, blank
+    `error_reason`, spread across ~25 distinct leagues and dates 2020-2026 (pulled individually — sample in this
+    session's scratch script). These are genuinely-captured historical data with no duplicate/twin (consistent with why
+    today's `2f56038e` cleanup left them untouched) — **recommend re-stamping `service_name` to `instruments-service`
+    via a direct verified canonical rewrite** (same read-live-index / confirm-no-twin / write-back pattern as
+    `instruments-service/scripts/dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py`), NOT deletion — deleting
+    would destroy real capture evidence that has no replacement. **Recommended execution order for the next (fixing)
+    agent**: (c) blank-data_type write-path fix first (cheapest, most clearly a bug, unblocks re-verification of the
+    shard-completeness path broadly) → (a) INJURIES misclassification fix + UAC table entry + ONE manual
+    envelope-inspection call before any re-attempt → (b) FIXTURES root-cause (mirror the (a)/(c) method) → (d)
+    phantom-path diff → re-attempt all four classes → (3) service_name rewrite for the 88 MTDS rows → final re-verify
+    todo. of accepting a documented-equivalent residual.
