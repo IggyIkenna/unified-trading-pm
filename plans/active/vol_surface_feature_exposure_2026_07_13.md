@@ -97,9 +97,19 @@ sequential: false
       used anywhere in the volatility family; matching the direct sibling code being extended is the
       internally-consistent choice (a known pre-existing two-convention split in the repo, not something to reconcile
       here).
-- [ ] [SCRIPT] P2. Implement + unit-test the per-strike grid extractor (mirrors `extract_vol_greeks_feature_dict`'s
+- [x] ✅ [SCRIPT] P2. Implement + unit-test the per-strike grid extractor (mirrors `extract_vol_greeks_feature_dict`'s
       honest-absence pattern — sparse surfaces omit missing strikes, never interpolate/synthesise). `formula_version=1`.
-      Repo: features-service.
+      Repo: features-service. — SHIPPED `features-service@6cfe2abf`. Implemented exactly per item 1's design: added
+      `_TENOR_SUFFIXES`/`_WING_BANDS` dicts + a tenor-aware `_pick_otm_iv_in_tenor` helper (sibling of the existing
+      shortest-tenor-only `_pick_otm_iv`), wired into `extract_vol_surface_features` as a new loop emitting the 16
+      `iv_{pillar}_{tenor}` keys plus 8 derived `iv_skew_25d_{tenor}`/`iv_skew_10d_{tenor}` keys — 24 new keys total,
+      zero collisions with existing ones, `FORMULA_VERSION` constant unchanged at 1 (matches the sibling-module
+      convention decided in item 1). 12 new tests added to `tests/volatility/unit/test_vol_greeks_features.py` covering:
+      band+tenor-scoped presence/absence for each of the 4 wing pillars, cross-tenor isolation (a point in the wrong
+      tenor bucket doesn't leak into an adjacent one), the ATM-not-duplicated invariant, both skew composites
+      (present/absent), float-type assertion, and a full 4-tenor sweep. 42/42 tests pass (30 pre-existing + 12 new, zero
+      regressions), `ruff`/`basedpyright` clean, `check-import-patterns.py` 0 violations, full `quality-gates.sh` green
+      (265s, sentinel-verified).
 - [ ] [SCRIPT] P2. Wire VOL_VARIANCE_SWAP / VOL_RATIO_SPREAD / VOL_SPREAD_STRUCTURES
       (`strategy-service/.../vol_trading/`) to consume the denser grid where it's present, falling back to the existing
       3-bucket behavior when absent (do not regress the already-shipped honest-absence tests). Repo: strategy-service.
