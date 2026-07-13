@@ -131,14 +131,76 @@ are similarly degraded is UNKNOWN — no equivalent audit exists for them.
 Full `quality-gates.sh` green (281s). Unit-tested only — **NOT verified against production data** (no production write
 was made or attempted by this touch).
 
+## Audit Results (2026-07-13)
+
+Ran `plans/audit/results/available_at_fill_rate_audit_2026_07_13.py` — reads each bucket's CONSOLIDATED
+`_index/availability_index.parquet` via UTL `read_availability_index()` (no whole-corpus GCS walk), filters
+`capture_status=captured`, computes `available_at != ""` fill rate. Live production data, read 2026-07-13 ~23:29 UTC
+(same day `9c9cdc50` landed — this is still overwhelmingly the historical pre-fix backlog).
+
+**`market-data-tick` buckets (MTDS + MDPS write path — the actual buggy `record_captured`/`record_captured_from_counts`
+call path):**
+
+| asset_group | bucket                                               |                                                                                                                                                                                                                                                                                                                                                                                                                                 captured rows | filled | fill rate |
+| ----------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -----: | --------: |
+| defi        | `market-data-tick-defi-prd-central-element-323112`   |                                                                                                                                                                                                                                                                                                                                                                                                                                     3,010,913 |      0 |  **0.0%** |
+| tradfi      | `market-data-tick-tradfi-prd-central-element-323112` |                                                                                                                                                                                                                                                                                                                                                                                                                                     1,620,826 |      0 |  **0.0%** |
+| sports      | `market-data-tick-sports-prd-central-element-323112` |                                                                                                                                                                                                                                                                                                                                                                                                                                       377,194 |      0 |  **0.0%** |
+| prediction  | `market-data-tick-pred-prd-central-element-323112`   |                                                                                                                                                                                                                                                                                                                                                                                                                                        45,542 |      0 |  **0.0%** |
+| cefi        | `market-data-tick-cefi-prd-central-element-323112`   | NOT MEASURED — manifest consolidator for this bucket is stale/down (consolidated blob age 267–390s, over the 120s `MANIFEST_CONSOLIDATED_STALENESS_SEC` threshold); `read_availability_index()` correctly refused the per-VM-shard fallback merge (OOM risk on this bucket size) rather than silently under-report. This is a SEPARATE consolidator-health issue, not part of this audit's fix — flagged as a new todo below, not fixed here. |
+
+Per-service breakdown confirms the 0% is uniform, not concentrated in one writer: e.g. `market-tick-data-service` (2.65M
+rows), `market-data-processing-service` (364K rows), and `instruments-service` (172 rows) are ALL 0.0% filled in the
+defi bucket; same pattern in tradfi/sports/prediction.
+
+**Verdict: WORSE than sports-only.** The CF-8 sports-only signal ("IS 62.9%, MDPS ~0%") undersold the true blast radius
+— every measurable non-sports asset_group on the MTDS/MDPS write path is uniformly **0%** filled, not partially
+degraded. This confirms the issue's own hypothesis ("may be systemically low for the same reason") as TRUE, not just
+possible.
+
+**`instruments-store` buckets (instruments-service's own captured rows):**
+
+| asset_group | bucket                                                | captured rows |    filled |  fill rate |
+| ----------- | ----------------------------------------------------- | ------------: | --------: | ---------: |
+| cefi        | `instruments-store-cefi-prd-central-element-323112`   |        64,327 |    64,327 | **100.0%** |
+| defi        | `instruments-store-defi-prd-central-element-323112`   |       171,200 |   171,200 | **100.0%** |
+| tradfi      | `instruments-store-tradfi-prd-central-element-323112` |        11,888 |    11,888 | **100.0%** |
+| sports      | `instruments-store-sports-prd-central-element-323112` |     1,224,719 | 1,224,719 | **100.0%** |
+| prediction  | `instruments-store-pred-prd-central-element-323112`   |        25,432 |    25,432 | **100.0%** |
+
+All 5 asset_groups are fully filled (this is HIGHER than the CF-8 sports figure of 62.9% cited in "What happened" above
+— not reconciled here; possibly a metric-definition difference [CF-8's `.notna()` check over the WHOLE index vs this
+audit's captured-only `available_at != ""` check] or genuine state change from concurrent same-day sports work. Either
+way, current live IS-side state is clean — no backfill action needed there).
+
+**`strategy-store` bucket (strategy-service write / execution-service read path, `data_type=strategy_instructions`):**
+`strategy-store-central-element-323112` is **completely empty** — 0 rows in the entire consolidated index, not just 0
+captured. No fill-rate to measure; not a manifest defect, just no production data yet for this shard atom.
+
+**New finding while auditing strategy-service/execution-service call sites (P2 below):**
+`StrategyManifestRecorder.record_captured()`
+(`strategy-service/strategy_service/engine/core/strategy_manifest.py:107-129`) and
+`ExecutionManifestRecorder.record_captured()`
+(`execution-service/execution_service/strategy_instructions/manifest.py:106-129`) call UTL `ManifestWriter.add()`
+directly — NOT `record_captured()`/`record_captured_from_counts()` — and never pass `available_at=` to `add()` at all.
+This is a DIFFERENT, NOT-YET-FIXED bug (the `9c9cdc50` fix only touched `_writer_captured.py`); it won't surface in the
+fill-rate numbers above only because the bucket is currently empty, but the first `strategy_instructions` row ever
+written will land with `available_at=""` regardless.
+
+**Not-yet-grepped services re-check**: re-grepped `record_captured(` (non-test, non-comment) across alerting-service,
+deployment-api, deployment-service, fund-administration-service, greeks-service, trading-agent-service, ml-service,
+features-service, unified-trading-system-ui — **0 call sites in every one**. The blast-radius table in "What happened"
+above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; no additional services are affected.
+
 ## Recommended next steps (not mine to decide unilaterally — routing to operator/manifest_master owner)
 
-1. **Audit the true blast radius** — for each asset_group/service in the table above (and the ones not yet grepped),
-   sample the current manifest index's `available_at` fill rate for `capture_status=captured` rows. This tells us
-   whether this was a sports-only-severity issue or whether tradfi/cefi/defi CF-8-equivalents are ALSO silently RED.
-2. **Decide whether a backfill is warranted for non-sports asset_groups** — if fill rates are low elsewhere too, this
-   becomes a much larger cross-asset-group backfill program, not a sports-scoped one. Should probably become its own
-   plan under `manifest_master` rather than living in this issue doc.
+1. ~~**Audit the true blast radius**~~ — DONE, see "Audit Results (2026-07-13)" above. Verdict: **worse than
+   sports-only** — every measurable non-sports asset_group on the MTDS/MDPS write path is uniformly 0% filled (not
+   partially degraded); instruments-store side is 100% filled; strategy-store is empty (no data yet).
+2. **Decide whether a backfill is warranted for non-sports asset_groups** — YES per the audit: defi (3.0M rows), tradfi
+   (1.6M rows), sports (377K rows, already covered by the sports-scoped plan), prediction (46K rows) on the MTDS/MDPS
+   `market-data-tick` write path are all 0% filled. This is a much larger cross-asset-group backfill program than
+   sports-only. Should become its own plan under `manifest_master` (todo P2 below) rather than living in this issue doc.
 3. **New captures are now correct** (as of `9c9cdc50`) — no further action needed for rows written after this fix lands
    on `live-defi-rollout`/promotes; this issue is only about the historical backlog.
 4. This does NOT block or change `sports_cf8_available_at_backfill_regression_2026_07_13.md`'s own P1 todo (re-attempt
@@ -148,9 +210,28 @@ was made or attempted by this touch).
 
 ## Todos
 
-- [ ] [DATA] P1. Audit current manifest `available_at` fill rate for `capture_status=captured` rows, per asset_group,
+- [x] [DATA] P1. Audit current manifest `available_at` fill rate for `capture_status=captured` rows, per asset_group,
       for every service in the blast-radius table above (plus the not-yet-grepped services named in that section) —
       determine whether this is sports-severity or worse elsewhere. (repo: unified-trading-library, all services above)
-- [ ] [DATA] P2. Based on the audit's findings, scope a backfill plan for any non-sports asset_group found to have a
-      degraded `available_at` fill rate — route through `manifest_master` epic, NOT this issue doc, once scoped. (repo:
-      TBD per audit)
+      — ✅ unified-trading-pm (this doc + `plans/audit/results/available_at_fill_rate_audit_2026_07_13.py`). Verdict:
+      WORSE than sports-only (0% uniform across defi/tradfi/sports/prediction on the MTDS/MDPS write path); IS side
+      100%; strategy-store empty. See "Audit Results (2026-07-13)" above for full evidence.
+- [ ] [DATA] P2. Scope + execute a cross-asset-group backfill plan for the `market-data-tick` `available_at` backlog
+      (defi 3.0M rows, tradfi 1.6M rows, prediction 46K rows — sports already covered by
+      `sports_cf8_available_at_backfill_regression_2026_07_13.md`) — route through `manifest_master` epic as its own
+      plan, NOT this issue doc. Re-derive `available_at` per-row from source data per `AVAILABILITY_AT_SEMANTICS` (same
+      approach as the sports rebuild), not a synthetic/estimated fill. (repo: TBD per plan)
+- [ ] [DATA] P3. Fix `StrategyManifestRecorder.record_captured()`
+      (`strategy-service/strategy_service/engine/core/strategy_manifest.py:107-129`) and
+      `ExecutionManifestRecorder.record_captured()`
+      (`execution-service/execution_service/strategy_instructions/manifest.py:106-129`) — neither passes `available_at=`
+      to the underlying `ManifestWriter.add()` call, so every `strategy_instructions` manifest row will land with
+      `available_at=""` the moment production data starts flowing (the bucket is currently empty, so this hasn't
+      surfaced yet). Separate, not-yet-fixed bug — `9c9cdc50` only touched `_writer_captured.py`. (repo:
+      strategy-service, execution-service)
+- [ ] [INFRA] P3. Investigate the stale/down manifest consolidator for
+      `market-data-tick-cefi-prd-central-element-323112` (consolidated blob age observed 267s→390s and rising against
+      the 120s staleness threshold during this audit, 2026-07-13 ~23:29 UTC) — this bucket could not be read via
+      `read_availability_index()` (correctly refused the OOM-risk per-VM-shard fallback), so cefi's `available_at` fill
+      rate is UNKNOWN, not confirmed-green. (repo: deployment-service, per
+      `codex/05-infrastructure/manifest-consolidator-ssot.md`)
