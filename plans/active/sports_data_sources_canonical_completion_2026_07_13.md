@@ -828,3 +828,179 @@ report written in this plan's Progress Log.
   "zero-ever-captured" defect is conclusively resolved: 123,642 real historical captures are now visible in the
   canonical manifest, root-caused in code (not just patched), zero data-integrity regressions (no new duplicate-dedup
   groups, arithmetic fully reconciles). No further action taken this dispatch — re-verify only, per task scope.
+
+- **2026-07-13 (slot-3, IMPLEMENTATION dispatch — root-cause + code fix for the api_football `attempted_failed` /
+  blank-`data_type` classes, todos "api_football deep investigation" + "api_football: fix root causes + re-attempt
+  failed cells").** Root-caused all four classes precisely (some conclusions **refine/correct** the prior
+  investigation-only pass) and shipped verified code fixes. All changes QG-green (`ruff` clean, `basedpyright` no new
+  errors beyond pre-existing baseline noise, 1202 relevant instruments-service unit tests pass, targeted UAC tests
+  pass) + functionally verified via direct isolated-function assertions (see below) — NOT via a full historical
+  re-attempt (see "Deferred" below).
+
+  - **(c) blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` (461) — CONFIRMED + FIXED.** Root cause: the GENERIC
+    CeFi/TradFi-shaped venue-grain shard-completeness gate (`process_completeness.py::_completeness_and_retry` /
+    `_finalize_completeness`) treats sports pseudo-venue names (`API_FOOTBALL`, `FOOTYSTATS`, `UNDERSTAT`,
+    `TRANSFERMARKT`, `SOCCER_FOOTBALL_INFO`, `OPEN_METEO`) as literal venues in `active_venues`/`expected_venues`. 5 of
+    these 6 (all except `API_FOOTBALL`) are ENRICHMENT-ONLY — fetched in stage 7, never populate `counts` (this stage's
+    `written_venues`), so they permanently land in `missing_shards` and the generic corrective write
+    (`row_key={"date","venue"}`, no `data_type`) stamps a blank-`data_type` row that can never reconcile against any
+    real sports cell (confirmed via direct manifest sample: all 461 blank rows' `venue` ∈ {FOOTYSTATS, OPEN_METEO,
+    SOCCER_FOOTBALL_INFO, TRANSFERMARKT, UNDERSTAT} — never API_FOOTBALL). **Fix**: excluded these 5 names from
+    `expected_venues` (reusing `process_write.py`'s existing `_NON_VENUE_GRAIN_VENUE_NAMES` SSOT frozenset, which
+    already excludes them from venue-grain EU-seeding — same-source-of-truth for both numerator and denominator now).
+    `API_FOOTBALL` itself is DELIBERATELY KEPT checkable (it IS genuinely venue-grain here — its top-level FIXTURES
+    fetch runs in this same stage-4 fetch) — removing it too would silently drop the only safety net catching a total
+    API_FOOTBALL fetch failure during a combined `asset_groups=["ALL"]` run (where `_fixtures_fetch_failed`'s
+    zero-records branch never fires because cefi/tradfi/defi still produce records). When `API_FOOTBALL` IS genuinely
+    missing, `_finalize_completeness` now maps it to `row_key={"date","data_type":"FIXTURES"}` instead of a blank
+    `data_type` — mirroring the existing `process_preflight.py::_build_expected_entities` convention
+    (`"FIXTURES" if v == "API_FOOTBALL" else v`) that already existed elsewhere in this codebase for exactly this remap.
+    **Files**: `instruments-service/instruments_service/engine/orchestrator/process_completeness.py`.
+
+  - **(b) FIXTURES `FIXTURES_FETCH_FAILED` (665) — ROOT-CAUSED (corrects/extends the prior investigation's "not yet
+    root-caused" note) + FIXED.** The write site IS honest
+    (`process_zero_records.py::_zero_sports_empty_fixture_markers` — correctly keys
+    `row_key={"date","data_type":"FIXTURES","league_id":...}`, not a data-integrity bug per se). The BUG is upstream, in
+    the boolean that decides whether a zero-fixture day is a genuine fetch failure: `process.py::_fixtures_fetch_failed`
+    returns `True` whenever ANY member of `active_venues` is absent from `non_error_venues` (the stage-4 URDI fetch's
+    per-venue success set) — but `active_venues` for a sports run also carries the same 5 enrichment-only pseudo-venues
+    from (c) above, which are NEVER part of the stage-4 fetch and so can NEVER appear in `non_error_venues`, regardless
+    of whether `API_FOOTBALL`'s actual fixtures fetch succeeded. Net effect: on every genuinely-empty (legitimate
+    no-fixture) day, this check FALSELY reported "fetch failed" the moment `active_venues` included more than just the
+    fixtures-fetching venue — converting the correct `empty_confirmed(EXPECTED_NO_FIXTURE)` outcome into
+    `attempted_failed(FIXTURES_FETCH_FAILED)` for EVERY prediction league in one shot (matches the observed data
+    exactly: 665 rows cluster into 144 distinct `attempted_at` runs, each run flipping MULTIPLE leagues simultaneously —
+    a single false trigger per run, not per-league organic failures). **Fix**: `_fixtures_fetch_failed` now only checks
+    venues that actually participate in the stage-4 fetch — excludes `_NON_VENUE_GRAIN_VENUE_NAMES - {"API_FOOTBALL"}`
+    before the membership check (keeps `API_FOOTBALL` itself checkable, since a genuine `API_FOOTBALL` fetch failure IS
+    still a real fixtures-fetch failure). Verified directly:
+    `_fixtures_fetch_failed(active_venues=[...6 pseudo-venues...], non_error_venues={"API_FOOTBALL"}, skip_urdi=False)`
+    → `False` (post-fix; was a false `True` pre-fix), and `_fixtures_fetch_failed(..., non_error_venues=set(), ...)` →
+    `True` (genuine API_FOOTBALL failure still correctly detected). **Files**:
+    `instruments-service/instruments_service/engine/orchestrator/process.py`.
+
+  - **(a) INJURIES `ApiFootballResponseError` (1,642 total, 1,600 on INJURIES specifically) — TWO real bugs found, both
+    fixed (this SUPERSEDES the prior investigation's single "misclassification" framing — the misclassification is real
+    but not the primary defect for INJURIES specifically):**
+    1. **CONFIRMED live-API check**: manually called the real API-Football `/injuries?date=...` and `/status` endpoints
+       with the live production key (`api-football-api-key` secret) for both a data-rich date (2024-05-15, 140 results)
+       and a sparse date (2019-03-10, 0 results) — both returned clean `errors: []` envelopes, no plan/token/quota
+       restriction on INJURIES today (`Custom300` plan, 300k/day, 6,112 used at check-time). This DISPROVES the prior
+       investigation's "likely a plan/entitlement restriction on INJURIES" hypothesis — the account has full INJURIES
+       access.
+    2. **The REAL bug: `api_football.py::get_injuries` SILENTLY SWALLOWS hard fetch failures into an empty list**,
+       unlike its sibling `get_teams`/`_fetch_season_fixtures_with_raw` (which correctly `raise` after
+       `_emit_fetch_failed`). `get_injuries` is DATE-WIDE (single call returns ALL leagues' injuries for a date) —
+       unlike the 4 genuinely per-fixture methods that share its exact try/except shape (where swallowing IS correct,
+       shard-isolation behavior — a single fixture's failure shouldn't fail the whole date), `get_injuries` has no
+       per-shard granularity to protect. Swallowing here silently converted ANY hard failure (network, timeout, a
+       genuine future plan/token error) into a false "0 injuries, honest absence" (`empty_confirmed`) for the WHOLE date
+       — the exact "silent-empty manifest bug" `instruments-service@0db24503` (2026-06-21) fixed for the venue -fetch
+       path, left unfixed here. This means the manifest CANNOT currently distinguish a genuine zero-injuries day from a
+       masked hard failure for INJURIES. (The historical 1,600 `ApiFootballResponseError` rows themselves are a
+       SEPARATE, already-resolved artifact — see "historical-timestamp note" below; they predate/bypass this swallow bug
+       via a different code path or a stale migration rewrite, not something this fix needs to explain away.) **Fix**:
+       `get_injuries` now re-raises after `_emit_fetch_failed` (matches `get_teams`'s pattern exactly) so a hard failure
+       correctly surfaces as `attempted_failed` via the caller (`sports_reference_core.py::_fetch_injuries`'s own
+       `except` block), never a silent false-empty.
+    3. **Misclassification (the prior investigation's original finding) — ALSO fixed, additively.**
+       `failure.py::_classify_adapter_failure` fed `type(exc).__name__` (literal `"ApiFootballResponseError"`) into UAC
+       `classify_venue_error`, which is keyed by HTTP/domain codes — never matched, always fell back to the raw class
+       name. Fixed: `ApiFootballResponseError` now carries a real `error_key` attribute (the raw envelope error-dict's
+       own key — `"plan"`/`"token"`/`"requests"`/`"rateLimit"` — extracted in `_raise_on_api_errors`);
+       `_classify_adapter_failure` prefers it (via duck-typed `getattr`, zero risk to every OTHER venue this function
+       classifies for) before falling back to the class name. Added the 3 corresponding UAC
+       `VENUE_ERRORS_SPORTS["api_football"]` entries (`"plan"`/`"token"`/`"requests"`) so `classify_venue_error` can now
+       actually resolve a real classification for future hard failures (previously impossible — nothing in this codebase
+       ever produced a code matching the table's pre-existing HTTP-status/`FREE_PLAN_DATE_LIMIT`-style entries;
+       confirmed via a repo-wide grep, 0 hits).
+    - **Historical-timestamp note (why the OLD 1,600 rows exist despite current code never being able to produce them
+      via `get_injuries` alone)**: only 3 distinct `attempted_at` values across all 1,642 rows, and the blank-`venue`
+      rows from (c) share the EXACT same microsecond-precision timestamp pattern as a single shared `_failed_attempt_ts`
+      computed once per date-shard's completeness-gate call — strong evidence these are migration/rebuild-pass re-stamps
+      (a bulk rewrite bumping `attempted_at` to "now" while carrying forward an old `error_reason` verbatim), not fresh
+      in-flight failures reproducing today. Not fully re-traced to the exact historical commit that could have produced
+      the original `ApiFootballResponseError` via `get_injuries` (budget) — immaterial to the fix either way: whatever
+      the historical mechanism, the CURRENT code's two real bugs (silent swallow + misclassification) are now both
+      closed, and the stale rows are covered by the re-attempt follow-up below.
+    - **Files**: `instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py`
+      (`get_injuries` re-raise fix, `ApiFootballResponseError.error_key`, `_raise_on_api_errors`),
+      `instruments-service/instruments_service/engine/orchestrator/failure.py` (`_classify_adapter_failure`),
+      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/sports.py` (3 new
+      `VENUE_ERRORS_SPORTS["api_football"]` entries), `instruments-service/tests/unit/test_sports_http_adapters.py` (2
+      tests updated to assert propagation instead of the old swallow-to-`[]` behavior — this was itself encoding the bug
+      as "intended", per governance rule "if you encounter errors... never mark completed" this required a genuine
+      behavior-change test update, not a mechanical adjustment).
+
+  - **(d) `phantom_captured_no_parquet_at_canonical_path` (487) — ROOT-CAUSED, no code fix needed (this is NOT a live
+    write-path bug).** `phantom_captured_no_parquet_at_canonical_path` is written EXCLUSIVELY by the dedicated
+    reconciliation tooling (`scripts/reconcile_phantom_manifest_rows_all.py` et al.), never by the live orchestrator —
+    confirmed via repo-wide grep (every hit is in a `scripts/reconcile_*`/`diagnose_*` one-off, none in
+    `engine/orchestrator/`). These 487 rows are the CORRECT, HONEST output of that tooling detecting a previously
+    mis-stamped `captured` row with no real parquet at its canonical path and re-flagging it `attempted_failed` so the
+    gap is visible and re-attempted — exactly the tool's designed job, not a fresh defect. All 487 share the identical
+    `attempted_at=2026-07-13T16:24:30.871968+00:00` (a single reconciliation pass), corroborating the same
+    single-run-bulk-restamp pattern as (a)'s historical-timestamp note above — very plausibly the SAME systemic incident
+    (whatever caused a batch of writes to fail mid-flight got caught by this same reconciliation run). **No further code
+    fix filed** — the correct next step is simply re-attempting these specific cells (covered by the re-attempt
+    follow-up below), not a new code change.
+
+  - **(3) 8,766 non-instruments-service rows — RESOLVED.**
+    - `fill-missing-player-stats` (8,678 rows): CONFIRMED sanctioned one-off (`scripts/fill_missing_player_stats.py`
+      carries proper `# Epic`/`# Lifecycle`/`# Delete-when` markers, calls the same orchestrator fetch +
+      `ManifestWriter` path with a deliberate, documented `service_name` override) — left as-is, not a bug.
+    - **88 `market-tick-data-service` orphans — FIXED via direct canonical rewrite** (same safe pattern as
+      `instruments-service/scripts/dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py`: read live index,
+      confirm no canonical twin at the real identity, DIRECT REWRITE — never a shard-merge write, which cannot collapse
+      a `service_name`-keyed dedup group). New one-off script
+      `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` (Epic/Lifecycle/Delete-when
+      markers per `codex/06-coding-standards/script-homes.md`), dry-run-by-default, `--apply` re-verifies at run time
+      (re-derives the twin-check live rather than trusting the prior investigation's numbers) before writing. Ran
+      dry-run (confirmed 88 eligible, 0 excluded) then `--apply`: **all 88 rows re-stamped
+      `service_name: market-tick-data-service → instruments-service`, `asset_group: "" → "sports"`. Verified post-apply:
+      0 remaining `market-tick-data-service`+`api_football` rows in the live manifest.**
+
+  - **Verification performed (this dispatch)**: `instruments-service` — `ruff check` clean on every changed file;
+    `basedpyright` shows zero NEW errors (all pre-existing errors confirmed via `git diff` hunk-location cross-check to
+    be outside every line range I touched); full targeted pytest run
+    (`-k "completeness or sports or process or orchestrator or failure"`) — **1202 passed, 0 failed**; the 2 updated
+    adapter tests independently re-run in isolation (68 passed in `test_sports_http_adapters.py`); 2 direct
+    isolated-function assertions proving both the `_fixtures_fetch_failed` false-positive elimination AND the
+    `process_completeness` pseudo-venue exclusion (both shown above). `unified-api-contracts` — `ruff`/`basedpyright`
+    clean, targeted `pytest -k "sports and error"` 17 passed. Full repo `quality-gates.sh` run TWICE with
+    `QG_SENTINEL_DISABLE=true` (first run pre-refinement, second post-refinement) — both show the ONLY hard-gate failure
+    (`STEP 5.95` TID251 ratchet, `reconcile_lending_indices_phantom.py:88`) is **conclusively unrelated to this work**:
+    that file has zero uncommitted diff (`git diff --stat` empty, last real commit 2026-06-23) and the actual
+    over-baseline count is traced to a DIFFERENT, untracked, foreign file
+    (`scripts/cefi_legacy_path_dedup_2026_07_13.py`, mtime ~18:35, clearly another concurrent agent's live in-progress
+    WIP in this shared checkout, alongside a second untracked foreign file
+    `scripts/migrate_orphaned_mdps_odds_horizon_bucket_rows_2026_07_13.py`) — left untouched per the multi-agent "never
+    edit unfamiliar/untracked files" hard rule; not staged, not committed, not fixed by me (out of scope, not mine,
+    another agent's live WIP).
+
+  - **Deferred work after 2026-07-13 (full historical re-attempt of the stale failed cells)**: the 4 fixes above stop
+    the bugs from RECURRING going forward, but the ~3,257 EXISTING `attempted_failed` rows (plus the 461 blank-`venue`
+    rows, now correctly excluded from future writes but still sitting in the manifest as-is) are historical artifacts
+    that need a genuine re-fetch/re-verify pass to actually resolve, not just a code fix. This is a real, bounded
+    infra-scale operation (many historical (date, league) shards spanning 2017-2026, live API calls against the
+    `Custom300` plan, 300k/day quota) — appropriately a dedicated backfill VM run (mirror
+    `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`, per this plan's own §"(6) VM launcher + backfill
+    driver pattern" note elsewhere), not something to run ad hoc inline in an interactive dispatch. NOT run this session
+    — tracked here as the concrete next step for the "final re-verify" todo below. The blank-`venue`/blank- `data_type`
+    rows and the phantom rows (d) do not need re-fetching per se (they were never real failures in the live-data sense)
+    — a manifest-level cleanup pass (re-typing/removing the now-provably-stale rows) would suffice for those, while
+    INJURIES/FIXTURES genuinely benefit from a live re-attempt now that the false-positive triggers are fixed.
+
+  - **Also NOT in scope for this dispatch (flagging, not fixing)**: the NEW "api_football TEAMS: root-cause + fix the
+    61-league per-league capture gap" todo (added by a concurrent investigation elsewhere in this same plan) is a
+    separate, already fully root-caused, real capture gap — unrelated to the 4 classes this dispatch was scoped to fix.
+    Left entirely untouched; that todo's own recommended one-line fix + backfill plan stands as written.
+
+  - **Commits (this dispatch)**:
+    - `instruments-service` —
+      `fix(sports): api_football root-cause fixes — blank-data_type completeness-gate leak, FIXTURES false-positive fetch-failed, INJURIES silent-swallow + misclassification`
+      (process_completeness.py, process.py, failure.py, api_football.py, test_sports_http_adapters.py) +
+      `scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` (new one-off, applied).
+    - `unified-api-contracts` —
+      `fix(sports): add raw envelope-key VENUE_ERRORS_SPORTS entries for api_football (plan/token/requests)`.
+    - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
