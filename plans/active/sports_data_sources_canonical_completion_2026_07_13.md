@@ -1123,3 +1123,74 @@ report written in this plan's Progress Log.
     this read-only audit).
   - **No code changed in this dispatch** — audit only, per the task's explicit read-only scope.
     - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
+- **2026-07-13 (sub-agent, read-only investigation) — api_football TEAMS 61-league gap: ROOT CAUSE FOUND (code
+  unchanged, no fix shipped yet — this pass was investigation-only per dispatch).** **(1) One code path, not two.**
+  `instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_teams_and_standings` (lines 138-216) is the
+  ONLY current TEAMS-writing function. It loops `for league_def in _orch.get_prediction_leagues()` (line 153) — that
+  helper (`unified_api_contracts…league_data.py:405`) returns leagues whose UAC `classification == "Prediction"`, which
+  is **33 leagues**, confirmed live via
+  `unified_api_contracts.canonical.domain.sports.league_data.get_prediction_leagues()`. It then writes ONLY per-league
+  partitions (line 190-201); the bare/no-league-id write branch is explicitly retired and now just logs-and-skips
+  ("TEAMS bare-path fallback triggered … data shape regression", line 202-208) — **this live code path cannot produce a
+  blank-`league_id` captured row.** **(2) Root cause = a classification-filter mismatch between writer and enumerator,
+  not a hardcoded allowlist.** The EU enumerator's denominator comes from
+  `get_expected_leagues_for_source("api_football")` (`league_data.py:581`) — classification-AGNOSTIC, returns every
+  league whose `data_sources` frozenset contains `"api_football"` = **94 leagues** (live-verified). The writer uses the
+  classification-FILTERED `get_prediction_leagues()` (Prediction-tier only) instead. Live set arithmetic: of the 94 EU
+  leagues, exactly 61 are NOT in `get_prediction_leagues()` ∩ api_football — matching the plan's number exactly. **(3)
+  The 61 missing leagues, by UAC classification/tier** (all have real non-null `api_football_id`s in `LEAGUE_REGISTRY`,
+  which is WHY they're in the 94-league EU set at all): **22 "Features"-tier domestic lower divisions** (tier 2/3/5) —
+  ARGENTINA_PRIMERA_NACIONAL, AUSTRIAN_2_LIGA, BELGIAN_FIRST_B, BRASILEIRAO_SERIE_B, CHILE_PRIMERA_B,
+  DANISH_1ST_DIVISION, EERSTE_DIVISIE, ENG_NATIONAL_LEAGUE, FRANCE_NATIONAL, GREEK_SUPER_LEAGUE_2, J2_LEAGUE,
+  K_LEAGUE_2, LIGA_EXPANSION_MX, LIGA_PORTUGAL_2, NORWAY_1_DIVISJON, POLAND_I_LIGA, PRIMERA_RFEF, SCOTTISH_CHAMPIONSHIP,
+  SUPERETTAN, SWISS_CHALLENGE_LEAGUE, TFF_FIRST_LEAGUE, USL_CHAMPIONSHIP; **39 "Reference"-tier cup/supercup
+  competitions** (tier 0) — AUSTRALIA_CUP, AUSTRIAN_CUP, BELGIAN_CUP, CARABAO_CUP, COPA_ARGENTINA, COPA_CHILE,
+  COPA_DEL_REY, COPA_DO_BRASIL, COPA_LIBERTADORES, COPA_LIGA_PROFESIONAL, COPA_MX, COPA_SUDAMERICANA, COPPA_ITALIA,
+  COUPE_DE_FRANCE, DANISH_CUP, DFB_POKAL, DFL_SUPERCUP, EMPEROR_CUP, FA_CUP, GREEK_CUP, JLEAGUE_CUP, KNVB_CUP,
+  KOREAN_FA_CUP, NORWEGIAN_CUP, POLISH_CUP, SCOTTISH_CUP, SCOTTISH_LEAGUE_CUP, SUPERCOPA_ESPANA, SUPERCOPPA_ITALIANA,
+  SVENSKA_CUPEN, SWISS_CUP, TACA_DA_LIGA, TACA_DE_PORTUGAL, TROPHEE_CHAMPIONS, TURKIYE_KUPASI, UCL, UECL, UEL,
+  US_OPEN_CUP. **No hardcoded allowlist file — the "allowlist" IS the Prediction-classification filter itself**, applied
+  at the wrong layer (capture loop should use the same source-coverage filter as the enumerator, not a
+  betting-model-relevance filter). **(4) API coverage: likely YES for all 61, unproven for cup-type specifically.**
+  Every one of the 61 already carries a valid `api_football_id` in `LEAGUE_REGISTRY` (that's the only reason they're in
+  `get_expected_leagues_for_source("api_football")` at all) — api-football's `/teams?league={id}&season={y}` endpoint is
+  keyed purely off that numeric ID and has no known Prediction-tier gating, so there's no code/registry reason to expect
+  failure. Caveat: none of the 33 already-captured leagues are cup competitions, so the 39 Reference-tier cups are
+  UNTESTED by precedent — recommend one live smoke call per cup-tier league before committing to a full backfill. The
+  `sports_league_entity_coverage.json` TEAMS-observed list (34 entries incl. `UNKNOWN`) is circular evidence — it's
+  DERIVED from the existing captured corpus, so it trivially matches the current 33-league gap and cannot be used to
+  pre-screen; it should be regenerated only AFTER a real attempt. **(5) Backfill scope — flag before sizing a VM.**
+  Naive full 2018-2026 daily backfill = 61 leagues × ~3,046 days ≈ **185,800 API calls**. But TEAMS is roster data
+  (stable within a season) — the 33 already-captured leagues' ~3,046-rows/league cadence reflects the writer's
+  in-process `_cached_teams_df` reuse across dates WITHIN one orchestrator run (0 extra API calls per cached date), not
+  evidence that literal daily granularity is required or was 3,046 real API calls. No downstream consumer found in this
+  pass that needs a dated daily TEAMS snapshot vs. "latest per league-season" (features-sports-service reads the
+  per-league `teams.parquet`, not visibly date-keyed beyond most-recent). **Recommend the backfill-implementation todo
+  explicitly decide-and-document**: either justify daily cadence with a named consumer, or switch to per-season cadence
+  (~61 leagues × ~8 seasons ≈ 500 calls) — this could cut the real API-call count by >99% while still satisfying
+  "canonical per-league TEAMS coverage" per the operator's stated model. **(6) The blank-`league_id` bulk bundle is a
+  SEPARATE, likely-legacy artifact, not the current writer's output and not confirmed reusable.** Live-manifest query
+  confirms 3,648 blank rows spanning 2014-01-01→2026-07-13 (plus one literal `date="all"` sentinel row) — i.e. it is NOT
+  simply pre-2018 legacy data (a date range that recent looked at first like an ongoing duplicate live writer, but the
+  CURRENT `_fetch_teams_and_standings` cannot produce a blank-league row per finding (1), so these are residual MANIFEST
+  rows, most likely from `scripts/migrate_bare_to_per_league.py` (docstring: "reads legacy bare parquets, splits by
+  league_id, writes per-league, updates the manifest with per-league captured rows, and deletes the bare parquet")
+  having been run but either not covering TEAMS fully or not retro-deleting the old bare manifest rows after the
+  per-league rows were added — **not fully resolved in this pass, needs one more check before backfill ships** (confirm
+  no live scheduler/poller still bare-writes TEAMS) to avoid a fresh backfill re-creating parallel blank rows. Did NOT
+  get to opening a sample bare-captured `teams.parquet` file's raw columns (time-boxed out) — worth checking whether the
+  raw team records still carry a league/competition reference internally despite the manifest row_key being blank, which
+  would let the 61-league gap be substantially re-derived from already-captured bytes at near-zero new API cost rather
+  than a fresh fetch; flagged as the first thing the implementation pass should check. **(7) VM/launcher precedent for
+  the eventual backfill**: `af-backfill-` is the registered general api_football VM prefix
+  (`deployment-service/deployment_service/vm_prefix_registry.py:618`, bucket=`instruments-store-sports-*`); the
+  better-fit precedent is the **targeted gap-fill pattern** `fill-missing-player-stats-`
+  (`deployment-service/scripts/vm/launch-fill-missing-player-stats-vm.sh` +
+  `instruments-service/scripts/fill_missing_player_stats.py`) — reads the canonical manifest, computes the missing
+  `(league_id, date)` cells directly, fires ONLY at those shards (not a full chronological re-walk), and singleton-locks
+  against `af-backfill-*` (shared api_football rate-limit key). Recommend basing a new `fill-missing-teams` driver on
+  this exact pattern once (5)/(6) resolve the true scope. **Net: this todo is NOT yet closed** — root cause is
+  identified and documented (a filter-layer mismatch in the writer, not the enumerator; fix = change
+  `_fetch_teams_and_standings`'s league source to match the enumerator's `get_expected_leagues_for_source` call), but no
+  code was changed, no backfill ran, and the blank-bundle provenance + true backfill cadence remain open sub-questions
+  for the implementation pass.
