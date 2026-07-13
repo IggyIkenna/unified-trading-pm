@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                          is NOT a tooling bug or an adapter regression.
-                          `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-                          under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-                          `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-                          sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                              is NOT a tooling bug or an adapter regression.
+                              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1404,7 +1404,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   `instrument_availability` missing day=2026-07-09, `market_lifecycle` missing 07-07 through 07-12 entirely. POLYMARKET:
   new, independent corroboration of the same root-cause family, not previously verified). The DEFI outlier
   (`launcher_script_timeout`) traced to the SAME already-open
-  `defi_consolidator_scheduler_sigkill_ unresolved_2026_07_10.md` OOM-preflight self-delete (confirmed live: the DEFI
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` OOM-preflight self-delete (confirmed live: the DEFI
   availability index is still stuck at the same 2026-07-10T21:42:30Z timestamp that doc's own 07-12/07-13 entries
   already cite) — the "launcher timeout" label was a secondary client-side artifact layered on top of the real,
   pre-existing cause. Shipped `unified-trading-pm@055083485`.
@@ -1413,7 +1413,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   contention for BINANCE-DELIVERY/OKX/BYBIT-SPOT/COINBASE-FUTURES/BITFINEX-SPOT/KRAKEN-FUTURES; a genuinely
   pre-launch-day honest-empty for COINBASE-CDE's IS legs; a real, already-separately-filed missing-batch-adapter gap for
   COINBASE-CDE's MTDS leg). Two corrections to already-filed docs with harder evidence:
-  `hyperliquid_s3_archives_ dead_upstream_2026_07_13.md`'s "dead since 2026-06-05" claim for l2Book is wrong (real
+  `hyperliquid_s3_archives_dead_upstream_2026_07_13.md`'s "dead since 2026-06-05" claim for l2Book is wrong (real
   archive objects exist through 2026-06-29 — a rolling ~2-week publish lag, not permanent death; also found a live,
   current `node_fills_by_block/hourly/` prefix the original doc never checked, meaning trades/node_fills is very likely
   migratable, not permanently dead as claimed). **One major, new, cross-cutting finding**: re-verifying
