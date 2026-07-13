@@ -292,6 +292,20 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
   live-defi-rollout.
 
+- **2026-07-13 (late), ROUND 2 — operator returned + authorized the remainder.** Verbatim rulings: prod redeploys
+  authorized; Tardis lease fine to move ("authenticationless"); "for the rest … why can't we migrate and delete" +
+  ticked: L6 legacy twins, DeFi -prd trio (after redeploy+parity), football migrate-to-canonical-homes+delete; ASTER
+  originals moved to the ASTER plan (todo added there this commit). Round-2 execution: 3 agents relaunched after a
+  session-limit interrupt (deployment-api prod redeploy+verify; PATH_REGISTRY-ml/config-store literal repoints across
+  UTL/IS/SIT; DeFi trio redeploy+parity+config-removal incl. MTDS lease default). Orchestrator SSM ops: legacy
+  consolidator crons paused, tradfi legacy-vs-prd object diff + gap copy, football ×4 migrate→verify→delete into
+  backtest-results/{football}, ml-models-store-prd/{legacy_football}, instruments-store-sports-prd/{legacy_football},
+  and DETACHED version-aware deletion of the 6 verified L6 twins (market-data-tick + instruments-store ×
+  cefi/defi/tradfi flat). **Sports pair HELD** — instruments-store-sports flat carries 316 legacy-only cells owned by
+  sports_manifest_canonicalisation E1/E8; not covered by the June legacy⊆canonical verification. Deletions of
+  strategy-store-{defi,tradfi,cefi}, flat config-store, flat ml trio remain gated on the three agents' verify reports,
+  then execute this session.
+
 - **2026-07-13, /autonomous dispatch END (rule-9 report).** Verified end-state: **estate 241 → 164** (79 W1 deletions,
   +2 recon); terraform reconciled + derived-from-yaml + APPLIED (0 bucket destroys; drift-proof for buckets —
   `terraform plan` from deployment-service@42d4035 is now the estate drift detector); COLDLINE@60d live on all 79
