@@ -13,7 +13,8 @@ summary:
   local object DB, but this is a live data-loss risk for any mid-session agent with local-ahead commits, and directly
   contradicts `slot-cron-ff-pull.sh`'s own documented contract ('Never destructive. Never runs reset --hard. Skips:
   dirty / ahead / diverged / detached.')."
-status: open
+status: superseded
+superseded_by: plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -28,7 +29,8 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [multi-agent-safety, data-loss, git, per-tab-worktrees, incident]
-related: [codex/05-infrastructure/per-tab-worktrees.md]
+related:
+  [codex/05-infrastructure/per-tab-worktrees.md, plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md]
 created: 2026-07-13
 parent_epic: infrastructure_master
 priority: P1
@@ -121,3 +123,13 @@ diverged / detached").
   still in each repo's reflog/object DB (none were unrecoverable). All 16 shippable repos' fixes are now confirmed on
   `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Filed this issue for the operator/infra owner to
   investigate root cause — I do not have the access from within this agent session to identify the exact process.
+- **2026-07-13 (slot-6, sonnet/high)** — Main confirmed this is the SAME actively-firing mechanism already tracked
+  fleet-wide in `plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md` (18 at-risk commits across the
+  fleet as of that session). Marking this doc superseded — the 8-repo/6-commit evidence above is additional
+  corroboration for the master doc, not a separate incident. A follow-up fleet-wide audit also flagged 3 more
+  possibly-at-risk commits in this slot's clones (instruments-service `0a34152a`, market-tick-data-service `b9cb1aa2`,
+  unified-trading-pm `510be6e9a`); investigated all 3 and none needed recovery — each is a redundant duplicate of work
+  already shipped independently (data_type=instruments fix already live + its issue doc already `status: resolved`;
+  BITFINEX-SPOT/FUTURES connectors already exist with tests; the fastapi-ceiling issue already tracked+resolved via a
+  different doc). See `slot11_silent_branch_reset_data_loss_2026_07_13.md` for the consolidated root-cause
+  investigation.
