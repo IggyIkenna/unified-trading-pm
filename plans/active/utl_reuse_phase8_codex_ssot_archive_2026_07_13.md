@@ -62,7 +62,7 @@ drift_direction: correct-codex
       execution-service per-venue order circuit breaker — UTL's CB is DR-recovery tooling; batch-live stage-grain recon
       schemas; trading-agent ephemeral ledger; ibkr TCP health probe; client-reporting-api `core/hwm_seeds.py` — static
       seeds for UTL's three-method HWM, not a `max(equity)` reimpl) in the relevant codex docs so the next reuse audit
-      doesn't re-open them. — unified-trading-pm@f17ba42bf. Recorded in
+      doesn't re-open them. — unified-trading-pm@a7d49568b. Recorded in
       `codex/04-architecture/greeks-service-overview.md`, `codex/04-architecture/kill-switch-circuit-breaker.md`,
       `codex/09-strategy/operational/paper-batch-live-reconciliation.md`,
       `codex/04-architecture/trading-agent-service-directive-pipeline.md`, `codex/02-venues/prime-brokers.md`, and
