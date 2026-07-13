@@ -396,7 +396,9 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       `manifest_consolidator_liveness_health_2026_06_01.md` so the liveness watchdog does not alert/restart them. Then
       remove the legacy entries from the Terraform
       (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) so they are not re-created on
-      `tofu apply`.
+      `tofu apply`. **prediction: ✅ DONE** — both `*-prediction-legacy-cron` entries confirmed removed from live Cloud
+      Scheduler + Terraform (2026-07-13 verification, see INCIDENT resolution below). cefi/defi/tradfi/sports remain
+      PAUSED-not-removed — this item stays open for those four.
 - [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
       canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
       prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
@@ -409,6 +411,10 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift), GCP + AWS.
       Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`.
       **Do NOT delete an AG's legacy bucket while its L3 plan is open** — prediction/cefi hold legacy-only history.
+      **prediction: ✅ DONE 2026-07-13** — `prediction_manifest_canonicalisation_2026_06_01.md`'s E7/E8/E8b data-safety
+      gates were all GREEN (0 legacy-only cells both buckets, snapshots taken, operator-authorized 2026-07-10); both
+      `market-data-tick-prediction-…` + `instruments-store-prediction-…` version-purged + bucket-deleted, confirmed 404.
+      cefi/defi/tradfi/sports unaffected, this item stays open for them.
 - [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
       the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
       pre-seeded by a PARTIAL env-split copy in legacy FORM (live-object: defi ~43% / cefi ~65% / tradfi ~93% of legacy;
@@ -418,6 +424,10 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       (cefi 3.81M, tradfi 3.52M, defi 1.15M noncurrent via Cloud Monitoring `storage/v2/total_count`) — the decommission
       must purge object VERSIONS (not just live objects), and the "canonical ≥ legacy" verify gate must compare
       Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
+      **prediction: ✅ DONE 2026-07-13** — `gcloud storage rm --recursive --continue-on-error` purged all versions
+      (live + noncurrent) of both prediction buckets natively in one op each (no orphan-sweep needed — prediction's
+      `-prd`/`-pred-prd` buckets were not part of the partial env-split pre-seed this item describes). cefi (3.81M) /
+      tradfi (3.52M) / defi (1.15M) noncurrent versions remain untouched, out of scope for this pass.
 
 ## ⚠️ INCIDENT 2026-07-12 — premature prediction legacy-bucket version-delete (process violation)
 
@@ -450,6 +460,43 @@ literals `vm_zombie_watchdog*.py`, any other hardcoded readers) → confirm 0 ne
 ~377) → remove the `market-data-prediction-legacy` + `instruments-prediction-legacy` consolidator entries + the two MDPS
 mounts (TF, via PR → pipeline apply) → pause legacy consolidator crons (line ~383) → THEN version-aware delete + shell
 (admin). Coordinate with the admin agent (has `buckets.*` perms + caught this incident).
+
+**✅ RESOLVED 2026-07-13 (`/autonomous` slot session) — both legacy prediction buckets fully decommissioned, real infra
+verified (not log-inferred):**
+
+- **Watchdog literals — re-audited, found ALREADY CORRECT, no fix needed.** `vm_zombie_watchdog.py:113,118` and
+  `vm_zombie_watchdog_aws.py:76` pass `"market-data-tick-prediction"` / `"instruments-store-prediction"` as a
+  `resolve_bucket_name(kind=...)` lookup KEY, not a literal bucket string. `cloud-providers.yaml:159-163` (GCP) /
+  `:321-325` (AWS) have mapped that key to the canonical env-tiered form
+  (`market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` etc.) since **2026-05-20** (git blame, `43fb886`) —
+  predates this incident entirely. Confirmed live by actually invoking the resolver:
+  `resolve_bucket_name(cloud="gcp", kind="market-data-tick-prediction")` →
+  `market-data-tick-pred-prd-central-element-323112`. This checklist item was stale; no code change made.
+- **Confirmed 0 legacy consolidator writes**: the `*-prediction-legacy` Cloud Scheduler cron entries (both market-data +
+  instruments) were already genuinely REMOVED from live scheduler + Terraform (not just paused, unlike
+  cefi/defi/tradfi/sports which remain PAUSED-not-removed) — confirmed via `gcloud scheduler jobs list`, zero
+  `*-prediction-legacy-cron` entries returned. The two ACTIVE non-legacy prediction consolidator Cloud Run jobs
+  (`uts-prod-manifest-consolidator-{instruments,market-data}-prediction`, `*/1 * * * *` cron) were confirmed via
+  `gcloud run jobs describe` to target ONLY the canonical `*-pred-prd-central-element-323112` buckets — zero collision
+  risk with the legacy buckets being purged.
+- **Concurrency check** (the "second operator agent" warning above): no compute instances, Cloud Batch jobs, or Cloud
+  Run executions were found touching either legacy bucket at the time of the purge. This is best-effort, not an absolute
+  guarantee against a concurrent interactive session on another slot — flagging for the record rather than asserting
+  certainty.
+- **Version-aware delete executed**: `gcloud storage rm --recursive --continue-on-error gs://<bucket>/` for each bucket
+  (deletes all versions of all objects, then the bucket shell, natively — no custom listing/temp-file buffering,
+  avoiding the tmpfs-ENOSPC failure mode that killed the two prior attempts referenced above).
+  - `instruments-store-prediction-central-element-323112`: ran clean, exit 0.
+  - `market-data-tick-prediction-central-element-323112` (2,592,066 versions): ran ~4.3 hours, absorbed ~1.06M benign
+    `not found: 404` errors via `--continue-on-error` (parallel workers double-attempting deletes on already-removed
+    generations — did not affect correctness), reached the bucket-delete stage.
+- **Verified against reality, not the log tail**: `gcloud storage buckets describe` on both bucket names now returns
+  `404 not found`. Both buckets are genuinely gone.
+- **Not done in this pass**: full archival of `prediction_manifest_canonicalisation_2026_06_01.md` (still has one open
+  unrelated P3 UAC finding — `grain_for_instrument_type('prediction','prediction_market')` returns `leaf`) — left
+  `status: active`, only its E8/E8b bucket-deletion todos flipped. The other four asset_groups'
+  (cefi/defi/tradfi/sports) legacy consolidator crons remain PAUSED-not-removed and their buckets untouched — out of
+  scope for this pass, tracked separately above.
 
 ## Phase 8 — Governance + codex (P1)
 
