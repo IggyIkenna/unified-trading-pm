@@ -80,10 +80,21 @@ readers still point at the dedicated buckets.
       assumption carried over from the earlier session's DeFi migration verification (that verification explicitly
       EXCLUDED these 3 kinds since they were kept live). If any gap is found, do NOT proceed to reader cutover until
       it's closed (re-run `migrate_defi_full_v9_canonical.py` for the gapped kind if needed).
-- [ ] [CODE] P0. Read `strategy-service/engine/core/canonical_dex_pool_provider.py` +
+- [x] ✅ [CODE] P0. Read `strategy-service/engine/core/canonical_dex_pool_provider.py` +
       `scripts/materialize_dex_pool_fees.py` in full — confirm exactly how each resolves its bucket today
       (`resolve_bucket_name(kind="dex-pools", ...)` or similar) and what real callers depend on their current output
-      shape (so the cutover doesn't silently change a field/path shape a live caller expects).
+      shape (so the cutover doesn't silently change a field/path shape a live caller expects). —
+      `strategy-service@3affd5b2` (2026-07-13): rewrote both readers' path-construction to the shared bucket's day-first
+      shape, dropped the now-unneeded two-step mode-discovery (`_pipeline_mode_prefixes`/ `_fee_pipeline_mode_prefixes`
+      deleted — a single per-day `list_blobs` prefix suffices, measured ~700 objects/day bucket-wide so this is cheap),
+      repointed both to `resolve_bucket_name(kind="tick-data", ...)`. Output contract (`DexPoolObservation`,
+      `pairs_for_day`/`pool_for_day`/`pairs_window`/`pool_window`) left byte-identical — only the read path changed.
+      Live-verified against real production data (`ENVIRONMENT=prod`): `pairs_for_day(2026-05-01)` → 4,550 real pairs; a
+      real pool observation round-tripped correctly; `_read_pools_for_day` direct inspection → 24,050 total rows across
+      9 venues, 1,191 real Curve rows (Curve's NaN token_a/b/price_b confirmed pre-existing Curve-schema behaviour, not
+      a migration regression). 9/9 unit tests updated + passing. Shipped via quickmerge (content-scoped sentinel handled
+      a stale `.qg_last_passed_sha` automatically — HEAD had moved via concurrent unrelated commits but the `--files`
+      set was byte-identical across the gap, so Pass-1 QG coverage still applied).
 - [ ] [CODE] P0. Find and read the `e2e-testing` lst-rates reader flagged in
       `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` (`_lst_bucket()` in `staked_basis_funding_scan.py`) —
       same analysis. Resolve that issue doc's still-open finding as part of this cutover.
@@ -119,6 +130,11 @@ readers still point at the dedicated buckets.
       done.
 
 ## Progress Log
+
+- **2026-07-13 (Todo 2 shipped)** — `canonical_dex_pool_provider.py` + `materialize_dex_pool_fees.py` rewritten to the
+  shared bucket's day-first path shape and shipped (`strategy-service@3affd5b2`). Full detail in the Todo 2 checkbox
+  above. Next: Todo 3 (find + fix the `e2e-testing` lst-rates reader) and Todo 4 (locate the real perp-funding reader —
+  not yet found).
 
 - **2026-07-13 (Todo 1 done — data parity verified; Todo 2 in progress — found a real path-shape blocker)** — **Parity
   (Todo 1)**: direct GCS probes (consolidator still stale, ~64h — same open sub-finding as
