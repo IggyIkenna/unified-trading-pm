@@ -2018,3 +2018,40 @@ it's new adapter work, not a data-audit residual).
     pass, (ii) any pre-calendar-gate FIXTURES artifact cleanup, (iii) the `redo_all` + `sports_entity_filter` latent bug
     — all three are flagged above for a follow-up rather than fixed here (out of this todo's literal scope, and (iii)
     touches shared orchestrator infra requiring its own blast-radius proof).
+
+- 2026-07-13 (slot-3, interactive session, post-compaction resume): **multi-agent collision — a redundant TEAMS backfill
+  run was launched and killed.** After context compaction, this session independently found the (at-the-time)
+  uncommitted `backfill_teams_61_leagues_2026_07_13.py` sitting in an untracked state in the main `instruments-service`
+  clone, assumed it was orphaned WIP at risk of being lost, committed it (`instruments-service@98e7a784`, bundled with
+  two other legitimately-orphaned scripts), and launched its own full 60-league / 186,960-cell apply (PID 46373, started
+  ~20:53 UTC). This script was in fact a live artifact of an **already-in-flight** 4-phase workflow (`wf_42ff1064-99c`,
+  dispatched before compaction) whose own Backfill phase was independently running the identical backfill concurrently.
+  Both processes wrote real per-league TEAMS data for overlapping leagues simultaneously for ~40 minutes before the
+  collision was noticed (via the `wf_42ff1064-99c` completion notification reporting `162,032/162,032` cells — the exact
+  same total this session's own process's progress log was independently converging toward). **Verified impact**:
+  harmless from a data-correctness standpoint (both writes are per-VM-shard, identical-content re-stamps of the same
+  live current roster, consolidator-deduped on an identical dedup key, 0 corruption) but wasteful — real external
+  api_football API quota was burned twice for the same ~60 leagues. **Action taken**: confirmed via a fresh
+  `gcloud storage cp` + local `pd.read_parquet` (bypassing a transient `gcsfs`-layer "Corrupt snappy compressed data"
+  read exception, itself just a read-during-consolidator-overwrite race, not real corruption — the object downloaded
+  clean at 5,506,821 rows) that live coverage had already reached 86/94 leagues; killed the redundant duplicate process
+  (`kill -TERM 46373`, confirmed dead) immediately once confirmed. **Root cause of the collision**: found = "uncommitted
+  file in a shared clone" was treated as "orphaned," when it was actually "in-progress foreign WIP mid-write" — the
+  correct signal to check BEFORE inheriting untracked work in a multi-agent workspace is liveness (a running process /
+  recent workflow dispatch against the same plan), not just "is it committed yet." **Lesson for future sessions**:
+  before resuming/relaunching any backfill found as loose uncommitted script output, first check for an in-flight
+  `Workflow`/agent dispatch already covering the identical plan todo (this plan's own Progress Log would have shown the
+  `wf_42ff1064-99c` dispatch under a compacted-away entry — a live `ps`/workflow-journal check catches what a stale
+  summary can miss).
+
+- 2026-07-13 (slot-3, interactive session): **new P1 finding surfaced by `wf_42ff1064-99c`'s Reconcile phase, carried
+  forward here for visibility** — a NULL-vs-`""` dedup-key normalization gap in
+  `unified_trading_library.manifest_consolidator` prevents a `captured` row from superseding its own
+  `expected_unattempted` seed twin when one side's optional dedup-key column is stored as SQL-NULL/pandas-NA and the
+  other as an empty string, even after a full `--force` canonical rebuild. This is shared fleet infrastructure (not
+  sports-specific) — filed by that dispatch as a new P1 rather than patched blind, per rule 11 (a shared-infra fix needs
+  its own blast-radius proof across all 5 asset_groups before shipping). This is the same underlying bug class as the
+  `mdps_odds_horizon_bucket` expected-universe grain mismatch fixed elsewhere in this plan, but at the consolidator
+  layer rather than the enumerator layer — worth a dedicated follow-up plan/todo once this plan's own in-flight
+  categories land, since it likely explains residual disjoint-cell symptoms across MORE than just
+  `mdps_odds_horizon_bucket`.
