@@ -121,11 +121,20 @@ corrected range to confirm the 39 stale violations drop to 0 (or only genuinely-
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix `last_promoted_marker()` in `unified-trading-pm/scripts/cicd/promote_provenance_range.py` to
+- [x] ✅ [SCRIPT] P1. Fix `last_promoted_marker()` in `unified-trading-pm/scripts/cicd/promote_provenance_range.py` to
       match promote PRs opened with `--head promote/<repo>/<sha>` (title-prefix or head-ref-prefix query), not the
-      literal `--head live-defi-rollout`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. Add a regression test for `last_promoted_marker()` covering the per-SHA-ref head-branch shape
-      (`promote/<repo>/<sha>`), not just the legacy `live-defi-rollout` shape. (repo: unified-trading-pm)
+      literal `--head live-defi-rollout`. (repo: unified-trading-pm) — unified-trading-pm@20db96085. Switched
+      `last_promoted_marker()` to filter by the stable `chore(promote)` title prefix (shared by every promote-bot
+      variant: Tier-C staging drain, Option-B main auto-drain, Option-B main fleet per-SHA-ref direct) sorted by
+      `mergedAt`, instead of `--head <branch>` — head-ref-shape-agnostic, so it matches both the legacy
+      `live-defi-rollout`-headed PRs and the WS-L Phase-0 `promote/<repo>/<sha>`-headed fleet PRs unchanged.
+- [x] ✅ [SCRIPT] P2. Add a regression test for `last_promoted_marker()` covering the per-SHA-ref head-branch shape
+      (`promote/<repo>/<sha>`), not just the legacy `live-defi-rollout` shape. (repo: unified-trading-pm) —
+      unified-trading-pm@20db96085. Added `test_marker_matches_per_sha_ref_promote_pr_by_title_not_head` (asserts the
+      marker resolves from a `gh pr list` payload with no `headRefName` field at all, proving title-based resolution is
+      head-ref-shape-agnostic) + `test_marker_ignores_non_promote_prs_and_picks_latest_mergedat` in
+      `tests/unit/test_promote_provenance_range.py`; updated the pre-existing `test_marker_parsed_from_gh_json` to carry
+      a `title` field now that the query no longer filters by `--head`.
 - [ ] [SCRIPT] P2. After the fix ships, audit other `ldr_main` repos for accumulated stale-marker provenance noise
       (re-run `check_strict_quickmerge.py` with the corrected range per repo) and confirm auto-merge arms cleanly on
       their next drain. (repo: unified-trading-pm)
