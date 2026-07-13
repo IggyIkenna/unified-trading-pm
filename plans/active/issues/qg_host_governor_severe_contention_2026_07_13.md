@@ -85,6 +85,42 @@ Two independent, non-conflicting questions for whoever owns this:
    masquerade as a performance regression on an otherwise-fast run? This is a genuine measurement bug independent of the
    K=1 policy question.
 
+## Update 2026-07-13 (slot 12, cicd escalation agt-d20784, execution-service RB-327b389f)
+
+Hit the same wall shipping the click/pillow pip-audit fix: two full `bash scripts/quality-gates.sh` attempts queued 21+
+min and 15+ min respectively without acquiring the token, while a THIRD, independent slot 12 `quality-gates.sh`
+invocation moments earlier (a `QG_SLICE=lint-codex` run — a light slice that never even calls the heavy phases the
+governor guards) hit the SAME unconditional `qg_governor_acquire()` call at `base-service.sh:601` and queued 900s before
+its own `timeout 900` killed it.
+
+**New data point beyond the K=1-is-a-deliberate-floor finding above**: while the full-run was stuck reporting
+`all 1 tokens busy`, I checked ground truth directly —
+
+```
+$ cat /proc/locks | grep 8817482          # inode of /tmp/qg-host-governor/slot.1
+(no output — zero lock records on that inode)
+$ exec 250>/tmp/qg-host-governor/slot.1 && flock -n 250 && echo ACQUIRED
+ACQUIRED                                   # succeeded instantly, in a fresh shell
+```
+
+At that exact moment `/proc/locks` showed **no process holding the token**, yet dozens of already-running
+`quality-gates.sh` processes across slots 5/8/9/10/11/13/14/15 (many 20-40+ min into their own queue wait) kept
+reporting `all 1 tokens busy` on their next 30s narration tick. This is consistent with the K=1-under-20-way-demand
+churn described above (a token can free and be re-grabbed by some OTHER waiter inside the ~2s poll interval, so any
+single point-in-time snapshot can show "free" while the aggregate remains saturated) — I could NOT fully rule that out
+with a single snapshot, so I did **not** treat this as a confirmed second bug and did not change governor code. Flagging
+as a data point for whoever picks up the K=1 policy todo below: worth re-checking whether real turnover-under-churn
+fully explains 20-40 min waits, or whether the acquire loop itself has a starvation/fairness gap under this many
+concurrent waiters (no fairness queue — every waiter free-for-alls the same `flock -n` each tick, so a convoy of 20
+waiters can in theory starve indefinitely even with genuine turnover).
+
+**What I did**: did NOT self-adjust `QG_HOST_CONCURRENCY` or leave a `QG_GOVERNOR_DISABLE=true` run in flight against
+the heavy TESTS/TYPECHECK phases (confirmed swap still at 3.4-3.8GB used — the original memory-pressure condition
+persists) — killed that bypass attempt and re-queued respecting the K=1 floor with `IGNORE_TIMEOUT=true` per this doc's
+own sanctioned workaround. `QG_GOVERNOR_DISABLE=true` IS safe/sanctioned for a lint-only `QG_SLICE` (no heavy phase ever
+runs under it, so bypassing the queue adds no memory pressure) — used that for the fast pip-audit-only verification, but
+not for the full run.
+
 ## Todos
 
 - [ ] [SPEC] P2. Decide whether this host's `QG_HOST_CONCURRENCY=1` floor should change given current fleet size +
@@ -93,3 +129,12 @@ Two independent, non-conflicting questions for whoever owns this:
 - [ ] [SCRIPT] P2. Make `qg-host-governor.sh` / `base-service.sh`'s `MAX_DURATION` wall-clock check measure only
       post-token-acquisition work time, not governor queue wait, so queueing under contention cannot fail an
       otherwise-green run. (repo: unified-trading-pm, `scripts/quality-gates-base/`)
+- [ ] [SCRIPT] P3. Gate `qg_governor_acquire()` on the caller's `QG_SLICE` at `base-service.sh:601` so a light slice
+      (`QG_SLICE=lint-codex`, which never runs TESTS/TYPECHECK) doesn't queue behind the same heavy-phase token as full
+      runs — it has nothing to protect against contention-wise. (repo: unified-trading-pm,
+      `scripts/quality-gates-base/base-service.sh` + `qg-host-governor.sh`)
+- [ ] [SPEC] P3. Investigate whether the acquire loop has a fairness/starvation gap under ~20-way concurrent waiters (no
+      fairness ordering — every waiter races the same non-blocking `flock -n` each ~2s tick), separate from the
+      K=1-is-too-low policy question above; a single `/proc/locks` snapshot during today's incident showed zero lock
+      holders on the token inode while many waiters kept reporting busy, which is consistent with either explanation and
+      wasn't conclusively distinguished. (repo: unified-trading-pm, `scripts/quality-gates-base/qg-host-governor.sh`)
