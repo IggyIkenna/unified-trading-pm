@@ -2907,14 +2907,26 @@ cases) but would close the residual class the 2,902 post-fix rows came from. `sk
 flip). Next toucher: don't re-run the full audit for zero new info — the remaining 5 blockers above are all
 E3/E4-VM-apply or schema-change scope; re-verify only after one of those actually lands.
 
-- [ ] [DATA] P2. Add explicit `source=_orch._sports_ref_source(<entity>)` to the ~20 `record_empty()` call sites
+- [x] ✅ [DATA] P2. Add explicit `source=_orch._sports_ref_source(<entity>)` to the ~20 `record_empty()` call sites
       identified this session that currently rely solely on the library-level auto-stamp (repo: instruments-service;
       files: `sports_reference_core.py:90-94,118-122,127-131`, `process_write.py:281-289`,
       `footystats.py:312-317,332,644,658,1001,1040`, `sfi.py:484-493,514,522,536,543`,
       `process_zero_records.py:204,295,315,361`, `process_preflight.py:703`,
       `triggers/sports_fixtures_daily_repoll.py:340`) — defense-in-depth so a future deployment-lag window (like the
       2,902-row residual found this session) can't silently reproduce the CF-4 gap; mirror the pattern already used in
-      `transfermarkt.py`/`weather.py`/`understat.py`.
+      `transfermarkt.py`/`weather.py`/`understat.py`. — `instruments-service@6b49cb1c`. All 20 sites confirmed via a
+      paren-depth `record_empty(` block scan (0 sites missing `source=` post-fix). Two exceptions from the literal
+      "`_orch._sports_ref_source(<entity>)`" spec, both matching an existing precedent already in this codebase:
+      `process_write.py:282` and `triggers/sports_fixtures_daily_repoll.py:340` use the literal `source="api_football"`
+      (mirroring the sibling `record_captured`/`record_empty` call already in the same function, and — for the trigger
+      file — the fact that it has no `_orch` proxy alias at all, being a standalone trigger outside the
+      `engine/orchestrator` cohesion-module package). `process_zero_records.py:361` (the `_enr_entity`
+      PREDICTIONS/MATCHES/XG/WEATHER loop) needed a small local translation dict (`_enr_entity_to_sports_ref_entity`)
+      since those uppercase data_type strings aren't valid `_sports_ref_source` entity keys on their own. QG green
+      (`instruments-service`, full run, exit 0) — the `IS-MTDS CONTRACT INTEGRITY` adapter-contract-regression warning
+      it also printed is pre-existing baseline drift in `market-tick-data-service` handlers + `unified-api-contracts`
+      crosscutting files this task never touched (tracked separately at
+      `plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`).
 
 **Tooling used**: `unified-trading-pm/plans/audit/results/cf_manifest_audit_2026_06_01.py` (unmodified) +
 `instruments-service/scripts/restamp_is_sports_blank_source_2026_07_13.py` (new, `instruments-service@3a102604`),
