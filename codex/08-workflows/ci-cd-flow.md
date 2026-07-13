@@ -894,6 +894,13 @@ Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced 
 **RETIRED workflows (deleted):** `ci-failure-watcher.yml` (renamed) · `promotion-lag-monitor.yml` (folded) ·
 `sit-starvation-detector.yml` (folded)
 
+**What each of these posts to `#ci-failures`, and the dedup/cooldown contract that governs the volume, is the SSOT
+[../04-architecture/ci-alerting.md](../04-architecture/ci-alerting.md)** — the reusable `notify-slack.yml` carrier
+(read-back dedup, `dedup_key` + `cooldown_min`, `recovery` gating, fail-open), the per-reporter key/cooldown table, and
+why `notify-qg-fail` (per-run) / `ci-status-update` (per-transition) / `ldr-ci-monitor` (hourly) legitimately show
+different counts. Cooldowns track a condition's **measured** cadence, not its declared cron (GitHub throttles
+`schedule:` to ≈37%).
+
 ### Token-pool convention (sprawl consolidation 2026-06-27)
 
 All PM workflows MUST follow the **token-pool split**:

@@ -470,6 +470,17 @@ prefetch_main_clones() {
         local repo_name int_branch
         repo_name=$(basename "${d}")
         int_branch="$(branch_for_repo "${repo_name}")"
+        # Reference-clone prune protection (2026-07-13). This very fetch adds loose objects to
+        # the base every tick — exactly what pushes it past git's auto-gc threshold. The base
+        # backs N slot `git clone --reference` clones (shared object store via
+        # objects/info/alternates), and default auto-gc prunes objects unreachable from the
+        # BASE's refs with no knowledge of slot refs → a slot's stale ref/reflog is left
+        # pointing at a deleted object and its `git fsck` FAILS ("invalid sha1 pointer" /
+        # "invalid reflog entry"). gc.pruneExpire=never keeps auto-gc's repack but never
+        # DELETES objects. Asserted here because this cron runs every 5 min on EVERY slot host
+        # and self-pulls its own code, so the fix reaches the whole fleet with no manual
+        # deploy. SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Reference-clone prune hazard".
+        git -C "${d}" config gc.pruneExpire never 2>/dev/null || true
         # `--tags --force` heals stale local release tags fleet-wide: linked tab
         # worktrees share .git/refs with this main clone, so one forced tag sync
         # here fixes the `(would clobber existing tag)` pull failure for every

@@ -114,10 +114,10 @@ to 93 min) — GitHub deprioritizes `schedule:` workflows on high-Actions-usage 
 2. **Re-remind must be age-based, not tick-based.** Anchor the cooldown to how long the pair has been un-propagated, not
    to cron ticks (which slip). With a real ~40-min cadence, a 120-min cooldown ≈ 3 actual promote cycles.
 
-The clean structural fix is the WS-1 stretch item: **trigger the promote (and the lag check) from our own scheduler**
-(the AO backend, reliable 15-min tick) instead of GitHub's throttled `schedule:` — then `*/15` is real and both the
-threshold and re-remind become meaningful. Out of scope for the noise-cleanup, but this measurement is the evidence for
-prioritising it.
+A possible structural fix (considered, then **dropped by operator 2026-07-13 — not pursuing**): **trigger the promote
+(and the lag check) from our own scheduler** (the AO backend, reliable 15-min tick) instead of GitHub's throttled
+`schedule:` — then `*/15` would be real and both the threshold and re-remind become meaningful. The noise-cleanup (WS-1
+cooldown → 2 h) is sufficient on its own; the measured cadence above is why the 2 h cooldown ≈ 3 real promote cycles.
 
 ## Design
 
@@ -184,11 +184,16 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
 - [x] 3. ✅ [INFRA] P2. WS-2: gated `ci-status-update.yml` `notify` on `status == 'FAILING'` so only regressions page;
      the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
      PM-local (fires from `main`). — unified-trading-pm@e4b494356.
-- [ ] [INFRA] P3. WS-1 (stretch): evaluate moving the promotion-lag check to a self-triggered path (AO backend) for
-      cron-deviation-proof timing — age-based re-remind independent of GitHub's hosted scheduler.
-- [ ] [REVIEW] P3. WS-4: document the CI-alert dedup/cooldown contract in `codex/08-workflows/ci-cd-flow.md` (or a new
-      `codex/04-architecture/ci-alerting.md`); re-pull a 24–48 h window post-rollout and confirm the volume drop
-      (evidence jsonl in `alerts_audit/`).
+- [x] 4. ✅ [REVIEW] P3. WS-4 (doc): wrote the CI-alert dedup/cooldown SSOT `codex/04-architecture/ci-alerting.md` — the
+     `notify-slack.yml` carrier contract (read-back dedup, `dedup_key`+`cooldown_min`, `recovery`-gating, fail-open),
+     the per-reporter key/cooldown table (branch-health lag/AR, `notify-qg-fail`, `ci-status-update`), the 3-way-count
+     explainer (per-run vs per-transition vs hourly), and the "cooldown tracks MEASURED cadence not declared cron" rule.
+     Cross-linked from `ci-cd-flow.md` § CI-health + the CLAUDE.md Slack-notifications bullet. Also fixed a stale
+     SHA-based dedup comment in `python-quality-gates-v2.yml` left by WS-3 (actionlint clean). Frontmatter + size-cap +
+     prettier green. — unified-trading-pm (this commit).
+- [ ] [REVIEW] P3. WS-4 (verify): re-pull a 24–48 h `#ci-failures` window post-rollout and confirm the volume drop
+      (promotion-lag re-reminds ~2 h not hourly, no green all-clears, QG failures dedup per-branch); drop the evidence
+      jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.)
 
 ## Progress Log
 
@@ -208,3 +213,9 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
   rate. Consequences folded in: (a) the 60-min lag threshold can fire on a lag merely waiting for a throttled promote →
   new **D4** (raise threshold 60→120); (b) re-remind must be age-based; (c) the self-triggered-scheduler stretch item is
   now evidence-backed. **D1 resolved: 2 h re-remind cooldown** (operator). D2/D3/D4 open.
+- **2026-07-13 (WS-4 doc + stretch dropped)** — Operator: do WS-4, drop the WS-1 stretch. Wrote the CI-alert SSOT
+  `codex/04-architecture/ci-alerting.md` (carrier dedup/cooldown contract + per-reporter table + 3-way-count explainer +
+  measured-cadence rule), cross-linked from `ci-cd-flow.md` § CI-health and the CLAUDE.md Slack-notifications bullet,
+  and fixed a stale SHA-based dedup comment WS-3 left in `python-quality-gates-v2.yml` (the key is `ref_name` now;
+  actionlint clean). **Deleted the WS-1-stretch todo** (self-triggered AO scheduler) per operator — not pursuing. Only
+  the WS-4 verification re-pull (24–48 h observation) remains open, matching the AO-plan WS-E wait.

@@ -772,11 +772,12 @@ jobs:
 
   # ── SLACK NOTIFY — QG slice failure / cancellation ───────────────────────────
   # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
-  # gains content dedup (same repo+sha within cooldown_min = one page per failing
-  # commit, not per matrix leg re-run), alert ledger lifecycle, and re-nag eligibility.
+  # gains content dedup, alert ledger lifecycle, and re-nag eligibility.
   # Replaces the per-leg inline curl that fired once per failing slice per run.
-  # dedup_key = qg-fail:{repo}:{sha} — a new commit re-arms; a re-run within
-  # cooldown_min of the SAME sha is suppressed.
+  # dedup_key = qg-fail:{repo}:{ref_name} (ci_failures_channel_cleanup WS-3, 2026-07-13):
+  # keyed by REPO+BRANCH so a still-red branch pages once per red-period, not per failing
+  # push; a genuinely new failure after cooldown_min re-alerts. See the `with:` block below
+  # + codex/04-architecture/ci-alerting.md for the full dedup/cooldown contract.
   notify-qg-fail:
     name: Slack CRITICAL — QG Slice Failed
     needs: [content-gate, qg-slices]
