@@ -229,9 +229,25 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       this is a genuine row-count/schema difference between the two copies, not assumed here). No errors, no source
       deletions (this script never deletes — Phase 4 is the separate, operator-gated cleanup step). Zero unmigrated
       objects.
-- [ ] [DATA] P0. Post-apply verification: re-run the Phase 1 scope audit against the CeFi bucket, confirm 0 objects
+- [x] ✅ [DATA] P0. Post-apply verification: re-run the Phase 1 scope audit against the CeFi bucket, confirm 0 objects
       remain unmigrated (excluding any genuinely-still-running collection window) and spot-check row/byte parity (not
-      just object presence) on 20+ migrated objects across the three duplication-period bands identified above.
+      just object presence) on 20+ migrated objects across the three duplication-period bands identified above. —
+      **DONE, slot 14, market-tick-data-service@`<pending-ship>`
+      (`scripts/verify_aster_cefi_defi_bucket_migration_2026_07_13.py`)**. **Existence check: PASSED** — full 948-day
+      re-walk, all 117,176 DeFi-bucket objects confirmed present at their canonical CeFi-bucket target, 0 missing.
+      **Parity spot-check (45 samples, 15/band): revealed a real data-correctness issue, NOT a clean pass** — `zero_dup`
+      band 15/15 row-count-match + byte-identical (trivial, freshly `--apply`-copied); `low_dup` band 14/15 clean;
+      **`high_dup` band (2024-01→2025-06, the LARGEST slice of the corpus) only 5/15 row-count-match, 0/15
+      byte-identical**. Root-caused via a full column diff on one pair: the CeFi-bucket "duplicates" in this era carry
+      only 10 columns vs the DeFi-bucket originals' 23 (missing `mark_price`/`bid_price`/`ask_price`/`index_price`/
+      `mid_price`/`open_interest`/`volume_24h` and more) and are often 1 row short — **these are NOT true duplicates,
+      they're an older/narrower-schema capture**. This directly affects Phase 4 below (deleting the DeFi-bucket
+      originals for this band would delete the MORE complete copy). Filed
+      [`plans/active/issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md)
+      with the full evidence + an operator-decision todo. Did NOT attempt a fix (schema-authority call is out of this
+      todo's scope). Output written to
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/aster_cefi_migration_post_apply_verify_2026_07_13.parquet`
+      (117,176 rows).
 
 ## Phase 3 — Manifest + downstream (P1)
 
@@ -248,7 +264,13 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       DeFi-bucket-resident ASTER `asset_group=cefi` originals (version-aware, matching the same rigor as
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`'s Phase-7 decommission gate — snapshot first,
       verify canonical ≥ legacy via live-object counts, never a naive `ls`). This is explicitly NOT bundled with the
-      migration apply step — do not delete until an operator confirms the parity verification evidence.
+      migration apply step — do not delete until an operator confirms the parity verification evidence. **⚠️ 2026-07-13
+      (slot 14): parity verification is NOT green for the `high_dup` band (2024-01→2025-06) — see
+      [`aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md).
+      The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
+      originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
+      regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
+      issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).**
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 

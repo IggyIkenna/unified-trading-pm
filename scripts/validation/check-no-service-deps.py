@@ -3,20 +3,27 @@
 # Lifecycle: permanent
 # Delete-when: NA
 """
-Check that a service repo does not depend on another service repo as a path dependency.
+Check that a service repo does not depend on another service repo as a path dependency,
+and (WARN-only, informational) flag a raw import of another service's package.
 
 Services must import only libraries (T0-T3); interaction is via messaging/APIs/storage
-per runtime topology DAG (runtime-topology.yaml). Importing another service as a package
-is a violation.
+per runtime topology DAG (runtime-topology.yaml). A `[tool.uv.sources]` path dep on another
+service is a hard failure. A raw `import <other_service>` / `from <other_service> import ...`
+statement (source or tests) is additive-hardening belt-and-suspenders (utl_reuse_phase9,
+2026-07-13): printed as [WARN] but does not fail the gate, since the fleet already carries
+~39 pre-existing, individually-reviewed/tracked raw cross-service imports (see
+`find_raw_service_imports`'s caller in `main()` for why hard-failing those isn't safe yet).
 
 Usage:
     From service repo root: python unified-trading-pm/scripts/check-no-service-deps.py
     Or with REPO_ROOT set:  REPO_ROOT=/path/to/workspace python check-no-service-deps.py
     (run from the service repo directory containing pyproject.toml)
 
-Exit: 0 if OK (not a service, or no service deps); 1 if service has path dep on another service.
+Exit: 0 if OK (not a service, or no path-dep service violations — raw-import hits warn only);
+1 if service has a path dep on another service.
 """
 
+import ast
 import json
 import os
 import sys
@@ -134,6 +141,53 @@ def get_path_deps(pyproject_path: Path) -> list[str]:
     return deps
 
 
+_EXCLUDED_DIR_NAMES: frozenset[str] = frozenset(
+    {".venv", "venv", "node_modules", "build", "dist", "__pycache__", ".git"}
+)
+
+
+def _service_package_name(repo_name: str) -> str:
+    """Map a dash-cased repo name (manifest key) to its importable python package name."""
+    return repo_name.replace("-", "_")
+
+
+def _iter_py_files(root: Path) -> list[Path]:
+    """Yield every .py file under root, skipping venvs/build/vcs directories."""
+    return [p for p in root.rglob("*.py") if not any(part in _EXCLUDED_DIR_NAMES for part in p.relative_to(root).parts)]
+
+
+def find_raw_service_imports(project_root: Path, other_service_packages: dict[str, str]) -> list[tuple[str, int, str]]:
+    """Scan every .py file under project_root for a raw import of another service's package.
+
+    ``other_service_packages`` maps importable-package-name -> repo-name for every OTHER
+    service repo (the current repo is excluded by the caller). Catches both plain
+    ``import <pkg>`` and ``from <pkg>[.sub] import ...`` — belt-and-suspenders alongside the
+    ``[tool.uv.sources]`` path-dep check above, since today every live violation also carries
+    a path dep. Static AST-based (no dynamic ``importlib.import_module(...)`` detection).
+    """
+    violations: list[tuple[str, int, str]] = []
+    for py_file in _iter_py_files(project_root):
+        try:
+            tree = ast.parse(py_file.read_text(), filename=str(py_file))
+        except (SyntaxError, UnicodeDecodeError, OSError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    top = alias.name.split(".")[0]
+                    if top in other_service_packages:
+                        violations.append(
+                            (str(py_file.relative_to(project_root)), node.lineno, other_service_packages[top])
+                        )
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                top = node.module.split(".")[0]
+                if top in other_service_packages:
+                    violations.append(
+                        (str(py_file.relative_to(project_root)), node.lineno, other_service_packages[top])
+                    )
+    return violations
+
+
 def main() -> int:
     project_root = Path.cwd()
     pyproject = project_root / "pyproject.toml"
@@ -152,6 +206,8 @@ def main() -> int:
         # Current repo is not a service; no check
         return 0
 
+    violations_found = False
+
     path_deps = get_path_deps(pyproject)
     other_services = [d for d in path_deps if d in service_repos and d != current]
     if other_services:
@@ -162,8 +218,29 @@ def main() -> int:
             " (runtime-topology.yaml).",
             file=sys.stderr,
         )
-        return 1
-    return 0
+        violations_found = True
+
+    # Raw-import scan is WARN-only for now, not blocking: a fleet probe (utl_reuse_phase9,
+    # 2026-07-13) found ~39 pre-existing raw cross-service imports in tests/source across
+    # deployment-service/execution-service/strategy-service/features-service, each already
+    # reviewed/tracked (service_contract_map.py forbidden_exceptions, deprecation_ledger.yaml,
+    # or an explicit sanctioned-deep-import noqa marker + rationale comment) — none carry a
+    # path dep, so the (hard-fail) check above never saw them. Hard-failing here today would break those
+    # repos' quality-gates.sh with no way to distinguish "new accidental coupling" from
+    # "already-sanctioned debt." Mirrors how the path-dep gate itself was rolled out: land the
+    # detector, remediate/baseline what it finds, THEN flip to hard-fail (see item 1 above) —
+    # that remediation pass is out of this ticket's scope (touches repos this plan doesn't
+    # own) and is tracked as a follow-up, not silently skipped.
+    other_service_packages = {_service_package_name(name): name for name in service_repos if name != current}
+    for file, lineno, other_repo in sorted(find_raw_service_imports(project_root, other_service_packages)):
+        print(
+            f"[WARN] Service '{current}' raw-imports service '{other_repo}':"
+            f" {file}:{lineno}. If new, use messaging per runtime topology (runtime-topology.yaml)"
+            " instead — if intentional/tracked debt, this is informational only for now.",
+            file=sys.stderr,
+        )
+
+    return 1 if violations_found else 0
 
 
 if __name__ == "__main__":

@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                  is NOT a tooling bug or an adapter regression.
-                  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-                  under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-                  `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-                  sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                              is NOT a tooling bug or an adapter regression.
+                              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1372,3 +1372,74 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
     stash-pop merge conflict in `tardis_concurrent_ip_lockout_2026_07_12.md` (two concurrent agents' additive Progress
     Log entries collided; kept both, dropped only the conflict markers, no content lost) that was blocking every commit
     in this shared PM clone — `unified-trading-pm@d0be200b`.
+
+- 2026-07-13 (same session, remaining three clusters closed out — SPORTS re-verification, PREDICTION+DEFI, CEFI) —
+
+  **SPORTS fixture-aware re-verification, redone properly** (todo 26 was marked done earlier, but the operator asked to
+  actually run it — the earlier pass only built the tooling). Re-ran both IS's 7 SPORTS shards and MTDS's 64 (excluding
+  bare BETFAIR, per its own separate zero-captured-data finding) against real per-venue PROD-confirmed fixture days.
+  MTDS side confirmed the already-known architecture cleanly (ODDS_API's real fetch genuinely reaches its
+  operator-confirmed-intentional league scope; the 6 sub-venues correctly show "no active venues," confirming they're
+  ODDS_API bookmaker fan-out tags, not independently fetchable — a checker-design fact, not a bug). **IS side surfaced a
+  real bug**: every IS SPORTS shard enumerated ZERO cells (`total=0, results=[]`) — reproducing an unresolved issue
+  first hit 2026-07-12 and never root-caused. Dispatched a focused fix. **The diagnosis corrected my own premise**:
+  `smoke_matrix.py`'s SPORTS provider list (API_FOOTBALL/OPEN_METEO/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/
+  UNDERSTAT/FOOTYSTATS) was NOT stale — it's IS's genuinely correct, deliberately-disjoint-from-MTDS venue registry
+  (Decision C, 2026-06-29: IS drives SPORTS reference data via these providers; ODDS_API/PINNACLE/BETFAIR_*/
+  DRAFTKINGS/FANDUEL are MTDS-owned, `NO_ADAPTER_YET` on the IS side, correctly producing a fast no-op skip — the
+  earlier "`is__SPORTS__PINNACLE exit=0`" evidence that looked like a real pass was this same silent skip, not real
+  work). The one genuine gap: bare `BETFAIR` DOES have a real, credential-gated IS adapter that was missing from
+  `smoke_matrix.py`'s enumeration entirely, with latent CLI-arg/write-path/manifest-match bugs for any
+  non-provider-routed SPORTS cell. Fixed: added BETFAIR as a venue-routed cell, fixed `build_cli_args`/
+  `expected_write_prefix`/`verify_manifest_row` to discriminate on `cell.sports_provider` instead of a blanket
+  asset_group check, added a loud explanatory skip reason for the 7 MTDS-owned venues instead of a silent dead end.
+  Shipped `instruments-service@0a03de5a`. **Real-VM-verified**: `--venue ODDS_API` now enumerates 0 cells with an
+  actionable reason instead of a bare "0"; `--venue BETFAIR` enumerates 1 real cell and all 3 legs launched genuine GCE
+  VMs, reporting the already-known BLOCKED-CREDENTIALS gap (`wsfeedconnector_phase35_gap_2026_07_06.md` gap-009) instead
+  of a silent zero-cell skip.
+
+  **PREDICTION (11 leg-results) + DEFI:AAVE_V3-POLYGON outlier (1)** — fully closed, no new bugs. All 11 PREDICTION
+  leg-results corroborated onto `prediction_universe_capture_dead_since_07_01_2026_07_06.md` (KALSHI: byte-identical to
+  the doc's already-documented Root Cause #2; new precise evidence pinning the exact missing-window boundaries —
+  `instrument_availability` missing day=2026-07-09, `market_lifecycle` missing 07-07 through 07-12 entirely. POLYMARKET:
+  new, independent corroboration of the same root-cause family, not previously verified). The DEFI outlier
+  (`launcher_script_timeout`) traced to the SAME already-open
+  `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` OOM-preflight self-delete (confirmed live: the DEFI
+  availability index is still stuck at the same 2026-07-10T21:42:30Z timestamp that doc's own 07-12/07-13 entries
+  already cite) — the "launcher timeout" label was a secondary client-side artifact layered on top of the real,
+  pre-existing cause. Shipped `unified-trading-pm@055083485`.
+
+  **CEFI (38 leg-results across 8 venues)** — mostly corroborated onto already-tracked docs (Tardis concurrent-IP-lock
+  contention for BINANCE-DELIVERY/OKX/BYBIT-SPOT/COINBASE-FUTURES/BITFINEX-SPOT/KRAKEN-FUTURES; a genuinely
+  pre-launch-day honest-empty for COINBASE-CDE's IS legs; a real, already-separately-filed missing-batch-adapter gap for
+  COINBASE-CDE's MTDS leg). Two corrections to already-filed docs with harder evidence:
+  `hyperliquid_s3_archives_dead_upstream_2026_07_13.md`'s "dead since 2026-06-05" claim for l2Book is wrong (real
+  archive objects exist through 2026-06-29 — a rolling ~2-week publish lag, not permanent death; also found a live,
+  current `node_fills_by_block/hourly/` prefix the original doc never checked, meaning trades/node_fills is very likely
+  migratable, not permanently dead as claimed). **One major, new, cross-cutting finding**: re-verifying
+  `CEFI:OKX:liquidations`'s live-leg failure with a fresh VM (after the cell had already been independently confirmed
+  healthy at the manifest level) reproduced the identical `attempted_failed` verdict — but reading that fresh VM's own
+  per-VM manifest shard directly (bypassing the checker's consolidated-index read) showed the live capture was
+  completely healthy, dated `2026-07-13` (today's real wall-clock date). Root cause: `_run_live_leg`'s
+  `verify_manifest_row(bucket, match, day)` filters by the sweep's fixed NOMINAL historical `day` (`2026-07-09` for this
+  whole run) — a value that can never match a live VM's own row, since live captures always write with today's real
+  date. The live-leg check therefore never inspects what the live VM it just launched wrote; it silently matches
+  whatever OTHER row already exists for that key (almost always the same shard's own force-leg result, run moments
+  earlier). **This means no live-leg verdict anywhere in `RESWEEP_FINAL_REPORT.md` is trustworthy evidence the live
+  capture path itself works** — every "pass" is really just the force leg's own result restated, and a completely broken
+  live path would be silently masked by an unrelated force-leg pass. Filed
+  `pipeline_e2e_check_live_leg_manifest_date_mismatch_2026_07_13.md` (P1) with a clear recommended fix (verify against
+  the live VM's own launch/completion date, not the sweep's nominal day) — not fixed this pass, since
+  `scripts/pipeline_e2e_check.py`/`scripts/smoke_matrix.py` were both actively dirty with concurrent agent WIP at filing
+  time. Shipped `unified-trading-pm@6463131f1`.
+
+  **Net state after this round**: every one of todo 25's remaining ~219 genuine failures has now been individually
+  looked at with real evidence (not left as an abstracted reason string) — the large majority confirmed as
+  already-tracked infra issues (Tardis lock, DEFI/CEFI consolidator staleness) or checker-design non-bugs (SPORTS
+  architecture, honest pre-launch-day empties), a handful of real bugs found and fixed (YAHOO_FINANCE crash, CBOE stale
+  symbol + bare-instrument-id rejection, KRX registry gap, IS SPORTS BETFAIR enumeration), and 2 genuinely new,
+  significant findings surfaced and filed for follow-up (ICE's structural zero-fetch-path gap; the live-leg
+  manifest-date-mismatch bug, which is the most consequential finding of this entire round since it undermines trust in
+  every live-leg result across all 452 shards, not just the ones sampled here). No further individual re-verification is
+  planned this session — the live-leg bug is the one clear next-step item that should be fixed before any future sweep's
+  live-leg numbers are trusted.

@@ -99,11 +99,31 @@ drift_direction: advance-code
       service-flavour, so the gate correctly does not flag that path-dep (it is a library-like-coupling extraction, not
       a service↔service violation in the gate's terms). The stale manifest dep-edges for the 2 resolved edges were
       dropped via `fix-internal-dependency-alignment.py` (alignment: True).
-- [ ] [AGENT] P2. **DEFERRED (additive hardening) — extend `check-no-service-deps.py` to also catch a raw
+- [x] ✅ [AGENT] P2. **DEFERRED (additive hardening) — extend `check-no-service-deps.py` to also catch a raw
       `import <other_service>` in source/tests** (currently `[tool.uv.sources]` path-dep-only). Today every LIVE
       service↔service violation also carries a path dep, so the path-dep gate catches them all; this extension is
       belt-and-suspenders for a future import-without-path-dep case. Target repo: `unified-trading-pm`
-      (`scripts/validation/check-no-service-deps.py`).
+      (`scripts/validation/check-no-service-deps.py`). — SHIPPED `unified-trading-pm@386a7325` (companion fleet-drift
+      fix `unified-trading-pm@5e056fad` — see below). Added `find_raw_service_imports()`: AST-walks every `.py` file
+      under the current service repo (source + tests, skipping `.venv`/build dirs) for a plain `import <pkg>` or
+      `from <pkg>[.sub] import ...` whose top-level component matches another service's importable package name
+      (dash→underscore of its manifest repo key). **Deliberately WARN-only (prints `[WARN]`, does not fail the gate)** —
+      a fleet-wide sanity probe (all 24 repos, before shipping) found ~11 hits across
+      execution-service/features-service/strategy-service, every one an already-reviewed/tracked cross-service import
+      (`service_contract_map.py forbidden_exceptions`, `deprecation_ledger.yaml`, or an explicit sanctioned-deep-import
+      rationale comment). Hard-failing on those today would break 3 repos' `quality-gates.sh` outside this plan's
+      declared scope with no way to distinguish new accidental coupling from sanctioned debt — mirrors how the original
+      path-dep gate itself was rolled out (detector → remediate/baseline → hard-fail last, item 1 above); that
+      remediation pass is out of this ticket's scope and is a tracked follow-up, not silently dropped. Verified via 29
+      new/updated unit tests (`tests/unit/test_check_no_service_deps.py`, including 3 end-to-end `main()` tests proving
+      raw-import hits warn+exit-0 while a path-dep still hard-fails+exit-1) — 941 passed / 8 skipped full-suite;
+      `ruff`/`basedpyright` clean; re-ran the fleet-wide probe post-format, all 24 repos still exit 0. **Unrelated
+      blocker hit + fixed in passing**: PM's Stage 1.5 dependency-alignment gate was red on an unrelated fleet-canonical
+      `click` floor (`>=8.3.2` vs the already-tightened PYSEC-2026-2132 fix `>=8.3.3`, per
+      `plans/active/issues/fund_administration_service_click_pysec_2026_2132_2026_07_13.md` — documented as already
+      corrected in that same session but never pushed) — completed + shipped that one-line fix
+      (`unified-trading-pm@5e056fad`, `workspace-constraints.toml` + regenerated `canonical-dependency-manifest.json`)
+      since it blocked every PM quickmerge, not just this one.
 
 ## Success criteria
 
