@@ -101,15 +101,17 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (ODDS/FIXTURE_LINEUPS/FIXTURE_EVENTS/FIXTURE_STATS/PLAYER_STATS/INJURIES/ FIXTURES), apply the same
       captured-vs-expected grain cross-check** — the aggregate "spread evenly across years" framing looked plausible but
       missed this exact bug for TEAMS; don't take the same claim on faith for the rest.
-- [ ] [DATA] P2. **api_football TEAMS/STANDINGS: purge the legacy blank-`league_id` bulk bundle (NEW 2026-07-13,
-      discovered during the TEAMS backfill).** The live writer bug that produced these rows (blanket
-      `record_captured_from_counts` in `process_enrichment.py` not excluding "teams"/"standings" from
-      `_self_manifested`) was fixed in `instruments-service@56aa1938` — this todo is ONLY the historical cleanup of the
-      3,648 TEAMS + 3,647 STANDINGS blank-league "captured" rows already in the canonical index (2014→2026-07-13), now
-      inert noise once the leak is stopped. Decide: delete via a manifest-row-removal one-off (mirror
-      `backfill_remove_unknown_league_phantom_2026_07_09.py`'s pattern) vs. leave as accepted historical noise (they
-      don't block per-league gap-closure, just add non-canonical rows to `source`-column totals). Low priority — not
-      blocking any downstream consumer.
+- [x] [DATA] P2. **api_football TEAMS/STANDINGS: purge the legacy blank-`league_id` bulk bundle (NEW 2026-07-13,
+      discovered during the TEAMS backfill).** — ✅ DECIDED 2026-07-13 (sub-agent decide-and-document pass): **LEAVE as
+      accepted historical noise, no purge.** Live-verified 3,648 TEAMS + 3,647 STANDINGS blank-league_id `captured` rows
+      still present (2014-01-01→2026-07-13, `instrument_count` 519-621/714, genuine captures not phantoms), 1.36% of
+      api_football's 536,368 captured rows / 0.27% of its 2,683,950 total — noise-level, no dashboard surfaces a sports
+      `source=` total prominently (checked both UI repos), root cause already fixed at source
+      (`instruments-service@56aa1938`, confirmed the leak stopped: last pre-fix write 18:05 UTC vs. fix landed 18:44:38
+      UTC), and a removal one-off would need the same CAS-safe retry loop as
+      `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` for a cosmetic, non-blocking fix against a table the
+      concurrent 61-league TEAMS backfill is actively writing to right now. Full reasoning: Progress Log "(b)" entry
+      below. No code/data change made.
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
@@ -149,12 +151,22 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       identity overlap between the two grains in a live dry-run. Required before this source can show a clean
       0/0/0-style coverage number (currently ~209k `expected_unattempted` and ~124k `captured` sit as disjoint cells
       post-backfill).
-- [ ] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** Reconcile
-      `_CANONICAL_PREFIX_TEMPLATES` in `_read_raw_odds()` against MTDS's actual current on-disk sports-odds writer
-      convention — confirmed via live `list_blobs` probes that NO on-disk shape currently uses the
-      `data_source=ODDS_API` segment the reader expects (2026-05 layout: per-bookmaker `venue={BOOKMAKER}`; 2026-06+
-      layout: meta `venue=ODDS_API` with non-`ticks.parquet` filenames). Needed before any future `--force` re-run can
-      safely capture new dates without silently reclassifying real captures as `empty_confirmed`.
+- [x] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** — DONE, code fix +
+      tests + live-verified: `market-data-processing-service@e8f6709` (also carried a pre-existing uncommitted,
+      inherited-dead-WIP `_resolve_bucket()` project_id fix found sitting in the working tree at session start — see
+      Progress Log). Reconciled `_CANONICAL_ODDS_PREFIX_TEMPLATES` (renamed from `_CANONICAL_PREFIX_TEMPLATES`) in
+      `_read_raw_odds()` against MTDS's actual current on-disk sports-odds writer convention — live `list_blobs` probes
+      (2020-06 through 2026-07-13) confirmed the OLD templates' `data_source=ODDS_API` segment NEVER matched any on-disk
+      shape, ever. Now supports BOTH real shapes found: the dominant per-bookmaker "trades" shape
+      (`venue={BOOKMAKER}/.../data_type=trades/ticks.parquet`, present 2020-06 through at least 2026-06-20, has
+      `bm_time`/`bm_minutes_to_kickoff`) AND the 2026-06-21+ meta-snapshot shape (`venue=ODDS_API` token +
+      `ODDS_API:SPORT:{sport}.parquet` filename, schema has a nested `bookmakers` column, NOT the flat per-outcome rows
+      the adapter needs). Added a fail-loud path (`RawOddsShapeUnrecognizedError`, classified to
+      `RAW_ODDS_SHAPE_UNRECOGNIZED`) for any date where files exist but match neither the consumable shape nor a
+      deliberately-skipped legacy-migration artifact — recorded `attempted_failed`, never a phantom `empty_confirmed`,
+      mirroring instruments-service's `reconcile_manifest_from_per_league_parquets.py` 2026-07-13 "skip + log loudly"
+      fix. See Progress Log 2026-07-13 "reprocess_sports_odds.py prefix-template refresh" entry for the full live-probe
+      evidence table and dry-run verification output.
 - [x] [DATA] P1. **odds_api source: retirement-status check.** — DONE, no code change (root-caused twice; see Progress
       Log 2026-07-13 "implementation" entry). `odds_api` is NOT retired/superseded: it is the sole `SOURCE_PRIORITY`
       owner of `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` and is a credential-gated (`BLOCKED-CREDENTIALS`) live
@@ -172,9 +184,15 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       expected_unattempted is legitimate (likely off-season/no-transfer-window dates).
 - [ ] [DATA] P2. **weather (open_meteo): close the small residual.** 51 attempted_failed
       (`phantom_captured_no_parquet_at_canonical_path`), 94 expected_unattempted (verify legitimate).
-- [ ] [DATA] P3. **Retired data_types spot-verify.** SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES (88,056 rows,
-      code-confirmed retired in `rebuild_sports_manifest_v9.py:103`) — spot-check a sample actually carries
-      `EXPECTED_DEPRECATED_DATA_TYPE`, not a stale/blank reason. Cheap, no fix expected.
+- [x] [DATA] P3. **Retired data_types spot-verify.** — ✅ DONE 2026-07-13 (sub-agent). All 88,056 rows (SFI_LEAGUES
+      12,469 + SFI_STANDINGS 42 + TRANSFERMARKT_LEAGUES 75,545) live-verified `capture_status=empty_confirmed` +
+      `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`, 0 anomalies (checked all 88,056, not just a sample), plus a 30-row
+      stratified spot-check — CLEAN, matches plan expectation exactly. **Bonus finding while settling the codeset
+      NOTE**: `SFI_PROGRESSIVE_STATS` (which is NOT one of the 3 genuinely-retired types — it's the one live SFI entity)
+      was actually present in `rebuild_sports_manifest_v9.py`'s `_RETIRED_DATA_TYPES` frozenset (a real copy-paste bug
+      since the 2026-06-01 introduction, confirmed by reading the code + cross-checking every other retired-types
+      definition in the repo) — fixed + shipped `market-tick-data-service@934a1efa` (removed it from the set, added a
+      regression test). Full detail: Progress Log entry below.
 - [x] [VERIFY] P0. **Whole-asset_group final re-verify + close-out report.** — DONE 2026-07-13 (final-reverify
       dispatch). Fresh single-parquet re-read produced the final per-source table below; **DoD is NOT fully met** — 2 of
       8 categories hit the literal/documented-equivalent bar cleanly (transfermarkt, odds_api, retired data_types — 3
@@ -1613,3 +1631,160 @@ report written in this plan's Progress Log.
   33/94) plus final failure count, per-VM shard landing confirmation, and closes this todo's checkbox once verified. If
   the consolidator race causes a partial landing, that entry will also record the retry outcome, not just the first
   pass.
+
+- 2026-07-13 (sub-agent, `/autonomous` dispatch — retired-data-types spot-verify + blank-league-bundle
+  decide-and-document, two P2/P3 §1 todos): both closed this pass, plus a bonus code-fix discovery.
+
+  **BONUS FINDING — real bug, fixed + shipped**: the task brief asked me to settle whether `SFI_PROGRESSIVE_STATS` was
+  genuinely inside `rebuild_sports_manifest_v9.py`'s `_RETIRED_DATA_TYPES` frozenset or a misreading. Read the file
+  directly: it WAS actually in the set (line 103,
+  `frozenset({"SFI_LEAGUES", "SFI_PROGRESSIVE_STATS", "SFI_STANDINGS", "TRANSFERMARKT_LEAGUES"})`, present since the
+  2026-06-01 keystone-relabel commit `1036de203`). Cross-checked every other authoritative definition of the retired set
+  in the codebase — the archived `sports_retired_data_types_code_cleanup_2026_05_13.md` plan (line 74:
+  "SFI_PROGRESSIVE_STATS is the only live SFI entity"),
+  `instruments-service/scripts/migrate_sports_retired_types_2026_05_13.py`'s `DEFAULT_RETIRED_TYPES` (3 members, no
+  SFI_PROGRESSIVE_STATS), and `instruments-service/scripts/sweep_sports_index_noncanonical_2026_06_25.py`'s own
+  `_RETIRED_DATA_TYPES` (also 3 members) — every one of them agrees SFI_PROGRESSIVE_STATS is the live entity and only
+  SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES were retired. Live-manifest cross-check confirms it's actively
+  captured today (§0 baseline: `soccer_football_info` source, 226,237 rows, 19,750 `captured`, only 94
+  `expected_unattempted` — clearly live, not deprecated). **This was a real copy-paste bug**:
+  `rebuild_sports_manifest_v9.py`'s KEYSTONE reason-relabel step (STEP 1 of `_classify_empty_row`) would have relabelled
+  any `empty_confirmed` SFI_PROGRESSIVE_STATS cell it processed as `EXPECTED_DEPRECATED_DATA_TYPE` instead of running it
+  through the real oracle classification (SOURCE_RETURNED_ZERO / EXPECTED_NO_FIXTURE / attempted_failed per the CF-11
+  fixture gate) — a live SFI_PROGRESSIVE_STATS empty cell would have been silently mislabelled as "this data_type
+  doesn't exist anymore" every time this rebuild script ran over it. **Fix shipped**:
+  `market-tick-data-service@934a1efa` — removed `SFI_PROGRESSIVE_STATS` from `_RETIRED_DATA_TYPES` (now 3 members),
+  updated the two docstring/comment blocks referencing it, added a regression test
+  (`test_retired_data_types_excludes_live_sfi_progressive_stats`) asserting it's excluded and the set is exactly the 3
+  genuinely-retired types. Live-manifest scan (below) found 0 SFI_PROGRESSIVE_STATS rows currently mislabelled
+  `EXPECTED_DEPRECATED_DATA_TYPE` (the bug hadn't yet been triggered against real data by a rebuild run since the
+  2026-06-01 introduction — caught before any damage). Shipping note: full-repo `quality-gates.sh` was initially RED at
+  my starting HEAD (`c71e8098`) due to an unrelated pre-existing violation (`sentinels.py` over the 900-line cap + 1
+  in-function import, introduced by a concurrent agent's `29db8440`) — not touched by my diff, out of my task's scope
+  per the per-slot file-ownership rule. Rather than block or hand-roll a fix to an unfamiliar file, I `git fetch` +
+  `git pull --ff-only`'d and found a concurrent agent had already landed the fix (`a813711b`, "restore sentinels.py
+  under the 900-line cap") minutes later; re-ran quality-gates.sh clean (exit 0, `.qg_last_passed_sha` matched HEAD) and
+  shipped via `--agent` quickmerge normally.
+
+  **(a) Retired data_types spot-verify — DONE, CLEAN, no fix needed.** Live single-parquet read of
+  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` (5,516,181 total rows)
+  filtered to the 3 genuinely-retired types: 88,056 rows exactly matching the plan's §0 baseline (SFI_LEAGUES 12,469 +
+  SFI_STANDINGS 42 + TRANSFERMARKT_LEAGUES 75,545), 100% `capture_status=empty_confirmed`, 100%
+  `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` (the manifest's reason column is named `error_reason`, not
+  `empty_confirmed_reason`/`reason`) — **0 anomalies** found when checking every one of the 88,056 rows (not just the
+  sample) for a reason other than `EXPECTED_DEPRECATED_DATA_TYPE`. Stratified spot-check of 30 rows (10 per type,
+  `random_state=42`) all confirm the same. Todo closed clean — matches the plan's own §0 pre-annotation ("already
+  correctly typed ... needs only a spot-verify, no active work").
+
+  **(b) api_football TEAMS/STANDINGS blank-league_id bulk bundle — DECISION: LEAVE as accepted historical noise, do NOT
+  purge.** Live-verified the rows are still present and inert: 3,648 TEAMS + 3,647 STANDINGS blank-`league_id`
+  `captured` rows (`service_name=instruments-service`, `source=api_football`), date range 2014-01-01 through 2026-07-13,
+  `instrument_count` 519-621 (TEAMS) / 714 (STANDINGS) — i.e. these are REAL captured snapshots (a genuine daily
+  all-leagues roster/standings pull), not corrupt or phantom rows, just filed at a different grain (blank league_id =
+  "all leagues bundled") than the per-league enumerator expects. Checked whether the leak is truly stopped by the cited
+  fix (`instruments-service@56aa1938`, authored 2026-07-13T19:44:38+01:00 = 18:44:38 UTC): the last blank-league write
+  before the fix landed was `written_at=18:05:00 UTC` (both TEAMS and STANDINGS, date=2026-07-13) — consistent with the
+  fix stopping it. One row per data_type shows a `written_at` AFTER the fix commit (20:16:22 UTC) but for a HISTORICAL
+  date (2017-02-26, not "today") — this reads as the live manifest consolidator (Cloud Run Job, `*/1 *` cron) merging a
+  pre-existing, already-on-disk per-VM shard into canonical rather than a fresh post-fix write (the fix removes the
+  writer's blanket `record_captured_from_counts` call for teams/standings going forward; it cannot retroactively touch
+  an already-written shard file the consolidator hadn't gotten to yet). Decision rationale, per the plan's own framing
+  ("delete ... vs. leave as accepted historical noise ... low priority, not blocking any downstream consumer"): (1) the
+  7,295 rows are 1.36% of api_football's 536,368 `captured` rows and 0.27% of its 2,683,950 total rows — noise-level,
+  not the kind of material inflation the plan's own bar for action names ("inflating a source= total that a dashboard
+  surfaces prominently"); (2) grepped both UI repos (`deployment-ui/src`, `unified-trading-system-ui/src`) for any
+  per-source/per-data_type total dashboard — found none that surfaces sports `source=`/`data_type=` row-count totals
+  prominently, so there is no operator-visible surface these rows would visibly distort; (3) the rows are genuine
+  historical captures (real instrument_count values), not fabricated/placeholder data — deleting real historical
+  evidence for a cosmetic non-canonical-grain cleanup is a net information loss for a P2/non-blocking item; (4) the root
+  cause is already fixed at source (no further accumulation), so this is a one-time historical residual, not a growing
+  problem; (5) a manifest-row-removal one-off would need the same CAS-safe generation-precondition retry loop as
+  `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` (the live per-minute consolidator can silently clobber a
+  plain write) — nontrivial extra risk for a cosmetic fix, and the task brief's own "CONCURRENT WORK WARNING" plus the
+  still-`RUNNING` 61-league TEAMS backfill (previous journal entry, same `source=api_football`/`data_type=TEAMS`
+  surface) makes this an actively-hot table right now — not the moment to add an unrelated write operation against it.
+  **No code/data change made for (b)**; todo closed as a documented decide-and-document call, not deferred.
+
+### 2026-07-13 — reprocess_sports_odds.py prefix-template refresh (DONE)
+
+**Task**: reconcile `_CANONICAL_PREFIX_TEMPLATES` in `market-data-processing-service/scripts/reprocess_sports_odds.py`
+`_read_raw_odds()` against MTDS's actual current on-disk sports-odds layout, so a future `--force` re-run never silently
+reclassifies a real capture as `empty_confirmed`.
+
+**Inherited dead WIP found at session start**: `git status` on a fresh clone showed `scripts/reprocess_sports_odds.py`
+already modified (uncommitted, mtime hours old, no live process touching it — liveness-gated dead claim, safe to
+inherit). Diff was a correct, verified fix to `_resolve_bucket()`: the prior commit (`6907257e4`, this plan's
+"mdps_odds_horizon_bucket: root-cause zero-ever-captured" entry) had switched `_resolve_manifest_bucket()` to
+`resolve_bucket_name(...)` but left `_resolve_bucket()` on the legacy
+`get_bucket_name("market-data-tick-sports", project_id=project)` call. Verified in
+`unified_trading_library/core/cloud_constants.py`: `get_bucket_name`'s yaml-SSOT delegation is explicitly skipped
+whenever `project_id` is passed ("Skip when project_id is explicitly overridden" branch gate), so the legacy call
+silently fell through to the no-env-tier legacy bucket-name shape (missing `-prd-`) instead of the real bucket. Folded
+this into the same commit as an adjacent, verified fix (findings triage: adjacent + small + clear).
+
+**Root cause (this todo's actual scope)**: live `list_blobs` probes across a representative date range (2020-06-15,
+2022-06-15, 2024-06-15, 2026-05-20/21/22, 2026-06-21/24, 2026-07-01/10/12/13) against
+`market-data-tick-sports-prd-central-element-323112` found:
+
+- The OLD `_CANONICAL_PREFIX_TEMPLATES`' `data_source=ODDS_API` hive segment **never matched any on-disk blob, at any
+  date since 2020** — the real writer always keys off `venue=` directly, never a `data_source=` segment.
+- **Actual consumable shape** (has `bm_time`/`bm_minutes_to_kickoff` — verified by reading a real parquet file's
+  schema), present 2020-06 through at least 2026-06-20:
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/asset_group=sports/venue={BOOKMAKER}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
+- **Actual meta-snapshot shape** (recognized but schema-incompatible — verified by reading a real parquet file: columns
+  `[venue, instrument_id, sport_key, event_id, home_team, away_team, commence_time, bookmakers, ts_ms]`, no `bm_time`;
+  `bookmakers` is a nested column, not the flattened per-outcome rows the adapter needs), present 2026-06-21 onward
+  (both `batch_odds_api` and `live_odds_api` pipeline_mode variants):
+  `raw_tick_data/by_date/day={D}/pipeline_mode={batch_odds_api,live_odds_api}/asset_group=sports/venue=ODDS_API/[league_id=/]instrument_type=sport/data_type=trades/ODDS_API:SPORT:{sport_key}.parquet`
+- Legacy migration artifacts (`*_migrated_*.parquet`, from the 2026-05-05 per-shard refactor) co-exist with the
+  consumable shape at the same historical dates (2020/2022/2024) — confirmed both shapes present side-by-side for the
+  same date, so the existing `_migrated_` skip is safe to keep as-is (never the ONLY shape present).
+- 2026-06-25 through 2026-07-13: zero raw blobs of ANY shape found (checked both odds-specific and whole-day listings,
+  and the `processed/` MDPS output side too) — genuinely empty capture window (consistent with summer-break sparse
+  EPL/Serie A fixtures), not a probe artifact.
+
+**Fix shipped**: `market-data-processing-service@e8f6709` (+ `docs(plans):` flip in this commit).
+
+- Renamed `_CANONICAL_PREFIX_TEMPLATES` → `_CANONICAL_ODDS_PREFIX_TEMPLATES` = the two real pipeline_mode prefixes
+  (`batch_odds_api`, `live_odds_api`) — no more `data_source=` assumption.
+- `_read_raw_odds()` now lists both prefixes once, classifies every blob by filename shape (`_is_consumable_trades_blob`
+  / `_is_meta_snapshot_blob` / `_is_legacy_migrated_blob`), prefers the consumable shape, and — new — raises
+  `RawOddsShapeUnrecognizedError` when blobs exist but none are consumable (meta-snapshot and/or a genuinely
+  new/unrecognized shape). Falls through to the legacy single-file path only when BOTH prefixes are completely empty.
+- `_classify_exception()` maps `RawOddsShapeUnrecognizedError` to a dedicated `RAW_ODDS_SHAPE_UNRECOGNIZED` error code
+  (not the generic `UNCLASSIFIED_EXCEPTION` fallback) so the manifest row is directly actionable.
+- The exception deliberately propagates uncaught out of `_read_raw_odds()`/`reprocess_date()` — `_process_one_date`'s
+  existing per-day try/except (shard-level failure isolation, already in place) catches it and records
+  `attempted_failed`, never `empty_confirmed`. Fail-honest pattern mirrors instruments-service's
+  `reconcile_manifest_from_per_league_parquets.py` 2026-07-13 "skip + log loudly, don't guess" fix (cited per the task
+  brief).
+- Added 5 new unit tests to `tests/unit/test_reprocess_sports_odds_capture_status.py` (blob-shape classification ×2,
+  `_read_raw_odds` raises on meta-snapshot-only ×1, `_classify_exception` mapping ×1, updated the pre-existing
+  canonical-prefix regression test for the renamed constant); updated 1 pre-existing test. All 15 tests in that file
+  pass; full repo `quality-gates.sh --no-fix` green (1 pre-existing, unrelated basedpyright warning in
+  `cli/handlers/process_handler.py`, outside `[tool.basedpyright] include` scope for `scripts/`, confirmed pre-existing
+  and untouched by this change).
+
+**Live dry-run verification** (`--dry-run`, real GCS, no writes — `--force` alone would still respect `writer.write()`
+being skipped under `--dry-run`, so this is fully safe), run both before AND after the quickmerge landed, same result
+both times:
+
+- `2026-05-20` (consumable shape): **1 success**, "Read 6463 rows from canonical ODDS_API (73 parquet files)" → 183
+  bucketed rows / 27 shards / 8 horizons / 23 bookmakers. Before the fix this returned 0 rows → would have written a
+  phantom `empty_confirmed` on top of a real, previously-uncaptured-by-this-reader day.
+- `2020-06-15` (deep legacy, migrated artifacts co-existing with the consumable shape): **1 success**, "Read 3092
+  rows... (50 parquet files)" — confirms the `_migrated_` skip still works and doesn't shadow the real data.
+- `2026-06-21` (meta-snapshot-only): **1 failed** (`attempted_failed`, NOT `empty_confirmed`) — log: "found 4
+  meta-snapshot + 0 unrecognized-shape blob(s), 0 consumable — raising (will record attempted_failed, NOT
+  empty_confirmed)"; `Day 2026-06-21 failed: RAW_ODDS_SHAPE_UNRECOGNIZED (RawOddsShapeUnrecognizedError)`. This is
+  exactly the bug this fix closes.
+- `2026-07-10` (genuinely empty window): **1 empty** (`empty_confirmed`, correctly) — "No raw odds data for 2026-07-10 —
+  skipping". Confirms the fix does NOT over-correct into flagging every empty day as unrecognized.
+
+**Todo left open, not this todo's scope**: the meta-snapshot shape (2026-06-21+) still has no real adapter — dates in
+that window will now correctly record `attempted_failed` (visible, actionable) instead of a silent wrong answer, but
+turning that into actual `captured` rows needs a NEW adapter that flattens the nested `bookmakers` column into
+per-outcome rows (not scoped or estimated here; not a todo in this plan — the task brief's Definition of Done for this
+specific item was "safe to re-run without silently misclassifying," which is met). If a follow-up wants to close that
+gap, it should be filed as its own plan todo (out of `sports_data_sources_canonical_completion_2026_07_13`'s scope since
+it's new adapter work, not a data-audit residual).
