@@ -1203,6 +1203,37 @@ report written in this plan's Progress Log.
     **open** — checkbox left `[ ]` with this sub-status noted rather than flipped, since the item's own text explicitly
     includes "then migrate the 362,665 orphaned rows" as part of its definition of done.
     - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
+- **2026-07-13 (sub-agent, BLAST-RADIUS PROOF dispatch, AUTONOMOUS_AGENT_RULES.md rule 11 closing self-check for
+  `market-tick-data-service@ad76547c`) — all 5 asset_groups PROVED, PASS.** Ran the actual resolver code path with real
+  inputs (not assertion-by-inspection): `GCP_PROJECT_ID=central-element-323112 .venv/bin/python -c` calling
+  `get_tick_data_bucket(None, ag, test_aware=False)` then `_resolve_manifest_bucket(data_bucket, ag)` for
+  `ag in {cefi, defi, tradfi, sports, prediction}` against the live `central-element-323112` GCP config (ADC-authed, no
+  mocks). Observed:
+  - `cefi`: data=`market-data-tick-cefi-prd-central-element-323112`, manifest=SAME → `identical=True`. **PASS**
+    (byte-identical to pre-fix; cefi never enters the sports-only `if` branch).
+  - `defi`: data=`market-data-tick-defi-prd-central-element-323112`, manifest=SAME → `identical=True`. **PASS.**
+  - `tradfi`: data=`market-data-tick-tradfi-prd-central-element-323112`, manifest=SAME → `identical=True`. **PASS.**
+  - `prediction`: data=`market-data-tick-pred-prd-central-element-323112`, manifest=SAME → `identical=True`. **PASS.**
+  - `sports`: data=`market-data-tick-sports-prd-central-element-323112` (unchanged raw-byte bucket), manifest=
+    `instruments-store-sports-prd-central-element-323112` (the canonical bucket — `identical=False`, as intended).
+    **PASS** — sports now resolves to the correct manifest bucket.
+  - **Corroborating evidence (not just the live run)**: `git show ad76547c -- .../__init__.py` diff shows all 4 non-
+    sports call sites previously read `_bucket` (== `get_tick_data_bucket()`'s return, i.e. `data_bucket`) directly for
+    both the raw-write AND manifest/preflight/non-trading-day paths; post-fix they read
+    `_manifest_bucket = _resolve_manifest_bucket(_bucket, ag)`, and `_resolve_manifest_bucket`'s body is a single
+    `if asset_group.lower() == "sports": return resolve_bucket_name(...)` / `return data_bucket` — algebraically
+    provable that any `ag != "sports"` returns its input `data_bucket` unchanged, matching the live-run observation
+    exactly. `venue_fetch.py:395,590` (`_bucket = state.bucket`, the actual `PartitionedTickWriter`/
+    `StreamingParquetWriter` raw-byte write path) greps to 0 references of `manifest_bucket` — confirmed untouched, so
+    no asset_group's raw tick-byte write location changed.
+  - **Working-tree/QG state at proof time**: `market-tick-data-service` `git status` clean, HEAD == `ad76547c` (no drift
+    since the code-fix commit); `.qg_last_passed_sha` on disk (`b11199c…`) is STALE relative to HEAD — expected
+    (gitignored sentinel, this shared clone had a concurrent agent's QG run land after the code-fix commit per the
+    per-tab-worktrees shared-repo model) and immaterial to this proof since no new code was written in this pass, only a
+    read-only verification.
+  - **Verdict: 5/5 asset_groups PASS.** No regression found for cefi/defi/tradfi/prediction; sports fix confirmed live.
+    Nothing reverted, nothing further to fix. The P1 todo's checkbox stays `[ ]` per the prior entry's note (code half
+    done + proved; migration half of the bundled item remains the only open piece, unchanged by this proof pass).
 - **2026-07-13 (sub-agent, read-only investigation) — api_football TEAMS 61-league gap: ROOT CAUSE FOUND (code
   unchanged, no fix shipped yet — this pass was investigation-only per dispatch).** **(1) One code path, not two.**
   `instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_teams_and_standings` (lines 138-216) is the
