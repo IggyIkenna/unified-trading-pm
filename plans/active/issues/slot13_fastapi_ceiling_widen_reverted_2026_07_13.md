@@ -14,7 +14,7 @@ summary: |
   Phase-1 strategy-service risk plan, which referenced the exception mechanism. All 13 repos reverted back to
   <0.137.0; the 7 already-pushed repos got explicit revert commits + fresh QG + quickmerge; the 6 unpushed repos
   had the bad commit simply dropped (never left local disk).
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -51,7 +51,7 @@ parent_epic: infrastructure_master
 priority: P1
 source: self-discovered by slot-13 mid-batch, 2026-07-13, while reading utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-13
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -157,5 +157,7 @@ revert commits mid-flight at time of writing).
       agent-orchestrator + unified-trading-api at `<0.138.0` headroom — but since all 7 repos here declare the exact
       canonical `<0.137.0` (not exercising that headroom), the alignment check passes on direct canonical match, not via
       the exception path. No contradiction with this todo's intent.
-- [ ] [BACKEND] P1. Resume the original click/pillow/soupsieve batch
-      (`system_integration_tests_pip_audit_red_2026_07_13.md`) to completion on the corrected baseline.
+- [x] ✅ [BACKEND] P1. Resumed the original click/pillow/soupsieve batch
+      (`system_integration_tests_pip_audit_red_2026_07_13.md`) to completion on the corrected baseline — click floor
+      shipped `unified-trading-pm@c44b182f9` + `features-service@d676d24c`; pillow/soupsieve already satisfied
+      fleet-wide via each repo's own `uv.lock` resolution. Todo 1 flipped in that plan doc.
