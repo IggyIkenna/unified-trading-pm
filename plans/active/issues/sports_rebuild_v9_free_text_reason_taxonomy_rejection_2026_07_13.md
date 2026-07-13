@@ -146,10 +146,17 @@ Two sequenced follow-ups, both concrete (not ambiguous operator calls):
       (strip the free-text `__truthset_*`/`flipped_*` suffix) + `available_at`, closing the residual CF-8 gap this
       rebuild pass could not close for these rows. (repo: market-tick-data-service) —
       `market-tick-data-service@444c8dd8`
-- [ ] [DATA] P2. Consider whether `_rebuild_sports_write.py`'s `not force` skip-condition should also validate the
+- [x] ✅ [DATA] P2. Consider whether `_rebuild_sports_write.py`'s `not force` skip-condition should also validate the
       existing reason is in the closed-set taxonomy (not just that it starts with `EXPECTED_`) — a reason failing that
       check should be treated as "needs relabel" (route through the oracle), not "keep_typed", closing this class of gap
-      at the source for any future rebuild run. (repo: market-tick-data-service)
+      at the source for any future rebuild run. (repo: market-tick-data-service) — `market-tick-data-service@d936444d`.
+      Found the actual gap lives in `rebuild_sports_manifest_v9.py::_classify_empty_row` STEP 3 (not
+      `_rebuild_sports_write.py`, which only has a _secondary_ `not force` skip-check downstream of the classifier) —
+      its blanket `existing_reason.startswith("EXPECTED_")` check preserved non-canonical suffixed variants (e.g.
+      `EXPECTED_NO_FIXTURE__truthset_20260713-142830`) verbatim regardless of `--force`. Now gated on
+      `_validate_reason()` (previously defined, never called) — a look-alike falls through to the oracle (steps 4-8)
+      instead of `keep_typed`. Added 2 regression tests (canonical-preserved + noncanonical-routes-through-oracle), all
+      40 tests in `test_rebuild_sports_manifest_v9.py` pass.
 
 ## Progress Log
 
