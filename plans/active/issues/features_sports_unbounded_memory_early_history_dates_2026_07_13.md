@@ -262,7 +262,7 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       (NaN-filled venue columns) instead. Applied at all 4 vulnerable merge/groupby sites in the function (venue_coords,
       away_coords, the home_win_pct venue_stats groupby, and the clean-sheet-rate venue_hist groupby), not just the 2
       named here. See "Update — real root cause confirmed + fix shipped (slot 14)" below for full verification evidence.
-- [ ] [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
+- [x] ✅ [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
       (`features_service/sports/data/gcs_mappings.py`) returns `venue_id=""` for all 591 rows even though the raw source
       parquet (`gs://instruments-store-sports-prd-central-element-323112/sports_reference/venues/venues.parquet`) has
       591 correctly distinct real venue names — find and fix the column-mapping/normalization bug; (2) separately,
@@ -271,18 +271,44 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       cartesian join explodes from ~1.4GB to 40GB+ RSS in low single-digit seconds — too fast for a userspace
       RSS-polling watchdog; use a real kernel-enforced cap (`docker run --memory=<N>g --memory-swap=<N>g`), not
       `RLIMIT_AS` (caps virtual memory, not RSS — false-triggers on numpy/grpc before real growth). (repo:
-      features-service) — **EXACT SITES NOW PINNED (slot 14, 2026-07-13):** both call sites named here plus a THIRD
-      (`travel_calculator.py:182-184`) all carry the identical pattern —
-      `pd.to_numeric(df["venue_id"], errors="coerce")` then `str(int(v)) if notna else ""`. The comments at all 3 sites
-      say this normalizes a numeric id (`"173.0 → '173'"`) — but the real production `venue_id` is a non-numeric string
-      code (`"OLD_TRAFFORD"` etc, confirmed 591/591 unique via direct raw-parquet read), so `pd.to_numeric` returns NaN
-      for every row → collapses to `""` everywhere. This is NOT a quick fix I could take unilaterally: it's ambiguous
-      whether the string code is now the sole canonical venue_id (delete the numeric round-trip) or whether a real
-      numeric↔string id-space crosswalk is missing (bigger fix). Filed as a separate issue doc with the
-      operator-decision framed as 3 options:
-      `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`. The OOM-crash risk this todo
-      partly motivated is CLOSED regardless (see Todo above) — this remaining piece is a correctness-only gap (venue
-      features silently NaN, not a crash risk) tracked in the new issue doc, not blocking here.
+      features-service) — **DONE, slot 5, 2026-07-13, features-service@a9684e27.** The `[DECISION]` this todo was
+      blocked on turned out to have a definite factual answer rather than a judgment call: `venues.parquet`'s `venue_id`
+      is `unified_api_contracts.sports.build_venue_id(name)` (verified byte-exact against ALL 591 production rows, 0
+      mismatches — direct GCS read + apply). That SAME UAC builder is already used elsewhere for the identical purpose
+      (weather-lookup canonicalization); raw fixtures already carry a `venue_name` column alongside the useless numeric
+      `venue_id` (confirmed via real GCS reads for 2018-06-17, 2019-08-11, 2024-01-15). Fix at all 3 sites (matches the
+      sibling issue's `[CODE]` todo, done together since a partial fix would leave `travel_calculator.py` silently
+      re-corrupting what the other two sites now fix, and would newly CRASH on a real string venue_id via its
+      `int(float(...))` cast — a 4th latent bug found during this fix, also corrected):
+  - `gcs_mappings.py::read_venues()` — deleted the `pd.to_numeric`/`int()` round-trip entirely; `venue_id` from
+    venues.parquet is already canonical, no transform needed.
+  - `gcs_normalizers.py::normalize_fixtures()` — rebuilds `venue_id` from `venue_name` via `build_venue_id()` instead of
+    coercing the raw (wrong-id-space) numeric `venue_id`.
+  - `travel_calculator.py::compute_travel_batch()` — removed the redundant re-corruption of `venues["venue_id"]`, and
+    fixed `vid_str = str(int(float(match_venue_id)))` (would raise on a non-numeric string) → `str(match_venue_id)`.
+    Verified via `unified_api_contracts.sports.build_venue_id` fleet-wide grep: no 4th site exists.
+  - **Verified end-to-end against real GCS production data**: `export_derived_features()` completes for BOTH poison
+    dates with no OOM (2018-06-17: 649MB peak RSS, 2018-06-18: 649MB peak RSS — matching the prior `_dropna_key()` fix's
+    baseline, no regression). `home_venue_win_rate`/`home_venue_goals_avg`/`home_venue_clean_sheet_rate`/
+    `home_venue_matches_played` now populate 140/149 rows for 2018-06-17 (previously ALWAYS NaN via the constant-blank
+    key) — these use fixture-to-fixture venue_id self-consistency (today's fixture vs. historical fixtures at the same
+    venue), independent of `venues.parquet` coverage. `stadium_capacity`/`travel_distance_km`
+    (`venues.parquet`-dependent) only matched 1/149 for 2018-06-17 — confirmed CORRECT honest-absence, not a bug: this
+    date is June (European off-season), so its 149 fixtures are overwhelmingly minor/friendly matches at venues
+    genuinely outside the 591-row curated `venues.parquet` (`teams_df`-derived, major-league-only) registry — direct
+    membership check confirmed 139/149 distinct venue codes are honestly absent from `venues.parquet`, not mismatched.
+    Confirmed the positive-match path works on a covered venue too (`"Grimsta IP"` → `GRIMSTA_IP`, present in
+    `venues.parquet`), and on 3 real EPL fixtures for 2019-08-11 (`St. James' Park`→`ST_JAMES_PARK`,
+    `King Power Stadium`→`KING_POWER_STADIUM`, `Old Trafford`→`OLD_TRAFFORD`, all 3/3 exact matches).
+  - Updated `tests/sports/unit/test_gcs_normalizers.py` (replaced the 2 tests encoding the old numeric-collapse behavior
+    with 4 new tests covering the name-derived venue_id, diacritics, missing-venue_name honest-absence, and the
+    no-venue_name-column no-op case) and `tests/sports/unit/calculators/test_travel_calculator.py` (6
+    `compute_travel_batch` tests were relying on the removed internal type-coercion to paper over mixed int/string
+    venue_id test fixtures — updated to use consistent string venue_ids throughout, matching production reality
+    post-fix). 273 tests green, `quality-gates.sh` run.
+  - The sibling issue doc's `[CODE]`/`[VERIFY]` todos are resolved by this same change — see
+    `plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md` for the full decision write-up and
+    remaining follow-up (a downstream-retrain-audit todo there is still open).
 - [x] ✅ [DATA] P1. After the above two todos land, re-verify the 2018-06-17 AND 2018-06-18 OOMs are actually resolved
       end-to-end (not just the `shot_quality_calculator` site fixed in Todo 2) — the pipeline must reach and complete
       `shot_quality_calculator` without first OOM-ing in `venue_context`, since venue_context runs several
