@@ -214,6 +214,27 @@ per-repo rather than this audit force-recovering content into worktrees it doesn
 Diagnostic script (read-only, reusable for future audits until this is confirmed fixed):
 `scripts/dev/audit-fleet-reflog-resets.sh` (plain text or `--json` output).
 
+## UPDATE 5 (slot 9, 2026-07-13) — checked slot 9's 2 flagged rows: both false alarms, already re-shipped independently
+
+Per the urgent liveness message routed to slot 9 (its 2 rows in the UPDATE 3 table above:
+`instruments-service@8f15fd3c`, `market-tick-data-service@64512679`), checked both via `git merge-base --is-ancestor` +
+content diff before cherry-picking:
+
+- `instruments-service@8f15fd3c` ("wire enumerate_expected_universe to TOTAL_UNIVERSE_AXES SSOT B2", 2026-07-06): NOT
+  reachable from HEAD/origin (confirmed at-risk in the reflog-only sense), but the identical feature was independently
+  re-implemented and shipped the next day as `7ded5940` ("feat(enumerator): wire enumerate_expected_universe to UAC
+  TOTAL_UNIVERSE_AXES SSOT", 2026-07-07) — reachable from current HEAD, same guard assertion already present in
+  `scripts/enumerate_expected_universe.py`. No cherry-pick needed.
+- `market-tick-data-service@64512679` ("BETFAIR + 3 sub-variants WSFeedConnector scaffold, BLOCKED-CREDENTIALS",
+  2026-07-06): also not reachable, but the same 4-venue-key scaffold shipped as `2115f867` ("feat(mtds): BETFAIR + 3
+  sub-variants BLOCKED-CREDENTIALS scaffold (gap-009)") — already promoted to `main`. No cherry-pick needed.
+
+Both slot-9 rows in the "18 currently-at-risk" table can be downgraded to "superseded, safe to ignore" — supports the
+UPDATE 4 finding that this is a real, ongoing bug, but also suggests at least some of the 18 at-risk rows may turn out
+to be non-issues on inspection (the feature got re-built rather than genuinely lost) rather than needing cherry-pick
+recovery. Did not touch the other 16 rows (not this slot's repos) — left as a judgment call per-repo per the existing
+recommendation.
+
 ## UPDATE 4 (slot 15, 2026-07-13 14:58 UTC) — the bug hit THIS AUDIT'S OWN COMMITS, live, mid-session — breaks the T0-only theory
 
 Meta-finding, discovered while shipping UPDATE 3: the exact same session that ran the fleet-wide audit above (slot 15,
