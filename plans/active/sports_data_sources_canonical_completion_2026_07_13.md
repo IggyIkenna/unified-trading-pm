@@ -85,6 +85,22 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `fill-missing-player-stats` is a sanctioned dedicated service_name (check its origin script/plan) or another
       instance of the service_name-drift bug class fixed today; handle the 88 `market-tick-data-service` orphans (no
       canonical twin found by today's cleanup — investigate individually, they may be genuinely new data).
+- [ ] [DATA] P0. **api_football TEAMS: root-cause + fix the 61-league per-league capture gap.** NEW 2026-07-13
+      (operator-prompted direct re-verify contradicted the prior investigation's blanket "453,961 expected_unattempted
+      is legitimate" claim). Confirmed: `captured` TEAMS rows exist in TWO incompatible grains — a blank-`league_id`
+      bulk daily bundle (3,648 rows, ~621 teams/day, ALL leagues aggregated) vs a per-`league_id` granular capture
+      (100,498 rows, only 33 distinct leagues). The `expected_unattempted` enumerator generates per-(league,date) cells
+      for 94 leagues; **61 of those 94 have ZERO non-blank-league_id captured rows ever** (2018→2026, their entire
+      history). Find the orchestrator code driving per-league TEAMS capture (likely
+      `instruments-service/engine/     orchestrator/api_football.py` or a sibling) and determine: (a) was per-league
+      TEAMS capture only ever wired for 33 leagues (a real, fixable capture gap — build it out for the other 61), or (b)
+      is the bulk bundle the intended sole source of truth for TEAMS and the enumerator
+      (`enumerate_expected_universe.py`) is wrongly generating per-league expectations that were never meant to be
+      satisfied per-league (fix the enumerator, not the capture path)? Decide-and-document, ship the fix, re-verify.
+      **Before closing the broader "453,961 is legitimate" claim for the OTHER data_types
+      (ODDS/FIXTURE_LINEUPS/FIXTURE_EVENTS/FIXTURE_STATS/PLAYER_STATS/INJURIES/ FIXTURES), apply the same
+      captured-vs-expected grain cross-check** — the aggregate "spread evenly across years" framing looked plausible but
+      missed this exact bug for TEAMS; don't take the same claim on faith for the rest.
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
@@ -477,3 +493,44 @@ report written in this plan's Progress Log.
     data_type — relabeling or erasing them would itself violate the honest-manifest rule
     (`codex/02-data/availability-manifest-and-data-status.md`). 0 dedup groups (clean). **Nothing left open on this
     todo; no further action warranted.**
+
+- **2026-07-13 (slot-3, interactive session, correction to the api_football investigation's "453,961
+  expected_unattempted is legitimate, no fix needed" verdict) — CONTRADICTED for the TEAMS subset (192,384 of the
+  453,961, ~42%).** Operator asked a sharp follow-up question (pre-2020-unrun vs genuinely-no-fixture) that prompted a
+  direct re-verify rather than trusting the aggregate claim. Live-manifest query
+  (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`,
+  `source=api_football data_type=TEAMS`, 296,554 total rows): **`captured` rows split into TWO incompatible grains** —
+  3,648 rows with BLANK `league_id` (`row_count` ≈ 621, a bulk daily bundle of ~621 teams across ALL leagues aggregated
+  into one row/day) vs 100,498 rows with a POPULATED `league_id` covering only **33 distinct leagues** (~3,046
+  rows/league, i.e. near-daily captures for those 33). The `expected_unattempted` enumerator generates one expected cell
+  **per (league_id, date)** — 94 distinct leagues, 3,116 dates each (2018-01-01→2026-07-13, literally every day in
+  range). **Overlap check: of the 94 EU leagues, only 33 have ANY non-blank-league_id captured row — 61 of the 94 EU
+  leagues have LITERALLY ZERO per-league TEAMS captures across the entire 8.5-year window.** This is not "most cells are
+  genuinely no-fixture" (TEAMS is a roster fact, not fixture-dependent, so it doesn't have "no fixture" off-days the way
+  FIXTURES/STANDINGS do) — it is a **genuine, unaddressed capture gap for 61 specific (mostly second-tier) leagues'
+  TEAMS data**, going back to 2018. Root cause not yet identified in this pass (candidates: the per-league TEAMS capture
+  path was only ever wired for a 33-league subset, or the bulk/blank-league_id bundle path was meant to be the ONLY
+  source of truth and the enumerator should not be generating per-league TEAMS expectations at all — needs code-level
+  investigation of whichever orchestrator function drives per-league TEAMS capture vs the bulk bundle, and of
+  `enumerate_expected_universe.py`'s TEAMS enumeration to see which grain it _should_ match). **This todo
+  (`api_football deep investigation`) should NOT be considered closed on the TEAMS point** until this gap is root-caused
+  and either (a) a real per-league TEAMS backfill ships for the 61 leagues, or (b) the enumerator is corrected to not
+  expect per-league TEAMS grain if the bulk bundle is the intended sole source (decide-and-document, not a silent
+  descope, per the external-data-always-available rule). Other data_types in the 453,961 total (ODDS
+  82,749/FIXTURE_LINEUPS 47,282/FIXTURE_EVENTS 47,028/FIXTURE_STATS 36,677/PLAYER_STATS 26,363/INJURIES
+  20,700/FIXTURES 778) were NOT re-verified in this pass — the original "legitimate" claim may hold for those, but given
+  TEAMS was wrong, they should get the same direct-verification treatment (sample captured vs expected grain match)
+  before being marked closed, not taken on the aggregate agent's word alone.
+- **2026-07-13 (slot-3, interactive session) — MTDS vs MDPS `mdps_odds_horizon_bucket` row-count asymmetry, explained
+  (operator question).** Operator asked why MDPS (109,638 captured rows) and MTDS (14,656) differ so much for what's
+  "still odds, one just processed/bucketed." Direct comparison in the OTHER manifest
+  (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`,
+  `source= mdps_odds_horizon_bucket`): **both service_names cover the IDENTICAL 1,813 distinct dates, IDENTICAL date
+  range (2020-06-06→2026-04-14), and IDENTICAL 38 leagues** — no coverage gap between them. The row-count difference is
+  a GRAIN difference, not a gap: `market-tick-data-service` writes exactly one row per (date, league) with
+  `row_count=1.0` uniformly (a coarse "did we ingest any odds tick for this league today" marker);
+  `market-data-processing-service` writes multiple rows per (date, league) with `row_count` unpopulated (NaN) —
+  consistent with one row per distinct horizon-bucket (e.g. per pre-kickoff time window) per match, the derived
+  fine-grained product. ~7.5x ratio (109,638/ 14,656) is plausible for "several horizon buckets per match" at this
+  league/date volume. **Not a bug** — same dates, same leagues, different write-grain for raw-ingest-marker vs
+  derived-product. No further investigation needed on this specific question.
