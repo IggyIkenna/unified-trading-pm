@@ -67,13 +67,38 @@ drift_direction: advance-code
 - [ ] [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
       `... or training_period == ""` (`:531`,`:646`) returns the WRONG version from cache; UTL's `== training_period` is
       correct. Consolidating onto UTL **fixes** this for ml-service.
-- [ ] [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard + AWS
-      S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
+- [x] ✅ [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard +
+      AWS S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
       deployment depends on them, add the equivalent local/S3 path to UTL first; else confirm `config.ml_source_bucket`
-      is always set on the training path.
+      is always set on the training path. — AUDITED (2026-07-13, slot-3), all 3 resolved, no UTL extension needed:
+  - **`CLOUD_PROVIDER=local` no-bucket guard** — MOOT for UTL. The guard exists because ml-service's `__init__` calls
+    UCI's `get_data_sink`/`get_data_source` factories, which auto-upgrade local→gcp whenever a bucket name is supplied.
+    UTL's `ModelRegistry` doesn't use those factories at all — it calls `get_storage_client()` / `download_from_storage`
+    / `upload_to_storage` directly (`unified_trading_library/cloud_interface/factory.py`), which resolves the provider
+    via `get_cloud_provider()` cleanly regardless of whether a bucket is passed. No action needed.
+  - **AWS S3 bucket fallback** — test-covered but NOT production-live. 3 ml-service test files
+    (`tests/training/unit/test_model_registry_utils.py::test_uses_aws_bucket_when_cloud_provider_is_aws`,
+    `tests/training/unit/test_model_registry_coverage.py::test_uses_aws_s3_bucket_when_configured`,
+    `tests/training/test_model_registry_full.py`) exercise `cloud_provider="aws"` + `ml_models_s3_bucket`, but
+    `deployment-service/configs/aws/` has NO `ml-service.yaml` (unlike strategy-service/execution-service/
+    features-service/alerting-service/risk-and-exposure-service, which do) — ml-service has never actually been deployed
+    to AWS. UTL's `ModelRegistry` resolves its bucket via `resolve_bucket_name(cloud="gcp", ...)` (GCP-only). Decision:
+    do NOT carry AWS support into UTL for a capability with zero live deployment — delete the 3 AWS-path tests as part
+    of the local-registry deletion (todo below) instead of blocking on unneeded UTL work. If ml-service is ever deployed
+    to AWS, extend `resolve_bucket_name` with an AWS kind mapping then (same pattern other AWS-deployed services already
+    use), not before.
+  - **`None`-on-miss error contract** — ALREADY equivalent. UTL's `load_model`/`get_model_metadata`/
+    `get_model_for_inference_date` all `return None` on miss (never raise), matching the local registry's contract
+    exactly. No action needed.
+  - **`config.ml_source_bucket` always set on the training path** — confirmed: UTL resolves
+    `ml_gcs_bucket or unified_config.ml_gcs_bucket or resolve_bucket_name(cloud="gcp", kind="ml-models-store")`, so the
+    training path always has a concrete bucket with no local-only special-casing required.
 - [ ] [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
       `final_training_handler.py`, `model_loader.py` (loader already uses UTL) to
-      `from unified_trading_library import ModelRegistry`.
+      `from unified_trading_library import ModelRegistry`. Also delete the 3 AWS-path tests identified in the audit
+      above (`test_uses_aws_bucket_when_cloud_provider_is_aws`, `test_uses_aws_s3_bucket_when_configured`, and the AWS
+      case in `test_model_registry_full.py`) — they test a capability with no live UTL equivalent and no live AWS
+      deployment; do not carry them forward as skipped/xfail (CLAUDE.md "delete deprecated code", no shims).
 - [x] ✅ [AGENT] P1. ~~Delete the **dead** `inference/types.py:ModelMetadata` TypedDict~~ — **already done**, verified
       stale during Phase 0 SPEC confirmation (2026-07-13): `ml-service@00855f6` ("schema-provenance class cleared
       honestly … 4 dead TypedDicts deleted") already removed this TypedDict;
