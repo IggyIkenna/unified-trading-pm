@@ -537,3 +537,16 @@ with **zero `code=274` lines** — CeFi Tardis capture is flowing again on this 
 capture since the 2026-06-04 write-collapse this doc documents). Lease-acquisition ordering evidence pending the first
 KEYED fetches (free/day-1 fetches don't take the lease by design); a monitor is following the wave to completion. G4
 re-run stays gated on the pilot's outcome.
+
+### 2026-07-13 (~20:40Z) — pilot 1 HONEST OUTCOME: inconclusive (bad slice); pilot 2 launched
+
+Pilot 1 (`BITFINEX-SPOT`/`BYBIT-SPOT` 2025) is **inconclusive for the lease mechanism**: every processed date logged
+`1 skipped (no instruments)` — instruments-service's catalog has NO instruments for those venue/2025-date cells, so no
+keyed Tardis call ever fired; the zero `code=274` count and zero lease-log lines are both trivially explained (nothing
+to serialize), NOT lease evidence. Both VMs exited 137 after ~35 min — consistent with the stall watchdog
+(`STALL_PROGRESS_REGEX=uploaded`, and nothing uploads on an all-skipped run), and the stale okx-swap `lease.json` was
+never stolen (confirming no acquisition was ever attempted). Corrective: the pilot slice must be a venue/year with real
+catalog coverage. **Pilot 2 launched 20:42Z**: `VENUES="BINANCE-FUTURES" YEARS="2024"` (heavy+light = 2 lease-enabled
+VMs, `cefi-binance-futures-2024-{heavy,light}-20260713-204215`, all tarballs verified current at launch) —
+BINANCE-FUTURES 2024 has known instrument coverage (39.9% of its af rows are 403s, i.e. real keyed fetch history).
+Monitored to completion for staggered lease acquisition + code=274 counts.
