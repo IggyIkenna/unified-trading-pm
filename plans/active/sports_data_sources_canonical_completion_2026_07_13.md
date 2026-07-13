@@ -674,3 +674,26 @@ report written in this plan's Progress Log.
     cause is fixed in code (not just data patched), the historical real captures are now visible in the canonical
     manifest, and every deeper follow-on discovery is filed as a scoped todo above rather than silently rolled into this
     fix or left undocumented.
+
+- **2026-07-13 (slot-3, FINAL RE-VERIFY dispatch — fresh single-parquet read post-fix).** Re-read
+  `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` fresh (4,988,134 total
+  rows now, up from the §0 baseline's 4,863,784 — expected, reflects the migration write).
+  `source=mdps_odds_horizon_bucket` now: **339,775 rows** (215,481 baseline + 124,294 migrated = exact match, confirms
+  clean arithmetic, no double-write). `capture_status` breakdown: `captured` **123,642** (was 0), `empty_confirmed`
+  **6,607** (5,955 pre-existing + 652 migrated — also exact match), `attempted_failed` **0** (unchanged),
+  `expected_unattempted` **209,526** (unchanged — sum of all four = 339,775, fully reconciles, no unaccounted rows).
+  `service_name` split: `instruments-service` 215,481 (untouched original enumerator seed),
+  `market-data-processing-service` 109,638 + `market-tick-data-service` 14,656 = 124,294 (exactly the migrated set).
+  **Duplicate-dedup-key check**: grouping on the coarse identity (date, venue, data_type, timeframe, league_id) alone
+  surfaces 326 apparent "duplicate" groups, but re-grouping on the TRUE dedup key (same tuple **+ service_name**, per
+  this session's established manifest-consolidator convention) finds **0** true collisions — the 326 are legitimate rows
+  from two different `service_name`s (`market-data-processing-service` + `market-tick-data-service`) independently
+  writing the same coarse identity, not duplicates. **Verdict: does NOT meet the understat-standard literal 0/0/0 bar,
+  but the residual is fully explained and already documented, not still-broken.** `attempted_failed=0` and 0 true dedup
+  collisions are clean; the 209,526 `expected_unattempted` residual is the already-filed P1 "expected-universe grain
+  realignment" follow-on (the enumerator's coarse seed grain — `venue=""`, uppercase `data_type`, no `timeframe` —
+  structurally cannot reconcile against MDPS's actual captured grain — `venue=ODDS_API`, lowercase `data_type`,
+  per-`T-*` `timeframe`) — a known, separately-scoped design fix, not an oversight of this fix. The core
+  "zero-ever-captured" defect is conclusively resolved: 123,642 real historical captures are now visible in the
+  canonical manifest, root-caused in code (not just patched), zero data-integrity regressions (no new duplicate-dedup
+  groups, arithmetic fully reconciles). No further action taken this dispatch — re-verify only, per task scope.
