@@ -86,13 +86,32 @@ green, 0 regressions vs. a clean-tree baseline of 6930 passing / 12 pre-existing
 
 Fix each bucket to get `V` back to ≤3 (or ideally 0, continuing the ratchet-down trend from 12→11→7→3):
 
-- [ ] [AGENT] P1. Replace the 7 hardcoded `*-central-element-323112` bucket literals in
-      `execution_service/data/defi_lateral_loader.py` with `resolve_bucket_name(...)` calls (or `config.gcp_project_id`
-      interpolation, matching the sibling configs' pattern per CLAUDE.md storage-code rule). (repo: execution-service)
-- [ ] [AGENT] P1. Replace the `"market-data-tick-cefi-central-element-323112"` fallback literals in
+- [x] ✅ [AGENT] P1. **Replace the 7 hardcoded `*-central-element-323112` bucket literals — DONE (committed, not yet
+      shipped — blocked on this same repo-blocker).** `execution-service@86f166a9` — `DEFAULT_LATERAL_BUCKETS` in
+      `execution_service/data/defi_lateral_loader.py` now interpolates
+      `ExecutionServicesConfig.project_id/gcp_project_id` (matching the sibling `_resolve_asset_group_bucket` flat
+      `"{prefix}-{group}-{pid}"` construction), instead of a hardcoded literal. Also corrected `eigenlayer_rewards` to
+      resolve its own dedicated bucket (the real writer `eigenlayer_rewards_handler.py` writes there — the previous
+      default pointed at the shared tick-data bucket instead, a latent bug). Updated `test_bucket_naming_convention` (no
+      longer assumes the hardcoded pattern) + widened `test_real_aave_v3_ethereum`'s except clause to catch
+      `google.api_core.exceptions.NotFound` (the dynamically-resolved bucket can legitimately not exist under the QG
+      env's `GCP_PROJECT_ID=test-project`).
+- [x] ✅ [AGENT] P1. **Replace the `"market-data-tick-cefi-central-element-323112"` fallback literals — DONE (same
+      commit, same blocked-ship status).** `execution-service@86f166a9` —
       `execution_service/cli/defi_arbitrage_dispersion_decision_trace.py` and
-      `execution_service/cli/defi_target_universe_rebalance_recommender.py` with a config-driven resolution (no bare
-      project-ID string). (repo: execution-service)
+      `execution_service/cli/defi_target_universe_rebalance_recommender.py` now fall back to
+      `f"market-data-tick-cefi-{cfg.project_id or cfg.gcp_project_id}"` instead of the bare literal.
+- [ ] [AGENT] P2. **NEW (discovered 2026-07-13 while fixing the 2 items above): 5 more files still match this SAME
+      "Hardcoded project ID in production" check**
+      (`rg "central-element-[0-9]+" --type py --glob '!tests/**'     execution_service/` — not caught by this issue
+      doc's original bucket-#1 file list, so fixing the 3 files above alone does NOT flip this check green):
+      `execution_service/providers/l2_depth_provider.py` (2 sites — a `project_id="central-element-323112"` docstring
+      example call + a `project_id: str = "central-element-323112"` default param),
+      `execution_service/providers/solana_amm_depth_provider.py` (same 2-site pattern),
+      `execution_service/providers/factory.py` (1 default-param site), `execution_service/providers/matching_engine.py`
+      (1 default-param site), `execution_service/providers/tenderly_budget.py` (1 docstring mention of
+      `gs://central-element-323112-archetype-state/...`). Same fix pattern as above (interpolate
+      `config.gcp_project_id`, never a literal default). (repo: execution-service)
 - [ ] [AGENT] P2. Bump `click` to ≥8.3.3 and `pillow` to ≥12.3.0 via
       `uv lock --upgrade-package click --upgrade-package     pillow`; re-run `pip-audit` to confirm both CVE families
       clear. (repo: execution-service)
