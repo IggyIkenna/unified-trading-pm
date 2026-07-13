@@ -183,12 +183,12 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
      render. — agent-orchestrator@038beeb.
 - [x] [OPERATOR] P1. ✅ D1/D2/D3 all resolved by operator (2026-07-13) — see Decisions. Plan unblocked for
       implementation.
-- [ ] [BACKEND] P2. WS-E: **DEFERRED — operator-timed.** Code is landed on LDR (WS-A/B/C/D). Activating it needs a
-      **restart of the live central orchestrator** (to load `DailySummaryLoop` + the notifier changes) — a
-      whole-fleet-affecting action left to operator timing, not done mid-session while the fleet is running.
-      Verification is inherently a **24–48 h observation window** (re-pull with the same `fetch_alerts.py` and confirm
-      churn is gone / volume at the actionable-only target; drop the post-deploy jsonl in `alerts_audit/`). The
-      git-health guard cron (WS-C) picks up its script change on its next tick without a restart.
+- [ ] [BACKEND] P2. WS-E: **auto-deploys — verification pending only.** Code is landed on LDR (WS-A/B/C/D). The prod
+      backend runs uvicorn `--reload` (operator 2026-07-13), so it restarts on the new code automatically once it
+      reaches the VM — **no manual restart needed**. The git-health guard cron (WS-C) picks up its script change on its
+      next tick. The ONLY remaining step is the **24–48 h verification observation window**: re-pull with
+      `alerts_audit/fetch_alerts.py` after the code has been live ~24–48 h, confirm lifecycle churn is gone / volume at
+      the actionable-only target, and drop the post-deploy jsonl in `alerts_audit/`.
 - [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
      contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
      (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
@@ -211,11 +211,11 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   self-failure page), enabled by default, supervised. WS-C: `fleet-git-health-guard.sh` state-transition dedup +
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
-  central-orchestrator RESTART + a 24–48 h re-pull verification, DEFERRED to operator timing (whole-fleet-affecting).
+  auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
 
 ## Deferred work after 2026-07-13
 
-| Item                                           | Why deferred                                                                                                                                                                  | Next action                                                                                                                                                                            |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WS-E deploy + verify                           | Activating `DailySummaryLoop` + the notifier changes needs a restart of the LIVE central orchestrator (affects the whole fleet); verification is a 24–48 h observation window | Operator restarts AO on the central VM at a safe time, then re-pull with `alerts_audit/fetch_alerts.py` after 24–48 h and drop the jsonl in `alerts_audit/` to confirm the volume drop |
-| Underlying git corruption on `ip-172-31-5-118` | Out of scope for this alerting plan (operator decision); a separate agent already added commit-graph self-heal (`agent-orchestrator@297b867`)                                 | Confirm the fsck failure clears after that fix propagates; if not, a targeted `instruments-service` .git repair                                                                        |
+| Item                                           | Why deferred                                                                                                                                                             | Next action                                                                                                                                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WS-E verify (deploy is automatic)              | Prod backend runs uvicorn `--reload`, so it picks up the new code with NO manual restart once it reaches the VM; verification is inherently a 24–48 h observation window | After the code has been live ~24–48 h, re-pull with `alerts_audit/fetch_alerts.py` and drop the jsonl in `alerts_audit/` to confirm the volume drop (can be re-run any time on request) |
+| Underlying git corruption on `ip-172-31-5-118` | Out of scope for this alerting plan (operator decision); a separate agent already added commit-graph self-heal (`agent-orchestrator@297b867`)                            | Confirm the fsck failure clears after that fix propagates; if not, a targeted `instruments-service` .git repair                                                                         |
