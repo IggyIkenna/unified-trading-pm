@@ -53,9 +53,14 @@ drift_direction: advance-code
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC; sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
-> BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
+> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
+> settled contract lives in codex
+> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`;
+> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC;
+> sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3**
+> (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT
+> coarse`batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -415,13 +420,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
       **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
       `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
-      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native
-      `af*_\_id`, score breakdowns     extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**     (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of     (`v2
-      fixtures`∪`v2
-      fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.     team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,     `away_team`→`_\_name`, `league`→`league_name`).
-      **VERDICT: v1_archive is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats);
-      v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating
-      v1_archive as superseded.**
+      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af*_\_id`, score breakdowns
+      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
+      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of
+      (`v2     fixtures`∪`v2     fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.
+      team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,
+      `away_team`→`_\_name`, `league`→`league_name`). **VERDICT: v1_archive is COLUMN-superseded by the current split
+      (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY →
+      keep all. No column-level data loss from treating v1_archive as superseded.**
 - [x] ✅ [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
       row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
       the current split's rows (the v1_archive date-range/leagues are all present in
@@ -724,9 +730,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
       form resolves → correct, leave). Of 52 suffixed unique league*ids, the actual rewrite need is TINY: - **SAFE
       (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows). Rule =
-      strip trailing
-      `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →     **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -     **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF     id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.     `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -     **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,     `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids`
-      OR leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
+      strip trailing `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →
+      **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -
+      **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF
+      id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
+      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -
+      **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
+      `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids` OR
+      leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
       SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier disambiguation remain (both doable pre-migration;
       LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
@@ -1757,10 +1768,9 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       AUTONOMOUS*AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
       vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
-      already excludes
-      `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment regex     (`[A-Za-z0-9*{]`
-      after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this session (sentinel
-      at mtds@01d70902).
+      already excludes `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment regex
+      (`[A-Za-z0-9*{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this
+      session (sentinel at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
@@ -2641,3 +2651,34 @@ flip the E8 checkbox or any gate state — that is the orchestrator's call.
 the 2026-07-11/12 `_probe_paths` fixes — verified by reading the source before running), executed from
 `market-tick-data-service/.venv` (MTDS surface) and `instruments-service/.venv` (IS surface), read-only, `gcloud`
 project `central-element-323112`. No writes, no VM launches, no checkbox/gate-state changes.
+
+## E8 Verify — re-dispatch check 2026-07-13T03:43Z (data_engineering slot-9, task -001, twelfth touch)
+
+Re-dispatched to the same E8-verify checkbox (~6h after the operator-ordered live-index re-run above, which already
+re-confirmed 6 real RED gaps on a <1-minute-fresh index — not stale-snapshot artifacts). Checked the two things that
+could have changed in the interim rather than re-paying a full GCS corpus scan for a result that can't have moved:
+
+- **E3 drain / E4 VM apply**: `gcloud compute instances list --project central-element-323112` (via
+  `/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap `gcloud` on this host is broken,
+  `cap_dac_override`/`snap-confine` error, non-snap SDK works fine) shows **no** sports/E3-drain/E4-migration VM
+  running, completed, or ever launched — 18 instances total, all cefi/tradfi/fss backfills, none sports-related. The
+  sole hard blocker (E3 fleet drain + E4 VM apply, "GATED — none of which is bypassable by an interactive slot") is
+  unchanged.
+- **BLK-f2bb67c2**: still `answered_at: null` (confirmed via `GET /api/state` → `blocked_queue`) — the operator decision
+  (schedule E3/E4 now vs. keep parked vs. fix-forward the write-path gap first) is still outstanding.
+- **Write-path gap (IS CF-3/CF-4 blank pipeline_mode/source)**: checked `git log --since=<last-audit-timestamp>` on both
+  `instruments-service` and `market-tick-data-service` for anything landing since the 21:55Z re-run. One relevant
+  commit: `mtds@e555d7c5` ("`_build_row_key` omits blank chain/underlying instead of `""`") — a real bug fix surfaced by
+  the **E4 mdps-2019 smoke test** (sports rows with blank chain/underlying were tripping UTL's `MalformedRowKeyError`
+  and getting silently dropped from the v9 rebuild instead of typed). This is in-flight E4 migration-code work by
+  another agent, not a completed VM `--apply` walk — it doesn't change the live-index audit numbers above (nothing
+  landed touching the IS reference-data writer's `pipeline_mode`/`source` stamping).
+
+Since the operational precondition is unchanged, the operator decision is still pending, and no relevant write-path fix
+has actually landed against the live corpus (the one commit found is E4-migrator-code progress, not a data-state
+change), a full `cf_manifest_audit_2026_06_01.py` re-run would reproduce the identical RED verdict at real GCS-read cost
+for zero new information — same reasoning as the tenth-touch (slot-12) entry above. **Not filing a duplicate
+blocked-question** — `BLK-f2bb67c2` already carries the exact decision needed and remains live. `skip-current-task`'d.
+Next toucher: check `BLK-f2bb67c2.answered_at` first; if still null and no E3/E4 VM exists, this cheap precondition
+check is sufficient — only re-run the full audit once an E3/E4 VM has actually executed or the operator has ruled on
+BLK-f2bb67c2.
