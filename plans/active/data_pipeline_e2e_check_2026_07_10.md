@@ -1122,6 +1122,19 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       narrowing — see `tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md` residuals; also the `venue_mapping.py`
       ICE start-date 2020-01-01 vs 2019-01-02 nit). (repo: instruments-service / unified-api-contracts)
 
+- [ ] 31. [DATA] P3. **Small verification-round nits, batched** (each flagged in a Progress Log entry but previously
+      lacking a todo): (a) COINBASE-CDE `venue_start_dates` 2026-07-10 floor understates the venue's REAL fetchable
+      trade history (A3's live-API probe pulled 2026-07-11 trades; the floor's semantics vs actual API history needs a
+      registry check) + whether the CDE batch adapter should also serve ohlcv/candles; (b) CBOE VX live-leg `.FUT`
+      suffix symbology (fallback symbol now reaches Databento but `VXU26.FUT` fails gateway resolution — narrow
+      symbology pass, flagged 2026-07-13 morning); (c) MTDS force-leg has no honestly-empty pass path (a lag/pre-launch
+      day with an honest empty_confirmed row still reports `no_parquet_under` — the MTDS analogue of the IS benign-pass
+      in instruments-service@526d2ffd); (d) MTDS KRX skip-leg reports `ambiguous: skip_signal_not_found_in_run_log` for
+      the Yahoo route (skip-signal grep coverage); (e) PREDICTION checker enumeration hygiene — IS-domain surfaces
+      (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group`) enumerate as MTDS shards and the
+      checker resolves the PRD bucket for prediction (todo-13 naming quirk); (f) concurrent-driver Phase-0 caveat — a
+      parallel driver's re-consolidation of a shared -test- bucket can make verify_manifest_row miss a just-written row
+      (the ICE false-negative). (repos: unified-api-contracts, market-tick-data-service)
 - [x] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
       meaningfully test SPORTS coverage (this session's single fixed day, 2026-07-09, had zero scheduled fixtures for
       every tested league/venue — an honest but uninformative result). Built + ran (see Progress Log): queried PROD's
