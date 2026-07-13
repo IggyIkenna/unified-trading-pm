@@ -144,5 +144,15 @@ depends_on: []
 
 - 2026-07-13 22:42Z — terraform fix `deployment-service@5c114aa`; live job updated; verification execution `t9zl9`
   SUCCEEDED (40.68s, exit 0). GCS `gs://features-onchain-central-element-323112/seasonal_rewards/` not yet present —
-  consistent with 0 events for 2026-07-12 (write is skipped on empty event list per script `_write_events`); execution
-  log detail pending Cloud Logging propagation at doc-write time.
+  consistent with 0 events for 2026-07-12 (write is skipped on empty event list per script `_write_events`).
+- 2026-07-13 22:47Z — **scheduler-path verification**: forced `gcloud scheduler jobs run …-cron` → execution `h7vbq`
+  SUCCEEDED (completed 22:47:32Z) and the scheduler's standing error status CLEARED (`status.code: 3` → `{}`). The exact
+  cron→`:run`→execution-creation path that failed daily since 2026-06-19 is healed end-to-end. Fresh-image provenance:
+  `unified-trading-system/features-service:latest` = `0.66.0`/`08fd0d8`, Evidence:
+  cloudbuild=5e720778-fad2-4c60-a4b3-cd930b9b49ce (SUCCESS, 2026-07-13T14:35Z, trigger-built — no manual rebuild
+  needed).
+- Why no app-log lines are visible for either execution: the project `_Default` logging sink carries exclusion
+  `severity <= "DEBUG"` (`debug-filter`) which drops unstructured container stdout/stderr (ingested at severity
+  DEFAULT=0 < DEBUG=100) — only the `varlog/system` "Container called exit(0)." (INFO) survives. Event-count
+  observability for this job therefore requires structured logging or an exclusion carve-out; per-shard failures still
+  surface via `ADAPTER_FETCH_FAILED` events / availability index per the runbook.
