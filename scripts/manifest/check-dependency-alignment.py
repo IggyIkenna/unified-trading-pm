@@ -89,6 +89,7 @@ PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
     ("deployment-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
     ("agent-orchestrator", "fastapi"): "fastapi>=0.115.0,<0.138.0",
     ("features-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
+    ("unified-trading-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
 }
 
 JsonDict = dict[str, object]
