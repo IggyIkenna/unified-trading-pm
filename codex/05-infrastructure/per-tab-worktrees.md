@@ -294,12 +294,19 @@ git-health guard reports as "genuine missing/broken objects". This is git's docu
 `git clone` man page). Reference incidents: instruments-service (2026-07-09→13) and deployment-api (2026-07-13), both on
 `agent-orchestrator-vm-1`.
 
-**The durable fix (two layers).** Never let a base that backs `--reference` clones DELETE objects:
+**The durable fix (three layers).** Never let a base that backs `--reference` clones DELETE objects:
 
 1. **At clone time** — `setup-tab-worktrees.sh` sets `gc.pruneExpire=never` on the sibling base whenever it references
-   it (idempotent, asserted every `--init` / `--add-slot`).
-2. **Continuously** — `fleet-git-health-guard.sh` asserts `gc.pruneExpire=never` on every main clone it scans (every 15
-   min), so pre-existing bases and any config drift self-heal without a re-clone.
+   it (idempotent, asserted every `--init` / `--add-slot`), so a newly-provisioned base is born protected.
+2. **Continuously, every host (primary)** — `slot-cron-ff-pull.sh` asserts `gc.pruneExpire=never` on every main clone in
+   its `prefetch_main_clones()` loop. This is the fleet-wide guarantee: the cron runs **every 5 min on every
+   slot-hosting host** (operator laptops + every VM) and **self-pulls its own code from `origin/live-defi-rollout`**, so
+   the protection reaches the whole fleet with no manual deploy and heals pre-existing bases + any config drift within
+   one tick. It is asserted in the same loop that fetches (the fetch is what feeds the auto-gc trigger), so the disarm
+   tracks the trigger exactly.
+3. **Continuously, orchestrator VM (belt-and-suspenders)** — `fleet-git-health-guard.sh` also asserts it on every main
+   clone it scans (every 15 min), and remains the DETECTOR/repair for any clone that corrupted before the protection
+   landed.
 
 `gc.pruneExpire=never` keeps auto-gc's repack (loose-object → pack, the performance win) and drops only the destructive
 prune, so slots never lose a referenced object. To reclaim unreachable objects on a base, run `git gc --prune=now`
