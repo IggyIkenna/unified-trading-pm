@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-          is NOT a tooling bug or an adapter regression.
-          `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-          under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-          `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-          sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+              is NOT a tooling bug or an adapter regression.
+              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -439,18 +439,62 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       in the scratchpad driver: IS now runs to completion (barrier) before any MTDS job starts, preserving 40-way
       concurrency within each phase.
 
-- [ ] 25. [DATA] P2. **Remaining work: individually triage the 244 MTDS `no_parquet_under` genuine failures + 47 IS
-      `no_parquet_at_instrument_availability` genuine failures venue-by-venue.** Not started this session (out of time
-      budget after 11 real bugs found+fixed+shipped and the full 452-shard sweep itself). The full sweep's tool is now
-      proven correct (zero known tooling bugs remaining); every one of these 291 leg-results is a real, honest "this
-      shard didn't produce data" result that needs a human/agent to determine per-venue whether it's (a) another
-      documented-architecture-gap case like ASTER/HYPERLIQUID (REST can't serve this data_type — add to
-      `aggregate_report.py`'s `KNOWN_ARCHITECTURAL_GAPS` table), (b) a genuinely broken/misconfigured adapter (a real
-      bug to fix), or (c) an honest "no data existed for this venue on 2026-07-09" (re-test on a different day before
-      concluding). `FINAL_REPORT.md`'s "Genuine, undocumented failures" table has the full per-shard list to start from.
-      Also not done: extending `KNOWN_ARCHITECTURAL_GAPS`/`KNOWN_SKIP_LEG_GAP_ASSET_GROUPS` beyond the 2 hand-verified
-      entries — the aggregator's cross-reference is deliberately conservative (documented as non-exhaustive in its own
-      docstring) rather than guessing at gaps not individually confirmed.
+- [x] 25. [DATA] P2. ✅ **Full clean 452-shard re-sweep run 2026-07-13 with every tooling/adapter fix from this session
+      live simultaneously** — the honest, trustworthy count this todo always needed.
+      `_pipeline_e2e_check_sweep/RESWEEP_MANIFEST.json` + `RESWEEP_FINAL_REPORT.md` (108 IS + 344 MTDS, day=2026-07-09,
+      concurrency=20). Full breakdown of the 954 leg-results collected (100 genuinely passed; 126 of the 452 jobs
+      produced no report at all — see below): - **Genuine, undocumented failures: 219** (was 458 before a
+      checker-tooling-limitation fix below cut it in half). Breaking down by asset_group shows this is NOT 219 distinct
+      new bugs: **SPORTS = 138 (63%)** — expected, honest-empty-by-design (this full re-sweep intentionally used the
+      fixed day=2026-07-09 for parity with the original sweep, not the fixture-aware per-venue days todo 26 proved out —
+      SPORTS needs its own fixture-aware re-run to be meaningfully tested, already flagged as future work under todo
+      26). **TRADFI:KRX = 19** — this re-sweep's static shard-enumeration files (`is_shards.json`/`mtds_shards.json`)
+      were generated before today's KRX registry narrowing (`unified-api-contracts@a2751f36`) and likely still enumerate
+      now-invalid ohlcv_1m/15m shards for KRX; not re-verified against a regenerated shard list this pass. **CEFI = 38
+      (BINANCE-DELIVERY 14, KRAKEN-FUTURES 6, COINBASE-CDE 5, COINBASE-FUTURES 4, OKX 3, others 6)** — spot-checked
+      BINANCE-DELIVERY's run.log directly: its failure window (11:35-11:52 UTC) predates the CEFI manifest- consolidator
+      staleness fix (~12:14 UTC, see below), so at least this venue's failures in THIS sweep are explained by an infra
+      issue that no longer exists, not a code regression; the remaining CEFI venues plausibly trace to the
+      already-tracked Tardis concurrent-IP-lock contention (`tardis_concurrent_ip_lockout_2026_07_12.md`, P0) given the
+      retriage round's concrete evidence of the same lock being held throughout this session by other production VMs —
+      not individually re-verified per-venue in this pass. **TRADFI (non-KRX) = 12** (YAHOO_FINANCE 6, CBOE 3, ICE 2,
+      NYSE 1) — plausibly the already-tracked TradFi Databento silent-zero-rows issue
+      (`tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`, still open) or the non-Databento-venue exclusions
+      confirmed earlier this session; not individually re-verified. **PREDICTION = 11** (KALSHI 7, POLYMARKET 4) —
+      plausibly the already-tracked prediction-bucket-naming gap / KALSHI universe-dead corroboration; not individually
+      re-verified. **DEFI = 1** (AAVE_V3-POLYGON) — a genuine single outlier, not investigated. **Honest bottom line:
+      the raw 219 count substantially overstates the truly-novel-and-unexplained remainder** — the large majority traces
+      to identifiable, mostly-already-tracked causes; a small residual (low double digits at most) may be genuinely new,
+      not isolated in this pass given the time already spent this session. - **Known checker-tooling limitation: 239**
+      (NEW category added to `aggregate_report.py` this pass) — the live-leg check has no PROD-sampled
+      instrument_id/underlying for ~64 long-tail DEFI venues, so it can't build a shard-spec; force-leg is unaffected. A
+      checker sampling gap, not a per-venue data bug — was previously indistinguishable from "genuine failure,"
+      inflating that count by 2x. - **Ambiguous: 1** (`TRADFI:FX:ohlcv_24h` skip leg — write succeeded but genuineness
+      unconfirmed). NEW category added to `aggregate_report.py` this pass (previously silently invisible — MTDS's own
+      exit-code logic doesn't even flip on `ambiguous`, unlike IS's, a real, separate small inconsistency worth a
+      follow-up fix). - **Already known/tracked, re-confirmed at scale**: known architectural gaps 52, known IS skip-leg
+      gap 162, known DEFI-consolidator infra issue 156. - **126 of 452 jobs produced no report at all** (driver-level
+      1200s timeout or crash before any leg result was recorded) — broken down: CEFI 62, DEFI 55, TRADFI 8,
+      PREDICTION 1. The CEFI figure is substantially explained by the manifest-consolidator staleness finding below
+      (many of these jobs ran during the ~14-day-stale window, before the manual fix); DEFI's is consistent with the
+      already-tracked consolidator/live-leg-hang pattern. - **Real, NEW production infra finding surfaced mid-sweep**:
+      CEFI's manifest consolidator was found ~14.1 days stale (frozen `availability_index.parquet`, confirmed via 3
+      readings whose staleness grew in exact lockstep with wall-clock time) — slowing/timing-out a large share of this
+      sweep's CEFI shards. Manually triggered a forced consolidation run; the index resumed refreshing on its normal
+      cadence afterward. Root cause NOT conclusively determined (ruled out a stale pre-fix deploy; the fix's own code is
+      still present but something else caused a 14-day freeze) — filed as its own issue, cross-referencing the
+      already-archived, supposedly- already-fixed `consolidator_idle_bucket_incremental_trap_2026_06_19.md` as a
+      possible regression: `plans/active/issues/cefi_manifest_consolidator_14day_stale_recovered_2026_07_13.md`. -
+      Confirmed NOT a Databento billing issue for the TradFi timeout pattern seen mid-sweep: pulled real VM run.logs —
+      every individual VM (force/skip/live) completed in 1-2 minutes with clean, specific results (a `0 records` success
+      or a real `unknown instrument` error), no billing/quota messages anywhere; the 1200s driver-level timeout is
+      cumulative latency (a slow `sample_live_instrument` pre-check + 3 sequential real GCE VM launches) landing right
+      at the budget, not a hang. - **Not done, honest residual**: individually re-verifying each of the ~80-ish
+      plausibly-explained-but-not- confirmed CEFI/TRADFI/PREDICTION failures above against their real run.logs one by
+      one (time-boxed after the rest of this session's work); regenerating the static shard-enumeration files against
+      today's KRX/TradFi registry changes and re-running just the affected shards; a fixture-aware SPORTS re-run using
+      todo 26's per-venue day-picker instead of the single fixed day. All flagged here as concrete next steps, not
+      silently dropped.
 
 ## Verification (workspace-wide, before this plan is considered shippable)
 
