@@ -431,3 +431,16 @@ Phase C — verification + guardrails:
   serve-stale/refuse-large defense-in-depth**, NOT a from-scratch re-architecture and NOT a RAM bump. Full chain + log
   evidence in `bench2/FINDINGS.md` top block. Verified read-only against live GCS + Cloud Logging + Cloud Run configs;
   no changes made.
+- 2026-07-13 (operator context — Ikenna via Slack, recalibrates PRIORITY not diagnosis): Ikenna (primary data-pipeline
+  owner + the effective sole consumer of the data-status tab) is **NOT using the data-status tab right now and won't for
+  a while** — he's reconciling shard issues / smoke-test outputs so they produce data as expected, and blindly reading
+  coverage over broken adapters/consolidators isn't useful yet. **Implication:** the big-ticket cell-grid bound/stream
+  re-architecture (make the tab fast at full range) drops OFF the critical path — schedule it deliberately, not under
+  incident pressure. **What stays urgent (independent of tab usage):** (1) the rollup worker
+  `uts-prod-data-status-rollup-svc` is OOM-looping ~144×/day (16GiB×4CPU every 10 min, producing nothing for MTDS/MDPS)
+  — ongoing cost + noise regardless of tab use → pause its `*/10` cron or bound its build; (2) a cheap API
+  fail-fast/refuse-large (or serve-stale-as-last-resort) guard so a single `/api/data-status/manifest` request can't
+  OOM-crash-loop the WHOLE deployment-api (blast radius = cockpit/deployments/costs all go down) — highest
+  value-per-effort near-term item. **Unaffected + still worth doing for the surfaces people DO use:** WORKERS=2,
+  bounded-cache hygiene, and the 7 slow non-data-status endpoints (§2.8). Priority: data-status COMPUTE fix →
+  deferred/scheduled; rollup-worker cost-stop + API OOM-guard → near-term; general responsiveness → walkthrough.
