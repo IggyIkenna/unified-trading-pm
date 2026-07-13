@@ -234,13 +234,39 @@ Grep `venue_id` + `to_numeric` fleet-wide (per the existing P1 CODE todo's own i
       covered venue (`"Grimsta IP"` → `GRIMSTA_IP`, present in `venues.parquet`) and against 3 real EPL fixtures for
       2019-08-11 (`St. James' Park`, `King Power Stadium`, `Old Trafford` — all 3/3 exact matches against
       `venues.parquet`).
-- [ ] [VERIFY] P2. New finding from slot 4's Decision audit (2026-07-13): `venues.parquet` (591 rows) does NOT cover
+- [x] ✅ [VERIFY] P2. New finding from slot 4's Decision audit (2026-07-13): `venues.parquet` (591 rows) does NOT cover
       every stadium referenced in the fixture corpus (e.g. "Brentford Community Stadium" has zero rows; only 43-70% of
       distinct `venue_name` values per sampled day matched, worse on lower-league/international fixtures — matches slot
       5's independent finding above that 139/149 venue codes for 2018-06-17 are honestly absent from `venues.parquet`).
       Quantify the true corpus-wide coverage gap (distinct unmatched `venue_name` count) and decide whether to backfill
       `venues.parquet` from `venue_name`/`venue_city`/lat-lon already present on fixtures, or accept honest-absence NaN
-      for unmatched venues as correct behavior going forward. (repo: instruments-service, features-service)
+      for unmatched venues as correct behavior going forward. (repo: instruments-service, features-service) — **DONE,
+      slot 4, 2026-07-13 — read-only investigation, no code shipped.** Quantified via the SANCTIONED manifest-based
+      approach (single-walk discipline: no fresh corpus glob) — `read_availability_index()` on the sports IS bucket
+      gives an EXACT captured-`FIXTURES`-shard universe: **58,649 captured `(day, league_id)` shards, 95 leagues, 3,205
+      distinct dates, ~206,946 total fixture rows**. Reading all 58,649 shards was out of scope for a P2 finding, so
+      drew a documented stratified sample instead (up to 3 dates per league, 285 shards attempted across 92
+      non-blank-league_id leagues, 113 successfully read — the rest hit stale/moved-path read errors, not chased further
+      as out of this todo's scope) and checked each sampled shard's `venue_name` against `build_venue_id(venue_name)`
+      membership in `venues.parquet`'s `venue_id` set: - **282 distinct venue_names in the sample; 193 matched (68.4%);
+      89 unmatched (31.6%)** — confirms the original 43-70%-match spot-check with a real stratified statistical estimate
+      across the corpus, not just a handful of days. - **Noted `venues.parquet` grew from 591 rows (my earlier
+      crosswalk-decision check, same session) to 2,752 rows** within a few hours — traced to
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:490` `_write_venues_from_teams`, which
+      extracts venue metadata from captured `TEAMS` data (461,777 manifest rows, actively growing via the ongoing
+      backfill fleet). **This means venues.parquet coverage is self-healing as team capture progresses, NOT a
+      static/fixed gap** — the same mechanism that already produced the 591→2,752 jump will keep closing the gap as the
+      fleet captures more teams, with no separate backfill code needed. - **Decision: ACCEPT honest-absence NaN for
+      unmatched venues as correct behavior going forward — do NOT build a separate `venue_name`/`venue_city`/lat-lon
+      backfill path from fixtures.** Reasoning: (1) the existing team-based writer is already the correct, ongoing
+      backfill mechanism and demonstrably closing the gap organically; (2) fixtures don't carry `capacity`/`surface` (2
+      of `venues.parquet`'s 8 columns), so a fixtures-derived backfill would need to write a partial-schema row, adding
+      complexity for a case the existing pipeline already resolves over time; (3) some "unmatched" samples (e.g.
+      `"Orange Vélodrome"`) look like they SHOULD already be covered (a major Ligue 1 stadium) — suggests part of the
+      residual 31.6% is spelling/diacritic variance between the fixture-side name and the team-derived name rather than
+      genuine absence, which a naive backfill script risks reconciling WRONG (writing a duplicate/near-duplicate venue
+      row) rather than correctly; a fresh, careful investigation of THAT specific sub-problem (if pursued) should be its
+      own scoped todo, not bundled into this decision.
 - [ ] [VERIFY] P3. Check whether any downstream ML model/strategy already trained on the broken (all-NaN) venue-context
       columns — if so, flag for a retrain, this is out of scope for this issue to fix directly. **STILL OPEN** — not
       investigated by the slot-5 fix pass above; the venue-context columns (`VENUE_CONTEXT_COLUMNS`) were silently
