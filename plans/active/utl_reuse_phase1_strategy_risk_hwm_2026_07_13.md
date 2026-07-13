@@ -163,8 +163,13 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       type would require redesigning `RiskGroupAggregator`'s constructor contract or touching `service.allocate`'s
       public kwarg, for zero behavioural benefit — declined per this plan's own "no regressions for no gain" pattern. No
       code change; no quickmerge required (pure verification).
-- [ ] [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
-      quickmerge.
+- [x] ✅ [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
+      quickmerge. — VERIFIED (2026-07-13, slot-5) against `strategy-service@10943bfd`: pure verification, no code change
+      needed. `tests/risk/unit/test_golden_fixture_phase0_risk_eval.py` passes; full `tests/risk/` suite (722 passed, 1
+      skipped). Full `quality-gates.sh` exit 0, sentinel verified against `10943bfd`. First attempt hit a transient
+      wall-clock resource-budget gate failure (672s > 300s) from shared-host QG contention (multiple slots running full
+      QG concurrently) — re-ran once contention cleared, clean pass. This closes out
+      `utl_reuse_phase1_strategy_risk_hwm`'s final todo; all 6 todos now done.
 
 ## Success criteria
 
