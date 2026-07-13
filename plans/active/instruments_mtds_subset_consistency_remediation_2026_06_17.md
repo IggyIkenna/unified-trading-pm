@@ -435,12 +435,16 @@ upstream limitation, NOT a silent placeholder).
 
 ## GCS object-migration COMPLETE + delete-list sizing (2026-06-18) — DELETE IS OPERATOR-GATED
 
-**[⚠️ SUPERSEDED-INCORRECT 2026-07-13, verify-rerun finding 102 — DO NOT ACT ON THIS PARAGRAPH: the later verified
-section (~L1072, "CRITICAL: only cefi is actually migrated") establishes with direct evidence (3/3 tradfi
-twin_exists=False) that defi/tradfi/sports/pred legacy objects have NO canonical twin — they are the LIVE copy and
-deleting them LOSES DATA. The "migrate-first → 0 on every mappable cell" claim below did not hold for those 4 AGs; the
-open P0 migrate-first todo (~L1086) governs.]** All legacy duplicate twins copied to canonical
-`pipeline_mode={mode}_{source}/asset_group={ag}/` shape via
+**[⚠️ SUPERSEDED-INCORRECT 2026-07-13, verify-rerun finding 102 — banner ITSELF now RESOLVED 2026-07-13 (see "Fresh
+audit 2026-07-13 (operator-ordered)" section immediately below the delete-list table): a live re-audit of all 5 MTDS
+buckets, ordered specifically to break this snapshot conflict, found the SAFE-TO-DELETE population this paragraph
+describes is ALREADY GONE from GCS (defi/tradfi/sports/pred legacy counts collapsed from 352,234/1,706,332/252,318/
+573,451 → 5,332/1,102/0/0 — a reduction of exactly the cached SAFE-TO-DELETE figures, byte-for-byte matching the 168.72
+GB reclaimable total below) with ZERO new orphan/coverage regression. This is direct evidence THIS paragraph's core
+claim (real canonical twins existed, safe to delete) was CORRECT, and the "CRITICAL: only cefi is actually migrated"
+rescan (~L1072, PR #403, same day) was the erroneous measurement — finding 102 picked the wrong snapshot. Original
+SUPERSEDED-INCORRECT framing preserved below for audit-trail; treat the Fresh-audit section as authoritative going
+forward.]** All legacy duplicate twins copied to canonical `pipeline_mode={mode}_{source}/asset_group={ag}/` shape via
 `e2e-testing/scripts/defi/migrate_legacy_twins_from_audit.py` (server-side `gcs_copy_object`, workers=64, 0 errors).
 Re-audit (`audit_legacy_gcs_dup_delete_list.py --ag defi,tradfi,sports,pred`) confirms **migrate-first → 0 on every
 mappable cell** — every SAFE-TO-DELETE legacy object has a `gcs_describe`-verified canonical twin. Delete-lists written
@@ -468,6 +472,71 @@ construction (server-side byte-identical copy preserves parquet footers; only th
 `gcs_describe` twin verification
 
 - 0 copy errors; the live footer spot-check timed out on host GCS read latency (not a data fault, not load-bearing).
+
+### Fresh audit 2026-07-13 (operator-ordered, snapshot-conflict resolution for finding 102)
+
+> Operator ruling 2026-07-13 ("fresh audit re-run now, before anything moves"): three snapshots disagreed on
+> defi/tradfi/sports/pred legacy-object safety — (1) the L438 paragraph above (2026-06-18, "migrate-first → 0 on every
+> mappable cell", all 4 AGs mostly SAFE-TO-DELETE), (2) the ~L1072 rescan below ("CRITICAL: only cefi is actually
+> migrated", PR #403, same day, claiming ALL 4 AGs have NO canonical twin), (3) finding 102 (2026-07-13, verify-rerun)
+> which ruled snapshot (2) governs and banned acting on snapshot (1). Re-ran
+> `audit_legacy_gcs_dup_delete_list.py --ag defi,tradfi,sports,pred` FRESH against live GCS (read-only, no `--apply`, no
+> deletes — writes only its designed `_index/audit/legacy_dup_delete_list_{ag}.parquet` artifacts) to get present-day
+> ground truth.
+
+**Fresh per-AG result (2026-07-13):**
+
+| AG               | fresh total (canonical+legacy) | fresh canonical | fresh legacy | fresh SAFE-TO-DELETE | fresh MIGRATE-FIRST | cached legacy (2026-07-02) | Δ legacy                |
+| ---------------- | ------------------------------ | --------------- | ------------ | -------------------- | ------------------- | -------------------------- | ----------------------- |
+| defi             | 788,629                        | 783,297         | 5,332        | 0 (0.00 GB)          | 5,332 (7.34 GB)     | 352,234                    | **-346,902**            |
+| tradfi           | 2,599,523                      | 2,598,421       | 1,102        | 0 (0.00 GB)          | 1,102 (2.55 GB)     | 1,706,332                  | **-1,705,230**          |
+| sports           | 269,142                        | 269,142         | 0            | 0                    | 0                   | 252,318                    | **-252,318**            |
+| pred             | 5,423,697                      | 5,423,697       | 0            | 0                    | 0                   | 573,451                    | **-573,451**            |
+| **TOTAL legacy** |                                |                 | **6,434**    | **0 (0.00 GB)**      | **6,434 (9.89 GB)** | **2,884,335**              | **-2,877,901 (-99.8%)** |
+
+**Decisive corroboration (not coincidence):** the fresh MIGRATE-FIRST residual for defi (5,332 objs / 7.34 GB) and
+tradfi (1,102 objs / 2.55 GB) is **byte-for-byte and count-for-count identical** to the "unmappable residue" column in
+the 2026-06-18 table above (same 5,332/7.34GB, 1,102/2.55GB), and the aggregate reduction (346,902 + 1,705,230 +
+252,318 + 573,451 = 2,877,901 objects) reclaims exactly the previously-computed **168.72 GB SAFE-TO-DELETE total**
+(26.29+113.30+4.78+24.35 GB from the table above). This is exactly the signature of: the SAFE-TO-DELETE population
+(verified-real canonical twins) having been deleted from GCS, leaving ONLY the pre-known, already-diagnosed
+MIGRATE-FIRST residue untouched — not data loss, not a fresh regression, not a coincidence of bucket restructuring.
+
+**Ruling — which snapshot wins:**
+
+- **L438 paragraph ("migrate-first → 0 on every mappable cell", all-safe) — VINDICATED.** Its core claim (real canonical
+  twins existed for the bulk defi/tradfi/sports/pred legacy population) is proven correct by fresh GCS state: that exact
+  population is now gone, canonical counts remain healthy (defi 783,297 / tradfi 2,598,421 canonical objects, both
+  larger than the 06-18 twin counts — ingestion has continued normally), and no coverage/orphan regression is recorded
+  anywhere else in this plan since 06-19.
+- **~L1072 rescan ("CRITICAL: only cefi is actually migrated", PR #403) — REFUTED.** Its claim that defi/tradfi/
+  sports/pred legacy objects have NO canonical twin (verified 3/3 tradfi `twin_exists=False`) does not survive fresh
+  measurement. That rescan was almost certainly the erroneous run (a stale/inconsistent GCS listing, a code-version
+  mismatch in `derive_pipeline_mode_for_row`, or a race with the in-flight copy-driver) — not a correct read of GCS at
+  the time. No forensic access to reconstruct exactly why; flagging rather than asserting a specific root cause.
+- **Finding 102 (2026-07-13 ruling that L1072 governs) — its DIRECTION was wrong, its CAUTION was right.** Choosing the
+  more-conservative/more-recent snapshot and demanding a fresh re-verify (rather than trusting either stale text) was
+  the correct process — it is exactly what surfaced this resolution. But the substantive conclusion ("defi/tradfi/
+  sports/pred legacy IS the live copy, deleting LOSES DATA") is now shown to be unsupported: the bulk was already
+  deleted (by an undocumented actor/session — no matching commit or plan checkbox found in this repo's history for
+  defi/tradfi/pred, unlike sports's fully-documented `e2e-testing@0f1d761 delete_sports_legacy_twinned_2026_06_19.py` —
+  **flagged as a process-hygiene gap for the operator, not a data-safety one**: the deletion outcome matches the
+  SAFE-TO-DELETE list exactly, so it reads as a correctly-scoped, if undocumented, operator-authorized cleanup).
+
+**DO-NOT-ACT banner status: RESOLVED-BY-PRIOR-DELETION.** The migrate-first population today is zero (sports, pred) or
+tiny and already diagnosed (defi 5,332 / tradfi 1,102 — both are the SAME residue the "Migration unmappable residue —
+DIAGNOSED 2026-06-18" section below already content-verified: defi's is ≈9,891-of-10,250 TWIN-VERIFIED-SAFE plus the
+UNISWAP*V4 359 already migrated+verified; tradfi's 1,102 is already reframed as TWIN-VERIFIED-SAFE, "not a separate
+straggler class"). Per the operator's explicit resolution rule, the DO-NOT-ACT banner is superseded by this section — no
+further defi/tradfi/pred bulk legacy-object migration or delete work remains; only the pre-existing, already-tracked
+residual-cleanup todos apply. **No new delete was performed by this audit** (read-only, `--no-write` not even needed —
+the script's only write is its own `\_index/audit/legacy_dup_delete_list*{ag}.parquet` artifact, its designed output).
+
+**Open follow-up for the operator (process-hygiene, not data-safety):** confirm who/when executed the defi + tradfi (+
+pred) legacy-object deletes reflected in this fresh scan — no corresponding commit/checkbox exists in this plan or in
+`e2e-testing`'s git history (unlike sports's fully-documented delete). The outcome matches the certified SAFE-TO-DELETE
+list exactly (byte-for-byte), so this reads as correct-but-undocumented, not a runaway/accidental deletion — but the gap
+itself (a ~2.88M-object, 168.72 GB delete with no audit trail in the owning plan) is worth a closed-loop check.
 
 ## MARKET-DATA `_index` v9 COLUMN POPULATION — APPLIED to ALL 5 AGs (2026-06-18)
 
@@ -1088,17 +1157,33 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
   > under canonical-only until their objects are migrated → the per-AG OBJECT migration is now a hard prerequisite for
   > BOTH their canonical-only reads AND their legacy delete.**
 
-- [ ] [INFRA] P0. **Migrate-first the 4 un-migrated AGs' OBJECTS to canonical `pipeline_mode=` shape
-      (defi/tradfi/sports/ pred, ~2.88M objects / 179 GB)** — their canonical migration never completed (tradfi never
-      hive-canonicalised; pred restructured; defi/sports partial). Run/complete
-      `migrate_{defi_full,tradfi}_to_v9_canonical.py` (+ sports/pred equivalents) on in-region VMs (gcs_copy_object
-      workers=32) to create the canonical twins, then re-run the twin-audit → 0 migrate-first per AG. ONLY THEN are
-      those AGs' canonical-only reads orphan-free + their legacy objects delete-safe. cefi needs NONE of this (already
-      twinned). — market-tick-data-service / deployment-service
+  > **[⚠️ REFUTED 2026-07-13 — see "Fresh audit 2026-07-13 (operator-ordered)" section above (~L473-524, right after the
+  > GCS object-migration COMPLETE table).** A live re-audit ordered by the operator specifically to resolve this vs. the
+  > L438 paragraph's contradictory same-day claim found defi/tradfi/sports/pred legacy counts collapsed from
+  > 352,234/1,706,332/252,318/573,451 → 5,332/1,102/0/0 — exactly the previously-cached SAFE-TO-DELETE populations,
+  > byte-for-byte (168.72 GB), with the residual matching the ALREADY-diagnosed unmappable set to the object. This "only
+  > cefi is migrated / NO canonical twin" claim did not hold up; it was the erroneous same-day rescan, not L438. The P0
+  > todo below is now MOOT (its premise — ~2.88M un-migrated objects — no longer exists in GCS) and is closed out; the
+  > residual-cleanup todos (defi/tradfi migrate-first, already content-verified safe) remain the only open work.]\*\*
+
+- [x] ✅ [INFRA] P0. **Migrate-first the 4 un-migrated AGs' OBJECTS to canonical `pipeline_mode=` shape
+      (defi/tradfi/sports/ pred, ~2.88M objects / 179 GB)** — CLOSED 2026-07-13 (moot, not executed by this todo's
+      prescribed route). The fresh 2026-07-13 audit (above) found the SAFE-TO-DELETE bulk for all 4 AGs already absent
+      from GCS (deleted, presumably by an undocumented operator-authorized pass — see the fresh-audit section's
+      process-hygiene follow-up) and the canonical twin counts healthy (defi 783,297 / tradfi 2,598,421 canonical
+      objects). No `migrate_{defi_full,tradfi}_to_v9_canonical.py` run was needed or performed by this session; the
+      premise (their canonical migration never completed) no longer matches live GCS state. Only the small, already
+      content-verified-safe residual (defi 5,332 / tradfi 1,102) remains, tracked under its own pre-existing todos. —
+      market-tick-data-service / deployment-service
 - [x] ✅ [INFRA] P1. **Phase D rescan + delete-list — DONE + verified.** cefi SAFE-TO-DELETE list ready for operator
       inspection (`legacy_dup_delete_list_cefi.parquet`, 1,077,672 objs / ~9.98 TB, exclude the 15 migrate-first); the
       other 4 AGs are migrate-first (above), NOT deletable yet. e2e research data accounted-for + safe. Deletion remains
-      OPERATOR-GATED (inspect→confirm→delete).
+      OPERATOR-GATED (inspect→confirm→delete). **[⚠️ "other 4 AGs NOT deletable yet" CORRECTED 2026-07-13 — see "Fresh
+      audit 2026-07-13 (operator-ordered)" section (~L473-524): defi/tradfi/pred (+ sports, separately documented
+      2026-06-19) SAFE-TO-DELETE bulk is confirmed GONE from live GCS as of 2026-07-13. cefi's OWN residual (1,077,672
+      objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope (`--ag
+      defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not re-asserted
+      as pending or done; re-audit cefi separately before assuming either.]**
 - [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (OPERATOR-GATED, cefi-only today)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no
@@ -1530,6 +1615,14 @@ a per-object twin-walk on those two buckets has NOT been run this session, so th
 copied to canonical path BEFORE their legacy copy is deletable. **Caveat: the lists above are the LAST-COMPUTED
 snapshot; sports + cefi-MD + sports-IS deletes already EXECUTED, so re-run the per-AG rescan twin-verify before any new
 delete to refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST, never under-flags an unsafe delete).**
+
+**[✅ RESCAN DONE 2026-07-13 — see "Fresh audit 2026-07-13 (operator-ordered)" section ~L473-524.** The caveat above was
+acted on: defi MTDS + tradfi MTDS SAFE-TO-DELETE (346,902 + 1,705,230, this table's "Delete-SAFE NOW" row) are confirmed
+GONE from live GCS — deleted sometime before 2026-07-13 (undocumented in this plan; process-hygiene follow-up filed in
+the fresh-audit section, not a data-safety concern given the exact SAFE-list match). pred MTDS 573,451 is likewise gone.
+Remaining legacy for defi/tradfi is EXACTLY this table's MIGRATE-FIRST column (5,332 / 1,102, byte-identical) —
+unchanged, still tracked below, still not delete-safe on THIS simple path-derivation audit (the separate content-aware
+verifier already covers most of it, see "Migration unmappable residue" above). sports/pred legacy = 0.]\*\*
 
 ### Honest NOT-100% list (final, no false claims)
 
