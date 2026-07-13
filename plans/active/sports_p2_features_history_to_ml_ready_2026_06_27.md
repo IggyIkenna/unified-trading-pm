@@ -117,6 +117,44 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 15 (Todo 3 re-dispatch — fast re-verify confirms slot-12's finding still current; vm-4 crashed again on 2018-06-18 exactly as predicted; no new data_engineering action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped. No new action taken.**
+
+Fast re-verify via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):
+
+- Features bucket unique-date count: **1,744** (up from 1,682 at slot-12's check) — steady forward progress.
+- `gcloud compute instances list --filter="name~fss OR name~features"`: **7** shards running (`vm-3,5,6,7,8,9,10`).
+  Confirmed genuinely live via `run.log` freshness, not just `RUNNING` status — `vm-3`'s last log line
+  (`2026-07-13 11:55:20 UTC`) was 20s old at check time, actively on date 209/421 (2017-11-16).
+- `vm-1` and `vm-2` are absent from the instance list with a clean `VM EXIT rc=0` marker in their `run.log` — completed
+  their assigned ranges normally, not dead.
+- **`vm-4` is absent from the instance list with NO exit marker** — confirms slot-12's finding is still accurate: its
+  log's last line (`2026-07-13 11:35:30 UTC`, ~20 min stale at check time) shows it was mid-compute on **2018-06-18**,
+  the exact date slot-12 flagged as "clearly heading to the same OOM ceiling" after the first relaunch also died on
+  2018-06-17. The VM has since disappeared from the instance list with no exit marker — consistent with a second OOM on
+  the predicted date, not a new/different failure.
+
+Per slot-12's explicit handoff, did **not** relaunch `vm-4`'s range (2018-06-17→2019-08-11) — doing so before the
+reopened issue doc's P0 profiling todo lands a real fix would just reproduce the same OOM a third time. That profiling
+work is its own actionable todo in
+[`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md),
+not this task. The other 7 shards' progress is healthy and unaffected.
+
+**What I did NOT do**: did not attempt the memory profiling inline (out of this task's scope — it's the issue doc's own
+P0 todo, needs memray/tracemalloc rigor, not a quick re-verify). Did not relaunch `vm-4`. Did not flip Todo 1 or Todo 3
+— gate remains unmet, same confirmed-still-broken state slot-12 left it in.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should keep climbing past
+1,744) and whether the issue doc's P0 profiling todo has landed a fix; only once it has is `vm-4`'s range safe to
+relaunch. Re-run `check_pipeline_completeness.py` + reassess Todo 1/Todo 3 once the bucket approaches the full
+~4,210-day span AND `vm-4`'s range is genuinely covered.
+
+Checkbox NOT flipped. No repo code commit this entry (read-only verification, not a code change); this plan-doc edit
+ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other dispatchable work.
+
 ### 2026-07-13 — slot 12 (Todo 3 dispatch — found + gap-filled 2 dead shards; CRITICAL new finding: the same-day-shipped OOM fix does NOT hold on real data, REOPENED the issue doc)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
