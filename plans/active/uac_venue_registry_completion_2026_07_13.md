@@ -139,11 +139,28 @@ code.
       transient mid-commit — self-recovered per `plans/active/issues/host_root_disk_full_transient_2026_07_13.md` — and
       one quickmerge sentinel-invalidating rebase from a concurrent unrelated sports-venue commit), sentinel verified at
       `61ba523906afc462943b24db83d40bf16ff90695`.
-- [ ] [REGISTRY] P2. Regenerate + commit `capability-verdict-matrix.json` and confirm: (a) all 6 venues above now
+- [x] ✅ [REGISTRY] P2. Regenerate + commit `capability-verdict-matrix.json` and confirm: (a) all 6 venues above now
       resolve a non-`(unknown)` category in `openapi/venue-coverage-report.md`, (b) `FX`/`BITFINEX-SPOT`/
       `BITFINEX-FUTURES`/`NASDAQ`/`NYSE` show `leg_eligible=yes`, (c) `split_scope_tokens` does not raise for any of
       these tokens, (d) no existing venue's category/capability entry regressed. Cite the regenerated matrix commit as
-      evidence on this todo per the plan's evidence-backed-completion rule.
+      evidence on this todo per the plan's evidence-backed-completion rule. — SHIPPED `unified-api-contracts@c138145b`.
+      Ran both regenerators (`unified-trading-pm/scripts/openapi/     generate_capability_verdict_matrix.py` +
+      `audit_venue_coverage.py`) against the 6 already-shipped fixes above. **(a)/(b) confirmed by direct grep of the
+      regenerated `venue-coverage-report.md`**: `BITFINEX-FUTURES`/
+      `BITFINEX-SPOT`/`BITGET-FUTURES`/`BITGET-SPOT`/`KRAKEN-FUTURES`/`KRAKEN-SPOT` all `category=cefi`, `FX`/`NASDAQ`/
+      `NYSE` all `category=tradfi`, all 9 show `leg_eligible=yes`. **(c) found a genuine gap while verifying, not
+      assumed**: `split_scope_tokens(("fx",))` RAISED — `"fx"` was missing from `KNOWN_VENUE_TOKENS` (`_TRADFI_TOKENS`
+      in `venue_tokens.py`), contradicting this plan's own ground-truth claim that it was "already wired." The other 8
+      tokens (bitfinex/bitget/kraken/nasdaq/nyse, bare lowercase, no hyphens) were genuinely fine. Fixed as a minimal
+      necessary companion (added `"fx"` to `_TRADFI_TOKENS`, matching the other IBKR-routed entries) since criterion (c)
+      is this exact todo's job to ensure — a pure frozenset addition, provably non-regressive
+      (`is_venue_token`/`split_scope_tokens` can only succeed in MORE cases afterward, never fewer). Re-ran both
+      regenerators after the fix; all 9 tokens confirmed no-raise. **(d) verified by diffing category-line-by-line**
+      against the pre-regen committed report: every category flip is either one of this plan's 6 already-shipped fixes
+      (unknown→known, expected) or an unrelated concurrent registry change from another slot (e.g. Barchart retirement,
+      POLYMARKET-PERP/KALSHI-PERP additions) — zero known→unknown flips, zero regressions attributable to this change.
+      Full `quality-gates.sh` green (237s), sentinel verified at `c138145b9dc5f2f0c598671ddcff1c1136c75fd7`. **All 7
+      todos in this plan are now complete.**
 
 ## Progress Log
 
