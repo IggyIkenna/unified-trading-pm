@@ -979,7 +979,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1364,7 +1364,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
