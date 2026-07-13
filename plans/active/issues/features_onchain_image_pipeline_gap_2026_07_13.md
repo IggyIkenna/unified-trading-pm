@@ -156,3 +156,197 @@ depends_on: []
   DEFAULT=0 < DEBUG=100) — only the `varlog/system` "Container called exit(0)." (INFO) survives. Event-count
   observability for this job therefore requires structured logging or an exclusion carve-out; per-shard failures still
   surface via `ADAPTER_FETCH_FAILED` events / availability index per the runbook.
+
+## Operator ruling 2026-07-13 (explicit, interactive Q&A): DELETE EVERYTHING NOW — pre-delete state capture
+
+Ruling: decommission immediately (no grace) — Cloud Run job `features-onchain-service-job`, PAUSED scheduler
+`features-onchain-service-daily-trigger` + its workflow `features-onchain-service-daily`, broken schedulers
+`uts-{dev,staging}-features-onchain-t1-schedule` (targets nonexistent jobs), and the legacy AR repo
+`features-onchain-service/*`. DO NOT touch `uts-prod-features-onchain-collect-lst-seasonal-rewards` (live, just fixed)
+or anything in `features-service`. Full pre-delete state captured below (all `gcloud … describe` 2026-07-13, project
+`central-element-323112`, asia-northeast1) so every surface is re-creatable.
+
+### 1. Cloud Run job `features-onchain-service-job` (full spec)
+
+```yaml
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  annotations:
+    run.googleapis.com/creator: ikenna@odum-research.com
+    run.googleapis.com/lastModifier: ikenna@odum-research.com
+  creationTimestamp: "2026-01-27T19:28:56.909429Z"
+  labels:
+    app: features-onchain-service
+    cloud.googleapis.com/location: asia-northeast1
+    environment: prod
+    goog-terraform-provisioned: "true"
+    managed-by: terraform
+    service: features-onchain-service
+    version: v2
+  name: features-onchain-service-job
+  namespace: "1060025368044"
+  uid: a634d534-353c-458a-a1f3-7e471d983f27
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      parallelism: 1
+      taskCount: 1
+      template:
+        spec:
+          containers:
+            - env:
+                - { name: GCP_PROJECT_ID, value: central-element-323112 }
+                - { name: GCS_REGION, value: asia-northeast1 }
+                - { name: UCS_SKIP_GCSFUSE_CHECK, value: "1" }
+                - { name: GCS_LOCATION, value: asia-northeast1 }
+                - name: GRAPH_API_KEY
+                  valueFrom: { secretKeyRef: { key: latest, name: graph-api-key } }
+                - { name: PYTHONUNBUFFERED, value: "1" }
+                - name: ALCHEMY_API_KEY
+                  valueFrom: { secretKeyRef: { key: latest, name: alchemy-api-key } }
+                - { name: ENVIRONMENT, value: prod }
+              image: asia-northeast1-docker.pkg.dev/central-element-323112/features-onchain-service/features-onchain-service:latest
+              resources: { limits: { cpu: "2", memory: 4Gi } }
+          maxRetries: 3
+          serviceAccountName: features-onchain-sa@central-element-323112.iam.gserviceaccount.com
+          timeoutSeconds: "86400"
+# status at capture: executionCount: 4; latestCreatedExecution features-onchain-service-job-xssn7
+#   EXECUTION_SUCCEEDED 2026-01-27T19:30:12Z (execution deleted 2026-02-08)
+```
+
+### 2. Scheduler `features-onchain-service-daily-trigger` (PAUSED; full spec)
+
+```yaml
+attemptDeadline: 180s
+description: Triggers features-onchain-service-daily workflow
+httpTarget:
+  body: eyJhcmd1bWVudCI6IntcInRyaWdnZXJcIjpcInNjaGVkdWxlZFwifSJ9 # {"argument":"{\"trigger\":\"scheduled\"}"}
+  headers: { Content-Type: application/octet-stream, User-Agent: Google-Cloud-Scheduler }
+  httpMethod: POST
+  oauthToken:
+    scope: https://www.googleapis.com/auth/cloud-platform
+    serviceAccountEmail: features-onchain-sa@central-element-323112.iam.gserviceaccount.com
+  uri: https://workflowexecutions.googleapis.com/v1/projects/central-element-323112/locations/asia-northeast1/workflows/features-onchain-service-daily/executions
+name: projects/central-element-323112/locations/asia-northeast1/jobs/features-onchain-service-daily-trigger
+retryConfig: { maxBackoffDuration: 300s, maxDoublings: 5, maxRetryDuration: 0s, minBackoffDuration: 5s, retryCount: 3 }
+schedule: 30 11 * * *
+state: PAUSED
+timeZone: UTC
+userUpdateTime: "2026-06-08T04:13:33.512569Z"
+```
+
+### 3. Workflow `features-onchain-service-daily`
+
+`workflows.workflows.get` is DENIED for every identity available to this session (`unified-trading-sa` direct + ADC;
+impersonation of github-actions-deploy/github-deploy/features-onchain-sa denied — no serviceAccountTokenCreator), so the
+live spec could not be read via API. The workflow is terraform-provisioned and its FULL source is git-tracked:
+`deployment-service/terraform/services/features-onchain-service/gcp/main.tf` (`locals.workflow_yaml`, module
+`daily_workflow`, name from `terraform.tfvars` `workflow_name = "features-onchain-service-daily"`) — fully re-creatable
+from source. Sibling `features-onchain-service-backfill` (module `backfill_workflow`) is NOT in the ruling and is left
+untouched.
+
+### 4. Broken T1-recon schedulers (ENABLED, targets nonexistent jobs; full specs)
+
+```yaml
+# uts-dev-features-onchain-t1-schedule
+attemptDeadline: 180s
+description: features-onchain-service T+1 recon batch — writes to t1-recon/features/onchain/
+httpTarget:
+  headers: { User-Agent: Google-Cloud-Scheduler }
+  httpMethod: POST
+  oauthToken:
+    scope: https://www.googleapis.com/auth/cloud-platform
+    serviceAccountEmail: uts-dev-batch-sa@central-element-323112.iam.gserviceaccount.com
+  uri: https://asia-northeast1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/central-element-323112/jobs/uts-dev-features-onchain-service-t1-recon:run
+name: projects/central-element-323112/locations/asia-northeast1/jobs/uts-dev-features-onchain-t1-schedule
+retryConfig: { maxBackoffDuration: 3600s, maxDoublings: 5, maxRetryDuration: 0s, minBackoffDuration: 5s, retryCount: 1 }
+schedule: 30 2 * * *
+state: ENABLED # status.code: 5 NOT_FOUND daily; lastAttemptTime 2026-07-13T02:30:19Z
+timeZone: UTC
+userUpdateTime: "2026-03-12T17:52:54.003335Z"
+---
+# uts-staging-features-onchain-t1-schedule — IDENTICAL shape except:
+#   serviceAccountEmail: uts-staging-batch-sa@central-element-323112.iam.gserviceaccount.com
+#   uri target job: uts-staging-features-onchain-service-t1-recon
+#   userUpdateTime: "2026-03-12T17:59:20.584838Z"; lastAttemptTime 2026-07-13T02:30:20Z; status.code: 5
+```
+
+### 5. Legacy AR repo `features-onchain-service` (14444.221 MB, 32 image digests)
+
+```yaml
+name: projects/central-element-323112/locations/asia-northeast1/repositories/features-onchain-service
+format: DOCKER
+mode: STANDARD_REPOSITORY
+description: Docker repository for features-onchain-service
+createTime: "2026-01-27T18:48:43.183623Z"
+updateTime: "2026-02-10T17:32:50.494355Z"
+labels:
+  {
+    environment: prod,
+    goog-terraform-provisioned: "true",
+    managed-by: terraform,
+    project: unified-trading,
+    service: features-onchain-service,
+  }
+registryUri: asia-northeast1-docker.pkg.dev/central-element-323112/features-onchain-service
+```
+
+All images under package `features-onchain-service/features-onchain-service` (digest → tags → createTime):
+
+| digest (sha256:…) | tags             | created             |
+| ----------------- | ---------------- | ------------------- |
+| d7874899c19e27eb  | `2ec6391,latest` | 2026-02-10T17:32:46 |
+| e400de137d9b53ef  | `96a8367`        | 2026-02-10T11:30:27 |
+| 98805d35361f89d6  | `542690c`        | 2026-02-10T06:23:06 |
+| 41ca125783f06da9  | `8286b33`        | 2026-02-09T23:07:36 |
+| 8e7c997771d2ca5f  | `e422bae`        | 2026-02-09T22:09:18 |
+| 1c8103a49d0e16cd  | `cf3cc2a`        | 2026-02-09T15:35:02 |
+| 2ea96b814da060f8  | `2ddaeda`        | 2026-02-09T14:54:42 |
+| fc884fd4103806bc  | `172cccf`        | 2026-02-08T12:02:07 |
+| 0a701ac3f1748849  | `e1a6395`        | 2026-02-08T09:15:44 |
+| 27d6b7637bd2bdd9  | `08e29d6`        | 2026-02-08T09:04:51 |
+| c6730dde9209c7f1  | `63b36f8`        | 2026-02-08T08:52:29 |
+| f6e2a049a3a226d2  | `be57d3a`        | 2026-02-08T08:46:56 |
+| 42a8e55490ab2c5c  | `76c93b9`        | 2026-02-08T08:10:19 |
+| af6ac6ded6bf1e0f  | `37fc99f`        | 2026-02-07T13:01:09 |
+| c10ff06f6fd1baac  | `65fb1f4`        | 2026-02-07T07:59:40 |
+| 3f4ec4e84e688cb9  | `292fa15`        | 2026-02-06T20:23:30 |
+| 17eab784ba44ae1d  | `b665631`        | 2026-02-06T16:13:57 |
+| fc2b4cba1990c5d7  | `38802b1`        | 2026-02-05T18:40:50 |
+| 0d736aae983b87c4  | `aef1f7b`        | 2026-02-05T18:31:33 |
+| 4b682826352832f4  | `f4cd884`        | 2026-02-05T18:27:09 |
+| 41e2af14498e440f  | `7d35352`        | 2026-02-05T18:27:03 |
+| e8e98b8d95778968  | `6d16ac5`        | 2026-02-05T17:11:47 |
+| edcfc4ccfdd7cca5  | `4de7a5f`        | 2026-02-05T16:40:13 |
+| 775d89790c987bf7  | `1584fdc`        | 2026-02-05T16:22:22 |
+| e42ea653db5ac789  | `abcd20b`        | 2026-02-05T15:32:49 |
+| 2ac7787e04153c31  | `7253143`        | 2026-02-05T15:32:11 |
+| cf4701d3242ae2f9  | `c195bec`        | 2026-02-05T15:21:44 |
+| 065a4bc299c5aa92  | `dac4172`        | 2026-02-05T14:20:57 |
+| d0f86da1c0b90748  | `16947bb`        | 2026-02-05T13:25:45 |
+| 1b5c2aabeec549ca  | `4bc4e23`        | 2026-01-28T11:33:26 |
+| 7199c3265a348345  | `5ac4d82`        | 2026-01-27T19:14:56 |
+| 09aadac9c89036eb  | `c18b163`        | 2026-02-04T13:18:28 |
+
+(Digests truncated to 16 hex chars for the table; the `:latest` head in full =
+`sha256:d7874899c19e27eb6f82cde11f362ec119b863a5f44f186c91f7124cfc3d9fef`, source commit `2ec6391` of the archived
+standalone repo.)
+
+Cross-checked before AR-repo deletion: the ONLY Cloud Run job whose container image references
+`…/features-onchain-service/…` is `features-onchain-service-job` itself (deleted by this same ruling);
+`uts-prod-features-onchain-collect-lst-seasonal-rewards` runs `unified-trading-system/features-service:latest` and the
+two `uts-prod-manifest-consolidator-features-onchain-{cefi,defi}` jobs use other images.
+
+### Decommission checklist (execute after this capture is committed)
+
+- [ ] P1. Delete Cloud Run job `features-onchain-service-job` (asia-northeast1) + verify NOT_FOUND
+- [ ] P1. Delete scheduler `features-onchain-service-daily-trigger` + verify NOT_FOUND
+- [ ] P1. Delete workflow `features-onchain-service-daily` + verify NOT_FOUND (perms caveat above — Cloud Build executor
+      fallback if direct delete denied)
+- [ ] P1. Delete schedulers `uts-dev-features-onchain-t1-schedule` + `uts-staging-features-onchain-t1-schedule` + verify
+      NOT_FOUND
+- [ ] P1. Delete AR repo `features-onchain-service` (asia-northeast1) + verify NOT_FOUND

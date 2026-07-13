@@ -115,3 +115,89 @@ flows to `main` via the standing fleet promote; the image needs no action.
 - [ ] P3. Tear down the HISTORICAL europe-west4 Cloud Run service `agent-orchestrator-staging` (min-instances 0, runs
       the superseded `cloud-run-source-deploy:uat` image) + its registry — codex already marks it "not running today";
       keep only if the cloud-agnostic re-spin optionality is still wanted.
+
+## Operator ruling 2026-07-13 (explicit, interactive Q&A): execute items 1 + 3 — pre-delete state capture
+
+Ruling: delete the stale asia-northeast1 AR package `unified-trading-system/agent-orchestrator` AND tear down the
+europe-west4 Cloud Run service `agent-orchestrator-staging` — the latter conditional on verified zero traffic over the
+last 30 days. Do NOT touch the central-VM AO runtime (tmux/systemd) or any europe-west4 'production'-tagged
+image/service. Item 2 (Cloud Build trigger decision) remains open — not part of this ruling.
+
+### Traffic verification for `agent-orchestrator-staging` (gate PASSED — zero traffic)
+
+- Cloud Logging `run.googleapis.com/requests` for
+  `resource.labels.service_name="agent-orchestrator-staging" AND resource.labels.location="europe-west4"`,
+  `--freshness=30d`: **0 entries**.
+- Cloud Monitoring `run.googleapis.com/request_count` (unaffected by logging-sink exclusions), 30-day window aligned
+  `ALIGN_SUM`: **empty timeSeries — no data points**, i.e. genuinely zero requests.
+- Service status corroborates: latestReadyRevision `agent-orchestrator-staging-00014-hdn`, last transition
+  2026-05-22T03:50Z (untouched for ~7 weeks).
+
+### 1. AR package `unified-trading-system/agent-orchestrator` (asia-northeast1) — pre-delete state
+
+```text
+IMAGE:  asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/agent-orchestrator
+DIGEST: sha256:6236b0d8dd204fe5d6907b263125841f3f3a6e1cee15a2dc39c25eb11fd382ca   (single digest)
+TAGS:   0.0.0.dev0, 4539201d, latest
+CREATED: 2026-06-28T05:34:30 (package createTime 2026-06-28T05:34:30.866415Z)
+Provenance: manual Cloud Build e11ef7c7-ab7c-4559-8289-9658f8fa8dd7 (2026-06-28T05:31:16Z, empty buildTriggerId)
+            of agent-orchestrator/cloudbuild.yaml @ 4539201d — re-creatable via `gcloud builds submit` from the repo.
+```
+
+### 2. Cloud Run service `agent-orchestrator-staging` (europe-west4) — pre-delete spec
+
+```yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/urls: '["https://agent-orchestrator-staging-1060025368044.europe-west4.run.app","https://agent-orchestrator-staging-cldtjniqvq-ez.a.run.app"]'
+    serving.knative.dev/creator: ikenna@odum-research.com
+  creationTimestamp: "2026-05-19T11:27:18.862776Z"
+  generation: 14
+  labels: { cloud.googleapis.com/location: europe-west4 }
+  name: agent-orchestrator-staging
+  namespace: "1060025368044"
+  uid: d11385ae-95e6-4d89-8c51-6575df5b471a
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      containers:
+        - command: [sh]
+          args: ["-c", "uvicorn server.server:app --host 0.0.0.0 --port 8080"]
+          env:
+            - name: ORCHESTRATOR_JWT_SECRET
+              valueFrom: { secretKeyRef: { key: latest, name: ORCHESTRATOR_JWT_SECRET } }
+            - name: AGENT_ORCHESTRATOR_SLACK_WEBHOOK
+              valueFrom: { secretKeyRef: { key: latest, name: AGENT_ORCHESTRATOR_SLACK_WEBHOOK } }
+            - name: AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET
+              valueFrom: { secretKeyRef: { key: latest, name: AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET } }
+            - { name: ORCHESTRATOR_MODE, value: live }
+            - { name: ORCHESTRATOR_ALLOW_ANONYMOUS, value: "false" }
+            - { name: ORCHESTRATOR_USERS_JSON, value: /secrets/users.json }
+          image: europe-west4-docker.pkg.dev/central-element-323112/cloud-run-source-deploy/agent-orchestrator:uat
+          ports: [{ containerPort: 8080, name: http1 }]
+          resources: { limits: { cpu: "1", memory: 1Gi } }
+          startupProbe: { failureThreshold: 1, periodSeconds: 240, tcpSocket: { port: 8080 }, timeoutSeconds: 240 }
+          volumeMounts: [{ mountPath: /secrets, name: ORCHESTRATOR_USERS_JSON-tuk-fih }]
+      serviceAccountName: 1060025368044-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+      volumes:
+        - name: ORCHESTRATOR_USERS_JSON-tuk-fih
+          secret: { items: [{ key: latest, path: users.json }], secretName: ORCHESTRATOR_USERS_JSON }
+  traffic: [{ latestRevision: true, percent: 100 }]
+# status at capture: Ready=True since 2026-05-22T03:50:19Z; latestReadyRevision agent-orchestrator-staging-00014-hdn;
+# url https://agent-orchestrator-staging-cldtjniqvq-ez.a.run.app
+# NOTE: the referenced image europe-west4 cloud-run-source-deploy/agent-orchestrator:uat is NOT deleted by this ruling.
+```
+
+### Teardown checklist (execute after this capture is committed)
+
+- [ ] P1. Delete AR package `unified-trading-system/agent-orchestrator` (asia-northeast1) + verify NOT_FOUND
+- [ ] P1. Delete Cloud Run service `agent-orchestrator-staging` (europe-west4) + verify NOT_FOUND
