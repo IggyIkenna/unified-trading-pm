@@ -220,7 +220,7 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       acceptable, -005 re-verifies + flips `understat-vm-xg-complete` on this state; if ruled NOT acceptable, the typing
       script (tracked in `sports_is_manifest_eu_regression_overwrite_2026_06_29.md`, repo instruments-service) lands
       first; (c) -006 documents final totals; (d) THEN -007 re-dispatches and deletes the driver.
-- [ ] [INFRA] P0. **NEW (2026-07-13, slot-3, operator directive: "close the lag ... till 100% completion, no dups,
+- [x] ✅ [INFRA] P0. **NEW (2026-07-13, slot-3, operator directive: "close the lag ... till 100% completion, no dups,
       canonical, daily jobs updating the rest").** Root-cause-grounded via a fresh code investigation this session (see
       Progress Log 2026-07-13): the `expected_unattempted` residual (currently 30, was 6,093) is a rolling ≤3-day
       trailing edge because the daily forward-poll enum (`google_cloud_scheduler_job.expected_universe_v2_daily`,
@@ -241,7 +241,18 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       the workaround): make `enumerate_expected_universe.py`'s `_enumerate_v2_sports` matchday-aware at the SOURCE so it
       never blank-reason-seeds a no-fixture date in the first place — this is the actual root cause per the script's own
       docstring ("This script does NOT fix the writer — that is the deeper, still-open durable fix"); scheduling the
-      typing script closes the lag NOW, the writer fix prevents needing a typing script at all going forward.
+      typing script closes the lag NOW, the writer fix prevents needing a typing script at all going forward. **DONE
+      2026-07-13 (slot-3, same session — checkbox flip only, verified 2026-07-13 slot-11).** Shipped
+      `deployment-service@7c68e77` (`feat(sports): schedule the understat EU typing sweep`): new
+      `terraform/gcp/understat_eu_typing_scheduler.tf` — Cloud Run Job + daily `0 3 * * *` UTC Cloud Scheduler cron
+      running `type_understat_eu_no_provider_coverage.py --apply`, reusing the existing `expected_universe_v2_enum` SA
+      (no new IAM). Applied to real prod terraform state via `tofu` and manually triggered once
+      (`gcloud run jobs execute`, `Completed` in 38.71s). Independently cross-confirmed by this plan's own `[VERIFY] P0`
+      final-re-verify todo below (also `[x]`): scheduler `understat-eu-typing-sweep` confirmed `ENABLED` with the
+      correct `0 3 * * *` schedule, plus the sibling `expected-universe-v2-sports` forward-poll job showing 5
+      consecutive `Completed` daily runs. This checkbox was left unflipped despite the work being done and independently
+      re-verified — flipping now with the cross-reference; no new code shipped this todo, verification + plan hygiene
+      only.
 - [x] ✅ [DATA] P0. **DONE 2026-07-13 (slot-3, same session).** The suspected "RECURRENCE" was a misdiagnosis — full
       root-cause turned out to be unrelated to `sports_xg_shots_instrument_type_dedup_key_instability_2026_07_09.md`'s
       own bug (that fix DID hold; re-verified 0 `instrument_type='shot'` rows). Actual cause: today's
@@ -567,3 +578,12 @@ machine-encoded) — tracked as its own new todo above pending a planning-VM-res
   "operator-ruled acceptable residual" close-out — a genuine literal 100%, not a ruled exception. **Plan is functionally
   complete** (DoD met literally); archival is NOT run this session — still `locked_by: live-defi-rollout`, needs an
   explicit `[unlock-plan]` ask per CLAUDE.md (never autonomous). Flagging for the operator as the one remaining step.
+- 2026-07-13 (slot 11, `data_engineering` dispatch, `understat_local_backfill_completion-001`): dispatched to the "close
+  the lag" todo which the 2026-07-13 slot-3 Progress Log already describes as shipped (`deployment-service@7c68e77`) and
+  independently cross-verified by this plan's own already-checked final re-verify todo — but its own checkbox had been
+  left `- [ ]`. Verified the shipped commit + terraform file exist (`deployment-service` git log +
+  `terraform/gcp/understat_eu_typing_scheduler.tf`), cross-referenced the final re-verify todo's scheduler confirmation,
+  and flipped the checkbox with the evidence cited inline (done-but-unchecked class of finding — no new code shipped,
+  verification + plan hygiene only). The remaining unchecked todo (line ~137, the pre-superseded "one-off manifest
+  normalization" item) is a different, older item not matching this dispatched task's title — left as-is, out of this
+  task's scope.
