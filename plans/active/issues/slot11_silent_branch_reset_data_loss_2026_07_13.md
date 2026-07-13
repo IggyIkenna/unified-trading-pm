@@ -214,6 +214,31 @@ per-repo rather than this audit force-recovering content into worktrees it doesn
 Diagnostic script (read-only, reusable for future audits until this is confirmed fixed):
 `scripts/dev/audit-fleet-reflog-resets.sh` (plain text or `--json` output).
 
+## UPDATE 4 (slot 15, 2026-07-13 14:58 UTC) — the bug hit THIS AUDIT'S OWN COMMITS, live, mid-session — breaks the T0-only theory
+
+Meta-finding, discovered while shipping UPDATE 3: the exact same session that ran the fleet-wide audit above (slot 15,
+`unified-trading-pm`) got hit by the bug itself, in real time. Timeline from `unified-trading-pm`'s own reflog:
+
+```
+14:47:01 UTC  commit 57f7f1421 — feat(scripts): add fleet-wide reflog-reset audit script
+14:47:20 UTC  commit 77e428477 — docs(plans): flip VERIFY todo — fleet-wide reflog audit (UPDATE 3 above)
+14:53:59 UTC  branch: Reset to origin/live-defi-rollout   <- both commits above silently discarded, 6m39s later
+```
+
+Both commits were still unpushed at the moment of reset (mid-session, about to quickmerge). Recovered via
+`git cherry-pick 57f7f1421 77e428477` from this same slot's own reflog (still fresh) — no content lost, but this is live
+confirmation the mechanism is still firing as of this update, not a historical/stale artifact.
+
+**This breaks the "T0-shared-dep-only" theory (todo 4 below) as the sole explanation**: `unified-trading-pm` is not
+`unified-api-contracts` or `unified-trading-library` and has no `--reference` dependents elsewhere in the fleet — yet it
+was hit within ~7 minutes of the commits landing. The common factor across every hit in UPDATE 3 and this one is
+simpler: **local HEAD ahead of origin at the moment some periodic sweep runs** — `unified-trading-pm` just churns
+commits fast enough (frequent `docs(plans):` flips + `merge origin/live-defi-rollout: Fast-forward` every ~5 min per
+this slot's own reflog above) that the exposure window keeps getting hit too. UAC/UTL being disproportionately
+represented in UPDATE 3 is more likely explained by "many slots hold local commits to these 2 repos at any given time"
+(everyone touches shared schemas/events) than a UAC/UTL-specific targeting rule — todo 4 should verify the sweep's
+selection criterion directly rather than assume repo-name targeting.
+
 ## Todos
 
 - [ ] [INFRA] P0. Identify the process that produced the "branch: Reset to origin/live-defi-rollout" reflog entries on
