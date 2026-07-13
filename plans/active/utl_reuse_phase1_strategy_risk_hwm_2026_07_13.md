@@ -58,11 +58,15 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
 
 ## Todos
 
-- [ ] [AGENT] P0. **Dedupe the twin threshold/equity helper.** `risk/core/risk_calculator.py` and
+- [x] ✅ [AGENT] P0. **Dedupe the twin threshold/equity helper.** `risk/core/risk_calculator.py` and
       `risk/engine/risk_metrics.py` carry near-identical `get_threshold_status` + equity/concentration/peak computation.
       Collapse to ONE shared pure helper (keep the **stateless** `risk_metrics` form for batch=live symmetry); have
       `RiskCalculator.calculate_drawdown` wrap it with its per-`client_id` peak dict. Preserve: per-client peak store,
-      UAC `RiskMetrics`/`RiskStatus` assembly, `assert_client_allowed`.
+      UAC `RiskMetrics`/`RiskStatus` assembly, `assert_client_allowed`. — SHIPPED `strategy-service@2b2e326c` |
+      `get_threshold_status`/`compute_drawdown` extracted as shared pure helpers in `risk_calculator.py`;
+      `risk_metrics.py` imports them (no more inline reimplementation); `account_equity_proxy` gained the
+      `max_leverage<=0` guard `risk_metrics.py` already had, for behaviour parity | full risk suite (718 tests) + Phase
+      0 golden fixture green | `quality-gates.sh` exit 0, sentinel verified.
 - [ ] [AGENT] P0. **Migrate the one genuine same-layer duplication** —
       `risk/v2/preflight.py:226 _run_legacy_portfolio_gates` (daily-loss / drawdown / family-cap) → UTL `RiskRule`
       registry entries (`MaxDailyLossTrigger`/`MaxDrawdownTrigger` + a family-cap trigger). After migration the legacy
