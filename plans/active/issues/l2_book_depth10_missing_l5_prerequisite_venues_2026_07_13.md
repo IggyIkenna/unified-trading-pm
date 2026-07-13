@@ -111,8 +111,14 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
       **DONE, slot 8**: real venue, in scope. See the "Recommended fix" section item 3 above for the full evidence trail
       (UAC adapter-key + coverage-start + capability + expected-data_types all present; the 2026-07-09 fix only barred
       reusing OKX-SWAP's factory, not a scope exclusion).
-- [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for BINANCE-SPOT (combined-stream
-      depth5/depth20, mirrors BinanceFuturesBookWSConnector). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for BINANCE-SPOT (combined-stream
+      depth5/depth20, mirrors BinanceFuturesBookWSConnector). (repo: market-tick-data-service) — **DONE, slot 8,
+      `market-tick-data-service@e4029282`**. New `binance_spot_book_ws.py` (combined-stream
+      `wss://stream.binance.com:9443/stream`, mirrors the futures connector exactly — depth5 for book_snapshot_5,
+      depth20-sliced-to-10 for depth_of_book_10; simpler than futures since spot has no @LIN/@INV margin marker or
+      derivative_ticker), wired into `binance_spot_ws.py`'s factory (previously always returned the trades-only
+      connector regardless of `data_type`). 29 new tests + 34 existing spot-connector tests green, 0 new basedpyright
+      violations (3 baseline errors, same shape as the futures original), full quality-gates.sh green.
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-SPOT (books5/books channels, mirrors
       OKXFuturesBookWSConnector/OKXFuturesDepth10WSConnector). (repo: market-tick-data-service)
 - [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for UPBIT (single `{market_code}.30` channel
