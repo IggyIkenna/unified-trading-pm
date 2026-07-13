@@ -216,11 +216,19 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
       — ✅ unified-trading-pm (this doc + `plans/audit/results/available_at_fill_rate_audit_2026_07_13.py`). Verdict:
       WORSE than sports-only (0% uniform across defi/tradfi/sports/prediction on the MTDS/MDPS write path); IS side
       100%; strategy-store empty. See "Audit Results (2026-07-13)" above for full evidence.
-- [ ] [DATA] P2. Scope + execute a cross-asset-group backfill plan for the `market-data-tick` `available_at` backlog
+- [x] ✅ [DATA] P2. Scope + execute a cross-asset-group backfill plan for the `market-data-tick` `available_at` backlog
       (defi 3.0M rows, tradfi 1.6M rows, prediction 46K rows — sports already covered by
       `sports_cf8_available_at_backfill_regression_2026_07_13.md`) — route through `manifest_master` epic as its own
       plan, NOT this issue doc. Re-derive `available_at` per-row from source data per `AVAILABILITY_AT_SEMANTICS` (same
-      approach as the sports rebuild), not a synthetic/estimated fill. (repo: TBD per plan)
+      approach as the sports rebuild), not a synthetic/estimated fill. (repo: TBD per plan) — **SCOPED, slot 7,
+      2026-07-13**: `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`. Found prediction/tradfi rebuild
+      scripts already derive `available_at_envelope` correctly for captured clusters (just needed the library fix, same
+      mechanism as the sports rebuild — a `--force` rerun now backfills them); defi has NO existing capture-path
+      threading (its rebuild script only calls `record_empty`/`record_failed`, zero `record_captured*` call sites — real
+      new engineering work across ~30 per-data_type handlers). Plan phases prediction → tradfi (execute, gated on an
+      operator-coordinated maintenance window per the sports Finding 1 cron-collision precedent) then audits + gates
+      defi behind an explicit operator go/no-go given the sports CF-8 regression precedent. No production writes made by
+      this touch — scoping only, execution is the plan's own todos.
 - [ ] [DATA] P3. Fix `StrategyManifestRecorder.record_captured()`
       (`strategy-service/strategy_service/engine/core/strategy_manifest.py:107-129`) and
       `ExecutionManifestRecorder.record_captured()`
