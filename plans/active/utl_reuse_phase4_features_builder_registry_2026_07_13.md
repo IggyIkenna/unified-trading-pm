@@ -79,9 +79,16 @@ drift_direction: advance-code
       (`test_no_dependency_cycles`, `test_all_groups_present`, `test_phase_0_has_no_deps`,
       `test_meta_features_in_last_phase`, `test_get_builder_returns_entry`/`_unknown_raises` — all green).
       `basedpyright` clean on the cast. `quality-gates.sh` exit 0, sentinel verified.
-- [ ] [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
+- [x] ✅ [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
       (callable + `columns` + `required_inputs` + `default_kwargs`), or (b) keep sports' local function-based dataclass.
-      Default to (b) unless a 2nd function-based consumer appears (YAGNI).
+      Default to (b) unless a 2nd function-based consumer appears (YAGNI). — DECIDED (2026-07-13, slot-6): **(b)**, per
+      the plan's own pre-specified default. Verified the trigger condition is NOT met: grepped every
+      `feature_builder_registry.py` in features-service (calendar, cross_instrument, multi_timeframe, delta_one,
+      volatility, onchain, sports) for `class BuilderEntry` — `sports/tracking/feature_builder_registry.py` is the
+      **only** one that still defines a local `BuilderEntry`; every other family already imports UTL's
+      `calculator_name`/`sources`-shaped canonical class. No 2nd function-based consumer exists fleet-wide, so creating
+      a UTL `FunctionBuilderEntry` sibling now would be a single-caller abstraction (YAGNI). No code change needed —
+      sports keeps its local dataclass as-is (already resolver-migrated per item 2).
 - [ ] [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
       `transformations.boxcox_transform` (adapt the `1e-8` vs `+1` edge-shift) and DELETE local. Leave
       `calculate_time_since` (element-wise log/lookback), `calculate_time_to_next`, rolling `calculate_zscore`,
