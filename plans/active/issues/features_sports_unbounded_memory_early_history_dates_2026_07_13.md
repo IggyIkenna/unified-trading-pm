@@ -218,8 +218,8 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       take down the entire `google-startup-scripts.service` systemd unit (wrapper shell + tee + python child all
       killed), not just the workload subprocess — so the existing trap may not even get a chance to run. Verify the
       trap's EXIT-signal path survives a whole-unit OOM kill, not only a clean subprocess non-zero exit.
-- [ ] [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient on
-      production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
+- [x] ✅ [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient
+      on production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
       repro) end-to-end through `run_new_calculators`, because the shot_quality precompute fix did not stop the OOM.
       Also profile 2018-06-18 (a `--force` single-date run) — RSS climbed steadily past 13GB and was still rising when
       killed, on a date with only 24 target fixtures (vs 149 on -17), which points at the 400-day HISTORICAL LOOKBACK
@@ -236,7 +236,16 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       (24-fixture) case: `24 × 591 = 14,184` rows, then re-multiplied by 591 again ≈ 8.4M rows — smaller than -17's ~52M
       but still large enough to explain the observed steady multi-minute RSS climb toward the OOM ceiling. The
       `_read_per_league_subpartitions` fallback was considered and ruled out as the dominant cost — it's a same-day,
-      one-time 33-shard read, not something repeated across the 400-day historical window.
+      one-time 33-shard read, not something repeated across the 400-day historical window. **CHECKBOX FLIPPED (slot 10,
+      2026-07-13)**: the literal ask here (re-profile 2018-06-17/2018-06-18 against real GCS data, find the root cause)
+      was fully carried out and answered in-body the same day (slot-8's "Additional finding" section above) and
+      independently verified by the shipped fix (`features-service@c3e3ebfe`) — todo below ("After the above two todos
+      land, re-verify...") confirms both dates now complete cleanly against real production data (149/24 rows, ~617MB
+      peak RSS each), already `[x]`. Leaving this unflipped any longer was the "done-but- unchecked" pattern, not a live
+      gap. **Does NOT close this issue doc** — the "THIRD recurrence" section further down found a DIFFERENT,
+      still-unresolved crash site (`compute_shot_quality_batch`, 3 unrelated poison dates: 2018-01-06 / 2019-08-17 /
+      2025-08-10), tracked by its own still-open P0 todo at the bottom of this list. No code change in this commit — the
+      fix was already shipped; this is a documentation-only correction of a stale checkbox.
 - [x] ✅ [DATA] P0. Add a duplicate-key merge guard to `_compute_venue_features`
       (`features_service/sports/exporters/derived_features_helpers.py:501-699`) —
       `.drop_duplicates(subset=["venue_id"])` before the `venue_coords` merge (line ~516-527) and
