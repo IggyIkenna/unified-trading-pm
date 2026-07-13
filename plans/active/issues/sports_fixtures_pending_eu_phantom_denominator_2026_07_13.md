@@ -193,6 +193,18 @@ Follow-ups (post-remediation):
   daily pipeline; was 778 this afternoon, 38,255 at diagnosis). All open todos in this doc are now complete; remaining
   watch item: confirm the nightly enumerator calendar gate goes live after the next LDR→main image rebuild
   (`expected-universe-v2-sports-daily`, ≥ 2026-07-14 01:30 UTC).
+- 2026-07-13 (final): CLOSED OUT. (1) The independent verifier found 20 pre-window pending cells (2026-05-20→06-24)
+  outside every sweep's date bounds — all 20 proved to be **manifest-orphans** (canonical parquets already on disk with
+  truthset-exact row counts); reconciled to `captured` via per-VM shard `fetch20-20260713` (zero API fetches, 20/20
+  verified by content post-consolidation 17:56:44Z; script `--vm-name` param shipped instruments-service@270509fd).
+  **Pending for ALL dates ≤ 2026-07-12 = 0; total pending = the 68 today-cells only.** (2) Calendar-gate rollout
+  CONFIRMED for tonight: promote PR #765 auto-merged (main@8299e3dc), Cloud Build 3a077ae1 SUCCESS
+  (`:latest`=sha256:5f2f029f, tagged 8299e3d), all 4 sports Cloud Run jobs repinned (jobs also resolve `:latest` at
+  execution time) — tonight's 01:30 UTC run executes the new gate. (3) Related fixes shipped same-day: oscillation guard
+  instruments-service@ba306543 (+21 atoms repaired; 189 parked in
+  [[sports_index_recency_masked_captured_atoms_2026_07_13]]) and consolidator prune-race fix
+  unified-trading-library@97212d3b (prod fleet rollout in flight). Residual work when 2026-07-13 closes: daily fetch
+  captures today's match-day cells; one evidenced flip pass for today's no-fixture remainder (same pattern/script).
 - 2026-07-13 (evening): 24-league de-registration RULED + EXECUTED + independently verified (see flipped todo above for
   full evidence). Sports availability index now carries exactly the 94-league trading universe; raw pending-fetch EU 778
   (was 38,255 this morning). Execution note: the first executor agent completed every mutation (re-key, park, purge,
