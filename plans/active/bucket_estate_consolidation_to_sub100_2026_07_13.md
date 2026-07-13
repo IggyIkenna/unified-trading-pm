@@ -85,29 +85,43 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 
 ## Wave 0 — stop the bleeding (nothing else sticks until this lands)
 
-- [ ] [INFRA] P0. **Terraform reconcile** (`deployment-service/terraform/gcp/main.tf` +
+- [x] ✅ [INFRA] P0. **Terraform reconcile** (`deployment-service/terraform/gcp/main.tf` +
       `modules/shared-infrastructure/gcp/main.tf`): remove every `google_storage_bucket` resource whose bucket the
       07-10/07-12 cleanups deleted or whose name no resolver path emits — long-env Group-B blocks (main.tf:807-1357),
       legacy-kind tests gas-fees-test/solana-defi-test/ evm-defi-test (:736-799), full-word `-prediction-test-` (:353,
       :685, :970, :1151) — with matching `terraform state rm`; keep resources tracking LIVE buckets (legacy flat
       tick/instruments, the 3 dedicated DeFi `-prd` — those leave TF only in the same change that deletes the bucket,
       see W2). Until this lands: **no `terraform apply` from anyone** (each apply regrows ~30 empty buckets). Evidence
-      bar — `terraform plan` shows zero bucket creates against the post-W1 estate.
-- [ ] [INFRA] P0. **RULED 2026-07-13 — terraform derived-from-yaml**: implement one `for_each` `google_storage_bucket`
-      block generated from cloud-providers.yaml's canonical (prd+test) names, import the existing canonical buckets into
-      it, keep hand-written blocks only for genuine infra buckets (deployment-scripts, state, events, …). Document the
-      model in `codex/05-infrastructure/bucket-isolation-model.md`.
-- [ ] [CONFIG] P0. **Sync the stale cloud-providers.yaml copies** to the canonical 36-kind file:
+      bar — `terraform plan` shows zero bucket creates against the post-W1 estate. — DONE 2026-07-13 (autonomous
+      dispatch): deployment-service@ccfaca26 (42 stale + 11 double-declare resources removed; module Group-B excised —
+      `create_gcs_buckets=true` confirmed the resurrection path) + @42d4035 (manual-audit excluded: locked 220752000s
+      retention forces a prevent_destroy-blocked replacement). State surgery executed on the orchestrator VM against
+      terraform/state/prod (the committed backend prefix terraform/state/dev is a stub; per-env prefixes come from
+      bootstrap_gcp.sh): backup → 42 rm + 11 mv + 68 import. Final targeted plan: 2 add (recon-prd/test) / 77 change / 0
+      destroy / 0 replace → APPLIED (rc=0).
+- [x] ✅ [INFRA] P0. **RULED 2026-07-13 — terraform derived-from-yaml**: implement one `for_each`
+      `google_storage_bucket` block generated from cloud-providers.yaml's canonical (prd+test) names, import the
+      existing canonical buckets into it, keep hand-written blocks only for genuine infra buckets (deployment-scripts,
+      state, events, …). Document the model in `codex/05-infrastructure/bucket-isolation-model.md`. — DONE (code):
+      canonical_buckets.tf shipped + applied; 79 canonical buckets under for_each (81 minus manual-audit pair, excluded
+      with audit-records for locked retention); recon-prd/test created by the apply. Codex doc update rides the Deferred
+      table (docs-only).
+- [x] ✅ [CONFIG] P0. **Sync the stale cloud-providers.yaml copies** to the canonical 36-kind file:
       `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml` (the packaged runtime fallback — ship
       via quickmerge, this one is a real runtime divergence for standalone installs) +
       `unified-trading-pm/configs/cloud-providers.yaml`; also reconcile
       `unified-trading-library/tests/fixtures/cloud-providers.yaml` if the kind removals changed parametrized tables
-      (estate-cleanup §5b lesson — grep `rg -l '<kind>'` workspace-wide, 4 copies + shadows).
-- [ ] [INFRA] P0. **RULED 2026-07-13 — cold-tier move at 60d**: replace the untracked STANDARD→COLDLINE@14d rules with
-      STANDARD→COLDLINE@60d on the data buckets, encoded in the derived-from-yaml terraform (the ONE tracked place per
-      the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
+      (estate-cleanup §5b lesson — grep `rg -l '<kind>'` workspace-wide, 4 copies + shadows). — DONE: UAC packaged copy
+      uac@f84e5b37 (byte-identical, 37 kinds, v2 CI green); UTL fixture utl@3382cc7c (37 kinds, cell sweep auto-covers
+      recon); PM mirror synced in this commit (37 kinds verified).
+- [x] ✅ [INFRA] P0. **RULED 2026-07-13 — cold-tier move at 60d**: replace the untracked STANDARD→COLDLINE@14d rules
+      with STANDARD→COLDLINE@60d on the data buckets, encoded in the derived-from-yaml terraform (the ONE tracked place
+      per the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
       lifecycle'd" claim for tick buckets is superseded). Operator verbatim "nearlcoldline nmove after 60d" — if a
-      NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing.
+      NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing. —
+      DONE: encoded in canonical_buckets.tf (STANDARD→COLDLINE@60) and APPLIED via the targeted terraform apply;
+      live-verified age=60 on market-data-tick-defi-prd + instruments-store-cefi-prd (was untracked @14d).
+      gcs-lifecycle-policies.md codex update rides the Deferred table.
 - [x] ✅ [SCRIPT] P1. **Retire the stale provisioning surfaces** — `e2e-testing@16efd49`: deleted
       `e2e-testing/scripts/common/setup-gcp-fixtures.sh` (zero callers workspace-wide — grepped every
       `*.sh/*.py/*.yml/     *.yaml/*.md` in e2e-testing + Makefile/docker-compose/GHA, none reference it; the modern,
@@ -119,12 +133,16 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 
 ## Wave 1 — delete the 81 confirmed-empty buckets (AFTER Wave-0 terraform reconcile)
 
-- [ ] [SCRIPT] P0. Delete the 81 buckets in Appendix A. Protocol per estate-cleanup precedent: re-verify emptiness
+- [x] ✅ [SCRIPT] P0. Delete the 81 buckets in Appendix A. Protocol per estate-cleanup precedent: re-verify emptiness
       immediately before each delete (shallow root `ls` — provably complete); zero overlap with the never-touch list;
       log per-bucket; independently re-count the estate after (expect ≈160). Two gated exceptions inside the list:
       `positions-store-test` — verify no test-mode PATH_REGISTRY caller first (the `dex-pools-test` false-positive
       precedent, estate cleanup §"false-positive caught"); `strategy-store-defi`/`strategy-store-tradfi` — delete only
-      AFTER the split-brain repoint below (deployment-api defaults still reference them).
+      AFTER the split-brain repoint below (deployment-api defaults still reference them). — DONE 2026-07-13: 79/79
+      DELETED (positions-store-test verified code-unreachable and included; the 2 strategy-store per-AG twins deferred
+      to post-deployment-api-prod-redeploy). Per-bucket re-verify-empty → delete → 404-verify log:
+      gs://deployment-scripts-central-element-323112/migration-bundle/staging/w1_deletion_log_2026_07_13.tsv. Estate
+      independently re-counted: 241 → 164 (−79 +2 recon).
 - [x] ✅ [OPERATOR] P1. **RULED 2026-07-13 — retire BOTH dev/stg tiers** (operator answer to the audit question set; 20
       of 21 canonical dev/stg buckets empty). Remaining action rides the W1 delete todo above; the sole content-bearing
       exception `instruments-store-sports-dev` gets inspect + migrate/drop there. Resolver keeps supporting the tiers;
@@ -132,7 +150,12 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 
 ## Wave 2 — in-flight completions + audit-found breakages (estate ≈139 after)
 
-- [ ] [DATA] P0. **recon bucket** ([[recon_bucket_missing_nightly_recon_failing_2026_07_13]]): operator decides kind vs
+- [ ] [DATA] P0. **recon bucket** ([[recon_bucket_missing_nightly_recon_failing_2026_07_13]]) — PARTIAL 2026-07-13: kind
+      `recon` added to all 4 yaml copies (autonomous decide-and-document: env-tiered kind over prefix); recon-prd/test
+      buckets created via terraform apply; BLRS config resolver-repointed blrs@2f0380b (v2 green); launcher doc fixed
+      (ds@ccfaca26). REMAINING: prod image pickup (rides the automated BASE_IMAGE_DIGEST fan-out + LDR→main promote),
+      the upstream t1-recon ML/strategy producer chain (never ran anywhere — job stage0 will still gate until producers
+      write \_SUCCESS markers), green scheduled run, Cloud Run failure alerting. Original todo: operator decides kind vs
       prefix; provision; repoint `batch_live_reconciliation_service/config.py` to the resolver; fix launcher doc;
       end-to-end T1 chain run; next scheduled run green; wire Cloud Run failure alerting (55 silent failures).
 - [ ] [CODE] P1. **strategy-store split-brain** ([[strategy_store_split_brain_2026_07_13]]): repoint deployment-api
@@ -182,6 +205,21 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       pointing at an archived plan — fix both); update `bucket-isolation-model.md`, `gcs-lifecycle-policies.md`,
       `per-asset-group-bucket-layouts.md`; final estate re-count; flip [[bucket_env_split_rollout_2026_06]] to
       complete/superseded per its banner; close the three audit issue docs.
+
+## Deferred work after 2026-07-13 (autonomous dispatch session end)
+
+| #   | Item                                                                                                                                                                                                             | Why deferred                                                                                                                                                                                                                                 | Unblock condition / next step                                                                                                                                                        |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Delete `strategy-store-{defi,tradfi}-{pid}` (empty) + retire `strategy-store-cefi-{pid}` (content copied to flat; verify staleness dedupe first)                                                                 | prod deployment-api still runs pre-6da793b defaults until redeployed                                                                                                                                                                         | after deployment-api prod redeploy; then gcloud delete + confirm catalogue regen writes flat                                                                                         |
+| 2   | Delete flat ml trio (`ml-models-store`, `ml-configs-store`, `ml-predictions-store` `-{pid}`)                                                                                                                     | UTL PATH_REGISTRY ml rows still resolve the flat names (live deployment-api data-status readers)                                                                                                                                             | W3 ml fold (bucket_estate_fold_design_2026_07_13) repoints PATH_REGISTRY; delete then                                                                                                |
+| 3   | Delete flat `config-store-{pid}`                                                                                                                                                                                 | MTDS `TARDIS_CONCURRENCY_LEASE_BUCKET` writes an ephemeral lease there; live Tardis VM held it at check time; 2 more flat literals: instruments-service scripts/generate_domain_config.py:258, SIT tests/smoke/test_cloud_infra_smoke.py:113 | repoint lease env default + 2 literals, wait for VM completion, then delete (prd copy verified md5-identical for all durable config)                                                 |
+| 4   | recon end-to-end green run                                                                                                                                                                                       | upstream t1-recon ML/strategy producers never ran anywhere; BLRS prod image needs digest fan-out + main promote                                                                                                                              | investigate producer chain per issue doc fix-direction #3; then `gcloud builds triggers run batch-live-reconciliation-service-build --branch=main`; verify 06:00Z run; wire alerting |
+| 5   | Non-bucket terraform drift (7 undeployed adds: odum_portal domain mapping, 2 scheduler crons, 2 Cloud Run jobs; ~36 Cloud Run job in-place changes; 2 catalogue-IAM replacements riding the flat-bucket repoint) | pre-existing drift outside tonight's bucket scope; targeted apply deliberately excluded it                                                                                                                                                   | operator review + full `terraform apply` from deployment-service@42d4035 (safe for buckets now — plan gate: 0 bucket destroys)                                                       |
+| 6   | W2 checkpoint deletions owned by other plans: dex-pools/lst-rates/perp-funding-prd (−3), lending-indices pair (−2), legacy flat tick/instruments twins (−8, L6 operator-gated), football ×4, ASTER originals     | owned by defi_dedicated_bucket_shared_migration / M-1 L6 / operator rulings — deliberately not force-run tonight                                                                                                                             | those plans' own gates                                                                                                                                                               |
+| 7   | Codex doc updates: bucket-isolation-model.md (derived-from-yaml model), gcs-lifecycle-policies.md (COLDLINE@60d supersedes "not lifecycle'd")                                                                    | docs-only, end of dispatch window                                                                                                                                                                                                            | mechanical edit + prek commit                                                                                                                                                        |
+| 8   | setup-buckets.py + bucket_config.yaml resolver rewrite                                                                                                                                                           | live consumers (setup-dev-project.sh, provision-test-buckets.sh, SIT conftest); rewrite exceeds blast radius                                                                                                                                 | W3 or dedicated small plan                                                                                                                                                           |
+| 9   | UAC `mapping_resolver.py` hardcoded `instruments-store-sports-test-project` (broken name, live package code) + UI vendored copy                                                                                  | found by audit, out of tonight's repo scopes                                                                                                                                                                                                 | small fix + ship                                                                                                                                                                     |
+| 10  | `ml_jobs_ikenova`-class ops singletons registration (honest-coverage/phantom-triage/rescan-triage/benchmark-reports/deployment-events)                                                                           | W2 P2, not reached                                                                                                                                                                                                                           | fold-or-register per W3 design §ops                                                                                                                                                  |
 
 ## Appendix A — Wave-1 deletion list (81, all confirmed empty 2026-07-13; suffix `-central-element-323112` omitted)
 
@@ -253,6 +291,16 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   any). Wave-0 "retire the stale provisioning surfaces" todo flipped — all 3 sub-items (setup-buckets.py KEPT,
   setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
   live-defi-rollout.
+
+- **2026-07-13, S4 COMPLETE + S5 bookkeeping (autonomous tick).** Targeted terraform apply SUCCEEDED on the orchestrator
+  VM (gate: 2 add / 77 change / 0 destroy / 0 replace): recon-prd/test created, COLDLINE@60d live on all 79 canonical
+  for_each buckets (verified age=60 on tick-defi-prd + instruments-cefi-prd), 2 catalogue-IAM replacements deferred with
+  the non-bucket drift. manual-audit discovered retention-LOCKED (220752000s) at first live plan → excluded from
+  for_each beside audit-records (ds@42d4035, QG green). W1 sweep: **79/79 DELETED**, 0 failures, per-bucket
+  re-verify-empty + 404-verify, log uploaded to deployment-scripts staging. **Estate: 241 → 164.** State surgery final
+  tallies: 42 rm + 11 mv + 68 import after the generated script's guards mis-skipped (fixed deterministically by
+  classifying the plan's own destroy list). PM mirror yaml synced (37 kinds) in this commit. Deferred table added below
+  (10 items with unblock conditions).
 
 - **2026-07-13, S3 landings + S4 state-surgery iteration (autonomous tick).** `deployment-api@6da793b` — strategy-store
   defaults collapse to flat via resolver (all 3 per-AG props), execution-store default → CEFI (decide-and-document: sole
