@@ -117,6 +117,39 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 6 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap gcloud/gsutil (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-9 found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`.
+- Features bucket unique-date count: **2,262** (up from slot-9's 2,258) — steady forward progress, no stall.
+- Checked `run.log` freshness for all 3 (not just `RUNNING` status): all wall-clock-fresh at check time (`date -u` =
+  2026-07-13T21:05:07Z) — `-200043` on 2025-08-31 (past slot-9's 2025-08-30), `-200456` on 2018-01-25 (past slot-9's
+  2018-01-24), `-200525` on 2019-09-06 (past slot-9's mid-calculator-chain state). No hang, no stall.
+- `features-service` git log for `shot_quality_calculator.py`: still `b05f48ad` (already known-insufficient) as the
+  latest touch — no new fix landed. Confirmed the P0 root-cause todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  is still unchecked/unowned.
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling — same reasoning as every prior
+dispatch (needs a dedicated Docker-memory-capped investigation against real data, not a quick check between other tasks;
+a rushed attempt right now risks repeating this same doc's own already-documented pattern of guessed fixes that didn't
+hold under real data). Did not relaunch or touch any of the 3 healthy shards. Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,262).
+Unchanged from every prior handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo, which needs a
+dedicated session (Docker memory cap, memray/tracemalloc against real GCS data for one of the known poison dates:
+2018-01-06 / 2019-08-17 / 2025-08-10) rather than another fast re-verify cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-13 — slot 9 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
