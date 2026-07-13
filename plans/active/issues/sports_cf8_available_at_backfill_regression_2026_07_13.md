@@ -193,6 +193,19 @@ consolidation).
       CF-8 backfill on production data (todo 2 below) to confirm the fix holds at the real 5.5M-row scale — the fix is
       proven correct at the code/unit-test level but the production canonical is still at the restored 62.9% baseline
       pending that re-attempt.
+  - **ADDENDUM, slot 3, 2026-07-13** (dispatched to `sports_manifest_canonicalisation-004`, the live-backfill re-attempt
+    — did NOT re-attempt it per this doc's own "do not re-attempt" instruction; worked this P0 instead, unaware slot 11
+    had landed `f5f15e3a` concurrently until the pull surfaced it): independently reached the same
+    `_records_to_dataframe()` root cause via my own synthetic repro, then found `f5f15e3a` already on
+    `live-defi-rollout` and rebased onto it rather than duplicating. While tracing the same write path, found a SECOND,
+    separate, and much broader bug: `record_captured()` / `record_captured_from_counts()` validate an
+    `available_at`-bearing input but never persist it onto the `AvailabilityRecord` at all (independent of the
+    serializer bug `f5f15e3a` fixes) — this is the write path actual production adapters use for real captured data,
+    across every asset_group, not just sports. Fixed in `unified-trading-library@9c9cdc50` + filed as its own
+    cross-cutting issue doc (this one stays sports-scoped):
+    `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`. Still NOT re-attempting the live
+    backfill (todo 2) myself — out of scope for what I was dispatched, and per Finding 1 it needs operator-coordinated
+    maintenance window regardless of which agent runs it.
 - [ ] [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
       surfaces (IS still at 62.9%, MDPS still at ~0%) — coordinate the maintenance window with the operator first to
       avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service) — **STILL BLOCKED on the P0
