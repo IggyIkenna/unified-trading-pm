@@ -97,14 +97,28 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       false-positive risk once real drawdown data is wired into execution-service's live order path. See
       `plans/active/issues/global_data_staleness_halt_drawdown_field_collision_2026_07_13.md`
       (`unified-trading-pm@8acd22e5d`).
-- [ ] [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
-      `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
-      `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
-      diverging. **Delete the superseded `RiskLimits`-config-sourced threshold comparison for these 6 checks once UTL
-      `evaluate_rule` is wired in** — no parallel old+new comparison path left standing (CLAUDE.md "delete deprecated
-      code"; flagged during Phase 0 SPEC confirmation, 2026-07-13, as the one under-specified deletion in this plan).
-      Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours, cash-reserve,
-      VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
+- [x] ✅ [AGENT] P0. **Route the 6 comparison checks through UTL rules — PARTIAL, RE-SCOPED 2026-07-13 (slot-10).**
+      Investigation (escalated via `/blocked` BLK-9db4a748, main's ruling) found: (1) the plan text is internally
+      inconsistent — headline says "6 comparison checks" but the body names only 5
+      (`position_size/leverage/gross/net/concentration`); (2) `concentration` has no already-computed source in
+      `pre_trade_check_engine.py` (no percentage-of-NAV computation exists anywhere in the file today) — routing it
+      would mean inventing new, unspecified NAV/equity-proxy logic on a CRITICAL pre-trade gate, not wiring through an
+      existing value; (3) routing threshold **numbers** from the static per-axis UAC registry
+      (`unified_api_contracts.risk.iter_applicable_rules`) — the literal reading of "UAC caps" — would silently change
+      pre-trade enforcement (e.g. `binance` `MAX_POSITION_SIZE_PER_VENUE`=$20,000,000 vs the Phase 0 golden fixture's
+      `RiskLimits.max_position_size`=100 raw units) and drop the check entirely for unregistered clients/venues (no
+      fallback), breaking this plan's own "Golden risk-eval identical" acceptance gate. Main's ruling: unify the
+      COMPARISON DISPATCH via ad-hoc UAC-typed `RiskRule` objects built per-call, sourcing cap **values** from the
+      existing `RiskLimits` config (not the static registry) — same `evaluate_rule` path `risk_preflight_gate.py`
+      already uses, preserving the golden-fixture numeric output exactly. SHIPPED for the 4 checks with a clean 1:1 UAC
+      `RiskRuleTrigger` match: `position_value` (`MaxPositionSizeTrigger`), `leverage` (`MaxLeverageTrigger`),
+      `gross_exposure` (`MaxGrossExposureTrigger`), `net_exposure` (`MaxNetExposureTrigger`) — deleted the superseded
+      raw-`>`-comparison for these 4, no parallel old+new path — `strategy-service@1cc449d3` | `quality-gates.sh` exit 0
+      (sentinel verified) | Phase 0 golden fixture green (unchanged — cap sourcing preserved) | 731 pre-existing risk
+      tests green. **Kept local by design** (no matching UAC trigger type): raw-quantity `position_size` (units, not
+      USD), `margin_ratio` (no `MinMarginRatio` trigger in UTL's closed union). **Deferred as a follow-up SPEC todo**
+      (not silently dropped): `concentration` + the "6 vs 5" count resolution — see
+      `plans/active/issues/pre_trade_check_engine_utl_routing_concentration_gap_2026_07_13.md`.
 - [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing** — SHIPPED `strategy-service@67ecc156` | 60 risk
       tests ✓ | basedpyright 0 ✓ | full `quality-gates.sh` exit 0 ✓ | regression:
       `tests/risk/unit/test_pre_trade_check_engine.py::test_leverage_estimate_is_upnl_sensitive_not_constant`.
@@ -129,11 +143,33 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       `test_output_builders.py`/`test_math_utilities.py` suites (all green) and the Phase 0 golden risk-eval fixture
       (reproduces identically). Local only — did not touch UTL `hwm_invariants`. `quality-gates.sh` exit 0, sentinel
       verified.
-- [ ] [AGENT] P2. Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — UTL `family_aggregator` only gives
-      **family-level pairwise** rhos, a different axis/shape. Optional local cleanup: unify the 3 local correlation
-      shapes (instrument-matrix / family-pairwise-dict / v2 nested-dict) — local typing only, not a UTL migration.
-- [ ] [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
-      quickmerge.
+- [x] ✅ [AGENT] P2. **Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — VERIFIED NON-FINDING, optional
+      cleanup declined.** Confirmed UTL `family_aggregator.aggregate_family_state` operates on a coarser,
+      genuinely-different axis: it buckets archetypes into `StrategyFamilyId` groups, mean-collapses each family's
+      `last_returns_30d` into one series, then Pearson-correlates _between families_ into a
+      `cross_family_correlation: dict[StrategyFamilyId, float]` fan (not a full symmetric matrix).
+      `correlation_matrix.py` is a dense `list[list[float]]` N×N over raw instruments — same "documented,
+      non-overlapping taxonomy" pattern already verified for the family-cap NON-finding above (todo 2). No migration
+      possible; kept local, do not re-flag. **Optional 3-shape cleanup investigated + declined**: the "3 local
+      correlation shapes" are not really duplicative — (1) the instrument-matrix (`correlation_matrix.py`) has ~0
+      production consumers (only its own unit test; the Monte-Carlo-VaR wiring the docstring claims doesn't exist); (2)
+      the "family-pairwise-dict" (`CorrelationConfigLoader` + `RiskGroupAggregator`) is also unwired in production (the
+      `correlation_matrix_json` config field has no instantiation site) and exposes a `Callable[[str,str], Decimal]`
+      interface, not a dict — a real API shape difference, not just typing; (3) the "v2 nested-dict" is the only one
+      with live production callers (`portfolio_allocator/guard_rails.py` → `service.allocate(correlation=...)`, a real
+      external-facing kwarg) and its sibling `risk/v2/correlation_cap.py` — these two already share the identical
+      `Mapping[str, Mapping[str, Decimal]]` shape, just with independently-implemented symmetric-lookup helpers (the one
+      genuine, but purely cosmetic, dedup opportunity — not attempted here, no behavioural gain). Forcing all 3 into one
+      type would require redesigning `RiskGroupAggregator`'s constructor contract or touching `service.allocate`'s
+      public kwarg, for zero behavioural benefit — declined per this plan's own "no regressions for no gain" pattern. No
+      code change; no quickmerge required (pure verification).
+- [x] ✅ [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
+      quickmerge. — VERIFIED (2026-07-13, slot-5) against `strategy-service@10943bfd`: pure verification, no code change
+      needed. `tests/risk/unit/test_golden_fixture_phase0_risk_eval.py` passes; full `tests/risk/` suite (722 passed, 1
+      skipped). Full `quality-gates.sh` exit 0, sentinel verified against `10943bfd`. First attempt hit a transient
+      wall-clock resource-budget gate failure (672s > 300s) from shared-host QG contention (multiple slots running full
+      QG concurrently) — re-ran once contention cleared, clean pass. This closes out
+      `utl_reuse_phase1_strategy_risk_hwm`'s final todo; all 6 todos now done.
 
 ## Success criteria
 

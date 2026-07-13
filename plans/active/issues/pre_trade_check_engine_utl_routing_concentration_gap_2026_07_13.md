@@ -6,7 +6,7 @@ summary:
   headline says 6) and under-specified for the `concentration` check, which has no already-computed source in
   `pre_trade_check_engine.py`. Shipped the 4 checks with a clean 1:1 UAC RiskRuleTrigger match (position_value,
   leverage, gross_exposure, net_exposure); filed this as a follow-up SPEC todo for the remainder.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -23,7 +23,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend-engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: "main ruling via BLK-fa2173d1 (option A) — no code change"
 locked_by:
 source:
   [
@@ -85,8 +85,20 @@ computation added to `pre_trade_check_engine.py` and routed through `MaxConcentr
 — is `position_size` (raw units) meant to route through `MaxPositionSizeTrigger` too (unit-mismatch with its USD-only
 `cap_usd` field notwithstanding), or was the "6" simply a miscount at plan-authoring time (5 is correct)?
 
+## Resolution (2026-07-13, slot-5)
+
+Escalated via `/blocked` BLK-fa2173d1; main ruled **option A**: the plan's "6" was a plan-authoring miscount — 5 is
+correct. Closed as resolved-no-new-code: `concentration` and raw-quantity `position_size` stay **local by design**,
+since neither has a matching UAC `RiskRuleTrigger` / an already-computed percentage source, consistent with the earlier
+ruling on this same plan (BLK-9db4a748/BLK-66b39605) to only route the checks that cleanly match rather than inventing
+new mappings. Option B (a new additive `concentration` check) and option C (forcing the units-vs-USD mismatch into
+`MaxPositionSizeTrigger`) are both real design decisions that deserve their own reviewed spec — not a quiet resolution
+inside this migration task. No code change. `utl_reuse_phase1_strategy_risk_hwm` todo 3 already reflects this as its
+final scope (`strategy-service@1cc449d3`, 4 checks shipped).
+
 ## Todos
 
-- [ ] [SPEC] P2. Resolve the "6 vs 5 checks" count + the `concentration` computation source for
+- [x] ✅ [SPEC] P2. Resolve the "6 vs 5 checks" count + the `concentration` computation source for
       `pre_trade_check_engine.py` UTL routing; if concentration is confirmed in-scope, add it as a new todo with the
-      NAV/equity-proxy formula spelled out. (repo: strategy-service, plan: utl_reuse_phase1_strategy_risk_hwm)
+      NAV/equity-proxy formula spelled out. (repo: strategy-service, plan: utl_reuse_phase1_strategy_risk_hwm) —
+      RESOLVED: option A (5 is correct, no new code) per main's BLK-fa2173d1 ruling. See Resolution section above.

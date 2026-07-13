@@ -89,10 +89,24 @@ code.
       exactly this case) rather than inventing a phantom `yahoo_finance` adapter key with no backing class. Added `FX`
       to `test_venue_adapter_keys.py`'s `EXPECTED_SENTINEL_VENUES` deliberate-decision gate with the same reasoning. 836
       relevant tests + full `quality-gates.sh` green, sentinel verified.
-- [ ] [REGISTRY] P0. Add `BITFINEX-SPOT` + `BITFINEX-FUTURES` to `VENUE_CATEGORY_MAP` (`"cefi"`) and
+- [x] ✅ [REGISTRY] P0. Add `BITFINEX-SPOT` + `BITFINEX-FUTURES` to `VENUE_CATEGORY_MAP` (`"cefi"`) and
       `VENUE_CAPABILITIES` (`SPOT_TRADE` for `-SPOT`, `PERP_TRADE`+`FUTURES_TRADE` for `-FUTURES`, mirroring the
-      existing BINANCE/OKX/BYBIT entries in the same dicts). Same file as above.
-- [ ] [REGISTRY] P1. Add `BITGET-SPOT` + `BITGET-FUTURES` to both dicts, same capability pattern as bitfinex.
+      existing BINANCE/OKX/BYBIT entries in the same dicts). Same file as above. — SHIPPED
+      `unified-api-contracts@85b4ea01`. Also added the required `VENUE_ORDER_CAPABILITIES` entries (empty frozenset, not
+      `_CEFI_FULL`) — `test_all_venues_with_capabilities_have_order_capabilities` requires every `VENUE_CAPABILITIES`
+      key to appear there too (same discovery class as the FX todo above), and `BitfinexCeFiAdapter` (execution-service)
+      is `BLOCKED-CREDENTIALS` with every trading method raising `NotImplementedError`, so an empty set is the honest
+      capability, not an assumed `_CEFI_FULL`. Full `quality-gates.sh` green (274s once the shared host-QG-governor
+      token was acquired; an earlier attempt hit the token after a 796s queue wait and tripped the `<720s` MAX_DURATION
+      gate purely from queue-time being counted as work time — see
+      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md`), sentinel verified at
+      `85b4ea015c65f56d0777d6a8a2b65117e848ce6f`.
+- [x] ✅ [REGISTRY] P1. Add `BITGET-SPOT` + `BITGET-FUTURES` to both dicts, same capability pattern as bitfinex. —
+      SHIPPED `unified-api-contracts@21dde0f8`. Category `"cefi"`; capabilities `{SPOT_TRADE}` /
+      `{PERP_TRADE,     FUTURES_TRADE}`. Same `VENUE_ORDER_CAPABILITIES` discovery as BITFINEX applied —
+      `BitgetCeFiAdapter` (execution-service) is also `BLOCKED-CREDENTIALS` with every trading method raising
+      `NotImplementedError`, so empty frozenset entries were added there too. Full `quality-gates.sh` green (297s),
+      sentinel verified at `21dde0f8ce9e860e4115cb30845a5eb35e9b6938`.
 - [ ] [REGISTRY] P1. Add `KRAKEN-SPOT` + `KRAKEN-FUTURES` to both dicts, same capability pattern as bitfinex.
 - [ ] [REGISTRY] P1. Wire archetype-leg eligibility for `FX`, `BITFINEX-SPOT`, `BITFINEX-FUTURES`, `NASDAQ`, `NYSE` into
       `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`

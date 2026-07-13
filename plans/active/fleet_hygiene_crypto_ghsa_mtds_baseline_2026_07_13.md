@@ -77,11 +77,12 @@ sequential: false
     `system-integration-tests@02010af`, `client-reporting-api@8e58b92`, `strategy-service@23e250c0`,
     `deployment-service@56c65fb`, `fund-administration-service@018e5a6`, `instruments-service@055ca3cc`,
     `e2e-testing@4b91e1a`.
-  - **1/17 BLOCKED**: `market-tick-data-service` (commit `1317ba31`, verified locally correct, NOT yet pushed) —
-    pre-existing file-size gate RED (`migrate_sports_canonical_v9.py` 934 lines > 900 limit, confirmed pre-existing at
-    `HEAD~1`, unrelated to this bump). Filed
-    `plans/active/issues/mtds_migrate_sports_canonical_v9_filesize_2026_07_13.md`, declared repo-blocker `RB-0c6017c8`.
-    Will ship the moment the blocker clears (per the repo-blocker green-signal protocol).
+  - **17/17 SHIPPED** (final): `market-tick-data-service@ee911510` — shipped by **slot-9**, who picked up the
+    repo-blocker's green signal once slot-3 independently fixed the pre-existing file-size gate
+    (`market-tick-data-service@e284ad63`) that had blocked this repo. My own locally-committed crypto-bump for this repo
+    (`1317ba31`) was never pushed and turned out redundant with slot-9's shipped commit — abandoned in favor of theirs
+    (verified identical target `cryptography>=47.0.0,<50.0.0` state) rather than duplicate/conflict. Full story in
+    `plans/active/issues/mtds_migrate_sports_canonical_v9_filesize_2026_07_13.md`.
   - **Separate P1 safety finding**: an unidentified process force-reset 8 of this slot's worktrees mid-ship, silently
     discarding 6 committed-but-unpushed commits (all recovered via `git cherry-pick` from dangling reflog SHAs, all now
     confirmed pushed). Filed `plans/active/issues/slot6_git_reset_dataloss_2026_07_13.md` (P1) + alerted main/operator —

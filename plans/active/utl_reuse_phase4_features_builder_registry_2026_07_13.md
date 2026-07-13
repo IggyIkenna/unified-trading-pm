@@ -53,10 +53,20 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
+- [x] ✅ [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
       (incl. `_build_dag`/`_kahn_bfs`) → `from unified_trading_library import BuilderEntry, resolve_build_order` (match
       the already-shipped calendar/delta_one pattern). Keep `_build_registry`/`get_builder`; volatility keeps its
-      orthogonal `_CALCULATOR_CLASS_MAP`.
+      orthogonal `_CALCULATOR_CLASS_MAP`. — SHIPPED `features-service@4d9a1656`. All three families now import
+      `BuilderEntry`/`resolve_build_order` (aliased `_utl_resolve_build_order`) from `unified_trading_library`; local
+      `resolve_build_order()` wrappers reduced to `return _utl_resolve_build_order(_get_registry())`.
+      `_build_registry`/`_get_registry`/`get_builder`/`get_all_builders` kept local unchanged; volatility's
+      `_CALCULATOR_CLASS_MAP`/`get_calculator_class_name` untouched. onchain never sets `lookback_candles` — UTL's
+      default `0` reproduces prior behaviour. Verified via
+      `tests/common/test_golden_fixture_phase0_resolve_build_order.py` (all 4 families byte-identical build order),
+      `tests/onchain/unit/test_calculators.py::test_resolve_build_order_raises_on_cycle` (UTL's "Dependency cycle in
+      builder DAG" message still matches the "Dependency cycle" substring), and the full
+      `tests/{multi_timeframe,volatility,onchain}/unit/test_feature_touchup.py` suites (128 passed). Full
+      `quality-gates.sh` green, sentinel verified against `4d9a1656`.
 - [x] ✅ [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
       `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.** —
       SHIPPED `features-service@48895959`. Replaced the local hand-rolled Kahn's-algorithm `resolve_build_order()` body
@@ -69,9 +79,16 @@ drift_direction: advance-code
       (`test_no_dependency_cycles`, `test_all_groups_present`, `test_phase_0_has_no_deps`,
       `test_meta_features_in_last_phase`, `test_get_builder_returns_entry`/`_unknown_raises` — all green).
       `basedpyright` clean on the cast. `quality-gates.sh` exit 0, sentinel verified.
-- [ ] [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
+- [x] ✅ [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
       (callable + `columns` + `required_inputs` + `default_kwargs`), or (b) keep sports' local function-based dataclass.
-      Default to (b) unless a 2nd function-based consumer appears (YAGNI).
+      Default to (b) unless a 2nd function-based consumer appears (YAGNI). — DECIDED (2026-07-13, slot-6): **(b)**, per
+      the plan's own pre-specified default. Verified the trigger condition is NOT met: grepped every
+      `feature_builder_registry.py` in features-service (calendar, cross_instrument, multi_timeframe, delta_one,
+      volatility, onchain, sports) for `class BuilderEntry` — `sports/tracking/feature_builder_registry.py` is the
+      **only** one that still defines a local `BuilderEntry`; every other family already imports UTL's
+      `calculator_name`/`sources`-shaped canonical class. No 2nd function-based consumer exists fleet-wide, so creating
+      a UTL `FunctionBuilderEntry` sibling now would be a single-caller abstraction (YAGNI). No code change needed —
+      sports keeps its local dataclass as-is (already resolver-migrated per item 2).
 - [ ] [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
       `transformations.boxcox_transform` (adapt the `1e-8` vs `+1` edge-shift) and DELETE local. Leave
       `calculate_time_since` (element-wise log/lookback), `calculate_time_to_next`, rolling `calculate_zscore`,

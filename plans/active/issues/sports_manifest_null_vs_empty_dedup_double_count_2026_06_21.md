@@ -135,6 +135,19 @@ the only mitigation) — tracked as a todo in `plans/active/understat_local_back
 entry) scoped to the sports bucket; the cross-bucket check this doc already calls out (cefi/defi/tradfi/prediction)
 remains a separate, not-yet-scheduled follow-up.
 
+**CORRECTION (same session, later 2026-07-13): the "recurrence" above was a misdiagnosis — it was NOT this doc's
+consolidator gap.** Root-caused fully: the fresh 2026-07-13T06:21Z duplicates were collateral damage from an unrelated
+bug in `market-tick-data-service`'s sports manifest rebuild script, run as part of
+`sports_manifest_canonicalisation_2026_06_01.md`'s E4 migration apply-pass the SAME morning (a hardcoded `service_name`
+
+- missing `asset_group` re-emitted 684,158 rows fleet-wide under the wrong service_name at `06:16:51Z`–`06:23:04Z` — see
+  that plan's E3/E4 entry for full detail, the fix at `market-tick-data-service@55f9e961`, and the cleanup at
+  `instruments-service@2f56038e`). The sibling doc's 2026-07-09 fix DID hold; this doc's own "incremental cycle not
+  applying the fix continuously" gap (Update 2026-07-08) is therefore **NOT re-confirmed by this event** — it remains
+  exactly as before (a real, still-open, still-unexplained gap worth root-causing on its own merits, but the 2026-07-13
+  "recurrence" is not fresh evidence for it). Correcting the record so a future reader doesn't over-weight this data
+  point.
+
 ## Non-FIXTURES blank-reason residue (left untouched, by design)
 
 The same one-off leaves **612,682** consolidated-index `empty_confirmed` blank `error_reason` rows untouched

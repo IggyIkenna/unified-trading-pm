@@ -18,7 +18,7 @@ summary:
   `vault_share_price_apy`, `yield_curve`) appeared in the onchain phase-0 bucket that a clean-process capture never
   produced. `multi_timeframe`/`volatility`/`sports` were checked and are NOT affected — they each build from a
   module-local dict/registry, not the shared UTL class-level one."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,7 +36,7 @@ parent_epic: features_and_ml_master
 priority: P2
 source: utl_reuse_phase0_guardrails_2026_07_13 todo 2 (golden-fixture capture), 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: features-service@91089000 (slot-6, 2026-07-13)
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -136,10 +136,27 @@ migrates this exact code path to UTL and would otherwise carry the bug forward.
       `tests/common/test_golden_fixture_phase0_resolve_build_order.py::test_golden_resolve_build_order_onchain`'s
       cross-family filter workaround back to a direct equality check, since the leak it worked around is fixed at the
       source.
-- [ ] [BACKEND] P2. Determine whether the 5 orphaned onchain calculator files (`block_priority_gas_distribution`,
+- [x] ✅ [BACKEND] P2. Determine whether the 5 orphaned onchain calculator files (`block_priority_gas_distribution`,
       `chainlink_peg_deviation`, `concentrated_liquidity_il_realised`, `vault_share_price_apy`, `pool_invariant_drift`)
       should be wired into `onchain/app/calculators/__init__.py` (if live/load-bearing) or deleted (if dead code); apply
-      whichever the codeowner confirms (repo: features-service)
+      whichever the codeowner confirms (repo: features-service) — DONE `features-service@91089000`. Determined
+      **live/load-bearing**, not dead code: all 5 have real substance (136-240 lines each), deliberate feature-commit
+      history (`chainlink_peg_deviation` shipped as its own dedicated
+      `feat(features-service)!: Phase 12 P1 — Chainlink LST peg-deviation calculator` commit), and identical
+      `feature_group`/`feature_family` ClassVars + `@FeatureCalculatorRegistry.register` decorators to the 13 production
+      onchain calculators (all 6 from the same May-16 "add ClassVars to 19 onchain calculators" batch — 13 wired + these
+      5 orphaned + 1 functional regime calculator = 19). Conclusive evidence: UAC's product docs
+      (`openapi/prospectus/DEFI_LP_VAULT.md`, `ARBITRAGE_MEV_BACKRUN.md`) cite `vault_share_price_apy` and
+      `block_priority_gas_distribution` as the **primary input** for live strategies; `chainlink_peg_deviation` has 26
+      passing dedicated tests (`test_chainlink_peg_deviation_calculator.py`). Wired all 5 into
+      `onchain/app/calculators/__init__.py` + added `sources` metadata to `feature_builder_registry.py`'s
+      `_build_registry()` (derived from each calculator's own `source_name()`: `mtds_gas_fees`, `mtds_oracle_prices`,
+      `mtds_dex_pools` ×2, `mtds_vault_share_price`) so they pass the cross-family-pollution filter from todo 1 instead
+      of falling through the empty-metadata fallback. Updated the Phase 0 golden fixture to the new, correct 18-entry
+      onchain phase-0 build order. 1338 onchain tests + 4 golden-fixture tests pass unchanged. Landed cleanly through a
+      concurrent rebase of Phase 4's `resolve_build_order` UTL migration (`features-service@4d9a1656`) — compatible,
+      only the `BuilderEntry`/`resolve_build_order` implementation swapped, `_build_registry()`'s metadata dict and
+      filter untouched.
 
 ## Progress Log
 

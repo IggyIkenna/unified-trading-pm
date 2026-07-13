@@ -98,13 +98,13 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       `_index/audit/aster_cefi_in_defi_bucket_scope_2026_07_1X.parquet` (mirrors the existing
       `_index/audit/legacy_dup_delete_list_defi.parquet` convention). Confirm the 2023-11→2023-12 zero-duplication
       window and the 2025-07→2026-06 low-duplication window precisely (exact day boundaries, not "~"). — **DONE (audit +
-      results), slot 14, market-tick-data-service@`c2244d5f`
-      (`scripts/audit_aster_cefi_in_defi_bucket_scope_2026_07_13.py`) — committed locally, SHIP BLOCKED as of this
-      writing by an unrelated repo-wide QG regression (`migrate_sports_canonical_v9.py` crossed the 900-line ceiling in
-      a different slot's commit `13c53dfa`); repo-blocker declared, will land + this SHA note update once the gate is
-      green again.** Full 948-day walk (per-day scoped GCS prefix listing, not a whole-bucket scan — completed in ~5s
-      via 20-way thread-pool parallelism over `raw_tick_data/by_date/day={D}/pipeline_mode=batch_aster/...`, both
-      buckets). Output written to
+      results), slot 14, market-tick-data-service@`aea8515e`
+      (`scripts/audit_aster_cefi_in_defi_bucket_scope_2026_07_13.py`) — SHIPPED (was briefly blocked by an unrelated
+      repo-wide QG regression, `migrate_sports_canonical_v9.py` crossing the 900-line ceiling in a different slot's
+      commit `13c53dfa`; repo-blocker RB-9ab3fac9 resolved via `watcher_green`, see
+      `plans/active/issues/mtds_migrate_sports_canonical_v9_900line_regression_2026_07_13.md`).** Full 948-day walk
+      (per-day scoped GCS prefix listing, not a whole-bucket scan — completed in ~5s via 20-way thread-pool parallelism
+      over `raw_tick_data/by_date/day={D}/pipeline_mode=batch_aster/...`, both buckets). Output written to
       `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/aster_cefi_in_defi_bucket_scope_2026_07_13.parquet`
       (115,110 rows, one per DeFi-bucket-resident object, with
       `day`/`defi_object_stem`/`canonical_target`/`duplicated_in_cefi_bucket`). **Exact totals**: 115,110 objects total
@@ -144,23 +144,91 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       Did NOT run `--apply` against production data — that is Phase 2's separate, sequenced-after-Phase-1-Todo-1
       execution step, out of this todo's scope. exist even there). DRY-RUN default, `--apply` to mutate — same
       convention as the script it extends.
-- [ ] [DATA] P0. Root-cause the write-path bug: find the batch/backfill writer that produced this historical ASTER data
-      and determine why it selected the DeFi bucket for cefi-labeled objects (likely a venue-level "primary asset_group"
-      bucket selection instead of a per-object `asset_group` field read). Fix it so this does not recur for whatever
-      collection job (if any) still runs — cross-reference with the "batch_aster appears to have stopped after
-      2026-06-05" finding below; if the writer is confirmed fully decommissioned, this becomes a historical-only fix
-      (document why, do not chase a dead code path).
+- [x] ✅ [DATA] P0. Root-cause the write-path bug — **DONE, slot 8, read-only investigation, no code change needed
+      (confirmed fully decommissioned — historical-only fix per this todo's own fallback clause).** The buggy writer was
+      `market_tick_data_service/cli/handlers/_perp_funding_hl_aster.py`, a stage module of `perp_funding_handler.py`
+      given an ASTER/HYPERLIQUID `derivative_ticker`+`trades` leg on 2026-06-17 (commit `59786270`). Bug mechanism
+      confirmed by reading the code at the pre-deletion commit
+      (`git show ba6df0ac^:market_tick_data_service/cli/handlers/_perp_funding_hl_aster.py`): `perp_funding_handler.py`
+      is a **mixed-asset_group handler** (GMX/Kalshi/Polymarket legs are genuinely defi/prediction) that resolves ONE
+      `bucket` up front per invocation — `bucket = get_write_bucket_name("market_data", "defi")`
+      (`perp_funding_handler.py:225`, landed 2026-06-21 commit `7c32ff61`) — and threads that single value down into
+      every protocol's writer, never re-deriving per-row via
+      `resolve_bucket_name(asset_group=<the row's own     asset_group>)`. When the ASTER/HL `cefi`-labeled legs were
+      bolted onto this handler, `_write_aster_derivative_ticker` / `_write_aster_trades` correctly stamped
+      `asset_group="cefi"` in the **manifest** (`writer.add(asset_group="cefi",     ...)`) but physically
+      `storage.upload_bytes(bucket, ...)`'d into the wrong (DeFi) **bucket** — manifest label and physical location
+      diverged. HYPERLIQUID was never corrupted by this same handler because HL's `derivative_ticker`/ `trades` was
+      always sourced from the separate, correctly single-asset_group `onchain_perp_batch_handler.py` path instead —
+      ASTER's ~3-week window (2026-06-17 → 2026-07-08) was the only time this bug's blast radius included a real
+      producer. Filename evidence corroborates: the corrupted DeFi-bucket copies use bare exchange symbols
+      (`BTCUSDT.parquet`, this handler's `row["symbol"] = sym`), not the canonical
+      `ASTER:PERPETUAL:BTC-USDT@LIN.parquet` naming the correct path produces — though per Phase 1 Todo 1's
+      exact-boundary audit, DeFi-bucket-resident ASTER objects actually span 2023-11-01 → 2026-06-05 (much wider than
+      this handler's 2026-06-17 introduction), meaning this specific handler explains only the tail of the corrupted
+      window — an EARLIER, no-longer-identifiable producer (predating the 2026-06-11 handler split) wrote the 2023-11 →
+      2026-06-16 majority; not chased further since it too is provably gone (no such producer exists in the current
+      codebase, and the migration script already treats the whole 2023-11→2026-06-05 range uniformly regardless of which
+      historical writer produced each day). **`perp_funding_handler.py`/`_perp_funding_hl_aster.py` fully retired
+      2026-07-08 (commit `ba6df0ac`, "retire standalone perp_funding for
+      HYPERLIQUID/ASTER/PACIFICA-SOLANA/LIGHTER-ZKSYNC in favor of derivative_ticker.funding_rate") — confirmed the file
+      no longer exists in the working tree; current `perp_funding_handler.py` docstring (lines 8-18) explicitly
+      documents the retirement and points to `onchain_perp_batch_handler.py` as ASTER/HL's sole current
+      `derivative_ticker` producer.** That replacement handler is single-asset_group by construction
+      (`_ASSET_GROUP = "cefi"` at `onchain_perp_batch_handler.py:99`,
+      `bucket = get_write_bucket_name("market_data", _ASSET_GROUP)` at line 290) — safe, but only because every venue it
+      currently processes happens to be cefi, not because it re-derives per-row; the same "resolve bucket once, reuse
+      everywhere" shape would reproduce this exact bug again if a mixed-asset_group venue were ever added to it.
+      Flagging as a defense-in-depth lesson (not actioned here, out of this todo's scope): any handler spanning more
+      than one `asset_group` must resolve the write bucket per-shard/per-venue from the row's own `asset_group`, never
+      once at the top of `process()`. **This also resolves the "batch_aster stopped after 2026-06-05" deferred item
+      below** — it was a collector handoff, not a silent failure: `onchain_perp_batch_handler.py`
+      (`--operation collect-onchain-perp-batch`, introduced 2026-06-21 commit `1e4dfb21`) superseded the buggy handler
+      as ASTER/HL's `derivative_ticker`/`trades` producer, and the buggy handler's last-processed day (2026-06-05) is
+      simply the last day a backfill invocation of the old path ran before hand-off, not an encoded cutoff (no
+      scheduler/launcher/allowlist gate found referencing that date).
 
 ## Phase 2 — Dry-run + apply (P0)
 
-- [ ] [DATA] P0. Run the extended migration script in dry-run across the full 948-day range; verify the planned object
-      count matches Phase 1's scope audit; spot-check 10+ planned renames for correctness (base/quote split, `@LIN`
-      margin marker) against the existing 2026-07-08 script's validated logic.
-- [ ] [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for one
-      pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
+- [x] ✅ [DATA] P0. Run the extended migration script in dry-run across the full 948-day range — **DONE, slot 8**, ran
+      `scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py` (no `--apply`) for real against production GCS, full
+      2023-11-01 → 2026-06-05 default range. **Result: 117,176 objects planned, 0 skipped** (log:
+      `Plan: 117176 objects to copy, 0 skipped (not in scope / already canonical)`; scanned all 948 days in ~29s via
+      per-day targeted prefix listing, no whole-corpus walk). **Count vs Phase 1 Todo 1's audit (115,110 total objects):
+      a 2,066-object (1.8%) difference, root-caused, not a bug** — Phase 1's audit prefix was scoped to
+      `.../instrument_type=perpetual/data_type=derivative_ticker/` only (per its own Finding section), while this
+      migration script's `day_prefix()` scopes at the `venue=ASTER/` level (no `data_type` restriction) and picks up a
+      SIBLING `data_type=trades` partition Phase 1's narrower audit never scanned (confirmed live: `day=2023-11-01` has
+      63 `derivative_ticker` + 15 `trades` objects under the same venue prefix). **This means Phase 1 Todo 1's exact
+      counts (115,110 total / 71,843 unique) under-scope the true migration surface by the `trades` data_type** —
+      flagging for whoever revisits that audit, but NOT blocking here: this migration script's broader venue-level scope
+      is the CORRECT one (every cefi-labeled ASTER object needs migrating regardless of `data_type`), so no script
+      change needed, just documenting the count-reconciliation. **Spot-checked all 10 sample renames the dry-run
+      printed** (`1000FLOKIUSDT.parquet`→`ASTER:PERPETUAL:1000FLOKI-USDT@LIN.parquet`,
+      `1000PEPEUSDT`→`1000PEPE-USDT@LIN`, `1000SHIBUSDT`→`1000SHIB-USDT@LIN`, `AAVEUSDT`→`AAVE-USDT@LIN`,
+      `ADAUSDT`→`ADA-USDT@LIN`, `ALGOUSDT`→`ALGO-USDT@LIN`, `ALICEUSDT`→`ALICE-USDT@LIN`, `APEUSDT`→`APE-USDT@LIN`,
+      `APTUSDT`→`APT-USDT@LIN`, `ARBUSDT`→`ARB-USDT@LIN`) — all correct base/quote splits (longest-suffix-first `USDT`
+      match), all carry the `@LIN` margin marker, all target the correct CeFi-bucket path with
+      `day=`/`pipeline_mode=batch_aster`/ `asset_group=cefi`/`venue=ASTER` preserved. Matches the validated logic from
+      `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`. Nothing mutated (dry-run only).
+- [x] ✅ [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for
+      one pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
       `codex/05-infrastructure/vm-launcher-runbook.md` if a local/interactive run proves too slow; SPOT provisioning per
       the backfill-VM default). No fire-and-forget — verify STARTED + periodic progress + terminal state per the
-      VM-launcher runbook if dispatched to a VM.
+      VM-launcher runbook if dispatched to a VM. — **DONE, slot 14, market-tick-data-service@`aea8515e`
+      (`scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py --apply --workers 32`)**, run local/interactive (a single
+      948-day pass proved fast enough — full run, scan+copy, completed in ~9 minutes — no VM shard needed). No
+      fire-and-forget: launched via `setsid nohup ... & disown`, verified STARTED (scan-phase log lines within 10s),
+      monitored periodic progress every 15s through the full day range, and observed the terminal `SUMMARY` line.
+      **Result: `{'copied': 73359, 'parity_conflict_not_overwritten': 43817, 'skipped_not_in_scope': 0}`** — totals
+      reconcile exactly to Phase 2 Todo 1's dry-run plan of 117,176 objects (73,359 + 43,817 = 117,176). Every parity
+      conflict was logged with a `(size, crc32c)` mismatch and NOT overwritten, per the script's idempotency design —
+      spot-checked a sample of the conflict log: all observed conflicts show the DeFi-bucket source object at ~2x the
+      CeFi-bucket dest object's size (e.g. src=13144B vs dest=6716B), a consistent ratio across every sampled conflict
+      regardless of day — flagging this pattern for the next todo's post-apply verification (worth root-causing whether
+      this is a genuine row-count/schema difference between the two copies, not assumed here). No errors, no source
+      deletions (this script never deletes — Phase 4 is the separate, operator-gated cleanup step). Zero unmigrated
+      objects.
 - [ ] [DATA] P0. Post-apply verification: re-run the Phase 1 scope audit against the CeFi bucket, confirm 0 objects
       remain unmigrated (excluding any genuinely-still-running collection window) and spot-check row/byte parity (not
       just object presence) on 20+ migrated objects across the three duplication-period bands identified above.
@@ -184,9 +252,9 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 
-| Item                                                                | State                                                                                                                         | Next action                                                                                                                  |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `batch_aster` collection stopped after 2026-06-05                   | Found, unexplained                                                                                                            | Separate finding — confirm whether this is an intentional decommission or a silent collector failure; not this plan's scope. |
-| BYBIT `futures_chain` write-shape bug (flat glued-symbol files)     | Found + partially fixed in code 2026-07-09, historical data not backfilled                                                    | Tracked separately — `plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`.                                    |
-| Legacy `ticks_migrated_*` shallow shape in DeFi bucket (5,332 objs) | Already tracked pre-existing — codex axis-7, archived plan F16/F29, 2026-06-18 delete-list audit MIGRATE-FIRST classification | No new work needed — do NOT re-scope here, it already has an owner.                                                          |
-| `defi__dex_swaps` BQ external table split-table design              | Separate, independent fix in `deployment-service`                                                                             | Tracked in this session's direct commit to `bigquery_feature_external_tables.tf` — does not block or depend on this plan.    |
+| Item                                                                | State                                                                                                                            | Next action                                                                                                               |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `batch_aster` collection stopped after 2026-06-05                   | ✅ **Explained** (Phase 1 Todo 3, 2026-07-13) — collector handoff to `onchain_perp_batch_handler.py` (2026-06-21), not a failure | No action needed — see Phase 1 Todo 3 above for the full trail.                                                           |
+| BYBIT `futures_chain` write-shape bug (flat glued-symbol files)     | Found + partially fixed in code 2026-07-09, historical data not backfilled                                                       | Tracked separately — `plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`.                                 |
+| Legacy `ticks_migrated_*` shallow shape in DeFi bucket (5,332 objs) | Already tracked pre-existing — codex axis-7, archived plan F16/F29, 2026-06-18 delete-list audit MIGRATE-FIRST classification    | No new work needed — do NOT re-scope here, it already has an owner.                                                       |
+| `defi__dex_swaps` BQ external table split-table design              | Separate, independent fix in `deployment-service`                                                                                | Tracked in this session's direct commit to `bigquery_feature_external_tables.tf` — does not block or depend on this plan. |

@@ -235,6 +235,30 @@ to be non-issues on inspection (the feature got re-built rather than genuinely l
 recovery. Did not touch the other 16 rows (not this slot's repos) — left as a judgment call per-repo per the existing
 recommendation.
 
+## UPDATE 6 (slot 10, 2026-07-13) — checked slot 10's 2 flagged rows: both false alarms, same re-shipped-next-day pattern
+
+Per the urgent liveness message routed to slot 10 (its 2 rows in the UPDATE 3 table above:
+`instruments-service@f8724cdb`, `market-tick-data-service@fcf05dc6`), checked both via `git merge-base --is-ancestor` +
+content diff before cherry-picking — same protocol as slot 9's UPDATE 5:
+
+- `instruments-service@f8724cdb` ("pass SETUPTOOLS_SCM_PRETEND_VERSION to docker build, P0b", 2026-06-27): NOT reachable
+  from HEAD/origin (confirmed at-risk in the reflog-only sense), but the fix was independently re-implemented more
+  completely — current `Dockerfile`/`cloudbuild.yaml` already wire `SETUPTOOLS_SCM_PRETEND_VERSION` (unsuffixed, full
+  `ENV` export + `publish-wheel` step) vs. the discarded commit's narrower
+  `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_INSTRUMENTS_SERVICE` (2-line `ARG`/`ENV` only). No cherry-pick needed — current
+  version is a strict superset.
+- `market-tick-data-service@fcf05dc6` ("register Phase-3.5 DeFi LST/perp/specialty canonical keys, gap-014",
+  2026-07-06): also not reachable, but the identical 10-connector scaffold set shipped the next day as `a49c0828`
+  ("feat(live): 10 DeFi LST + perp + specialty WSFeedConnector scaffolds, wsfeedconnector_phase35_gap-014") — same
+  gap-014 reference, all 9 individual connector files + registration present at current HEAD (self-contained, no
+  `_defi_scaffold_ws` shared-module dependency the discarded commit used), test coverage present as
+  `test_defi_lst_perp_specialty_ws_scaffolds.py` (renamed from the discarded commit's
+  `test_defi_lst_perp_specialty_registration.py`). No cherry-pick needed.
+
+Both slot-10 rows can be downgraded to "superseded, safe to ignore" — 3rd data point (after slot 9's 2) supporting that
+the "re-implemented the next day" pattern, not permanent loss, is the common outcome once a slot notices and re-does the
+work rather than waiting on reflog recovery. Did not touch the other 14 rows (not this slot's repos).
+
 ## UPDATE 4 (slot 15, 2026-07-13 14:58 UTC) — the bug hit THIS AUDIT'S OWN COMMITS, live, mid-session — breaks the T0-only theory
 
 Meta-finding, discovered while shipping UPDATE 3: the exact same session that ran the fleet-wide audit above (slot 15,

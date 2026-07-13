@@ -114,10 +114,31 @@ venues, or change instrument_type classification? Phase 1 owns this).
     capture-cessation finding and does not block Phase 2's reshape work (which only touches the 2023-04→2026-05-22
     window where data actually exists).
   - Todo #2 below (shape-2 duplicate-vs-unique determination) is unblocked by this audit's per-day classification.
-- [ ] [DATA] P0. For every day classified shape (2) or mixed (bare-underlying + glued coexisting): determine whether the
-      two files are duplicates (same trades, different naming) or genuinely different data — sample a handful of (day,
-      symbol) pairs, download + diff row counts/content. This determines whether shape (2) needs its own reshape logic
-      or can be treated as a pre-existing duplicate of shape (3).
+- [x] ✅ [DATA] P0. For every day classified shape (2) or mixed (bare-underlying + glued coexisting): determine whether
+      the two files are duplicates (same trades, different naming) or genuinely different data — **DONE, slot 8,
+      read-only investigation, no code shipped (none needed — pure data-comparison finding).** Sampled 5 days across the
+      audit's classification bands (2023-04-05, 2023-04-10, 2023-06-01, 2024-11-15, 2025-03-22) and downloaded + diffed
+      both variants at row level (sort by `(timestamp, id)`, compare
+      `exchange/symbol/timestamp/local_timestamp/     id/side/price/amount`):
+  - **`bare_flat` (e.g. `BTC.parquet`) vs `hive` (`underlying=BTC/ticks.parquet`) on the same day**: the bare_flat file
+    is consistently a **strict subset of the hive form's contract-expiry coverage** — e.g. 2023-04-05's `BTC.parquet`
+    holds only 2 of that day's 7 distinct BTC futures contracts (`BTC-29SEP23`/`BTC-21APR23`, symbols like
+    `BTC-07APR23`/`BTC-28APR23`/`BTC-26MAY23`/`BTC-30JUN23`/`BTC-14APR23` exist ONLY in the hive file); every
+    overlapping contract's rows are **byte-identical** between the two forms (exact row-count match per contract AND
+    `DataFrame.equals()` True on the common columns, confirmed for all 4/5 sample days where both forms coexist). Zero
+    symbols found existing ONLY in the flat form across all samples (`only_in_flat` empty set every time).
+  - **`bundled_flat` (bare `ticks.parquet`) vs its sibling per-symbol `bare_flat` files on the same day**: 2024-11-15
+    confirmed the bundled file is an **exact concatenation** of that day's `BTC.parquet`+`ETH.parquet`+`SOL.parquet` —
+    34,605 rows in both, `DataFrame.equals()` True after sorting, zero symbols exclusive to either side. This
+    corroborates the issue doc's original 2025-01-01 spot-check ("size ≈ sum of the three per-underlying hive files")
+    with an exact row-level proof rather than a size approximation.
+  - **Verdict: shape (2) in BOTH its variants is a pre-existing PARTIAL duplicate of shape (1)/(3)'s data, never a
+    source of genuinely unique trades** — it needs NO reshape logic of its own. Phase 2's reshape script can treat every
+    `bare_flat`/`bundled_flat` object as safe-to-supersede-then-delete once its overlapping hive/canonical counterpart
+    is confirmed present (no new data to migrate FROM these forms). **Caveat (sample-based, not exhaustive)**: only 5 of
+    the 831 non-absent audited days were checked at row level — Phase 2's dry-run/verify step should still run a real
+    byte/row parity check per day before treating any specific bare_flat/bundled_flat file as disposable, rather than
+    assuming this pattern holds for all 831 days from a 5-day sample.
 
 ## Phase 2 — Build + dry-run the reshape (P0)
 

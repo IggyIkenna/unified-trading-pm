@@ -1433,6 +1433,34 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     `POST /api/prerequisites/sports-e3-e4-fleet-drain-complete {value:true}` called — ungates E8 verify above. —
     ops-only (no code change; existing shipped scripts `mtds@4da9d65c` snapshot script, `mtds@680dff5f`+`mtds@699c58e9`
     rebuilder, `deployment-service@6e8a115` launcher) — unified-trading-pm@<PM_SHA>.
+  - **BIG FINDING + FIX + CLEANUP 2026-07-13 (slot-3, interactive session, discovered while verifying an unrelated
+    understat completion question).** The E4 `--surface instruments` apply-pass above had a real data-correctness bug:
+    `market_tick_data_service/scripts/rebuild_sports_manifest_v9.py` hardcoded `SERVICE_NAME="market-tick-data-service"`
+    regardless of `--surface` and never threaded `asset_group` through any of its 3 write paths. Rebuilding the
+    `instruments` surface (instruments-service's OWN reference-data manifest) re-emitted **684,158 rows** (12% of the
+    whole 5.6M-row sports manifest, ALL data_types — STANDINGS/TEAMS/FIXTURES/MATCHES/ODDS/PREDICTIONS/PLAYER_STATS/
+    WEATHER/INJURIES/XG/XG_SHOTS/VENUES/etc.) under the wrong `service_name` with a blank `asset_group`, all in a single
+    ~6-minute window (`2026-07-13T06:16:51Z`–`06:23:04Z`). Because `service_name` is a `_BASE_DEDUP_COLS` member, these
+    can never collapse via a normal consolidator rebuild — a different dedup key by design, not a coalescing bug.
+    **Fixed going forward**: `market-tick-data-service@55f9e961` (surface-aware `service_name` + `asset_group` threaded
+    through `_write_empty_rows`/`_write_captured_rows`/`_write_attempted_failed_rows`). **Cleaned up the 683,592
+    already-written duplicates** (operator directive: "keep the ones which are canonical, remove the less-good
+    duplicates") via `instruments-service@2f56038e`
+    (`scripts/dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py`, dry-run-verified then `--apply`'d against
+    prod): a **direct canonical rewrite** dropping every `service_name=market-tick-data-service` row that has a
+    confirmed `service_name=instruments-service` identity twin (matched on the full BASE+OPTIONAL dedup-key identity
+    minus service_name), regardless of whether the two rows' `capture_status` agreed (14,770 of 683,592 matched pairs
+    disagreed — the MTDS value was a stale v8-snapshot artifact, not new information; canonical always won). **A first
+    cleanup attempt this session tried the standard shard-merge convention (re-stamp canonical rows via a per-VM shard,
+    let `--force` collapse) — it does NOT work for this class of duplicate**: verified via a real `--force` run,
+    `dedup_dropped=0`, counts unchanged. There is no delete-via-shard mechanism in the consolidator (append-only merge,
+    dedup only within an already-matching key) — same lesson `drop_stale_xg_shots_shot_rows_2026_07_09.py` already
+    documented for the `instrument_type='shot'` case; a direct canonical rewrite is the only way to remove a mis-keyed
+    row. 88 rows (0.01%) had no canonical twin and were deliberately left untouched for manual review — not silently
+    dropped. **Verified post-cleanup**: understat XG/XG_SHOTS big-5 duplicate groups now 0 (was 7,645/6,666); manifest
+    total 5,547,376 → 4,863,784 rows. **Not yet done**: the 88 orphan rows' review, and a check on whether this same bug
+    class affects the `mdps` surface or any OTHER bucket rebuilt via this script family (out of scope of this session,
+    flagged here for a follow-up).
 
 ## Deferred work after 2026-06-01 (sports-slot pickup session)
 
