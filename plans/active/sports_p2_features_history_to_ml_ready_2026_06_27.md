@@ -117,6 +117,50 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 5 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress; landed the unrelated venue_id correctness fix moments earlier this session)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Immediately prior on this same slot: root-caused + shipped the venue_id-normalization fix (`features-service@a9684e27`,
+see
+[`issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+and
+[`issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`](issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md)).
+That fix is orthogonal to this plan's still-open OOM blocker (`compute_shot_quality_batch`, a separate allocation site)
+— it restores correct venue-context feature VALUES, it does not touch the crash path. Flagging so whoever picks up Todo
+1 next force-recomputes any already-captured dates once the shot_quality OOM is also fixed, so venue-context columns
+aren't left silently NaN/wrong in already-`captured` rows from before this fix landed.
+
+Fast re-verify via non-snap gcloud/gsutil (`ikenna@odum-research.com`, `central-element-323112`,
+`/home/ubuntu/google-cloud-sdk/bin/`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-14/slot-10 already found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`.
+- Features bucket unique-date count: **2,242** (up from slot-10's 2,216) — steady forward progress, no stall.
+- **Went past `RUNNING` status**: tailed all 3 `run.log`s — all wall-clock-fresh (within ~2 min of check time, `date -u`
+  = 2026-07-13T20:45:17Z), genuinely computing (no OOM/crash signature, no hang). `-200456` logged `Venues: 2628 rows` —
+  more than the 591-row `venues.parquet` I verified directly during the venue_id fix; this VM's packaged codebase
+  predates `a9684e27` (launched ~20:00-20:05 UTC, my fix landed ~20:41 UTC), so it's still running pre-fix code — not a
+  new finding, just confirms these 3 shards will need their captured dates eventually re-verified/force-recomputed once
+  relaunched on the fixed codebase (see note above).
+- No new `compute_shot_quality_batch` crash signature on any of the 3 shards this check.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling (same reasoning as every prior slot —
+needs a dedicated Docker-memory-capped investigation, not a quick check). Did not relaunch or touch any of the 3 healthy
+shards, and did not repackage/relaunch them with the venue_id fix mid-run (would duplicate in-flight SPOT compute for no
+immediate benefit — the fix is a correctness improvement, not a crash fix, so their current progress is still valid,
+just needs a future re-verify pass once the shot_quality blocker clears anyway). Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,242).
+Once the `compute_shot_quality_batch` P0 profiling todo lands a fix, relaunches should use a freshly-packaged tarball
+(now includes `a9684e27`) and consider whether previously-captured dates need a `--force` re-run to pick up correct
+venue-context values.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-13 — slot 10 (Todo 1 re-dispatch — fast re-verify, fleet healthy post-recovery, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
