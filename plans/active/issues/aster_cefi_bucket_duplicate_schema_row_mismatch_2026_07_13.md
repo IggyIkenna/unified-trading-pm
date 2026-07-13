@@ -110,7 +110,7 @@ concrete reason to invoke. Two options for whoever picks this up:
 
 ## Todos
 
-- [ ] [DATA] P1. Operator/architecture decision: for the `high_dup` era (2024-01-01→2025-06-15), is the 23-column
+- [x] ✅ [DATA] P1. Operator/architecture decision: for the `high_dup` era (2024-01-01→2025-06-15), is the 23-column
       DeFi-bucket shape or the 10-column CeFi-bucket shape authoritative going forward? Audit downstream consumers of
       the CeFi-bucket ASTER `derivative_ticker` data for this era before deciding (repo: market-tick-data-service +
       consumers). — **Downstream-consumer audit DONE (slot 14, 2026-07-13)** — the decision itself is still open
