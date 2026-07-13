@@ -16,7 +16,7 @@ summary:
   re-resolution can shift transitive pins for unrelated packages, so a piecemeal fix inside an unrelated task risks
   widening scope uncontrollably. Reverted that partial fix; filing this instead so the full remediation gets its own
   scoped, tested change."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ parent_epic: infrastructure_master
 priority: P1
 source: utl_reuse_phase0_guardrails_2026_07_13 todo 2 (ml-service golden-fixture shipping attempt), 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: ml-service@4d16341 (2026-07-13, slot-9)
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -102,13 +102,14 @@ then `bash scripts/quality-gates.sh` to confirm green end-to-end (not just pip-a
 
 - [x] ✅ [BACKEND] P1. Bump `pillow`→12.3.0, `cryptography`→48.0.0→49.0.0, `pydantic-settings`→2.14.2 (all within
       existing `pyproject.toml` constraints, zero compatibility risk) — shipped `ml-service@3f18fa0`.
-- [ ] [BACKEND] P2. `starlette` is still short of its 1.3.0 fix (locked at 1.2.1) — our own `fastapi>=0.115.0,<0.137.0`
-      pyproject ceiling caps starlette there even at fastapi's max allowed patch (0.136.3). Needs a deliberate
-      `fastapi<0.137.0` ceiling bump + compatibility check (ml-service's actual FastAPI/ASGI usage), not a blind
-      lockfile bump. Interim: `ml-service@3f18fa0` added `--ignore-vuln PYSEC-2026-248 --ignore-vuln PYSEC-2026-249` to
-      `PIP_AUDIT_EXTRA_ARGS` with a comment explaining why (fastapi-capped, not "no fix version") so quality-gates.sh is
-      honestly green in the meantime. Bump the fastapi ceiling, confirm starlette resolves to >=1.3.0, run the full test
-      suite (not just pip-audit), then remove the two ignore-vuln entries. (repo: ml-service)
+- [x] ✅ [BACKEND] P2. `starlette` is still short of its 1.3.0 fix (locked at 1.2.1) — our own
+      `fastapi>=0.115.0,<0.137.0` pyproject ceiling caps starlette there even at fastapi's max allowed patch (0.136.3).
+      Needs a deliberate `fastapi<0.137.0` ceiling bump + compatibility check (ml-service's actual FastAPI/ASGI usage),
+      not a blind lockfile bump. Interim: `ml-service@3f18fa0` added
+      `--ignore-vuln PYSEC-2026-248 --ignore-vuln PYSEC-2026-249` to `PIP_AUDIT_EXTRA_ARGS` with a comment explaining
+      why (fastapi-capped, not "no fix version") so quality-gates.sh is honestly green in the meantime. Bump the fastapi
+      ceiling, confirm starlette resolves to >=1.3.0, run the full test suite (not just pip-audit), then remove the two
+      ignore-vuln entries. (repo: ml-service) — DONE `ml-service@4d16341`.
 
 ## Progress Log
 
@@ -119,3 +120,14 @@ then `bash scripts/quality-gates.sh` to confirm green end-to-end (not just pip-a
   after still showed all 4 packages vulnerable). Went ahead with the full fix: pillow/cryptography/pydantic-settings
   bumped clean (`ml-service@3f18fa0`); starlette turned out to be capped by our own fastapi ceiling rather than a simple
   lockfile bump, so left that one `--ignore-vuln`'d with a clear comment + this issue as the tracked follow-up.
+- **2026-07-13 (slot-9, sonnet/high)** — Closed the P2 follow-up, `ml-service@4d16341`. Widened the `fastapi` ceiling
+  `<0.137.0`→`<0.138.0` (verified via `uv pip install --dry-run` that fastapi 0.137.0 is the minimum version whose
+  resolver accepts starlette≥1.3.0 — fastapi 0.136.x permits starlette down to 1.1.0) + added a
+  `[tool.uv] override-dependencies` floor pin `starlette>=1.3.1` (precedent: `unified-trading-library/pyproject.toml`'s
+  existing cryptography/pip security-pin pattern) since fastapi's own declared range alone doesn't force the bump.
+  fastapi itself landed on 0.136.3 (no forced jump to 0.137/0.138 — `uv lock` picked the minimal satisfying version).
+  Rebased my commit onto `3f18fa0` (real conflict — both touched `uv.lock` concurrently) and removed the two
+  `--ignore-vuln` flags from `scripts/quality-gates.sh` since starlette is now genuinely fixed (leaving stale
+  ignore-vulns would silently mask a future regression below 1.3.0). `pip-audit` clean (0 findings, joblib/pyjwt ignores
+  only); full ml-service test suite
+  - `quality-gates.sh` green; shipped via quickmerge. Issue fully resolved — both todos done.
