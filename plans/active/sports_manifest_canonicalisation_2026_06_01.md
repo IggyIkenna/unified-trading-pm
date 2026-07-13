@@ -3070,13 +3070,19 @@ todos below lands or CF-8's schema change ships.
       `codex/02-data/availability-manifest-and-data-status.md`) vs. fund a historical-reconstruction pass (e.g.
       re-deriving from raw provider payloads if still retrievable). Not blocking E8 on its own if the operator accepts
       option A.
-- [ ] [DATA] P2. **Manifest consolidator: alert on incremental-cycle silent-no-progress after a bulk shard drop** (repo:
-      unified-trading-library): the per-minute cron completed `exit(0)` 18+ consecutive times (2026-07-13 05:57Z-06:30Z)
-      without ever merging 8 newly-landed per-VM shards into the canonical — no `MANIFEST_CONSOLIDATION_FAILED` event
-      fired (would have paged per `consolidator_rules.py`'s severity routing), so this was silently invisible until this
-      touch's manual investigation. The SSOT already documents that a bulk shard drop needs `--force` (not the
-      incremental cron) — but there's no signal telling anyone a bulk drop has happened and needs it. Add a
-      lifecycle-event or metric (e.g. "N consecutive `shards_scanned>0` cycles with `rows_out` unchanged") so a future
-      bulk-backfill-after-cron-can't-keep-up case pages instead of silently stalling. Not urgent (this touch's manual
-      `--force` closed the immediate instance) but closes the detection gap that let this run undetected for 30+
-      minutes.
+- [x] ✅ [DATA] P2. **Manifest consolidator: alert on incremental-cycle silent-no-progress after a bulk shard drop**
+      (repo: unified-trading-library): the per-minute cron completed `exit(0)` 18+ consecutive times (2026-07-13
+      05:57Z-06:30Z) without ever merging 8 newly-landed per-VM shards into the canonical — no
+      `MANIFEST_CONSOLIDATION_FAILED` event fired (would have paged per `consolidator_rules.py`'s severity routing), so
+      this was silently invisible until this touch's manual investigation. The SSOT already documents that a bulk shard
+      drop needs `--force` (not the incremental cron) — but there's no signal telling anyone a bulk drop has happened
+      and needs it. Add a lifecycle-event or metric (e.g. "N consecutive `shards_scanned>0` cycles with `rows_out`
+      unchanged") so a future bulk-backfill-after-cron-can't-keep-up case pages instead of silently stalling. Not urgent
+      (this touch's manual `--force` closed the immediate instance) but closes the detection gap that let this run
+      undetected for 30+ minutes. — unified-trading-library@cbcc13fa: new `MANIFEST_CONSOLIDATION_STALLED` event (ERROR,
+      same alert path as `MANIFEST_CONSOLIDATION_FAILED`), tracked per-bucket in a tiny separate state blob
+      (`_index/consolidator_stall_state.json`, NOT the canonical's own metadata — would defeat the incremental-skip
+      optimisation) via `_check_consolidation_stall`; fires after 10 consecutive no-op cycles where `shards_scanned`
+      stays above the last-real-progress baseline (a quiet bucket with no new shards never advances past its baseline,
+      so it never false-pages; a first-ever observation adopts the baseline without counting, so rollout onto an
+      already-caught-up bucket can't false-positive either). 5 new unit tests + full QG green.
