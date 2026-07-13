@@ -102,12 +102,26 @@ the class of gap the plan's "Definition of 100%" section calls out.
       `status=RUNNING`, `machine_type=e2-standard-4`, `provisioning_model=SPOT`.
 - [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
       after the backfill completes. (repo: `instruments-service`)
-- [ ] [INFRA] P2. Close the VM-launch/GCS-publish race found 2026-07-12 (slot-12) — a VM can boot and pull
+- [x] ✅ [INFRA] P2. Close the VM-launch/GCS-publish race found 2026-07-12 (slot-12) — a VM can boot and pull
       `startup-script-url` from `gs://deployment-scripts-*/vm/setup-data-pipeline-vm.sh` _before_
       `create-code-tarballs.sh`'s `gsutil cp` has actually published a just-landed fix, silently running stale pre-fix
       logic despite correct instance metadata. Add a pre-launch check (poll the GCS object's `updated` timestamp for
       `>= commit push time`, or a launcher precondition) so a fix-then-immediately-launch turn can't race itself. (repo:
-      `deployment-service`)
+      `deployment-service`) — **Done 2026-07-13 (slot-10, infra).** `deployment-service@491c957`. Added
+      `lc_verify_setup_script_freshness` to `scripts/vm/lib/launcher_common.sh`: before a launch, compares the local
+      `scripts/vm/<script>.sh` content hash (`gsutil hash -m`) against the live GCS object's hash (`gsutil stat`) for
+      whatever `startup-script-url=gs://<bucket>/vm/<script>.sh` the launcher's metadata carries, acting per
+      `LC_SETUP_SCRIPT_FRESHNESS` (`off|warn(default)|enforce|auto`) — same mode semantics as the sibling
+      `lc_verify_tarball_freshness` guard this doc's P1 items shipped. Wired directly into the shared `lc_gcloud_create`
+      helper (not per-launcher) so all ~80 Pattern-A launchers inherit the guard automatically with zero per-file edits,
+      unlike the tarball-freshness rollout which needed ~108 individual launcher edits. 7 new unit tests
+      (`TestSetupScriptFreshnessGuard` in `tests/unit/test_vm_launcher_scripts.py`): off-mode short-circuit,
+      no-startup-script-url no-op, fresh/stale/missing-script outcomes, and automatic `lc_gcloud_create` wiring. Ran
+      into the repo's `deployment-digest`/`data_pipeline_monitors/cli.py` QG-red repo-blocker (`RB-116481d7`, filed
+      earlier this dispatch) mid-ship — slot-11 independently fixed it (`deployment-service@534de4b`) before I got to
+      quickmerge; rebased onto that, dropped my now-redundant duplicate fix, and shipped only this guard.
+      `quality-gates.sh` green (sentinel verified for `534de4b`+diff); quickmerge landed on `live-defi-rollout`, no
+      strict-quickmerge violations.
 
 Not attempted inline in this dispatch — this is new capability wiring (verify the EVM dispatch integration point, not
 just adding a protocol string to a list), consistent with how the G1.6 dex_pool_swaps Solana-indexer finding was scoped
