@@ -83,7 +83,29 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
 
 ## Todos
 
-- [ ] [INFRA] P1. Check whether `.uv-cache` / per-slot `.venv` growth is unbounded and needs a prune schedule; connect
-      to the QG-governor contention finding for an overall host-capacity review. Given the recurrence, also consider
-      whether a per-slot disk-usage cap or an automated `.venv`/cache prune cron is warranted, not just a one-time
-      cleanup. (repo: infra/host config)
+- [x] ✅ [INFRA] P1. Check whether `.uv-cache` / per-slot `.venv` growth is unbounded and needs a prune schedule;
+      connect to the QG-governor contention finding for an overall host-capacity review. Given the recurrence, also
+      consider whether a per-slot disk-usage cap or an automated `.venv`/cache prune cron is warranted, not just a
+      one-time cleanup. (repo: infra/host config) — **INVESTIGATED + PARTIALLY FIXED, slot 11, 2026-07-13**:
+      `unified-trading-pm@9dcd37631`. - **Confirmed root driver #1 (shared, safe to fix)**: `.uv-cache` (12G) had NO
+      prune schedule at all (no crontab entry, no systemd timer). A single manual `uv cache prune` (no `--force` —
+      respects in-use checks) reclaimed **5.7GiB in ~3s**. Shipped `scripts/dev/prune-uv-cache.sh` + idempotent per-host
+      installer `scripts/dev/install-prune-uv-cache-cron.sh` (6h default cadence), mirroring the existing
+      `cleanup-stale-qg-tmp.sh` convention exactly. **NOT yet actually scheduled** — could not self-install from this
+      sandboxed slot session (`crontab -l`/`-e` both hit `Permission denied` for this user on this host); an operator or
+      a root-capable agent needs to run `bash unified-trading-pm/scripts/dev/install-prune-uv-cache-cron.sh` once. -
+      **Confirmed root driver #2 (larger, NOT fixed — live data)**: per-slot `.venv` dirs are the dominant consumer,
+      ~150-200G summed across the 16 slots (1.3-2.6G per heavy repo × ~5-6 heavy repos × 16 slots).
+      `UV_LINK_MODE=hardlink` IS configured (`base-service.sh:322`) but is NOT actually deduping across slots — verified
+      by comparing the same `numpy.libs/libscipy_openblas64_*.so` file across two different slots' `.venv`s: identical
+      content/size, but `nlink=1` on both with DIFFERENT inodes (not hardlinked to each other). Root cause of the
+      non-dedup not investigated further this dispatch (candidate: each slot's `uv sync` may resolve to a distinct cache
+      entry, or hardlink only applies within a single sync's own cache→venv copy, not across independently-run syncs).
+      Did NOT touch any slot's `.venv` — these are live, in-use directories; a blanket prune risks breaking an active
+      slot's `quality-gates.sh`/`quickmerge.sh` mid-run (same "never overwrite live foreign WIP without a liveness
+      check" principle as `features_sports_parallel_backfill_vm_name_collision_2026_07_13.md`'s VM-name-collision
+      fix). - **Follow-on todos** (not done this dispatch, out of single-worker scope): (a) operator runs the cron
+      installer above; (b) investigate why `UV_LINK_MODE=hardlink` isn't deduping across slots — if fixable, the
+      150-200G `.venv` footprint could shrink dramatically for free; (c) if hardlink-dedup can't be made to work
+      cross-slot, a liveness-aware per-slot `.venv` prune (idle-slot detection, same pattern as the VM-collision guard)
+      is the real fix for driver #2, not a blanket cron.
