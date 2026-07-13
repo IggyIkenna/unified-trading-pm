@@ -23,7 +23,6 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend-engineer
 drift_direction: advance-code
-author: slot-10 (backend-engineer)
 resolved_by:
 locked_by:
 source:
@@ -33,6 +32,7 @@ source:
   ]
 related: [plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md]
 tags: [utl, uac, risk, pre-trade, spec-gap]
+depends_on: []
 ---
 
 # pre_trade_check_engine UTL routing — concentration + 6th-check spec gap

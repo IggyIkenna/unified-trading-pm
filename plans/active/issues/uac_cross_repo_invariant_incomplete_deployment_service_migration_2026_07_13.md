@@ -18,10 +18,11 @@ parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
-author: slot-11
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
 resolved_by: slot-3
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # unified-api-contracts cross-repo invariant test RED — deployment-service registry relocation incomplete

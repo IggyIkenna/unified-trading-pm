@@ -24,12 +24,12 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: infra
 drift_direction: advance-code
-author: slot-10 (backend-engineer)
 resolved_by:
 locked_by:
 source: [plans/archive/issues/api_host_chronic_impairment_2026_05_29.md, scripts/quality-gates-base/qg-host-governor.sh]
 related: [plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md]
 tags: [infra, quality-gates, host-contention, governor]
+depends_on: []
 ---
 
 # qg-host-governor severe contention — QG_HOST_CONCURRENCY=1 floor vs 20-way slot demand
