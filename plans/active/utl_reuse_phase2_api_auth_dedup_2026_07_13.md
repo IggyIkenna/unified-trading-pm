@@ -74,8 +74,17 @@ drift_direction: advance-code
       CVEs — click/cryptography/idna/pydantic-settings/starlette) via a separate interim-fix commit
       `unified-trading-api@c85d860`; real version-bump remediation tracked in
       `plans/active/issues/unified_trading_api_pip_audit_stale_ignore_list_2026_07_13.md`.
-- [ ] [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
-      without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each.
+- [x] ✅ [VERIFY] P0. Auth smoke per repo — DONE. **alerting-service** (`alerting-service@6761e50`): dedicated
+      `tests/unit/test_auth_wiring_smoke.py` calls the real (non-mock) `_api_auth` dependency directly — missing key →
+      401, wrong key → 401, correct key → authenticates (`is_api_key=True`); Bearer JWT/X-Service-Token/DISABLE_AUTH-
+      in-prod branches are UTL-internal logic, covered by UTL's own 4 auth tests (unchanged by this migration).
+      **unified-trading-api** (`unified-trading-api@2670288`): pre-existing `test_missing_api_key_returns_401` /
+      `test_invalid_api_key_returns_401` / `test_valid_api_key_succeeds` (test_middleware.py) and
+      `test_invalid_api_key_emits_auth_failure` (test_event_logging.py) now exercise the real UTL-delegated path (fixed
+      to force off the env-driven mock/disable-auth short-circuit); Bearer JWT coverage pre-existing + unaffected
+      (`TestGetCurrentUser`); DISABLE_AUTH-in-prod guard untouched (local, preserved as-is). **client-reporting-api**
+      (`client-reporting-api@9cd77cc`): already done pre-plan (579 tests ✓). All 3 repos: `quality-gates.sh` full-run
+      green (sentinel-verified per commit), each shipped via quickmerge.
 
 ## Success criteria
 
