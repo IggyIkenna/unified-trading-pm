@@ -675,6 +675,137 @@ report written in this plan's Progress Log.
     manifest, and every deeper follow-on discovery is filed as a scoped todo above rather than silently rolled into this
     fix or left undocumented.
 
+- **2026-07-13 (slot-3, FINAL RE-VERIFY dispatch — footystats + soccer_football_info + transfermarkt + open_meteo
+  residuals, post per-league-isolation-fix `instruments-service@746ce3e2`/`5b8cc6d0`): residual-closer
+  (`sports_attempted_failed_residual_closer_2026_07_13.py`, PID 3247, `agentwork/sports_residual_fix_2026_07_13` branch)
+  is STILL ACTIVELY RUNNING at read time — this is a mid-flight snapshot, NOT the closer's terminal state.**
+  - **Consolidator-staleness caveat discovered**: the closer's OWN internal remaining-count checks were noisy this run —
+    round-0 (pre-loop) read 0 attempted_failed for all 3 sources, round=1 verify read 61 total, round=2 verify read 266
+    total (≈ the full pre-fix baseline 205+10+51) — a `ManifestConsolidatorStaleError` (consolidated blob >120s stale,
+    forced per-VM-shard fallback) was live during the run's early reads (confirmed in a discarded first invocation's
+    traceback), so the closer's per-round counts should not be read as a literal progress curve. A direct independent
+    read taken THIS check found the consolidated blob freshly updated (17:53:54Z, age ~seconds) — used that fresh window
+    for the numbers below, which are more trustworthy than the closer's own round logs.
+  - **Fresh single-parquet read** (`read_availability_index`, 4,988,134 total rows — up from §0's 4,863,784 baseline,
+    consistent with the separate mdps_odds_horizon_bucket backfill landing):
+    - **footystats**: `attempted_failed`=200 (TimeoutError 174, phantom 15, ArrowTypeError 11) vs baseline 205
+      (179/15/11) — only the TimeoutError count moved (179→174, 5 resolved so far); phantom+Arrow untouched.
+      `expected_unattempted`=56, identical to baseline, 100% dated 2026-07-13 (today's legitimate rolling trailing-edge,
+      self-closes next capture pass — unchanged conclusion from the investigation-only pass).
+    - **soccer_football_info**: `attempted_failed`=10 (phantom), UNCHANGED from baseline, despite the closer's own log
+      claiming `[sfi] processed=10 raised=0` — the per-VM-shard writes are buffered and only drain into the canonical
+      index via the script's single explicit `flush_all_pending_buckets()` call AFTER the entire round loop exits (not
+      yet reached while PID 3247 is alive), so this canonical read cannot yet show the SFI reprocessing's effect even if
+      it succeeded. `expected_unattempted`=94, unchanged, 100% today's date (legitimate).
+
+- **2026-07-13 (sub-agent, investigation-only dispatch — TEAMS 61-league gap root-cause, read-only, no code/data
+  changes).** Full root-cause of the P0 todo "api_football TEAMS: root-cause + fix the 61-league per-league capture
+  gap." **Conclusion: ONE code path, deliberately scoped too narrow (not two competing capture paths); the 61 leagues
+  ARE api_football-covered; the blank-league_id bundle is a phantom manifest artifact, not a reusable data source; true
+  backfill cost is ~549 API calls, not ~190k.**
+  - **(1) One code path, not two.** `instruments_service/engine/orchestrator/sports_reference_core.py:138-216`
+    (`_fetch_teams_and_standings`) is the ONLY production call site of `adapter.get_teams()` for api_football. It
+    iterates `_orch.get_prediction_leagues()` (UAC `LEAGUE_REGISTRY` filtered to `classification=="Prediction"` —
+    exactly 33 leagues, confirmed by counting `classification="Prediction"` in
+    `unified-api-contracts/.../league_data_prediction.py`) and writes ONE per-league parquet per league via
+    `teams_df.groupby("league_id")` → `_gated_sink_write(partition={"league": ...})`. The `else` branch (missing
+    `league_id` column) explicitly **skips the write** with a warning ("data shape regression... Skipping write to keep
+    manifest honest") — there is no branch in current code that CAN write a blank-`league_id` captured TEAMS row. Live
+    GCS listing confirms the code matches reality:
+    `gs://instruments-store-sports-prd.../sports_reference/by_date/ day=2026-07-13/pipeline_mode=batch_api_football/entity=teams/`
+    contains exactly 33 `league=<X>/teams.parquet` objects, zero bare-path file.
+  - **(2) Why only 33 — a scope mismatch between two functions in the SAME module, not a deliberate design split.**
+    `sports_reference_core.py:113` (the module's OWN absence-recording helper, `_record_empty_for_uncaptured`) already
+    correctly calls `_orch.get_expected_leagues_for_source("api_football")` with NO classification filter — the full
+    94-league set (`get_expected_leagues_for_source` returns leagues where `"api_football" in league.data_sources`,
+    optionally filtered by classification; `None` = all). UAC's `SPORTS_ENTITY_LEAGUE_COVERAGE["TEAMS"] = None`
+    (`provider_league_ids.py:776`) explicitly documents TEAMS as "expected on all fixture dates" (no per-league
+    restriction) — i.e. the ENUMERATOR/denominator side was deliberately built for the full 94-league universe. The
+    CAPTURE loop three lines below in the same file was simply never widened to match — it still reads
+    `get_prediction_leagues()` (Prediction-tier only), a leftover scoping choice. Verified the 33/61 split maps exactly
+    to classification: 33 Prediction (captured) + 22 Features + 39 Reference = 94 (0 captures) — Features = mostly
+    2nd-division domestic leagues (e.g. `EERSTE_DIVISIE`, `USL_CHAMPIONSHIP`, `J2_LEAGUE`), Reference = mostly
+    cup/continental competitions (`FA_CUP`, `DFB_POKAL`, `UCL`, `COPA_LIBERTADORES`, etc, tier=0). This is a genuine,
+    fixable capture-loop scoping bug, not an intentional two-tier design — decision: **(a) applies** (widen the capture
+    path), not (b) (the enumerator is the one that's already correct).
+  - **(3) API coverage check for the 61 — CONFIRMED covered, not an out-of-provider-coverage case.** Queried the live
+    manifest for all api_football rows where `league_id` is one of the 61: FIXTURES has 27,843 `captured` rows,
+    FIXTURE_STATS 6,229, FIXTURE_EVENTS 4,176, FIXTURE_LINEUPS 4,006, INJURIES 784, PLAYER_STATS 656 — spanning 60 of
+    the 61 leagues. Api-Football is actively and successfully returning fixture-level and even player-level data for
+    these same leagues; team-roster data (`/teams`) is a strictly more basic/available endpoint than lineups or
+    per-player stats on that provider's API. **No evidence any of the 61 lack TEAMS coverage** — this should be typed as
+    a real backfill target, not `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`. (Did not make a live manual API call to verify
+    a specific league's `/teams` response directly — the indirect evidence via sibling data_types for the same leagues
+    is strong enough to proceed with a backfill attempt; the implementing agent should treat any per-league API 4xx as a
+    genuine `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` exception discovered during the backfill run, not assume upfront.)
+  - **(4) True backfill scope — season-grain, NOT date-grain: ~549 real API calls, not ~190k.**
+    `adapter.get_teams(league_id, season=None)` (`api_football.py:610`, `base.py:247`) is a **season-keyed** call — a
+    team roster is fetched per season, not per day. The current orchestrator merely happens to invoke it once per
+    calendar day inside the daily loop (with same-day, in-memory caching via `_orch._cached_teams_df`), which is why the
+    33 already-wired leagues show ~3,046 near-daily rows each over 8.5 years for data that changes maybe twice a season.
+    The literal 61-leagues × 3,116-dates naive estimate (~190k cells) is NOT the real API cost: the true minimum is ~61
+    leagues × ~9 seasons (2018–2026) ≈ **549 real `get_teams` calls**. Each season's single roster payload can then be
+    replicated to populate every date-row in that season's manifest window (many cheap manifest WRITES, zero incremental
+    API cost per day) — mirroring the existing per-league write shape so the resulting per-day row count matches the 33
+    already-canonical leagues' pattern. (Whether the expected-universe itself SHOULD be date-grain for TEAMS at all,
+    given it's genuinely season-grain data, is a separate, smaller follow-up worth flagging to the enumerator owner —
+    not blocking this backfill.)
+  - **(5) Blank-`league_id` bulk bundle (3,648 rows, ~621 teams/day) — CONFIRMED phantom, NOT a reusable/alternate
+    source of truth.** Cross-checked a `capture_status=captured` blank-league_id TEAMS row dated **2026-07-13 (today)**
+    against live GCS: zero bare-path `entity=teams/teams.parquet` object exists for that day at either the canonical
+    (`pipeline_mode=` prefix) or legacy path — the manifest claims captured, no parquet exists anywhere. This is the
+    same `phantom_captured_no_parquet_at_canonical_path` class already documented elsewhere in this plan for other
+    api_football data_types, just not yet caught by the phantom classifier for this specific (blank-league_id, TEAMS,
+    captured) shape. Corroborating evidence: 533 distinct `attempted_at`/`written_at` timestamps across only 3,648 rows
+    (repeated re-stamping/rebuild passes touching the same historical rows, not a live daily producer), and dates
+    running back to 2014-01-01 — three years before api_football's own `SOURCE_COVERAGE_START` of 2018-01-01. **There is
+    no nested per-league structure to unpack** — it is not real captured data at all, so it cannot be repurposed to
+    synthesize the missing 61 leagues' rows without fresh API calls. Recommend: (i) do NOT treat it as ground truth or
+    attempt to "unpack" it; (ii) re-type these 3,648 rows via the existing
+    `scripts/reconcile_phantom_manifest_rows_all.py` tooling (same pattern already applied to the footystats/SFI/weather
+    phantom rows elsewhere in this plan) so `captured` → `attempted_failed`/typed-absence, not left as a false-positive
+    captured record; (iii) once retyped, this row shape can be deleted from any future "is TEAMS legitimate" sampling.
+  - **(6) VM launcher + backfill driver pattern.** `deployment-service/scripts/vm/` sports-registered launchers (grep
+    confirmed no hand-rolled name needed): `launch-sports-is-gap-fill.sh` (paired with
+    `instruments-service/scripts/query_sports_is_gaps.py`) is the existing per-league-scoped gap-fill launcher already
+    recommended elsewhere in this plan for other api_football residuals — reuse it for the TEAMS backfill rather than
+    writing a new launcher. `launch-sports-entity-sweep-vm.sh` / `launch-sports-full-sweep-vm.sh` are the other
+    sports-registered prefixes available if a full-entity sweep shape fits better. Existing per-league driver code
+    patterns to base the TEAMS-specific backfill script on:
+    `instruments-service/scripts/backfill_per_league_record_empty.py` and
+    `instruments-service/scripts/migrate_sports_per_league.py` (both already iterate `get_prediction_leagues()` in the
+    same per-league shape the TEAMS fix needs, just widened to the full 61-league set — `SOURCE_COVERAGE_START` gates
+    the pre-2018 floor automatically since `_fetch_teams_and_standings` is called from the daily `sports_reference.py`
+    orchestrator entrypoint that already respects it).
+  - **Recommended fix for the implementing agent (in order): (i)** widen the capture loop at
+    `sports_reference_core.py:153` from `_orch.get_prediction_leagues()` to
+    `_orch.get_expected_leagues_for_source("api_football")` (matching the module's own absence-recording helper three
+    lines above) — this is the root-cause fix, one line; **(ii)** run a season-grain backfill (~549 API calls) for the
+    61 newly-in-scope leagues across 2018–2026, writing per-date manifest rows from each season's single payload the
+    same way the daily loop already does going forward; **(iii)** retype the 3,648 blank-`league_id` phantom rows via
+    `reconcile_phantom_manifest_rows_all.py`; **(iv)** re-verify the live manifest shows 94 distinct captured leagues
+    for TEAMS with 0 remaining zero-capture leagues. This todo
+    (`api_football TEAMS: root-cause + fix the 61-league per-league capture gap`) is root-caused and ready for
+    implementation — not yet flipped `[x]` (no code/data change made in this investigation-only pass, per dispatch
+    scope).
+    - **transfermarkt**: `attempted_failed`=0 (unchanged, already clean), `expected_unattempted`=47, unchanged, 100%
+      today's date (legitimate) — no closer work targets this source (it was never in scope, already clean at baseline).
+    - **open_meteo (weather)**: `attempted_failed`=51 (phantom), UNCHANGED from baseline — same buffered-write
+      explanation as SFI (closer log shows `[weather] processed=51 raised=0` mid-run, not yet drained).
+    - **Dedup-key groups**: 0 duplicate groups for all 4 sources when keyed correctly on
+      `(date, venue, data_type, league_id, service_name)` — an initial pass of this check that omitted `league_id`
+      mis-flagged thousands of "duplicate" groups (footystats 9,176 / SFI 2,391 / transfermarkt 3,161 / weather 2,840);
+      re-run with `league_id` included (these sources are league-grain, not venue-grain, so `venue` is blank and cannot
+      stand in for the shard key alone) confirmed all 4 sources are genuinely dedup-clean. Documenting this here so the
+      next verifier doesn't re-trip the same false positive.
+  - **Verdict: NOT YET at the understat-standard bar for footystats/SFI/weather — the closer is mid-run, buffered writes
+    haven't drained to the canonical index, and only 5 of 236 targeted attempted_failed rows show as resolved in THIS
+    read.** transfermarkt was already clean at baseline and remains so (0/47, both legitimate). Recommend a follow-up
+    re-verify once PID 3247 reaches its `EXPLICIT PRE-EXIT DRAIN`/`FINAL TALLY` log lines (or exits) — expect the drain
+    to reveal a materially different (likely much closer to 0) attempted_failed count for footystats/SFI/weather once
+    the buffered per-VM-shard writes are visible in a subsequent fresh read. Not marking any of the 4 residual todos
+    `[x]` this pass — the fix's effect is not yet observable end-to-end.
+
 - **2026-07-13 (slot-3, FINAL RE-VERIFY dispatch — fresh single-parquet read post-fix).** Re-read
   `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` fresh (4,988,134 total
   rows now, up from the §0 baseline's 4,863,784 — expected, reflects the migration write).
