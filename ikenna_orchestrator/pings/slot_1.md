@@ -1,6 +1,7 @@
 ## [slot-1-main] 2026-06-15 — CREDENTIAL APPROVAL REQUEST: Smarkets execution adapter
 
-**Plan refs**: `plans/active/v2_engine_venue_buildout_2026_06_15.md` (Phase V — Smarkets adapter BLOCKED-CREDENTIALS todo)
+**Plan refs**: `plans/active/v2_engine_venue_buildout_2026_06_15.md` (Phase V — Smarkets adapter BLOCKED-CREDENTIALS
+todo)
 
 ```
 CREDENTIAL APPROVAL REQUEST — Smarkets sports-exchange execution adapter
@@ -13,6 +14,15 @@ Without it: smarkets_direct is leg-eligible + matrix-buildable + parses in slot 
             landed), but has NO live execution adapter — adapter scaffold + mocked unit tests will ship under the
             BLOCKED-CREDENTIALS todo; live integration tests stay @pytest.mark.requires_credentials (skipped).
 ```
+
+**Status**: ✅ **WITHDRAWN 2026-07-13** — operator ruled Smarkets not useful; do not action this credential request.
+
+**Rationale (operator)**: Smarkets adapter deemed not worth pursuing. No credential/account needed.
+
+**Applied**: `plans/active/v2_engine_venue_buildout_2026_06_15.md` Phase V ADAPTER todo retagged `BLOCKED-CREDENTIALS` →
+`BLOCKED-OPERATOR-DECISION` (2026-07-13), checkbox left `[ ]` per this plan corpus's ruled-out-not-completed convention.
+The already-shipped `smarkets_direct` token/leg-eligibility wiring is unaffected — only the live execution adapter build
+is dropped, absent a future operator reversal.
 
 ---
 
@@ -5324,11 +5334,13 @@ two cicd items but did NOT flip that plan (slot-1 owns it). Please flip when you
 
 ## 2026-06-12 — CREDENTIAL APPROVAL REQUEST: ORCHESTRATOR_INTERNAL_SECRET fleet distribution
 
-Plan-of-record: `plans/active/monitoring_control_plane_master_2026_06_10.md` (the `[CREDS] P1 BLOCKED-CREDENTIALS` item).
+Plan-of-record: `plans/active/monitoring_control_plane_master_2026_06_10.md` (the `[CREDS] P1 BLOCKED-CREDENTIALS`
+item).
 
-- **What**: the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM —
-  NOT `ORCHESTRATOR_INTERNAL_SECRET`. On a fresh bootstrap-launched VM `auth._load_internal_secret()` falls back to an
-  ephemeral generated secret → `/api/escalate` + central→worker proxy 401 every caller (prod vm-0 works only by hand-wiring).
+- **What**: the `ORCHESTRATOR_ENV_LOCAL` Secret Manager value carries only JWT_SECRET/USERS_JSON/MODE/TELEGRAM — NOT
+  `ORCHESTRATOR_INTERNAL_SECRET`. On a fresh bootstrap-launched VM `auth._load_internal_secret()` falls back to an
+  ephemeral generated secret → `/api/escalate` + central→worker proxy 401 every caller (prod vm-0 works only by
+  hand-wiring).
 - **Operator action**: append `ORCHESTRATOR_INTERNAL_SECRET=<value from prod vm-0's .env.local>` to the
   `ORCHESTRATOR_ENV_LOCAL` secret in BOTH AWS SM + GCP SM. Bootstrap already propagates the whole secret to `.env.local`
   (no code change; bootstrap loud-warns when the key is absent).
@@ -5361,17 +5373,17 @@ shipped (market-tick-data-service@4d32528, Phase D P1c Item 3) but cannot run un
 
 ## CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19, sports e2e audit)
 
-Plan-of-record: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` (sports drive).
-Both adapters + unit tests already EXIST (no build needed); both secrets EXIST in Secret Manager — but coverage is
-0.000 on their ACTIVE captured data_types, consistent with expired/suspended keys (the footystats "valid key, account
-suspended" precedent).
+Plan-of-record: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` (sports drive). Both
+adapters + unit tests already EXIST (no build needed); both secrets EXIST in Secret Manager — but coverage is 0.000 on
+their ACTIVE captured data_types, consistent with expired/suspended keys (the footystats "valid key, account suspended"
+precedent).
 
 - **soccer-football-info (SFI)** — `SoccerFootballInfoAdapter` (RapidAPI `soccer-football-info.p.rapidapi.com`), secret
   `soccer-football-info-api-key`. Unblocks **SFI_PROGRESSIVE_STATS** (per-fixture progressive stats). 35 unit tests
   (`tests/unit/test_sfi_adapter_coverage.py`). SFI_LEAGUES/SFI_STANDINGS are RETIRED (runtime-only UAC catalog — NOT a
   data gap). **ASK: validate/rotate `soccer-football-info-api-key` (RapidAPI sub).**
-- **Transfermarkt** — `TransfermarktAdapter` (RapidAPI `transfermarkt-football-data-api.p.rapidapi.com` OR Apify), secret
-  `transfermarkt-api-key`. Unblocks **PLAYER_VALUES** (per-season team/player market values). 33 unit tests
+- **Transfermarkt** — `TransfermarktAdapter` (RapidAPI `transfermarkt-football-data-api.p.rapidapi.com` OR Apify),
+  secret `transfermarkt-api-key`. Unblocks **PLAYER_VALUES** (per-season team/player market values). 33 unit tests
   (`tests/unit/test_transfermarkt_adapter_coverage.py`). TRANSFERMARKT_LEAGUES RETIRED (runtime-only). **ASK:
   validate/rotate `transfermarkt-api-key` (RapidAPI/Apify sub).**
 
@@ -5381,10 +5393,11 @@ PLAYER_VALUES (IS coverage backfill is the concurrent af95b962 worker's domain).
 ### UPDATE 2026-06-19 — SFI + Transfermarkt keys LIVE-TESTED (precise diagnosis)
 
 Both keys live-tested (read-only GET). **Root cause = NOT a bad/expired key — it is a RapidAPI SUBSCRIPTION GAP:**
-- `soccer-football-info-api-key` AND `transfermarkt-api-key` hold the **SAME RapidAPI key** (`22380b4a…`, 50-char,
-  valid RapidAPI key format).
-- SFI `GET soccer-football-info.p.rapidapi.com/championships/list/` → **HTTP 403 `{"message":"You are not subscribed
-  to this API."}`**.
+
+- `soccer-football-info-api-key` AND `transfermarkt-api-key` hold the **SAME RapidAPI key** (`22380b4a…`, 50-char, valid
+  RapidAPI key format).
+- SFI `GET soccer-football-info.p.rapidapi.com/championships/list/` → **HTTP 403
+  `{"message":"You are not subscribed to this API."}`**.
 - Transfermarkt `GET transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` → **HTTP 403
   `{"message":"You are not subscribed to this API."}`**.
 - (Control: `api-football-api-key` `c820a404…` + `footystats-api-key` `b1d5bc90…` are DIFFERENT keys, separate working
@@ -5409,17 +5422,22 @@ sources (C)". **This credential ask is CLOSED — no further operator action nee
 
 ## [slot-1-escalation] 2026-06-22 — CREDENTIAL APPROVAL REQUEST: Mantle paid RPC for gas-fees backfill
 
-**Plan refs**: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` (§ "2026-06-22 05:25 — DEFI status + gas-fees MANTLE BLOCKED-CREDENTIALS")
+**Plan refs**: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` (§ "2026-06-22 05:25 — DEFI status + gas-fees
+MANTLE BLOCKED-CREDENTIALS")
 
-**Issue**: gas-fees on MANTLE chain uses the free public RPC (`rpc.mantle.xyz`) which 429-rate-limits `eth_feeHistory`. Each MANTLE day takes ~10-15 min vs ~2-3 min on paid RPCs. This makes the gas-fees task the batch long-pole (~1.5M blocks/yr on MANTLE chain).
+**Issue**: gas-fees on MANTLE chain uses the free public RPC (`rpc.mantle.xyz`) which 429-rate-limits `eth_feeHistory`.
+Each MANTLE day takes ~10-15 min vs ~2-3 min on paid RPCs. This makes the gas-fees task the batch long-pole (~1.5M
+blocks/yr on MANTLE chain).
 
 **Request**:
+
 - Vendor: Alchemy or dRPC (Mantle-chain RPC provider)
 - Plan tier: paid tier with no `eth_feeHistory` throttle
 - SM key name: `mantle-rpc-url` (or similar in deployment-service RPC config)
 - Repo: `deployment-service` / MTDS RPC config
 
-**Unblocks**: MANTLE gas-fees batch speed (10-15 min/day → 2-3 min/day); no code change needed, just RPC URL swap in config.
+**Unblocks**: MANTLE gas-fees batch speed (10-15 min/day → 2-3 min/day); no code change needed, just RPC URL swap in
+config.
 
 **Status**: BLOCKED-CREDENTIALS awaiting operator [ack]
 
@@ -5427,12 +5445,17 @@ sources (C)". **This credential ask is CLOSED — no further operator action nee
 
 **Escalation**: agt-87fccf (ldr_qg_failure → instruments-service quality-gates-v2 FAILING on live-defi-rollout)
 
-**Root cause**: `test_weather_all_off_season_skips_call` in `tests/unit/test_orchestrator_data_fetchers.py` was missing a `_sports_ref_sink_for` mock. `_fetch_weather_data` calls `_orch._sports_ref_sink_for(...)` at line 147 BEFORE the off-season guard fires. Without the mock, the real `get_data_sink` ran in CI (where `PROTOCOL_DATA_SINK_BACKEND=gcs`) → GCS client creation → GCP ADC discovery → `169.254.169.254` → `SocketConnectBlockedError` (network-blocked CI).
+**Root cause**: `test_weather_all_off_season_skips_call` in `tests/unit/test_orchestrator_data_fetchers.py` was missing
+a `_sports_ref_sink_for` mock. `_fetch_weather_data` calls `_orch._sports_ref_sink_for(...)` at line 147 BEFORE the
+off-season guard fires. Without the mock, the real `get_data_sink` ran in CI (where `PROTOCOL_DATA_SINK_BACKEND=gcs`) →
+GCS client creation → GCP ADC discovery → `169.254.169.254` → `SocketConnectBlockedError` (network-blocked CI).
 
-**Fix**: Added `patch("instruments_service.engine.orchestrator._sports_ref_sink_for", return_value=MagicMock())` to the test — consistent with every other test in `TestOffSeasonSeasonWindowGuard` which already patches this.
+**Fix**: Added `patch("instruments_service.engine.orchestrator._sports_ref_sink_for", return_value=MagicMock())` to the
+test — consistent with every other test in `TestOffSeasonSeasonWindowGuard` which already patches this.
 
 **Evidence**: specific test passes locally; full QG green (84s); shipped to LDR via quickmerge `--no-fix`.
 
-**Plan ref**: Orchestrator escalation agt-87fccf / CI run 28125321568 / failed job 83287700247. No active plan item — CI-fix escalation, self-contained.
+**Plan ref**: Orchestrator escalation agt-87fccf / CI run 28125321568 / failed job 83287700247. No active plan item —
+CI-fix escalation, self-contained.
 
 **Status**: RESOLVED — no operator action needed. CI should go green on next drain.

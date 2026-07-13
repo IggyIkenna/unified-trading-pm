@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: v2 Engine + Venue Build-Out — 22 engineless archetypes + 9 unwired venues
-summary: Build out real strategy engines for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
+summary:
+  Build out real strategy engines for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy
+  framework.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -18,7 +20,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 55.0
 estimate_calibrated_ai_days: 66.0
-last_updated: 2026-06-27
+last_updated: 2026-07-13
 locked_by: live-defi-rollout
 locked_since: 2026-06-15
 supersedes:
@@ -95,23 +97,20 @@ regenerate + commit the verdict matrix; (7) `split_scope_tokens` no longer raise
       (this todo's verdict-matrix scope) COMPLETE. **Live execution adapter = BLOCKED-CREDENTIALS** (no Smarkets order
       path today — only Betfair/Matchbook adapters exist) → tracked in the [ADAPTER] todo below + ping
       `ikenna_orchestrator/pings/slot_1.md`.
-- [ ] [REGISTRY] P2. Re-confirm against `capability-verdict-matrix.json` the EXACT unwired-venue set before building
-      (the 6 registry-missing FX/BITFINEX/BITGET/KRAKEN + 2 TradFi NASDAQ/NYSE are a SEPARATE class — VENUE_CATEGORY_MAP
-      gaps, F39/F42/F43 — fold them in if still open). Repo: unified-api-contracts.
-- [ ] [ADAPTER] P2. **[BLOCKED-CREDENTIALS: Smarkets exchange API key + account]** Build the **Smarkets** live execution
-      adapter in execution-service (`sports_execution/adapters/exchanges/smarkets.py` mirroring `matchbook.py` —
-      OddsAdapter+BettingAdapter, session auth/retry, UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED`, add
-      `smarkets_direct` to `SupportedDataSource` + `_build_smarkets` in `routing.py`) + UAC
-      `external/smarkets/schemas.py` response models + `BOOKMAKER_REGISTRY["smarkets"]` (venue_manifest +
-      provider_api_versions already carry `smarkets`); unit tests on mocks + integration tests
-      `@pytest.mark.requires_credentials` (skipped by default). Repo: execution-service (+ unified-api-contracts
-      schema). **Found 2026-06-15 (Phase V wiring)**: Smarkets is leg-eligible (`archetype_leg_spec_seeds`) + now
-      token-wired in `KNOWN_VENUE_TOKENS`, but has NO execution order path today (only Betfair + Matchbook adapters
-      exist; Smarkets has UAC reference data only). Status BLOCKED-CREDENTIALS per external-data-always-available rule —
-      see ping `ikenna_orchestrator/pings/slot_1.md`. NOTE — `matchbook_direct` + `trader_joe` were ALSO surfaced as
-      matrix-unbuildable and were token-wired in the SAME Phase V batch (the SSOT enumerated 11 unbuildable venues, not
-      the transcribed 9); matchbook already has an execution adapter; trader_joe routes through the generic DEX
-      SwapHandler — both fully clear, no adapter gap.
+- [ ] [ADAPTER] P2. **DECOMMISSIONED — BLOCKED-OPERATOR-DECISION (2026-07-13): operator ruled Smarkets not useful, do
+      not pursue.** ~~Build the **Smarkets** live execution adapter in execution-service~~
+      (`sports_execution/adapters/exchanges/smarkets.py` mirroring `matchbook.py` — OddsAdapter+BettingAdapter, session
+      auth/retry, UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED`, add `smarkets_direct` to
+      `SupportedDataSource` + `_build_smarkets` in `routing.py`) + UAC `external/smarkets/schemas.py` response models +
+      `BOOKMAKER_REGISTRY["smarkets"]`. Repo: execution-service (+ unified-api-contracts schema). **Found 2026-06-15
+      (Phase V wiring)**: Smarkets is leg-eligible (`archetype_leg_spec_seeds`) + token-wired in `KNOWN_VENUE_TOKENS`
+      (that part stays — already shipped, harmless), but has NO execution order path (only Betfair + Matchbook adapters
+      exist; Smarkets has UAC reference data only) and was BLOCKED-CREDENTIALS per the external-data-always-available
+      rule. **Superseded 2026-07-13**: do not build this adapter absent a future operator reversal; the Smarkets
+      credential ask in `ikenna_orchestrator/pings/slot_1.md` should be withdrawn (not yet done — separate action). NOTE
+      — `matchbook_direct` + `trader_joe` were ALSO surfaced as matrix-unbuildable and were token-wired in the SAME
+      Phase V batch; matchbook already has an execution adapter; trader_joe routes through the generic DEX SwapHandler —
+      both fully clear, no adapter gap, UNAFFECTED by this decommission.
 
 ## Phase E1 — MARKET*MAKING*\* engines (5) — gated on an L2 orderbook microstructure feed
 
@@ -503,6 +502,26 @@ named operator credential ask. These are the engines' true predecessors.
 
 (loop handoff lands here — never a separate _\_HANDOFF.md / _\_SUMMARY.md)
 
+### 2026-07-13 — Plan reviewed for staleness (~4 weeks, zero forward progress since 2026-06-15); 2 edits made
+
+Operator review found this plan's `locked_by: live-defi-rollout` lock has had no commits/progress since 2026-06-15
+across any of the 21 open todos. Two decisions made and applied:
+
+- **Smarkets live-adapter todo DECOMMISSIONED** (operator ruling: not useful, don't pursue) — was
+  `[ADAPTER] P2 BLOCKED-CREDENTIALS`, now `BLOCKED-OPERATOR-DECISION`, checkbox intentionally left `[ ]` per this plan
+  corpus's convention for a ruled-out (not completed) todo. The already-shipped `smarkets_direct` token/leg wiring is
+  unaffected — only the never-built execution adapter is dropped. Credential ask in
+  `ikenna_orchestrator/pings/slot_1.md` still needs manual withdrawal (not done as part of this edit).
+- **FX/BITFINEX/BITGET/KRAKEN/NASDAQ/NYSE re-confirm todo rescoped** out of Phase V into its own follow-up todo — it was
+  never actually part of the mechanical 11-venue Phase V batch, it's a separate unaudited class (F39/F42/F43). Operator
+  raised a naming-mismatch hypothesis (e.g. `bitfinex_derivatives` existing under a different token than bare
+  `bitfinex`; NASDAQ/NYSE possibly keyed by MIC code XNAS/XNYS). **Verification workflow `wf_6df96698-5dc` completed
+  2026-07-13** — mixed result, not a clean naming-mismatch: NASDAQ/NYSE's `VENUE_CATEGORY_MAP` claim was a genuine false
+  positive (both already registered, stale audit likely grepped the wrong file); FX/BITFINEX are real gaps as originally
+  claimed (missing category-map entry AND leg eligibility); BITGET/KRAKEN are real but narrower (missing only the
+  category-map entry, already leg-eligible). NASDAQ/NYSE's real residual gap is leg-eligibility, not category-map. Full
+  per-venue evidence folded into the follow-up todo; it's now precisely scoped and buildable.
+
 ### 2026-06-15 — Phase D P1 (a)+(c)+(e) [in progress]
 
 **Canonical schema settled (single-canonical, converges with greeks-service@0299b03):**
@@ -571,6 +590,65 @@ P2).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
+- [ ] [REGISTRY] P2. **Add FX/BITFINEX/BITGET/KRAKEN to `VENUE_CATEGORY_MAP` + `VENUE_CAPABILITIES`; wire FX + BITFINEX
+      archetype-leg eligibility; drop the NASDAQ/NYSE `VENUE_CATEGORY_MAP` framing (false positive).** Rescoped out of
+      Phase V 2026-07-13 (was never part of the mechanical 11-venue batch). **2026-07-13 naming-mismatch verification
+      COMPLETE** (`wf_6df96698-5dc`) — F39/F42/F43's original claims were a mix of real gaps, narrower-than-claimed
+      gaps, and one outright false positive. Confirmed against
+      `unified-api-contracts/unified_api_contracts/registry/venue_constants.py` + `venue-coverage-report.md` +
+      `capability-verdict-matrix.json` directly (not grep-0):
+  - [ ] **FX** — REAL gap, confirmed as originally claimed. Execution adapter exists
+        (`execution-service/.../adapters/fx_adapter.py`, IBKR OTC forex via `FXAdapter`, routed in `factory.py:292` as a
+        "composite" TradFi venue), but `FX` is absent from `KNOWN_VENUE_TOKENS`, `VENUE_CATEGORY_MAP`, AND
+        `capability-verdict-matrix.json` (0 rows) — `venue-coverage-report.md:68` confirms
+        `category=(unknown) leg_eligible=no`. Needs both the category-map entry AND archetype-leg eligibility.
+        **Data-vendor note (2026-07-13, `wf_a7c336cf-b95`)**: FX market data is Yahoo Finance (`yfinance`, confirmed
+        live in `market-tick-data-service/.../adapters/tradfi/yahoo_finance_adapter.py:48`) — **daily bars only, no
+        intraday/live tick feed** (Yahoo has none for these tickers; operator OK'd this ceiling 2026-07-13). Execution
+        stays IBKR IDEALPRO. Separately,
+        `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:121` currently maps
+        `"FX": "databento"`, which is WRONG (leftover/copy-paste — FX never touches Databento; actual routing is
+        hardcoded to Yahoo in MTDS `umi_tick_provider.py`, not looked up via this key). **Fix this key to the correct
+        vendor (or a dedicated `yahoo_finance` key) as part of the same registry pass** — don't propagate the stale
+        `databento` tag when adding FX's `VENUE_CATEGORY_MAP` entry.
+  - [ ] **BITFINEX** (bare + `BITFINEX-SPOT` + `BITFINEX-FUTURES`) — REAL gap, worst-off of the 3 CEX siblings. NOT a
+        naming mismatch (tested the "bare absent, `-derivatives` variant present" hypothesis directly — `bitfinex` is
+        missing from `VENUE_CATEGORY_MAP`/`VENUE_CAPABILITIES` in EVERY form, bare and suffixed alike,
+        `venue_constants.py:326-368,554-590`). Fully wired everywhere else (adapter `bitfinex_native.py`, live WS
+        connectors, real captured production data per MTDS e2e sweep reports) but `capability-verdict-matrix.json` has
+        **0** bitfinex rows (vs. 44 each for bitget/kraken) — excluded from `ARCHETYPE_LEG_STRUCTURES` entirely, both
+        legs. `venue-coverage-report.md:67` shows `BITFINEX-SPOT leg_eligible=no`; `BITFINEX-FUTURES` doesn't even
+        appear in that report. Root cause traced to a stale 2026-05-21 canary note (`orphan-decisions.yaml:51`: "no
+        production adapter in any service repo") that predates the actual adapter (shipped 2026-06-11) — the premise was
+        fixed in code, the registry entries never caught up. Needs category-map entry + leg eligibility for BOTH legs.
+  - [ ] **BITGET-SPOT / BITGET-FUTURES** — REAL but NARROWER gap than bitfinex. Missing from `VENUE_CATEGORY_MAP`/
+        `VENUE_CAPABILITIES` only (`venue_constants.py:326-367,554-590`) — but IS already leg-eligible
+        (`capability-verdict-matrix.json` 44 `"venue":"bitget"` rows; `venue-coverage-report.md:42-44` shows
+        `leg_eligible=yes`, `WIRED(22)` bucket). Adapter (`bitget_native.py`) + adapter-key map fully wired. Needs ONLY
+        the category-map entry, not leg eligibility.
+  - [ ] **KRAKEN-SPOT / KRAKEN-FUTURES** — same shape as bitget: missing ONLY from `VENUE_CATEGORY_MAP`/
+        `VENUE_CAPABILITIES` (`venue_constants.py:326-368,554-589`); already leg-eligible
+        (`capability-verdict-matrix.json:23809` `venue_buildable:true`, 44 rows total), full execution adapter
+        (`kraken_rest_adapter.py`). Needs ONLY the category-map entry.
+  - [x] **NASDAQ** — F43's "VENUE_CATEGORY_MAP gap" claim is a FALSE POSITIVE, closed as already-done.
+        `NASDAQ:     "tradfi"` already exists verbatim at `venue_constants.py:341`, plus `KNOWN_VENUE_TOKENS`,
+        `VENUE_TO_ADAPTER_KEY` (→databento), a full `NASDAQAdapter` routed in `factory.py:262`. The audit almost
+        certainly grepped lowercase `nasdaq` against a dict keyed by the uppercase constant form. F43's OTHER claim (leg
+        eligibility) is real and separate — `venue-coverage-report.md:69` confirms `leg_eligible=no` — that's an
+        `ARCHETYPE_LEG_STRUCTURES` gap, tracked below, not a `VENUE_CATEGORY_MAP` one.
+  - [x] **NYSE** — same false positive as NASDAQ. `NYSE: "tradfi"` (`venue_constants.py:342`) + `XNYS: "tradfi"`
+        (`:350`) both already present; full adapter (`nyse_adapter.py`) + unit tests. The stale audit likely read
+        `unified_api_contracts/internal/market_category.py` (a bare `MarketCategory` enum with zero venue tokens — wrong
+        file) instead of the real registry. Real residual gap confirmed by direct grep: `archetype_leg_spec_seeds.py`
+        has 0 `nyse` hits — leg eligibility only, tracked below.
+  - [ ] **Archetype-leg eligibility follow-on** (separate from the category-map work above): wire FX + BITFINEX-SPOT +
+        BITFINEX-FUTURES + NASDAQ + NYSE into `ARCHETYPE_LEG_STRUCTURES`/`eligible_venue_ids`
+        (`internal/architecture_v2/archetype_leg_spec_seeds.py`) — confirmed 0 hits for all 5 today. BITGET/KRAKEN do
+        NOT need this (already leg-eligible).
+
+    Repo: unified-api-contracts. Found 2026-06-15 (Phase V wiring) as F39/F42/F43; rescoped as its own follow-up
+    2026-07-13; naming-mismatch verification completed 2026-07-13 (`wf_6df96698-5dc`, full evidence in that run's
+    journal). This todo is now precisely scoped and buildable — no further audit needed before starting.
 - [ ] [SCRIPT] P2. **Bump cryptography fleet-wide off the GHSA-537c-gmf6-5ccf line + drop its --ignore-vuln** — the
       2026-06-15 advisory flagged cryptography 46.0.7 (statically-linked OpenSSL). Unlike aiohttp it is NOT
       vcrpy-deadlocked, so the PROPER fix is a floor bump + per-repo `uv lock` regen, not a permanent ignore. The ignore

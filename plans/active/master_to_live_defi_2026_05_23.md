@@ -159,7 +159,7 @@ epic._
 
 | Plan                                                                                                                                                        | Owner                                  | Class     | Checkboxes | % done       | Cal left | Deadline |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------- | ---------- | ------------ | -------- | -------- |
-| [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md)                                                                           | master                                 | research  | 12/44      | 27%          | 48.0     | —        |
+| [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md)                                                                           | master                                 | research  | 14/51      | 27%          | 47.9     | —        |
 | [`instruments_foundation_completeness_2026_06_24`](./instruments_foundation_completeness_2026_06_24.md)                                                     | instruments_master                     | design    | 29/80      | 36%          | 12.1     | —        |
 | [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md)                                             | batch_live_symmetry_master             | infra     | 90/123     | 73%          | 10.2     | —        |
 | [`org_migration_to_odumresearch_2026_06_07`](./org_migration_to_odumresearch_2026_06_07.md)                                                                 | infrastructure_master                  | infra     | 0/27       | 0%           | 8.0      | —        |
@@ -206,11 +206,14 @@ epic._
 | [`sports_pipeline_to_100pct_golden_window_first_2026_06_27`](./sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)                                 | master                                 | design    | —          | —            | 1.2      | —        |
 | [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md)                                                                   | infrastructure_master                  | infra     | 0/18       | 0%           | 1.2      | —        |
 | [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md)                                                                                     | infrastructure_master                  | infra     | 0/4        | 0%           | 1.2      | —        |
+| [`utl_reuse_phase3_ml_model_registry_2026_07_13`](./utl_reuse_phase3_ml_model_registry_2026_07_13.md)                                                       | infrastructure_master                  | refactor  | 0/9        | 0%           | 1.2      | —        |
 | [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](./prediction_venue_perps_and_live_clob_depth_2026_06_20.md)                                       | master                                 | brand-new | 73/85      | 86%          | 1.1      | —        |
 | [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](./predictions_other_bucket_and_ui_drilldown_2026_06_20.md)                                         | master                                 | brand-new | 8/11       | 73%          | 1.1      | —        |
 | [`l0_doc_index_generator_2026_06_24`](./l0_doc_index_generator_2026_06_24.md)                                                                               | agent_operating_framework_master       | infra     | 1/3        | 33%          | 1.1      | —        |
+| [`utl_reuse_phase1_strategy_risk_hwm_2026_07_13`](./utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md)                                                       | infrastructure_master                  | refactor  | 1/7        | 14%          | 1.0      | —        |
 | [`sports_p2_features_history_to_ml_ready_2026_06_27`](./sports_p2_features_history_to_ml_ready_2026_06_27.md)                                               | master                                 | infra     | 2/4        | 50%          | 1.0      | —        |
 | [`tradfi_v9_stage1_finish_2026_07_06`](./tradfi_v9_stage1_finish_2026_07_06.md)                                                                             | instruments_master                     | infra     | 7/12       | 58%          | 1.0      | —        |
+| [`utl_reuse_phase4_features_builder_registry_2026_07_13`](./utl_reuse_phase4_features_builder_registry_2026_07_13.md)                                       | infrastructure_master                  | refactor  | 0/6        | 0%           | 1.0      | —        |
 | [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md)                                                       | features_and_ml_master                 | brand-new | 37/44      | 84%          | 1.0      | —        |
 | [`uat_role_charter_2026_06_27`](./uat_role_charter_2026_06_27.md)                                                                                           | master                                 | refactor  | 1/4        | 25%          | 0.9      | —        |
 | [`instruments_completion_tracker_2026_07_06`](./instruments_completion_tracker_2026_07_06.md)                                                               | instruments_master                     | infra     | 7/37       | 19%          | 0.8      | —        |
@@ -230,12 +233,17 @@ epic._
 | [`data_status_tab_and_downloads_remediation_2026_06_16`](./data_status_tab_and_downloads_remediation_2026_06_16.md)                                         | deployment_and_user_management_master  | refactor  | 18/31      | 58%          | 0.5      | —        |
 | [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](./data_feed_sla_registry_and_active_self_healing_2026_06_19.md)                               | infrastructure_master                  | design    | 11/13      | 85%          | 0.5      | —        |
 | [`tradfi_multisource_backfill_2026_06_22`](./tradfi_multisource_backfill_2026_06_22.md)                                                                     | master                                 | infra     | 8/11       | 73%          | 0.4      | —        |
+| [`utl_reuse_phase0_guardrails_2026_07_13`](./utl_reuse_phase0_guardrails_2026_07_13.md)                                                                     | infrastructure_master                  | refactor  | 0/3        | 0%           | 0.4      | —        |
+| [`utl_reuse_phase8_codex_ssot_archive_2026_07_13`](./utl_reuse_phase8_codex_ssot_archive_2026_07_13.md)                                                     | infrastructure_master                  | refactor  | 0/3        | 0%           | 0.4      | —        |
 | [`ao_worker_lifecycle_audit_and_corrections_2026_07_10`](./ao_worker_lifecycle_audit_and_corrections_2026_07_10.md)                                         | master                                 | refactor  | 20/24      | 83%          | 0.4      | —        |
 | [`sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27`](./sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md)                           | master                                 | infra     | 5/6        | 83%          | 0.4      | —        |
 | [`honest_coverage_v2_instrument_denominator_2026_06_28`](./honest_coverage_v2_instrument_denominator_2026_06_28.md)                                         | infrastructure_master                  | infra     | 14/15      | 93%          | 0.4      | —        |
 | [`sports_p2_history_apifootball_2015_to_present_2026_06_27`](./sports_p2_history_apifootball_2015_to_present_2026_06_27.md)                                 | master                                 | infra     | 8/9        | 89%          | 0.4      | —        |
+| [`utl_reuse_phase7_low_lint_tail_2026_07_13`](./utl_reuse_phase7_low_lint_tail_2026_07_13.md)                                                               | infrastructure_master                  | refactor  | 4/8        | 50%          | 0.3      | —        |
 | [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](./agent_orchestrator_alert_channel_cleanup_2026_07_13.md)                                           | master                                 | infra     | 8/9        | 89%          | 0.3      | —        |
 | [`deployment_obs_backend_kinds_health_2026_07_09`](./deployment_obs_backend_kinds_health_2026_07_09.md)                                                     | master                                 | infra     | 28/29      | 97%          | 0.2      | —        |
+| [`utl_reuse_phase2_api_auth_dedup_2026_07_13`](./utl_reuse_phase2_api_auth_dedup_2026_07_13.md)                                                             | infrastructure_master                  | refactor  | 2/5        | 40%          | 0.2      | —        |
+| [`utl_reuse_phase6_venue_health_retry_2026_07_13`](./utl_reuse_phase6_venue_health_retry_2026_07_13.md)                                                     | infrastructure_master                  | refactor  | 2/5        | 40%          | 0.2      | —        |
 | [`global_ledger_epic_reaudit_2026_07_12`](./global_ledger_epic_reaudit_2026_07_12.md)                                                                       | global_ledger_pnl_attribution_master   | research  | 14/15      | 93%          | 0.2      | —        |
 | [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](./canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)                         | instruments_master                     | refactor  | 8/11       | 73%          | 0.2      | —        |
 | [`layer1_remeasure_and_certify_2026_07_06`](./layer1_remeasure_and_certify_2026_07_06.md)                                                                   | instruments_master                     | infra     | 7/8        | 88%          | 0.2      | —        |
@@ -245,9 +253,11 @@ epic._
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md)                                                             | master                                 | design    | 62/71      | 87%          | 0.2      | —        |
 | [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)                                                                 | infrastructure_master                  | refactor  | 17/19      | 89%          | 0.1      | —        |
 | [`understat_local_backfill_completion_2026_07_06`](./understat_local_backfill_completion_2026_07_06.md)                                                     | infrastructure_master                  | infra     | 6/7        | 86%          | 0.1      | —        |
+| [`utl_reuse_phase9_deployment_registry_extract_2026_07_13`](./utl_reuse_phase9_deployment_registry_extract_2026_07_13.md)                                   | infrastructure_master                  | refactor  | 5/7        | 71%          | 0.1      | —        |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md)                                                                                     | README                                 | design    | 168/172    | 98%          | 0.1      | —        |
 | [`canonical_id_p0_kraken_futures_collision_2026_07_08`](./canonical_id_p0_kraken_futures_collision_2026_07_08.md)                                           | instruments_master                     | refactor  | 5/6        | 83%          | 0.1      | —        |
 | [`sports_manifest_canonicalisation_2026_06_01`](./sports_manifest_canonicalisation_2026_06_01.md)                                                           | master                                 | infra     | 105/108    | 97%          | 0.1      | —        |
+| [`utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13`](./utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13.md)                                         | infrastructure_master                  | refactor  | 4/6        | 67%          | 0.1      | —        |
 | [`scripts_lifecycle_marker_rollout_2026_06_18`](./scripts_lifecycle_marker_rollout_2026_06_18.md)                                                           | infrastructure_master                  | refactor  | 23/24      | 96%          | 0.0      | —        |
 | [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](./canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)                                       | batch_live_symmetry_master             | refactor  | 4/4        | 100%         | 0.0      | —        |
 | [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](./canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)                                   | instruments_master                     | refactor  | 4/4        | 100%         | 0.0      | —        |
@@ -276,7 +286,7 @@ epic._
 | [`sports_p1_golden_window_reference_sources_2026_06_27`](./sports_p1_golden_window_reference_sources_2026_06_27.md)                                         | master                                 | infra     | 6/6        | 100%         | 0.0      | —        |
 | [`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`](./sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md)                   | master                                 | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_reference_backfill_oom_2026_06_22`](./sports_reference_backfill_oom_2026_06_22.md)                                                                 | master                                 | refactor  | 2/2        | 100%         | 0.0      | —        |
-| **TOTAL** (117 plans)                                                                                                                                       | 0 orphans, 0 TBD                       | —         | —          | **61% done** | **206**  | —        |
+| **TOTAL** (127 plans)                                                                                                                                       | 0 orphans, 0 TBD                       | —         | —          | **61% done** | **211**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
@@ -324,9 +334,9 @@ OKX only); `ARBITRAGE_PRICE_DISPERSION` uses all 6 for cross-venue funding sprea
 Stream E correction 2026-05-07. TradFi / Sports / Prediction stay batch-only this cycle — but their ML readiness ladders
 progress in parallel so the \_next* archetypes after DeFi launch quickly.
 
-**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated
-to AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests /
-ML / strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
+**Cloud-parity goal (concurrent with live trading goal).** Full AWS↔GCP parity by May 23: DeFi-relevant data migrated to
+AWS (with prior cost analysis), data status working on AWS, batch backfill with `--force` working on AWS, backtests / ML
+/ strategy examples runnable on AWS, **and** a live trading deployment + monitoring instance running on AWS — so the
 team can seamlessly switch any deployment between AWS-live / AWS-batch / GCP-live / GCP-batch. _Not every byte gets
 migrated_ (waste of API quota when GCS already has it) — only what's needed for the DeFi proof.
 
@@ -415,11 +425,11 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit
 
 This is the deliverable that ties the audit to action. For each high-leverage change area, flag whether the codex SSOT,
-the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this
-plan, before agents start writing code in the affected area.**
+the corresponding sub-plan, and the code agree. **Items marked ⚠ are pre-existing drift to resolve as part of this plan,
+before agents start writing code in the affected area.**
 
-| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                              | Resolve via                                                                                                                                                               |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                                                            | Codex SSOT                                                                                                                                                  | Sub-plans                                                                                                                                                                                                              | Drift status                                                                                             | Resolve via                                                                                                                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Manifest schema (v6)                                            | `02-data/availability-manifest-and-data-status.md` (current)                                                                                                | `manifest_schema_v6_quote_margin_combo_2026_04_23`, `availability_manifest_v4_and_data_status_2026_04_13`                                                                                                              | ⚠ Confirmed — `availability_manifest_v4_…` is the only stale active plan; self-tagged superseded         | Archive the v4 plan via work-stream G; doc already canonical v6 with v4/v5 hive-key fallback                                                                              |
 | Shard granularity propagation                                   | `02-data/availability-manifest-and-data-status.md` (multi-axis correction post-2026-05-06)                                                                  | `shard_granularity_ssot_propagation_2026_05_06.HANDOVER`, `writegate_honest_coverage_endtoend_2026_05_06`, `data_status_multi_axis_shard_propagation_2026_05_06`                                                       | ⚠ Confirmed — `writegate_…` declared umbrella; other two are children but not yet `parent:`-tagged       | Re-tag children with `parent: writegate_honest_coverage_endtoend_2026_05_06` (work-stream G); surface only umbrella                                                       |
 | Cloud-agnostic VM/build                                         | `04-architecture/cloud-agnostic-migration.md`                                                                                                               | (no active plan — work-stream D is the new one)                                                                                                                                                                        | ⚠ Doc partially describes target; VM launchers GCP-only in code                                          | Add VM-launcher parity appendix to the doc; new plan for AWS launchers                                                                                                    |
@@ -500,7 +510,7 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 | Plans missing `name` field                      |    11 |
 | Plans missing `last_updated` (95%)              |   140 |
 | `superseded_by` set but plan still in `active/` |    18 |
-| Filename ↔ `name` field mismatch               |     1 |
+| Filename ↔ `name` field mismatch                |     1 |
 | YAML errors                                     |     2 |
 
 **Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
@@ -510,14 +520,14 @@ from filename + body, populate `locked_by: live-defi-rollout` for any that are m
 
 | Service                   | Active plans touching it |
 | ------------------------- | -----------------------: |
-| instruments-service       |                **35** ⚠ |
-| deployment-service        |                    16 ⚠ |
-| strategy-service          |                    16 ⚠ |
-| deployment-api            |                    16 ⚠ |
-| unified-trading-system-ui |                    12 ⚠ |
-| execution-service         |                    12 ⚠ |
-| deployment-ui             |                    12 ⚠ |
-| market-tick-data-service  |                    10 ⚠ |
+| instruments-service       |                 **35** ⚠ |
+| deployment-service        |                     16 ⚠ |
+| strategy-service          |                     16 ⚠ |
+| deployment-api            |                     16 ⚠ |
+| unified-trading-system-ui |                     12 ⚠ |
+| execution-service         |                     12 ⚠ |
+| deployment-ui             |                     12 ⚠ |
+| market-tick-data-service  |                     10 ⚠ |
 
 Eight services with >5 active plans = real overlap risk. The `instruments-service` 35-plan count is the clearest
 consolidation target post-cutover.
@@ -1040,11 +1050,11 @@ per-target upgrade path.
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped execution-service@a39294603 + PM@77810ca6 2026-05-15**
 
 - **Item 21 (Reconciliation suite)**:
-  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔
-        paper ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3);
-        codify per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than
-        batch-vs-live since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity);
-        closed-set failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
+  - [x] [AGENT] P0. `pvl-p21a-three-way-recon`: Extend `batch-live-reconciliation-service` to 3-way recon (batch ↔ paper
+        ↔ live) — add `paper-live` and `batch-paper` recon stages alongside existing `batch-live` (stage3); codify
+        per-pair tolerance thresholds in `models/deviation_thresholds.py` (paper-vs-live tighter than batch-vs-live
+        since same data + similar API conditions; batch-vs-paper bounded by matching-engine fidelity); closed-set
+        failure-routing policy (alert / auto-pause-live / auto-demote-to-paper). _(folded from
         paper_vs_live_workflow_maturity_2026_05_08)_ — **shipped batch-live-reconciliation-service@48f12ce 2026-05-15**
 
 - **Item 22 (Trading guardrails)** — composes with `alerting_service_live_rules_2026_05_07`:
