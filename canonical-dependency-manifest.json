@@ -81,11 +81,11 @@
     },
     {
       "name": "click",
-      "versionRange": "click>=8.3.2,<9.0.0"
+      "versionRange": "click>=8.3.3,<9.0.0"
     },
     {
       "name": "cryptography",
-      "versionRange": "cryptography>=46.0.7,<47.0.0"
+      "versionRange": "cryptography>=47.0.0,<50.0.0"
     },
     {
       "name": "databento",
