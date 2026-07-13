@@ -11,7 +11,7 @@ summary: >
   vol_dvol_backtestable_engines_2026_07_13.md Todo 1) — I never touched either file/dependency. The cryptography CVE was
   already fixed in market-tick-data-service (fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md) but that plan's
   `repos:` scope did not include unified-api-contracts, so this repo was missed.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,7 +36,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: slot-5, 2026-07-13 (unified-api-contracts@42f516da + already-landed a6130736)
 ---
 
 # unified-api-contracts QG RED — file-size + cryptography CVE
@@ -101,9 +101,22 @@ Two independent fixes, same pattern already proven elsewhere in this session:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Bump the `cryptography` floor in `unified-api-contracts/pyproject.toml` off GHSA-537c-gmf6-5ccf
+- [x] ✅ [BACKEND] P1. Bump the `cryptography` floor in `unified-api-contracts/pyproject.toml` off GHSA-537c-gmf6-5ccf
       (mirror `market-tick-data-service`'s already-shipped fix this session), `uv lock`, verify `pip-audit` clears.
-      (repo: unified-api-contracts)
-- [ ] [REFACTOR] P1. Split `unified_api_contracts/external/databento/databento_classifier.py` (906 lines) back under the
-      900-line ceiling — extract a cohesive helper module rather than an arbitrary line-count trim. Verify
-      `bash scripts/quality-gates.sh` is green afterward. (repo: unified-api-contracts)
+      (repo: unified-api-contracts) — **DONE**, `unified-api-contracts@a6130736`
+      (`fix(deps): bump cryptography 47.0.0 ->     49.0.0 — clears pip-audit GHSA-537c-gmf6-5ccf blocking the LDR->main promote`),
+      already landed on `live-defi-rollout` before this dispatch picked up the sibling `[REFACTOR]` todo.
+- [x] ✅ [REFACTOR] P1. Split `unified_api_contracts/external/databento/databento_classifier.py` (906 lines) back under
+      the 900-line ceiling — extract a cohesive helper module rather than an arbitrary line-count trim. Verify
+      `bash scripts/quality-gates.sh` is green afterward. (repo: unified-api-contracts) — **DONE, slot 5, 2026-07-13,
+      unified-api-contracts@42f516da.** Extracted the pure symbol-shape rule tables (CME month map, root/ticker sets,
+      all 18 classifier regexes, combo-prefix strategy map — zero dispatch logic) into a new sibling module,
+      `databento_classifier_patterns.py` (189 lines), mirroring this package's existing `schemas`/`schemas_columns`
+      split — the "rule tables vs. dispatch logic" seam this todo's own recommendation called for.
+      `databento_classifier.py` drops from 906→751 lines. Names are module-public (no leading underscore) in the new
+      module since they now cross a module boundary — avoids `reportPrivateUsage` noise from importing
+      underscore-prefixed names, and avoids ruff isort force-single-line-splitting aliased private-name imports (both
+      hit during this fix before landing on the plain-name approach). No behavior change: 60/60 databento classifier
+      tests green, ruff/basedpyright clean (one pre-existing, unrelated `reportRedeclaration` at
+      `classify_databento_symbol` excluded — confirmed present at HEAD before this change too), full `quality-gates.sh`
+      green + sentinel-verified on the shipped SHA.

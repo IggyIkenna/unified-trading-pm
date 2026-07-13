@@ -314,7 +314,17 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
       originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
       regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
-      issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).**
+      issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).** **✅
+      2026-07-13 (slot 6): operator decision resolved (Option A, BLK-4032eac4) — `high_dup` band re-migrated with the
+      new `--force` flag on `migrate_aster_cefi_defi_bucket_2026_07_13.py`, making the 23-column DeFi-bucket shape
+      authoritative at the CeFi-bucket canonical target for 2024-01-01→2025-06-15. Result:
+      `{'force_overwritten': 39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`, 0 errors.
+      **Post-force parity re-verification DONE and GREEN**: existence 40,406/40,406 present (0 missing); spot-check
+      20/20 row_count_matches, 20/20 byte_identical (vs the pre-force 5/15 and 0/15). Full evidence in
+      `aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md` P2. **This gate is now UNBLOCKED for the
+      `high_dup` band** — parity is fully green for all three bands (`zero_dup`, `high_dup`, `low_dup`). The DeFi-bucket
+      originals are still NOT deleted by this todo; deletion remains a separate, explicitly operator-gated step (this
+      todo itself), now unblocked to proceed whenever an operator wants to schedule it.**
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 

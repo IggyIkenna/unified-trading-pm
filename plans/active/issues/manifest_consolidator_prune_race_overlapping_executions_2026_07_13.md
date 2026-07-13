@@ -137,3 +137,11 @@ content-write success marker gates pruning per-shard.
   (19:19:02Z) ran image @sha256:f9645265 and completed succeededCount=1; per_vm shard dir near-empty (absorption
   normal). The prune race is closed in production. Residual (non-blocking): AWS ECR Batch-Fargate mirrors pick the fix
   up on their next image sync; the manual-overlap mitigation is no longer required on GCP.
+- 2026-07-13 (AWS mirror synced): ECR `market-tick-data-service:latest` was 6 weeks stale (2026-05-31, digest ad21c436 —
+  the 26 Batch-Fargate consolidators ran pre-fix code). Fresh image built from pinned main@80fa2903 (UTL base
+  sha256:b7e391f8 = contains 97212d3b) and pushed: ECR digest sha256:4e60180c at 21:03:35Z (old image untagged). Batch
+  job definitions verified to reference `:latest` by TAG (Fargate pulls at each per-minute task start → automatic
+  pickup). VERIFICATION CAVEAT: post-push Batch execution observation is BLOCKED from the human-planning host (role
+  uts-orchestrator-epic-role lacks batch:ListJobs + s3:ListBucket) — pickup is structurally certain but unobserved from
+  here; confirm from a Batch-read-capable role/console if desired. The GCP + AWS fleets now both run the prune-race fix;
+  issue remains resolved.
