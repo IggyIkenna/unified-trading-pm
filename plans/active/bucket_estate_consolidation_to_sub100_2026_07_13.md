@@ -206,6 +206,20 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
 
 ## Progress Log
 
+- **2026-07-13, /autonomous dispatch started (operator away ~3h — "do everything possible without asking").** Staged
+  execution: S1 = UAC packaged-yaml sync (36+recon=37 kinds) + enumerate_envelope flat repoint · UI strategy-store route
+  repoint (catalogue/+configs/ copied cefi→flat first, server-side, verified) · W3 fold-design draft agent. S2 = UTL
+  config-store resolver repoint + fixture sync · deployment-service TF reconcile (machine-verified 42-resource
+  REMOVE_STALE list) + derived-from-yaml `canonical_buckets.tf` (COLDLINE@60d per ruling) + provisioning-scripts
+  retirement. S3 = deployment-api store-defaults repoint · BLRS recon repoint + e2e fixtures fix. S4 = SSM ops on the
+  orchestrator VM (terraform install — VM has none; state surgery: rm/mv/import per generated script; plan gate: apply
+  ONLY if plan shows no unexpected create/destroy; W1 81-bucket sweep AFTER; ml legacy deletes; recon buckets arrive via
+  TF apply). Decisions made under decide-and-document: `recon` = new env-tiered yaml kind (37th) — consistency with
+  resolver architecture over prefix-in-existing-bucket, +2 buckets; UAC's enumerate_envelope repoint uses the flat
+  literal template (UAC cannot import UTL's resolver — tier inversion); UI routes get the flat literal (TS, no
+  resolver); `positions-store-test` verified code-unreachable (PATH_REGISTRY has no env axis; zero literals) → cleared
+  for W1. Ship order honors tiers: UAC → UTL → deployment-service/deployment-api/BLRS; ≤2 concurrent QGs instructed.
+
 - **2026-07-13, plan created.** Follows the same-day full estate audit (241 buckets; findings shipped as the three issue
   docs in `related:` + 2 discovery todos in the DeFi migration plan, pm@38238d3a7; env-split ruling recorded
   pm@4bd5c0765). Estate snapshot + per-bucket classification published as a session artifact; the durable subset (Wave-1
