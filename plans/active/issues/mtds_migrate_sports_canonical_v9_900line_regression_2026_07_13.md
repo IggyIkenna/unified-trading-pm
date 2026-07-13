@@ -10,7 +10,7 @@ summary: >
   to 934. My own unrelated change (a new, separate audit script for aster_cefi_data_defi_bucket_migration_2026_07_13.md)
   cannot ship via quickmerge --agent while this repo-wide gate is red, since the green-tree rule blocks ANY commit until
   the full quality-gates.sh passes.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, sports]
 stage: [data]
@@ -32,6 +32,8 @@ depends_on: []
 last_updated: 2026-07-13
 locked_by:
 resolved_by:
+  slot-9, 2026-07-13, market-tick-data-service@01f23b8c (verified quality-gates.sh green; fix already shipped by another
+  slot as e284ad63)
 ---
 
 # market-tick-data-service QG RED — migrate_sports_canonical_v9.py file-size regression
@@ -86,7 +88,14 @@ migration script needs domain understanding of what's safe to extract, not a mec
 
 ## Todos
 
-- [ ] [REFACTOR] P1. Split `market_tick_data_service/scripts/migrate_sports_canonical_v9.py` (934 lines) back under the
-      900-line ceiling — extract a cohesive helper module (e.g. the "legacy-vs-canonical reconciliation" logic
+- [x] ✅ [REFACTOR] P1. Split `market_tick_data_service/scripts/migrate_sports_canonical_v9.py` (934 lines) back under
+      the 900-line ceiling — extract a cohesive helper module (e.g. the "legacy-vs-canonical reconciliation" logic
       `13c53dfa` added, if it's separable) rather than an arbitrary line-count trim. Verify
-      `bash scripts/quality-gates.sh` is green afterward. (repo: market-tick-data-service)
+      `bash scripts/quality-gates.sh` is green afterward. (repo: market-tick-data-service) — **DONE, slot 9,
+      market-tick-data-service@`01f23b8c`.** Found the split already shipped by another slot (`e284ad63`, "fix(mtds):
+      shrink migrate_sports_canonical_v9.py under the 900-line file-size gate") — `migrate_sports_canonical_v9.py` is
+      now exactly 900 lines. Verified (did not just trust the line count): ran `bash scripts/quality-gates.sh --no-fix`
+      fresh against current HEAD (`01f23b8c`, clean tree, no local changes) — **`✅ ALL QUALITY GATES PASSED (362s)`**,
+      sentinel `.qg_last_passed_sha=01f23b8c...` written matching HEAD exactly, confirming the file-size gate + full
+      codex-compliance sweep are genuinely green, not just the single file under the ceiling. No further code change
+      needed.
