@@ -119,8 +119,14 @@ For each of the 4 venues, in the same style as the 5 already-extended venues:
       derivative_ticker), wired into `binance_spot_ws.py`'s factory (previously always returned the trades-only
       connector regardless of `data_type`). 29 new tests + 34 existing spot-connector tests green, 0 new basedpyright
       violations (3 baseline errors, same shape as the futures original), full quality-gates.sh green.
-- [ ] [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-SPOT (books5/books channels, mirrors
-      OKXFuturesBookWSConnector/OKXFuturesDepth10WSConnector). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for OKX-SPOT (books5/books channels,
+      mirrors OKXFuturesBookWSConnector/OKXFuturesDepth10WSConnector). (repo: market-tick-data-service) — **DONE, slot
+      7, `market-tick-data-service@90009ac1`**. New `okx_spot_book_ws.py`: `OKXSpotBookWSConnector`/
+      `OKXSpotDepth10WSConnector` subclass the OKX-SWAP `books5`/`books` connectors (same shared public endpoint +
+      channels, only the instId shape differs — spot instIds are bare `BASE-QUOTE`) and re-tag the emitted tick for
+      OKX-SPOT, mirroring `okx_spot_ws.py`'s existing trade-stream re-tag pattern rather than re-implementing the
+      reconnect loop/book-state maintenance. Wired into `okx_spot_ws.py`'s factory (previously always returned the
+      trades-only connector regardless of `data_type`). 18 new tests, full quality-gates.sh green.
 - [x] ✅ [DATA] P2. Build live `book_snapshot_5` + `depth_of_book_10` capture for UPBIT (single `{market_code}.30`
       channel backs both data_types since 30 is the venue's hard depth cap). (repo: market-tick-data-service) — **DONE,
       slot 3, `market-tick-data-service@09da9848`**. New `upbit_book_ws.py`
