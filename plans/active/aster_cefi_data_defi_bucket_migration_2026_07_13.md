@@ -92,12 +92,37 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Phase 1 — Confirm scope + build the migration script (P0)
 
-- [ ] [DATA] P0. Re-verify the full scope with a fresh, complete (not sampled) day-by-day object count + duplication
+- [x] ✅ [DATA] P0. Re-verify the full scope with a fresh, complete (not sampled) day-by-day object count + duplication
       check across all 948 `day=`/`pipeline_mode=batch_aster`/`asset_group=cefi` partitions in the DeFi bucket (the
       2026-07-13 finding above is from 20+ sample days, not a full walk) — write the result to
       `_index/audit/aster_cefi_in_defi_bucket_scope_2026_07_1X.parquet` (mirrors the existing
       `_index/audit/legacy_dup_delete_list_defi.parquet` convention). Confirm the 2023-11→2023-12 zero-duplication
-      window and the 2025-07→2026-06 low-duplication window precisely (exact day boundaries, not "~").
+      window and the 2025-07→2026-06 low-duplication window precisely (exact day boundaries, not "~"). — **DONE (audit +
+      results), slot 14, market-tick-data-service@`c2244d5f`
+      (`scripts/audit_aster_cefi_in_defi_bucket_scope_2026_07_13.py`) — committed locally, SHIP BLOCKED as of this
+      writing by an unrelated repo-wide QG regression (`migrate_sports_canonical_v9.py` crossed the 900-line ceiling in
+      a different slot's commit `13c53dfa`); repo-blocker declared, will land + this SHA note update once the gate is
+      green again.** Full 948-day walk (per-day scoped GCS prefix listing, not a whole-bucket scan — completed in ~5s
+      via 20-way thread-pool parallelism over `raw_tick_data/by_date/day={D}/pipeline_mode=batch_aster/...`, both
+      buckets). Output written to
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/aster_cefi_in_defi_bucket_scope_2026_07_13.parquet`
+      (115,110 rows, one per DeFi-bucket-resident object, with
+      `day`/`defi_object_stem`/`canonical_target`/`duplicated_in_cefi_bucket`). **Exact totals**: 115,110 objects total
+      (within the plan's ~100-120K estimate); **71,843 unique / no canonical twin (62.4%)**; 43,267 duplicated (37.6%) —
+      refines the plan's "~~65-70%" weighted estimate with the true count. **Exact window boundaries** (refining the
+      "~~" estimates above): - Zero-duplication: **2023-11-01 → 2023-12-31 exactly** (61 days) — matches the sampled
+      estimate precisely. - Steady high-duplication (~98-99%, sometimes literally 100%): **2024-01-01 → 2025-06-15**. -
+      Transition: **2025-06-16 is the first low-duplication day** (drops to 10.8%), with a single one-day reversion back
+      to 98.8% on **2025-06-17**, then sustained low duplication from **2025-06-18** onward — this is ~2 weeks EARLIER
+      than the plan's "~2025-07-01" estimate. - Low-duplication tail: **2025-06-18 → 2026-06-05** (the corpus's last
+      day), steady 4-11% range, growing object count per day as ASTER listed more symbols (matches the "443 symbols/day
+      by 2026-06" finding). - **NEW anomaly found**: a 5-day window, **2026-01-01 → 2026-01-05**, shows 100% duplication
+      (every DeFi-bucket object that day has a canonical twin in the CeFi bucket) — a sharp, isolated spike inside the
+      otherwise-steady low-duplication tail, immediately reverting to ~4.8% on 2026-01-06. Not investigated further (out
+      of this todo's scope) — flagging for whoever runs Phase 2's migration script: this 5-day window may need a
+      byte-parity check rather than a blind "skip if canonical target exists" (the existing script's idempotency check),
+      since a genuine backfill/resync coincidence and a mis-attributed duplicate are hard to distinguish from object
+      presence alone.
 - [x] ✅ [DATA] P0. Extend `market-tick-data-service/scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py` (or
       a new sibling script, if the source-bucket difference makes extension awkward — the existing script only reads
       from `resolve_bucket_name(asset_group="cefi")`) to ALSO source from the DeFi bucket's
