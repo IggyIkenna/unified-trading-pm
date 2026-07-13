@@ -220,6 +220,15 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       still pages CRITICAL (verified `_mark_unresolved_and_maybe_reescalate`). Added to the recovery-bookends
       logged-not-paged test; codex "does NOT page" list updated. Full `quality-gates.sh` green (1219 pytest). —
       agent-orchestrator@8843519.
+- [x] 13. ✅ [BACKEND] P1. Operator decision (2026-07-13, reverses the audit's shape-#5 KEEP): **spawn failures →
+      summary only, no direct page.** Downgraded `notify_spawn_failed` from `_post` → `logger.info` (kept its GCS-ledger
+      persist so `GET /api/alerts` still records it). The callers already write `autospawn_failed` (AutoSpawn path) /
+      `escalation_dispatch_failed` (escalation path) to the activity log, so spawn failures still roll into the daily
+      digest — a persistent inability to spawn shows as a rising count. AutoSpawn retries + watchdog self-heal, so a
+      transient failure isn't per-event actionable; auth-shaped failures still page via the account drop-from-rotation
+      alert, and unresolved/re-escalation escalations still page CRITICAL. The `alert_spawn_failed` skip/dedup tests are
+      unaffected (they mock the notifier); rewrote `test_notify_spawn_failed_*` → logged-not-paged. codex "does NOT
+      page" / "DOES page" updated. Full `quality-gates.sh` green (1221 pytest). — agent-orchestrator@770f12f.
 
 ## Progress Log
 
@@ -240,6 +249,10 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (spawn failures → summary-only)** — Operator: "spawn failures should not send direct alert, it should
+  only go into summary one." This reverses the audit's shape-#5 KEEP. Downgraded `notify_spawn_failed` → `logger.info`
+  (activity log already carries `autospawn_failed` / `escalation_dispatch_failed` → digest; GCS ledger kept).
+  **agent-orchestrator@770f12f** (QG green, 1221 pytest). Auth-shaped + unresolved-escalation pages preserved.
 - **2026-07-13 (escalation-RESOLVED still paging)** — Operator flagged two `escalation RESOLVED` alerts
   (execution-service, system-integration-tests) still hitting the channel. It's an all-clear bookend WS-A had left
   paging (parked as KEEP in the low-volume tail). Downgraded `notify_escalation_resolved` → `logger.info` (activity log

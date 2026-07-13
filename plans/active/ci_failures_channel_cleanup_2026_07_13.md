@@ -219,3 +219,11 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
   and fixed a stale SHA-based dedup comment WS-3 left in `python-quality-gates-v2.yml` (the key is `ref_name` now;
   actionlint clean). **Deleted the WS-1-stretch todo** (self-triggered AO scheduler) per operator — not pursuing. Only
   the WS-4 verification re-pull (24–48 h observation) remains open, matching the AO-plan WS-E wait.
+- **2026-07-13 (WS-5: sit-unlock icon contradiction)** — Operator flagged a `#ci-failures` alert showing
+  `:white_check_mark: CRITICAL — sit-unlock | result: OK (success)` with body "SIT Failed — staging unlocked." Root
+  cause: `sit-unlock.yml`'s notify passed `conclusion: needs.unlock-staging.result` — the UNLOCK job's mechanical result
+  (`success`, because unlocking staging works fine) — which drives the carrier's icon, so a SIT-failure alert rendered a
+  green ✅. Fixed the notify `conclusion` to reflect the alert SUBJECT: `failure` for both the unlock-failed and
+  SIT-failed cases, `success` only on the genuine sit-passed green path. Now the SIT-failed alert renders `:x:` CRITICAL
+  result FAILED. The `persist` job keeps `unlock-staging.result` (the ledger records the JOB outcome). actionlint clean,
+  all 3 branches verified. — **unified-trading-pm@86e335607**.

@@ -41,6 +41,12 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
 - `notify_agent_stuck_respawned` — an auto-respawn (self-healing).
 - `notify_slot_recovered`, `notify_spawn_recovered`, `notify_git_staleness_resolved`, `notify_escalation_resolved` —
   recovery/closure bookends (a dispatched CI/CD wall confirmed clear: PR merged/superseded or `quality-gates-v2` green).
+- `notify_spawn_failed` (fired via `autospawn.alert_spawn_failed` on the AutoSpawn + escalation paths) — a hard spawn
+  failure (session died before the boot paste). **AutoSpawn retries and the watchdog self-heal**, so it is not per-event
+  actionable (operator 2026-07-13). It keeps its GCS-ledger persist (so `GET /api/alerts` still records it) and is
+  counted in the digest via the `autospawn_failed` / `escalation_dispatch_failed` activity events the callers write; a
+  _persistent_ inability to spawn shows as a rising count there. Auth-shaped spawn failures are still surfaced by the
+  account drop-from-rotation page (`notify_account_auth_failed`).
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.
@@ -48,8 +54,9 @@ recorded in the DB **activity log** (`log_activity`) by the callers, which is wh
 ## What DOES page (operator-actionable)
 
 - **Failures** — `notify_plan_health_dispatch_failed` (deduped 1h; the plan-health do_spawn failure branch was
-  previously Slack-silent), escalation dispatch failure (`autospawn.alert_spawn_failed`), `notify_spawn_failed`,
-  unresolved / re-escalation-cap escalations.
+  previously Slack-silent); **unresolved / re-escalation-cap escalations** (`_mark_unresolved_and_maybe_reescalate`,
+  CRITICAL — a stuck wall past deadline); account-auth failure (an account leaving rotation). (Spawn failures are NOT
+  here — see the summary-only list above.)
 - **Worker BLOCKED questions** — `notify_slot_blocked` (a worker asks the main/review agent or the operator). Renders
   the structured `question` + `options` (bulleted) + `recommendation` on their own full-width sections.
 - **The digest job failing** — `notify_daily_summary_failed` (a dead digest must not be silent).
