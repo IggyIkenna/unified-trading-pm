@@ -70,11 +70,21 @@ ONLY about the historical backlog on already-captured rows.
 
 ## What we already know about the backfill mechanism, per asset_group (2026-07-13 code read)
 
-- **prediction** (`rebuild_prediction_manifest.py`) and **tradfi** (`rebuild_tradfi_manifest.py`) already call
-  `writer.record_captured_from_counts(..., available_at_envelope=<correctly-derived-per-row-key>, ...)` for CAPTURED
-  clusters — this was already correct, it just silently no-opped on `available_at` until `9c9cdc50` landed. Because the
-  manifest consolidator is last-write-wins, **simply re-running these two scripts in `--force` mode now backfills
-  `available_at` on every existing captured row** — no new code needed, same mechanism the sports rebuild used.
+- **prediction** (`rebuild_prediction_manifest.py`) — confirmed 2026-07-14: prediction's entire captured-row corpus is
+  bundled-by-design (the whole asset_group routes through the "bundled cqg atom") and `emit_manifest_rows` calls
+  `writer.record_captured_from_counts(..., available_at_envelope=..., ...)` uniformly. **This asset_group's claim
+  holds** — a `--force` re-run backfills the full prediction corpus, no new code needed.
+- **tradfi** (`rebuild_tradfi_manifest.py`) — **CORRECTION, 2026-07-14 (slot 3)**: the claim below (as originally
+  written) overstated tradfi's coverage. `scan_and_rebuild`'s object-scan loop (line ~515) branches on
+  `parsed.data_type in BUNDLED_DATA_TYPES`: ONLY that branch (line ~555-567, `_emit_bundled_shard_row` →
+  `record_captured_from_counts(..., available_at_envelope=...)`) threads `available_at`. For every NON-bundled data_type
+  — the general/majority case — the loop instead calls `target.add(processing_date=..., venue=..., ...)` (line 568-578)
+  **without an `available_at=` kwarg at all**, even though `ManifestWriter.add()` has accepted one since 2026-06-26.
+  `BUNDLED_DATA_TYPES` (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py`) is a narrow closed
+  set for tradfi's write path — `options_chain`, `futures_chain`, `event_contract` — not tradfi's tick data generally.
+  **A `--force` re-run of `rebuild_tradfi_manifest.py` will NOT backfill `available_at` on the non-bundled majority of
+  the 1.6M-row corpus** — only on options/futures-chain/event-contract shards. Exact bundled-vs-non-bundled row split
+  not yet measured (new todo below) — do not assume "re-run --force" alone closes tradfi's gap.
 - **defi** (`rebuild_defi_manifest.py`) and **cefi** (`rebuild_cefi_manifest.py`) call ONLY `record_empty`/
   `record_failed` (gap-filling) — **never** `record_captured`/`record_captured_from_counts` — confirmed by grep, no call
   sites in either file. There is no existing rebuild entrypoint that touches captured rows for defi. DeFi's live
@@ -115,14 +125,27 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the prediction consolidator cron; record the before/after fill-rate evidence in this plan's
       Progress Log. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index for the bundled
+      (`options_chain`/`futures_chain`/`event_contract`) vs non-bundled row-count split on `capture_status=captured`
+      rows, so the true post-`--force` fill-rate ceiling is known BEFORE claiming success (a `--force` re-run only fixes
+      the bundled subset — see "What we already know" correction above). If the non-bundled majority is material, thread
+      `available_at=` into the `target.add(...)` call at `rebuild_tradfi_manifest.py:568` (same honest
+      `written_at`-proxy pattern sports's `_available_at_from_row` uses, per `AVAILABILITY_AT_SEMANTICS`), unit-tested,
+      BEFORE the apply todo below — otherwise scope this asset_group's non-bundled backfill as its own follow-up
+      (mirroring defi's audit-and-decide gate) rather than declaring tradfi done on a partial fix. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P1. Dry-run `rebuild_tradfi_manifest.py --force` against
       `market-data-tick-tradfi-prd-central-element-323112`; sanity-check envelope values across a sample of tradfi
-      data_types/venues (bundled + non-bundled shards). (repo: market-tick-data-service)
+      data_types/venues (bundled + non-bundled shards) — confirm non-bundled shards' `available_at` behavior matches
+      whatever the prior todo decided (either newly threaded, or knowingly still blank pending follow-up). (repo:
+      market-tick-data-service)
 - [ ] [DATA] P1. Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo:
       market-tick-data-service)
 - [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py --no-dry-run --force`, force-consolidate, then verify fill rate +
-      guardrail + row count via the audit script, same protocol as prediction. (repo: market-tick-data-service,
-      unified-trading-library)
+      guardrail + row count via the audit script, same protocol as prediction. **Do not declare tradfi's backlog fully
+      resolved from this alone** — confirm the resulting fill rate matches the bundled-vs-non-bundled ceiling measured
+      above (a rate matching only the bundled fraction means the non-bundled follow-up is still open, not a bug). (repo:
+      market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the tradfi consolidator cron; record evidence in the Progress Log. (repo:
       market-tick-data-service)
 - [ ] [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how (or
@@ -152,3 +175,19 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 **2026-07-13 (slot 7)**: plan authored per `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`
 todo P2. No production writes made by this touch — scoping only (code read of all four asset_groups' rebuild scripts to
 determine per-asset_group backfill mechanism + risk, informed directly by the sports CF-8 regression postmortem).
+
+**Verification touch — 2026-07-14 (slot 3)**: dispatched to the SAME source todo concurrently (a dispatcher collision —
+confirmed via `git log` this plan already existed on `live-defi-rollout` before committing anything of my own, so did
+NOT create a duplicate plan). Independently traced all 3 target rebuild scripts' captured-row write paths as a
+verification pass before adopting this plan's claims at face value. **Confirmed prediction's claim is correct**
+(uniformly bundled, uniformly threaded). **Found tradfi's claim was overstated**: `rebuild_tradfi_manifest.py`'s
+object-scan loop only threads `available_at` for the `BUNDLED_DATA_TYPES` subset (`options_chain`/`futures_chain`/
+`event_contract`); the general/non-bundled majority path (`target.add(...)`, line ~568) never passes `available_at=` — a
+`--force` re-run alone will NOT close tradfi's 1.6M-row backlog, only its bundled fraction. Corrected the "What we
+already know" section + added a new P1 todo (quantify the bundled/non-bundled split; thread `available_at` into the
+non-bundled `.add()` call if material) ahead of the existing apply todos, and caveated those todos so a future agent
+doesn't declare tradfi done on a partial fix. Also separately checked `rebuild_defi_manifest.py`'s own `writer.add()`
+call site (its CF-11 honest-absence function, not this plan's defi gap) — confirmed it is dead code on the real
+(non-projection) apply path (the script's own test asserts `writer.add.assert_not_called()` when `projection=False`),
+consistent with this plan's existing "defi has NO existing capture-path threading" conclusion — no action needed there,
+just corroboration. No production writes made this touch.
