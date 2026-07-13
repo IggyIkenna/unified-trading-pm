@@ -248,20 +248,29 @@ remediation todo below).
 
 ## Phase 3.5 — Remediate the already-applied migration (P0, blocks Phase 4)
 
-- [ ] [DATA] P0. Re-run the now-fixed `reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py --apply` (script already
-      idempotent by design) across the FULL originally-audited scope (not just the 42 conflicts) — since the 793
-      `'copied'` objects have their canonical PATH already correct, the fixed script's download-correct-merge-upload
-      path will re-process every one of them: for a `'copied'` day, the corrected script downloads the (still
-      column-wrong) canonical file, corrects its columns in place, and re-uploads (no separate "repair-only" mode needed
-      — same code path, same idempotent design, just a second full pass). Verify the run report shows the
-      previously-`copied` days now landing as `created`-equivalent (content actually rewritten) and the 42
-      `parity_conflict`-classified days landing as `merged` (recovering any real coexistence-window rows, matching the
-      day=2025-03-13 SOLUSDT case and any siblings).
-- [ ] [DATA] P0. Re-run Phase 3 Todo 2's post-apply verification script
-      (`scripts/verify_bybit_futures_chain_reshape_2026_07_13.py`) against the remediated result — confirm 0 remaining
-      column-value mismatches (spot-check `underlying`/`instrument_id` content, not just path/existence) and 0 remaining
-      source-larger-than-target anomalies across all 42 former conflicts (not just a 25-sample spot-check this time,
-      given the day=2025-03-13 case proves the sampling missed at least one real positive).
+- [x] ✅ [DATA] P0. Re-run the now-fixed `reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py --apply` across the
+      FULL originally-audited scope — **DONE, slot 4, market-tick-data-service@`c70d4388`**. **A SECOND real bug was
+      found and fixed before this could actually work**: the first re-run (still on the pre-fix merge logic) showed
+      `{'merged': 42, 'already_covered_no_new_rows': 793}` — the 793 "already_covered" outcome meant NOTHING was
+      re-uploaded for them, because `drop_duplicates(subset=ROW_KEY, keep="first")` kept the STALE wrong-column
+      `existing` rows over the freshly-corrected `df` rows on every row-key collision, and the "skip if row count
+      unchanged" early-return treated that as "nothing to do" — silently leaving all 793 wrong-column files untouched.
+      Fixed (`keep="last"` so corrected `df` rows win on collision, and removed the same-row-count skip entirely — a
+      same-row-count merge does NOT mean unchanged content when the existing row's VALUES were wrong). Re-ran with the
+      fix: **`{'corrected': 835}`** — all 835 objects (the 793 previously-untouched + the 42 already-correct merges
+      reconfirmed) now uploaded with verified-correct content. See Phase 3.5 Todo 2 below for exhaustive proof.
+- [x] ✅ [DATA] P0. Re-run Phase 3 Todo 2's post-apply verification script
+      (`scripts/verify_bybit_futures_chain_reshape_2026_07_13.py`) against the remediated result — **DONE, slot 4,
+      market-tick-data-service@`c70d4388`**. Extended the script (was a 25-sample spot-check with existence+row-parity
+      only) to add a THIRD check — column-value correctness (`underlying`/`instrument_id` content on the target rows
+      matching each source's row-keys, not just path/existence) — and made the parity check EXHAUSTIVE (all 835 migrated
+      objects, not a 25-sample), since the original sample happened to miss the day=2025-03-13 SOLUSDT anomaly.
+      **Result: 835/835 existence, 835/835 row-subset parity, 835/835 column values correct** — 0 remaining mismatches
+      of any kind. The day=2025-03-13 SOLUSDT case specifically: `src_rows=1087`, `dst_rows=1781` (up from the
+      pre-remediation 694 — confirms the previously-dropped coexistence-window rows were genuinely recovered),
+      `subset=True`, `column_values_correct=True`. Output written to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/bybit_futures_chain_reshape_phase35_parity_verify_2026_07_13.parquet`
+      (835 rows, full detail — not just the summary).
 - [ ] [DATA] P1. Once Phase 3.5 is fully green, re-verify this doesn't change Phase 4's gating (still
       BLOCKED-OPERATOR-DECISION, but the "parity verification is fully green" precondition now refers to the
       Phase-3.5-remediated result, not the original Phase 3 Todo 2 pass which is now known-incomplete).
