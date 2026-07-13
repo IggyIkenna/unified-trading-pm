@@ -144,12 +144,49 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       Did NOT run `--apply` against production data — that is Phase 2's separate, sequenced-after-Phase-1-Todo-1
       execution step, out of this todo's scope. exist even there). DRY-RUN default, `--apply` to mutate — same
       convention as the script it extends.
-- [ ] [DATA] P0. Root-cause the write-path bug: find the batch/backfill writer that produced this historical ASTER data
-      and determine why it selected the DeFi bucket for cefi-labeled objects (likely a venue-level "primary asset_group"
-      bucket selection instead of a per-object `asset_group` field read). Fix it so this does not recur for whatever
-      collection job (if any) still runs — cross-reference with the "batch_aster appears to have stopped after
-      2026-06-05" finding below; if the writer is confirmed fully decommissioned, this becomes a historical-only fix
-      (document why, do not chase a dead code path).
+- [x] ✅ [DATA] P0. Root-cause the write-path bug — **DONE, slot 8, read-only investigation, no code change needed
+      (confirmed fully decommissioned — historical-only fix per this todo's own fallback clause).** The buggy writer was
+      `market_tick_data_service/cli/handlers/_perp_funding_hl_aster.py`, a stage module of `perp_funding_handler.py`
+      given an ASTER/HYPERLIQUID `derivative_ticker`+`trades` leg on 2026-06-17 (commit `59786270`). Bug mechanism
+      confirmed by reading the code at the pre-deletion commit
+      (`git show ba6df0ac^:market_tick_data_service/cli/handlers/_perp_funding_hl_aster.py`): `perp_funding_handler.py`
+      is a **mixed-asset_group handler** (GMX/Kalshi/Polymarket legs are genuinely defi/prediction) that resolves ONE
+      `bucket` up front per invocation — `bucket = get_write_bucket_name("market_data", "defi")`
+      (`perp_funding_handler.py:225`, landed 2026-06-21 commit `7c32ff61`) — and threads that single value down into
+      every protocol's writer, never re-deriving per-row via
+      `resolve_bucket_name(asset_group=<the row's own     asset_group>)`. When the ASTER/HL `cefi`-labeled legs were
+      bolted onto this handler, `_write_aster_derivative_ticker` / `_write_aster_trades` correctly stamped
+      `asset_group="cefi"` in the **manifest** (`writer.add(asset_group="cefi",     ...)`) but physically
+      `storage.upload_bytes(bucket, ...)`'d into the wrong (DeFi) **bucket** — manifest label and physical location
+      diverged. HYPERLIQUID was never corrupted by this same handler because HL's `derivative_ticker`/ `trades` was
+      always sourced from the separate, correctly single-asset_group `onchain_perp_batch_handler.py` path instead —
+      ASTER's ~3-week window (2026-06-17 → 2026-07-08) was the only time this bug's blast radius included a real
+      producer. Filename evidence corroborates: the corrupted DeFi-bucket copies use bare exchange symbols
+      (`BTCUSDT.parquet`, this handler's `row["symbol"] = sym`), not the canonical
+      `ASTER:PERPETUAL:BTC-USDT@LIN.parquet` naming the correct path produces — though per Phase 1 Todo 1's
+      exact-boundary audit, DeFi-bucket-resident ASTER objects actually span 2023-11-01 → 2026-06-05 (much wider than
+      this handler's 2026-06-17 introduction), meaning this specific handler explains only the tail of the corrupted
+      window — an EARLIER, no-longer-identifiable producer (predating the 2026-06-11 handler split) wrote the 2023-11 →
+      2026-06-16 majority; not chased further since it too is provably gone (no such producer exists in the current
+      codebase, and the migration script already treats the whole 2023-11→2026-06-05 range uniformly regardless of which
+      historical writer produced each day). **`perp_funding_handler.py`/`_perp_funding_hl_aster.py` fully retired
+      2026-07-08 (commit `ba6df0ac`, "retire standalone perp_funding for
+      HYPERLIQUID/ASTER/PACIFICA-SOLANA/LIGHTER-ZKSYNC in favor of derivative_ticker.funding_rate") — confirmed the file
+      no longer exists in the working tree; current `perp_funding_handler.py` docstring (lines 8-18) explicitly
+      documents the retirement and points to `onchain_perp_batch_handler.py` as ASTER/HL's sole current
+      `derivative_ticker` producer.** That replacement handler is single-asset_group by construction
+      (`_ASSET_GROUP = "cefi"` at `onchain_perp_batch_handler.py:99`,
+      `bucket = get_write_bucket_name("market_data", _ASSET_GROUP)` at line 290) — safe, but only because every venue it
+      currently processes happens to be cefi, not because it re-derives per-row; the same "resolve bucket once, reuse
+      everywhere" shape would reproduce this exact bug again if a mixed-asset_group venue were ever added to it.
+      Flagging as a defense-in-depth lesson (not actioned here, out of this todo's scope): any handler spanning more
+      than one `asset_group` must resolve the write bucket per-shard/per-venue from the row's own `asset_group`, never
+      once at the top of `process()`. **This also resolves the "batch_aster stopped after 2026-06-05" deferred item
+      below** — it was a collector handoff, not a silent failure: `onchain_perp_batch_handler.py`
+      (`--operation collect-onchain-perp-batch`, introduced 2026-06-21 commit `1e4dfb21`) superseded the buggy handler
+      as ASTER/HL's `derivative_ticker`/`trades` producer, and the buggy handler's last-processed day (2026-06-05) is
+      simply the last day a backfill invocation of the old path ran before hand-off, not an encoded cutoff (no
+      scheduler/launcher/allowlist gate found referencing that date).
 
 ## Phase 2 — Dry-run + apply (P0)
 
@@ -184,9 +221,9 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 
-| Item                                                                | State                                                                                                                         | Next action                                                                                                                  |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `batch_aster` collection stopped after 2026-06-05                   | Found, unexplained                                                                                                            | Separate finding — confirm whether this is an intentional decommission or a silent collector failure; not this plan's scope. |
-| BYBIT `futures_chain` write-shape bug (flat glued-symbol files)     | Found + partially fixed in code 2026-07-09, historical data not backfilled                                                    | Tracked separately — `plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`.                                    |
-| Legacy `ticks_migrated_*` shallow shape in DeFi bucket (5,332 objs) | Already tracked pre-existing — codex axis-7, archived plan F16/F29, 2026-06-18 delete-list audit MIGRATE-FIRST classification | No new work needed — do NOT re-scope here, it already has an owner.                                                          |
-| `defi__dex_swaps` BQ external table split-table design              | Separate, independent fix in `deployment-service`                                                                             | Tracked in this session's direct commit to `bigquery_feature_external_tables.tf` — does not block or depend on this plan.    |
+| Item                                                                | State                                                                                                                            | Next action                                                                                                               |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `batch_aster` collection stopped after 2026-06-05                   | ✅ **Explained** (Phase 1 Todo 3, 2026-07-13) — collector handoff to `onchain_perp_batch_handler.py` (2026-06-21), not a failure | No action needed — see Phase 1 Todo 3 above for the full trail.                                                           |
+| BYBIT `futures_chain` write-shape bug (flat glued-symbol files)     | Found + partially fixed in code 2026-07-09, historical data not backfilled                                                       | Tracked separately — `plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`.                                 |
+| Legacy `ticks_migrated_*` shallow shape in DeFi bucket (5,332 objs) | Already tracked pre-existing — codex axis-7, archived plan F16/F29, 2026-06-18 delete-list audit MIGRATE-FIRST classification    | No new work needed — do NOT re-scope here, it already has an owner.                                                       |
+| `defi__dex_swaps` BQ external table split-table design              | Separate, independent fix in `deployment-service`                                                                                | Tracked in this session's direct commit to `bigquery_feature_external_tables.tf` — does not block or depend on this plan. |
