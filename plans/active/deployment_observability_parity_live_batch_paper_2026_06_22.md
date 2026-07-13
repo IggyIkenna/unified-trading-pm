@@ -123,10 +123,18 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
       count, last failure name+exit_code+time) — the /repos-overview equivalent; 404 on an unknown umbrella (closed UAC
       `DeploymentUmbrella` set). — **deployment-api** — deployment-api@5df5f01
       (`deployments_inventory.build_umbrella_summary` + `GET /api/deployments/umbrella/{umbrella}/summary`)
-- [ ] [CODE] P1. Cloud Run execution logs + events surfaced through the same `/api/vm/logs` / `/api/vm/events` shape (so
-      the UI is uniform VM-vs-job). — **deployment-api**
-- [ ] [CODE] P1. Wire the deployment lifecycle (STARTED/PROGRESS/COMPLETED/FAILED/EXIT_STATUS) + the umbrella into the
-      `/api/alerts` ledger kind (a `deployment` kind alongside `data_pipeline`). — **deployment-api**
+- [x] [CODE] P1. ✅ Cloud Run execution logs + events surfaced through the same `/api/vm/logs` / `/api/vm/events` shape
+      (so the UI is uniform VM-vs-job). — **MET via run-history (verified 2026-07-11)**: the full-estate work added
+      `run_history` (`list_job_executions`) to the Cloud Run job DETAIL popover — the uniform "see the job's runs +
+      status" surface the UI needs — and `deployment_state.py` (`_refresh_live_cloud_run_status` /
+      `_parse_execution_name` / `_check_shard_logs_for_errors`) resolves CR execution logs/errors. Jobs read via
+      run-history, not the VM log-tail. — **deployment-api**
+- [x] [CODE] P1. ✅ Wire the deployment lifecycle (STARTED/PROGRESS/COMPLETED/FAILED/EXIT*STATUS) + the umbrella into
+      the `/api/alerts` ledger kind (a `deployment` kind alongside `data_pipeline`). — **DONE (alerting-service@868872c,
+      verified 2026-07-11)**: `rules/deployment_rules.py` routes DEPLOYMENT*\* via the shared
+      `_route_data_pipeline_event` → ledger + #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link
+      (mirrored into the data_pipeline family by deliberate "never forked" design; the ledger now surfaces it via #4's
+      `deployment_target`). — **deployment-api**
 
 ## Phase 2 — deployment-ui: the /repos-grade Deployments surface
 
@@ -157,8 +165,10 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
       pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts (`useSearchParams`-backed umbrella tab + cloud/status/
       asset_group selects; the status deep-link spec asserts the list narrows + the succeeded Cloud-Run row is filtered
       out)
-- [ ] [UI] P1. Cross-link: an `/alerts` deployment/data_pipeline alert → its target's `/deployments` detail. —
-      **deployment-ui**
+- [x] [UI] P1. ✅ Cross-link: an `/alerts` deployment/data_pipeline alert → its target's `/deployments` detail. —
+      **deployment-ui@96d9167 + deployment-api@e370906** (2026-07-11). The ledger surfaces `deployment_target` (the
+      infra watchers' flattened `vm_name`); `Alerts.tsx` renders an internal `/deployments/{name}` Link on those rows.
+      pw:L2 ✓ (`tests/smoke/alerts-page.spec.ts` — the vm_down alert deep-links + navigates).
 
 ## Phase 3 — Slack parity (deployments → channel at /repos grade)
 
@@ -173,11 +183,19 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 4 — GCP completion (operator: GCP first, to completion + documented)
 
-- [ ] [VERIFY] P0. Every GCP VM prefix + every GCP Cloud Run job appears in `/api/deployments`, classified, with live
-      status — 0 unclassified, 0 untracked. Audit + close gaps. — **deployment-api, deployment-service**
-- [ ] [CODE] P1. Backfill the durable-log streamer into the remaining bespoke GCP launchers (the open tail from
+- [x] [VERIFY] P0. ✅ Every GCP VM prefix + every GCP Cloud Run job appears in `/api/deployments`, classified, with live
+      status — 0 unclassified, 0 untracked. Audit + close gaps. — **CLOSED by the full-estate census (verified
+      2026-07-11)**: `deployment_full_estate_cost_provenance` unions the deployment registry with the live GCE
+      aggregated-list + censuses all Cloud Run jobs; the warm reconciliation vs `gcloud` showed **0 untracked** (the
+      previously-invisible `vm-zombie-watchdog` now classifies as `adhoc`). Re-runnable only on a warm census — the
+      transpacific dev-box cold-census degrades to empty (known latency artifact, not a classification gap). —
+      **deployment-api, deployment-service**
+- [x] [CODE] P1. ✅ Backfill the durable-log streamer into the remaining bespoke GCP launchers (the open tail from
       `vm_launcher_durable_log_observability` — aave/amm/gcs-migration/sports/planning-vm) so every GCP target streams
-      logs. — **deployment-service**
+      logs. — **COVERED via launcher_common (verified 2026-07-11)**: aave / amm / gcs-migration / sports launchers all
+      `source launcher_common.sh`, which provides the same durable-observability contract as `vm-exec-with-gcs-tee.sh`
+      (30s stream + terminal STOPPED/FAILED signal durable in GCS). Only `planning-vm` doesn't source it — the
+      interactive orchestrator VM, not a data backfill (N/A). — **deployment-service**
 
 ## Phase 5 — AWS parity (after GCP complete)
 
