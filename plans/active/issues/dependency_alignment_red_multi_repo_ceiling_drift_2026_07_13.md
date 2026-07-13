@@ -149,7 +149,7 @@ in one commit under a gate I can't currently ship through anyway.
       case exactly. Ran `check-dependency-alignment.py --json` fresh: **0 fastapi issues remain** (5 issues total, all
       pillow/click floor-lag — todo below). STAGE 1.5 is unblocked for the fastapi-ceiling class. (repo:
       unified-trading-pm + the 6 named repos)
-- [ ] [BACKEND] P1. `fix_external_dependency_alignment.py --apply` scoped to execution-service, strategy-service
+- [x] ✅ [BACKEND] P1. `fix_external_dependency_alignment.py --apply` scoped to execution-service, strategy-service
       (pillow) and features-service (click) to pick up the already-bumped canonical floor. **Status correction
       (2026-07-13, slot 7): the `d4ad81d40` commit message claims execution-service + strategy-service's pillow
       floor-lag was "fixed directly in those repos" — verified this did NOT actually land**
@@ -158,6 +158,15 @@ in one commit under a gate I can't currently ship through anyway.
       `execution-service`/`ml-service`/`strategy-service`/ `client-reporting-api` on `pillow`, `features-service` on
       `click` — `client-reporting-api` is a 5th repo not in this issue's original 3-repo list, presumably picked up by
       the same fresh scan). Still open — not fixed by this task (outside my dispatched todo-1 scope; flagging for
-      whoever picks this up next). (repo: unified-trading-pm)
+      whoever picks this up next). (repo: unified-trading-pm) **All 5 CLOSED (2026-07-13, slot 9)**:
+      `execution-service@f481ba08` — shipped directly
+      (`fix_external_dependency_alignment.py --apply --repo execution-service` + `uv lock --upgrade-package pillow`).
+      `strategy-service` — independently shipped by slot-7 (`10943bfd`, identical target spec `pillow>=12.3.0,<13.0.0`);
+      my own local commit was redundant and correctly dropped during a rebase. `ml-service` + `client-reporting-api` +
+      `features-service` — already fixed by other slots by the time I re-verified (`ml-service/pyproject.toml:59` =
+      `pillow>=12.3.0,<13.0.0` with `PYSEC-2026-2253/2254/2255/2256/2257` citation;
+      `client-reporting-api/pyproject.toml:52` = `pillow>=12.3.0,<13.0.0`; `features-service` click already `>=8.3.3`).
+      Fresh `check-dependency-alignment.py --json` confirms **0 issues fleet-wide** — STAGE 1.5 fully green. (repo:
+      unified-trading-pm, execution-service)
 - [ ] [INFRA] P2. Evaluate a lighter-weight per-repo-exception process (YAML + justification) so this doesn't require a
       hand-edited Python dict entry every time a repo patches a CVE ahead of canonical. (repo: unified-trading-pm)

@@ -1304,10 +1304,6 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   SUCCESSOR (drop these ignores): migrate execution-service off aioresponses (→ adapter-layer mocks) + bump it to
     #   aiohttp>=3.14, then it's fleet-wide. Tracked:
     #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    # GHSA-537c-gmf6-5ccf: cryptography <=46.0.7 — wheels statically link an OpenSSL with a known CVE. TRANSITIVE pin;
-    #   covered by the operator "speed > security: transitive CVEs WARN not block" policy (2026-06-12). UNLIKE aiohttp
-    #   this is NOT vcrpy-deadlocked — the proper fix is a cryptography floor bump + fleet lock-regen. SUCCESSOR (remove
-    #   this ignore): bump cryptography to the patched line. Tracked: v2_engine_venue_buildout_2026_06_15.md follow-ups.
     # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
