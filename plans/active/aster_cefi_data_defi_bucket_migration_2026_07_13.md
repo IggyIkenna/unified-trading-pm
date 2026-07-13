@@ -211,11 +211,24 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       match), all carry the `@LIN` margin marker, all target the correct CeFi-bucket path with
       `day=`/`pipeline_mode=batch_aster`/ `asset_group=cefi`/`venue=ASTER` preserved. Matches the validated logic from
       `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`. Nothing mutated (dry-run only).
-- [ ] [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for one
-      pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
+- [x] ✅ [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for
+      one pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
       `codex/05-infrastructure/vm-launcher-runbook.md` if a local/interactive run proves too slow; SPOT provisioning per
       the backfill-VM default). No fire-and-forget — verify STARTED + periodic progress + terminal state per the
-      VM-launcher runbook if dispatched to a VM.
+      VM-launcher runbook if dispatched to a VM. — **DONE, slot 14, market-tick-data-service@`aea8515e`
+      (`scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py --apply --workers 32`)**, run local/interactive (a single
+      948-day pass proved fast enough — full run, scan+copy, completed in ~9 minutes — no VM shard needed). No
+      fire-and-forget: launched via `setsid nohup ... & disown`, verified STARTED (scan-phase log lines within 10s),
+      monitored periodic progress every 15s through the full day range, and observed the terminal `SUMMARY` line.
+      **Result: `{'copied': 73359, 'parity_conflict_not_overwritten': 43817, 'skipped_not_in_scope': 0}`** — totals
+      reconcile exactly to Phase 2 Todo 1's dry-run plan of 117,176 objects (73,359 + 43,817 = 117,176). Every parity
+      conflict was logged with a `(size, crc32c)` mismatch and NOT overwritten, per the script's idempotency design —
+      spot-checked a sample of the conflict log: all observed conflicts show the DeFi-bucket source object at ~2x the
+      CeFi-bucket dest object's size (e.g. src=13144B vs dest=6716B), a consistent ratio across every sampled conflict
+      regardless of day — flagging this pattern for the next todo's post-apply verification (worth root-causing whether
+      this is a genuine row-count/schema difference between the two copies, not assumed here). No errors, no source
+      deletions (this script never deletes — Phase 4 is the separate, operator-gated cleanup step). Zero unmigrated
+      objects.
 - [ ] [DATA] P0. Post-apply verification: re-run the Phase 1 scope audit against the CeFi bucket, confirm 0 objects
       remain unmigrated (excluding any genuinely-still-running collection window) and spot-check row/byte parity (not
       just object presence) on 20+ migrated objects across the three duplication-period bands identified above.
