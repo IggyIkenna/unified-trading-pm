@@ -174,9 +174,21 @@ venues, or change instrument_type classification? Phase 1 owns this).
 
 ## Phase 3 — Apply + verify (P0)
 
-- [ ] [DATA] P0. `--apply` the reshape, sharded by date range if needed (VM launch per
+- [x] ✅ [DATA] P0. `--apply` the reshape, sharded by date range if needed (VM launch per
       `codex/05-infrastructure/vm-launcher-runbook.md`, SPOT provisioning, no fire-and-forget — verify STARTED +
-      progress + terminal state).
+      progress + terminal state). — **DONE, slot 14**, run local/interactive (only 835 objects — a VM shard was
+      unnecessary, completed in ~7s).
+      `scripts/reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py --apply     --workers 20` (script already shipped
+      at `market-tick-data-service@6f0efb52`). **Result: `{'copied': 793,     'parity_conflict_not_overwritten': 42}`**
+      — reconciles exactly to the 835-object dry-run plan. **The 42 conflicts are an EXPECTED, not anomalous, outcome**:
+      they concentrate on `mixed`-classification days (per Phase 1's audit) where the canonical
+      `underlying={U}/ticks.parquet` target already holds a legitimate MULTI-symbol bundle from the correct pipeline
+      (confirmed via size — conflicting dest files are consistently much LARGER than the single-symbol glued source,
+      e.g. src=37,211B vs dest=790,487B), so the idempotency check correctly refused to overwrite a real bundle with
+      just one symbol's data — exactly the safety behavior it was designed for, not a bug. Flagging for the next todo's
+      post-apply verification: these 42 conflicts should be spot-checked to confirm the glued source's data is a genuine
+      SUBSET of the existing bundle (matching Phase 1 Todo 2's earlier finding for shape 2) rather than assumed. No
+      source deletions (Phase 4 gated separately).
 - [ ] [DATA] P0. Post-apply verification: re-run Phase 1's audit against the result, confirm 0 non-canonical shapes
       remain in the migrated window; spot-check row/byte parity (not just object presence) on 20+ migrated (day, symbol)
       pairs.
