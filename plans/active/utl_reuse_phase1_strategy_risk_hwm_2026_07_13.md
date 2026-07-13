@@ -115,9 +115,20 @@ preserve the residual; where the lib lacks a load-bearing local control, extend 
       **post-trade** value (neutral uPnL → `leverage == max_leverage` baseline preserved; negative uPnL → higher
       leverage → can breach). **This also delivers the first slice of the P0 "dedupe twin equity helper" above** (the
       equity-proxy formula is now single-sourced).
-- [ ] [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
+- [x] ✅ [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
       `engine/core/components/pnl_monitor.py:214-222` and `engine/core/output_builders.py:153-158`. Keep it **local**
-      (do NOT route to UTL `hwm_invariants` — wrong domain). Leave fee-crystallization HWM to UTL `post_trade`.
+      (do NOT route to UTL `hwm_invariants` — wrong domain). Leave fee-crystallization HWM to UTL `post_trade`. —
+      SHIPPED `strategy-service@12dc136c`. Added `MetricsCalculator.equity_curve_drawdown()` to `math_utilities.py`
+      (returns `(peak_so_far, drawdown_fraction)` per point — a superset shape of the existing numba
+      `calculate_max_drawdown()`, which only returns the aggregate + indices and can't serve
+      `build_net_equity_timeseries`'s per-row running-HWM need). `PnLMonitor._compute_drawdowns` now derives
+      `max_drawdown` via `max(dd for _, dd in ...)`; `build_net_equity_timeseries` derives its per-row peaks by seeding
+      the walk with `initial_capital` and dropping the seed entry — both verified bit-identical to the original
+      hand-rolled loops via new regression tests (4 for the helper in `test_math_utilities.py`, 4 for
+      `PnLMonitor._compute_drawdowns` in new `test_pnl_monitor_drawdown.py`) plus the existing
+      `test_output_builders.py`/`test_math_utilities.py` suites (all green) and the Phase 0 golden risk-eval fixture
+      (reproduces identically). Local only — did not touch UTL `hwm_invariants`. `quality-gates.sh` exit 0, sentinel
+      verified.
 - [ ] [AGENT] P2. Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — UTL `family_aggregator` only gives
       **family-level pairwise** rhos, a different axis/shape. Optional local cleanup: unify the 3 local correlation
       shapes (instrument-matrix / family-pairwise-dict / v2 nested-dict) — local typing only, not a UTL migration.
