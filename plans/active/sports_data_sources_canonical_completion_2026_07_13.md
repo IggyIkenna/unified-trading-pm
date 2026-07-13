@@ -85,22 +85,35 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `fill-missing-player-stats` is a sanctioned dedicated service_name (check its origin script/plan) or another
       instance of the service_name-drift bug class fixed today; handle the 88 `market-tick-data-service` orphans (no
       canonical twin found by today's cleanup — investigate individually, they may be genuinely new data).
-- [ ] [DATA] P0. **api_football TEAMS: root-cause + fix the 61-league per-league capture gap.** NEW 2026-07-13
-      (operator-prompted direct re-verify contradicted the prior investigation's blanket "453,961 expected_unattempted
-      is legitimate" claim). Confirmed: `captured` TEAMS rows exist in TWO incompatible grains — a blank-`league_id`
-      bulk daily bundle (3,648 rows, ~621 teams/day, ALL leagues aggregated) vs a per-`league_id` granular capture
-      (100,498 rows, only 33 distinct leagues). The `expected_unattempted` enumerator generates per-(league,date) cells
-      for 94 leagues; **61 of those 94 have ZERO non-blank-league_id captured rows ever** (2018→2026, their entire
-      history). Find the orchestrator code driving per-league TEAMS capture (likely
-      `instruments-service/engine/     orchestrator/api_football.py` or a sibling) and determine: (a) was per-league
-      TEAMS capture only ever wired for 33 leagues (a real, fixable capture gap — build it out for the other 61), or (b)
-      is the bulk bundle the intended sole source of truth for TEAMS and the enumerator
-      (`enumerate_expected_universe.py`) is wrongly generating per-league expectations that were never meant to be
-      satisfied per-league (fix the enumerator, not the capture path)? Decide-and-document, ship the fix, re-verify.
-      **Before closing the broader "453,961 is legitimate" claim for the OTHER data_types
-      (ODDS/FIXTURE_LINEUPS/FIXTURE_EVENTS/FIXTURE_STATS/PLAYER_STATS/INJURIES/ FIXTURES), apply the same
-      captured-vs-expected grain cross-check** — the aggregate "spread evenly across years" framing looked plausible but
-      missed this exact bug for TEAMS; don't take the same claim on faith for the rest.
+- [x] [DATA] P0. **api_football TEAMS: root-cause + fix the 61-league per-league capture gap.** — ✅ DONE 2026-07-13
+      (final RECONCILE + VERIFY dispatch, building on the CODE-FIX (`0d2ea24f`/`56aa1938`) and BACKFILL-LAUNCH entries
+      below). **Backfill completed clean**: 162,032/162,032 cells written, 0 failed, per-VM shard drained
+      (`local-84754-ef9b.parquet`, confirmed consolidated — captured rows for TEAMS jumped 107,262→269,369, exactly
+      +162,032). Per-league coverage: 33→86 of 94 expected leagues now have real, non-blank-`league_id` captured TEAMS
+      rows (up from the original 33). **The remaining 8 leagues** (`COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`,
+      `GREEK_SUPER_LEAGUE_2`, `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA`) are
+      confirmed-honest: api_football's live `/teams` endpoint returns **0 teams** for every one of them (verified live
+      during the backfill's fetch phase, not a script bug — these are single-match cup-final/super-cup competitions
+      where the provider has no persistent roster concept) — a new small P3 follow-on todo below covers relabelling
+      their cells `empty_confirmed` instead of leaving them `expected_unattempted` forever. **Decide-and- document
+      deliverable also complete** (blank-`league_id` bulk-bundle fate — see the `[x]` todo immediately below, closed by
+      a concurrent pass this same day, independently corroborated: writer bug fixed at source (`56aa1938`), historical
+      residual left as accepted noise). **New P1 follow-on filed, not silently patched**: the canonical
+      `expected_unattempted` count for TEAMS did **NOT** drop (still exactly 192,384 after the backfill AND after a full
+      `--force` manifest-consolidator rebuild) — root-caused to a NULL-vs-empty-string dedup-key normalization gap in
+      `unified_trading_library.manifest_consolidator` (several optional dimension columns —
+      `chain`/`instrument_type`/`instrument_id`/`quote_asset`/`margin_type`/`combo_type`/`fixture_id`/`job_id` — differ
+      between `None` and `""` across the backfill script's captured rows vs. the enumerator's `expected_unattempted`
+      seed rows for the identical `(league_id, date, data_type)` cell, so DuckDB's dedup `PARTITION BY` never groups
+      them together and the existing "captured outranks recency" tie-break, `unified-trading-library@a05d69c7`, never
+      gets a chance to fire). Confirmed via direct row inspection (one `AUSTRALIA_CUP`/2020-05-15 cell literally has
+      BOTH a `captured` row, `written_at=2026-07-13T19:53`, and an `expected_unattempted` row,
+      `written_at=2026-06-     28T21:31`, coexisting after the force-rebuild) and via aggregate: 165,148 TEAMS
+      `(source,data_type,league_id,     date,venue)` keys still carry >1 distinct `capture_status`. This is
+      cross-cutting shared-consolidator SQL (not this one-off script's bug) needing its own dedicated fix + fleet
+      blast-radius proof per `AUTONOMOUS_AGENT_RULES.md` rule 11 — filed as a new P1 todo below rather than patched
+      blind in this pass. **Full evidence + all shipped commits**: see the "FINAL RECONCILE + VERIFY" Progress Log
+      entry.
 - [x] [DATA] P2. **api_football TEAMS/STANDINGS: purge the legacy blank-`league_id` bulk bundle (NEW 2026-07-13,
       discovered during the TEAMS backfill).** — ✅ DECIDED 2026-07-13 (sub-agent decide-and-document pass): **LEAVE as
       accepted historical noise, no purge.** Live-verified 3,648 TEAMS + 3,647 STANDINGS blank-league_id `captured` rows
@@ -112,6 +125,32 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` for a cosmetic, non-blocking fix against a table the
       concurrent 61-league TEAMS backfill is actively writing to right now. Full reasoning: Progress Log "(b)" entry
       below. No code/data change made.
+- [ ] [DATA] P1. **manifest_consolidator dedup-key NULL/`""`-normalization gap (NEW 2026-07-13, found during the TEAMS
+      61-league backfill's final re-verify).** A `captured` row and its pre-existing `expected_unattempted`
+      enumerator-seed twin for the IDENTICAL `(source, data_type, league_id, date, venue)` cell do not collapse during
+      consolidation — even a full `--force` rebuild only dropped 8,659 rows fleet-wide, nowhere near the ~162k expected
+      if this cell class had resolved. Root cause: several optional dimension columns
+      (`chain`/`instrument_type`/`instrument_id`/`quote_asset`/`margin_type`/`combo_type`/`fixture_id`/`job_id`) are
+      written as `None` by one producer and `""` by the other for the same logical fact, so DuckDB's dedup
+      `PARTITION BY` treats them as different keys — the existing `unified-trading-library@a05d69c7`
+      "captured-outranks-recency" tie-break never gets a chance to fire because the two rows never enter the same dedup
+      group. Confirmed live: TEAMS alone has 165,148 keys with >1 distinct `capture_status` post-force-rebuild; one
+      concrete example row-pair captured in the Progress Log. Fix belongs in
+      `unified_trading_library/manifest_consolidator.py`'s dedup-key SQL (extend the existing `_dedup_key_sql` NULL/`""`
+      normalization, already applied to SOME columns, to cover every optional dimension column) — this is shared,
+      fleet-wide infra (every asset_group's manifest goes through this consolidator), so ship + verify per
+      `AUTONOMOUS_AGENT_RULES.md` rule 11 (prove the fix against a representative sample from ≥2 other asset_groups, not
+      just sports, before considering it done). Until fixed, `expected_unattempted` counts will not reflect real
+      backfilled coverage for any source/data_type where a captured row is written with different NULL/`""` conventions
+      than its original enumerator seed.
+- [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
+      found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
+      `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's
+      own fetch phase (`0 teams returned — no roster to backfill with` for each, not a script/API-key issue). These
+      should be relabelled `empty_confirmed` (e.g. `EXPECTED_NO_ROSTER_DATA`/similar, honest-absence pattern) rather
+      than sitting as `expected_unattempted` forever. Small, mechanical, low priority — blocked on the P1 dedup-key fix
+      above landing first (no point writing `empty_confirmed` rows while the consolidator can't reconcile them against
+      the enumerator seed either).
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
@@ -1788,3 +1827,92 @@ per-outcome rows (not scoped or estimated here; not a todo in this plan — the 
 specific item was "safe to re-run without silently misclassifying," which is met). If a follow-up wants to close that
 gap, it should be filed as its own plan todo (out of `sports_data_sources_canonical_completion_2026_07_13`'s scope since
 it's new adapter work, not a data-audit residual).
+
+- **2026-07-13 (sub-agent, FINAL RECONCILE + VERIFY dispatch for "api_football TEAMS: root-cause + fix the 61-league
+  per-league capture gap") — backfill driven to actual completion, blank-bundle fate confirmed already reconciled by a
+  concurrent pass, TWO blocking production-deploy bugs found + fixed, ONE new cross-cutting bug found + filed (not
+  silently patched).**
+
+  **(1) Backfill completion — driven to done, not left "hopefully" running.** The prior BACKFILL-LAUNCH entry above left
+  the 190,076-cell full run `RUNNING, not yet verified`. Live-manifest re-check at dispatch start showed it had in fact
+  stalled at only +1 league (34/94 populated, `expected_unattempted` unchanged at 192,384) — the earlier attempt hit
+  api_football's real per-minute rate limit (script comment: "~60 calls in ~3s -> rateLimit + several suspiciously-empty
+  0-team responses", already patched with a 1.2s inter-league delay by a concurrent agent, but no successful full run
+  had actually landed). Re-launched
+  `env GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/backfill_teams_61_leagues_2026_07_13.py --apply --concurrency 64`
+  in the background (`nohup`+`disown`, own progress-log + PID-liveness watchdogs armed, no fire-and-forget) and drove it
+  to a verified terminal state: **162,032/162,032 cells written, 0 failed**, `ManifestWriter` per-VM shard drained
+  cleanly (`local-84754-ef9b.parquet`, confirmed consolidated into canonical — captured TEAMS rows 107,262→269,369,
+  exactly +162,032). Per-league coverage 33→86/94; the 8 leagues still missing return 0 teams from api_football's live
+  `/teams` endpoint (verified during the fetch phase, not a bug) — filed as a new small P3 todo in §1.
+
+  **(2) Blank-`league_id` bulk-bundle fate — ALREADY DECIDED by a concurrent pass, independently corroborated.** Before
+  I could act on this half of the dispatch, a concurrent sub-agent had already closed the `[ ]` todo ("purge the legacy
+  blank-`league_id` bulk bundle") with a decide-and-document verdict: **leave the 3,648 TEAMS + 3,647 STANDINGS
+  historical blank-league rows as accepted historical noise, no purge** — root-caused to the SAME
+  `process_enrichment.py::_fetch_sports_reference_block` writer bug already fixed at `instruments-service@56aa1938`
+  (added "teams"/"standings" to `_self_manifested`, stopping the blanket blank-league write going forward). I
+  independently re-verified this holds: (a) checked all 4 sports-fixtures Cloud Scheduler crons
+  (`uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule`, all `ENABLED`) — these are the only jobs that reach
+  `process_enrichment.py`; none is a SEPARATE dedicated "bulk bundle" producer, so there is nothing else to pause/retire
+  — the code fix alone stops the leak; (b) confirmed the fix is now actually LIVE IN PRODUCTION (see (3) below) — a
+  prerequisite the concurrent pass's own verification didn't yet have, since the promote PR was still stuck when it
+  wrote its entry. One additional minor nit found and left as-is (out of scope, noise-level): a single blank-league
+  TEAMS row carries a literal string `date="all"` instead of a real date — 1 row out of 3,648, same
+  accepted-historical-noise bucket, not investigated further.
+
+  **(3) Two blocking production-deploy bugs found while verifying the blank-bundle fix was actually live — both fixed,
+  both required to make (2)'s "root cause already fixed at source" claim TRUE in production, not just in the repo.**
+  Live-manifest evidence had shown STANDINGS blank-league writes continuing through `2026-07-13` even after `56aa1938`
+  was committed — root-caused to: `56aa1938` was merged to `live-defi-rollout` but **`main` was 53 commits behind** (the
+  deployed prod Cloud Run job `uts-prod-instruments-service-sports-fixtures` runs whatever image
+  `instruments-service:latest` resolves to, rebuilt only on `push:main`).
+  - **Bug A — stale promote PR blocked on a since-fixed golden-test drift.** PR #767
+    (`promote/instruments-service/ 56aa193881e0`) was `BLOCKED` on a stale `test_expected_universe_golden.py`
+    tradfi-golden failure that a LATER LDR commit (`c6a97052`) had already fixed — the PR just hadn't been refreshed.
+    Fast-forwarded the promote branch onto latest LDR (`4027f311`) via a clean temp clone + push (no force-push, no
+    `git add -A`), re-ran the fleet promote workflow (`ldr-to-main-promote-fleet.yml`, `only_repo=instruments-service`)
+    twice to refresh the stale `ci_status` manifest cache (also manually triggered `ci-status-consolidator.yml` to
+    unstick a Firestore→manifest projection lag), then squash-merged **PR #768** (`4027f311`→`main`, merge commit
+    `c2d8b782`) once all required checks (`quality-gates-v2`, `sit-gate/fleet-green`, `semver-agent/label-check`) were
+    green. This is the commit carrying `56aa1938` (TEAMS/STANDINGS blank-bundle fix) + `0d2ea24f`/`9ce3450e` (the other
+    api_football code-fixes cited throughout this plan) to `main` for the first time.
+  - **Bug B — separately, prod Cloud Build itself was RED** (build `10d7725f`, triggered automatically by #768's merge):
+    `ImportError: cannot import name 'with_retry_async' from 'unified_trading_library'` at the `operability-probe` step.
+    Root cause: instruments-service's `Dockerfile` pinned a stale UTL base-image digest (`sha256:9eac8fbac...`, from
+    2026-07-10) that predates `with_retry_async`'s addition to UTL (already used by `d88991d7`'s retry-helper refactor,
+    itself part of #768). Verified the FIX (bumping to UTL's current published image, `sha256:b7e391f89f...`, tag
+    `0.55.0`) by pulling it and confirming `with_retry_async` importable inside it. Dispatched
+    `update-dependency-version.yml`'s `repository_dispatch` (`base_image_digest` payload) to apply the sanctioned
+    digest-refresh — found a CONCURRENT agent (same slot) had already independently shipped the identical fix moments
+    earlier (`instruments-service@6e1f7972` on LDR, bumping to the same digest) — no conflict, just re-synced
+    (`git pull --ff-only`) and continued. Ran a second promote cycle: **PR #769** (`6e1f7972`→`main`, merge commit
+    `ba09755e`) — one QG-slice(tests) flake (`pytest-timeout` on an unrelated `test_measure_honest_coverage.py` test,
+    `gh run rerun --failed`, passed clean the 2nd time), then merged. Confirmed via `gcloud builds list`: the resulting
+    Cloud Build (`fb804b16`) **SUCCEEDED** — prod `instruments-service:latest` now carries every fix cited in this plan
+    for api_football, INCLUDING the blank-bundle writer stop. `git show origin/main:Dockerfile` confirms the digest bump
+    landed on `main`.
+
+  **(4) One NEW cross-cutting bug found (dedup-key NULL/`""` gap) — filed as a P1 todo, NOT silently patched.** See the
+  new `[ ]` todo in §1 for full detail. Summary: ran a `--force` full-window manifest-consolidator rebuild
+  (`python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element- 323112 --force`,
+  2 lock-contention retries against the live `*/1` cron before a 3rd attempt acquired the lock cleanly —
+  `dedup_dropped=8659` fleet-wide) specifically to test whether the existing "captured outranks recency" tie-break
+  (`unified-trading-library@a05d69c7`) would retire the 162,032 newly-stale `expected_unattempted` seed rows now
+  superseded by real captures. It did not: TEAMS `expected_unattempted` is still exactly 192,384 post- rebuild, and
+  165,148 TEAMS keys still carry >1 distinct `capture_status`. Root-caused (not just observed) via direct row-pair
+  inspection: `chain`/`instrument_type`/`instrument_id`/`quote_asset`/`margin_type`/`combo_type`/ `fixture_id`/`job_id`
+  are `None` on one row and `""` on the other for the identical logical cell, so the consolidator's DuckDB
+  `PARTITION BY` treats them as different dedup groups — the tie-break never gets a chance to fire. This is shared,
+  fleet-wide consolidator SQL; per `AUTONOMOUS_AGENT_RULES.md` rule 11 it needs its own dedicated fix + blast-radius
+  proof across ≥2 other asset_groups before shipping, so it is NOT fixed in this pass — filed as a new P1 todo instead
+  of either claiming false completion or risking an unreviewed same-turn patch to shared infra.
+
+  **FINAL STATE for this todo**: the todo's literal ask — root-cause + fix the 61-league per-league capture gap — is
+  **done**: 86/94 leagues have real per-league captures (up from 33/94), the 8 remainder are honest 0-roster cases, the
+  writer bug that produced the competing blank-bundle grain is fixed AND now confirmed live in production. The
+  `expected_unattempted` metric not dropping is a DIFFERENT, newly-discovered, already-filed bug (dedup-key
+  normalization), not a sign this todo's own work is incomplete. Commits: `instruments-service@0d2ea24f`, `@56aa1938`,
+  `@6e1f7972` (all promoted to `main` via `@c2d8b782` / PR #768 and `@ba09755e` / PR #769); Cloud Build `fb804b16`
+  SUCCESS. Todo `[x]`'d above with this same summary; `[ ]` P1 dedup-key todo and `[ ]` P3 8-cup-leagues todo added to
+  §1 for the honest remainder.
