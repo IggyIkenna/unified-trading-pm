@@ -2743,3 +2743,17 @@ at real GCS-read cost for zero new information — same reasoning as touches ten
 filing a duplicate blocked-question** — `BLK-f2bb67c2` still carries the exact decision needed and remains live in the
 queue. `skip-current-task`'d. Next toucher: same check — only re-run the full audit once an E3/E4 VM has actually
 executed or the operator has ruled on BLK-f2bb67c2.
+
+## E8 Verify — re-dispatch check 2026-07-13T04:15Z (data_engineering slot-5, task -001, sixteenth touch)
+
+Re-dispatched ~4 min after the fifteenth-touch entry. Same three preconditions, all unchanged: (1)
+`gcloud compute instances list --project central-element-323112` — 19 instances, none sports/E3/E4-related; (2)
+`BLK-f2bb67c2` — confirmed via `GET /api/state` still `answered_at: null`; (3) `git log --since="2026-07-13T04:07:00"`
+on `instruments-service` + `market-tick-data-service` (both fresh-pulled) — zero commits on either repo since the
+fourteenth touch. No full audit re-run (would reproduce the identical RED verdict at real GCS-read cost). Not filing a
+duplicate blocked-question. **Sixteen touches on this checkbox since 2026-06-27 with the operator decision
+(`BLK-f2bb67c2`, filed 2026-07-12T03:38Z, 24+h outstanding) as the sole unblock path** — flagging the thrash pattern
+itself, not just re-confirming the data-state, since a worker cannot edit `agent-orchestrator/data/config/backlog.yaml`
+(main-agent/operator-scoped per `RULES.md` §4) to add a `prereqs.conditions` gate that would stop this task being
+re-offered to every idle slot. `skip-current-task`'d. Next toucher: same cheap check; consider whether main/operator
+should attach a condition gate (e.g. on `BLK-f2bb67c2` answered) to stop the re-dispatch churn until it resolves.
