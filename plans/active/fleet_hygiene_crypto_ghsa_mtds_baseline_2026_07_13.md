@@ -48,9 +48,45 @@ sequential: false
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Bump the `cryptography` dependency floor fleet-wide (every repo declaring it, directly or
+- [x] ✅ [SCRIPT] P2. Bump the `cryptography` dependency floor fleet-wide (every repo declaring it, directly or
       transitively) to a version outside the `GHSA-537c-gmf6-5ccf` line; regenerate `uv.lock` per repo. Repo:
-      fleet-wide.
+      fleet-wide. — DONE for 16/17 repos, 1 blocked (see below).
+  - Bumped the canonical range in `workspace-constraints.toml` (`cryptography>=47.0.0,<50.0.0` — floor off the advisory
+    line, ceiling widened to admit what the fleet already naturally resolves to: 47/48/49 seen pre-bump on repos without
+    an explicit ceiling). Did NOT use `propagate-canonical-versions.py --apply` for the 13 directly-pinned repos — it
+    bulk-realigns EVERY canonical package, not just the one changed (caught it silently downgrading MTDS's fastapi
+    ceiling/uvicorn floor); reverted that and hand-patched just the `cryptography` line via a scoped regex across the 13
+    files instead.
+  - 13 repos with an explicit pin (unified-trading-library, unified-trading-pm, market-tick-data-service,
+    unified-trading-api ×2 occurrences, batch-live-reconciliation-service, trading-agent-service, deployment-api,
+    ibkr-gateway-infra, system-integration-tests, client-reporting-api, strategy-service,
+    market-data-processing-service, execution-service): `pyproject.toml` line updated + `uv.lock` regenerated.
+  - 4 purely-transitive repos with no explicit pin, stale locks (deployment-service, fund-administration-service,
+    instruments-service, e2e-testing): `uv lock --upgrade-package cryptography` (no pyproject.toml change needed).
+  - All 17 repos verified off the vulnerable line (`cryptography` now 47.0.0-49.0.0 everywhere) via a fleet-wide version
+    sweep.
+  - Two unrelated pre-existing findings hit + resolved in passing: `ibkr-gateway-infra`'s scm-version-gate was RED
+    (cloudbuild.yaml missing a git-tag fetch step) — fixed via the existing sanctioned `patch_cloudbuild_fetch_tags.py`
+    tool (small/clear/scripted). `fund-administration-service`'s pip-audit was RED on `click 8.3.2` (PYSEC-2026-2132,
+    already tracked in `plans/active/issues/fund_administration_service_click_pysec_2026_2132_2026_07_13.md`) — fixed
+    via the issue's own documented remedy (`uv lock --upgrade-package click`), bundled into the same `uv.lock` commit.
+  - **16/17 repos SHIPPED**: `unified-trading-library@b65cf8d2`, `unified-trading-pm@03a90fb64`,
+    `market-data-processing-service@807bc2a`, `unified-trading-api@7e1c506`,
+    `batch-live-reconciliation-service@727e676`, `trading-agent-service@4225490`, `deployment-api@20fbd6d`,
+    `execution-service@a37bac53`, `ibkr-gateway-infra@7ea590c` (+`d7ef684` scm-version-gate fix),
+    `system-integration-tests@02010af`, `client-reporting-api@8e58b92`, `strategy-service@23e250c0`,
+    `deployment-service@56c65fb`, `fund-administration-service@018e5a6`, `instruments-service@055ca3cc`,
+    `e2e-testing@4b91e1a`.
+  - **1/17 BLOCKED**: `market-tick-data-service` (commit `1317ba31`, verified locally correct, NOT yet pushed) —
+    pre-existing file-size gate RED (`migrate_sports_canonical_v9.py` 934 lines > 900 limit, confirmed pre-existing at
+    `HEAD~1`, unrelated to this bump). Filed
+    `plans/active/issues/mtds_migrate_sports_canonical_v9_filesize_2026_07_13.md`, declared repo-blocker `RB-0c6017c8`.
+    Will ship the moment the blocker clears (per the repo-blocker green-signal protocol).
+  - **Separate P1 safety finding**: an unidentified process force-reset 8 of this slot's worktrees mid-ship, silently
+    discarding 6 committed-but-unpushed commits (all recovered via `git cherry-pick` from dangling reflog SHAs, all now
+    confirmed pushed). Filed `plans/active/issues/slot6_git_reset_dataloss_2026_07_13.md` (P1) + alerted main/operator —
+    contradicts `slot-cron-ff-pull.sh`'s documented never-destructive contract, root cause needs infra investigation I
+    don't have session access for.
 - [ ] [SCRIPT] P2. Remove the `GHSA-537c-gmf6-5ccf` `--ignore-vuln` from both
       `unified-trading-pm/scripts/quality-gates-base/base-service.sh` and `base-library.sh` once the bump above is
       confirmed green across the fleet — do not remove the ignore before every dependent repo's QG has actually passed
