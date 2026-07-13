@@ -117,6 +117,43 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 7 (Todo 3 dispatch — partial manifest-cleanliness check, real finding, self-heals, no fix needed)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion); ran a
+partial check against the currently-computed subset instead of re-diagnosing the well-established compute-in-progress
+state.**
+
+Picked up right after this same slot's own Todo 1 re-verify (bucket 1,557/~4,210 dates, all 10 VMs healthy — see entry
+below). Rather than log a second near-duplicate "still waiting" entry for Todo 3, ran the manifest-cleanliness query
+early (correctness craft north-star) against the availability_index for `features-sports-prd-central-element-323112` via
+a synced `.venv` (`uv sync --frozen`) + `read_availability_index`:
+
+- **77,704 total manifest rows** across capture_status: `captured` 42,929, `empty_confirmed` 34,644, `attempted_failed`
+  **131**. All 131 have a non-blank `error_reason` (130 `ValueError`, 1 `AvailableAtStampingError`) — so the literal "0
+  blank-reason" sub-gate already holds.
+- **Traced the 131 `attempted_failed(ValueError)` rows**: all 14 unique dates (2025-09-01→2025-09-13 + 2025-10-01, the
+  P1 golden window) with `written_at` between 2026-06-27 and 2026-07-08 — **none from today's running compute**. This is
+  the exact bug slot-3's 2026-07-08 20th-dispatch root-caused and fixed (`features-service@12816d87`, int64 vs
+  stringified `fixture_id` merge on the post-match join).
+- **Checked whether `--skip-existing` would strand these rows forever** (read `batch_handler.py`
+  `_should_skip_attempted`): it skips `captured`/`empty_confirmed` only — `ATTEMPTED_FAILED` and missing rows always
+  fall through to retry, force or not (`_run_reference_tables` line 409, `_run_feature_group` line 507). So no manual
+  `--force` re-run is needed: when the running 10-VM fleet's assigned chunk reaches Sept/Oct 2025, these 14 dates will
+  be recomputed automatically with the fixed code and should resolve to `captured`/`empty_confirmed`.
+
+**What I did NOT do**: did not force-recompute these 14 dates manually — the retry-on-attempted-failed logic already
+guarantees a correct outcome once the fleet reaches that date range, so a manual re-run would just be duplicate, wasted
+work (efficiency craft north-star). Did not re-verify Todo 1's fleet health a second time in this same session (already
+confirmed moments earlier). Did not flip Todo 3's checkbox — the overall gate is full-history coverage and compute is
+only ~37% done; this was a partial-subset check to catch a correctness regression early, not a full-history verify.
+
+**Handoff for the next dispatch**: once the full-history compute (Todo 1) reaches completion, re-run this same
+manifest-cleanliness query (or `check_pipeline_completeness.py`) over the full 2015→present range — expect
+`attempted_failed` count to have dropped from 131 toward 0 as the Sept/Oct-2025 chunk gets naturally reprocessed by the
+fixed code; if any `attempted_failed` rows remain after full-history completion, THAT would be a genuine new finding
+worth a targeted `--force --date <D>` re-run. Checkbox NOT flipped. `/skip-current-task` taken (no further
+data_engineering action available until the compute progresses).
+
 ### 2026-07-13 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, genuinely mid-compute, no new action)
 
 Re-dispatched shortly after this same slot's own prior entry below (same day). Fast re-verify only (not a repeat
