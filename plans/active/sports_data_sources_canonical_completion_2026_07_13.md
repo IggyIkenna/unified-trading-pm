@@ -104,13 +104,38 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
-- [ ] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** 209,526 `expected_unattempted` rows and
-      exactly 0 `captured` — find whether this pipeline was ever actually implemented/wired (check
-      `market-tick-data-service` for an ODDS_HORIZON_BUCKET producer), whether it's gated behind a credential/feature
-      flag, or whether the expected-universe enumerator is seeding a universe for a feature that was never built. This
-      may be a genuine "scaffold exists, adapter never shipped" gap (per the workspace's "external data always available
-      — exhausting the free path is a credential ask, not a descope" rule) — if so, build the adapter/writer or file it
-      precisely as `BLOCKED-CREDENTIALS` with the scaffold in place, per that rule (do not silently descope).
+- [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
+      `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
+      `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
+      124,294 orphaned rows, 123,642 now `captured` and visible in the canonical manifest). Root cause was a
+      manifest-bucket-routing split-brain, NOT a broken/unbuilt pipeline — see Progress Log 2026-07-13 "IMPLEMENTATION
+      dispatch" entry for full detail, the 2 deeper follow-on bugs discovered (expected-universe grain mismatch;
+      raw-input prefix-template drift), and the corrected `odds_api` finding (362,665 rows of the SAME bug class, filed
+      as a new P1 todo below rather than fixed in this pass — touches the shared cross-asset-group MTDS orchestrator,
+      higher blast radius, needs its own dedicated pass).
+- [ ] [DATA] P1. **MTDS shared-orchestrator sports-manifest-bucket routing (NEW 2026-07-13).** Extend the same
+      `sports → instruments-store` manifest-bucket exception to MTDS's own cross-asset-group raw-capture path
+      (`engine/orchestrator/__init__.py::get_tick_data_bucket()` / `_DateRunState.bucket` / `manifest_finalize.py`'s
+      `catalogue_bucket=state.bucket`) WITHOUT moving the actual tick-byte write path (mirror the `_resolve_bucket()` vs
+      `_resolve_manifest_bucket()` split from the mdps_odds_horizon_bucket fix above) — then migrate the 362,665
+      orphaned `source=odds_api` rows (362,631 `captured`, live through today) the same way. Requires a full audit of
+      every `ManifestWriter`/preflight-lookup call site in the shared orchestrator (affects ALL asset_groups —
+      cefi/defi/tradfi/sports/prediction, not just sports) before shipping — full blast-radius proof required per
+      `AUTONOMOUS_AGENT_RULES.md` rule 11 (a gate/change you make must be proven across the whole fleet it touches, not
+      just sports).
+- [ ] [DATA] P1. **mdps_odds_horizon_bucket expected-universe grain realignment (NEW 2026-07-13).** Fix
+      `enumerate_expected_universe.py`'s sports seeding for this source so `expected_unattempted` uses the SAME
+      `(venue=ODDS_API, data_type=odds_horizon_bucket lowercase, timeframe=T-*)` grain MDPS actually writes, instead of
+      the current coarse `(venue="", data_type=ODDS_HORIZON_BUCKET uppercase, no timeframe)` seed — confirmed zero
+      identity overlap between the two grains in a live dry-run. Required before this source can show a clean
+      0/0/0-style coverage number (currently ~209k `expected_unattempted` and ~124k `captured` sit as disjoint cells
+      post-backfill).
+- [ ] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** Reconcile
+      `_CANONICAL_PREFIX_TEMPLATES` in `_read_raw_odds()` against MTDS's actual current on-disk sports-odds writer
+      convention — confirmed via live `list_blobs` probes that NO on-disk shape currently uses the
+      `data_source=ODDS_API` segment the reader expects (2026-05 layout: per-bookmaker `venue={BOOKMAKER}`; 2026-06+
+      layout: meta `venue=ODDS_API` with non-`ticks.parquet` filenames). Needed before any future `--force` re-run can
+      safely capture new dates without silently reclassifying real captures as `empty_confirmed`.
 - [x] [DATA] P1. **odds_api source: retirement-status check.** — DONE, no code change (root-caused twice; see Progress
       Log 2026-07-13 "implementation" entry). `odds_api` is NOT retired/superseded: it is the sole `SOURCE_PRIORITY`
       owner of `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` and is a credential-gated (`BLOCKED-CREDENTIALS`) live
@@ -534,3 +559,118 @@ report written in this plan's Progress Log.
   fine-grained product. ~7.5x ratio (109,638/ 14,656) is plausible for "several horizon buckets per match" at this
   league/date volume. **Not a bug** — same dates, same leagues, different write-grain for raw-ingest-marker vs
   derived-product. No further investigation needed on this specific question.
+
+- **2026-07-13 (slot-3, IMPLEMENTATION dispatch — `mdps_odds_horizon_bucket: root-cause zero-ever-captured` P0 todo).
+  Root cause confirmed exactly as the prior investigation concluded (manifest-bucket-routing split-brain); code fix
+  shipped + a metadata backfill applied; TWO additional, deeper bugs discovered in the process and scoped out as
+  follow-on todos rather than rushed.**
+  - **Code fix shipped**: `market-data-processing-service@6907257e4`
+    (`fix(sports): route mdps_odds_horizon_bucket manifest to instruments-store-sports`, pushed directly to
+    `live-defi-rollout` per this session's established direct-push convention — `quality-gates.sh` green before commit).
+    `reprocess_sports_odds.py` now has TWO separate bucket resolvers: `_resolve_bucket()` (raw-odds input + bucketed
+    OUTPUT DATA — unchanged destination, stays `market-data-tick-sports-prd`, matches what `features-service`'s
+    `read_odds_data`/`read_bucketed_odds` readers resolve) and a NEW `_resolve_manifest_bucket()` (the
+    `ManifestWriter.catalogue_bucket`, now `resolve_bucket_name(kind="instruments-store", asset_group="sports")` — the
+    SAME call the expected-universe enumerator uses). Only the manifest moved; no data bytes moved; the fix is a pure
+    routing correction.
+  - **A SECOND, independent bug found + fixed in the SAME commit** (in-file, same findings-triage rule): the
+    pre-existing `_resolve_bucket()` itself was ALSO broken, unrelated to the manifest issue. It called
+    `get_bucket_name("market-data-tick-sports", project_id=project)` — passing `project_id` explicitly. UTL's
+    `get_bucket_name` (`core/cloud_constants.py:209`) SKIPS its yaml-SSOT env-tiering delegation whenever `project_id`
+    is passed explicitly (a documented behavior — "the resolver reads project_id from env and doesn't accept a
+    caller-supplied override") and silently falls through to a legacy no-env-tier shape
+    (`market-data-tick-sports-{pid}`, missing `-prd-`) instead of the real bucket (`market-data-tick-sports-prd-{pid}`)
+    — confirmed empirically: running the ORIGINAL unmodified function locally produced the wrong bucket name every time,
+    in any environment (dev or prod), since `project_id` is NEVER `None` at this call site
+    (`UnifiedCloudConfig().gcp_project_id or "test-project"` is always a non-empty string). Historical production runs
+    (VM-tarball-deployed, `deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh`) evidently ran an OLDER
+    `unified-trading-library` snapshot where this branch behaved differently — a fresh checkout/redeploy today would
+    have silently started writing real captures to a wrong, un-tiered, likely-nonexistent-index bucket. Fixed by
+    switching to `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="sports")` directly — the same call
+    MTDS's own `get_tick_data_bucket()` and features-service's `resolve_tick_data_bucket()` already use for this exact
+    bucket. Verified locally post-fix: resolves to the correct, real, live
+    `market-data-tick-sports-prd-central-element-323112`.
+  - **Historical backfill applied** (metadata-only, no re-derivation): `instruments-service` (untracked, one-off)
+    `scripts/migrate_orphaned_mdps_odds_horizon_bucket_rows_2026_07_13.py` — migrates the 124,294 orphaned
+    `source=mdps_odds_horizon_bucket` rows (123,642 `captured` / 652 `empty_confirmed`) from
+    `market-data-tick-sports-prd`'s manifest into `instruments-store-sports-prd`'s manifest. **Why a metadata copy, not
+    a `--force` re-run**: re-running `reprocess_sports_odds.py --force` would re-invoke `_read_raw_odds()`, whose
+    `_CANONICAL_PREFIX_TEMPLATES` expect a `data_source=ODDS_API` path segment — confirmed via live `list_blobs` probes
+    (2026-05-10, 2026-06-24) that NO on-disk shape uses that segment (2026-05 layout uses per-bookmaker
+    `venue={BOOKMAKER}`; 2026-06+ layout uses `venue=ODDS_API` with non-`ticks.parquet` filenames) — a `--force` re-run
+    today would silently reclassify all 123,642 real captures as `empty_confirmed`, a regression. **Safety-verified
+    before writing**: zero identity collision between the 123,968 distinct migrated (date, venue, data_type, timeframe,
+    league_id) tuples and the 215,481 existing target rows (the enumerator's seed uses `venue=""` + UPPERCASE
+    `data_type="ODDS_HORIZON_BUCKET"` + `timeframe=None` — a different, coarser grain than MDPS's own `venue=ODDS_API` /
+    lowercase `data_type` / per-`T-*`-timeframe rows) — so this migration cannot create a new duplicate-dedup-key group
+    (today's earlier `dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py` bug class). Dry-run confirmed the
+    exact expected counts (124,294 eligible, 0 collisions) before `--apply`. Same accepted one-off convention as that
+    script (plain `gcsfs` read/write, no generation-match — DRY-RUN default, `# Epic`/`# Lifecycle`/`# Delete-when`
+    marker). **Concurrency note**: `instruments-service` had a live, uncommitted, in-progress WIP from a concurrent slot
+    (the `api_football` todo's fix — `failure.py`/`process.py`/`process_completeness.py`/`api_football.py` + test) at
+    the time this ran; only this script's own new file was staged/committed, the other agent's dirty files were left
+    completely untouched (`git status` verified before and after).
+  - **TWO deeper, separate bugs discovered and DELIBERATELY NOT rushed in this session (documented instead, per the "big
+    finding → issue doc" rule + AUTONOMOUS_AGENT_RULES rule 11 blast-radius caution)**:
+    1. **Expected-universe grain mismatch for `mdps_odds_horizon_bucket`** — even with the bucket now correct, the
+       enumerator's 209,526-row `expected_unattempted` seed (coarse: `venue=""`, `data_type="ODDS_HORIZON_BUCKET"`
+       uppercase, no `timeframe`, one row per (date, league_id)) will NEVER reconcile against MDPS's actual captured
+       shard grain (`venue="ODDS_API"`, `data_type="odds_horizon_bucket"` lowercase, one row per (date, league_id,
+       timeframe)) — confirmed zero identity overlap in a live dry-run. This means the coverage metric for this source
+       will show BOTH ~209k `expected_unattempted` AND ~124k `captured` as entirely disjoint cells post-migration — real
+       progress (real work now visible) but NOT a clean 100%-coverage story, because the "expected" side needs its own
+       re-seed at the correct grain. This is a design-level fix to `enumerate_expected_universe.py`'s sports
+       `mdps_odds_horizon_bucket` seeding logic, not a quick patch.
+    2. **Raw-input path-template drift (MTDS on-disk convention has moved past the MDPS reader)** — `_read_raw_odds()`
+       in `reprocess_sports_odds.py` has apparently been unable to find ANY current-shape raw odds data for a while
+       (confirmed no matches for 2026-05 or 2026-06 dates); MTDS's actual on-disk sports odds layout has evolved
+       (per-bookmaker `venue=` segments in 2026-05, meta `venue=ODDS_API` per-sport files in 2026-06+) without the
+       reader's `_CANONICAL_PREFIX_TEMPLATES` being updated to match. This means FUTURE re-runs (even post-bucket-fix)
+       may currently be unable to capture any NEW dates until this is fixed — a real, live pipeline-health risk,
+       independent of the manifest-routing bug this session fixed. Needs careful cross-referencing of MTDS's exact
+       current writer convention (`market_tick_data_service/engine/orchestrator/partitioned_writer.py`) against every
+       historical layout era before a safe multi-template fix can ship (get it wrong and captures silently regress
+       further). **Not attempted in this session** — flagged here + as a new todo below, per the workspace's
+       blast-radius-before-fleet-change rule (this specific reader affects a currently-active, revenue-relevant sports
+       ML pipeline; a wrong guess at the new prefix shape is worse than leaving it as a documented, precisely-scoped
+       open item).
+    3. **(Correction to this plan's own earlier `odds_api` conclusion, filed 2026-07-13 investigation-only dispatch
+       above)**: that entry concluded `source=odds_api` is fully and correctly credential-gated/dead post-2020-06-06,
+       based on querying ONLY `instruments-store-sports-prd`. A direct check of the OTHER manifest
+       (`market-data-tick-sports-prd`) for `source=odds_api` during this session found **362,665 rows, 362,631
+       `captured`** (`service_name` split `market-tick-data-service` 195,437 + `migrate-sports-canonical` 167,220 +
+       `market-data-processing-service` 8), `written_at` spanning through **today** — i.e. the SAME manifest-bucket
+       split-brain bug class affects the raw `odds_api` numerator too, at ~3x the row-count of
+       `mdps_odds_horizon_bucket`. That prior entry's conclusion is **INCOMPLETE, not wrong on its own narrow evidence**
+       (the credential-gated finding for the `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` derived sub-types still holds —
+       those genuinely have 0 rows anywhere post-2020-06-06) — but the raw `trades`/`odds_api` capture itself is very
+       much alive and simply invisible in the canonical manifest, same bug, much bigger blast radius. **This is a
+       cross-repo, data-correctness "big finding"** — flagged here for the operator/next dispatch, not silently folded
+       into this session's narrower `mdps_odds_horizon_bucket` fix (fixing MTDS's raw-capture manifest routing touches
+       the SHARED, cross-asset-group `process_ticks()`/`_DateRunState.bucket` orchestrator used by cefi/defi/tradfi/
+       sports/prediction alike — a substantially higher-blast-radius change than this session's isolated MDPS-script
+       fix, requiring its own careful, dedicated pass per AUTONOMOUS_AGENT_RULES rule 11).
+  - **New follow-on todos filed** (P1, not part of this session's scope, decide-and-document per autonomous rules —
+    genuinely separate bodies of work, not a deferral of THIS todo which is fully closed):
+    - `[DATA] P1. MTDS shared-orchestrator sports-manifest-bucket routing`: extend the same `sports → instruments-store`
+      manifest-bucket exception to MTDS's own cross-asset-group raw-capture path
+      (`engine/orchestrator/__init__.py::get_tick_data_bucket()` / `_DateRunState.bucket` / `manifest_finalize.py`'s
+      `catalogue_bucket=state.bucket`) WITHOUT moving the actual tick-byte write path (mirror this session's
+      `_resolve_bucket()` vs `_resolve_manifest_bucket()` split) — then migrate the 362,665 orphaned `odds_api` rows the
+      same way. Requires careful audit of every `ManifestWriter`/preflight-lookup call site in the shared orchestrator
+      (affects ALL asset_groups, not just sports) before shipping — full blast-radius proof required per
+      AUTONOMOUS_AGENT_RULES rule 11.
+    - `[DATA] P1. mdps_odds_horizon_bucket expected-universe grain realignment`: fix `enumerate_expected_universe.py`'s
+      sports seeding for this source so `expected_unattempted` uses the SAME
+      `(venue=ODDS_API, data_type=odds_horizon_bucket lowercase, timeframe=T-*)` grain MDPS actually writes, instead of
+      the current coarse `(venue="", data_type=ODDS_HORIZON_BUCKET uppercase, no timeframe)` seed — required before this
+      source can show a clean 0/0/0-style coverage number.
+    - `[DATA] P1. reprocess_sports_odds.py raw-input prefix-template refresh`: reconcile `_CANONICAL_PREFIX_TEMPLATES`
+      in `_read_raw_odds()` against MTDS's actual current on-disk sports-odds writer convention (multiple historical
+      layout eras confirmed: `data_source=` never seen on disk; per-bookmaker `venue={BOOKMAKER}` circa 2026-05; meta
+      `venue=ODDS_API` circa 2026-06+) — needed before any FUTURE `--force` re-run can safely capture new dates without
+      silently regressing existing coverage.
+  - **This todo (`mdps_odds_horizon_bucket: root-cause zero-ever-captured`) is DONE**: the manifest-bucket-routing root
+    cause is fixed in code (not just data patched), the historical real captures are now visible in the canonical
+    manifest, and every deeper follow-on discovery is filed as a scoped todo above rather than silently rolled into this
+    fix or left undocumented.
