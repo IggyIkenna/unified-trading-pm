@@ -4311,7 +4311,202 @@ per MTDS consolidation ruling.)**
       unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).** **(MIGRATED FROM:
       `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-### From `downstream_services_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution))
+### 2026-07-13 — Plan A `canonical_question_group` OBJECT-LAYER migration — combined design (supersedes the C0/E-checklist copy-walk above for the _object shape_ question; the copy-walk itself already ran)
+
+> **Operator ruling 2026-07-13**: prediction = ONE combined migration straight to the Plan A `canonical_question_group`
+> shape — no interim pure-copy. **SCOPE CORRECTION (same day, fresh audit PM@194b7d542)**: the legacy
+> `market-data-tick-prediction-…`/`instruments-store-prediction-…` buckets are CONFIRMED GONE (404, version-purged) —
+> the historical "573,451 legacy objects" figure (`gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`,
+> `instruments_mtds_subset_consistency_remediation_2026_06_17.md`) refers to objects already copied into canonical
+> `pred-prd` by the prior copy-walk (E4, ran 2026-06-29) and is now HISTORICAL PROVENANCE only — **there is no
+> legacy-bucket input left to map**. The fresh audit counts **5.42M total objects** currently in
+> `market-data-tick-pred-prd-central-element-323112` across ALL prediction data_types (trades, book_snapshot_5,
+> market_lifecycle, …) — this migration's actual scope is the **`trades`/`prediction_trades` subset of that corpus
+> only** (see "Scope: which data_type" below), not the full 5.42M.
+
+**Codex SSOTs for this section**: `codex/02-data/per-asset-group-bucket-layouts.md` ~L121 ("PREDICTION (post-Plan A
+target)" table row — the ratified object shape); `codex/02-data/pipeline-mode-partition.md` § "Predictions migration
+(Plan A)"; `codex/02-data/availability-manifest-and-data-status.md` § "Bundled data_types"
+(`prediction_canonical_question_group` / `PREDICTION_GROUPS`). No conflicting in-flight migration found:
+`gcloud compute instances list` (2026-07-13) shows no prediction/canonical-migration VM running; the only
+prediction-adjacent active plans are `prediction_canonical_identity_migration_2026_07_08.md` (instruments-service
+catalogue identity — orthogonal, different repo/data-plane), `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`
+(UI/OTHER-bucket, references this plan for the writer/data side — do not duplicate there), and
+`prediction_capture_incident_remediation_2026_07_06.md` (capture-path dtype hardening + PERP adapter correction —
+orthogonal).
+
+#### Current state (verified live, 2026-07-13)
+
+- Legacy buckets 404 confirmed (`gcloud storage buckets describe` on both `market-data-tick-prediction-…` and
+  `instruments-store-prediction-…`).
+- `market-data-tick-pred-prd-central-element-323112` raw_tick_data is **still per-market-file** (NOT yet the cqg
+  rollup): sampled
+  `day=2026-06-26/pipeline_mode=live_kalshi/asset_group=prediction/venue=KALSHI/ instrument_type=prediction_market/data_type=book_snapshot_5/KALSHI:PREDICTION_MARKET:{ticker}.parquet`
+  (one file per market) and multiple other days 2021→2026-06 showing `data_type=trades` / `data_type=prediction_trades`
+  (older, not yet CF-7-relabeled) per-market files. **Zero objects found anywhere under
+  `data_type=prediction_canonical_question_group`** — the bundled OBJECT shape has never been written; only the MANIFEST
+  already emits a `data_type=prediction_canonical_question_group` bundle row (see next point) — this is the gap this
+  migration closes.
+- Live `_index` (755,943 prediction rows, checked via direct parquet download) already shows
+  `prediction_canonical_question_group` as a manifest data_type (POLYMARKET captured=7,289, KALSHI captured=10,040, plus
+  various empty/expected states) — **the live writer already computes+emits the cqg-BUNDLE MANIFEST atom**
+  (`manifest_finalize.py::_finalize_prediction_bundles`, fed by `partitioned_writer.py::_update_prediction_counts` /
+  `_prediction_cluster_counts`) but the **raw OBJECT is still written per-market** (`partitioned_writer.py::write_chunk`
+  groups by `symbol`, not by `canonical_question_group`, for non-derivative prediction rows). So the manifest has been
+  "lying ahead" of the object layer since Wave-2 — this migration makes the object layer catch up.
+- `trades`/`prediction_trades` manifest cells (10,799 total captured across venues) also exist as a SEPARATE, redundant
+  per-market atom (`venue_fetch.py::_record_venue_shard_counts` → `shard_counts`/`captured_per_instrument_shards`, fed
+  by `writer.underlying_counts` i.e. `_row_counts`) — this generic per-symbol atom is UNCHANGED by the design below (out
+  of scope for this pass; flagged as a residual below).
+
+#### Scope: which data_type actually rolls up
+
+Only the raw **`trades`** data_type physically bundles into the `canonical_question_group={cqg}/ticks.parquet` shape.
+Evidence: a live per-market `trades` object's columns are
+`side, asset, conditionId, size, price, timestamp, title, slug, eventSlug, outcome, outcomeIndex, transactionHash, condition_id, data_type, instrument_type, underlying, market_category, market_type, resolution_period, data_source, venue, chain, ts_event, symbol`
+— i.e. it carries EXACTLY the "6 legacy axes" the task names
+(`data_source`/`chain`/`market_category`/`underlying`/`market_type`/`resolution_period`), already as ROW COLUMNS (not
+path segments — that flattening already happened in the E4 copy-walk). `book_snapshot_5` / `market_lifecycle` rows ALSO
+carry a `canonical_question_group` column (both adapters stamp it — `polymarket_adapter.py:676,795`,
+`kalshi_adapter.py:520` — consumed today only by the MANIFEST completeness bundle, which conflates all three data_types
+into one `_prediction_cluster_counts` accumulator) but have a DIFFERENT row schema (book depth levels, not trade prints)
+— physically bundling them into the same file as `trades` would mix schemas. `prediction_trades` is a pre-CF-7 alias of
+`trades` on older objects (2025-03-14→2026-03 sampled); the live adapter (`polymarket_adapter.py:664`) hardcodes
+`data_type="trades"` today, so `prediction_trades` is a closed historical set, not a live emission.
+
+#### Target write shape (ratified)
+
+```
+raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/
+  data_type=prediction_canonical_question_group/canonical_question_group={CQG}/ticks.parquet
+```
+
+One file per `(canonical_question_group, day)` per venue; `market_id` (the bare `symbol`/`condition_id`/ticker) survives
+as a ROW COLUMN; the 6 legacy axes stay as row columns (harmless, already flattened). `pipeline_mode` sits LEFT of
+`asset_group=` per `pipeline-mode-partition.md` (unchanged from today).
+
+#### Design — live-writer code change (drafted + reverted this session; NOT shipped — see "Why not shipped")
+
+Fully designed and validated (re-derivable from this spec without re-investigation):
+
+1. **UAC** `unified_api_contracts/canonical/partition_paths.py::build_prediction_partition_path` — add an optional
+   `canonical_question_group: str = ""` kwarg. When given, returns the bundle path above instead of the per-market
+   `{condition_id}.parquet` path (`condition_id`/`data_type` args become don't-cares for the bundle branch). Add a
+   module constant `BUNDLED_PREDICTION_DATA_TYPE = "prediction_canonical_question_group"`; export both through
+   `unified_api_contracts/gcs_paths.py` (the existing facade `build_prediction_partition_path` is already re-exported
+   there and imported by MTDS from there, not from `canonical.*` directly — Citadel import-surface rule).
+2. **MTDS** `engine/orchestrator/symbol_rules.py::_build_partition_path_for_asset_group` — new
+   `canonical_question_group: str = ""` kwarg; when set (prediction only), delegate to the UAC builder above (a NEW code
+   path, unlike the existing prediction/tradfi inline-duplication debt — no reason to duplicate the format string here
+   too). Add `_PREDICTION_CQG_BUNDLE_DATA_TYPES = frozenset({"trades"})` next to `_UNDERLYING_PARTITIONED_TYPES`
+   (deliberately narrow — see "Scope" above for why `book_snapshot_5` is excluded).
+3. **MTDS** `engine/orchestrator/partitioned_writer.py`:
+   - `_get_writer(...)` — new `cqg: str = ""` param; when set, key =
+     `(instrument_type, BUNDLED_DATA_TYPE, "__cqg__", cqg)` (a 4-tuple, so it can never collide with the existing
+     3-tuple per-symbol/per-underlying keys) and the GCS path is built via the UAC bundle branch (`file_name` fixed at
+     `"ticks.parquet"`).
+   - `write_chunk(...)` — add `cqg = self._resolve_prediction_cqg_bundle_key(dt_str, group_df)`; when non-empty, pass
+     `symbol="", file_symbol="", cqg=cqg` to `_get_writer` instead of the per-symbol kwargs (mirrors exactly how
+     `options_chain`/`futures_chain` already bundle by `underlying` while each contract's own `symbol` column survives
+     as a row value — same mechanism, new bundle key). New helper
+     `_resolve_prediction_cqg_bundle_key(dt_str, group_df)`: returns `""` unless
+     `self._asset_group == "prediction" and dt_str in _PREDICTION_CQG_BUNDLE_DATA_TYPES and "canonical_question_group" in group_df.columns`
+     and the column has a non-null/non-empty value for the group (falls back to per-market on unclassified, rather than
+     joining a bogus bundle). `_update_row_and_symbol_counts` / the generic `shard_counts` atom are deliberately LEFT
+     UNCHANGED (see residual below).
+   - No change needed to `_update_prediction_counts` / `manifest_finalize.py::_finalize_prediction_bundles` — the
+     manifest atom is already correct and independent of the object layer.
+
+This was implemented + code-reviewed against the exact `options_chain`/`futures_chain` bundling precedent this session,
+then **reverted (`git checkout --` on just these 2 files per repo — confirmed clean, no foreign WIP touched)** before
+commit — see "Why not shipped" below. The spec above is complete enough to re-apply directly.
+
+#### Why not shipped this session — the real blocker (READ BEFORE RE-ATTEMPTING)
+
+Cutting the object over to the bundle shape without a companion change breaks the **live PREDICTION candle pipeline** in
+`market-data-processing-service` (MDPS), a DIFFERENT repo, silently:
+
+- `market_data_processing_service/app/core/orchestration_scanner.py::_blob_matches_data_type_partition` (line ~248)
+  matches raw shard blobs by the literal substring `f"data_type={data_type}/"` — for prediction "trades" candles this
+  means it looks for `data_type=trades/` in the blob name. After cutover, NEW days' trades data lands under
+  `data_type=prediction_canonical_question_group/` instead — the scanner finds 0 blobs → MDPS silently stops building
+  prediction OHLCV candles for every day after cutover. **The exact same equivalence-map mechanism this file already has
+  for DeFi** (`_DEFI_DEX_DATA_TYPE_ONDISK_SEGMENTS`, used by `_blob_matches_data_type_partition`/
+  `_data_type_requires_partition` for the dex_pools/dex_swaps on-disk-vs-logical data_type collapse) is the right
+  template to extend for prediction (`"trades" → ["prediction_canonical_question_group", "trades"]` on-disk segments).
+- `market_data_processing_service/app/core/dependency_checker.py::check_upstream_data_per_shard` (line ~552) does its
+  own independent raw `list_blobs` + substring match on `data_type={data_type}/` — same failure mode. Used by
+  `cli/handlers/process_handler.py::_filter_shards_by_per_shard_check` (opt-in via `--per-shard-check`, NOT confirmed
+  whether the live prediction MDPS cron passes that flag — VERIFY before assuming it's inert).
+- `market_data_processing_service/app/adapters/prediction/trades_adapter.py` (`PredictionTradesAdapter`) — encouraging
+  finding: its own docstring says "Polymarket ticks.parquet contains multiple condition_ids (instruments) in one file.
+  The orchestrator detects this via the instrument_key column which this adapter adds from condition_id" — i.e. the
+  candle adapter ALREADY expects to receive a multi-instrument combined frame with a derived `instrument_key`, which is
+  compatible with (maybe even written in anticipation of) the bundle shape. This piece may need **zero** changes —
+  VERIFY by reading how `orchestration_scanner.py` hands the scanned+concatenated frame to this adapter today.
+
+Per the task's own contract ("if the live path needs a code change… ships FIRST, else the migration chases a moving
+target") and the workspace's data-pipeline-correctness HARD RULE (no regressions), shipping the MTDS-only half now would
+have silently broken live candle production — so it was reverted rather than shipped half-done. **Clean boundary**:
+MTDS+UAC diff is fully specified above; the missing companion piece is scoped to 2-3 functions in 2 files in MDPS
+(`orchestration_scanner.py`, `dependency_checker.py`) + one VERIFY read (`trades_adapter.py`) — small enough for a
+single follow-up session to design+ship all three repos together, QG'd, before touching any object.
+
+#### Historical rollup — reuse `rebuild_prediction_manifest.py`'s classify/atom logic (NOT built this session)
+
+`market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py` already contains the EXACT
+classify-and-bundle logic needed (battle-tested, unit-tested): `compute_object_atom()` re-classifies each per-market
+object's rows via UAC `classify_polymarket_to_canonical_group`/`classify_kalshi_to_canonical_group`, groups by
+`(date, venue, cqg)`, and currently only EMITS A MANIFEST ROW per bundle (`record_captured_from_counts`). The historical
+migration script is a SIBLING tool that reuses `parse_canonical_prediction_path` / `compute_object_atom` /
+`merge_object_into_aggregate` verbatim but, instead of (or in addition to) `emit_manifest_rows`, **concatenates the real
+per-object DataFrames per `(date, venue, cqg)` group and writes ONE physical parquet** to the target path via the new
+UAC/MTDS builder above — CF-11 honest-absence rules (0-row → failed, missing envelope → failed,
+`ClassifierConfidenceLow` → failed, never a bogus bundle) carry over unchanged. Row-parity invariant for the SMOKE step:
+`sum(per-market object row counts for a (day,venue,cqg)) == rollup file row count`. Perf-contract unchanged
+(`ThreadPoolExecutor`, `--start-date`/`--end-date`/`--workers`, per-object `try/except…continue`, idempotent). Launch
+via `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (existing registered launcher family) once the
+live-writer companion change (above) has shipped + been running for at least one full day (so the rollup script's date
+range never overlaps a still-in-flight per-market-only day).
+
+#### Phased next steps (in order — each gates the next)
+
+- [ ] [CODE] P0. Ship the MTDS+UAC live-writer bundle change (spec above) TOGETHER WITH the MDPS companion change
+      (`orchestration_scanner.py` data_type-equivalence map extension + `dependency_checker.py` per-shard-gate update +
+      VERIFY `trades_adapter.py` needs no change) as ONE coordinated cross-repo QG+quickmerge — 3 repos
+      (unified-api-contracts, market-tick-data-service, market-data-processing-service), each gated green independently
+      per the "commit is the quality boundary" rule. Verify in a live/paper run (not just unit tests) that a NEW day's
+      prediction trades still produce candles post-cutover before calling this done.
+- [ ] [DATA] P1. Build the historical rollup migration script (reuse `rebuild_prediction_manifest.py` logic, spec above)
+      with `--dry-run` first; smoke-test on 1 day × 1 venue against real GCS data verifying the row-parity invariant,
+      then a small multi-day/multi-venue dry-run sample.
+- [ ] [DATA] P1. Pre-migration drain (stop prediction writers/crons per the HARD RULE) → snapshot `_index` →
+      registered-launcher VM walk (SPOT, per-VM date shards, no-fire-and-forget) rewriting the
+      `trades`/`prediction_trades` corpus into per-(cqg,day) rollup files, `--apply` only after a full dry-run plan
+      review → resume writers.
+- [ ] [DATA] P1. Post-verify: CF-audit the pred surface (row-parity per (day,venue,cqg) sampled; manifest cross-check
+      against the ALREADY-correct bundle atom — should now match 1:1 with real objects instead of being ahead of them);
+      confirm deployment-ui prediction drilldown reads the new shape (cross-ref
+      `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`).
+- [ ] [DATA] P2. Only after content-verified closure (sports-template content-aware verifier, snapshot-first): delete
+      the superseded per-market `trades`/`prediction_trades` objects. Journal every step in THIS section's Progress Log
+      (below), not a new plan.
+
+**Progress Log (this section)**:
+
+- **2026-07-13** — Design session. Confirmed legacy buckets 404 (no migration input there); confirmed no in-flight
+  conflicting prediction migration VM; confirmed current `pred-prd` shape is still per-market (0 objects at
+  `data_type=prediction_canonical_question_group` anywhere sampled); confirmed the manifest already emits the cqg-bundle
+  atom (17,329 captured cells) ahead of the object layer. Drafted + validated the full MTDS+UAC write-path code change
+  (options_chain/futures_chain bundling precedent), then discovered mid-implementation that MDPS's
+  `orchestration_scanner.py`/`dependency_checker.py` raw-blob scanners hardcode `data_type={requested}/` substring
+  matching for the raw shard discovery feeding live prediction candle-building — shipping the writer change alone would
+  silently stop prediction OHLCV candle production for every day after cutover. Reverted the MTDS+UAC edits (clean
+  `git checkout --` on only the 2 files per repo I'd touched; confirmed no foreign WIP disturbed) rather than ship a
+  partial cross-repo change into a live data pipeline. Full spec + exact file:line references captured above so the next
+  session implements directly instead of re-diagnosing. Fresh-audit correction folded in: 573,451 was the pre-copy-walk
+  legacy count (bucket now gone); current `pred-prd` total is 5.42M objects across all data_types, of which only the
+  `trades`/`prediction_trades` subset is this migration's physical-rollup scope.
 
 - [ ] [CODE] P1. **FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets, `-prd`
       initial.** The `instruments-store` / `features-store` / `ml-store` / `execution-store` (+ `ml-configs-store`,
