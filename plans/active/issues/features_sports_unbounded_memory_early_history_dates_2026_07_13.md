@@ -25,8 +25,10 @@ related:
   ]
 created: 2026-07-13
 parent_epic: sports_master
-priority: P1
-source: sports_p2_features_history_to_ml_ready-002 dispatch, slot 6, 2026-07-13 (full-history features backfill fleet)
+priority: P0
+source:
+  sports_p2_features_history_to_ml_ready-002 dispatch, slot 6, 2026-07-13 (full-history features backfill fleet);
+  reopened same day by slot 12 after the shipped fix (features-service@b05f48ad) failed to reproduce-fix on real data
 assigned_vm: planning
 resolved_by:
 locked_by:
@@ -134,19 +136,78 @@ computed and the manifest likely has no captured row for it (or a partial one).
       report could see — buffered stdout on the OOM-killed process). No join-cardinality guard existed, so a duplicate
       `fixture_id` surviving upstream dedup (this codebase has a documented history of str/int64 dtype-mismatch dedup
       gaps) could additionally explode the join into a cartesian product.
-- [x] ✅ [DATA] P1. Bound/fix the identified allocation site so this date (and any date with a similarly dense
-      historical-snapshot lookback) computes within a fixed, reasonable memory ceiling (e.g. under 16GB). (repo:
-      features-service) — features-service@b05f48ad. Precomputed the shots<->fixtures join + per-team grouping ONCE via
-      a new `_build_team_shots_index` (mirrors the existing precompute pattern in
-      `derived_features_helpers._compute_venue_features`), replacing the per-fixture-per-side `_get_team_shots` call.
-      Added `validate="many_to_one"` + an explicit `fixture_id` dedup on the join so a duplicate key can never explode
-      output rowcount — fails loudly instead of silently ballooning if the invariant is ever violated again.
-      Synthetic-scale benchmark: wall time for `compute_shot_quality_batch` dropped 6.72s → 0.21s (32x) at the same
-      input scale; all 47 pre-existing unit tests pass unchanged, +4 new regression tests (duplicate-fixture-row
-      cardinality guard, batch-index/per-team parity). Full `quality-gates.sh` green; shipped via quickmerge.
+- [x] ⚠️ REOPENED (2026-07-13, slot 12) [DATA] P1. Bound/fix the identified allocation site so this date (and any date
+      with a similarly dense historical-snapshot lookback) computes within a fixed, reasonable memory ceiling (e.g.
+      under 16GB). (repo: features-service) — features-service@b05f48ad shipped this precompute-once fix
+      (`_build_team_shots_index` + `validate="many_to_one"` dedup guard) and it was marked done on a SYNTHETIC-scale
+      benchmark. **Confirmed on real production data the same day the fix landed: the OOM is NOT resolved.** See the
+      "Update — production re-test" section below for full evidence. Leaving the original checkmark + evidence in place
+      (the profiling + the precompute-once change are real, verified improvements) but the completion claim itself does
+      NOT hold — treat this todo as still open pending a second investigation.
 - [ ] [INFRA] P2. Fix `lc_log_upload_trap_block`'s EXIT_STATUS to reflect an OOM-killed/crashed workload subprocess's
       real exit code, not just the wrapper shell's — so a crashed shard is never reported as `EXIT_STATUS=0`. (repo:
-      deployment-service)
-- [ ] [DATA] P2. After the fix lands, `--force`-recompute 2018-06-17 (and audit for other similarly-shaped
-      dense-lookback dates) then re-run `check_pipeline_completeness.py` / the manifest-cleanliness query for the full
-      2015→present range. (repo: features-service)
+      deployment-service) — NOW CONFIRMED WORSE than originally scoped: the 2026-07-13 re-test found the OOM killer can
+      take down the entire `google-startup-scripts.service` systemd unit (wrapper shell + tee + python child all
+      killed), not just the workload subprocess — so the existing trap may not even get a chance to run. Verify the
+      trap's EXIT-signal path survives a whole-unit OOM kill, not only a clean subprocess non-zero exit.
+- [ ] [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient on
+      production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
+      repro) end-to-end through `run_new_calculators`, because the shot_quality precompute fix did not stop the OOM.
+      Also profile 2018-06-18 (a `--force` single-date run) — RSS climbed steadily past 13GB and was still rising when
+      killed, on a date with only 24 target fixtures (vs 149 on -17), which points at the 400-day HISTORICAL LOOKBACK
+      itself (independent of today's fixture count) as the dominant cost, not (only) shot_quality. Suspect candidates:
+      another per-fixture/per-team full-frame merge elsewhere in `run_new_calculators`'s calculator chain that the
+      synthetic benchmark's calculator list didn't cover (the synthetic repro checked
+      `team_form`/`team_xg`/`team_goals`/`h2h`/`promoted_team`/`venue_context` — NOT the full calculator set actually
+      invoked for these two dates), or the `_read_per_league_subpartitions` 33-shard-concat fallback path scaling badly
+      when repeated across the historical lookback window rather than just once for today. (repo: features-service)
+- [ ] [DATA] P2. After the REAL fix lands (not just the partial one), `--force`-recompute 2018-06-17 AND 2018-06-18 (and
+      audit for other similarly-shaped dense-lookback dates across the full 2015-2019 era, not just these two — the
+      2018-06-18 finding suggests this is endemic to the era, not isolated to one date) then re-run
+      `check_pipeline_completeness.py` / the manifest-cleanliness query for the full 2015→present range. (repo:
+      features-service)
+
+## Update — production re-test (2026-07-13, slot 12, same day the b05f48ad fix landed)
+
+Picked up `sports_p2_features_history_to_ml_ready-002` (Todo 3 gate). Found `fss-backfill-vm-3`/`fss-backfill-vm-4` (of
+the running 10-VM fleet) both OOM-killed — `fss-backfill-vm-3` cleanly (process gone, `dmesg` OOM at 2018-01-06, within
+its own 2017-04-22→2018-06-16 range, unrelated poison date); `fss-backfill-vm-4` at 2018-06-18, the FIRST date of its
+post-exclusion range (2018-06-17 had already been excluded by an earlier dispatch). Both crashes were at **10:08-10:09
+UTC — 31 minutes BEFORE `features-service@b05f48ad` landed at 10:40:04 UTC** — i.e. both shards were still running the
+pre-fix codebase when they died, so this was not yet evidence against the fix.
+
+Repackaged the VM tarball fresh from a local checkout confirmed to have `b05f48ad` in `HEAD`, and gap-filled both shards
+with their ORIGINAL full ranges (`--skip-existing` default):
+
+- **`fss-backfill-vm-3`**: relaunched clean, ran the fixed codebase, completed 49+ dates with no issue (2017-04-22
+  onward, past the earlier poison point) — this shard's earlier crash looks unrelated to the shot_quality bug (or was
+  incidentally fixed as a side effect).
+- **`fss-backfill-vm-4`**: relaunched on the fixed codebase (`b05f48ad` confirmed present in the packaged tarball),
+  range 2018-06-17→2019-08-11 (re-including the previously-excluded date since the fix was supposed to resolve it,
+  matching this issue doc's own Todo 4 recommendation). **OOM'd again on 2018-06-17 at 11:25:58 UTC** — same
+  `total-vm:20572684kB, anon-rss:15810800kB` signature as the original pre-fix incident, i.e. the exact allocation
+  ceiling was unchanged by the fix. Worse than the original incident: this time `dmesg`/`journalctl` show the OOM killer
+  took down the ENTIRE `google-startup-scripts.service` systemd unit (wrapper shell PID 4510, `tee`, AND the python
+  child) — `Consumed 2min 12.990s CPU time, 15.1G memory peak` — not just the workload subprocess, so the shard's own
+  per-date retry loop never got a chance to run and move to the next date; the VM was a permanent zombie (GCE `RUNNING`,
+  zero live processes) until manually recreated.
+
+Relaunched `fss-backfill-vm-4` a second time excluding 2018-06-17 again (range 2018-06-18→2019-08-11) to test whether
+the bug was specific to that one date. **It was not**: on 2018-06-18 (only 24 target fixtures, vs 149 on -17) the
+`features-servic` process climbed steadily — 12.5GB → 12.6GB → 13.05GB RSS over ~5 minutes, state `R` (actively
+computing, not hung/deadlocked), CPU time climbing in step — a slower but qualitatively identical unbounded-growth
+trajectory clearly heading toward the same OOM ceiling. Killed the VM manually after confirming this rather than waiting
+for a second OOM (no value in burning more SPOT compute reproducing the same signature a third time).
+
+**Conclusion**: the shipped fix's own synthetic benchmark was scoped to the specific calculator set it profiled
+(`team_form`/`team_xg`/`team_goals`/`h2h`/`promoted_team`/`venue_context` + the shot_quality site itself) and to ONE
+date's exact data shape — it does not generalize to the real GCS data for this era, and the fact that an ADJACENT date
+with 6x fewer target fixtures shows the same growth pattern strongly suggests the dominant cost is the shared 400-day
+historical-lookback build itself (done once per date regardless of today's fixture count), not the per-fixture
+shot_quality loop that was fixed. **Did not attempt a second inline fix** — this needs the same rigor as the first
+profiling pass (memray/tracemalloc against REAL data, not synthetic), which is a real investigation, not a quick patch;
+guessing again risks another false "fixed" claim. Todo 3 of the parent plan (`sports_p2_features_history_to_ml_ready`)
+remains genuinely blocked — full-history compute cannot be honestly called clean while a confirmed-reproducible,
+whole-shard-killing OOM sits unresolved in the 2015-2019 era. Not attempting `/skip-current-task` yet — filing this
+update first per FINDINGS CLOSURE (§4.5), since the previous "done" claim needs correcting before another dispatch
+trusts it.

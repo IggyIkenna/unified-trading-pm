@@ -6,11 +6,11 @@ summary:
   (per-VM shards written since the last consolidated-index run, i.e. not yet absorbed) and a live throughput view of
   shards absorbed per tick. v1 is cheap + no consolidator change (backend backlog field from a single shard-prefix list
   + a client-accumulated session sparkline that INFERS merged/tick from backlog deltas). v2 (the truthful
-  merged-per-tick histogram, sourced by instrumenting the consolidator job) is DEFERRED + still under discussion. WS-3
-  (2026-07-10) folds in the deployments-page split — this page owns the DATA-CORRECTNESS lens, the per-run "did the run
-  PRODUCE its expected data" verdict (fired-but-empty + stale-output) + a job-identity-keyed lookup seam the deployments
-  detail popover cross-links to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this
-  slot.
+  merged-per-tick histogram) was DESCOPED 2026-07-13 — it rides WS-H's structured-progress spine in
+  `deployment_observability_expansion_2026_07_08.md`, not a separate build here. WS-3 (2026-07-10) folds in the
+  deployments-page split — this page owns the DATA-CORRECTNESS lens, the per-run "did the run PRODUCE its expected data"
+  verdict (fired-but-empty + stale-output) + a job-identity-keyed lookup seam the deployments detail popover cross-links
+  to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this slot.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -66,9 +66,11 @@ drift_direction: advance-code
   renders a live sparkline per AG; "shards absorbed this tick" is INFERRED from backlog drops between samples. Honest
   limits: window = your current watching session (resets on reload); "merged" is inferred (backlog delta), not the job's
   real count. Both are exactly what v2 fixes.
-- **v2 (DEFERRED, under discussion) = the truthful merged-per-tick histogram.** Instrument the consolidator job to
-  record `{ts, asset_group, shards_merged, backlog_after, rows_added, duration_ms}` per run to a durable store; the
-  endpoint returns the last N runs → an exact histogram with real numbers + durable history. See the WS-2 section.
+- **v2 (DESCOPED 2026-07-13 — no longer a workstream here) = the truthful merged-per-tick histogram.** Instrument the
+  consolidator job to record `{ts, asset_group, shards_merged, backlog_after, rows_added, duration_ms}` per run; the
+  endpoint returns the last N runs → an exact histogram. This is now a downstream consumer of **WS-H's
+  structured-progress event-facade spine** in `deployment_observability_expansion_2026_07_08.md` (see the Progress Log
+  descope note), NOT a separate build in this plan. The v1 inferred sparkline stays as the shipped view.
 
 ## Codex SSOTs (READ before touching each area)
 
@@ -114,35 +116,6 @@ drift_direction: advance-code
       deployment-api locally against live GCS + the UI against it, and verify the endpoint returns `pending_shard_count`
       and cefi=`ok` live. Deploy (Cloud Build, `Evidence: cloudbuild=<id>` SUCCESS) happens at end-of-cockpit-plans, if
       the promote pipeline hasn't already carried it.
-
-## WS-2 — v2: truthful merged-per-tick histogram (DEFERRED — 🟡 UNDER DISCUSSION / nice-to-have)
-
-> **Not built. Design captured so we don't lose it.** The consolidator job KNOWS its exact merge count (its merge step
-> lists + reads every shard). Recording that per run gives an exact, durable histogram — replacing v1's inferred,
-> session-only view. Deferred because it edits the consolidator job code and **redeploys ~10-20 Cloud Run Jobs + the AWS
-> Batch mirror** — a data-correctness-critical-path change whose real cost is blast radius + rollout care, not dollars.
->
-> **⚠️ Overlap with the parent's WS-H (2026-07-10 review)**: `deployment_observability_expansion_2026_07_08.md` WS-H
-> builds a general structured-progress spine — a `report_progress({...})` helper riding the UTL **event facade** + a
-> typed per-workload progress contract + a "manifest cross-check per typed metric (`shards_saved` vs object count)".
-> That is the SAME per-run-job-metrics sink WS-2 needs. **WS-2 must RIDE WS-H's spine, not build a parallel
-> GCS/Firestore store** — if WS-H ships the event-facade spine, WS-2's `{ts, shards_merged, …}` record becomes one typed
-> progress event on it; the bespoke store below is the FALLBACK only if WS-H stays deferred. So the store-decision todo
-> is contingent on WS-H's outcome — coordinate before building either.
-
-- [ ] [DESIGN] P3. **Store decision — OPEN.** GCS/S3 rolling history object (recommended: zero new IAM, each job writes
-      its own cloud's bucket it already has objectAdmin on, reuses the endpoint read path; ~$2-4.50/mo GCS Class-A) vs
-      Firestore (native TTL + query, cheaper writes ~$1/mo, `ci_status` precedent, BUT +IAM +client dep, and the AWS
-      mirror would need GCP creds — cross-cloud). **Cost is negligible either way (< ~$5/mo); the decision is
-      architecture-fit + blast radius.** OPEN sub-question: does the AWS Batch mirror actually consolidate any of the 5
-      AGs (cefi/defi/tradfi/sports/prediction), or is it GCP-only? All 5 index buckets are GCP → if GCP-only, Firestore
-      is clean same-cloud and the cross-cloud concern is moot.
-- [ ] [INFRA] P3. **Instrument the job** — after each merge, append
-      `{ts, asset_group, shards_merged, backlog_after,     rows_added, duration_ms}` (~15 lines; the merge already knows
-      `len(shards)`). Rolling window cap (last 24-48h). Staged rollout (one AG first, verify, then fan out); rollback
-      story documented.
-- [ ] [BACKEND] P3. **Endpoint history** — `/api/health/consolidator` (or a `/consolidator/{ag}/history`) returns the
-      last N runs; the UI swaps the inferred sparkline for the real merged/tick histogram (drop the "inferred" caption).
 
 ## WS-3 — data-correctness lens: per-run "did it PRODUCE its data" verdict + deployments cross-link seam (NEW 2026-07-10)
 
@@ -368,6 +341,13 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- 2026-07-13 — **WS-2 (merged-per-tick histogram) DESCOPED from this plan (operator 2026-07-13).** Its 3 P3 todos
+  (store-decision / instrument-the-job / history-endpoint) kept surfacing as "remaining" on a workstream that was always
+  🟡 nice-to-have AND contingent on another plan. Design is NOT lost: WS-2 must **ride WS-H's structured-progress
+  event-facade spine** in `deployment_observability_expansion_2026_07_08.md` (a
+  `report_progress({ts, shards_merged, rows_added, duration_ms})` typed event), NOT build a parallel GCS/Firestore store
+  — so the histogram is a downstream consumer of WS-H, tracked there if/when WS-H ships. The v1 inferred session-only
+  sparkline stays as-is.
 - 2026-07-13 — **UI polish: content-sized consolidator metric columns.** The card's metric row was a fixed
   `grid-cols-5`, forcing every metric to a rigid 1/5 share → the widest one (`index age`, e.g. `41s / 24.0h`) truncated
   to `24.…` while `rows`/`fed by` wasted their column. Replaced with a content-sized `flex flex-wrap` row (`Stat` + the

@@ -117,6 +117,52 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 12 (Todo 3 dispatch — found + gap-filled 2 dead shards; CRITICAL new finding: the same-day-shipped OOM fix does NOT hold on real data, REOPENED the issue doc)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped. Took concrete action (2 shard gap-fills) and produced a critical correctness finding.**
+
+Fast re-verify first (bucket 1,682 dates, 8/10 VMs healthy — vm-1/vm-2 completed cleanly, `rc=0`). Went one level deeper
+per this plan's own precedent (check wall-clock log freshness, not just `RUNNING`): `fss-backfill-vm-3` and
+`fss-backfill-vm-4` were both stale >1h. SSH confirmed both OOM-killed (`dmesg`) — vm-3 on 2018-01-06 (unrelated poison
+date within its own range), vm-4 on 2018-06-18 (its first date after an earlier dispatch excluded 2018-06-17). Both
+crashes were at 10:08-10:09 UTC, **31 minutes before `features-service@b05f48ad`** (this same plan's own
+`features_sports_unbounded_memory_early_history_dates_2026_07_13.md` issue-doc fix) **landed at 10:40:04 UTC** — so
+neither crash was yet evidence against the fix.
+
+Repackaged the VM tarball fresh from a local checkout confirmed to have `b05f48ad` in HEAD, gap-filled both shards with
+their full original ranges:
+
+- **vm-3**: clean relaunch on the fixed codebase, progressing normally (49+ dates, no recurrence).
+- **vm-4**: relaunched 2018-06-17→2019-08-11 (re-including the previously-excluded date, since the fix was supposed to
+  resolve it). **OOM'd again on 2018-06-17, identical signature** (`anon-rss:15810800kB`) to the pre-fix incident — the
+  fix did NOT change the memory ceiling for this date. Worse: this time the OOM killer took down the ENTIRE
+  `google-startup-scripts.service` systemd unit (wrapper + tee + python child), not just the workload subprocess, so the
+  shard's own per-date retry loop never ran — a permanent zombie VM (GCE `RUNNING`, zero live processes) until manually
+  recreated. Relaunched a second time excluding 2018-06-17 (range 2018-06-18→2019-08-11) to test whether the bug was
+  date-specific: **it was not** — 2018-06-18 (only 24 target fixtures vs 149 on -17) showed the same steadily-climbing
+  RSS (12.5→13.05GB over ~5min, process state `R`, genuinely computing not hung), clearly heading to the same OOM
+  ceiling. Killed the VM manually rather than wait for a second OOM to confirm what was already clear.
+
+**REOPENED** the issue doc's previously-`[x]`-checked "bound/fix the allocation site" todo (bumped priority P1→P0) — the
+shipped fix's synthetic benchmark did not generalize to real GCS data for this era; the fact that an adjacent date with
+6x fewer fixtures shows the same growth strongly points at the shared 400-day historical-lookback build itself (not the
+per-fixture shot_quality loop that was fixed) as the dominant cost. Filed full evidence + 2 new actionable todos (P0
+re-profile against real data; P2 re-force-compute both dates once actually fixed) in the issue doc per FINDINGS CLOSURE
+(§4.5) rather than attempting a second inline guess-fix.
+
+**What I did NOT do**: did not attempt a second profiling/fix pass inline — this needs the same memray/tracemalloc rigor
+as the first pass, against real data this time, which is a genuine investigation not a quick patch. Did not touch the 6
+other healthy VMs (5,6,7,8,9,10). Did not flip Todo 1 or Todo 3 — gate remains unmet, and is now blocked on a
+_confirmed-still-broken_ correctness bug rather than a presumed-fixed one.
+
+**Handoff for the next dispatch**: `fss-backfill-vm-4`'s range (2018-06-17→2019-08-11) is currently NOT being worked by
+any VM (deleted after the second OOM) — do not blindly relaunch it again with `--skip-existing` until the P0 re-profile
+todo in the issue doc lands a real fix, or it will just reproduce this same OOM a third time. The other 9 original
+shards' progress is unaffected. Re-check `gsutil ls .../sports_features/by_date/ | wc -l` (was 1,707 at this dispatch)
+for overall movement, and re-run `check_pipeline_completeness.py` only once the issue doc's P0 todo is resolved and
+vm-4's range is genuinely covered.
+
 ### 2026-07-13 — slot 11 (Todo 3 re-dispatch — fast re-verify, fleet still healthy, ~37.5% done, no new action)
 
 Fast re-verify only via non-snap gcloud (`ikenna@odum-research.com`, `central-element-323112`):

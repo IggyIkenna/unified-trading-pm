@@ -1,0 +1,115 @@
+---
+doc_type: issue
+title:
+  "ml-service quality-gates.sh RED on pre-existing pip-audit findings — pillow, cryptography, pydantic-settings,
+  starlette (4 packages, 9 CVEs, all have fix versions)"
+summary:
+  "Found 2026-07-13 while shipping the utl_reuse_phase0_guardrails_2026_07_13 golden-fixture test for ml-service (an
+  unrelated, test-only change). `bash scripts/quality-gates.sh` fails STEP 'Codex compliance' (CODEX_MAX_VIOLATIONS=0)
+  on a pip-audit finding: pillow 12.2.0 (5 CVEs, fix 12.3.0), cryptography 48.0.0 (GHSA-537c-gmf6-5ccf, fix 48.0.1),
+  pydantic-settings 2.14.1 (GHSA-4xgf-cpjx-pc3j, fix 2.14.2), starlette 1.1.0 (PYSEC-2026-248/249, fix 1.3.0/1.3.1) — 9
+  CVEs across 4 packages total. Verified pre-existing and NOT caused by the golden-fixture change: stashed the test-file
+  diff, ran pip-audit against the untouched HEAD uv.lock directly, same 9 findings appear. Confirmed a
+  golden-output-fixture-only diff cannot touch dependency-installed versions. Attempted the pillow-only fix (`uv lock
+  --upgrade-package pillow`, still within the existing `pillow>=12.2.0,<13.0.0` pyproject constraint — zero
+  compatibility risk) but that alone does not turn the gate green: the other 3 packages still fail it, and pillow's own
+  re-resolution can shift transitive pins for unrelated packages, so a piecemeal fix inside an unrelated task risks
+  widening scope uncontrollably. Reverted that partial fix; filing this instead so the full remediation gets its own
+  scoped, tested change."
+status: open
+nature: notes
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [ml-service]
+scope: [engineer]
+tags: [ml-service, pip-audit, dependency, security, quality-gates, cve]
+related:
+  [
+    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
+    ml-service/scripts/quality-gates.sh,
+    ml-service/pyproject.toml,
+  ]
+created: 2026-07-13
+parent_epic: infrastructure_master
+priority: P1
+source: utl_reuse_phase0_guardrails_2026_07_13 todo 2 (ml-service golden-fixture shipping attempt), 2026-07-13
+assigned_vm: planning
+resolved_by:
+locked_by:
+execution_scope: orchestrator-agent
+assigned_role: backend-engineer
+model_tier: sonnet-doable
+thinking_tier: medium
+drift_direction: advance-code
+depends_on: []
+---
+
+## What I found
+
+`bash scripts/quality-gates.sh` in `ml-service` fails at the "Codex compliance" aggregate step (`CODEX_MAX_VIOLATIONS=0`
+— `scripts/quality-gates.sh:26`) because `pip-audit` (with the repo's existing
+`PIP_AUDIT_EXTRA_ARGS="--ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183"` for two known-unfixable joblib/pyjwt
+CVEs) still reports 9 live findings across 4 packages, all of which HAVE fix versions available:
+
+```
+Name              Version ID                  Fix Versions
+----------------- ------- ------------------- ------------
+cryptography      48.0.0  GHSA-537c-gmf6-5ccf 48.0.1
+pillow            12.2.0  PYSEC-2026-2253     12.3.0
+pillow            12.2.0  PYSEC-2026-2255     12.3.0
+pillow            12.2.0  PYSEC-2026-2257     12.3.0
+pillow            12.2.0  PYSEC-2026-2256     12.3.0
+pillow            12.2.0  PYSEC-2026-2254     12.3.0
+pydantic-settings 2.14.1  GHSA-4xgf-cpjx-pc3j 2.14.2
+starlette         1.1.0   PYSEC-2026-249      1.3.1
+starlette         1.1.0   PYSEC-2026-248      1.3.0
+```
+
+Verified pre-existing, not caused by my change: my task's diff was a single new test file
+(`tests/training/unit/test_golden_fixture_phase0_model_selection.py`, committed at `ml-service@d443b15`) — no
+`pyproject.toml`/`uv.lock` edits. Stashed that diff, ran
+`uv run pip-audit --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183` directly against the clean, untouched HEAD
+`uv.lock` — same 9 findings, byte-identical. A pure test-file addition cannot change resolved dependency versions, so
+this is unambiguously pre-existing.
+
+`pillow` alone is a safe, zero-risk bump (`pyproject.toml:59` already declares `"pillow>=12.2.0,<13.0.0"` — bumping the
+LOCKED version to 12.3.0 stays inside that existing range, no code/API surface changes expected for an imaging library
+patch release). `cryptography`/`pydantic-settings` are also narrow patch bumps. `starlette` 1.1.0 → 1.3.x is the outlier
+— that's not a patch bump and could carry real API/behavior changes for whatever FastAPI/ASGI surface ml-service
+exposes; it needs its own compatibility check, not a blind version bump riding on an unrelated task.
+
+## Why it matters
+
+This blocks ANY commit to ml-service from passing `quality-gates.sh` and therefore shipping via the mandatory
+Pass-1(QG)→Pass-2(quickmerge) flow — every worker touching ml-service hits this same RED gate regardless of what they're
+actually changing, until the underlying dependencies are bumped. It's also a live security exposure: 9 CVEs with
+published fixes sitting unpatched in a service-tier repo's dependency tree.
+
+## Recommended decision
+
+Bump all 4 packages to their fixed versions in one scoped PR:
+
+- `pillow` → 12.3.0 (already covered by the existing pyproject constraint — trivial)
+- `cryptography` → 48.0.1 (patch)
+- `pydantic-settings` → 2.14.2 (patch)
+- `starlette` → 1.3.0 or 1.3.1 — check ml-service's FastAPI/Starlette version compatibility matrix first (this is the
+  one genuine compatibility judgment call); run the full ml-service test suite after the bump, not just pip-audit.
+
+`uv lock --upgrade-package pillow --upgrade-package cryptography --upgrade-package pydantic-settings --upgrade-package starlette`
+then `bash scripts/quality-gates.sh` to confirm green end-to-end (not just pip-audit in isolation).
+
+## Todos
+
+- [ ] [BACKEND] P1. Bump `pillow`→12.3.0, `cryptography`→48.0.1, `pydantic-settings`→2.14.2, `starlette`→1.3.x in
+      `ml-service/uv.lock` (all already within existing `pyproject.toml` version constraints where applicable; verify
+      starlette compatibility with ml-service's FastAPI usage before locking), then run the full
+      `bash scripts/quality-gates.sh` to confirm the whole gate (not just pip-audit) is green. Ship via quickmerge.
+      (repo: ml-service)
+
+## Progress Log
+
+- **2026-07-13 (slot-3, sonnet/high)** — Found while shipping an unrelated golden-fixture test for
+  `utl_reuse_phase0_guardrails_2026_07_13`. Verified pre-existing (stash-diff test against clean HEAD). Attempted a
+  pillow-only partial fix (safe, in-constraint) but reverted it since the gate stays red regardless (3 other packages
+  still fail) and a piecemeal dependency bump inside an unrelated task risks uncontrolled scope creep — filed this issue
+  for the full remediation instead.
