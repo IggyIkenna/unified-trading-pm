@@ -9,7 +9,7 @@ summary:
   fleet-canonical floor bump alone (now corrected to >=8.3.3 in workspace-constraints.toml) does not fix it here without
   a `uv lock --upgrade-package click` re-lock, which is out of scope for the no-relock declarative batch this was found
   during. Verified pre-existing (not caused by the fastapi commit) via a clean-tree pip-audit rerun."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,7 +22,7 @@ parent_epic: infrastructure_master
 priority: P2
 source: system_integration_tests_pip_audit_red_2026_07_13 todo 1 (fastapi canonical alignment batch), 2026-07-13
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-11 (2026-07-13)
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend-engineer
@@ -58,8 +58,14 @@ QG→quickmerge flow.
 
 ## Todos
 
-- [ ] [CODE] P2. `uv lock --upgrade-package click` in `fund-administration-service`, verify `pip-audit` clean, run full
-      `quality-gates.sh`, ship via `quickmerge --agent --files 'uv.lock'`. (repo: fund-administration-service)
+- [x] ✅ [CODE] P2. `uv lock --upgrade-package click` in `fund-administration-service`, verify `pip-audit` clean, run full
+      `quality-gates.sh`, ship via `quickmerge --agent --files 'uv.lock'`. (repo: fund-administration-service) — locally
+      relocked click 8.3.2->8.4.2 and confirmed QG-green (`IGNORE_TIMEOUT=true`, sentinel c4f36095d), but on quickmerge's
+      pre-pull rebase discovered slot-6 had already shipped an equivalent broader relock
+      (`fund-administration-service@018e5a668b334d34a49e99772e2ab49b443da5e4`, "re-lock off cryptography
+      GHSA-537c-gmf6-5ccf") that picked up the identical click 8.3.2->8.4.2 bump as a side effect — my local change was
+      absorbed into that rebase with nothing left to commit. Verified `pip-audit` clean for click against current HEAD
+      (`018e5a6`, HEAD==origin).
 
 ## Progress Log
 
