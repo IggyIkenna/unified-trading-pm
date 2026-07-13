@@ -117,6 +117,44 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 4 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Picked up right after shipping the BYBIT futures_chain reshape remediation on a different plan this same session.
+Re-verified via non-snap gcloud/gsutil (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-5 found
+  (`features-sports-sports-20260713-200043/-200456/-200525`), all `RUNNING`, same `creationTimestamp` — no new death, no
+  new preemption.
+- Checked `features-service` git log for any new `compute_shot_quality_batch` OOM fix since slot-5's check: **none** —
+  `b05f48ad` (already known-insufficient per slot-12's real-data finding) is still the latest touch on
+  `shot_quality_calculator.py`. The P0 profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  remains unowned.
+- Features bucket unique-date count: **2,246** (up from slot-5's 2,242) — steady forward progress, no stall.
+- **Went past `RUNNING` status** (SSH, not just log-tail) on all 3: confirmed the real `features_service` process alive
+  on each — `-200043` 28.6% CPU / ~1.03GB RSS / 13:24 accumulated CPU-time on date 2025-08-26 (past its 2025-08-11
+  start); `-200456` 25.6% CPU / ~1.01GB RSS / 11:01 CPU-time on date 2018-01-20 (past its 2018-01-07 start); `-200525`
+  28.5% CPU / ~0.96GB RSS / 12:06 CPU-time on date 2019-09-01 (past its 2019-08-18 start). All three RSS values are
+  nowhere near the 15-32GB OOM ceiling — no crash risk observed. `run.log` lines wall-clock-fresh on all 3 (within ~2
+  min of check time, `date -u` = 2026-07-13T20:50:17Z).
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling (same reasoning as every prior slot —
+needs a dedicated Docker-memory-capped investigation against real data, not a quick check). Did not relaunch or touch
+any of the 3 healthy shards (still running pre-venue_id-fix code per slot-5's note — unchanged since, not a new
+finding). Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,246).
+Unchanged from slot-5's handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo to land before
+these 3 shards' captured dates need a `--force` re-run with the venue_id fix included.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-13 — slot 5 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress; landed the unrelated venue_id correctness fix moments earlier this session)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
