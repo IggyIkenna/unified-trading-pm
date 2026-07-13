@@ -13,7 +13,7 @@ summary: >
   COMPLETE copy, not a redundant duplicate — Phase 4's planned cleanup (delete the DeFi-bucket originals once parity is
   "green") would delete the richer data and keep the poorer one if it proceeds on the existing "object presence =
   migrated" assumption.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi]
 stage: [data]
@@ -33,7 +33,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: slot 6, 2026-07-13 (operator decision BLK-4032eac4, Option A executed + verified)
 ---
 
 # ASTER CeFi-bucket "duplicates" are narrower-schema, row-deficient — not true duplicates
@@ -136,6 +136,30 @@ concrete reason to invoke. Two options for whoever picks this up:
     tilts toward **Option A** (re-migrate the `high_dup` band with `--force`, making the 23-column DeFi-bucket shape
     authoritative) being the lower-risk choice, though the final call (and whether the narrow shape's 2 extra columns
     `instrument_type`/`underlying` need preserving too) remains an explicit operator decision.
-- [ ] [DATA] P2. Once decided: either re-migrate the `high_dup` band with `--force` (option A) or add an explicit
-      Phase-4 exclusion for this band (option B) to `aster_cefi_data_defi_bucket_migration_2026_07_13.md`. (repo:
-      unified-trading-pm)
+  - **RESOLVED (operator, 2026-07-13, slot 6, BLK-4032eac4): Option A.** Per CLAUDE.md's "Data pipeline correctness is
+    the heartbeat" hard rule, the silent NaN degradation in real, currently-running production consumers is not an
+    acceptable permanent state and this doesn't qualify for any of the narrow operator-gated defer categories. Operator
+    additionally required a pre-execution grep of ALL `derivative_ticker` readers workspace-wide for hardcoded
+    column-count/positional-index assumptions (not just the 4 already-audited venue-agnostic consumers) before executing
+    — **DONE, slot 6**: no hard 10-column assumption found anywhere in the workspace (every reader is
+    `if col in df.columns`-guarded or operates below the parquet-column level); full findings in the P2 evidence below.
+    The narrow shape's 2 extra columns (`instrument_type`/`underlying`) are NOT preserved by the DeFi-bucket original
+    and are dropped by the re-migration — no consumer was found reading them for `derivative_ticker` (see the original
+    audit above), so this was accepted as part of the Option A resolution, not re-escalated.
+- [x] ✅ [DATA] P2. Re-migrated the `high_dup` band (2024-01-01 → 2025-06-15) with the new `--force` flag on
+      `migrate_aster_cefi_defi_bucket_2026_07_13.py` (option A) — **DONE, slot 6, market-tick-data-service@`724e9a09`**.
+      Added `--force` (requires `--apply`): on a parity conflict, overwrites the CeFi-bucket target with the DeFi-bucket
+      source instead of leaving it untouched (default behavior unchanged when `--force` is omitted). Smoke-tested
+      `--apply --force` on a single day (`2024-02-14`, the doc's own root-cause example) first: 65 objects
+      force-overwritten, 1 already parity-confirmed; downloaded the `PYTH-USDT` pair post-overwrite and confirmed 23/23
+      columns, 3/3 rows, byte-identical to the DeFi-bucket source. Then ran the full band
+      (`--apply --force --start-date 2024-01-01 --end-date 2025-06-15 --workers 32`, local/interactive, no
+      fire-and-forget — verified STARTED + monitored to the terminal `SUMMARY` line). **Result:
+      `{'force_overwritten':     39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`** — 0
+      errors. **Post-force verification**
+      (`verify_aster_cefi_defi_bucket_migration_2026_07_13.py --start-date 2024-01-01 --end-date     2025-06-15 --samples-per-band 20`,
+      output at `_index/audit/aster_cefi_migration_post_force_verify_2026_07_13.parquet`): existence check 40,406/40,406
+      objects present (0 missing); parity spot-check **20/20 row_count_matches, 20/20 byte_identical** for the
+      `high_dup` band — clean, unlike the pre-force 5/15 and 0/15 respectively. The `high_dup` band's CeFi-bucket
+      canonical location now carries the full 23-column DeFi-bucket schema. See
+      `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 4 for the updated cleanup-gate status.
