@@ -3712,6 +3712,32 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-13 (§A2 findings 175/142/146 — MTDS/MDPS 2-survivor consolidation EXECUTED): the fold-in/archive mapping
+  authored in `mtds_consolidation_foldin_mapping_2026_07_12.md` (per the "ENFORCE 2 survivors" ruling) received its HARD
+  GATE approval — operator ruling verbatim: "Approve all + unlock" (blanket `[unlock-plan]` for every locked candidate);
+  todo-5 judgment call (`defi_manifest_canonicalisation_2026_06_01`) = "FOLD → M-1";
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` = "KEEP standalone";
+  `mdps_features_reduced_artifact_tracker_2026_06_28` = "Keep as tracker"; `sports_manifest_canonicalisation_2026_06_01`
+  = KEEP per this same ruling's original 175/142/146 text (unchanged). Executed in full: **9 plans folded into M-1**
+  (`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`, `data_source_provenance_all_asset_groups_2026_06_01`,
+  `macro_econ_adapter_scaffolds_2026_06_09`, `cefi_manifest_canonicalisation_2026_06_01`,
+  `tradfi_manifest_canonicalisation_2026_06_01`, `prediction_manifest_canonicalisation_2026_06_01`,
+  `downstream_services_manifest_canonicalisation_2026_06_01`, `defi_manifest_canonicalisation_2026_06_01`,
+  `bar_edge_left_vs_right_remediation_2026_06_08` — 130 open todos migrated verbatim with provenance into M-1's new
+  "Folded-in scope 2026-07-13" section, each archived to `plans/archive/2026_07/` — unified-trading-pm@e4dd7871e); **1
+  plan credited into M-2** (`mdps_polars_engine_cost_sharpening_2026_06_28`) + **4 plan-hygiene-debt plans
+  simple-archived** (`mdps_book_microstructure_precompute_columns_2026_06_28`,
+  `mdps_features_full_month_benchmark_binance_2026_06_28`, `tradfi_mdps_passthrough_dependency_gap_2026_06_28`,
+  `solana_defi_legacy_migration_2026_05_27` — stale `status: active` corrected to `complete` + unlocked —
+  unified-trading-pm@4336c38f6); 10 codex docs repointed off the now-archived paths +
+  `pipeline_mode_source_batch_live_replay_standardisation` banner + tracker rows + `epics/mtds_mdps_master.md`
+  consolidation-executed banner (unified-trading-pm@8eb5293b3). **"sports_master wording fixed" pointer** (the paired
+  item from the original 175/142/146 ruling, not executed by the foldin-mapping plan per its own scope note):
+  `sports_manifest_canonicalisation_2026_06_01.md` itself was confirmed untouched (correct — KEEP-WITH-JUSTIFICATION);
+  the `sports_master` epic-body wording fix referenced by the original ruling still needs a direct edit to
+  `plans/epics/sports_master.md` by whoever next touches that epic — filed here as the pointer since this plan's scope
+  explicitly excluded executing it directly. Full mapping + per-plan justification:
+  `mtds_consolidation_foldin_mapping_2026_07_12.md` (now `status: complete`).
 - 2026-07-12 (dev sports-fixtures OOM todo CLOSED — mirrored, not descoped): confirmed dev is genuinely consumed, not
   dead weight — `uts-dev-{sports,features,instruments,cefi}-*-t1-schedule` Cloud Scheduler entries (4x/day: midnight,
   6am, noon, 6pm, matching prod's cadence exactly) are ENABLED and firing every 6h in the SAME `central-element-323112`
