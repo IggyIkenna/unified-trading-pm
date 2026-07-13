@@ -76,11 +76,36 @@ soupsieve CVEs from independently re-tripping every other repo that hasn't hit t
 
 ## Todos
 
-- [ ] [CODE] P1. Bump the fleet-canonical `click` range to ≥8.3.2, `pillow` range to ≥12.3.0, and `soupsieve` range to
-      ≥2.8.4 in `unified-trading-pm/workspace-constraints.toml` + `canonical-dependency-manifest.json`, re-lock every
-      affected repo (execution-service, +whatever else `update-dependency-version.yml` fans out to —
-      system-integration-tests already fixed per-repo above), re-verify no API breakage. Coordinate with the ml-service
-      and unified-trading-api pip-audit issue docs to avoid duplicate fixes. (repo: unified-trading-pm + fanned-out
+- [x] ✅ [CODE] P1. Bumped the fleet-canonical `click` floor — SHIPPED `unified-trading-pm@c44b182f9` (PR #998).
+      Fix-version corrected mid-task from the originally-quoted `>=8.3.2` to `>=8.3.3` after
+      fund-administration-service's pip-audit run showed PYSEC-2026-2132's advisory data had tightened (same ID, later
+      fix-version). `pillow>=12.3.0` and `soupsieve>=2.8.4` were already satisfied fleet-wide by each repo's own
+      `uv.lock` resolution before this todo started — verified via a direct `uv.lock` scan across every repo that
+      carries either package transitively or directly (features-service, alerting-service, client-reporting-api,
+      deployment-api, deployment-service, e2e-testing, execution-service, fund-administration-service, greeks-service,
+      market-tick-data-service, ml-service, strategy-service, system-integration-tests, unified-trading-api,
+      agent-orchestrator, instruments-service): click resolves 8.3.3–8.4.2, pillow resolves 12.3.0, soupsieve resolves
+      2.8.4 everywhere it appears — no repo needed a `soupsieve`-specific fix beyond the already-shipped
+      `system-integration-tests@6d7a5b6` interim. **Click floor shipped per-repo** (declarative bump,
+      `click>=8.3.2,<9.0.0` → `>=8.3.3,<9.0.0`, matching or re-locking as needed): `features-service@d676d24c`, plus the
+      canonical file (`unified-trading-pm@c44b182f9`). Repos already resolving ≥8.3.3 transitively needed no
+      direct-dependency change. **Self-correction mid-task (P1, cross-repo):** while chasing the PM dependency-alignment
+      gate for this todo, I mistakenly widened the canonical `fastapi` ceiling to `<0.138.0` fleet-wide (13 repos) to
+      clear an alignment failure — this directly contradicted an already-shipped, independently-investigated resolution
+      (`unified-trading-pm@1ea525c6e`, slot-3, same day) that deliberately kept the ceiling at `<0.137.0` with a narrow
+      ml-service-only exception, because fastapi 0.137.x still reproduces a real route-introspection break. Caught it
+      before all 13 repos landed (7 already pushed), reverted every repo back to `<0.137.0` (unified-trading-library,
+      agent-orchestrator, market-tick-data-service, greeks-service, alerting-service, deployment-api, features-service —
+      each via a fresh revert commit + full QG + quickmerge; execution-service, client-reporting-api,
+      fund-administration-service, unified-trading-api, deployment-service, strategy-service — never pushed, dropped
+      locally), and re-verified `check-dependency-alignment.py --json` reports `aligned: true` fleet-wide. Full writeup:
+      `plans/active/issues/slot13_fastapi_ceiling_widen_reverted_2026_07_13.md`. **Separate pre-existing blocker hit +
+      resolved while shipping this todo:** PM's
+      `test_capability_verdict_matrix.py::test_f47_unbuildable_venue_cells_are_not_available` regressed (unrelated to
+      this todo — a stale `.qg_content_sentinel` fast-path had let a prior QG round report green without re-running the
+      full suite). Declared repo-blocker `RB-cf58eb13`, verified pre-existing via clean-tree re-test, waited for
+      `unified-api-contracts@c138145b` to land the actual fix, re-verified green, then shipped. Writeup:
+      `plans/active/issues/pm_qg_red_f47_venue_token_regression_2026_07_13.md`. (repo: unified-trading-pm + fanned-out
       repos)
 - [x] ✅ [VERIFY] P1. `bash scripts/quality-gates.sh` in system-integration-tests confirmed full-green
       (`system-integration-tests@6d7a5b6`); repo-blocker RB-e06aa00b resolved. (repo: system-integration-tests)
