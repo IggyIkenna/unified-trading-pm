@@ -57,11 +57,15 @@ drift_direction: advance-code
       `scripts/vm/{vm_log_archival_cron,vm_serial_capture_cron,vm_zombie_watchdog,validate_vm_prefix_mapping}.py`
       `storage.Client()` → UTL `get_storage_client()`/`upload_to_storage`/`storage_exists`/`gcs_copy_object`;
       `compute_v1` control-plane kept.
-- [ ] [AGENT] P2. **deployment-api** (routes half — REMAINING): route
-      `deployment_api/routes/{builds_history,builds}.py` + `services/shard_detail.py:828` GCS-storage `storage.Client()`
-      through UTL `get_storage_client()`. Keep `compute_v1` + pubsub/secretmanager liveness probes.
-- [ ] [VERIFY] P1. Per repo: secret fetch + GCS read still work against emulator/mock; `quality-gates.sh` green;
-      quickmerge.
+- [x] ✅ [AGENT] P2. **deployment-api** (routes half) — DONE `deployment-api@cb16bc0`. `routes/builds_history.py`
+      `_live_entries()` tarball-metadata lookup: `google.cloud.storage.Client()` → UTL
+      `get_storage_client(provider="gcp").get_blob_metadata()`. `services/shard_detail/_shard_read.py`
+      `_parquet_signed_url()` (post-split home of the former `shard_detail.py:828` site): raw
+      `storage.Client().bucket().blob().generate_signed_url()` → UTL `generate_download_url()`. `builds.py` carries no
+      `storage.Client()` site (only Artifact Registry + ECR, out of scope). `compute_v1` + pubsub/secretmanager liveness
+      probes untouched.
+- [x] ✅ [VERIFY] P1. `deployment-api@cb16bc0` — `quality-gates.sh` green (sentinel matches HEAD); 62 targeted unit
+      tests (`test_builds_history.py` + `test_shard_detail_service.py`) pass; shipped via quickmerge.
 
 ## Success criteria
 

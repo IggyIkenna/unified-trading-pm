@@ -21,7 +21,11 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [trading-agent-service directive pipeline (PnL stream to ArchetypeAllocationDirective)]
-referenced_by: [codex/06-coding-standards/config-reloader-pattern.md, codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md]
+referenced_by:
+  [
+    codex/06-coding-standards/config-reloader-pattern.md,
+    codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -179,6 +183,15 @@ Both are in `unified_api_contracts.internal` (not public surface) — internal c
   through to static config when no directive present (Phase 5).
 - `trading_agent_service/replay/` — backtest-replay infrastructure: `inference_cache.py`, `directive_log.py`,
   `cutoff_clamp.py` (Phase 6.5).
+- `trading_agent_service/app/ledger/trade_ledger.py:TradeLedger` — in-memory, per-process trade ledger consumed by the
+  L3/L5/L6/L7 loops for fill reconciliation.
+
+> **Verified NON-finding (UTL/UAC reuse audit, 2026-07-13)**: `TradeLedger` is a deliberately EPHEMERAL in-process cache
+> — execution-service remains the SSOT for order state; the ledger is rebuilt on every trading-agent restart by querying
+> execution-service for open orders (the L6 fill-verify loop). There is no UTL/UAC persistent-ledger primitive this
+> should reuse or migrate to — a durable ledger here would duplicate execution-service's SSOT, not consolidate onto one.
+> Do not re-flag it in a future reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`
+> line 176-179 (verified NON-findings list).
 
 ---
 

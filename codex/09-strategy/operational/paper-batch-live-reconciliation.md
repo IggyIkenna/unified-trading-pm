@@ -9,7 +9,15 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, e2e-testing, execution-service, features-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    e2e-testing,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: [reconciliation, determinism, ledger, live-trading, backfill, execution, defi]
 related:
@@ -21,8 +29,19 @@ related:
   ]
 created: 2026-06-19
 authoritative_for:
-  [paper↔batch↔live determinism spine (trade-by-trade reconciliation + four as-if-filled ledgers + two-fill-realities model)]
-referenced_by: [codex/02-data/live-data-persistence-and-event-log.md, codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/08-workflows/t1-batch-dag.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, codex/09-strategy/operational/cli-promote-paths.md]
+  [
+    paper↔batch↔live determinism spine (trade-by-trade reconciliation + four as-if-filled ledgers + two-fill-realities
+    model),
+  ]
+referenced_by:
+  [
+    codex/02-data/live-data-persistence-and-event-log.md,
+    codex/04-architecture/multi-mode-wallet-isolation.md,
+    codex/04-architecture/trading-agent-service-directive-pipeline.md,
+    codex/08-workflows/t1-batch-dag.md,
+    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    codex/09-strategy/operational/cli-promote-paths.md,
+  ]
 owner:
 last_reviewed: 2026-06-22
 code_refs:
@@ -319,6 +338,15 @@ def reconcile_day(paper: RunManifest, batch: RunManifest, live: RunManifest | No
 (deterministic or bug); the live↔paper verdict is the calibrated tolerance check that already exists
 (`batch-live-reconciliation-threshold-calibration.md`), now per-trade instead of per-date-average.
 
+> **Verified NON-finding (UTL/UAC reuse audit, 2026-07-13)**: `batch-live-reconciliation-service/models/recon_report.py`
+> (`ReconReport` / `StageReport` / `DeviationRecord`, one row per pipeline stage — `config_pull` / `data_pipeline_recon`
+> / `ml_recon` / `strategy_recon` / `execution_recon` / `paper_live_recon` / `batch_paper_recon`) is marked
+> `SCHEMA_PROVENANCE_EXEMPT` and is CORRECT-LOCAL: these are the service's private per-stage T+1 pipeline result types,
+> not a cross-service contract — the cross-service resolution-workflow contract already lives in
+> `unified-internal-contracts` (`ReconciliationAgeFields` / `ReconciliationDimension`). Do not re-flag the stage-grain
+> schemas as a UAC-migration candidate in a future reuse audit. SSOT:
+> `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
+
 ### 4.6 Per-archetype canonical data source (P11.11) — read the real corpus, never fake
 
 The paper engine drives each archetype's PRODUCTION engine (`factory.py`) off the data type that archetype's signal
@@ -334,9 +362,9 @@ needs, read directly from its **dedicated canonical GCS bucket** (resolved via `
 cross-sectional `funding_rank_pct` computed from the day cohort (deterministic). Funding is annualised hourly×8760×1e4
 (the SOL*BASIS convention). Honest absence (HARD RULE): a spec whose VENUE has no real data for the window is SKIPPED at
 RUNTIME (`run_paper` → `no_gcs_data_in_window`), never faked; an archetype whose corpus/tick-shape is not yet wired
-(`ARBITRAGE_PRICE_DISPERSION` /
-`DEFI_LP*\*`need`dex_pool_state` + a different tick shape) is a STATIC skip (`engine_tick_builder_unwired`). New
-data-backed archetypes auto-populate when their feature group + tick builder land — no code change to the run loop.
+(`ARBITRAGE_PRICE_DISPERSION` / `DEFI_LP*\*`need`dex_pool_state` + a different tick shape) is a STATIC skip
+(`engine_tick_builder_unwired`). New data-backed archetypes auto-populate when their feature group + tick builder land —
+no code change to the run loop.
 
 **FLAT/CLOSE is a valid fill side (UTL ledger SSOT).** The carry/funding engines emit a position close as
 `direction="FLAT"` (a `TradeInstruction` Literal LONG/SHORT/FLAT). UTL `_signed_delta` (`ledger/materialize.py`) +
@@ -390,27 +418,27 @@ Match key: `(instrument_key, strategy_instruction_id, tick_timestamp ± ε)`. Pe
 
 Last updated: 2026-06-22 (G3/G4/G5 landed; G1/G2 still open).
 
-| Component                                                | Status              | Location / commit                                                                                    |
-| -------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
-| Shared decision path (`V2EngineOrchestrator.on_tick`)    | EXISTS              | strategy-service (batch + paper + live)                                                              |
-| `LedgerRow` + 4 aliases + 5 enums                        | EXISTS              | `uac …/crosscutting/ledger/`                                                                         |
-| `PnLAttributionRow` / `PnLFactor` / `PnLLayer` + emitter | EXISTS              | `uac internal/risk.py` + `utl pnl_attribution/emitter.py`                                           |
-| HWM (3 methods) + invariants + seeds                     | EXISTS              | `utl post_trade/hwm_invariants.py` + `client-reporting-api`                                         |
-| `BenchmarkFillEngine` (sim fills)                        | EXISTS              | `strategy_service/engine/backtest/benchmark_fills.py`                                               |
-| aggregate recon (stage 3b/3c)                            | EXISTS              | `batch-live-reconciliation-service`                                                                  |
-| Slack via alerting-service (`AlertEvent`)                | EXISTS              | `alerting-service notifiers/slack.py` + `core/slack_dispatcher.py`                                  |
-| immutable GCS market data + feature versioning           | EXISTS              | `uts-prod-market-data-*` + `feature_group_version` hive key                                         |
-| **`InstructionLedger` writer from fills**                | **EXISTS** (P3.1)   | `utl ledger/materialize.py::ledger_row_from_trade_fill` — UTL@41d50461                              |
-| **`PassiveLedger` synthesiser**                          | **EXISTS** (P3.2)   | `utl ledger/materialize.py::passive_ledger_row` + `accrue_funding` — UTL@09885861                   |
-| **`PositionLedger` materialiser (avg-cost P&L)**         | **EXISTS** (P3.3)   | `utl ledger/materialize.py::materialize_position_ledger` — UTL@41d50461                             |
-| **realised-PnL computation**                             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py::compute_ledger_views` — CRA@0d9b1bec                    |
-| **per-venue/instrument balance from ledger**             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py` (by_venue/by_instrument rollups) — CRA@0d9b1bec         |
+| Component                                                | Status              | Location / commit                                                                                                                                                                         |
+| -------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared decision path (`V2EngineOrchestrator.on_tick`)    | EXISTS              | strategy-service (batch + paper + live)                                                                                                                                                   |
+| `LedgerRow` + 4 aliases + 5 enums                        | EXISTS              | `uac …/crosscutting/ledger/`                                                                                                                                                              |
+| `PnLAttributionRow` / `PnLFactor` / `PnLLayer` + emitter | EXISTS              | `uac internal/risk.py` + `utl pnl_attribution/emitter.py`                                                                                                                                 |
+| HWM (3 methods) + invariants + seeds                     | EXISTS              | `utl post_trade/hwm_invariants.py` + `client-reporting-api`                                                                                                                               |
+| `BenchmarkFillEngine` (sim fills)                        | EXISTS              | `strategy_service/engine/backtest/benchmark_fills.py`                                                                                                                                     |
+| aggregate recon (stage 3b/3c)                            | EXISTS              | `batch-live-reconciliation-service`                                                                                                                                                       |
+| Slack via alerting-service (`AlertEvent`)                | EXISTS              | `alerting-service notifiers/slack.py` + `core/slack_dispatcher.py`                                                                                                                        |
+| immutable GCS market data + feature versioning           | EXISTS              | `uts-prod-market-data-*` + `feature_group_version` hive key                                                                                                                               |
+| **`InstructionLedger` writer from fills**                | **EXISTS** (P3.1)   | `utl ledger/materialize.py::ledger_row_from_trade_fill` — UTL@41d50461                                                                                                                    |
+| **`PassiveLedger` synthesiser**                          | **EXISTS** (P3.2)   | `utl ledger/materialize.py::passive_ledger_row` + `accrue_funding` — UTL@09885861                                                                                                         |
+| **`PositionLedger` materialiser (avg-cost P&L)**         | **EXISTS** (P3.3)   | `utl ledger/materialize.py::materialize_position_ledger` — UTL@41d50461                                                                                                                   |
+| **realised-PnL computation**                             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py::compute_ledger_views` — CRA@0d9b1bec                                                                                                          |
+| **per-venue/instrument balance from ledger**             | **EXISTS** (P3.4)   | `client-reporting-api core/ledger_views.py` (by_venue/by_instrument rollups) — CRA@0d9b1bec                                                                                               |
 | **marks join by canonical `instrument_key`**             | **EXISTS** (P1-fix) | `utl ledger/run_writer.py::pricing_ledger_jsonl` stamps key; `materialize_position_ledger` joins on it — UTL@68540e7a (fixes phantom $700K uPnL when two legs share `asset_canonical_id`) |
-| **run manifest / as-of snapshot**                        | **EXISTS** (P4.1)   | `utl ledger/run_writer.py::write_run_manifest` + `read_run_manifest`                                |
-| **trade-by-trade keyed diff + daily T+1 recon**          | **EXISTS** (P4.2)   | `blrs engine/trade_recon.py::reconcile_day` + `engine/daily_determinism_stage.py` — BLRS@4b611db    |
-| **daily T+1 recon verdict → AlertEvent (INFO/CRITICAL)** | **EXISTS** (P6.2)   | `blrs engine/recon_alert_client.py::post_recon_alert` called by `cli/handlers/daily_determinism_handler.py` — BLRS@0fabc9c |
-| **Single shared fill model** (batch≡paper)               | **MISSING (G1)**    | P1.6 open — `GroupCRunner` smart-matching not yet wired in paper path                               |
-| **Per-trade identity in execution events**               | **MISSING (G2)**    | P2.1/P2.2 open — events are date-level float dicts; `trade_key` not yet on execution events         |
+| **run manifest / as-of snapshot**                        | **EXISTS** (P4.1)   | `utl ledger/run_writer.py::write_run_manifest` + `read_run_manifest`                                                                                                                      |
+| **trade-by-trade keyed diff + daily T+1 recon**          | **EXISTS** (P4.2)   | `blrs engine/trade_recon.py::reconcile_day` + `engine/daily_determinism_stage.py` — BLRS@4b611db                                                                                          |
+| **daily T+1 recon verdict → AlertEvent (INFO/CRITICAL)** | **EXISTS** (P6.2)   | `blrs engine/recon_alert_client.py::post_recon_alert` called by `cli/handlers/daily_determinism_handler.py` — BLRS@0fabc9c                                                                |
+| **Single shared fill model** (batch≡paper)               | **MISSING (G1)**    | P1.6 open — `GroupCRunner` smart-matching not yet wired in paper path                                                                                                                     |
+| **Per-trade identity in execution events**               | **MISSING (G2)**    | P2.1/P2.2 open — events are date-level float dicts; `trade_key` not yet on execution events                                                                                               |
 
 ---
 

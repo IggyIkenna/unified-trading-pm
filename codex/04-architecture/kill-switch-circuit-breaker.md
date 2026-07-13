@@ -29,7 +29,17 @@ authoritative_for:
     wallet-tier KILL_PER_WALLET semantics,
     multi-venue kill-switch hedged-position handling,
   ]
-referenced_by: [codex/04-architecture/account-instructions.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/custody-providers.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/manual-trade-booking.md, codex/04-architecture/mev-protection.md]
+referenced_by:
+  [
+    codex/04-architecture/account-instructions.md,
+    codex/04-architecture/alerting-batch-live.md,
+    codex/04-architecture/autonomous-recovery-matrix.md,
+    codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    codex/04-architecture/custody-providers.md,
+    codex/04-architecture/kill-switch-event-bus.md,
+    codex/04-architecture/manual-trade-booking.md,
+    codex/04-architecture/mev-protection.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -195,6 +205,14 @@ Kill Switch Activated (manual or automatic)
 - **Per-venue state machine**: `execution-service/engine/circuit_breaker.py`
 - **Cross-service propagation**: `alerting-service` subscribes to execution-service events and publishes `CIRCUIT_OPEN`
   (UAC `LifecycleEvent`) to `circuit-breaker-commands` topic.
+
+> **Verified NON-finding (UTL/UAC reuse audit, 2026-07-13)**: this per-venue order circuit breaker is DISTINCT from
+> `unified_trading_library.circuit_breaker` (UTL). UTL's package is the DR-plan `BreakerRecoveryEngine` — a pure
+> disarm/auto-cooldown decision engine over the UAC `CircuitBreakerId`/`BreakerConfig` taxonomy, wired to the
+> kill-switch bus (see `disaster_recovery_circuit_breakers_2026_05_10.md` Phase 5). It does not observe per-venue order
+> failure rates and cannot replace the CLOSED/DEGRADED/OPEN/HALF_OPEN state machine below. Do not re-flag this as a
+> duplicate in a future reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line
+> 176-179 (verified NON-findings list).
 
 ### States
 

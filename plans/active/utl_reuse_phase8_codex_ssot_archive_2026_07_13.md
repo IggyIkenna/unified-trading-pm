@@ -58,11 +58,15 @@ drift_direction: correct-codex
       (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
       future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
       UTL).
-- [ ] [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM kernel — UAC has only delta-strike schemas;
+- [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM kernel — UAC has only delta-strike schemas;
       execution-service per-venue order circuit breaker — UTL's CB is DR-recovery tooling; batch-live stage-grain recon
       schemas; trading-agent ephemeral ledger; ibkr TCP health probe; client-reporting-api `core/hwm_seeds.py` — static
       seeds for UTL's three-method HWM, not a `max(equity)` reimpl) in the relevant codex docs so the next reuse audit
-      doesn't re-open them.
+      doesn't re-open them. — unified-trading-pm@6bd87af85. Recorded in
+      `codex/04-architecture/greeks-service-overview.md`, `codex/04-architecture/kill-switch-circuit-breaker.md`,
+      `codex/09-strategy/operational/paper-batch-live-reconciliation.md`,
+      `codex/04-architecture/trading-agent-service-directive-pipeline.md`, `codex/02-venues/prime-brokers.md`, and
+      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
       regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
       split family per the 5-step HARD RULE once all repos hit C5.

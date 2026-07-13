@@ -11,7 +11,13 @@ stage: [meta]
 repos: [deployment-service, features-service, greeks-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [greeks, strategy, mtds, instruments, reconciliation]
-related: [global-ledger-architecture.md, ../02-data/ledger-event-taxonomy.md, instruments-service-as-ssot-for-mtds.md, ../02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    global-ledger-architecture.md,
+    ../02-data/ledger-event-taxonomy.md,
+    instruments-service-as-ssot-for-mtds.md,
+    ../02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-23
 authoritative_for: [greeks-service greek + carry-rate PricingLedger derivation]
 referenced_by: [codex/04-architecture/global-ledger-architecture.md]
@@ -147,6 +153,14 @@ Operator-tunable via `GreeksServiceConfig`. Defaults:
 
 The writer contract (PricingLedger row shape) is identical across backends; selection happens at the dispatcher keyed on
 `(asset_class, exercise_style, settlement_style)`.
+
+### Verified NON-finding — Black-Scholes kernel is correctly local (UTL/UAC reuse audit, 2026-07-13)
+
+`greeks_service/kernels/black_scholes.py` implements the `GreekKernel` protocol as a pure-function BSM library — **there
+is no UTL/UAC equivalent to reuse**: UAC ships only `DeltaStrike`-family option-identity/schema types (option metadata,
+not pricing math), and UTL carries no options-pricing kernel. The `Decimal`-only vanilla-European BSM implementation
+here is the correct, sole home for this compute; do not re-flag it in a future reuse audit. SSOT:
+`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
 
 ---
 

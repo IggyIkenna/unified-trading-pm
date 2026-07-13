@@ -21,7 +21,12 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [meta-broker venue pattern, prime-broker adapter shape]
-referenced_by: [codex/02-venues/unity-integration.md, codex/02-venues/venue-registry-reference.md, codex/09-strategy/architecture-v2/README.md]
+referenced_by:
+  [
+    codex/02-venues/unity-integration.md,
+    codex/02-venues/venue-registry-reference.md,
+    codex/09-strategy/architecture-v2/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -135,6 +140,15 @@ One credential per meta-broker:
 - IBKR: gateway session + client certificate
 
 Internal children don't need separate credentials; meta's SOR handles downstream authentication.
+
+> **Verified NON-finding (UTL/UAC reuse audit, 2026-07-13)**:
+> `ibkr-gateway-infra/ibkr_gateway_client/health.py: check_tunnel_health()` is a plain `socket.create_connection`
+> TCP-reachability probe on the SSH-tunnelled TWS API port — it verifies the tunnel + IB Gateway are up BEFORE a full
+> TWS-protocol connect is attempted, one level below the "meta-level connection health" this doc's Monitoring section
+> describes. It is not a retry/backoff call (no `@with_retry` target — a plain connect either succeeds or raises
+> `OSError`) and there is no UTL/UAC health-probe primitive it should consolidate onto. Do not re-flag it in a future
+> reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified
+> NON-findings list).
 
 ## Risk + kill switches
 
