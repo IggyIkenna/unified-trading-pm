@@ -399,9 +399,9 @@ unchanged.
 >    `canonicalize_defi_manifest_venue_2026_06_14.canonicalise_venue_column` + captured-preferring spelling-dedup, in
 >    the SAME single `_index` walk (resolves the "DeFi venue-naming drift" — chain-suffixed `AAVEV3-ARBITRUM` and bare
 >    `AAVE_V3`+chain twins collapse to the canonical `AAVE_V3-ETHEREUM`). Snapshots →
->    `\_index/snapshots/pre_is_v9*{ag}\_\*`. Verified live: every applied AG `schema_v9=100%`, `source`/`asset_group`/`pipeline_mode`=100%, `captured`
->    preserved (defi −861 = the legitimate legacy↔canonical spelling-dedup, all all-captured twins; 0 captured cell
->    shadowed).
+>    `\_index/snapshots/pre_is_v9*{ag}\_\*`. Verified live: every applied AG `schema_v9=100%`,
+>    `source`/`asset_group`/`pipeline_mode`=100%, `captured` preserved (defi −861 = the legitimate legacy↔canonical
+>    spelling-dedup, all all-captured twins; 0 captured cell shadowed).
 > 2. **Writer root-fix (no regression)** — the IS writer left producer-row `source` BLANK by design (the C-#6
 >    auto-resolve-at-read pattern), so a fresh capture would re-introduce a blank `source`. Fixed at the UTL SSOT:
 >    `ManifestWriter._stamp_producer_source` stamps `source_string_for(pipeline_mode)` on a BATCH captured row whose
@@ -631,6 +631,18 @@ Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in bot
 manifest. No silent drops.
 
 SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge".
+
+### Documented exception: permanently-untyped legacy rows (sports IS, pre-2026-07-08)
+
+19,274 `instruments-store-sports-prd` rows (0.3-0.4% of the corpus) have a blank `pipeline_mode` + `source` and are
+**operator-accepted as permanently untyped** (BLK-d48acae4, answered 2026-07-13, decision A) — not a bug to chase
+further. These rows all predate 2026-07-08, were confirmed unreachable by the real v9-migrator `--apply` run (E3/E4
+fleet drain, `sports_manifest_canonicalisation_2026_06_01.md` E8), and have no deterministic `pipeline_mode`/`source`
+derivable from any existing column (no raw-provider-payload trail was retrievable to reconstruct them). Any downstream
+manifest-cleanliness gate (e.g. "0 blank pipeline_mode/source over full history") should treat this specific residual as
+a **known, accepted exception**, not a fresh finding — re-litigating it (a 23rd+ audit dispatch) wastes real GCS-read
+cost for zero new information. A genuinely NEW blank-column row outside this pre-2026-07-08 cohort is still a real
+defect and should be investigated normally.
 
 ### Backward Compatibility
 
@@ -1343,8 +1355,8 @@ The enumerator has two grain levels that map to these two layers:
 - **v1 (shipped 2026-05-07)** — venue-grain expected universe; ~1.4M rows merged into canonical across all 5
   asset*groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
   SHOULD exist; pre-skips per-source / per-chain / per-calendar windows; emits
-  `record_expected_empty(reason=EXPECTED*\*)`for everything in the gap. Implementation:`instruments-service/scripts/enumerate_expected_universe.py` +
-  per-VM launcher.
+  `record_expected_empty(reason=EXPECTED*\*)`for everything in the gap.
+  Implementation:`instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
 - **v2 (in-flight design)** — instrument-grain expected universe; ~190M row estimate. Designed in
   [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
   (folded into `manifest_evolution_SUPERSEDED_2026_05_21` umbrella; sequenced AFTER v8 schema in gate G3). v2
