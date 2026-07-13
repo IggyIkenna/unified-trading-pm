@@ -1003,4 +1003,45 @@ report written in this plan's Progress Log.
       `scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` (new one-off, applied).
     - `unified-api-contracts` —
       `fix(sports): add raw envelope-key VENUE_ERRORS_SPORTS entries for api_football (plan/token/requests)`.
+
+- **2026-07-13 (slot-3, VERIFY dispatch — final re-verify for `api_football`, todo "api_football: final re-verify").**
+  Fresh single-parquet re-read of the live manifest (`instruments-store-sports-prd...` bucket,
+  `_index/availability_index.parquet`, 4,988,134 total rows; transient `FileNotFoundError` on first read mid a
+  consolidator rewrite at `18:06:01Z`, succeeded on immediate retry — not a data issue). **api_football slice: 2,518,571
+  rows** (vs baseline 2,518,940 — small net drift from ongoing organic activity, not this fix).
+  - **`attempted_failed`: 3,257 — UNCHANGED from the §0 baseline, identical breakdown** (INJURIES 1,946 / FIXTURES 665 /
+    blank-`data_type` 461 / PLAYER_STATS 74 / FIXTURE_STATS 46 / FIXTURE_LINEUPS 30 / TEAMS 24 / FIXTURE_EVENTS 11;
+    `error_reason` confirms `ApiFootballResponseError` 1,642, `FIXTURES_FETCH_FAILED` 665,
+    `phantom_captured_no_parquet_at_canonical_path` 487, `UNCLASSIFIED_ADAPTER_ERROR` 461). This is **expected, not a
+    regression** — the shipped fix stops the 4 bug classes from RECURRING going forward; it never claimed to
+    retroactively clear the pre-existing rows (documented as deferred backfill-VM work in the IMPLEMENTATION entry
+    above). Confirms no drift either direction since the fix landed.
+  - **`expected_unattempted`: 452,985** (vs baseline 453,961, -976 — consistent with ongoing organic captures converting
+    cells, not fix-driven; the TEAMS 61-league gap this bucket partly represents is still its own open P0 todo above,
+    not yet fixed).
+  - **Blank-`data_type` rows (any status): 583 total** — 461 `attempted_failed` (unchanged, pre-fix legacy rows) + 122
+    NEW `empty_confirmed` rows, `venue` ∈ {API_FOOTBALL, FOOTYSTATS, OPEN_METEO, SOCCER_FOOTBALL_INFO, TRANSFERMARKT,
+    UNDERSTAT} — confirms the `process_completeness.py` fix IS live and correctly routing the 5 enrichment pseudo-venues
+    to `empty_confirmed` now instead of minting new blank-`data_type` `attempted_failed` rows (0 new blank-`data_type`
+    failures since the fix shipped).
+  - **Duplicate dedup-key groups (identity = date + source + data_type + service_name + league_id + fixture_id, per the
+    understat precedent's "present optional dims" rule): 39,222 groups / 78,738 rows involved** — NOT part of the
+    original §0 table (which only tracked rows/captured/attempted_failed/expected_unattempted) and NOT something this
+    dispatch's fix touched. Root-caused via sampling (e.g. `2018-01-01/FIXTURES/A_LEAGUE`): each group is an OLD
+    superseded row (an earlier `empty_confirmed`/`attempted_failed` write) sitting alongside a NEWER `captured` row from
+    the same `attempted_at=2026-07-13T16:24:30.871968Z` reconciliation pass noted in finding (d) above — i.e. the
+    reconciliation tooling's re-attempt writes are landing correctly but the manifest consolidator, per the
+    already-established precedent, does not remove the stale superseded row on a shard-merge write; only a direct
+    canonical rewrite does. This is a **pre-existing manifest-hygiene residual, not a new defect and not introduced by
+    today's fix** — same class as the 88 MTDS orphans fixed earlier this session, scoped as follow-up cleanup rather
+    than in this VERIFY pass.
+  - **Verdict: does NOT yet meet the understat-standard 0/0/0 literal bar.** All three residuals are
+    **documented/explained, not silently-broken**: `attempted_failed` (3,257) is a known, bounded, already-scoped
+    backfill-VM re-attempt (deferred by design, confirmed unchanged not regressed); `expected_unattempted` (452,985) is
+    substantially the still-open TEAMS-gap investigation plus a legitimate could-exist-universe seed; the 39,222
+    duplicate groups are stale-superseded rows needing a direct-rewrite cleanup pass (same fixable pattern as the MTDS
+    orphans). The 4 shipped code fixes are confirmed WORKING (0 new blank-`data_type` failures, 0 new false-positive
+    FIXTURES_FETCH_FAILED since ship) — this category is **code-complete but not yet manifest-clean**; closing to a
+    literal 0/0/0 requires the deferred backfill-VM re-attempt + a canonical dedup-rewrite pass, both already tracked as
+    open todos in this plan.
     - (exact SHAs recorded via the git-commit skill in the same turn as this log entry — see repo `git log -1`.)
