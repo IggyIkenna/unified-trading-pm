@@ -367,10 +367,24 @@ guard is a sufficient, narrowly-scoped backstop for the specific data-loss sympt
       `scripts/dev/audit-fleet-reflog-resets.sh`, results in "UPDATE 3" above: 276 signature hits fleet-wide (16 slots),
       63 are real (non-orphan-wip) discarded commits across 10 slots / 8 repos, 18 still `AT_RISK_REFLOG_ONLY` as of
       this audit. Confirms this is NOT slot-11-isolated and has been ongoing since at least 2026-06-22.
-- [ ] [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
+- [x] ✅ [INFRA] P0. Check specifically for a "keep T0 shared-dep repos in sync" fleet job/cron targeting
       unified-api-contracts + unified-trading-library specifically (see UPDATE section — 3 hits on UAC, 2 on UTL, 0 on 4
       sibling repos touched in the same session) — if found, it MUST check for local-commits-ahead-of-origin before
-      resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling)
+      resetting, same fix as the other INFRA todos above. (repo: whichever owns fleet T0-sync tooling) — **DONE
+      2026-07-13 (slot 11), NO DEDICATED T0-SYNC JOB EXISTS.** Grepped every `.py`/`.sh`/`.yml`/`.yaml` under
+      `agent-orchestrator/server/`, `agent-orchestrator/scripts/`, and `unified-trading-pm/scripts/` for
+      `unified-api-contracts`/`unified-trading-library` combined with `sync`/`cron`/`schedule` — every hit is unrelated
+      (OpenAPI/UI-reference generation, capability-manifest sync, QG benchmarking), none touches git branch state for
+      these 2 repos specifically. Explicitly checked `slot-cron-ff-pull.sh` (the one standing periodic git-branch cron
+      in the workspace): its own header states "Never destructive. Never runs `merge     --no-ff`, never `rebase`, never
+      `reset --hard`" and it explicitly **skips** ahead/diverged/dirty repos — applies uniformly to every repo, no
+      T0-specific carve-out. **This confirms UPDATE 4's own finding (same issue doc, slot 15) rather than contradicting
+      it**: the UAC/UTL bias in the original counts is NOT repo-name targeting — it's
+      `heal_dead_slot_branch_quarantine`/`_orphan.py`'s realign (see UPDATE 7 above, todo 1) firing on ANY repo that
+      happens to be `diverged` at the moment the pre-spawn gate runs, and UAC/UTL/PM simply diverge far more often than
+      a session-scoped repo like `strategy-service` because so many concurrent slots hold local commits to the fleet's 2
+      canonical shared-schema/event repos at any given time — a probability effect, not a targeting rule. No separate
+      fix needed here beyond todo 2's guard (already shipped, covers every repo uniformly including UAC/UTL).
 
 ## Update 2026-07-13 (slot 8, heartbeat nudge — a much older AT_RISK_REFLOG_ONLY hit, still unrecovered)
 
