@@ -60,10 +60,43 @@ sequential: false
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Design the per-strike IV-by-moneyness grid feature shape — a denser strike ladder than the 3
+- [x] ✅ [SCRIPT] P2. Design the per-strike IV-by-moneyness grid feature shape — a denser strike ladder than the 3
       canonical buckets (`iv_atm`/`iv_25d_call`/`iv_25d_put`), keyed by strike/moneyness x expiry/tenor, sourced from
       `CanonicalImpliedVolSurface.points` (already carries per-point moneyness/tenor/implied_vol — this is exposing more
-      of an already-fetched surface, not fetching new data). Repo: features-service.
+      of an already-fetched surface, not fetching new data). Repo: features-service. — DESIGNED (2026-07-13, slot-6), no
+      code shipped (design-only; item 2 implements it). Read `CanonicalIVSurfacePoint`/`CanonicalImpliedVolSurface` and
+      the full existing `vol_surface_feature_extractor.py` + its tests first — the decision below extends that file's
+      existing conventions (moneyness-band delta-proxy, half-open day-range tenor buckets, dict-key-omission honest
+      absence), it does not invent new ones. **Decision: extend today's 3-pillar/1-tenor ladder to a 4-wing-pillar ×
+      4-tenor grid (16 new keys).** Pillars: keep the existing 25d bands unchanged (call `(1.02, 1.15]`, put
+      `[0.85, 0.98)`) and add a 10-delta wing immediately outside them — 10d call `(1.15, 1.40]`, 10d put `[0.60, 0.85)`
+      (first-cut heuristic like the existing 25d bands, not real option deltas — MUST be validated/tuned against real
+      Deribit strike spacing in item 2). Tenors: reuse the 4 existing `_TENOR_BUCKETS` exactly (`1w`/`1m`/`3m`/`6m`) —
+      the ask is a denser STRIKE axis, not a denser tenor axis. ATM row is NOT duplicated (`iv_term_{tenor}` already
+      covers ATM-across-tenor), so the grid only adds the 4 non-ATM wing pillars
+      (`10d_put`/`25d_put`/`25d_call`/`10d_call`) × 4 tenors. New key names (16 total, zero collisions with
+      `iv_atm`/`iv_25d_call`/`iv_25d_put`/`iv_term_*`/`iv_skew_25d`/`iv_slope_1m_3m`): `iv_10d_put_{tenor}`,
+      `iv_25d_put_{tenor}`, `iv_25d_call_{tenor}`, `iv_10d_call_{tenor}` for `tenor` in `{1w, 1m, 3m, 6m}` — mirrors
+      this SAME module's own `iv_25d_call`/`iv_term_1w` prefix-then-suffix style, deliberately NOT the sibling
+      `volatility/calculators/vol_surface_term_structure.py` calculator's `{side}_{pillar}d_iv_{tenor}d` day-count
+      convention, since this grid extends `vol_surface_feature_extractor.py` directly and must stay internally
+      consistent with its own existing keys, not a different pipeline's convention. Noted for awareness (not this task's
+      scope): `vol_surface_term_structure.py` already computes a similar but asymmetric grid (ATM × 5 tenors, wings only
+      × 30d) for a DIFFERENT consumer path — it's a batch `resolve_build_order` calculator, not the on-tick
+      `extract_vol_greeks_feature_dict` path the listed strategy-service consumers actually read via
+      `GroupBRunner.on_tick` — two parallel vol-grid implementations now exist by design, a future dedup opportunity but
+      out of scope here. Selection + honest absence: identical rule to today — within a (tenor-bucket ∩ pillar-band)
+      intersection, pick the point closest to the band's canonical anchor (mirrors `_pick_otm_iv`'s nearest-within-band
+      tie-break); no matching point → omit the key entirely (never `None`/`NaN`/interpolated), exactly the existing
+      `assert "<key>" not in result` test style. Derived composites for item 2 to add (mirrors
+      `iv_skew_25d`/`iv_slope_1m_3m`, only when both inputs present):
+      `iv_skew_25d_{tenor} = iv_25d_put_{tenor} - iv_25d_call_{tenor}`,
+      `iv_skew_10d_{tenor} = iv_10d_put_{tenor} - iv_10d_call_{tenor}` (8 more derived keys). `formula_version`: mirror
+      this module's own simple `FORMULA_VERSION: int = 1` constant, NOT the `delta_one` `FeatureSpec`
+      registry/GCS-partition mechanism in `codex/02-data/feature-formula-versioning.md` — confirmed that mechanism isn't
+      used anywhere in the volatility family; matching the direct sibling code being extended is the
+      internally-consistent choice (a known pre-existing two-convention split in the repo, not something to reconcile
+      here).
 - [ ] [SCRIPT] P2. Implement + unit-test the per-strike grid extractor (mirrors `extract_vol_greeks_feature_dict`'s
       honest-absence pattern — sparse surfaces omit missing strikes, never interpolate/synthesise). `formula_version=1`.
       Repo: features-service.
