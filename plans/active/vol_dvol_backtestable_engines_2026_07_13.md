@@ -71,10 +71,28 @@ what's missing.
 
 ## Todos
 
-- [ ] [DATA] P1. Register `volatility_index` data_type capability: `data_type_capability.py` entry for
+- [x] ✅ [DATA] P1. Register `volatility_index` data_type capability: `data_type_capability.py` entry for
       `(cefi,     volatility_index)`, venue `DERIBIT`, `live_capable=True, batch_capable=True` (it's a REST history
       endpoint, no streaming needed). `SOURCE_PRIORITY[("cefi","volatility_index")] = ["deribit"]`. Repo:
-      unified-api-contracts.
+      unified-api-contracts. — **DONE, slot 9, unified-api-contracts@`a02ce954`.** Added the `DataTypeCapability` entry
+      (no `streaming_protocol`, mirroring the `prediction_canonical_question_group` REST-derived pattern — it's a
+      REST-polled index, not a WS stream) + `SOURCE_PRIORITY[("cefi","volatility_index")] = ["deribit"]` exactly as
+      specified. Discovered the literal one-line `SOURCE_PRIORITY` entry needed a broader closed-set cascade to actually
+      round-trip (verified via the repo's own test suite, not assumed): added `PipelineMode.BATCH_DERIBIT`, widened
+      `SOURCE_MODE_CAPABILITY["deribit"]` + `BATCH_CAPABLE_CEFI_VENUES` to carry the same "self-archiving vendor"
+      exception already used for aster/extended/pacifica (deribit stays live/replay-only for every OTHER cefi data_type
+      — tardis remains those data_types' batch archive — but is now ALSO the genuine batch source for `volatility_index`
+      specifically), added an `EMISSION_LATENCY_MS_BY_SOURCE` entry (1h, matching the REST-history-endpoint cadence
+      class) and an `AVAILABILITY_AT_SEMANTICS` entry (`tick_timestamp`), and updated 2 tests that hard-coded deribit's
+      prior live/replay-only mode set. Verified via 718 targeted tests green (`test_source_mode_capability.py` /
+      `test_source_priority.py` / `test_source_priority_pipeline_mode.py` / `test_pipeline_mode.py` /
+      `test_availability_semantics.py` / `test_validity_matrix_completeness.py` + broader keyword sweep) + full
+      `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel matches HEAD). Hit + resolved an unrelated
+      repo-wide QG-red blocker along the way (databento_classifier.py file-size + cryptography GHSA-537c-gmf6-5ccf,
+      pre-existing, verified via clean `git diff --stat HEAD` on both — filed
+      [`plans/active/issues/uac_qg_red_databento_classifier_filesize_and_cryptography_ghsa_2026_07_13.md`](issues/uac_qg_red_databento_classifier_filesize_and_cryptography_ghsa_2026_07_13.md),
+      declared repo-blocker RB-e4b7bd5c, resolved once another slot shipped the cryptography bump). No MTDS handler
+      built here — that is the next todo below, separate scope.
 - [ ] [DATA] P1. Build the MTDS handler consuming the existing `DeribitVolatilityIndex` endpoint mapping: capture DVOL
       OHLC (`/public/get_volatility_index_data`, resolutions incl. `86400`/`3600`, paged via `continuation`) into the
       canonical schema, `pipeline_mode=batch_deribit`, `source="deribit"`, bucket via `resolve_bucket_name(...)`,
