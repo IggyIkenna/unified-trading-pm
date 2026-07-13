@@ -143,12 +143,15 @@ daemon reads structured-progress-when-present, else the log-scrape) means it rol
 
 - [x] ✅ [BACKEND] P1. Surface the **Tier-0 free wins** (machine_type/zone/labels/boot-disk/rows_in/error/uptime already
       fetched). — done in Plan 1.
-- [ ] [DATA] P2. Cost-per-target join (see WS-E) → `cost_per_day_usd` on each item. **OPEN — cost-plan-owned** (the
-      field renders; the billing-export JOIN is tracked in `cost_observability_ui_2026_07_08` / its successors).
+- [x] ✅ [DATA] P2. Cost-per-target join (see WS-E) → three USD figures on each item. — DONE 2026-07-13, built HERE in
+      the deployments tab (operator: USD-only, no currency toggle — GCP is GBP→USD-converted server-side).
+      deployment-api@7489d57 (`per_resource_daily` reuses the CACHED billing window; `_attach_costs` joins by
+      name==resource_id, honest None, never breaks the census) + deployment-ui@599a644 (`CostCell`: actual / 7d-avg /
+      24h-projected; pw:L2 `deployments-cost-cell.spec.ts`).
 - [x] ✅ [BACKEND] P2. Utilisation (cpu/mem/disk per target) from WS-D edge-push. — done in Plan 1 (UI Resources columns
       in UI-popover).
-- [ ] [BACKEND] P3. Recent error count / last log line — from the EXISTING teed GCS log / Cloud Logging (drill-down
-      only); no new CloudWatch dependency. **OPEN — P3 nice-to-have, not yet built.**
+  - ~~[BACKEND] P3. Recent error count / last log line (drill-down).~~ **REMOVED 2026-07-13 (operator)** — redundant:
+    the full teed GCS log is already shown in the detail popover on name-click. No action.
 - [x] ✅ [UI] P1. **Name-click detail popover** (deep fields: sparklines + timeline + rows/object-delta + owning
       consolidator). — done in UI-popover (`WorkHealthCard`).
 - [x] ✅ [UI] P1. **Console deep-link** in the popover (GCE/EC2/Cloud Run/ECS/Lambda URLs from fetched fields). — done
@@ -267,11 +270,13 @@ uses ready-state + revision health in place of desired/running.
 
 ## WS-E — Cost-per-target (reuse the billing work)
 
-- [ ] [DATA] P2. Join BigQuery billing-export (GCP) + AWS CUR by resource-id/labels → `$/day` per VM / Cloud Run / ECS /
-      Lambda. Coordinate with `cost_observability_ui_2026_07_08.md` (the /ops/costs page) so the per-target cost + the
-      aggregate cost page share ONE query path. **OPEN — cost-plan-owned:** the aggregate /ops/costs page + breakdown
-      SHIPPED (`cost_obs_ui_unified_breakdown_2026_07_08`, done); the per-target `$/day`-on-each-inventory-row join is
-      the remaining slice (feeds the `cost_per_day_usd` column). Track under the cost cluster, not here.
+- [x] ✅ [DATA] P2. Join the billing exports (GCP BigQuery + AWS CUR) by resource-id → three USD figures per target. —
+      DONE 2026-07-13. Reuses the SAME query path as the /ops/costs page: `CostObservabilityService.per_resource_daily`
+      aggregates the cached `CostRecord` window (net = cost+credit, USD; GCP already GBP→USD-converted) per
+      `resource_id` into
+      `{actual_usd (last complete day), avg_7d_usd (trailing-7d average), projected_24h_usd (peak     observed daily ≈ a full 24h day)}`.
+      Attached to each inventory row by name==resource_id (GCP VM/job names match; AWS ARNs keep None — honest absence).
+      deployment-api@7489d57 + deployment-ui@599a644.
 
 ## WS-F — Mock→real cutover + polish
 
@@ -287,29 +292,34 @@ uses ready-state + revision health in place of desired/running.
 - [x] ✅ [UI] P3. EXPERIMENT badge label — kept as `batch·exp` (`ModeBadge` renders it). — done in UI-popover.
 - [x] ✅ [REVIEW] P1. Gate `/freshness` fetches to VM kinds only (services use error-rate health). — done
       (deployment-ui@e9b77ac; `Cockpit.tsx` + `Deployments.tsx` filter `kind === "VM"`).
-- [ ] [DESIGN] P3. **Service controls (deferred, Open-Q8)** — scale-to-zero / restart affordances behind a safety
-      design. **OPEN — deliberately deferred** (NOT v1; own phase, high blast radius).
+  - ~~[DESIGN] P3. Service controls (scale-to-zero / restart).~~ **REMOVED 2026-07-13 (operator)** — VM
+    pause/resume/stop already ship and work (`deployment-ui/src/components/VmControls.tsx` →
+    `/api/vm/admin/{vm}/(pause|resume|cancel)`); Cloud-Run/ECS service scale-to-zero is not needed here and is high
+    blast radius. No action.
 
-## WS-H — Structured progress reporting (retire the log-scrape) — LAST PHASE, nice-to-have
+## WS-H — Structured progress reporting (retire the log-scrape)
 
-> Deferred deliberately (high blast radius). v1 relies on the manifest (write-truth) + log-scrape (hint) + `/proc`; this
-> phase makes progress TYPED + trustworthy, rolled out per service. **Graceful fallback:** the daemon reads
-> structured-progress-when-present, else the log-scrape — so nothing breaks mid-migration.
+> **🟢 EXTRACTED 2026-07-13 (operator) — moved OUT of this plan; needs its own dedicated plan (operator will create when
+> it's staffed).** This is a fleet-wide, cross-service infra change (UTL helper + a typed progress contract per
+> service), not deployments-UI work, and was always the deliberately-deferred "LAST PHASE, nice-to-have" (high blast
+> radius). Removed from this plan's active scope so it can archive. The spec is preserved below (prose, no open
+> checkboxes) so the future plan can lift it verbatim.
 
-- [ ] [INFRA] P3. **Central plumbing** — a `report_progress({...})` helper in UTL (rides the existing event facade) → a
-      dedicated progress record (JSON-lines), SEPARATE from the stdout log; daemon reads the LAST record (O(1), exact,
-      no regex); registry entry carries the typed payload; wrapper wires the second file. ~5 files, one-time.
-- [ ] [DATA] P3. **Typed progress contract per workload**, extending the `SHARD_AXIS_MATRIX[(service, asset_group)]`
-      registry: backfill `{shards_expected/downloaded/saved, bytes}`; features
-      `{mdps_days_read, features_computed, parquet_written, force_replaced, formula_version}`; strategy/recon/execution
-      each their own. Roll out per-service, priority order (backfills + features first).
-- [ ] [BACKEND] P3. **Manifest cross-check per typed metric** — `shards_saved` vs manifest object count;
-      `force_replaced` vs GCS object-GENERATION bumps → "is the VM telling the truth?" as an automated verdict.
-- [ ] [INFRA] P3. **Cloud-Run-job cgroup self-sampler** (`memory.current ÷ .max`) pushed via the event facade — only if
-      OOM-prediction on jobs proves worth it (still no Cloud Monitoring).
+Spec to lift into the future plan:
 
-**Open (WS-H):** typed-contract schema — a per-service typed model in UAC (like `SHARD_AXIS_MATRIX`) vs one flexible
-`{metric: value}` envelope validated per service. Leaning per-service typed (verifiable + self-documenting).
+- **Central plumbing** — a `report_progress({...})` helper in UTL (rides the existing event facade) → a dedicated
+  progress record (JSON-lines), SEPARATE from the stdout log; daemon reads the LAST record (O(1), exact, no regex);
+  registry entry carries the typed payload; wrapper wires the second file. ~5 files, one-time.
+- **Typed progress contract per workload**, extending the `SHARD_AXIS_MATRIX[(service, asset_group)]` registry: backfill
+  `{shards_expected/downloaded/saved, bytes}`; features
+  `{mdps_days_read, features_computed, parquet_written, force_replaced, formula_version}`; strategy/recon/execution each
+  their own. Roll out per-service, priority order (backfills + features first).
+- **Manifest cross-check per typed metric** — `shards_saved` vs manifest object count; `force_replaced` vs GCS
+  object-GENERATION bumps → "is the VM telling the truth?" as an automated verdict.
+- **Cloud-Run-job cgroup self-sampler** (`memory.current ÷ .max`) pushed via the event facade — only if OOM-prediction
+  on jobs proves worth it (still no Cloud Monitoring).
+- **Open design question**: typed-contract schema — a per-service typed model in UAC (like `SHARD_AXIS_MATRIX`) vs one
+  flexible `{metric: value}` envelope validated per service. Leaning per-service typed (verifiable + self-documenting).
 
 ---
 
