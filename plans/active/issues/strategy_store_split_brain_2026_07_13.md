@@ -56,6 +56,16 @@ resolved_by:
 1. Repoint deployment-api defaults + UI route + `enumerate_envelope.py` to the flat kind via the resolver (kind
    `strategy-store`); decide whether `configs/` + `catalogue/` content in the cefi bucket migrates to the flat bucket or
    gets regenerated there.
+   - ✅ **UI leg DONE** — `unified-trading-system-ui@2796d38b` (2026-07-13): both catalogue GCS-proxy routes
+     (`app/api/catalogue/envelope/route.ts:24`, `app/api/catalogue/instrument/route.ts:23`) repointed from
+     `strategy-store-cefi-central-element-323112` to the unified flat `strategy-store-central-element-323112` (content
+     verified present via `gcloud storage ls` before the flip); comments claiming "regenerated daily" corrected to
+     reference this issue doc. `rg "strategy-store-cefi"` in unified-trading-system-ui now returns zero hits in live app
+     code (a stale mirrored copy of `codex/04-architecture/data-flow-map.md` under `context/codex/` still shows the old
+     per-AG names — that mirror's SSOT is this PM repo's `codex/`, not in scope for a uts-ui-only session; update it
+     when this doc's codex-alignment pass runs).
+   - deployment-api defaults + `unified-api-contracts/scripts/enumerate_envelope.py` repoint **still open** (not this
+     session's repo scope).
 2. Then retire `strategy-store-{cefi,tradfi,defi}-{pid}` (cefi last — it holds the only real content) — this also closes
    M-1's A10 open question on the unmanaged flat strategy-store, in the OPPOSITE direction A10 assumed (the flat bucket
    is the keeper, per the yaml's operator decision).
