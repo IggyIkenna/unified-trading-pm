@@ -1752,3 +1752,40 @@ concurrent-IP lockout causes retriable 403s, not a hard block); "wait for a solo
 of the 3 pending VERIFY todos remain (DERIBIT-COMBO, bare-OKX options_chain) — attempting them now using slot-3's proven
 methodology (launch → monitor run.log → query the per-VM shard directly with row-group pushdown, not a full-corpus walk)
 rather than continuing to wait.
+
+**Addendum 5 — 2026-07-12T23:20Z-2026-07-13T01:03Z (slot-2): both remaining VERIFY todos closed, plus 2 new bugs found
+and fixed en route.** Continuing the last-remaining thread from Addendum 4.
+
+- **New bug found + fixed before VERIFY could even complete**: the OKX/DERIBIT-COMBO bulk options_chain post-stream
+  processing path (`_process_itype_group`/`_process_shard` in `tardis_bulk_download.py`) called
+  `derive_row_instrument_id`/`derive_settlement_dimensions`/`_extract_underlying_for_chain` once per ROW via
+  `.map()`/`to_dict("records")` — a live OKX attempt (102M raw rows) didn't finish after 46+ min of active CPU. Two
+  sequential fixes landed (a peer slot's itertuples rewrite `69f14aa5`, then my own memoize-by-unique-symbol fix
+  `market-tick-data-service@b549b580` on top, since each of those functions is a pure function of `symbol` — collapses
+  the cost from O(rows) to O(unique symbols)).
+- **OKX options_chain VERIFY: CLOSED.** Relaunched the exact 102M-row reproducer (OKX, 2026-01-01) post-fix: post-stream
+  processing completed in ~8 minutes (was: never finished). Row-group-pushdown metadata read against the landed
+  `BTC.parquet`/`ETH.parquet` confirms **54,079,980 + 48,187,504 = 102,267,484 rows — an exact match to the streamed
+  count, zero rows lost.**
+- **DERIBIT-COMBO OOM: found live, root-caused, and fixed.** A peer slot's static-trace fix
+  (`market-tick-data-service@f8cab3f0`, catalog-reader-once-per-process) was necessary but NOT sufficient — a live
+  re-verify showed a SINGLE ~1.6M-row catalog load alone already consumed 80.5% of the 15GB `e2-standard-4`, still
+  killing the process (`rc=137`) right where the original bug fired. Bumped just the DERIBIT-COMBO shard to
+  `e2-highmem-8` (`deployment-service@1735a19`) and re-verified live: day 1 AND day 2 both completed cleanly (the exact
+  point that killed it twice before), RSS staying at 13-15% of 62GB throughout.
+- **Bare-OKX instrument_availability 404: found + fixed by a peer slot (`instruments-service@1b040883`), corroborated.**
+  A separate bug from the above: `factory.py`'s Tardis-exchange resolution for bare OKX (no venue-level exchange since
+  it splits 4 ways by instrument type) raised `ValueError`, so IS could never write an `instrument_availability`
+  snapshot for the venue at all. I found the same bug independently and shipped a complementary reusable UAC helper
+  (`VenueMapping.get_all_tardis_exchanges_for_venue`, `unified-api-contracts`) before discovering the peer slot's more
+  complete fix (theirs also handles a mis-tagging risk I'd missed — `canonical_venue_override` — mine didn't); kept only
+  the UAC addition, discarded my redundant factory.py duplicate.
+
+**Net state**: both of the 2 remaining pending VERIFY todos from Addendum 4 are now closed with live evidence (not just
+code-complete). **The only remaining blocker for full-year completion on ALL THREE of this session's fixed venues
+(DERIBIT-COMBO, OKX, COINBASE-FUTURES) is the same pre-existing, already-tracked Tardis concurrent-IP-lock**
+(`tardis_concurrent_ip_lockout_2026_07_12.md` P0) — not a code bug, an operator-gated infra constraint. **Gate verdict
+(unchanged): ❌ NOT MET** — the 6 `BLK-afc672cf`-gated tuples remain a pure operator decision (no worker action
+possible), and full-year backfill completion for these 3 venues still needs either the concurrent-IP lease enabled
+fleet-wide or a genuinely solo window to land beyond a single verified day each. Full detail for both closed VERIFY
+todos: `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`.
