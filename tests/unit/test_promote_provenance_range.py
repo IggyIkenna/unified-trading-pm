@@ -11,6 +11,7 @@ forever). The two invariants under test:
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -75,8 +76,41 @@ def _patch_run(monkeypatch, rc: int, out: str):
 
 
 def test_marker_parsed_from_gh_json(monkeypatch):
-    _patch_run(monkeypatch, 0, '[{"headRefOid":"b859a15","mergedAt":"2026-06-16T22:32:52Z"}]')
+    _patch_run(
+        monkeypatch,
+        0,
+        '[{"headRefOid":"b859a15","mergedAt":"2026-06-16T22:32:52Z",'
+        '"title":"chore(promote): LDR → staging (Tier C auto-drain)"}]',
+    )
     assert ppr.last_promoted_marker("IggyIkenna", "unified-trading-library", "staging") == "b859a15"
+
+
+def test_marker_matches_per_sha_ref_promote_pr_by_title_not_head(monkeypatch):
+    # The bug (promote_provenance_marker_stale_head_query_2026_07_13.md): the WS-L Phase-0 fleet
+    # bot opens promote PRs with head `promote/<repo>/<sha>`, never literally `live-defi-rollout`.
+    # The marker must resolve from the `chore(promote)` TITLE, independent of what the head-ref
+    # shape is — this asserts the fix picks the PR up even though `gh pr list` here returns no
+    # `headRefName` field at all (title/mergedAt/headRefOid is all the marker needs).
+    _patch_run(
+        monkeypatch,
+        0,
+        '[{"headRefOid":"9614964abc","mergedAt":"2026-07-13T10:00:00Z",'
+        '"title":"chore(promote): LDR → main (Option-B direct)"}]',
+    )
+    assert ppr.last_promoted_marker("IggyIkenna", "market-tick-data-service", "main") == "9614964abc"
+
+
+def test_marker_ignores_non_promote_prs_and_picks_latest_mergedat(monkeypatch):
+    promote_title = "chore(promote): LDR → main (Option-B direct)"
+    payload = json.dumps(
+        [
+            {"headRefOid": "stale111", "mergedAt": "2026-07-01T00:00:00Z", "title": promote_title},
+            {"headRefOid": "notpromote", "mergedAt": "2026-07-12T00:00:00Z", "title": "fix: unrelated PR"},
+            {"headRefOid": "latest222", "mergedAt": "2026-07-10T00:00:00Z", "title": promote_title},
+        ]
+    )
+    _patch_run(monkeypatch, 0, payload)
+    assert ppr.last_promoted_marker("IggyIkenna", "market-tick-data-service", "main") == "latest222"
 
 
 def test_marker_none_on_gh_error(monkeypatch):
