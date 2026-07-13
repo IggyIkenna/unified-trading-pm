@@ -92,23 +92,42 @@ still-red repo re-fires only the per-run one. So the redundant/noisy path is pyt
    `dedup_key: "qg-fail:<repo>:<sha>"` + `cooldown_min: 45` — the SHA defeats cross-commit dedup, so a still-red repo
    pages on every failing push.
 
-## Timing basis (promotion cadence — operator's re-remind question)
+## Timing basis (promotion cadence — MEASURED, operator's re-remind question)
 
-Verified cadences: `ldr-to-main-promote.yml` = **`*/15`** (every 15 min, ~30-min LDR→main SLA); `branch-health.yml` lag
-monitor = `*/30`; `ldr-ci-monitor.yml` = hourly. A promotion lag > 60 min = >4 missed promote cycles → genuinely stuck
-(not normal in-flight churn). Operator: a 1–2 h re-remind is acceptable ("we keep shipping; when promotion runs it
-merges"). **Caveat (operator):** GitHub-hosted `schedule:` crons deviate under load, so the `*/15`/`*/30` timings are
-best-effort — the re-remind must be **age-based** (how long the pair has been un-propagated), not tick-based, to stay
-correct when a cron slips. A future option is to trigger the lag check from our own scheduler (the AO backend) for
-reliable timing — captured as a stretch item, not required for this cleanup.
+Declared crons: `ldr-to-main-promote.yml` = `*/15`; `branch-health.yml` lag monitor = `*/30`; `ldr-ci-monitor.yml` =
+hourly. **But the declared crons are NOT the real cadence.** Measured over the last 60 promote runs (2026-07-11 17:08 →
+07-13 09:55 UTC, all `schedule`-triggered):
+
+| metric          | value                       |
+| --------------- | --------------------------- |
+| **average gap** | **41.5 min**                |
+| **median gap**  | **33.0 min**                |
+| fastest         | 21.9 min (never reaches 15) |
+| **slowest**     | **93.1 min** (~1.5 h)       |
+
+So GitHub's hosted scheduler fires the promote at **~37% of the declared `*/15` rate** (~one run every 40 min, gaps up
+to 93 min) — GitHub deprioritizes `schedule:` workflows on high-Actions-usage accounts. **Two consequences:**
+
+1. **The 60-min lag threshold is now suspect.** With promote gaps up to 93 min, a lag of 60–90 min can simply mean _the
+   next promote hasn't fired yet_, not a stuck promotion. Options (D4): raise the lag threshold to ~120 min (≥3 real
+   cycles) so only genuinely-stuck lags alert; or make the threshold a small multiple of the observed p95 promote gap.
+2. **Re-remind must be age-based, not tick-based.** Anchor the cooldown to how long the pair has been un-propagated, not
+   to cron ticks (which slip). With a real ~40-min cadence, a 120-min cooldown ≈ 3 actual promote cycles.
+
+The clean structural fix is the WS-1 stretch item: **trigger the promote (and the lag check) from our own scheduler**
+(the AO backend, reliable 15-min tick) instead of GitHub's throttled `schedule:` — then `*/15` is real and both the
+threshold and re-remind become meaningful. Out of scope for the noise-cleanup, but this measurement is the evidence for
+prioritising it.
 
 ## Design
 
 - **WS-1 — Promotion-lag dedup.** Bump `branch-health.yml` `lag-notify` `cooldown_min` 60 → **120** (2 h; matches "1–2 h
-  is fine" and ~8 promote cycles), keeping the existing `promotion-lag` dedup*key + the RESOLVED bookend
-  (`lag-notify-resolved`, already present). Effect: a standing lag pages once on the 60-min crossing, then ~every 2 h,
-  and clears with a RESOLVED — ~24/day → ~12/day, and a self-resolving lag makes far less noise. *(Cooldown is the one
-  knob; if 2 h still feels noisy for a multi-day stuck lag, 240 is the notify-slack default.)\_
+  is fine" and ~3 REAL promote cycles at the measured ~40-min cadence), keeping the existing `promotion-lag` dedup key +
+  the RESOLVED bookend (`lag-notify-resolved`, already present). Optionally raise the lag THRESHOLD 60 → 120 min per D4
+  so a lag that is merely waiting for a throttled promote does not alert at all. Effect: a standing lag pages once on
+  the threshold crossing, then ~every 2 h, and clears with a RESOLVED — ~24/day → ~12/day (fewer if the threshold
+  rises), and a self-resolving lag makes far less noise. Cooldown is the one knob for cadence; 240 is the notify-slack
+  default if 2 h still feels noisy for a multi-day stuck lag.
 - **WS-2 — Drop/digest CI-RECOVERED.** Stop paging the red→green recovery from `ci-status-update.yml` (keep the
   REGRESSION →red page + the GCS ledger write). Simplest: gate the recovery branch so it persists + logs but does not
   call `notify-slack.yml` (mirror the AO WS-A "success is silent"); optionally surface a count in a periodic digest.
@@ -130,18 +149,24 @@ verification after every push"). `promotion_lag_monitor.py` lives in PM `scripts
   sibling to the AO one) — WS-4.
 - `notify-slack.yml` is the shared dedup carrier (`dedup_key` + `cooldown_min` + the green/INFO suppression gate).
 
-## Open decisions (operator)
+## Decisions
 
-- **D1 — WS-1 cooldown value.** Propose **120 min** (2 h). Confirm, or prefer 240 (4 h) for a quieter multi-day stuck
-  lag.
-- **D2 — WS-3 aggressiveness.** Propose the safe **dedup-by-branch** (keeps per-run alert, deduped). Alternative: DROP
-  the per-run QG Slack alert entirely and rely solely on ci-status-update transitions (collapses 105→0 but loses "new
-  failure while already red" visibility). Confirm branch-dedup vs drop.
-- **D3 — CI-RECOVERED.** Drop from Slack entirely, or keep a once-daily digest count? Propose drop + digest count.
+- **D1 — WS-1 re-remind cooldown → RESOLVED: 120 min (2 h).** Operator (2026-07-13): "2 hour re-reminding if it's not
+  solved." So `lag-notify` `cooldown_min` 60 → 120.
+- **D2 — WS-3 aggressiveness — OPEN.** Propose the safe **dedup-by-branch** (keeps per-run alert, deduped). Alternative:
+  DROP the per-run QG Slack alert entirely and rely solely on ci-status-update transitions (collapses 105→0 but loses
+  "new failure while already red" visibility). Confirm branch-dedup vs drop.
+- **D3 — CI-RECOVERED — OPEN.** Drop from Slack entirely, or keep a once-daily digest count? Propose drop + digest
+  count.
+- **D4 — WS-1 lag THRESHOLD — OPEN (raised by the cadence measurement).** The promote actually runs every ~40 min (gaps
+  to 93 min), so the current 60-min lag threshold can fire on a lag merely waiting for a throttled promote. Propose
+  raising the threshold 60 → **120 min** so only genuinely-stuck lags alert. Confirm, or keep 60 and rely on the
+  cooldown alone.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Resolve D1 (cooldown), D2 (branch-dedup vs drop per-run QG alert), D3 (recovered drop vs digest).
+- [ ] [OPERATOR] P1. D1 resolved (2 h cooldown). Still open: D2 (branch-dedup vs drop per-run QG alert), D3 (recovered
+      drop vs digest), D4 (lag threshold 60 vs 120 min).
 - [ ] [INFRA] P2. WS-1: in the `branch-health.yml` TEMPLATE, bump `lag-notify` `cooldown_min` 60 → 120 (D1); verify the
       `promotion-lag` dedup_key + `lag-notify-resolved` bookend are intact; roll out via
       `rollout-workflow-templates.sh`.
@@ -160,5 +185,9 @@ verification after every push"). `promotion_lag_monitor.py` lives in PM `scripts
 - **2026-07-13** — Audit complete. 384 msgs / 7 days → 11 shapes. Root causes + exact touch-points verified: WS-1
   promotion-lag cooldown=60m too short (`branch-health.yml` lag-notify); WS-2 CI-RECOVERED green bookends
   (`ci-status-update.yml`); WS-3 per-run QG alert keyed by SHA (`python-quality-gates-v2.yml` notify-qg-fail). Answered
-  the 3-way-count question (per-run vs per-transition vs hourly granularities). Promotion cadence confirmed `*/15`. Plan
-  authored (human/LOCAL). Awaiting D1–D3 before code.
+  the 3-way-count question (per-run vs per-transition vs hourly granularities). Plan authored (human/LOCAL).
+- **2026-07-13 (cadence measured)** — Operator flagged the promote is not really `*/15`. MEASURED last 60 promote runs:
+  avg gap **41.5 min**, median **33 min**, max **93 min** — GitHub throttles the `schedule:` cron to ~37% of declared
+  rate. Consequences folded in: (a) the 60-min lag threshold can fire on a lag merely waiting for a throttled promote →
+  new **D4** (raise threshold 60→120); (b) re-remind must be age-based; (c) the self-triggered-scheduler stretch item is
+  now evidence-backed. **D1 resolved: 2 h re-remind cooldown** (operator). D2/D3/D4 open.
