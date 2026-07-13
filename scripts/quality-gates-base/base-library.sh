@@ -64,6 +64,7 @@ _qg_content_hash() {
         "${RUFF_CMD:-ruff}" --version 2>/dev/null
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null
+        _qg_editable_sibling_hash                                        # workspace sibling deps (qg-common.sh)
     } | sha256sum | awk '{print $1}'
 }
 
