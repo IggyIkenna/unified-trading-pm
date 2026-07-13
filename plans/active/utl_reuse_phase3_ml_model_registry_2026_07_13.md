@@ -55,13 +55,15 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [AGENT] P0. **Carry into UTL `ModelRegistry` (ship UTL MINOR bump first):**
-  - [ ] `store_model` writegate — `training_completeness_fraction` param +
+- [x] ✅ [AGENT] P0. **Carry into UTL `ModelRegistry` (ship UTL MINOR bump first):** — DONE
+      `unified-trading-library@7e4f9a23`.
+  - [x] ✅ `store_model` writegate — `training_completeness_fraction` param +
         `_check_emission_policy`/`publish_with_policy` BLOCK_CRITICAL gate (suppresses partial-coverage model writes +
-        P0 alert). Data-correctness invariant.
-  - [ ] `store_model` availability-manifest emission — `ManifestWriter.add(...).write()` with `job_id`.
-  - [ ] `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — keep UTL's `expected_sha256`
-        integrity param too (strongest combination = both).
+        P0 alert). Data-correctness invariant. Extracted into `_emission_gate()` to stay under the 50-line method limit.
+  - [x] ✅ `store_model` availability-manifest emission — `ManifestWriter.add(...).write()` with `job_id`, via
+        `_emit_availability_record()` (best-effort, non-fatal on failure).
+  - [x] ✅ `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — kept UTL's `expected_sha256`
+        integrity param too (strongest combination = both), enforced in `_deserialize_model`.
 - [ ] [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
       `... or training_period == ""` (`:531`,`:646`) returns the WRONG version from cache; UTL's `== training_period` is
       correct. Consolidating onto UTL **fixes** this for ml-service.
