@@ -136,6 +136,55 @@ report written in this plan's Progress Log.
   immediately following the understat completion in the same session. Baseline audit in §0 above. Model tier flagged
   `opus-required` per CLAUDE.md (cross-repo architectural investigation) — this session is running Sonnet 5 (cannot
   switch mid-session); compensating by routing the hard root-causing work to opus-tier Workflow sub-agents.
+- 2026-07-13 (sub-agent, investigation-only dispatch — footystats/SFI/transfermarkt/weather residuals): fresh
+  live-manifest read (`.venv/bin/python` ad-hoc script, `read_availability_index`, single-parquet read) confirms the
+  plan's §0 baseline numbers are still current: footystats 205 attempted_failed (179 TimeoutError, 15 phantom, 11
+  ArrowTypeError) + 56 EU; SFI 10 phantom + 94 EU; transfermarkt 0 attempted_failed + 47 EU; weather 51 phantom + 94 EU.
+  **(1) expected_unattempted legitimacy — CONFIRMED legitimate for all 4**: every single EU row across all 4 sources is
+  dated `2026-07-13` (today, the day this investigation ran) — 0 historical backlog. This is the SAME rolling ≤1-day
+  trailing edge already root-caused for understat (`expected_universe_v2_daily` Cloud Scheduler enum re-seeds today's
+  date at 01:30 UTC; same-day capture hasn't resolved it to `empty_confirmed(EXPECTED_NO_FIXTURE)` yet within the same
+  calendar day). Not a real gap — self-closes on the next capture pass. No action needed beyond the daily job already
+  running. **(2) phantom_captured_no_parquet_at_canonical_path — root-caused, GENUINE (not self-healing like the prior
+  ODDS precedent)**: live-probed all 76 phantom rows (15 footystats + 10 SFI + 51 weather) against EVERY
+  `candidate_parquet_paths()` candidate (canonical `pipeline_mode=` + legacy fallback) via direct
+  `blob_exists`/`list_blobs` checks — **0 of 76 have a real parquet today** (unlike the 2026-07-08 footystats ODDS
+  precedent where 19/20 were false positives that self-healed). Shared code-path root cause confirmed by reading
+  `footystats.py`/`sfi.py`/`weather.py`: **all three share the IDENTICAL anti-pattern** — a synchronous per-league loop
+  calls `_orch._gated_sink_write(...)` (a real, synchronous `storage_client.upload_bytes`, not buffered) immediately
+  followed by `manifest.record_captured(...)` with NO per-shard try/except isolating the pair; the only exception
+  handler is one FUNCTION-level `except Exception` wrapping the entire per-date/per-league loop (footystats.py:669,
+  sfi.py's fetch-level handler, weather.py's per-date handler). `record_captured()` itself buffers into the in-memory
+  `ManifestWriter` (flushed later via `.write()` / `flush_all_pending_buckets()`), decoupled in time from the
+  synchronous data write. footystats' 15 phantom rows are a single contiguous cluster (SEGUNDA_DIVISION,
+  2022-09-25→2022-10-10) — consistent with one historical backfill/retry pass where the manifest buffer's eventual flush
+  survived but the corresponding data write did not durably persist (VM interruption / later overwrite/delete), the same
+  buffered-manifest-vs-synchronous-data-write decoupling class already documented in
+  `reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12`. SFI (10 rows, scattered 2025-01→2026-04) and
+  weather (51 rows, scattered 2019-2026) show the same shape (small counts, no self-heal) — same class, not
+  independently re-diagnosed per-source. **Fix recommendation** (for the implementing agent): (a) data-only, safe,
+  immediate — run the existing
+  `scripts/reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types MATCHES,PREDICTIONS,ODDS,SFI_PROGRESSIVE_STATS,WEATHER --unphantom-only --dry-run`
+  first (safe-by-construction, phantom→captured only) to double-confirm before flipping the 76 confirmed-genuine rows to
+  `attempted_failed` via the same tool's normal (non-`--unphantom-only`) apply mode, then let the standard retry path
+  (VM re-run / `query_sports_is_gaps.py` → `launch-sports-is-gap-fill.sh`) re-capture them; (b) code fix, not urgent
+  given the tiny count — wrap the write+record_captured pair in each of the 3 orchestrator modules in a per-shard
+  try/except (mirroring the isolation pattern shard-level-failure-isolation.md already mandates) so a future interrupted
+  write cannot leave a buffered manifest entry with no corresponding durable data write. **(3) footystats TimeoutError
+  (179 rows) — retry/backoff tuning issue, NOT a dead endpoint**: dates span 2019-01-01 → 2023-01-03 uniformly (no
+  concentration near any specific outage window), 100% blank `league_id` (date-level bulk-call timeouts before the
+  per-league split, not a per-league-specific failure), split ODDS=90/PREDICTIONS=89. Uniform spread across 4 years of
+  historical dates is inconsistent with "dead endpoint for old dates" and consistent with a generic transient-timeout
+  class from the original backfill run; footystats' live endpoint is confirmed working today (this same investigation's
+  EU rows are actively being seeded for it). Recommend a plain re-attempt (existing
+  `footystats_residual_closer_2026_07_12.py` pattern or `query_sports_is_gaps.py` → gap-fill VM) with retry/backoff, no
+  adapter-timeout code change needed. The 11 ArrowTypeError rows (all ODDS, 2020-2023) are a distinct, small,
+  separately-diagnosable schema/serialization issue — not investigated further here (out of this pass's scope, flagged
+  for the implementing agent to triage as a possible one-off dtype coercion bug in the ODDS write path). **(4) Retired
+  data_types spot-verify — CLEAN, no fix needed**: `SFI_LEAGUES`/`SFI_STANDINGS`/`TRANSFERMARKT_LEAGUES`, 88,056 rows,
+  100% `capture_status=empty_confirmed` with `error_reason=EXPECTED_DEPRECATED_DATA_TYPE` — exactly as documented in
+  `rebuild_sports_manifest_v9.py:103`, no stale/blank rows found. No code or data changes made this pass
+  (investigation-only per dispatch scope); all fixes above are recommendations for the next implementing session/agent.
 
 - 2026-07-13 (sub-agent, investigation-only dispatch): **`odds_api` source retirement-status check — CONCLUSION: NOT
   retired/superseded, is a credential-gated (BLOCKED-CREDENTIALS) live source, already documented elsewhere.**
@@ -285,3 +334,75 @@ report written in this plan's Progress Log.
     envelope-inspection call before any re-attempt → (b) FIXTURES root-cause (mirror the (a)/(c) method) → (d)
     phantom-path diff → re-attempt all four classes → (3) service_name rewrite for the 88 MTDS rows → final re-verify
     todo. of accepting a documented-equivalent residual.
+
+- 2026-07-13 (sub-agent, investigation-only dispatch): **`mdps_odds_horizon_bucket` zero-ever-captured root-cause —
+  CONCLUSION: NOT a broken/unbuilt pipeline. Root cause is a manifest-bucket-routing split-brain: the real captured data
+  lives in a DIFFERENT manifest than the one this investigation (and the plan's §0 baseline) queried.**
+  - **The pipeline is fully built and actively running.** Producer:
+    `market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py`
+    (`SportsBucketAssignmentAdapter`, registered
+    `@CandleAdapterRegistry.register(MarketAssetGroup.SPORTS, "odds_horizon_bucket")`) — complete, tested,
+    honest-coverage-compliant (empty/failed paths correctly distinguished). Entrypoint:
+    `market-data-processing-service/scripts/reprocess_sports_odds.py`. Launcher:
+    `deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` (Pass K of the archived
+    `sports_predictions_e2e_2026_05_05` plan).
+  - **Direct evidence it has run and is current**: `reprocess_sports_odds.py:149` resolves its manifest bucket as
+    `get_bucket_name("market-data-tick-sports", project_id=project)` → writes to
+    `gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet` — a SEPARATE physical
+    manifest from `instruments-store-sports-prd` (the one this task's brief + the plan's §0 baseline queried). Direct
+    read of that manifest (1,958,499 total rows): `source=mdps_odds_horizon_bucket` → 124,294 rows, `capture_status`
+    123,642 `captured` / 652 `empty_confirmed`, **0 attempted_failed**; `service_name` split
+    `market-data-processing-service` 109,638 + `market-tick-data-service` 14,656; `written_at` spans
+    2026-05-05T22:07:33Z → **2026-07-13T06:16:02Z (today)** — the pipeline is live and current, ~99.5% capture rate.
+    Confirmed further via GCS listing: real raw `data_source=ODDS_API` tick parquets exist under
+    `gs://market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=.../pipeline_mode=batch_odds_api/`
+    across 1,938 distinct `day=` partitions through 2026-06-24 — the upstream input MDPS reads is real and populous.
+  - **Why `instruments-store-sports-prd` shows 0 captured**: querying it directly (215,481 `mdps_odds_horizon_bucket`
+    rows) shows ALL rows are `service_name=instruments-service`, ALL carrying an `enumerator_run_id` (e.g.
+    `enum-universe-sports-20260628-213115`, `enum-universe-sports-20260629-075526`) — i.e. every single row was written
+    by the expected-universe ENUMERATOR, never by MDPS/MTDS. Cross-check confirms this categorically: **zero rows
+    anywhere in the 4,863,784-row `instruments-store-sports-prd` manifest have
+    `service_name == "market-data-processing-service"`.** The 209,526 `expected_unattempted` are the enumerator's normal
+    seed; the 5,955 `empty_confirmed` all carry `error_reason=EXPECTED_PRE_SOURCE_COVERAGE_START` (dated
+    2018-01-01→2020-06-05, i.e. enumerator-side pre-coverage marking, not an actual MDPS attempt).
+  - **The actual bug**: `instruments-service/scripts/enumerate_expected_universe.py:279-307` (`_default_bucket_for`)
+    hardcodes, as a documented deliberate decision ("slot-4 finding 2026-06-07", see
+    `plans/active/sports_manifest_canonicalisation_2026_06_01.md` lines ~1524-1997), that **all of sports' manifest —
+    including MTDS/MDPS-owned market-data types — lives in the `instruments-store` bucket**, NOT the per-asset-group
+    `market-data-tick` bucket that every other asset_group (cefi/defi/tradfi) uses. That decision was applied to the
+    enumerator (denominator writer) but was **never mirrored to the MDPS producer** (`reprocess_sports_odds.py:149`,
+    numerator writer) or to MTDS's own raw `odds_api` tick writer, which still both independently target
+    `market-data-tick-sports-prd`. Result: numerator and denominator for `mdps_odds_horizon_bucket` (and likely for
+    MTDS's raw `odds_api`/`trades` captures — the same split-brain may explain this plan's own §0 "odds_api …
+    suspiciously sparse" line, though that source's `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` sub-types were
+    separately confirmed genuinely credential-gated in the prior entry above — the raw `trades` numerator itself is NOT
+    credential-gated and DOES exist, just in the other bucket) live in two different physical manifests that nothing
+    ever merges — `codex/05-infrastructure/manifest-consolidator-ssot.md`'s Cloud Run consolidator jobs consolidate
+    SHARDS WITHIN a bucket, not ACROSS the instruments-store/market-data-tick pair.
+  - **Not a deferred/intentional design gap** — no plan or issue doc marks this as known;
+    `sports_predictions_e2e_2026_05_05` (archived 2026-05-05, `status: in_progress` at archive time) explicitly called
+    for running exactly this pipeline (Group D todos, all still `- [ ]` unchecked at archive) and was archived without
+    those todos ever being flipped or re-homed to a successor plan — this is the silent-gap case, not the
+    intentional-deferral case. Because features-service's sports reader
+    (`features-service/features_service/sports/data/gcs_reader.py`, `test_read_bucketed_odds.py`) reads bucketed parquet
+    **directly by GCS path**, not via the manifest, the actual ML/feature pipeline for `odds_horizon_bucket` is
+    unaffected by this bug — only the manifest-derived coverage metric (and this investigation) were fooled.
+  - **Recommended fix (concrete, for the implementing agent)**: (1) Either (a) make `reprocess_sports_odds.py:149` and
+    MTDS's raw sports `odds_api` writer resolve their manifest bucket via the SAME `sports → instruments-store` routing
+    exception already in `enumerate_expected_universe.py::_default_bucket_for` (co-locate numerator + denominator, the
+    architecturally-consistent fix, matches the documented 2026-06-07 decision), OR (b) if `market-data-tick-sports-prd`
+    is meant to stay the sports market-data canonical manifest instead, revert the enumerator's sports exception and
+    seed the `mdps_odds_horizon_bucket`/raw-odds expected-universe there instead — **(a) is recommended** since the
+    enumerator-side decision is the more recent, deliberately-verified one (WAVE-2 dry-runs, slot-4, 2026-06-07) and
+    instruments-store-sports-prd is what this plan, the operator's task brief, and presumably the data-status UI all
+    already treat as sports' canonical manifest. (2) One-time backfill: after the code fix, re-run
+    `reprocess_sports_odds.py --force` (idempotent, no API credits — pure re-derivation from existing raw ticks) so the
+    123,642 already-computed captures get correctly stamped as `captured` in `instruments-store-sports-prd` instead of
+    silently sitting in the orphaned `market-data-tick-sports-prd` copy; do NOT double-count — either migrate/merge the
+    existing 124,294 rows or let the re-run naturally overwrite via `ManifestWriter`'s dedup key. (3) Apply the
+    identical fix-and-check to MTDS's raw `odds_api`/`trades` writer since it has the same bucket mismatch and is very
+    likely why this plan's own §0 table flagged "odds_api … suspiciously sparse/dead" for the raw-tick numerator
+    (separate from the credential-gated derived sub-types already resolved in the prior entry above). (4) Audit whether
+    any other MTDS/MDPS sports writer (footystats/SFI/etc. already look clean per §0, so likely unaffected — they may
+    already target `instruments-store-sports-prd` correctly) has the same mismatch before declaring this class of bug
+    closed.
