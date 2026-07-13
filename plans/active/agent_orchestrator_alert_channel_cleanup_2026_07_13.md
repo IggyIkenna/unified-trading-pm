@@ -192,6 +192,17 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
 - [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
      contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
      (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
+- [x] 9. ✅ [BACKEND] P2. WS-B follow-up (first live digest, 2026-07-13 16:15 UTC, 1706 events / 5 failures): the digest
+     announced "5 failure event(s) — see the counts below" but showed only the top-25 types by frequency, and the
+     failure rows (`worker_kick_failed` etc.) ranked below #25 were truncated out of view. Fixed `notify_daily_summary`
+     to append any below-#25 failure row (🔴-marked) rather than drop it; `test_daily_summary.py` locks it
+     (`test_digest_never_truncates_a_failure_out_of_view`); full `quality-gates.sh` green (1216 pytest). —
+     agent-orchestrator@f79f028.
+- [x] 10. ✅ [REVIEW] P2. Documented **every digest field + every `event_type`** in the codex SSOT
+      `codex/04-architecture/agent-orchestrator-alerting.md` (operator ask, 2026-07-13): a "Digest anatomy" field table
+      (Since / Total events / N failure event(s) / Activity / Footer) + a "Digest event glossary" grouping all ~25 event
+      types by lifecycle stage (boot·spawn / task / git-health / liveness·self-healing / plan-health·escalation) with
+      their `log_activity` code refs. Frontmatter-schema + prettier green. — unified-trading-pm (this commit).
 
 ## Progress Log
 
@@ -212,6 +223,13 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
   `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
+- **2026-07-13 (first live digest + follow-up)** — WS-B went live: the first `AO daily activity digest` posted (1706
+  events / 5 failures since 07:15 UTC), confirming `DailySummaryLoop` runs in prod. Operator flagged a readability gap —
+  the "5 failure event(s)" line pointed "see the counts below" but the failures ranked below the shown top-25 and were
+  truncated. Fixed `notify_daily_summary` to always keep failure rows visible (🔴-marked) —
+  **agent-orchestrator@f79f028** (QG green, 1216 pytest). Also documented every digest field + `event_type` in the codex
+  SSOT per operator ask (todo 10). The stray `fleet-git-health-guard.sh` prune-hazard fix in the tree was a concurrent
+  agent's WIP (shipped independently as `agent-orchestrator@a96c07c`) — left untouched.
 
 ## Deferred work after 2026-07-13
 
