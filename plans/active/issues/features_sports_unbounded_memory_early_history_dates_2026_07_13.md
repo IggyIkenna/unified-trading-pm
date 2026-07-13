@@ -85,6 +85,73 @@ in shape if not in mechanism: **a crashed shard reports `EXIT_STATUS=0`**, so an
 check would wrongly treat 2018-06-17 as successfully processed for the rest of history, when in fact it was never
 computed and the manifest likely has no captured row for it (or a partial one).
 
+## Additional finding (independent concurrent investigation, slot-8, 2026-07-13)
+
+**A dispatcher collision happened on this issue's Todo 1**: slot-10 picked up the same todo and shipped
+`features-service@b05f48ad` (`shot_quality_calculator` fix) at 10:40 UTC while I was independently profiling the same
+date using REAL production GCS data (not a synthetic repro). My investigation found a **separate, chronologically
+EARLIER unbounded-growth site** that slot-10's fix does not touch — flagging this because, if correct, the pipeline
+never reaches `shot_quality_calculator` (deep inside `run_new_calculators`, Phase-4) on this date: it OOMs first in
+`venue_context`, which runs several calculator-groups earlier (right after `advanced_stats`, matching BOTH original
+`dmesg` OOM logs' exact crash point).
+
+**Method**: built a tracemalloc/RSS-instrumented harness (`scripts/sports/profile_2018_06_17_memory.py`) that
+monkeypatches the real pipeline functions in `derived_features_exporter` (no production-code changes) and ran it against
+real 2018-06-17 GCS data end-to-end, protected by an external RSS-polling watchdog (RLIMIT_AS was tried first and
+rejected — it caps virtual address space, not RSS, and false-triggers on numpy/grpc/BLAS mmap arenas long before real
+memory grows). Confirmed `team_form`/`team_xg`/`team_goals`/`h2h`/`promoted_team` all complete with negligible memory
+deltas (flat ~5.3GB RSS baseline) — ruling out the original 5 suspects named in "What I found" above. The crash
+reproduced twice at the identical point: immediately after `Calculator advanced_stats: 62 columns added`, RSS jumping
+from ~5.3GB to 11.5GB+ within seconds (first run, 10GB watchdog kill) confirming the crash site is the very next
+calculator group.
+
+**Root cause, pinned exactly** via a cached-input bisection script (`scripts/sports/profile_venue_context_bisect.py`,
+run under a hard Docker `--memory` cgroup cap — the only reliable stop, since the explosion is too fast for userspace
+RSS polling to catch):
+
+1. `read_venues()` (`features_service/sports/data/gcs_mappings.py`) returns `venue_id=""` (empty string) for **all 591
+   rows** — confirmed via direct inspection of the cached pipeline DataFrame (`venues['venue_id'].nunique() == 1`, value
+   is `''`). This is a genuine bug: the RAW source parquet
+   (`gs://instruments-store-sports-prd-central-element-323112/sports_reference/venues/venues.parquet`) has 591 correctly
+   distinct real venue names (`OLD_TRAFFORD`, `ST_JAMES_PARK`, etc.) when read directly — `read_venues()`'s own
+   column-mapping/normalization is discarding them.
+2. Separately, `fixtures`/`fixtures_all`'s `venue_id` column is **also** `""` for 100% of both today's (149) and
+   historical (30,447) rows — a second, independent upstream normalization gap (not yet traced to its exact source file
+   — likely `gcs_normalizers.py` or the fixtures reader).
+3. `_compute_venue_features` (`features_service/sports/exporters/derived_features_helpers.py:501-699`) does THREE
+   `pd.merge(..., on="venue_id"/"away_venue_id", how="left")` calls against `venues`-derived tables with **no
+   duplicate-key guard** — unlike the sibling `compute_weather_for_fixtures`
+   (`features_service/sports/exporters/_weather_fetcher.py:42`), which already has a
+   `.drop_duplicates(subset=["venue_id"])` with an explicit comment:
+   `"Dedup venues by venue_id — duplicates cause combinatorial explosion in merge"` (i.e. this exact bug class was
+   already hit and patched once, just not in this sibling function).
+4. Because BOTH sides of the merge share the identical constant empty-string key, every venue merge becomes a full
+   CARTESIAN PRODUCT. Confirmed via row-count bisection with exact arithmetic:
+   - `venue_coords` merge (`derived_features_helpers.py:527`): `149 (target_fixtures) × 591 (venues) = 88,059` rows —
+     confirmed exactly (bisection printed `88059`, and `149 * 591 == 88059`).
+   - `away_coords` merge (`derived_features_helpers.py:572`): `88,059 × 591 ≈ 52,038,869` rows — this second cartesian
+     multiplication is what actually exhausts memory (the crash happens between these two merges in every reproduction:
+     full-pipeline runs died right after this point at 11.5GB/41GB RSS depending on the run; the bisection script died
+     between printing `[3] after home_venues merge: 88059 rows` and `[4]`, i.e. during the `away_coords` merge, under
+     both a 6GB and 10GB hard memory cap).
+
+**Fix needed** (not yet implemented — flagging per the "capture discoveries as plan todos immediately" rule, see new
+Todo below): (a) defensive guard — add `.drop_duplicates(subset=["venue_id"])` /
+`.drop_duplicates(subset=["away_venue_id"])` before each venue merge in `_compute_venue_features`, mirroring the sibling
+weather-fetcher's existing pattern, so a degenerate/duplicate-key venues table can never cartesian-explode a merge
+again; (b) root-cause fix — `read_venues()` and the fixtures normalizer both need to stop collapsing `venue_id` to an
+empty string (investigate the actual column mapping/normalizer logic; the raw source data has real values).
+
+**Safety note for whoever verifies this**: reproducing this bug against real GCS data is dangerous on a shared host —
+the cartesian join explodes from ~1.4GB to 40GB+ RSS in low single-digit seconds, too fast for a userspace RSS-polling
+watchdog to reliably catch (confirmed: mine missed it once). Use a REAL kernel-enforced memory cap (e.g.
+`docker run --memory=<N>g --memory-swap=<N>g`) around any repro/verification run, not `RLIMIT_AS` (caps virtual memory,
+not RSS — false-triggers on numpy/grpc) and not a polling watchdog (too slow for this specific explosion).
+
+Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: temporary`, delete once this issue closes):
+`scripts/sports/profile_2018_06_17_memory.py`, `scripts/sports/profile_cache_inputs.py`,
+`scripts/sports/profile_venue_context_bisect.py`.
+
 ## Why it matters
 
 - Blocks `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 (full-history compute) and, transitively, Todo 3
@@ -161,11 +228,41 @@ computed and the manifest likely has no captured row for it (or a partial one).
       `team_form`/`team_xg`/`team_goals`/`h2h`/`promoted_team`/`venue_context` — NOT the full calculator set actually
       invoked for these two dates), or the `_read_per_league_subpartitions` 33-shard-concat fallback path scaling badly
       when repeated across the historical lookback window rather than just once for today. (repo: features-service)
-- [ ] [DATA] P2. After the REAL fix lands (not just the partial one), `--force`-recompute 2018-06-17 AND 2018-06-18 (and
-      audit for other similarly-shaped dense-lookback dates across the full 2015-2019 era, not just these two — the
-      2018-06-18 finding suggests this is endemic to the era, not isolated to one date) then re-run
-      `check_pipeline_completeness.py` / the manifest-cleanliness query for the full 2015→present range. (repo:
+      **UPDATE (slot-8, same day): this todo is ANSWERED** — see "Additional finding" above + the two new todos
+      immediately below. `venue_context` (via `_compute_venue_features`) DOES explode on real data despite the synthetic
+      benchmark showing it flat — the synthetic repro used clean, distinct `venue_id` values, so it never exercised the
+      degenerate all-empty-string `venue_id` the real GCS data actually has. This also explains the 2018-06-18
+      (24-fixture) case: `24 × 591 = 14,184` rows, then re-multiplied by 591 again ≈ 8.4M rows — smaller than -17's ~52M
+      but still large enough to explain the observed steady multi-minute RSS climb toward the OOM ceiling. The
+      `_read_per_league_subpartitions` fallback was considered and ruled out as the dominant cost — it's a same-day,
+      one-time 33-shard read, not something repeated across the 400-day historical window.
+- [ ] [DATA] P0. Add a duplicate-key merge guard to `_compute_venue_features`
+      (`features_service/sports/exporters/derived_features_helpers.py:501-699`) —
+      `.drop_duplicates(subset=["venue_id"])` before the `venue_coords` merge (line ~516-527) and
+      `.drop_duplicates(subset=["away_venue_id"])` before the `away_coords` merge (line ~561-572), mirroring the
+      existing dedup pattern already in the sibling `compute_weather_for_fixtures`
+      (`features_service/sports/exporters/_weather_fetcher.py:42`). Without this, a degenerate `venue_id` value (see
+      next todo) turns these `pd.merge(..., how="left")` calls into a cartesian product — confirmed 149×591=88,059 rows
+      then 88,059×591≈52M rows, exhausting host memory. Add `validate="many_to_one"` too so any future recurrence fails
+      loudly instead of silently ballooning. (repo: features-service)
+- [ ] [DATA] P0. Root-cause + fix `venue_id` collapsing to an empty string: (1) `read_venues()`
+      (`features_service/sports/data/gcs_mappings.py`) returns `venue_id=""` for all 591 rows even though the raw source
+      parquet (`gs://instruments-store-sports-prd-central-element-323112/sports_reference/venues/venues.parquet`) has
+      591 correctly distinct real venue names — find and fix the column-mapping/normalization bug; (2) separately,
+      `fixtures`/`fixtures_all`'s `venue_id` is ALSO `""` for 100% of rows (today's + historical) — trace this to its
+      normalizer (likely `gcs_normalizers.py` or the fixtures reader) and fix it too. **CAUTION when reproducing**: this
+      cartesian join explodes from ~1.4GB to 40GB+ RSS in low single-digit seconds — too fast for a userspace
+      RSS-polling watchdog; use a real kernel-enforced cap (`docker run --memory=<N>g --memory-swap=<N>g`), not
+      `RLIMIT_AS` (caps virtual memory, not RSS — false-triggers on numpy/grpc before real growth). (repo:
       features-service)
+- [ ] [DATA] P1. After the above two todos land, re-verify the 2018-06-17 AND 2018-06-18 OOMs are actually resolved
+      end-to-end (not just the `shot_quality_calculator` site fixed in Todo 2) — the pipeline must reach and complete
+      `shot_quality_calculator` without first OOM-ing in `venue_context`, since venue_context runs several
+      calculator-groups earlier in `export_derived_features`. Use `scripts/sports/profile_2018_06_17_memory.py` (this
+      issue's committed profiling harness). Then `--force`-recompute both dates plus audit for other similarly-shaped
+      dense-lookback dates across the full 2015-2019 era (not just these two — the 2018-06-18 finding suggests this is
+      endemic to the era), and re-run `check_pipeline_completeness.py` / the manifest-cleanliness query for the full
+      2015→present range. (repo: features-service)
 
 ## Update — production re-test (2026-07-13, slot 12, same day the b05f48ad fix landed)
 
@@ -211,3 +308,11 @@ remains genuinely blocked — full-history compute cannot be honestly called cle
 whole-shard-killing OOM sits unresolved in the 2015-2019 era. Not attempting `/skip-current-task` yet — filing this
 update first per FINDINGS CLOSURE (§4.5), since the previous "done" claim needs correcting before another dispatch
 trusts it.
+
+**Cross-reference (slot-8, same day)**: this production re-test's "Conclusion" hypothesis (dominant cost is the shared
+400-day historical-lookback build, independent of today's fixture count) is CONFIRMED, but not via the historical-read
+itself (that step's tracemalloc/RSS delta measured flat and small in the "Additional finding" profiling above) — the
+actual mechanism is `_compute_venue_features`'s cartesian-join explosion, which scales with `target_fixtures × 591` (not
+with the 400-day lookback's row count directly), fully explaining why 24-fixture 2018-06-18 also climbs toward the same
+ceiling as 149-fixture 2018-06-17. See "Additional finding" above for the exact root cause and the two new P0 todos for
+the fix.
