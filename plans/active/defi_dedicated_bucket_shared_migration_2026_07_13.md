@@ -149,6 +149,21 @@ readers still point at the dedicated buckets.
       shared bucket with no data loss or behavior change (diff real output — e.g. dex-pool-fee materialization results —
       against a pre-migration baseline; confirm strategy-service's DEX-pool-dependent code paths still produce correct
       results end-to-end, not just "no crash").
+- [ ] [CODE] P0. (Discovered 2026-07-13 estate audit, adversarially verified) Migrate
+      `execution-service/execution_service/data/defi_lateral_loader.py` — `DEFAULT_LATERAL_BUCKETS` (:46-73) still
+      defaults to FLAT bucket names (`perp-funding-{pid}`, `lending-indices-{pid}`, `liquidations-{pid}`,
+      `oracle-prices-{pid}`, `gas-fees-{pid}`, `lst-rates-{pid}`, `eigenlayer-rewards-{pid}`, flat
+      `market-data-tick-defi-{pid}`) — 5 of 7 already point at buckets DELETED on 2026-07-10/12, and the path shape is
+      the legacy `category=` form (no `raw_tick_data/by_date/` wrapper). Dormant in prod backtests (`defi_feeds` is
+      configured nowhere) but breaks the 15 operator decision-trace CLIs today; needs the same two-axis fix
+      (`kind="tick-data"` + day-first prefix) this plan shipped for `canonical_dex_pool_provider.py` — do it BEFORE the
+      deletion todo below runs. Also covers `service_config` `defi_bucket_*` fields.
+- [ ] [INFRA] P0. (Discovered 2026-07-13 estate audit) The deletion todo below MUST also remove the Terraform resources
+      `market_data_defi_lst_rates_prd` / `market_data_defi_perp_funding_prd`
+      (`deployment-service/terraform/gcp/main.tf:530-579`) and the `bucket_config.yaml` dex-pools/lst-rates/
+      perp-funding entries in the SAME change — otherwise the next `terraform apply` resurrects the deleted buckets as
+      empty shells (this exact failure recreated ~30 cleanup-deleted buckets on 2026-07-12T21:59Z; see
+      [[terraform_bucket_estate_drift_resurrection_2026_07_13]]).
 - [ ] [DATA] P1. Once every reader is confirmed migrated and real production traffic is flowing through the new path
       (not just deployed-but-idle), delete `dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd` — mirror the careful
       backup-verify-delete pattern already used this session for the other 12 legacy DeFi buckets
