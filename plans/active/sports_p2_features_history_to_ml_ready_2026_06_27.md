@@ -117,6 +117,26 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-13 — slot 4 (Todo 3 re-check — still BLOCKED-PREREQ; compute ~37% through; 1 VM died non-clean, new finding)
+
+Fast re-verify (not a repeat multi-hour dive) of Todo 1's full-history compute launched 2026-07-12 by slot 11:
+
+- Features bucket `gs://features-sports-prd-central-element-323112/sports_features/by_date/`: **1,554 unique dates** (up
+  from 97 at slot-11's check ~24h ago) against the ~4,210-day 2015-01-01→2026-07-12 target — **~37% complete**. Earliest
+  date present is 2017-02-02 (not yet 2015-01-01) — confirms compute is genuinely still mid-run, not done.
+- VM fleet: `fss-backfill-vm-{3,4,5}` still `RUNNING`. `fss-backfill-vm-{1,2,6,7,8,9}` completed cleanly (`VM EXIT rc=0`
+  in each run.log, auto-deleted on completion per shutdown-script).
+- **New finding**: `fss-backfill-vm-10`'s GCE instance is gone (auto-deleted) but its `run.log` has **no `VM EXIT`
+  marker** — last line is a mid-date GCS-read log at 2026-07-12T12:08:32Z processing `day=2025-05-26`, i.e. it appears
+  to have died non-gracefully (crash/OOM/host-maintenance) rather than completing its assigned chunk or being cleanly
+  preempted-and-relaunched. This leaves a real gap in whatever date range was assigned to shard 10 — worth checking once
+  the other 9 finish, and relaunching shard 10's range if the gap is confirmed (VM launch is `infra` craft, not
+  `data_engineering` — flagging for the next Todo-1 dispatch/infra rather than acting on it here).
+- Gate ("features manifest clean over history") remains structurally unmet — full-history compute not done. Checkbox NOT
+  flipped. Not filing a new BLK (no operator decision needed; this is the same well-documented compute-not-done wait
+  this plan has hit 26+ times, plus one new observational data point for continuity). Releasing via
+  `/skip-current-task`.
+
 ### 2026-07-12 — slot 11 (Todo 3 dispatch, same session — BLOCKED-PREREQ, structurally unreachable, no new investigation needed)
 
 **Todo 3 (features manifest clean over history)** — dispatched immediately after this same slot's own Todo 1 launch
