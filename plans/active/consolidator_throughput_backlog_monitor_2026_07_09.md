@@ -283,20 +283,22 @@ drift_direction: advance-code
 > terminate at `log_event → PubSub → alerting-service → Slack`; NO Firestore/DB. The candidate-CSV + issue-doc outputs
 > target the PM git clone, which doesn't exist on the Cloud Run image → discarded on job exit.
 
-- [ ] [BACKEND] P2. **Persist a per-AG summary + read endpoint (phantom).** Write/overwrite a stable `latest.json` per
-      AG (phantom count + timestamp + triage-JSONL link) next to the existing `emit_dp_event` in the hygiene/reconcile
-      script. A real but UNWIRED artifact already exists to lean on —
-      `gs://central-element-323112-phantom-triage/     triage_{ag}_{ts}.jsonl` (written dry-run when phantoms > 0,
-      timestamp-suffixed, NO latest-pointer, ZERO consumers). Then a small deployment-api endpoint reads `latest.json`.
-      **Zero new detection logic.**
-- [ ] [BACKEND] P2. **Persist a per-AG summary + read endpoint (reprobe).** No artifact exists today (fully Slack-only)
-      → write a per-AG `latest.json` (disagreement counts + reclassified count + timestamp) in
-      `reprobe_new_empty_confirmed     .py`, same GCS-JSON pattern, same read endpoint. (The incidental
-      `error_reason=REPROBE_PROVED_FETCHABLE` + `.bak.parquet` manifest trace covers only the narrow proven subset — not
-      enough alone.)
-- [ ] [UI] P2. **Surface on the consolidator page** — per consolidator/AG: "last phantom audit: N phantoms (Xd ago)" +
-      "last reprobe: N disagreements / M reclassified", with HONEST staleness shown loudly (phantom is WEEKLY → the age
-      matters). Tooltip explains what a phantom / a reprobe-disagreement is. `pw:L2`.
+- [x] [BACKEND] P2. ✅ **Persist a per-AG summary + read endpoint (phantom) — SHIPPED 2026-07-13.**
+      `_write_phantom_audit_latest()` writes a stable `_index/phantom_audit_latest.json` (schema v1: phantom*count +
+      generated_at + triage-JSONL link) to the AG's manifest bucket on every canonical AG audit (incl. phantom_count=0,
+      honest all-clear), re-published with the real triage link on the dry-run path; leans on the existing
+      `gs://central-element-323112-phantom-triage/triage*{ag}\_{ts}.jsonl`(zero new detection logic). deployment-api    `\_audit_fields()`reads it per market-data/instruments entry (gated; absent = None). —`instruments-service@5d06c2d1`    +`deployment-api@92442b13` +
+      unit tests.
+- [x] [BACKEND] P2. ✅ **Persist a per-AG summary + read endpoint (reprobe) — SHIPPED 2026-07-13.**
+      `_write_reprobe_audit_latest()` writes a per-AG `_index/reprobe_audit_latest.json` (new_empties / disagreements /
+      ambiguous / proven / reclassified + day + generated_at) to the AG's market-data bucket every run (dry-run OR
+      `--reclassify-apply`), same GCS-JSON pattern + same deployment-api read path as phantom. —
+      `e2e-testing@85d8d4ac` + `deployment-api@92442b13` + unit tests.
+- [x] [UI] P2. ✅ **Surface on the consolidator page — SHIPPED 2026-07-13.** `AuditSummary` renders "phantoms N · {age}"
+      (amber when > 0; timestamp red when the ~weekly audit is overdue — loud staleness) + "reprobe N disagree · M
+      reclassified · {age}" (amber on disagreements) on market-data/instruments cards; absent audit → NO row (honest
+      absence, never a fabricated 0). Tooltips + help-doc section explain phantom / reprobe-disagreement. —
+      `deployment-ui@b0c68249`. `pw:L2 ✓` cockpit.spec.ts O8.
 
 > **✅ Coverage-gap FINDINGS — VERIFIED 2026-07-10 (operator asked to verify before filing; done by reading source +
 > live `gcloud`). Outcome: ONE genuine gap FILED, two downgraded to by-design:**
@@ -341,6 +343,19 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- 2026-07-13 — **Phantom + re-probe visibility SHIPPED end-to-end (todos 313/319/324).** The two dark data-correctness
+  actors now self-publish a stable per-AG summary the cockpit reads. **Writers**: the cross-AG phantom reconciler writes
+  `_index/phantom_audit_latest.json` (phantom_count + triage link) to the AG's manifest bucket
+  (`instruments-service@5d06c2d1`); the daily empty re-probe writes `_index/reprobe_audit_latest.json` (disagreements /
+  reclassified / new_empties) to the AG's market-data bucket every run, dry-run included (`e2e-testing@85d8d4ac`) — both
+  land in the SAME bucket the consolidator card reads, so no new plumbing. **Reader**: deployment-api `_audit_fields()`
+  reads both per market-data/instruments entry (gated so features/execution/flat pay nothing; absent = None, honest), +7
+  `ConsolidatorHealth` fields (`deployment-api@92442b13`). **UI**: `AuditSummary` renders "phantoms N · {age}" (amber
+  when > 0, timestamp red when the ~weekly audit is overdue) + "reprobe N disagree · M reclassified · {age}"; absent
+  audit → NO row, never a fabricated 0 (`deployment-ui@b0c68249`, `pw:L2 ✓` O8 + help-doc section). All 4 repos
+  QG-green + strict-quickmerge. **Design note**: inline JSON writers with a documented blob-path convention (not a new
+  UTL symbol) to avoid a UTL ship→propagate cycle across two consumer repos. The artifacts appear in prod the moment
+  each audit job next runs — same "ship code now, artifact on next run" shape as the consolidator `latest.json`.
 - 2026-07-13 — **WS-2 (merged-per-tick histogram) DESCOPED from this plan (operator 2026-07-13).** Its 3 P3 todos
   (store-decision / instrument-the-job / history-endpoint) kept surfacing as "remaining" on a workstream that was always
   🟡 nice-to-have AND contingent on another plan. Design is NOT lost: WS-2 must **ride WS-H's structured-progress
