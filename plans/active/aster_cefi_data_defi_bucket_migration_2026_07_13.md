@@ -190,9 +190,27 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Phase 2 — Dry-run + apply (P0)
 
-- [ ] [DATA] P0. Run the extended migration script in dry-run across the full 948-day range; verify the planned object
-      count matches Phase 1's scope audit; spot-check 10+ planned renames for correctness (base/quote split, `@LIN`
-      margin marker) against the existing 2026-07-08 script's validated logic.
+- [x] ✅ [DATA] P0. Run the extended migration script in dry-run across the full 948-day range — **DONE, slot 8**, ran
+      `scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py` (no `--apply`) for real against production GCS, full
+      2023-11-01 → 2026-06-05 default range. **Result: 117,176 objects planned, 0 skipped** (log:
+      `Plan: 117176 objects to copy, 0 skipped (not in scope / already canonical)`; scanned all 948 days in ~29s via
+      per-day targeted prefix listing, no whole-corpus walk). **Count vs Phase 1 Todo 1's audit (115,110 total objects):
+      a 2,066-object (1.8%) difference, root-caused, not a bug** — Phase 1's audit prefix was scoped to
+      `.../instrument_type=perpetual/data_type=derivative_ticker/` only (per its own Finding section), while this
+      migration script's `day_prefix()` scopes at the `venue=ASTER/` level (no `data_type` restriction) and picks up a
+      SIBLING `data_type=trades` partition Phase 1's narrower audit never scanned (confirmed live: `day=2023-11-01` has
+      63 `derivative_ticker` + 15 `trades` objects under the same venue prefix). **This means Phase 1 Todo 1's exact
+      counts (115,110 total / 71,843 unique) under-scope the true migration surface by the `trades` data_type** —
+      flagging for whoever revisits that audit, but NOT blocking here: this migration script's broader venue-level scope
+      is the CORRECT one (every cefi-labeled ASTER object needs migrating regardless of `data_type`), so no script
+      change needed, just documenting the count-reconciliation. **Spot-checked all 10 sample renames the dry-run
+      printed** (`1000FLOKIUSDT.parquet`→`ASTER:PERPETUAL:1000FLOKI-USDT@LIN.parquet`,
+      `1000PEPEUSDT`→`1000PEPE-USDT@LIN`, `1000SHIBUSDT`→`1000SHIB-USDT@LIN`, `AAVEUSDT`→`AAVE-USDT@LIN`,
+      `ADAUSDT`→`ADA-USDT@LIN`, `ALGOUSDT`→`ALGO-USDT@LIN`, `ALICEUSDT`→`ALICE-USDT@LIN`, `APEUSDT`→`APE-USDT@LIN`,
+      `APTUSDT`→`APT-USDT@LIN`, `ARBUSDT`→`ARB-USDT@LIN`) — all correct base/quote splits (longest-suffix-first `USDT`
+      match), all carry the `@LIN` margin marker, all target the correct CeFi-bucket path with
+      `day=`/`pipeline_mode=batch_aster`/ `asset_group=cefi`/`venue=ASTER` preserved. Matches the validated logic from
+      `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`. Nothing mutated (dry-run only).
 - [ ] [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for one
       pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
       `codex/05-infrastructure/vm-launcher-runbook.md` if a local/interactive run proves too slow; SPOT provisioning per
