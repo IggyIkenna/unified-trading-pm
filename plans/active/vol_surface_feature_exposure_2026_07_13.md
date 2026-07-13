@@ -165,12 +165,30 @@ sequential: false
       strategy-service consumer code exactly, which is the correct SSOT to mirror (same reasoning as item 1 matching
       `vol_surface_feature_extractor.py`'s own existing key style rather than the sibling calculator's convention).
       `formula_version`: same module-level `FORMULA_VERSION: int = 1` constant, no new versioning scheme.
-- [ ] [SCRIPT] P2. Implement + unit-test the multi-underlying extractor, honest-absence on any missing underlying (no
+- [x] ✅ [SCRIPT] P2. Implement + unit-test the multi-underlying extractor, honest-absence on any missing underlying (no
       degraded single-surface synthesis beyond the existing `degraded_single_surface` attestation already in
-      VOL_DISPERSION). `formula_version=1`. Repo: features-service.
-- [ ] [SCRIPT] P2. Wire VOL_DISPERSION (full mode) + VOL_CROSS_ASSET_SPREAD to consume the multi-underlying vector,
+      VOL_DISPERSION). `formula_version=1`. Repo: features-service. — SHIPPED `features-service@f09f6388`. Implemented
+      exactly per item 4's design: `extract_dispersion_features(index_surface, component_surfaces)` (emits
+      `index_iv_atm` via `_pick_atm_iv`; `component_iv_atm` for exactly one usable component, `avg_component_iv_atm`
+      for >1 — a component with no usable ATM point is dropped from the average, never treated as 0) and
+      `extract_cross_asset_spread_features(surface_a, surface_b)` (emits `iv_atm_asset_a`/`iv_atm_asset_b`
+      independently). Factored the surface→float-tuple conversion loop already inside `extract_vol_surface_features`
+      into a shared `_surface_to_pts()` helper (as item 4 suggested) so it isn't duplicated 3x. 19 new tests (11 for
+      dispersion: single/multi/dropped/zero/empty/none component paths + full-vector + float-type; 7 for
+      cross-asset-spread: both/only-a/only-b/neither/empty/no-atm/float-type) — 61/61 pass (42 pre-existing + 19 new,
+      zero regressions), `ruff`/`basedpyright` clean, full `quality-gates.sh` green (264s).
+- [x] ✅ [SCRIPT] P2. Wire VOL_DISPERSION (full mode) + VOL_CROSS_ASSET_SPREAD to consume the multi-underlying vector,
       preserving the existing single-surface degraded fallback for VOL_DISPERSION and the both-surfaces-required honest
-      no-trade for VOL_CROSS_ASSET_SPREAD. Repo: strategy-service.
+      no-trade for VOL_CROSS_ASSET_SPREAD. Repo: strategy-service. — NO CODE CHANGE NEEDED, verified not assumed:
+      re-read both engines directly — `dispersion.py:67-72`'s `_component_iv()` helper already checks `component_iv_atm`
+      then `avg_component_iv_atm` in that exact order, and `on_tick` already reads `index_iv_atm`/falls back to `iv_atm`
+      (degraded mode) exactly as item 4 specified; `cross_asset_spread.py:87-90` already reads
+      `iv_atm_asset_a`/`iv_atm_asset_b` and requires BOTH before trading (else honest no-trade). Both engines were
+      written anticipating this exact feature-vector shape — item 4's design confirmed this and item 5 simply made the
+      keys real; there was nothing left to wire. Re-ran
+      `tests/unit/engine/strategies/v2/test_vol_remaining_wave_engines.py -k "dispersion or cross_asset"` (6 tests,
+      already covering the honest-absence/degraded-mode/both-required semantics this design relies on) — all pass
+      unchanged, confirming no regression risk from this being a no-op on the strategy-service side.
 
 ## Progress Log
 
