@@ -3757,14 +3757,18 @@ tracked in the Progress Log.
   re-verified BACKED, no regression. All 4 codex SSOT docs exist/current (contradicts the epic's "DEFERRED-POST-CUTOVER"
   framing); one codex-internal stale sub-claim found (`global-ledger-architecture.md` still calls
   `build_attribution_rows()` a "stub") and flagged CODEX-GATED (not edited — operator-gated, new todo filed in the
-  re-audit plan for a follow-up session). **GOVERNANCE-GATE FINDING escalated to operator (not adjudicated)**: no
-  explicit operator-ack record was found for the discovery plan's 3 gated decisions (Phase 3 late-arriving-data / Phase
-  5 greeks-home / Phase 6 TreasuryLedger split) despite the Citadel plan's shipped code making de-facto choices on all 3
-  axes — read as a cross-plan visibility gap (two plans, two epics, one gated ledger-taxonomy surface, no closing
-  cross-reference) rather than proven unauthorized action, but exactly the pattern the operator asked this audit to
-  surface. Epic synced in place (`last_updated` bumped to 2026-07-12, all STALE/CONTRADICTED-BY-CODE claims corrected
-  with "(was: …)" + evidence citations) — commit pending via the orchestrator (this agent runs no git commands per its
-  instructions).
+  re-audit plan for a follow-up session). **GOVERNANCE-GATE: NO BREACH (initial suspicion overturned on deeper
+  verification)**: the audit's first pass found no operator-ack record for the discovery plan's 3 gated decisions (Phase
+  3 late-arriving-data / Phase 5 greeks-home / Phase 6 TreasuryLedger split) and provisionally escalated; a
+  PM-git-history search then FOUND the ack — `unified-trading-pm@351a47b61` (2026-05-23 20:42 +0100, "6 operator-ACK'd
+  decisions"), recorded in `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` § "Operator decisions
+  (ACK'd 2026-05-23)". Gate properly cleared ~4 weeks before any Phase 7/8 code shipped; shipped code CONSISTENT with
+  the acks; escalation WITHDRAWN. Real finding = doc-sync: the ack lived only in the MTDS plan while the epic +
+  discovery archival banner said "[ack] pending" for 7 weeks (now fixed in the epic with citations). Bonus discovery
+  from the ack record: the acked `ledger_type=treasury/` partition (fund-administration-service writer) is itself still
+  unimplemented at HEAD — forward-carried as a second epic P3 todo. Epic synced in place (`last_updated` bumped to
+  2026-07-12, all STALE/CONTRADICTED-BY-CODE claims corrected with "(was: …)" + evidence citations) — commit pending via
+  the orchestrator (this agent runs no git commands per its instructions).
 
 - 2026-07-12 (LEFTOVER QUEUE CLOSED, final Q&A round): operator ruled all 4 remaining items. (1) codex finding 346 FIXED
   — shard-level-failure-isolation.md synced to the 4-category taxonomy, validation-and-errors.md §1 named SSOT. (2)
