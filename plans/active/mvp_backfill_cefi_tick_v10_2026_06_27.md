@@ -2836,3 +2836,14 @@ Hypothesis: at a full 3-VM cap, a COLD-STARTING VM loses lease rotations to esta
 progress marker inside the 30-min stall window. Suggested shapes for attempt 3: (a) launch when the fleet is ≤1 other VM
 (quiet window), or (b) bump STALL threshold for this small scoped run, or (c) piggyback the 10 spot_pair instruments
 onto an existing queue VM's venue list instead of a dedicated VM.
+
+### Wave B part 2 RETRY + stall-regex root cause — 2026-07-14T18:04Z (doc-reconciliation session)
+
+First tail VM (`...165647`) STARTED fine, progressed 27 min (real sentinel fan-outs), then WORKER_STALLED at exactly
+last-progress+30min. Root cause is NOT lease starvation this time: the stall detector's progress regex was hardcoded
+`uploaded`, and a sparse-residual sweep spends most of its time SKIPPING already-captured cells (no uploads) — a
+full-range scan of mostly-complete data is a guaranteed watchdog death. This likely also contributed to the two DERIBIT
+spot_pair deaths (tiny 10-instrument scope → few uploads). Fix shipped (deployment-service, quickmerged):
+`STALL_PROGRESS_REGEX` env override in the cefi launcher. Retry launched: `cefi-queue-heavy-20260714-180440` (RUNNING,
+lease-ON, regex `uploaded|sentinel fan-out` — scan advancement counts as progress, 403-retry churn still does not).
+Guard passed 2+1=3.
