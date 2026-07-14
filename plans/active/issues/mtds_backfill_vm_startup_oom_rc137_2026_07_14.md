@@ -554,7 +554,7 @@ referenced twice) would benefit from the same hint — left untouched since they
 below for the live Cloud Run verification this session's sandboxed `gcloud` (same broken snap `cap_dac_override` prior
 sessions on this issue hit) cannot perform.
 
-- [ ] [INFRA] P0. **Live-verify `unified-trading-library@39979c5a` (NOT MATERIALIZED fix) against the real
+- [x] [INFRA] P0. **Live-verify `unified-trading-library@39979c5a` (NOT MATERIALIZED fix) against the real
       `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job** — confirm the image picks up the new code (per
       "P0 infra residual verification" above, this job's `market-tick-data-service:latest` base image is digest-pinned
       and needs an explicit bump if `update-dependency-version.yml` hasn't auto-fired; verify via direct content
@@ -569,7 +569,91 @@ sessions on this issue hit) cannot perform.
       without the OOM this issue's thread experiment hit), or genuinely batching the anti-join over date-range
       partitions (this issue's `ManifestFreshnessCache` sibling fix's `date_range`-scoping idea, applied to the
       consolidator side). Repo: `deployment-service` (Cloud Run job redeploy/trigger) + `unified-trading-library` (if a
-      further code change is needed).
+      further code change is needed). — ✅ DONE 2026-07-14 (slot 5, infra) — **live-verified, does NOT close**: the fix
+      is real and substantial (~10x longer survival) but insufficient alone. See "P0 infra live-verify — NOT
+      MATERIALIZED fix confirmed deployed, survival improved ~10x, still OOMs" below for the full evidence. New
+      `[BACKEND]` P0 todo filed below (date-range batching, Python/SQL service logic, outside infra craft).
+
+## P0 infra live-verify — NOT MATERIALIZED fix confirmed deployed, survival improved ~10x, still OOMs (2026-07-14, slot 5, infra)
+
+Picked up the last open `[INFRA] P0` todo (live-verify `unified-trading-library@39979c5a` against the real Cloud Run
+job). Non-snap `gcloud`/`docker` (same `~/google-cloud-sdk` workaround prior infra sessions on this issue used — the
+snap install's `cap_dac_override` failure reproduces in this sandbox too) were sufficient; no escalation needed.
+
+**Step 1 — confirmed the fix was published but NOT yet deployed.** Pulled the currently-deployed
+`market-tick-data-service:latest` image (digest `17ae49848e95…`, built 2026-07-14T20:24:56Z) and content-grepped
+`manifest_consolidator.py` — `NOT MATERIALIZED` absent. Pulled the newest tagged
+`unified-trading-library:latest`/`0.55.0` image (digest `174863e1…`, published 20:46:11Z) and content-grepped the same
+file — **present**. Confirmed via `git merge-base --is-ancestor 39979c5a HEAD` that the local `unified-trading-library`
+clone (HEAD `8745d9eb`) descends from the fix commit.
+
+**Step 2 — found + fixed a real digest-pin staleness gap** (same class this issue already documented once for
+`6b229121`/threads): `market-tick-data-service/Dockerfile`'s `ARG BASE_IMAGE_DIGEST` was still pinned to `06d1481d…`
+(the pre-`39979c5a` UTL image). Bumped it to `174863e1…`, shipped `market-tick-data-service@804584ef` via the normal
+Pass-1 QG → Pass-2 quickmerge flow. Manually `workflow_dispatch`'d `ldr-to-main-promote-fleet.yml` (PM repo) rather than
+waiting for the next `*/15` cron tick — opened MTDS promote PR #576, `image-build-gate` + `quality-gates-v2` both green,
+auto-merged 20:59:21Z. Fresh MTDS image built 20:58:08Z (digest `e61ea7245f…`, tags `804584e,latest`) — content-verified
+via pull+grep: `NOT MATERIALIZED` present, `pip show unified-trading-library` = `0.55.0` (the fixed build).
+
+**Step 3 — found + fixed a SECOND, more subtle gap**: even after the fresh MTDS image existed, the Cloud Run **job**
+kept executing the OLD digest. Cloud Run Jobs resolve a `:latest` tag reference to a concrete digest **at job-update
+time**, not per-execution — confirmed by describing the crashed execution `n2266` (started 20:58:04, the first cycle
+after the fresh image existed) and finding it still ran digest `17ae49848e95…` (the pre-fix image), not `e61ea7245f…`.
+Forced re-resolution with `gcloud run jobs update … --image=…:latest` (no-op-looking update, same tag, but it re-reads
+`:latest` at apply time) — subsequent executions confirmed via
+`executions describe … --format='value(spec.template.spec.containers[0].image)'` to run digest `e61ea7245f…`. **This
+resolution-pinning behavior is a real operational trap worth flagging on its own** — any prior session's "bumped the
+digest, should be live now" assumption for this job could have been silently wrong without this per-execution digest
+check.
+
+**Step 4 — watched real cycles on the confirmed-fixed image + digest, across two thread settings**:
+
+| `CONSOLIDATOR_DUCKDB_THREADS` | execution | `duckdb_merge_start` | `Container terminated on signal 9` | survival |
+| ----------------------------- | --------- | -------------------- | ---------------------------------- | -------- |
+| 1 (live stopgap, unchanged)   | `lpj95`   | 21:04:49.389503Z     | 21:08:41.622698Z                   | ~232.2s  |
+| 1 (live stopgap, unchanged)   | `82g2p`   | 21:10:47.382174Z     | 21:14:15.907698Z                   | ~208.5s  |
+| 4 (code default, tested live) | `w4sbp`   | 21:15:51.141516Z     | 21:16:51.737567Z                   | ~60.6s   |
+
+Both threads=1 runs survive **~10x longer** than every pre-fix crash this issue recorded (15-25s, insensitive to
+`memory_limit`) — hard confirmation the `NOT MATERIALIZED` hint is doing real work in production, not just the synthetic
+5M-row local repro. But the SAME threads-scaling trend from the pre-fix "P0 infra residual verification" table
+reproduces post-fix (more threads → faster crash, more concurrent scratch overhead) — threads=4 crashed nearly 4x faster
+than threads=1. **Reverted `CONSOLIDATOR_DUCKDB_THREADS` back to `1`** (the best measured setting, both pre- and
+post-fix) as the final live state.
+
+**Step 5 — index freshness, unchanged**: `_index/availability_index.parquet` for
+`market-data-tick-defi-prd-central-element-323112` remains frozen at `2026-07-14T12:56:34Z` (re-checked via
+`gsutil stat` after every crash — no successful cycle occurred at any thread setting tested). `latest.json` continues
+reporting `"success": true, "no_op": true, "error_reason": "locked"` for every skipped cycle — the same
+Cloud-Run-execution-status masking hazard this issue flagged earlier (`succeededCount:1` even on a pure no-op) remains
+unaddressed, still worth its own follow-up.
+
+**Verdict — this todo does NOT close the issue.** The fix is genuine and shipped correctly (both digest-pin gaps found
+and closed as part of this verification), but the real 27.4M-row DeFi canonical's working set still exceeds the
+NOT-MATERIALIZED-streamed footprint at both thread settings tested (1 and 4) on the 32Gi container. This confirms the
+todo's own anticipated "if it STILL crashes" branch — the remaining path is genuinely batching the incremental anti-join
+over date-range partitions (not just tuning threads/memory_limit, both now exhausted as levers), mirroring the
+`ManifestFreshnessCache` sibling fix's `date_range`-scoping idea. Filed below as a new `[BACKEND]` P0 todo — SQL
+query-plan restructuring inside `unified_trading_library/manifest_consolidator.py` is Python service business logic,
+outside infra craft (`does_not: Python service business logic → backend_engineer`).
+
+- [ ] [BACKEND] P0. **`uts-prod-manifest-consolidator-market-data-defi`'s DuckDB incremental-merge still OOMs even with
+      the `NOT MATERIALIZED` streaming fix (`unified-trading-library@39979c5a`) live-deployed and confirmed working (
+      survival went from ~15-25s to ~208-232s at `threads=1`, ~60.6s at `threads=4` — both still crash)** — the real
+      27.4M-row DeFi canonical's working set genuinely exceeds the NOT-MATERIALIZED-streamed footprint regardless of
+      thread count on the 32Gi/24GB-budget container. `_index/availability_index.parquet` for
+      `market-data-tick-defi-prd-central-element-323112` remains frozen at `2026-07-14T12:56:34Z` (now >8h stale).
+      Threads/memory_limit tuning is exhausted as a lever (see "P0 infra live-verify — NOT MATERIALIZED fix confirmed
+      deployed" above + "P0 infra residual verification — threads pragma confirmed insufficient" earlier in this issue
+      for both pre- and post-fix thread sweeps). Next step: genuinely batch the incremental anti-join in
+      `_duckdb_merge_payload` over date-range partitions (process the canonical+delta merge in bounded date-range chunks
+      instead of one monolithic full-corpus pass) — mirrors the `ManifestFreshnessCache` sibling fix's
+      `date_range`-scoping idea (`market-tick-data-service`'s slim-read pattern) applied to the consolidator side.
+      `CONSOLIDATOR_DUCKDB_THREADS` is currently live-set to `1` (best measured setting, both pre- and post-fix) — leave
+      it there until this lands. Also still open: Cloud Run's `execution.status` reads
+      `"Completed     successfully"`/`succeededCount:1` on a pure no-op (locked, zero rows touched) — worth a follow-up
+      to make `error_reason` the primary success signal instead of relying on someone checking `_index/latest.json` by
+      hand. Repo: `unified-trading-library` (`manifest_consolidator.py`).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 

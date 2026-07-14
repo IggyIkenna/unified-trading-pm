@@ -117,12 +117,22 @@ depends_on: []
 
 ## Todos
 
-- [ ] [CODE] P1. **ml-service: make the sports GCS loader layout-aware** — in
+- [x] [CODE] P1. **ml-service: make the sports GCS loader layout-aware** — in
       `_load_sports_group_parquet`/`_collect_sports_frames_by_date`, when the day-level blob is absent, list
       `sports_features/by_date/day={date}/league=*/feature_group={group}/features.parquet` (single prefix list per
       (date, group), concat league frames; same for `horizon_schema.json` sidecar — any one league's sidecar suffices,
       they're identical projections of the registry). Gate: an ml-service integration test proving derived_features
-      loads for a per-league-layout date; training run log shows derived columns in the matrix.
+      loads for a per-league-layout date; training run log shows derived columns in the matrix. —
+      **ml-service@360da40** + evidence: 8 loader unit tests (`tests/training/unit/test_sports_feature_loader.py`:
+      day-level-only, per-league- only concat, both-present union, empty day, sibling-group filter, per-league sidecar
+      fallback) green in `quality-gates.sh --no-fix` exit 0; REAL-bucket runtime verify day=2025-10-20: derived_features
+      **(24 fixtures × 728 cols, 17 leagues incl. 39/140)**, fixture_features (24×29), odds_features day-level (31×143)
+      unregressed, horizon sidecar 876 cols via per-league fallback, full `_query_sports_features` (24×728). **Second
+      read-side gap found + fixed in the same commit**: `Settings.get_sports_bucket()` resolved the legacy FLAT bucket
+      `features-sports-{pid}` (near-empty — only `day=2020-01-01` exists there); the writer's real corpus is env-tiered
+      `features-sports-prd-{pid}` (cloud-providers.yaml kind=`features-sports`). Now resolves via UTL
+      `get_bucket_name("features_sports")` with the template kept as an explicit override escape hatch (mirrors
+      ml-service@32f5c94). So pre-fix, ml-service read the wrong bucket AND the wrong layout.
 - [ ] [CODE] P2. **features-service: align the failure atom with the success atom** — `record_failed` in
       `_run_feature_group` should carry the same league granularity as `_write_per_league` successes (or a documented
       day-level sentinel that data-status readers treat as superseded when per-league captured rows exist for the same
@@ -131,6 +141,14 @@ depends_on: []
 - [ ] [DOC] P3. **Write the features-bucket path SSOT** (codex/02-data) documenting: odds day-level; derived/fixture
       per-league with RAW af-id keys (historical, addressable); manifest key = canonical league NAME; readers must
       handle both layouts. Cite `writer.py:26-27` + `batch_handler.py:300-323`.
+- [ ] [CODE] P2. **ml-service: odds_features cannot join the fixture matrix — join-key mismatch** (found during the P1
+      real-bucket runtime verify, 2026-07-14): the real `odds_features` parquet keys rows on **`event_id`** (columns:
+      `event_id, home_implied_prob, …`), but `_merge_sports_groups_for_date`
+      (`ml_service/training/app/core/sports_feature_loader.py`) requires a **`fixture_id`** column and skips the group
+      with a warning ("Sports group 'odds_features' … has no fixture_id column") — so odds features load from GCS but
+      never enter the merged matrix. Pre-existing (independent of the layout fix; visible now that loading works). Needs
+      an event_id↔fixture_id mapping decision (features-service exporter emits fixture_id? or ml-service maps via the
+      fixtures reference?) — cross-repo, decide atom on the features-service side first.
 
 ## Non-actions (explicit)
 
