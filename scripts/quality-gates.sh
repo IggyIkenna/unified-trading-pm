@@ -12,6 +12,15 @@ SOURCE_DIR="scripts"
 MIN_COVERAGE=69
 RUN_INTEGRATION=true
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
+# Wire the checker-adjacent test_*.py files that live next to their checkers under scripts/
+# (scripts/quality_gates/, scripts/cicd/, scripts/docs/) into the TESTS phase. Plain `testpaths`
+# widening in pyproject.toml does NOT work here — base-service.sh's pytest invocation always
+# passes explicit ${PYTEST_UNIT_DIR} path args, and pytest CLI paths override
+# [tool.pytest.ini_options] testpaths, so testpaths is never consulted. PYTEST_UNIT_DIR is the
+# documented per-repo override point instead (space-separated, word-split into pytest args).
+# Verified 2026-07-14: all 18 files here (254 tests) collect + pass together with no name
+# collisions. SSOT: plans/active/issues/qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md
+PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners
