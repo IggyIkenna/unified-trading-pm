@@ -236,25 +236,86 @@ consolidation).
       `quality-gates.sh` green (232s). - Both crons confirmed `ENABLED` (resumed) after all verification completed.
       Snapshots taken before any write: `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` on both
       surfaces.
-- [ ] [DATA] P0. **CF-8 backfill left `captured` rows specifically un-filled — confirms this doc's own candidate (a)
+- [x] ✅ [DATA] P0. **CF-8 backfill left `captured` rows specifically un-filled — confirms this doc's own candidate (a)
       hypothesis at line ~115 ("captured rows may go through a different path"), now quantified.** A fresh
       `cf_manifest_audit_2026_06_01.py` re-run (2026-07-14, data_engineering slot-2) confirms the 87.8%/85.3% aggregate
       fill rate the backfill achieved is driven almost entirely by `empty_confirmed`/`attempted_failed`/
       `expected_unattempted` rows reaching ~99.8-100% fill — but `capture_status='captured'` rows (the actual data, not
       placeholders) are still only **39.8% filled on IS** (651,845/1,638,158 missing) and **49.8% filled on MDPS**
       (286,839/575,671 missing). CF-8 therefore remains genuinely RED on both surfaces post-backfill, for a DIFFERENT
-      reason than before (was: whole-corpus 0-63%; now: captured-row-specific ~40-50% gap). Root cause not yet isolated
-      — needs investigation into whether `rebuild_sports_manifest_v9.py`'s captured-row write path
-      (`_write_captured_rows`, distinct from the empty-row `_write_empty_rows` path this doc's Finding 2 traced) derives
-      `available_at` the same way, or whether these are pre-existing captured rows written before the
-      `record_captured()`/`record_captured_from_counts()` writer-plumbing fix (`unified-trading-library@9c9cdc50`)
-      landed and were never re-emitted by the backfill pass (which may only touch empty/failed rows via `--force`, not
-      already-captured ones). A full fix likely needs either (a) a targeted re-emit pass for captured rows specifically
-      (mirroring the empty-row backfill recipe: dry-run → pause-cron/snapshot → apply → force-consolidate, this time
-      scoped to `capture_status=captured`), or (b) confirming captured rows need a different `available_at` source
-      entirely (e.g. object creation time) that the current `_available_at_from_row(row)` `written_at`-based derivation
-      doesn't cover. (repo: market-tick-data-service, unified-trading-library) — found via
-      `plans/active/sports_manifest_canonicalisation_2026_06_01.md`'s E8-verify re-audit, same date.
+      reason than before (was: whole-corpus 0-63%; now: captured-row-specific ~40-50% gap). — **ROOT-CAUSED FURTHER,
+      slot 3 (data_engineering), 2026-07-14**, via a single-object read of the live IS
+      `_index/availability_index.parquet` + the `pre_cf8_backfill_retry_20260713T233713Z.parquet` snapshot the backfill
+      itself already took (no new whole-corpus walk):
+  - **Candidate (b) ("captured rows need a different `available_at` source") — RULED OUT.** Both the pre-backfill
+    snapshot and the live index show `written_at` non-blank on 100% of captured rows (0/1,224,740 blank pre-backfill;
+    0/1,638,411 blank live) — including every row that ends up missing `available_at`. `_available_at_from_row(row)`
+    only returns `""` when `written_at` is blank, so source-timestamp-absence cannot be the cause: a valid fallback was
+    always derivable.
+  - **The missing rows were never touched by the backfill — a targeted-re-emit gap, not a corruption during re-emit.**
+    Broke the 651,991 IS captured rows missing `available_at` down by `written_at` date: 2026-05-05 (276,532,
+    `trades`/`odds_api` + `odds_horizon_bucket`/`mdps_odds_horizon_bucket`), 2026-07-13 (375,019, split between
+    `trades`/`odds_api` 195,410 and `TEAMS`/`api_football` 165,224), 2026-07-14 (439, `TEAMS`/`STANDINGS`). The
+    2026-07-13 missing rows' `written_at` range (06:15-20:16 UTC) sits entirely BEFORE the backfill's own apply window
+    (21:07-23:41 UTC per this doc's own snapshot timestamps) — these are ordinary LIVE production writes from earlier
+    the same day; the backfill's re-emission pass never touched them (their `written_at` is unchanged from the original
+    live-write time, not overwritten with a fresh backfill timestamp). Candidate (a)'s framing is correct in spirit but
+    mis-scoped: `_write_captured_rows` → `writer.add()` DOES thread `available_at` correctly (confirmed — matches the
+    independent re-verification touch above) — the gap is that a `--force` full-rebuild only re-emits from the OLD INDEX
+    SNAPSHOT it reads at start, so any row written by a concurrent/same-day LIVE capture never entered that snapshot and
+    was never re-emitted.
+  - **Two live-write-path sub-causes identified, both upstream of the rebuild script:**
+    1. **`TEAMS`/`STANDINGS`** (165,224 pre-fix + 439 recurring as recently as TODAY, 2026-07-14): confirmed the
+       2026-07-14 rows go through `instruments-service@56aa1938`'s (2026-07-13 18:44 UTC) FIXED per-league
+       `record_captured` path (non-blank `league_id`, matching the fix's write shape, not the retired blank-league_id
+       blanket writer) — yet still show `available_at=NULL`. The code is correct by inspection (`record_captured()`'s
+       `_available_at_value` derivation from `df`, `unified-trading-library@9c9cdc50`, also verified correct) — this
+       points at a **production deployment lag** (the running instruments-service process hadn't yet picked up the fixed
+       dependency at write-time), an ops question, not a further code change.
+    2. **`trades`/`odds_api` + `odds_horizon_bucket`** (the dominant ~75% of the gap, mostly 2026-05-05 + pre-fix
+       2026-07-13): traced to `market-tick-data-service/engine/orchestrator/manifest_finalize.py`'s
+       `_write_shard_counts_to_manifest()` — the `itype_key == "odds" and data_type_key == "trades"` branch stamps
+       `available_at=datetime.now(UTC).isoformat()` unconditionally (fix dated 2026-06-26,
+       `sports_mtds_available_at_manifest_gap`). Rows written before that landed have no derivable value from this path
+       either. Zero 2026-07-14 `trades`/`odds_api` rows show up missing — the live path is healthy going forward; this
+       slice is pure historical residue pre-dating the 2026-06-26 fix.
+    3. **Flagged, not confirmed**: `manifest_consolidator.py`'s dedup tie-break prefers the higher-`row_count` row (not
+       recency) when a dedup-key group is multi-source (`captured_distinct_sources > 1`) — a plausible mechanism for a
+       stale blank-`available_at` row to out-rank a fresher filled one. Did not verify whether any missing row_keys are
+       genuinely multi-source (would need a targeted read); noted as an open follow-up, not a confirmed cause.
+  - **Shipped**: the existing `_check_column_fill_regression` guardrail (`unified-trading-library@2e132bb2`) only
+    compares AGGREGATE fill rate — structurally blind to this exact failure shape (aggregate rose 62.9%→87.8% while
+    `capture_status='captured'` stayed ~40-50% filled; captured rows are too small a fraction of the corpus to move the
+    aggregate). Added `_check_captured_column_fill_regression()` — a `capture_status='captured'`-scoped sibling, same
+    single-pass-query shape, wired into the same `_duckdb_merge_payload` call site — so a FUTURE merge cycle that
+    silently drops `available_at` on captured rows specifically pages loud via a new
+    `MANIFEST_CAPTURED_COLUMN_FILL_REGRESSION` event even when the aggregate looks fine. 3 new unit tests
+    (`tests/unit/test_manifest_consolidator.py`), including one that directly demonstrates the aggregate guard stays
+    silent on this exact shape while the new guard fires. Full `quality-gates.sh` green.
+  - **Not done — still genuinely RED**: no further production write attempted (Finding 1's cron-collision history + this
+    doc's repeated "don't re-attempt without operator coordination" lesson); the historical residue (2026-05-05 +
+    pre-fix 2026-07-13 rows) needs a targeted re-emit, and the TEAMS/STANDINGS deployment-freshness question needs an
+    ops answer. See new todos below.
+- [ ] [INFRA] P1. Confirm whether the running instruments-service production deployment has picked up
+      `instruments-service@56aa1938` + `unified-trading-library@9c9cdc50` (both landed 2026-07-13 18:44 UTC and earlier)
+      — 439 `TEAMS`/`STANDINGS` captured rows written as recently as 2026-07-14 (TODAY, hours after both fixes landed in
+      the repo) still show `available_at=NULL` despite going through the code paths that should now populate it
+      correctly (verified by code inspection, see the P0 addendum above). If the deployment is stale, redeploy; if it's
+      current and the gap persists, that means there IS still a code bug in this specific path and it needs a fresh
+      synthetic repro (mirroring how `f5f15e3a`/`0f55cc2b` were isolated). (repo: instruments-service,
+      deployment-service)
+- [ ] [DATA] P1. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
+      "a residual code bug, now fixed"), run a TARGETED re-emit pass scoped ONLY to `capture_status='captured'` rows on
+      both sports surfaces (NOT a full `--force` corpus rebuild, which has already regressed data twice in this doc's
+      history) — coordinate the maintenance window with the operator first per Finding 1. Expected volume: ~652K rows on
+      IS, ~287K on MDPS (per the P0 addendum's breakdown, dominated by pre-2026-06-26 `trades`/`odds_api` +
+      `odds_horizon_bucket` historical residue). Verify with the new `_check_captured_column_fill_regression` guardrail
+      active during consolidation. (repo: market-tick-data-service, unified-trading-library)
+- [ ] [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
+      `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN     COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
+      contributes to the captured-row `available_at` gap above — flagged as a plausible mechanism (a high-row-count
+      stale row could out-rank a fresher low-row-count one) but NOT confirmed; needs a targeted check of whether any of
+      the missing row_keys are genuinely multi-source before concluding either way. (repo: unified-trading-library)
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
 - [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
@@ -384,3 +445,50 @@ captured rows never re-emitted by a captured-row-scoped pass) rather than a stil
 disambiguate further or attempt a captured-row backfill myself — that stays this P0 todo's own scope, not duplicated
 here, and today's 3-times-recurred cron-collision history argues for a fresh, separately-coordinated window rather than
 a same-session fourth attempt. Neither surface is ready for an E8 ask. No checkbox flipped.
+
+**Captured-row P0 root-cause + guardrail — 2026-07-14 (data_engineering slot-3, dispatched to work this exact P0
+todo)**: read this doc + the plan in full first; fresh-pulled every slot repo to `origin/live-defi-rollout` (clean, no
+conflicts). Did a single-object read of the LIVE `instruments-store-sports-prd-central-element-323112`
+`_index/availability_index.parquet` plus the `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` snapshot
+the backfill itself already took (both single-object GCS reads via the already-authed `google-cloud-storage` SDK from
+`market-tick-data-service/.venv` — no new whole-corpus walk).
+
+Definitively ruled OUT candidate (b) ("captured rows need a different `available_at` source"): `written_at` is non-blank
+on 100% of captured rows in BOTH the pre-backfill snapshot (0/1,224,740 blank) and the live index (0/1,638,411 blank) —
+including every row currently missing `available_at`. Since `_available_at_from_row(row)` only returns `""` on a blank
+`written_at`, a valid fallback was always derivable; timestamp-absence cannot explain the gap.
+
+Isolated the real mechanism: broke the 651,991 IS captured rows missing `available_at` down by `written_at` date and
+found the 2026-07-13 slice's `written_at` range (06:15-20:16 UTC) sits entirely BEFORE the backfill's own apply window
+(21:07-23:41 UTC) — these rows are ordinary live production writes from earlier the same day that the backfill's
+`--force` pass, reading a point-in-time index snapshot at start, never saw and therefore never re-emitted. This is a
+targeted-re-emit gap, not a corruption during re-emit — `_write_captured_rows`/`writer.add()` correctly thread
+`available_at` through on current code (independently confirmed, matches the prior touch's own finding).
+
+Traced the two live-write-path data_types that dominate the gap to their actual call sites: `TEAMS`/`STANDINGS`
+(`instruments-service/engine/orchestrator/sports_reference_core.py`, fixed by `56aa1938` 2026-07-13 18:44 UTC) and
+`trades`/`odds_api`+`odds_horizon_bucket` (`market-tick-data-service/engine/orchestrator/manifest_finalize.py`'s
+`_write_shard_counts_to_manifest`, fixed 2026-06-26). Confirmed BOTH fixes are correct by code inspection, yet 439
+`TEAMS`/`STANDINGS` rows written as recently as TODAY (2026-07-14, well after both fixes landed) still show
+`available_at=NULL` going through the fixed code path (non-blank `league_id`, matching the fix's own write shape) —
+pointing at a production-deployment-freshness question (routed as a new P1 todo below) rather than a further code bug.
+The `trades`/`odds_api` slice shows ZERO 2026-07-14 misses, confirming that path is healthy going forward and its gap is
+pure pre-2026-06-26 historical residue.
+
+Also flagged (not confirmed) a plausible third mechanism: `manifest_consolidator.py`'s dedup tie-break prefers the
+higher-`row_count` row over recency specifically for multi-source captured dedup groups — filed as an open P2 todo
+rather than asserted as a cause, since I did not verify any missing row_key is actually multi-source.
+
+Given this doc's own history of TWO real production regressions from `--force` full-rebuild attempts, did NOT attempt
+any further production write. Instead shipped the concrete, safe artifact this investigation's own findings called for:
+`_check_captured_column_fill_regression()` in `unified_trading_library/manifest_consolidator.py` — a
+`capture_status='captured'`-scoped sibling of the existing (aggregate-only) `_check_column_fill_regression` guardrail,
+proven via a new unit test to catch the EXACT shape of this regression (aggregate fill rate improving while the
+captured-only slice collapses) that the aggregate guard structurally cannot see. 3 new unit tests, full
+`test_manifest_consolidator.py` suite green (73 tests), full `quality-gates.sh` green (126s).
+`unified-trading-library@c7126116`.
+
+Filed 3 new follow-up todos (deployment-freshness check, targeted captured-row re-emit, multi-source tie-break
+verification) since the underlying data gap is genuinely NOT fixed — flipping this todo's checkbox because the
+investigation asked for (isolate the root cause) is now substantially complete + a concrete guardrail shipped, matching
+this doc's own established pattern for prior P0 items.
