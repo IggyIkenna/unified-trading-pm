@@ -711,7 +711,7 @@ issue's own established verification pattern (bump the digest-pinned MTDS base i
 hasn't auto-fired, confirm via direct content inspection not just git-ancestor math, watch a real `duckdb_merge_start`
 cycle for survival vs. `Container terminated on signal 9`).
 
-- [ ] [INFRA] P0. **Live-verify `unified-trading-library@2ab54ce0` (date-range chunked incremental merge) against the
+- [x] [INFRA] P0. **Live-verify `unified-trading-library@2ab54ce0` (date-range chunked incremental merge) against the
       real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job** — confirm the image picks up the new code
       (per this issue's own repeated digest-pin-staleness gotcha: the job's `market-tick-data-service:latest` base image
       is digest-pinned in `market-tick-data-service/Dockerfile`'s `ARG BASE_IMAGE_DIGEST` and needs an explicit bump if
@@ -730,7 +730,117 @@ cycle for survival vs. `Container terminated on signal 9`).
       succeeds, `CONSOLIDATOR_DUCKDB_THREADS` (currently live-set to `1` as a stopgap) may be worth raising back up now
       that each chunk's working set is far smaller — re-test rather than assume. Repo: `deployment-service` (Cloud Run
       job image/digest verification) + `unified-trading-library` (if `CONSOLIDATOR_MERGE_CHUNK_DAYS` needs tuning down
-      after this verification).
+      after this verification). — ✅ DONE 2026-07-14 (slot 2, infra) — **the OOM is fixed, but this surfaced a NEW
+      CRITICAL data-correctness bug; NOT a close.** See "P0 infra live-verify — OOM fixed, but row-count regression
+      found" below for the full evidence, remediation actions taken (digest bump, task-timeout bump, scheduler paused),
+      and the two new todos filed (one P0 CRITICAL data-correctness, one P1 timeout/lock-TTL follow-up).
+
+## P0 infra live-verify — OOM fixed, but row-count regression found (2026-07-14, slot 2, infra)
+
+**Step 1 — confirmed deployed image was STALE, missing `2ab54ce0`.** Content-grepped the currently-deployed
+`market-tick-data-service:latest` (digest `e61ea7245f…`, the same one slot 5's prior session verified for
+`NOT MATERIALIZED`/`39979c5a`) — `CONSOLIDATOR_MERGE_CHUNK_DAYS`/`merge_chunks` absent. Confirmed `39979c5a` is an
+ancestor of `2ab54ce0` (`git merge-base --is-ancestor`), so the deployed image predated the chunking fix. Same
+digest-pin-staleness gotcha this issue has hit repeatedly: bumped `market-tick-data-service/Dockerfile`'s
+`ARG BASE_IMAGE_DIGEST` to the newest published `unified-trading-library` image (`03a1951d…`, tag `0.55.0`/`latest`,
+content-verified to contain the chunking code first). Shipped `market-tick-data-service@3ff887c8`, manually
+`workflow_dispatch`'d `ldr-to-main-promote-fleet.yml` (PM repo) rather than waiting for the `*/15` cron, opened MTDS
+promote PR #576→**#577**, `image-build-gate` + `quality-gates-v2` both green, auto-merged 22:07:05Z. Fresh MTDS image
+built 22:06:46Z (digest `738e504d…`), content-verified via pull+grep: `CONSOLIDATOR_MERGE_CHUNK_DAYS`/`merge_chunks`
+present. Forced the Cloud Run JOB to re-resolve `:latest` (`gcloud run jobs update --image=...:latest`) — same
+resolution-pinning trap slot 5 already documented (Jobs resolve `:latest` at update time, not per-execution).
+
+**Step 2 — confirmed ZERO OOM-kills on the fixed image across 3 independent full-length attempts.** Watched the live
+`*/1` cron. A race meant the FIRST execution to acquire the lock after my digest bump (`l5655`, created 22:06:01) had
+already started on the STALE pre-chunking image before my re-resolve landed — it OOM'd identically to every prior crash
+in this issue (`Container terminated on signal 9` at 22:10:52Z, ~245s survival at `threads=1`, matching the
+NOT-MATERIALIZED-only ceiling already documented above). Every execution AFTER that point ran the fixed `738e504d` image
+(`ds5pp` created 22:11:01, `xj2fb` created 22:17:01, `2kqdc` created 22:23:01) — **none of the three ever SIGKILL'd.**
+`ds5pp`'s first attempt and (separately) `xj2fb`'s first attempt each ran the full 1800s to
+`Terminating task because it has reached the maximum timeout of 1800 seconds` (Cloud Run's own task-timeout killer,
+confirmed via `run.googleapis.com/varlog/system` log entries — a TIMEOUT, not a SIGKILL/OOM). `2kqdc` — the one
+execution that got to run undisturbed after I intervened (see Step 3) — **completed successfully in 24m28.93s**, logging
+`phase=duckdb_merge_done rows_out=27410052` and writing a fresh consolidated index. **The chunking fix does what it was
+designed to do: eliminates the OOM.**
+
+**Step 3 — found + fixed a NEW operational hazard: 300s lock TTL << actual chunked-merge duration → livelock.**
+`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) was tuned for pre-chunking cycle times (93-121s observed
+2026-07-11, per that constant's own code comment) — chunking's real-world duration (24-30+ min) blows past it by 5-10x,
+so every `*/1` cron tick within a still-running cycle's lock window found the lock "fresh" and skipped, but once the TTL
+elapsed the NEXT tick found it "stale" and started a COMPETING concurrent merge — observed 3+ executions (`ds5pp`,
+`xj2fb`, `2kqdc`) running concurrently, each independently re-downloading the full 27.4M-row canonical and re-running
+the whole chunked merge, none able to finish before the next lock-steal. This reproduces, at a new scale, the exact
+"wasted concurrent DuckDB merge" hazard `_LOCK_TTL_SECONDS`'s own comment already names as the leading suspect for a
+prior scheduler-vs-manual SIGKILL asymmetry. **Remediation (infra-scope, both reversible/live-tunable, no code
+change)**: (1) `gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-defi-cron` — stops new
+lock-stealing executions from spawning; left PAUSED as the session-end state (protective, autonomous-OK per the
+kill-switch rule) until the correctness bug below is fixed and re-verified. (2)
+`gcloud run jobs update --task-timeout=3600` — doubles the per-attempt deadline for future executions (does NOT apply
+retroactively to the already-in-flight executions' baked-in 1800s spec); confirmed live-tunable via
+`gcloud run jobs update --help`. `_LOCK_TTL_SECONDS` itself is a hardcoded Python constant, NOT an env var like
+`CONSOLIDATOR_DUCKDB_THREADS`/`_MEMORY_LIMIT`/`_MERGE_CHUNK_DAYS` — raising it needs a code change, filed below.
+
+**Step 4 — CRITICAL: the completed merge dropped rows beyond its own alert threshold, and the corrupted output is
+already live in production.** `2kqdc`'s completion log (22:47:23Z):
+
+```
+CRITICAL ManifestConsolidator: ROW COUNT REGRESSION bucket=market-data-tick-defi-prd-central-element-323112
+canon_rows=27445013 rows_out=27410052 dropped=34961 (0.1274%) — exceeds 0.1000% alert threshold; suspected merge bug,
+not routine dedup/prune
+```
+
+followed 6s later by
+`wrote consolidated index (27410052 rows, 412281352 bytes) to market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
+and `success=True`. The `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD = 0.001` check (`manifest_consolidator.py:1733`) is
+**pure observability** — it logs + emits `MANIFEST_ROW_COUNT_REGRESSION` but does NOT block the write or roll back;
+confirmed via direct code read. The regression compares `rows_out` against `canon_rows` (the PRE-merge canonical row
+count, 27,445,013) — a net LOSS of 34,961 rows relative to the starting canonical, i.e. more rows vanished than the
+~4,348-row incremental shard update could plausibly explain via legitimate dedup, tripping a threshold specifically
+designed (per its own docstring) to distinguish real bugs from routine dedup/prune.
+`_index/availability_index.parquet`'s `Update time` DID advance (confirmed via `gsutil stat`: now
+`2026-07-14T22:47:57Z`, vs. the `12:56:34Z` it had been frozen at all day) — **this is genuinely the first successful
+write since the OOM incident began, and it may have silently dropped ~35K real rows into production.** Whether this is
+(a) a genuine bug in the chunking/concat logic — the fix's own safety argument (chunking strictly on `date` can never
+split a dedup group) may not hold at a boundary/concat edge — or (b) a legitimate one-time cleanup of duplicate/orphaned
+rows accumulated during today's chaos (multiple crashed merges + orphaned locks + this session's own
+concurrent-execution pile-up) is **not established** — this needs a backend_engineer investigation, not an infra guess.
+Not independently re-verified whether `xj2fb`'s later `pruned 2 shards, rows_in=0/rows_out=0` no-op cycle (22:47:48Z,
+correctly found nothing new after `2kqdc`'s fresh write) touched row counts further.
+
+**Escalating per the data-pipeline-correctness HARD RULE** (`codex/02-data/data-pipeline-correctness-hard-rule.md`) — a
+big finding (data-correctness, already live in production) — via `/blocked` to the operator in the same turn as this
+commit, not deferred.
+
+- [ ] [BACKEND] P0 CRITICAL. **Investigate the `2ab54ce0` chunked-merge ROW COUNT REGRESSION** — the first successful
+      post-fix consolidator write (`2kqdc`, 2026-07-14T22:47:29Z) dropped 34,961 rows (0.1274%) versus the pre-merge
+      canonical, tripping `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (`manifest_consolidator.py:1733`, "suspected merge
+      bug, not routine dedup/prune" per the check's own log message). This output is ALREADY LIVE in
+      `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (27,410,052 rows, overwrote
+      the prior ~9h-stale-but-presumably-correct canonical). Determine: (a) is this a real bug in
+      `_duckdb_merge_payload`'s per-chunk anti-join/self-heal/concat logic — re-check the "chunking can never split a
+      dedup group" safety argument specifically at chunk BOUNDARIES and in the final passthrough `COPY` concat step, not
+      just the interior-of-chunk case the existing regression tests cover; or (b) a legitimate one-time cleanup of
+      duplicate/orphaned rows from today's chaos (multiple crashed merges, orphaned locks, this session's own
+      concurrent-execution pile-up before the scheduler was paused) — if (b), confirm which specific rows were dropped
+      and why they were illegitimate duplicates, don't just assume. If (a), the corrupted index needs a remediation plan
+      (revert to a known-good prior snapshot if one exists, or a corrective re-merge) — do NOT let downstream consumers
+      keep reading it uninvestigated. The scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`) is
+      currently PAUSED (this session's own remediation) — leave it paused until this is resolved and re-verified; do not
+      silently un-pause. Repo: `unified-trading-library` (`manifest_consolidator.py`).
+
+- [ ] [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
+      chunked-merge duration (24-30+ min observed) and causes a lock-stealing livelock** — every cron tick past the TTL
+      treats a still-running legitimate cycle as orphaned and starts a competing concurrent merge (observed 3+
+      simultaneous executions this session, each re-downloading the full 27.4M-row canonical). This is a hardcoded
+      Python constant, not a live-tunable env var like its `CONSOLIDATOR_DUCKDB_*`/`CONSOLIDATOR_MERGE_CHUNK_DAYS`
+      siblings — raising it needs a code change (mirror the existing env-var-with-code-default pattern, or at minimum
+      raise the hardcoded value to comfortably exceed the observed 24-30 min real-world merge duration with headroom,
+      consistent with the constant's own "N x headroom over the worst observed cycle" design rationale). Separately, the
+      job's `--task-timeout` was live-bumped to 3600s this session (`gcloud run jobs update`, applies to future
+      executions only) as a stopgap — worth codifying in Terraform
+      (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) once a stable value is confirmed by a
+      clean run under the new lock TTL. Repo: `unified-trading-library` (lock TTL) + `deployment-service` (Terraform
+      task-timeout codification).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
