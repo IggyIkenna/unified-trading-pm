@@ -124,6 +124,13 @@ Detection signature (has false positives — legit globs like `data_type=*/`, es
 - **Repair-without-stabilize is futile** (orchestrator's own failed quick-fix on the final 2 files): restoring text and
   even backticking the target token gets re-mangled on the next `--write` if sibling bare underscore tokens remain in
   the paragraph — the WHOLE paragraph must be stabilized.
+- **Fourth trigger** (final-residuals fixer @e1b983b90, minimal repro): a paragraph with 2+ occurrences of the SAME
+  underscore-plus-asterisk wildcard token (e.g. two mentions of the DP event-family glob) re-corrupts on every `--write`
+  even when each occurrence is individually backticked and the paragraph is short. Stable fix: the escaped-bare form
+  (backslash-underscore backslash-asterisk, no backticks) for repeated tokens in one paragraph.
+- **Version nuance**: the pre-commit hook resolves the GLOBAL prettier binary (3.8.4), not the npx-latest (3.9.5); the
+  versions differ materially in paragraph-continuation-indentation stability — verify repairs against the binary the
+  hook actually runs.
 
 ## Progress Log (append-only)
 

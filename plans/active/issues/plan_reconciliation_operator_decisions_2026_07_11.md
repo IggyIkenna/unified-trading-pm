@@ -1337,8 +1337,8 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - **canonical instrument_id live≠batch P0 findings status** — `epics/batch_live_symmetry_master.md:73-80`: “## P0 — must
   complete before next foundation gate ... **status**: 🔴 NEW — from `canonical_instrument_id_audit_2026_07_08` ...
   these 2 findings are dir” vs `active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md:10`: “status: complete”
-  - why: The epic (last*updated 2026-07-08, same day) frames both canonical_id_p0*\* findings as '🔴 NEW' P0 work that
-    'must complete before next foundation gate', with no acknowledgement they are done. But both child docs are
+  - why: The epic (`last_updated` 2026-07-08, same day) frames both canonical_id_p0\_\* findings as '🔴 NEW' P0 work
+    that 'must complete before next foundation gate', with no acknowledgement they are done. But both child docs are
     frontmatter `status: complete` (canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md:10 and canonica
 
 - planned fix: Sync batch_live_symmetry_master P0 section: CCXT divergence RESOLVED
@@ -1749,9 +1749,9 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
   18:27Z)**: emit (mode=live → lifecycle-events) → subscriber consumes lifecycle-events-sub (no 403) → route_eve” vs
   `active/data_pipeline_hardening_self_monitoring_2026_06_22.md:961-963`: “the alerting subscriber IS running ... the
   messages DO land ... YET 0 DP events routed in 14 min. Root cause: UTL PubSubEventSink.write_event publishe”
-  - why: The issue doc declares the relay definitively 'LIVE END-TO-END' at 18:27Z and later (still open, last*updated
+  - why: The issue doc declares the relay definitively 'LIVE END-TO-END' at 18:27Z and later (still open, `last_updated`
     2026-06-27) lists only cosmetic/durability items as remaining ('NOT blocking the relay — it is live'). The related
-    plan (same day) subsequently proves DP*\* events were silently dropped before Slack due to an un
+    plan (same day) subsequently proves DP\_\* events were silently dropped before Slack due to an un
 
 #### [P1] active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md ↔ active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md
 

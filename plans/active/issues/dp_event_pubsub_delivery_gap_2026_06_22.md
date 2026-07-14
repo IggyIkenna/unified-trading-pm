@@ -126,11 +126,11 @@ DP_DAILY_DIGEST INFO rule live in UAC).
 
 > **[doc-reconciliation 2026-07-12, finding 192, §A2 B-queue ruling]** This "LIVE END-TO-END" claim did not hold past
 > this same day: `active/data_pipeline_hardening_self_monitoring_2026_06_22.md` (~19:14-19:20Z, 2026-06-22) root-caused
-> that every DP*\* event was silently DROPPED before Slack (UTL `PubSubEventSink.write_event` publishes under key
+> that every DP\_\* event was silently DROPPED before Slack (UTL `PubSubEventSink.write_event` publishes under key
 > `"event"`, but `_extract_event_name` didn't check it → `UNKNOWN_EVENT` → no rule match), fixed by adding `"event"` to
 > the extractor key tuple; then on 2026-06-23 the same plan found the Cloud Run subscriber's background pull task "died
-> on its FIRST DP*\* message at 20:20Z and stayed dead 4+h" (missing `setup_events()` call → `RuntimeError` swallowed by
-> the lifespan task), fixed via `_ensure_local_events()` + per-message try/except isolation, with a fresh 9/9 PROVEN
+> on its FIRST DP\_\* message at 20:20Z and stayed dead 4+h" (missing `setup_events()` call → `RuntimeError` swallowed
+> by the lifespan task), fixed via `_ensure_local_events()` + per-message try/except isolation, with a fresh 9/9 PROVEN
 > end-to-end verification recorded there. Neither break nor its fix is reflected in this issue doc's Resolution section
 > — read the hardening plan's 2026-06-22/06-23 entries for the actual delivery history before relying on this doc's
 > "live since 18:27Z" framing.
