@@ -59,7 +59,7 @@ Reuse, do not reinvent:
   (lazy SDK load — `google.cloud.firestore` is imported inside the factory, never at module top; ships no type stubs, so
   it is `cast` to the Proto).
 - **CAS + ordering** — model the heartbeat compare-and-set on
-  [`unified-trading-pm/scripts/cicd/ci_status_store.py`](scripts/cicd/ci_status_store.py): a Firestore-transaction
+  [`unified-trading-pm/scripts/cicd/ci_status_store.py`](../../scripts/cicd/ci_status_store.py): a Firestore-transaction
   read-modify-write with an `is_stale_write(prev, new, ...)` guard so an out-of-order heartbeat never clobbers a newer
   one.
 - **The entry shape** — `DeploymentRegistryEntry`

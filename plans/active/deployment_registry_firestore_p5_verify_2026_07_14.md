@@ -63,7 +63,7 @@ datetimes; QG-green.
       heartbeat interval at the 100-VM and 5,000-VM points (the cadence lever), noting the resource-sample forensics
       ride the run.log (`utl@600fe4f4`) so slowing the registry write loses no resource history.
 - [ ] [REVIEW] P2. Post-phase codex audit — update
-      [`codex/05-infrastructure/deployment-observability.md`](codex/05-infrastructure/deployment-observability.md): the
+      [`codex/05-infrastructure/deployment-observability.md`](../../codex/05-infrastructure/deployment-observability.md): the
       Firestore-registry contract (collection/doc/query), the GCS→Firestore lineage note (GCS-first until 2026-07, then
       Firestore), and the DynamoDB/`cloud_interface` backend-swap note. SUPERSEDED-banner any GCS-registry-specific doc.
 - [ ] [REVIEW] P2. Update the CLAUDE.md deployment-observability one-liner (+ any conditional-domain-index pointer) to
