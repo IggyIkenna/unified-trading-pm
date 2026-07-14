@@ -3712,6 +3712,30 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
+- 2026-07-14 (verify-rerun-2 CLOSE-OUT — all 163 confirmed findings dispositioned): the 2026-07-13 verification re-run
+  (163 confirmed: 10 P0 / 66 P1 / 59 P2 / 28 P3; 57 refuted; 10 plausible-unverified; coverage caveats — re-hunts
+  partially failed under session limits, 4 tiebreaks + completeness critic never ran, so 163 undercounts) is now fully
+  worked: P0s 63/53/113 inline (PM@432a0c71a); P0 pair 215+127 (footystats-reversal sync + row-loss issue resolved,
+  PM@f3321cbc4-rebased); P0 pair 197+220 (catalogue G2 registry + PLAN_FORMAT epic assigned_vm, PM@697ad61e3); P0s
+  152/154/196 adjudicated per-claim against post-dating events (cross-cutting doc corrected — relabel/rebuild claims
+  STALE for sports/tradfi/defi, cefi NOT adjudicated (no fresh CF-audit), E8/legacy-deletes STILL-LIVE, PM@98555eb99).
+  153 P1-P3 findings union-find-chunked into 15 disjoint fixer waves, all applied + pushed: chunk 0
+  (e217ade9b/269153dc2/67f59b944), 1 (5fe1e98d9), 2+3 (10a704cd8 — chunk 3's commit absorbed, content verified), 4
+  (3872662ef/717cfcd47/3219c10d6/378f89b6f/ea26e1644/63e8b11f7/8025a34d0/01e12b3d6), 5 (89f00fde9), 6 (70adff9d1), 7
+  (c40143447/cfbde900a), 8 (13d29f946), 9 (eef15a1d5 — incl. an honesty UN-flip of a wrongly-[x] P0 config-grid run,
+  finding 36), 10 (2460d4bc0), 11 (b9556edc8), 12 (c934a7ed0), 13 (7fcc70b70), 14 (932ffcf8e). Incidents during the
+  wave, all resolved: (a) a stale-tree index race produced commit 0e5f533b6 carrying 3 foreign files' PRE-fix content —
+  its revert b7da88fbf was CORRECT (restored the fixes); the orchestrator's own re-apply false-alarm was caught and
+  reversed with zero residue; (b) deterministic prettier emphasis-mangling root-caused (code span split across a line
+  break + unbackticked underscore identifiers → underscores rewritten as asterisks, paragraphs collapsed): repaired +
+  made prettier-stable in instruments_foundation_completeness (PM@169a8c8cd), propagated copies in 2 active plans + 4
+  audit-instruction docs dispatched to a fixer (archive copies left as historical record). Operator-gated leftovers
+  parked (see session report): STEP 5.91 + STEP 5.86 QG-step collisions (228/227, renumbering needs a ruling),
+  tradfi-databento codex SSOT stale VIX-15m sourcing rows (217, CODEX-GATED), wsfeedconnector ownership routing (126),
+  mvp_catalogue archival (130, locked_by), G3 homeless-consolidator re-scope-vs-close (182), [UI] tick with [BACKEND]
+  evidence (56), instruments_completion_tracker D6 still ⏳ (residual). Separately during close-out: the 2026-07-13
+  BITGET-FUTURES 6-VM wave was found FAILED on Tardis concurrent-IP lockout (launched without the lease) — correction +
+  recurrence entries shipped PM@c31cdb81c.
 - 2026-07-13 (§A2 findings 175/142/146 — MTDS/MDPS 2-survivor consolidation EXECUTED): the fold-in/archive mapping
   authored in `mtds_consolidation_foldin_mapping_2026_07_12.md` (per the "ENFORCE 2 survivors" ruling) received its HARD
   GATE approval — operator ruling verbatim: "Approve all + unlock" (blanket `[unlock-plan]` for every locked candidate);
