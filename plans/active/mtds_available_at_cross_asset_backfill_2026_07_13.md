@@ -698,3 +698,25 @@ operator maintenance-window decision remains the sole blocker for the tradfi/pre
 main/operator action the parking recipe on `-003`/`-005`/`-009`/`-012`/`-014` directly, or resolve the
 maintenance-window decision, before further slot cycles are spent on redundant re-verification. No production writes
 made this touch; no cron state changed, no manifest touched.
+
+**Re-verification #5, no new writes — 2026-07-14 (data_engineering slot-5, task
+`mtds_available_at_cross_asset_backfill-003`)**: dispatched task `-003` a sixth time (slots 4, 6, 10, 12, 7 already
+covered — see the five entries above). Fresh-pulled all 24 slot repos to `origin/live-defi-rollout` (all clean FF).
+Re-read this plan in full and confirmed nothing has changed: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION`
+maintenance-window todo is still unchecked, no operator go-ahead on record, `BLK-f3cdf442` remains open. Confirmed via
+`git log --oneline -20 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*' 'scripts/*prediction*'` on
+`market-tick-data-service` post-pull (HEAD `476d3099`): only the prediction snapshot (`86467a0a`) and tradfi snapshot
+(`8f131104`) scripts exist — no cron-pause action anywhere. Directly queried `GET /api/backlog` (not just the plan file)
+to check whether the standing parking recommendation (flagged 8× now) has been actioned: `-003`/`-005`/`-007`/
+`-009`/`-012`/`-014` are ALL still at `priority: 20` with `prereqs: null` — confirms slot-12/slot-6's finding still
+holds, no worker-reachable endpoint exists to set `priority`/`prereqs.conditions` on an existing backlog entry (only
+`POST /api/prerequisites/<name>` to create/flip a condition, and `DELETE /api/backlog/<task_id>` for permanent removal —
+neither lets a worker gate an existing task). Declined to execute the underlying todo (pausing the prediction
+consolidator cron with no operator go-ahead would violate this plan's own HARD constraint re: the sports CF-8
+precedent). Not filing a 7th duplicate `/blocked` for the same still-open root gate — calling `/skip-current-task`
+citing this entry + `BLK-f3cdf442`/`BLK-ccb6cd86`. **Flagging for main/operator, now 9 independent confirmations (slots
+4/6/10/12/7/5) across this task and its `-005`/`-009`/`-014` siblings**: the fix remains either (a) resolve the P0
+maintenance-window decision, or (b) main/operator applies the parking recipe from `RULES.md` §4 (`priority: 999` + a
+false `prereqs.conditions` gate) to `-003`/`-005`/`-007`/`-009`/`-012`/`-014` — worker slots cannot edit the central
+`backlog.yaml` or set per-task `priority`/`prereqs` via any reachable API. No production writes made this touch; no cron
+state changed, no manifest touched, no code changed.
