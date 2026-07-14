@@ -598,8 +598,15 @@ fi
 # Blocks until <=K QG heavy-phases run host-wide (K=max(2, floor(cores/4))); released after
 # TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
 # No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent. Skipped on a sentinel hit
-# (no heavy phase to govern).
-[ "$_QG_SENTINEL_HIT" = true ] || qg_governor_acquire
+# (no heavy phase to govern) AND skipped whenever THIS run has no heavy phase to protect
+# at all (RUN_TESTS=false AND SKIP_TYPECHECK=true — QG_SLICE=lint-codex, a DOCS-ONLY
+# changeset, or --skip-tests+--skip-typecheck together): such a run never touches
+# pytest/basedpyright, so it has nothing to gain from the token and nothing to protect
+# other waiters from — yet it previously queued behind the same K=1 heavy-phase token as
+# full runs anyway (qg_host_governor_severe_contention_2026_07_13.md todo 3).
+if [ "$_QG_SENTINEL_HIT" != true ] && { [ "$RUN_TESTS" = true ] || [ "$SKIP_TYPECHECK" != "true" ]; }; then
+    qg_governor_acquire
+fi
 
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
