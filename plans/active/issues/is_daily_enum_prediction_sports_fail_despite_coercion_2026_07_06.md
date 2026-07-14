@@ -245,3 +245,8 @@ one.
 - [ ] [CODE] P2. Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental
       manifest writes, no full-universe accumulation); same review for the sports enum path. Until then the 16Gi limit
       is a ceiling race against universe growth.
+- 2026-07-14 00:05Z: **PREDICTION RESOLVED — first green run in 5+ days**: is-daily-enum-prediction-wrbsm
+  succeededCount=1, completed 2026-07-13T23:54:52Z on 16Gi (the OOM diagnosis verified end-to-end: 8Gi OOM at -9 → 16Gi
+  green). SPORTS confirmed same class: 6dnq9 logged `exit_code=-9` at 23:37:23Z on 8Gi — doomed 8Gi retry cancelled, job
+  bumped to 16Gi, verification execution launched 00:04Z (in flight). The durable chunked-scan todo stands for both
+  (16Gi is a ceiling race against universe growth). Doc flips to resolved when the sports verification lands green.
