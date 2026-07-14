@@ -188,3 +188,17 @@ crash, no stall. Skipping a redundant full-corpus GCS date-count walk given slot
 discipline — no value in a 5th identical scan within 20 minutes). The affected-range boundary for this todo's gap-fill
 still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code touched, checkbox
 NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:2x UTC — data_engineering slot-13 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as every prior re-check above (this is the 7th
+consecutive dispatch of this exact todo). Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` (grepped the plan's checkbox list directly). Cheap non-GCS-walk
+re-check (`gcloud compute instances list`, `central-element-323112`, non-snap binary): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps as every prior check
+— no crash, no stall. Skipped a redundant full-corpus GCS date-count walk (single-walk discipline — slot-9 ran one ~10
+min earlier; no value in an 8th identical scan). The affected-range boundary for this todo's gap-fill still isn't stable
+until Todo 1's full-history compute completes. Note for main/operator: this backlog task has now round-tripped through 7
+slots without a structural prereq gate (its dependency on Todo 1 is prose-only, inside its own todo text, not a
+`prereqs.completed_tasks` binding) — consider parking it (RULES.md § "Park a task") against Todo 1's completion to stop
+the redispatch churn. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
