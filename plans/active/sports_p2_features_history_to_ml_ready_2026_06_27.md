@@ -240,11 +240,33 @@ capacity again, the next-highest-value unclaimed target is **2018-07-09 → 2019
 gaps are claimed.
 
 No repo code commit this entry (VM launch + read-only verification only, no code changed); this plan-doc edit (banner
-update + this Progress Log entry) ships via the `docs(plans):` carve-out. `/done` follows — this dispatch's
-`done_definition` ("checkbox flipped in plan + code shipped") doesn't fit cleanly (no code shipped, checkbox correctly
-not flipped since compute isn't done) but real, concrete forward progress was made (a genuine gap identified
+update + this Progress Log entry) ships via the `docs(plans):` carve-out. This dispatch's `done_definition` ("checkbox
+flipped in plan + code shipped") isn't met (no code shipped, checkbox correctly not flipped) — `/skip-current-task`
+follows per this task's established convention, even though real forward action was taken this dispatch (see the
+self-correction immediately below, found ~10 min after the VM launch while verifying it was genuinely progressing).
 
-- closed with a new VM) — evidenced by the launched VM name/timestamp above.
+**SELF-CORRECTION (found ~20:23Z, same dispatch, while doing the "verify newly-launched VM is genuinely progressing"
+check every VM launch requires)**: the new VM's own `run.log` reveals my `by_date/`-listing-diff gap-finding method
+above is **NOT reliable** — it conflates true "never attempted" gaps with honest-absence dates that WERE already
+attempted (and correctly write zero rows, hence no `by_date/day=X/` partition ever gets created for them). Evidence:
+`features-sports-sports-20260714-201910`'s log shows, for 2015-01-01 through 2015-01-07, every single
+table/feature-group (`fixtures`, `leagues`, `teams`, `fixture_features`, `derived_features`, `odds_features`, etc.)
+logging `SKIP <x> for <date> — manifest shows prior captured/empty (use --force)` — i.e. the MANIFEST (the real SSOT for
+"attempted", per craft rule "`expected_unattempted` materialised by the WRITER, never re-derived") already marked these
+dates as attempted-and-empty from an EARLIER dispatch, well before today. My `by_date/` prefix listing has no way to
+distinguish "never attempted" from "attempted, correctly wrote zero rows" — both look identical (no directory) from a
+pure GCS-listing diff. Practical impact: this means the 763-day 2015-01-01→2017-02-01 gap I characterized as "the single
+biggest unclaimed gap" is very likely mostly (possibly entirely) honest-absence already correctly captured, not
+genuinely unprocessed work — early-2015 volume this thin across ALL entity types (including base reference data like
+`leagues`/`teams`) is consistent with upstream not existing that far back for several sources, matching this plan's own
+Scope note ("pre-source-coverage cells inherit honest absence"). The VM launch itself is NOT wasted or harmful —
+skip-existing-style behavior means it will genuinely compute any date in the range that isn't already manifest-attempted
+(a true gap, if any exists in this span) while cheaply skipping the rest; worst case it just confirms existing
+honest-absence and self-deletes quickly. But my "next-highest-value target: 2018-07-09→2019-08-11" handoff guidance
+above is UNVERIFIED by the same weak signal — before any future dispatch launches a VM for that range, verify via the
+MANIFEST (not a `by_date/` listing diff) that it is genuinely unattempted, not another honest-absence false positive. I
+did not have a cheap manifest-query tool on hand to verify this myself within this dispatch's scope; flagging rather
+than guessing further.
 
 ### 2026-07-14 13:57 UTC — data_engineering slot-8 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-15's check ~67min earlier, steady progress, no new action)
 
