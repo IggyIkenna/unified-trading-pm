@@ -282,6 +282,16 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Progress Log
 
+**2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
+window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
+`uts-prod-manifest-consolidator-market-data-tradfi-cron` paused 2026-07-14T11:06:16Z → resumed 11:12:43Z; first
+post-resume run Completed=True 11:13:59Z; snapshot-first + row-preserving GATE respected per this plan's HARD
+constraint. This does NOT pre-authorize this plan's own tradfi rebuild window — the
+`[OPERATOR] P0 BLOCKED-OPERATOR-DECISION` maintenance-window todo above still stands and should confirm its own window
+at dispatch (today's grant was scoped to the ICE purge op). Also note for the tradfi rebuild task: the tradfi `_index`
+now carries 12,521 more `empty_confirmed[EXPECTED_NO_PROVIDER_COVERAGE]` rows (ICE non-24h captured/failed reclass) and
+the ICE non-24h GCS objects are GONE — a full object-scan rebuild will simply see honest absence there.
+
 **2026-07-13 (slot 7)**: plan authored per `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`
 todo P2. No production writes made by this touch — scoping only (code read of all four asset_groups' rebuild scripts to
 determine per-asset_group backfill mechanism + risk, informed directly by the sports CF-8 regression postmortem).

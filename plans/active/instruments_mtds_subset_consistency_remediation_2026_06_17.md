@@ -719,10 +719,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+          finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+          `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+          UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+          (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -1185,9 +1185,9 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       OPERATOR-GATED (inspect→confirm→delete). **[⚠️ "other 4 AGs NOT deletable yet" CORRECTED 2026-07-13 — see "Fresh
       audit 2026-07-13 (operator-ordered)" section (~L473-524): defi/tradfi/pred (+ sports, separately documented
       2026-06-19) SAFE-TO-DELETE bulk is confirmed GONE from live GCS as of 2026-07-13. cefi's OWN residual (1,077,672
-      objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope (`--ag
-      defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not re-asserted
-      as pending or done; re-audit cefi separately before assuming either.]**
+      objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope
+      (`--ag     defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not
+      re-asserted as pending or done; re-audit cefi separately before assuming either.]**
 - [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (OPERATOR-GATED, cefi-only today)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no
@@ -1213,13 +1213,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-      AG. — market-tick-data-service
+          chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+          even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+          UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+          column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+          migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+          canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+          AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
@@ -2001,6 +2001,16 @@ unblocks) to flow the actual data into those canonical buckets.
       CLI/TF/test caller. Repo: instruments-service. (MIGRATED FROM: same.)
 
 ## TradFi ICE/CME pre-cutover legacy chain-tail — PRESERVE+RESHAPE — DONE (2026-07-13, operator ruling)
+
+> **🟡 PARTIALLY SUPERSEDED (2026-07-14, operator ruling — ICE descope)**: the ICE half of this section's "PRESERVE AND
+> RESHAPE, never delete" ruling was explicitly OVERRIDDEN one day later by the operator's ICE-descope ruling ("delete
+> the 9 but for dollar index we're gonna use the daily yahoo finance"): the 9 preserved ICE `futures_chain` canonical
+> objects on `day=2025-01-06` (BRENT, COCOA, COFFEE, COTTON, DOLLARINDEX, GASOIL, ORANGEJUICE, SUGAR, WTI) were DELETED
+> 2026-07-14 as part of the ICE non-`ohlcv_24h` purge (market-tick-data-service@fffd7f82
+> `scripts/purge_tradfi_ice_non_24h_2026_07_14.py`; manifest rows reclassed
+> `empty_confirmed[EXPECTED_NO_PROVIDER_COVERAGE]`, snapshot `_index/snapshots/pre_ice_purge_2026_07_14.parquet`). DXY's
+> forward path is the Yahoo `ohlcv_24h` route (`ICE:INDEX:DXY-USD`). The CME half (40 futures_chain + 6 options_chain
+> objects) is UNAFFECTED — CME stays in-subscription and preserved.
 
 > Operator ruling 2026-07-13: the tradfi "LEGACY shape D" (pre-hive instrument-key,
 > `day={D}/data_type={DT}/{class}/{VENUE}/{file}`) `futures_chain`/`options_chain` objects the generic
