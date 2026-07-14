@@ -206,23 +206,46 @@ consolidation).
     `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`. Still NOT re-attempting the live
     backfill (todo 2) myself — out of scope for what I was dispatched, and per Finding 1 it needs operator-coordinated
     maintenance window regardless of which agent runs it.
-- [ ] [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
+- [x] ✅ [INFRA] P1. Once root-caused and fixed, re-attempt the full-corpus CF-8 `available_at` backfill on both sports
       surfaces (IS still at 62.9%, MDPS still at ~0%) — coordinate the maintenance window with the operator first to
-      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service) — **P0 root cause is now FIXED
-      (`f5f15e3a` + `9c9cdc50`, both merged) — the code-level blocker is CLEARED.** The remaining blocker is procedural,
-      not technical: per Finding 1, this needs an operator-coordinated maintenance window (regardless of which agent
-      runs it) so a routine cron-resume doesn't collide mid-backfill again. **STILL NOT re-attempted as of 2026-07-14
-      (slot 3, laptop)** — confirmed via a fresh live audit this touch: IS `available_at` non-null=3,492,700/5,506,821
-      (63.4% — a small organic drift from the 62.9% restore baseline via ordinary incremental writes, NOT a re-attempt;
-      MDPS column still absent). Both sports consolidator crons are back to `ENABLED` (routine steady-state, confirmed
-      live) — safe for normal operation per Finding 1's own conclusion, but a `--force` full-rebuild re-attempt should
-      still wait for the operator-coordinated window before anyone runs it. Additionally shipped a general
-      defense-in-depth guardrail this touch (independent of the specific bug — catches ANY future recurrence of this
-      class of failure): `unified-trading-library@2e132bb2` adds `_check_column_fill_regression()` /
-      `MANIFEST_COLUMN_FILL_REGRESSION`, mirroring the existing row-count regression guard — any future full-rebuild
-      that silently nulls a previously-populated column now pages loudly instead of succeeding silently.
+      avoid a repeat of the cron-collision (Finding 1). (repo: market-tick-data-service) — **RE-ATTEMPTED + SUCCEEDED,
+      slot 11, 2026-07-14**, operator-coordinated maintenance window as this todo requires. - **Result**: IS
+      `available_at` fill 62.9% → **87.8%** (5,051,105/5,751,180); MDPS 0% (column absent) → **85.3%**
+      (1,670,401/1,958,499). Zero row-count regression on either surface across two consecutive force-consolidate runs
+      on IS + one on MDPS. Verified via direct GCS reads pre/post, not log trust. - **A THIRD collision happened live
+      during this run** — the exact Finding-1 class, twice: the consolidator crons got externally re-enabled mid-window
+      (once while I was mid-write, once while root-causing the bug below), despite operator confirmation of the
+      coordinated window. Re-paused both times (protective, reversible, no data touched by the pause/resume itself);
+      verified via direct fill-rate reads that neither occurrence caused any regression — one of them actually helped
+      (the routine incremental cron opportunistically absorbed the IS shard correctly once the serializer fix was live).
+      **Also hit a genuine concurrent-DUPLICATE-dispatch**: a different slot (slot 6) was independently running the
+      identical `--surface instruments --no-dry-run --force` rebuild at the same time (separate per-VM shard, no direct
+      collision — confirmed via file listing + PID/inode checks — but flagged + waited for it to finish before
+      consolidating, rather than risk a second uncoordinated consolidate/resume race on top of the first). - **Found +
+      fixed 2 MORE consolidator bugs surfaced only by actually running this on MDPS** (a bucket whose canonical has
+      NEVER carried `available_at` — a schema shape neither `f5f15e3a`/`9c9cdc50` nor the
+      `_check_column_fill_regression` guardrail (`2e132bb2`) had coverage for): `unified-trading-library@0f55cc2b`.
+      `_duckdb_merge_payload`'s `canon_read` was a plain `SELECT *` (unlike the union_cols-padded `shard_proj`), and
+      `_check_column_fill_regression`'s own before/after fill-rate query assumed every `union_col` exists on the
+      canonical — both crash with
+      `DuckDB BinderException: Set operations can only apply to expressions with the       same number of result columns`
+      the moment a shard introduces a column the canonical has never had. Root-caused via the exact scenario this todo
+      hit live, not speculatively; 2 new regression tests
+      (`tests/unit/test_manifest_consolidator_canon_schema_align.py`, full-rebuild + incremental paths) proven to fail
+      on pre-fix code, pass on post-fix. Full `test_manifest_consolidator.py` suite green (67 tests). Full
+      `quality-gates.sh` green (232s). - Both crons confirmed `ENABLED` (resumed) after all verification completed.
+      Snapshots taken before any write: `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` on both
+      surfaces.
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
+- [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
+      (original incident 2026-07-13 + twice more during the 2026-07-14 re-attempt above) despite operator coordination
+      each time — manual "please don't touch this" coordination is not holding up under real fleet concurrency. Worth a
+      TECHNICAL safeguard instead of relying on coordination alone: e.g. a maintenance-window marker (a GCS sentinel
+      object or Firestore flag) that a resume/pause action checks and refuses to override without an explicit force, or
+      routing cron pause/resume through a single dashboard control other agents/ operators can see is currently held.
+      Scope/design not decided — routing to operator/infra owner. (repo: unified-trading-pm or deployment-service,
+      wherever the scheduler-management tooling should live)
 - [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
       backfill a real vendor source or accept as a known residual. (The 35,361 free-text-reason rows are tracked
       separately in `sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.) (repo:
