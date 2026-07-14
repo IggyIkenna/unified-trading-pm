@@ -32,7 +32,7 @@ related:
     codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-14
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -115,29 +115,35 @@ honest-coverage denominator math, not a same-file fix.
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause + fix the `league_id="UNKNOWN"` manifest write bug — tracked separately, see
-      `plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md` (2,373 real rows, all 17 sports data_types,
-      ongoing through today). Not a same-file quick fix — do the trace there first.
-- [ ] [DATA] P1. Decide, with the operator: does the "could-exist" catalog / honest-coverage system for Sports NEED
-      fixture/team/player grain at all, or is league-grain the permanently-correct scope for Sports coverage tracking
-      (with fixture-level completeness tracked some other way, e.g. directly against the manifest's per-date fixture
-      counts rather than a catalog join)? This is the load-bearing decision the rest of this plan depends on.
-- [ ] [DATA] P2. If fixture-grain IS wanted: design the manifest schema extension needed to track per-fixture capture
-      presence (today's atom is `(league_id, data_type, date)`) without breaking the existing league-grain
-      honest-coverage denominator for in-flight consumers.
-- [ ] [DATA] P2. If fixture-grain IS wanted: write `build_sports_fixture_catalogue_from_manifest()` (or equivalent)
-      analogous to `build_sports_catalogue_from_manifest()`, gated on the manifest extension above, with the same
-      "catalogue superset ⊇ manifest present-set" invariant the league-grain function already documents.
-- [ ] [DATA] P3. If fixture-grain IS wanted: extend the catalog build to also invoke reference-data adapters that are
-      currently never called from `build_instrument_catalogue.py` for sports (`api_football_reference.py` fixtures,
-      `betfair.py` runners once BETFAIR is wired into the sports fetch pipeline — see
-      `plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` for why Betfair specifically is not
-      fetched today) — or confirm the manifest-only path (no direct adapter calls) remains the intended source of truth
-      and the "11-step pipeline" doc language should be corrected instead.
-- [ ] [DATA] P3. If league-grain IS confirmed as the permanent, correct scope: update
+- [x] [DATA] P1. ✅ Root-cause + fix the `league_id="UNKNOWN"` manifest write bug — RESOLVED 2026-07-09 in
+      `plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md` (`status: resolved`): root cause pinned to a
+      catalogue↔enumerator feedback loop (`build_sports_catalogue_from_manifest` + `_enumerate_v2_sports`), fixed at
+      both layers with regression tests, real prod backfill (catalogue 116 → 115 rows; 2,373 manifest rows deleted,
+      backups taken, `--verify-only` 0 sentinel rows remaining) — see the issue doc's "Resolution (2026-07-09)" section
+      for full evidence.
+- [x] [DATA] P1. ✅ Decide, with the operator: does the "could-exist" catalog / honest-coverage system for Sports NEED
+      fixture/team/player grain at all, or is league-grain the permanently-correct scope? — **OPERATOR RULING
+      2026-07-14: FIXTURE-GRAIN WANTED.** The fixture-grain todos below (manifest schema extension design, fixture
+      catalogue builder, adapter invocation) are now this plan's active scope; the league-grain-permanent todo is VOIDED
+      by this ruling.
+- [ ] [DATA] P2. **(ACTIVE scope — fixture-grain CONFIRMED by operator ruling 2026-07-14)** Design the manifest schema
+      extension needed to track per-fixture capture presence (today's atom is `(league_id, data_type, date)`) without
+      breaking the existing league-grain honest-coverage denominator for in-flight consumers.
+- [ ] [DATA] P2. **(ACTIVE scope — fixture-grain CONFIRMED by operator ruling 2026-07-14)** Write
+      `build_sports_fixture_catalogue_from_manifest()` (or equivalent) analogous to
+      `build_sports_catalogue_from_manifest()`, gated on the manifest extension above, with the same "catalogue superset
+      ⊇ manifest present-set" invariant the league-grain function already documents.
+- [ ] [DATA] P3. **(ACTIVE scope — fixture-grain CONFIRMED by operator ruling 2026-07-14)** Extend the catalog build to
+      also invoke reference-data adapters that are currently never called from `build_instrument_catalogue.py` for
+      sports (`api_football_reference.py` fixtures, `betfair.py` runners once BETFAIR is wired into the sports fetch
+      pipeline — see `plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` for why Betfair
+      specifically is not fetched today) — or confirm the manifest-only path (no direct adapter calls) remains the
+      intended source of truth and the "11-step pipeline" doc language should be corrected instead.
+- [x] [DATA] P3. ~~If league-grain IS confirmed as the permanent, correct scope: update
       `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "11-step pipeline" section so it no longer implies the catalog
-      itself carries fixture/team/player-grain `instrument_id`s — reframe steps 3-8 as "reference DATA written to GCS"
-      (true) distinct from "catalog/coverage tracks these grains" (not true today, by design).
+      itself carries fixture/team/player-grain `instrument_id`s~~ — **VOIDED by operator ruling 2026-07-14
+      (FIXTURE-GRAIN WANTED; league-grain is NOT the permanent scope). Not executed — kept for the record, do not
+      revive.**
 - [ ] [REVIEW] P3. Post-decision codex alignment check: if the manifest/catalog grain changes,
       `codex/02-data/availability-manifest-and-data-status.md` and `codex/02-data/honest-coverage-model.md` need a
       corresponding update (this is the HARD RULE "post-phase codex audit" — do not skip it if this plan's scope changes
@@ -148,3 +154,13 @@ honest-coverage denominator math, not a same-file fix.
 - `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-coverage denominator.
 - `codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download model this plan's
   fixture-grain option would need to fit into, not bypass.
+
+## Progress Log
+
+- **2026-07-14 (operator ruling, interactive Q&A)**: Grain decision made — **FIXTURE-GRAIN WANTED**. Todo 2 flipped with
+  the ruling; todos 3-5 (manifest schema extension design, `build_sports_fixture_catalogue_from_manifest`, adapter
+  invocation in the catalog build) are now the plan's active scope; todo 6 (league-grain-permanent doc reframe) VOIDED
+  by the ruling (marked, not deleted). Todo 1 also flipped: its issue doc
+  `plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md` was resolved 2026-07-09 (feedback-loop fix +
+  prod backfill, 0 sentinel rows remaining). NOTE: **scheduling/dispatch of the fixture-grain build is a separate
+  decision** — this plan remains `assigned_vm: NA` (not auto-dispatched) until the operator explicitly routes it.
