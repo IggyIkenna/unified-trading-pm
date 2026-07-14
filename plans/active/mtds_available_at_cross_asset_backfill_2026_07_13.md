@@ -555,6 +555,28 @@ parking every todo downstream of that gate (`priority: 999` + a false condition,
 stops re-offering this task to slots that cannot progress it. No production writes made this touch; no cron state
 changed, no manifest touched.
 
+**Premature-dispatch finding #5, tradfi apply lane — 2026-07-14 (slot 11)**: dispatched task
+`mtds_available_at_cross_asset_backfill-014` again — the SAME task slots 9 and 10 already declined (see
+"Premature-dispatch finding #3" and "#4" above). Fresh-pulled all 24 slot repos to `origin/live-defi-rollout` (all clean
+FF, no non-FF skips), re-read this plan in full, and re-verified read-only: the P0
+`[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked (no operator go-ahead on record), and
+the tradfi snapshot+pause-cron todo is still only PARTIAL (snapshot done via `8f131104`, cron NOT paused). Confirmed via
+`git log --oneline -20 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*'` on `market-tick-data-service`
+post-pull: only the tradfi snapshot script (`8f131104`) and prediction snapshot script (`86467a0a`) exist — no
+cron-pause action, no apply action, anywhere in history; a repo-wide
+`find -iname '*cron*pause*' -o -iname '*pause*cron*'` returned zero hits. Nothing has changed since slot 10's touch.
+Declined to execute: running a full-corpus `rebuild_tradfi_manifest.py` apply with no cron pause and no operator
+go-ahead would repeat the exact sports CF-8 production-data-regression risk this plan's "HARD constraint" section exists
+to prevent. Did NOT touch production (no apply, no consolidate, no cron state change, no code change). Not filing a 6th
+duplicate `/blocked` for the same still-open root gate — calling `/skip-current-task` citing this entry + the existing
+`BLK-f3cdf442`/`BLK-ccb6cd86` escalations, per the established precedent in this plan. **Flagging again for
+main/operator, now at 5 independent confirmations**: this is the 5th independent finding that the P0 operator
+maintenance-window decision is the sole blocker for the tradfi/prediction apply lanes — the prior recommendation to park
+every todo downstream of that gate (`priority: 999` + a false condition, per `RULES.md` § 4) has not yet been acted on
+across at least 5 dispatch cycles now; strongly recommend main/operator action on that parking (or resolving the
+maintenance-window decision itself) before this task burns a 6th slot cycle. No production writes made this touch; no
+cron state changed, no manifest touched.
+
 **Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
 `mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
 (snapshot the prediction index) after fresh-pull — already fully worked by slot 4 (safe half done, cron-pause half
