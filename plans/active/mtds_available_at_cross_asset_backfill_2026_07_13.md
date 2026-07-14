@@ -296,6 +296,23 @@ that's gated behind the still-open OPERATOR maintenance-window todo, downstream 
 for the next todo (snapshot + pause cron) once the OPERATOR P0 maintenance-window go-ahead lands — that decision is
 still open and is NOT something this dispatch can make.
 
+**Premature-dispatch finding, tradfi lane — 2026-07-14 (slot 4)**: dispatched task
+`mtds_available_at_cross_asset_backfill-009` ("Resume the tradfi consolidator cron; record evidence in the Progress
+Log"), the LAST tradfi-lane todo in this plan, with none of its upstream prerequisites satisfied — verified read-only
+after a fresh-pull of all slot repos: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still
+unchecked, the bundled/non-bundled row-count-split todo is still unchecked, the tradfi snapshot+pause-cron todo is still
+unchecked, and the tradfi apply todo is still unchecked. `git log -- scripts/` on `market-tick-data-service` shows only
+the prediction snapshot script (`86467a0a`) — no tradfi snapshot or cron-pause action exists anywhere in history.
+**There is nothing to resume**: the tradfi consolidator cron was never paused by this plan's workflow. This is the same
+premature-dispatch pattern already found for the sibling prediction-lane task `-005` (slot 5, `BLK-f3cdf442`) — despite
+`sequential: true` having been added to this plan's frontmatter specifically to fix that class of bug, todo #11 (this
+task) was still dispatched ahead of its file-order predecessors (#2 OPERATOR gate, #7 split-quantification, #9
+snapshot+pause, #10 apply). Declined to execute (filed `/blocked` `BLK-ccb6cd86`): did NOT touch the tradfi cron (no
+pause was ever made, so a "resume" action here would be a meaningless no-op at best), did NOT flip this todo's checkbox
+since its actual scope (verify before/after evidence of a real pause→apply→resume cycle) was never performed.
+Recommending this task re-queue once the real prerequisite chain — starting with the OPERATOR P0 maintenance-window
+decision — is actually satisfied. No production writes made this touch; no cron state changed, no manifest touched.
+
 **Snapshot (safe half only) — 2026-07-14 (slot 4)**: dispatched task `mtds_available_at_cross_asset_backfill-003`
 ("Snapshot the prediction canonical manifest index"). The underlying todo bundles a second action — pause the prediction
 consolidator cron — which is still gated on the same open P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window
