@@ -164,12 +164,12 @@ consolidation).
   `dataclasses.asdict()`) before handing rows to `df.to_parquet()`.
 - **IS apply-pass skipped 47,768 rows** (0.87% of corpus) on two pre-existing data-quality gaps, confirmed
   non-destructive (skipped rows retain prior state, not corrupted): (a) 35,361 rows carry historical free-text
-  EMPTY_CONFIRMED reason strings (`EXPECTED_NO_FIXTURE__truthset_*` variants) that don't match the current closed-set
-  `EmptyConfirmedReason` enum exactly — **independently found + already filed** by slot 6 (this same plan's
-  twenty-seventh touch) as `plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`
-  (full evidence + 3 actionable todos there; not duplicated here); (b) 12,407 rows (captured VENUES/LEAGUES) carry a
-  legacy `source='instruments_service'` stamp (the writing SERVICE's own name, not a real data vendor) that isn't in the
-  registered `SOURCE_PRIORITY` vendor list for `asset_group=sports` — not yet filed elsewhere, tracked as a todo below.
+  EMPTY*CONFIRMED reason strings (`EXPECTED_NO_FIXTURE\_\_truthset*\*`variants) that don't match the current
+  closed-set`EmptyConfirmedReason`enum exactly — **independently found + already filed** by slot 6 (this same plan's
+  twenty-seventh touch) as`plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`(full
+  evidence + 3 actionable todos there; not duplicated here); (b) 12,407 rows (captured VENUES/LEAGUES) carry a
+  legacy`source='instruments_service'`stamp (the writing SERVICE's own name, not a real data vendor) that isn't in the
+  registered`SOURCE_PRIORITY`vendor list for`asset_group=sports` — not yet filed elsewhere, tracked as a todo below.
   Both are candidates for a future cleanup pass but were correctly non-fatal here.
 
 ## Todos
@@ -296,14 +296,40 @@ consolidation).
     doc's repeated "don't re-attempt without operator coordination" lesson); the historical residue (2026-05-05 +
     pre-fix 2026-07-13 rows) needs a targeted re-emit, and the TEAMS/STANDINGS deployment-freshness question needs an
     ops answer. See new todos below.
-- [ ] [INFRA] P1. Confirm whether the running instruments-service production deployment has picked up
+- [x] ✅ [INFRA] P1. Confirm whether the running instruments-service production deployment has picked up
       `instruments-service@56aa1938` + `unified-trading-library@9c9cdc50` (both landed 2026-07-13 18:44 UTC and earlier)
       — 439 `TEAMS`/`STANDINGS` captured rows written as recently as 2026-07-14 (TODAY, hours after both fixes landed in
       the repo) still show `available_at=NULL` despite going through the code paths that should now populate it
       correctly (verified by code inspection, see the P0 addendum above). If the deployment is stale, redeploy; if it's
       current and the gap persists, that means there IS still a code bug in this specific path and it needs a fresh
       synthetic repro (mirroring how `f5f15e3a`/`0f55cc2b` were isolated). (repo: instruments-service,
-      deployment-service)
+      deployment-service) — **CONFIRMED STALE + FIX STAGED, slot 2 (data_engineering), 2026-07-14**. Instrumented via
+      `google-cloud-run`/Artifact Registry REST (gcloud CLI still broken on this host, same snap-confine issue prior
+      touches hit): the `uts-prod-instruments-service-sports-fixtures` Cloud Run Job resolves its `:latest` tag FRESH at
+      every execution start (confirmed via 8 executions' resolved digests differing over time — NOT pinned at job
+      deploy), so the 2026-07-14 00:01 UTC execution (the one that wrote the 439 stale rows) ran image digest
+      `de1b5bb3...`, built 23:46:58 UTC from commit `f4f5260c` (a `live-defi-rollout`→`main` promote whose tree content
+      at `process_enrichment.py` is byte-identical to `56aa1938`'s fix — confirmed via direct file diff, not just
+      `git merge-base` which returns false-negative across the promote's history-rewriting merge). **So the
+      instruments-service APPLICATION code was current.** The actual staleness: that image's `Dockerfile` pins
+      `ARG BASE_IMAGE_DIGEST=sha256:b7e391f8...` (the UTL base image), built **2026-07-13T17:43:29Z — 5.5 hours BEFORE**
+      `unified-trading-library@9c9cdc50` landed (23:08:07 UTC). Confirmed current LDR HEAD (`a771e3e2`, 2026-07-14 00:28
+      UTC, well after `9c9cdc50`) STILL carries the same stale digest pin — the `update-dependency-version.yml`
+      auto-refresh automation (designed for exactly this: "Refreshed by the dependency-update fan-out... on base-image
+      republish") did not fire/land for this repo. **Fix staged**: bumped `ARG BASE_IMAGE_DIGEST` to
+      `sha256:29e5b552...` (the current UTL `latest`/`0.55.0` image, built 2026-07-14T01:23:17Z from UTL HEAD `c7126116`
+      — confirmed `merge-base --is-ancestor 9c9cdc50 HEAD` on UTL). Also regenerated the `tradfi` expected_universe
+      golden fixture (unrelated pre-existing QG-red: UAC's `753fb81a`, an operator-approved 2026-07-13 change narrowing
+      ICE to `ohlcv_24h`-only, never got its instruments-service golden regenerated — verified intentional via commit
+      message + git blame before regenerating; scoped the regen to ONLY `tradfi.json`, reverted the other 4
+      auto-regenerated goldens since their tests were already passing and blind-committing them risks baking in
+      unrelated drift). **Both fixes are LOCAL, UNCOMMITTED** — a SECOND, independent, confirmed-pre-existing QG red
+      (STEP 5.101 empty-string-fallback baseline breach, 368>366) blocks the `quickmerge --agent` sentinel gate;
+      repo-blocker `RB-f453fcc0` declared + issue doc filed
+      (`instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md`). **Answer to this todo's own question:
+      STALE (the UTL base layer specifically), NOT a residual code bug** — todo 2 below can proceed once (a) this fix
+      ships (unblocks the repo-blocker) and (b) the operator-coordinated maintenance window todo 2 itself requires is
+      arranged.
 - [ ] [DATA] P1. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
       "a residual code bug, now fixed"), run a TARGETED re-emit pass scoped ONLY to `capture_status='captured'` rows on
       both sports surfaces (NOT a full `--force` corpus rebuild, which has already regressed data twice in this doc's
@@ -332,9 +358,9 @@ consolidation).
       market-tick-data-service, unified-api-contracts) — **DECIDED, slot 8, 2026-07-13**:
   - **Root cause confirmed historical, not a live bug.** UAC `SOURCE_PRIORITY` (`_source_priority_data.py`) registers
     `("sports", "VENUES")` and `("sports", "LEAGUES")` under `["api_football"]` — `instruments_service` (the writing
-    SERVICE's own name) was never a valid vendor for these data_types. Traced the CURRENT active capture code
+    SERVICE's own name) was never a valid vendor for these data*types. Traced the CURRENT active capture code
     (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py::_sports_ref_source()`): it derives
-    the manifest `source` from the entity's pipeline_mode (batch_-stripped), which correctly resolves to `api_football`
+    the manifest `source` from the entity's pipeline_mode (batch*-stripped), which correctly resolves to `api_football`
     for VENUES/LEAGUES today, and `record_captured()` itself **fail-fasts** (`MissingSourceError`) on any source not in
     `SOURCE_PRIORITY` — so the current write path CANNOT reproduce this mislabeling; it's guarded. The 12,407 rows are
     therefore genuinely **legacy** (written before this source-derivation/validation existed), not an active, recurring
@@ -492,3 +518,29 @@ Filed 3 new follow-up todos (deployment-freshness check, targeted captured-row r
 verification) since the underlying data gap is genuinely NOT fixed — flipping this todo's checkbox because the
 investigation asked for (isolate the root cause) is now substantially complete + a concrete guardrail shipped, matching
 this doc's own established pattern for prior P0 items.
+
+**Deployment-freshness todo resolved — 2026-07-14 (data_engineering slot-2, dispatched to
+`sports_cf8_available_at_backfill_regression-007`)**: read this doc + the plan in full first; fresh-pulled every slot
+repo (clean). Root-caused the deployment-freshness question the P0 addendum above left open: the production
+`uts-prod-instruments-service-sports-fixtures` Cloud Run Job resolves its `:latest` image tag FRESH at every execution
+(proven via 8 executions' differing resolved digests, not pinned at job-deploy time), so instruments-service APPLICATION
+code was current at every write. The actual staleness is one layer down: the Dockerfile's `ARG BASE_IMAGE_DIGEST` pins a
+UTL base image built 5.5 hours BEFORE `unified-trading-library@9c9cdc50` landed, and current LDR HEAD still carries that
+stale pin (the `update-dependency-version.yml` digest-auto-refresh automation didn't fire for this repo — a separate,
+real infra gap, not filed as its own issue this touch since the immediate fix was a one-line manual bump matching
+exactly what that automation would have done). Staged the digest bump + an unrelated tradfi golden-fixture regen
+(verified-intentional per UAC `753fb81a`, operator-approved) needed to get a clean QG baseline, but hit a SECOND,
+confirmed-pre-existing QG red (STEP 5.101 baseline-ratchet breach, unrelated to either fix, verified via clean-tree
+stash A/B) blocking the ship. Filed `instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md` + declared
+repo-blocker `RB-f453fcc0` rather than hand-guess the wrong lines (the checker's own reporting is a positional
+tail-slice, not true new-site detection — confirmed via `git blame` that its 2 named lines are 2-month-old, unrelated
+code). Both fixes remain staged LOCALLY/UNCOMMITTED in the instruments-service slot clone pending the repo-blocker
+clearing (per RULES.md §4b posture — commit only from a green tree, wait for the backend's green signal, do not silently
+stash-and-abandon).
+
+Did NOT attempt the actual targeted captured-row re-emit (todo 2 below, this dispatch's literal assignment) — it is a
+live production write of ~939K rows across two surfaces, and this doc's own text requires operator-coordinated
+maintenance-window scheduling first (Finding 1's cron-collision history recurred 3 times even WITH coordination on the
+prior attempt). Routing that coordination ask + the repo-blocker status to the operator via `/blocked` rather than
+either running an uncoordinated production backfill or silently leaving the dispatch's actual assignment untouched with
+no visibility.
