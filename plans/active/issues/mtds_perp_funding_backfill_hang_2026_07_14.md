@@ -257,7 +257,7 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       consulting `classify_venue_error`. Two regression tests added per adapter (`test_non_retryable_status_fails_fast`,
       mirroring the Kalshi fix). Full `quality-gates.sh` green (611s, host under heavy multi-slot contention; extended
       `PYRIGHT_TIMEOUT=400` used to ride out a transient basedpyright timeout — no code-side issue).
-- [ ] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
+- [x] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
       `classification.retry_safe if     classification is not None else True` call sites found by
       `grep -rn "classification.retry_safe if classification is not None else True" market_tick_data_service/` —
       classify each as (a) gates a live retry loop → same bug class, fix like the P1 todo above, or (b) pure `log_event`
@@ -266,7 +266,24 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `cli/handlers/_defi_manifest.py`, `prediction/polymarket_adapter.py:510`) for consistency and to stop the pattern
       from silently becoming a live bug if someone later wires `retry_safe` into a retry decision at one of these sites.
       This is a genuinely audit-scope task (many files) — size it as its own plan rather than folding into this issue
-      doc's remaining todos. Repo: `market-tick-data-service`.
+      doc's remaining todos. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot-8): read all 70 grep hits
+      (with ±8 lines context) across the 37 files. **Classification result: 2 of 70 sites gate a live retry loop
+      (category a)** — `onchain/glassnode.py:191` and `onchain/helius_solana.py:167`, both already identified by the
+      preceding P1-scoping todo and covered by the still-open `[BACKEND] P1` todo directly above (left untouched here to
+      avoid colliding with that in-flight fix). **The other 68 sites across 35 files are category (b)** — every one is
+      `classification = classify_venue_error(...)` →
+      `log_event("ADAPTER_FETCH_FAILED", details={...,     "retry_safe": classification.retry_safe if classification is not None else True})`
+      → an immediately-following unconditional `raise` / `raise CanonicalError(...)` / `raise exc` (a handful of tradfi
+      adapters — e.g. `fear_greed_adapter.py`, `baker_hughes_adapter.py`, `eia_adapter.py`, `cftc_cot_adapter.py`,
+      `databento_symbology.py` — log-and-continue with no raise at all). `retry_safe` is never read back or consulted
+      for a retry decision at any of these 68 sites — confirmed functionally inert, matching the
+      `hyperliquid_adapter.py:419` spot-check from the prior todo, generalized to the full set. **Fix shipped**:
+      standardized all 68 to the safer `else False` convention per the recommendation, matching the existing
+      `defi/utils.py` / `prediction/kalshi_adapter.py` / `cli/handlers/_defi_manifest.py` /
+      `prediction/polymarket_adapter.py:510` precedent — zero functional/behavioral change (raise is unconditional at
+      every site) but removes the latent "silently becomes a live bug if someone later wires retry_safe into a retry
+      decision" risk the prior todo flagged. Full `quality-gates.sh` green (5473 passed, 16 skipped).
+      market-tick-data-service@f82f29c1.
 
 ## Update — 2026-07-14 (independent corroboration of the P2 relaunch, concurrent session)
 
