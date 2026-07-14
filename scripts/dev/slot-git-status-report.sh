@@ -163,14 +163,19 @@ except Exception:
 fi
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
-#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans
+#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample
 #
 # unpushed_plans: pipe-separated list of plan file basenames (plans/active/*.md or
 #   plans/active/issues/*.md) that are dirty or untracked in a unified-trading-pm worktree.
 #   Empty string for all other repos.
+# dirty_sample: pipe-separated raw `git status --porcelain` lines (status code + path),
+#   up to 5, when dirty_files > 0. Empty when clean. Lets a dirty-worktree report be
+#   reconciled against the actual file(s) instead of just a count
+#   (slot5_deployment_api_dirty_false_positive_2026_07_13.md — a bare "1 dirty file"
+#   with no path could never be cross-checked against a simultaneous manual `git status`).
 classify_repo() {
     local repo_dir="$1"
-    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans
+    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
     repo_name=$(basename "${repo_dir}")
     int_branch="${INTEGRATION_BRANCH}"
 
@@ -179,7 +184,7 @@ classify_repo() {
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
         popd >/dev/null
         return 0
     fi
@@ -189,15 +194,24 @@ classify_repo() {
     dirty_files=0
     dirty_oldest_iso=""
     unpushed_plans=""
+    dirty_sample=""
     if [[ -n "${porcelain}" ]]; then
         dirty_files=$(printf '%s\n' "${porcelain}" | wc -l | tr -d ' ')
         # Find oldest mtime among dirty files; also collect unpushed plan files for
         # unified-trading-pm repos (paths matching plans/active/*.md or plans/active/issues/*.md).
-        local oldest_epoch="" line file ep plan_list=()
+        # Also capture up to 5 raw porcelain lines (status code + path) so a false-positive
+        # report is immediately diagnosable from the dashboard/nudge instead of requiring a
+        # blind manual re-check (slot5_deployment_api_dirty_false_positive_2026_07_13.md —
+        # "1 dirty file" with no path meant the claim could never be reconciled against
+        # a simultaneous clean `git status`).
+        local oldest_epoch="" line file ep plan_list=() sample_list=()
         while IFS= read -r line; do
             [[ -z "${line}" ]] && continue
             file="${line:3}"
             file="${file%% -> *}"
+            if [[ "${#sample_list[@]}" -lt 5 ]]; then
+                sample_list+=("${line}")
+            fi
             # Detect plan files (dirty or untracked) in unified-trading-pm worktrees.
             if [[ "${file}" == plans/active/*.md || "${file}" == plans/active/issues/*.md ]]; then
                 plan_list+=("$(basename "${file}")")
@@ -214,6 +228,10 @@ classify_repo() {
         if [[ "${#plan_list[@]}" -gt 0 ]]; then
             unpushed_plans="$(printf '%s|' "${plan_list[@]}")"
             unpushed_plans="${unpushed_plans%|}"   # strip trailing pipe
+        fi
+        if [[ "${#sample_list[@]}" -gt 0 ]]; then
+            dirty_sample="$(printf '%s|' "${sample_list[@]}")"
+            dirty_sample="${dirty_sample%|}"   # strip trailing pipe
         fi
     fi
 
@@ -237,8 +255,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
             popd >/dev/null
             return 0
         fi
@@ -257,8 +275,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
     popd >/dev/null
 }
 
@@ -309,9 +327,9 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 10:
-        parts += [""] * (10 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw = parts[:10]
+    if len(parts) < 11:
+        parts += [""] * (11 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw = parts[:11]
     repo = {
         "name": name,
         "branch": branch,
@@ -326,6 +344,8 @@ for line in sys.stdin:
         repo["dirty_oldest_mtime"] = dirty_oldest
     if unpushed_raw:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
+    if dirty_sample_raw:
+        repo["dirty_files_sample"] = [p for p in dirty_sample_raw.split("|") if p]
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
