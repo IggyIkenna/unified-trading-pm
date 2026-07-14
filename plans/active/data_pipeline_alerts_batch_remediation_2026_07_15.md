@@ -154,3 +154,9 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   4. Research/triage sweep of remaining cefi/tradfi (asset_group, data_type) pairs from the alert batch not yet
      explained — classify tracked-vs-new, file/annotate issue docs. All 4 in flight as this entry is written; will fold
      results in on completion (harness auto-notifies on each).
+- 2026-07-15 (agent 1 DONE): alerting-service dedup fix shipped —
+  `alerting-service@fe76ded34a46f0cfa880c563fe462c155d50809f`. `_RECURRING_WARN_EVENTS: frozenset[str]` →
+  `_RECURRING_ALERT_COOLDOWNS: dict[str, float]`, `DP_RUN_MOSTLY_EMPTY: 1800.0` added. Regression tests added (router +
+  data_pipeline_rules), `quality-gates.sh --no-fix` green. Issue doc todo 1 flipped (`unified-trading-pm@0b7654658`).
+  Todos 2 (deployment-service) and 3 (docs) left untouched as instructed — todo 3 was already done by the parallel docs
+  commit; agent correctly preserved it rather than overwriting.
