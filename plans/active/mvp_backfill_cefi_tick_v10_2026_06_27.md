@@ -2563,3 +2563,12 @@ in its own right and this session is already extremely long. **Concrete next ste
 (the 9 active mvp symbols, excluding expired `MATIC_USDC`) via `launch-cefi-sharded-backfill.sh`, lease-enabled, and
 watch `run.log` for real `instrument_type=spot_pair/` writes vs. a write-time crash/misclassification — exact same
 playbook proven twice already today.
+
+**Attempted this session (08:10Z) — correctly blocked by the launcher's own concurrency guard.** Tried the exact launch
+above; `launch-cefi-sharded-backfill.sh` refused with "cefi-sharded-backfill VMs already running in asia-northeast1-c" —
+the 6 BITGET-FUTURES VMs from earlier this session were still active. This guard exists specifically to prevent the
+2026-05-05 silent-drop incident class (concurrent runs colliding on Tardis 429 backoffs, retry budget exhausting
+silently) — did NOT use `FORCE=1` to override it; that would reintroduce the exact risk the plan's own "no repeat of the
+parallel-wave shape" directive (03:45Z entry) already warned against. **Next session: check
+`gcloud compute instances list --filter='name~bitget'` first — once those 6 VMs have self-terminated, this exact launch
+command is ready to run as-is.**
