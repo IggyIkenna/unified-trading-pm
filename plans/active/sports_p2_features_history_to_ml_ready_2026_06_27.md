@@ -117,6 +117,52 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, the previously-tracked `compute_shot_quality_batch` OOM blocker is now fully resolved per the issue doc, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,353** (up from this same slot's earlier 2,347 check ~9 min prior) — steady
+  forward progress, no stall. History is ~4,210 days total; coverage now ~55.9% (2,353/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:38:23Z — all
+  wall-clock-fresh (within ~1 min of check time). `-085642` mid reference-data reads on 2025-12-22 (honest-absence
+  warnings for 5/17 missing entity types, not errors), `-085703` mid `halftime`/`team_derived` calculator writes
+  (all-NaN/all-zero columns are the known, already-documented honest-absence pattern), `-085726` mid
+  `multisource_xg`/`team_derived` writes (same pattern, cross-provider xg data not fetched in `--skip-fetch` mode, typed
+  `UPSTREAM_MISSING`). No OOM/crash signature on any of the 3.
+- **Checked the previously-open `compute_shot_quality_batch` OOM blocker** (this plan's Progress Log had repeatedly
+  logged it as "still open/unowned" across ~10 prior dispatches) — re-read
+  [`issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  fresh rather than trusting the stale summary text: **every `[DATA] P0` item in that doc is now checked** — the 3-date
+  real-VM `--force` relaunch (slot 9, 2026-07-13) confirmed all 3 poison dates (2018-01-06, 2019-08-17, 2025-08-10)
+  complete cleanly with no OOM on the real fleet, and the root cause was a DIFFERENT, already-fixed bug (venue_id
+  collapsing to empty string, `features-service@a9684e27`/`c3e3ebfe`). Only a `[INFRA] P3` alerting/monitoring todo
+  remains unchecked in that doc — unrelated to compute correctness, not this craft's blocker. This is a **stale-summary
+  correction**, not a new finding: the underlying issue doc closure already happened via other slots' work; this
+  dispatch is the first to notice the plan's own Progress Log text hadn't caught up.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~56% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress, unchanged by the stale-summary correction above (the OOM blocker being resolved doesn't accelerate the
+remaining ~44% of unattempted history, it only means no code fix is still owed).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,353).
+Fleet is healthy — no gap-fill relaunch needed this cycle. The `compute_shot_quality_batch` OOM blocker this plan's log
+had tracked for ~10 dispatches is CLOSED (see above) — future dispatches can stop re-checking it and drop that line from
+their re-verify checklist. Once the bucket approaches the full ~4,210-day span, re-run `check_pipeline_completeness.py`
+(Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding beyond the stale-summary correction). No repo code
+commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
 ### 2026-07-14 — slot 3 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-5's check ~9min earlier, steady progress, still BLOCKED-PREREQ, no new action)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
