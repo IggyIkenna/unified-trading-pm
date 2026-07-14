@@ -1175,3 +1175,36 @@ now confirmed exhausted for this session** (each transitively gated on the same 
 here until the fleet completes. This session's real contribution was the T+25min health check above (genuine evidence
 the fleet is healthy, not stalled) plus correctly declining 3 premature downstream dispatches rather than launching
 redundant/colliding work.
+
+### 2026-07-14T11:52Z — session 22 (data_engineering slot-8): T+~40min health check — INJURIES fleet member complete, others progressing steadily
+
+**Fleet status (11:50–11:52 UTC, ~12 min after session 21's T+25min check)**:
+
+- **INJURIES (`af-backfill-20260714-111518`) — COMPLETE**: `DEPLOYMENT_COMPLETED … exit_code=0` at 11:45:39Z;
+  self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true` (no longer present in `gcloud compute instances list`). Finished the
+  remaining 33 days (day 58/91 at session 21's 11:40Z check → day 91/91) in ~5 min.
+- **4 per-fixture VMs STILL RUNNING** (`gcloud compute instances list --filter='name~af-backfill'`, zone
+  asia-northeast1-c, all confirmed RUNNING):
+
+  | VM (entity)            |    Session 21 (11:40Z) | Session 22 (11:51Z, this check) | Days advanced (11min) | ETA to day 91 |
+  | ---------------------- | ---------------------: | ------------------------------: | --------------------: | ------------: |
+  | 111307 FIXTURE_EVENTS  | 2025-09-30 (day 30/91) |          2025-10-24 (day 54/91) |                   +24 |       ~17 min |
+  | 111346 FIXTURE_LINEUPS | 2025-09-20 (day 20/91) |          2025-09-24 (day 24/91) |                    +4 |         ~3.1h |
+  | 111414 FIXTURE_STATS   | 2025-09-20 (day 20/91) |          2025-09-23 (day 23/91) |                    +3 |         ~4.2h |
+  | 111447 PLAYER_STATS    | 2025-09-20 (day 20/91) |          2025-09-23 (day 23/91) |                    +3 |         ~4.2h |
+
+  Zero Tracebacks/ERRORs in any `run.log` tail (`gsutil cat … | tail -5` on all 4). Note: this slot's `/snap/bin/gcloud`
+  is broken (`snap-confine`/`cap_dac_override` error, unrelated to the fleet) — used
+  `/home/ubuntu/google-cloud-sdk/bin/gcloud` instead, which works.
+
+**Gate (GW gate, Todo 9's own criterion)**: still FAILS — 4/5 entities not yet at 0 pending within window. **Checkbox
+NOT flipped.**
+
+**Downstream todos** (full-history enrichment / features recompute / ML re-verify): re-checked, no material change since
+session 21's decline (~12 min elapsed, same GW-gate prereq not yet green) — not re-declining separately per-todo,
+session 21's reasoning stands unchanged.
+
+**Nothing actionable this session** beyond the health check — genuine external wait (SPOT VM fleet), not a judgment
+call. Slowest ETA ~4.2h (FIXTURE_STATS/PLAYER_STATS, unchanged bottleneck from session 21). Next session should re-check
+`gcloud compute instances list --filter='name~af-backfill'` (via the google-cloud-sdk path above, not the broken snap) —
+once all 4 remaining VMs have self-deleted, run the manifest-rescan + GW gate query per session 20's next-step note.
