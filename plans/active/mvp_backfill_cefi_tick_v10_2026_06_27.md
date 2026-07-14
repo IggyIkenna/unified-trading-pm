@@ -1923,8 +1923,8 @@ remaining Layer-1 gaps below in this same session.
 **Gate verdict:** ❌ **NOT MET** — Layer-1 91.78% (6 missing); Layer-2 af=1,829/eu=213,672. **Blocking items
 remaining:**
 
-1. ~~`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md` (P0)`~~ — **RESOLVED** (see addendum above);
-   `market-tick-data-service@0da8be67`.
+1. ~~`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md`
+   (P0)`~~ — **RESOLVED** (see addendum above); `market-tick-data-service@0da8be67`.
 2. **BITGET-FUTURES ×3 / COINBASE-CDE/trades / DERIBIT-COMBO/options_chain-trades** — genuine remaining Layer-1 gaps,
    attempting relaunch now that the P0 above is resolved.
 3. **COINBASE-FUTURES/spot_pair/trades measurement anomaly** — data confirmed safe; root-cause not yet found (see
@@ -2107,3 +2107,62 @@ Tardis-sourced venues — a single large VM gets one IP and can still paralleliz
 without tripping the per-IP lock. Relaunch decision deliberately left to the operator/owning lane rather than fired
 autonomously here, because the 23:22Z entry also records backfill launches as gated on the P0 migration collision.
 Operator has been notified via the doc-reconciliation session report.
+
+---
+
+### G4 Re-Verification Run #6 — 2026-07-14T03:45-04:12Z (data_engineering slot-2): 2 real bugs found + fixed, live-verified
+
+Fresh `measure_honest_coverage.py --asset-group cefi` re-run (03:47Z): **Layer-1 improved to 94.5%** (69/73 matched, 4
+missing — down from 91.78%/6-missing at last session's close). `COINBASE-CDE/future/trades` and
+`COINBASE-FUTURES/spot_pair/trades` (the two "pending consolidator"/"measurement anomaly" gaps from the prior close-out)
+are both now **CONFIRMED CLOSED**. Layer-2: captured=2,255,463 / af=1,878 / eu=213,672 / coverage=91.28%.
+
+**Remaining 4 Layer-1 missing tuples:** `(BITGET-FUTURES, future, book_snapshot_5)`,
+`(BITGET-FUTURES, future, derivative_ticker)`, `(BITGET-FUTURES, future, trades)`,
+`(DERIBIT-COMBO, options_chain, trades)`.
+
+**Bug 1 — BITGET-FUTURES dated futures never reach the catalogue (root-caused, fixed, shipped).** Live manifest query
+confirmed BITGET-FUTURES carries ZERO `captured` rows for any FUTURE-typed cell — all attempts are `blank-itype`
+attempted_failed (the already-known 2026-07-12 issue) — and a direct read of the instruments-service catalogue snapshot
+(`day=2026-07-13`) confirmed **714/714 rows are PERPETUAL, 0 FUTURE**, despite live Tardis metadata
+(`api.tardis.dev/v1/exchanges/bitget-futures`) showing 16 real dated-quarterly FUTURE symbols (e.g. `BTCUSDH25`,
+`ETHUSDH25`). Root cause (sub-agent trace, confirmed): `_resolve_base_quote`
+(`instruments-service/.../adapters/cefi/tardis/parsing.py`) had no branch for `exchange="bitget-futures"` — Bitget's
+no-dash CME-month-code symbol shape (identical to Bybit's legacy quarterlies) fell through to the generic suffix
+matcher, resolved `quote=""`, and was silently dropped by `adapter.py`'s empty-quote guard. Fixed by reusing the
+existing `_split_bybit_symbol` branch (identical shape, no duplication) for `bitget-futures` too — 4 new regression
+tests (`test_bybit_kraken_futures_canonical_id.py`). Expiry resolves correctly via the existing `availableTo` fallback
+(all 16 real symbols already carry it) — no expiry-parser change needed. **Shipped: `instruments-service@cd902fb1`**, QG
+green, `quickmerge --agent`.
+
+**Bug 2 — DERIBIT-COMBO instrument-universe + failure-manifest rows collapse onto bare DERIBIT (root-caused, fixed,
+shipped) — caught via a LIVE VM launch, not just static analysis.** Launched a lease-enabled, single-VM
+`cefi-deribit-combo-2024-heavy` verification VM (`TARDIS_CONCURRENCY_LEASE=1`) targeting the missing
+`(DERIBIT-COMBO, options_chain, trades)` tuple. Within ~3 min its `run.log` showed real writes landing under
+**`venue=DERIBIT/instrument_type=perpetual|future`** (`MATIC_USDC-PERPETUAL`, `BTC-12JAN24`, `BTC-29MAR24`, …) — i.e. it
+was fetching bare DERIBIT's regular perpetual/dated-future universe, NOT DERIBIT-COMBO's combo/spread symbols. **Killed
+the VM immediately** (`gcloud compute instances delete`) before further wasted Tardis/SPOT spend. Dispatched a sub-agent
+trace: this is the SAME bug class as the 2026-07-12 "Bug A" (DERIBIT-COMBO/DERIBIT 1:1 `tardis_to_venue` slug collision)
+but at TWO uncovered call sites the Addendum-3 `canonical_venue` fix never reached — (1) `_resolve_symbols`'s GCS
+catalogue lookup (both branches) re-derived `vm.tardis_to_venue.get(exchange) or exchange.upper()` directly instead of
+accepting the caller's already-resolved `canonical_venue`, so a whole-venue DERIBIT-COMBO backfill (no explicit
+`instrument_ids`) silently fetched bare DERIBIT's catalogue — the dominant root cause, determines WHICH symbols get
+requested; (2) `PerSymbolTask.row_key["venue"]` was built from the raw exchange slug (lowercase `"deribit"`, unresolved)
+instead of `canonical_venue`, so failure/zero-rows manifest rows for EVERY venue carried an unresolved venue (a general
+stray-tuple bug, not just DERIBIT-COMBO); (3) the per-symbol write-path call chain (`_download_one_perp_symbol` →
+`_streaming`/`_legacy`) never threaded `canonical_venue` through to `finalise_and_write_cefi_shards[_streaming]` even
+though both already accept it. Fixed all three; added `canonical_venue` param to `_resolve_symbols`, moved its
+resolution earlier in `download_batch` so the SAME resolved value drives both the universe lookup and the write path. 3
+new/updated regression tests (`test_tardis_batch_download_failure_instrument_type.py`, new
+`test_tardis_resolve_symbols_canonical_venue.py`). **Shipped: `market-tick-data-service@c9e6080f`**, QG in progress at
+this entry's write time.
+
+**Gate verdict:** ❌ NOT MET — 4 Layer-1 tuples still absent pending a VERIFY relaunch of both fixed venues (next
+session/continuation: BITGET-FUTURES needs a fresh backfill wave that reaches its dated-future symbols — its heavy
+shards' full-catalogue alphabetical walk means either a targeted `VM_INSTRUMENT_IDS` scoped to the 16 known symbols or
+accepting the established full-catalogue-recapture precedent; DERIBIT-COMBO needs a relaunch now that the
+canonical_venue fix is live, verified via `run.log` showing `venue=DERIBIT-COMBO` not `venue=DERIBIT`). Both relaunches
+MUST use the lease (`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112`),
+single-VM, per the 2026-07-14T02:00Z CORRECTION directive above — no repeat of the parallel-wave shape. Phantom
+reconcile + manifest hygiene still not re-run this session (recurring note). **Not blocked by
+CREDENTIALS/OPERATOR/UPSTREAM.**
