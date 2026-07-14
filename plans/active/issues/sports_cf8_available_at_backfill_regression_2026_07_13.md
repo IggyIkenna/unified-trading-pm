@@ -422,8 +422,18 @@ consolidation).
       duplicates the doc's investigation trail already traced (targeted-re-emit gap, service_name-scoped dedup) fully
       explain the gap via other confirmed mechanisms, this tie-break is not a contributing cause. No further action
       needed on this todo.
-- [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
-      `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
+- [x] ✅ [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
+      `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service) —
+      market-tick-data-service@cae3a3fb. `ProjectionCollector._emit()` (the single choke point every
+      `add`/`record_empty`/`record_failed`/`emit_passthrough` row passes through) now coerces any dataclass-instance
+      value (e.g. `FetchEvidence`, threaded via `record_empty(fetch_evidence=...)` for honest-absence validation) to a
+      JSON string via `dataclasses.asdict()` before `write_projected_index` hands rows to
+      `pd.DataFrame(...).to_parquet()` — pyarrow's type inference cannot serialize a raw dataclass instance, which is
+      exactly the `pyarrow.lib.ArrowInvalid` this todo names. New regression test
+      (`test_fetch_evidence_dataclass_does_not_crash_parquet_write`) confirmed to FAIL with the exact same
+      `ArrowInvalid` on pre-fix code (verified via a temporary `git stash` revert) and PASS post-fix, round-tripping
+      `fetch_evidence` as valid JSON. Confirmed this never touched the real `--no-dry-run` write path (only
+      preview/dry-run tooling). Full `quality-gates.sh` green + sentinel-verified; shipped via `quickmerge --agent`.
 - [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
       (original incident 2026-07-13 + twice more during the 2026-07-14 re-attempt above) despite operator coordination
       each time — manual "please don't touch this" coordination is not holding up under real fleet concurrency. Worth a
