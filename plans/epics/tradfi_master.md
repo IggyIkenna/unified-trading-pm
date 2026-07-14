@@ -181,10 +181,19 @@ Covers:
 - **TradFi futures + ETFs + options** instrument coverage (CME ES/NQ/MES, CBOE VIX, NASDAQ ETFs, NYSE ETFs).
 - **TradFi tick data backfill** to ≥99% coverage. **Sourcing = DATABENTO-FIRST**
   (`SOURCE_PRIORITY[("tradfi", *)] = ["databento", "massive"]`; Massive is the secondary co-source per
-  `tradfi_massive_dual_source`). Barchart is **RETIRED as a general OHLCV tick source** — it now survives ONLY as the
+  `tradfi_massive_dual_source`). Barchart is **RETIRED as a general OHLCV tick source** — ~~it now survives ONLY as the
   VIX-15m cash-index layering (Barchart preload 2020-01-02→2025-11-12 + Yahoo rolling 60d + honest gap), which Databento
-  does not serve. SSOT:
-  [`codex/02-data/tradfi-databento-sourcing-ssot.md`](../../codex/02-data/tradfi-databento-sourcing-ssot.md).
+  does not serve.~~ **[2026-07-14 correction, verify-rerun-2 finding 217] stale** (was the text struck through above —
+  contradicted this same epic's own § "Anti-patterns" `[2026-07-12 correction]`, which this Scope section was never
+  updated to match). Operator decision 2026-06-23 DELETED the VIX cash index entirely (`instruments-service@814b14a`,
+  1,621 GCS objects removed) — there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is
+  **VX-futures-only via Databento `XCBF.PITCH`** (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED").
+  Barchart has **zero remaining sanctioned use** in TradFi sourcing. SSOT:
+  [`codex/02-data/tradfi-databento-sourcing-ssot.md`](../../codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**:
+  as of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
+  Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged
+  here as CODEX-GATED (not corrected in this pass — codex edits are out of scope for a plans-reconciliation fix;
+  recommend an operator-approved follow-up to update that codex SSOT).
 - **Market-hours + holiday calendar SSOT** integration end-to-end (instruments → MTDS → MDPS → features → ML +
   strategy + execution).
 - **S&P 500 ML readiness**: ES futures continuous-series, VIX 15m + features, full backtest train/test split.

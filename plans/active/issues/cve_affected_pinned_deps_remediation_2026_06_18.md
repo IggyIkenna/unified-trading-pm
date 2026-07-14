@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: CVE-affected pinned deps — lift caps + drop --ignore-vuln entries once blockers clear (follow-up after 1.5b)
-summary: '| Dep           | Working (kept) | Capped out | What breaks                                                                                                                                          ...'
+summary:
+  "| Dep           | Working (kept) | Capped out | What
+  breaks                                                                                                                                          ..."
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -17,7 +19,12 @@ related:
 created: 2026-06-18
 parent_epic: infrastructure_master
 priority: P2
-source: ['2026-06-18 — surfaced during the 1.5b fleet `uv lock --upgrade` pass: the upgrade pulled vcrpy 8.1.1 -> 8.2.1 (the exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it', base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15)]
+source:
+  [
+    "2026-06-18 — surfaced during the 1.5b fleet `uv lock --upgrade` pass: the upgrade pulled vcrpy 8.1.1 -> 8.2.1 (the
+    exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it",
+    base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -110,7 +117,18 @@ gate is satisfied.
       `canonical-dependency-manifest.json` + the 15 declaring repos' pyproject, regen locks atomically, run QG
       fleet-wide. On green, drop the starlette CVE-2026-54283/-54282 `--ignore-vuln` entries from `base-service.sh` +
       `base-library.sh`. Repo: unified-trading-library + strategy-service + client-reporting-api + features-service +
-      unified-trading-pm.
+      unified-trading-pm. **[2026-07-14 note, verify-rerun-2 finding 99]**: this coordinated fleet-wide bump is still
+      genuinely OPEN — `workspace-constraints.toml` confirmed as of 2026-07-14 still caps `fastapi>=0.115.0,<0.137.0` +
+      `starlette>=1.1.0,<1.3.0` fleet-wide, and this UTL `_IncludedRouter` fix has not landed. However, ml-service
+      found + shipped (`ml-service@4d16341`, 2026-07-13) an alternate, REPO-LOCAL escape hatch that does NOT require
+      this UTL fix: a `[tool.uv] override-dependencies` floor pin (`starlette>=1.3.1`) forces the resolver's starlette
+      version independent of what UTL's own `fastapi<0.137.0` declares, clearing ml-service's starlette CVEs without
+      touching `workspace-constraints.toml` or this todo's UTL prerequisite (see
+      `issues/ml_service_pip_audit_red_pillow_cryptography_starlette_2026_07_13.md` "Corrections" §2 — the doc's own
+      retraction of its earlier "requires cross-repo UTL change" diagnosis). This does NOT close this todo (the
+      coordinated fleet-wide cap lift + the route-introspection fix are still required for the other 14 declaring
+      repos), but the override-dependencies pattern is now a proven alternative worth considering per-repo while the UTL
+      fix is pending.
 - [ ] [TEST] P3. **alerting-service upgrade-time investigation.** `test_synthetic_false_does_not_log_suppressed_event`
       failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external
       deps are upgraded one-by-one, identify which upgraded dep changed the suppressed-event behaviour and fix the test
@@ -118,18 +136,20 @@ gate is satisfied.
 - [x] ✅ [SCRIPT] P2. **aiohttp / vcrpy unblock — biggest CVE cluster — DONE 2026-06-23.** vcrpy 8.2.1 confirmed
       aiohttp-3.14-compatible (`MockStream` rewritten; UAC 649-cassette suite green on 3.14.1, conftest shim removed).
       **17 of 18 repos** bumped to `aiohttp>=3.14.1,<4.0.0` + `vcrpy>=8.2.1` in `workspace-constraints.toml` +
-      `canonical-dependency-manifest.json` + each pyproject; all shipped to LDR + drained to staging (v2 green); CLAUDE.md
-      KNOWN-EXCEPTION block rewritten (cap LIFTED). GHSA-rpj2 ignore dropped (8.2.1 fixes it). **execution-service held on
-      3.13.5 via `[tool.uv] override`** (aioresponses 0.7.8 can't build aiohttp-3.14 ClientResponse) → the 11 aiohttp
-      ignores are retained ONLY for it; drop them when it migrates →
+      `canonical-dependency-manifest.json` + each pyproject; all shipped to LDR + drained to staging (v2 green);
+      CLAUDE.md KNOWN-EXCEPTION block rewritten (cap LIFTED). GHSA-rpj2 ignore dropped (8.2.1 fixes it).
+      **execution-service held on 3.13.5 via `[tool.uv] override`** (aioresponses 0.7.8 can't build aiohttp-3.14
+      ClientResponse) → the 11 aiohttp ignores are retained ONLY for it; drop them when it migrates →
       `issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Repo: unified-trading-pm + 18
       aiohttp repos. SSOT: `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (RESOLVED banner).
 - [ ] [SCRIPT] P3. **pip floor bump.** Bump the CI/base pip floor to a patched release (CVE-2026-3219 / -6357 /
       PYSEC-2026-196), re-validate, drop those 3 ignores. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P3. **cryptography / idna / CVE-2026-4539 re-check.** Re-check upstream for patched releases; lift where
-      resolvable, else add a `# re-check <date>` next to each ignore so it doesn't rot silently. Repo: unified-trading-pm.
+      resolvable, else add a `# re-check <date>` next to each ignore so it doesn't rot silently. Repo:
+      unified-trading-pm.
 - [ ] [SCRIPT] P3. **(then) one-by-one for the rest.** Walk the remaining external deps for the latest version
-      compatible with our code — no mass updates, validating QG per dep (the broadened audit scope above). Repo: per-dep.
+      compatible with our code — no mass updates, validating QG per dep (the broadened audit scope above). Repo:
+      per-dep.
 
 ## Composes with
 

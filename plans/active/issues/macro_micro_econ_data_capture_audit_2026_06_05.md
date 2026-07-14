@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Macro + micro economic data capture — coverage audit across all 5 asset groups (capacity vs backfill)
-summary: '**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr...'
+summary:
+  "**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4).
+  Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr..."
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +15,15 @@ related: [macro_econ_adapter_scaffolds_2026_06_09]
 created: 2026-06-05
 parent_epic: mtds_mdps_master
 priority: P1
-source: ['Codebase audit 2026-06-05 — 6-domain parallel sweep (macro / CeFi / DeFi / TradFi / Sports+Prediction / codex-registry) walking the adapter→pipeline→manifest→codex chain with file:line evidence', 'unified-api-contracts/unified_api_contracts/registry/capability_declarations/{_altdata,_tradfi,_cefi,_defi*,_sports}.py', 'unified-api-contracts/unified_api_contracts/registry/{expected_coverage,data_source_continuity,data_availability}.py', 'unified-trading-pm/codex/02-data/{mtds-data-source-coverage-matrix,tradfi-data-types-catalog,defi-data-types-catalog,sports-data-source-coverage-matrix,prediction-data-types-catalog,honest_coverage_baseline_2026_05}.md', News-data-vendor research 2026-06-05 (prior; ETF-flow + macro vendor landscape)]
+source:
+  [
+    "Codebase audit 2026-06-05 — 6-domain parallel sweep (macro / CeFi / DeFi / TradFi / Sports+Prediction /
+    codex-registry) walking the adapter→pipeline→manifest→codex chain with file:line evidence",
+    "unified-api-contracts/unified_api_contracts/registry/capability_declarations/{_altdata,_tradfi,_cefi,_defi*,_sports}.py",
+    "unified-api-contracts/unified_api_contracts/registry/{expected_coverage,data_source_continuity,data_availability}.py",
+    "unified-trading-pm/codex/02-data/{mtds-data-source-coverage-matrix,tradfi-data-types-catalog,defi-data-types-catalog,sports-data-source-coverage-matrix,prediction-data-types-catalog,honest_coverage_baseline_2026_05}.md",
+    News-data-vendor research 2026-06-05 (prior; ETF-flow + macro vendor landscape),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -37,6 +47,15 @@ last_updated: 2026-06-27
 > `ikenna_orchestrator/pings/slot_3.md`). **This audit STAYS ACTIVE** — the backfill RUN, paid sources (Glassnode/
 > CoinGlass/CryptoQuant), and the `altdata` asset-group / honest-coverage-gate / GCS-shard-write wiring (Open Questions
 > #1–#4, Phases 3–6) remain operator-blocked and are tracked on the wrapper plan + here.
+>
+> **[2026-07-14 correction, verify-rerun-2 finding 229]**: the wrapper plan `macro_econ_adapter_scaffolds_2026_06_09.md`
+> was SUPERSEDED/FOLDED 2026-07-13 (now `plans/archive/2026_07/macro_econ_adapter_scaffolds_2026_06_09.md`, banner: "do
+> NOT dispatch further work here; the live todos are in M-1") as part of the MTDS/MDPS 2-survivor consolidation — every
+> open todo was migrated verbatim into
+> [`data_completion_to_100_all_ag_2026_06_21.md`](../data_completion_to_100_all_ag_2026_06_21.md) §"Folded-in scope
+> 2026-07-13" (status: active). The remaining Phases 3-6 / backfill-RUN / paid-source work described above is now
+> tracked on **that** live plan, not the archived wrapper. This audit doc (status: open) itself stays active as the
+> canonical record of the coverage findings.
 
 > **Framing (operator, 2026-06-05):** "It's possible we haven't done the backfill on this, but that doesn't mean we
 > don't have the capacity." This audit therefore separates **capability** (does an adapter/pipeline exist that _can_

@@ -338,8 +338,15 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       path) + add a cross-AG regression test asserting every rebuild stamps both. Repos: market-tick-data-service +
       unified-trading-library. Owner: vm-defi (#1) + UTL. **#2 (C-#2) DONE 2026-06-07 — utl@d0745bde**: `add()` now
       AUTO-DERIVES `pipeline_mode` via `derive_pipeline_mode_for_row` for a derivable market-data row (venue+data_type,
-      no feature_group); blank can no longer pass silently. **REMAINING: #1 (defi rebuild stamp) — vm-defi**, + the
-      cross-AG regression test rides the defi rebuild fix.
+      no feature_group); blank can no longer pass silently. **[2026-07-14 correction, verify-rerun-2 finding 165] #1
+      (defi rebuild stamp) is ALSO DONE** (was: "REMAINING: #1 (defi rebuild stamp) — vm-defi" — stale, contradicted
+      this doc's own "Verified conflicts" table above marking #1 ✅ RESOLVED): confirmed via two real, reachable shas —
+      `market-tick-data-service@f80c50f1` (2026-06-07, defi migrator+rebuild source-aware
+      pipeline_mode+source+transport) and `market-tick-data-service@89807b4` (2026-06-16, defi rebuild CF-11 re-emit
+      stamp + a `TestDefiRebuildCallSiteStampsProvenance` regression test asserting the object-scan `add()` call stamps
+      non-blank `pipeline_mode`/`source`/`asset_group`) — both verified present in the mtds repo history. **Parent
+      checkbox left open**: the added regression test is defi-specific, not yet confirmed to cover every AG's rebuild
+      script (the "cross-AG regression test" clause of this work unit), so full closure of this item is unverified.
 - [ ] [CODE] P1. **features delta_one reader pipeline_mode-aware** (#3) — `_build_blob_path`/`_resolve_blob_paths`
       include the `pipeline_mode=` segment (delegate to UAC `candidate_parquet_paths` or build inline like MDPS), with a
       coverage regression. Repo: features-service. Owner: vm-ml.
@@ -348,16 +355,20 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       cell's primary external source in UAC `SOURCE_PRIORITY`; seeded `expected_unattempted`/`empty_confirmed` rows now
       carry all three (computed/unregistered cells exempt-blank). +5 tests asserting non-blank pm+source+transport on
       seeded cells. (transport added too, per C-TRANSPORT.) Repo: instruments-service.
-- [ ] [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify). **PARTIAL — Phase 0.1 shipped the
+- [x] ✅ [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify). **PARTIAL — Phase 0.1 shipped the
       abstract `Mode{BATCH,LIVE,REPLAY}` enum + `mode_of(PipelineMode)` (UAC@a2eab633).** **C-TRANSPORT tranche DONE
       2026-06-07 (operator R4)**: source-aware `LIVE_<SOURCE>`/`REPLAY_<SOURCE>` members + round-tripping
       `source_string_for`/`pipeline_mode_for_source` for batch+live+replay; the `Transport` enum + `transport_of()`
       (>1-transport suffix parser, None today) + `default_transport_for_source()`; `source_string_for` strips a trailing
       transport suffix; the **`hyperliquid_rest` antipattern is retired** → `source=hyperliquid` + `transport=rest` (the
       unified vendor: `batch_hyperliquid` + `live/replay_hyperliquid`); + the manifest `transport` COLUMN (uac@cc69b123,
-      utl@d0745bde, mtds@c567962e). **REMAINING (the BREAKING object migration, separate GATED tranche — see the
+      utl@d0745bde, mtds@c567962e). ~~**REMAINING (the BREAKING object migration, separate GATED tranche — see the
       M1-BREAKING item below): migrate `live_websocket` OBJECTS/writers/readers → `live_<source>`/`replay_<source>` +
-      the reconciliation-service.** Repos: UAC + UTL + MTDS + features + batch-live-reconciliation-service.
+      the reconciliation-service.**~~ **[2026-07-14 correction, verify-rerun-2 finding 166] DONE** (was: checkbox left
+      open `[ ]` while its own stated only-remaining scope, the M1-BREAKING item below, was already checked `[x]` DONE
+      with a 2026-07-12 correction + verified shas — a stale unflipped parent box). Confirmed: M1-BREAKING (below) is
+      `[x]` with real, reachable shas incl. `market-tick-data-service@84a15cc` and `unified-trading-library@2afb22bd`
+      (both verified present in repo history). Repos: UAC + UTL + MTDS + features + batch-live-reconciliation-service.
 - [x] ✅ [DESIGN] P0. **M2 — source-capability registry in UAC — Phase 0.1 DONE (draft seed) (UAC@a2eab633).**
       `SOURCE_MODE_CAPABILITY` (source→`{Mode}`) + `modes_for_source`/`source_supports`/`sources_supporting`; batch=all
       (certain), live/replay seeded with the operator-stated facts (chain RPCs replay-capable; Tardis live-not-replay),
