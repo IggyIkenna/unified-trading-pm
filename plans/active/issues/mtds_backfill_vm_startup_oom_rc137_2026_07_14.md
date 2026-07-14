@@ -879,7 +879,7 @@ defect. **Recommendation: do NOT revert or re-merge the already-live index** —
 cleanup, not corruption. Leave the scheduler PAUSED per this issue's own standing instruction until the residual
 live-sample verification below completes.
 
-- [ ] [INFRA] P1. **Residual live verification (2026-07-14, slot-3, backend_engineer)**: the "verdict (b)" conclusion
+- [x] [INFRA] P1. **Residual live verification (2026-07-14, slot-3, backend_engineer)**: the "verdict (b)" conclusion
       above is evidence-based (code review + adversarial synthetic test + git-history timeline) but NOT verified against
       the REAL ~34,961 dropped rows — this sandbox has no working `gcloud`/GCS access (same limitation every prior
       session on this issue hit). Needs: (1) if a backup/snapshot of the pre-`2kqdc` canonical still exists (check GCS
@@ -891,7 +891,35 @@ live-sample verification below completes.
       matches NEITHER pattern, that reopens the "(a) real bug" hypothesis and needs escalation; (3) once confirmed,
       resume the scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`, currently PAUSED) — do NOT resume it
       based on this todo's evidence alone, only after the live sample check in (1)-(2) passes. Repo:
-      `deployment-service` (GCS sample pull) + `unified-trading-library` (if a sampled row contradicts the verdict).
+      `deployment-service` (GCS sample pull) + `unified-trading-library` (if a sampled row contradicts the verdict). —
+      ✅ DONE 2026-07-14 (slot-3, infra) — **row-level live verification is INFEASIBLE, not merely inconvenient;
+      escalated + operator-ruled, not silently skipped.** Found the exact pre-`2kqdc` snapshot: bucket versioning is
+      `Suspended`, but soft-delete IS enabled, and generation `1784033794988708` (soft-deleted at
+      `2026-07-14T22:47:29Z`, the exact `2kqdc` write instant) has `creation_time=2026-07-14T12:56:34Z` — an exact match
+      to the frozen-canonical timestamp cited throughout this issue, confirmed via
+      `gcloud storage objects describe --soft-deleted`. However, **GCS soft-delete blocks reading a soft-deleted
+      object's CONTENT via any API** — confirmed directly: a JSON API `alt=media` request for that generation returns
+      HTTP 400 `"Cannot request object data for soft-deleted object"`. The only way to read its bytes is
+      `gcloud storage restore`, which writes back to the **same live path** (no destination override exists) — reading
+      the pre-image would require briefly overwriting the current production `availability_index.parquet` (est. 10-30s
+      window) with the stale pre-fix content before restoring today's generation back, exposing any of the fleet's
+      unaudited downstream readers (feature builders, honesty-coverage, gating checks) to reverted data during that
+      window. Also checked and ruled out the alternative of independent ground truth: `_index/per_vm/*.parquet` (the
+      per-VM shard files the consolidator merges from) have already been pruned post-absorption — only
+      `_legacy_seed.parquet` remains — so there is no raw-shard cross-check available either; the soft-deleted
+      generation was the only remaining path to a pre-image, and it's unreadable without a live revert. **Escalated via
+      `/blocked` (`BLK-a8931895`)** rather than deciding solo, given this is a genuine production-risk judgment call the
+      todo itself didn't anticipate (it assumed a passive backup, not a live-swap). **Operator ruling: Option B — do NOT
+      perform the live restore.** Rationale (verbatim reasoning from the ruling): reintroducing the ~9h-stale pre-fix
+      canonical into the live path — even byte-exact-staged for ~10-30s — would deliberately inject known-worse content
+      into a production path read by unenumerable fleet consumers, which violates the current protective posture
+      (downstream is being gated OFF the suspect revision, not fed staler data on purpose); the existing adversarial
+      regression test + git-history timeline proof already establish verdict (b) with high confidence, so finalize that
+      documented verdict and record row-level live verification as INFEASIBLE without a prod revert, rather than
+      pursuing it. **Scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`) stays PAUSED** — resuming it /
+      unfreezing `mvp_backfill_defi_onchain_v10-002`'s G2 gate remains operator+backend-owned and will be decided on its
+      own evidence, not unblocked by this verdict alone. Repo: `deployment-service` (GCS soft-delete investigation) +
+      `unified-trading-pm` (this doc).
 
 - [x] ✅ [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
       chunked-merge duration (24-30+ min observed) and causes a lock-stealing livelock** — every cron tick past the TTL
