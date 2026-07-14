@@ -46,18 +46,22 @@ drift_direction: advance-code
 
 # Sports P2c — derived features history to ML-ready
 
-> **🟢 2026-07-14 ~17:15Z: GW enrichment features recompute is RUNNING** (`fss-backfill-vm-1/2/3`, SPOT, chunked
-> 2025-09-01→09-30 / 10-01→10-30 / 10-31→11-30; `--tables derived_features,fixture_features --force`). Resume trigger
-> met: P2a Todo 9 flipped GREEN 16:55Z (post-fix GW re-run + parquet-presence cross: false-empty 0 / phantom 0 / blank
-> 0; issue `sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md` resolved). **NOTE — the first
-> recompute wave (17:02Z) NO-OP'd**: the launcher's `--force` mapped to `--no-skip-existing` only, but the features
-> CLI's manifest-attempted skip (`_should_skip_attempted`) needs the CLI's OWN `--force`, which the runner never
-> forwarded — all 3 VMs "completed" rc=0 in ~8 min having skipped 91/91 dates. Fixed (`e2e-testing@b6b04b8` runner
-> `--force` passthrough + `deployment-service@a79fa65` launcher mapping `--no-skip-existing --force`), relaunched
-> 17:1xZ, verified genuinely COMPUTING (per-date Calculator activity, zero SKIP lines) on all 3 VMs. Any past
-> "recompute" run via this launcher predating these fixes silently no-op'd on manifest-attempted dates — treat prior
-> recompute claims accordingly. ML-readiness re-verify follows completion. Concurrent: the P2a 2020+ enrichment fleet
-> (multi-day) — its enriched dates need the follow-on recompute per the todos below.
+> **🟢 2026-07-14 20:xx Z: GW recompute COMPLETE + shape suspicion RESOLVED — per-league layout is CANONICAL, no redo.**
+> All 3 `fss-backfill-vm-1/2/3` exited rc=0 (19:03–19:05Z, 91/91 dates), self-deleted; manifest shows DERIVED/FIXTURE
+> captured on all 91 window days (1,672 per-league rows each, canonical league NAMES, 0 numeric). The
+> `day=<D>/league=<numeric_af_id>/feature_group={derived,fixture}_features/` shape matches ALL bucket history (2021→
+> 2025 probes; a day-level parquet for these two groups has NEVER existed) — writer-canonical since
+> `features-service@b144552d`. The real cross-repo gap found instead: ml-service's training loader reads day-level only,
+> so derived_features never loads into the ML matrix — see issue
+> `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md` (also covers the stale day-level
+> `attempted_failed` rows from the pre-fix waves). ML-readiness (odds matrix) re-verified over the window: **74/91 pass,
+> gate NOT met** (17 days <95%, cluster at 68.6%) — odds-side coverage, NOT touched by this recompute; see Progress Log
+> 2026-07-14 20:xx entry. Concurrent: the P2a 2020+ enrichment fleet (multi-day) — its enriched dates need the follow-on
+> recompute per the todos below.
+>
+> _(Prior banner context: the first 17:02Z wave NO-OP'd — launcher `--force` didn't forward the CLI's own `--force` past
+> `_should_skip_attempted`; fixed `e2e-testing@b6b04b8` + `deployment-service@a79fa65`, relaunched 17:1xZ. Any recompute
+> run predating those fixes silently no-op'd on manifest-attempted dates.)_
 
 ## Scope
 
@@ -134,7 +138,47 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
-### 2026-07-14 13:57 UTC — data_engineering slot-8 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-15's check ~67min earlier, steady progress, no new action)
+### 2026-07-14 20:15 UTC — diagnosis agent (GW recompute per-league-shape suspicion → VERDICT: shape CANONICAL, no defect, no redo; real gap is ml-service reader; ML-readiness re-verify RUN — gate NOT met on odds)
+
+**Dispatched off the loop's 17:xx suspicion that the recompute wrote a divergent per-league/numeric-id shape.
+Grep-then-READ diagnosis, evidence file:line:**
+
+1. **Writer**: per-league is the NORMAL path for derived/fixture — `_write_per_league`
+   (`features-service .../cli/handlers/batch_handler.py:530`, groups by df `league_id`, keeps RAW af-id in the GCS path
+   by design per the `batch_handler.py:310-312` comment, canonical NAME in the manifest key via `_canonical_league_id`)
+   → `write_sports_table(league_id=...)` → `LEAGUE_PATH_TEMPLATE` (`.../data/writer.py:27`, since
+   `features-service@b144552d` 2026-05-08). odds_features df has no `league_id` column → day-level. Today's launcher/CLI
+   fixes (b6b04b8/a79fa65) only touched `--force` forwarding, not the write path.
+2. **Bucket history agrees**: `day=2021-03-06/league=39/feature_group=fixture_features/` (P2c fleet); derived_features
+   per-league on 2022-10-15 / 2023-04-22 / 2024-02-10; day-level `feature_group=derived_features/` matched NO objects on
+   2022-10-15 / 2024-02-10 / 2025-09-01 — the day-level atom for these two groups has never existed. The suspicion's
+   premise ("the shape the gates read") was wrong: `check_pipeline_completeness.py` is manifest-driven (no GCS path
+   reads) and `ml_readiness_check.py:40` reads odds_features only.
+3. **Fleet COMPLETE**: vm-1/2/3 `VM EXIT rc=0` 19:03–19:05Z (30+30+31 = 91 dates), self-deleted; window-end
+   `day=2025-11-30/league=140/.../features.parquet` created 19:03:37Z. Manifest: DERIVED 1,672 captured + FIXTURE 1,672
+   captured across ALL 91 days, atom
+   `(date, feature_group, data_type, league_id=<canonical NAME>, pipeline_mode=batch_footystats|batch_api_football)`, 76
+   league_ids, 0 numeric; 1,626/1,672 derived rows re-stamped ≥17:00Z today. 27 stale
+   `attempted_failed(ValueError, league_id='')` rows remain from the 06-27/29 pre-fix waves (failure atom is day-level —
+   `record_failed` omits league_id — so per-league successes never superseded them).
+4. **REAL finding (cross-repo, data-correctness)**: ml-service `sports_feature_loader.py:43` downloads ONLY the
+   day-level blob; `derived_features` ∈ `SPORTS_FEATURE_GROUPS` (`feature_query_support.py:76`) → the 559-column primary
+   ML feature source can NEVER load from GCS. Filed
+   `plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md` (P1: ml-service
+   layout-aware read; P2: features-service failure-atom alignment + stale-row cleanup; P3: features-bucket path SSOT
+   doc). Numeric `league=` path keys are NOT a naming-rule violation (defi-canonical SSOT is DeFi-only;
+   `sports-gcs-path-ssot.md`/UAC `candidate_parquet_paths` govern the IS `sports_reference` bucket, not
+   `sports_features/`) — do NOT rename historical dirs.
+5. **ML-readiness verify RUN** (verdict (a) follow-through):
+   `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` → **74/91 pass, 0 missing, avg 95.3%, GATE NOT
+   MET** — 17 days <95% non-NULL at T-24h/T-1h (9 days cluster at exactly 68.6%: 09-02/03/04/09/10, 10-07/14/23,
+   11-11/13; rest 85–94.9%). This measures the ODDS matrix (day-level), which this recompute did not touch — the misses
+   are odds-side coverage (bookmaker-sparse midweek/international-break days), a distinct workstream from the
+   derived/fixture recompute. Next actor on the odds gate: diagnose whether the 68.6% cluster is honest-absence
+   (few-bookmaker days) or an odds_features compute gap before any relaunch.
+
+**No relaunch performed; no redo needed (cost 0). No checkbox flipped (Todo 1 full-history compute remains in-flight on
+the separate `features-sports-sports-*` fleet).**
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
 
