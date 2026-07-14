@@ -117,6 +117,45 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 12 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-2's earlier 2026-07-14
+  dispatch relaunched (`features-sports-sports-20260714-002915/-002934/-002956`), all `RUNNING`.
+- Features bucket unique-date count: **2,271** (up from slot-2's 2,267) — steady forward progress, no stall.
+- **Went past `RUNNING` status**: `-002934` and `-002956` have wall-clock-fresh `run.log` lines (within ~2 min of check
+  time, `date -u` = 2026-07-14T00:47:16Z) — no crash signature, actively computing (`-002956` mid `derived_features`
+  writes, hit a transient "consolidated blob age 830.3s > 120s" manifest-staleness warning but correctly fell back per
+  its own honest-refusal logic, not a crash). `-002915`'s `run.log` GCS object doesn't exist yet (tee upload lag, not a
+  bug) — confirmed genuinely alive via direct SSH instead: real `features_service` process (PID 7609, 25.5% CPU, 691MB
+  RSS, 4:09 accumulated CPU-time) on its assigned range (2025-08-11→2026-07-13), nowhere near the 15-32GB OOM ceiling.
+- Checked `features-service` git log (`origin/live-defi-rollout`) for any new commit touching
+  `compute_shot_quality_batch`/`derived_new_calculators.py` since the last check: **none** — `b05f48ad` (already
+  known-insufficient per the reopened issue doc) is still the latest touch on `shot_quality_calculator.py`. The P0
+  root-cause profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  remains open/unowned.
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling — same reasoning as every prior
+dispatch (needs a dedicated Docker-memory-capped investigation against real data, not a quick check between other
+tasks). Did not relaunch or touch any of the 3 healthy shards. Did not re-run `check_pipeline_completeness.py` (Todo
+2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, history is still only ~54% covered.
+Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,271).
+Unchanged from every prior handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo, which needs a
+dedicated session (Docker memory cap, memray/tracemalloc against real GCS data for one of the known poison dates:
+2018-01-06 / 2019-08-17 / 2025-08-10) rather than another fast re-verify cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-14 — slot 2 (Todo 3 dispatch — still BLOCKED-PREREQ, immediately following this session's own Todo 1 fast-reverify)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
