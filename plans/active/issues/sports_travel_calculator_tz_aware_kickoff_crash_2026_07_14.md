@@ -241,3 +241,36 @@ write scope, not a availability gap I'm missing.
 
 Not re-filing a duplicate `/blocked` (slot-14's is presumably still open/unanswered — no message received on this boot).
 Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T23:3x UTC — data_engineering slot-8 (Todo 2 re-dispatch — 10th consecutive check; parking recipe confirmed reverted, not just half-applied)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD (`06476f2dc`).
+Coverage check (bounded day-prefix listing, `gsutil ls -d .../by_date/day=*/ | wc -l` — NOT a whole-corpus walk):
+**2,888/4,210** unique dates (~68.6%), up from slot-15's 2,538 at 13:09 UTC — real forward progress over the last ~10h,
+but genuinely incomplete.
+
+**New finding — the parking recipe reverted, confirming slot-15's suspicion.** Live backlog entry for this task now
+reads back `priority: 50` (not the 999 slot-14's `/blocked` got applied), `priority_override: false`, and
+`prereqs.prerequisites: []` — read directly off the root clone's `data/config/backlog.yaml` (read-only). Per RULES.md §4
+"Park a task", `priority_override: true` is REQUIRED alongside `priority: 999` or the next regen tick reverts it to the
+plan-derived value — that's exactly what happened here (the override flag was apparently never set, or didn't survive),
+even though the specific regen-drops-prereqs bug this pattern named
+(`backlog_regen_drops_handtuned_prereqs_2026_07_12.md`) is already fixed in this checkout's agent-orchestrator history
+(`8dd5763` present). So the structural gate still doesn't exist — this is the 10th slot burned on the same prose-only
+dependency.
+
+**Also notable (informational, not actionable from this task's scope):** `gcloud compute instances list` for
+`central-element-323112` shows ZERO instances matching `features-sports*` / `sports*` name patterns right now (all prior
+checks today found 3 RUNNING) — the parent plan's Progress Log shows the compute fleet has been repeatedly relaunched
+under different name patterns throughout the day (`-085642/-085703/-085726` → `-002915/-002934/-002956` →
+`-000856/-000924/-000944` → GW-recompute `fss-1/2/3`, which self-deleted on completion per the plan's 20:0xZ
+autonomous-tick-2 entry) as part of a much larger multi-agent effort (enrichment fleet, ML-loader fixes, odds join-key
+fix, all shipped today per the plan's tail). The features `_index/availability_index.parquet` was written 23:32:42Z, ~1
+min before this check — fresh consolidator activity, consistent with an active or very-recently-active pipeline, not a
+dead one. Whether the 2015→present compute specifically is between relaunch cycles or paused is the parent plan's
+concern (already under heavy, current, multi-slot management per its own Progress Log) — out of this todo's scope to
+chase or relaunch.
+
+Not re-filing a duplicate `/blocked` (slot-14's structural-gate ask still stands unanswered; a 3rd ask adds no new
+information). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
