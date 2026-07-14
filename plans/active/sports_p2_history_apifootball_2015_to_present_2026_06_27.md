@@ -1777,3 +1777,10 @@ by the time I reached this point — left as-is, no duplicate edit needed.
   recompute + final gates, (4) pre-2025 false-empty sweep done, (5) rule-9 final report here. State at arming: both
   fleets RUNNING+healthy (5× af-backfill-1724xx enrichment, shards mtime-live 18:15Z; 3× fss-backfill features
   recompute, launched 17:22Z); pre-2025 false-empty sweep DISPATCHED (hist-false-empty-repair-20260714, no quota).
+- 2026-07-14 23:1xZ (autonomous tick 5): 68.6% cluster CLOSED — verdict honest-absence (43-col >=2-snapshot sparse tier
+  during FIFA break) + upstream zombie-board contamination routed to the stale-reinjection issue doc (another slot
+  active there; loop stands off per collision rule). Pre-2025 sweep STALL diagnosed: prior agent ran 5 parallel
+  full-index scans on the 15GB host — LINEUPS completed (scan+adjudication CSVs), the other 4 thrashed 4+h and were
+  killed incomplete; --apply never ran. Fresh completion agent dispatched with STRICTLY-SEQUENTIAL execution (reuses
+  LINEUPS CSVs, re-scans the 4, one fresh snapshot before apply). Enrichment fleet: 4 VMs RUNNING, shards mtime-live
+  23:01Z, quota within budget.
