@@ -257,17 +257,45 @@ one-liner once each is empty: `gcloud storage buckets delete gs://<b>`. That lan
 
 **Still HELD / genuinely open (each with a real gate — NOT force-run):**
 
-| #   | Item                                                                                                                       | Gate                                                                                                                                                                                                                                                                                                                                                            |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A   | `instruments-store-cefi` legacy twin                                                                                       | 27,225 "legacy-only" objects are 2020-era `instrument_availability/` under a DIFFERENT partition shape than canonical prd (prd already has 51,611 availability objects) — same class as the sports legacy-cells; needs the instruments/migration owner's shape-aware reconcile, not a blind copy. Purge deliberately NOT armed.                                 |
-| B   | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`)                                                 | UTL PATH_REGISTRY repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api data-status readers until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a no-new-writes check.                                                                                                      |
-| C   | `lending-indices` + `-prd`                                                                                                 | `subgraph_health_probe.py::_resolve_bucket()` writes fingerprints to the flat bucket via `t1_batch` IAM (TF binding at subgraph_health_probe_scheduler.tf:71) — repoint that writer first (TF resource block already removed, ds@1dd2159), then delete both.                                                                                                    |
-| D   | recon end-to-end green                                                                                                     | recon buckets exist + BLRS config resolver-repointed, but the upstream `t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod image needs the digest fan-out; investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z run.                                                                            |
-| E   | Terraform state re-import                                                                                                  | The straggler-rm over-removed 7 LIVE non-bucket resources whose data_types stay live in the shared bucket (only the bucket KINDS were retired). Re-import before the next full apply: `defi_collect_cron["liquidations"]`→`.../jobs/uts-prod-mtds-collect-liquidations-cron`, `["solana-defi"]`→`...-solana-defi-cron`; `module.defi_collect_job["liquidations" | "solana-defi"].google_cloud_run_v2_job.job`→`.../jobs/uts-prod-mtds-collect-{liquidations,solana-defi}`; `pubsub_topic`/`pubsub_subscription.unified_trading["liquidations"]`→`.../topics/liquidations`+ its sub; plus re-import`google_storage_bucket.canonical["manual-audit-{prd,test}-…"]` if a full apply is run (they were state-rm'd, kind is excluded — harmless, they'll just show as adds otherwise). Owned by Deferred #5 (non-bucket drift). |
-| F   | ASTER originals                                                                                                            | MOVED to `aster_cefi_data_defi_bucket_migration_2026_07_13.md` (operator ruling) — re-migrate the high_dup schema-narrower band, then delete there.                                                                                                                                                                                                             |
-| G   | sports legacy pair (`market-data-tick-sports`/`instruments-store-sports` flat)                                             | owned by `sports_manifest_canonicalisation_2026_06_01` E1/E8 (316 legacy-only cells) — HELD.                                                                                                                                                                                                                                                                    |
-| H   | W3 structural folds (features 25→5, ml 8→2, stores)                                                                        | design drafted (`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its own plan(s).                                                                                                                                                                                                               |
-| I   | Findings #11/#12 (`dependencies.py` + SIT `_resolve_bucket()` `{category_lower}` bug) + item 10 ops-singleton registration | small contained fixes, captured above.                                                                                                                                                                                                                                                                                                                          |
+| # | Item | Gate | | --- |
+--------------------------------------------------------------------------------------------------------------------------
+|
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| | A | `instruments-store-cefi` legacy twin | 27,225 "legacy-only" objects are 2020-era `instrument_availability/`
+under a DIFFERENT partition shape than canonical prd (prd already has 51,611 availability objects) — same class as the
+sports legacy-cells; needs the instruments/migration owner's shape-aware reconcile, not a blind copy. Purge deliberately
+NOT armed. | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL PATH_REGISTRY
+repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api data-status readers
+until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a no-new-writes check. | |
+C | `lending-indices` + `-prd` | `subgraph_health_probe.py::_resolve_bucket()` writes fingerprints to the flat bucket
+via `t1_batch` IAM (TF binding at subgraph_health_probe_scheduler.tf:71) — repoint that writer first (TF resource block
+already removed, ds@1dd2159), then delete both. | | D | recon end-to-end green | recon buckets exist + BLRS config
+resolver-repointed, but the upstream `t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod
+image needs the digest fan-out; investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z
+run. | | E | Terraform state re-import | **RESOLVED 2026-07-14** (see "TERRAFORM RECONCILIATION" log entry below) — all
+6 over-removed live resources (defi_collect_cron/job × liquidations+solana-defi, the liquidations pubsub topic+sub)
+re-imported; re-plan confirmed zero of this work pending. Residual full-apply delta (odum_portal domain,
+governance/digest features, legacy-consolidator teardown) is other-workstream, deliberately NOT auto-applied —
+owner/operator green-light needed, not a bucket-plan gate. | | F | ASTER originals | MOVED to
+`aster_cefi_data_defi_bucket_migration_2026_07_13.md` (operator ruling) — re-migrate the high_dup schema-narrower band,
+then delete there. | | G | sports legacy pair (`market-data-tick-sports`/`instruments-store-sports` flat) | owned by
+`sports_manifest_canonicalisation_2026_06_01` E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS
+surface 140 legacy-only cells, all verified phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real
+cells migrated this session (down from 1,854), FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down
+to 28 accepted-phantom cells remaining (not 316, that count is stale). **Actual remaining blocker is CF-8
+(`available_at`)**: code fixed + a coordinated backfill already ran (85.3%/87.7% overall fill), but the real captured
+(non-empty) rows are only ~50-60% filled and a targeted re-emit attempt today found a genuine architectural gap (the
+manifest consolidator's dedup key includes `service_name`, and a naive backfill can never supersede rows owned by a
+different original service — rolled back cleanly, no data harm). The real operator (separate concurrent session) has
+explicitly instructed: wait for a scheduled maintenance window + a service_name-aware write redesign before another live
+attempt. Full detail: `plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
+`plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Still HELD — do not purge/delete
+either bucket.** | | H | W3 structural folds (features 25→5, ml 8→2, stores) | design drafted
+(`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its
+own plan(s). | | I | Findings #11/#12 (`dependencies.py` + SIT `_resolve_bucket()` `{category_lower}` bug) + item 10
+ops-singleton registration | small contained fixes, captured above. |
 
 ## Appendix A — Wave-1 deletion list (81, all confirmed empty 2026-07-13; suffix `-central-element-323112` omitted)
 
