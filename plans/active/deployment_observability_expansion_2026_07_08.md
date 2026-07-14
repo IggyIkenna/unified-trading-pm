@@ -304,6 +304,10 @@ uses ready-state + revision health in place of desired/running.
 > service), not deployments-UI work, and was always the deliberately-deferred "LAST PHASE, nice-to-have" (high blast
 > radius). Removed from this plan's active scope so it can archive. The spec is preserved below (prose, no open
 > checkboxes) so the future plan can lift it verbatim.
+>
+> \*\*(was: `consolidator_throughput_backlog_monitor_2026_07_09.md`'s WS-2 pointed to this doc as "tracked here if/when
+> WS-H ships" — that pointer is now stale/dangling since this same-day extraction; no plan currently owns WS-H until the
+> operator creates one. [finding 183, synced 2026-07-14])
 
 Spec to lift into the future plan:
 
