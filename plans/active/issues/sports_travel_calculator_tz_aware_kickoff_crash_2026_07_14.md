@@ -110,9 +110,19 @@ the fix is in the deployed tarball) as a normal follow-up backfill pass.
       (`away_cumulative_travel_30d`/`home_cumulative_travel_30d`/`*_travel_per_game_30d`/`travel_fatigue_ratio`) are
       suspiciously all-NaN for dates with tz-aware `kickoff_utc` fixtures, and gap-fill re-run those with `--force` on
       the fixed code. (repo: features-service)
-- [ ] [DATA] P3. **Audit whether other sports calculators share the same
-      `pd.Timestamp(value, tz="UTC")`-on-possibly-aware-value pattern** (grep `features_service/sports/calculators/*.py`
-      for `tz="UTC"` / `tz=UTC`) — this is the second distinct tz-naive/tz-aware inconsistency found in this pipeline in
-      as many days (see `sports_venue_id_numeric_coercion_data_loss_2026_07_13.md` for the first, a different
-      comparison-site bug), suggesting `kickoff_utc` normalization is inconsistent across sports readers and worth a
-      systemic look rather than one-off patching. (repo: features-service)
+- [x] ✅ [DATA] P3. **Audit whether other sports calculators share the same
+      `pd.Timestamp(value, tz="UTC")`-on-possibly-aware-value pattern** — grepped
+      `features_service/sports/calculators/*.py` for `tz="UTC"`/`tz=UTC`, found 7 call sites, checked each: -
+      **`european_fatigue_calculator.py:207`** — IDENTICAL bug (`match_date = pd.Timestamp(raw_date, tz="UTC")` on the
+      same `kickoff_utc` column), and WORSE than travel_calculator's: `match_date` gates the ENTIRE row (all
+      `EUROPEAN_FATIGUE_COLUMNS`), not just a subset. Confirmed live-scale on the 3 running P2c backfill VMs: **33,348**
+      occurrences on `-085703`, **261** on `-085642`, 0 on `-085726` (mid a different date range). Fixed —
+      features-service@81036512 (same `pd.to_datetime(utc=True, errors="coerce")` swap). - `manager_calculator.py:522`,
+      `season_context.py:319` — `tz="UTC"` only reached via the `pd.Timestamp.now(tz="UTC")` fallback branch (always a
+      fresh timestamp, never re-parses a possibly-aware value) — NOT vulnerable. - `h2h_calculator.py:283` —
+      `pd.Timestamp.now(tz="UTC")`, same as above — NOT vulnerable. - `european_fatigue_calculator.py:157` — string
+      literal `f"{season_year}-07-01"`, always naive — NOT vulnerable. - `transfer_window_calculator.py:378` —
+      `match_date.isoformat()` where `match_date: date` (not `datetime`) per the function signature, so `.isoformat()`
+      is always a bare `YYYY-MM-DD` with no tzinfo — NOT vulnerable. **Gate met**: audited all 7 sites; found + fixed 1
+      additional real instance (the other 6 are safe by construction). No further sports-calculator instances of this
+      exact pattern remain.
