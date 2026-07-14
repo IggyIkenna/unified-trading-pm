@@ -12,7 +12,7 @@ summary: >
   data this plan's todo 4 now produces (market-tick-data-service@ef467572) has no consumer wired to it in
   features-service — extending the named function is impossible (it no longer exists) and reintroducing raw-snapshot
   reads would reverse a deliberate, already-shipped architecture decision.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [features]
@@ -41,7 +41,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-14
 locked_by:
-resolved_by:
+resolved_by: operator (via BLK-e5571ccf, 2026-07-14) — Option C confirmed, Option A not authorized as a new plan yet
 ---
 
 # l2_book_microstructure_capture todo 5 targets a retired extractor architecture
@@ -113,12 +113,26 @@ below), and file a new MDPS-scoped plan (Option A) as a separate piece of work w
 `MarketMakingQueueMicrostructureEngine` backtest gate for real — it is not on this plan's critical path today (no
 backtest has been authorised yet per this plan's own todo 7).
 
+## Resolution (2026-07-14, slot 14, BLK-e5571ccf)
+
+Operator confirmed **Option C**: leave `queue_position`/deeper `depth_levels_*` as MTDS-only data for now, with no
+features-service consumer yet. Explicitly rejected Option B (reintroducing a parallel `CanonicalBookMicrostructure`
+snapshot-read path) — that would reverse the deliberate, already-shipped no-tech-debt deletion from
+`features_read_book_columns_not_snapshots_2026_06_28.md` for one narrow feature slice. Option A (extend
+`book_summary_spec.py` + MDPS candle aggregation to cover `depth_of_book_10`/`queue_position`, then repoint the features
+extractor) is agreed as the right long-term path, but is **NOT authorized as its own plan today** — it should be scoped
+only when the `MarketMakingQueueMicrostructureEngine` backtest gate is actually picked up (no backtest work is
+authorized yet per `l2_book_microstructure_capture_2026_07_13.md` todo 7).
+
 ## Todos
 
-- [ ] [DESIGN] P2. Operator/main: confirm Option C (leave `queue_position` MTDS-only for now) vs. authorize a new
+- [x] ✅ [DESIGN] P2. Operator/main: confirm Option C (leave `queue_position` MTDS-only for now) vs. authorize a new
       MDPS-scoped plan for Option A (extend `book_summary_spec.py` + MDPS candle computation to aggregate
       `depth_of_book_10`/`queue_position` the same way `book_snapshot_5` is aggregated today, then repoint the features
-      extractor). (repo: unified-trading-pm — plan decision)
-- [ ] [SCRIPT] P3. If Option A is authorized: author `mdps_book_microstructure_deeper_depth_columns_<date>.md` scoping
-      the `book_summary_spec.py` extension + MDPS aggregation change + the features-service extractor follow-on,
-      depends_on this issue doc. (repo: unified-trading-pm)
+      extractor). (repo: unified-trading-pm — plan decision) — **DONE: Option C confirmed via BLK-e5571ccf, see
+      Resolution above.**
+- [ ] [SCRIPT] P3. **Not authorized today** — deferred until the `MarketMakingQueueMicrostructureEngine` backtest gate
+      is actually picked up. If/when Option A is authorized at that point: author
+      `mdps_book_microstructure_deeper_depth_columns_<date>.md` scoping the `book_summary_spec.py` extension + MDPS
+      aggregation change + the features-service extractor follow-on, depends_on this issue doc. (repo:
+      unified-trading-pm)

@@ -185,9 +185,15 @@ sequential: true
       `queue_position`/deeper-depth columns exist there). Surfacing `queue_position`/`depth_levels_*` in features now
       requires an ARCHITECTURE decision (extend MDPS's column pipeline to match — bigger scope, new plan — vs.
       reintroduce a parallel raw-snapshot read path, which reverses the 2026-06-28/29 decision) — not a same-shape
-      "extend the extractor" edit. See the issue doc for the full option analysis + recommendation (Option C: leave
-      `queue_position` MTDS-only for now; Option A as the real follow-up, its own MDPS-scoped plan). **BLOCKED-OPERATOR
-      pending that decision — checkbox NOT flipped**, not attempting Option B (parallel snapshot path) unilaterally.
+      "extend the extractor" edit. **RESOLVED 2026-07-14 (slot 14, `BLK-e5571ccf`): operator confirmed Option C** —
+      leave `queue_position`/deeper `depth_levels_*` as MTDS-only data for now, no features-service consumer yet; Option
+      B (parallel snapshot path) explicitly rejected; Option A (MDPS column extension) agreed as the right long-term
+      path but NOT authorized as its own plan until the `MarketMakingQueueMicrostructureEngine` backtest gate (todo 7
+      below) is actually picked up. See
+      [`issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md`](issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md)
+      (status: resolved) for the full option analysis + resolution. **Checkbox intentionally stays unflipped** — this
+      todo's actual scope (extend the extractor) remains honestly undone/deferred, not completed; the decision that
+      unblocks or permanently defers it is what's now resolved.
 - [ ] [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue (mirrors
       the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a backfill. Repo:
       market-tick-data-service.
@@ -227,3 +233,13 @@ decision, not a coding gap. This plan-doc + issue-doc edit ships via the `docs(p
 commit). `/blocked` posted to the orchestrator citing the issue doc; `/done`-ing this dispatch with the Todo 4 shipment
 as the evidence (the actual deliverable this session produced) since Todo 5 cannot honestly be marked done or continued
 without that decision.
+
+### 2026-07-14 — slot 14 (Issue-doc DESIGN todo resolved: Option C confirmed)
+
+Dispatched task `l2_book_microstructure_features_extractor_snapshot_path_retired-001` (the issue doc's DESIGN todo).
+Posted `/blocked` (`BLK-e5571ccf`) with the three options + recommendation (C now, A as real follow-up); operator
+answered confirming **Option C** and explicitly rejecting Option B, with Option A deferred until the
+`MarketMakingQueueMicrostructureEngine` backtest gate (todo 7) is actually picked up. Flipped the issue doc's DESIGN
+todo `[x]`, set the issue doc `status: resolved` + `resolved_by`, added a Resolution section, and marked its P3
+follow-up todo as not-authorized-today. Updated this plan's todo 5 note to record the resolution — todo 5's own checkbox
+stays unflipped (the extractor work itself remains undone/deferred by design, not completed).
