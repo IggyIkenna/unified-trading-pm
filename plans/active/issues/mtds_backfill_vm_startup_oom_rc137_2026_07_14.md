@@ -129,9 +129,40 @@ site, not a verified fix.
       (`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-1{2,3,4}/*.json`) for `exit_code=137`
       `DEPLOYMENT_FAILED` entries across ALL asset_groups (not just DeFi) to gauge blast radius since `f8cab3f0` landed
       (2026-07-12). Repo: `deployment-service`. — ✅ DONE 2026-07-14, see "Fleet-wide blast-radius check" below.
-- [ ] [SCRIPT] P2. Once the fix lands, relaunch `mtds-perp-funding-backfill` and `mtds-dex-swaps-backfill` (same command
-      as this session used) and verify past the first `RESOURCE_SAMPLE` without a crash before resuming
-      `mvp_backfill_defi_onchain_v10-002`'s G2 verification. Repo: `deployment-service`.
+- [x] [SCRIPT] P2. Once the fix lands, relaunch `mtds-perp-funding-backfill` (same command as this session used) and
+      verify past the first `RESOURCE_SAMPLE` without a crash before resuming `mvp_backfill_defi_onchain_v10-002`'s G2
+      verification. Repo: `deployment-service`. — ✅ DONE 2026-07-14 (slot 11, data_engineering): relaunched with the
+      confirmed-fresh `mtds-code.manifest.json` @ `ecd3a4d4` (d6846f1c ancestor-verified); VM survived past the crash
+      point and is genuinely capturing
+      (`Perp funding collection complete for 2024-04-03: 2 records across 3     protocols`, per-VM manifest shard writes
+      flowing) — **perp-funding side of this todo is resolved.** **`mtds-dex-swaps-backfill` split OUT to its own todo
+      below — it crashed again, same `rc=137`, on the SAME fresh fix.**
+- [ ] [SCRIPT] P0. **NEW FINDING (2026-07-14, slot 11, data_engineering) — `mtds-dex-swaps-backfill` crashes rc=137 with
+      a DIFFERENT root cause than the one this issue fixed.** Relaunched with the identical fresh, verified-current
+      tarball (`mtds-code.manifest.json` @ `ecd3a4d4`, `d6846f1c` confirmed ancestor) that let
+      `mtds-perp-funding-backfill` survive — `mtds-dex-swaps-backfill` still died `rc=137` (SIGKILL), self-deleted, in
+      under 25s from process start: `TheGraph key pool loaded` → `DEX swaps handler initialized` → one `RESOURCE_SAMPLE`
+      at `rss=666MiB mem=10.3%` (nowhere near an 85%-threshold OOM) → `Killed` → `rc=137`. Since
+      `mtds-perp-funding-backfill` used the exact same tarball and survived, **this is NOT the
+      `_register_all_catalog_readers()` defect this issue closed** — it is a separate memory spike specific to
+      `DexSwapsHandler` (`market_tick_data_service/cli/handlers/dex_swaps_handler.py`, 900 lines, a single monolithic
+      `process()` method) that happens BETWEEN `RESOURCE_SAMPLE` ticks (same "spike invisible to the coarse sampler"
+      pattern this issue already flagged for the `opt-deribit-combo-2024` outlier). Quick code read (not a full
+      RSS-instrumented repro — out of this task's craft-scoped verification brief, filing for a dedicated fix-worker
+      instead): `catalogue_pool_ids_for_shard`/`catalogue_filter_ids_and_symbols`
+      (`market_tick_data_service/cli/handlers/_catalogue_filter.py`) cache a single DeFi-only `prod/catalog.parquet` —
+      much smaller than the 4-asset-group combined catalogue the original fix targeted, so likely NOT the culprit
+      either. Leading hypothesis: the handler's single `process()` method building an eager in-memory structure across
+      the full 2023-01-01→2026-07-14 (~3.5yr) × 9-protocol swaps range before any GCS flush — this plan's own G0.2 gap
+      report shows `dex_pool_swaps` UNISWAP_V3/BALANCER/PANCAKESWAP_V3 alone carry hundreds of thousands of
+      `expected_unattempted` cells, a plausible bulk-materialization site. **Recommended fix-worker action**: RSS-
+      instrument `DexSwapsHandler.process()` (same technique slot-2 used for the original diagnosis — see "P0 confirm +
+      fix" below) to find the actual spike site, then apply the craft's efficiency north-star (stream per-date/
+      per-protocol flush instead of accumulating the full range) rather than assuming the catalog-registration fix
+      covers it. **Do not re-relaunch `mtds-dex-swaps-backfill` again until root-caused** — confirmed 2/2 reproducible
+      now (pre-fix AND post-fix), will burn SPOT minutes for zero data. This is holding up
+      `mvp_backfill_defi_onchain_v10_2026_06_27.md` G2 same as before, now on a handler-specific defect rather than the
+      already-fixed fleet-wide one. Repo: `market-tick-data-service`.
 
 ## P0 confirm + fix (2026-07-14, slot 2)
 
