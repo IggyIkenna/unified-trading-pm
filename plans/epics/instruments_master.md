@@ -55,13 +55,17 @@ related_plans:
     ../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
     ../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
   ]
-last_updated: 2026-07-08
+last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
 <!-- 2026-07-12 doc-reconciliation sync (findings 96/101/106/111/117/123/125, §A2 B-queue ruling): epic-body staleness
      annotated in place below (was: unannotated) — see body markers for each finding's correction. -->
+
+<!-- 2026-07-14 doc-reconciliation sync (verify-rerun-2 pass, distinct finding-id space from the 07-12 pass above —
+     that pass's "123"/"125" covered unrelated topics; this pass's own findings 123/146/150 are body markers below,
+     125 is the frontmatter last_updated bump above). -->
 
 # Instruments Live — Master Activation Plan
 
@@ -231,6 +235,13 @@ CLI is single-codepath; adding `--trigger` as a new axis is additive (Phase A.7)
   (`cefi_master`, `tradfi_master`, `sports_master`, `predictions_master`). Phases C.2, D.1, E.2 above touch MTDS only
   because tradfi/cefi/prediction "instruments" 15-min OHLCV cadence sits inside MTDS adapters, not instruments-service.
 - Telegram bot infra and the alerting-service rule engine — owned by `alerting_service_live_rules_2026_05_07`.
+
+> **Routing gap flagged 2026-07-14 (finding 126, unresolved — needs an operator ruling, not fixed here)**: despite the
+> two disclaimers above, `active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` carries
+> `parent_epic: instruments_master` (repos: `market-tick-data-service`) yet its content is precisely per-venue MTDS
+> `WSFeedConnector` live-tick capture wiring across cefi/tradfi/sports/defi — including a "### DeFi — 49 venues" section
+> building onchain-protocol connectors (Uniswap/Aave/Compound/Morpho/Lido/GMX etc.) — i.e. exactly both disclaimed
+> categories. Neither doc reconciles this; annotated in place only, not resolved.
 
 ## Parallelisation strategy
 
@@ -481,7 +492,12 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
 - ✅
   [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
-  — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed.
+  — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed. Caveat
+  (2026-07-14, finding 150): DONE covers the ticker-collision remediation only (125/125 files, verified); the plan's own
+  frontmatter is `status: active` and still carries an unresolved `- [ ] [DATA] P2` todo (was: presented above as a flat
+  DONE with no caveat) — a separate `FI_`/`FF_` contract-subtype same-(ticker,expiry) collision (13 pairs, ETH/XBT, 45
+  of the 125 files) surfaced during this fix's own verification, needing an operator decision before any further
+  Kraken-Futures remediation or backfill.
 - ✅
   [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
   — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
@@ -493,7 +509,11 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   `plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` §MTDS-WS). Synced per
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 93).
 - [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
-  — P1, real `InstrumentLeg`/`COMBO` infrastructure exists (proven for CME), just not wired up for CBOE/VX spreads.
+  — P1, CBOE/VX combo-leg decomposition now wired (was: "just not wired up for CBOE/VX spreads" — corrected 2026-07-14,
+  findings 123 + 146): `_parse_cboe_spread_legs()`, human-name translation, venue-prefix drop, and `SPOT_PAIR`→`COMBO`
+  type fix all shipped `instruments-service` 2026-07-09, quality-gates green, real prod-bucket dry-run verified. Plan
+  itself remains `status: active` — 3 unrelated follow-on P1-P3 todos filed the same day (TradFi single-leg
+  `@LIN`/`@INV` extension, Deribit combo hard-cap extension, UAC `build_leg()` venue-omission mode) are still open.
 
 ## P1 — done/archived (historical — pre-consolidation)
 

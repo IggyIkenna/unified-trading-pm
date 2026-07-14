@@ -240,18 +240,24 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   `quickmerge.sh --agent --files "scripts/reconcile_phantom_manifest_rows_all.py scripts/reconcile_sports_blank_empty_reason_2026_06_24.py" --skip-preflight`
   (pre-flight skipped because an unrelated dependency repo, `unified-api-contracts`, has unrelated uncommitted changes
   from another session) reaches Stage 3 (Local Quality Gates) and fails on 4 pre-existing, unrelated test failures in
-  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs*\*`— root cause
-  confirmed (not assumed) by inspecting`git status`: another agent has a **live** uncommitted WIP on
-  `instruments*service/reference_data/adapters/tradfi/databento/{**init**,adapter,symbology}.py` (mtime ~5 min old at
-  observation time, actively multi-file, matches this session's explicit "DO NOT touch databento files" scope boundary)
-  that has \_temporarily* reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while the already-committed
-  test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature. Confirmed via a bounded
-  3-minute poll (6× 30s) that this WIP was still unresolved at observation end — not something this pass fixed or should
-  fix (explicitly out-of-scope file per this dispatch's own instructions; touching another agent's live WIP file is a
-  workspace HARD RULE violation). This pass's own STEP 5.101 + STEP 5.95 fix is itself real, complete, and independently
-  gate-clean (verified via direct checker re-runs above, not just quickmerge's full-suite run) — landing is pending only
-  on that unrelated sibling WIP resolving (or a future push once the tree is quiescent). No baseline edits, no
-  force-push, no `--skip-tests`.
+  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs*\*`— root cause confirmed (not assumed) by inspecting`git
+  status`: another agent has a **live** uncommitted WIP on `instruments*service/reference_data/adapters/tradfi/databento/{**init**,adapter,symbology}.py`
+  (mtime ~5 min old at observation time, actively multi-file, matches this session's explicit "DO NOT touch databento
+  files" scope boundary) that has \_temporarily* reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while
+  the already-committed test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature
+  (corrected 2026-07-14, finding 145: this was a mid-transition snapshot, not the durable target — the 1-arg form is the
+  intentional, permanent signature per the venue-drop decision in
+  `active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md:153-156`, which fixed the 2-arg test calls as
+  the actual regression, shipped 2026-07-09; live code confirms 1-arg —
+  `instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py:244`
+  `def _parse_cme_calendar_spread_legs(raw_symbol: str) -> list[InstrumentLeg] | None:` — was: this doc characterized
+  2-arg as "the real, current" signature and 1-arg as a temporary revert, the opposite of what shipped). Confirmed via a
+  bounded 3-minute poll (6× 30s) that this WIP was still unresolved at observation end — not something this pass fixed
+  or should fix (explicitly out-of-scope file per this dispatch's own instructions; touching another agent's live WIP
+  file is a workspace HARD RULE violation). This pass's own STEP 5.101 + STEP 5.95 fix is itself real, complete, and
+  independently gate-clean (verified via direct checker re-runs above, not just quickmerge's full-suite run) — landing
+  is pending only on that unrelated sibling WIP resolving (or a future push once the tree is quiescent). No baseline
+  edits, no force-push, no `--skip-tests`.
 - **2026-07-09 (re-confirmed, blocking a 4th independent fix)** — Hit the identical wall shipping the real
   OKX-SWAP/OKX-FUTURES `margin_type` full-sweep (`prod/catalog.parquet` 2,753 rows + `instrument_availability/by_date/`
   per-day corpus 4,762 files, both real production GCS writes, already applied + verified independent of this gate — see

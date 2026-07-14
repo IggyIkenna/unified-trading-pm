@@ -53,6 +53,13 @@ resolved_by:
 
 # WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues
 
+> **Routing note (annotated 2026-07-14, finding 126, unresolved — not fixed here)**: this doc's
+> `parent_epic: instruments_master` nominally conflicts with `epics/instruments_master.md`'s own "Out of scope" section,
+> which disclaims both DeFi onchain live triggers (→ `defi_master.md`) and per-shard MTDS market-tick capture (→ per-AG
+> MTDS masters) — yet this doc's content is precisely per-venue MTDS `WSFeedConnector` wiring across
+> cefi/tradfi/sports/defi (repo: `market-tick-data-service`), including a "### DeFi — 49 venues" section building
+> onchain-protocol connectors. Flagged in place only; routing/ownership is an operator decision, not a doc-sync fix.
+
 > Filed as the audit output of `foundation_gates_and_capture_to_100_2026_07_06` task 010 (venue-level `WSFeedConnector`
 > registration audit — a DIFFERENT bug class from the operations-dispatcher C5 handler audit). **The C5 audit closed 2
 > gaps; this per-VENUE audit shows the residual is entirely Phase-3.5 rollout gap (0 built-but- unregistered venues; 73
@@ -110,7 +117,11 @@ batch+live smoke matrix are a **live-transport gap, not a wiring bug**. Task 001
 honest-live-absence for the 73 venues without re-scoping them as capture bugs.
 
 **Impact on Layer-1 certification (mine, task 002 of Plan 4):** none — Layer-1 is denominator-only (batch capture);
-`blocked-not-registered` is a LIVE-dimension verdict. The certified cefi Layer-1 73.61% stands.
+`blocked-not-registered` is a LIVE-dimension verdict. The certified cefi Layer-1 73.61% stands (corrected 2026-07-14,
+finding 128 — was: presented unqualified; cefi was re-measured 2026-07-07 08:54 UTC to 72.60%, see
+`active/issues/instruments_service_plan_reconciliation_2026_06_29.md`'s A19 2026-07-12 correction, which names
+`layer1_remeasure_and_certify_2026_07_06` + its 07-07 cefi update as the current Layer-1 certification, not this 73.61%
+figure — this doc's own conclusion above, that the impact on Layer-1 is none, is unaffected either way).
 
 **Impact on Plan 4's Layer-2 rollup interpretation:** the `blocked-not-registered` cells belong to venues without a LIVE
 feed — batch-only capture (REST) may still be present for many (BITFINEX/BITGET REST, ICE via Databento batch), which is

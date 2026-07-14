@@ -29,7 +29,7 @@ source: [operator request 2026-06-29]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
-last_updated: 2026-07-03
+last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-03, unchanged despite substantive 2026-07-12 body corrections e.g. A19 §158; finding 129)
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
