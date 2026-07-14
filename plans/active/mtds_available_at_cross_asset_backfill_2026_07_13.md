@@ -720,3 +720,19 @@ maintenance-window decision, or (b) main/operator applies the parking recipe fro
 false `prereqs.conditions` gate) to `-003`/`-005`/`-007`/`-009`/`-012`/`-014` — worker slots cannot edit the central
 `backlog.yaml` or set per-task `priority`/`prereqs` via any reachable API. No production writes made this touch; no cron
 state changed, no manifest touched, no code changed.
+
+**Re-verification #6, no new writes — 2026-07-14 (data_engineering slot-14, task
+`mtds_available_at_cross_asset_backfill-003`)**: dispatched task `-003` a seventh time (slots 4, 6, 10, 12, 7, 5 already
+covered above). Fresh-pulled all 25 slot repos to `origin/live-defi-rollout` (all clean FF). Confirmed nothing has
+changed: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked, `BLK-f3cdf442`
+remains open, `market-tick-data-service` HEAD (`f2668925`) has no cron-pause action anywhere in
+`scripts/*tradfi*`/`scripts/*snapshot*`/`scripts/*cron*`/`scripts/*prediction*` history (only the two existing snapshot
+scripts). Re-checked `dashboard/API_REFERENCE.md` directly (not just `GET /api/backlog`) for a worker-reachable
+priority/prereqs-update endpoint on an existing task — confirmed none exists: § "Endpoints the dashboard does NOT call
+(workers do)" lists only `/boot`, `/heartbeat`, `/progress`, `/done`, `/blocked`, `GET /messages`; the only
+task-mutation surfaces documented anywhere are `POST /api/prerequisites/<name>` (condition create/flip, doesn't attach
+to a task) and `DELETE /api/backlog/<task_id>` (permanent removal, wrong tool). `GET /api/backlog` still shows
+`-003`/`-005`/`-007`/`-009`/`-012`/`-014` all at `priority: 20`, `prereqs: null` — the standing parking recommendation
+(10 confirmations now) has still not been actioned. Not filing an 8th duplicate `/blocked` — calling
+`/skip-current-task` citing this entry + `BLK-f3cdf442`/`BLK-ccb6cd86`, per established precedent. No production writes
+made this touch; no cron state changed, no manifest touched, no code changed.
