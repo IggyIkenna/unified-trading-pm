@@ -208,6 +208,75 @@ _qg_ledger_remove_unlocked() {
     mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
 }
 
+# Count of LIVE reservations (running heavy-phase count), after a sweep.
+_qg_ledger_count() { _qg_ledger_with_lock _qg_ledger_count_unlocked; }
+_qg_ledger_count_unlocked() {
+    _qg_ledger_sweep_unlocked
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || { echo 0; return; }
+    awk 'END{print NR+0}' "$f"
+}
+
+# ── DUAL-GATE ADMISSION DECISION (Phase 3b — additive; NOT wired into acquire) ──
+# _qg_admit_check is PURE (all inputs explicit, no live reads) so every branch is
+# unit-testable. It encodes the two-clause RAM gate + CPU gate + oversize-solo:
+#   1. oversize      : this_peak > budget      → SOLO (run alone; wait for reserved==0)
+#   2. RAM reserve   : reserved + this > budget → WAIT_RAM_RESERVATION (ledger bound; the 6×UTL stacking cap)
+#   3. RAM live      : avail < this + floor     → WAIT_RAM_LIVE (external pressure + climb headroom)
+#   4. CPU           : running + 1 > slots      → WAIT_CPU
+#   else ADMIT. Echoes the decision token; returns 0 iff the run may proceed now.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+_qg_admit_check() {
+    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7"
+    if (( this > budget )); then
+        if (( reserved == 0 )); then echo "SOLO_ADMIT"; return 0; fi
+        echo "SOLO_WAIT"; return 1
+    fi
+    if (( reserved + this > budget )); then echo "WAIT_RAM_RESERVATION"; return 1; fi
+    if (( avail < this + floor )); then echo "WAIT_RAM_LIVE"; return 1; fi
+    if (( running + 1 > slots )); then echo "WAIT_CPU"; return 1; fi
+    echo "ADMIT"; return 0
+}
+
+# Per-repo peak-RSS (MB) from the committed baseline — max(local, vm) is conservative
+# and host-portable. Unmeasured repo → QG_UNMEASURED_PEAK_MB (default 5500 = treat as
+# heaviest, never a low guess that would under-reserve). QG_BASELINE_PATH overrides for tests.
+_qg_repo_peak_mb() {
+    local repo="$1" baseline peak
+    baseline="${QG_BASELINE_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../dev" 2>/dev/null && pwd)/qg_resource_baseline.json}"
+    peak="$(python3 - "$baseline" "$repo" 2>/dev/null <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    e = d.get(sys.argv[2], {}) or {}
+    vals = [(e.get(k) or {}).get("peak_rss_mb") for k in ("local", "vm")]
+    vals = [v for v in vals if isinstance(v, (int, float))]
+    print(int(max(vals)) if vals else 0)
+except Exception:
+    print(0)
+PY
+)"
+    [[ "${peak:-0}" -gt 0 ]] && echo "$peak" || echo "${QG_UNMEASURED_PEAK_MB:-5500}"
+}
+
+# Live admission decision for <repo>: gathers ledger + capacity, calls _qg_admit_check.
+# Echoes the decision token; returns 0 iff admit-now. (Not yet wired into acquire.)
+_qg_admit() {
+    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots
+    this="$(_qg_repo_peak_mb "$repo")"
+    reserved="$(_qg_ledger_reserved_mb)"
+    running="$(_qg_ledger_count)"
+    mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
+    frac_pct="$(awk -v f="${QG_MEM_SAFETY_FRAC:-0.70}" 'BEGIN{printf "%d", f*100}')"
+    cpu_pct="$(awk -v f="${QG_CPU_FRAC:-0.80}" 'BEGIN{printf "%d", f*100}')"
+    budget=$(( mt / 1024 * frac_pct / 100 ))          # MB
+    avail=$(( ma / 1024 ))                             # MB
+    floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}" # MB (default 10% of total)
+    (( floor >= 2048 )) || floor=2048
+    slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
+    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots"
+}
+
 # Base file-descriptor for the token locks. The original used bash >=4.1's
 # `exec {fd}>` auto-FD form, which is unparseable on bash 3.2 (the macOS
 # operator host) → the governor silently went INACTIVE there, so concurrent
