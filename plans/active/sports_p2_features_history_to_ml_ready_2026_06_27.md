@@ -138,6 +138,69 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 21:15 UTC — data_engineering slot-9 (Todo 1 re-dispatch — followed up on the prior entry's handoff: confirmed `-201910` completed cleanly with ZERO writes over its whole 763-day range (closes 2015-2017 as genuine honest-absence, not a gap); MANIFEST-verified a new real gap (2020-03-07→2020-10-05, 161 missing dates, mostly a 147-day contiguous block) and launched a gap-fill VM for it; checkbox NOT flipped)
+
+**Todo 1 (compute features 2015→present) — real forward action taken, following the prior dispatch's explicit handoff.
+Checkbox NOT flipped (compute still genuinely in progress).**
+
+**Fleet check**: `gcloud compute instances list` showed **2** VMs at start of this dispatch: `-201910` (STOPPING) and
+`-210122` (RUNNING). Confirmed `-201910`'s completion is CLEAN via GCE audit log (`v1.compute.instances.delete`
+attributed to its own `…-compute@developer.gserviceaccount.com`, not a human or another slot) and via its GCS-hosted
+`run.log` tail: `Processing completed successfully` / `DEPLOYMENT_COMPLETED … exit_code=0` /
+`VM_SHUTDOWN_ON_COMPLETION=true`. **New finding**: `grep -c "INFO Wrote"` on `-201910`'s full run.log returns **0** —
+across its entire 2015-01-01→2017-02-01 (763-day) assigned range, it wrote precisely zero rows of any kind (every
+entity, every date, either `SKIP … manifest shows prior captured/empty` or an upstream-missing skip). This CONFIRMS the
+21:02 entry's suspicion at 100% coverage (not just the sampled 2015-01-01→2016-07-13 prefix it checked): the whole
+763-day span is genuine, already-captured honest-absence, not unprocessed work. Treating this range as CLOSED — no
+further action needed on 2015-01-01→2017-02-01.
+
+**Verified `-210122` (the 2018-07-09→2019-08-11 gap-fill from the prior dispatch) is genuinely computing real work, not
+just skipping**: SSH'd in, confirmed the `features_service` process alive at 26.9% CPU (2:09 CPU time after ~9 min
+wall-clock); tailed its GCS run.log — real `INFO Wrote venues: 68 rows` / `Wrote fixtures: 76 rows` /
+`Wrote leagues: 1228 rows` / `Wrote teams: 4436 rows` / `Wrote standings: 714 rows` lines on 2018-07-11, i.e. genuine
+compute against a real gap, consistent with the prior dispatch's manifest-based verification that this range was truly
+unattempted. Left it untouched.
+
+**Action taken (new capacity freed by `-201910`'s clean completion, craft north-star #2 — efficiency, don't leave
+capacity idle on a genuine gap)**: ran
+`check_pipeline_completeness.py --start-date 2019-08-18 --end-date 2020-10-05 --services features-sports-service`
+(manifest-based, not a `by_date/` listing diff — the now-established reliable method) against `-085726`'s old assigned
+range (that VM is gone from the current fleet; presumably completed/rotated out before this dispatch). Result: **254/415
+dates present (61.2%), 161 genuinely MISSING** (zero manifest rows, not honest-absence-empty — confirmed via the
+script's `present=False` only fires when `day_df.empty`, i.e. no manifest row of any kind exists for that date).
+Extracted the full missing-date list via the script's `--output` JSON and computed contiguous ranges: a handful of 1-3
+day slivers March–April 2020 (COVID pause window, plausible partial honest-absence) plus one large contiguous block
+**2020-05-12 → 2020-10-05 (147 days)** — post-COVID-restart football resumed globally in this window (empty-stadium
+matches), so this is very likely real, uncaptured work, not honest absence. Launched
+`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2020-03-07 --end-date 2020-10-05 --mode batch --operation compute --launch-mode full`
+(one run spanning both the small slivers and the big block; `--skip-existing` behavior means the already-attempted
+in-between dates cost nothing). New VM: **`features-sports-sports-20260714-211514`** (SPOT, RUNNING,
+`asia-northeast1-c`, launched 21:15:20Z). Same stale `unified-trading-library` tarball warning as the prior dispatch
+(unrelated read-scoping perf commit, not a correctness fix) — accepted as low-risk per that dispatch's precedent rather
+than delaying to republish. No-fire-and-forget check passed: instance RUNNING 45s post-launch-command return, confirmed
+again via `describe`.
+
+**What I did NOT do**: did not touch `-210122` (healthy, genuinely computing, no reason to intervene). Did not
+investigate why `-085642`/`-085726` (the 3rd/2nd VMs from the 13:57Z dispatch) are no longer in the fleet — both are
+gone (self-deleted, presumably clean completions like every other VM in this log's history) and out of scope for this
+dispatch beyond confirming their former range (2019-08-18→2020-10-05) still had a real, now-addressed gap. Did not
+re-run `check_pipeline_completeness.py` for `-085642`'s old range (2025-08-11→2026-07-13) or the small 1-6 day scattered
+gaps noted in the 20:12-20:22Z entry (Feb-Mar 2017) — lower priority, likely honest-absence, not worth the compute-cost
+check this cycle. Did not flip Todo 1 (compute still genuinely in progress — fleet is 2 VMs, one on a manifest-verified
+real gap from the prior dispatch, one on a newly manifest-verified real gap from this dispatch).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,870 — should
+climb once `-210122` and `-211514` get further into their assigned ranges). Verify `-211514` is making real progress
+(non-SKIP `Wrote` lines in its run.log, same check as this dispatch used for `-210122`). Once either VM completes and
+frees capacity, use `check_pipeline_completeness.py` (manifest-based) against `-085642`'s old range
+(2025-08-11→2026-07-13) — untouched by this dispatch — to find and confirm the next genuine gap before launching further
+capacity.
+
+No repo code commit this entry (VM launch + read-only manifest/serial/SSH verification only, no code changed); this
+plan-doc edit ships via the `docs(plans):` carve-out. This dispatch's `done_definition` ("checkbox flipped in plan +
+code shipped") isn't met — `/skip-current-task` follows per this task's established convention.
+
 ### 2026-07-14 21:10 UTC — data_engineering (per-league-layout issue doc P1 SHIPPED: ml-service loader is now layout-aware + bucket-corrected; derived_features loads from GCS for the first time)
 
 **Issue doc `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14` P1 flipped — ml-service@360da40**
