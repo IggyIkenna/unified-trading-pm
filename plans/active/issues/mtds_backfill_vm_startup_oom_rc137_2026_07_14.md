@@ -216,7 +216,7 @@ site, not a verified fix.
       on every DeFi launcher) — so the exact kill mechanism is still open. Filed the residual as a new
       `[INFRA]`+`[DATA]` todo below (VM launch + consolidator health are both outside backend_engineer craft scope).
 
-- [ ] [INFRA] P0. **Residual (2026-07-14, slot 2, backend_engineer)** — two things needed to actually close this issue,
+- [x] [INFRA] P0. **Residual (2026-07-14, slot 2, backend_engineer)** — two things needed to actually close this issue,
       neither doable from a backend_engineer session: (1) **Fix/investigate the DeFi manifest consolidator** — live-
       confirmed 2026-07-14T17:43Z the consolidated `availability_index.parquet` for
       `market-data-tick-defi-prd-central-element-323112` is ~4.8h stale (17,241.9s, vs the 120s default budget) — per
@@ -236,7 +236,139 @@ site, not a verified fix.
       `read_availability_index`'s per-VM-shard fallback is the true spike; if it reaches
       `enter=dex_swaps.process.shard.*` first, the spike is per-venue, not the freshness cache) or elsewhere. Repo:
       `deployment-service` (VM launch) + `unified-trading-library`/`market-tick-data-service` if the consolidator itself
-      needs a code fix. See "P0 full-path RSS trace" below for the full repro transcript.
+      needs a code fix. See "P0 full-path RSS trace" below for the full repro transcript. — ✅ DONE 2026-07-14 (slot 11,
+      infra): both diagnostic actions performed with hard evidence captured; **neither closes the issue** — the
+      consolidator crash-loop persists after a real (but insufficient) fix, and the VM crash is now definitively
+      pinpointed to a specific function with a plausible code-level culprit identified. See "P0 infra diagnostics —
+      consolidator misconfiguration fixed but crash persists" and "P0 infra diagnostics — dex_swaps VM crash pinpointed
+      via live RSS_PROBE + kernel dmesg" below. Two new `[BACKEND]` P0 todos filed below for a fix-worker — this
+      contradicts the "fix confirmed + shipped, no code change needed" closure two sections below for the SAME reason
+      slot 2 already escalated once (2nd occurrence of this pattern on this issue) — escalating to operator via
+      `/blocked` per governance (big finding: data-correctness, contradicts a prior recorded closure, blocks
+      `mvp_backfill_defi_onchain_v10-002`'s G2 gate for a 5th consecutive relaunch attempt across both a Cloud Run job
+      and a VM).
+
+## P0 infra diagnostics — consolidator misconfiguration fixed but crash persists (2026-07-14, slot 11, infra)
+
+**Root cause of the "locked" no-op crash-loop, confirmed via `gcloud logging read` + `gsutil stat` on the live
+`uts-prod-manifest-consolidator-market-data-defi` Cloud Run Job**: the job's container had been bumped to 8vCPU/32Gi
+LIVE (drift — not reflected in `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`, which had no
+`market-data-defi` entry in any of the three per-bucket override maps) but `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` was left
+at the code default (8GB) — exactly the "bumping ONLY the container does nothing" trap the Terraform file's own comment
+documents (DuckDB still caps its buffer manager at 8GB and spills the incremental merge to Cloud Run gen2's in-memory
+tmpfs, which itself consumes container RAM). Every cycle: `phase=duckdb_merge_start` →
+`Container terminated on signal 9` ~15-25s later → lock orphaned until the 300s TTL clears → repeat. Canonical index
+frozen at `2026-07-14T12:56:34Z` for the entire session (still frozen as of `18:36Z`, ~5.7h stale).
+
+**Fix applied**: `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB` set live via `gcloud run jobs update` (immediate effect) +
+codified in Terraform — `deployment-service@ebf928b` (adds `market-data-defi` to all three override maps: cpu=8,
+memory=32Gi, duckdb_memory=24GB, mirroring the existing `market-data-tradfi-legacy` heavy tier).
+
+**This did NOT fix the crash** — confirmed on the next TTL-cleared cycle (18:05:42-18:06:03Z):
+`phase=duckdb_merge_start ... memory_limit=24GB` → `Container terminated on signal 9` **~15s later, faster than the 8GB
+run's ~22-25s**, tripling the memory budget did not meaningfully change crash timing. Cloud Run's own execution-level
+retry (`maxRetries=1`) then re-ran the task, which found its OWN sibling's now-orphaned lock still "fresh" (age <300s)
+and no-op'd — so the overall `Execution` status reads `"Completed successfully"` / `succeededCount:1` in
+`gcloud run jobs executions describe` despite doing ZERO real work. **This is a masking hazard worth flagging on its
+own**: anyone checking Cloud Run's own execution history (rather than `_index/latest.json`'s `error_reason`) would see a
+false all-clear.
+
+**Assessment for the fix-worker**: raising `memory_limit` alone is not the fix. The crash-timing insensitivity to an
+8GB→24GB range (3x) suggests either (a) DuckDB's buffer-manager accounting isn't actually bounding the real working set
+for this merge (a query-plan or thread-parallelism issue — the job runs 8 vCPU, so DuckDB defaults to 8 parallel threads
+with no `SET threads=` override in `manifest_consolidator.py`; per-thread scratch allocation on a wide anti-join across
+27.4M+27.4M rows could aggregate past the pragma limit before the buffer manager's own tracking catches up), or (b) the
+actual spike is a real >24-28GB working set regardless of the pragma (would need DuckDB's own `EXPLAIN ANALYZE` /
+`PRAGMA` memory diagnostics, or profiling with a lower row-count synthetic reproduction, to pin down). Filed as new
+`[BACKEND]` P0 todo below — DuckDB SQL/thread tuning inside `unified_trading_library/manifest_consolidator.py` is Python
+service business logic, outside infra craft (`does_not: Python service business logic → backend_engineer`).
+
+## P0 infra diagnostics — dex_swaps VM crash pinpointed via live RSS_PROBE + kernel dmesg (2026-07-14, slot 11, infra)
+
+Per the operator's `/blocked` ruling this issue already carried, added a diagnostic override to the launcher
+(`deployment-service@97d2b9d` — `VM_SHUTDOWN_ON_COMPLETION` now env-overridable, defaults `true` unchanged for every
+other caller) and relaunched `mtds-dex-swaps-backfill` with `VM_SHUTDOWN_ON_COMPLETION=false --on-demand`, using the
+already-fresh tarballs (`mtds-code @ 56efdd7d`, ancestor-confirmed ≥ `bc84b3e5` RSS-probe commit;
+`unified-trading-library-code @ 43786858`, ancestor-confirmed ≥ `0fc088a9` slim-read fix — both auto-rebuilt ~18:13Z by
+the `code-tarball-refresh` Cloud Run job, no manual rebuild needed this time).
+
+**Result — crashed a 5th time, identically, but this time captured live**:
+
+```
+2026-07-14 18:25:36,671 INFO DEX swaps handler initialized (api_key_pool=9 keys)
+2026-07-14 18:25:36,701 INFO RSS_PROBE enter=dex_swaps.process.freshness_bulk_load peak_rss_mb=543.4
+bash: line 1:  7016 Killed   .../python -m market_tick_data_service --operation collect-dex-swaps ...
+[vm-exec] command exited rc=137
+```
+
+No matching `exit=dex_swaps.process.freshness_bulk_load` — **the kill is definitively inside
+`freshness_cache.bulk_load()`**, answering this todo's core question. VM stayed `RUNNING` post-crash (the diagnostic
+override worked), enabling a live SSH pull of the kernel's own account:
+
+```
+kernel: python invoked oom-killer: gfp_mask=0x140dca(GFP_HIGHUSER_MOVABLE|__GFP_ZERO|__GFP_COMP), order=0, oom_score_adj=0
+kernel: oom-kill:constraint=CONSTRAINT_NONE,...,task=python,pid=7016,uid=0
+kernel: Out of memory: Killed process 7016 (python) total-vm:23668396kB, anon-rss:15379504kB, file-rss:2808kB, ...
+```
+
+**Confirmed genuine kernel OOM-kill**: `anon-rss:15379504kB` (~14.67 GiB) on an `e2-standard-4` (16GB, ~15Gi usable) —
+not a Cloud-infra artifact, not an exception, a real memory exhaustion inside `bulk_load()`.
+
+**Sanity-checked the actually-installed code is the "fixed" version** (SSH'd in before the VM finished self-cleanup):
+`unified_trading_library/manifest_freshness.py` `_refresh_locked()` does call
+`read_availability_index(self.bucket, columns=[*_ROW_KEY_COLUMNS, "capture_status", "error_reason"])` — the slim path IS
+wired in and running. Yet it still OOMs at ~14.7 GiB, far above the isolated local repro's measured **5.30 GiB** peak
+for the same slim column set on the same real 27.4M-row index (see "P0 confirm — dex_swaps NEW FINDING closed" below).
+
+**Root of the discrepancy, found by reading the actual implementation**
+(`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`):
+
+1. `_read_consolidated_if_fresh()` (line 569) — its own docstring (lines 582-584) admits: _"columns: Optional column
+   filter passed to `pd.read_parquet`; reduces peak decode memory for slim reads (**full parquet bytes still
+   downloaded**, but only the requested columns are decoded)."_ The 445MB raw-bytes download itself isn't the OOM
+   driver, but this confirms the "slim" savings only apply at decode time, not download time — worth the fix-worker
+   verifying `_read_parquet_columns_safe` actually pushes `columns=` into the pyarrow reader (true column-pruned decode)
+   rather than decoding all 41 columns then subsetting in pandas (which would explain the gap outright).
+2. **The isolated repro measured `bulk_load()` in isolation** (per its own "What's NOT yet done" caveat in the section
+   below) — it did not exercise `_read_index_slim()`'s FULL path, specifically the `_read_self_shard()` +
+   `_merge_shard_frames([consolidated_df, self_shard])` step (`_read_index.py:521-526`) that runs immediately after the
+   slim consolidated read. That merge/dedup step is a second, unmeasured memory consumer plausibly closing most of the
+   5.3 GiB → 14.7 GiB gap.
+
+Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`ManifestFreshnessCache` code investigation
+(pyarrow column-pruning verification + self-shard-merge memory profiling), outside infra craft.
+
+- [ ] [BACKEND] P0. **DeFi manifest consolidator Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) still
+      SIGKILLs every cycle even at `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB`** (was 8GB; container is 8vCPU/32Gi) — crash
+      timing ~15s post-`duckdb_merge_start`, no better than the 8GB run's ~22-25s, so raising the memory budget 3x did
+      not meaningfully change the outcome. Canonical `availability_index.parquet` for
+      `market-data-tick-defi-prd-central-element-323112` has been frozen at `2026-07-14T12:56:34Z` all day (>5.7h stale
+      as of this writing). Investigate: (a) whether DuckDB's 8-thread default (no `SET threads=` override anywhere in
+      `manifest_consolidator.py`) is causing per-thread scratch memory to blow past the `memory_limit` pragma's own
+      accounting on the incremental anti-join across the 27.4M-row canonical + delta shards; (b) whether the actual
+      working set genuinely exceeds 24-28GB regardless of thread count, in which case the merge SQL/query plan itself
+      needs restructuring (e.g. batch the anti-join, or reduce columns materialized during the merge, mirroring the
+      `read_availability_index(columns=...)` slim-read pattern already used elsewhere). Also flag: Cloud Run's own
+      `execution.status` reads `"Completed successfully"` after the `maxRetries=1` retry no-ops on the still-orphaned
+      lock — anyone checking Cloud Run execution history instead of `_index/latest.json.error_reason` gets a false
+      all-clear; worth a follow-up to make `MANIFEST_CONSOLIDATION_FAILED`/stall alerting the primary signal instead.
+      Repo: `unified-trading-library` (`manifest_consolidator.py`). See "P0 infra diagnostics — consolidator
+      misconfiguration fixed but crash persists" above for the full evidence.
+
+- [ ] [BACKEND] P0. **`mtds-dex-swaps-backfill` VM still OOMs (kernel-confirmed, anon-rss≈14.67GiB on a 16GB
+      `e2-standard-4`) inside `ManifestFreshnessCache.bulk_load()`'s "fixed" slim-read path** (`_refresh_locked()` →
+      `read_availability_index(columns=[...])`), despite the isolated local repro of the same slim path measuring only
+      5.30 GiB peak on the same real 27.4M-row index. Two concrete leads to check first (both in
+      `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`): (1) verify
+      `_read_parquet_columns_safe` (called from `_read_consolidated_if_fresh`, line ~593/618) actually pushes `columns=`
+      into the underlying pyarrow/pandas parquet reader for true column-pruned DECODE, not just a read-then-select — its
+      own docstring at lines 582-584 only promises the decode step is pruned, and doesn't rule out a full intermediate
+      materialization; (2) profile `_read_self_shard()` + `_merge_shard_frames([consolidated_df, self_shard])`
+      (`_read_index.py:521-526`), which runs immediately after the slim consolidated read inside
+      `_read_availability_index_slim()` and was NOT exercised by the isolated `bulk_load()`-only repro in "P0 confirm —
+      dex_swaps NEW FINDING closed" below — this merge/dedup step is the most likely unmeasured contributor to the
+      5.3→14.7 GiB gap. Repo: `unified-trading-library`. See "P0 infra diagnostics — dex_swaps VM crash pinpointed via
+      live RSS_PROBE + kernel dmesg" above for the full RSS_PROBE + dmesg transcript.
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 

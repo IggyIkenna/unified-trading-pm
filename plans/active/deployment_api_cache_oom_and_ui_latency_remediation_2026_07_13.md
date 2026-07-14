@@ -747,3 +747,27 @@ Phase C — verification + guardrails:
   re-verified** (unlike the OOM guard/costs/UI pieces, which got a dedicated adversarial-verify pass): the cache-hygiene
   and vm-deployments-SWR pieces, and the recovery-reconstruction itself beyond the QG-green confirmation — a follow-up
   review pass would be reasonable before treating this as fully closed.
+- 2026-07-14 (slot-3, `/autonomous` continuation — driving the CI/promotion pipeline to a genuinely green end-state per
+  AUTONOMOUS_AGENT_RULES.md rule 4 "reconcile everything down here, now"): found and fixed a real blocker unrelated to
+  this plan's own code but sitting in its path: `deployment-api` PR #284 (`main-backmerge-to-ldr`, auto-opened, "main
+  has commit(s) that conflict with LDR") was CONFLICTING, blocking the LDR→main promote PR from ever landing. Root
+  cause: `main` had received a manual operator-approved merge (PR #283, a provenance-gate hotfix for the reap_stale fix)
+  that diverged from LDR's independent evolution of the same subsystems (costs DuckDB Increment 2, the cost-snapshot
+  bucket-prefix refactor, the lending-indices bucket-retirement follow-up). Resolved the merge locally
+  (`git merge origin/main`) — 8 real conflicts (`cloudbuild.yaml`, `cost_snapshot_worker.py`,
+  `cost_observability/ {cache,service,snapshot}.py`, `data_status/defi.py`, 2 test files) — investigated each
+  individually (diffed main's content against the Increment-1 baseline / checked live call-sites in the already-resolved
+  files) before resolving; every single one confirmed LDR's side was a strict superset or a later, documented
+  correction, never a case of discarding genuine main-only work. Quality-gates.sh green on the merged tree before push.
+  **Recovery incident #2, same root cause as the one earlier in this session**: the first attempt at this merge commit
+  silently failed twice (conventional-commit hook rejected the non-prefixed message; my own `tail -10` truncation hid
+  the rejection both times) and the resolved-but-uncommitted merge state sat exposed just long enough that it also
+  risked the same automated-cron-sweep fate as before — caught it via `git status` showing a stale `MERGE_HEAD` still
+  present, re-committed immediately with a conventional-commit-formatted message, verified via `git log -1` before doing
+  anything else, and pushed within the same few seconds. Landed as `deployment-api@bd83d87`. PR #284 auto-merged/closed
+  on push; the stale promote PR #285 (pinned to an older LDR tip) was superseded by a fresh `#286` once
+  `ldr-to-main-promote-fleet` was manually re-triggered (`gh workflow run`, rather than waiting up to 15min for its own
+  cron) — `#286` went from CONFLICTING to MERGEABLE immediately. `deployment-service` promote PR #393 and
+  `deployment-ui` (no open PRs) were both already clean. Two historical `quality-gates-v2` FAILUREs on deployment-api
+  (11:30Z, 13:33Z) and one on deployment-service (14:35Z) were confirmed superseded by later green runs on the same
+  branch — not open problems.
