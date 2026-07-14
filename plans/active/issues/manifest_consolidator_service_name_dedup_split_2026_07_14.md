@@ -41,6 +41,8 @@ locked_by:
 resolved_by:
 execution_scope: local-only
 model_tier: sonnet-doable
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
