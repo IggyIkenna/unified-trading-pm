@@ -110,11 +110,25 @@ the audit implied by option 1 is out of scope for that task.
     own data-craft todo below rather than fixed here (out of infra-craft/this-repo scope; needs
     `unified-api-contracts`).
 
-- [ ] [SCRIPT] P3. Wire `scripts/quality_gates/test_*.py` (and any other confirmed-passing orphaned test files from the
-      audit above) into `quality-gates.sh`'s TESTS phase — either via `testpaths` widening or a dedicated step — so
+- [x] ✅ [SCRIPT] P3. Wire `scripts/quality_gates/test_*.py` (and any other confirmed-passing orphaned test files from
+      the audit above) into `quality-gates.sh`'s TESTS phase — either via `testpaths` widening or a dedicated step — so
       checker self-tests actually run on every gate invocation. Scope: the 17 confirmed-clean files above (241 tests)
       only — do NOT include `test_check_banned_placeholder_methods.py` or `test_prediction_pipeline_e2e.py` until their
-      own todos below are resolved (wiring them as-is would turn QG red immediately). (repo: unified-trading-pm)
+      own todos below are resolved (wiring them as-is would turn QG red immediately). (repo: unified-trading-pm) —
+      **WIRED, slot 13 (infra), 2026-07-14**: plain `testpaths` widening (option 1) does NOT work with this repo's
+      invocation — `base-service.sh`'s TESTS phase always passes explicit `${PYTEST_UNIT_DIR}` path args to pytest, and
+      pytest CLI paths override `[tool.pytest.ini_options] testpaths`, so testpaths is never consulted regardless of its
+      value. Used the documented `PYTEST_UNIT_DIR` per-repo override point instead (space-separated dirs, word-split
+      into pytest positional args) in `scripts/quality-gates.sh`:
+      `PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"`. Scope ended up wider than the
+      17-file/241-test floor: by the time this shipped, both blocking todos below (banned-placeholder-methods assertion,
+      prediction-e2e rename) were already resolved, so all 18 current orphaned files (254 tests: the 17 + the now-fixed
+      `test_check_banned_placeholder_methods.py`, 28/28) are wired — verified collecting + passing together with no
+      module-name collisions before wiring
+      (`.venv/bin/python -m pytest scripts/quality_gates/ scripts/cicd/     scripts/docs/ -q` → 254 passed). Full
+      `bash scripts/quality-gates.sh` green post-wiring: TESTS phase now runs 1247 passed + 8 skipped (was 6,
+      `tests/integration/` only) at 72.85% coverage (floor 69%). `unified-trading-pm@297695d47`, PR #1015 (auto-merge
+      enabled).
 - [x] ✅ [SCRIPT] P3. Fix `test_load_baseline_real_workspace_baseline`'s stale `len(baseline) >= 1` assertion in
       `scripts/quality_gates/test_check_banned_placeholder_methods.py` — the real baseline is correctly empty (ratchet
       fully cleared 2026-05-17 per its own `entries_postscript`); the test should assert the baseline parses cleanly
@@ -175,3 +189,15 @@ out-of-scope repos/files under a P3 audit dispatch.
 gap while shipping (the `--agent` fast path skipping the `Quickmerge:` trailer stamp) — filed as its own doc rather than
 patch the shared `quickmerge.sh` unilaterally mid-task; see
 `quickmerge_agent_already_committed_fastpath_skips_trailer_2026_07_14.md`.
+
+**2026-07-14, slot 13 (infra), todo 2 wiring**: confirmed `testpaths` widening (recommended option 1) is a dead end for
+this repo — `base-service.sh` always calls pytest with explicit `${PYTEST_UNIT_DIR}` path args, which take precedence
+over `[tool.pytest.ini_options] testpaths` in pytest's own resolution order, so touching `pyproject.toml` alone would
+have changed nothing (worth flagging back to the "Recommended decision" section above — its option 1 caution undersold
+this). Used the `PYTEST_UNIT_DIR` override base-service.sh already documents for exactly this per-repo-layout case.
+Spent real effort chasing a false alarm mid-task: the first full `quality-gates.sh` run appeared to only collect 6 tests
+post-change, but that was the separate, always-unredirected `PM integration test` sub-step's own terminal output (6
+items, `tests/integration/test_pm_scripts_integration.py`) — the actual widened TESTS run succeeds silently on a clean
+pass (output only goes to a temp log, `cat`'d to terminal on failure only) and was genuinely green the whole time
+(confirmed via temporary debug instrumentation in `base-service.sh`, fully reverted before shipping — `git diff` on that
+file is clean). `unified-trading-pm@297695d47`, PR #1015.
