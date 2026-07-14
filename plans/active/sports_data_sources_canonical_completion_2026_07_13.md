@@ -167,8 +167,8 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` for a cosmetic, non-blocking fix against a table the
       concurrent 61-league TEAMS backfill is actively writing to right now. Full reasoning: Progress Log "(b)" entry
       below. No code/data change made.
-- [ ] [DATA] P1. **manifest_consolidator dedup-key NULL/`""`-normalization gap (NEW 2026-07-13, found during the TEAMS
-      61-league backfill's final re-verify).** A `captured` row and its pre-existing `expected_unattempted`
+- [x] ✅ [DATA] P1. **manifest_consolidator dedup-key NULL/`""`-normalization gap (NEW 2026-07-13, found during the
+      TEAMS 61-league backfill's final re-verify).** A `captured` row and its pre-existing `expected_unattempted`
       enumerator-seed twin for the IDENTICAL `(source, data_type, league_id, date, venue)` cell do not collapse during
       consolidation — even a full `--force` rebuild only dropped 8,659 rows fleet-wide, nowhere near the ~162k expected
       if this cell class had resolved. Root cause: several optional dimension columns
@@ -199,7 +199,15 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       collapse 607 defi MTDS-subgraph ✕ MDPS-rpc captured-vs-captured atoms (distinct row_counts) on top of the sports
       EU twins — so the lean shifts to Option B (collapse captured-vs-NON-captured only). Full numbers + the sharpened
       A-vs-B decision in the issue doc's "🔬 Rule-11 LIVE blast-radius proof" section.** Do NOT re-dispatch as a
-      NULL/`""` fix — it is a no-op for this symptom.**
+      NULL/`""` fix — it is a no-op for this symptom.** **✅ RESOLVED 2026-07-14 (slot-5) — operator ruled Option B
+      (BLK-17603e1f), shipped `unified-trading-library@9bc06261`: a status-aware cross-`service_name` collapse
+      (`manifest_consolidator._option_b_collapse_ctes`, both incremental + `--force` paths) drops a `captured` row's
+      NON-captured cross-service twin while leaving captured-vs-captured (dual-source) pairs intact; `service_name`
+      stays a dedup key so no writer-mirror change. 3 new unit tests + 75-test consolidator suite green; QG green
+      (sentinel=HEAD). Live-verified: captured-row count unchanged in defi+sports; collapses 35,557 defi + 1,038 sports
+      cross-service non-captured twins; the 607 defi dual-source captured pairs preserved. NB: the ORIGINAL 165,148
+      TEAMS EU twins had already self-resolved in the live manifest (0 coexisting now) — the fix targets the live bug
+      CLASS + prevents recurrence. Evidence: issue doc "✅ Option B live-data verification" section.**
 - [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
       found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
       `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's
