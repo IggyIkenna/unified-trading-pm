@@ -2166,3 +2166,71 @@ MUST use the lease (`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=
 single-VM, per the 2026-07-14T02:00Z CORRECTION directive above — no repeat of the parallel-wave shape. Phantom
 reconcile + manifest hygiene still not re-run this session (recurring note). **Not blocked by
 CREDENTIALS/OPERATOR/UPSTREAM.**
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T04:13-04:35Z: relaunch VERIFY closes the routing bug, surfaces 2 deeper Layer-1 denominator gaps + 1 more real code bug
+
+**DERIBIT-COMBO VERIFY: routing fix CONFIRMED WORKING, surfaces a deeper catalogue-population gap (not a code bug).**
+Republished tarballs (`mtds-code @ c9e6080ff446` confirmed fetched), relaunched `cefi-deribit-combo-2024-heavy`
+lease-enabled, single-VM. `run.log` confirms the fix: **zero `venue=DERIBIT` collapse** — instead
+`TardisAdapter: NO SYMBOLS for deribit on 2024-01-01`, i.e. the venue resolution is now correctly scoped to
+DERIBIT-COMBO, which genuinely has no catalogue entries for that date. Root-caused: the instruments-service catalogue
+(`prod/catalog.parquet`) has only **4 DERIBIT-COMBO rows total**, all `mvp=False`, all `available_from` in 2026-07 —
+because `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` is a HARD, mode-independent mapping to the LIVE-only
+Deribit REST combo adapter; the historical Tardis-sourced path is never invoked for the batch/backfill catalogue
+refresh. Deleted the VM (would have spun through 2024 finding zero symbols on every date — no point burning spend).
+**Filed as a new P1 finding** (`issues/cefi_layer1_denominator_gaps_2026_07_03.md`) with a concrete recommended fix
+(mode-aware adapter-key resolution, mirroring the existing live→CCXT pattern) — deliberately NOT attempted this session
+(architectural, touches shared routing logic every CeFi Tardis venue depends on).
+
+**BITGET-FUTURES: 2 MORE real bugs found + fixed in the same file, both live-verified against real exchange APIs.** Ran
+`--operation instruments --mode batch --venues BITGET-FUTURES --force`: raw URDI universe grew **714 → 1010** (confirms
+the base/quote fix works), but a second gap emerged — all 16 dated futures had already expired by the fetch date
+(`BTCUSDH25` etc., `availableTo` predates 2026-07-14), so the by_date snapshot's date-active filter drops them, and
+`build_instrument_catalogue.py`'s roll-up (by_date-presence-only) can never backfill a symbol that expired before its
+first correctly-parsing fetch — same bug class as the 2026-07-09 Bybit/Kraken-Futures precedent
+(`canonicalize_bybit_kraken_futures_catalog_2026_07_09.py`), which needed a dedicated one-off recapture script. Filed as
+a second new P1 finding in the same issue doc with a concrete, scoped recommended fix (append 16 rows directly to
+`prod/catalog.parquet` from Tardis's own `availableSince`/`availableTo`, backup-first + monotonic-guard, matching the
+established safety pattern) — also deliberately not attempted this session.
+
+While diagnosing, cross-checked `_infer_margin_type` (same file as the base/quote fix) against Bitget's real public REST
+(`api.bitget.com/api/v2/mix/market/contracts?productType=coin-futures`): confirmed USD-quoted BITGET-FUTURES derivatives
+(the 16 dated futures + any USD-quoted perpetual) are genuinely coin-margined (`supportMarginCoins` lists BTC/ETH/etc,
+not stables) — but `_infer_margin_type` had no `bitget-futures` branch at all, so every one silently defaulted to
+`LINEAR`. Fixed (3 new regression tests). **Shipped: `instruments-service@75bdf02d`**, QG green, `quickmerge --agent`.
+
+**Commits shipped this session** (all QG-green, quickmerge --agent, live on `live-defi-rollout`):
+
+- `instruments-service@cd902fb1` — BITGET-FUTURES dated-future base/quote resolution (was silently dropped)
+- `market-tick-data-service@c9e6080f` — DERIBIT-COMBO canonical_venue threading (venue-collapse fix)
+- `instruments-service@75bdf02d` — BITGET-FUTURES coin-margined (USD-quote) instruments mislabeled LINEAR
+
+**New findings filed** (both P1, `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, both block G4 Layer-1 closure
+until fixed, both deliberately scoped out of this session as real follow-up engineering):
+
+1. BITGET-FUTURES catalogue can't backfill expired dated-futures (needs a one-off recapture script)
+2. DERIBIT-COMBO catalogue is permanently live-only (needs mode-aware adapter-key routing)
+
+**Fresh `measure_honest_coverage.py` re-run (04:30Z)**: Layer-1 **91.8%** (67/73 matched, 6 missing — note: the
+legacy/secondary manifest bucket (`market-data-tick-cefi-central-element-323112`) is currently unreachable, "MERGE
+DISABLED for cefi" — its `_index/` prefix returns zero objects via direct `gcloud storage ls`, a standing external
+condition unrelated to this session's changes, not investigated further as out-of-scope for this task; this changes the
+merged view and reintroduced 2 `DERIBIT spot_pair` tuples that the legacy-bucket merge was previously covering — NOT a
+regression from this session's fixes, a measurement-consistency artifact worth a future session's attention). Layer-2
+coverage 99.84% (2,307,426/2,311,118 reachable) — this number is on the SAME merge-disabled denominator, not directly
+comparable to earlier runs. Remaining 6 Layer-1 missing tuples:
+`(BITGET-FUTURES, future, {book_snapshot_5,derivative_ticker,trades})` (3, gated on the new catalogue-backfill finding
+above), `(DERIBIT, spot_pair, {book_snapshot_5,trades})` (2, likely a legacy-bucket-merge artifact — re-check once the
+legacy bucket is reachable again), `(DERIBIT-COMBO, options_chain, trades)` (1, gated on the new adapter-routing finding
+above).
+
+**Gate verdict: ❌ NOT MET.** **Genuinely remaining work for the next session**: (1) the 2 new catalogue-population
+findings above are now the hard blockers for the last 4 "real" Layer-1 tuples — no amount of VM relaunching helps until
+one of them lands; (2) re-check the `DERIBIT spot_pair` legacy-bucket-merge anomaly once
+`market-data-tick-cefi-central-element-323112/_index/` is confirmed reachable again; (3) phantom reconcile + manifest
+hygiene still not re-run (recurring note across many sessions). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** — a
+highly productive session (3 real, independently-verified bugs fixed and shipped; 2 substantial new findings
+root-caused, evidenced, and filed with concrete recommended fixes rather than left as vague TODOs; a live VM caught
+mid-flight writing to the wrong venue and stopped before wasted spend). Handing off cleanly here — the remaining work is
+real engineering (a one-off catalogue-backfill script, an adapter-routing architecture change), not something a plain
+relaunch will resolve.
