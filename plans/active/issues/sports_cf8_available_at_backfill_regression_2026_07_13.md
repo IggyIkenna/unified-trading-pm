@@ -651,3 +651,33 @@ the operator's `BLK-d9137d48` STOP-pending-scheduled-window answer only after th
 session's own independent finding reaches the same "do not proceed" conclusion for a different, technical reason, but
 the timing gap (not re-checking this doc immediately before the write step) is noted honestly as a process lesson for
 next time on a doc this actively contested.
+
+**Per-original-service_name write design built + tested — 2026-07-14 (slot 12, data_engineering)**: read this doc + the
+plan in full at dispatch start; fresh-pulled every slot repo (clean, no conflicts). This doc's own P1 todo above is
+explicitly gated on TWO things before any further production write: (1) the operator's `BLK-d9137d48` STOP pending a
+coordinated maintenance window (still standing — not re-litigated here), and (2) the service_name dedup-key blocker
+found by the touch immediately above, which this doc's own text calls "new, unreviewed engineering, not a batch-size
+call" and names the concrete fix needed ("group target rows by their own service_name and write each group through a
+ManifestWriter constructed with THAT service_name"). Confirmed via `git log` that fix had not yet been built by any slot
+— only flagged as needed.
+
+Built it: `sports_captured_available_at_targeted_backfill_2026_07_14.py` now reads each target row's own `service_name`
+column (already present on every index row — the mechanism this doc's own finding used to diagnose the bug), groups
+target rows by that value (falling back to the surface default only when blank/missing), and constructs one
+`ManifestWriter` per group scoped to that group's own service_name — so a rewrite's dedup key matches the row it is
+meant to supersede, closing the exact gap the 500-row MDPS test exposed. Verified via a new synthetic unit test
+(`tests/unit/scripts/test_sports_captured_available_at_targeted_backfill.py`, 4 tests) that constructs a
+multi-service_name target set with a mocked `ManifestWriter` and asserts: (a) rows split into per-service_name groups
+correctly, (b) blank/missing `service_name` falls back to the surface default, (c) `main()`'s real write loop constructs
+a distinct writer per group and routes each row's `add()` call to the writer matching ITS OWN service_name — never the
+surface's single fixed default (the exact bug this fix closes). Full `quality-gates.sh` green.
+`market-tick-data-service@af627b5b`.
+
+**Did NOT run this against production** — no live write was made, no snapshot/pause/cron action taken, nothing in this
+touch changes CF-8's live state on either surface. This closes the ENGINEERING half of the P1 todo's own caveat ("this
+is new, unreviewed engineering... a design + review step, not a batch-size judgment call"); the OPERATIONAL half — an
+actual coordinated-maintenance-window run, small-scale test first per Finding 1, honoring `BLK-d9137d48` — remains open
+and is NOT this touch's call to make. Not flipping the P1 todo's checkbox: the targeted re-emit itself is still not
+done, and CF-8 remains RED on both surfaces, unchanged from the pre-session baseline. A future operator-coordinated
+attempt now has a design that should actually close the gap instead of repeating the net-zero 500-row result — that is
+this touch's whole contribution.
