@@ -190,11 +190,25 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       sanity cap are preserved. Also corrected the `KALSHI_PERP` entry in the UAC endpoint registry (was pointing at the
       prediction-markets host). 18/18 unit tests green (2 new endpoint-shape assertions), full `quality-gates.sh` green
       both repos. market-tick-data-service@56efdd7d, unified-api-contracts@ea68ef46.
-- [ ] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
+- [x] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
       `mtds-perp-funding-backfill --start 2026-05-29 --end 2026-07-14` (manifest-gated, skips already-captured dates)
       and verify it progresses past 2026-05-29 without hanging/churning (T+10min real-progress check, not just liveness)
       before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification for perp_funding. Repo:
-      `deployment-service`.
+      `deployment-service`. — ✅ deployment-service (2026-07-14, slot-3): confirmed the then-running VM was still stuck
+      at 2026-05-28 (89min+ silent) on the STALE pre-fix tarball (`mtds-code.manifest.json` pinned `ecd3a4d4`, predates
+      `5a163d02`). Republished core tarballs (`create-code-tarballs.sh`) at MTDS `8d6b5644` (P0 fix only), deleted the
+      hung VM, relaunched `launch-mtds-perp-funding-backfill-vm.sh --start 2026-05-29 --end 2026-07-14`. That run
+      progressed cleanly past 2026-05-29 to full completion (`Batch complete: 47 results`, exit_code=0, clean
+      self-delete) in ~18min real time — `kalshi_perp` fails FAST via the P0 sanity-cap guard instead of
+      hanging/churning, confirmed on live infra. Mid-run, the endpoint-fix todo above landed on LDR
+      (market-tick-data-service@56efdd7d + unified-api-contracts@ea68ef46), so that first completed run only recorded
+      honest `attempted_failed` for kalshi_perp (pre-fix ticker-discovery code). Re-pulled, republished tarballs at MTDS
+      `56efdd7d` (P0 fix + endpoint fix composed), relaunched the SAME range once more: also completed cleanly
+      (`Batch complete: 47 results`, exit_code=0) and this time wrote REAL `kalshi_perp` funding-rate data (e.g.
+      39/39/26 rows for 2026-07-12/13/14 to
+      `gs://market-data-tick-defi-prd-central-element-323112/.../venue=KALSHI_PERP/...`) instead of honest-failure
+      records — both the hang fix and the endpoint fix verified working end-to-end on live infra.
+      `mvp_backfill_defi_onchain_v10-002`'s G2 gate for perp_funding is unblocked.
 - [x] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for retry loops that retry non-retryable HTTP statuses (the
       same "any `ClientError` gets retried regardless of status" bug pattern found here) — this may recur wherever a
       similar generic-except retry loop exists. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot-14).
