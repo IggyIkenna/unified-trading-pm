@@ -24,7 +24,7 @@ related:
     codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -199,7 +199,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       fill-rate uplift** for tradfi, not just "won't fix the non-bundled majority" — do NOT snapshot/pause/apply tradfi
       until the split todo below is confirmed at corpus scale, otherwise the pause/apply/resume cycle carries real
       production risk (per the sports CF-8 precedent) for no measurable gain.
-- [ ] [DATA] P2. **NEW — 2026-07-14 (slot 10)**: confirm/fix the suspected dead-code bundled-branch check in
+- [x] ✅ [DATA] P2. **NEW — 2026-07-14 (slot 10)**: confirm/fix the suspected dead-code bundled-branch check in
       `rebuild_tradfi_manifest.py`'s `scan_and_rebuild` (line ~555: `if parsed.data_type in BUNDLED_DATA_TYPES`) —
       `parse_tradfi_path()` never derives `data_type` as a chain-type literal from a current canonical path (only
       `instrument_type`, matched elsewhere against the separate `BUNDLED_ITYPES` set, e.g. line ~304), so this branch
@@ -208,9 +208,35 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       260-object sample) whether ANY current canonical object still routes through `_emit_bundled_shard_row`, and if
       truly dead, decide whether to (a) fix the check to `parsed.instrument_type in BUNDLED_ITYPES` so bundled shards
       once again get the `record_captured_from_counts` shard-atom treatment they were presumably designed for, or (b)
-      confirm bundling is intentionally retired for tradfi's current write convention and delete the dead branch. NOT
-      fixed in this touch (changes which shards get bundled shard-atom treatment — bigger blast radius than the
-      available_at threading above, needs its own confirmation before a code change). (repo: market-tick-data-service)
+      confirm bundling is intentionally retired for tradfi's current write convention and delete the dead branch. —
+      **RESOLVED 2026-07-14 (data_engineering slot-2, task `mtds_available_at_cross_asset_backfill-015`), decision
+      (b).** Corpus-scale confirmation via `read_availability_index()`-equivalent read (SDK download of the live tradfi
+      canonical index, single-walk-safe — `read_availability_index()` itself returned empty on this host, a separate
+      GCS-access flakiness matching the sports audit's snap-confine/gcloud issue, so downloaded the index parquet
+      directly): of 1,620,826 captured rows, 242,210 have `data_type` literally in `BUNDLED_DATA_TYPES` (all
+      `options_chain`) — but **100% of them are `venue=CME` with blank `job_id`**, matching `manifest_finalize.py`'s
+      live tick-orchestrator CME-options/futures/event-contract write path (confirmed by reading that file: it derives
+      `data_type_key="options_chain"` explicitly for `venue=CME-OPTIONS`, a completely separate write flow from this
+      rebuild script's object-scan). Separately, 550,333 rows have `instrument_type` in `BUNDLED_ITYPES`
+      (combo/futures_chain/options_chain/continuous_future) — of these, 429,833 carry an OHLCV-granularity `data_type`
+      (ohlcv_1m/ohlcv_1s/trades/tbbo), confirming this script's own per-file object scan legitimately writes these via
+      plain `add()` today (since `data_type` never matches `BUNDLED_DATA_TYPES` for them) — `add()` is NOT banned for
+      these rows, so no data is being silently dropped or misrouted. **Option (a) was rejected**:
+      `_emit_bundled_shard_row` stamps `row_key["data_type"] = parsed.data_type` unchanged (still the OHLCV granularity,
+      never the chain-type) — flipping the check to `instrument_type` would NOT restore real cluster validation (the
+      helper's `expected_root_clusters={cluster_root:1}`/`observed_clusters={cluster_root:1}` is a fake always-pass
+      placeholder for the historical-reconstruction case), and would actively regress today's correct behavior by
+      collapsing many legitimate per-instrument `add()` rows into one fake per-underlying bundle row, losing
+      granularity. **Implemented (b)**: removed the dead `if parsed.data_type in BUNDLED_DATA_TYPES:` branch + its
+      now-unused `BUNDLED_DATA_TYPES` import from `scan_and_rebuild` — `_emit_bundled_shard_row` itself is KEPT (still a
+      real, correct, reusable primitive for a caller that already knows a shard is bundled by construction:
+      `reshape_tradfi_ice_cme_legacy_chain_tail_2026_07_13.py` calls it directly, unaffected by this change — verified
+      both scripts still import cleanly). Added a new regression test
+      (`test_scan_rebuild_chain_instrument_type_uses_plain_add_not_bundled_shard`) asserting a chain-instrument-type
+      object (`instrument_type=options_chain`, `data_type=ohlcv_1m`) routes through `writer.add()` and NOT
+      `writer.record_captured_from_counts()`. Full `tests/unit/scripts/test_rebuild_tradfi_manifest_coverage.py` green
+      (21/21, was 20). Shipped `market-tick-data-service@c8c01855` via quickmerge. No production writes made — code +
+      tests only. (repo: market-tick-data-service)
 - [ ] [DATA] P1. Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo:
       market-tick-data-service)
 - [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run`
@@ -481,3 +507,39 @@ respecting the open `BLK-f3cdf442` block as a reason to stop offering this speci
 (`priority: 999` + a false condition, per `RULES.md` § 4) until the P0 operator decision resolves, to stop burning slot
 cycles on redundant re-verification. No production writes made this touch; no cron state changed, no live index mutated,
 checkbox left unflipped (todo's full scope — snapshot + pause — still incomplete).
+
+**Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
+`mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
+(snapshot the prediction index) after fresh-pull — already fully worked by slot 4 (safe half done, cron-pause half
+correctly parked on the standing operator maintenance-window escalation `BLK-272f061b`/`1e6326c7`/`f3cdf442`/
+`aa40e2b6`/`b484ff7a`, no new operator go-ahead on record) — skipped via `/skip-current-task` rather than duplicate a
+blocked-question on an already-escalated gate, matching the pattern slot 11 used minutes earlier. Re-dispatched to this
+P2 todo instead.
+
+Read `rebuild_tradfi_manifest.py` end to end plus UAC's `_honest_coverage_clusters.py` (the `BUNDLED_DATA_TYPES` SSOT,
+confirms the ManifestWriter's cluster-validation guard is keyed on `data_type`, not `instrument_type`) and
+`manifest_finalize.py` (the live tick-orchestrator's per-date write-out — confirmed it derives
+`data_type_key="options_chain"` explicitly for `venue=CME-OPTIONS`, a completely different write flow). Then ran a
+corpus-scale confirmation: `read_availability_index()` returned empty on this host (same GCS-access flakiness the sports
+CF-8 work hit — `gcloud` CLI is broken here too), so downloaded the live tradfi canonical index directly via the
+`google-cloud-storage` SDK (single object read, not a corpus walk) and analyzed locally. Result: of 1,620,826 captured
+rows, 242,210 have `data_type` literally in `BUNDLED_DATA_TYPES` — **100% are `venue=CME` with blank `job_id`**,
+confirming these come from `manifest_finalize.py`'s live write path, never from this rebuild script. Separately, 550,333
+rows have `instrument_type` in `BUNDLED_ITYPES` — of these, 429,833 carry a plain OHLCV- granularity `data_type` and are
+already correctly captured via `target.add()` today (the writer's ban never fires for them since `data_type` never
+matches `BUNDLED_DATA_TYPES`).
+
+**Decision: (b), delete the dead branch — NOT (a).** Verified `_emit_bundled_shard_row` stamps
+`row_key["data_type"] = parsed.data_type` unchanged (the OHLCV granularity, never the chain-type), so flipping the check
+to `instrument_type in BUNDLED_ITYPES` would not restore real cluster validation (the helper's
+`expected_root_clusters={cluster_root:1}`/`observed_clusters={cluster_root:1}` is an always-pass placeholder built for a
+different caller) — it would instead actively regress today's correct behavior by collapsing many legitimate
+per-instrument `add()` rows into one fake per-underlying bundle row. Removed the dead
+`if parsed.data_type in BUNDLED_DATA_TYPES:` branch + its now-unused import from `scan_and_rebuild`.
+`_emit_bundled_shard_row` itself is KEPT — `reshape_tradfi_ice_cme_legacy_chain_tail_2026_07_13.py` still calls it
+directly for shards it classifies as bundled by construction (verified both scripts still import cleanly). Added
+`test_scan_rebuild_chain_instrument_type_uses_plain_add_not_bundled_shard` asserting a chain-instrument-type object
+routes through `add()`, not `record_captured_from_counts`. Full `test_rebuild_tradfi_manifest_coverage.py` green (21/21,
+was 20). Two-pass QG (committed first, then re-ran QG so the sentinel matched the real commit — caught my own ordering
+mistake before shipping) green in 120s. Shipped `market-tick-data-service@c8c01855` via `quickmerge --agent`. No
+production writes made — code + tests only, no cron touched, no manifest write.
