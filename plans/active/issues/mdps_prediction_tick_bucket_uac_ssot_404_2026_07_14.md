@@ -82,7 +82,8 @@ flipping.
       unified-api-contracts@511a9c62.
 - [x] ✅ [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred`
       token. (repo: unified-api-contracts) — unified-api-contracts@511a9c62 (same commit; required to keep QG green
-      after the template flip).
+      after the template flip). Supplementary: unified-api-contracts@41827a6e adds an explanatory comment on the
+      PREDICTION MARKET_DATA parametrize case matching the existing INSTRUMENTS-case convention.
 - [x] ✅ [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
       `manifest_consolidator.py`, `upgrade_manifest_to_v8.py`, `detect_manifest_divergence.py`, `test_bucket_naming.py`,
       `test_cloud_constants.py`, `test_manifest_consolidator.py`) — KEEP `_asset_group_for_market_data_bucket`
