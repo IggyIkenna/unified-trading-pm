@@ -159,13 +159,17 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       out and completes in <1.5s. Root cause is `_fetch_kalshi_perp_market_tickers`'s `category=Crypto` filter matching
       thousands of irrelevant non-perp tickers (confirmed ≥15,000, capped at 50,000) instead of the ~13 real perp
       contracts, combined with the retry loop retrying permanent 404s — see "Update" section above for full evidence.
-- [ ] [BACKEND] P0. **Defensive guard (ships regardless of the endpoint-research answer below)**: in
+- [x] [BACKEND] P0. **Defensive guard (ships regardless of the endpoint-research answer below)**: in
       `_fetch_kalshi_perp_funding_for_ticker`, do not retry non-retryable HTTP statuses (404 and anything else outside
       `_RETRYABLE`) — fail fast on the first attempt instead of burning `_MAX_RETRIES` backoff cycles. In
       `_collect_kalshi_perp`, add a sanity cap on the tickers list returned by `_fetch_kalshi_perp_market_tickers` (e.g.
       warn + truncate or fail honestly if len(tickers) > ~100 — a real curated perp-contract list is ~13 tickers) so a
       broken ticker-discovery query can never again cause multi-hour-to-multi-day churn. Add a regression test pinning
-      both behaviors. Repo: `market-tick-data-service`.
+      both behaviors. Repo: `market-tick-data-service`. — ✅ market-tick-data-service@5a163d02 (2026-07-14, slot-8):
+      non-retryable statuses (e.g. 404) now fail fast in `_fetch_kalshi_perp_funding_for_ticker` instead of retrying;
+      `_collect_kalshi_perp` raises `ValueError` (honest `attempted_failed`) when ticker-discovery returns >100 tickers.
+      Two regression tests added (`test_non_retryable_status_fails_fast`, `test_excessive_ticker_count_raises`). Full
+      `quality-gates.sh` green.
 - [ ] [BACKEND/RESEARCH] P1. **Endpoint research (needs operator input)**: determine whether Kalshi's crypto
       perpetual-futures product (BTC-PERP/ETH-PERP/SOL-PERP/DOGE-PERP/~9 others per the module docstring) is reachable
       via a documented public endpoint at all — `category=Crypto` and `series_ticker=KXBTCPERP` on
