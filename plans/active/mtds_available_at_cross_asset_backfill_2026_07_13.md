@@ -238,7 +238,16 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (21/21, was 20). Shipped `market-tick-data-service@c8c01855` via quickmerge. No production writes made — code +
       tests only. (repo: market-tick-data-service)
 - [ ] [DATA] P1. Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — PARTIAL 2026-07-14 (data_engineering slot-2, task
+      `mtds_available_at_cross_asset_backfill-007`): snapshot half DONE + verified, mirroring the prediction precedent's
+      split (slot 4's "Snapshot (safe half only)" entry above) — shipped
+      `scripts/mtds_available_at_backfill_snapshot_tradfi_2026_07_14.py` (`market-tick-data-service@8f131104`, QG green,
+      shipped via quickmerge), ran it against real prod:
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T011351Z.parquet`
+      (162,825,635 bytes, byte-identical to the live index at snapshot time, independently re-verified via a fresh
+      `blob.reload()` read). Cron-pause half deliberately NOT done — same still-open P0 `BLOCKED-OPERATOR-DECISION`
+      maintenance-window gate (`BLK-272f061b`/`1e6326c7`/`f3cdf442`/`aa40e2b6`/ `b484ff7a`) — no operator go-ahead is on
+      record. Leaving this checkbox unflipped since the todo's full scope isn't complete.
 - [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run`
       flag exists), force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol
       as prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill
