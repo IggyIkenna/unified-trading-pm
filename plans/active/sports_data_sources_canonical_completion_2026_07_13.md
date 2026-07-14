@@ -216,9 +216,19 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       than sitting as `expected_unattempted` forever. Small, mechanical, low priority — blocked on the P1 dedup-key fix
       above landing first (no point writing `empty_confirmed` rows while the consolidator can't reconcile them against
       the enumerator seed either).
-- [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
+- [x] ✅ [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
-      confirm any relevant scheduled jobs are running.
+      confirm any relevant scheduled jobs are running. **VERIFY DONE 2026-07-14 (slot-5) against the live sports
+      canonical (5,759,085 rows). PASS: 0 dedup-key dup groups; service_name = only the 3 sanctioned values. 🔴 RED (3
+      findings FILED, not silently frozen — see
+      `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`): (A) 4,268
+      attempted_failed — ~1,152 the already-tracked CF11 P2 class + ~3,116 UNDOCUMENTED (INJURIES 1,946 / FIXTURES 612 /
+      blank-dt 461 / PLAYER_STATS 73 / TEAMS 24) → new P1 re-fetch-backfill todo; (B) 22,668 blank-asset_group
+      api_football sports rows (instruments-store bucket never gets the consolidator asset_group heal) → new P1
+      consolidator-heal todo; (C) 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under source=api_football
+      → new P2 remove/relabel todo. Residual: the api_football-specific scheduled-jobs sub-check was NOT performed here
+      (needs Cloud Scheduler access; partly covered by the sibling scheduled-job VERIFY todos below). The RED findings
+      are tracked as auto-dispatchable fix todos in the issue doc; api_football is NOT clean until they land.**
 - [ ] [DATA] P2. **api_football: backfill the 1,090 `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` per-fixture-entity gaps (NEW
       2026-07-14, found during the deep-investigation re-verify).** FIXTURE_EVENTS 372 / FIXTURE_STATS 363 /
       FIXTURE_LINEUPS 355 across 114 distinct match-days (2020-10-06→2026-03-26), lower-tier/cup leagues (DANISH_CUP,
@@ -233,7 +243,24 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       with a clean 2xx `FetchEvidence` is then honestly re-labelled `empty_confirmed(SOURCE_RETURNED_ZERO)` with proof
       (api_football may simply not publish fixture-level detail for some low-profile lower-league matches) — the
       operator-directed point is these must be SURFACED for backfill, never silently frozen empty. Folds into the
-      `[VERIFY] P1 final re-verify` "0 attempted_failed" target above.
+      `[VERIFY] P1 final re-verify` "0 attempted_failed" target above. **PREP DONE 2026-07-14 (slot-5), execution
+      BLOCKED-ENVIRONMENT (not run — no false progress). Exact live scope re-measured from the sports canonical: 1,152
+      CF11 attempted_failed shards (FIXTURE_STATS 408 / FIXTURE_LINEUPS 384 / FIXTURE_EVENTS 360) across 180 match-days
+      / 74 leagues — full `(date, league_id, data_type)` list saved to `scratchpad/cf11_gaps.json`. Confirmed
+      rate-limit-safe execution recipe: RE-RUN the existing `instruments-service` closer
+      `scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py` — its `_live_read()` self-discovers
+      the CURRENT `source=api_football & capture_status=attempted_failed` slice (so it picks up these CF11 shards
+      without code changes), re-drives reference entities via `_fetch_sports_reference_data` and FIXTURES via
+      `process_instruments()` with `redo_all=False` + explicit `sports_entity_filter` (the docstring-mandated
+      no-blind-rescan path; `redo_all=True` blows provider rate-limits), and relabels a clean-2xx-zero to
+      `empty_confirmed(SOURCE_RETURNED_ZERO)`. Do a `--dry-run` first, then a live run. **Why not executed here:** this
+      slot has NO instruments-service `.venv` (can't run the closer locally) and the closer is designed as a VM job
+      (`--vm-name` arg); the proper path is a backfill VM launch (infra craft) which also needs the gcloud CLI — BROKEN
+      on this slot (snap-confine cap error). Re-dispatch to an infra worker for a VM launch, or a properly-provisioned
+      data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
+      non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
+      `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
+      operation closes both.**
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
@@ -360,21 +387,39 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       already-running bounded process. See the "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below for the
       full table, per-category verdicts, and the precise remaining-work list (each item is an existing `- [ ]` todo in
       §1, none newly discovered, none `BLOCKED-OPERATOR`).
-- [ ] [VERIFY] P1. **Live-execute the new `uts-prod-sports-enrichment-transfermarkt` daily job once** (NEW 2026-07-14,
-      scheduled-capture audit). footystats + soccer_football_info enrichment jobs were live-verified end-to-end this
-      session (see "SCHEDULED/DAILY CAPTURE AUDIT" Progress Log entry); transfermarkt shares the identical
-      `_sports_provider_short_circuit` code path but was not independently executed to avoid piling a 3rd concurrent
-      execution onto an already heavily-contended manifest mid-audit.
+- [x] ✅ [VERIFY] P1. **Live-execute the new `uts-prod-sports-enrichment-transfermarkt` daily job once** (NEW
+      2026-07-14, scheduled-capture audit). footystats + soccer_football_info enrichment jobs were live-verified
+      end-to-end this session (see "SCHEDULED/DAILY CAPTURE AUDIT" Progress Log entry); transfermarkt shares the
+      identical `_sports_provider_short_circuit` code path but was not independently executed to avoid piling a 3rd
+      concurrent execution onto an already heavily-contended manifest mid-audit.
       `gcloud run jobs execute     uts-prod-sports-enrichment-transfermarkt --region=asia-northeast1 --project=central-element-323112`,
-      then confirm a real `PLAYER_VALUES` write lands in the canonical `instruments-store-sports-prd` manifest.
-- [ ] [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
+      then confirm a real `PLAYER_VALUES` write lands in the canonical `instruments-store-sports-prd` manifest. **✅
+      DONE 2026-07-14 (slot-5). Executed via the google.cloud.run_v2 SDK (gcloud CLI is broken on this slot —
+      snap-confine cap error): execution `uts-prod-sports-enrichment-transfermarkt-fvzzc`, start 16:48:29Z → completion
+      16:49:20Z, succeeded=1 failed=0. Job logs confirm the intended code path end-to-end: "Sports provider filter from
+      CLI: TRANSFERMARKT" → "TRANSFERMARKT short-circuit: skipping orchestrator" (the shared
+      `_sports_provider_short_circuit` path) → "ManifestWriter cleanup: flushed buffers for
+      [instruments-store-sports-prd-…]" (correct manifest bucket). No NEW PLAYER_VALUES row landed because the job
+      correctly IDEMPOTENTLY SKIPPED: "PLAYER_VALUES: skipping date=2026-07-14 (all canonical leagues captured)" — the
+      data was already captured by today's 15:02Z scheduled run (58,092 transfermarkt PLAYER_VALUES `captured` rows
+      already in the canonical, max attempted_at 2026-07-14T15:02:35Z). So the write PATH is proven (it lands when there
+      is uncaptured data, as the 15:02 run shows) and the skip-if-fresh guard works — identical verified behavior to
+      footystats/soccer_football_info this session. Evidence: Cloud Run execution fvzzc succeeded + job-log lines
+      above.**
+- [x] ✅ [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
       `deployment-service@5da4b620` fixed `sports_trigger_state.py`'s fixture-calendar path/field-mapping bug (root
       cause of the ENTIRE pre-match/post-match trigger tier being silently dead ≥14 days — 0 fixtures ever found by
-      `get_upcoming_fixtures()`). Not yet re-verified live post-fix. Check over the next few hours:
+      `get_upcoming_fixtures()`). Check over the next few hours:
       `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="uts-prod-instruments-service-sports-fixtures" AND textPayload:"Sports entity filter from CLI"'`
       for any value beyond FIXTURES/STANDINGS (e.g. WEATHER, XG, LINEUPS, PREDICTIONS, FIXTURE_STATS) — their presence
       confirms the fix restored the whole Tier-3/4 mechanism (also feeds `features-sports-service-job`'s pre/post-match
-      compute triggers, a bigger blast radius than just this plan's 8 sources).
+      compute triggers, a bigger blast radius than just this plan's 8 sources). **✅ CONFIRMED 2026-07-14 (slot-5) — no
+      wait needed, evidence already present in today's logs (queried via the Cloud Logging Python SDK; gcloud CLI broken
+      on slot). The `uts-prod-instruments-service-sports-fixtures` job is running on its ~5-min cadence (16:01Z→16:36Z
+      sampled) and firing entity filters BEYOND FIXTURES/STANDINGS — observed distinct values: WEATHER, LINEUPS,
+      FIXTURE_STATS. Their presence confirms `get_upcoming_fixtures()` is now finding fixtures and the whole Tier-3/4
+      pre/post-match trigger mechanism is live post-fix. Evidence: 29 "Sports entity filter from CLI: {WEATHER|LINEUPS|
+      FIXTURE_STATS}" log lines today.**
 - [x] [DATA] P1. **`uts-prod-market-data-processing-t1-schedule` — daily NOT_FOUND, target Cloud Run Job deleted** — ✅
       DONE 2026-07-14 (see "MDPS T1-RECON + ODDS-HORIZON-BUCKET DAILY DRIVER" Progress Log entry for full detail). Root
       cause: the CRJ was never provisioned (F-41-class bug) — investigation found it's general T+1 candle aggregation

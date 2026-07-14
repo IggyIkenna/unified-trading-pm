@@ -137,7 +137,7 @@ site, not a verified fix.
       (`Perp funding collection complete for 2024-04-03: 2 records across 3     protocols`, per-VM manifest shard writes
       flowing) — **perp-funding side of this todo is resolved.** **`mtds-dex-swaps-backfill` split OUT to its own todo
       below — it crashed again, same `rc=137`, on the SAME fresh fix.**
-- [ ] [SCRIPT] P0. **NEW FINDING (2026-07-14, slot 11, data_engineering) — `mtds-dex-swaps-backfill` crashes rc=137 with
+- [x] [SCRIPT] P0. **NEW FINDING (2026-07-14, slot 11, data_engineering) — `mtds-dex-swaps-backfill` crashes rc=137 with
       a DIFFERENT root cause than the one this issue fixed.** Relaunched with the identical fresh, verified-current
       tarball (`mtds-code.manifest.json` @ `ecd3a4d4`, `d6846f1c` confirmed ancestor) that let
       `mtds-perp-funding-backfill` survive — `mtds-dex-swaps-backfill` still died `rc=137` (SIGKILL), self-deleted, in
@@ -152,17 +152,69 @@ site, not a verified fix.
       instead): `catalogue_pool_ids_for_shard`/`catalogue_filter_ids_and_symbols`
       (`market_tick_data_service/cli/handlers/_catalogue_filter.py`) cache a single DeFi-only `prod/catalog.parquet` —
       much smaller than the 4-asset-group combined catalogue the original fix targeted, so likely NOT the culprit
-      either. Leading hypothesis: the handler's single `process()` method building an eager in-memory structure across
-      the full 2023-01-01→2026-07-14 (~3.5yr) × 9-protocol swaps range before any GCS flush — this plan's own G0.2 gap
-      report shows `dex_pool_swaps` UNISWAP_V3/BALANCER/PANCAKESWAP_V3 alone carry hundreds of thousands of
-      `expected_unattempted` cells, a plausible bulk-materialization site. **Recommended fix-worker action**: RSS-
-      instrument `DexSwapsHandler.process()` (same technique slot-2 used for the original diagnosis — see "P0 confirm +
-      fix" below) to find the actual spike site, then apply the craft's efficiency north-star (stream per-date/
-      per-protocol flush instead of accumulating the full range) rather than assuming the catalog-registration fix
-      covers it. **Do not re-relaunch `mtds-dex-swaps-backfill` again until root-caused** — confirmed 2/2 reproducible
-      now (pre-fix AND post-fix), will burn SPOT minutes for zero data. This is holding up
-      `mvp_backfill_defi_onchain_v10_2026_06_27.md` G2 same as before, now on a handler-specific defect rather than the
-      already-fixed fleet-wide one. Repo: `market-tick-data-service`.
+      either. ~~Leading hypothesis: the handler's single `process()` method building an eager in-memory structure across
+      the full 2023-01-01→2026-07-14 (~3.5yr) × 9-protocol swaps range before any GCS flush~~ — **REFUTED, see "P0
+      confirm — dex_swaps NEW FINDING closed" below, real cause was elsewhere (`ManifestFreshnessCache`, shared by every
+      DeFi handler, not `DexSwapsHandler`-specific).** — ✅ DONE 2026-07-14 (slot 9, data_engineering): root cause
+      confirmed + already fixed by `unified-trading-library@0fc088a9` (landed independently the same day, citing this
+      exact issue slug) — see below for the RSS evidence and the residual VM-relaunch-verify gap (filed as a new [INFRA]
+      todo, out of data_engineering craft scope). Repo: `market-tick-data-service` (diagnosis) /
+      `unified-trading-library` (fix, already shipped).
+- [ ] [INFRA] P1. **Residual verification gap (2026-07-14, slot 9, data_engineering)**: relaunch
+      `mtds-dex-swaps-backfill` one more time with BOTH the `mtds-code` tarball (≥ `d6846f1c`) AND the
+      `unified-trading-library-code` tarball (≥ `0fc088a9`) freshly rebuilt via
+      `deployment-service/scripts/vm/create-code-tarballs.sh` for `unified-trading-library` (its own tarball is separate
+      from `mtds-code.tar.gz` — easy to forget rebuilding when only the MTDS-side SHA was verified fresh, which is the
+      likely reason the prior relaunch above still crashed on an otherwise-fresh MTDS tarball), then verify past the
+      first `RESOURCE_SAMPLE` without a crash (same T+10min recipe used for `mtds-perp-funding-backfill`'s todo above)
+      before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification. **Not doable by this data_engineering
+      session**: VM launches are out of this craft's scope (`does_not: infra/VM launches → infra`), and this worker
+      sandbox's `gcloud` CLI is non-functional (`snap-confine` capability error, `cap_dac_override` missing) — confirmed
+      via `gcloud auth list` failing identically to `gcloud compute instances list`, so launch/verify must happen from a
+      session with working `gcloud` (e.g. the operator/planning VM). Repo: `deployment-service`.
+
+## P0 confirm — dex_swaps NEW FINDING closed (2026-07-14, slot 9, data_engineering)
+
+**Root cause was NOT `DexSwapsHandler`-specific** — it is `ManifestFreshnessCache._refresh_locked()`
+(`unified-trading-library` `manifest_freshness.py`), called by `dex_swaps_handler.py:179-180`
+(`freshness_cache = ManifestFreshnessCache(bucket=bucket, ttl_seconds=60)` →
+`await asyncio.to_thread(freshness_cache.bulk_load)`) right at the top of every single date's `process()`, BEFORE any
+per-venue collection. Confirmed the SAME shared DeFi bucket (`market-data-tick-defi-prd-central-element-323112`) is used
+by `dex_swaps_handler.py` (`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`) and
+`perp_funding_handler.py` (`get_write_bucket_name("market_data", "defi")`) — same physical bucket, both handlers pay
+this same cost; it is a fleet-wide DeFi-handler hazard, not one handler's bug.
+
+**RSS-instrumented repro** (local, `market-tick-data-service` `.venv`, real prod GCS data via ADC — no VM needed, same
+technique as the "P0 confirm + fix" section above): downloaded the REAL current consolidated
+`_index/availability_index.parquet` for that bucket (445,220,744 bytes on disk, 27,445,013 rows) and parsed it two ways:
+
+| Read                             | Peak RSS      |
+| -------------------------------- | ------------- |
+| baseline (process just started)  | 515 MiB       |
+| after raw parquet bytes download | 946 MiB       |
+| **SLIM** (7 row-key/status cols) | **5.30 GiB**  |
+| **FULL** (all 41 columns)        | **19.72 GiB** |
+
+An `e2-standard-4` backfill VM has 16 GiB total — the FULL-schema read alone (19.72 GiB) **guarantees** an OOM-kill
+before a single byte of per-venue swap data is even fetched, independent of date-range size or protocol count (matches
+every observed symptom: crash right after handler-init, before per-venue output, "no RESOURCE_SAMPLE at all" on fast
+paths, insensitive to backfill window). The SLIM read (5.30 GiB) leaves a ~10 GiB margin for TheGraph HTTP payloads +
+pandas working set — comfortably under the OOM line, consistent with the healthy `RESOURCE_SAMPLE` readings (9-11%
+`mem_pct`) logged for both handlers before this bug's crashes.
+
+**Fix already shipped independently** — `unified-trading-library@0fc088a9` ("fix(manifest): ManifestFreshnessCache uses
+slim column-pruned read_availability_index, not the ~6.5GB full-schema path", landed 2026-07-14T12:56:50Z, same-day as
+this issue, citing `mtds_backfill_vm_startup_oom_rc137_2026_07_14` by name in its own code comment). It changes
+`_refresh_locked()` to call
+`read_availability_index(self.bucket, columns=[*_ROW_KEY_COLUMNS, "capture_status", "error_reason"])` instead of the
+unqualified full-schema call — exactly the SLIM path measured above. No code change needed from this session; this
+section is the confirmation + quantification the "Recommended decision" item 1 above asked for, using the REAL current
+27.4M-row index (bigger than the ~6.5GB/sports figure that motivated the original comment — worth noting DeFi's own
+index has grown to a similarly dangerous size).
+
+**What's NOT yet done**: the fix landing in `unified-trading-library` doesn't by itself prove a freshly-packaged
+`mtds-dex-swaps-backfill` VM survives — that needs an actual relaunch with BOTH tarballs rebuilt post-fix (see the new
+`[INFRA]` todo above). Flagging as the residual gap rather than closing this out as fully verified.
 
 ## P0 confirm + fix (2026-07-14, slot 2)
 

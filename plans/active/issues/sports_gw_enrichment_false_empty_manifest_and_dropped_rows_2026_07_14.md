@@ -152,6 +152,27 @@ cells. Honest-absence integrity is the entire point of the manifest
 
 - 2026-07-14 ~14:10Z: Filed by the gw-verify agent after the content verification above. No code changed; no manifest
   rows written; launches held; P2a plan updated in the same commit (session-31 entry + banner).
+- 2026-07-14 ~16:30Z (fix-now agent, operator-mandated): **fix order items 1-3 fully shipped, item 5 (manifest repair)
+  APPLIED.** Code: `instruments-service@0d9ffabd` (session 33, 3 legs) + `instruments-service@86cc71ff` (this agent —
+  found two MORE live legs on the re-run fleet's own logs: (4) `reference_data/factory.py` pooled the api_football URDI
+  adapter WITHOUT the date in the pool key, so a multi-date `--force` run pinned the FIRST date's fixture universe onto
+  every later date — observed 91/91 URDI fetches all `date=2025-09-01` on the 14:46Z INJURIES VM → 90 false zero-fixture
+  verdicts → ~2,970 false `EXPECTED_NO_FIXTURE` FIXTURES markers (33-league), masked at read time only by captured>empty
+  precedence; (5) `process_zero_records.py::_zero_sports_empty_fixture_markers` was STILL prediction-tier-33 — fixed to
+  the 94-league `get_expected_leagues_for_source("api_football")`. Plus an emit-boundary PRESENCE guard:
+  `emit_empty_gaps_for_entity` now unions leagues whose per-league parquet EXISTS into the captured set (list-only GCS
+  probe `_list_present_parquet_leagues`; fail-safe: probe failure → skip empty emission), closing the
+  `redo_all`/zero-fixture-day paths the leg-1 fix could not reach. 7 regression tests incl. the 3 exact legs.
+  **Repair**: `scripts/gw_false_empty_repair_2026_07_14.py` (`instruments-service@0fe2f17b`, recency-adjudication
+  mechanics; snapshot-first `_index/snapshots/availability_index.20260714-161952/-162xxx…`): scope reproduced session-31
+  exactly (1,848 captured-FIXTURES cells / 86 leagues / 91 days); object-probe adjudication over 5,726 empty_confirmed
+  scope cells → **restamp-captured 4,170** (EVENTS 974 / LINEUPS 1,205 / STATS 1,082 / PLAYER_STATS 909; count > the
+  13:39Z-snapshot 3,720 because the post-fix fleet had landed more parquets whose captured rows had not yet
+  consolidated), **adjudicated-empty 1,556** (no attributable parquet — left as-is, listed in
+  `gw_false_empty_adjudication.csv`), attempted_failed report-only 13. Per-VM shard
+  `_index/per_vm/gw-false-empty-repair-20260714.parquet` written 16:29:06Z (4,170 captured rows, explicit `.write()`);
+  consolidator cron-absorbs. Parquet-level `--cross` re-verify runs after the post-fix fleet completes (LINEUPS+STATS
+  still RUNNING at 16:35Z) + ≥1 consolidator cycle.
 - 2026-07-14 ~14:20Z (P2a session 32, data_engineering slot-3): independent corroboration of leg 2
   (`_build_fixture_league_map_from_gcs` truncation/mapping-gap). Retried FIXTURE_EVENTS/LINEUPS/STATS for the ~16
   residual `attempted_failed` (`CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE`) cells via direct narrow-date-range CLI calls
