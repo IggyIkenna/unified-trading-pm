@@ -216,6 +216,14 @@ drift_direction: advance-code
 - `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — the SEPARATE curated ~300-league
   reference expansion (out of scope; 94 only here)
 
+- 2026-07-14 ~11:45Z (operator ruling, session): **Full-enrichment phase SCOPED TO 2020-01-01 → present** ("golden
+  window then all the fixtures since 2020 for api football"). Sequencing: GW fleet (running, session-20 entry) → GW gate
+  verify → GW features recompute dispatch, and the 2020+ enrichment fleet launches after GW verification using the same
+  launcher/rate machinery (entity-sharded, SPOT, registry rate split). Budget math at ruling time: ~400k per-fixture
+  calls vs 450k/day key quota → ~1-2 days respecting daily-pipeline headroom (the launcher's /status-driven rate split
+  governs per-minute; the launch agent must compute the day budget from the live quota read and leave >=15% headroom for
+  the daily pipeline). 2018-2019 enrichment stays parked (not in the ruling).
+
 ## Progress Log
 
 ### 2026-06-27 — slot 4
