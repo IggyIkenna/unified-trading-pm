@@ -82,30 +82,46 @@ independently verified**, first todo below.
 
 ## 3. Todos
 
-- [ ] [BACKEND] P1. Read `dex_swaps_handler.py` + its query/dispatch module (name TBD — confirm real filename, the
-      `_dex_pools_subgraph.py` naming was a guess by analogy) and confirm/refute whether it mirrors
-      `dex_pools_handler.py`'s `_DEFAULT_PROTOCOLS`/`fallbacks` dispatch pattern exactly, or differs. Update this plan's
-      §2 if it differs before proceeding.
-- [ ] [BACKEND] P1. Wire `velodrome_v2` + `trader_joe_v2` into `dex_pools_handler.py`'s `_DEFAULT_PROTOCOLS` +
-      `_dex_pools_subgraph.py`'s `fallbacks` dict (reuse `messari_basic`). Add/extend unit tests covering both new
-      dispatch entries.
-- [ ] [BACKEND] P1. Verify the real uniswap_v4 subgraph daily-snapshot entity shape (read IS's `uniswap_v4.py` query +,
-      if feasible, a live/cached subgraph schema introspection) before writing `_UNISWAP_V4_QUERY`. Implement
-      `_UNISWAP_V4_QUERY[_FILTERED]` + wire `fallbacks["uniswap_v4"]`, reusing `_parse_uniswap_v3` if the shape matches
-      or a new parser if it doesn't. Unit tests.
-- [ ] [BACKEND] P1. Implement `_UNISWAP_V2_QUERY[_FILTERED]` (pairs/pairDayDatas shape) + `_parse_uniswap_v2` in
-      `_dex_pools_parsers.py` + wire `fallbacks["uniswap_v2"]`. Unit tests.
-- [ ] [BACKEND] P1. Apply the same 4-protocol wiring to `dex_swaps_handler.py`'s dispatch (path/design depends on todo
-      1's finding — may reuse the same query templates or need swap-specific ones; do not assume without checking). Unit
-      tests.
-- [ ] [SCRIPT] P1. Full `market-tick-data-service` quality-gates run, quickmerge ship.
+- [x] ✅ [BACKEND] P1. Read `dex_swaps_handler.py` + its query/dispatch module — confirmed real filenames
+      (`_dex_swaps_queries.py`) and found the dispatch pattern DIFFERS from dex_pools: an ordered
+      `(query,     schema_name)` cascade selected by set-membership (`_build_cascade`), not a per-protocol `fallbacks`
+      dict. §2 updated accordingly — `market-tick-data-service@476d30994`.
+- [x] ✅ [BACKEND] P1. Wired `velodrome_v2` + `trader_joe_v2` into both `dex_pools_handler.py`'s `_DEFAULT_PROTOCOLS` +
+      `fallbacks` dict (reusing `messari_basic`, zero new queries) AND `_dex_swaps_queries.py`'s `_DEFAULT_PROTOCOLS`
+      (default messari-first cascade, also zero new queries). Unit tests added — `market-tick-data-service@476d30994`.
+- [x] ✅ [BACKEND] P1. Verified the real uniswap_v4 subgraph shape against the official `Uniswap/v4-subgraph` schema
+      (fetched live). Pools side: `poolDayDatas`/`pool{...}` matches V3's shape exactly, reused `_parse_uniswap_v3`.
+      Swaps side: the real `Swap` entity has **no `recipient` field** (replaced with `origin`) — reusing the univ3 swaps
+      cascade would have exhausted every fallback via schema drift and produced zero rows. Caught by adversarial review
+      before shipping; fixed with a dedicated `_UNISWAP_V4_SWAPS_QUERY` + `_parse_uniswap_v4_swaps` (maps
+      `origin`→`recipient` output column) and its own single-entry cascade. Unit tests added —
+      `market-tick-data-service@476d30994`.
+- [x] ✅ [BACKEND] P1. Implemented `_UNISWAP_V2_QUERY[_FILTERED]` (pairs/pairDayDatas shape, no feeTier — hardcoded
+      30bps) + `_parse_uniswap_v2` in `_dex_pools_parsers.py`, wired `fallbacks["uniswap_v2"]`; swaps side got its own
+      `_UNISWAP_V2_SWAPS_QUERY` (`amount0In`/`amount1In`/`amount0Out`/`amount1Out` directional shape) +
+      `_parse_uniswap_v2_swaps`. Verified against the real, long-stable public `Uniswap/v2-subgraph` schema. Unit tests
+      added — `market-tick-data-service@476d30994`.
+- [x] ✅ [BACKEND] P1. Applied the 4-protocol wiring to `dex_swaps_handler.py`'s dispatch — confirmed it needed
+      protocol-specific handling, not a blind mirror of dex_pools (per todo 1's finding): uniswap_v2 and uniswap_v4 each
+      got dedicated cascade entries, velodrome_v2/trader_joe_v2 use the default cascade. Unit tests added —
+      `market-tick-data-service@476d30994`.
+- [x] ✅ [SCRIPT] P1. Full `market-tick-data-service` quality-gates run (green, 48s) — hit and fixed one real gate
+      violation along the way (`dex_swaps_handler.py` grew past the 900-line file cap; relocated the new V4 swaps parser
+      to the module-level `_dex_swaps_queries.py`, matching the existing `_parse_uniswap_v2_swaps` pattern, to land
+      exactly at the cap). Quickmerge shipped `market-tick-data-service@476d30994`.
 - [ ] [DATA] P2. Real end-to-end smoke: run `dex_pools_handler`/`dex_swaps_handler` for each of the 4 protocols against
       a real (small, bounded) date range and confirm non-empty, schema-valid rows — not just unit-test green. Evidence:
-      row counts + a sample row per protocol.
+      row counts + a sample row per protocol. **Not yet run** — the adversarial-review pass flagged this as the gap that
+      would have caught the uniswap_v4 swaps bug immediately; still real, uncompleted verification even though the bug
+      it would have caught is now already fixed by direct schema cross-check instead.
 - [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` documents the
       dex_pools/dex_swaps protocol dispatch list; update if it asserts the old (incomplete) set.
 
 ## Progress Log
 
 - **2026-07-14** — Plan authored from the 2026-07-14 scoping pass's findings (operator already confirmed this is real,
-  in-scope work). Implementation not yet started.
+  in-scope work). Implementation done via a verify→implement→adversarial-review workflow: the verify pass corrected 2 of
+  the plan's own assumptions (dex_swaps dispatch pattern; IS adapters give no evidence about daily-snapshot entity
+  shapes), the adversarial review caught one real, concrete, would-have-shipped-broken bug (uniswap_v4 swaps reusing a
+  query field that doesn't exist in the real v4 schema) before it reached prod. Fixed directly, quality-gates verified
+  green, shipped `market-tick-data-service@476d30994`. Remaining: real end-to-end smoke test (P2) and codex audit (P3).
