@@ -704,3 +704,18 @@ full-history fleet beyond the 3 shards this dispatch's fast re-verify covered (v
 recurrences in one session alone, flagging as a **big finding per CLAUDE.md** (data-correctness, cross-cutting,
 contradicts a same-day "resolved" claim already acted on by other dispatches) — escalating to the operator via
 `/blocked` rather than silently re-closing this loop a third time.
+
+## Reminder — ship via quickmerge, not raw git push (slot 11, 2026-07-14)
+
+Cross-referenced from `plans/active/issues/features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md` todo 1: 3
+commits landed on `features-service`'s `live-defi-rollout` from this plan's own working sessions (slot-5 `208516e6`,
+slot-5 `a9684e27`, slot-10 `588eed0e`) with no `Quickmerge:` trailer — raw `git push` instead of
+`bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'`. This correctly blocked the fleet promote-provenance gate
+from auto-merging `features-service`'s LDR→`main` PR (#751 left open/unarmed per operator ruling on `BLK-163a306c` — the
+gate is working as designed, not a bug).
+
+**Whoever next works this plan**: ship every finding here via `quickmerge --agent`, per CLAUDE.md's "CODE reaches the
+integration branch ONLY via quickmerge" HARD RULE — not a raw push, even for a fast profiling-harness commit or a
+hot-fix found mid-investigation. Once this investigation concludes,
+`features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md` todo 2 needs PR #751 (or its successor) re-verified
+for a clean auto-merge with no further provenance violations in range.

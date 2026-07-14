@@ -102,9 +102,17 @@ merge, hold until re-shipped or reverted" resolution).
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Confirm whether the `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` plan is
+- [x] ✅ [SCRIPT] P2. Confirm whether the `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` plan is
       still active on slot-5/slot-10; if so, remind those sessions (or their next `/boot`) to ship any further findings
-      via `quickmerge --agent`, not raw `git push`. (repo: unified-trading-pm)
+      via `quickmerge --agent`, not raw `git push`. (repo: unified-trading-pm) — **CONFIRMED STILL ACTIVE, slot 11,
+      2026-07-14**: `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` is `status: open`,
+      `last_updated: 2026-07-13`, with dense same-day activity from many slots (4, 5, 6, 7, 8, 9, 10, 12, 14) — the OOM
+      investigation itself is now essentially concluded (root cause pinned to `venue_id` collapsing to `""` causing a
+      cartesian-product merge explosion; fixed `features-service@a9684e27`/`c3e3ebfe`; all 3 poison dates verified clean
+      on the real VM fleet by slot 9). Left an explicit reminder note directly in that plan's own Progress Log (see its
+      "Reminder — ship via quickmerge, not raw git push" entry) rather than relying on a per-slot boot message this
+      dispatch can't directly send — every future session reading that plan (the `sequential: true` + heavy per-touch
+      convention this doc already follows) will see it before its next commit.
 - [ ] [SCRIPT] P3. Once the `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` investigation
       concludes, verify PR #751 (or its successor per-SHA-ref PR) auto-merges cleanly on the next fleet drain with no
       further provenance violations in range. (repo: features-service)
