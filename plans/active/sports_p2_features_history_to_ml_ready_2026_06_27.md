@@ -72,6 +72,10 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 - `python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS --start-date <Y>-01-01 --end-date <Y>-12-31 --skip-existing`
   (year-chunked, resumable); or `launch-features-sports-parallel-backfill-vm.sh`.
+- For a single-shard gap-fill relaunch, prefer `launch-features-vm.sh --feature-family sports` (timestamp-suffixed VM
+  naming) over `launch-features-sports-parallel-backfill-vm.sh --vms 1` — the latter always names the VM
+  `fss-backfill-vm-1`, which can collide with and silently delete another concurrent gap-fill's live VM of the same name
+  (`plans/active/issues/features_sports_parallel_backfill_vm_name_collision_2026_07_13.md`).
 - `features-service/scripts/sports/check_pipeline_completeness.py` to verify per-range.
 - Asserts upstream manifest health first → P2a/P2b must be GREEN (the `depends_on` edge).
 
