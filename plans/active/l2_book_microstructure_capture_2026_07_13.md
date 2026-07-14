@@ -194,15 +194,47 @@ sequential: true
       (status: resolved) for the full option analysis + resolution. **Checkbox intentionally stays unflipped** — this
       todo's actual scope (extend the extractor) remains honestly undone/deferred, not completed; the decision that
       unblocks or permanently defers it is what's now resolved.
-- [ ] [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue (mirrors
-      the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a backfill. Repo:
-      market-tick-data-service.
+- [x] ✅ [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue
+      (mirrors the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a
+      backfill. Repo: market-tick-data-service. — **DONE, slot-11, `market-tick-data-service@bc9cd08c`.** Recreated
+      `scripts/book_microstructure_connectivity_check.py` (deleted in `a4fb3d13`) adapted for the deeper-book path: live
+      REST pull per capable venue (COINBASE-SPOT/BYBIT/DERIBIT/BINANCE-FUTURES/OKX-SWAP, each venue's public order-book
+      snapshot endpoint, 20 levels requested) through `compute_book_microstructure`, asserting `captured_depth > 5` and
+      that `queue_position_bid/ask`/`depth_levels_bid/ask` ARE populated (the opposite assertion from the retired
+      L5-only check, which asserted honest-absence). **Premise note**: checked the availability manifest first
+      (`read_availability_index`, not a raw GCS walk) — `depth_of_book_10` has **0 rows ever captured** in production;
+      todo 2's live WS connectors (`market-tick-data-service@15f5657b`) have shipped but never actually been dispatched.
+      A GCS-read connectivity test would have had nothing to read, so this hits each venue's REST endpoint directly
+      (separate from the WS subscription used for live capture) — proves venue reachability + the derivation without
+      depending on a prior live-capture run. **Ran live against real production APIs at authoring time — all 5 venues
+      passed** (captured_depth=20 for every venue; sample: BINANCE-FUTURES imbalance=0.55/queue_position bid=7.012
+      ask=2.083, DERIBIT bid=2510.0 ask=146280.0, etc. — full per-venue output in the session transcript). Exit 0.
+      `quality-gates.sh` green (147s, sentinel-verified at the shipped SHA).
 - [ ] [SCRIPT] P2. Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent
       plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest (which needs historical
       deeper-book replay, still no backfill authorised). This todo is DONE when the feed is honestly live for the
       capable venues, not when the engine registers.
 
 ## Progress Log
+
+### 2026-07-14 — slot 11 (Todo 6 shipped — deeper-book connectivity check)
+
+Dispatched task `l2_book_microstructure_capture-006` (todo 6, connectivity test) right after `/done`-ing the Todo 4/5
+dispatch above. Checked the availability manifest before writing anything (`read_availability_index`, bounded — NOT a
+raw GCS walk, killed an accidental recursive `gsutil ls -r` mid-investigation before it completed): `queue_position` AND
+`depth_of_book_10` both show **0 captured rows ever** — todo 2's live WS connectors are shipped but have never actually
+been dispatched in production. Built `scripts/book_microstructure_connectivity_check.py` (recreated from the deleted
+`a4fb3d13` version, adapted for the deeper-book path — see the todo's own checkbox above for full detail) hitting each
+of the 5 capable venues' public REST order-book endpoints directly rather than depending on a prior live capture. Ran it
+live against real production venue APIs — all 5 passed. Shipped `market-tick-data-service@bc9cd08c`, QG green,
+quickmerged.
+
+**Note for whoever picks up todo 7 / the parent plan's Phase E1 next**: the live WS `depth_of_book_10` capture (todo 2)
+has never actually run — "the feed is honestly live for the capable venues" (todo 7's own done-condition) is NOT yet
+true in the sense of continuous production capture, only in the sense that the code path is proven end-to-end (this
+todo) and the capability registry is honestly flipped (todo 4). Whether that gap needs a dispatch-the-live-capture todo
+before Phase E1 proceeds is a call for whoever picks up todo 7 — not addressed in this dispatch (out of this task's
+scope).
 
 ### 2026-07-14 — slot 11 (Todo 4 shipped; Todo 5 premise-correction — BLOCKED-OPERATOR)
 
