@@ -45,7 +45,7 @@ related:
 created: 2026-06-24
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # was: orchestrator-agent — corrected 2026-07-14, verify-rerun finding 113, per the finding-9 operator ruling precedent (two-track model stands): assigned_vm NA => local-only; AO regen ignores NA plans regardless, so ingestion semantics unchanged
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 32

@@ -349,8 +349,15 @@ Cross-cutting decisions to settle in the same session:
 
 Phase A — walkthrough + decisions (operator-joint; blocks Phase B):
 
-- [ ] [OPERATOR] P0. § 4 walkthrough session — open each deployment-ui page against live backend, fill every Decision
-      cell + settle D1–D6 in place. `BLOCKED-OPERATOR-DECISION` until scheduled.
+- [ ] [OPERATOR] P3. § 4 walkthrough session — open each deployment-ui page against live backend, fill every Decision
+      cell + settle D1–D6 in place. `BLOCKED-OPERATOR-DECISION` until scheduled. **(was: P0 blocking-all-of-Phase-B —
+      REPRIORITIZED 2026-07-14 per the operator's own 2026-07-13 Slack ruling in this doc's Progress Log L445-447:
+      "general responsiveness → walkthrough" = lowest priority; verify-rerun finding 53. Phase B no longer gates on
+      this.)**
+- [ ] [INFRA] P1. Pause the rollup-svc cron (cost-stop) — elevated to near-term per the operator's 2026-07-13 Slack
+      ruling (Progress Log L445-447); was narrative-only, promoted to a tracked todo by verify-rerun finding 53.
+- [ ] [BACKEND] P1. Add the deployment-api fail-fast/refuse-large OOM-guard — elevated to near-term per the same
+      operator ruling; promoted from narrative to tracked todo (finding 53).
 - [x] ✅ [BACKEND] P0. Benchmark session (2026-07-13, agent-run per operator direction) — deployed-API curl suite (39
       reqs, cold/warm/503 sequences), Playwright page-level timings (6 pages), local 4-worker replica with
       phase-attributed RSS monitoring incl. the turbo data-status path. Results = § 2.7; § 4 "Today" column filled with
