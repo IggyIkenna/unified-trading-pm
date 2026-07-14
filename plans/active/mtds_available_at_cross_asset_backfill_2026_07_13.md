@@ -35,6 +35,7 @@ estimate_calibrated_ai_days: 3.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+sequential: true
 source: >
   manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md todo P2 ("Scope + execute a
   cross-asset-group backfill plan... route through manifest_master epic as its own plan, NOT this issue doc")
@@ -191,3 +192,17 @@ call site (its CF-11 honest-absence function, not this plan's defi gap) — conf
 (non-projection) apply path (the script's own test asserts `writer.add.assert_not_called()` when `projection=False`),
 consistent with this plan's existing "defi has NO existing capture-path threading" conclusion — no action needed there,
 just corroboration. No production writes made this touch.
+
+**Dispatch-order finding — 2026-07-14 (slot 5)**: dispatched task `mtds_available_at_cross_asset_backfill-005` ("Resume
+the prediction consolidator cron; record before/after fill-rate evidence"), the LAST prediction-lane todo in this plan,
+with NONE of its upstream prerequisites satisfied — verified read-only: all 12 todos still unchecked, both prior
+Progress Log entries explicitly report "No production writes made", no operator go/no-go on record for the P0
+`BLOCKED-OPERATOR-DECISION` maintenance-window todo, no dry-run, no manifest snapshot, cron never paused, no `--force`
+apply. Root cause: this plan had no `sequential`/`depends_on` ordering, so the backlog regenerator could dispatch a
+downstream P1 todo ahead of its prerequisite P0/P1 todos (`plan_order` alone only orders same-priority todos by file
+position among DISPATCHABLE tasks — it does not gate on completion). Fix applied: added `sequential: true` to this
+plan's frontmatter (per `plans/active/task_template.md` §4 — shipped `ao@ff6100ad`) so downstream todos now wait for
+their predecessor to be `done` before dispatch. Filed `/blocked` (`BLK-f3cdf442`) declining to execute -005 as
+dispatched (nothing to resume, no evidence to record) and recommending it re-queue once the real prerequisite chain —
+starting with the OPERATOR P0 maintenance-window decision — is actually satisfied. No production writes made this touch;
+no cron touched, no manifest write, no consolidator state changed.
