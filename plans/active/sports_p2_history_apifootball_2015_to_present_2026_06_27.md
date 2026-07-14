@@ -1236,3 +1236,21 @@ remaining VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creati
 Tracebacks/ERRORs. No material change — still transitively gated on the GW gate (Todo 9) going green, session 22's
 slowest-VM ETA (~4.2h from 11:52Z) puts completion around ~16:00Z. Not re-running the manifest-rescan/GW gate query
 (would reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:19Z — session 25 (data_engineering slot-8): FIXTURE_EVENTS complete (2/5 entities done), background watchdog continuing
+
+Held Todo 9 across this dispatch window using a background poll (5-min interval via `gcloud compute instances list`, the
+google-cloud-sdk path — this slot's snap `gcloud`/`gsutil` is broken, same `cap_dac_override` error other slots hit)
+instead of re-checking on every heartbeat.
+
+**FIXTURE_EVENTS (`af-backfill-20260714-111307`) — COMPLETE**: `DEPLOYMENT_COMPLETED … exit_code=0` at 12:15:06Z,
+processed the full window through 2025-11-30 (91/91 days), self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`. Combined
+with INJURIES (session 22), **2 of 5 fleet entities now done**.
+
+**3 remaining VMs (FIXTURE_LINEUPS/STATS/PLAYER_STATS)** — all three now at `date=2025-10-05` (day 35/91), up from day
+23-24/91 at session 22's 11:51Z check (~28 min elapsed → ~0.4 days/min → revised ETA ~2.3h for these three, down from
+the ~4.2h session-22 estimate — the SPOT VMs sped up, not slowed). Log line counts growing steadily (4,984-5,145), zero
+Tracebacks/ERRORs.
+
+**Gate**: still FAILS — 3/5 entities not yet at 0 pending. **Checkbox NOT flipped.** Background watchdog continues
+polling; next log entry will land when the fleet shrinks further or completes.
