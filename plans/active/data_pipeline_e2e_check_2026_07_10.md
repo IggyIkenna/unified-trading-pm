@@ -1113,28 +1113,46 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE, EXPECTED_NO_PROVIDER_COVERAGE, EXPECTED_NO_MAPPING,
       EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED) — same drift class fixed twice now (ca4b140b, a0cefb6b7); sync the
       whole set + consider generating the mirror from the UAC enum. (repo: unified-trading-pm)
-- [ ] 29. [DATA] P3. **Operator decision — `EXPECTED_SOURCE_DELIVERY_LAG` denominator classification**: currently
-      WITHIN-window (counts against completion %), so HYPERLIQUID l2Book's rolling ~2-week publish lag reads as a
-      standing coverage dip; moving it OUT-of-window (or adding a dedicated out-of-window reason) is a denominator
-      change needing an operator ruling. (repo: unified-api-contracts)
-- [ ] 30. [DATA] P3. **IS could-exist enumeration gap**: `TRADFI_VENUE_INSTRUMENT_TYPES["ICE"]` lacks `"index"`, so the
-      D2a expected-universe generator never counts the real ICE:INDEX:DXY-USD cell (pre-existing, surfaced by the ICE
-      narrowing — see `tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md` residuals; also the `venue_mapping.py`
-      ICE start-date 2020-01-01 vs 2019-01-02 nit). (repo: instruments-service / unified-api-contracts)
+- [x] 29. ✅ [DATA] P3. **`EXPECTED_SOURCE_DELIVERY_LAG` denominator classification — RULED (2026-07-14, under the
+      operator's blanket /autonomous "decide+document" delegation): KEEP within-window, no out-of-window mechanism.**
+      Codified in `codex/02-data/honest-coverage-model.md` § Coverage formula ("Delivery-lag ruling"). Rationale: the
+      reachable-coverage formula already EXCLUDES `empty_confirmed` from the reachable denominator, so the lag band
+      never depressed reachable coverage — the trailing dip appears only in the all-shards completeness view (that
+      view's purpose); an out-of-window mechanism would hide a genuinely-stuck capture inside the lag window; the band
+      self-heals (idempotent re-attempts flip rows to `captured` after the lag elapses). Precedent: TradFi T+1 vendor
+      lags also stay within-window.
+- [x] 30. ✅ [DATA] P3. **IS could-exist enumeration gap** — `unified-api-contracts@7354de78`: `"index"` ADDED to
+      `TRADFI_VENUE_INSTRUMENT_TYPES["ICE"]` (chains deliberately KEPT — real historical captured rows exist at chain
+      grains, 4 UAC tests proved it) + `venue_mapping.py` ICE start-date 2020-01-01 → 2019-01-02. IS golden
+      (`test_expected_matches_golden[tradfi]`) regen rides the IS RC#5 batch (regen gate needs UAC+UTL sibling clones
+      clean; UTL carries live foreign WIP — retried this session until clean).
 
-- [ ] 31. [DATA] P3. **Small verification-round nits, batched** (each flagged in a Progress Log entry but previously
-      lacking a todo): (a) COINBASE-CDE `venue_start_dates` 2026-07-10 floor understates the venue's REAL fetchable
-      trade history (A3's live-API probe pulled 2026-07-11 trades; the floor's semantics vs actual API history needs a
-      registry check) + whether the CDE batch adapter should also serve ohlcv/candles; (b) CBOE VX live-leg `.FUT`
-      suffix symbology (fallback symbol now reaches Databento but `VXU26.FUT` fails gateway resolution — narrow
-      symbology pass, flagged 2026-07-13 morning); (c) MTDS force-leg has no honestly-empty pass path (a lag/pre-launch
-      day with an honest empty_confirmed row still reports `no_parquet_under` — the MTDS analogue of the IS benign-pass
-      in instruments-service@526d2ffd); (d) MTDS KRX skip-leg reports `ambiguous: skip_signal_not_found_in_run_log` for
-      the Yahoo route (skip-signal grep coverage); (e) PREDICTION checker enumeration hygiene — IS-domain surfaces
-      (`market_lifecycle`/`MARKET_LIFECYCLE`/`prediction_canonical_question_group`) enumerate as MTDS shards and the
-      checker resolves the PRD bucket for prediction (todo-13 naming quirk); (f) concurrent-driver Phase-0 caveat — a
-      parallel driver's re-consolidation of a shared -test- bucket can make verify_manifest_row miss a just-written row
-      (the ICE false-negative). (repos: unified-api-contracts, market-tick-data-service)
+- [x] 31. ✅ [DATA] P3. **Small verification-round nits, batched — ALL SIX CLOSED (2026-07-14):** **(a)**
+      `unified-api-contracts@cb61b42b` — COINBASE-CDE floor 2026-07-10 → **2025-12-12, MEASURED** (public Advanced-Trade
+      ticker probed day-by-day: ADP-20DEC30-CDE has trades on 2025-12-12, zero on 2025-12-11 and every earlier probe
+      back to 2025-07 — ~7 months of real fetchable history the old floor hid). Candles decision: `/candles` serves the
+      same depth but ohlcv stays UNDECLARED for CDE — bars derive from trades, one source per cell, same policy as every
+      Tardis venue (documented in-registry). **(b)** `market-tick-data-service@5bb0e2c3` — root cause was stype, not the
+      symbol: a month-coded specific contract (VXU26) was `.FUT`-suffixed + subscribed `stype_in=parent` (invalid parent
+      symbol → gateway reject). `_parse_instrument_id` now returns `(dataset, symbol, stype)` — month-coded FUTURES →
+      bare `raw_symbol`; parent underlyings/equities unchanged; subscriptions grouped by `(dataset, stype)`. Live
+      re-verify folded into the todo-27 re-run wave (needs the new code on a VM). **(c)**
+      `market-tick-data-service@1dd4bbbc` — force-leg honest-empty pass: per-VM row `empty_confirmed` + `EXPECTED_*`
+      reason → `passed` (`ok (honest-empty: <reason>)`); `SOURCE_RETURNED_ZERO` stays FAIL on force legs. **(d)**
+      `deployment-service@a460f18` — the KRX "ambiguous" was root-caused NOT to grep coverage: the skip VM died on
+      `ManifestConsolidatorStaleError` (heartbeat 434s > the in-VM 120s budget; `MANIFEST_ALLOW_STALE_FALLBACK` does NOT
+      gate that assert). Test-run launcher metadata now also stamps `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (both
+      `launch-mtds-backfill-vm.sh` + `launch-mtds-live.sh`). **(e-i)** `market-tick-data-service@1dd4bbbc` — PREDICTION
+      enumeration filtered to `get_expected_data_types_for_venue()` → exactly KALSHI/POLYMARKET × trades/book_snapshot_5
+      (verified live; the 10 IS-domain phantom shards are gone). **(e-ii)** PRD-bucket-under-test: DECIDED keep +
+      document — prediction test-runs deliberately land on the PROD flat-kind bucket (mirrors the shipped todo-13
+      `get_tick_data_bucket()`/`_test_bucket()` special case; a test-leg capture is a REAL idempotent capture, not
+      pollution; provisioning a `-test-` sibling would contradict the shipped resolver contract). **(f)**
+      `market-tick-data-service@1dd4bbbc` — concurrent-driver false-negative closed by construction: force/skip verify
+      is per-VM-first (`_read_per_vm_batch_row`, day-filtered, latest `attempted_at` wins) — the leg VM's OWN shard is
+      ground truth, immune to a parallel driver's re-consolidation. +5 unit tests
+      (`tests/unit/test_pipeline_e2e_check.py`, first coverage of the checker script). (repos: unified-api-contracts,
+      market-tick-data-service, deployment-service)
 - [x] 26. [DATA] P3. **Design a fixture-aware day-selection mechanism for the SPORTS asset_group** so a future sweep can
       meaningfully test SPORTS coverage (this session's single fixed day, 2026-07-09, had zero scheduled fixtures for
       every tested league/venue — an honest but uninformative result). Built + ran (see Progress Log): queried PROD's
@@ -1600,3 +1618,41 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   **Still in flight at entry time**: KALSHI trades post-80d5aadd proof-run (gated on tarball refresh; UAC foreign WIP
   intermittently blocks `create-code-tarballs.sh`), pilot wave completion. Todo 27's Tardis-locked venue cluster remains
   gated on the pilot outcome per the operator ruling.
+
+- 2026-07-14 (autonomous main-loop wave — todos 28/29/30/31 ALL closed, W1 deploy chain live, ~9 commits across 6 repos;
+  the 7-agent workflow died on the session limit so every unit ran sequentially in the main loop) — Shipped and verified
+  this wave:
+  1. **Todo 28** — `unified-trading-pm@2d6aacc1d`: PM QG mirror `check_record_empty_reason_closed_set.py` KNOWN_REASONS
+     brought to FULL 40/40 parity with UAC `EmptyConfirmedReason` (6 missing members added; verified programmatically).
+  2. **Todo 29** — ruled KEEP within-window (no out-of-window denominator mechanism); codified in
+     `codex/02-data/honest-coverage-model.md` § Coverage formula. See the flipped todo for the 3-part rationale.
+  3. **Todo 30** — `unified-api-contracts@7354de78` (ICE "index" added, chains kept — 4 tests proved real chain-grain
+     rows; ICE start 2019-01-02). IS golden regen rides the IS RC#5 batch (regen gate requires UAC+UTL clones clean).
+  4. **Todo 31 (all six letters)** — see the flipped todo for per-letter evidence: 31a `uac@cb61b42b` (CDE floor
+     2025-12-12 MEASURED via day-by-day public-API probe; candles = deliberately undeclared), 31b `mtds@5bb0e2c3`
+     (month-coded contracts → raw_symbol stype; the .FUT/parent combination was the real bug), 31c+e+f `mtds@1dd4bbbc`
+     (honest-empty force-leg pass, PREDICTION enumeration hygiene, per-VM-first concurrency-immune verify + 5 unit
+     tests), 31d `deployment-service@a460f18` (KRX "ambiguous" root-caused to the in-VM consolidator staleness assert;
+     launchers stamp `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` on test runs + opt-in `TARDIS_CONCURRENCY_LEASE`
+     passthrough as the todo-27 enabler).
+  5. **W1 (DEFI SIGKILL forensics) deploy chain LIVE** — `unified-trading-library@1a4b5238` adds `phase=` markers at
+     every memory-relevant consolidator boundary (lock_acquired → shards_listed → canonical_downloaded(canon_rows) →
+     shards_downloaded(rows_in) → duckdb_merge_start(mode, memory_limit) → duckdb_merge_done(rows_out)); UTL base image
+     rebuilt by push-trigger (build `87c2a467` SUCCESS → digest `ec37e0cc…`); `mtds@b737ca1f` pins the digest
+     (supersedes the concurrent 23:56Z `d4bcd124` pin — ec37e0cc is a descendant, both available_at fixes stay bundled).
+     The ~20 consolidator jobs resolve `market-tick-data-service:latest` PER EXECUTION, so the defi job's next cron tick
+     after the MTDS image push carries the markers — the last `phase=` line before the next SIGKILL pins the kill point.
+     Also fixed adjacent: `_load_expected_clusters_for_cqg` exact-pathed the retired group-first lifecycle layout
+     (expected=observed fallback fired on every call since the day-first migration) — now prefix-lists day-first and
+     tolerates the RC#5 `venue=` level (`mtds@5bb0e2c3`).
+  6. **Tardis G4 baseline census (frozen pre-fix numbers, cefi-prd consolidated index 2026-07-14 00:35Z)**: 7,507,673
+     total rows; captured 3,119,372 / empty_confirmed 2,620,818 / attempted_failed 1,724,463 / expected_unattempted
+     43,020. Of attempted_failed: 1,291,037 (74.87%) carry `403`; 25 carry `code=274` (the tag only exists since
+     2026-07-12). Per-venue af top: DERIBIT 576k, BINANCE-FUTURES 191k, BYBIT 169k, BITGET-FUTURES 166k. G4
+     re-measurement = re-run of this census after the lease-enabled todo-27 re-run wave; the 403 share should fall on
+     re-attempted shards. **Still open at entry time**: IS RC#5 batch ship (golden regen gated on the LIVE foreign UTL
+     WIP settling — `manifest_writer/_read_index.py`, mtime 00:40Z), tarball rebuild (same gate + clean MTDS/UAC now
+     satisfied), the sequenced infra wave (IS prediction re-run 07-07..12 → produces
+     `instrument_availability/by_date/day=2026-07-09` as a side effect (W3) → KALSHI e2e proof → Tardis-locked CEFI
+     cluster re-runs with `TARDIS_CONCURRENCY_LEASE=1` → DEFI kill-point observation → actual OOM fix), 31b live
+     re-verify.
