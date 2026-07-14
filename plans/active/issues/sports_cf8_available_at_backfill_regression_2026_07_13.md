@@ -329,7 +329,23 @@ consolidation).
       (`instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md`). **Answer to this todo's own question:
       STALE (the UTL base layer specifically), NOT a residual code bug** — todo 2 below can proceed once (a) this fix
       ships (unblocks the repo-blocker) and (b) the operator-coordinated maintenance window todo 2 itself requires is
-      arranged.
+      arranged. — **DIGEST FIX CONFIRMED LIVE, slot 2 (data_engineering), 2026-07-14 (session resumed after a mid-task
+      crash)**: on resume, fresh-pull found `instruments-service@ca3902bb` (slot 3, independently) already shipped the
+      byte-identical digest bump (`sha256:b7e391f8...` → `sha256:29e5b552...`, same UTL HEAD `c7126116`) via the
+      dirty-deps direct-push carve-out — confirmed via `git show`, now live on `live-defi-rollout`. Stashed my
+      now-superseded local Dockerfile diff (identical content, dropped cleanly on fast-forward) and re-verified the
+      `tradfi.json` golden fix is STILL genuinely needed (re-ran the failing test on the fast-forwarded tree — still
+      red; an earlier golden regen, `c6a97052`, only removed 3 stale ICE/ohlcv_1m tuples but pre-dated the
+      ICE/index/ohlcv_24h tuple becoming enumerable, so it's itself stale). Re-generated + reduced to a tradfi-only diff
+      again (verified passing); but a **THIRD, independent, confirmed-pre-existing QG red** surfaced on this same re-run
+      (`test_rollup_defi_pool_emits_dual_form_ids`, a DeFi UNISWAPV3-vs-UNISWAP_V3 naming drift, verified pre-existing
+      via clean-tree stash — unrelated to sports/tradfi, out of data_engineering craft scope). Given this repo is now
+      confirmed red for (at least) two independent reasons simultaneously and multiple other slots are actively shipping
+      fixes to it concurrently, re-stashed the tradfi golden fix (tag
+      `orchestrator-slot-2-sports_cf8_available_at_backfill_regression-007`) rather than chase a third unrelated failure
+      or risk a misapplied direct-push carve-out. **This todo's own substance (the deployment-freshness question) is now
+      fully resolved AND live in production** — the digest fix shipped is what matters; who authored the commit is
+      incidental given two independent investigations converged on the identical root cause and fix.
 - [ ] [DATA] P1. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
       "a residual code bug, now fixed"), run a TARGETED re-emit pass scoped ONLY to `capture_status='captured'` rows on
       both sports surfaces (NOT a full `--force` corpus rebuild, which has already regressed data twice in this doc's
@@ -544,3 +560,19 @@ maintenance-window scheduling first (Finding 1's cron-collision history recurred
 prior attempt). Routing that coordination ask + the repo-blocker status to the operator via `/blocked` rather than
 either running an uncoordinated production backfill or silently leaving the dispatch's actual assignment untouched with
 no visibility.
+
+**Session resumed after mid-task crash — 2026-07-14 (data_engineering slot-2)**: WIP was intact (uncommitted
+Dockerfile + tradfi.json diff, as left). Operator answered `BLK-d9137d48` with **option A**: wait for the repo-blocker,
+ship the digest fix, then STOP — do not attempt the live re-emit without further explicit go-ahead + a scheduled window.
+Fresh-pulled and found slot 3 had independently shipped the byte-identical digest fix (`instruments-service@ca3902bb`)
+via the dirty-deps carve-out while this session was down — confirmed live, dropped my now-redundant Dockerfile diff on
+fast-forward. Re-verified the tradfi golden fix is still genuinely needed (a prior golden regen, `c6a97052`, was itself
+stale) and re-confirmed it passes in isolation, but a third independent pre-existing QG red surfaced
+(`test_rollup_defi_pool_emits_dual_form_ids`, a DeFi naming drift, out of scope) — kept it stashed
+(`orchestrator-slot-2-sports_cf8_available_at_backfill_regression-007` in the instruments-service slot clone) rather
+than chase an unrelated third failure or misapply a direct-push carve-out I'm not confident matches this case.
+
+**Net effect for this dispatch**: this todo's own question (deployment-freshness) is resolved AND the fix is live in
+production, satisfying the operator's "ship the digest fix" instruction (via a converged independent fix, not my own
+commit). Per the operator's explicit STOP instruction, the actual targeted re-emit (todo 2) remains untouched, correctly
+— it needs a separately operator-scheduled maintenance window, not this dispatch. Closing this dispatch here.
