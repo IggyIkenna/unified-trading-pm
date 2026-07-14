@@ -127,3 +127,8 @@ flipping.
       `pred != "market-data-tick-prediction-test-project"` — its `_default_bucket_for("prediction")` resolves via
       `resolve_bucket_name(kind="market-data-tick-prediction")`, the same already-correct yaml-key path as todos 3/4's
       verification. 91 MTDS + 14 IS tests in the named files re-ran green, confirming no regression from the flip.
+      Follow-up (independent concurrent verification): landed doc-only comment clarifications so both files no longer
+      read as stale — `test_enumerate_expected_universe.py`'s "slated for L6 delete" comment now says "deleted
+      2026-07-12"; `test_migrate_prediction_to_pred_prd_v9_coverage.py`'s `LEGACY` constant now carries an explicit
+      comment stating it is the intentional historical migration-source name, not the live UAC SSOT. No assertions
+      changed (none were needed). — instruments-service@0a1f13e9, market-tick-data-service@9ed52332.
