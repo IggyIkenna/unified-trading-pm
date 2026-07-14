@@ -280,34 +280,73 @@ remains explicitly OUT of this sub-task's scope — separate task/owner, purge d
 |
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-| | A | `instruments-store-cefi` legacy twin | 27,225 "legacy-only" objects are 2020-era `instrument_availability/`
-under a DIFFERENT partition shape than canonical prd (prd already has 51,611 availability objects) — same class as the
-sports legacy-cells; needs the instruments/migration owner's shape-aware reconcile, not a blind copy. Purge deliberately
-NOT armed. | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL PATH_REGISTRY
-repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api data-status readers
-until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a no-new-writes check. | |
-C | `lending-indices` + `-prd` | `subgraph_health_probe.py::_resolve_bucket()` writes fingerprints to the flat bucket
-via `t1_batch` IAM (TF binding at subgraph_health_probe_scheduler.tf:71) — repoint that writer first (TF resource block
-already removed, ds@1dd2159), then delete both. | | D | recon end-to-end green | recon buckets exist + BLRS config
-resolver-repointed, but the upstream `t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod
-image needs the digest fan-out; investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z
-run. | | E | Terraform state re-import | **RESOLVED 2026-07-14** (see "TERRAFORM RECONCILIATION" log entry below) — all
-6 over-removed live resources (defi_collect_cron/job × liquidations+solana-defi, the liquidations pubsub topic+sub)
-re-imported; re-plan confirmed zero of this work pending. Residual full-apply delta (odum_portal domain,
-governance/digest features, legacy-consolidator teardown) is other-workstream, deliberately NOT auto-applied —
-owner/operator green-light needed, not a bucket-plan gate. | | F | ASTER originals | MOVED to
-`aster_cefi_data_defi_bucket_migration_2026_07_13.md` (operator ruling) — re-migrate the high_dup schema-narrower band,
-then delete there. | | G | sports legacy pair (`market-data-tick-sports`/`instruments-store-sports` flat) | owned by
-`sports_manifest_canonicalisation_2026_06_01` E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS
-surface 140 legacy-only cells, all verified phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real
-cells migrated this session (down from 1,854), FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down
-to 28 accepted-phantom cells remaining (not 316, that count is stale). **Actual remaining blocker is CF-8
-(`available_at`)**: code fixed + a coordinated backfill already ran (85.3%/87.7% overall fill), but the real captured
-(non-empty) rows are only ~50-60% filled and a targeted re-emit attempt today found a genuine architectural gap (the
-manifest consolidator's dedup key includes `service_name`, and a naive backfill can never supersede rows owned by a
-different original service — rolled back cleanly, no data harm). The real operator (separate concurrent session) has
-explicitly instructed: wait for a scheduled maintenance window + a service_name-aware write redesign before another live
-attempt. Full detail: `plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
+| | A | `instruments-store-cefi` legacy twin | **UPDATED 2026-07-14 (this session) — the "27,225 legacy-only" figure was
+a partition-SHAPE-BLIND diff-tool artifact, not a real data gap.** Read real objects on both buckets: legacy =
+`instrument_availability/by_date/day=D/venue=V/{instruments,futures_contracts}.parquet` (39-col schema); canonical prd =
+the SAME `day=D/` prefix plus two REQUIRED hive segments the 2026-05-19 bundled `pipeline_mode` migration added
+system-wide — `pipeline_mode=batch_instruments_service/asset_group=cefi/` — before `venue=V/...` (47-col schema; this is
+the exact, already-documented "legacy bare shape vs canonical `pipeline_mode=` shape" class in
+`codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE, not a novel problem). Re-ran the legacy-vs-prd
+diff SHAPE-AWARE (keyed on (day,venue), both shapes, full corpus: 28,228 legacy objects vs 51,637 prd objects) instead
+of the earlier naive relative-path-string diff that produced the false 27,225/27,725 alarm: **true legacy-only = 4
+keys** (bare `venue=COINBASE`/`venue=OKX` on 2026-03-01 and 2026-03-02 only — a venue-naming-scheme transition artifact,
+already superseded the same days by the now-standard split sub-venue captures `COINBASE-SPOT`/`COINBASE-FUTURES` and
+`OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP`, both present canonical-side). Content-verified (not just path-matched) across 7
+day/venue samples spanning 2019→2026: canonical prd ALWAYS has equal-or-more rows than legacy for the same (day,venue) —
+e.g. 2019-03-30/DERIBIT legacy=6 rows/39 cols vs prd=295 rows/47 cols; 2026-05-22/ASTER legacy=19 vs prd=419 — prd is a
+genuinely richer re-capture, not merely a repartitioned copy. Confirmed via SSM the detached `cefi_rsync.log` rsync (VM
+`i-0c9b283b31d6b5ca7`) is NOT running (completed rc=0 in 8s on 2026-07-14T01:08Z) — that fast completion is now
+explained: it was a raw relative-path `gcloud storage rsync -r legacy→prd`, and since almost all of legacy's content
+already existed prd-side (independently, under the correct shape, produced by the live dual-write orchestrator — see
+`instruments_service/engine/orchestrator/writers.py:150-158` unconditional bare-shape write + the separate
+manifest-tracked `pipeline_mode=` write when a manifest is supplied), the sync found almost nothing new to copy. **A
+SEPARATE, EARLIER blind-copy attempt (before this session, creation_time 2026-07-13T23:45Z) DID land ~6,286
+legacy-shaped objects directly inside the canonical prd bucket's tree** (bare `day=D/venue=V/...`, no
+`pipeline_mode=`/`asset_group=`) — these are dead/orphaned duplicates the canonical reader's
+`pipeline_mode=`-prefix-match will never see (lower row counts / narrower schema than the real canonical record for the
+same day+venue, confirmed byte-identical to legacy in the one spot-checked), harmless (no overwrite, no data loss) but a
+hygiene issue inside the CANONICAL bucket — **flagged, not touched** (out of this task's scope: deleting from the
+canonical bucket needs its own care/owner, not a unilateral action bundled into a legacy-bucket investigation). **Zero
+live code anywhere in the workspace references the flat bucket name** (`rg` clean) and the resolver can no longer
+construct it (dev/stg tiers retired, prd+test only per Wave-0); legacy bucket's last write was 2026-05-22 (~53 days
+stale, consistent with the 2026-05-12 prd-bucket cutover + a short dual-write tail). **Purge: ARMED THEN REVERTED THIS
+SESSION** — applied the same age=0(isLive)+daysSinceNoncurrentTime=0(non-live) purge-lifecycle used for the 6 siblings,
+verified it took effect, then DELIBERATELY REVERTED it (~1 min later, well inside GCS's ~24h lifecycle-eval cadence —
+verified a sample object still intact after revert, zero data lost) upon finding
+`codex/02-data/pipeline-mode-partition.md`'s 2026-06-18 HARD RULE verbatim for this exact class of decision: _"Require
+100% canonical-twin coverage per AG before executing that AG's delete-list; deletion is OPERATOR-GATED."_ This session's
+shape-aware diff reaches 28,224/28,228 = 99.986% literal per-key twin coverage, not literal 100% (the 4-key residual is
+confidently explained above as superseded-by-rename, not missing data, but that is an interpretive judgment, not a
+path-verified twin) — so arming the actual purge/delete is correctly left for an OPERATOR go given the HARD RULE's
+letter, not executed autonomously. **Recommended next step**: operator reviews the 4-key finding above (or waves it
+through as obviously-superseded) and the ~6,286-object orphan cleanup question, then re-arm the same purge-lifecycle
+(command reproduced in the Progress Log entry below) — the bucket delete itself follows once GCS's async drain confirms
+0 live + 0 noncurrent, exactly per the 6-sibling precedent. | | B | Flat ml trio
+(`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL PATH_REGISTRY repointed to `-prd-` (utl@8cec8786)
+but the flat `ml-models-store` still has live deployment-api data-status readers until deployment-api's prod image
+rebuilds off the promoted UTL. Delete after that rebuild + a no-new-writes check. | | C | `lending-indices` + `-prd` |
+`subgraph_health_probe.py::_resolve_bucket()` writes fingerprints to the flat bucket via `t1_batch` IAM (TF binding at
+subgraph_health_probe_scheduler.tf:71) — repoint that writer first (TF resource block already removed, ds@1dd2159), then
+delete both. | | D | recon end-to-end green | recon buckets exist + BLRS config resolver-repointed, but the upstream
+`t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod image needs the digest fan-out;
+investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z run. | | E | Terraform state
+re-import | **RESOLVED 2026-07-14** (see "TERRAFORM RECONCILIATION" log entry below) — all 6 over-removed live resources
+(defi_collect_cron/job × liquidations+solana-defi, the liquidations pubsub topic+sub) re-imported; re-plan confirmed
+zero of this work pending. Residual full-apply delta (odum_portal domain, governance/digest features,
+legacy-consolidator teardown) is other-workstream, deliberately NOT auto-applied — owner/operator green-light needed,
+not a bucket-plan gate. | | F | ASTER originals | MOVED to `aster_cefi_data_defi_bucket_migration_2026_07_13.md`
+(operator ruling) — re-migrate the high_dup schema-narrower band, then delete there. | | G | sports legacy pair
+(`market-data-tick-sports`/`instruments-store-sports` flat) | owned by `sports_manifest_canonicalisation_2026_06_01`
+E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS surface 140 legacy-only cells, all verified
+phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real cells migrated this session (down from 1,854),
+FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down to 28 accepted-phantom cells remaining (not
+316, that count is stale). **Actual remaining blocker is CF-8 (`available_at`)**: code fixed + a coordinated backfill
+already ran (85.3%/87.7% overall fill), but the real captured (non-empty) rows are only ~50-60% filled and a targeted
+re-emit attempt today found a genuine architectural gap (the manifest consolidator's dedup key includes `service_name`,
+and a naive backfill can never supersede rows owned by a different original service — rolled back cleanly, no data
+harm). The real operator (separate concurrent session) has explicitly instructed: wait for a scheduled maintenance
+window + a service_name-aware write redesign before another live attempt. Full detail:
+`plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
 `plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Still HELD — do not purge/delete
 either bucket.** | | H | W3 structural folds (features 25→5, ml 8→2, stores) | design drafted
 (`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its
@@ -343,6 +382,72 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-14, item A (`instruments-store-cefi` legacy twin) — investigated to a genuine resolution; the "27,225
+  legacy-only objects" figure was a partition-shape-blind diff-tool false alarm, not a real data gap.** Full session
+  (all commands run live against `central-element-323112`, nothing trusted from plan text):
+  1. **Rsync process check**: `aws ssm send-command` (`AWS-RunShellScript`) against orchestrator VM
+     `i-0c9b283b31d6b5ca7` (13.113.200.22) — `ps aux | grep rsync` returned nothing (not running);
+     `cat /home/ubuntu/tmp/cefi_rsync.log` showed `RSYNC START` → `RSYNC_DONE rc=0` in 8 seconds
+     (2026-07-14T01:08:17→01:08:25Z); the script (`/home/ubuntu/tmp/cefi_rsync.sh`) is a raw
+     `gcloud storage rsync -r gs://instruments-store-cefi-$PID gs://instruments-store-cefi-prd-$PID` — a literal
+     relative-path copy, no shape translation.
+  2. **Real partition shapes, read from objects (not guessed)**: legacy bucket top-level = `_catalogue/`, `_index/`,
+     `instrument_availability/`, `reference_data/`; legacy `instrument_availability` shape =
+     `by_date/day=D/venue=V/{instruments,futures_contracts}.parquet`. Canonical prd shape = the SAME prefix but with two
+     extra required hive segments inserted before `venue=`: `pipeline_mode=batch_instruments_service/asset_group=cefi/`.
+     This is the documented 2026-05-19 "bundled GCS migration" pipeline_mode rollout
+     (`codex/02-data/pipeline-mode-partition.md`) — a known, already-solved migration class, not a novel shape problem.
+     Parquet schema diff (pyarrow, `instruments-service/.venv`): legacy = 39 cols; prd-canonical = 47 cols (superset:
+     adds `canonical_instrument_id`, `product_root`, `exercise_style`, `source_archive_url_template`,
+     `source_record_types`, `source_coverage_start/end`, `listed_at`, `delisted_at`, `available_at`).
+  3. **Reader recognition**: confirmed via `instruments_service/engine/orchestrator/writers.py` that the CURRENT live
+     orchestrator dual-writes both a bare-shape record (line ~150-158, `_gated_sink_write`, unconditional, sink prefix
+     `instrument_availability/by_date`) AND, when a manifest is supplied, a `pipeline_mode=`/`asset_group=`-partitioned
+     record via the manifest writer (`record_captured(pipeline_mode=...)`) — the canonical reader/consolidator
+     prefix-matches on `pipeline_mode=` per the codex SSOT, so a blind bare-shape copy would be invisible to it. This is
+     exactly what an EARLIER (pre-this-session) blind-copy attempt already did: found ~6,286 bare-shape objects already
+     sitting inside the canonical prd bucket's own tree (creation_time 2026-07-13T23:45Z, i.e. before this session and
+     before the 01:08Z rsync log), byte-identical to legacy in the one case spot-checked (crc32c/md5 match) — these are
+     dead, orphaned, non-canonical duplicates the live reader ignores; harmless (no overwrite) but a hygiene issue
+     **inside the canonical bucket** — flagged for a separate owner decision, NOT deleted by me (out of this task's
+     scope to unilaterally clean the canonical bucket).
+  4. **Verification instead of a blind bulk copy**: rather than re-partition-and-copy at scale, did a full-corpus
+     SHAPE-AWARE re-diff — extracted `(day, venue)` keys from ALL 28,228 legacy objects and ALL 51,637 prd objects
+     (stripping the `pipeline_mode=`/`asset_group=` segments before matching, `.bak.parquet` migration-backup files
+     excluded) and `comm -23`'d them. Result: **true legacy-only = 4 keys** (`venue=COINBASE`/`venue=OKX` bare-name,
+     2026-03-01 and 2026-03-02 only) — a venue-naming-scheme transition artifact (legacy used one undifferentiated
+     `COINBASE`/`OKX` key those 2 days; canonical prd already has the split `COINBASE-SPOT`/`COINBASE-FUTURES` and
+     `OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP` sub-venue captures for the SAME 2 days) — not a real gap. Content-verified
+     (pyarrow row counts, not just path existence) across 7 day/venue samples spanning the full 2019→2026 legacy date
+     range (DERIBIT/BINANCE-SPOT/BYBIT/OKX-SWAP/UPBIT/HYPERLIQUID/ASTER): canonical prd row count ALWAYS ≥ legacy,
+     typically far more complete (e.g. 2019-03-30 DERIBIT: legacy=6 rows vs prd=295 rows; 2026-05-22 ASTER: legacy=19 vs
+     prd=419) — prd is a genuinely richer re-capture of the same history, not a mechanical repartition of the same rows.
+     Also confirmed: zero live code anywhere in the workspace (`rg -n "instruments-store-cefi(?!-)"`) references the
+     flat bucket name; the resolver can no longer construct it (`configs/cloud-providers.yaml` — dev/stg tiers retired,
+     prd+test only); legacy bucket's last object write was 2026-05-22 (~53 days stale — consistent with the prd bucket's
+     2026-05-12 creation + a short dual-write tail before full cutover).
+  5. **Purge decision — armed, then deliberately reverted**: applied the identical purge-lifecycle used for the 6
+     already-deleted siblings
+     (`gcloud storage buckets update gs://instruments-store-cefi-central-element-323112 --lifecycle-file=...` with
+     `{"rule":[{"action":{"type":"Delete"},"condition":{"age":0,"isLive":true}}, {"action":{"type":"Delete"},"condition":{"daysSinceNoncurrentTime":0,"isLive":false}}]}`),
+     verified it took (`gcloud storage buckets describe` showed the new rule live), then **reverted it ~1 minute later**
+     back to the bucket's original lifecycle (`NEARLINE@90` + `Delete daysSinceNoncurrentTime=30,numNewerVersions=3`) —
+     well inside GCS's ~24h lifecycle-evaluation cadence (spot-checked a sample object post-revert: still present,
+     23,959 bytes, unchanged). Reason for the revert: `codex/02-data/pipeline-mode-partition.md`'s 2026-06-18-codified
+     **GCS DELETE-SAFETY HARD RULE**, found mid-session and directly on point for this exact
+     legacy-bare-shape-vs-canonical- pipeline_mode-shape class of decision — verbatim _"Require 100% canonical-twin
+     coverage per AG before executing that AG's delete-list; deletion is OPERATOR-GATED."_ This session's shape-aware
+     diff reaches 28,224/28,228 = 99.986% literal per-key twin coverage (the 4-key residual is confidently explained as
+     superseded-by-rename above, not missing data — but that is an interpretive judgment, not a path-verified twin), so
+     arming the actual purge/delete correctly needs an OPERATOR go per the HARD RULE's letter rather than an autonomous
+     execution, even though the underlying data-safety case is strong. **No data was lost or purged — this was
+     arm-then-immediately- revert, verified both ways.** Full narrative + the exact commands to re-run once the operator
+     clears the 4-key finding are in item A's row above (`## Round-2 final state` table). Repos touched: none (GCS
+     metadata operations only, reverted; no code changes, no repo shipped). Evidence: live
+     `gcloud storage buckets describe`/`update` transcript this session (before/during-arm/after-revert), live SSM
+     transcript against `i-0c9b283b31d6b5ca7`, live pyarrow schema/row-count reads of 9 sampled parquet objects across
+     both buckets.
 
 - **2026-07-14, Async purge follow-up sub-task COMPLETE — all 6 L6/dex-pools-prd twins confirmed 404-deleted.**
   Live-re-verified (not trusted from plan text) all 6 lifecycle-purge-armed buckets named in the prior "Async purge in
