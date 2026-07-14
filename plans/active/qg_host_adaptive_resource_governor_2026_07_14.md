@@ -217,13 +217,16 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
-- [ ] [INFRA] P0. Re-verify the 2026-05-29 swap-incident repro does NOT recur at higher K on a 61 GB host (drive N
-      concurrent heavy QG runs; watch `free -h` swap-in rate + load) — the issue doc requires this before touching the
-      floor. Capture evidence.
-- [ ] [INFRA] P0. Raise `QG_HOST_CONCURRENCY` on 61 GB fleet hosts from 1 to `floor(0.7×RAM / heaviest-single-run-RSS)`
-      = floor(43 / 5.5) = **7** (use **6** for margin — NOT 8: 8×UTL = 44 GB > the 43 GB ceiling) in
-      `agent-orchestrator/scripts/bootstrap_vm.sh` + live `.env.local`; measure the fleet queue-time drop. (Interim —
-      once the gates land in Phase 3, K loosens to the runaway backstop, RAM-derived per host.)
+- [ ] [INFRA] P0. BLOCKED-OPERATOR-DECISION — DEFERRED (operator 2026-07-14, "raise K to 6 for now"): the live
+      load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33 GB < the 43 GB (70 %)
+      ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope (`tmux_spawn` §6.2) + 16 GB
+      host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at K=6. The Phase-6 soak (no
+      swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the live repro.
+- [x] [INFRA] P0. ✅ Raised `QG_HOST_CONCURRENCY` from 1 to **6** across all three layers — live tmux global env
+      (`setenv -g`, new workers inherit as they cycle) + root `agent-orchestrator/.env.local` (survives restart) +
+      `bootstrap_vm.sh` template (survives re-bootstrap). Evidence: AO@222369f (bootstrap) + `.env.local=6` +
+      `tmux show-environment -g → QG_HOST_CONCURRENCY=6`. Fleet queue-time delta to be measured in the Phase-6 soak.
+      (Interim — once the gates land in Phase 3, K loosens to the runaway backstop, RAM-derived per host.)
 
 ### Phase 2 — Host capacity introspection (portable)
 
@@ -336,6 +339,18 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   swap**, and the 05-29 mitigations (16 G host swap + `orchestrator.service` MemoryMax=56 G) are persistent. So the
   32–57 GB single-pytest OOM that motivated the K=1 floor is ALREADY contained per-worker at 10 G — the repro cannot
   recur the same way. Phase 1's re-verify should confirm the 10 G scope cap holds under N-concurrent, then raise K.
+
+### 2026-07-14 — Phase 1 K=6 raised (slot 16, operator-directed)
+
+- **Operator: "raise the floor of K to 6 for now."** Corrected my earlier over-claim (see below), confirmed 6×UTL = 33
+  GB < 43 GB ceiling, raised K to 6 across all three layers: live tmux global env (`setenv -g QG_HOST_CONCURRENCY 6` on
+  the default socket → new worker sessions inherit 6 as they cycle) + root `.env.local=6` (survives restart) +
+  `bootstrap_vm.sh` template `AO@222369f` (survives re-bootstrap). Existing 13 worker sessions keep K=1 until they
+  cycle. Live repro DEFERRED per operator; Phase-6 soak is the empirical confirmation.
+- **Correction to the Phase-1 recon (operator caught it):** the per-worker 10 GB scope cap does NOT make K=6 safe by
+  itself — it is per-worker, so K workers = up to K×10 GB and does not bound the aggregate. K=6 is safe because the
+  AGGREGATE math holds (6×UTL 5.5 = 33 GB < 43 GB, typical mix far less); the 10 GB scope cap + 16 GB swap are the
+  single-runaway BACKSTOP that turns a would-be host OOM into an isolated per-scope kill. Two distinct guarantees.
 
 ## Deferred / open decisions
 
