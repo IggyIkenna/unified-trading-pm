@@ -88,7 +88,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - [ ] [REVIEW] P0. Verify the drain end-to-end against the DEPLOYED in-region API: record `active/` object count before
       and after (expect → ≈ running-VM count), and `GET /api/deployments/inventory?status=all` returning non-empty live
       VMs within the 45s bound. Put the before/after numbers + a 200-with-items sample in the Progress Log.
-- [ ] [INFRA] P0. Add a SIGTERM handler to the UTL heartbeat daemon
+- [x] ✅ [INFRA] P0. Add a SIGTERM handler to the UTL heartbeat daemon — unified-trading-library@04c72ef5
       ([`lifecycle/daemon.py`](../../unified-trading-library/unified_trading_library/lifecycle/daemon.py),
       `HeartbeatDaemon`) that, on SIGTERM, calls `store.complete(self.entry)` (status=failed + exit_code set) within the
       SPOT ~30s preemption grace, then stops the daemon. Idempotent — safe if `complete()` was already called. This
