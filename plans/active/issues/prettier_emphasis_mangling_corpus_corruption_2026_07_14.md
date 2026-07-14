@@ -1,0 +1,116 @@
+---
+doc_type: issue
+title:
+  Prettier emphasis-mangling corrupts underscore identifiers across plans + codex docs (deterministic, two defect
+  classes)
+summary:
+  Prettier's markdown formatter deterministically corrupts doc passages in this repo — underscores in unbackticked
+  identifiers get rewritten as asterisks (`data_types`→`data*types`, `schema_version`→`schema*version`,
+  `{mode}_{source}`→`{mode}*{source}`, `LIVE_`/`BATCH_`→`LIVE*`/`BATCH\_`) and wrapped paragraphs collapse into blob
+  lines with multi-space runs. Two proven defect classes — (1) a code span split across a line break and/or bare
+  underscore identifiers mis-pair backtick/emphasis parsing for the whole paragraph; (2) very long single-paragraph list
+  items with many inline code spans re-corrupt on EVERY reformat even when backtick-clean (fix requires a paragraph
+  split). Found during the 2026-07-14 verify-rerun-2 close-out; the reference repairs are unified-trading-pm@169a8c8cd
+  and @65420c363. A corpus scan found ~31 plans docs (repair waves dispatched same session) and 13 codex docs (SSOTs —
+  repair operator-gated) carrying the signature; plans/archive copies are left as historical record.
+status: open
+resolved_by:
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: [docs-integrity, prettier, tooling, plans-corpus, codex, quality-gates]
+related: [plan_reconciliation_operator_decisions_2026_07_11.md, instruments_foundation_completeness_2026_06_24.md]
+created: 2026-07-14
+source:
+  - verify-rerun-2 chunk-7 fixer agent flagged pre-existing multi-space corruption in
+    instruments_foundation_completeness_2026_06_24.md; root-caused + corpus-scanned during the close-out.
+assigned_vm: NA
+assigned_role: data_engineering
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
+drift_direction: advance-docs
+parent_epic: agent_operating_framework_master
+execution_scope: local-only
+depends_on: []
+last_updated: 2026-07-14
+locked_by:
+locked_since:
+---
+
+# Prettier emphasis-mangling — corpus-wide doc corruption (two defect classes)
+
+## What happens
+
+Running prettier (directly or via the prek pre-commit auto-stage hook) on affected markdown deterministically corrupts
+content — this is NOT a concurrency race (it reproduces on a clean single-threaded `npx prettier --write`):
+
+- Underscores in unbackticked identifiers become asterisks: `data_types` → `data*types`, `schema_version` →
+  `schema*version`, `{mode}_{source}` → `{mode}*{source}`, `LIVE_`/`BATCH_` → `LIVE*`/`BATCH\_`. This can invert meaning
+  in normative text (a QG rule describing `LIVE_`-prefixed enum members now reads `LIVE*`).
+- Wrapped paragraph lines collapse into a single blob line with 4-6-space runs where newlines were; spaces around inline
+  code spans get eaten (`` glued `PROTOCOL-CHAIN` `` → ``glued`PROTOCOL-CHAIN` ``).
+
+## Root causes (both proven by isolated repro)
+
+1. **Backtick/emphasis mis-pairing** — a code span split across a line break (e.g. `` `master_data_canonicalisation_ ``
+   at end-of-line continuing `` migration_catalogue_2026_06_07` `` on the next) and/or bare underscore identifiers in
+   prose make prettier's parser mis-pair delimiters for the whole paragraph. Repair: restore original text, backtick
+   every bare underscore identifier, never split a code span across a line break. Reference: `169a8c8cd`.
+2. **Very-long-paragraph re-corruption** — a single-paragraph list item long enough (many inline code spans) re-mangles
+   on every `--write` pass even when backtick-clean. Repair: split into two paragraphs inside the same list item at a
+   sentence boundary (wording unchanged). Reference: `65420c363` (isolated repro: each half alone stable, combined blob
+   breaks).
+
+**Verification recipe for any repair**: detection grep clean + TWO consecutive `npx prettier --write` passes with the
+second reporting unchanged (one pass is NOT sufficient proof under defect 2) + `npx prettier --check` green.
+
+Detection signature (has false positives — legit globs like `data_type=*/`, escaped `\*`; verify each hit in context):
+
+```
+[a-z]\*[a-z_]+ < v9|\{mode\}\*\{source\}|asset\*group=|schema\*version|pipeline\*mode|instrument\*type|data\*type
+```
+
+## Affected inventory (scan 2026-07-14)
+
+- **Repaired 2026-07-14**: `instruments_foundation_completeness_2026_06_24.md` (@169a8c8cd), 6 propagated docs
+  (@65420c363), ~31 further plans/{active,epics,audit} docs dispatched to 5 repair batches same session (batch commits
+  cited in the reconciliation issue doc's Progress Log).
+- **plans/archive/** copies: left as historical record (out of repair scope).
+- **codex/ — 13 docs, repair OPERATOR-GATED**: `POST_PLAN_REALITY_2026_05_06`, 15-runbooks/alerting/alert-code-taxonomy,
+  04-architecture/service-contract-audit-template, 04-architecture/instrument-universe-registry-consolidation,
+  02-data/honest-absence-downstream-handling, 02-data/mtds-data-source-coverage-matrix,
+  02-data/service-output-emission-semantics, 09-strategy/architecture-v2/instruments-resolver-architecture,
+  02-data/defi-canonical-naming-ssot, 02-data/partitioning, 02-data/availability-manifest-and-data-status,
+  06-coding-standards/quality-gates, plus audit-instruction siblings.
+
+  Verified-real examples: partitioning.md line 51 and availability-manifest-and-data-status.md line 1140 (both say "data
+  types" in prose with the underscore rewritten as an asterisk); quality-gates.md line 185 (the enum-member underscore
+  prefixes for LIVE and BATCH rewritten as asterisk / escaped-underscore). Meta-note: the first draft of THIS paragraph
+  was itself mangled by prettier on save (defect 2) — it originally quoted the fragile tokens literally; it now
+  describes them instead.
+
+## Todos
+
+- [ ] [SCRIPT] P1. BLOCKED-OPERATOR-DECISION — codex repair wave. The 13 codex docs above carry verified mangling in
+      normative SSOT text. Options: (A, RECOMMENDED) approve a mechanical repair wave using the proven recipe (reference
+      commits 169a8c8cd/65420c363, per-hit false-positive verification, two-pass idempotence proof), one commit,
+      operator spot-review of the diff; (B) operator repairs by hand; (C) leave as-is (mangled SSOT text keeps
+      misleading readers and re-propagating into plans via copy-paste). Codex edits require an explicit operator ruling
+      per the plan-reconcile HARD GATE — do not execute without it.
+- [ ] [SCRIPT] P2. Gate hardening: add the detection signature (narrow, low-false-positive form:
+      `\{mode\}\*\{source\}|asset\*group=|schema\*version|[a-z]\*[a-z_]+ < v9`) as a PM quality-gate / prek check on
+      staged `.md` files so newly mangled text is rejected at commit time instead of accumulating. Home:
+      `scripts/quality_gates/` per script-homes SSOT; wire into the PM `quality-gates.sh`.
+- [ ] [SCRIPT] P3. Investigate a prettier-level fix: pin/bump the prettier version and minimally repro defect 2 upstream
+      (very-long list-item paragraph with many code spans); if an upstream issue exists, link it here; if a config
+      mitigation exists (e.g. `proseWrap`), evaluate against the repo's md conventions.
+
+## Progress Log (append-only)
+
+- 2026-07-14: issue filed during verify-rerun-2 close-out. Root causes proven + reference repairs shipped (@169a8c8cd
+  single doc, @65420c363 six propagated docs incl. the defect-2 discovery). Corpus scan complete; 5 parallel repair
+  batches over ~31 plans docs dispatched. Codex subset parked pending operator ruling (todo 1).
