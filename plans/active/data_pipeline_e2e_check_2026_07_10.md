@@ -1107,12 +1107,18 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       tarball first — refresh cron picks up pushed LDR commits). The Tardis-locked CEFI cluster
       (BINANCE-DELIVERY/OKX/BYBIT-SPOT/COINBASE-FUTURES/BITFINEX-SPOT/KRAKEN-FUTURES) re-runs only inside the lease
       pilot / solo window (operator decision 2026-07-13: pilot wave with lease ON). (repos: market-tick-data-service,
-      instruments-service)
-- [ ] 28. [INFRA] P2. **QG closed-set mirror sync**: 6 EmptyConfirmedReason members still missing from
-      `check_record_empty_reason_closed_set.py` KNOWN_REASONS (EXPECTED_NOT_ENOUGH_TVL, EXPECTED_CHAIN_AGGREGATE,
-      EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE, EXPECTED_NO_PROVIDER_COVERAGE, EXPECTED_NO_MAPPING,
-      EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED) — same drift class fixed twice now (ca4b140b, a0cefb6b7); sync the
-      whole set + consider generating the mirror from the UAC enum. (repo: unified-trading-pm)
+      instruments-service) **STATUS 2026-07-14T02:50Z — 5 of 6 clusters DONE, PREDICTION pair remains**: KRX ✅,
+      COINBASE-CDE ✅, HYPERLIQUID ✅, ICE ohlcv_24h ✅ (all in the 2026-07-13 verification round), Tardis-locked CEFI
+      cluster ✅ THIS session (lease-enabled re-run wave; real captures on every venue except bare-OKX liquidations,
+      which re-classed to `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md` Bug C routing — full evidence table
+      in `tardis_concurrent_ip_lockout_2026_07_12.md` § 2026-07-14T02:50Z). REMAINING: the PREDICTION pair (MTDS
+      KALSHI/POLYMARKET shards + post-RC#5 IS prediction re-run) — gated on the IS RC#5 batch ship, which is gated on
+      the live foreign UTL WIP settling (golden-regen sibling-clean guard).
+- [x] 28. ✅ [INFRA] P2. **QG closed-set mirror sync** — `unified-trading-pm@2d6aacc1d`: all 6 missing members added to
+      `check_record_empty_reason_closed_set.py` KNOWN_REASONS; FULL 40/40 parity with UAC `EmptyConfirmedReason`
+      verified programmatically (set-difference both directions = ∅). Generating the mirror from the UAC enum was
+      considered and deliberately NOT done: the PM QG runs without a UAC venv dependency by design (the mirror being a
+      literal is the point — drift is caught by the parity check, now exercised three times).
 - [x] 29. ✅ [DATA] P3. **`EXPECTED_SOURCE_DELIVERY_LAG` denominator classification — RULED (2026-07-14, under the
       operator's blanket /autonomous "decide+document" delegation): KEEP within-window, no out-of-window mechanism.**
       Codified in `codex/02-data/honest-coverage-model.md` § Coverage formula ("Delivery-lag ruling"). Rationale: the
@@ -1656,3 +1662,22 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
      `instrument_availability/by_date/day=2026-07-09` as a side effect (W3) → KALSHI e2e proof → Tardis-locked CEFI
      cluster re-runs with `TARDIS_CONCURRENCY_LEASE=1` → DEFI kill-point observation → actual OOM fix), 31b live
      re-verify.
+
+- 2026-07-14 (todo-27 Tardis-locked CEFI cluster re-run wave — lease-enabled, real VMs, ground-truth-verified) — Ran the
+  full cluster as test-run force legs on day=2026-07-09 with `TARDIS_CONCURRENCY_LEASE=1` through the
+  `deployment-service@a460f18` launcher passthrough. Driver summary tables under-reported (900s checker budget vs heavy
+  VMs) — per-VM shards + the consolidated test index are the verdict: BINANCE-DELIVERY book_snapshot_5 21 instruments
+  captured (75k–1.36M rows each) + derivative_ticker 21 + liquidations 7 + trades 4 (late-landed); BYBIT-SPOT trades 523
+  instruments / 5.94M rows; COINBASE-FUTURES derivative_ticker 145 / 13.25M rows; KRAKEN-FUTURES derivative_ticker 307 /
+  17.7M rows + trades 298 / 480k + liquidations 6; BITFINEX-SPOT honest-empty pass. **Zero `code=274` rows in every
+  serialized lease-enabled run** — the one 403 burst (01:32Z) is fully attributed to the concurrent NO-lease
+  BITGET-FUTURES 6-VM wave another session launched (documented as a RECURRENCE in
+  `tardis_concurrent_ip_lockout_2026_07_12.md`); the victim VM self-healed post-kill (trades captured 01:53Z).
+  Re-classifications out of the lock cluster: bare-OKX liquidations = Bug C venue→adapter routing (404
+  dataset-not-found; existing issue doc); BINANCE-DELIVERY ohlcv_1m + perp_funding = Tardis HTTP 400
+  (dataset-nonexistence for those dts on that venue — classification nit, rows honestly attempted_failed). 31b live
+  re-verify also PASSED this session: `TRADFI:CBOE:trades | live | passed` on the `5bb0e2c3` tarball — the raw_symbol
+  subscribe cleared the gateway (old failure mode gone); honest empty_confirmed row written by the live VM itself (thin
+  overnight CFE session). G4: baseline frozen (previous entry) + wave evidence appended to the tardis issue doc; full
+  post-fix af-census delta belongs to `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 after PROD-scale lease-enabled
+  waves.
