@@ -66,7 +66,15 @@ drift_direction: advance-code
 > 15:14 UTC via `canonical-migration-tradfi-20260706-145606` (planned=332825 moved=122703, exit_code=0, fatal=0). **All
 > 5 AGs now canonical (5/5).** Post-apply cleanup (E5 manifest rebuild + orphan sweep re-run + enumerate-seed +
 > straggler re-run) tracked in `tradfi_v9_stage1_finish_2026_07_06.md`. Tracker:
-> `instruments_completion_tracker_2026_07_06.md`.
+> `instruments_completion_tracker_2026_07_06.md`. **SCOPE CLARIFIED 2026-07-14 (doc-reconciliation verify-rerun-2,
+> finding 155)**: "canonical (5/5)" here means the **G4 physical `--apply`** (path/schema migration) is done for all 5
+> AGs — it does NOT mean every AG's manifest-content is CF-1…CF-21 clean. The fresher (2026-07-11) sibling doc
+> `plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md` explicitly flags **cefi as "NOT
+> ADJUDICATED"** on real CF-content RED items (CF-1 string-schema, CF-4 source 54% blank/3.9M rows, CF-5 189,665
+> untyped, Era-B 521,513 chain-rows) as of its own 2026-07-14 re-adjudication pass (sports/tradfi/defi were confirmed
+> stale-and-fixed there; cefi was not, for lack of a fresh CF-audit re-run). Read "5/5 canonical" as G4-apply-complete,
+> not as "all content-correctness gaps closed" — cefi's data-content gaps remain genuinely open pending its own fresh
+> CF-audit.
 
 > **Role**: this is the **G3.5 pre-apply verification gate** of
 > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` — it sits between **G3** (UNION view) and **G4**

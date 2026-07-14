@@ -7,16 +7,16 @@ summary:
   bucket_config.yaml/cloud-providers.yaml entries, and fix real data-pipeline correctness bugs surfaced along the way
   (gas-fees manifest scanning an empty bucket, lst-rates reader/writer bucket mismatch, cf-manifest-audit / qg-snapshot
   crons that were silently failing for weeks).
-status: complete
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, meta]
-repos: [deployment-service, unified-trading-library, market-tick-data-service, strategy-service]
+repos: [deployment-service, unified-trading-library, market-tick-data-service, strategy-service, ml-service]
 scope: [engineer, admin]
 tags: [gcs, buckets, cleanup, terraform, data-correctness, autonomous]
 related: []
 created: "2026-07-10"
-last_updated: "2026-07-10"
+last_updated: "2026-07-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -141,25 +141,25 @@ catastrophic if lost) · `trading-audit-records-*`/`audit-records`/`manual-audit
 ## Todos
 
 - [x] 1. ✅ [SCRIPT] P0. Deleted 5 confirmed-empty orphaned buckets + cleaned Terraform/bucket_config.yaml (see "Already
-      shipped" above) — deployment-service@7505ec6,849ff20,5e06a6f, alerting-service@49b0a52.
+     shipped" above) — deployment-service@7505ec6,849ff20,5e06a6f, alerting-service@49b0a52.
 - [x] 2. ✅ [SCRIPT] P0. Fixed qg-snapshot-daily cron (python3→venv-python bug + duplicate scheduler) —
-      deployment-service@3c7cd1c.
+     deployment-service@3c7cd1c.
 - [x] 3. ✅ [SCRIPT] P0. cf_manifest_audit shipped — unified-trading-library@f0a2c4cc, deployment-service@7890a14.
 - [x] 4. ✅ [SCRIPT] P0. Full 332-bucket scan completed; cross-checked against every candidate list; found 35/150
-      "DEAD_CONFIRMED" buckets actually have real content (see Progress Log "CRITICAL DECISION" entry) — deletion scope
-      narrowed to the 115 confirmed-empty.
+     "DEAD_CONFIRMED" buckets actually have real content (see Progress Log "CRITICAL DECISION" entry) — deletion scope
+     narrowed to the 115 confirmed-empty.
 - [x] 5. ✅ [SCRIPT] P0. Deleted 115 confirmed-empty buckets (deletion_log.tsv, 115/115 DELETED, 0 failures, 0 dupes,
-      independently verified via live `gcloud storage buckets list` count: 332→218). One false-positive caught +
-      corrected (`dex-pools-test-central-element-323112` recreated — see Progress Log).
+     independently verified via live `gcloud storage buckets list` count: 332→218). One false-positive caught +
+     corrected (`dex-pools-test-central-element-323112` recreated — see Progress Log).
 - [x] 6. ✅ [SCRIPT] P0. cloud-providers.yaml + bucket_config.yaml cleaned — deployment-service@c72a0cb.
 - [x] 7. ✅ [DATA] P1. Issue doc filed — unified-trading-pm PR #920,
-      `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`.
+     `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`.
 - [x] 8. ✅ [SCRIPT] P1. ml-store split-usage: got real object counts on all 18 variants (3 kinds × flat + 5
-      env-tiered). All empty except `ml-models-store-central-element-323112` (flat, 3 objects). Mixed/uncertain signal
-      (real-but- dormant resolver code paths for several shapes) — decided NOT to delete any, flagged for dedicated
-      follow-up rather than guessing (see Final Report below).
+     env-tiered). All empty except `ml-models-store-central-element-323112` (flat, 3 objects). Mixed/uncertain signal
+     (real-but- dormant resolver code paths for several shapes) — decided NOT to delete any, flagged for dedicated
+     follow-up rather than guessing (see Final Report below).
 - [x] 9. ✅ [SCRIPT] P2. Checked all 5 scratch buckets' real contents. All either non-empty (real data) or
-      personal-looking (`ml_jobs_ikenova`) — none deleted, all flagged for operator review (see Final Report).
+     personal-looking (`ml_jobs_ikenova`) — none deleted, all flagged for operator review (see Final Report).
 - [x] 10. ✅ [REVIEW] P1. Post-sweep audit done: `terraform fmt -check` clean on both touched .tf files; both yaml
       configs parse (`yaml.safe_load`); zero remaining code references to any removed kind (grep swept workspace-wide).
 - [x] 11. ✅ [REVIEW] P1. Final report below.
@@ -745,6 +745,22 @@ Flipped `defi_manifest_canonicalisation_2026_06_01.md`'s `C0f` todo to `[x]` (se
 (`VM_SHUTDOWN_ON_COMPLETION=true`; check for its absence from `gcloud compute instances list` as the completion signal),
 confirm its actual write target (expected: shared bucket via `kind="tick-data"`, not either legacy `lending-indices`
 bucket), then delete those 2 if still safe.
+
+## 5j. Doc-reconciliation corrections (2026-07-14, verify-rerun-2 findings 78/80/81)
+
+- **Finding 78 — frontmatter `status: complete` contradicted §5i's own "one open item" (lending-indices +
+  lending-indices-prd, gated on `mtds-lending-indices-20260712-112557`)**: re-checked live GCP state
+  (`gcloud compute instances list --project=central-element-323112`, 2026-07-14) — the VM is **gone** (matches its own
+  stated completion signal, `VM_SHUTDOWN_ON_COMPLETION=true`), so the gate that was blocking §5i's revisit has cleared.
+  However, §5i's remaining action ("confirm its actual write target, then delete those 2 buckets if still safe") has
+  **not** been executed by this doc-reconciliation pass — that's a live GCS delete, out of scope for a doc-fix and not
+  something to do without re-running the target-confirmation step §5i specifies. Flipped frontmatter `status: complete`
+  → `active` (was: `complete`) — the plan has one genuinely open, now-unblocked residual action, not zero.
+- **Finding 80 — frontmatter `last_updated: "2026-07-10"` predated §5c–§5i's real 2026-07-12 edits.** Bumped to
+  `"2026-07-14"` (was: `"2026-07-10"`) to reflect this pass's own edit plus the pre-existing 07-12 drift.
+- **Finding 81 — frontmatter `repos:` omitted `ml-service` despite §5h shipping `ml-service@7a90b84a`.** Added
+  `ml-service` to the `repos:` list (was:
+  `[deployment-service, unified-trading-library, market-tick-data-service, strategy-service]`).
 
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
