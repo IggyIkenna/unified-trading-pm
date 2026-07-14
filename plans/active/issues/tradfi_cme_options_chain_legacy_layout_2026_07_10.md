@@ -171,3 +171,47 @@ migration this doc always called for. The 🔴 entry above is superseded, not de
 wrong-bucket mistake happened). Next: scope + build + run the real migration against
 `market-data-tick-tradfi-prd-central-element-323112`, VM-eligible given the ~380M-row scale (comparable to or larger
 than the prior 158,812-object/1.19B-row single-leg migration that took ~2h on a VM).
+
+## 🟡 2026-07-14 (later same day) — script built, dry-run validated on 6 real diverse days, found + fixed a THIRD contamination axis
+
+Built the migration (`market-tick-data-service/scripts/canonicalize_cme_options_chain_legacy_flat_2026_07_14.py`,
+dry-run-by-default, backup-first, `--apply`-gated) implementing the transform designed in the 🟡 entry above
+(`ROOT-USD-YYMMDD-STRIKE-CALL@LIN` → `ROOT@LIN-YYYYMMDD-STRIKE-C`, reclassifying misclassified futures to
+`instrument_type=futures_chain`). Real dry-run against `day=2024-07-11` (2,437 files) surfaced a **third contamination
+axis the original design didn't anticipate**: 105 files (all futures-shaped) had `unclassified` instrument_keys that
+turned out to be genuine **ICE-venue commodity futures** (`ICE:FUTURE:ORANGEJUICE-...`, `SUGAR-...`, `WTI-...`, plus
+`BRENT`/`COCOA`/`COTTON`/`DOLLARINDEX`/`GASOIL`/`COFFEE` found on other sample days) sitting under the `venue=CME` GCS
+path prefix despite their own `instrument_key` correctly reading `ICE:...` — a second, independent writer-classification
+bug layered on top of the (a) options-format-mismatch and (b) misclassified-CME-futures issues already documented above.
+
+**Fix**: generalized both instrument-key regexes to capture venue (`(?P<venue>[A-Z]+):...`) instead of hardcoding
+`CME:`, and made the write side (`_target_path`, `bundle_and_write`) route each bundle by its object's REAL
+`instrument_key` venue — so `ICE:FUTURE:...` content now correctly lands under
+`venue=ICE/instrument_type=futures_chain/` instead of staying misfiled under `venue=CME`. The listing side intentionally
+stays scoped to the physical `venue=CME` source path (that's genuinely where these objects live; only the target path
+needed to become venue-aware).
+
+**Row-count discrepancy from the earlier same-day finding — RECONCILED, not a bug.** The original 2024-07-11 dry-run
+(5.56M rows) looked far denser than the ~1.3M/day average implied by 380,638,413 rows / 291 days, raising concern the
+manifest total might be unreliable. Sampled 5 additional real days at random (`2023-05-15`, `2024-01-05`, `2024-03-12`,
+`2024-03-25`, `2024-04-12`): row totals ranged from **4,267 to 194,258** — two to three orders of magnitude BELOW
+2024-07-11's (now, with the ICE fix, 6.82M) total. The real per-day distribution is heavy-tailed (a handful of
+very-high-volume days, e.g. likely quarterly-expiration dates, alongside many much quieter days), which is fully
+consistent with a genuine 380M-row total across 291 days — 2024-07-11 is a real outlier day, not evidence of a manifest
+bug. All 6 sampled days show `unclassified=0` post-fix, confirming the venue-generalized regex covers the real
+population with no silent drops.
+
+**Manifest-write safety implemented**: `rewrite_manifest()` now does a real CAS write
+(`StorageClient.conditional_upload_bytes(if_generation_match=...)`) with re-download+re-merge retry (5 attempts) on a
+concurrent writer, wrapped with a best-effort pause/resume of the
+`uts-prod-manifest-consolidator-market-data-tradfi-cron` Cloud Scheduler job as defense-in-depth (not a substitute for
+the CAS guarantee — a failed pause/resume call is logged, not fatal, and resume always runs in a `finally`). Note for
+anyone reading `tradfi_manifest_row_loss_regression_ 2026_07_12.md` for precedent: that doc's own restore did NOT pause
+any cron — CAS-write alone was what it actually verified; the pause here is this script's own added layer, not a re-used
+verified mechanism.
+
+**Status**: script passes real dry-run validation across 6 diverse real days (2 sizes at each end of the distribution),
+zero unclassified, zero exceptions. Not yet run with `--apply` against real data — next step is quality-gates + ship,
+then a scoped real `--apply` run (small real day first, then VM-scale `--all-days`), per the workspace's runtime-
+verification hard rule (a migration is "done" only once it has actually run against real data with verified output, not
+once the dry-run is green).

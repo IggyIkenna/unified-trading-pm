@@ -110,9 +110,59 @@ the fix is in the deployed tarball) as a normal follow-up backfill pass.
       (`away_cumulative_travel_30d`/`home_cumulative_travel_30d`/`*_travel_per_game_30d`/`travel_fatigue_ratio`) are
       suspiciously all-NaN for dates with tz-aware `kickoff_utc` fixtures, and gap-fill re-run those with `--force` on
       the fixed code. (repo: features-service)
-- [ ] [DATA] P3. **Audit whether other sports calculators share the same
-      `pd.Timestamp(value, tz="UTC")`-on-possibly-aware-value pattern** (grep `features_service/sports/calculators/*.py`
-      for `tz="UTC"` / `tz=UTC`) — this is the second distinct tz-naive/tz-aware inconsistency found in this pipeline in
-      as many days (see `sports_venue_id_numeric_coercion_data_loss_2026_07_13.md` for the first, a different
-      comparison-site bug), suggesting `kickoff_utc` normalization is inconsistent across sports readers and worth a
-      systemic look rather than one-off patching. (repo: features-service)
+- [x] ✅ [DATA] P3. **Audit whether other sports calculators share the same
+      `pd.Timestamp(value, tz="UTC")`-on-possibly-aware-value pattern** — grepped
+      `features_service/sports/calculators/*.py` for `tz="UTC"`/`tz=UTC`, found 7 call sites, checked each: -
+      **`european_fatigue_calculator.py:207`** — IDENTICAL bug (`match_date = pd.Timestamp(raw_date, tz="UTC")` on the
+      same `kickoff_utc` column), and WORSE than travel_calculator's: `match_date` gates the ENTIRE row (all
+      `EUROPEAN_FATIGUE_COLUMNS`), not just a subset. Confirmed live-scale on the 3 running P2c backfill VMs: **33,348**
+      occurrences on `-085703`, **261** on `-085642`, 0 on `-085726` (mid a different date range). Fixed —
+      features-service@81036512 (same `pd.to_datetime(utc=True, errors="coerce")` swap). - `manager_calculator.py:522`,
+      `season_context.py:319` — `tz="UTC"` only reached via the `pd.Timestamp.now(tz="UTC")` fallback branch (always a
+      fresh timestamp, never re-parses a possibly-aware value) — NOT vulnerable. - `h2h_calculator.py:283` —
+      `pd.Timestamp.now(tz="UTC")`, same as above — NOT vulnerable. - `european_fatigue_calculator.py:157` — string
+      literal `f"{season_year}-07-01"`, always naive — NOT vulnerable. - `transfer_window_calculator.py:378` —
+      `match_date.isoformat()` where `match_date: date` (not `datetime`) per the function signature, so `.isoformat()`
+      is always a bare `YYYY-MM-DD` with no tzinfo — NOT vulnerable. **Gate met**: audited all 7 sites; found + fixed 1
+      additional real instance (the other 6 are safe by construction). No further sports-calculator instances of this
+      exact pattern remain.
+
+## Progress Log
+
+### 2026-07-14T12:5x UTC — data_engineering slot-6 (Todo 2 dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 (identify + gap-fill pre-fix all-NaN cumulative-travel date-ranges) — still BLOCKED-PREREQ.** This todo's own
+text is explicit: "After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches completion".
+Checked `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s own Progress Log (dozens of prior `Todo 1`/`Todo 3`
+re-dispatch entries, most recent at 12:33 UTC) — Todo 1 is still `[ ]`, genuinely in-progress multi-day compute.
+Independently re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps; features bucket
+unique-date count **2,519** (up from 2,502 at the 12:33Z parent-plan check ~20 min earlier) — steady forward progress
+(~59.8% of ~4,210-day history), no stall, no crash. Identifying pre-fix all-NaN date-ranges before Todo 1 finishes would
+be premature (the affected-range boundary isn't stable until the full-history compute completes). Declining — no action
+taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:0x UTC — data_engineering slot-3 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as slot-6's check above. The parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` was independently touched 3 minutes before this dispatch by two
+sibling slots (15 @ 12:48 UTC, 16 @ 12:33/12:50 UTC): Todo 1 confirmed still `[ ]` at ~59.8% coverage (2,519/4,210
+unique dates), Todo 3 still BLOCKED-PREREQ. Re-confirmed independently via non-snap `gcloud compute instances list`: all
+3 backfill VMs (`features-sports-sports-20260714-085642/-085703/-085726`) still `RUNNING`, same creation timestamps as
+every prior check — no stall, no crash, steady progress. Given the prereq state was verified fleet-wide 3 minutes ago by
+two other slots, skipping the redundant full GCS-walk this dispatch (single-walk discipline — no value in a 4th
+identical corpus scan in under 20 minutes). Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
+
+### 2026-07-14T12:55 UTC — data_engineering slot-15 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 (identify + gap-fill pre-fix all-NaN cumulative-travel date-ranges) — still BLOCKED-PREREQ, unchanged.** This
+todo's own text is explicit: "After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches
+completion". Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]` — this same
+slot's own entries there ~5-8 min earlier (12:47/12:50 UTC) already found the fleet healthy at 2,519/4,210 (~59.8%).
+Cheap independent re-check this dispatch (non-snap `gcloud`/`gsutil`, `central-element-323112`): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps; features bucket
+unique-date count **2,525** (up from 2,519 ~8 min earlier, +6) — steady forward progress, no stall, no crash. The
+affected-range boundary for this todo's gap-fill isn't stable until Todo 1's full-history compute completes, so starting
+the identify/gap-fill work now would be premature. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.

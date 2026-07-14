@@ -113,14 +113,18 @@ site, not a verified fix.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Confirm/refute `_register_all_catalog_readers()` (market-tick-data-service
+- [x] [BACKEND] P0. Confirm/refute `_register_all_catalog_readers()` (market-tick-data-service
       `engine/orchestrator/__init__.py:684`) as the OOM site for the rc=137 backfill-VM crash — add RSS instrumentation
       immediately around the call, launch one disposable VM (e.g. re-run
       `launch-mtds-perp-funding-backfill-vm.sh --start 2026-07-13 --end 2026-07-14`, smallest possible window), capture
-      the memory delta. Repo: `market-tick-data-service`.
-- [ ] [BACKEND] P0. If confirmed: scope catalog-reader registration to the job's actual `asset_groups` (not
+      the memory delta. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot 2), see "P0 confirm + fix" below —
+      REFINED not refuted: registration itself is cheap, the real cost is the first `list_instruments()` call per group.
+- [x] [BACKEND] P0. If confirmed: scope catalog-reader registration to the job's actual `asset_groups` (not
       unconditionally all four) in `_register_all_catalog_readers()` / its `process_ticks()` call site. Add a regression
-      test asserting only the requested asset_group's reader(s) register. Repo: `market-tick-data-service`.
+      test asserting only the requested asset_group's reader(s) register. Repo: `market-tick-data-service`. — ✅ DONE
+      2026-07-14 — shipped by slot 11 as `market-tick-data-service@d6846f1c` (slot 2 independently implemented the
+      identical fix in parallel — same diagnosis, same extraction pattern — reconciled by rebasing slot 2's commits out
+      in favor of slot 11's, which landed first; see "P0 confirm + fix" below).
 - [x] [SCRIPT] P1. Fleet-wide check: grep the deployment registry archive
       (`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-1{2,3,4}/*.json`) for `exit_code=137`
       `DEPLOYMENT_FAILED` entries across ALL asset_groups (not just DeFi) to gauge blast radius since `f8cab3f0` landed
@@ -128,6 +132,67 @@ site, not a verified fix.
 - [ ] [SCRIPT] P2. Once the fix lands, relaunch `mtds-perp-funding-backfill` and `mtds-dex-swaps-backfill` (same command
       as this session used) and verify past the first `RESOURCE_SAMPLE` without a crash before resuming
       `mvp_backfill_defi_onchain_v10-002`'s G2 verification. Repo: `deployment-service`.
+
+## P0 confirm + fix (2026-07-14, slot 2)
+
+**RSS-instrumented repro** (local, market-tick-data-service `.venv`, real prod GCS catalogues via ADC, not a disposable
+VM — cheaper/faster and gave per-call RSS deltas a VM's coarse `RESOURCE_SAMPLE` log couldn't): registering all four
+catalog readers (`sports`/`cefi`/`defi`/`tradfi`) is CHEAP — RSS stayed flat (504.5 MiB) across all four
+`register_catalog_reader()` calls, confirming reader `__init__` never eagerly downloads (matches the
+`tradfi_backfill_oom_remediation_2026_06_24` per-instance lazy-cache design). The real cost is the FIRST
+`list_instruments()` call per group:
+
+| asset_group | rows loaded | RSS delta                         |
+| ----------- | ----------- | --------------------------------- |
+| sports      | 0           | +3.7 MiB                          |
+| cefi        | 358,455     | +304.9 MiB                        |
+| defi        | 15,810      | −108.8 MiB (GC reclaim from cefi) |
+| tradfi      | 1,170,558   | +566.5 MiB                        |
+
+Combined catalogue is now **1,554,823 rows** (grown from the ~1.6M f8cab3f0 cited 2 days ago — consistent, not
+contradictory). **Refined root cause**: `_register_all_catalog_readers()` itself was never the expensive call — the
+expense is `_load_sentinel_catalogs()` (`engine/orchestrator/sentinel_catalogs.py`), called ONCE PER DATE from
+`_emit_honest_coverage_sentinels()` → `_write_date_manifest()` (`manifest_finalize.py`, near the END of a date's
+processing, AFTER per-venue fetching), which UNCONDITIONALLY calls `list_instruments("cefi"/"defi"/"tradfi", ...)`
+regardless of the job's own `asset_groups` scope. A DeFi-only job was paying the full cefi (+305MiB) + tradfi (+567MiB)
+cost — ~870MiB entirely wasted — every date. This also explains the "no per-venue output" crash pattern reported in
+"What I found" above: per-venue fetch DID complete (feeding `_write_shard_counts_to_manifest`), the crash is in the
+LATER honest-coverage-sentinel stage, and a trivial 1-day/1-protocol job reaches that stage fast enough to die before
+the next periodic `RESOURCE_SAMPLE` fires (explains the "no RESOURCE_SAMPLE at all" 3rd-incarnation crash).
+
+**Fix shipped** — `market-tick-data-service@d6846f1c` (slot 11, landed 2026-07-14T12:42:29Z). Slot 2 (this session)
+independently reached the identical diagnosis and implementation in parallel (same root cause, same
+`catalog_registration.py` extraction to respect the 900-line file-size gate, same per-asset_group `set` guard, same
+`KeyError`-fallback reasoning) — both attempts converged on the same fix, which is itself a useful cross-validation
+signal. Slot 2's commits (`42d4397f`, `5361af99`) conflicted with slot 11's on push (identical files, genuine content
+conflict — not a false-positive), confirmed via full diff review that slot 11's version is complete and equivalent
+(marginally cleaner: set-intersection over registered/requested groups vs. slot 2's `_needs()` closure, and imports UAC/
+UTL directly into the new module rather than through the `_orch` package facade, avoiding slot 2's more fragile
+circular-import pattern), so slot 2 reconciled via `git rebase --skip` on its own two now-redundant commits rather than
+shipping a duplicate. No unique content from slot 2's implementation was lost — RSS-probe findings above are captured
+here in the issue doc regardless of whose code shipped.
+
+- `_register_all_catalog_readers(config, asset_groups)` now takes the job's `asset_groups` and only registers readers
+  for groups in that list (or all four when `asset_groups` contains `"ALL"` — same convention as
+  `get_venues_for_asset_groups`). Replaced the process-wide `_catalog_readers_registered: bool` guard with a
+  per-asset_group `_registered_catalog_asset_groups: set[str]` so registration stays idempotent per (process,
+  asset_group) across the multi-date loop.
+- Leverages EXISTING graceful-degradation: an out-of-scope group's `list_instruments()` call now raises `KeyError` (no
+  reader registered) — `_load_sentinel_catalogs()` and the sports Tier-2 sentinel fan-out already catch `KeyError` and
+  fall back to UAC seed instruments / v1 sentinels. Zero new failure modes, just skips the download+parse for
+  out-of-scope groups.
+- Regression tests: `tests/unit/engine/test_catalog_reader_registration_once_per_process.py` — 4 tests pin (a)
+  once-per-process idempotency (pre-existing invariant, preserved), (b) once-guard no-op, (c) a DeFi-only job registers
+  ONLY `defi`, (d) incremental registration across separate calls with different `asset_groups`. Verified passing (slot
+  2, post-reconciliation) + full `market-tick-data-service` `quality-gates.sh` green on `d6846f1c` (file-size gate clean
+  at 871 lines).
+
+**Cross-check against slot 3's fleet-wide data below**: this fix's mechanism (skip unconditional `list_instruments()`
+for out-of-scope groups) is asset_group-agnostic — a CEFI-only job now skips the DEFI+TRADFI loads instead, so it should
+address the 14 post-fix CEFI crashes equally, not just the 4 DEFI ones. The `opt-deribit-combo-2024` outlier
+(mem_pct=82.5% at last sample, flagged below as possibly a distinct large-data-volume OOM) is NOT expected to be fixed
+by this change if its cause is genuinely different (e.g. full-year options-chain data volume rather than the baseline
+catalogue-registration cost) — re-open as a separate issue if it recurs after this fix ships.
 
 ## Fleet-wide blast-radius check (2026-07-14, slot 3)
 

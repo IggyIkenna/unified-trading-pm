@@ -2713,3 +2713,15 @@ moot for this session's numbers — that tuple was already confirmed CLOSED in t
 landed. Item 2 (3-VM cap) matches exactly what this session hit and worked within. Item 3 (bundle via
 `SINGLE_VM_QUEUE=1` rather than add VMs) is genuinely better guidance than this session's per-shard `ONLY=` scoping for
 any FUTURE wave — noted for whoever picks up the "widen to earlier years" next step above.
+
+### Wave B part 1 LAUNCHED — majors mop-up queue VM — 2026-07-14T12:33Z (doc-reconciliation session)
+
+`cefi-queue-heavy-20260714-123340` (SPOT, e2-highmem-16, lease-ON, `VM_FORCE=false`) — SINGLE_VM_QUEUE combined VM
+covering BINANCE-SPOT + UPBIT + COINBASE-SPOT + OKX-SPOT trades+book_snapshot_5, 2020-01-01→2026-07-13. Target: the
+~2,011 af majors residual (census 11:08Z). Guard check passed at exactly cap: 2 running (Run-#7's relaunched bitget
+2025-heavy/light) + 1 planned = 3. STARTED verified RUNNING; T+10min log check + slot watcher armed. **Coordination
+split with the Run-#7 lane (slot session working this same plan)**: that lane owns BITGET-FUTURES waves + DERIBIT
+spot_pair; this session owns the majors mop-up + the OKX/BINANCE/KRAKEN-FUTURES tail (~86 af, queued for the next free
+slot) + the post-wave coverage re-measure. Launcher fix shipped en route: SINGLE_VM_QUEUE planned-count estimate now
+counts 1 for heavy-only (spot venues) launches instead of a blanket 2 (deployment-service, quickmerged) — without it the
+guard wrongly refused queue launches at 2 running.
