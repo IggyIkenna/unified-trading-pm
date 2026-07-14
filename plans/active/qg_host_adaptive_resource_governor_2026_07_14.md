@@ -352,6 +352,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   AGGREGATE math holds (6×UTL 5.5 = 33 GB < 43 GB, typical mix far less); the 10 GB scope cap + 16 GB swap are the
   single-runaway BACKSTOP that turns a would-be host OOM into an isolated per-scope kill. Two distinct guarantees.
 
+### 2026-07-14 — Phase 3a reservation-ledger primitives shipped (slot 16)
+
+- **Ledger primitives SHIPPED** in `qg-host-governor.sh` — `PM@88a4925af` (quickmerge; the LDR push succeeded, the
+  inline PR-to-main step exited non-zero but the standing LDR→main promote flow covers promotion). ADDITIVE: the
+  functions exist but are NOT yet wired into `acquire`/`release`, so zero change to live admission.
+- Shipped: host-shared ledger path `_qg_shared_root` (strips the per-slot `/.tabs/<N>` off WORKSPACE_ROOT — verified in
+  all 4 cases), `_qg_ledger_add`/`_remove`/`reserved_mb` (flock-protected, explicit-FD bash-3.2-safe) + a PID-liveness
+  sweep (dead-PID rows pruned → crash-safe, replacing the flock-auto-release guarantee). Test `tests/test-qg-ledger.sh`
+  (6 assertions + negative control; shellcheck clean).
+- **NEXT (Phase 3b/3c) is the safety-critical part:** the dual-gate admission logic (RAM two-clause + CPU + oversize)
+  built additively + tested, then the CUTOVER that wires it into `acquire`/`release` (+ cgroup cap + 80 % valve). The
+  cutover changes live admission fleet-wide — an operator-aware step, not an autonomous flip. Ledger + capacity probe
+  are the two foundations it stands on; both are now in place.
+
 ## Deferred / open decisions
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
