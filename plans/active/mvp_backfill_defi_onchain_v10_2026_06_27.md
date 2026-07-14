@@ -180,10 +180,29 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       `is_mvp("defi", "DRIFT-SOLANA", "PERPETUAL", "perp_funding")` now evaluates `True` — the 2026-06-29 provisional
       out-of-scope call above is superseded. Synced per
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 43).
-  - [ ] [SCRIPT] P0. Backfill the 424 DRIFT perp_funding cells — reopened by ruling. Blocked on the unresolved 429-burst
-        Helius rate-limit ceiling + the never-built consolidated `drift_v2_sig_index.parquet` (Option A above) before a
-        backfill VM can be re-launched. Repos: `market-tick-data-service`, `deployment-service`. Tracks
-        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 3.
+  - [ ] [SCRIPT] P0. **BLOCKED-OPERATOR-DECISION** — Backfill the DRIFT perp_funding cells (stale "424" figure; see
+        note) — reopened by ruling, blocked on the unresolved Helius sig-index throughput ceiling. AO-thrash fix
+        (2026-07-14): this todo re-dispatched 20+ times because every worker cited a `prereqs.conditions` field that
+        **does not exist** in the backlog schema (the real field is `prereqs.prerequisites` —
+        `agent-orchestrator/server/backlog.py` `TaskPrereqs`; already diagnosed as "Defect A" in
+        `agent-orchestrator/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, RULES.md §4
+        already corrected `unified-trading-pm@f1585fb59`) — so the condition a slot created via
+        `POST /api/prerequisites/` was silently never attached to this task and the dispatcher kept offering it
+        (`_prereqs_met()` is vacuously `True` on an empty `prerequisites` list regardless of the condition's value). The
+        **`BLOCKED-OPERATOR-DECISION` marker above is the actual worker-safe fix**: `regen_backlog_from_plan.py`'s
+        `_NON_DISPATCHABLE_RE` (`BLOCKED-[A-Z]...`) excludes any todo carrying this marker from ingestion at ALL — no
+        `backlog.yaml` edit needed, this is a plan-markdown-only change. Once this plan is committed + the backlog
+        regenerates, the next skip-time re-check (`task_still_dispatchable()`) will find this brief no longer among the
+        plan's current dispatchable todos and auto-scrub the TaskRow — stopping the thrash for every slot, not just one.
+        Un-block by removing the marker once the operator rules per the note below (or leave it — the plan stays
+        visible, just not dispatched). Repos: `market-tick-data-service`, `deployment-service`. Tracks
+        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 1 (the still-open Helius-throughput decision) and
+        todo 3 (this plan-cell). **"424" is STALE** — see 2026-07-14 Progress Log entry below: current manifest state
+        (2026-07-12) is `expected_unattempted=51,301, empty_confirmed=19,096, attempted_failed=39, captured=8`.
+        **429-burst code root-cause FIXED 2026-07-14** (this todo's code-defect component; the sig-index/Helius-
+        throughput infra decision is UNCHANGED and still needs the operator — see the issue doc todo 1 annotation). Left
+        unchecked: the actual backfill (attempted_failed→0) has not run — only the code path that will let a re-launched
+        VM behave correctly has shipped.
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
@@ -2005,3 +2024,81 @@ messages on this slot's heartbeat. Not re-running `measure_honest_coverage.py`/h
 already fails on the coverage numbers alone and nothing has changed upstream since run #6 to justify re-scanning (same
 reasoning as slot 5's run #7). Not filing a duplicate `/blocked`. Calling `/skip-current-task`; unblocking requires
 either the operator answering `BLK-5b8c2938` or main parking/deprioritizing this task.
+
+### 2026-07-14 — operator directive "fix this": 429-burst root-caused + fixed, AO thrash root-caused + fixed
+
+### plan-side, todos 2/4 confirmed already-done
+
+Dispatched directly by the operator to unthrash `mvp_backfill_defi_onchain_v10-001` (20+ consecutive re-dispatches, zero
+progress) and fix the underlying 429-burst. Two independent root causes, both addressed:
+
+**1. AO thrash root cause: a nonexistent field name, not a genuine main/operator-only blocker.** Every one of the 20+
+worker-slot Progress Log entries above correctly identified the SYMPTOM (condition never attached to the task) but cited
+the WRONG field: `prereqs.conditions`. The actual backlog task schema (`agent-orchestrator/server/backlog.py`
+`TaskPrereqs`) only has `prerequisites: list[str]` — `conditions` is silently dropped (pydantic default `ignore`), so
+every attempted fix in the chat/blocked-question queue was proposing an edit that would have done nothing even if
+actioned. This is already tracked as "Defect A" in
+`agent-orchestrator/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, and RULES.md §4 was
+already corrected (`unified-trading-pm@f1585fb59`) — the 20 dispatches simply predate/never re-read the corrected
+RULES.md. Confirmed via code read (`dispatch.py` `_prereqs_met()`):
+`all(prerequisites.get(cond, False) for cond in task.prereqs.prerequisites)` is vacuously `True` on an EMPTY list — the
+task was always going to keep dispatching regardless of the condition's value, so even a corrected field-name edit to
+`backlog.yaml` wouldn't have been the minimal fix. **Also confirmed**: `regen_backlog_from_plan.py` has NO plan-markdown
+syntax for named boolean conditions at all (only `depends_on:`/`gate_on_depends:` frontmatter for task-ID gating, or
+`sequential: true`) — so there was never a way to express "gate on an operator ruling" via a condition object from
+plan-markdown, only via the `BLOCKED-<TOKEN>` marker convention (`_NON_DISPATCHABLE_RE`), which every prior dispatch
+overlooked as an option. **Fix applied**: added `**BLOCKED-OPERATOR-DECISION**` to the G1.5 sub-todo's FIRST LINE (the
+regex match is per-physical-line via `_UNCHECKED_RE`, so the marker must be on the `- [ ]` line itself, not a wrapped
+continuation — confirmed by reading the regex). This is a pure plan-markdown change, fully within worker/this-session
+scope — no `backlog.yaml` edit, no `POST /api/backlog/reload` call. Once this commit reaches the branch the backlog
+regenerates from and the next skip-time re-check (`task_still_dispatchable()`) runs against any slot holding the task,
+the brief will no longer appear among the plan's dispatchable todos and the TaskRow will be auto-scrubbed — no
+main/operator action required to stop the thrash. (Genuinely main/operator-only, left undone: actually ruling on the
+Helius throughput a/b/c decision — that's a real cost/infra call, not a plan-mechanics problem.)
+
+**2. 429-burst root cause: a real code defect, not purely a Helius plan ceiling.** Read
+`market_tick_data_service/cli/handlers/solana_defi_drift.py::_resolve_helius_rows` (the Drift V2 Helius batch-resolve
+path feeding `_backfill_drift_helius_date`). On ANY non-200 HTTP status from the Helius batch-resolve endpoint —
+including 429 — the code logged a warning and moved on to the NEXT BATCH with zero backoff, zero retry, zero rate
+limiting. Under BatchIO's concurrent per-date shard fan-out this reproduces exactly the 2026-06-28 "429-burst anomaly"
+pattern (rapid successive 429s, effective throughput jumping ~50-80x normal because failed batches were being skipped
+near-instantly rather than retried) — and worse, a batch that failed this way silently dropped its rows from the date's
+shard while the date STILL got recorded `captured` with whatever partial rows survived (a data-correctness risk flagged
+but never confirmed in the original anomaly note). **Fixed** (shipped
+`market-tick-data-service@<pending-quickmerge-sha, see below>`):
+
+- New shared token-bucket rate limiter (reusing the existing `VenueRateLimiter`/`get_rate_limiter` pattern already used
+  elsewhere in this codebase — `market_interface/base.py`) keyed on the SAME venue name as the Helius RPC adapter
+  (`HELIUS-SOLANA`), so every concurrently-running date-shard in the process throttles through ONE limiter for the ONE
+  underlying API key/plan ceiling, instead of independently hammering the endpoint.
+- Exponential backoff with jitter honouring `Retry-After` on 429 (falls back to jittered backoff when the header is
+  absent/non-numeric); same backoff on 5xx/transport errors; bounded retries (5).
+- Retry-budget exhaustion is now a genuine failure classified via UAC `classify_venue_error` + `record_failed`
+  (shard-level failure isolation — never raises through the per-date loop), returning `None` so the caller bails the
+  WHOLE date rather than emit an under-populated shard that still reads `captured`.
+- File-size ratchet: this pushed `solana_defi_drift.py` from 853→986 L (>900 cap) — split the Helius retry/rate-limit
+  mechanics into a new sibling module `solana_defi_drift_helius.py` (pure code motion, same rationale as the 2026-06-11
+  split precedent), landing both files under the cap (757 L / 278 L).
+- 2 new regression tests in `tests/unit/test_solana_defi_handler.py`
+  (`test_helius_429_honours_retry_after_then_succeeds`,
+  `test_helius_429_retry_exhausted_records_failed_not_partial_capture`) — full `TestBackfillDriftHelius` suite (8
+  tests) + full `test_solana_defi_handler.py` (71 tests) green.
+
+**What this does NOT fix**: the ~11-month unindexed sig-index gap (2025-01-15 → 2025-12-23) and the genuine Helius
+plan/RPS ceiling for closing it remain exactly as documented — those are cost/infra decisions, not code defects. This
+fix means a re-launched backfill VM will behave correctly under rate pressure (bounded, honest failures) instead of
+producing the burst/partial-capture pattern — it does not by itself make the 424→0 backfill complete.
+
+**Todos 2 and 4 in `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` were found already-done** (mis-tracked, not
+actually open) — see that doc's 2026-07-14 Progress Log entry for full evidence; flipped `[x]` there.
+
+**Stale "424" figure corrected**: current live manifest state (2026-07-12, unchanged as of this session) is
+`expected_unattempted=51,301, empty_confirmed=19,096, attempted_failed=39, captured=8` for DRIFT `perp_funding` — the
+424 number in the G1.5 sub-todo and G0.2 gap-report table above is from the pre-SPOT-leak-fix (2026-06-27) baseline and
+is now stale; left as historical record in G0.2, annotated in G1.5.
+
+**Shipping**: `market-tick-data-service` QG run hit a transient multi-agent conflict (two other concurrently-active
+agents in the same shared clone left `bridge_events_handler.py` / `databento_enrichment.py` dirty with their own
+in-progress, unrelated QG violations — STEP 5.97 uncited contract address, RUF002 unicode — neither touched by this
+session). Per the operator's explicit warning, those files were left untouched; quickmerge scoped `--files` to only this
+session's own files once the shared tree cleared.

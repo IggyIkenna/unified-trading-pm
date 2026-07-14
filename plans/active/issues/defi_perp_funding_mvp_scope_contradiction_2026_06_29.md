@@ -165,17 +165,41 @@ and the v10 G2 perp_funding gate are valid.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Confirm the ruling: Option 1 / 2 / 3 above (provisional = Option 1, out of scope). Determines
-      DRIFT + Hyperliquid perp backfill scope and whether the AO item stays resolved or reopens.
-- [ ] [SCRIPT] P1. Once ruled: reconcile `mvp_scope.py` (defi `instrument_types` / `data_types`) with
+- [x] ✅ [OPERATOR] P0. Confirm the ruling: Option 1 / 2 / 3 above (provisional = Option 1, out of scope). Determines
+      DRIFT + Hyperliquid perp backfill scope and whether the AO item stays resolved or reopens. — **Superseded by the
+      broader 2026-07-09 operator ruling landing Option 2** (`unified-api-contracts@89b16943`, `DeFiMvpRule` v13) — see
+      Progress Log 2026-07-09 entry. The narrow Option-1/2/3 question this todo asked was overtaken, not independently
+      re-confirmed, but the practical answer (in-scope) is settled and load-bearing code has shipped against it.
+- [x] ✅ [SCRIPT] P1. Once ruled: reconcile `mvp_scope.py` (defi `instrument_types` / `data_types`) with
       `defi_venue_capabilities.py` + `expected_coverage.py` so `is_mvp()` and the coverage denominator agree on
-      `perp_funding`. Repo: `unified-api-contracts`. Add a `test_mvp_scope.py` assertion pinning the ruling.
-- [ ] [SCRIPT] P1. Apply the ruling to the v10 plan: update G1/G2 scope for `perp_funding`; flip 424 DRIFT
+      `perp_funding`. Repo: `unified-api-contracts`. Add a `test_mvp_scope.py` assertion pinning the ruling. — **Already
+      done as of the same v13 commit** (found 2026-07-14, this session — the 2026-07-09 Progress Log entry below
+      claiming this was "still unactioned" was incorrect): `unified-api-contracts@89b16943` added
+      `TestDeFiMvpV13Broadening.test_drift_perpetual_perp_funding_now_mvp` (`tests/unit/test_mvp_scope.py:1323-1327`)
+      asserting `is_mvp("defi", "DRIFT-SOLANA", "PERPETUAL", "perp_funding") is True` — verified green this session
+      (`pytest tests/unit/test_mvp_scope.py -k TestDeFiMvpV13Broadening` → 11 passed). The registries were never edited
+      by v13 (they already independently declared DRIFT-SOLANA `perp_funding`), so no reconciliation edit was needed —
+      only the pinning test, which exists.
+- [x] ✅ [SCRIPT] P1. Apply the ruling to the v10 plan: update G1/G2 scope for `perp_funding`; flip 424 DRIFT
       `perp_funding` cells to the correct honest state (out-of-scope vs attempted_failed) so the coverage gate reflects
-      reality. Repos: `instruments-service`, `unified-trading-pm`.
-- [ ] [SCRIPT] P2. If Option 1/3: confirm Hyperliquid perp funding is captured via cefi
+      reality. Repos: `instruments-service`, `unified-trading-pm`. — **Plan-mechanical part actioned 2026-07-14**: under
+      Option 2 (in-scope), the "correct honest state" for genuinely-unresolved cells IS `attempted_failed` (not
+      "out-of-scope") — no manifest re-flip was needed, the existing capture_status already reflects reality honestly.
+      What WAS stale: the "424" figure itself (superseded by the 2026-07-11/07-12 findings —
+      `expected_unattempted=51,301, empty_confirmed=19,096, attempted_failed=39, captured=8` as of 2026-07-12, driven
+      down from 424 mostly by the SPOT-leak fix below). Corrected in `mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.5
+      Progress Log (2026-07-14 entry) alongside the 429-burst code fix. **Actual closure to `attempted_failed=0` remains
+      genuinely blocked** on the Helius throughput operator decision (todo below) — that data-completeness work was
+      never in scope for this plan-mechanical todo.
+- [x] ✅ [SCRIPT] P2. If Option 1/3: confirm Hyperliquid perp funding is captured via cefi
       `funding_rate`/`derivative_ticker` and is not silently dropped by removing defi `perp_funding`. Repo:
-      `market-tick-data-service`.
+      `market-tick-data-service`. — **Confirmed 2026-07-14** (applies regardless of Option 1/2/3 — worth confirming once
+      either way, and this session did): live path `market_tick_data_service/live/connectors/hyperliquid_ticker_ws.py`
+      streams `data_type="derivative_ticker"` carrying `funding_rate`/`predicted_funding_rate` via the `activeAssetCtx`
+      WS channel; batch/historical path
+      `market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py::fetch_funding_rates()`
+      (`_download_funding_rates_from_api`) captures the same. Hyperliquid perp funding is NOT silently dropped — real,
+      shipped capture paths exist on both legs independent of the defi `perp_funding` data_type's scope status.
 - [x] [SCRIPT] P1. Fix the DRIFT SPOT_PAIR `perp_funding` leak (bundled `_PERPS` instrument_types with no
       per-instrument_type data_types split) via `VALID_DATA_TYPES_VENUE_EXCLUSIONS`; add regression tests. Repo:
       `unified-api-contracts`. ✅ — `unified-api-contracts@b7cf3106` (2026-07-11).
@@ -183,7 +207,13 @@ and the v10 G2 perp_funding gate are valid.
       RPS, (b) launch N more parallel-walker VM segments (`build_drift_v2_sig_index.py --before-sig`) to divide the
       ~11-month unindexed gap (2025-01-15 → 2025-12-23), or (c) accept the gap and mark those dates
       `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`-equivalent out-of-reach, closing the AO item without full coverage.
-      Blocks the actual DRIFT perp_funding backfill VM re-launch (AO item `mvp_backfill_defi_onchain_v10-010`).
+      Blocks the actual DRIFT perp_funding backfill VM re-launch (AO item `mvp_backfill_defi_onchain_v10-010`). **Still
+      genuinely open (2026-07-14)** — this is a cost/infra decision only the operator can make, unaffected by this
+      session's code fix. **Narrowed scope**: this session fixed a REAL code bug that was compounding the throughput
+      problem (`market-tick-data-service` — the Helius batch-resolve path had no backoff/rate-limiting at all and
+      silently produced the "429-burst" pattern; see the v10 plan G1.5 2026-07-14 Progress Log entry) — so the remaining
+      decision is now purely about (a)/(b)/(c) throughput economics for the ~11-month gap, not also a latent defect
+      masking the real ceiling.
 - [ ] [SCRIPT] P2. Once the operator rules on the todo above: re-run the DeFi expected-universe enumerator
       (`instruments-service/scripts/enumerate_expected_universe.py`) so the manifest's `expected_unattempted` grid picks
       up the SPOT-leak fix (currently only stops NEW wrong rows; existing 51,301-row snapshot is stale until
@@ -317,3 +347,31 @@ to `main` via `POST /api/agents/by-role/main/message`. 4 unanswered `/blocked` q
 same mitigation adds nothing — the fix (attach the condition, or rule on todo 3 directly) is fully specified and waiting
 on main/operator action, not on another worker cycle. No code or plan-of-record change possible from this slot beyond
 this entry; skipping the task per the slot-7 precedent.
+
+### 2026-07-14 — operator directive "fix this": actioned every mechanical todo, shipped the real code bug, left the
+
+### genuine infra decision open
+
+Dispatched directly by the operator (not via AO re-dispatch) to fix the thrash + the 429-burst. Two findings that move
+this doc materially:
+
+1. **Todos 2 and 4 were already effectively resolved, just mis-tracked.** Todo 2's pinning test
+   (`test_drift_perpetual_perp_funding_now_mvp`) shipped in the SAME commit as the v13 ruling
+   (`unified-api-contracts@89b16943`, `tests/unit/test_mvp_scope.py:1323-1327`) — the 2026-07-09 Progress Log entry
+   below calling it "still unactioned" was wrong; verified green this session. Todo 4 (Hyperliquid cefi funding capture
+   not silently dropped) is confirmed true by reading the live + batch Hyperliquid adapters — real code, not a gap. Both
+   flipped `[x]` above with evidence.
+2. **The 429-burst was a real, fixable code defect, not purely a Helius plan ceiling.** Root-caused in
+   `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_drift.py::_resolve_helius_rows` (now
+   split to `solana_defi_drift_helius.py`): on ANY non-200 status from the Helius batch-resolve endpoint — including 429
+   — the old code logged a warning and moved on to the NEXT batch with no backoff, no retry, no rate limit. Under
+   BatchIO's concurrent per-date shard fan-out this produced exactly the "rapid successive 429s, batch counter racing
+   ahead" pattern from the G1.5 2026-06-28 anomaly note, AND silently dropped the failed batch's rows from the date's
+   shard while still recording it `captured` (a data-correctness risk, not just a stall). Fixed: a shared
+   `VenueRateLimiter` (`market_interface/base.py`, same venue key as the Helius RPC adapter) bounds the process-wide
+   request rate across every concurrent date-shard; 429s honour `Retry-After` with jittered exponential backoff on
+   fallback; retry-budget exhaustion now classifies via `classify_venue_error` + `record_failed` (never a silent
+   partial-capture). See `mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.5 2026-07-14 entry for the shipped commit.
+3. **What's still genuinely open**: todo 1's underlying question (a/b/c Helius throughput path for the ~11-month
+   unindexed gap) is a cost/infra decision this session cannot make unilaterally — narrowed in scope (per the todo-1
+   annotation above) now that the code-side contributor is fixed, but not resolved. Left unchecked with that note.
