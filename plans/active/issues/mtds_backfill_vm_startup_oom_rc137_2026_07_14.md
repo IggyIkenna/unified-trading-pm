@@ -893,7 +893,7 @@ live-sample verification below completes.
       based on this todo's evidence alone, only after the live sample check in (1)-(2) passes. Repo:
       `deployment-service` (GCS sample pull) + `unified-trading-library` (if a sampled row contradicts the verdict).
 
-- [ ] [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
+- [x] ✅ [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
       chunked-merge duration (24-30+ min observed) and causes a lock-stealing livelock** — every cron tick past the TTL
       treats a still-running legitimate cycle as orphaned and starts a competing concurrent merge (observed 3+
       simultaneous executions this session, each re-downloading the full 27.4M-row canonical). This is a hardcoded
@@ -905,7 +905,35 @@ live-sample verification below completes.
       executions only) as a stopgap — worth codifying in Terraform
       (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) once a stable value is confirmed by a
       clean run under the new lock TTL. Repo: `unified-trading-library` (lock TTL) + `deployment-service` (Terraform
-      task-timeout codification).
+      task-timeout codification). — ✅ DONE 2026-07-14 (slot 5, backend_engineer): mirrored the existing
+      env-var-with-code-default pattern — `unified-trading-library@9358fb0b` makes `_LOCK_TTL_SECONDS` read
+      `CONSOLIDATOR_LOCK_TTL_SECONDS` from the environment (default unchanged at 300.0, so every fast bucket keeps
+      today's prompt crash-recovery; two new regression tests: `test_lock_ttl_seconds_env_default`,
+      `test_lock_ttl_seconds_env_override`). `deployment-service@fe67a53` codifies this session's live `--task-timeout`
+      bump (1800s→3600s for `market-data-defi` only) in `manifest_consolidator_timeouts` and adds a new
+      `manifest_consolidator_lock_ttl_seconds` Terraform map wiring `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` for
+      `market-data-defi` only (mirroring the existing per-bucket `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`/`_THREADS` override
+      pattern) — set comfortably above the bucket's own 3600s task-timeout so a "fresh" lock can only belong to a
+      still-legitimately-running execution, structurally eliminating the livelock class rather than just widening the
+      number. Both repos' full `quality-gates.sh` green. **Not live-verified against the real Cloud Run job** (this
+      sandbox's `gcloud` is non-functional, same `cap_dac_override` snap failure prior sessions on this issue hit) — the
+      Terraform change needs a real `tofu apply`/`gcloud run jobs update` + a watched cron cycle to confirm the env var
+      actually reaches the job and the livelock stops recurring; filing that as a residual `[INFRA]` todo below.
+
+- [ ] [INFRA] P1. **Residual (2026-07-14, slot 5, backend_engineer)**: live-verify `deployment-service@fe67a53`
+      (market-data-defi task-timeout 1800s→3600s + new `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` Terraform override) against
+      the real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job/scheduler — confirm the live
+      `gcloud run jobs     update` values already match (this session's Terraform change codifies what was live-set
+      earlier, but per this issue's own repeated digest/config-drift gotcha, verify by direct inspection, not just
+      assuming Terraform state matches reality), and confirm the deployed
+      `market-tick-data-service`/`unified-trading-library` image actually contains `unified-trading-library@9358fb0b`
+      (the `CONSOLIDATOR_LOCK_TTL_SECONDS` env-read) — bump the digest-pinned base image in
+      `market-tick-data-service/Dockerfile` if `update-dependency-version.yml` hasn't auto-fired, same recipe this issue
+      has used repeatedly. Then un-pause the scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`,
+      currently PAUSED per this issue's own prior remediation pending the row-count-regression investigation above — do
+      NOT un-pause until that P0 CRITICAL todo is separately resolved) and watch a full `duckdb_merge_start` cycle for
+      whether the lock-stealing/concurrent-execution pattern is actually gone. Repo: `deployment-service` (Cloud Run
+      job/scheduler verification).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
