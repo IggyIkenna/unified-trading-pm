@@ -107,15 +107,28 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 - [x] [SCRIPT] P0. **Manifest correction (one-off, snapshot+GATE) — REWRITTEN to row-preserving reclass + re-APPLIED
       2026-06-23** — `instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` (mirrors
       `populate_v9_index_columns_inplace.py`). **The 814b14a version was a NO-OP on EU** (it floor-clipped only
-      ohlcv*1s/1m which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
-      `source==databento` while the 140,530 ohlcv_15m EU are `source=massive` = 0 matched) — so the live EU stayed
+      `ohlcv_1s/1m` which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
+      `source==databento` while the 140,530 `ohlcv_15m` EU are `source=massive` = 0 matched) — so the live EU stayed
       inflated at 1,466,157 and the "EU→1,466,157 / index rows=0 / derived 15m EU=0" claim above was inaccurate
-      (measured live: ohlcv_15m EU still 140,530, trades/tbbo/mbp_10 out-of-rolling-window still EU). **Rewrote** to:
-      (1) **reclass IN PLACE** EU→`empty_confirmed` with typed
-      `EXPECTED*\*`reasons (rows PRESERVED, never dropped — the     SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched data_types     by DATE per billing level via UAC`earliest_allowed_start`(L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10)     →`EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →     `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE`(0 cells — already     absent from the manifest). **ABSOLUTE GATE: captured + attempted_failed + row-count UNCHANGED** (only EU→empty     moves). APPLIED to live tradfi`\_index`2026-06-23 (fresh snapshot    `\_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 = floor-clip     241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0). **GATE proof:     captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467 preserved.** Live     re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,     `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530,
-      remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s 308,871 + in-window trades 219,144/tbbo
-      215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX futures_chain captured cells preserved
-      untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
+      (measured live: `ohlcv_15m` EU still 140,530, trades/tbbo/`mbp_10` out-of-rolling-window still EU). **Rewrote**
+      to: (1) **reclass IN PLACE** EU→`empty_confirmed` with typed `EXPECTED_*` reasons (rows PRESERVED, never dropped —
+      the SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched
+      `data_types` by DATE per billing level via UAC `earliest_allowed_start` (L0 16y `ohlcv_1s/1m`, L1 1y trades/tbbo,
+      L2 1mo `mbp_10`) → `EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived `ohlcv_15m/24h` EU (ANY non-Yahoo/FX
+      source) → `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE` (0 cells —
+      already absent from the manifest). **ABSOLUTE GATE: captured + `attempted_failed` + row-count UNCHANGED** (only
+      EU→empty moves).
+
+      APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
+      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
+      floor-clip 241,085 [trades 108,221 + tbbo 107,799 + `mbp_10` 25,065] + derived `ohlcv_15m` 140,530; VIX-index 0).
+      **GATE proof: captured 733,338 → 733,338 (delta 0), `attempted_failed` 16,358 → 16,358 (delta 0), rows 6,668,467
+      preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
+      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (`ohlcv_1m` 313,720 +
+      `ohlcv_1s` 308,871 + in-window trades 219,144/tbbo 215,617/`mbp_10` 7,908 + `corporate_action`/earnings 9,641
+      each), **135 VX `futures_chain` captured cells preserved untouched**. Honest coverage
+      (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
+
 - [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
       objects (instrument_type=index at venue=CBOE — CBOE's only cash index is VIX, across batch_massive/batch_databento
@@ -139,11 +152,20 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       `Container terminated on signal 9` (OOM) at 4/8/16/32Gi — so the monotonic-guard KEPT the last-good catalogue
       (mtime 2026-06-17) and the v2 expected-universe enumerator cross-joined a STALE could-exist universe (the
       `DP_CATALOG_NOT_RUNNING` alert was REAL). Crash site: `build_instrument_catalogue.py::_iter_by_date_snapshots`
-      used `ThreadPoolExecutor.map`, which eagerly downloaded + buffered ALL 11.6k–13.5k tradfi by*date parquets in
-      memory at once. FIX: `_bounded_parallel_load` sliding-window (≤max_workers=16 frames in flight, each yielded into
-      the streaming aggregate fold + dropped before the next) → peak memory O(16 frames) not O(13.5k); applied to all 3
-      `\_iter*\*`sites + 3 regression tests. tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) +    `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read). — instruments-service@b84cc4f     (`scripts/build_instrument_catalogue.py`+`tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4     regression tests) + deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi     Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build     `c0b6772a`) so `:latest`bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run    `lifecycle-catalogue-regen-tradfi`on the fixed image and confirm it COMPLETES without OOM + writes a fresh    `prod/catalog.parquet`
-      mtime=today (evidence appended in the data_pipeline_hardening Progress Log). Other 4 AGs were already GREEN.
+      used `ThreadPoolExecutor.map`, which eagerly downloaded + buffered ALL 11.6k–13.5k tradfi `by_date` parquets in
+      memory at once. FIX: `_bounded_parallel_load` sliding-window (≤`max_workers`=16 frames in flight, each yielded
+      into the streaming aggregate fold + dropped before the next) → peak memory O(16 frames) not O(13.5k); applied to
+      all 3 `_iter_*` sites + 3 regression tests.
+
+      tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) + `timeout_seconds` 1800→3600 (slow
+      13.5k-blob GCS read). — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
+      `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) +
+      deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated
+      to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest`
+      bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
+      `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
+      `prod/catalog.parquet` mtime=today (evidence appended in the `data_pipeline_hardening` Progress Log). Other 4 AGs
+      were already GREEN.
 
 ## Codex SSOT updates
 
