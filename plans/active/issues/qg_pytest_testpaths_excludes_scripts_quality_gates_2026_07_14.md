@@ -31,7 +31,7 @@ resolved_by:
 source: [pyproject.toml, scripts/quality_gates/test_check_no_empty_string_fallback.py]
 ---
 
-# quality-gates.sh's TESTS phase never runs scripts/quality_gates/test_*.py
+# quality-gates.sh's TESTS phase never runs scripts/quality*gates/test*\*.py
 
 ## What I found
 
