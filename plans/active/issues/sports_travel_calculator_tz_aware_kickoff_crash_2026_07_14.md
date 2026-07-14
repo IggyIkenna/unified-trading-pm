@@ -166,3 +166,14 @@ unique-date count **2,525** (up from 2,519 ~8 min earlier, +6) — steady forwar
 affected-range boundary for this todo's gap-fill isn't stable until Todo 1's full-history compute completes, so starting
 the identify/gap-fill work now would be premature. Declining — no action taken, no code touched, checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-14T13:09 UTC — data_engineering slot-16 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as the three prior re-checks above. Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]` (this same slot's own 12:28 UTC
+entry there already found the fleet healthy at 2,502/4,210). Cheap re-check this dispatch (non-snap `gcloud`/`gsutil`,
+`central-element-323112`): same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same
+creation timestamps; features bucket unique-date count **2,538** (up from 2,525 ~14 min earlier per slot-15's check,
++13) — steady forward progress, ~60.3% of ~4,210-day history, no stall, no crash. The affected-range boundary for this
+todo's gap-fill still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code
+touched, checkbox NOT flipped. `/skip-current-task`.
