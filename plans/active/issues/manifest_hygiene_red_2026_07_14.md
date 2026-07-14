@@ -21,6 +21,9 @@ tags: [manifest-hygiene, data-pipeline, daily-audit]
 related: []
 priority: P2
 resolved_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_07_14)
