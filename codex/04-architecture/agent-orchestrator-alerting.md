@@ -19,7 +19,7 @@ created: 2026-07-13
 authoritative_for: [agent-orchestrator Slack alert routing, daily-summary digest, git-health guard dedup]
 referenced_by:
 owner:
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-14
 code_refs:
   - agent-orchestrator/server/notifications/slack.py
   - agent-orchestrator/server/daily_summary.py
@@ -246,6 +246,48 @@ restores the page with the standing-condition dedup this doc mandates:
 - **RESOLVED bookend carries the episode summary** ("recovered after Xm — was: <red repos>"); episode context is
   in-memory, so a bookend after a mid-episode restart is summary-less by design.
 - `notify_unpushed_plans` stays log-only — its content is covered by the staleness page's per-repo dirty lines.
+- **Recovery must be SUSTAINED, not a single clean tick** (`GIT_CLEAN_CONFIRM_S`, fix 2026-07-14): the day the
+  30-min-sustain page went live it flapped — the live channel showed dozens of RED/RECOVERED pairs across several slots,
+  "recovered after 0m" repeating every few minutes for hours. Root cause: `slot-git-status-report.sh` rebuilds each
+  slot's ENTIRE repo snapshot via a bash walk that can transiently drop one repo for a single ~5-min cycle (a
+  `pushd`/`git status` hiccup) — that one blip read as "nothing red," which fired the RESOLVED bookend AND cleared the
+  4h re-alert throttle, so the very next real-red tick re-alerted immediately. Fix: a clean reading must be sustained
+  past `GIT_CLEAN_CONFIRM_S` (15 min, ~3x the reporter cadence) before it clears the throttle — a lone blip now leaves
+  the episode fully armed (no bookend, no re-page); only a genuine, sustained recovery fires RESOLVED. Any red tick
+  cancels an in-progress clean streak (`kicker._staleness_clean_since`, in-memory, same restart semantics as the other
+  episode dicts).
 
 Code: `agent-orchestrator/server/worker_liveness/_git_alerts.py` (`GIT_RED_SUSTAIN_S` / `GIT_RED_REALERT_S` /
-`REPORTER_STALE_S`), `server/worker_liveness/__init__.py` (`_git_surfaces_pass`), `server/notifications/slack.py`.
+`REPORTER_STALE_S` / `GIT_CLEAN_CONFIRM_S`), `server/worker_liveness/__init__.py` (`_git_surfaces_pass`,
+`_staleness_clean_since`), `server/notifications/slack.py`.
+
+## Repeat-page hardening (2026-07-14) — dedup race + escalation over-creation
+
+A same-day operator sweep of the live channel (24h pull, post the 2026-07-13 cleanup) found two more repeat-page sources
+beyond the git-staleness flap above — both fixed in `agent-orchestrator@50557aa`:
+
+- **`notify_plan_health_dispatch_failed` — dedup race, not a missing dedup.** The 1h cooldown
+  (`plan_health.py _alert_dispatch_failed`) does a read-check-write on a disk-persisted cooldown dict with no lock. The
+  server runs single-process (`uvicorn` with no `--workers`), but two near-concurrent dispatch attempts (e.g. a
+  client-side retry racing the still-in-flight original request) could each read the cooldown before either wrote it —
+  observed live as the same slot's failure paging twice 6 minutes apart, and a different slot's failure paging twice 21
+  minutes apart. Fixed with an in-process `threading.Lock` around the read-check-write section
+  (`plan_health._dispatch_failed_lock`) — the Slack POST itself stays outside the lock so a slow network call never
+  blocks a concurrent caller's dedup check.
+- **`notify_escalation_unresolved` — repeated pages are a symptom of escalation OVER-CREATION, not a missing
+  notification dedup.** `_find_open_escalation`'s idempotency guard only collapses a duplicate trigger while the
+  existing escalation for that (repo, wall_type) is non-terminal (queued/dispatched); once one goes terminal
+  (`unresolved`, cap hit), a wall still red spawns a BRAND NEW escalation that repeats its own full
+  re-escalate-then-cap-hit page pair. Observed live: 7 "NOT resolved" pages for one repo in under 3 hours, all
+  legitimately distinct escalation rows. Rather than change escalation-creation/self-healing semantics (retrying a
+  broken wall with a fresh worker is correct behavior — the noise is purely in re-telling the operator), the page itself
+  is now cooldown-deduped per `{repo}:{wall_type}:{reescalating|cap_hit}` (`UNRESOLVED_PAGE_COOLDOWN_HOURS = 3`,
+  `escalation._unresolved_page_allowed` / `dedup_state.escalation_unresolved_path`). The two stages of ONE lifecycle
+  (re-escalating → cap hit) always both page — that transition is a genuine severity increase — while a fresh escalation
+  repeating the SAME stage within the cooldown collapses. `_mark_resolved` clears both stage cooldowns on resolution
+  (`escalation._clear_unresolved_page_cooldown`) so a later, genuinely NEW break on the same wall pages immediately
+  rather than inheriting a stale suppression window.
+
+Code: `agent-orchestrator/server/plan_health.py` (`_dispatch_failed_lock`), `server/escalation.py`
+(`_unresolved_page_allowed`, `_clear_unresolved_page_cooldown`, `UNRESOLVED_PAGE_COOLDOWN_HOURS`),
+`server/dedup_state.py` (`escalation_unresolved_path`).
