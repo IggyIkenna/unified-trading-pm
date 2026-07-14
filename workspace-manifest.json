@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 6,
+        "coverage_pct": 91.03,
         "warn_file_count": 7,
-        "coverage_pct": 91.01
+        "qg_red_reason": null,
+        "large_file_count": 6
       }
     },
     "market-data-processing-service": {
@@ -946,10 +946,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 82.24,
         "large_file_count": 0,
-        "warn_file_count": 5
+        "qg_red_reason": null,
+        "warn_file_count": 5,
+        "coverage_pct": 82.39
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 87.77,
+        "qg_red_reason": null,
         "large_file_count": 5,
-        "coverage_pct": 87.74,
-        "warn_file_count": 21,
-        "qg_red_reason": null
+        "warn_file_count": 21
       }
     },
     "unified-trading-pm": {
