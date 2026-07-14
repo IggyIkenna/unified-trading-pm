@@ -1168,3 +1168,10 @@ text says "after GW enrichment lands", fleet still RUNNING (unchanged from the c
 reason, no action taken. Not re-tabling the fleet-status table above since nothing material changed in 2 minutes — see
 the T+25min check immediately above for the last real evidence snapshot. Both this and the full-history todo will be
 genuinely actionable once the fleet self-deletes and the GW gate query (Todo 9) passes.
+
+**Also re-dispatched to the final "ML-readiness re-verify" todo** (11:43Z) — same transitive blocker (depends on the
+features recompute, which depends on GW enrichment). Declined, no action taken. **All 4 remaining todos in this plan are
+now confirmed exhausted for this session** (each transitively gated on the same in-flight fleet) — nothing further to do
+here until the fleet completes. This session's real contribution was the T+25min health check above (genuine evidence
+the fleet is healthy, not stalled) plus correctly declining 3 premature downstream dispatches rather than launching
+redundant/colliding work.
