@@ -282,8 +282,11 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
   provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
   `ON_DEMAND=true`) is the only opt-out; live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses
-  live data); on-demand for backfill is a bug. SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md`,
-  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
+  live data); on-demand for backfill is a bug. **Tardis VMs: HARD cap 3 concurrent, both clouds, lease does NOT lift
+  it** (operator 2026-07-14) — count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into the
+  cefi/mtds launchers); >3 = contention collapse; multi-VM waves always set `TARDIS_CONCURRENCY_LEASE=1`; keep fleet
+  total ≲60 streams (bundle shards per VM, not more VMs). SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` (§
+  Tardis cap), `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do
   NOT reference; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:

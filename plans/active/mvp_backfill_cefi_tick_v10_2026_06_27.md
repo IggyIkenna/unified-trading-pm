@@ -2608,3 +2608,25 @@ attempted this session, time-boxed out).
 09:21Z — `2024-light` self-terminated). Will retry once `gcloud compute instances list --filter='name~bitget'` returns
 empty. The 2,546 real phantom rows this session found are still accurately diagnosed (dry-run confirmed, unaffected by
 this race) — only the `--apply` write-back needs a clean, VM-free window.
+
+---
+
+### OPERATOR RULINGS — 2026-07-14T11:30Z (chat, doc-reconciliation session)
+
+1. **DERIBIT-COMBO gaps DEPRIORITIZED — not MVP-essential.** Operator: "deribit combo gaps i dont care about much for
+   now tbh — we can always derive synthetic combos; it's not MVP essential to fill those." The Layer-1 tuple-present vs
+   Layer-2 ~0% divergence stays flagged (honesty), but no backfill VM / catalogue-rollup work is scheduled for combos in
+   the MVP window. Synthetic derivation from legs remains the fallback.
+2. **Tardis concurrency HARD RULE: max 3 concurrent Tardis VMs (both clouds), lease does NOT lift the cap** — enforced
+   in code (deployment-service `tardis-concurrency-guard.sh`, wired into the cefi GCP/AWS sharded launchers +
+   `launch-mtds-backfill-vm.sh`), hard-ruled in `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap) +
+   workspace CLAUDE.md. Correction to the 2026-07-14T10:55Z lockout-issue entry: the surviving N=3 wave runs WITH the
+   lease (VM metadata verified `TARDIS_CONCURRENCY_LEASE=1`) — the 403 churn is lease-rotation handoff; the N=6 collapse
+   was lease-OFF. No lease-OFF multi-VM datapoint works.
+3. **Next-wave shape (operator guidance): bundle more shards per VM, keep fleet total ≲60 Tardis streams** — don't add
+   VMs. Staged Wave B (launch when the running bitget wave frees slots): SINGLE_VM_QUEUE=1 combined VM(s),
+   lease-enabled, covering DERIBIT spot_pair (10 instruments, the true Layer-1 blocker) + the majors trades/book5 mop-up
+   (BINANCE-SPOT 598 af, UPBIT 471, COINBASE-SPOT 471, OKX-SPOT 471, BINANCE-SPOT book5 139)
+   - the OKX-FUTURES/BINANCE-FUTURES/KRAKEN-FUTURES tail (~86 af). ~2,100+ af closure potential. The 82 af under legacy
+     venue names (BYBIT-FUTURES/BYBIT-SPOT/OKEX-SWAP/COINBASE-INTERNATIONAL/bare-OKX — non-canonical variants coexisting
+     in `venue_adapter_keys.py`) are manifest hygiene, NOT backfill targets.
