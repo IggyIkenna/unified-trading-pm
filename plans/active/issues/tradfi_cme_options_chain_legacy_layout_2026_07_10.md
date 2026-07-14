@@ -27,8 +27,9 @@ resolved_by:
 source:
   "Real finding surfaced by the TradFi single-leg migrate-stage agent (wf_118d8268-18c, 2026-07-09) while scoping the
   @LIN/@INV historical migration against the real availability_index.parquet manifest (single-walk discipline, not a
-  fresh corpus walk)."
-priority: P2
+  fresh corpus walk). Re-confirmed 2026-07-14 against the correct market-data-tick-tradfi-prd- bucket after an earlier
+  same-day re-verification wrongly checked a deprecated flat bucket name."
+priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -106,3 +107,36 @@ either a silent no-op or, worse, writing to the wrong location. Needs an operato
 the manifest consolidator (currently 17 days behind) and re-check, or track down exactly which manifest snapshot the
 original 2026-07-09 finding-agent (`wf_118d8268-18c`) used to get the 120,946-row figure, since it doesn't match what's
 queryable today.
+
+## 🟢 2026-07-14 (later same day) — RESOLVED: (c) was correct, the 2026-07-14 re-verification used the WRONG bucket
+
+Operator suggested checking whether the manifest consolidator itself needed attention. Investigating that surfaced the
+real root cause of the 🔴 entry above: **`market-data-tick-tradfi-central-element-323112` (the flat, no-env-tier bucket
+name the re-verification checked) is a DEPRECATED legacy bucket** — the live, current bucket is
+`market-data-tick-tradfi-**prd**-central-element-323112` (env-tiered, per the workspace's bucket-name-SSOT
+canonicalization). Two separate Cloud Run consolidator jobs exist for TradFi market-data:
+`uts-prod-manifest-consolidator-market-data-tradfi` (targets the `-prd-` bucket, cron **ENABLED**, running successfully
+every minute) and `uts-prod-manifest-consolidator-market-data-tradfi-legacy` (targets the flat bucket, cron **PAUSED** —
+explaining the "17 days stale" reading exactly: nobody's been running it because it's the wrong bucket to be watching).
+
+**Re-verified against the correct `-prd-` bucket, for real:**
+
+- Consolidated manifest is fresh (updated minutes before this check, not 17 days stale).
+- **242,210 real CME `options_chain` manifest entries, `capture_status=captured` on 100% of them, `row_count` summing to
+  380,638,413 rows** — roughly double the original 120,946-entry / ~187.5M-row estimate (the population has grown since
+  the 2026-07-09 finding, consistent with ongoing live capture, not a discrepancy).
+- **120,946 of the 242,210 have `instrument_type=options_chain` explicitly stamped** — an EXACT match to the original
+  finding's headline number, confirming the original 2026-07-09 finding was correct all along; the 2026-07-14
+  re-verification's "population doesn't exist" conclusion was itself the error (wrong bucket, not stale/missing data).
+- Confirmed the real object layout directly via `gsutil ls` (not just the manifest): real, live, flat per-contract files
+  with no `underlying=X/` grouping, e.g.
+  `raw_tick_data/by_date/day=2024-07-11/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=options_chain/data_type=options_chain/6AH5.parquet`
+  — matches the doc's original description exactly (note the real path root is `raw_tick_data/by_date/`, not
+  `instrument_availability/by_date/` — that prefix is instruments-service's reference-data tree, a different concept;
+  this correction's path is MTDS's own market-data tree).
+
+**Status: back to open (not resolved) for the RIGHT reason** — the population is real, confirmed, and needs the
+migration this doc always called for. The 🔴 entry above is superseded, not deleted (kept for the record of how the
+wrong-bucket mistake happened). Next: scope + build + run the real migration against
+`market-data-tick-tradfi-prd-central-element-323112`, VM-eligible given the ~380M-row scale (comparable to or larger
+than the prior 158,812-object/1.19B-row single-leg migration that took ~2h on a VM).

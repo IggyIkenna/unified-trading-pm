@@ -154,8 +154,12 @@ than 45%, or zero.
 
 **Separately, independent of the divergence question**: hive is a confirmed FROZEN snapshot (last real write 2026-06-29)
 while flat is live and current. Even if content never diverges historically, hive will always be silently absent/stale
-for anything after 2026-06-29 — `match_instruments_blob`'s hive-wins policy is still wrong for that reason alone,
-addressed separately below.
+for anything after 2026-06-29 — `match_instruments_blob`'s hive-wins policy is still wrong for that reason alone.
+
+**Fixed**: `match_instruments_blob` now prefers the legacy flat object when both exist, falling back to hive only when
+flat is absent — `market-tick-data-service@80f80f66f`. Confirmed safe for CeFi too: its own 2026-07-09 "binancefix"
+migration actually completed (flat renamed to `*.bak.parquet`, no longer a live candidate at all), so this preference
+only ever activates for a stalled migration like DeFi's, never a completed one. Quality-gates green, shipped.
 
 ## 🔵 2026-07-14 — "dex-pool second-writer-path" is this SAME population, not a separate issue; root cause identified
 
