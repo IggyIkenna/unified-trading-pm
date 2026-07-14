@@ -121,11 +121,43 @@ own sanctioned workaround. `QG_GOVERNOR_DISABLE=true` IS safe/sanctioned for a l
 runs under it, so bypassing the queue adds no memory pressure) — used that for the fast pip-audit-only verification, but
 not for the full run.
 
+## Update 2026-07-14 (slot 10, decision on todo 1)
+
+Re-measured live on this same host before deciding (not self-adjusting blind — this is the fresh host-capacity context
+the prior escalations asked for):
+
+```
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:            61Gi        12Gi        16Gi       104Mi        31Gi        49Gi
+Swap:           15Gi       3.9Gi        12Gi
+$ uptime
+ load average: 4.00, 4.02, 2.89   (16 cores)
+$ bash scripts/quality-gates-base/qg-host-governor.sh --status
+qg-host-governor: K=1  dir=/tmp/qg-host-governor  flock=yes
+  tokens held now: 0/1
+```
+
+Concurrent full `quality-gates.sh` demand has dropped back to ~2 runs (vs. the 16-20 that drove the 40+min queue waits
+in the original filing) — the acute contention has subsided for now. **But the swap signal has not cleared**: 3.9Gi swap
+in active use is the same magnitude as both the 2026-05-29 original chronic-impairment repro and yesterday's filing
+(3.8Gi). Swap pressure, not raw concurrency count, was the root trigger for the K=1 floor — and it's exactly under a
+demand spike back to 16-20 concurrent runs (the scenario this floor exists for) that swap pressure would compound
+fastest. Raising K now would remove the guard right as it becomes needed again next time fleet size spikes.
+
+**Decision: keep `QG_HOST_CONCURRENCY=1` on this host.** Do not raise it while swap sits in the multi-GB range; re-open
+this decision only once swap usage on this host is observed near-zero sustained across a normal fleet-load window. The
+real throughput-tax fix is todo 2 below (stop counting governor queue-wait against `MAX_DURATION`) — it relieves the
+false-failure pain without touching the memory-safety floor. Left todos 2-4 open for their assigned crafts; did not
+implement them under this SPEC-decision todo.
+
 ## Todos
 
-- [ ] [SPEC] P2. Decide whether this host's `QG_HOST_CONCURRENCY=1` floor should change given current fleet size +
+- [x] [SPEC] P2. Decide whether this host's `QG_HOST_CONCURRENCY=1` floor should change given current fleet size +
       today's observed memory pressure; if raised, re-verify against the 2026-05-29 incident's original repro. (repo:
-      infra/host config, not a specific service repo)
+      infra/host config, not a specific service repo) — ✅ **Decision: keep K=1** — swap still ~3.9Gi in use (same
+      magnitude as the original incident trigger) despite concurrent-QG demand dropping to ~2; see "Update 2026-07-14"
+      above. unified-trading-pm@<pending-sha>.
 - [ ] [SCRIPT] P2. Make `qg-host-governor.sh` / `base-service.sh`'s `MAX_DURATION` wall-clock check measure only
       post-token-acquisition work time, not governor queue wait, so queueing under contention cannot fail an
       otherwise-green run. (repo: unified-trading-pm, `scripts/quality-gates-base/`)
