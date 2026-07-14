@@ -3054,3 +3054,29 @@ it's new adapter work, not a data-audit residual).
     root causes" todo it drove; CF11 is operator-directed correct behavior, not a bug). Verification method: live
     single-parquet manifest read (scratch `verify_af.py` / `verify_cf11.py`, mtds `.venv` duckdb 1.5.3 + gcsfs, ADC on
     `central-element-323112`).
+
+- [ ] [VERIFY] P0. **Overnight/next-day live-cron verification (NEW 2026-07-14, operator-directed)** — every scheduled
+      driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
+      trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
+      self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
+      live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
+      tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
+  - `uts-prod-sports-enrichment-footystats-daily` / `uts-prod-sports-enrichment-soccer-football-info-daily` /
+    `uts-prod-sports-enrichment-transfermarkt-daily` (new today, `deployment-service@5da4b620`/`@0f862b6e`) — check
+    `gcloud scheduler jobs describe <job> --project=central-element-323112 --location=asia-northeast1` for
+    `lastAttemptTime`/`status`, then
+    `gcloud run jobs executions list --job=<run-job-name> --region=asia-northeast1 --project=central-element-323112 --limit=5`
+    for a self-triggered (not manually-executed) success, then confirm fresh `captured` rows landed in the canonical
+    manifest for TODAY's date for each source.
+  - The Tier-3/4 fixture-proximate trigger system fix (`sports_trigger_state.py` path/schema fix, shipped today) —
+    confirm it actually fires around a REAL live kickoff (pre-match T-1h lineups, post-match T+30m stats/events) rather
+    than just unit-test-passing; check `deployment_service`'s trigger logs / the relevant Cloud Run Job's execution
+    history spanning an actual match window.
+  - `uts-prod-mdps-odds-horizon-bucket-daily` + `uts-prod-market-data-processing-service-t1-recon` (new today,
+    `deployment-service@de117f5`) — same self-fire check; confirm the rolling 3-day window actually picks up real
+    newly-landed raw ticks once a full day has genuinely elapsed (today's `2026-07-14` data was still incomplete at test
+    time, so today's manual test could only confirm the mechanism runs cleanly, not that it captures a complete day
+    yet).
+  - If any of these did NOT self-fire on schedule (Cloud Scheduler shows no new `lastAttemptTime` past its cron time, or
+    the triggered Cloud Run Job execution list has no NEW entry beyond today's manual tests), that's a genuine
+    regression from what was "shipped" today — diagnose and fix, don't just re-trigger manually and declare it fine.
