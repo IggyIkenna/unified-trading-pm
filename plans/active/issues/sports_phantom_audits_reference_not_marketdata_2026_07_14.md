@@ -166,9 +166,46 @@ real data exists.** Independently re-verified real data exists for both: `odds_h
 specific spot-check (date `2020-06-06`, `venue=ODDS_API`) were directly confirmed against live GCS earlier today during
 the MDPS venue-grain-mismatch investigation (see this plan's own Progress Log, same date); `trades` is the raw
 `odds_api` ticks, separately confirmed ~100% healthy (561,048 captured / 6 attempted_failed) via direct manifest reads
-today. This confirms sub-item 1 in "Open sub-items" above precisely: it's the "no market-data phantom audit for sports"
-design gap, manifesting as blanket false positives rather than as an absence — `SPORTS_DATA_TYPE_TO_FOLDER` needs
-entries (or the phantom auditor needs an explicit skip-list) for these two data_types before this count means anything.
+today.
+
+**Correction/refinement 2026-07-15** — a sharper question ("is `trades` even a legitimate reference-manifest data_type
+for sports? doesn't the time-horizon-bucketed odds already come in elsewhere?") forced a re-check, and the
+"`SPORTS_DATA_TYPE_TO_FOLDER` needs entries" framing above is **incomplete — that fix alone would not work.** Read the
+writers directly (`market-data-processing-service/scripts/reprocess_sports_odds.py:249-297`, both docstrings cite
+`sports_manifest_canonicalisation_2026_06_01.md`, decided 2026-06-07):
+
+- **Yes, `trades`/`odds_horizon_bucket` manifest rows in `instruments-store-sports` are 100% legitimate and deliberate —
+  not a routing accident.** Sports is a documented, cross-referenced architectural exception: every other asset_group
+  splits its availability manifest into a reference bucket + a market-data bucket, but for sports specifically, **one
+  canonical manifest** (`instruments-store-sports`) tracks availability for ALL sports data_types — reference (fixtures,
+  injuries, standings…) AND market-data (raw odds ticks, bucketed odds-horizon output) alike.
+  `_resolve_manifest_bucket()`'s docstring: _"routed ALL of sports' availability manifest to the `instruments-store`
+  bucket while the actual tick BYTES ... correctly stay in the per-asset_group `market-data-tick` bucket."_ So
+  `_audit_sports()` auditing `instruments-store-sports` for these data_types is auditing the **correct, intended**
+  manifest — the phantom flag is not evidence anything is mis-routed.
+- **But the real parquet bytes for these two data_types physically live in a different bucket entirely**
+  (`market-data-tick-sports-{env}`, resolved via `resolve_bucket_name(kind="market-data", asset_group="sports")`), with
+  completely different path shapes than the `sports_reference/by_date/...` layout `candidate_parquet_paths()` assumes:
+  - `trades` (raw per-bookmaker odds ticks):
+    `raw_tick_data/by_date/day={date}/pipeline_mode={batch_odds_api|live_odds_api}/asset_group=sports/…ticks.parquet`
+  - `odds_horizon_bucket`:
+    `processed/by_date/day={date}/pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/data_type=odds_horizon_bucket/league_id={league_id}/timeframe={horizon}/bucketed.parquet`
+
+  Both templates are lifted verbatim from `reprocess_sports_odds.py` (`_CANONICAL_ODDS_PREFIX_TEMPLATES`,
+  `_OUTPUT_PATH_TEMPLATE`) — the actual, current write paths, not a guess.
+
+**Corrected fix suggestion**: simply adding `"trades"`/`"odds_horizon_bucket"` to `SPORTS_DATA_TYPE_TO_FOLDER` would NOT
+work — that map's templates are inherently scoped to same-bucket (`instruments-store-sports`) paths, and these two
+data_types' real files are in a **different bucket**. The correct fix is a **data_type-aware, cross-bucket branch in
+`_audit_sports()`** (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py:283`): for
+`data_type in {"trades", "odds_horizon_bucket"}` (equivalently `source in {"odds_api", "mdps_odds_horizon_bucket"}`),
+resolve `market-data-tick-sports-{env}` (not the bucket being audited) and probe the two templates above instead of
+`candidate_parquet_paths()`. A plain skip-list (silently excluding these data_types from the phantom check) would be the
+lazy alternative — it would just hide the false positive rather than actually re-verify these ~704,642 rows against
+their real location, so the cross-bucket probe is the more correct fix if anyone picks this up.
+
+This confirms sub-item 1 in "Open sub-items" above precisely: it's the "no market-data phantom audit for sports" design
+gap, manifesting as blanket false positives rather than as an absence.
 
 **The remaining 2.3% (~16,511 rows) is NOT explained by the above** — these are all registered reference data_types with
 real candidate-path templates. Spot-checked one `PLAYER_VALUES` row directly (`day=2021-06-27`,
