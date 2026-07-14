@@ -187,8 +187,30 @@ implement them under this SPEC-decision todo.
       `tests/test-step-5-63-run-lifecycle.sh`'s convention since `base-service.sh` is too large to source directly)
       covers every `QG_SLICE` value, DOCS-ONLY, `--skip-tests`+`--skip-typecheck`, and the sentinel-hit override. Full
       `quality-gates.sh` green + sentinel-verified on unified-trading-pm@9693a379d.
-- [ ] [SPEC] P3. Investigate whether the acquire loop has a fairness/starvation gap under ~20-way concurrent waiters (no
-      fairness ordering — every waiter races the same non-blocking `flock -n` each ~2s tick), separate from the
+- [x] ✅ [SPEC] P3. Investigate whether the acquire loop has a fairness/starvation gap under ~20-way concurrent waiters
+      (no fairness ordering — every waiter races the same non-blocking `flock -n` each ~2s tick), separate from the
       K=1-is-too-low policy question above; a single `/proc/locks` snapshot during today's incident showed zero lock
       holders on the token inode while many waiters kept reporting busy, which is consistent with either explanation and
-      wasn't conclusively distinguished. (repo: unified-trading-pm, `scripts/quality-gates-base/qg-host-governor.sh`)
+      wasn't conclusively distinguished. (repo: unified-trading-pm, `scripts/quality-gates-base/qg-host-governor.sh`) —
+      **INVESTIGATED, slot 10 (infra), 2026-07-14, via an isolated empirical stress probe (not the live host's token
+      dir).**
+  - **Method**: 20 background bash waiters, each replicating the exact `qg_governor_acquire()` mechanism (non-blocking
+    `flock -n` poll against a shared K=1 lock file, sleep-and-retry on failure) against an isolated `mktemp -d` lock
+    dir, each doing 15 acquire→hold(150ms)→release cycles (300 total acquisitions). Poll interval compressed to 0.2s
+    (from prod's 2s) purely to keep the experiment fast — same non-blocking-race MECHANISM, not a different algorithm.
+  - **Verdict: NOT true/indefinite starvation — CONFIRMED a real, severe fairness gap.** All 20 waiters completed all 15
+    rounds (300/300 acquisitions; zero waiters denied indefinitely) — the earlier "convoy could starve forever"
+    theoretical concern does not hold in this test. But per-waiter **max single wait ranged 3ms to 46,086ms — a ~15,000×
+    spread** across otherwise-symmetric waiters (full table in this touch's raw output), confirming the acquire loop has
+    **no fairness ordering whatsoever**: it is a pure free-for-all race on the same non-blocking `flock -n` each tick,
+    so which waiter wins in any given window is scheduler-luck, not FIFO/ticket-based. At prod's 10×-longer 2s poll
+    interval, this variance would scale proportionally — consistent with, and a plausible explanation for, why different
+    slots in the original incident reported wildly different wait times (15min vs. 40min+) for what should have been
+    similar contention: not necessarily worsening contention over time, but the natural variance of an unfair lottery
+    scheduler.
+  - **Not implemented (correctly out of this SPEC-investigate todo's scope)**: a real fix (e.g. a monotonic ticket/queue
+    file each waiter takes a number from and polls "is it my turn", since Linux `flock()` — blocking or non-blocking —
+    has no FIFO wake-order guarantee either) is new, unreviewed engineering needing its own design/review pass, not a
+    batch-size judgment call — matching this same plan's own precedent (todo 1's K=1 decision, todo 2/3's narrower
+    mechanical fixes) for routing genuine designs to a follow-up rather than implementing unilaterally under an
+    investigate-scoped dispatch.
