@@ -95,10 +95,14 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       `HeartbeatDaemon`) that, on SIGTERM, calls `store.complete(self.entry)` (status=failed + exit_code set) within the
       SPOT ~30s preemption grace, then stops the daemon. Idempotent — safe if `complete()` was already called. This
       archives preempted backfill VMs at the source instead of leaving `active/` ghosts.
-- [ ] [REVIEW] P0. Unit tests: (a) the reaper tick calls `reap_stale` with the running set and swallows a raised reaper
-      error without breaking the loop; (b) a SIGTERM during a running daemon archives the entry (status=failed) rather
-      than leaving it `running`. Run `bash scripts/quality-gates.sh` green in BOTH deployment-api and
-      unified-trading-library.
+- [x] ✅ [REVIEW] P0. Unit tests: (a) the reaper tick calls `reap_stale` with the running set and swallows a raised
+      reaper error without breaking the loop; (b) a SIGTERM during a running daemon archives the entry (status=failed)
+      rather than leaving it `running`. Run `bash scripts/quality-gates.sh` green in BOTH deployment-api and
+      unified-trading-library. — deployment-api@47f9b20 (5 new tests in `test_background_sync.py`: tick-boundary gate,
+      OSError/ValueError swallow, end-to-end swallow-does-not-break-loop), unified-trading-library@5f015cb5 (3 new tests
+      in `test_daemon.py`: SIGTERM archives status=failed, run()'s post-loop `complete()` is idempotent after a signal,
+      a raising `store.complete` inside the handler doesn't propagate). Both repos' `quality-gates.sh --no-fix` run
+      fresh (sentinel cleared first, not a cache hit) green: deployment-api 128s, unified-trading-library 151s.
 - [ ] [INFRA] P0. Ship: commit + push deployment-api and UTL changes (cite `<repo>@<sha>` each) and flip this plan's
       items (`docs(plans):`). THEN hand off (draft-gated chain): edit
       `deployment_registry_firestore_p1_dualwrite_2026_07_14.md` frontmatter `status: draft`→`active` and commit
