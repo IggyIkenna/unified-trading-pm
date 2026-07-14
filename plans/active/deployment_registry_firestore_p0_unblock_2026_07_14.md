@@ -118,6 +118,43 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 ## Progress Log
 
+- **2026-07-14 (local execution, this session)** — Pulled the whole 6-phase chain to local execution (`assigned_vm: NA`
+  / `execution_scope: local-only` on all 6 plans) after 6h on AO left 3/6 P0 todos still `queued` with no slot
+  dispatched. Shipped the unit-test todo, then chased the promote block to the root cause:
+  - **Unit tests** (the `[REVIEW]` todo above): 5 new tests in `deployment-api/tests/unit/test_background_sync.py`
+    (reaper-tick boundary gate, OSError/ValueError swallow, end-to-end swallow-doesn't-break-loop) + 3 new tests in
+    `unified-trading-library/tests/unit/lifecycle/test_daemon.py` (SIGTERM archives status=failed, idempotent with
+    run()'s post-loop complete(), a raising store.complete doesn't propagate). Both repos QG-green (fresh runs, sentinel
+    cleared first) — deployment-api@47f9b20, unified-trading-library@5f015cb5.
+  - **Promote pipeline was stuck** (PR #279→#280→#281, `BLOCKED`/provenance). Diagnosed: NOT the
+    `promote_provenance_marker_stale_head_query_2026_07_13.md` marker bug (already fixed in
+    `unified-trading-pm@20db96085`) — a genuine quickmerge bypass. `deployment-api@8660e9e` (the reaper-tick commit,
+    shipped by an earlier slot on this plan) changed real source (`background_sync.py`, `sync_service.py`) via a raw
+    push with no `Quickmerge:` trailer, despite this plan's earlier Progress Log entry (slot-3, backend-engineer)
+    claiming "Shipped via quickmerge --agent --files" — that claim was wrong; the commit itself has no trailer.
+  - **Attempted revert+re-quickmerge remediation** (operator-chosen over a manual-merge override): reverted 8660e9e
+    (`deployment-api@3fc1a06`, clean, non-destructive) then reapplied the identical diff via
+    `quickmerge.sh --agent --files` (`deployment-api@f83ac67`, carries `Quickmerge: agent`). **This did NOT clear the
+    gate** — `check_strict_quickmerge.py` flags every commit in the unpromoted marker range lacking a trailer, and a
+    plain `git revert` gets no exemption (only true merge commits / bot-authored / `[skip ci]` / already-backmerged
+    content are exempt) — so it went from 1 flagged commit to 2 (8660e9e + 3fc1a06), neither removable from history
+    without a force-push rewrite of the shared branch (banned). **No waiver/allowlist mechanism exists in the gate.**
+    Worth a follow-up issue doc: `check_strict_quickmerge.py`'s carve-out list could reasonably exempt single-parent
+    revert commits whose diff is later fully re-quickmerged, but that's a gate-design change, not something to improvise
+    mid-incident.
+  - **Resolution**: operator approved a manual merge (same mechanism as the `agt-c281eb` CVE precedent). Re-dispatched
+    `ldr-to-main-promote-fleet.yml` (`workflow_dispatch --only_repo deployment-api`) to refresh the frozen-head promote
+    PR to current HEAD, waited for `quality-gates-v2` green, then `gh pr merge 283 --squash --admin` with the reason
+    documented on the PR. Merged: `deployment-api@83308c2d` on `main`. `main-backmerge-to-ldr` fired clean.
+  - **Deploy to the live Cloud Run service is a MANUAL step** (`gcloud run deploy`, per
+    `deployment-api/docs/DEPLOYMENT_GUIDE.md` — no CI/CD auto-deploy-on-merge for this repo). Operator elected to run
+    that deploy themselves rather than have it done in this session. **Todo 3 (deployed-API verify) and the back half of
+    todo 6 (handoff to Phase 1) are therefore left UNCHECKED below, honestly** — activating Phase 1 before the prod fix
+    is verified live would repeat the exact premature-activation mistake this plan's chain was redesigned to avoid (see
+    the `gate_on_depends`-leak correction on the master plan). Once the operator deploys and the before/after `active/`
+    count + inventory-endpoint check are recorded, todo 3 and the handoff half of todo 6 can close and Phase 1 can
+    activate.
+
 - **2026-07-14 (slot 1, review)** — Attempted the deployed-API end-to-end verification for the `[REVIEW]` P0 todo above.
   **BLOCKED — the fix has not reached the deployed instance yet**, so the "after" half of the check cannot be done
   honestly. Leaving the checkbox unflipped; details below.
