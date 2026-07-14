@@ -36,7 +36,7 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 locked_by:
 resolved_by:
 ---
@@ -236,6 +236,25 @@ consolidation).
       `quality-gates.sh` green (232s). - Both crons confirmed `ENABLED` (resumed) after all verification completed.
       Snapshots taken before any write: `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` on both
       surfaces.
+- [ ] [DATA] P0. **CF-8 backfill left `captured` rows specifically un-filled — confirms this doc's own candidate (a)
+      hypothesis at line ~115 ("captured rows may go through a different path"), now quantified.** A fresh
+      `cf_manifest_audit_2026_06_01.py` re-run (2026-07-14, data_engineering slot-2) confirms the 87.8%/85.3% aggregate
+      fill rate the backfill achieved is driven almost entirely by `empty_confirmed`/`attempted_failed`/
+      `expected_unattempted` rows reaching ~99.8-100% fill — but `capture_status='captured'` rows (the actual data, not
+      placeholders) are still only **39.8% filled on IS** (651,845/1,638,158 missing) and **49.8% filled on MDPS**
+      (286,839/575,671 missing). CF-8 therefore remains genuinely RED on both surfaces post-backfill, for a DIFFERENT
+      reason than before (was: whole-corpus 0-63%; now: captured-row-specific ~40-50% gap). Root cause not yet isolated
+      — needs investigation into whether `rebuild_sports_manifest_v9.py`'s captured-row write path
+      (`_write_captured_rows`, distinct from the empty-row `_write_empty_rows` path this doc's Finding 2 traced) derives
+      `available_at` the same way, or whether these are pre-existing captured rows written before the
+      `record_captured()`/`record_captured_from_counts()` writer-plumbing fix (`unified-trading-library@9c9cdc50`)
+      landed and were never re-emitted by the backfill pass (which may only touch empty/failed rows via `--force`, not
+      already-captured ones). A full fix likely needs either (a) a targeted re-emit pass for captured rows specifically
+      (mirroring the empty-row backfill recipe: dry-run → pause-cron/snapshot → apply → force-consolidate, this time
+      scoped to `capture_status=captured`), or (b) confirming captured rows need a different `available_at` source
+      entirely (e.g. object creation time) that the current `_available_at_from_row(row)` `written_at`-based derivation
+      doesn't cover. (repo: market-tick-data-service, unified-trading-library) — found via
+      `plans/active/sports_manifest_canonicalisation_2026_06_01.md`'s E8-verify re-audit, same date.
 - [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
       `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
 - [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
@@ -309,3 +328,34 @@ sports consolidator crons are back to `ENABLED` (routine steady-state; no lock f
 mid-flight right now). Neither surface is honestly GREEN. Not ready for an E8 legacy-bucket-deletion ask on either
 surface — CF-8 remains the primary blocker on both, now purely procedural (operator-coordinated window) rather than a
 code-correctness blocker.
+
+**Post-slot-11-backfill re-audit — 2026-07-14 (data_engineering slot-2, task `sports_manifest_canonicalisation-001`,
+E8-verify dispatch)**: fresh-pulled to `unified-trading-pm@e2bf7a47a` (includes slot 11's completed backfill + slot 6's
+independent re-verification, both already flipping the plan's CF-8 P1 todo before this touch started). Since `gcloud`
+CLI is broken on this host (snap-confine sandboxing, same issue Finding 1's author hit), ran
+`cf_manifest_audit_2026_06_01.py`'s `audit()` in-process with `_cp`/`_ls_shallow` monkeypatched to the
+`google-cloud-storage` SDK (`.venv-workspace` has it pre-authed) instead of shelling to `gcloud storage` — same read
+logic, different transport, no script edit needed.
+
+Live results, both surfaces: **MDPS** `RED — ['CF-8', 'L6-legacy-only']`; `available_at` non-null=1,670,401/1,958,499
+(85.3%, matches slot 11's reported figure exactly — no drift). **IS**
+`RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']`; `available_at` non-null=5,090,721/5,751,217 (88.5%, up
+slightly from the reported 87.8% via ordinary incremental writes, consistent with the pattern the prior touch already
+noted for the 62.9%→63.4% drift). CF-2-paths/CF-3/CF-4/L6-legacy-only are byte-for-byte the SAME pre-existing,
+previously-triaged residuals (28 genuinely-empty INJURIES legacy-only cells on IS, 140 on MDPS — both match history
+exactly).
+
+**New finding, not previously quantified**: broke the CF-8 gap down by `capture_status` on both surfaces (grouped the
+downloaded index parquet by status, checked `available_at.notna()` per group) rather than trusting the aggregate
+percentage. Result: `empty_confirmed`/`attempted_failed`/`expected_unattempted` are ALL ~99.8-100% filled on both
+surfaces (the backfill worked correctly for these) — but `capture_status='captured'` rows are only **39.8% filled on
+IS** (986,313/1,638,158 filled, 651,845 missing) and **49.8% filled on MDPS** (288,832/575,671 filled, 286,839 missing).
+This confirms — and quantifies for the first time — this doc's own Finding-2 investigation-trail candidate (a) at line
+~115 ("captured rows may go through a different path — worth diff-checking against `_writer_record.py`'s non-captured
+path"): captured rows are genuinely, specifically under-filled, not just "slightly behind" the aggregate. Filed as a new
+P0 todo above (did not re-run any write myself — a captured-row-scoped backfill is the same
+operator-coordinated-maintenance-window class of operation as the empty-row backfill, out of scope for a verify
+dispatch, and Finding 1's cron-collision history argues against an uncoordinated attempt).
+
+**E8 checkbox NOT flipped** — CF-8 is genuinely still RED on both surfaces (for a narrower, now-understood reason). This
+plan-doc + issue-doc edit ship via the `docs(plans):` carve-out.
