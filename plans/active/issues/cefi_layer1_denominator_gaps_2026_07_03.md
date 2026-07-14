@@ -40,7 +40,7 @@ thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-10 # (was: 2026-07-06 -- corrected 2026-07-12, finding 63, §A2 B-queue ruling: body carries a 2026-07-10-dated entry, line ~208, operator decision #6, that postdated the recorded last_updated)
+last_updated: 2026-07-14 # (was: 2026-07-10 -- bumped for the 2026-07-14 DERIBIT-COMBO batch-routing fix flip, slot-7)
 supersedes:
 superseded_by:
 depends_on:
@@ -279,21 +279,21 @@ enough). The % is neither an upper nor lower bound of the real value.
       skipped by `recapture_bitget_futures_dated_futures_2026_07_14.py` land in `prod/catalog.parquet` without
       introducing a duplicate. (repo: instruments-service)
 
-- [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
+- [x] ✅ [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
       instrument catalogue is permanently LIVE-ONLY — can never backfill historical data.**
-      `unified_api_contracts.registry.venue_adapter_keys.VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` is a
+      `unified_api_contracts.registry.venue_adapter_keys.VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` was a
       HARD, mode-independent mapping — `instruments_service/reference_data/factory.py::get_adapter_for_canonical_venue`
-      only special-cases mode-routing (batch→Tardis / live→CCXT-or-live-adapter) for venues resolving to `"tardis"` or
-      `"databento"` FIRST via `_resolve_uac_adapter_key`; DERIBIT-COMBO never reaches that branch because its adapter
-      key is already pinned to `"deribit_combo"` (`DeribitComboReferenceDataAdapter`,
+      only special-cased mode-routing (batch→Tardis / live→CCXT-or-live-adapter) for venues resolving to `"tardis"` or
+      `"databento"` FIRST via `_resolve_uac_adapter_key`; DERIBIT-COMBO never reached that branch because its adapter
+      key was already pinned to `"deribit_combo"` (`DeribitComboReferenceDataAdapter`,
       `instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py`) regardless of `mode="batch"` vs
       `"live"`. That adapter's own docstring says it's LIVE-only ("real-time active combos... complements the Tardis
       adapter which covers historical data") — but the historical Tardis-sourced combo path
       (`TardisReferenceDataAdapter` with `canonical_venue_override="DERIBIT-COMBO"`, `combos.py`'s leg parser already
-      exists and is wired for it) is never actually invoked by the catalogue refresh for this venue. **Live-verified**:
-      `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` filtered to `venue=DERIBIT-COMBO`
-      has exactly **4 rows**, all `mvp=False`, all `available_from` in **2026-07** (i.e. "currently active as of the
-      last live refresh"), zero rows for any earlier date — despite
+      existed and was wired for it) was never actually invoked by the catalogue refresh for this venue.
+      **Live-verified**: `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` filtered to
+      `venue=DERIBIT-COMBO` has exactly **4 rows**, all `mvp=False`, all `available_from` in **2026-07** (i.e.
+      "currently active as of the last live refresh"), zero rows for any earlier date — despite
       `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT-COMBO"]["trades"] = "2022-08-23"` (live-verified against
       `api.tardis.dev/v1/exchanges/deribit`'s `type=='combo'` symbols per this plan's Addendum 5, 2026-07-12) declaring
       a real, much larger historical universe. **Consequence, confirmed by a real backfill VM this session**: relaunched
@@ -303,25 +303,39 @@ enough). The % is neither an upper nor lower bound of the real value.
       `NO SYMBOLS for deribit on 2024-01-01` — because the catalogue genuinely has zero DERIBIT-COMBO instruments dated
       that far back. **This means `(DERIBIT-COMBO, options_chain, trades)` can NEVER close as a G4 Layer-1 tuple until
       this catalogue-population gap is fixed** — no amount of backfill-VM relaunching will help; the denominator itself
-      is starved. **Recommended fix** (not attempted this session — architectural, touches
-      `factory.py::get_adapter_for_canonical_venue`'s mode-routing, which every other CeFi Tardis venue also depends on;
-      scoping as its own todo rather than risking a same-session change to shared routing logic): make
-      `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` resolve to `"tardis"` (with `canonical_venue_override="DERIBIT-COMBO"`,
-      `exchanges=["deribit"]`) for `mode="batch"`, and keep `"deribit_combo"` (the live REST adapter) only for
-      `mode="live"` — the SAME pattern `get_adapter_for_canonical_venue` already uses for CeFi Tardis venues on the
-      `live→CCXT` branch, just inverted (DERIBIT-COMBO's "live-native" adapter is `deribit_combo`, not CCXT, but the
-      batch-should-prefer-Tardis principle is identical). (repo: instruments-service, unified-api-contracts) IN FULL at
-      `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`.** Surfaced 2026-07-08 (slot-8
-      planning) while verifying `-004`'s Gate; root-caused to `unified-api-contracts@23fa3a99` (deliberate,
-      production-verified bare-OKX/BYBIT `SPOT_PAIR` removal) orphaning `OKX-SPOT`'s capability entry since `OKX-SPOT`
-      was never declared its own cefi venue (unlike `BYBIT-SPOT`, which IS declared and unaffected). Also blocks
-      `instruments-service` QG (2 pre-existing red tests: the OKX-fold test here + a separate stale `lighter-zksync`
-      Tardis-exchange-id assertion, root-caused to a slug rename `uac@f16c79e8` — resolve BOTH in the linked doc, not
-      here, to avoid duplicate-tracking drift). This todo is a pointer only; do the actual decision/fix/verify work
-      against the 3 todos in that doc. **Status update 2026-07-08 (slot-5 planning)**: the P0 QG-red shipping freeze is
-      CLEARED — shipped an interim Option-B fix (`unified-api-contracts@1771d59a` + `instruments-service@666bca5`, full
-      detail + trade-offs in the linked doc). The DESIGN decision itself (Option A vs keeping B) is still open pending
-      operator confirmation; this todo's urgency is now P1-cleanup, not P0-blocker.
+      is starved.
+
+      **DONE 2026-07-14 (data_engineering slot-7 planning) — `unified-api-contracts@89511de8` +
+          `instruments-service@e6fdfd00`.** Live-verified the premise first (`api.tardis.dev/v1/exchanges/deribit`
+          genuinely carries 68,847 `type=='combo'` symbols back to `availableSince=2022-08-23`, matching the finding
+          exactly). Implemented the recommended fix: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` flipped `"deribit_combo"` →
+          `"tardis"` (UAC); `factory.py::get_adapter_for_canonical_venue` special-cases `mode="live"` DERIBIT-COMBO to keep
+          routing to the `deribit_combo` REST adapter (extracted into `_build_deribit_combo_live_adapter` to stay under the
+          200-line function cap), so `mode="batch"` (default) now resolves to Tardis with `exchanges=["deribit"]` +
+          `canonical_venue_override="DERIBIT-COMBO"` (the `("DERIBIT-COMBO","OPTION"):"deribit"` itype-routing entry
+          already existed in `venue_instrument_type_to_tardis`, landed 2026-07-12). Went one step further than the
+          recommendation flagged: since the "deribit" Tardis exchange slug is shared with bare DERIBIT's own
+          option/future/perpetual/spot universe, `canonical_venue_override` alone would have mistagged that ENTIRE universe
+          as DERIBIT-COMBO — added a self-filter in `TardisReferenceDataAdapter.get_instruments()` restricting to
+          `type=='combo'` rows when the override is set (the venue_mapping.py comment had already flagged this as
+          not-yet-done). Corrected the adapter's own docstrings + the `honest-absence-downstream-handling.md` codex SSOT
+          § "DERIBIT-COMBO historical unavailability" (2026-06-27), which had over-broadly concluded "no data source can
+          serve it" — that was only ever true of Deribit's own REST `get_combos` endpoint, not Tardis's independent
+          archived feed; SUPERSEDED-banner added rather than deleted, per the codex-alignment rule. Added regression tests:
+          factory batch/live routing (`test_deribit_combo_batch_routes_to_tardis`,
+          `test_deribit_combo_live_routes_to_rest_adapter`), the Tardis combo-type self-filter
+          (`test_deribit_combo_override_filters_to_combo_type_only`), and fixed a stale assertion
+          (`test_factory_contains_deribit_combo` previously asserted the old `"deribit_combo"` value). QG-green both repos
+          (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` UAC,
+          `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5` instruments-service; 4409+ tests). **Next step (not
+          this todo — a backfill VM relaunch, not code)**: re-run `cefi-deribit-combo-2024-heavy` against this fixed code to
+          close `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple; tracked in
+          `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
+
+          *(Historical note: this todo's text previously carried a garbled, unrelated OKX-SPOT/QG-red pointer glued onto
+          the end from an editing mistake — removed 2026-07-14 during this flip. That OKX-SPOT content is tracked
+          independently and in full at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
+          which already carries its own open DESIGN todo — nothing was lost.)*
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 
@@ -931,3 +945,24 @@ The venue-blind denominator producer gets the MVP-gate intersection now; the str
   (`git checkout --`, not shipped)** — it can't land through a QG gate that's red for unrelated pre-existing reasons,
   and shipping it alone would misleadingly suggest the underlying OKX-SPOT hole is "handled". No `instruments-service`
   commit this turn.
+- **2026-07-14 (data_engineering slot-7 planning)** — **DERIBIT-COMBO catalogue-is-live-only todo FLIPPED ✅** —
+  `unified-api-contracts@89511de8` + `instruments-service@e6fdfd00`. Live-verified the premise
+  (`api.tardis.dev/v1/exchanges/deribit` genuinely has 68,847 `type=='combo'` symbols back to 2022-08-23) before
+  implementing. Flipped `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` from `"deribit_combo"` to `"tardis"`;
+  `factory.py::get_adapter_for_canonical_venue` now special-cases `mode="live"` DERIBIT-COMBO to keep the REST adapter
+  (extracted to `_build_deribit_combo_live_adapter` to stay under the 200-line function cap — the addition would have
+  pushed the shared function over); `mode="batch"` (default) routes through Tardis. Added a combo-type self-filter
+  (`type=='combo'` only) in `TardisReferenceDataAdapter.get_instruments()` keyed on
+  `canonical_venue_override=="DERIBIT-COMBO"` — without it the fix would have mistagged bare DERIBIT's whole
+  option/future/perpetual/spot universe as DERIBIT-COMBO, since both venues share the same "deribit" Tardis exchange
+  slug. Corrected two stale docs that had over-broadly concluded historical DERIBIT-COMBO data was unobtainable from ANY
+  source (it was only ever a Deribit-REST-specific limitation): the adapter's own docstrings, and codex
+  `honest-absence-downstream-handling.md` § "DERIBIT-COMBO historical unavailability" (SUPERSEDED-banner added, not
+  deleted). Also cleaned up this todo's own text — a prior edit had glued an unrelated OKX-SPOT/QG-red pointer onto the
+  end of the DERIBIT-COMBO finding by mistake; removed (that content is tracked independently, in full, at
+  `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`, unaffected). QG-green both repos
+  (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` /
+  `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5`; 4409+ instruments-service tests, ~4-5k UAC tests).
+  Code fix is code-complete + verified; the actual backfill-VM relaunch to close
+  `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple is separate infra work tracked in
+  `mvp_backfill_cefi_tick_v10_2026_06_27.md`, not this plan.

@@ -7,7 +7,7 @@ summary: >-
   empty_confirmed vs attempted_failed: NaN-handle honest empties, never fabricate placeholder rows / sentinels, fail
   loud on unexpected gaps; carries the closed capture_status × error_reason taxonomy, the per-source available_at
   stamping helpers, the §6A silent-drop violation classes, the 401≠honest-absence rule and the DERIBIT-COMBO
-  unbackfillability fact.
+  historical-fillability fact (corrected 2026-07-14 — Tardis CAN serve it; only the REST adapter is live-only).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -29,7 +29,7 @@ authoritative_for:
   [
     honest-absence downstream read/consume handling,
     per-source available_at stamping helpers,
-    DERIBIT-COMBO historical unbackfillability,
+    DERIBIT-COMBO historical fillability (corrected 2026-07-14),
   ]
 referenced_by:
   [
@@ -614,62 +614,70 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 
 ---
 
-## DERIBIT-COMBO historical unavailability (codified 2026-06-27)
+## DERIBIT-COMBO historical unavailability (codified 2026-06-27, CORRECTED 2026-07-14)
 
-> **Hard rule: DERIBIT-COMBO historical instrument-definition data is unbackfillable via REST. Do NOT re-attempt a
-> historical combo backfill. This section is the permanent SSOT for that fact.**
+> **🟢 SUPERSEDED 2026-07-14 — the "no data source can serve it" claim below was WRONG.** The 2026-06-27 finding only
+> checked Deribit's own REST API (`get_combos`), which genuinely is live-only. It never checked Tardis's independent
+> archived feed. Live-verified 2026-07-14: `api.tardis.dev/v1/exchanges/deribit` (free, no-auth) carries **68,847
+> `type=='combo'` symbols back to `availableSince=2022-08-23`** — Tardis records the market feed in real time and
+> retains it regardless of what Deribit's own live API currently lists. `instruments-service`'s Tardis adapter already
+> has a working combo-symbol leg parser (`adapters/cefi/tardis/combos.py::_parse_deribit_combo_legs`) that was simply
+> never wired to DERIBIT-COMBO's batch/historical catalogue path. **Fixed** —
+> `unified-api-contracts/registry/venue_adapter_keys.py`: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` now `"tardis"` (was
+> `"deribit_combo"`); `instruments-service` factory now special-cases `mode="live"` DERIBIT-COMBO to keep routing to the
+> `deribit_combo` REST adapter (still correct for live/forward — see below), while `mode="batch"` (default) now goes
+> through Tardis with `canonical_venue_override="DERIBIT-COMBO"`, self-filtered to `type=='combo'` rows only
+> (`TardisReferenceDataAdapter.get_instruments`). SSOT: `cefi_layer1_denominator_gaps_2026_07_03.md` (NEW FINDING
+> 2026-07-14). **Historical DERIBIT-COMBO cells are no longer permanently `empty_confirmed` — they are a fillable gap
+> once a backfill VM re-runs against the fixed code.** The rest of this section is preserved for the parts that are
+> STILL true (the REST adapter's own live-only limitation) — read the correction above first.
 
-### What the source limitation is
+### What the source limitation is (REST adapter only — NOT Tardis)
 
 Deribit's public REST API exposes combo (multi-leg strategy) instruments via `GET /api/v2/public/get_combos`. This
 endpoint returns **only currently-live (active) combos** at the time of the call. Once a combo instrument expires or is
 removed, it **disappears from the endpoint permanently** — Deribit does not retain or expose the historical state of
 expired combos via any REST endpoint. The retired `get_instruments?kind=combo` path (now HTTP 400) also never served
-historical states; it only ever listed live combos.
-
-Consequence: **the instruments-service `DERIBIT-COMBO` adapter can only capture combos that are active at the moment of
-the daily run.** Any combo that expired before the adapter was deployed is permanently inaccessible. No credential, no
-alternative endpoint, no Tardis archive exists that can reconstruct the historical set of expired Deribit combos with
-their leg structures.
+historical states; it only ever listed live combos. **This part is still true and is why `mode="live"` keeps routing to
+this REST adapter** — but it does NOT mean historical data is unobtainable overall (see the Tardis correction above).
 
 This was verified live on 2026-06-18 and documented in the `instruments_mtds_subset_consistency_remediation_2026_06_17`
 plan (§ DERIBIT-COMBO).
 
-### How the manifest must represent historical cells
+### How the manifest must represent historical cells — CORRECTED
 
-DERIBIT-COMBO historical cells (dates before live capture was running — approximately the ~475 dates from 2023-12-17 to
-the adapter's first successful capture) **MUST be represented as**:
+DERIBIT-COMBO historical cells are **no longer classified as permanently unfillable**. Prior to the 2026-07-14 fix
+landing + a re-run backfill, cells may still carry the legacy classification below; once a fresh backfill runs against
+the fixed code, genuinely-empty historical dates (before 2022-08-23, or dates with zero active combos) should use the
+normal `empty_confirmed`/`SOURCE_RETURNED_ZERO` honest-absence classification like any other venue — NOT the
+special-cased `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` reason below, which now overstates the limitation.
+
+Legacy classification (pre-fix rows, or reference for why it was chosen):
 
 ```
 capture_status = empty_confirmed
 error_reason   = EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE
 ```
 
-Rationale for `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (not other reasons):
-
-- NOT `SOURCE_RETURNED_ZERO`: no fetch was made; the source has no endpoint to serve this historical state.
-- NOT `attempted_failed`: no amount of retry will produce historical combo data from the REST API.
-- NOT `EXPECTED_INSTRUMENT_DELISTED`: the instruments existed; the source cannot serve their historical state.
-- `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` is the correct choice: "the venue's BATCH source structurally does not
-  offer this data_type at all — no historical endpoint / archive prefix / feed exists for it." This also correctly
-  excludes these cells from the coverage-% denominator (`OUT_OF_COVERAGE_WINDOW_REASONS`).
-
 This is consistent with how `ASTER book_snapshot_5` (no historical order-book endpoint) and `HYPERLIQUID liquidations`
-(no public liquidation feed) are classified.
+(no public liquidation feed) are classified — venues that are STILL genuinely unbackfillable, unlike DERIBIT-COMBO now.
 
 ### What audits and agents MUST NOT do
 
-- **Do NOT treat DERIBIT-COMBO historical silent-absent or `attempted_failed` cells as a coverage gap to fill.** The
-  cefi 8-venue backfill correctly could not fill these cells — that is expected behaviour, not a pipeline failure.
-- **Do NOT re-attempt a historical DERIBIT-COMBO backfill.** There is no data source that can serve it.
-- **If a coverage audit shows DERIBIT-COMBO historical cells as absent or `attempted_failed`**: relabel them to
-  `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` and move on.
+- **Do NOT assume DERIBIT-COMBO historical cells are permanently unfillable.** That was the 2026-06-27 finding; it was
+  corrected 2026-07-14. A historical backfill VM targeting DERIBIT-COMBO is now expected to work (fetches via Tardis,
+  not the REST adapter) — see `cefi_layer1_denominator_gaps_2026_07_03.md` for the relaunch todo.
+- **If a coverage audit shows DERIBIT-COMBO historical cells as absent or `attempted_failed`** on code from BEFORE the
+  2026-07-14 fix: treat as a genuine gap to re-attempt, not a permanent classification — re-run the backfill on current
+  code first.
 
 ### Adapter reference
 
-The source limitation is documented in the adapter docstring at:
+The REST adapter's own (still-true) live-only limitation is documented in the adapter docstring at:
 `instruments-service/instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py` (method
-`_fetch_combos_for_currency`) — look for the "SOURCE LIMITATION" block.
+`_fetch_combos_for_currency`) — look for the "SOURCE LIMITATION" block. The batch/historical routing fix + combo-type
+self-filter live in `instruments_service/reference_data/factory.py::get_adapter_for_canonical_venue` and
+`adapters/cefi/tardis/adapter.py::TardisReferenceDataAdapter.get_instruments`.
 
 ---
 
