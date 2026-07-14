@@ -158,20 +158,31 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       write \_SUCCESS markers), green scheduled run, Cloud Run failure alerting. Original todo: operator decides kind vs
       prefix; provision; repoint `batch_live_reconciliation_service/config.py` to the resolver; fix launcher doc;
       end-to-end T1 chain run; next scheduled run green; wire Cloud Run failure alerting (55 silent failures).
-- [ ] [CODE] P1. **strategy-store split-brain** ([[strategy_store_split_brain_2026_07_13]]): repoint deployment-api
-      defaults + UI catalogue route + `enumerate_envelope.py` to the flat kind; migrate-or-regenerate the cefi bucket's
-      `configs/` + `catalogue/`; then retire `strategy-store-{cefi,tradfi,defi}-{pid}` (cefi last) + their TF resources.
+- [x] ✅ [CODE] P1. **strategy-store split-brain** ([[strategy_store_split_brain_2026_07_13]]) — DONE 2026-07-13/14: all
+      code legs shipped (uac@f84e5b37+@155093a1, ui@2796d38b, dapi@6da793b, ds catalogue scheduler @ccfaca26);
+      deployment-api prod VERIFIED live-serving flat (revision 00158-m5x); catalogue/+configs/ copied to flat; cefi
+      residuals (105 obj) preserved at flat legacy_cefi/; strategy-store-{cefi,defi,tradfi} buckets DELETED. Original:
+      repoint deployment-api defaults + UI catalogue route + `enumerate_envelope.py` to the flat kind;
+      migrate-or-regenerate the cefi bucket's `configs/` + `catalogue/`; then retire
+      `strategy-store-{cefi,tradfi,defi}-{pid}` (cefi last) + their TF resources.
 - [ ] [CODE] P1. **config-store split-brain**: flat `config-store-{pid}` AND canonical `config-store-prd-{pid}` both
       exist with content; `unified_trading_library/config_interface/__init__.py:170` + `bucket_config.yaml` still emit
       the flat name. Repoint to resolver, verify hot-reload consumers, migrate + retire the flat bucket.
-- [ ] [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint only, do not duplicate):
-      `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (−3, [[defi_dedicated_bucket_shared_migration_2026_07_13]]
-      todos 6-9 incl. the TF-resource removal added 2026-07-13); `lending-indices`+`-prd` (−2, same plan / estate
-      cleanup §5i, gated on VM `mtds-lending-indices-20260712-112557` completion); legacy flat tick+instruments twins
-      (−8, M-1 `data_completion_to_100_all_ag_2026_06_21` L6, operator-gated version-aware deletes — millions of
-      noncurrent versions).
-- [ ] [OPERATOR] P1. **football-\* (4 buckets)** — no canonical destination exists (estate cleanup §5g): rule
-      archive-tier-and-dated-delete vs migrate `odds/`+`parquet_backup/` into the sports pipeline first.
+- [ ] [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint; UPDATED 2026-07-14: DeFi trio —
+      parity re-verified by agent incl. closing a 6,941-object gap, lst-rates-prd + perp-funding-prd DELETED,
+      dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns), kinds removed from all 5 yaml copies
+      (34), TF state clean; L6 twins — cefi/defi/tradfi tick+instruments purge-lifecycle armed (sports pair HELD for
+      sports-plan E1/E8; bucket deletes = follow-up one-liner once purged); lending pair still HELD — Morpho VM
+      completed but write-target verification inconclusive): `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (−3,
+      [[defi_dedicated_bucket_shared_migration_2026_07_13]] todos 6-9 incl. the TF-resource removal added 2026-07-13);
+      `lending-indices`+`-prd` (−2, same plan / estate cleanup §5i, gated on VM `mtds-lending-indices-20260712-112557`
+      completion); legacy flat tick+instruments twins (−8, M-1 `data_completion_to_100_all_ag_2026_06_21` L6,
+      operator-gated version-aware deletes — millions of noncurrent versions).
+- [x] ✅ [OPERATOR] P1. **football-\* (4 buckets)** — RULED + DONE 2026-07-14: migrated count-verified into canonical
+      homes (backtest-results/football 455 obj; ml-models-store-prd/legacy_football 119;
+      instruments-store-sports-prd/legacy_football/{mapped_consolidated 107, raw_all_sources 37}) and all 4 deleted.
+      Original: no canonical destination existed (estate cleanup §5g): rule archive-tier-and-dated-delete vs migrate
+      `odds/`+`parquet_backup/` into the sports pipeline first.
 - [ ] [DATA] P1. **ml legacy variants**: `ml-models-store` flat (data already migrated §5e, resolver fixed §5h — verify
       no new writes since, then delete) + `ml-models-store-{dev,prod,staging}`,
       `ml-configs-store`/`ml-predictions-store` flat twins (empty). Verify
