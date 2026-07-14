@@ -27,7 +27,7 @@ status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [market-tick-data-service, features-service]
+repos: [market-data-processing-service, market-tick-data-service, features-service]
 scope: [engineer]
 tags: [sports, odds, mdps, data-correctness, honest-absence, ml-readiness, stale-cache]
 related:
@@ -125,10 +125,59 @@ re-serve, the ratio lands somewhere in the partial 70-95% range (the other 8 dat
 - **No relaunch of the GW recompute** — this issue is entirely on the MTDS odds side, untouched by the
   derived/fixture-features recompute this plan's other todos concern.
 
+## Verification + mechanism refinement (2026-07-14 tick-4 diagnosis dispatch — adversarial re-check, all original evidence CONFIRMED, root-cause mechanism CORRECTED)
+
+Independently re-verified from the real buckets (fresh downloads, per-column analysis over `ODDS_COLUMNS` at
+T-24h/T-1h):
+
+- **Column block CONFIRMED**: 3 cluster days (09-02, 09-09, 10-23) each show the IDENTICAL 43-column all-NULL set
+  (intersection == union), zero partial-null columns, exact 94/137 = 68.6131% non-null; passing day 2025-09-06 = 100.0%
+  with zero NULL columns. **All 43 columns match `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` prefixes (0
+  unmatched)** — the entire block is already documented-sparse in the WriteGate
+  (`features_service/sports/data/writer.py:181-200`), which is the P1d-archived proposal's premise
+  (`plans/archive/2026_07/sports_p1_golden_window_features_2026_06_27.md` 2026-07-12 entry: per-date gate could exempt
+  the WriteGate sparse set — still unimplemented).
+- **Root-cause mechanism CORRECTED — it is NOT an MTDS client-side cache re-serve.** Raw
+  `day=2025-09-02/.../venue=BETFAIR_EX_UK/league_id=SOCCER_EPL/.../ticks.parquet` shows LIVE scrapes in the same pass:
+  fresh `bm_time=2025-09-02T11:55:16Z`, 11 EPL events all kicking off Sep 13-20 (next matchday after the break,
+  15,810-25,890 min out — correctly beyond every horizon bucket). The staleness is UPSTREAM: the-odds-api itself keeps
+  returning frozen bookmaker boards for dead/idle league keys (`soccer_russia_premier_league` board frozen at the
+  Mar-2022 CSKA Moscow fixture; `soccer_australia_aleague` off-season board frozen at a 94-days-past fixture,
+  `minutes_to_kickoff=-135,488`). Original P1 candidate (a) (cache fallback) is DISPROVEN; candidate (b) (missing
+  date/staleness filter) is CONFIRMED, with the precise locus:
+  **`market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py`** —
+  buckets purely on `bm_minutes_to_kickoff` (line ~374/487); its "staleness cap" is only the bm-relative deviation from
+  the bucket target (`TIER1_HORIZONS` ±60/45/.../5 min), and `bm_minutes < 0 → T-0`; it NEVER checks `staleness_seconds`
+  (fetch_utc − bm_time ≈ 3.5 YEARS for the zombie) or fetch-vs-kickoff distance. A frozen board whose
+  bm_minutes_to_kickoff happens to sit near a target (russia: 1423 ≈ T-24h) re-buckets under EVERY fetch day forever; a
+  frozen in-play/past board (A-League: −113) lands T-0/HT forever. Raw MTDS ingestion honestly records what the live API
+  returned (fetch_utc real, staleness_seconds carried) — the defect is the processed layer ACCEPTING arbitrarily stale
+  ticks.
+- **Third event class found (NOT contamination): single-snapshot REAL fixtures.** The other 2 events on 2025-10-23 are
+  genuine China Superleague fixtures (kickoff 2025-10-24T11:35Z, fresh bm_time 2025-10-23T11:5x, 11 bookmakers) caught
+  at exactly ONE horizon (T-24h) by the once-daily ~12:00Z snapshot wave; their T-12h→T-0 snapshots fall on the kickoff
+  day and land under `day=2025-10-24` (a passing day). Honest absence within day=D's partition, structural
+  (fetch-day-partitioned atom), not a bug. Partial-range days confirmed as the graduated form: 2025-10-20 = 4 events
+  100% (full ladder) + 9 events 79.6-89.8% (14-28 null cols, shallow ladders) → 91.1% day total, no zombies required to
+  explain.
+- **Break-day honest absence PROVEN (nothing to re-capture)**: on 2025-09-02 every covered league's live board shows
+  zero fixtures within 24h — next kickoffs MLS Sep 7, Argentina Sep 11+, EPL Sep 13-20. The odds-api historical endpoint
+  has nothing more to serve for these days (the boards WERE fetched live and contained no in-window fixtures) —
+  **re-capture cost = 0 because re-capture target = ∅; no fetch plan filed, quota untouched.** After the P2 purge the 9
+  cluster days become 0-row days, so P3 must pair the purge with gate semantics for zero-in-window-fixture days (vacuous
+  pass or expected-fixture-aware skip) + the P1d sparse-column exemption for shallow-ladder days.
+
 ## Todos
 
-- [ ] [CODE] P1. **market-tick-data-service: stop re-serving a stale cached fixture as if it were a fresh day's odds.**
-      Find the sports odds-api ingestion/backfill path that populates
+- [ ] [CODE] P1. **Stop stale/zombie ticks at bucket assignment (fix locus: MDPS, not MTDS raw ingestion — see
+      refinement above).** Primary fix in
+      `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`: drop rows whose
+      `staleness_seconds` (fetch_utc − bm_time) exceeds a sane cap (hours-scale, ≥ the largest horizon window) or whose
+      `kickoff_utc` is far outside the fetch day's horizon reach, BEFORE horizon assignment — record honest-absence/zero
+      rows for that league-day instead. Optionally also drop >N-days-past-kickoff rows at MTDS raw ingestion, but the
+      raw layer honestly recording the live API response is defensible; the processed layer accepting 3.5-year-stale
+      ticks is the bug. Original sub-question retained below for context: Find the sports odds-api ingestion/backfill
+      path that populates
       `processed/by_date/day=<D>/pipeline_mode=batch_mdps_odds_horizon_bucket/.../data_type=odds_horizon_bucket/` for
       low-activity league_ids (start with `soccer_russia_premier_league`, `soccer_australia_aleague`) and determine why
       a fixture whose `kickoff_utc` is far in the past (or far from the target `day=<D>`) gets written under that day's
@@ -143,8 +192,17 @@ re-serve, the ratio lands somewhere in the partial 70-95% range (the other 8 dat
       for repeated (fixture_id, bookmaker_key, kickoff_utc) tuples spanning multiple `day=` partitions (the same
       signature found here) to size the blast radius across leagues/dates, and purge/re-derive the contaminated shards +
       their downstream `odds_features` + manifest rows. Single-walk discipline applies — do this via the manifest index,
-      not a fresh whole-corpus GCS walk.
+      not a fresh whole-corpus GCS walk. **Purge discriminator (tick-4 refinement)**: zombie rows are cheaply separable
+      by `staleness_seconds` / |fetch_utc − kickoff_utc| (years-scale on zombies, ≤~26h on genuine rows); do NOT purge
+      the single-snapshot REAL-fixture class (fresh bm_time, kickoff within ~24-36h of fetch — e.g. the 2 China
+      Superleague events on day=2025-10-23), which is honest data.
 - [ ] [DATA] P3. **Re-run `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` after the P1/P2 fix**
       to confirm the 17 failing dates clear (or shrink to genuine honest-absence-only misses), then reassess whether the
       strict per-day gate (vs the already-precedented aggregate ≥95% pass bar from 2026-07-12) is still the right pass
-      criterion for near-empty international-break days.
+      criterion for near-empty international-break days. **Expected post-purge state (tick-4 refinement)**: the 9
+      cluster days become 0-row/near-0-row days (the gate currently scores empty = not-passed), so the gate fix is
+      two-part — (i) zero-in-window-fixture days pass vacuously (or are skipped via an expected-fixture count from IS
+      fixtures), and (ii) the per-date cell count exempts `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` prefixes
+      (the P1d 2026-07-12 proposal — ALL 43 always-null cluster columns verified inside that set, 0 unmatched), which
+      also fixes the shallow-ladder partial days (e.g. 2025-10-20 at 91.1%). No re-capture/re-fetch is part of this path
+      — verified nothing re-fetchable exists for these days (live boards had zero in-window fixtures).
