@@ -247,3 +247,24 @@ Follow-ups (post-remediation):
   empty_confirmed rows whose atoms are captured ("a seeder never overrides capture evidence" — 35 saves on first night),
   45,267 candidates written, run_id enum-universe-sports-20260714-015652. The full remediation chain — evidenced flips,
   de-registration, calendar gate, oscillation guard, day-closeout — is now operating end-to-end.
+- 2026-07-14 (fixes): **The fixture day-boundary staleness class flagged in the 07-14 closeout is now FIXED in code**
+  (operator-approved 3-fix set, shipped instruments-service@bd6b797a + @c78c7a0e via the dirty-deps direct-push
+  carve-out — quickmerge pre-flight blocked solely by live foreign UTL WIP; full `quality-gates.sh --no-fix` GREEN on
+  the shipped tree, sentinel at 0782f9af; the a771e3e2-era tradfi golden drift is gone, fixed upstream by bdb2dc69).
+  **FIX 1 — T+1 closing re-poll** (@c78c7a0e): `sports_fixtures_daily_repoll` window extended to `[today-1, today+8]`
+  (`_DEFAULT_LOOKBACK_DAYS=1`, parameterized `lookback_days=`) so the day just ended gets one final post-day-end upsert
+  — finished-overnight FT results land (the status=1H mid-game capture class) and late reschedules stamp the closed day;
+  docstring Window contract + behavior tests updated, dedicated T+1 test added. **FIX 2 — evidence-freshness rule in the
+  enumerator calendar gate** (@bd6b797a): `_AfFixtureCalendar` carries a per-(league, season) evidence clock parsed from
+  the truthset artifact NAME (producer run*ts — immutable under server-side copies, unlike GCS `timeCreated`, which the
+  closeout's own copy would have reset; rationale in `_af_truthset_built_at`); `is_no_fixture_day` requires
+  `evidence_built_at > end of the stamped day (UTC)`, bridged inter-season-gap days need BOTH adjacent season queries
+  fresh; stale-covered days keep the pending `expected_unattempted` seed — a stale absence stamp is now structurally
+  impossible. Unit tests include the exact ALLSVENSKAN 2026-07-13 scenario (stale 20260713-172514 calendar covering
+  07-13 → pending, NOT EXPECTED_NO_FIXTURE; fresh 20260714-001053 → stampable). **FIX 3 — audit script prd bucket
+  default** (@bd6b797a): `audit_fixtures_via_api_football.py` default bucket now resolves via
+  `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (runtime-verified ==
+  `instruments-store-sports-prd-central-element-323112`, write blob under the gate's
+  `\_audits/fixtures_truthset*`union prefix — no more server-side copies);`--bucket` stays as the explicit override. **Rollout**: tonight's 16Gi re-execution ran the PREVIOUS image — the nightly enum (`expected-universe-v2-sports-daily`, 01:30Z) picks up FIX 2 only after the next LDR→main promote rebuilds `instruments-service:latest`; until then the 00:0xZ daily-run ordering can still stamp same-day absences off a stale calendar, and the day-closeout sweep remains the backstop. Same-commit inherit: 5 stranded empty-string-fallback `#
+  noqa`annotations in`reconcile_lending_indices_phantom.py` (dead autostash WIP; ratchet restored to exactly the 366
+  baseline).
