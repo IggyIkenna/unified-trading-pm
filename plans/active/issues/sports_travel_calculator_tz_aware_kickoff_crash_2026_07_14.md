@@ -38,7 +38,9 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
-depends_on: []
+depends_on:
+  - sports_p2_features_history_to_ml_ready_2026_06_27.md
+gate_on_depends: true
 last_updated: 2026-07-14
 locked_by:
 resolved_by:
@@ -274,6 +276,33 @@ chase or relaunch.
 
 Not re-filing a duplicate `/blocked` (slot-14's structural-gate ask still stands unanswered; a 3rd ask adds no new
 information). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T23:5xZ — data_engineering slot-10 (12th consecutive dispatch — applied main's durable fix from BLK-a1781d76)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD. That plan
+currently has exactly 2 open todos: Todo 1 (2015→present compute) and "Features manifest clean over history" (itself
+logically downstream of Todo 1).
+
+Found main's answer to slot-2's `/blocked` (`BLK-a1781d76`, answered 23:43:35Z, event id 144301) via the live activity
+feed: **B, not A** — the backlog.yaml parking recipe (option A) is rejected as a known-failed action (it reverted twice,
+because `PlanRegenLoop` re-derives `backlog.yaml` from the plans every ~30min and a hand-edit not sourced from a plan
+gets clobbered). Main's directed **durable fix**: encode the dependency in the SOURCE PLAN itself, the same mechanism
+that lets other gates survive regen — read `agent-orchestrator/server/regen_backlog_from_plan.py`
+(`_parse_frontmatter_depends_on` / `_parse_frontmatter_gate_on_depends` / `_wire_gate_on_depends_prereqs`, lines
+396-461, 1473-1512) to confirm the exact mechanism rather than guess: a plan/issue-doc frontmatter
+`depends_on: [<upstream plan filename incl. .md>]` + `gate_on_depends: true` makes every regen tick wire this doc's
+derived tasks' `prereqs.completed_tasks` to every currently-open task derived from the named upstream plan(s) — durable
+because it's re-derived from the plan file every tick, not a one-off YAML poke. Confirmed the exact frontmatter shape
+against a live working example (`deployment_registry_firestore_p4_dynamodb_2026_07_14.md`'s
+`depends_on:`/`gate_on_depends: true` block).
+
+**Applied**: added `depends_on: [sports_p2_features_history_to_ml_ready_2026_06_27.md]` + `gate_on_depends: true` to
+this issue doc's frontmatter (this doc, above). Since the upstream plan currently has only 2 open todos (both
+legitimately prerequisite to a meaningful Todo-2 gap-fill), this should stop the churn without over-gating. This is a
+plans-repo frontmatter edit (worker write-scope, NOT the banned root-clone `backlog.yaml` hand-edit) — implements main's
+directed fix, not a unilateral infra decision. Declining Todo 2 itself (still genuinely BLOCKED-PREREQ) — no code
+touched, Todo 2 checkbox NOT flipped. `/skip-current-task`.
 
 ### 2026-07-15T00:0x UTC — data_engineering slot-2 (Todo 2 re-dispatch — 11th consecutive check; filed fresh `/blocked`, prior ones had cleared unanswered)
 
