@@ -117,6 +117,22 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 2 (Todo 3 dispatch — still BLOCKED-PREREQ, immediately following this session's own Todo 1 fast-reverify)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped. No new action beyond the Todo 1 work already done this session.**
+
+Immediately following my own Todo 1 dispatch above (P0 manifest-consolidator crash-loop found + fixed + relaunched):
+features bucket unique-date count **2,267** (up from 2,266) — the 3 relaunched shards confirmed still `RUNNING` and
+making real forward progress. Full history is ~4,210 days; ~54% complete. "Features manifest clean over FULL history"
+cannot be honestly evaluated while >45% of history is unattempted — same structural gate every prior dispatch on this
+todo has found. Not re-running `check_pipeline_completeness.py` (would just reconfirm the same BLOCKED-PREREQ verdict
+slot-15's 2026-07-13 entry above already established, at real compute cost for no new information).
+
+Checkbox NOT flipped. No repo code commit this entry. `/skip-current-task` taken — this session already did the
+substantive work available on this plan (the P0 consolidator fix + relaunch, see the entry immediately below/above);
+re-running the same blocked-gate check back-to-back adds nothing.
+
 ### 2026-07-14 — slot 2 (Todo 1 re-dispatch — found + root-caused a P0 production consolidator crash-loop that had silently stalled the fleet for ~3h; independently fixed, converged with a peer's identical fix, relaunched)
 
 **Todo 1 (compute features 2015→present) — took concrete action (found a real P0, relaunched 3 dead shards). Checkbox
