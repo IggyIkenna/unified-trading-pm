@@ -37,7 +37,7 @@ related:
     codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: sports_master
 priority: P1
 source: |
@@ -213,3 +213,29 @@ Follow-ups (post-remediation):
   attributed a benign 21-atom captured→empty_confirmed oscillation in SEGUNDA_DIVISION/BRASILEIRAO to a generic
   16:24:30Z full-index dedup rewrite (pre-existing behavior, objects verified on disk), NOT the purge. Remaining open
   here: the P3 fetch_needed re-check (~2026-07-20) below.
+- 2026-07-14 (day-closeout of 2026-07-13): the 68 intentionally-deferred 2026-07-13 cells RESOLVED now the day is final.
+  Pre-write snapshot `_index/snapshots/availability_index_20260714T000752Z.parquet` (80,290,383 bytes, crc32c `Vr7oSQ==`
+  verified). Enumeration on the downloaded canonical: exactly 68 deduped pending FIXTURES EU cells, ALL dated 2026-07-13
+  (one per league; 0 pre-window residue; 0 dated later). Fresh season-complete truthset
+  `_audits/fixtures_truthset_20260714-001053.parquet` (94 leagues × seasons 2025-2026, 188/188 pairs, 0 failures; built
+  00:10-00:12Z 07-14 — postdates the day's end; NOTE the audit script's default bucket lacks the `-prd-` segment,
+  artifact server-side copied into the prd `_audits/`, size+crc verified). Classification: **68/68 proven zero-fixture
+  on 07-13** (66 by day-absence within truthset-evidenced seasons; COPA_MX + GREEK_SUPER_LEAGUE_2 by season-empty query
+  evidence — fixtures=0 for BOTH 2025+2026) → all 68 flipped `empty_confirmed`
+  `error_reason=EXPECTED_NO_FIXTURE__truthset_20260714-001053` (shard `closeout-0713-flip-20260714-001955`, dry-run
+  first). Side-finding fixed in-scope: ALLSVENSKAN + BRASILEIRAO_SERIE_B 2026-07-13 were stamped
+  `empty_confirmed/EXPECTED_NO_FIXTURE` at 00:02Z 07-14 (daily run, calendar built from the now-stale 07-13T17:25
+  truthset) but the FRESH truthset proves 3 fixtures existed — both re-fetched live from api_football (1+2 rows),
+  canonical parquets written, record_captured + explicit .write() (shard `closeout-0713-fetch`). Script's flip window
+  parametrized (`--flip-cutoff-date`/`--backlog-lo-date`, defaults preserve the original window) — shipped
+  instruments-service@a771e3e2 via the dirty-deps carve-out (QG blocked solely by UAC@7354de78 ICE-index golden drift in
+  `test_expected_universe_golden[tradfi]`; regen belongs to that tradfi plan — annotated, not fixed, collision risk; all
+  other gates green, 4334 passed). Cron-only consolidation (per-minute Cloud Run job; both shards absorbed ≤2 cycles, no
+  manual executions). Content verification on the re-downloaded canonical: 68/68 flipped with the fresh reason; 2/2
+  captured (row_count 1 and 2); **residual deduped pending FIXTURES EU for dates ≤ 2026-07-13 = 0**; zero captured-count
+  decreases in any data_type (atom-level: 2 blank-asset_group ARGENTINA_PRIMERA_NACIONAL 07-04/07-05 atoms were re-keyed
+  to `asset_group=sports` with identical row_counts by a concurrent 23:49Z re-assertion sweep — not a loss; FIXTURES
+  captured atoms 58,649 → 93,877 incl. that sweep's +35k). Pairs/cells provenance:
+  `_audits/closeout_0713_flip_pairs_20260714.parquet` + `_audits/closeout_0713_fetch_cells_20260714.csv`. The
+  post-cutoff trickle class in this issue is now fully closed through 2026-07-13; remaining open here: the P3
+  fetch_needed re-check (~2026-07-20).
