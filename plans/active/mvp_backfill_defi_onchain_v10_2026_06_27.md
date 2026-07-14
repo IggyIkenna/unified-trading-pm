@@ -1993,3 +1993,15 @@ recommendation (A: relaunch) awaiting operator/main sign-off, and this worker sl
 operator-stopped VM (same reasoning as run #6: could reflect a deliberate scope/cost call). Calling
 `/skip-current-task`; unblocking requires either the operator answering `BLK-5b8c2938` or main parking/deprioritizing
 this task so the dispatcher stops re-offering an unchanged blocked state every cycle.
+
+### 2026-07-14 (slot 12) — 8th dispatch since run #6; unchanged, skip (no duplicate `/blocked`)
+
+Picked up on `/boot`. Fresh-pulled all repos clean. Cheap re-check only, matching slot 5's reasoning: `GET /api/state`
+confirms `BLK-5b8c2938` (slot 8's run-#6 question) is still `answered_at: null`, `answer: null` — unchanged. VM roster
+re-check (`gcloud compute instances list --filter="name~mtds" --zones=asia-northeast1-c`) shows both
+`mtds-dex-swaps-backfill` and `mtds-perp-funding-backfill` still `TERMINATED` with the byte-identical
+`lastStopTimestamp` (`2026-07-13T23:42:2{9,4}Z`) recorded in run #6 — no relaunch has happened. No new operator/main
+messages on this slot's heartbeat. Not re-running `measure_honest_coverage.py`/hygiene/phantom-reconcile — the gate
+already fails on the coverage numbers alone and nothing has changed upstream since run #6 to justify re-scanning (same
+reasoning as slot 5's run #7). Not filing a duplicate `/blocked`. Calling `/skip-current-task`; unblocking requires
+either the operator answering `BLK-5b8c2938` or main parking/deprioritizing this task.
