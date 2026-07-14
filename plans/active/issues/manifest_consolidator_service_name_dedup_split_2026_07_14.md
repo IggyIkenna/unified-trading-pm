@@ -19,7 +19,7 @@ summary:
   >1 distinct capture_status — a key that EXCLUDES service_name) is exactly the signature of a service_name-only split.
   Fixing this is a fleet-wide dedup-key semantics decision (does service_name belong to cell IDENTITY or to PROVENANCE,
   like `source` which was already excluded from the key?) and needs an operator ruling before any code lands.'
-status: blocked
+status: resolved
 nature: notes
 asset_group: [cross-cutting, defi, cefi, tradfi, prediction, sports, meta]
 stage: [meta]
@@ -39,6 +39,7 @@ source:
 assigned_vm: planning
 locked_by:
 resolved_by:
+  "Option B (operator ruling BLK-17603e1f) shipped in unified-trading-library manifest_consolidator, 2026-07-14 slot-5"
 execution_scope: local-only
 model_tier: sonnet-doable
 drift_direction: advance-code
@@ -222,9 +223,33 @@ there, not re-litigated here.
       them defi MTDS-subgraph ✕ MDPS-rpc captured-vs-captured with distinct row_counts → Option A is NOT a no-op; lean
       shifts to Option B. Full numbers in the "🔬 Rule-11 LIVE blast-radius proof" section above. Repro:
       `scratchpad/rule11_service_name_blast_radius.py` + `rule11_defi_deepdive.py`.
-- [ ] [DATA] P1. Apply the operator-chosen fix (A/B/C) to `unified_trading_library/manifest_consolidator.py`'s dedup key
-      (+ the writer mirror `manifest_writer/_writer_io.py::_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` / `_rows.py` if the key
-      set changes), then RE-RUN the rule-11 proof post-fix to confirm the chosen option behaves as intended (Option B
-      must leave the 607 defi captured-vs-captured atoms intact; Option A must collapse exactly the 609) before landing
-      (repo: unified-trading-library). BLOCKED-OPERATOR-DECISION until the A-vs-B ruling (with the defi dual-source
-      consequence explicit) is given.
+- [x] [DATA] P1. **Operator ruled Option B** (2026-07-14, BLK-17603e1f) and it is IMPLEMENTED + live-verified.
+      `unified_trading_library/manifest_consolidator.py` now runs a status-aware cross-`service_name` collapse
+      (`_option_b_collapse_ctes`) as a bounded second-level post-pass in BOTH dedup paths (incremental + `--force`
+      full-rebuild): a `captured` row supersedes a NON-captured row identical on all dedup dims EXCEPT `service_name`;
+      captured-vs-captured pairs are left intact. `service_name` STAYS a dedup key, so **no writer-mirror change** was
+      needed. 3 new unit tests (full-rebuild collapse, incremental collapse, dual-source preservation) + the full
+      75-test consolidator suite green.
+
+## ✅ Option B live-data verification (2026-07-14 slot-5)
+
+Ran the exact Option B collapse over the live canonicals (`scratchpad/rule11_option_b_verify_fast.py`,
+`sports_teams_twin_diag.py`):
+
+- **Invariant — captured never dropped**: captured-row count identical before/after in both AGs (defi 3,010,913; sports
+  1,648,070). Option B only ever removes NON-captured rows.
+- **defi**: 35,557 cross-service conflict atoms → 35,557 non-captured rows collapse (real coverage understatement
+  fixed); the 607 MTDS-subgraph ✕ MDPS-rpc dual-source captured pairs are OUTSIDE the conflict set (noncap=0) → both
+  survive.
+- **sports**: 1,038 non-captured rows collapse (on `odds_horizon_bucket`/`ODDS`/`FIXTURE_LINEUPS`-class cells with a
+  cross-service captured sibling).
+- **The plan's original 165,148 TEAMS EU twins are ALREADY GONE from the live manifest**: TEAMS now has 165,148
+  `backfill-teams-61-leagues` captured + 269,727 `instruments-service` captured, and only 26,385 `instruments-service`
+  `expected_unattempted` with **0** coexisting captured/EU twins under either the plan's coarse key
+  (`data_type,league_id,date,venue`) OR the true dedup key. They resolved between 2026-07-13 and 2026-07-14 by other
+  means (most likely an enumerator reseed that skips already-captured cells). So the ORIGINAL symptom no longer
+  reproduces on TEAMS, but the **bug CLASS is live elsewhere** (the 35,557 defi + 1,038 sports rows above) — Option B
+  fixes those and PREVENTS RECURRENCE for every future backfill/one-off that captures a pre-seeded cell under a distinct
+  `service_name`.
+
+Status flipped to RESOLVED for this issue's code deliverable; the fix ships with task -016.

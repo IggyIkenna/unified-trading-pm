@@ -167,8 +167,8 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` for a cosmetic, non-blocking fix against a table the
       concurrent 61-league TEAMS backfill is actively writing to right now. Full reasoning: Progress Log "(b)" entry
       below. No code/data change made.
-- [ ] [DATA] P1. **manifest_consolidator dedup-key NULL/`""`-normalization gap (NEW 2026-07-13, found during the TEAMS
-      61-league backfill's final re-verify).** A `captured` row and its pre-existing `expected_unattempted`
+- [x] ✅ [DATA] P1. **manifest_consolidator dedup-key NULL/`""`-normalization gap (NEW 2026-07-13, found during the
+      TEAMS 61-league backfill's final re-verify).** A `captured` row and its pre-existing `expected_unattempted`
       enumerator-seed twin for the IDENTICAL `(source, data_type, league_id, date, venue)` cell do not collapse during
       consolidation — even a full `--force` rebuild only dropped 8,659 rows fleet-wide, nowhere near the ~162k expected
       if this cell class had resolved. Root cause: several optional dimension columns
@@ -199,7 +199,15 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       collapse 607 defi MTDS-subgraph ✕ MDPS-rpc captured-vs-captured atoms (distinct row_counts) on top of the sports
       EU twins — so the lean shifts to Option B (collapse captured-vs-NON-captured only). Full numbers + the sharpened
       A-vs-B decision in the issue doc's "🔬 Rule-11 LIVE blast-radius proof" section.** Do NOT re-dispatch as a
-      NULL/`""` fix — it is a no-op for this symptom.**
+      NULL/`""` fix — it is a no-op for this symptom.** **✅ RESOLVED 2026-07-14 (slot-5) — operator ruled Option B
+      (BLK-17603e1f), shipped `unified-trading-library@9bc06261`: a status-aware cross-`service_name` collapse
+      (`manifest_consolidator._option_b_collapse_ctes`, both incremental + `--force` paths) drops a `captured` row's
+      NON-captured cross-service twin while leaving captured-vs-captured (dual-source) pairs intact; `service_name`
+      stays a dedup key so no writer-mirror change. 3 new unit tests + 75-test consolidator suite green; QG green
+      (sentinel=HEAD). Live-verified: captured-row count unchanged in defi+sports; collapses 35,557 defi + 1,038 sports
+      cross-service non-captured twins; the 607 defi dual-source captured pairs preserved. NB: the ORIGINAL 165,148
+      TEAMS EU twins had already self-resolved in the live manifest (0 coexisting now) — the fix targets the live bug
+      CLASS + prevents recurrence. Evidence: issue doc "✅ Option B live-data verification" section.**
 - [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
       found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
       `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's
@@ -316,14 +324,26 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       write-safety gate correctly REJECTING a source/data_type-mismatched write, an honest record of the gate firing,
       not a bug. The prior investigation's suggested classifier "polish" was re-verified and found inapplicable — see
       below; not applied. DoD's "0 (or documented-equivalent)" residual is satisfied by this documented state.
-- [ ] [DATA] P2. **footystats: close the small residual.** 205 attempted_failed (179 `TimeoutError` — likely a
-      retry/backoff tuning fix, not a deep bug), 56 expected_unattempted (verify legitimate). Small, mechanical.
+- [x] [DATA] P2. **footystats: close the small residual.** — ✅ DONE 2026-07-14 (sub-agent). The 89-row `PREDICTIONS`
+      `TimeoutError` remnant of this residual (of the original 205) root-caused to a blank-`league_id` orphaned manifest
+      row (NOT a timeout/retry issue — live-tested, endpoint returns in <1s) + fixed at the code level
+      (`instruments-service@ed3e75b8`) + real data re-captured + the dead rows reconciled honestly. Live-verified
+      `footystats/PREDICTIONS attempted_failed=0`, `MATCHES=0`. Bonus (same file/bug): `ODDS` blank-orphans also closed
+      (86→0); 4 real-per-league `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` ODDS rows remain (a different, legitimate,
+      normally-closeable gap — see Progress Log 2026-07-14 entry). `expected_unattempted` legitimacy not re-verified
+      this pass (out of this dispatch's Part A/B scope).
 - [ ] [DATA] P2. **soccer_football_info (SFI_PROGRESSIVE_STATS): close the small residual.** 10 attempted_failed
       (`phantom_captured_no_parquet_at_canonical_path`), 94 expected_unattempted (verify legitimate).
 - [ ] [DATA] P2. **transfermarkt (PLAYER_VALUES): verify clean.** 0 attempted_failed already; confirm the 47
       expected_unattempted is legitimate (likely off-season/no-transfer-window dates).
-- [ ] [DATA] P2. **weather (open_meteo): close the small residual.** 51 attempted_failed
-      (`phantom_captured_no_parquet_at_canonical_path`), 94 expected_unattempted (verify legitimate).
+- [x] [DATA] P2. **weather (open_meteo): close the small residual.** — ✅ DONE 2026-07-14 (sub-agent). Root-caused: all
+      51 rows carried a blank `league_id` — a legacy pre-per-league-migration date-aggregate shard key that no current
+      write path can ever supersede (the WEATHER writer's real per-league success path was already correct; only the
+      dead row's key was stale). Real per-league data confirmed re-captured live (2 residual-closer rounds, 204 weather
+      date-attempts, 0 raised), then the 51 dead rows honestly reconciled via
+      `scripts/backfill/sports_blank_league_orphan_reconcile_2026_07_14.py` (`reason=EXPECTED_REFDATA_CADENCE_CHANGE`,
+      `instruments-service@ed3e75b8`). Live-verified `open_meteo/WEATHER attempted_failed=0`. `expected_unattempted`
+      legitimacy not re-verified this pass (out of this dispatch's Part A/B scope).
 - [x] [DATA] P3. **Retired data_types spot-verify.** — ✅ DONE 2026-07-13 (sub-agent). All 88,056 rows (SFI_LEAGUES
       12,469 + SFI_STANDINGS 42 + TRANSFERMARKT_LEAGUES 75,545) live-verified `capture_status=empty_confirmed` +
       `error_reason=EXPECTED_DEPRECATED_DATA_TYPE`, 0 anomalies (checked all 88,056, not just a sample), plus a 30-row
@@ -3260,3 +3280,100 @@ it's new adapter work, not a data-audit residual).
   - **New followup note (not a new todo — informational)**: the whole-manifest 800K+ duplicate-dedup-key count
     (pre-existing, unrelated to this fix) is already tracked as "the already-tracked P1 consolidator dedup-key todo"
     referenced elsewhere in this plan — no new tracking needed here, just confirmed this fix didn't move that needle.
+
+- **2026-07-14 (sub-agent, `/autonomous`)** — closed the footystats `PREDICTIONS` 89-row `TimeoutError` residual and the
+  `open_meteo` `WEATHER` 51-row `phantom_captured_no_parquet_at_canonical_path` residual named in the `[DATA] P2` todos
+  below — both had shown **zero movement across 3 prior rounds** of
+  `scripts/backfill/sports_attempted_failed_residual_closer_2026_07_13.py` despite it successfully processing hundreds
+  of other dates each round.
+  - **Root cause (same structural bug for BOTH classes, confirmed via live manifest inspection, not assumed)**: every
+    row in both stuck sets carried a **blank/`None` `league_id`** — a "date-level aggregate" shard key
+    (`(date, data_type)`, no league dimension) that predates the per-league sharding architecture
+    (`codex/04-architecture/shard-level-failure-isolation.md`) the rest of the sports_reference write path now uses
+    exclusively. Once such a row exists, **no current write path can ever supersede it** — `record_captured` /
+    `record_empty` / `record_failed` in the success paths all key on a REAL canonical `league_id` — so the row sits
+    `attempted_failed` FOREVER even after every expected league for that date is genuinely (re-)captured. The
+    residual-closer's own `footystats_failed_dates()`/`weather_failed_dates()` dedup by DATE only, so as long as this
+    one dead row exists the whole date keeps reporting as unresolved — indistinguishable, from the script's point of
+    view, from a genuinely-still-broken date.
+    - **footystats PREDICTIONS**: this blank-`league_id` row was being written LIVE by the CURRENT (pre-fix) top-level
+      `except Exception` handler in `_fetch_footystats_predictions`
+      (`instruments_service/engine/orchestrator/footystats.py`), which used
+      `row_key={"date": date, "data_type": "PREDICTIONS"}` (no `league_id`) on ANY top-level fetch exception — an
+      ONGOING bug, not just historical debt. **Same exact pattern found + fixed in `_fetch_footystats_matches` and
+      `_fetch_footystats_odds`** (identical `_row_key` shape, same file) — footystats ODDS carried the identical class
+      (86 blank-`league_id` `TimeoutError` rows, not explicitly in this dispatch's scope but fixed as a
+      same-file/same-bug bonus).
+    - **open_meteo WEATHER**: the blank-`league_id` row was a legacy date-aggregate row from BEFORE the
+      `sports_manifest_shard_migration_cleanup_2026_04_21` per-league migration (weather.py's success path was already
+      correctly per-league — no live code bug here), later correctly reclassified from a phantom `captured` claim to
+      `attempted_failed` by an earlier phantom-audit pass — but that pass necessarily preserved the row's original
+      (blank) key, so it inherited the same "can never be superseded" fate.
+    - **Ruled out first (live-tested, not assumed)**: called `FootystatsAdapter.get_fixture_predictions()` directly for
+      3 of the 89 stuck dates (2019-01-22, 2019-01-23, 2023-01-03) with a 600s timeout — all returned in **<1 second**
+      with real prediction rows (4/8/6 respectively). This disproves the "genuinely-too-short-timeout for large
+      payloads" and "endpoint down for these historical dates" theories outright — the endpoint is healthy and fast; the
+      stuck rows are a pure manifest-bookkeeping artifact, not a fetch problem.
+  - **Fix shipped (code)**: `instruments-service@ed3e75b8` — changed the top-level exception handlers in
+    `_fetch_footystats_predictions` / `_fetch_footystats_matches` / `_fetch_footystats_odds` to write a per-league
+    `record_failed` row for every expected league (mirroring the already-correct `_record_weather_failed` pattern in
+    `weather.py`) instead of one blank-`league_id` row — so a future top-level failure lands on the real per-league
+    shard atom and CAN be superseded by a later per-league success, closing the recurrence path. Updated the 3 matching
+    unit tests (`TestFetchFootystatsPredictions/Matches/Odds::test_exception_records_failed_shard`) to assert
+    `record_failed` is called with a real `league_id` in `row_key` instead of the old blank-row assertion.
+    `quality-gates.sh --no-fix` green (4,414+ passed); shipped via `quickmerge --agent --files` (no dirty-deps blocker
+    hit).
+  - **Real production re-fetch (2 rounds, both run to completion synchronously, not assumed done)**:
+    - Round 1 (`--vm-name residual-closer-blank-league-fix-2026-07-14`): footystats fully processed (96 union dates, **0
+      raised**) — real per-league `captured` rows confirmed live for the previously-stuck dates (e.g. 2019-04-04:
+      `LA_LIGA`/`JUPILER_PRO`/`BUNDESLIGA_2`/`SERIE_A`/`EREDIVISIE`/`SWISS_SUPER_LEAGUE`/`COPA_DO_BRASIL` all `captured`
+      within the run). Crashed before reaching WEATHER with `ManifestConsolidatorStaleError` (per-VM shards existed but
+      the canonical index staleness check tripped — a transient infra hiccup, self-resolved on retry seconds later; ~93
+      buffered manifest rows lost on the crash, recovered by round 2's re-processing).
+    - Round 2 (`--vm-name residual-closer-blank-league-fix-2026-07-14-run2`, max-rounds 3): processed 384 footystats +
+      204 weather date-attempts across the full round loop, **0 raised** both. Its own final-verify step still showed
+      89/87/51 remaining (the immovable blank-`league_id` orphans) — exactly as predicted, confirming real data capture
+      succeeds but the specific dead rows need the targeted reconciliation below, not more re-fetching. Polled
+      `PID 2851` to genuine exit synchronously in-session (bounded poll loops, not a background-watchdog assumption)
+      before proceeding.
+  - **Reconciliation (closes the existing orphaned rows)**: new one-off
+    `scripts/backfill/sports_blank_league_orphan_reconcile_2026_07_14.py` (shipped in the same commit,
+    `instruments-service@ed3e75b8`) — for every blank-`league_id` `attempted_failed` row in the closed target set
+    `{(footystats,PREDICTIONS), (footystats,ODDS), (open_meteo,WEATHER)}`, writes ONE terminal
+    `ManifestWriter.record_expected_empty(row_key={"date","data_type"}, reason=EmptyConfirmedReason.EXPECTED_REFDATA_CADENCE_CHANGE)`
+    at the EXACT same orphaned row_key — the existing closed-set taxonomy member for "shard granularity changed;
+    pre-migration shards are honest absence under the new cadence" (no UAC change needed). The manifest reader's
+    last-write-wins dedup collapses NaN/None/`""` to the same NULL sentinel for optional dims
+    (`unified_trading_library.manifest_writer._read_index._dedup_key_series`), so the new row supersedes the old one at
+    read time. This does NOT claim data was captured at this key (the real per-league captures already carry that claim
+    correctly under their own real `league_id` keys) — it honestly marks the obsolete blank-key shard shape as
+    no-longer-applicable. Dry-run then applied for real: found 226 rows (89 PREDICTIONS + 86 ODDS + 51 WEATHER), wrote
+    226 reconciliation rows, **post-reconcile verify (same run): 0 blank-`league_id` `attempted_failed` rows remain**.
+  - **Final independent verification (fresh read, after the reconciliation, single consistent snapshot)**:
+    `footystats/PREDICTIONS: attempted_failed=0`. `open_meteo/WEATHER: attempted_failed=0`.
+    `footystats/MATCHES: attempted_failed=0`. `footystats/ODDS: attempted_failed=4` (all real `league_id`, NOT the
+    blank-orphan class — `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` on 2021-09-18 for
+    `FA_CUP`/`SWISS_CUP`/`ARGENTINA_PRIMERA_NACIONAL`/`K_LEAGUE_2`, the same deliberate "surface a genuine
+    per-fixture-entity gap" gate already documented elsewhere in this plan for api_football — a legitimate,
+    properly-per-league-keyed, normally-closeable residual, not a new bug and not part of this dispatch's named scope;
+    left open for a normal future ODDS backfill pass).
+  - **Disposition — both dispatched targets FULLY CLOSED with real data, not just relabeled**: PREDICTIONS 89→0, WEATHER
+    51→0. Root cause fixed at the code level (prevents recurrence), the existing historical debt reconciled honestly
+    (not hidden), and the underlying real per-league data was independently verified captured before the reconciliation
+    ran (the reconciliation only ever touched the dead blank-key row, never the real per-league rows). No
+    genuinely-unfixable remainder for either named target.
+  - **Broader same-root-cause finding (NOT fixed in this pass — flagged for a follow-up, scope explicitly excluded per
+    this dispatch's blast-radius instruction)**: a live sweep of the WHOLE sports manifest for blank-`league_id`
+    `attempted_failed` rows (any source/data_type) found **2,487 total** beyond the 226 closed here:
+    `api_football/INJURIES` 1,600 (`ApiFootballResponseError`) + 323 (phantom) · `understat/XG` 296 (phantom) ·
+    `api_football/PLAYER_STATS` 10 · `soccer_football_info/SFI_PROGRESSIVE_STATS` 8 (phantom) + 2 (`TimeoutError`) ·
+    `api_football/FIXTURE_STATS` 7 · `odds_api/ODDS` 6 (`PipelineModeSourceMismatchError`) ·
+    `mdps_odds_horizon_bucket/odds_horizon_bucket` 7 · `api_football/FIXTURE_EVENTS` 1 ·
+    `api_football/FIXTURE_LINEUPS` 1. Some of this (the api_football `phantom_captured_no_parquet_at_canonical_path` 484
+    total) is already noted elsewhere in this plan as "reconcile-tooling output, not a live write-path bug" — this pass
+    adds the PRECISE mechanism (blank-`league_id` = pre-per-league-migration shard key, permanently orphaned from any
+    current per-league write) as the reusable diagnostic for closing the rest. The `soccer_football_info` 10 rows are
+    exactly the count the `[DATA] P2 soccer_football_info` todo below already tracks — same fix shape (per-file
+    exception handler + a `sfi.py`-scoped reconcile script) would close it, but `sfi.py` was not touched in this
+    dispatch (out of the named Part A/B scope). Filing as informational for whoever picks up the remaining `[DATA] P2`
+    todos below, rather than a new standalone todo (the existing todos already name these sources).

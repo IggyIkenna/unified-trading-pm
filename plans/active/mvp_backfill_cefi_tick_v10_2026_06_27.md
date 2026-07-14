@@ -2734,3 +2734,90 @@ STARTED 12:42Z and streaming healthily) + `cefi-deribit-2026-heavy-20260714-1247
 predated the guard ship (deployment-service quickmerge ~12:0xZ; slot FF-pull cadence 5min — close race). All 4 are
 lease-serialized so this degrades per-VM efficiency rather than risking the lease-OFF collapse mode; no VM killed (never
 bulk-kill a peer slot's running work). Next launch from this session waits for fleet < 3. Operator notified.
+
+### G4 Re-Verification Run #8 — 2026-07-14T15:09-16:30Z (data_engineering slot-12): root-caused + fixed the DERIBIT
+
+spot_pair Layer-1 gap (write-time misclassification, not a routing/attempt gap), fixed a second guard-estimator bug it
+surfaced, DERIBIT spot backfill re-launched and confirmed writing correctly-tagged data
+
+**Fresh `measure_honest_coverage.py --asset-group cefi` (15:09Z) — unchanged from the 11:24Z run**: Layer-1 97.26%
+(71/73 matched), same 2 missing tuples `(DERIBIT, spot_pair, book_snapshot_5)` / `(DERIBIT, spot_pair, trades)`; Layer-2
+captured=2,310,315, coverage=99.42%. In-flight VMs (bitget 2025-heavy/light, cefi-queue-heavy) all confirmed
+live-progressing via fresh `run.log` writes, not stalled.
+
+**Root cause found for the standing DERIBIT spot_pair gap (the actual reason the two prior real attempts — 11:33Z
+stale-code stall, 12:47Z — never closed it): a write-time instrument_type misclassification, not a missing-attempt
+gap.** Direct manifest inspection of the 12:47Z VM's 2026-01-02 output (4,774,463 real rows, genuinely captured) showed
+every DERIBIT spot symbol (`BTC_USDC`, `ETH_USDC`, `PAXG_USDC`, …) landed under `instrument_type=PERPETUAL` instead of
+`SPOT_PAIR` — the exact same bug class as the already-fixed COINBASE-FUTURES mixed-venue gap
+(`coinbase_futures_spot_pair_zero_attempts`), just never carried over to DERIBIT:
+`TardisAdapter._classify_row_instrument_type`
+(`market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py`) had a COINBASE-FUTURES-only `-USDC`
+dash-suffix branch but no DERIBIT branch, so DERIBIT's `{BASE}_{QUOTE}` (underscore, no dash) spot symbols fell through
+to the venue-level `PERPETUAL` default. Confirmed against the live catalogue: all 15 DERIBIT SPOT_PAIR raw_symbols are
+bare `{BASE}_{QUOTE}` (no dash); all 28 DERIBIT PERPETUAL raw_symbols carry a dash (`BTC-PERPETUAL` /
+`BTC_USDC-PERPETUAL`) — a clean, collision-free discriminator. **Fixed**: added a
+`venue_u == "DERIBIT" and "-" not in s and "_" in s` branch mirroring the COINBASE-FUTURES pattern + a regression test
+(`test_classify_row_instrument_type_deribit_spot_pair`, 6 assertions covering all 3 spot symbols used + both perpetual
+shapes). QG green, shipped `market-tick-data-service@a8479ac0`.
+
+**Second, distinct bug surfaced along the way (documented, NOT fixed this session — separate code path, separate fix)**:
+the Tier-3 "expected but not captured" sentinel/`empty_confirmed` placeholder path (`engine/orchestrator/sentinels.py` →
+`_orch._resolve_instrument_type(venue, data_type)`) resolves `instrument_type` by **(venue, data_type) alone**, with no
+instrument_id/symbol awareness — so it can't distinguish DERIBIT's spot vs perpetual instruments the way the now-fixed
+row-level classifier can. Live-verified: fresh (16:21Z, post-fix) `book_snapshot_5` sentinel rows for the same 9 MVP
+spot symbols on 2026-01-01 are still `instrument_type=perpetual` (lowercase, `empty_confirmed`) — cosmetically wrong (an
+honest "not captured" placeholder mistagged, not a captured-data correctness issue) but will keep the
+`(DERIBIT, spot_pair, book_snapshot_5)` Layer-1 tuple from closing on days where book_snapshot_5 is genuinely absent.
+**Follow-up (P2, deployment target `market-tick-data-service`, scoped, not attempted this session — needs
+`_resolve_instrument_type`'s call sites audited for how to thread instrument_id through, a larger surface than the
+row-level fix)**: thread instrument_id (or a venue+instrument_id-aware lookup) into `_resolve_instrument_type` so the
+DERIBIT mixed-venue split applies to the sentinel path too.
+
+**Guard-estimator bug #2 found + fixed while relaunching**: `tardis_concurrency_guard`'s `PLANNED_TARDIS_VMS` estimator
+in `launch-cefi-sharded-backfill.sh` ignored `ONLY=` scoping entirely (the prior session's 07-14T11:22Z entry filed this
+as a known-but-unfixed P3) — a `DRY_RUN=1 ONLY="DERIBIT:2026:heavy"` launch confirmed exactly 1 VM would launch, yet the
+guard refused twice on a phantom count (first "2 running + 14 planned = 16" with `YEARS` unscoped, then "2 running + 2
+planned = 4" even after scoping `YEARS="2026"` to match `ONLY` — DERIBIT's heavy+light fan-out was still counted in full
+regardless of the `ONLY` group filter). **Fixed**: added an `_only_matches()` helper mirroring `launch_cefi_shard`'s own
+`ONLY` per-(venue,year,group) match logic, applied to both the heavy and light increments in the estimator loop.
+Live-verified: same launch now computes `2 running + 1 planned = 3 <= cap 3` and succeeds. QG green, shipped
+`deployment-service@a3fafa62`.
+
+**DERIBIT spot backfill re-launched against the fixed code and confirmed working.**
+`cefi-deribit-2026-heavy-20260714-161705` (SPOT, e2-highmem-16, lease-ON,
+`VENUES="DERIBIT" YEARS="2026" ONLY="DERIBIT:2026:heavy"`, `VM_INSTRUMENT_IDS`=the 9 active MVP symbols) — tarball
+freshness confirmed (`mtds-code@ecd3a4d4366f`, verified `git merge-base --is-ancestor a8479ac0 ecd3a4d4366f` = true, so
+the fix IS in the deployed code, unlike the earlier BITGET-FUTURES stale-tarball incident). RUNNING, T+~15min: date
+2026-01-01 fully processed (19,008 records, 7 shards) and 2026-01-02 in progress (genuine Tardis streaming, HTTP 403
+concurrent-IP-lock churn is the known lease-rotation noise, not a stall). **Direct manifest verification (not log-trust)
+confirms the fix**: fresh `trades` rows for `XRP_USDC`/`BTC_USDT`/ `SOL_USDC`/`ETH_USDT` on 2026-01-01, written
+16:20:37Z (after the fix), landed `instrument_type=SPOT_PAIR`, `capture_status=captured` — this is the first real,
+correctly-tagged DERIBIT spot capture in the plan's history. The `(DERIBIT, spot_pair, trades)` Layer-1 tuple should
+close on the next coverage measurement; `book_snapshot_5` depends on the follow-up above or a date where it's genuinely
+non-empty.
+
+**Manifest hygiene secondary check (`manifest_hygiene_daily.py --mode full`) — best-effort, inconclusive this session.**
+Two attempts: (1) `run_in_background` bash task killed by the harness almost immediately (not the documented ~13-14min
+background-process cap — killed within ~1 min, cause unclear); (2) relaunched fully detached (`nohup … & disown`) per
+this doc's own prior workaround — progressed through the divergence + phantom-reconcile dry-run steps (~10min,
+consistent with prior runs) then died silently mid-4-pillar-validation with no final verdict and no new output files,
+likely resource contention from this session's concurrent VM launches/QG runs. A third attempt (unbuffered, `python -u`)
+is still running passively in the background at session-write time, deprioritized as best-effort — **not blocking**,
+since G4's primary evidence source (`measure_honest_coverage.py`) already ran clean this session. **Caught + reverted a
+real near-miss**: the first broken (env-var-missing) `manifest_hygiene_daily.py` run silently overwrote a previously
+`status: resolved` issue doc (`plans/active/issues/manifest_hygiene_red_2026_07_14.md`) and its candidate CSV with a
+malformed, unrelated-slot regeneration before the pre-commit hook caught the missing frontmatter fields and blocked the
+auto-commit — restored both files from git HEAD before re-running with `GCP_PROJECT_ID` set correctly.
+
+**Gate verdict: ❌ NOT MET** — Layer-1 still 97.26% as of the last full measurement (2 tuples); the DERIBIT spot
+backfill that should close (at least) the `trades` tuple is mid-flight, not yet re-measured post-launch. Layer-2 af
+count not re-checked this entry (bitget/queue-heavy waves still in-flight). **Concretely remaining for the next
+session**: (1) verify `cefi-deribit-2026-heavy-20260714-161705` continues progressing / widen to earlier years once 2026
+is proven complete under the 3-VM cap; (2) re-run `measure_honest_coverage.py` once the VM has processed enough dates to
+confirm `(DERIBIT, spot_pair, trades)` closes; (3) the sentinel `_resolve_instrument_type` follow-up above for
+`book_snapshot_5` to fully close; (4) resume/re-attempt `manifest_hygiene_daily.py --mode full` once no heavy concurrent
+GCS work is in flight; (5) phantom reconcile `--apply` still deferred pending a VM-free window (unchanged from the
+08:10Z entry's race-condition finding). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Checkbox NOT flipped — gate
+genuinely not met; handing off with 3 VMs actively in-flight and verified running (bitget 2025-heavy/ light + the new
+DERIBIT spot launch), each with a concrete, checkable next state.
