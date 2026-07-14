@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "qg_red_reason": "ruff",
+        "large_file_count": 2,
         "warn_file_count": 15,
-        "qg_red_reason": null,
-        "coverage_pct": 81.97,
-        "large_file_count": 2
+        "coverage_pct": 81.71
       }
     },
     "deployment-service": {
@@ -820,10 +820,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 1,
-        "coverage_pct": 88.44,
         "qg_red_reason": null,
-        "warn_file_count": 6
+        "large_file_count": 1,
+        "warn_file_count": 6,
+        "coverage_pct": 88.46
       }
     },
     "market-tick-data-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "ruff",
+        "large_file_count": 0,
         "warn_file_count": 38,
-        "qg_red_reason": null,
-        "coverage_pct": 83.07,
-        "large_file_count": 0
+        "coverage_pct": 82.95
       }
     },
     "ml-service": {
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.65,
+        "qg_red_reason": "ruff",
         "large_file_count": 5,
         "warn_file_count": 20,
-        "qg_red_reason": null
+        "coverage_pct": 87.61
       }
     },
     "unified-trading-pm": {
@@ -1277,7 +1277,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
