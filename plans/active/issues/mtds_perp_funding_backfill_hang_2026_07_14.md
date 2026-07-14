@@ -183,9 +183,58 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       and verify it progresses past 2026-05-29 without hanging/churning (T+10min real-progress check, not just liveness)
       before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification for perp_funding. Repo:
       `deployment-service`.
-- [ ] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for retry loops that retry non-retryable HTTP statuses (the
+- [x] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for retry loops that retry non-retryable HTTP statuses (the
       same "any `ClientError` gets retried regardless of status" bug pattern found here) — this may recur wherever a
-      similar generic-except retry loop exists. Repo: `market-tick-data-service`.
+      similar generic-except retry loop exists. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot-14).
+      **Confirmed 3 live instances of the exact same bug class**, plus a much broader systemic version: 1.
+      `market_interface/adapters/onchain/glassnode.py::_get` (retry loop at line 182) — catches
+      `(aiohttp.ClientError, asyncio.TimeoutError)` from `resp.raise_for_status()`, then decides retry-vs-fail via
+      `classify_venue_error("GLASSNODE", type(exc).__name__)`. `GLASSNODE` has **zero entries** in
+      `unified_api_contracts`'s `VENUE_ERROR_MAP`, so `classification` is always `None`, which falls back to
+      `retry_safe = True` (line 191) — i.e. **every** `ClientResponseError` (a permanent 404/400/403 included) is
+      retried up to `_MAX_RETRIES`, identical in kind to the Kalshi bug (bounded here to a few backoff cycles, not a
+      catastrophic churn, but still wasted retries on permanent errors). 2.
+      `market_interface/adapters/onchain/helius_solana.py::_rpc_call` (retry loop at line 158) — same
+      `classify_venue_error("HELIUS", ...)` fallback-to-`True` bug; `HELIUS` is also **unregistered** in
+      `VENUE_ERROR_MAP`. 3. `market_interface/adapters/onchain/helius_solana.py::get_enhanced_transactions` (retry loop
+      at line 325) — **worse than 1/2**: no status check _at all_ before retry — `resp.raise_for_status()` on any
+      non-200/429 status is caught generically and retried unconditionally up to `_MAX_RETRIES` regardless of whether
+      the status is permanent (404/400/403) or transient (5xx). Note: this method currently has **zero callers** in the
+      repo (dead code, not wired into any pipeline) — real-world blast radius is latent, not active, but the bug is real
+      and would bite the moment it's wired up. 4. **Broader systemic pattern (not individually verified site-by-site —
+      flagged for a dedicated audit, see new todo below)**: the exact fallback idiom
+      `classification.retry_safe if classification is not None else True` appears at **~60 call sites across ~50 adapter
+      files** (`market_interface/adapters/{defi,cefi,tradfi,sports,        onchain_perps,prediction,onchain}/*.py`, via
+      `grep -rn "classification.retry_safe if classification is not        None else True"`). Spot-checked
+      `onchain_perps/hyperliquid_adapter.py:419` — there the pattern is **only** logging metadata inside a
+      `log_event(..., details={...})` block immediately followed by `raise` (does NOT gate a live retry decision at that
+      call site), so NOT every hit is a confirmed active bug like 1-3 above — each site needs individual verification of
+      whether `retry_safe` actually gates a retry loop (bug) or is pure observability (not a bug, though still a
+      confusing default). **A safer `else False` convention already exists elsewhere in this same codebase** —
+      `market_interface/adapters/defi/utils.py:80`, `market_interface/adapters/prediction/kalshi_adapter.py:403`,
+      `cli/handlers/_defi_manifest.py:698`, and `market_interface/adapters/prediction/polymarket_adapter.py:510` all
+      default unclassified errors to `retry_safe = False` (fail fast, don't blindly retry unknowns) — this is the
+      correct/safe convention and should become the standard, not the ~60-site `else True` default.
+- [ ] [BACKEND] P1. **Fix the 2 confirmed live-loop instances** from the grep above: in
+      `market_interface/adapters/onchain/glassnode.py::_get` and
+      `market_interface/adapters/onchain/helius_solana.py::_rpc_call`, do not treat an unregistered venue in
+      `VENUE_ERROR_MAP` as `retry_safe=True` by default — either register `GLASSNODE`/`HELIUS` in
+      `unified_api_contracts`'s `VENUE_ERROR_MAP` with real per-status entries, or (simpler, no cross-repo change)
+      branch on `exc.status` directly when `exc` is `aiohttp.ClientResponseError` (retry only on 429/5xx, fail fast
+      otherwise) before ever consulting `classify_venue_error`. Also fix `helius_solana.py::get_enhanced_transactions`'s
+      retry loop (line 325) to add the same status check even though it has no current callers (latent bug, cheap to fix
+      now). Add regression tests pinning the fixed behavior (mirror `test_non_retryable_status_fails_fast` from the
+      Kalshi fix, `market-tick-data-service@5a163d02`). Repo: `market-tick-data-service`.
+- [ ] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
+      `classification.retry_safe if     classification is not None else True` call sites found by
+      `grep -rn "classification.retry_safe if classification is not None else True" market_tick_data_service/` —
+      classify each as (a) gates a live retry loop → same bug class, fix like the P1 todo above, or (b) pure `log_event`
+      observability metadata before an unconditional `raise` → not a functional bug, but consider standardizing to the
+      safer `else False` convention (already used in `defi/utils.py`, `prediction/kalshi_adapter.py`,
+      `cli/handlers/_defi_manifest.py`, `prediction/polymarket_adapter.py:510`) for consistency and to stop the pattern
+      from silently becoming a live bug if someone later wires `retry_safe` into a retry decision at one of these sites.
+      This is a genuinely audit-scope task (many files) — size it as its own plan rather than folding into this issue
+      doc's remaining todos. Repo: `market-tick-data-service`.
 
 ## Evidence
 
