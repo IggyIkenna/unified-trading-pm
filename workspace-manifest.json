@@ -946,10 +946,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
+        "warn_file_count": 5,
         "large_file_count": 0,
         "qg_red_reason": null,
-        "warn_file_count": 5,
-        "coverage_pct": 82.39
+        "coverage_pct": 82.58
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.67,
-        "warn_file_count": 21,
+        "warn_file_count": 20,
+        "coverage_pct": 87.71,
         "qg_red_reason": null,
-        "large_file_count": 5
+        "large_file_count": 6
       }
     },
     "unified-trading-pm": {
