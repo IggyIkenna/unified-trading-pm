@@ -358,6 +358,36 @@ HARDCODED_PROJECT_EXCLUDE_GLOBS+=(
     # via --project; no config injection for a post-gate probe; not a secret).
     "!**/check_evidence_backed_completion.py"
 )
+# ── Orphaned checker self-tests (qg_pytest_testpaths_excludes_scripts_quality_gates
+# 2026-07-14): pyproject.toml's testpaths=["tests"] means these test_*.py files, which
+# live next to the checker scripts they cover under scripts/, are never collected by the
+# TESTS phase above. Audited 2026-07-14 (18/19 orphaned scripts/**/test_*.py files
+# confirmed passing when run directly; the 19th, scripts/prediction/test_prediction_pipeline_e2e.py,
+# is a manual e2e driver, not a real pytest suite — excluded here pending its own todo
+# in qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md). Wiring them in
+# here (not a pyproject.toml testpaths widen) keeps the tests/ TESTS phase itself
+# untouched and avoids blindly collecting future scripts/**/test_*.py files that haven't
+# been confirmed passing.
+EXTRA_PYTEST_PATHS=(
+    "scripts/cicd/test_promotion_lag_monitor_etag.py"
+    "scripts/docs/test_docspec.py"
+    "scripts/docs/test_gen_doc_index.py"
+    "scripts/quality_gates/test_check_asyncio_manifest_explicit_drain.py"
+    "scripts/quality_gates/test_check_banned_placeholder_methods.py"
+    "scripts/quality_gates/test_check_bar_edge_open_ingestion.py"
+    "scripts/quality_gates/test_check_canonical_futures_construction.py"
+    "scripts/quality_gates/test_check_canonical_model_regressions.py"
+    "scripts/quality_gates/test_check_chain_set_inclusion.py"
+    "scripts/quality_gates/test_check_imports_inside_functions.py"
+    "scripts/quality_gates/test_check_inline_bucket_uri.py"
+    "scripts/quality_gates/test_check_manifest_writer_missing_write_before_return.py"
+    "scripts/quality_gates/test_check_mdps_bar_available_at_stamping.py"
+    "scripts/quality_gates/test_check_no_empty_string_fallback.py"
+    "scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py"
+    "scripts/quality_gates/test_check_removed_symbols.py"
+    "scripts/quality_gates/test_detect_template_drift.py"
+    "scripts/quality_gates/tests/test_check_mdps_bar_boundary_compliance.py"
+)
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
 # ── Pre-commit gate: validate workspace-manifest.json (add-manifest-json-validation) ──
