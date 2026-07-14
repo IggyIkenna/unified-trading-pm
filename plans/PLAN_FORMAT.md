@@ -164,7 +164,11 @@ type: epic
 tier: L0 | L1 | L2 | L3 | L4 | L5 # which layer this epic sits in
 status: active | paused | cancelled # NEVER "complete" — epics are everlasting
 priority: P0 | P1 | P2 | P3
-assigned_vm: vm-<id> # REQUIRED — registry-resolved VM that owns this epic
+assigned_vm: NA # REQUIRED field (presence; docspec `registry_or_na`) — value is `NA` on every CURRENT epic
+                 # (epic-owns-VM dispatch DROPPED, D2 2026-06-24 + single-VM architecture 2026-06-27); a legacy
+                 # `vm-<id>` value still validates but is OPTIONAL-HISTORICAL (archaeology only, never
+                 # dispatch-resolved) — (was: `vm-<id> # REQUIRED — registry-resolved VM that owns this epic`,
+                 # finding 220, 2026-07-14)
 parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutover ships)
 owner: ikenna | harsh | claude-code
 created: YYYY-MM-DD
@@ -179,6 +183,15 @@ related_plans:
 
 **Forbidden on epics**: `deadline:`, `estimate_class:`, `estimate_baseline_ai_days:`, `estimate_calibrated_ai_days:`.
 Epics are everlasting; estimation lives on the active plans they reference.
+
+**`assigned_vm` on epics — SUPERSEDED value-meaning, field still REQUIRED (synced 2026-07-14, finding 220)**: the
+machine truth (`scripts/docs/docspec.py` `PER_TYPE["epic"]`) still requires this field PRESENT (kind `registry_or_na`),
+so don't drop it — but the epic-owns-VM ownership meaning it used to carry is dropped. `NA` is the expected value on
+every current epic; a legacy `vm-<id>` still validates against `orchestrator_vm_registry.yaml` (which retains the old
+ids) but is OPTIONAL-HISTORICAL only — archaeology, never dispatch-resolved. SSOT: operator-locked decision **D2**
+(`plans/epics/agent_operating_framework_master.md:129`, 2026-06-24 — "`assigned_vm` is a mandatory **per-plan** field;
+epic-to-VM delegation is DROPPED for matching"), the `epics/README.md` supersession banner (lines 23-30), and
+`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (single-VM, role-based dispatch, 2026-06-27).
 
 ### Legacy schema (active plans pre-2026-05-21 epic-foundation update)
 
