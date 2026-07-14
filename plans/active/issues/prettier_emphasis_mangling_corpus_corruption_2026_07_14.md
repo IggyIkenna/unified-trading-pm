@@ -109,8 +109,32 @@ Detection signature (has false positives — legit globs like `data_type=*/`, es
       (very-long list-item paragraph with many code spans); if an upstream issue exists, link it here; if a config
       mitigation exists (e.g. `proseWrap`), evaluate against the repo's md conventions.
 
+## Additional findings from the repair waves (2026-07-14)
+
+- **Third trigger confirmed** (batch 01, ~15 isolated repros): a bare underscore identifier co-occurring in the same
+  paragraph with ANY asterisk — a literal `*`, a proper italic span, or a code span containing `*` — re-mangles on the
+  next format pass even in freshly repaired, backtick-clean text. Backticking the bare identifier sufficed in every case
+  tested.
+- **Config pin-down** (batch 02): prettier 3.8.4 with this repo's `proseWrap: always` is the combination that makes bare
+  underscore identifiers unsafe; the reflow step is what re-triggers the desync.
+- **Detection-regex gap** (batch 03): the original lowercase-only signature missed uppercase manglings (e.g. the
+  VOL/MARKET_MAKING family, AUTONOMOUS AGENT RULES refs) — sweeps must be case-insensitive / uppercase-aware.
+- **Structural damage class** (batch 04): beyond prose, a 4-row markdown table in the MTDS/MDPS epic was shattered
+  across ~15 physical lines by the same parser desync (rows rendered as broken plain text); repaired by rejoining rows.
+- **Repair-without-stabilize is futile** (orchestrator's own failed quick-fix on the final 2 files): restoring text and
+  even backticking the target token gets re-mangled on the next `--write` if sibling bare underscore tokens remain in
+  the paragraph — the WHOLE paragraph must be stabilized.
+
 ## Progress Log (append-only)
 
 - 2026-07-14: issue filed during verify-rerun-2 close-out. Root causes proven + reference repairs shipped (@169a8c8cd
   single doc, @65420c363 six propagated docs incl. the defect-2 discovery). Corpus scan complete; 5 parallel repair
   batches over ~31 plans docs dispatched. Codex subset parked pending operator ruling (todo 1).
+- 2026-07-14 (repair waves landed): batch 00 @6118a3258 (6 files), batch 01 @61bf72297 (5 files, 27 mangles, third
+  trigger discovered), batch 02 @6ad39dc29 (5 files, ~42 spots, proseWrap pin-down), batch 03 @d87565728 (7 files, ~62
+  spots, uppercase-gap + embedded-backtick cascade), batch 04 @9a914087d (8 files, table-structure repair). Residual
+  sweep then found 2 more infested files the narrow signature missed (`tradfi_multisource_backfill_2026_06_22.md`,
+  `data_pipeline_hardening_self_monitoring_2026_06_22.md` — ~20 further spots incl. the DP-underscore event-family
+  refs); dedicated fixer dispatched. Known unresolved residual: `master_data_canonicalisation_migration_catalogue` line
+  ~1488 truncated value (needs domain verification, not a mechanical repair). The corpus long tail beyond the detection
+  signature is expected — the P2 gate-hardening todo is the durable stop.
