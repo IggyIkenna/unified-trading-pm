@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.73,
-        "large_file_count": 5,
         "qg_red_reason": null,
-        "warn_file_count": 20
+        "warn_file_count": 20,
+        "large_file_count": 5,
+        "coverage_pct": 87.72
       }
     },
     "unified-trading-pm": {
