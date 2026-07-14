@@ -3162,6 +3162,17 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 
 ### The four levers (all in `base-service.sh`, sourced live by every repo's `quality-gates.sh`)
 
+> **🟡 2026-07-14 — host-adaptive RESERVATION governor supersedes the fixed-K bucket (rolling out).** A new mode
+> (`QG_GOVERNOR_MODE=reservation`, default `token` = the bucket below) reads each host's live
+> `MemTotal`/`MemAvailable` + physical cores and admits a heavy phase only when BOTH a RAM budget
+> (`sum_reserved_peak + this_repo_peak ≤ 0.70 × MemTotal`, atomic under one ledger lock so N acquirers never over-admit)
+> AND a CPU budget (`running + 1 ≤ floor(cores × 0.80)`) AND live headroom (`MemAvailable ≥ this_peak + floor`, plus an
+> 80 %-host-pressure valve) allow it — using host-portable per-repo peak-RSS from
+> `scripts/dev/qg_resource_baseline.json`. Hard backstop: a per-repo cgroup cap `QG_MEM_CAP = 1.2 × baseline`. This
+> replaces the "raise/lower K per host" tuning — each host self-tunes (16 GB → ~2 heavy, 61 GB → CPU-bound, 128 GB →
+> CPU-only). **Live on the central dispatch host as of 2026-07-14; the fixed-K bucket remains the default on other hosts
+> pending rollout.** SSOT + rollout state: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
+
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a
    shared host always permits 2 concurrent full QGs — on the macOS operator host `lscpu`+`nproc` are both absent → cores
@@ -3192,12 +3203,16 @@ code-freeze. Aggregate cross-slot contention is measured separately by `scripts/
 
 ### VM-sizing (data-driven, not a guess)
 
-The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library 5.27
-GB**, then execution/features ~1.9 GB — so a _single_ heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget by
-up to 2.6×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet change** — the governor caps
-K=`max(2, floor(vCPU/4))`=2 on a 4-vCPU worker (floor raised 1 → 2, operator 2026-06-05) so two concurrent peaks (~10.6
-GB) still fit 16 GB; sizing rule `per-VM RAM ≥ peak-per-run-RSS × K`. Central self-hosted-runner QG (Option B) was
-**rejected** — it breaks the local pass/fail feedback loop. ADR: `adr-qg-offload-self-hosted-runners-2026-06-02.md`.
+The binding constraint is **peak RSS**, not cores. Measured heavy tier (tree-RSS, 2026-07-14 VM re-benchmark —
+**corrects the stale "then execution/features ~1.9 GB" claim**): **unified-trading-library 5.46 GB → instruments-service
+3.66 GB → execution 2.09 → deployment-api 1.77 → features 1.61 → …**. instruments-service silently grew **+182 % (1.30 →
+3.66 GB)** since 2026-06-17 (it absorbed the reference-data SSOT / URDI consolidation) — proof a static baseline goes
+stale, which the reservation governor's daily freshness loop addresses. A _single_ heavy gate still overshoots the
+`m7i.xlarge` 2 GB/slot budget by up to 2.7×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet
+change** — the governor caps K=`max(2, floor(vCPU/4))`=2 on a 4-vCPU worker (floor raised 1 → 2, operator 2026-06-05) so
+two concurrent peaks (~10.6 GB) still fit 16 GB; sizing rule `per-VM RAM ≥ peak-per-run-RSS × K`. Central
+self-hosted-runner QG (Option B) was **rejected** — it breaks the local pass/fail feedback loop. ADR:
+`adr-qg-offload-self-hosted-runners-2026-06-02.md`.
 
 ### Both base files are governed
 

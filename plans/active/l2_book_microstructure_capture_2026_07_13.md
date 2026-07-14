@@ -21,7 +21,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 last_updated: 2026-07-13
 locked_by:
@@ -194,15 +194,79 @@ sequential: true
       (status: resolved) for the full option analysis + resolution. **Checkbox intentionally stays unflipped** — this
       todo's actual scope (extend the extractor) remains honestly undone/deferred, not completed; the decision that
       unblocks or permanently defers it is what's now resolved.
-- [ ] [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue (mirrors
-      the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a backfill. Repo:
-      market-tick-data-service.
+- [x] ✅ [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue
+      (mirrors the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a
+      backfill. Repo: market-tick-data-service. — **DONE, slot-11, `market-tick-data-service@bc9cd08c`.** Recreated
+      `scripts/book_microstructure_connectivity_check.py` (deleted in `a4fb3d13`) adapted for the deeper-book path: live
+      REST pull per capable venue (COINBASE-SPOT/BYBIT/DERIBIT/BINANCE-FUTURES/OKX-SWAP, each venue's public order-book
+      snapshot endpoint, 20 levels requested) through `compute_book_microstructure`, asserting `captured_depth > 5` and
+      that `queue_position_bid/ask`/`depth_levels_bid/ask` ARE populated (the opposite assertion from the retired
+      L5-only check, which asserted honest-absence). **Premise note**: checked the availability manifest first
+      (`read_availability_index`, not a raw GCS walk) — `depth_of_book_10` has **0 rows ever captured** in production;
+      todo 2's live WS connectors (`market-tick-data-service@15f5657b`) have shipped but never actually been dispatched.
+      A GCS-read connectivity test would have had nothing to read, so this hits each venue's REST endpoint directly
+      (separate from the WS subscription used for live capture) — proves venue reachability + the derivation without
+      depending on a prior live-capture run. **Ran live against real production APIs at authoring time — all 5 venues
+      passed** (captured_depth=20 for every venue; sample: BINANCE-FUTURES imbalance=0.55/queue_position bid=7.012
+      ask=2.083, DERIBIT bid=2510.0 ask=146280.0, etc. — full per-venue output in the session transcript). Exit 0.
+      `quality-gates.sh` green (147s, sentinel-verified at the shipped SHA).
 - [ ] [SCRIPT] P2. Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent
       plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest (which needs historical
       deeper-book replay, still no backfill authorised). This todo is DONE when the feed is honestly live for the
-      capable venues, not when the engine registers.
+      capable venues, not when the engine registers. **BLOCKED-DATA-CORRECTNESS (2026-07-14, slot-11):** verified the
+      done-condition before flipping — it is NOT true. Manifest check found `depth_of_book_10` has 0 rows ever captured,
+      AND — much bigger — the entire CeFi live WS tick-capture pipeline (every `live_*` pipeline_mode, every data_type,
+      every venue) has produced no manifest rows since 2026-06-29 (15 days stale); no running compute instance in the
+      project looks like a persistent live-WS process. Filed
+      [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+      (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything
+      myself (needs operator context on the correct deployment target + whether this is an intentional pause).
+      **Checkbox NOT flipped** pending that finding's resolution; the engine-registration guard itself is trivially
+      satisfied (not touched), but that's not what this todo's done-condition actually gates on.
 
 ## Progress Log
+
+### 2026-07-14 — slot 11 (Todo 7 — verified done-condition false, filed a bigger NOTIFY-OPERATOR finding)
+
+Dispatched task `l2_book_microstructure_capture-007` right after `/done`-ing todo 6. Todo 7's action item (don't touch
+the engine registration) is trivially satisfied by not touching strategy-service. But its actual done-condition is "the
+feed is honestly live for the capable venues" — checked that before flipping anything, rather than treating "the action
+item is a no-op" as "the todo is done".
+
+Widened the manifest check from todo 6's `depth_of_book_10`-only finding to `book_snapshot_5` (this plan's own stated
+foundation) and then to every `live_*` pipeline_mode row in the CeFi manifest: **no live-mode manifest row anywhere
+newer than 2026-06-29** (15 days stale at check time), across every data_type and venue, not just this plan's 5.
+Cross-checked via bounded (non-recursive) GCS listing on 4 sampled recent days — only `pipeline_mode=batch_*`
+directories present, zero `live_*`. `gcloud compute instances list` (project-wide) shows only backfill/batch VMs
+running; no GKE clusters. This reads as the entire CeFi live tick-capture pipeline being dormant, not a
+`depth_of_book_10`-specific gap — filed
+[`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+(P1, NOTIFY-OPERATOR per the data-pipeline-correctness HARD RULE) rather than trying to relaunch anything myself (no
+context on the correct deployment target or whether this is an intentional pause — real production infra, not a call to
+make unilaterally).
+
+**Checkbox NOT flipped** — the done-condition is honestly false. This plan-doc + issue-doc edit ships via the
+`docs(plans):` carve-out (no code this dispatch). `/done`-ing this dispatch with the finding + issue doc as the evidence
+— same posture as the todo 5 premise-correction earlier in this session.
+
+### 2026-07-14 — slot 11 (Todo 6 shipped — deeper-book connectivity check)
+
+Dispatched task `l2_book_microstructure_capture-006` (todo 6, connectivity test) right after `/done`-ing the Todo 4/5
+dispatch above. Checked the availability manifest before writing anything (`read_availability_index`, bounded — NOT a
+raw GCS walk, killed an accidental recursive `gsutil ls -r` mid-investigation before it completed): `queue_position` AND
+`depth_of_book_10` both show **0 captured rows ever** — todo 2's live WS connectors are shipped but have never actually
+been dispatched in production. Built `scripts/book_microstructure_connectivity_check.py` (recreated from the deleted
+`a4fb3d13` version, adapted for the deeper-book path — see the todo's own checkbox above for full detail) hitting each
+of the 5 capable venues' public REST order-book endpoints directly rather than depending on a prior live capture. Ran it
+live against real production venue APIs — all 5 passed. Shipped `market-tick-data-service@bc9cd08c`, QG green,
+quickmerged.
+
+**Note for whoever picks up todo 7 / the parent plan's Phase E1 next**: the live WS `depth_of_book_10` capture (todo 2)
+has never actually run — "the feed is honestly live for the capable venues" (todo 7's own done-condition) is NOT yet
+true in the sense of continuous production capture, only in the sense that the code path is proven end-to-end (this
+todo) and the capability registry is honestly flipped (todo 4). Whether that gap needs a dispatch-the-live-capture todo
+before Phase E1 proceeds is a call for whoever picks up todo 7 — not addressed in this dispatch (out of this task's
+scope).
 
 ### 2026-07-14 — slot 11 (Todo 4 shipped; Todo 5 premise-correction — BLOCKED-OPERATOR)
 

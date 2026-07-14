@@ -24,7 +24,7 @@ related:
     plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
   ]
 created: "2026-07-13"
-last_updated: "2026-07-13"
+last_updated: "2026-07-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -74,12 +74,16 @@ readers still point at the dedicated buckets.
 
 ## Todos
 
-- [ ] [DATA] P0. Verify data parity: for each of `dex-pools` (data_types `dex_pool_state`/`dex_pool_swaps`), `lst-rates`
-      (`lst_rates`), `perp-funding` (`perp_funding`), confirm the shared bucket's availability index has equivalent or
-      superior coverage (row counts, date ranges) vs the dedicated `-prd` bucket — direct real-data comparison, not an
-      assumption carried over from the earlier session's DeFi migration verification (that verification explicitly
-      EXCLUDED these 3 kinds since they were kept live). If any gap is found, do NOT proceed to reader cutover until
-      it's closed (re-run `migrate_defi_full_v9_canonical.py` for the gapped kind if needed).
+- [x] ✅ [DATA] P0. Verify data parity: for each of `dex-pools` (data_types `dex_pool_state`/`dex_pool_swaps`),
+      `lst-rates` (`lst_rates`), `perp-funding` (`perp_funding`), confirm the shared bucket's availability index has
+      equivalent or superior coverage (row counts, date ranges) vs the dedicated `-prd` bucket — direct real-data
+      comparison, not an assumption carried over from the earlier session's DeFi migration verification (that
+      verification explicitly EXCLUDED these 3 kinds since they were kept live). If any gap is found, do NOT proceed to
+      reader cutover until it's closed (re-run `migrate_defi_full_v9_canonical.py` for the gapped kind if needed). —
+      Checkbox was never flipped when the work landed 2026-07-13; see the Progress Log entry "Todo 1 done — data parity
+      verified" for the real evidence (all 4 data_types present across every sampled date 2024-06..2026-06; each
+      dedicated bucket's max date sits inside that window; `dex_pool_fees` independently checked, zero real rows
+      anywhere at the time).
 - [x] ✅ [CODE] P0. Read `strategy-service/engine/core/canonical_dex_pool_provider.py` +
       `scripts/materialize_dex_pool_fees.py` in full — confirm exactly how each resolves its bucket today
       (`resolve_bucket_name(kind="dex-pools", ...)` or similar) and what real callers depend on their current output
@@ -180,7 +184,7 @@ readers still point at the dedicated buckets.
       `market-data-tick-defi-prd-central-element-323112`, zero reads left on the dedicated buckets. No live writers to
       the dedicated buckets (newest real object 2026-06-21; only a 2026-07-12 availability-index write from the
       pre-cutover scanner).
-- [ ] [CODE] P0. (Discovered 2026-07-13 estate audit, adversarially verified) Migrate
+- [x] ✅ [CODE] P0. (Discovered 2026-07-13 estate audit, adversarially verified) Migrate
       `execution-service/execution_service/data/defi_lateral_loader.py` — `DEFAULT_LATERAL_BUCKETS` (:46-73) still
       defaults to FLAT bucket names (`perp-funding-{pid}`, `lending-indices-{pid}`, `liquidations-{pid}`,
       `oracle-prices-{pid}`, `gas-fees-{pid}`, `lst-rates-{pid}`, `eigenlayer-rewards-{pid}`, flat
@@ -188,7 +192,16 @@ readers still point at the dedicated buckets.
       the legacy `category=` form (no `raw_tick_data/by_date/` wrapper). Dormant in prod backtests (`defi_feeds` is
       configured nowhere) but breaks the 15 operator decision-trace CLIs today; needs the same two-axis fix
       (`kind="tick-data"` + day-first prefix) this plan shipped for `canonical_dex_pool_provider.py` — do it BEFORE the
-      deletion todo below runs. Also covers `service_config` `defi_bucket_*` fields.
+      deletion todo below runs. Also covers `service_config` `defi_bucket_*` fields. — `execution-service@a7e42c932`
+      (2026-07-14): all 7 default bucket entries + 9 feed keys now resolve `_SHARED_LATERAL_BUCKET` (module-level
+      `resolve_bucket_name(kind="tick-data", asset_group="defi")`); `build_partition_prefix`/`build_partition_needles` +
+      `list_partition_files` rewritten to the day-first-prefix + needle-filter pattern; `load_lst_rates` +
+      `load_eigenlayer_rewards_range` (also fixed `EIGENLAYER` → `EIGENLAYER-ETHEREUM` venue-string drift) fixed too.
+      Verified all 7 legacy bucket names directly against real GCP state before editing (5 confirmed 404-gone, 2
+      `eigenlayer-rewards` forms confirmed 0 bytes). 2 test files updated to match the new prefix/needle contract,
+      quality-gates.sh green (also closed a real gap found in the process: `tests/defi_execution/unit/` + `tests/e2e/`
+      were completely un-gated by any QG wrapper/CI — wired the 2 touched files into `scripts/quality-gates.sh`'s
+      `PYTEST_UNIT_DIR`).
 - [x] ✅ [INFRA] P0. (Discovered 2026-07-13 estate audit) The deletion todo below MUST also remove the Terraform
       resources `market_data_defi_lst_rates_prd` / `market_data_defi_perp_funding_prd` and the `bucket_config.yaml`
       dex-pools/lst-rates/perp-funding entries in the SAME change. — `deployment-service@f04cc39b` (2026-07-13): both TF
@@ -198,12 +211,22 @@ readers still point at the dedicated buckets.
       `bucket_config.yaml` GCP+AWS templates + aws_naming rows removed, `tofu validate` green. Paired guarded
       `terraform state rm` script GENERATED (not run — orchestrator runs it BEFORE the next apply, else the config-less
       state entries plan a DESTROY that errors on force_destroy=false): probes state for
-      `google_storage_bucket.market_data_defi*{lst_rates,perp_funding,dex_pools}\_prd`, removes only present entries,     DRY_RUN=1 mode. **Related finding (NOT fixed here — belongs to     [[terraform_bucket_estate_drift_resurrection_2026_07_13]])**: `market_data_defi_lending_indices_prd`
-      is still declared in main.tf while its bucket was cleanup-deleted on 2026-07-10 — same resurrection class.
-- [ ] [DATA] P1. Once every reader is confirmed migrated and real production traffic is flowing through the new path
+      `google_storage_bucket.market_data_defi*{lst_rates,perp_funding,dex_pools}\_prd`, removes only present entries,
+      DRY_RUN=1 mode. **Related finding (NOT fixed here — belongs to
+      [[terraform_bucket_estate_drift_resurrection_2026_07_13]])**: `market_data_defi_lending_indices_prd` is still
+      declared in main.tf while its bucket was cleanup-deleted on 2026-07-10 — same resurrection class.
+- [x] ✅ [DATA] P1. Once every reader is confirmed migrated and real production traffic is flowing through the new path
       (not just deployed-but-idle), delete `dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd` — mirror the careful
       backup-verify-delete pattern already used this session for the other 12 legacy DeFi buckets
-      (`gcs_bucket_estate_cleanup_2026_07_10.md` §5i).
+      (`gcs_bucket_estate_cleanup_2026_07_10.md` §5i). — All 3 confirmed deleted (`gcloud storage buckets list`, zero
+      matches in any form, 2026-07-14). `lst-rates-prd`/`perp-funding-prd` were deleted by the operator directly
+      (`ikenna@odum-research.com`, GCP audit log) prior to this session's visible window. **`dex-pools-prd` was deleted
+      by the same operator on 2026-07-14T11:03:47Z BEFORE this todo's own snapshot-before-delete step ran** — the
+      ~209k-object undiffed legacy tree noted below was never independently object-diffed; no soft-delete recovery or
+      pre-migration snapshot of it exists. Not the careful backup-verify-delete pattern this todo specified. Risk
+      assessed low (not zero) given Todo 1's prior parity verification already covered the canonical/reader-relevant
+      content and `dex_pool_fees` had zero real rows to lose — full writeup in `gcs_bucket_estate_cleanup_2026_07_10.md`
+      §5k. Flagging per the data-correctness HARD RULE rather than silently treating it as fine.
 - [x] ✅ [CODE] P1. Remove the `dex-pools`/`lst-rates`/`perp-funding` kinds from `cloud-providers.yaml`,
       `bucket_config.yaml`, and `manifest_reader.py`'s `_EXTRA_BUCKET_KINDS` — mirror the exact removal pattern already
       used for `gas-fees` earlier this session. — Done 2026-07-13 across **five** cloud-providers.yaml copies (the plan
@@ -221,12 +244,91 @@ readers still point at the dedicated buckets.
       `kind="perp-funding"`; repointed to `kind="tick-data"` + live-verified 230/230 HL coins) ·
       `market-tick-data-service@02a88186` (dirty-deps carve-out; QG PASS 130s) · `unified-trading-pm@abcd47b4` (PR
       #1006, auto-merge on v2). deployment-service post-push `quality-gates-v2` run 29292731847 = success.
-- [ ] [DATA] P2. Final verification sweep (full bucket-list check confirming all 3 gone, no stray references left in any
-      repo) + update `gcs_bucket_estate_cleanup_2026_07_10.md` §5i and `defi_manifest_canonicalisation_2026_06_01.md`
-      C0f with the completed resolution — C0f can only fully close once these last 3 (of the original 8 DeFi kinds) are
-      done.
+- [x] ✅ [DATA] P2. Final verification sweep (full bucket-list check confirming all 3 gone, no stray references left in
+      any repo) + update `gcs_bucket_estate_cleanup_2026_07_10.md` §5i and
+      `defi_manifest_canonicalisation_2026_06_01.md` C0f with the completed resolution — C0f can only fully close once
+      these last 3 (of the original 8 DeFi kinds) are done. — Bucket-list check: all 3 confirmed gone. Workspace-wide
+      grep sweep (dedicated research pass, all repos) found **1 more real, live bug** (fixed same-day, see below) + 4
+      lower-severity script-level findings (NOT fixed — separate repos/scope, captured as new todos below) + confirmed
+      the rest is harmless (data_type/CLI-operation names, test fixtures, plan docs, already-clean
+      Terraform/cloud-providers.yaml/bucket_config.yaml). Docs updated: `gcs_bucket_estate_cleanup_2026_07_10.md` §5k
+      added; `defi_manifest_canonicalisation_2026_06_01.md` C0f noted (kept `[ ]` —
+      `lending-indices`/`lending-indices-prd` remain a separate open item, out of scope here).
+- [x] ✅ [CODE] P1. (Found by the final verification sweep) `deployment-api/deployment_api/services/data_status/defi.py`
+      — `_BUCKET_CATEGORY_OVERRIDES` + `_MTDS_DEFI_SUB_DIMENSIONS` still listed 9 of 10 Phase-1 DeFi sub-buckets
+      (`gas-fees`/`evm-defi`/`solana-defi`/`dex-pools`/`dex-swaps`/`liquidations`/`lst-rates`/`oracle-prices`/
+      `perp-funding`) as bucket-name templates — ALL 9 now resolve to deleted buckets (this file was never updated
+      across ANY of the `gcs_bucket_estate_cleanup_2026_07_10.md` deletion rounds, not just this plan's 3). Not a crash
+      — `_read_defi_merged_index` wraps each sub-bucket read in `except Exception: logger.debug(...)` — but a LIVE,
+      silent monitoring bug: deployment-ui's Data ETL DeFi drilldown was permanently showing these 9 sub-dimensions as
+      empty/no-data (the real data now merges into the main "defi-core" bucket instead, unlabeled). Dropped all 9 dead
+      entries from both dicts (kept `lending-indices`, confirmed still live); verified the breakdown-building code
+      (`breakdowns_domain.py::_build_defi_sub_dimension_breakdown`) degrades gracefully — `all_sources` unions the
+      static list with whatever `_defi_source` values actually appear in the data at runtime, so no UI code path assumes
+      these keys statically exist. — `deployment-api@b5641cf79`, quality-gates.sh green.
+- [ ] [SCRIPT] P2. (Found by the final verification sweep, NOT fixed — separate repos/scope) 3 diagnostic/migration
+      scripts still hardcode dead flat bucket-name templates for `dex-pools`/`lst-rates`/`perp-funding` and would error
+      if re-invoked: `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`
+      (`SubsetSpec.canonical_bucket_kind = "dex-pools"`/`"lst-rates"` isn't a valid UTL domain key, falls through to a
+      legacy fallback that builds the now-404 flat bucket names — lines 92/94/95/132-136, used at 271/314);
+      `strategy-service/scripts/trace_carry_staked_basis.py` (`_LST_RATES_BUCKET_TEMPLATE`/
+      `_PERP_FUNDING_BUCKET_TEMPLATE` at lines 81/83, used in `main()`'s slot-processing loop — this one is likely still
+      actively used, it's the same carry_staked_basis archetype verified via paper-trading VM earlier this session);
+      `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py` (`_DEFAULT_PERP_FUNDING_BUCKET_     TEMPLATE`
+      at line 106, default unless `--perp-funding-bucket` passed explicitly). Each needs the same
+      `resolve_bucket_name(kind="tick-data", asset_group="defi")` repoint already shipped everywhere else this plan
+      touched — small, mechanical, same pattern 3x over, just not done here to keep this plan's scope to the 3 original
+      kinds + what directly blocked them.
+- [ ] [CHORE] P3. (Found by the final verification sweep, NOT fixed) Housekeeping cluster, all low-risk/low-value: (1)
+      `market_tick_data_service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
+      `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied, script should
+      be deleted; (2) `market-tick-data-service/cli/handlers/data_manifest_handler.py:44-82` — module-level `OPERATIONS`
+      constant still has stale `"bucket_type": "dex-pools"`/`"perp-funding"` values contradicting the file's own correct
+      `_build_operations_dict()` (already `kind="tick-data"`) — confirmed unused elsewhere, dead but misleading, should
+      be deleted or corrected; (3) ~8 more `market-tick-data-service/scripts/defi_*_2026_06_01.py` /
+      `gate3_solana_manifest_reconcile.py` / `backfill_hl_*_2026_06_17.py` (all `Lifecycle: campaign`) hardcode dead
+      bucket names tied to separate, already-completed earlier migrations — a lifecycle-marker audit pass, not urgent;
+      (4) `strategy-service/strategy_service/cli/handlers/paper_run_handler.py:314,430` — stale comments say "kind
+      `perp-funding`"/"kind `dex-pools`" describing classes that already correctly use `kind="tick-data"` — comment-only
+      fix.
 
 ## Progress Log
+
+- **2026-07-14 (final todo shipped — `defi_lateral_loader.py` fixed, all 3 buckets confirmed deleted, TF state clean,
+  cross-plan docs updated)** — Fixed the last broken reader (`execution-service@a7e42c932`): `defi_lateral_loader.py`'s
+  `DEFAULT_LATERAL_BUCKETS` repointed off 5-of-7-dead flat bucket defaults to the shared bucket via
+  `resolve_bucket_name(kind="tick-data", asset_group="defi")`, plus the day-first-prefix + needle-filter rewrite
+  (`build_partition_prefix`/`build_partition_needles`/`list_partition_files`), `load_lst_rates`, and
+  `load_eigenlayer_rewards_range` (also fixed an `EIGENLAYER`→`EIGENLAYER-ETHEREUM` venue-string bug found while reading
+  it). 2 test files updated to match; quality-gates.sh green; also closed a real QG-coverage gap found in the process
+  (`tests/defi_execution/unit/` + `tests/e2e/` were completely un-gated — wired the 2 touched files in).
+  **Bucket-deletion todo**: all 3 (`dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd`) confirmed gone via direct
+  `gcloud storage buckets list`. **Flagging, not hiding**: `dex-pools-prd` was deleted by the operator directly
+  (`ikenna@odum-research.com`, 2026-07-14T11:03:47Z per GCP audit log) BEFORE this plan's own snapshot-before-delete
+  step for its ~209k-object undiffed legacy tree could run — that tree was never independently object-diffed, and no
+  soft-delete recovery or pre-migration snapshot of it exists. Assessed risk as low (not zero): Todo 1's parity check
+  had already verified the canonical/reader-relevant content in the shared bucket, and `dex_pool_fees` (the one
+  data_type that could have held unique legacy content) was confirmed to have zero real rows anywhere. **Terraform**:
+  `tofu state list` in `deployment-service/terraform/gcp` confirmed clean — zero `google_storage_bucket` entries for any
+  of the 3 kinds (only the legitimate, live `google_cloud_scheduler_job`/`google_cloud_run_v2_job` DATA-COLLECTION
+  resources match the kind names); the guarded `terraform state rm` script generated 2026-07-13 was never run and turned
+  out unnecessary — no matching state entries existed to remove. **Cross-plan docs updated**:
+  `gcs_bucket_estate_cleanup_2026_07_10.md` gets a new §5k covering this trio's resolution + the early-deletion flag;
+  `defi_manifest_canonicalisation_2026_06_01.md`'s C0f gets a note that the "last 3" are now deleted, but stays `[ ]`
+  (not flipped to done) since `lending-indices`/`lending-indices-prd` — a separate, pre-existing residual from that same
+  checkbox's original 14-bucket scope — remain undeleted (out of scope here; tracked in
+  `gcs_bucket_estate_cleanup_2026_07_10.md` §5i/§5j). **Final workspace-wide straggler sweep results** (dedicated
+  research pass, every repo, `kind="dex-pools"/"lst-rates"/"perp-funding"` resolver calls + hardcoded bucket-name
+  literals): found **1 more real, live bug** — `deployment-api`'s Data ETL DeFi drilldown
+  (`services/data_status/defi.py`) still templated 9 of 10 Phase-1 sub-bucket names (this file was never touched across
+  ANY of the earlier `gcs_bucket_estate_cleanup_2026_07_10.md` deletion rounds, not just this plan's 3 kinds), silently
+  swallowing failed reads against now-deleted buckets and permanently showing those 9 sub-dimensions as empty in the UI.
+  Fixed same-day — `deployment-api@b5641cf79`, see the todo above. 4 lower-severity findings (3 diagnostic/migration
+  scripts with dead bucket templates, 1 housekeeping cluster) captured as new `[ ]` P2/P3 todos above rather than fixed
+  here — separate repos, each a small mechanical repoint but genuinely outside this plan's original 3-kind scope.
+  Everything else confirmed harmless: ~2,700+ legitimate data_type/CLI-operation/UAC-capability name hits, test-fixture
+  mock bucket names, historical plan/codex docs, already-clean Terraform + `cloud-providers.yaml` +
+  `bucket_config.yaml`.
 
 - **2026-07-13 (Todos 6-9 + config-removal todos shipped — redeploy verified, 6,941-object residual gap closed, kinds
   retired)** — executed by the todo-6-9 worker; full evidence in the flipped checkboxes above. Shipped:

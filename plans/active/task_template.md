@@ -85,7 +85,7 @@ priority: P0
 estimate_class: infra # refactor 0.4x | design 0.6x | infra 0.8x | brand-new 1.0x | research 1.2x
 estimate_baseline_ai_days: <n>
 estimate_calibrated_ai_days: <n × class-multiplier>
-assigned_role: <default craft — data_engineering | infra | backend-engineer | ui-developer | review>
+assigned_role: <default craft — data_engineering | infra | backend_engineer | ui_developer | review>
 # model_tier: opus-required # optional — default sonnet (role-derived); fable-required = OPERATOR-REQUEST-ONLY (§4)
 drift_direction: advance-code
 depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
@@ -102,8 +102,8 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 ## 3. Todo format
 
 - Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
-- **`[TAG]` → craft role** (per-task, AO): `[INFRA]`→infra · `[DATA]`→data_engineering · `[BACKEND]`→backend-engineer ·
-  `[UI]`→ui-developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
+- **`[TAG]` → craft role** (per-task, AO): `[INFRA]`→infra · `[DATA]`→data_engineering · `[BACKEND]`→backend_engineer ·
+  `[UI]`→ui_developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
 - **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).
 - **Non-dispatchable** (kept visible, never ingested): a line containing `BLOCKED-<TOKEN>` (e.g. `BLOCKED-CREDENTIALS`,
   `BLOCKED-OPERATOR-DECISION`), `[OPERATOR]` (operator-only action), or a `_(stretch, optional)_` marker.

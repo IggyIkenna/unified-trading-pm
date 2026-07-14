@@ -39,7 +39,7 @@ assigned_vm: planning
 resolved_by: slot-11 (2026-07-13)
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: medium
 drift_direction: advance-code
@@ -108,11 +108,11 @@ will fire the FIRST TIME the drawdown-state wiring (already built, just not yet 
 Replace `GLOBAL_DATA_STALENESS_HALT`'s trigger with a `BinaryEventTrigger(event_source="data_staleness")` — matching the
 pattern already used correctly for `ORACLE_OUTAGE_HALT` / `CROSS_CLOUD_EGRESS_HALT` / `CUSTODY_ENDPOINT_HALT` three
 rules below it in the same file. The caller populates `active_events` (a `frozenset[str]`) with `"data_staleness"` when
-MTDS/MDPS/features-* actually reports stale output (the freshness-contract check already exists elsewhere per the rule's
-own description — this just needs to feed a boolean into `active_events` instead of overloading the drawdown field).
-This is a UAC-only change (no downstream caller needs to change — `BinaryEventTrigger` already reads `active_events` via
-`.get()` with a safe empty-set default, so callers that don't populate it simply never fire this rule, same as today's
-default-off state).
+MTDS/MDPS/features-\* actually reports stale output (the freshness-contract check already exists elsewhere per the
+rule's own description — this just needs to feed a boolean into `active_events` instead of overloading the drawdown
+field). This is a UAC-only change (no downstream caller needs to change — `BinaryEventTrigger` already reads
+`active_events` via `.get()` with a safe empty-set default, so callers that don't populate it simply never fire this
+rule, same as today's default-off state).
 
 ## Todos
 

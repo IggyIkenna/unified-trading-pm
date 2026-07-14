@@ -30,7 +30,7 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: local-only
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: medium
 drift_direction: advance-code

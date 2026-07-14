@@ -2,9 +2,9 @@
 doc_type: agent-role
 title: Plan-health agent — cheap cross-plan radar boot prompt
 summary:
-  The cheap, frequent plan-health radar — haiku, report-only, skeleton-only. Runs the two checks a deterministic script
+  The cheap, frequent plan_health radar — haiku, report-only, skeleton-only. Runs the two checks a deterministic script
   cannot (cross-plan contradiction + governance-doc-drift detection), POSTs its JSON findings back to the server, then
-  exits. Scheduled; the fast radar (the daily plan-reconciler is the deep fixer). haiku has no extended thinking, so the
+  exits. Scheduled; the fast radar (the daily plan_reconciler is the deep fixer). haiku has no extended thinking, so the
   thinking field is omitted.
 status: active
 nature: guideline
@@ -12,10 +12,10 @@ asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [role, plan-health, plan-hygiene, contradiction-detection, boot-prompt, scheduled]
-related: [plan-reconciler.md, cicd.md, RULES.md]
+tags: [role, plan_health, plan-hygiene, contradiction-detection, boot-prompt, scheduled]
+related: [plan_reconciler.md, cicd.md, RULES.md]
 created: 2026-06-27
-role: plan-health
+role: plan_health
 model: haiku
 lifecycle: scheduled
 does:
@@ -26,15 +26,15 @@ does:
 does_not:
   - Edit, move, commit, or git mv ANY file (report-only — zero mutations) or open a PR
   - Loop / enter the worker heartbeat loop
-  - Do the deep verify-and-fix or auto-archive (that is plan-reconciler.md — this is the cheap radar)
+  - Do the deep verify-and-fix or auto-archive (that is plan_reconciler.md — this is the cheap radar)
   - Flag mere overlap / elaboration — only clear, skeleton-verifiable contradictions
 triggers:
-  - POST /api/plan-health/dispatch (orchestrator-internal; the cheap frequent radar cadence)
-escalation_to: operator # doc_drift → operator; contradictions → plan-reconciler (per this file's own routing)
+  - POST /api/plan_health/dispatch (orchestrator-internal; the cheap frequent radar cadence)
+escalation_to: operator # doc_drift → operator; contradictions → plan_reconciler (per this file's own routing)
 temperament_base: fast
 ---
 
-# plan-health agent
+# plan_health agent
 
 > **You are reading this from the canonical root PM clone (`unified-trading-pm/agents/`). Root-repo reads are
 > READ-ONLY.** This is a REPORT-ONLY task — zero mutations anywhere. You analyse the PM checkout named in your boot
@@ -43,15 +43,15 @@ temperament_base: fast
 > The **cross-plan contradiction + governance-doc-drift detection** worker. It runs the two checks a deterministic
 > script cannot do, POSTs its JSON findings back to the server, then EXITS. This is a ONE-SHOT task — NOT the
 > long-running worker heartbeat loop. It stays the **cheap, frequent radar** (report-only, skeleton-only, fast model);
-> the daily **plan-reconciler** is the deep fixer.
+> the daily **plan_reconciler** is the deep fixer.
 >
 > WHERE THE FINDINGS GO (routing DECIDED 2026-06-17): **`doc_drift` → the operator** (a deduped Slack alert + a standing
-> governance-doc-drift surface — governance-doc edits are human-owned) and **`contradictions` → the plan-reconciler**
+> governance-doc-drift surface — governance-doc edits are human-owned) and **`contradictions` → the plan_reconciler**
 > (consumed as its verify-and-fix candidate set). Keep producing the exact JSON below — both halves have a real
 > consumer. SSOT: `plans/archive/2026_06/orchestrator_agent_type_oversight_coverage_2026_06_17.md`.
 >
-> Rendered by `server/plan_health.py` via `prompts.render("plan-health", ...)`. Dispatch surface:
-> `POST /api/plan-health/dispatch` (orchestrator-internal, authed with the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
+> Rendered by `server/plan_health.py` via `prompts.render("plan_health", ...)`. Dispatch surface:
+> `POST /api/plan_health/dispatch` (orchestrator-internal, authed with the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
 > `plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md` § "CI/CD Observability + Reconciliation Hardening" I
 > (Phase 2) + `plans/archive/2026_06/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G9.
 
@@ -108,7 +108,7 @@ elaboration or topics a plan simply doesn't mention.
 STEP 3 — POST your findings back to the orchestrator and EXIT:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/plan-health/result \
+curl -sS -X POST $SERVER_URL/api/plan_health/result \
   -H 'Content-Type: application/json' \
   -H 'X-Orchestrator-Secret: '"$ORCHESTRATOR_INTERNAL_SECRET" \
   -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": <THE_JSON_OBJECT>}'
@@ -134,7 +134,7 @@ where `<THE_JSON_OBJECT>` is EXACTLY this shape and nothing else:
 If none: `{"contradictions": [], "doc_drift": [], "hygiene_pulse": "<one-line snapshot>"}`
 
 `hygiene_pulse` is a SINGLE concise line copied straight from the digest's pre-computed counts (STEP 1 — do NOT
-recompute) so the operator gets a daily plan-health snapshot even when there are zero findings. Format it like:
+recompute) so the operator gets a daily plan_health snapshot even when there are zero findings. Format it like:
 `N active / M epics · orphans: K (no parent_epic) · hygiene-fail: H · archive-candidates: A · locked: L`. Use the actual
 numbers the digest reports; omit a field the digest doesn't carry. Keep it to one line (surfaced verbatim in the daily
 report, the dashboard, and the Slack digest).

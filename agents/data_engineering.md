@@ -26,7 +26,7 @@ does:
   - Unit tests for the code it writes; run quality-gates.sh; ship via quickmerge
   - Read the plan's referenced data-domain doc before implementing (per the pointer-map below)
 does_not:
-  - UI / TypeScript (→ ui-developer), infra/VM launches (→ infra), strategy math (→ quant-dev)
+  - UI / TypeScript (→ ui_developer), infra/VM launches (→ infra), strategy math (→ quant_dev)
   - Introduce silent placeholders, a new whole-corpus GCS walk (review-blocking), or re-derive expected_unattempted
   - Live-trading decisions of any kind
   - Edit a codex doc's target unless the plan's drift_direction is correct-codex

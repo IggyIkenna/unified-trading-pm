@@ -141,6 +141,14 @@ _qg_content_hash() {
 #
 # Full SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
 # ╚════════════════════════════════════════════════════════════════════════════╝
+# Per-repo HARD cap when the reservation governor is active (QG_GOVERNOR_MODE=reservation):
+# QG_MEM_CAP = 1.2 × this repo's baseline peak, so a run that outgrows its baseline is
+# OOM-killed in its OWN systemd scope, never the host — the hard backstop the reservation
+# gate leans on. Only when reservation mode is on AND QG_MEM_CAP was not explicitly set;
+# token mode (default) keeps the legacy 10G default, so this changes no current behaviour.
+if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" && -z "${QG_MEM_CAP:-}" ]]; then
+    QG_MEM_CAP="$(_qg_repo_mem_cap "$SERVICE_NAME")"
+fi
 QG_MEM_CAP="${QG_MEM_CAP:-10G}"
 MEM_WRAP=()
 if [[ "$QG_MEM_CAP" != "0" ]]; then

@@ -1,7 +1,10 @@
 ---
 doc_type: codex-runbook
 title: DevOps CI walls — recovery recipes for the common deploy/CI walls (cicd role)
-summary: The DevOps (cicd) role's per-wall recovery runbook — v2-never-reported deadlock, behind-remote rebase, stuck LDR→main promotion, SIT/QG wall. Triage entry point is the /ci-status skill; every recipe cross-links its ci-cd-flow.md SSOT section instead of duplicating it.
+summary:
+  The DevOps (cicd) role's per-wall recovery runbook — v2-never-reported deadlock, behind-remote rebase, stuck LDR→main
+  promotion, SIT/QG wall. Triage entry point is the /ci-status skill; every recipe cross-links its ci-cd-flow.md SSOT
+  section instead of duplicating it.
 status: current
 nature: process
 asset_group: [meta]
@@ -19,17 +22,21 @@ related:
 created: 2026-07-02
 scope: [engineer, admin]
 audience: dev / operator / the cicd one-shot worker
-owner: 'the dispatched cicd one-shot worker (operator when the wall escalates to main)'
-cadence: 'per-wall (event-driven — a wall dispatch IS the execution; no scheduled run)'
-verifier: 'python -m server.ci_status <repo> returns blocked=false for the walled repo after the fix (and the wall''s escalation row closes with exit_reason=lifecycle-complete)'
+owner: "the dispatched cicd one-shot worker (operator when the wall escalates to main)"
+cadence: "per-wall (event-driven — a wall dispatch IS the execution; no scheduled run)"
+verifier:
+  "python -m server.ci_status <repo> returns blocked=false for the walled repo after the fix (and the wall's escalation
+  row closes with exit_reason=lifecycle-complete)"
 last_executed: 2026-07-02
 last_updated: 2026-07-02
 code_refs: [agent-orchestrator/server/ci_status.py, agent-orchestrator/server/escalation.py]
 execution:
   {
-    owner: 'the dispatched cicd one-shot worker (operator when the wall is escalated to main)',
-    cadence: 'per-wall (event-driven — a wall dispatch IS the execution; no scheduled run)',
-    verifier: 'python -m server.ci_status <repo> returns blocked=false for the walled repo after the fix (and the wall''s escalation row closes with exit_reason=lifecycle-complete)',
+    owner: "the dispatched cicd one-shot worker (operator when the wall is escalated to main)",
+    cadence: "per-wall (event-driven — a wall dispatch IS the execution; no scheduled run)",
+    verifier:
+      "python -m server.ci_status <repo> returns blocked=false for the walled repo after the fix (and the wall's
+      escalation row closes with exit_reason=lifecycle-complete)",
     last_executed: 2026-07-02,
   }
 ---
@@ -37,10 +44,10 @@ execution:
 # DevOps CI walls — recovery recipes (cicd role)
 
 The **DevOps role = the `cicd` one-shot worker** (`agent-orchestrator/agents/cicd.md`): dispatched per wall via
-`POST /api/escalate`, fixes the wall on the integration branch, exits. Wall routing:
-`merge_conflict` + `stuck_promotion_pr` → the **conflict-resolver** prompt; `data_pipeline_failure` → its own prompt;
-everything else (`ldr_qg_failure`, `sit_failure`, `main_ci_red`, `label_mismatch`) → the generic **cicd** prompt
-(`server/escalation.py` `_prompt_template_for`; regression-tested in `tests/test_escalation.py`).
+`POST /api/escalate`, fixes the wall on the integration branch, exits. Wall routing: `merge_conflict` +
+`stuck_promotion_pr` → the **conflict_resolver** prompt; `data_pipeline_failure` → its own prompt; everything else
+(`ldr_qg_failure`, `sit_failure`, `main_ci_red`, `label_mismatch`) → the generic **cicd** prompt (`server/escalation.py`
+`_prompt_template_for`; regression-tested in `tests/test_escalation.py`).
 
 **Triage entry point — ALWAYS first**: from the agent-orchestrator repo root,
 
@@ -95,7 +102,7 @@ squash-inflated `ahead_by`.
 
 **Fix**: read the promote PR's v2 state first (`/ci-status <repo>` + the PR checks). v2 MISSING → Recipe 1 against the
 PR head. v2 red → fix the root cause on LDR via quickmerge (the PR re-gates on the new head). PR conflicted → this is
-the `stuck_promotion_pr` wall (conflict-resolver prompt): reconcile per Recipe 2, keeping the merged combination.
+the `stuck_promotion_pr` wall (conflict_resolver prompt): reconcile per Recipe 2, keeping the merged combination.
 Promotion is `*/15` scheduled — do not hand-merge past a red gate; make the gate green instead.
 
 **SSOT**: ci-cd-flow.md § "LDR-trunk decoupling — quickmerge lands on LDR; the drain promotes; hotfix is the only
@@ -108,10 +115,10 @@ model — LDR trunk → staging → main".
 promotion path.
 
 **Fix**: `gh run view --log-failed` on the failing run; determine whether the break is a REAL public-surface change
-(breaking-detection is CONTENT-based — an AST diff; a 0.x-minor/docstring/refactor is NOT breaking) or a stale
-consumer pin. Real break → fix forward in the consumer(s) via quickmerge, or route the producer through the staging
-toggle per operator decision; false positive → fix the detector input (never relax the gate). Reproduce locally with
-the repo's `bash scripts/quality-gates.sh` before pushing the fix.
+(breaking-detection is CONTENT-based — an AST diff; a 0.x-minor/docstring/refactor is NOT breaking) or a stale consumer
+pin. Real break → fix forward in the consumer(s) via quickmerge, or route the producer through the staging toggle per
+operator decision; false positive → fix the detector input (never relax the gate). Reproduce locally with the repo's
+`bash scripts/quality-gates.sh` before pushing the fix.
 
 **SSOT**: ci-cd-flow.md § "WS-L SIT-rehome — the LDR→main cross-repo breaking gate (full-coverage, 2026-06-28)" + §
 "Breaking = public-surface change, NOT version phase (SIT scope; codified 2026-06-08)" + § "Local ↔ CI QG parity matrix
@@ -119,6 +126,6 @@ the repo's `bash scripts/quality-gates.sh` before pushing the fix.
 
 ## Escalation boundary (when the cicd worker stops)
 
-Self-resolve everything above in-band. Escalate to `main` (→ operator) ONLY on: a human-only hard-stop (force-push
-main, wallet keys, 1.0.0 graduation), an ambiguous product decision (which side of a conflict is intended), or a wall
-that re-fires after a completed fix (loop guard). Record the wall id + evidence in the escalation row before exiting.
+Self-resolve everything above in-band. Escalate to `main` (→ operator) ONLY on: a human-only hard-stop (force-push main,
+wallet keys, 1.0.0 graduation), an ambiguous product decision (which side of a conflict is intended), or a wall that
+re-fires after a completed fix (loop guard). Record the wall id + evidence in the escalation row before exiting.

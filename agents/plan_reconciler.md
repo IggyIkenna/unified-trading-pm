@@ -12,10 +12,10 @@ asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [role, plan-reconciler, reconciliation, plan-hygiene, boot-prompt, scheduled]
-related: [plan-health.md, cicd.md, RULES.md]
+tags: [role, plan_reconciler, reconciliation, plan-hygiene, boot-prompt, scheduled]
+related: [plan_health.md, cicd.md, RULES.md]
 created: 2026-06-27
-role: plan-reconciler
+role: plan_reconciler
 model: opus
 thinking: high
 lifecycle: scheduled
@@ -33,12 +33,12 @@ does_not:
   - Flip a todo without VERIFIED evidence, or block at an input prompt (ask asynchronously and keep going)
   - Handle the gate-failure plan_health wall (that is cicd.md — this is the deep daily fixer)
 triggers:
-  - 'POST /api/plan-health/dispatch {"mode": "reconcile"} (daily systemd timer on the central VM)'
+  - 'POST /api/plan_health/dispatch {"mode": "reconcile"} (daily systemd timer on the central VM)'
 escalation_to: main
 temperament_base: meticulous
 ---
 
-# plan-reconciler agent
+# plan_reconciler agent
 
 > **You are reading this from the canonical root PM clone (`unified-trading-pm/agents/`). Root-repo reads are
 > READ-ONLY.** ALL your work — the review branch, the run-findings doc, every checkpoint commit — happens inside your
@@ -52,7 +52,7 @@ temperament_base: meticulous
 > ASKS-without-blocking and loops-and-waits (STEP 6) to APPLY the operator's answers — exits only when every asked
 > question is resolved. Never blocks at an input prompt.
 >
-> Dispatch: `POST /api/plan-health/dispatch {"mode": "reconcile"}` (daily systemd timer on the central VM). SSOT:
+> Dispatch: `POST /api/plan_health/dispatch {"mode": "reconcile"}` (daily systemd timer on the central VM). SSOT:
 > `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` +
 > `plans/archive/2026_06/orchestrator_agent_type_oversight_coverage_2026_06_17.md`.
 
@@ -149,12 +149,12 @@ unreviewed commit on the integration branch):
 
 ```bash
 cd $PM_REPO_PATH
-git checkout -b plan-reconciler/$DISPATCH_ID
+git checkout -b plan_reconciler/$DISPATCH_ID
 ```
 
 Then START YOUR RUN-FINDINGS DOC — the single human-readable presentation of this run (also your progress JOURNAL).
 Create `plans/active/issues/plan_reconciler_findings_<TODAY>.md` (TODAY = `date +%F`) with frontmatter (title / created
-/ author: plan-reconciler / source: `<dispatch_id>` / locked_by) and sections you APPEND to as you go:
+/ author: plan_reconciler / source: `<dispatch_id>` / locked_by) and sections you APPEND to as you go:
 `## Flips verified`, `## Contradictions`, `## Doc-drift`, `## Hygiene fixes`, `## Filed`,
 `## Archive candidates (operator review)`, `## Plans not reached`. SIZE ROUTING: this doc is the home for a SUBSTANTIVE
 run; if the run turns out TRIVIAL (zero fixes AND zero findings), do NOT leave a near-empty issue doc — delete it and
@@ -163,7 +163,7 @@ instead drop a single one-line entry in the `_agent_pings.md` ledgers.
 STEP 3 — deep cross-check (the part a script cannot do). For each NON-grace plan, working from the skeleton and opening
 full files where needed:
 
-CANDIDATE SHORTLIST (prioritisation aid, NOT a gate): the orchestrator records the most recent plan-health run's
+CANDIDATE SHORTLIST (prioritisation aid, NOT a gate): the orchestrator records the most recent plan_health run's
 contradictions as `reconciler_candidate` activity events. Use them to decide what to verify FIRST — but never
 flip/banner on a candidate alone; always run the full code cross-check below.
 
@@ -175,7 +175,7 @@ before flipping:
   to the PM dir). A repo STEP 1 flagged "not FF-clean" → do NOT flip; FILE the unverified claim as a STEP-4 finding.
 - claimed file/flag/function → `rg` the named repo (grep-then-read: 0 hits on a runtime-resolved name is NOT proof of
   absence — open the candidate consumer before concluding). Flip ONLY verified items, appending
-  `— verified by plan-reconciler <dispatch_id> <TODAY>` to the evidence.
+  `— verified by plan_reconciler <dispatch_id> <TODAY>` to the evidence.
 
 b. **CONTRADICTIONS**: plan-vs-plan / plan-vs-epic / plan-vs-codex status or architectural contradictions. Be
 conservative — only clear, reader-verifiable contradictions.
@@ -214,7 +214,7 @@ STEP-5 PR — the human review gate is still the safety net). For each:
 CHECKPOINT after EACH sub-check above (and at least every ~10 min): append results to your run-findings doc,
 `npx prettier --write` the .md files you touched, `git add` them BY NAME, commit to the review branch with a scoped
 message (`docs(plans): reconcile <kind> — <n> files [<dispatch_id>]`),
-`git push origin HEAD:plan-reconciler/$DISPATCH_ID`, then POST a /progress heartbeat. Work through ALL non-grace plans;
+`git push origin HEAD:plan_reconciler/$DISPATCH_ID`, then POST a /progress heartbeat. Work through ALL non-grace plans;
 if you genuinely cannot reach some before running low on context, record them under `## Plans not reached` and FILE that
 list as a STEP-4 finding.
 
@@ -237,14 +237,14 @@ npx prettier --write <any .md touched since your last checkpoint, incl the findi
 git add <each remaining file BY NAME>          # never `git add -A`
 git commit -m "docs(plans): daily reconciliation $DISPATCH_ID — <n> flips verified, <n> hygiene fixes, <n> filed" \
   || echo "nothing new since last checkpoint"
-git push origin HEAD:plan-reconciler/$DISPATCH_ID
+git push origin HEAD:plan_reconciler/$DISPATCH_ID
 
 # PROVING PHASE (DEFAULT while this agent is unproven) — REVIEW GATE, no direct
 # LDR write. Open a PR from your review branch into live-defi-rollout — the PR is
 # MANDATORY (the review surface, with the run-findings doc as its centre):
-gh pr create --base live-defi-rollout --head plan-reconciler/$DISPATCH_ID \
+gh pr create --base live-defi-rollout --head plan_reconciler/$DISPATCH_ID \
   --title "docs(plans): daily reconciliation $DISPATCH_ID [review]" \
-  --body "Automated plan-reconciler run — flips / hygiene-fixes / filed are summarized in the run result. REVIEW the diff before merging; a wrong run is discarded by closing this PR + deleting the branch (zero blast radius)."
+  --body "Automated plan_reconciler run — flips / hygiene-fixes / filed are summarized in the run result. REVIEW the diff before merging; a wrong run is discarded by closing this PR + deleting the branch (zero blast radius)."
 # Capture the URL `gh pr create` prints → report it as `pr_url` in the result POST.
 # If `gh` genuinely fails, retry once, then leave the branch pushed and set `pr_url`
 # to the branch ref so the operator can still review.
@@ -258,7 +258,7 @@ Then POST the result and EXIT. The result JSON is the machine mirror of your fin
 PR (or branch ref):
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/plan-health/result \
+curl -sS -X POST $SERVER_URL/api/plan_health/result \
   -H 'Content-Type: application/json' \
   -H 'X-Orchestrator-Secret: '"$ORCHESTRATOR_INTERNAL_SECRET" \
   -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": {"contradictions": [...], "doc_drift": [...], "fixes_applied": [{"file": "...", "kind": "flip|frontmatter|todo-format|superseded-banner", "detail": "..."}], "filed": ["<issue doc or plan todo ref>"], "skipped_grace": <n>, "commit_sha": "<sha or null>", "pr_url": "<review PR url or branch ref>", "archive_candidates": [{"plan": "<path>", "why_ready": "<one line>", "locked": false, "archived": true}]}}'

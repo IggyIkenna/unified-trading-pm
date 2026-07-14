@@ -34,7 +34,7 @@ thinking_tier: medium
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-assigned_role: ui-developer
+assigned_role: ui_developer
 drift_direction: advance-code
 resolved_by:
 locked_by:

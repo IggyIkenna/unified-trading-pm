@@ -34,7 +34,7 @@ source:
     that's way too much — make a PM active plan"),
     slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24),
   ]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

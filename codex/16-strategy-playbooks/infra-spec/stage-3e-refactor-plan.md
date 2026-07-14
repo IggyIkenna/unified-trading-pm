@@ -9,7 +9,8 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, execution-service, features-service, instruments-service, strategy-service, unified-api-contracts]
+repos:
+  [deployment-api, execution-service, features-service, instruments-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [refactor, ui, uac, strategy, migration, docspec]
 related:
@@ -20,8 +21,17 @@ related:
     codex/09-strategy/architecture-v2/uac-registry-gaps.md,
   ]
 created: 2026-04-20
-authoritative_for: [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/14-customer-journeys/roadmap/next-waves.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+authoritative_for:
+  [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
+referenced_by:
+  [
+    codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+    codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+    codex/14-customer-journeys/roadmap/next-waves.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -635,13 +645,13 @@ Each item below has:
 
 - **Current state.** `codex/14-customer-journeys/` is hand-maintained. When rules change, 40+ docs may drift. No
   automated parity checker between `_ssot-rules/` and downstream docs.
-- **Target state.** `playbook-consistency-agent` (part of `plan-health-agent` family) runs on merges to
+- **Target state.** `playbook-consistency-agent` (part of `plan_health-agent` family) runs on merges to
   `codex/14-customer-journeys/` — verifies rule citations still point to live sections, verifies experience playbook
   grammar (9 sections per rule 01), verifies demo-restriction-profile references are valid.
 - **Blast radius.** Agents repo (existing infrastructure), GHA workflow.
 - **Blockers.** None — additive.
 - **Group.** G3
-- **Owner.** agents / plan-health team
+- **Owner.** agents / plan_health team
 - **Proposed follow-up plan.** `playbook_consistency_agent_2026_10.plan.md`
 - **Unlocks playbooks.** Long-term maintenance of the `14-customer-journeys/` SSOT.
 

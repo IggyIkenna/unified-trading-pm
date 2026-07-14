@@ -87,7 +87,7 @@ class FieldSpec:
     req: Req
     kind: str  # scalar|enum|enum_list|free_list|date|registry|registry_or_na|status
     enum: frozenset[str] | None = None
-    registry: str | None = None  # vm|epic|repos
+    registry: str | None = None  # vm|epic|repos|role
     conditional_on: tuple[str, str] | None = None  # (field, value) -> required iff fm[field]==value
 
 
@@ -123,6 +123,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("superseded_by", Req.O, "free_list"),
         FieldSpec("depends_on", Req.O, "free_list"),
         FieldSpec("source", Req.O, "scalar"),
+        FieldSpec("assigned_role", Req.E, "registry", registry="role"),
     ],
     "epic": [
         FieldSpec("name", Req.R, "scalar"),
@@ -200,10 +201,11 @@ class Registries:
     epics: frozenset[str]
     repos: frozenset[str]
     epic_vms: dict[str, str] = field(default_factory=dict)  # epic slug -> its assigned_vm (for plan inheritance)
+    roles: frozenset[str] = field(default_factory=frozenset)  # agents/*.md `role:` values
 
 
 def load_registries(pm_root: Path) -> Registries:
-    """Load the live registries the validator checks against (vm ids, epic slugs+vms, repo names)."""
+    """Load the live registries the validator checks against (vm ids, epic slugs+vms, repo names, agent roles)."""
     vms: set[str] = {"NA"}
     reg = pm_root / "orchestrator_vm_registry.yaml"
     if reg.exists():
@@ -228,7 +230,16 @@ def load_registries(pm_root: Path) -> Registries:
         m = json.loads(manifest.read_text())
         repos_obj = m.get("repositories") or {}
         repos.update(repos_obj.keys() if isinstance(repos_obj, dict) else repos_obj)
-    return Registries(frozenset(vms), frozenset(epics), frozenset(repos), epic_vms)
+    roles: set[str] = set()
+    agents_dir = pm_root / "agents"
+    if agents_dir.is_dir():
+        for p in agents_dir.glob("*.md"):
+            if p.name == "RULES.md":  # shared boot-rules meta, not a role charter (no `role:` field)
+                continue
+            afm, _ = parse_frontmatter(p.read_text())
+            if afm and afm.get("role"):
+                roles.add(str(afm["role"]))
+    return Registries(frozenset(vms), frozenset(epics), frozenset(repos), epic_vms, frozenset(roles))
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -339,6 +350,10 @@ def _validate_value(spec: FieldSpec, v: object, reg: Registries, doc_type: str) 
         for el in _as_list(v):
             if el not in reg.repos:
                 out.append(Violation(spec.name, Sev.SOFT, f"repo '{el}' not in workspace-manifest"))
+    elif spec.kind == "registry" and spec.registry == "role":
+        if v not in reg.roles:
+            msg = f"'{v}' not a role: value under agents/*.md — {sorted(reg.roles)}"
+            out.append(Violation(spec.name, Sev.HARD, msg))
     elif spec.kind == "date":
         s = str(v)
         if not (len(s) >= 10 and s[4] == "-" and s[7] == "-" and s[:4].isdigit()):

@@ -20,8 +20,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -42,7 +42,9 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 5)
 # Phase 5 — Verify at scale + codex SSOT update
 
 > **Dispatch:** `assigned_role: review` · **model: Sonnet** (default) · **effort: high**. `status: draft` — activated by
-> whichever of Phase 3 / Phase 4 finishes last. Final phase — closes the migration.
+> whichever of Phase 3 / Phase 4 finishes last. Final phase — closes the migration. **Pulled to LOCAL execution
+> 2026-07-14** (`assigned_vm: NA` / `execution_scope: local-only`, same as the rest of this phase chain) — see Phase 0's
+> Dispatch note for why.
 
 ## Context (read first — self-contained)
 

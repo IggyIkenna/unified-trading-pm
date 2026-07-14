@@ -38,7 +38,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 last_updated: 2026-07-12

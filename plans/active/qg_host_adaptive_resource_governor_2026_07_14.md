@@ -366,6 +366,45 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   cutover changes live admission fleet-wide — an operator-aware step, not an autonomous flip. Ledger + capacity probe
   are the two foundations it stands on; both are now in place.
 
+### 2026-07-14 — Phase 3b + 3c shipped: the governor engine is complete (flag-off) (slot 16)
+
+- **Phase 3b — dual-gate DECISION logic** `PM@3de0ee74d`. `_qg_admit_check` (pure, all-inputs-explicit) encodes the
+  two-clause RAM gate + CPU gate + oversize-solo; `_qg_repo_peak_mb` reads `max(local,vm)` from the baseline (unmeasured
+  → conservative 5500 MB, never a low guess). Test `test-qg-admit.sh`: all 6 decision branches + boundaries + the plan's
+  6×UTL worked example + the peak reader — 15 assertions, negative control, live smoke.
+- **Phase 3c — reservation-mode CUTOVER** `PM@6e818079a`. Flag-gated on `QG_GOVERNOR_MODE` (default `token` = the legacy
+  bucket, so **shipping changed NO live behaviour on any host**). Reservation mode = the ATOMIC check-and-reserve
+  (`_qg_try_reserve` under one ledger lock) + a wait/retry acquire + reservation-remove release; capacity override env
+  vars (`QG_FORCE_MEM_TOTAL_KB`/`_AVAIL_KB`/`QG_FORCE_CORES`) added for tests + the Phase-6 cross-host sim. Test
+  `test-qg-reservation.sh` proves the crux: **6 simultaneous acquirers on one heavy repo admit exactly 3 (budget fits 3)
+  and never over-admit** — the atomic-reserve guarantee — plus round-trip, oversize-solo, and default-token-inert.
+- **Ship discipline (operator directive):** every piece built LOCALLY, tested to green (4 governor suites + shellcheck
+  clean + token-mode-unchanged regression), only THEN shipped — and behind a default-off flag so no host can break.
+- **The whole governor engine is now on LDR, dormant.** What remains before it does anything: (a) the operator-gated
+  **flag flip** — set `QG_GOVERNOR_MODE=reservation` on ONE host, soak, then roll out (this is the "affects everyone"
+  cutover); (b) `QG_GOVERNOR_REPO` wiring in `base-service.sh` so acquire knows the repo; (c) cgroup `1.2×` cap + 80 %
+  valve + Slack (Phase 4); (d) Phase-0 canonical cost + unpinned parallel `cpu_weight`; (e) fairness + retire fixed K
+  (Phase 5) + cross-host verify (Phase 6).
+
+### 2026-07-14 — Phase 4 hard safety net shipped (slot 16, operator: "before the flip")
+
+- **Per-repo cgroup cap + 80 %-host-pressure valve** `PM@a6b5e24a5`, both RESERVATION-GATED (token mode byte-for-byte
+  unchanged — verified). This is the hard backstop the operator required before any flip.
+- **Cgroup cap**: `base-service.sh` sets `QG_MEM_CAP = _qg_repo_mem_cap(SERVICE_NAME) = 1.2 × baseline` (UTL 6558M,
+  instruments 4388M, floored 2048M) ONLY when `QG_GOVERNOR_MODE=reservation` — the existing `systemd-run --scope`
+  wrapper then OOM-kills a run that outgrows its baseline in its OWN scope, never the host (the 05-29 guard). Repo
+  identity is `SERVICE_NAME` (set by each repo's quality-gates.sh; matches the baseline keys), which the reservation
+  acquire already falls back to — so no separate `QG_GOVERNOR_REPO` wiring was needed.
+- **80 % valve**: `_qg_admit_check` gained an 8th arg `min_avail` (= 20 % of MemTotal); refuses ANY admit when
+  `avail < min_avail`, catching aggregate/non-QG pressure. `min_avail=0` (omitted) disables it, so the shipped
+  `_qg_admit_check` is back-compatible. `_qg_admit` + `_qg_try_reserve` compute + pass it.
+- Tests: `test-qg-admit.sh` +3 host-pressure cases +3 cap cases; all 4 governor suites green; shellcheck clean.
+- **Layered defense now in place for a flip:** reservations cap the SUM ≤ 70 % (atomic, no over-admit) → live + 80 %
+  clauses stop admits under pressure → cgroup cap is the HARD per-run ceiling if a baseline is stale → baselines fresh
+  (today). **Remaining (hardening, NOT flip-blockers):** Slack overrun alerts, fairness/FIFO aging, MAX_DURATION
+  queue-time exclusion, runtime abort-monitor. **Recommended first validation:** flip `QG_GOVERNOR_MODE=reservation` for
+  ONE manual QG run on this 61 GB host and watch it reserve/release before any fleet use.
+
 ## Deferred / open decisions
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.

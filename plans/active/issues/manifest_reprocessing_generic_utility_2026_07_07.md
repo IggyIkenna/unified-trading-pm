@@ -42,7 +42,7 @@ last_updated: 2026-07-12
 supersedes:
 superseded_by:
 depends_on:
-assigned_role: infra_engineering
+assigned_role: infra
 drift_direction: advance-code
 locked_since:
 ---

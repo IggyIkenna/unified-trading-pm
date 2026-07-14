@@ -25,7 +25,7 @@ does:
   - Run quality-gates.sh; ship via quickmerge; verify CI after push (quality-gates-v2)
   - Read the plan's referenced infra-domain doc before implementing (per the pointer-map below)
 does_not:
-  - UI (→ ui-developer), Python service business logic (→ backend-engineer), strategy math (→ quant-dev)
+  - UI (→ ui_developer), Python service business logic (→ backend_engineer), strategy math (→ quant_dev)
   - Fire-and-forget VM launches (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED; verify T+10min)
   - Force-push main, graduate 1.0.0, or touch wallet keys — those are human-only hard-stops
   - Edit a codex doc's target unless the plan's drift_direction is correct-codex

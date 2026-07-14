@@ -20,8 +20,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -40,8 +40,10 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 0)
 # Phase 0 — Unblock prod (schedule the reaper + graceful complete)
 
 > **Dispatch:** `assigned_role: infra` · **model: Sonnet** (default) · **effort: high**. First phase of the chain —
-> `status: active`, no `depends_on`, so it dispatches immediately. Every downstream phase is also `active` but
-> machine-held via `gate_on_depends` until its prerequisites finish.
+> `status: active`, no `depends_on`. **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` /
+> `execution_scope: local-only`) — AO's per-task turnaround on this chain was too slow (3 P0 tasks still `queued` after
+> 6h); driving the remaining P0 todos + the full downstream chain interactively instead. Do not flip back to
+> `assigned_vm: planning` without operator instruction.
 
 ## Context (read first — self-contained)
 

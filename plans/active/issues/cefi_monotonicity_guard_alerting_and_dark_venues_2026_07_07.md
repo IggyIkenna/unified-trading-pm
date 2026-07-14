@@ -44,7 +44,7 @@ last_updated: 2026-07-10
 supersedes:
 superseded_by:
 depends_on:
-assigned_role: infra_engineering
+assigned_role: infra
 drift_direction: advance-code
 locked_since:
 ---
@@ -238,7 +238,7 @@ CeFi venues, 64,096 captured cells:
        `LIGHTER`/`PACIFICA` keys stop 2026-06-26 (as originally diagnosed); but `LIGHTER-ZKSYNC` (215 instruments),
        `PACIFICA-SOLANA` (10), `EXTENDED-STARKNET` (101) all show **unbroken daily captures through 2026-07-09**
        (yesterday relative to this fix). Every other real cefi venue (BYBIT, DERIBIT, OKX-SWAP/SPOT/ FUTURES,
-       KRAKEN-SPOT/FUTURES, HYPERLIQUID, COINBASE-SPOT/FUTURES/CDE, BITGET/BITFINEX/BINANCE-*, UPBIT, ASTER) is also
+       KRAKEN-SPOT/FUTURES, HYPERLIQUID, COINBASE-SPOT/FUTURES/CDE, BITGET/BITFINEX/BINANCE-\*, UPBIT, ASTER) is also
        current through 2026-07-09; only the already-known-legacy bare `OKX`/`COINBASE` keys are stale (since 2026-03-02,
        unrelated pre-existing issue, not part of this incident).
     2. **The OOM is real, independently confirmed, and now fixed.** `gcloud run jobs executions list` for

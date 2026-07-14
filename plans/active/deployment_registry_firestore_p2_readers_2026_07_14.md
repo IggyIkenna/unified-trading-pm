@@ -21,13 +21,13 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: opus-required
 drift_direction: advance-code
 depends_on:
@@ -45,7 +45,8 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 2)
 
 > **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: max** — highest
 > blast-radius phase. `status: draft` — activated by Phase 1's last todo; `sequential: true` orders its todos. Runs in
-> PARALLEL with Phase 4 (both activated by Phase 1).
+> PARALLEL with Phase 4 (both activated by Phase 1). **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` /
+> `execution_scope: local-only`, same as the rest of this phase chain) — see Phase 0's Dispatch note for why.
 
 > **SAFETY-CRITICAL SEQUENCING:** the Phase-1 dual-write must OUTLIVE the last reader. Do the reader INVENTORY (first
 > todo) BEFORE cutting any reader. A missed reader that still parses GCS after cutover reads stale/empty data.

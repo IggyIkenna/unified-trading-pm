@@ -338,6 +338,11 @@ audit trail.
 - **2026-05-27 (cefi remediation §1 + §2)** — OKX Tardis `code 140` (request outside expiry window) misclassified as
   download error; ~1,250 spurious 400s per VM per window. Operator directive: "if the issue is of 401, we should not
   mark that one as honest-absence — that will make the data look corrupt."
+- **2026-06-29 CeFi live WS tick-capture intentional pause (confirmed 2026-07-14)** — availability manifest shows ZERO
+  `live_*` pipeline_mode rows for any CeFi venue/data_type since 2026-06-29. Operator/main confirmed this is an
+  **intentional pause** (cost-control VM-consolidation redesign + Pub/Sub live-sink cutover, both mid-flight around
+  2026-06-27–29), NOT a genuine outage — do not re-raise this as a data-correctness alarm until the migration lands and
+  a fresh `captured` row appears. See `plans/active/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`.
 
 ---
 

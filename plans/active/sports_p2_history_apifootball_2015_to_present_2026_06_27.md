@@ -216,6 +216,14 @@ drift_direction: advance-code
 - `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — the SEPARATE curated ~300-league
   reference expansion (out of scope; 94 only here)
 
+- 2026-07-14 ~11:45Z (operator ruling, session): **Full-enrichment phase SCOPED TO 2020-01-01 → present** ("golden
+  window then all the fixtures since 2020 for api football"). Sequencing: GW fleet (running, session-20 entry) → GW gate
+  verify → GW features recompute dispatch, and the 2020+ enrichment fleet launches after GW verification using the same
+  launcher/rate machinery (entity-sharded, SPOT, registry rate split). Budget math at ruling time: ~400k per-fixture
+  calls vs 450k/day key quota → ~1-2 days respecting daily-pipeline headroom (the launcher's /status-driven rate split
+  governs per-minute; the launch agent must compute the day budget from the live quota read and leave >=15% headroom for
+  the daily pipeline). 2018-2019 enrichment stays parked (not in the ruling).
+
 ## Progress Log
 
 ### 2026-06-27 — slot 4
@@ -1129,3 +1137,142 @@ NOT hand-edited; the parser re-derives from this plan's todos.
 - **Next after fleet completes**: rerun `launch-sports-manifest-rescan-vm.sh` (materialise `empty_confirmed` for
   no-enrichment cells), then the GW gate query in Todo 9, then the follow-on todos (full-history phase → features
   recompute → ML re-verify).
+
+### 2026-07-14T11:40Z — session 21 (data_engineering slot-7): T+25min health check — genuine forward progress confirmed, still in-flight
+
+Picked up this task via the queue; nothing new to launch (session 20's scoping + fleet launch is correct and complete)
+so this check confirms the fleet is healthy, not stalled, before handing off — no code/config change needed this
+session. Compared against session 20's own T+10min (11:29:13Z) checkpoint:
+
+| VM (entity)            |       T+10min (11:29Z) | T+25min (11:40Z, this check) | log lines (10min→25min) |
+| ---------------------- | ---------------------: | ---------------------------: | ----------------------: |
+| 111307 FIXTURE_EVENTS  | 2025-09-21 (day 21/91) |       2025-09-30 (day 30/91) |           1,438 → 2,387 |
+| 111346 FIXTURE_LINEUPS | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,050 → 2,078 |
+| 111414 FIXTURE_STATS   | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,054 → 1,930 |
+| 111447 PLAYER_STATS    | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,052 → 1,929 |
+| 111518 INJURIES        |  2025-09-08 (day 8/91) |       2025-10-28 (day 58/91) |             838 → 1,887 |
+
+All 5 `gcloud compute instances list` STILL RUNNING; zero Tracebacks/ERRORs in any `run.log` tail; INJURIES is per-date
+(not per-fixture) so it's moving much faster (58/91 = 64%) than the 4 per-fixture entities (~20-33%, on pace with
+session 20's own ~1-1.5h/VM ETA estimate). **Not fire-and-forget** — this is a real, evidenced re-check, not a status
+assumption. **Nothing actionable right now**: the GW gate query (Todo 9's own gate) and the manifest-rescan relaunch
+both depend on the fleet finishing (~35-65 more minutes at the observed per-entity pace), and session 20 already
+scoped + launched correctly — there is no bug to fix or launch to make until then. Checkbox NOT flipped (gate correctly
+not met yet). Handing off with the fleet verified healthy and progressing; next session should re-check
+`gcloud compute instances list --filter='name~af-backfill'` — once all 5 have self-deleted
+(`VM_SHUTDOWN_ON_COMPLETION=true`), run the manifest-rescan + GW gate query per session 20's own next-step note above.
+
+**Immediately re-dispatched to the next todo** (full-history enrichment phase) by the queue in the same turn. That
+todo's own text is explicit: "**after the GW gate above is GREEN**" — and the GW gate (this todo, directly above) is NOT
+green yet (same fleet, same ~35-65min remaining). Launching a second, full-history-scoped `af-backfill-*` fleet now
+would violate the plan's own golden-window-first sequencing (session 20's explicit design choice) and risks the two
+fleets competing for the shared api_football per-key rate budget the registry allocator assumes is scoped to one active
+wave. **Declined to start** — no launch made, no code touched. This is a genuine prereq-not-met (not a blocked
+question): the dispatcher handed it over without a wired gate-condition check between these two todos; deferring is the
+correct call per the todo's own stated sequencing, not a judgment call needing operator input.
+
+**Also re-dispatched to the "Features recompute for enriched dates" todo** (2 min later, 11:42Z) — same blocker: its own
+text says "after GW enrichment lands", fleet still RUNNING (unchanged from the check above). Declined for the same
+reason, no action taken. Not re-tabling the fleet-status table above since nothing material changed in 2 minutes — see
+the T+25min check immediately above for the last real evidence snapshot. Both this and the full-history todo will be
+genuinely actionable once the fleet self-deletes and the GW gate query (Todo 9) passes.
+
+**Also re-dispatched to the final "ML-readiness re-verify" todo** (11:43Z) — same transitive blocker (depends on the
+features recompute, which depends on GW enrichment). Declined, no action taken. **All 4 remaining todos in this plan are
+now confirmed exhausted for this session** (each transitively gated on the same in-flight fleet) — nothing further to do
+here until the fleet completes. This session's real contribution was the T+25min health check above (genuine evidence
+the fleet is healthy, not stalled) plus correctly declining 3 premature downstream dispatches rather than launching
+redundant/colliding work.
+
+### 2026-07-14T11:52Z — session 22 (data_engineering slot-8): T+~40min health check — INJURIES fleet member complete, others progressing steadily
+
+**Fleet status (11:50–11:52 UTC, ~12 min after session 21's T+25min check)**:
+
+- **INJURIES (`af-backfill-20260714-111518`) — COMPLETE**: `DEPLOYMENT_COMPLETED … exit_code=0` at 11:45:39Z;
+  self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true` (no longer present in `gcloud compute instances list`). Finished the
+  remaining 33 days (day 58/91 at session 21's 11:40Z check → day 91/91) in ~5 min.
+- **4 per-fixture VMs STILL RUNNING** (`gcloud compute instances list --filter='name~af-backfill'`, zone
+  asia-northeast1-c, all confirmed RUNNING):
+
+  | VM (entity)            |    Session 21 (11:40Z) | Session 22 (11:51Z, this check) | Days advanced (11min) | ETA to day 91 |
+  | ---------------------- | ---------------------: | ------------------------------: | --------------------: | ------------: |
+  | 111307 FIXTURE_EVENTS  | 2025-09-30 (day 30/91) |          2025-10-24 (day 54/91) |                   +24 |       ~17 min |
+  | 111346 FIXTURE_LINEUPS | 2025-09-20 (day 20/91) |          2025-09-24 (day 24/91) |                    +4 |         ~3.1h |
+  | 111414 FIXTURE_STATS   | 2025-09-20 (day 20/91) |          2025-09-23 (day 23/91) |                    +3 |         ~4.2h |
+  | 111447 PLAYER_STATS    | 2025-09-20 (day 20/91) |          2025-09-23 (day 23/91) |                    +3 |         ~4.2h |
+
+  Zero Tracebacks/ERRORs in any `run.log` tail (`gsutil cat … | tail -5` on all 4). Note: this slot's `/snap/bin/gcloud`
+  is broken (`snap-confine`/`cap_dac_override` error, unrelated to the fleet) — used
+  `/home/ubuntu/google-cloud-sdk/bin/gcloud` instead, which works.
+
+**Gate (GW gate, Todo 9's own criterion)**: still FAILS — 4/5 entities not yet at 0 pending within window. **Checkbox
+NOT flipped.**
+
+**Downstream todos** (full-history enrichment / features recompute / ML re-verify): re-checked, no material change since
+session 21's decline (~12 min elapsed, same GW-gate prereq not yet green) — not re-declining separately per-todo,
+session 21's reasoning stands unchanged.
+
+**Nothing actionable this session** beyond the health check — genuine external wait (SPOT VM fleet), not a judgment
+call. Slowest ETA ~4.2h (FIXTURE_STATS/PLAYER_STATS, unchanged bottleneck from session 21). Next session should re-check
+`gcloud compute instances list --filter='name~af-backfill'` (via the google-cloud-sdk path above, not the broken snap) —
+once all 4 remaining VMs have self-deleted, run the manifest-rescan + GW gate query per session 20's next-step note.
+
+### 2026-07-14T12:02Z — session 23 (data_engineering slot-2): T+~50min cheap re-check, unchanged, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 25 slot repos clean. Cheap re-check
+only (~10 min since session 22's T+40min check, well inside the ~4.2h slowest-VM ETA): all 4 remaining `af-backfill-*`
+VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creation timestamps as every prior session — no material
+change. This todo is transitively gated on the GW gate (Todo 9) going green, which needs the fleet to finish; nothing to
+launch or fix here, matching sessions 20-22's reasoning. Not re-running the manifest-rescan/GW gate query (would
+reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:05Z — session 24 (data_engineering slot-13): T+~1h cheap re-check, unchanged, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 24 slot repos clean. Cheap re-check
+only (~3 min since session 23's 12:02Z check): `gcloud compute instances list --filter='name~af-backfill'` shows all 4
+remaining VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creation timestamps as every prior session.
+`run.log` tails (via `/home/ubuntu/google-cloud-sdk/bin/gsutil`, the snap `gsutil`/`gcloud` on this slot is broken —
+`cap_dac_override` error, same as session 22's note) confirm active per-fixture fetches at ~12:03-12:05Z, zero
+Tracebacks/ERRORs. No material change — still transitively gated on the GW gate (Todo 9) going green, session 22's
+slowest-VM ETA (~4.2h from 11:52Z) puts completion around ~16:00Z. Not re-running the manifest-rescan/GW gate query
+(would reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:19Z — session 25 (data_engineering slot-8): FIXTURE_EVENTS complete (2/5 entities done), background watchdog continuing
+
+Held Todo 9 across this dispatch window using a background poll (5-min interval via `gcloud compute instances list`, the
+google-cloud-sdk path — this slot's snap `gcloud`/`gsutil` is broken, same `cap_dac_override` error other slots hit)
+instead of re-checking on every heartbeat.
+
+**FIXTURE_EVENTS (`af-backfill-20260714-111307`) — COMPLETE**: `DEPLOYMENT_COMPLETED … exit_code=0` at 12:15:06Z,
+processed the full window through 2025-11-30 (91/91 days), self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`. Combined
+with INJURIES (session 22), **2 of 5 fleet entities now done**.
+
+**3 remaining VMs (FIXTURE_LINEUPS/STATS/PLAYER_STATS)** — all three now at `date=2025-10-05` (day 35/91), up from day
+23-24/91 at session 22's 11:51Z check (~28 min elapsed → ~0.4 days/min → revised ETA ~2.3h for these three, down from
+the ~4.2h session-22 estimate — the SPOT VMs sped up, not slowed). Log line counts growing steadily (4,984-5,145), zero
+Tracebacks/ERRORs.
+
+**Gate**: still FAILS — 3/5 entities not yet at 0 pending. **Checkbox NOT flipped.** Background watchdog continues
+polling; next log entry will land when the fleet shrinks further or completes.
+
+### 2026-07-14T12:23Z — session 25 (data_engineering slot-3): cheap re-check, FIXTURE_EVENTS completed, 3 remain, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 25 slot repos clean. Cheap re-check
+(`gcloud compute instances list --filter='name~af-backfill'` via `/home/ubuntu/google-cloud-sdk/bin/gcloud` — snap
+`gcloud` on this slot is broken too, same `cap_dac_override` error noted by sessions 22/24): **111307 (FIXTURE_EVENTS)
+has completed and self-deleted** (no longer in the instance list — consistent with session 22's ~17min ETA from its
+11:51Z check, i.e. finished ~12:09Z). The 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447` PLAYER_STATS) are
+still `RUNNING`, same creation timestamps as every prior session; `run.log` tails via `gcloud storage cat` show active
+fetches at ~12:18-12:20Z, zero Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing
+to launch or fix here, matching sessions 20-24's reasoning. Not re-running the manifest-rescan/GW gate query (3/4 VMs
+not yet done). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:32Z — session 26 (data_engineering slot-16): cheap re-check, unchanged (9min since session 25), decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Cheap re-check only (~9 min since session 25's 12:23Z
+check): `gcloud compute instances list --filter='name~af-backfill'` (non-snap `/home/ubuntu/google-cloud-sdk/bin/`)
+shows the same 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447` PLAYER_STATS) still `RUNNING`, same creation
+timestamps — no death, no new completion. `run.log` tails confirm active fetches at ~12:30-12:32Z on all 3, zero
+Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing to launch or fix here,
+matching sessions 20-25's reasoning. Not re-running the manifest-rescan/GW gate query. Declining — no action taken, no
+code touched. `/skip-current-task`.

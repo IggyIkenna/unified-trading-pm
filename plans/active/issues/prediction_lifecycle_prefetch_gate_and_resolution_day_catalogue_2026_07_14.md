@@ -75,17 +75,29 @@ locked_since:
 
 ## Todos
 
-- [ ] [VERIFY] P0. Trace the propagation: IS lifecycle/catalogue cron → `market_lifecycle/by_canonical_group/day=` store
-      → `_load_lifecycles_from_gcs` → `cid_to_shard` (Polymarket) and the Kalshi equivalent. Quantify the distribution
-      of (attempted day − market `end_date`) over a sampled backfill window; pull the existing
+- [x] ✅ [VERIFY] P0. Trace the propagation: IS lifecycle/catalogue cron → `market_lifecycle/by_canonical_group/day=`
+      store → `_load_lifecycles_from_gcs` → `cid_to_shard` (Polymarket) and the Kalshi equivalent. Quantify the
+      distribution of (attempted day − market `end_date`) over a sampled backfill window; pull the existing
       `rejected_pre`/`rejected_post` gate counters from Cloud Logging rather than re-deriving. Gate: a one-page
-      confirmed data-flow diagram + counts, appended here.
-- [ ] [CODE] P1. Pre-fetch lifecycle gate in both adapters: filter `cid_to_shard`/`ticker_lifecycles` to ids whose
+      confirmed data-flow diagram + counts, appended here. — evidence: `unified-trading-pm@dea6c88fa` (Progress Log
+      data-flow + real-GCS-partition A/B + Cloud Logging attempt, see entry above); verdict CONDITIONALLY CONFIRMED
+      (resolution-day-scoped for backfilled dates, active-window for live-captured dates).
+- [x] ✅ [CODE] P1. Pre-fetch lifecycle gate in both adapters: filter `cid_to_shard`/`ticker_lifecycles` to ids whose
       bounds overlap the target day BEFORE `get_trades_batch`, reusing `_apply_lifecycle_gate`'s bounds comparison as a
       pre-check. Skipped combos write typed no-fetch honest absence (`EXPECTED_INSTRUMENT_NOT_LISTED` /
       `EXPECTED_INSTRUMENT_DELISTED` via the sentinel path), NOT attempted `SOURCE_RETURNED_ZERO`; shard atom unchanged;
       decision-338 untouched (no new EU seeding). Gate: unit test — a pre-genesis and a post-resolution day for a
-      fixture market produce zero network calls + EXPECTED_* rows; QG green.
+      fixture market produce zero network calls + EXPECTED_* rows; QG green. — evidence:
+      `market-tick-data-service@abe0904d` (shared `compute_lifecycle_window_ts`/`classify_lifecycle_prefetch_skip`/
+      `prefilter_ids_by_lifecycle_window` in `base_prediction_adapter.py`; pre-fetch gate in
+      `polymarket_adapter.py::_fetch_trades_for_date` + `_polymarket_helpers.py::_prefilter_trade_cids`;
+      `kalshi_adapter.py::_fetch_trades_for_date`; typed sentinel-path routing in
+      `engine/orchestrator/sentinels.py::_emit_tier3_for_dt` via new
+      `engine/orchestrator/     prediction_tier3_lifecycle.py`; fail-open coverage guard for the 07-01-outage class; 45
+      new/updated unit tests across `test_polymarket_adapter_lifecycle_gating.py` /
+      `test_kalshi_adapter_lifecycle_gating.py` / `test_sentinels_prediction_lifecycle_tier3.py`, all green; QG
+      `.qg_last_passed_sha=f4b19bad2` == HEAD before quickmerge; 173 total tests re-run clean (36 new/touched + 137
+      broader prediction/sentinel regression sweep, 0 failures)).
 - [ ] [CODE] P1 (contingent on the P0 VERIFY confirming propagation). Widen the per-day catalogue derivation from
       resolution-day-only to active-window (`created_at ≤ day ≤ end_date`) — MUST land together with (or after) the
       pre-fetch gate, otherwise attempt volume explodes. Gate: sampled day's cid list contains active non-resolving
@@ -98,3 +110,134 @@ locked_since:
 - 2026-07-14: Filed. Finding 1 verified read-only (file:line above); Finding 2's filter verified by direct read of
   `clob.py:335-341`, propagation deliberately left as the P0 VERIFY. Operator notified in the main session (big-finding
   rule: data-correctness class). No code changed.
+
+- 2026-07-14 [VERIFY P0 — CONFIRMED, CONDITIONALLY]: Traced the full propagation + read real GCS partitions (read-only,
+  no mutation). **Verdict: was active-life trading structurally never attempted? YES for backfilled historical days; NO
+  for days captured by the live daily cron.** The catalogue scoping (resolution-day-only vs active-window) is not a
+  fixed property of the pipeline — it's a property of WHICH CODE PATH populated a given day's catalogue.
+
+  **Data-flow (confirmed, file:line):**
+  1. `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/adapter.py:118-178`
+     (`PolymarketReferenceDataAdapter.get_instruments`) branches on `date < today` (`:136-141` vs `:142-176`):
+     - **PAST date** (`date < today` — i.e. any retroactive backfill run): `_fetch_clob_markets(date, now)` →
+       `clob.py:319-358` → resolution-day-scoped filter (`end_date_iso.startswith(f"{date}T")`).
+     - **TODAY/live** (`date is None` or `date == today`): Gamma API `active=true&closed=false` full active-markets
+       listing (`:142-161`) — the FULL active-window universe, not resolution-day-scoped. (A same-day CLOB supplement at
+       `:165-175` only registers `clob_token_ids` side-effect; it does not narrow the returned universe.)
+  2. That day's catalogue (`_group_df_clean` in
+     `instruments-service/instruments_service/engine/orchestrator/ process_write.py:280-406`) feeds BOTH stores MTDS
+     reads, from the identical per-day DataFrame:
+     - `market_lifecycle/by_canonical_group/day={date}/group={g}/venue={V}/market_lifecycle.parquet` via
+       `_write_market_lifecycle` (`instruments-service/instruments_service/engine/orchestrator/writers.py:411-484`,
+       called at `process_write.py:398-406`).
+     - `instrument_availability/by_date/.../instruments.parquet` (same function, `:330-344`).
+  3. MTDS reads BOTH for the SAME day: `cid_to_shard` ← `_load_instruments_from_gcs` (Polymarket
+     `polymarket_adapter.py:805-811`, reads `instrument_availability`); `cid_to_lifecycle`/`ticker_lifecycles` ←
+     `_load_lifecycles_from_gcs` → `_load_market_lifecycle_for_date`
+     (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/ base_prediction_adapter.py:91-218`,
+     PRIMARY path reads `market_lifecycle/by_canonical_group/day={date}/`). Since both GCS stores are written from the
+     identical per-day IS catalogue snapshot, **both inherit whichever scoping that day's IS catalogue fetch used** —
+     there is no independent widening/narrowing between the two stores.
+
+  **Empirical GCS reads (bucket `instruments-store-pred-prd-central-element-323112`, read-only):**
+  - `day=2026-07-06/group=BTC_UP_DOWN_DAILY/market_lifecycle.parquet`: 318 rows — 268 resolve ON 2026-07-06, **50 are
+    active but resolve LATER** (non-resolution-day markets present). Every row's `available_at` ≈
+    `2026-07-06T14:19:58Z`/`14:20:35Z` — i.e. **written ON that same calendar day** → this partition was populated by
+    the LIVE/current-day Gamma active-markets path (confirms active-window scoping for live-captured days).
+  - `day=2026-07-06/group=CPI_PRINT_PER_MONTH`: 1 row, `market_created_at=2026-06-10`, `settlement_time=2026-07-15`
+    (resolves 9 days LATER, not that day) — a genuinely long-lived active market correctly present in a live-captured
+    day's snapshot.
+  - `day=2025-03-14/group=BTC_UP_DOWN_DAILY/market_lifecycle.parquet`: **1 row**, resolves EXACTLY on 2025-03-14
+    (`settlement_time=2025-03-14T02:00:00Z`), `available_at=2026-06-26T17:38:10Z` — **written 15+ months after the
+    partition's own day** → this was a retroactive BACKFILL run. The row set is 100% resolution-day-scoped: zero
+    active-non-resolving rows, exactly the failure mode Finding 2 hypothesized.
+  - `day=2026-06-28` through `day=2026-07-03`: **zero objects** (`gcloud storage ls` → "matched no objects") — the known
+    cron-paused gap (`prediction_capture_incident_remediation_2026_07_06.md`); confirms these days were never attempted
+    at all (not a resolution-day artifact — genuinely absent).
+
+  **Distribution / counts**: not quantified as a full-corpus histogram (would require a whole-store walk, which is
+  review-blocking per single-walk discipline outside a dedicated backfill/audit plan) — the two-partition A/B comparison
+  above (a definitively LIVE-captured day vs a definitively BACKFILLED day) is sufficient to CONFIRM the conditional
+  propagation mechanism with direct evidence rather than inference. A full quantification (what fraction of the corpus
+  is backfill-scoped vs live-scoped) is exactly what the contingent catalogue-widening item below would need to size —
+  see its write-up.
+
+  **Cloud Logging (`rejected_pre`/`rejected_post` counters)**: attempted via `gcloud logging read` against project
+  `central-element-323112`. Broad `resource.type="gce_instance" AND textPayload:"..."` queries reliably TIMED OUT
+  (>60-90s) even at 1-2 day freshness with `limit=5`; a baseline no-filter query returned in <1s, confirming the
+  project's Cloud Logging is reachable but full-text `textPayload:` search is prohibitively slow without a `logName`
+  restriction. Narrowed to `logName="projects/central-element-323112/logs/python"` (the stream carrying this workspace's
+  live/paper Python process logs) — that query returns fast but **zero matches** for `"PolymarketAdapter"`,
+  `"KalshiAdapter"`, or `"lifecycle gating"` over a 90-day freshness window. Verdict: **not reachable** — prediction
+  backfill VM runs either don't ship structured logs to this sink, or none ran with this log line active in the sampled
+  90-day window. Per the todo's "if reachable" qualifier, this is a clean negative rather than a blocker; the
+  GCS-partition A/B comparison above is the load-bearing evidence for this VERIFY.
+
+- 2026-07-14 [CODE P1 — SHIPPED, `market-tick-data-service@abe0904d`]: Implemented the pre-fetch lifecycle gate exactly
+  as scoped (adapters + the Tier-3 sentinel-path typed reason; no catalogue widening — see below).
+  - **Shared bounds SSOT**: extracted `compute_lifecycle_window_ts` / `classify_lifecycle_prefetch_skip` /
+    `prefilter_ids_by_lifecycle_window` into `base_prediction_adapter.py` — the exact bounds comparison
+    `_apply_lifecycle_gate` (Polymarket) and `_collect_kalshi_frames` (Kalshi) already used for the post-fetch gate, now
+    reused for the NEW pre-fetch gate so both layers can never disagree. Both post-fetch gates were refactored to call
+    the shared helper (behavior-preserving; only a sub-second-truncation edge case, already Polymarket's convention, is
+    now uniform across both venues).
+  - **Pre-fetch gate**: `polymarket_adapter.py::_fetch_trades_for_date` (+
+    `_polymarket_helpers.py:: _prefilter_trade_cids`) and `kalshi_adapter.py::_fetch_trades_for_date` (new, extracted
+    from `download_batch` to stay ≤50L) now filter the known-id list to ids whose lifecycle window overlaps the target
+    day BEFORE `get_trades_batch` — zero network calls for out-of-window ids. Fail-open guard
+    (`_MIN_LIFECYCLE_COVERAGE_FRACTION=0.5`): an empty or suspiciously-small lifecycle map bypasses gating entirely for
+    that day (fetches every known id, logs a WARNING) — the 07-01-outage-class guard the task required.
+  - **Typed no-fetch honest absence via "the sentinel path"**: `engine/orchestrator/sentinels.py::_emit_tier3_for_dt`
+    (new `engine/orchestrator/prediction_tier3_lifecycle.py` module, extracted to stay ≤900L) now classifies each
+    expected-but-uncaptured POLYMARKET/KALSHI `trades` instrument_id via the SAME bounds comparison and routes to
+    `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED|EXPECTED_INSTRUMENT_DELISTED)` instead of the fallback
+    `record_empty(reason=SOURCE_RETURNED_ZERO)` — scoped to POLYMARKET/KALSHI `trades` only (verified via a dedicated
+    regression test that BINANCE/other dts never touch the new lifecycle loader). Decision-338 untouched: no new
+    manifest rows/EU-seeding at per-conditionId grain in the enumerator — this only re-types the reason on rows that
+    already exist in the Tier-3 fan-out today.
+  - **Post-fetch gate kept as defense-in-depth** (unchanged behavior, just refactored onto the shared helper).
+  - **Tests**: 45 new/updated unit tests (pre-genesis / post-resolution / empty-map-bypass / active-window-fetched ×
+    both adapters + 6 new sentinels.py Tier-3 tests) — all green; a 137-test broader regression sweep across
+    prediction/sentinel/manifest-finalize/CF-11 test files — 0 failures. QG `.qg_last_passed_sha=f4b19bad2` ==
+    pre-quickmerge HEAD; quickmerge landed `abe0904d` on `live-defi-rollout` (confirmed ancestor of
+    `origin/live-defi-rollout`).
+  - See `## Catalogue-widening scope (contingent P1 — NOT implemented this pass)` below for the item deliberately
+    deferred per the task's explicit instruction (now CONFIRMED necessary by the P0 VERIFY, not merely hypothesized).
+
+## Catalogue-widening scope (contingent P1 — NOT implemented this pass)
+
+Per the P0 VERIFY above, this item is now CONFIRMED necessary (not merely hypothesized) for the backfilled portion of
+the historical corpus. Scope, written up per instruction rather than implemented:
+
+- **What changes**:
+  `instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/ clob.py:319-358`
+  (`_fetch_clob_markets`) filters `raw_markets` by `end_date_iso.startswith(f"{date}T")` (resolution day only). Widen to
+  an ACTIVE-WINDOW filter: keep a market when `start_date ≤ day_end AND end_date_iso > day_start` (i.e. the market's
+  `[created, resolved)` window overlaps the requested day) — the SAME semantics the new `market-tick-data-service`
+  shared helper `base_prediction_adapter.classify_lifecycle_prefetch_skip`/`compute_lifecycle_window_ts` already encode
+  for MTDS's gates (2026-07-14, this issue's Finding 1 fix); IS's widened filter should mirror that comparison so both
+  services agree on "what counts as active that day."
+- **Kalshi side**: Kalshi's IS adapter
+  (`instruments-service/instruments_service/reference_data/adapters/prediction/ kalshi.py`) was NOT inspected for an
+  equivalent per-date filter in this pass — must be checked for the same resolution-day-vs-active-window distinction
+  before/alongside the Polymarket fix (Kalshi's MTDS-side lifecycle store is fed by the SAME
+  `market_lifecycle/by_canonical_group/` writer, so if Kalshi's IS-side catalogue fetch has an analogous per-date
+  filter, it needs the identical widening).
+- **Ordering dependency (why this waits on Finding 1's fix, not the reverse)**: the MTDS pre-fetch gate MUST land BEFORE
+  (or with) this widening — otherwise widening the catalogue explodes attempt volume: EVERY (venue, active-window-day)
+  pair becomes a fetch attempt again, undoing the whole point of this issue. With the pre-fetch gate live (shipped this
+  pass), a widened catalogue instead produces MORE `cid_to_shard` entries per day, but the pre-fetch gate still filters
+  to the ones actually in-window — net effect is bounded, not explosive.
+- **Backfill cost**: widening the catalogue for FUTURE backfill runs is cheap (same CLOB scan, different filter
+  predicate — `_get_raw_clob_markets_cached` already caches the full ~900K-market scan per process). The bigger cost is
+  RE-BACKFILLING the historical corpus that was ALREADY captured resolution-day-scoped (e.g. the 2025-03-14 partition
+  above) — that is a full re-run of IS's catalogue step for every historical day, which is exactly the kind of
+  multi-week compute-cost decision that needs an operator call, not an autonomous one.
+- **Verification gate** (per the original todo text): a sampled day's cid list must contain active non-resolving markets
+  after the fix (repeat the `day=2025-03-14`-style A/B read above and confirm the resolving-vs-active-not- resolving
+  ratio now resembles the `day=2026-07-06` live-captured shape); attempt volume must stay bounded by the MTDS pre-fetch
+  gate (already shipped); QG green in instruments-service.
+- **Recommended sequencing**: (1) already done — MTDS pre-fetch gate (this issue, Finding 1). (2) Kalshi IS-adapter
+  audit for the same defect. (3) Widen `_fetch_clob_markets` (+ Kalshi equivalent if found) behind an operator-reviewed
+  plan, since it changes attempt volume materially and gates a historical re-backfill cost/benefit call. (4) Re-measure
+  per this issue's P2 VERIFY todo.

@@ -27,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
@@ -91,7 +91,7 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
      Override to `InstrumentType.EQUITY_PERP` when the base ∈
      `LINKED_EQUITY_PERP_BASES`/`STANDALONE_EQUITY_PERP_SYMBOLS` (UAC `crypto_equity_link.tracks_equity()` / the
      base-universe). Mirror the existing OPTION special-case in `_passes_asset_filter` / the type path. Tokenized-equity
-     venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`. 2a. **UPDATED 2026-07-10 (operator, aligning with the
+     venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`. 2a. \*\*UPDATED 2026-07-10 (operator, aligning with the
      canonical-instrument-id decision) — `instrument_id`/ `instrument_key` construction for EQUITY_PERP/TOKENIZED_EQUITY
      MUST route through the shared canonical builder
      (`unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id`, or the venue's own

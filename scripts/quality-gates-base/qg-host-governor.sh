@@ -78,6 +78,7 @@ _qg_is_macos() { [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; }
 
 # Total physical RAM, in KB. QG_MEMINFO_PATH overrides the source for tests.
 _qg_mem_total_kb() {
+    [[ -n "${QG_FORCE_MEM_TOTAL_KB:-}" ]] && { echo "$QG_FORCE_MEM_TOTAL_KB"; return; } # test / cross-host sim
     if _qg_is_macos; then
         local b; b="$(sysctl -n hw.memsize 2>/dev/null || echo 0)"
         echo $(( b / 1024 ))
@@ -90,6 +91,7 @@ _qg_mem_total_kb() {
 # macOS has no equivalent, so approximate with the pages the kernel can hand out
 # without swapping — free + inactive + purgeable + file-backed — times page size.
 _qg_mem_available_kb() {
+    [[ -n "${QG_FORCE_MEM_AVAIL_KB:-}" ]] && { echo "$QG_FORCE_MEM_AVAIL_KB"; return; } # test / cross-host sim
     if _qg_is_macos; then
         local ps vms free inact purge filed pages
         ps="$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)"
@@ -107,6 +109,7 @@ _qg_mem_available_kb() {
 
 # Physical core count (not logical/HT).
 _qg_physical_cores() {
+    [[ -n "${QG_FORCE_CORES:-}" ]] && { echo "$QG_FORCE_CORES"; return; } # test / cross-host sim
     local c=0
     if _qg_is_macos; then
         c="$(sysctl -n hw.physicalcpu 2>/dev/null || echo 0)"
@@ -227,7 +230,11 @@ _qg_ledger_count_unlocked() {
 #   else ADMIT. Echoes the decision token; returns 0 iff the run may proceed now.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 _qg_admit_check() {
-    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7"
+    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7" min_avail="${8:-0}"
+    # 0. Host-pressure valve — refuse ANY admit (regardless of this run's size) if the host is
+    #    already past 80 % used, i.e. avail < min_avail (= 20 % of MemTotal). Catches aggregate /
+    #    non-QG pressure the per-run clauses miss. min_avail=0 (default/omitted) disables it.
+    if (( min_avail > 0 && avail < min_avail )); then echo "WAIT_HOST_PRESSURE"; return 1; fi
     if (( this > budget )); then
         if (( reserved == 0 )); then echo "SOLO_ADMIT"; return 0; fi
         echo "SOLO_WAIT"; return 1
@@ -259,10 +266,20 @@ PY
     [[ "${peak:-0}" -gt 0 ]] && echo "$peak" || echo "${QG_UNMEASURED_PEAK_MB:-5500}"
 }
 
+# Per-repo HARD cgroup cap for QG_MEM_CAP = 1.2 × baseline peak, as a systemd size string
+# (e.g. "6600M"). The reservation governor sets QG_MEM_CAP to this so a run that outgrows its
+# baseline is OOM-killed in its OWN scope, never the host. Floored at 2048M (never absurdly tight).
+_qg_repo_mem_cap() {
+    local mb; mb="$(_qg_repo_peak_mb "$1")"
+    mb=$(( mb * 12 / 10 ))
+    (( mb >= 2048 )) || mb=2048
+    echo "${mb}M"
+}
+
 # Live admission decision for <repo>: gathers ledger + capacity, calls _qg_admit_check.
 # Echoes the decision token; returns 0 iff admit-now. (Not yet wired into acquire.)
 _qg_admit() {
-    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots
+    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots min_avail
     this="$(_qg_repo_peak_mb "$repo")"
     reserved="$(_qg_ledger_reserved_mb)"
     running="$(_qg_ledger_count)"
@@ -274,7 +291,8 @@ _qg_admit() {
     floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}" # MB (default 10% of total)
     (( floor >= 2048 )) || floor=2048
     slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
-    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots"
+    min_avail=$(( mt / 1024 * 20 / 100 ))             # 20% of MemTotal → host-pressure floor
+    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots" "$min_avail"
 }
 
 # Base file-descriptor for the token locks. The original used bash >=4.1's
@@ -295,6 +313,52 @@ _qg_governor_deprioritise() {
     ionice -c2 -n7 -p "$$" >/dev/null 2>&1 || true
 }
 
+# ── RESERVATION-MODE ACQUIRE (Phase 3c — opt-in via QG_GOVERNOR_MODE=reservation) ─
+# Default mode is "token" (the legacy bucket below), so this path is INERT until the
+# flag is set — shipping it changes NO live behavior. When active, admission is the
+# ATOMIC check-and-reserve: sweep + read + decide + reserve all under ONE ledger lock,
+# so N simultaneous acquirers serialize and can never over-admit past the RAM budget.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+
+# UNLOCKED body — call ONLY via _qg_ledger_with_lock. Decides + reserves atomically.
+_qg_try_reserve() { # <repo> <this_peak_mb> <pid>
+    local repo="$1" this="$2" pid="$3" f reserved running mt ma cores frac_pct cpu_pct budget avail floor slots min_avail decision
+    _qg_ledger_sweep_unlocked
+    f="$(_qg_ledger_file)"
+    reserved="$( [[ -f "$f" ]] && awk '{s+=$3} END{printf "%d", s+0}' "$f" || echo 0 )"
+    running="$( [[ -f "$f" ]] && awk 'END{print NR+0}' "$f" || echo 0 )"
+    mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
+    frac_pct="$(awk -v x="${QG_MEM_SAFETY_FRAC:-0.70}" 'BEGIN{printf "%d", x*100}')"
+    cpu_pct="$(awk -v x="${QG_CPU_FRAC:-0.80}" 'BEGIN{printf "%d", x*100}')"
+    budget=$(( mt / 1024 * frac_pct / 100 )); avail=$(( ma / 1024 ))
+    floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}"; (( floor >= 2048 )) || floor=2048
+    slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
+    min_avail=$(( mt / 1024 * 20 / 100 ))  # host-pressure floor (20% of MemTotal)
+    decision="$(_qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots" "$min_avail")"
+    case "$decision" in ADMIT|SOLO_ADMIT) _qg_ledger_add_unlocked "$pid" "$repo" "$this" 0 ;; esac
+    echo "$decision"
+}
+
+_qg_governor_acquire_reservation() {
+    [[ -n "${_QG_RESERVED_PID:-}" ]] && return 0   # idempotent — already holding a reservation
+    local repo this waited=0 decision
+    repo="${QG_GOVERNOR_REPO:-${SERVICE_NAME:-unknown}}"
+    this="$(_qg_repo_peak_mb "$repo")"
+    while true; do
+        decision="$(_qg_ledger_with_lock _qg_try_reserve "$repo" "$this" "$$")"
+        case "$decision" in
+            ADMIT|SOLO_ADMIT)
+                _QG_RESERVED_PID=$$
+                _qg_governor_deprioritise
+                QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
+                [[ "$waited" -gt 0 ]] && echo "[qg-governor] ${repo} reserved ${this}MB (${decision}) after ${waited}s" >&2
+                return 0 ;;
+        esac
+        sleep 2; waited=$(( waited + 2 ))
+        (( waited % 30 == 0 )) && echo "[qg-governor] ${repo} (${this}MB) waiting: ${decision} ${waited}s" >&2
+    done
+}
+
 # Acquire one host token (blocks until free). Holds an flock'd fd for the run's lifetime.
 #
 # Exposes QG_GOVERNOR_WAIT_SECONDS (global, accumulated across calls — 0 if never
@@ -305,6 +369,7 @@ _qg_governor_deprioritise() {
 # (qg_host_governor_severe_contention_2026_07_13.md).
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
+    [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]] && { _qg_governor_acquire_reservation; return; }
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
     [[ -n "${_QG_GOV_FD:-}" ]] && return 0   # already holding a token (idempotent)
 
@@ -338,8 +403,15 @@ qg_governor_acquire() {
     done
 }
 
-# Release the held token (also released automatically when the process exits).
+# Release the held token/reservation (also released automatically when the process exits —
+# reservations by PID-liveness sweep, tokens by flock auto-drop on close).
 qg_governor_release() {
+    if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
+        [[ -n "${_QG_RESERVED_PID:-}" ]] || return 0
+        _qg_ledger_remove "$_QG_RESERVED_PID"
+        _QG_RESERVED_PID=""
+        return 0
+    fi
     [[ -n "${_QG_GOV_FD:-}" ]] || return 0
     flock -u "$_QG_GOV_FD" 2>/dev/null || true
     eval "exec ${_QG_GOV_FD}>&-" 2>/dev/null || true   # explicit FD (bash 3.2-compatible)

@@ -324,6 +324,42 @@ the todos already promised.
       fabricated constants. Was blocked at the quickmerge ship step by live sibling-agent WIP in
       `unified-trading-library`/`unified-api-contracts`; shipped via the dirty-deps carve-out direct push (those repos
       not touched) once the fix had sat ready long enough to justify it.
+- [x] ✅ [FIX] P0. FLUID `lending_indices` revert-data guard never fires (`fluid_adapter.py:394,399-401,422` in this
+      doc's original line numbers) — **discovered already fixed by an untracked concurrent workflow, doc updated to
+      reflect it (2026-07-14).** `market-tick-data-service@3c00b504` (2026-07-08, "fix: Fluid lending_indices via
+      FluidVaultResolver.getVaultEntireData (root-cause ContractCustomError fix)") + follow-ups `83abcc13`/`4bb92b28`
+      rewrote the vault-state read path: Fluid vaults never exposed `totalSupply()`/`totalBorrow()`/`exchangePrice()` as
+      direct vault-contract view functions (this doc's root-cause finding was correct) — the fix switches to the real
+      periphery contract (`FluidVaultResolver.getVaultEntireData()`, live-verified address
+      `0xA5C3E16523eeeDDcC34706b0E6bE88b4c6EA95cC`) and wraps every resolver call in
+      `except (OSError, ValueError, RuntimeError, Web3Exception, DecodingError)` — `ContractCustomError` IS a subclass
+      of `web3.exceptions.Web3Exception` (confirmed via the repo's installed web3 6.20.3: `ContractCustomError.__mro__`
+      → `ContractLogicError` → `Web3Exception`), so the guard now genuinely catches it; no crash. This doc's own Todos
+      list never got a checkbox for this fix (it shipped via a different, untracked workflow the same week) — added
+      retroactively after re-verifying rather than trusting the commit message: 5/5
+      `tests/unit/market_interface/adapters/defi/test_fluid_utilization.py` pass, and a live scratchpad smoke fetch (no
+      GCS writes) for vault `0xeAbBfca72F8a8bf14C4ac59e69ECB2eB69F0811C` (ETH/USDC) on `2026-06-01` returned **96/96
+      real 15-min samples** (utilization ~0.89-0.92, plausible supply/borrow exchange prices ~1.08-1.20) with zero
+      errors. **FLUID lending_indices is no longer "100% broken."** **BUT a new, distinct, genuine gap was found during
+      this same verification** (not the original bug — a different root cause) — see the new `[VERIFY]` todo directly
+      below.
+- [ ] [VERIFY] P1. **NEW (2026-07-14) — FLUID lending_indices silently returns 0 rows for ~18 months of its own declared
+      availability window.** `FLUID_LAUNCH = datetime(2024, 6, 1)` (`fluid_adapter.py:281`) is the adapter's own claim
+      of when real Fluid data should exist, but the `FluidVaultResolver` periphery contract the fix above depends on was
+      only deployed **2025-11-26** (block 23,881,723 — bisected live via `eth_getCode` at the dispatching agent's host:
+      no code at block 23,881,722, code present at 23,881,723, block timestamp `2025-11-26T08:27:11Z`). For any date
+      before that, `getVaultEntireData()` reverts with empty return data (`web3.exceptions.BadFunctionCallOutput`,
+      itself a `Web3Exception` subclass, so it's caught by the same guard the fix above verified) — the call fails
+      silently and cleanly, no crash, but `download_market_data()` returns 0 rows for a genuinely real ~18-month window
+      (2024-06-01 → 2025-11-26) where real Fluid vault activity existed on-chain, just not readable via this resolver.
+      Live-verified the boundary directly: `getVaultEntireData()` at block 22,606,141 (2025-06-01) →
+      `BadFunctionCallOutput`; at blocks 24,000,000 / 25,000,000 / 25,500,000 (all post-deployment) → clean success with
+      real decoded data. **This is a genuine coverage gap, not a crash risk and not the bug this doc originally filed**
+      — it needs research into an alternate historical read path (an older resolver contract address if one exists,
+      direct storage-slot reads via the struct layout's documented
+      `supplyExchangePriceSlot`/`borrowExchangePriceSlot`/`userSupplySlot`/`userBorrowSlot` fields, or an
+      indexer/subgraph fallback for the pre-resolver period) before it can be fixed — NOT a ≤30-min fix, so not
+      attempted inline per the findings-triage rule. (repo: `market-tick-data-service`)
 - [ ] [VERIFY] P1. Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session (out
       of dispatched scope).
 - [x] [FIX] P1. OKX/BYBIT margin-type mislabeling — **already fixed by a concurrent sibling workflow**,
@@ -362,9 +398,23 @@ the todos already promised.
   is SDK TS constants, not the dead Data API) and the SolBlaze/BlazeStake dead `/api/v1/exchange_rate` endpoint fixed
   (real live endpoint is `/api/v1/stats`, confirmed live 2026-07-10 — this one was NOT actually dead code,
   `_tier3_bsol_rest` in `solana_lst_archival.py` is a real live production code path that could never succeed before
-  this fix; parser + APY unit conversion updated to match, shipped `market-tick-data-service@f4a118be`). Remaining ~13
-  items in the P2/P3 list not attempted (low value, several already cross-referenced/deferred elsewhere, some touch
-  `instrument_key` format which needs the dedicated canonicalization effort, not a cosmetic batch pass).
+  this fix; parser + APY unit conversion updated to match, shipped `market-tick-data-service@f4a118be`). **2026-07-14
+  addition**: `bridge_events_handler.py` (~256, "Across deposit `symbol` hardcoded `USDC`") also fixed —
+  `market-tick-data-service@f4b19bad` (quickmerge-landed on `live-defi-rollout`, ancestor-verified) — added a real
+  `inputToken`-address→symbol lookup (`_ACROSS_TOKEN_SYMBOLS`, covers USDC/USDT/WETH/DAI/WBTC/native-ETH, the tokens
+  that dominate Across's real Ethereum volume) with honest fallback to the raw address for unknown tokens (never a
+  fabricated symbol), matching the Stargate sibling function's real-symbol behavior in the same file. Also fixed the
+  test suite's mock-matches-the-bug: the existing test asserted `symbol == "USDC"` against a FAKE `"0xusdc"` mock
+  address (would have passed even with the bug fixed to always-return-fake-USDC) — updated to a real checksum USDC
+  address, plus 2 new regression tests (real-WETH-address→"WETH" and unknown-address→raw-address-fallback). Note: this
+  handler is currently DEAD CODE in production — confirmed still true 2026-07-14 — `across`/`stargate` are never
+  registered in `SUBGRAPH_IDS`, so `_fetch_bridge_events` returns `[]` before reaching this code path (see the P2/P3
+  bug-list entry right above the one this item addresses) — fixing the mislabeling now closes the "landmine" this doc's
+  own P2/P3 note already flagged ("a latent corruption risk if that gap is ever fixed without also fixing this") before
+  someone registers the subgraph IDs and ships real, silently-mislabeled data. Remaining ~12 items in the P2/P3 list not
+  attempted (low value, several already cross-referenced/deferred elsewhere, some touch `instrument_key` format which
+  needs the dedicated canonicalization effort, not a cosmetic batch pass) — see the 2026-07-14 Progress Log entry below
+  for a one-line diagnosis on each.
 
 ## Progress Log
 
@@ -531,3 +581,61 @@ the todos already promised.
      detail gets re-wrapped into a generic `aiohttp.ClientError` before `classify_graph_error()` sees it, so it always
      lands on `UNKNOWN` even though `AUTH_FAILURE`/`INDEXING_ERROR`/`SUBGRAPH_NOT_FOUND` codes already exist in UAC's
      `VENUE_ERROR_MAP` and would be reachable with more precise error-detail propagation.
+- **2026-07-14 ("fix any broken adaptors" operator dispatch, scope: market-tick-data-service + read-only
+  instruments-service/UAC reference)** — Targeted this doc's FLUID finding (P0, "revert-data guard never fires") per the
+  operator's explicit priority list. Before writing any code, verified whether it was still broken: it was NOT — already
+  fixed by an untracked concurrent workflow on 2026-07-08 (`market-tick-data-service@3c00b504` + `83abcc13`/`4bb92b28`),
+  6 days before this doc's own Todos list would have credited it. Re-verified live rather than trusting the commit
+  message (unit tests + a scratchpad-only smoke fetch, no GCS writes — see the new `[FIX] P0` todo above for full
+  detail): 96/96 real 15-min FLUID rate-index samples returned for a 2026-06-01 vault fetch, zero crashes. **Found one
+  genuine NEW gap while verifying** (not the original bug): the resolver contract the fix depends on
+  (`FluidVaultResolver`) was only deployed on-chain 2025-11-26, so the ~18-month window between `FLUID_LAUNCH`
+  (2024-06-01) and then silently returns 0 rows (no crash — just no data reachable via this path yet) — filed as a new
+  `[VERIFY] P1` todo above, NOT fixed inline (needs research into an alternate historical read path, not a ≤30-min
+  change). Also re-verified this doc's MORPHO-adjacent lending fix (tracked in the sibling
+  `defi_morpho_lending_indices_never_wired_2026_07_12.md`, not duplicated here) is likewise still genuinely in place —
+  see that doc's own 2026-07-14 Progress Log entry.
+  - **One additional small+clear fix shipped** (findings-triage "outside-plan small+clear → ≤30 min" rule):
+    `bridge_events_handler.py`'s hardcoded `"symbol": "USDC"` for every Across deposit (P2/P3 list, this doc) — real
+    `inputToken`-address→symbol lookup added, honest raw-address fallback for unknown tokens, 2 new regression tests,
+    the existing test's mock-matches-the-bug fixed too (see the updated P3-sweep todo above for full detail). Shipped
+    `market-tick-data-service@f4b19bad` — full `quality-gates.sh --no-fix` green (ALL QUALITY GATES PASSED, sentinel
+    verified; the ship rode the content-scoped sentinel after two foreign fast-forwards landed with byte-identical
+    `--files`), quickmerge-landed on `live-defi-rollout`, ancestor-verified against `origin/live-defi-rollout`. This
+    handler is currently dead code in production (across/stargate never registered in `SUBGRAPH_IDS`) — fixed anyway per
+    this doc's own explicit "latent corruption risk if that gap is ever fixed without also fixing this" framing.
+  - **Remaining P2/P3 list items — assessed, NOT fixed this dispatch** (per the operator's explicit scope: "enumerate
+    them with one-line diagnosis each" rather than force through items that aren't genuinely small/clear or aren't in
+    this dispatch's target repo). One-line diagnosis each:
+    1. `_instrument_enums.py` vs `solana_defi_handler.py:338-339` SOLANA_LENDING naming — cosmetic only, zero functional
+       impact, not worth a dedicated commit.
+    2. `balancer.py` fetches real `pool.type` but never persists it — instruments-service, not this dispatch's repo;
+       small in isolation but needs an IS-side schema/consumer check first (does anything expect this field?).
+    3. `venue_adapter_keys.py` missing `JUPITER-SOLANA` `NO_ADAPTER_YET` sentinel — lives in `unified-api-contracts`,
+       out of this dispatch's write-scope (read-only UAC reference only); genuinely small, safe for a UAC-scoped
+       follow-up.
+    4. IDLE/JITORESTAKING/SYMBIOTIC/KARAK DefiLlama emptiness — **operator already decided accept-structurally-empty**
+       (§3a above) — not reopened.
+    5. `restaking_karak_adapter.py:32` wrong DefiLlama slug — **moot**, the correct slug also returns 0 pools (already
+       noted in this doc) — not worth fixing.
+    6. `lido.py`/`etherfi.py`/`solblaze.py` + MTDS `lst_*_adapter.py` `instrument_key` "LST" vs `instrument_type`
+       "YIELD_BEARING" disagreement, and IS-vs-MTDS RENZO key-shape drift — **both explicitly flagged in this doc's own
+       prior text** as needing the dedicated `instrument_key` canonicalization effort, not a cosmetic batch fix; not
+       reopened here.
+    7. `_defi.py` `SUBGRAPH_IDS` never registers `across`/`stargate` — this is the actual blocker keeping the
+       `bridge_events_handler.py` fix above unexercised in production; NOT small (needs the real subgraph IDs
+       researched + validated against The Graph, plus a decision on whether these two protocols are still in-scope) —
+       natural next step if bridge_events coverage becomes a priority.
+    8. Grammar-only `:PERP:` vs `:PERPETUAL:` inconsistency — spans many files across IS+MTDS docstrings/tests; low
+       value, not small once touch-count is included.
+    9. CME/ICE live combo-spread legs dropped with WARNING-only log — plausible quick logging/metric improvement, but
+       lives in the live-connector layer this dispatch didn't otherwise touch; flagging for a connector-focused pass.
+    10. `understat_xg_shots.fixture_id`/`progressive_stats.team` sports field-mapping bugs — **grepped, 0 hits in
+        market-tick-data-service** (no `understat`/`progressive_stats` files here) — likely live in a different
+        repo/provider adapter not covered by this dispatch's scope; needs repo identification before it can be triaged,
+        not attempted.
+    11. `kalshi_perp.py` wrong base URL / `_REPOINT_PENDING` + `/margin/markets/{ticker}/trades` 404 — **already
+        tracked** in `prediction_capture_incident_remediation_2026_07_06.md` and the KALSHI-PERP remediation plan
+        respectively — correctly not duplicated here (per this doc's own existing cross-reference).
+    12. `TardisAdapter.download_csv()` crash outside full `ServiceBootstrap` — **already assessed** in this doc as
+        "likely a test-harness artifact, not verified further (out of scope)" — not reopened.

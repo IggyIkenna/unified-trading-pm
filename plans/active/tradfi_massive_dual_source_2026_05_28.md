@@ -27,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
@@ -59,7 +59,8 @@ sources.
    > `codex/02-data/tradfi-databento-sourcing-ssot.md`.
 4. **Scope**: batch / historical REST first. Live / WebSocket connector deferred — operator stated "not too worried
    about live yet".
-5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter $29 +
+5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter
+   $29 +
    Futures $199 ≈ $290/mo. Pricing TBC at signup; ping operator if real-time required for any cell.
 
 ## Status snapshot

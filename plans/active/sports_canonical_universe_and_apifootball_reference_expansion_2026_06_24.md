@@ -27,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: correct-codex
 ---
 

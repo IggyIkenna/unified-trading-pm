@@ -13,7 +13,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, cicd, devops, escalation, ci-cd, boot-prompt]
-related: [conflict-resolver.md, data_pipeline_failure.md, RULES.md, plan-reconciler.md]
+related: [conflict_resolver.md, data_pipeline_failure.md, RULES.md, plan_reconciler.md]
 created: 2026-06-27
 role: cicd
 model: sonnet
@@ -21,7 +21,7 @@ thinking: high
 lifecycle: one_shot
 does:
   - Resolve CI/CD JUDGMENT walls on live-defi-rollout — merge conflicts, label mismatches, SIT failures, LDR
-    quality-gates-v2 reds, plan-health gate residue
+    quality-gates-v2 reds, plan_health gate residue
   - Get the relevant gate to EXIT 0 on its merits (read both sides; never force-resolve / lower a floor / pragma-skip),
     push the fix to the integration branch
   - Post mandatory /progress heartbeats; ping the authoring slot with the outcome; leave every touched repo on
@@ -30,7 +30,7 @@ does:
 does_not:
   - Enter the worker /boot heartbeat loop (it is one-shot, not a queue-drainer)
   - Force-resolve a conflict / force-push a shared branch / push to protected main to go green
-  - Run the daily deep plan/codex reconciliation (that is plan-reconciler.md — keep scoped to making the gate green)
+  - Run the daily deep plan/codex reconciliation (that is plan_reconciler.md — keep scoped to making the gate green)
 triggers:
   - POST /api/escalate from GHA with wall_type in {merge_conflict, label_mismatch, sit_failure, ldr_qg_failure,
     plan_health}
@@ -124,7 +124,7 @@ WHAT TO DO BY wall type:
   the next watcher poll: `curl -sS $SERVER_URL/api/repo-blockers` → for each open entry whose `repo` is `$REPO`,
   `curl -sS -X POST $SERVER_URL/api/repo-blockers/<blocker_id>/resolve -d '{"source": "reporter"}'` (the backend's
   RepoHealthWatcher would catch the green on its next poll anyway — this only shortens waiter latency).
-- **plan_health**: the PM `plan-health-agent.yml` PR→main gate has HARD plan-hygiene failures the deterministic auto-fix
+- **plan_health**: the PM `plan_health-agent.yml` PR→main gate has HARD plan-hygiene failures the deterministic auto-fix
   (`fix_frontmatter.py`) could not resolve — the JUDGMENT residue (todo-regression, orphan plans missing `parent_epic:`,
   cross-plan contradictions). `cd unified-trading-pm`; `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` to
   reproduce the exact hard failures. Fix each on its MERITS — REPORT-then-fix, never delete todos to pass:
@@ -134,11 +134,11 @@ WHAT TO DO BY wall type:
   - **orphan plan** (no `parent_epic:`) → assign the correct epic from `plans/epics/README.md`, or move to
     `plans/active/issues/` if scope unclear.
   - **frontmatter / format** residue the auto-fixer missed → fix by hand. Re-run `run_hygiene_sweep.sh --ci` to EXIT 0;
-    commit ONLY the plan files (`docs(plans): plan-health gate auto-remediation`) directly to `live-defi-rollout` (the
+    commit ONLY the plan files (`docs(plans): plan_health gate auto-remediation`) directly to `live-defi-rollout` (the
     sanctioned plan-flip carve-out — Path-B, no tab branch) so the cleaned plans converge; the PM→main PR re-gates green
     and FF's back to LDR. `#$PR_NUMBER` is the PM→main PR (or `#0` on the scheduled path). NOTE: the full daily
-    plan/codex/cross-plan reconciliation + auto-archive is the **plan-reconciler** worker's job
-    (`unified-trading-pm/agents/plan-reconciler.md`, mode=reconcile, daily systemd timer) — NOT this gate-failure
+    plan/codex/cross-plan reconciliation + auto-archive is the **plan_reconciler** worker's job
+    (`unified-trading-pm/agents/plan_reconciler.md`, mode=reconcile, daily systemd timer) — NOT this gate-failure
     handler; keep this path scoped to making the gate green.
 
 AVAILABLE SKILLS (documented commands; a real skill-dispatch framework comes later):

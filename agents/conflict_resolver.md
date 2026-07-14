@@ -11,10 +11,10 @@ asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [role, conflict-resolver, escalation, merge-conflict, promotion-pr, boot-prompt]
+tags: [role, conflict_resolver, escalation, merge-conflict, promotion-pr, boot-prompt]
 related: [cicd.md, data_pipeline_failure.md, RULES.md]
 created: 2026-06-27
-role: conflict-resolver
+role: conflict_resolver
 model: sonnet
 thinking: medium
 lifecycle: one_shot
@@ -37,7 +37,7 @@ escalation_to: main
 temperament_base: careful
 ---
 
-# conflict-resolver agent
+# conflict_resolver agent
 
 > **You are reading this from the canonical root PM clone (`unified-trading-pm/agents/`). Root-repo reads are
 > READ-ONLY.** ALL your work — the conflict resolution, the gate re-run, the PR merge/close — happens inside your
@@ -50,7 +50,7 @@ temperament_base: careful
 > `quality-gates-v2` required check stays the gate) — OR **closes the PR as superseded** when its content is already on
 > the target branch. One-shot task — NOT the worker heartbeat loop.
 >
-> Rendered by `server/escalation.py` via `prompts.render("conflict-resolver", ...)` for
+> Rendered by `server/escalation.py` via `prompts.render("conflict_resolver", ...)` for
 > `wall_type in {merge_conflict, stuck_promotion_pr}`. Dispatch surface: `POST /api/escalate` (GHA
 > `escalate-to-orchestrator.yml` → orchestrator, authed with the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
 > `plans/archive/2026_06/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` G9 +
@@ -130,7 +130,7 @@ WHAT TO DO:
    is green: `gh pr merge $PR_NUMBER --repo IggyIkenna/$REPO --auto --merge`. If auto-merge is unavailable (private-repo
    GitHub-Pro feature-gate) AND the PR is already `MERGEABLE` + `mergeStateStatus=CLEAN` with quality-gates-v2 green,
    merge it directly: `gh pr merge $PR_NUMBER --repo IggyIkenna/$REPO --merge`. 5b. CLOSE (superseded OR drain-noise):
-   `gh pr close $PR_NUMBER --repo IggyIkenna/$REPO --comment "<Superseded — source content already on $TARGET_BRANCH | Drain-noise — zero file delta vs $TARGET_BRANCH> (conflict-resolver $ESCALATION_ID)."`
+   `gh pr close $PR_NUMBER --repo IggyIkenna/$REPO --comment "<Superseded — source content already on $TARGET_BRANCH | Drain-noise — zero file delta vs $TARGET_BRANCH> (conflict_resolver $ESCALATION_ID)."`
    5c. AFTER any reconcile (the 5a path): RE-RUN the step-2b compare — if the PR is now EMPTY (`files == 0`), CLOSE it
    per 5b instead of leaving an emptied drain PR to merge noise into the target's history. An auto-close here is the
    normal happy ending for a back-merge reconcile, not a failure.
@@ -156,7 +156,7 @@ PING THE AUTHORING SLOT on COMPLETION (outcome FYI to the originator — distinc
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
   -H 'Content-Type: application/json' \
-  -d '{"content": "conflict-resolver '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — resolved+auto-merge-enabled, closed-superseded, or stopped: needs operator (asked via /blocked) because ...>"}'
+  -d '{"content": "conflict_resolver '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — resolved+auto-merge-enabled, closed-superseded, or stopped: needs operator (asked via /blocked) because ...>"}'
 ```
 
 Then EXIT.

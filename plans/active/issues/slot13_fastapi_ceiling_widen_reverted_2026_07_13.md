@@ -55,7 +55,7 @@ resolved_by:
   slot-13 (all 5 todos verified/flipped 2026-07-13, closing the loop on work substantially done by slots 7/9/15)
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: medium
 drift_direction: revert-to-canonical

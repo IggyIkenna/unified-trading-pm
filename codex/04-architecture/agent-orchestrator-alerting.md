@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Agent-Orchestrator Alerting — actionable-only channel + daily digest
 summary:
   The contract for what reaches the agent-orchestrator-alerts Slack channel. Automatic backend lifecycle events
-  (plan-health / escalation dispatches, auto-respawns, recoveries) are NOT paged — they log to AO logs + the GCS ledger
+  (plan_health / escalation dispatches, auto-respawns, recoveries) are NOT paged — they log to AO logs + the GCS ledger
   and are rolled into one daily digest. Only operator-actionable events page (failures, worker BLOCKED questions,
   unresolved escalations). Standing conditions dedup by state-transition (fire on change / RESOLVED / a re-remind
   interval), never every tick.
@@ -59,7 +59,7 @@ recorded in the DB **activity log** (`log_activity`) by the callers, which is wh
 
 ## What DOES page (operator-actionable)
 
-- **Failures** — `notify_plan_health_dispatch_failed` (deduped 1h; the plan-health do_spawn failure branch was
+- **Failures** — `notify_plan_health_dispatch_failed` (deduped 1h; the plan_health do_spawn failure branch was
   previously Slack-silent); **unresolved / re-escalation-cap escalations** (`_mark_unresolved_and_maybe_reescalate`,
   CRITICAL — a stuck wall past deadline). (Generic spawn failures are NOT here — see the summary-only list above.)
 - **Dead/expired token** — `notify_account_auth_failed` (CRITICAL, re-mint action). This is the one auth alert the
@@ -90,7 +90,7 @@ check it against this table** — the default for any automatic/self-healing/lif
 | `notify_watchdog_kill`                                                                                                                                                                                                                                                                                                                                                                                            | **PAGE** _(cap-hit only)_ | plain kills already log; only the daily-cap-hit (watchdog dormant) pages                                 |
 | `notify_escalation_unresolved`                                                                                                                                                                                                                                                                                                                                                                                    | **PAGE**                  | a CI wall stuck past deadline                                                                            |
 | `notify_escalation_abandoned`                                                                                                                                                                                                                                                                                                                                                                                     | **PAGE**                  | escalation gave up on a wall (terminal — human needed)                                                   |
-| `notify_plan_health_dispatch_failed`                                                                                                                                                                                                                                                                                                                                                                              | **PAGE**                  | the plan-health job failed to dispatch (was Slack-silent)                                                |
+| `notify_plan_health_dispatch_failed`                                                                                                                                                                                                                                                                                                                                                                              | **PAGE**                  | the plan_health job failed to dispatch (was Slack-silent)                                                |
 | `notify_daily_summary`                                                                                                                                                                                                                                                                                                                                                                                            | **PAGE**                  | the digest itself                                                                                        |
 | `notify_daily_summary_failed`                                                                                                                                                                                                                                                                                                                                                                                     | **PAGE**                  | a dead digest must not be silent                                                                         |
 | `notify_agent_stuck_escalation`                                                                                                                                                                                                                                                                                                                                                                                   | summary                   | "Auto-respawn FAILED" — automatic self-healing escalation                                                |
@@ -202,7 +202,7 @@ lifecycle stage (code ref = the `log_activity` call site in `agent-orchestrator/
 
 **Plan-health / escalation** (the automatic backend jobs WS-A stopped paging individually — see "What does NOT page")
 
-- `plan_health_dispatch_initiated` — the plan-health job started a dispatch cycle (`server/plan_health.py`).
+- `plan_health_dispatch_initiated` — the plan_health job started a dispatch cycle (`server/plan_health.py`).
 - `escalation_dispatch_initiated` — an escalation dispatch cycle started (`server/escalation.py`).
 - `escalation_dispatched` — an escalation was dispatched (`escalation.py`).
 - `escalation_resolved` — an escalation closed / resolved (`escalation.py`).

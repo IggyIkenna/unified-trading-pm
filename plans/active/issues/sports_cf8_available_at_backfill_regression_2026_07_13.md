@@ -434,14 +434,35 @@ consolidation).
       `ArrowInvalid` on pre-fix code (verified via a temporary `git stash` revert) and PASS post-fix, round-tripping
       `fetch_evidence` as valid JSON. Confirmed this never touched the real `--no-dry-run` write path (only
       preview/dry-run tooling). Full `quality-gates.sh` green + sentinel-verified; shipped via `quickmerge --agent`.
-- [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
+- [x] ✅ [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
       (original incident 2026-07-13 + twice more during the 2026-07-14 re-attempt above) despite operator coordination
       each time — manual "please don't touch this" coordination is not holding up under real fleet concurrency. Worth a
       TECHNICAL safeguard instead of relying on coordination alone: e.g. a maintenance-window marker (a GCS sentinel
       object or Firestore flag) that a resume/pause action checks and refuses to override without an explicit force, or
       routing cron pause/resume through a single dashboard control other agents/ operators can see is currently held.
       Scope/design not decided — routing to operator/infra owner. (repo: unified-trading-pm or deployment-service,
-      wherever the scheduler-management tooling should live)
+      wherever the scheduler-management tooling should live) — **Shipped, slot 6 (infra), 2026-07-14.** Built the
+      GCS-sentinel maintenance-window marker option: `unified-trading-library@4ddc59c9`
+      (`unified_trading_library.maintenance_window` — `acquire`/`read`/`release_maintenance_window`), a distributed CAS
+      marker modeled on the production-proven `TardisConcurrencyLease` pattern (generation-precondition
+      `conditional_upload_bytes`/`conditional_delete_blob`, so two racing callers can never both believe they hold the
+      window; every window auto-expires via TTL so an abandoned declaration never permanently blocks future
+      maintenance). 15 unit tests, in-memory fake GCS client with generation semantics. Scheduler-specific wiring in
+      `deployment-service@1090c3e` (`scheduler_maintenance.py`): `pause_for_maintenance()` acquires the window BEFORE
+      pausing (never pauses a cron it can't safely account for); `resume_after_maintenance()` refuses
+      (`MaintenanceWindowActiveError`) when a live foreign window is held, unless `force=True`; a `--status` CLI
+      subcommand lets ANY caller — including an operator about to run a raw `gcloud scheduler jobs resume` — check who
+      holds the window and why, directly targeting Finding 1's root cause (the operator wasn't aware the pause was
+      intentional). 11 more unit tests (injected fake pauser/resumer, no real GCP credentials). Full `quality-gates.sh`
+      green on both repos, shipped via `quickmerge --agent`. **Complementary work discovered mid-dispatch**
+      (`deployment-service@e2a62cc`, a different slot, same session): a new DP-WATCHER-003 check
+      (`consolidator_scheduler_watcher.py`) pages CRITICAL when a manifest-consolidator Cloud Scheduler job is found
+      PAUSED with no maintenance marker — the reactive/detection half of this same problem (mine is the
+      proactive/prevention half). A natural follow-up (not done in this dispatch — new, unreviewed integration work) is
+      teaching that watcher to read `maintenance_window`'s marker and suppress its page when a live window legitimately
+      explains the pause, mirroring the existing pause-aware `scheduler_state_reader` pattern in `check_cron_fired`.
+      **Does NOT retrofit the existing ad-hoc CF-8 backfill scripts to call this** — that adoption (which scripts, when)
+      is a separate operator/infra-owner decision; this ships the primitive + CLI for that decision to act on.
 - [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
       backfill a real vendor source or accept as a known residual. (The 35,361 free-text-reason rows are tracked
       separately in `sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.) (repo:
@@ -475,6 +496,21 @@ consolidation).
       corruption. (repo: unified-trading-library) — `unified-trading-library@2e132bb2`, see Progress Log.
 
 ## Progress Log
+
+**Maintenance-window primitive — 2026-07-14 (slot 6, infra)**: dispatched to the cron-collision todo. Built + shipped
+the GCS-sentinel maintenance-window option (`unified-trading-library@4ddc59c9` — generic CAS marker, modeled on
+`TardisConcurrencyLease`) + a scheduler-specific pause/resume wrapper + `--status` CLI (`deployment-service@1090c3e`),
+26 combined unit tests, both repos full-`quality-gates.sh` green, shipped via `quickmerge --agent`. Hit the exact
+quickmerge rebase race `pm_qg_governor_k1_vs_branch_churn_race_2026_07_13.md` describes repeatedly on both repos (5
+misses on UTL alone) under heavy same-session churn — kept re-running QG + retrying quickmerge until each landed
+cleanly, no shortcuts taken. Along the way, fixed 3 unrelated pre-existing reds that blocked shipping: a fresh
+setuptools CVE (PYSEC-2026-3447, `uv lock --upgrade-package setuptools`, UTL@b8ef48dc), a top-level-import-pattern
+violation (UTL@4ddc59c9 exports the new symbols), and 2 codex-compliance violations in my own new file (basedpyright
+`reportAny` + a hardcoded prod project id in a test). Discovered `deployment-service@e2a62cc` (a different slot, same
+session) independently built the complementary detection/alerting half of this same problem (DP-WATCHER-003 pages when a
+consolidator scheduler is found paused unexpectedly) — cross-linked in the todo above rather than duplicated; flagged a
+natural follow-up (that watcher reading this marker to suppress its page during a legitimate window) as unreviewed
+future work, not done here.
 
 **CF-8 scoping + guardrail touch — 2026-07-14 (slot 3, laptop, dispatched per the operator's original CF-8-backfill
 ask)**: read this doc + the plan in full before starting. Found (via `git log --all`) that root-causing was already IN

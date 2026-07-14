@@ -46,7 +46,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: data-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by: live-defi-rollout

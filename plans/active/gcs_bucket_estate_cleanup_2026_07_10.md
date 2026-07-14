@@ -783,6 +783,56 @@ references to the legacy bucket, then deleted it (versioning was `Suspended` on 
 `data_completion_to_100_all_ag_2026_06_21.md`'s 2026-07-14 entry. `features-onchain-defi-prd-central-element-323112` is
 now correctly gone (404 confirmed), not just correctly classified.
 
+## 5k. `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` trio resolved — last reader fixed, all 3 confirmed deleted (2026-07-14)
+
+The 3 buckets §5i explicitly withheld ("live, real callers — do not delete, ever, without a separate finding that those
+callers have moved off") are now resolved. Full execution tracked in
+`defi_dedicated_bucket_shared_migration_2026_07_13.md`; summary here for this doc's own bucket-estate ledger:
+
+- **Last broken reader fixed**: `execution-service/execution_service/data/defi_lateral_loader.py` still had flat,
+  partly-dead `DEFAULT_LATERAL_BUCKETS` defaults (5 of 7 pointed at buckets already deleted earlier this round:
+  `perp-funding`, `liquidations`, `oracle-prices`, `gas-fees`, `lst-rates` flat forms; the remaining 2, both
+  `eigenlayer-rewards` forms, confirmed 0 bytes) — broke all 15 operator decision-trace CLIs that use it. Repointed to
+  the shared bucket via `resolve_bucket_name(kind="tick-data", asset_group="defi")` + the canonical v9 day-first
+  path/needle-filter pattern (mirrors `canonical_dex_pool_provider.py`). Also fixed `EIGENLAYER` → `EIGENLAYER-ETHEREUM`
+  venue-string drift in `load_eigenlayer_rewards_range()`. — `execution-service@a7e42c932`, quality-gates.sh green (also
+  closed a real gap found while fixing it: `tests/defi_execution/unit/` (19 files) and `tests/e2e/` (4 files) were
+  completely un-gated by any QG wrapper or CI workflow — wired the 2 files this fix touches into
+  `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR`; the other 21 files remain un-gated, not fixed here).
+- **All 3 buckets confirmed deleted** (`gcloud storage buckets list --project=central-element-323112` — zero matches for
+  `dex-pools`/`lst-rates`/`perp-funding` in any form, flat/`-prd`/`-test`): `lst-rates-prd` + `perp-funding-prd` were
+  deleted by the operator directly (`ikenna@odum-research.com`, GCP audit log, prior to this session's visible window);
+  `dex-pools-prd` was deleted by the same operator principal on **2026-07-14T11:03:47Z** (audit log:
+  `storage.buckets.delete`, `protoPayload.resourceName=projects/_/buckets/dex-pools-prd-central-element-323112`).
+- **Flag, not an incident**: `dex-pools-prd`'s deletion preempted this plan's own gating step — the ~209k-object
+  undiffed legacy tree (`day=.../category=defi/` + `_migration/`, noted in
+  `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s Progress Log as needing a snapshot-before-delete) was never
+  independently object-diffed; the operator deleted the bucket before that step ran. No soft-delete recovery available
+  (`gcloud storage buckets list --project=central-element-323112` has no `--soft-deleted` support in the installed
+  gcloud version; no snapshot of `dex-pools-prd` specifically exists in `central-element-323112-pre-migration-snapshot`,
+  which only holds the unrelated 2026-05-19 VM-drain snapshot). **Assessed risk: low, not zero** — the plan's own Todo 1
+  parity check had already verified `dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`perp_funding` present in the shared
+  bucket at (venue, data_type, day) granularity across the full date range, and the one companion data_type that could
+  have held unique legacy content (`dex_pool_fees`) was independently confirmed to have **zero real rows anywhere** in
+  `dex-pools-prd` (recursive search, no matches) — so the canonical/reader-relevant content was verified safe before
+  deletion; only the true legacy trees (pre-v9-format duplicates + migration-tooling scratch output, per this doc's own
+  `_migration/column_union.json` pattern found in the other DeFi buckets) went unverified. Flagging per the
+  data-correctness HARD RULE rather than silently treating it as fine.
+- **Terraform**: confirmed clean — `tofu state list` in `deployment-service/terraform/gcp` has zero
+  `google_storage_bucket` entries for any of the 3 kinds (the only state entries matching the kind names are the live,
+  legitimate `google_cloud_scheduler_job.defi_collect_cron["dex-pools"|"lst-rates"|"perp-funding"]` +
+  `module.defi_collect_job[...].google_cloud_run_v2_job.job` — ongoing DATA COLLECTION infra that writes into the shared
+  bucket, not orphaned bucket resources). `main.tf` + `canonical_buckets.tf` already had their bucket-resource blocks
+  removed 2026-07-13 (confirmed still clean, only historical comments remain). The guarded `terraform state rm` script
+  generated 2026-07-13 for this trio was never run — turned out to be unnecessary, since no matching state entries
+  existed to remove.
+- **Config SSOT**: the `dex-pools`/`lst-rates`/`perp-funding` kind entries were already removed from
+  `cloud-providers.yaml` (5 copies) + `bucket_config.yaml` + `manifest_reader.py`'s `_EXTRA_BUCKET_KINDS` on 2026-07-13
+  (see `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s own todos) — not re-verified byte-for-byte here, but no
+  contradicting evidence found.
+- **Not this trio's scope, still open**: `lending-indices` + `lending-indices-prd` (§5i/§5j finding 78) remain undeleted
+  — a separate, pre-existing residual item, unrelated to this trio.
+
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 
 Per `AUTONOMOUS_AGENT_RULES.md`'s self-check, a long cross-repo autonomous loop like this one normally routes to

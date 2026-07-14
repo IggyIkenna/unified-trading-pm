@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Data-feed SLA registry (single SSOT) + active feed self-healing
-summary: Build a single declarative data-feed SLA registry (consolidating scattered freshness thresholds) and add active feed self-healing via re-fetch on stale detection.
+summary:
+  Build a single declarative data-feed SLA registry (consolidating scattered freshness thresholds) and add active feed
+  self-healing via re-fetch on stale detection.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -24,8 +26,15 @@ locked_since: 2026-06-19
 supersedes:
 superseded_by:
 depends_on:
-source: [operator direction 2026-06-19 (comparison vs external "Operation Blue Flame" SLA architecture — two gaps where Blue Flame is tighter than this workspace), 'verification 2026-06-19 — `rg "data_feed_sla|feed_sla|FEED_SLA"` returns 0 hits; freshness thresholds are scattered across UAC `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`, execution/strategy `freshness_gate.py`, MDPS `feature_freshness.py`']
-assigned_role: data-pipeline-engineer
+source:
+  [
+    operator direction 2026-06-19 (comparison vs external "Operation Blue Flame" SLA architecture — two gaps where Blue
+    Flame is tighter than this workspace),
+    'verification 2026-06-19 — `rg "data_feed_sla|feed_sla|FEED_SLA"` returns 0 hits; freshness thresholds are scattered
+    across UAC `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`,
+    execution/strategy `freshness_gate.py`, MDPS `feature_freshness.py`',
+  ]
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

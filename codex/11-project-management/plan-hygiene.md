@@ -35,7 +35,7 @@ code_refs:
     scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh,
     scripts/plan-hygiene/build_health_digest.sh,
     scripts/docs/docspec.py,
-    .github/workflows/plan-health-agent.yml,
+    .github/workflows/plan_health-agent.yml,
     deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf,
   ]
 type: project-management
@@ -141,7 +141,7 @@ details stay in the Cloud Run job logs.
 Terraform SSOT: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`. Entrypoint:
 `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`.
 
-## Plan Health Agent (GHA — `.github/workflows/plan-health-agent.yml`, daily 02:00 UTC)
+## Plan Health Agent (GHA — `.github/workflows/plan_health-agent.yml`, daily 02:00 UTC)
 
 Report-only daily audit. The deterministic `build_health_digest.sh` runs the full hygiene sweep (including
 `check_claude_subagent_parity.sh`) and hands a compact digest + plan skeletons to a cheap Haiku agent. The agent does

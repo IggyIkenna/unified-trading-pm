@@ -25,7 +25,7 @@ assigned_vm: planning
 resolved_by: fund-administration-service@566a877 (2026-07-13, slot-11)
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: medium
 drift_direction: advance-code

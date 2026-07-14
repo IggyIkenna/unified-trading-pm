@@ -279,11 +279,21 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
   - **Follow-up todo filed below** (new engineering — extending the read-path budget resolution to be asset-group-aware
     needs its own review, not a blind port of the cockpit dict into a shared library function many callers depend on) —
     not implemented in this investigate-scoped touch.
-- [ ] [INFRA] P2. Make UTL's `read_availability_index()` staleness-refusal gate (`_resolve_consolidated_staleness_sec()`
-      in `manifest_writer/_state.py`, consumed by `_read_slow_path()` in `manifest_writer/_read_index.py`)
-      asset-group-aware, mirroring `deployment-api@90ace9f`'s already-shipped `_AG_STALENESS_BUDGET_SEC` cockpit fix —
-      so a cefi (or any future daily-batch-cadence) bucket read doesn't intermittently false-positive-refuse against the
-      generic 120s default the way the sports audit hit on 2026-07-13. Needs a bucket→asset_group resolution path
-      threaded into `read_availability_index(bucket, ...)` (it currently only takes a raw bucket string) — a design
-      decision, not a batch-size judgment call, per this doc's own precedent for similar write-path fixes. (repo:
-      unified-trading-library)
+- [x] ✅ [INFRA] P2. Make UTL's `read_availability_index()` staleness-refusal gate
+      (`_resolve_consolidated_staleness_sec()` in `manifest_writer/_state.py`, consumed by `_read_slow_path()` in
+      `manifest_writer/_read_index.py`) asset-group-aware, mirroring `deployment-api@90ace9f`'s already-shipped
+      `_AG_STALENESS_BUDGET_SEC` cockpit fix — so a cefi (or any future daily-batch-cadence) bucket read doesn't
+      intermittently false-positive-refuse against the generic 120s default the way the sports audit hit on 2026-07-13.
+      Needs a bucket→asset_group resolution path threaded into `read_availability_index(bucket, ...)` (it currently only
+      takes a raw bucket string) — a design decision, not a batch-size judgment call, per this doc's own precedent for
+      similar write-path fixes. (repo: unified-trading-library) — unified-trading-library@084e62f0. New module
+      `manifest_writer/_staleness_budget.py` (split out — `_state.py` was already at 897/900 lines) holds
+      `asset_group_from_bucket()` (best-effort token match against the closed cefi/defi/tradfi/sports/prediction
+      vocabulary) + `AG_STALENESS_BUDGET_SEC` (intentionally duplicated from deployment-api's dict — cross-repo import
+      is the wrong dependency direction). `_resolve_consolidated_staleness_sec()` threads an optional `bucket` parameter
+      through its 5 call sites (`assert_consolidator_healthy` + the 3 `read_availability_index` staleness checks);
+      `bucket=None` (every existing zero-arg caller, incl. deployment-api's own default lookup) preserves the prior
+      global-only behaviour unchanged. 4 new unit tests, including two end-to-end `assert_consolidator_healthy`
+      regressions — one proving a 600s-stale cefi bucket now correctly no-ops (reproduces the exact false-positive on
+      pre-fix code, verified via git-stash revert), one proving a same-age non-cefi bucket still correctly raises. Full
+      `quality-gates.sh` green + sentinel-verified, shipped via `quickmerge --agent`.

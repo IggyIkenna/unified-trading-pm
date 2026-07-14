@@ -20,8 +20,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
@@ -44,7 +44,8 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 1)
 
 > **Dispatch:** `assigned_role: infra` · **model: Opus** (`opus-required`) · **effort: high**. `status: draft` —
 > activated by Phase 0's last todo; `sequential: true` runs its todos strictly in order. **Additive only — no reader
-> touches this phase.**
+> touches this phase.** **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` / `execution_scope: local-only`,
+> same as the rest of this phase chain) — see Phase 0's Dispatch note for why.
 
 ## Context (read first — self-contained)
 

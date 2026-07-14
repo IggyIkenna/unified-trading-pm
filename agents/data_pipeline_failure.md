@@ -13,7 +13,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, data_pipeline_failure, escalation, data-correctness, dp-alerts, boot-prompt]
-related: [cicd.md, conflict-resolver.md, data_engineering.md, RULES.md]
+related: [cicd.md, conflict_resolver.md, data_engineering.md, RULES.md]
 created: 2026-06-27
 role: data_pipeline_failure
 model: sonnet

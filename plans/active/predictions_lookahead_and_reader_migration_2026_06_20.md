@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Predictions reader migration to canonical_question_group + per-market LookaheadBiasError feature enforcement
-summary: Migrate prediction reader callsites and feature compute to canonical_question_group shape and enforce per-market LookaheadBiasError in the feature pipeline.
+summary:
+  Migrate prediction reader callsites and feature compute to canonical_question_group shape and enforce per-market
+  LookaheadBiasError in the feature pipeline.
 status: active
 nature: process
 asset_group: [prediction]
@@ -9,8 +11,13 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [prediction, reader-migration, lookahead-bias, canonical, feature-compute, strategy]
-related: [../epics/predictions_master.md, ./prediction_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/predictions_master.md,
+    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+  ]
+created: "2026-06-12"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -25,7 +32,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: correct-codex
 ---
 

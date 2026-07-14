@@ -51,6 +51,15 @@ PAT='\{mode\}\*\{source\}|asset\*group|schema\*version|pipeline\*mode|instrument
 RC=0
 for f in "${FILES[@]}"; do
   [ -f "$f" ] || continue
+  # plans/archive/** copies are explicitly out of repair scope (left as historical record —
+  # see the issue doc's "Affected inventory" section) when this script's own default file-discovery
+  # glob runs (no args: plans/active + plans/epics + plans/audit + codex, archive excluded). But an
+  # explicit-paths invocation (e.g. the precommit hook passing staged files) bypassed that exclusion,
+  # permanently blocking any future edit to an already-mangled archived doc for pre-existing,
+  # out-of-scope corruption unrelated to the edit. Apply the same exclusion here for consistency.
+  case "$f" in
+    */plans/archive/*|plans/archive/*) continue ;;
+  esac
   # Preprocess: blank out fenced code blocks (``` ... ```), then inline code spans (`...`),
   # keeping line numbers stable (fences emit empty lines; spans are removed in-line).
   HITS=$(awk 'BEGIN{fence=0} /^[[:space:]]*```/{fence=!fence; print ""; next} {print fence?"":$0}' "$f" \

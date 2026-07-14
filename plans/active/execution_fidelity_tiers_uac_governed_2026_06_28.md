@@ -34,7 +34,7 @@ supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, mvp_for_mdps_and_features_universe_uac_2026_06_28]
 source: [operator request 2026-06-28]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: opus-required
 thinking_tier: high
 drift_direction: advance-code
