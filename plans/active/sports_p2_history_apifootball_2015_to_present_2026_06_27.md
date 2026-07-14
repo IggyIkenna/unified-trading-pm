@@ -206,12 +206,28 @@ drift_direction: advance-code
       empty-confirmed row instead of skipping. QG green (sentinel-verified, 2 runs — 97s/134s), sentinel SHA==HEAD at
       quickmerge time. Unrelated pre-existing MTDS adapter-contract warning (`solana_defi_drift.py`, tracked since
       2026-05-20 per `lint_sweep_774602ea8_regression_audit_2026_05_20.md`) is untouched by this change.
-- [ ] [DATA] P0. **Post-fix GW re-run + parquet-level re-verify** — re-run the SAME 5-entity GW fleet (idempotent;
+- [x] ✅ [DATA] P0. **Post-fix GW re-run + parquet-level re-verify** — re-run the SAME 5-entity GW fleet (idempotent;
       presence-skip makes it cheap — only the 225,854 dropped rows re-fetch), then re-run the parquet-presence cross
       (NOT the naive gate query alone: the current index reads 0-pending/0-blank/0-missing while 3,720 cells are
       false-empty), then flip Todo 9 with per-entity evidence and resume the operator chain (2020+ fleet → GW features
       recompute → ML re-verify). Manifest-row correction for the false-empty cells coordinates with
-      `sports_data_sources_canonical_completion_2026_07_13.md` (dedup-key semantics owner).
+      `sports_data_sources_canonical_completion_2026_07_13.md` (dedup-key semantics owner). — **DONE**: re-launched all
+      5 VMs (`af-backfill-20260714-144333/144423/144457/144531/144603`) against the shipped fix
+      (instruments-service@0d9ffabd), tarball-fresh verified at launch, no fire-and-forget (STARTED evidence within 3
+      min, health checks throughout); all 5 self-deleted `exit_code=0`, zero `PREEMPTED`, zero Tracebacks (~2h wall
+      clock — slower than pure presence-skip since the fixed league map now correctly fetches leagues the old 33-league
+      map silently skipped, not just the previously-dropped rows). Wrote
+      `scripts/verify_golden_window_parquet_presence_2026_07_14.py` (instruments-service@c06fbf1b) — independently
+      re-derives the 1,848 GW cells and crosses manifest vs actual GCS parquet presence (not the naive gate). First run
+      (16:45Z, post-fleet): false-empty dropped 3,720→50 (98.7%), phantom-captured=0, pending-fetch=0, INJURIES 30/30
+      A_LEAGUE cells now typed `EXPECTED_PAUSED_LEAGUE` (0 blank-reason) — leg-3 fix confirmed. The 50 residual cells
+      (FIXTURE_LINEUPS 37 / FIXTURE_STATS 13, last 2 weeks of window) traced to a genuinely separate mechanism: the
+      per-league FIXTURES parquet carries no inline `league_id` column, only numeric `af_league_id`, and some of those
+      numeric IDs weren't resolving. Independently, a peer (main-agent) ran a second `gw_false_empty_repair` pass over
+      the SAME 50 cells (object-probe + `record_captured` restamp) concurrently. Re-ran the verify script fresh at
+      16:54Z (after both the fleet's last write and the peer's repair had settled): false-empty 0/0/0/0 across all 4
+      entities, phantom-captured=0, pending-fetch=0 — gate genuinely green, not just naive-green. Todo 9 flipped above
+      with this evidence.
 - [ ] [DATA] P2. **Full-history enrichment phase (after the GW gate above is GREEN)** — extend the same entity-sharded
       SPOT `af-backfill-*` fleet across the full coverage windows (per-fixture types 2020-06-06→present; INJURIES
       2021-01-01→; STANDINGS 2018-01-01→; TEAMS after the `sports_data_sources_canonical_completion_2026_07_13.md`
@@ -1651,3 +1667,51 @@ plan flip. `unified-trading-pm` commit this session flips the checkbox + banner 
 **Not started this session** (separate todos, correctly left for their own dispatch): the 2020+ full-history enrichment
 fleet, the GW features recompute, and the ML-readiness re-verify — all three were explicitly held pending this gate per
 the issue doc + session 31/33's sequencing, and now may proceed.
+
+### 2026-07-14T16:56Z — session 33 (data_engineering slot-13, continued): Post-fix GW re-run task checkbox flipped
+
+This is the same session 33 that shipped the `[CODE] P0` write-path fix (`instruments-service@0d9ffabd`, see the earlier
+entry above) — continuing on to this task's own `[DATA] P0` "Post-fix GW re-run + parquet-level re-verify" todo, which
+explicitly depends on that fix.
+
+**Fleet re-launch**: re-ran the same 5-entity GW SPOT fleet against the shipped fix — `af-backfill-20260714-144333`
+(FIXTURE_EVENTS) · `-144423` (FIXTURE_LINEUPS) · `-144457` (FIXTURE_STATS) · `-144531` (PLAYER_STATS) · `-144603`
+(INJURIES). Refreshed core+instruments-service tarballs first (`create-code-tarballs.sh --include instruments-service`)
+and confirmed `lc_verify_tarball_freshness` reported all 4 tarballs at `@0d9ffabd` before each launch — critical, since
+a stale tarball would have re-run the pre-fix buggy code. No fire-and-forget: STARTED evidence (`DEPLOYMENT_STARTED` +
+correct rate-budget) confirmed for all 5 within ~3 min of launch, followed by periodic health checks watching real date
+advancement (not just instance-count) through completion. All 5 self-deleted `exit_code=0`, zero `PREEMPTED`, zero
+Tracebacks — INJURIES/FIXTURE_EVENTS/PLAYER_STATS/FIXTURE_LINEUPS/FIXTURE_STATS finished in that order, ~2h total wall
+clock (slower than pure presence-skip because the fixed 94-league map now genuinely fetches leagues the old 33-league
+map silently skipped, not just re-fetching the previously-dropped 225,854 rows).
+
+**Independent parquet-presence verification**: wrote `scripts/verify_golden_window_parquet_presence_2026_07_14.py`
+(instruments-service@c06fbf1b) — re-derives the 1,848 GW captured-FIXTURES `(date, league_id)` cells independently (not
+trusting any cached cell list) and crosses manifest `capture_status` against actual GCS parquet object presence via one
+prefix-listing per (date, entity) — 364 scoped list calls, not a whole-corpus walk. First run (16:45Z, right after the
+fleet + consolidator settled): false-empty dropped from the original 3,720 to 50 (EVENTS 0, LINEUPS 37, STATS 13,
+PLAYER_STATS 0) — a 98.7% reduction — with `phantom_captured=0` and `pending_fetch_eu=0` maintained throughout (the fix
+never over-claims capture, only under-claims absence). INJURIES: all 30 previously-blank A_LEAGUE September cells now
+read `capture_status=empty_confirmed`, `error_reason=EXPECTED_PAUSED_LEAGUE` — 0 still-blank — the leg-3 off-season fix
+confirmed working exactly as designed.
+
+**Investigated the 50 residual cells directly** (not accepted at face value): traced to a genuinely separate, third
+mechanism from the 3 legs already fixed — the per-league FIXTURES parquet never carries an inline `league_id` column
+(only the raw numeric `af_league_id`), and `_build_fixture_league_map_from_gcs`'s af_league_id reverse-map missed a
+subset of fixtures whose per-league FIXTURES blob set had duplicate/legacy-shaped rows. Prototyped a fix
+(`_read_per_league_entity_df(..., inject_league_id=True)` + per-row hybrid league_id/af_league_id resolution) and
+verified it against the live data — found it only marginally improved coverage (135→140 of 262 on the sampled date)
+because the REAL cause was duplicate FIXTURES blobs for the same (date, league) with mismatched schemas, a deeper
+data-hygiene issue than this task's scope. Reverted the unshipped prototype rather than rush a half-tested fix, and did
+not need to pursue it further: a peer (main-agent) independently found the exact same 50 residual cells via a different
+method (`gw_false_empty_repair_2026_07_14.py`'s object-probe adjudication) and closed them with a `record_captured`
+restamp while I was mid-investigation.
+
+**Final re-verification**: re-ran my verify script fresh at 16:54Z, after both the fleet's last write (16:41Z) and the
+peer's repair (16:47Z push) had fully settled into the consolidated index (16:54:09Z) — **false-empty 0/0/0/0 across all
+4 entities, phantom-captured=0, pending-fetch=0, INJURIES 0 blank-reason**. Genuinely, fully green — not the naive-gate
+false-green this whole exercise exists to catch.
+
+**Checkbox flipped above** with full evidence (fleet re-launch, verify-script methodology + results, the residual
+investigation, and the peer-repair convergence). Todo 9 was already correctly flipped by the peer with matching evidence
+by the time I reached this point — left as-is, no duplicate edit needed.
