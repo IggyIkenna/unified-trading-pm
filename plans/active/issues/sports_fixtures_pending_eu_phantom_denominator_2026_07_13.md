@@ -239,3 +239,11 @@ Follow-ups (post-remediation):
   `_audits/closeout_0713_flip_pairs_20260714.parquet` + `_audits/closeout_0713_fetch_cells_20260714.csv`. The
   post-cutoff trickle class in this issue is now fully closed through 2026-07-13; remaining open here: the P3
   fetch_needed re-check (~2026-07-20).
+- 2026-07-14 02:00Z: **CALENDAR GATE LIVE AND VERIFIED IN PRODUCTION.** The 01:30Z scheduled run OOM'd at the old
+  8Gi/2cpu (first run with the heavier new-image profile — captured-set suspect, tracked in the enum issue doc); job
+  bumped to 16Gi/4cpu and re-executed: expected-universe-v2-sports-v97dj GREEN 01:57:24Z. Run log evidence: calendar
+  gate ON (4 truthset artifacts unioned incl. tonight's 20260714-001053, 60,213 fixture-days, 94 leagues),
+  `EXPECTED_NO_FIXTURE: 38` seeded as empty_confirmed (phantom minting dead), oscillation guard dropped 35
+  empty_confirmed rows whose atoms are captured ("a seeder never overrides capture evidence" — 35 saves on first night),
+  45,267 candidates written, run_id enum-universe-sports-20260714-015652. The full remediation chain — evidenced flips,
+  de-registration, calendar gate, oscillation guard, day-closeout — is now operating end-to-end.
