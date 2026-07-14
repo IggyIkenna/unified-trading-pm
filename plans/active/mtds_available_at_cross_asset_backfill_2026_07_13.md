@@ -125,7 +125,13 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `--dry-run` instead, which is the actual no-writes preview mode).
 - [ ] [DATA] P1. Snapshot the prediction canonical manifest index
       (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and pause its consolidator cron. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — PARTIAL 2026-07-14 (slot 4): snapshot half DONE + verified —
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet`
+      (47,908,172 bytes, byte-identical to the live index at snapshot time). Shipped
+      `scripts/mtds_available_at_backfill_snapshot_prediction_2026_07_14.py` (market-tick-data-service@86467a0a).
+      Cron-pause half deliberately NOT done — same still-open P0 `BLOCKED-OPERATOR-DECISION` maintenance-window gate
+      slot 5 (`BLK-f3cdf442`) and slot 9 already deferred on; no operator go-ahead is on record. Leaving this checkbox
+      unflipped since the todo's full scope isn't complete.
 - [ ] [DATA] P1. Apply `rebuild_prediction_manifest.py --no-dry-run --force`, force-consolidate, then re-run
       `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill rate rose from 0% — verify the
       `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is unchanged before declaring
@@ -261,3 +267,27 @@ that's gated behind the still-open OPERATOR maintenance-window todo, downstream 
 **Net**: prediction's dry-run preview ran clean with no code changes needed; the mechanism works as documented. Ready
 for the next todo (snapshot + pause cron) once the OPERATOR P0 maintenance-window go-ahead lands — that decision is
 still open and is NOT something this dispatch can make.
+
+**Snapshot (safe half only) — 2026-07-14 (slot 4)**: dispatched task `mtds_available_at_cross_asset_backfill-003`
+("Snapshot the prediction canonical manifest index"). The underlying todo bundles a second action — pause the prediction
+consolidator cron — which is still gated on the same open P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window
+todo slot 5 filed `/blocked` (`BLK-f3cdf442`) over and slot 9 independently deferred on after its dry-run touch. No
+operator go-ahead is on record for either bucket. Split the todo: executed ONLY the snapshot half (a read of the live
+canonical index + an additive copy-write to `_index/snapshots/`, no mutation of the live index, no cron touched) via a
+new one-off script, `scripts/mtds_available_at_backfill_snapshot_prediction_2026_07_14.py`
+(market-tick-data-service@86467a0a, QG green, shipped via quickmerge). Ran it against real prod:
+
+```
+$ .venv/bin/python scripts/mtds_available_at_backfill_snapshot_prediction_2026_07_14.py
+Downloading live canonical index gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet
+Downloaded 47908172 bytes
+Snapshotted to gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet
+Snapshot verified: 47908172 bytes match source.
+```
+
+Independently re-verified post-hoc via a fresh GCS read:
+`_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet` exists, size=47,908,172 bytes, matches. Did NOT
+pause the consolidator cron — deliberately, per the same open OPERATOR gate. Checkbox left unflipped (todo's full scope
+— snapshot + pause — is not complete). Filed `/blocked` for this task rather than declaring it done, recommending the
+operator resolve the maintenance-window decision (todo 2) so the remaining prediction + tradfi cron-pause/apply todos
+can proceed. No cron state changed, no live index mutated this touch.
