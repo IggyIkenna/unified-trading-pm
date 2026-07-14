@@ -2109,3 +2109,19 @@ agents in the same shared clone left `bridge_events_handler.py` / `databento_enr
 in-progress, unrelated QG violations — STEP 5.97 uncited contract address, RUF002 unicode — neither touched by this
 session). Per the operator's explicit warning, those files were left untouched; quickmerge scoped `--files` to only this
 session's own files once the shared tree cleared.
+
+### 2026-07-14 (slot 13) — 9th dispatch since run #6; unchanged, skip (no duplicate `/blocked`)
+
+Picked up `mvp_backfill_defi_onchain_v10-002` on `/boot`. Fresh-pulled all repos clean. Cheap re-check only, matching
+slots 5/12's reasoning: `GET /api/state` confirms `BLK-5b8c2938` (slot 8's run-#6 question re: relaunching the two
+operator-stopped G1 VMs) is still `answered_at: null`, `answer: null` — unchanged. VM roster re-check
+(`gcloud compute instances list --filter="name~mtds" --zones=asia-northeast1-c`) shows both `mtds-dex-swaps-backfill`
+and `mtds-perp-funding-backfill` still `TERMINATED` with the byte-identical `lastStopTimestamp`
+(`2026-07-13T23:42:2{9,4}Z` / local `16:42:2{9,4}.-07:00`) recorded in run #6 — no relaunch has happened. Also checked
+the most recent Progress Log entry above (operator-dispatched 429-burst + AO-thrash fix session) — that work landed on
+the sibling `-001` task's DRIFT sub-todo (Helius rate-limiter fix + `BLOCKED-OPERATOR-DECISION` marker) and does not
+touch or answer this task's `BLK-5b8c2938` question. No new operator/main messages on this slot's heartbeat/boot. Not
+re-running `measure_honest_coverage.py`/hygiene/phantom-reconcile — the gate already fails on the coverage numbers alone
+and nothing has changed upstream since run #6 to justify re-scanning (same reasoning as slots 5/12). Not filing a
+duplicate `/blocked`. Calling `/skip-current-task`; unblocking requires either the operator answering `BLK-5b8c2938` or
+main parking/deprioritizing this task.
