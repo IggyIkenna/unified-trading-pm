@@ -141,7 +141,7 @@ sequential: true
       `l2_book_depth10_missing_l5_prerequisite_venues_2026_07_13.md` were never added to `_CONNECTOR_TO_VENUE`, verified
       pre-existing via clean-tree `git stash` before fixing; adjacent, small, fixed in the same shipment rather than
       blocking on a repo-blocker). Full `quality-gates.sh` green.
-- [ ] [SCRIPT] P2. **NEW (discovered 2026-07-13, slot-13):** Build the handler + CLI wiring to dispatch
+- [x] ✅ [SCRIPT] P2. **NEW (discovered 2026-07-13, slot-13):** Build the handler + CLI wiring to dispatch
       `compute_book_microstructure` (market-tick-data-service, recreated todo 3) against the live `depth_of_book_10`
       feed (todo 2, 5 capable venues) and write the resulting `queue_position_bid/ask` + `depth_levels_bid/ask` rows —
       mirrors the deleted `book_microstructure_handler.py` pattern
@@ -150,13 +150,44 @@ sequential: true
       `resolve_bucket_name(...)`, no raw `gs://`). This is the gap between todo 3 (pure compute function, done) and todo
       5 below (features-service extraction, which has nothing to read until this lands) — todo 5 is effectively blocked
       on this. Only after this lands should `queue_position`'s `data_type_capability.py` rows flip to
-      `live_capable=True` for the 5 capable venues. Repo: market-tick-data-service.
+      `live_capable=True` for the 5 capable venues. Repo: market-tick-data-service. — **DONE, slot-11,
+      `market-tick-data-service@ef467572`.** New `BookMicrostructureHandler`
+      (`cli/handlers/book_microstructure_handler.py`): reads already-captured `depth_of_book_10` rows via
+      `CanonicalParquetReader.read_shard()` for the 5 capable venues (+ per-venue instrument_type map — DERIBIT covers
+      PERPETUAL+FUTURE, the rest PERPETUAL/SPOT only), converts rows to `BookInput`, calls
+      `compute_book_microstructure`, writes via
+      `record_captured(source="mtds_microstructure",     pipeline_mode=PipelineMode.BATCH_MTDS_MICROSTRUCTURE)` with
+      shard isolation (no `raise` in the per-venue/ per-instrument loop, `classify_venue_error`+`ADAPTER_FETCH_FAILED`).
+      Honest gap (no manifest write) when no `depth_of_book_10` shard exists for a (venue, instrument_type, day) — never
+      a fabricated `record_failed`/`empty`. **Known documented limitation**: the live `depth_of_book_10` WS connectors
+      (all 5 venues, verified directly) write no per-row capture timestamp column, so `as_of` is stamped as the shard's
+      day at 12:00 UTC (day-representative, not per-row-precise) — see the handler's module docstring. Wired as
+      `--operation collect-book-microstructure --mode     batch` in `cli/main.py`. 18 new unit tests (row parsing,
+      shard-isolation, honest-gap routing), full `quality-gates.sh` green (sentinel-verified). Also flipped
+      `queue_position`'s `data_type_capability.py` rows to `live_capable=True` for the 5 capable venues
+      (`unified-api-contracts@4b945423`), mirroring `depth_of_book_10`'s own split — updated
+      `test_book_microstructure_schema.py` accordingly. **Tracking-discrepancy correction**: the AO backlog had task
+      `l2_book_microstructure_capture-008` (this todo) marked `done` with `done_sha=019276470203` — that SHA is actually
+      todo 3's commit (the compute function only); no handler file existed in the repo before this dispatch. This plan
+      doc's checkbox (the real SSOT) was correctly still unchecked; only the backlog DB row had drifted.
 - [ ] [SCRIPT] P2. Extend `features-service/.../book_microstructure_feature_extractor.py`
       (`extract_book_microstructure_feature_dict`) to surface `queue_position_bid`/`queue_position_ask`/
       `book_depth_levels` when present — the honest-absence behavior for capped venues must be preserved exactly as
       today. `formula_version=1` on any new derived keys. Repo: features-service. **Blocked on the new handler-wiring
       todo above** — until it lands, `queue_position`/`depth_levels_*` are honest-absent from every captured row, so
-      there is nothing new for this extractor to surface yet.
+      there is nothing new for this extractor to surface yet. **PREMISE CORRECTION (2026-07-14, slot-11,
+      `plans/active/issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md`):** the
+      handler-wiring todo above IS now done, but this todo's target — `extract_book_microstructure_feature_dict` reading
+      raw `CanonicalBookMicrostructure` snapshot rows — no longer exists. It was DELETED as "no-tech-debt" by
+      `features_read_book_columns_not_snapshots_2026_06_28.md` (complete, `features-service@d794b8c1`, 2026-06-29),
+      which repointed the extractor at MDPS's precomputed bar-level candle columns
+      (`unified_api_contracts.internal.domain.market_data_processing.book_summary_spec`, L1-L5 only, no
+      `queue_position`/deeper-depth columns exist there). Surfacing `queue_position`/`depth_levels_*` in features now
+      requires an ARCHITECTURE decision (extend MDPS's column pipeline to match — bigger scope, new plan — vs.
+      reintroduce a parallel raw-snapshot read path, which reverses the 2026-06-28/29 decision) — not a same-shape
+      "extend the extractor" edit. See the issue doc for the full option analysis + recommendation (Option C: leave
+      `queue_position` MTDS-only for now; Option A as the real follow-up, its own MDPS-scoped plan). **BLOCKED-OPERATOR
+      pending that decision — checkbox NOT flipped**, not attempting Option B (parallel snapshot path) unilaterally.
 - [ ] [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue (mirrors
       the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a backfill. Repo:
       market-tick-data-service.
@@ -167,4 +198,32 @@ sequential: true
 
 ## Progress Log
 
-(loop handoff lands here)
+### 2026-07-14 — slot 11 (Todo 4 shipped; Todo 5 premise-correction — BLOCKED-OPERATOR)
+
+Dispatched task `l2_book_microstructure_capture-005` (brief: extend the features-service extractor, todo 5). Fresh-pull
+confirmed the AO backlog had already marked the actual prerequisite (handler+CLI wiring, backlog id `-008`) `done` — but
+with `done_sha=019276470203`, which is todo 3's commit (pure compute function only); no handler file existed in the repo
+and nothing called `compute_book_microstructure` outside its own module/tests. The plan doc's own checkbox (the real
+SSOT) was correctly still unchecked.
+
+**Built the actual prerequisite (Todo 4)**: `BookMicrostructureHandler` in market-tick-data-service — reads captured
+`depth_of_book_10` rows via `CanonicalParquetReader.read_shard()` for the 5 capable venues, derives `queue_position` via
+`compute_book_microstructure`, writes via `record_captured(source="mtds_microstructure")`. Full detail + evidence in the
+todo's own checkbox above. Shipped `market-tick-data-service@ef467572` + `unified-api-contracts@4b945423` (capability
+flip), both quality-gates.sh green, both quickmerged to `live-defi-rollout`.
+
+**Then attempted the actual assigned task (Todo 5)** and found it targets retired code: the extractor no longer reads
+`CanonicalBookMicrostructure` snapshot rows at all (deleted "no-tech-debt" by
+`features_read_book_columns_not_snapshots_2026_06_28.md`, complete since 2026-06-29) — it reads MDPS precomputed
+bar-column candle fields (L1-L5 only, no `queue_position`). Filed
+[`issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md`](issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md)
+with the full option analysis (extend MDPS's column pipeline vs. reintroduce a parallel snapshot-read path vs. leave
+`queue_position` MTDS-only for now) — recommending the third pending an operator/main decision on whether the MDPS
+extension is worth a new plan. Did NOT unilaterally reintroduce the deleted snapshot-read pattern — that would reverse
+an already-shipped, deliberate architecture decision without authorization.
+
+**Checkbox state**: Todo 4 flipped `[x]`. Todo 5 NOT flipped — genuinely blocked on an operator/main architecture
+decision, not a coding gap. This plan-doc + issue-doc edit ships via the `docs(plans):` carve-out (no code in this
+commit). `/blocked` posted to the orchestrator citing the issue doc; `/done`-ing this dispatch with the Todo 4 shipment
+as the evidence (the actual deliverable this session produced) since Todo 5 cannot honestly be marked done or continued
+without that decision.
