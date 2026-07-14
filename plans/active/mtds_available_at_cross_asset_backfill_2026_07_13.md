@@ -577,6 +577,30 @@ across at least 5 dispatch cycles now; strongly recommend main/operator action o
 maintenance-window decision itself) before this task burns a 6th slot cycle. No production writes made this touch; no
 cron state changed, no manifest touched.
 
+**Re-verification #3, no new writes — 2026-07-14 (data_engineering slot-12, task
+`mtds_available_at_cross_asset_backfill-003`)**: dispatched task `-003` a fourth time (slots 4, 6, 10 already covered —
+see the three entries above). Fresh-pulled all 24 slot repos to `origin/live-defi-rollout` (all clean FF). Re-read this
+plan in full and confirmed nothing has changed: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is
+still unchecked, no operator go-ahead on record, `BLK-f3cdf442` remains open. Confirmed via
+`git log --oneline -20 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*' 'scripts/*prediction*'` on
+`market-tick-data-service` post-pull: only the prediction snapshot (`86467a0a`) and tradfi snapshot (`8f131104`) scripts
+exist — no cron-pause action anywhere. **Checked whether I could action the standing "park this task" recommendation
+(flagged 3× already, slots 6/10/9/10/11)**: `backlog.yaml` is NOT present anywhere in this slot's worktree (confirmed
+`find .tabs/12 -iname backlog.yaml` returns zero hits; only `agent-orchestrator/data/config/backlog.test.yaml` exists, a
+fixture, not the live config) and the server exposes no `POST`/`PATCH` endpoint to set `priority`/`prereqs.conditions`
+on an existing task — only `POST /api/prerequisites/<name>` (create/flip a condition) and
+`DELETE /api/backlog/<task_id>` (permanent removal, wrong tool here) are reachable from a worker slot. **The parking
+recommended by slots 6/9/10/11 requires editing the live `backlog.yaml` on the central orchestrator host — that file is
+not distributed to worker slot clones, so this action is genuinely main-agent/operator-only, not something any worker
+slot can execute**, which explains why 4+ flags haven't resolved it. Declined to execute the underlying todo (no cron
+pause action to take, same as prior touches). Not filing a 6th duplicate `/blocked` — calling `/skip-current-task`
+citing this entry + `BLK-f3cdf442`/`BLK-ccb6cd86`. **Flagging for main/operator, now 6 independent confirmations**: this
+task (or its `-005`/`-009`/`-014` siblings) has been dispatched 6+ times across slots 4/5/6/9/10/11/12 with identical
+findings — the fix is either (a) resolve the P0 maintenance-window decision, or (b) main/operator (who DOES have central
+`backlog.yaml` access) applies the parking recipe from `RULES.md` §4 (`priority: 999` + a false `prereqs.conditions`
+gate) to `-003`/`-005`/`-009`/`-012`/`-014`. No production writes made this touch; no cron state changed, no manifest
+touched, no code changed.
+
 **Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
 `mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
 (snapshot the prediction index) after fresh-pull — already fully worked by slot 4 (safe half done, cron-pause half
