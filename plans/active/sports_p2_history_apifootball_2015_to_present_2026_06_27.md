@@ -1506,3 +1506,38 @@ flipped above with evidence.
 **Next**: re-launch the same 5-entity GW SPOT fleet (idempotent, presence-skip — only the 225,854 previously-dropped
 rows should re-fetch) per session 20's launcher recipe, then re-run the parquet-presence cross-check (not the naive
 gate) to confirm the 3,720 false-empty cells resolve, then flip Todo 9 + this task's own checkbox.
+
+### 2026-07-14T14:46Z — session 34 (data_engineering slot-15): independent duplicate fix superseded; collision-avoided on the post-fix fleet relaunch
+
+Dispatched to Todo 9 (this task, `sports_p2_history_apifootball_2015_to_present-001`). Fresh-pulled all 24 slot repos
+clean. Independently re-derived all 3 legs of the write-path bug from the issue doc + this plan's session 31 finding
+(same root causes: skip-as-present demoting captured cells, the 33-league/`max_results=100` league-map truncation, the
+off-season silent-`continue`) and implemented the fix — only to discover on `git pull --rebase --autostash` that
+`instruments-service@0d9ffabd` (session 33, slot-13) had landed the identical fix moments earlier. Diffed my pending
+edits against the pulled HEAD: functionally equivalent (same 3 call sites, same `EXPECTED_PAUSED_LEAGUE` reason, same
+`record_failed` conversion for the bare-path drop). Discarded my redundant local changes
+(`git checkout HEAD -- <files>`, dropped the autostash) rather than double-shipping — no new commit from this session
+for the CODE fix.
+
+**Post-fix fleet relaunch (Todo 11) — found already in-flight, did NOT duplicate**: proceeded to session 33's stated
+"Next" step (re-launch the 5-entity GW fleet). First check used the broken snap `gcloud` alias (silently exits 1 under
+`set -e`, same `cap_dac_override` issue sessions 22/24/25 hit) and falsely read "no VMs running" — re-ran with
+`PATH=/home/ubuntu/google-cloud-sdk/bin:$PATH` and found 2 fresh `af-backfill-*` VMs already `RUNNING` (created
+14:43-14:44Z, ~2 min old), confirming another slot was actively executing this exact step concurrently. Waited 90s and
+re-checked: all 5 VMs up (`af-backfill-20260714-144333` FIXTURE_EVENTS · `-144423` FIXTURE_LINEUPS · `-144457`
+FIXTURE_STATS · `-144531` PLAYER_STATS · `-144603` INJURIES), staggered ~30-35s apart — same recipe, same window
+(2025-09-01..2025-11-30, confirmed via VM metadata `VM_START_DATE`/`VM_END_DATE`), tarball pinned to
+`instruments-service@0d9ffabd` (the just-landed fix, manifest `created_at=2026-07-14T14:40:22Z`) — the fleet IS running
+the fixed code. `run.log` health: FIXTURE_EVENTS + FIXTURE_LINEUPS already writing real rows (0 events / 39 lineup rows
+per fixture, zero Tracebacks); STATS/PLAYER_STATS/INJURIES too fresh (~1 min) to have written a first log line yet —
+normal startup lag, not a stall.
+
+**Declined to launch a competing fleet** — the launcher's own singleton lock would have blocked a second wave anyway,
+but avoided even attempting it (no `--force`) since a genuine parallel wave is already correctly in progress and a
+second one would contend for the same shared api_football per-key rate budget the registry allocator assumes is scoped
+to one active wave (exactly the risk session 20/31 flagged). Not duplicating a progress-log entry for the launch itself
+(whoever ran it will log their own evidence) — this entry documents my independent verification + the
+collision-avoidance decision only. **Checkbox NOT flipped** (Todo 9 gate still requires the fleet to complete + the
+parquet-presence re-verify, in progress under another slot). `/skip-current-task` — nothing further to do here without
+duplicating in-flight work; next genuinely-actionable point is once all 5 VMs self-delete and the parquet-presence
+cross-check runs.
