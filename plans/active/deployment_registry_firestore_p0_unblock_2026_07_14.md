@@ -112,6 +112,33 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 ## Progress Log
 
+- **2026-07-14 (slot 1, review)** — Attempted the deployed-API end-to-end verification for the `[REVIEW]` P0 todo above.
+  **BLOCKED — the fix has not reached the deployed instance yet**, so the "after" half of the check cannot be done
+  honestly. Leaving the checkbox unflipped; details below.
+  - **Before (confirmed live in prod, matches the plan's problem statement):**
+    - `gs://deployment-scripts-central-element-323112/deployments/active/` object count = **3,304** (measured just now
+      via `gcloud storage ls | wc -l`; consistent with the plan's "measured 2026-07-14: 3,270" — it's still growing).
+    - `GET https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/deployments/inventory?status=all` → **HTTP 503
+      after 42.6s** (deployed API, no in-flight fix). Confirms the census-timeout bug is still live in prod right now.
+    - Live GCE instance count (this project, `RUNNING` only): 18
+      (`gcloud compute instances list --project=central-element-323112`).
+  - **Why "after" can't be measured yet**: the deployed Cloud Run service (`uts-shared-deployment-api`, revision
+    `uts-shared-deployment-api-00163-44l`) is running image `deployment-api:30c4d46` — that's the LDR→main promote from
+    PR #278 (merged 2026-07-14T00:57Z), which predates the reaper-tick work. `deployment-api@8660e9e` (the
+    [BACKEND]-shipped reaper tick) is **98 commits ahead of `main`** on `live-defi-rollout`, only reachable via the open
+    promote PR **#279** (`promote/deployment-api/8660e9eccb6f`).
+  - **PR #279 is failing `quality-gates-v2`** (`gh run 29328006371`, `QG slice (lint-codex)` job):
+    `❌ Codex compliance FAILED: 6 violations (max allowed: 5)`. I confirmed this is **pre-existing and unrelated to
+    this phase's diff** — none of the flagged long-function violations touch `background_sync.py`, `sync_service.py`, or
+    `deployment_registry.py` (the files this phase changed); the violating files are unrelated data-status/breakdown
+    modules. Something in the 98-commit LDR/main gap since PR #278 pushed the codex-compliance count from 5→6. This is a
+    **shared-pipeline blocker** — it blocks EVERY pending promote for this repo, not just this plan.
+  - **Recommendation** (chatted to main): file/assign a fix for the codex-compliance regression (identify which of the
+    98 commits added the 6th long-function violation, then either shorten that function or bump the accepted baseline
+    per `codex/06-coding-standards/quality-gates.md` if warranted) so PR #279 goes green and `deployment-api@8660e9e`
+    actually deploys. Once deployed, re-run this same before/after check (before-count already captured above) to close
+    this todo.
+
 - **2026-07-14 (slot 3, backend-engineer)** — Shipped both [BACKEND] todos.
   - **Plan/code discrepancy found**: the plan assumed `auto_sync_running_deployments()` "already fetches the GCE VM list
     each cycle" to reuse as `running_vm_names`. Traced `SyncService.sync_deployments()` → `scan_deployment_states()` /
