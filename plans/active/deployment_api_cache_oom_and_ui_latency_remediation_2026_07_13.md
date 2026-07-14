@@ -354,8 +354,14 @@ Phase A — walkthrough + decisions (operator-joint; blocks Phase B):
       REPRIORITIZED 2026-07-14 per the operator's own 2026-07-13 Slack ruling in this doc's Progress Log L445-447:
       "general responsiveness → walkthrough" = lowest priority; verify-rerun finding 53. Phase B no longer gates on
       this.)**
-- [ ] [INFRA] P1. Pause the rollup-svc cron (cost-stop) — elevated to near-term per the operator's 2026-07-13 Slack
-      ruling (Progress Log L445-447); was narrative-only, promoted to a tracked todo by verify-rerun finding 53.
+- [x] ✅ [INFRA] P1. Rollup-svc cost-stop — elevated to near-term per the operator's 2026-07-13 Slack ruling (Progress
+      Log L445-447); was narrative-only, promoted to a tracked todo by verify-rerun finding 53. **Resolved via
+      per-service child-process isolation instead of pausing the cron** (pausing would have kept producing ZERO value;
+      isolation makes 11 of 12 services succeed instead) — `deployment-api@8d260ad` + `deployment-service@08d29b0`
+      (container 16Gi/4CPU→32Gi/8CPU, cron 10min→20min, attempt_deadline 600s→900s). Evidence:
+      `gs://central-element-323112-data-status-rollups/` now contains a fresh
+      `market-data-processing-service/full.json.gz` (written 2026-07-14T00:15:39Z) for the first time ever; full
+      root-cause + fix detail in the Progress Log entry above.
 - [ ] [BACKEND] P1. Add the deployment-api fail-fast/refuse-large OOM-guard — elevated to near-term per the same
       operator ruling; promoted from narrative to tracked todo (finding 53).
 - [x] ✅ [BACKEND] P0. Benchmark session (2026-07-13, agent-run per operator direction) — deployed-API curl suite (39
@@ -451,3 +457,36 @@ Phase C — verification + guardrails:
   value-per-effort near-term item. **Unaffected + still worth doing for the surfaces people DO use:** WORKERS=2,
   bounded-cache hygiene, and the 7 slow non-data-status endpoints (§2.8). Priority: data-status COMPUTE fix →
   deferred/scheduled; rollup-worker cost-stop + API OOM-guard → near-term; general responsiveness → walkthrough.
+- 2026-07-13/14 (slot-3): Delivered the near-term "rollup-worker cost-stop" item from the entry above — narrowly scoped,
+  no changes to deployment-api's live-serving/caching code, so this does NOT touch the § 4 joint-walkthrough gate.
+  **Root cause found**: `data_status_rollup_worker.py::run_rollup` processed all 12 `_DEFAULT_SERVICES` (IS, MTDS, MDPS,
+  7× features-*, ml-service, strategy-service, execution-service) SEQUENTIALLY IN ONE PROCESS. MTDS (2nd in the list)
+  OOM-killed the WHOLE container on every cron tick — so nothing queued after it (10 of the 12 services, including cheap
+  ones) had EVER produced a rollup blob; only instruments-service (1st) had ever succeeded. **Fix**
+  (`deployment-api@8d260ad`): each service's compute+write now runs in its own `multiprocessing.get_context("spawn")`
+  child, capped by `resource.setrlimit(RLIMIT_AS, 24GiB)` (container bumped 16Gi/4CPU → 32Gi/8CPU, verified against a
+  throwaway Cloud Run service first) — a too-large service raises a catchable `MemoryError` in its own throwaway child
+  instead of OOM-killing the parent/container. Verified the mechanism end-to-end against real Linux containers (not just
+  mocks) before shipping: `RLIMIT_AS` cleanly raises `MemoryError` for numpy/pandas allocations, and a real cgroup
+  OOM-kill terminates only the offending child while the parent survives. **Verified in production**:
+  `market-data-processing-service/full.json.gz` now exists in `gs://…-data-status-rollups/` for the **first time ever**
+  — direct proof MTDS's failure no longer blocks MDPS. **Second finding + fix, cadence mismatch**: the dedicated rollup
+  service's own request timeout (900s) was longer than both the old 10-min cron cadence and the old 600s scheduler
+  `attempt_deadline`; with `maxScale=1` (no concurrent instances), a new tick routinely fired while the previous sweep
+  was still running in the background, got rejected 429/`RESOURCE_EXHAUSTED`, and the previous sweep's real progress
+  (e.g. MDPS's blob write completing at t+15min) was invisible to the scheduler's own bookkeeping. Fixed
+  (`deployment-service@08d29b0`): cron `*/10`→`*/20`, `attempt_deadline` 600s→900s (applied live via
+  `gcloud scheduler jobs update`, matching this component's existing "imperatively managed" pattern; `.tf` kept in sync
+  as desired-state SSOT). **Scope boundary respected**: MTDS/MDPS's OWN full-2018-today build still exceeds any sane
+  per-child memory ceiling ("no RAM tier through 64GB survives it", § 3) — this fix does not and cannot make their own
+  rollup blobs succeed; that remains exactly the § 4 walkthrough's job. **Operator asked** (separately, same session)
+  whether DuckDB could help the § 3 compute — researched (not implemented): DuckDB is already a trusted, precedented
+  pattern in this codebase (`unified-trading-library/manifest_consolidator.py`'s pandas→DuckDB migration, plus two
+  one-off dedup/restore scripts in instruments-service and MTDS), but had never been applied to this data-status compute
+  path. A 7-agent design workflow produced a concrete technical memo: DuckDB fixes the read/filter stage cleanly, but
+  the DOMINANT cost (measured 81GB vs. a raw index that's plausibly low-single-digit-GB) is CPython dict-of-dicts
+  overhead + per-category copies + `ProcessPoolExecutor` fan-out duplication in
+  `venue_resolution.py`/`mtds.py`/`breakdowns_core.py` — DuckDB only fixes this if the nested Python loops are
+  themselves replaced by SQL `GROUP BY` aggregation, which is a real rewrite (SQL sketches, file:line-cited risks, and
+  an ordered implementation sequence are written up and available on request) — squarely § 3/Phase-B work, explicitly
+  not implemented, offered as input to the walkthrough whenever it's scheduled.
