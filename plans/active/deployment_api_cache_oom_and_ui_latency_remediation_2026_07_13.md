@@ -24,7 +24,7 @@ related:
     ../../codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -587,12 +587,21 @@ Phase C — verification + guardrails:
   `attempt_deadline`; with `maxScale=1` (no concurrent instances), a new tick routinely fired while the previous sweep
   was still running in the background, got rejected 429/`RESOURCE_EXHAUSTED`, and the previous sweep's real progress
   (e.g. MDPS's blob write completing at t+15min) was invisible to the scheduler's own bookkeeping. Fixed
-  (`deployment-service@08d29b0`): cron `_/10`→`\*/20`, `attempt_deadline`600s→900s (applied live via`gcloud scheduler
-  jobs
-  update`, matching this component's existing "imperatively managed" pattern; `.tf` kept in sync as desired-state SSOT). **Scope boundary respected**: MTDS/MDPS's OWN full-2018-today build still exceeds any sane per-child memory ceiling ("no RAM tier through 64GB survives it", § 3) — this fix does not and cannot make their own rollup blobs succeed; that remains exactly the § 4 walkthrough's job. **Operator asked** (separately, same session) whether DuckDB could help the § 3 compute — researched (not implemented): DuckDB is already a trusted, precedented pattern in this codebase (`unified-trading-library/manifest_consolidator.py`'s pandas→DuckDB migration, plus two one-off dedup/restore scripts in instruments-service and MTDS), but had never been applied to this data-status compute path. A 7-agent design workflow produced a concrete technical memo: DuckDB fixes the read/filter stage cleanly, but the DOMINANT cost (measured 81GB vs. a raw index that's plausibly low-single-digit-GB) is CPython dict-of-dicts overhead + per-category copies + `ProcessPoolExecutor`fan-out duplication in`venue_resolution.py`/`mtds.py`/`breakdowns_core.py`— DuckDB only fixes this if the nested Python loops are themselves replaced by SQL`GROUP
-  BY` aggregation, which is a real rewrite (SQL sketches, file:line-cited risks, and an ordered implementation sequence
-  are written up and available on request) — squarely § 3/Phase-B work, explicitly not implemented, offered as input to
-  the walkthrough whenever it's scheduled.
+  (`deployment-service@08d29b0`): cron `_/10`→`\*/20`, `attempt_deadline`600s→900s (applied live
+  via`gcloud scheduler jobs update`, matching this component's existing "imperatively managed" pattern; `.tf` kept in
+  sync as desired-state SSOT). **Scope boundary respected**: MTDS/MDPS's OWN full-2018-today build still exceeds any
+  sane per-child memory ceiling ("no RAM tier through 64GB survives it", § 3) — this fix does not and cannot make their
+  own rollup blobs succeed; that remains exactly the § 4 walkthrough's job. **Operator asked** (separately, same
+  session) whether DuckDB could help the § 3 compute — researched (not implemented): DuckDB is already a trusted,
+  precedented pattern in this codebase (`unified-trading-library/manifest_consolidator.py`'s pandas→DuckDB migration,
+  plus two one-off dedup/restore scripts in instruments-service and MTDS), but had never been applied to this
+  data-status compute path. A 7-agent design workflow produced a concrete technical memo: DuckDB fixes the read/filter
+  stage cleanly, but the DOMINANT cost (measured 81GB vs. a raw index that's plausibly low-single-digit-GB) is CPython
+  dict-of-dicts overhead + per-category copies + `ProcessPoolExecutor`fan-out duplication
+  in`venue_resolution.py`/`mtds.py`/`breakdowns_core.py`— DuckDB only fixes this if the nested Python loops are
+  themselves replaced by SQL`GROUP BY` aggregation, which is a real rewrite (SQL sketches, file:line-cited risks, and an
+  ordered implementation sequence are written up and available on request) — squarely § 3/Phase-B work, explicitly not
+  implemented, offered as input to the walkthrough whenever it's scheduled.
 - 2026-07-14 (operator-directed order: costs first, deployments = operator handling via Firestore, health LAST since it
   fans in the others): Root-caused `/ops/costs` (§4b). Measured the GCP billing explosion with live `bq`: 98,542
   full-grain rows vs 3,236 without `resource_id` (30×; 16,900 distinct resources drive it, not the 120 skus); AWS/GitHub
@@ -613,3 +622,28 @@ Phase C — verification + guardrails:
   perms-or-stale-deploy (works locally, per operator). Topology (20×4×4GB) declared NOT fixed → billing designed to fit
   regardless; Redis parked. **Billing page is DONE at the plan level; implementation starts once the whole plan is
   finalised** (operator: finalise plan first). Still no code changes.
+- 2026-07-14 (bug-investigation agent, live-triage of operator report "unknown error opening the data-status
+  drill-down"): **Fresh recurrence of THIS incident, not a new bug** — confirms Phase B (§5) is still unshipped and the
+  root cause is still live. Live evidence: `uts-shared-deployment-api` (now revision `00163-44l`, still 4Gi/2CPU per
+  `gcloud run services describe`) logged `Memory limit of 4096 MiB exceeded with 4098–4372 MiB used` repeatedly
+  04:01Z-11:05Z on 2026-07-14, with a dense burst 11:04:06Z-11:05:52Z. Cloud Logging request records show
+  `referer = …/service/market-tick-data-service/data-status` firing a parallel burst of
+  `GET /api/data-status/drilldown/market-tick-data-service/{cefi,defi,sports,tradfi,prediction}` +
+  `/api/data-status/coverage-summary` + `/api/data-status/bucket-counts` + `/api/capabilities/service-asset-groups/*`,
+  ALL with the default full-history window `start_date=2018-01-01&end_date=2026-07-13` — exactly the §2.8 "default range
+  = full history from 2018-01-01 → 1 click = kill" pattern. Every one of those calls came back `503` after 15-18s
+  (container OOM-killed mid-request; matches the documented malformed-response-or-connection-error signature). This is
+  what the operator experienced as "unknown error" in the drill-down modal — the browser's fetch simply failed once the
+  4GiB container was reaped. **The drill-down endpoint itself
+  (`deployment_api/routes/data_status/_deploy_turbo.py::get_data_status_drilldown`,
+  `GET /drilldown/{service}/{asset_group}`) is not independently broken** — it is collateral damage of the same
+  MTDS/manifest cell-grid OOM root-caused in §2.8/§3 (the drilldown burst and the manifest/coverage/bucket-counts calls
+  share the same worker pool and die together). No new code investigated or written per the findings-triage rule (fits
+  this existing locked P0 plan; the fix is architectural and gated on Phase A/§4b decisions already in flight here — not
+  a ≤30-min patch). Reinforces the urgency of the still-open
+  `[BACKEND] P1. Add the deployment-api fail-fast/ refuse-large OOM-guard` todo in §5 Phase A: today's burst shows the
+  blast radius is NOT limited to data-status — the same OOM window took down unrelated cockpit/repo-ci calls in-flight,
+  so an operator opening ONLY the data-status drill-down can currently crash-loop the whole shared backend for every
+  other open tab. By 11:08Z the crash-loop had subsided on its own (autoscaler cycled a fresh instance; `/api/health`
+  and `/api/repo-ci/*` were 200 again) — no operator/agent action taken, no deploy performed. Read-only
+  `gcloud logging read` / `gcloud run services describe` evidence only; no prod changes made.
