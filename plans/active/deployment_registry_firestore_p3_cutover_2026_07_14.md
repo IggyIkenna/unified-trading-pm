@@ -48,13 +48,14 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 3)
 > irreversible GCS deletion is made safe by the snapshot-before-delete (recoverable), not a human sign-off; the "all
 > readers migrated" check is an agent verification.
 
-> **🔴 BLOCKED (2026-07-14) — DEPLOY + DUAL-WRITE SOAK REQUIRED, DESTRUCTIVE / OPERATOR-GATED.** The verify gate
-> (todo 1) ran and HALTED: the prod `deployments` Firestore collection is EMPTY — dual-write has never run on the live
-> fleet (the flag defaults off; enabling it needs the deployment-api Cloud Run deploy, which the operator
-> deprioritized). P3 drops the GCS-write and DELETES the GCS registry blobs; doing that while Firestore is empty
-> destroys the only populated registry (data-loss). This phase CANNOT proceed until: (a) deploy the P1/P2 image, (b)
-> enable `deployment_registry_firestore_dualwrite` on the fleet, (c) soak until Firestore mirrors GCS, (d) validate
-> parity. Steps a–d are the deploy the operator set aside. Human decision required — see Progress Log.
+> **🔴 BLOCKED (2026-07-14) — GCS DELETE HELD UNTIL OPERATOR CONFIRMS THE FLEET IS ON FIRESTORE (operator decision
+> 2026-07-14).** The verify gate (todo 1) ran and HALTED: the prod `deployments` Firestore collection is EMPTY —
+> dual-write has never run on the live fleet (the flag defaults off; enabling it needs the deployment-api deploy). The
+> operator's explicit ruling: **the GCS delete (todo 4) stays BLOCKED until we can SEE the fleet using the new path —
+> specifically until (i) VMs are writing to Firestore, (ii) VM resource stats (cpu/mem/disk/heartbeat) are READ from the
+> Firestore surface in the deployment-ui, and (iii) per-VM data (the `/{id}/detail` drill-down) is retrievable from
+> Firestore.** Only after that is confirmed does the snapshot→delete run. Concrete unblock sequence + the GO/NO-GO
+> verification are in the Progress Log. Nothing destructive happens before that confirmation.
 
 ## Context (read first — self-contained)
 
@@ -130,6 +131,27 @@ QG-green per repo.
     `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` (or the typed config) on the fleet; (c) let dual-write soak until the
     Firestore `deployments` doc count tracks the live fleet; (d) diff a sample (P1 todo6). THEN P3's drop-GCS-write +
     snapshot-then-delete become safe. All code for the cutover is ready; only the prod rollout gates it.
+
+- **2026-07-14 (operator decision)** — The GCS delete (todo 4) is held explicitly until we can SEE the fleet on the new
+  path. **DELETE GO/NO-GO checklist** (all must be true before the snapshot→delete runs):
+  1. **Fleet writing Firestore** — the `deployments` collection is non-empty AND its doc count ≈ the live-VM count, with
+     `last_heartbeat_at` values fresh (VMs are actively writing through the new path, not a stale one-time backfill).
+  2. **Resource stats read from the new surface** — the deployment-ui Deployments tab shows each VM's cpu/mem/disk/
+     heartbeat sourced from the Firestore doc (the D.1 host-metric fields), not the GCS blob. (P2 already routes the
+     LIST view's resource columns through `resolve_active_registry`; this phase adds the `/{id}/detail` drill-down — see
+     the 2026-07-14 detail-read routing note below.)
+  3. **Per-VM data retrievable from Firestore** — `GET /{id}/detail` returns the full per-VM record from Firestore for a
+     sampled set of live VMs (the drill-down popover renders with real data).
+  4. **Parity** — for N sampled live deployments the Firestore doc equals the GCS blob (status, last_heartbeat_at,
+     counters, resource fields). Only when 1–4 hold does the snapshot→delete run (and even then: snapshot to a dated
+     cold prefix FIRST, verify the copy, then delete). Until then the GCS registry stays authoritative and untouched.
+
+- **2026-07-14 (slot 5, Opus) — detail-read routing shipped toward the gate.** To make GO/NO-GO items 2–3 achievable,
+  the per-VM point reads (`/{id}/detail` drill-down + the experiment-detail `.get`) now route Firestore-first via a new
+  `resolve_deployment_by_id()` (GCS fallback), companion to P2's `resolve_active_registry()`. So once dual-write is on,
+  per-VM data + resource stats come from Firestore. This is additive + safe (fallback preserved); it does NOT drop the
+  GCS write or delete anything — those stay blocked per the checklist above. Evidence in the P2-reader plan's log /
+  deployment-api commit.
 
 ## Codex SSOTs
 
