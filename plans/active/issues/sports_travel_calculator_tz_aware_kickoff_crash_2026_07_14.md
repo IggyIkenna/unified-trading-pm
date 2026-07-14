@@ -202,3 +202,20 @@ until Todo 1's full-history compute completes. Note for main/operator: this back
 slots without a structural prereq gate (its dependency on Todo 1 is prose-only, inside its own todo text, not a
 `prereqs.completed_tasks` binding) — consider parking it (RULES.md § "Park a task") against Todo 1's completion to stop
 the redispatch churn. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T14:0x UTC — data_engineering slot-14 (Todo 2 re-dispatch — still BLOCKED-PREREQ, 8th consecutive check; filed parking escalation)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as all 7 prior re-checks. Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+(grepped the plan's checkbox list directly). Cheap non-GCS-walk re-check (`gcloud compute instances list`,
+`central-element-323112`, non-snap binary): same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all
+`RUNNING`, no crash. Skipped the redundant full-corpus GCS date-count walk (single-walk discipline — 8 identical scans
+in under 2h has no marginal value). **This is now the 8th slot burned on the same structural gap** — rather than add a
+9th "consider parking it" note, I located the concrete blocker: the live orchestrator's `data/config/backlog.yaml` that
+`park a task` (RULES.md §4) needs to edit lives in the **root PM/agent-orchestrator clone**
+(`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/config/backlog.yaml`), which is READ-ONLY for a
+worker slot per RULES.md's root-clone hard rule — I cannot make this edit myself from `.tabs/14`. Filed `/blocked`
+(`BLK-` — see slot heartbeat) asking main/operator to apply the exact recipe: set `priority: 999` +
+`priority_override: true` + `prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` (condition created `false`
+via `POST /api/prerequisites/...`, flipped `true` once Todo 1's checkbox lands) on this task's entry, then
+`POST /api/backlog/reload`. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
