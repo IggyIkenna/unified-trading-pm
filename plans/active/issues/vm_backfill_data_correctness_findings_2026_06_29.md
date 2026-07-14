@@ -1,7 +1,10 @@
 ---
 doc_type: issue
 title: Backfill-VM data-correctness findings (footystats odds / Aster funding / FX / Curve / bybit / lending)
-summary: Six data-pipeline defects found while auditing running GCP backfill VMs 2026-06-29 — backfills are "alive" (heartbeating) but several produce invalid/empty output. Code-fixable defects fixed so the next VM generation runs clean.
+summary:
+  Six data-pipeline defects found while auditing running GCP backfill VMs 2026-06-29 — backfills are "alive"
+  (heartbeating) but several produce invalid/empty output. Code-fixable defects fixed so the next VM generation runs
+  clean.
 status: open
 nature: notes
 asset_group: [sports, defi, cefi, tradfi]
@@ -9,7 +12,13 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [backfill, data-quality, footystats, aster, fx, curve, bybit, lending, honest-absence]
-related: [market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md, codex/02-data/data-pipeline-correctness-hard-rule.md, codex/02-data/honest-absence-downstream-handling.md, codex/09-strategy/mvp-universe-per-asset-group.md]
+related:
+  [
+    market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md,
+    codex/02-data/data-pipeline-correctness-hard-rule.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/09-strategy/mvp-universe-per-asset-group.md,
+  ]
 created: 2026-06-29
 parent_epic: infrastructure_master
 priority: P1
@@ -21,7 +30,10 @@ audited_scope: data-correctness
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated:
+  "2026-06-30 (was: 2026-06-27 — verify-rerun-2 finding 95, corrected 2026-07-14 — last_updated predated
+  created:2026-06-29 by 2 days [copy-paste template artifact]; corrected to match the Progress Log's actual latest
+  entry, 2026-06-30)"
 locked_since: 2026-05-21
 ---
 
@@ -30,8 +42,9 @@ locked_since: 2026-05-21
 ## Context
 
 While auditing the running GCP backfill VMs (`central-element-323112`, zone `asia-northeast1-c`) for spend, a deeper
-work-product check (run.log content, not just heartbeat/CPU) surfaced that several backfills are **alive and heartbeating
-but producing invalid or empty data**. The supervising orchestrator agent only checks liveness, so these passed unnoticed.
+work-product check (run.log content, not just heartbeat/CPU) surfaced that several backfills are **alive and
+heartbeating but producing invalid or empty data**. The supervising orchestrator agent only checks liveness, so these
+passed unnoticed.
 
 Per `codex/02-data/data-pipeline-correctness-hard-rule.md`, these freeze downstream feature/backtest work for the
 affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
@@ -42,11 +55,11 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 ### F1 — ✅ FIXED (instruments-service@a4dfa6b) — footystats odds `kickoff_utc` serialization
 
 - **VM:** `fs-backfill-20260629-062206` (SPORTS, footystats odds). **MVP-critical** (odds = sports backtest input).
-- **Symptom:** 179× `ERROR validation error in instruments-service.footystats_odds_fetch:
-  ("Expected bytes, got a 'Timestamp' object", 'Conversion failed for column kickoff_utc with type object')`.
+- **Symptom:** 179×
+  `ERROR validation error in instruments-service.footystats_odds_fetch: ("Expected bytes, got a 'Timestamp' object", 'Conversion failed for column kickoff_utc with type object')`.
 - **Root cause:** pyarrow write failure. The NaN-fill path injects scheduled-fixture rows with `kickoff_utc` as a
-  `pd.Timestamp` (`instruments_service/engine/orchestrator/footystats.py` ~L759/L672-678), which collide with the
-  API odds rows' `kickoff_utc` (string), yielding an object-dtype column pyarrow can't serialize against the table schema.
+  `pd.Timestamp` (`instruments_service/engine/orchestrator/footystats.py` ~L759/L672-678), which collide with the API
+  odds rows' `kickoff_utc` (string), yielding an object-dtype column pyarrow can't serialize against the table schema.
 - **Fix:** coerce `kickoff_utc` to a single consistent dtype before write (normalize across API + NaN-fill rows).
 - **Repo/file:** `instruments-service/.../engine/orchestrator/footystats.py`.
 
@@ -58,31 +71,30 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
   Aster spams 4xx for pre-launch / unavailable dates instead of recording honest-absence.
 - **2026-06-29 ROOT CAUSE (verified, UAC dates confirmed):** there are **two distinct Aster genesis dates** and the
   trades leg uses the wrong one. (1) **Funding** genesis = `2023-07-22` (UAC `registry/venue_launch_dates.py "ASTER"` +
-  `perp_funding_handler.py:127 _ASTER_FUNDING_START_DATE`, *operator-confirmed 2026-06-17*: funding reaches back via the
+  `perp_funding_handler.py:127 _ASTER_FUNDING_START_DATE`, _operator-confirmed 2026-06-17_: funding reaches back via the
   Astherus pre-rebrand, Binance-proxied) — so the **funding leg is correct** to run 2023-11→2024-06 and is already gated
   (`_perp_funding_hl_aster.py:184`). (2) **Native trades (aggTrades)** genesis = `2024-09-01` (UAC
   `registry/chain_env.py ("BSC","ASTER")` — "Aster DEX launched on BSC ~Q3 2024"). The 113K 4xx are the **trades leg**
-  (`_write_aster_trades`, `_perp_funding_hl_aster.py:428`) running from the *funding* start (2023-07-22) while Aster's
+  (`_write_aster_trades`, `_perp_funding_hl_aster.py:428`) running from the _funding_ start (2023-07-22) while Aster's
   native tape only exists from ~2024-09 → every pre-launch date 4xxes.
-- **Fix (specified, not blocked):** gate `_write_aster_trades` by the **native-trades genesis** (UAC `("BSC","ASTER")`
-  = 2024-09-01, NOT the funding start) — early-return + **record honest-absence** (`record_zero_rows` /
+- **Fix (specified, not blocked):** gate `_write_aster_trades` by the **native-trades genesis** (UAC `("BSC","ASTER")` =
+  2024-09-01, NOT the funding start) — early-return + **record honest-absence** (`record_zero_rows` /
   `EXPECTED_PRE_VENUE_LAUNCH`, per QG STEP 5.86, mirroring the funding leg's pre-launch path) instead of attempting the
   aggTrades fetch. Funding leg unchanged. Add a `_ASTER_TRADES_START_DATE` constant sourced from UAC chain_env. + test.
-- **Repo/file:** `market-tick-data-service/.../cli/handlers/_perp_funding_hl_aster.py` (`_write_aster_trades`),
-  date SSOT `unified-api-contracts/.../registry/chain_env.py`.
+- **Repo/file:** `market-tick-data-service/.../cli/handlers/_perp_funding_hl_aster.py` (`_write_aster_trades`), date
+  SSOT `unified-api-contracts/.../registry/chain_env.py`.
 
 ### F3 — ✅ FIXED (market-tick-data-service@75c8f148) — TradFi FX backfill wrote zero rows (timestamp-bias rejection)
 
 > Operator decision 2026-06-29: **bug fixed for correctness, but NO new FX VMs launched** (FX is out of TradFi MVP).
-> Same fix also covers the KRX Yahoo daily-bar path (identical bug). Root cause: Yahoo daily bars are close-edge
-> stamped (bar for day D closes at D+1 00:00); the FX/KRX records omitted `bar_edge="close"`, so the day-partition
-> validator (`partitioned_writer.py:232` keys `close_edge` off that column) rejected every bar. Fix sets the marker.
-
+> Same fix also covers the KRX Yahoo daily-bar path (identical bug). Root cause: Yahoo daily bars are close-edge stamped
+> (bar for day D closes at D+1 00:00); the FX/KRX records omitted `bar_edge="close"`, so the day-partition validator
+> (`partitioned_writer.py:232` keys `close_edge` off that column) rejected every bar. Fix sets the marker.
 
 - **VM:** `tradfi-bf-fx-ohlcv-24h-2026` (TRADFI). **Out of named MVP** (FX not in TradFi MVP universe).
-- **Symptom:** 24× `ERROR Venue FX: adapter error: UpstreamTimestampBiasError: expected_day=<d>, observed_range=[…],
-  n_ticks_seen=N — adapter received ticks but ALL fell [outside expected day]`; 204× `SHARD_INCOMPLETE … missing ['FX']`;
-  0 rows written across 149 dates.
+- **Symptom:** 24×
+  `ERROR Venue FX: adapter error: UpstreamTimestampBiasError: expected_day=<d>, observed_range=[…], n_ticks_seen=N — adapter received ticks but ALL fell [outside expected day]`;
+  204× `SHARD_INCOMPLETE … missing ['FX']`; 0 rows written across 149 dates.
 - **Root cause:** 24h-bar FX adapter day-boundary/timezone mismatch — ticks land outside the expected UTC day window and
   are all rejected.
 - **Fix:** correct the FX 24h-bar day-window alignment. **Lower priority** — FX is out of MVP; the VM itself should be
@@ -91,19 +103,20 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 ### F4 — [P2][CONFIG] Curve DEX pools dead — decommissioned subgraph
 
 - **VM:** `mtds-dex-pools-backfill` (DEFI).
-- **Symptom:** 1,207× `WARNING Subgraph query errors … 'subgraph not found: no allocations'` + `All query schemas failed
-  for curve/<id>` → `curve_* = 0` pools every date. Uniswap/Sushi/Pancake/Aerodrome OK.
+- **Symptom:** 1,207× `WARNING Subgraph query errors … 'subgraph not found: no allocations'` +
+  `All query schemas failed for curve/<id>` → `curve_* = 0` pools every date. Uniswap/Sushi/Pancake/Aerodrome OK.
 - **Root cause:** `curve_adapter.py` `SUBGRAPH_URL = https://api.thegraph.com/subgraphs/name/lnfi/ln` — The Graph's
   hosted service (`/subgraphs/name/...`) was decommissioned; must use the gateway subgraph-id endpoint.
-- **2026-06-29 LIVE-ENDPOINT VERIFICATION (operator-requested):** Curve REST `api.curve.finance/v1/getPools/all/ethereum`
-  is **alive** (HTTP 200, 2,347 pools) — BUT returns only **current** pool snapshots. `mtds-dex-pools-backfill` needs
-  **historical** `dex_pool_state` per day (block-level), which REST cannot provide. The dex-pools handler routes curve
-  through the subgraph only (`_dex_pools_subgraph.py:216 fallbacks["curve"]=[messari_basic]`); the gateway subgraph ID
-  returns `no allocations` (no indexers serve it). **The fix is NOT a simple REST cutover** — historical pool-state needs
-  either (a) a **current indexer-allocated Curve subgraph ID** (The Graph gateway — needs the API key to verify which
-  subgraph is live), or (b) **RPC at historical blocks** via `_query_curve_pool_at_block` (needs Alchemy/RPC key).
-  → **BLOCKED-CREDENTIALS / operator decision**: provide The Graph key (find a live Curve subgraph) or RPC key, or accept
-  honest-absence for Curve pools until a source is wired. (REST stays usable for current-state instrument discovery.)
+- **2026-06-29 LIVE-ENDPOINT VERIFICATION (operator-requested):** Curve REST
+  `api.curve.finance/v1/getPools/all/ethereum` is **alive** (HTTP 200, 2,347 pools) — BUT returns only **current** pool
+  snapshots. `mtds-dex-pools-backfill` needs **historical** `dex_pool_state` per day (block-level), which REST cannot
+  provide. The dex-pools handler routes curve through the subgraph only
+  (`_dex_pools_subgraph.py:216 fallbacks["curve"]=[messari_basic]`); the gateway subgraph ID returns `no allocations`
+  (no indexers serve it). **The fix is NOT a simple REST cutover** — historical pool-state needs either (a) a **current
+  indexer-allocated Curve subgraph ID** (The Graph gateway — needs the API key to verify which subgraph is live), or (b)
+  **RPC at historical blocks** via `_query_curve_pool_at_block` (needs Alchemy/RPC key). → **BLOCKED-CREDENTIALS /
+  operator decision**: provide The Graph key (find a live Curve subgraph) or RPC key, or accept honest-absence for Curve
+  pools until a source is wired. (REST stays usable for current-state instrument discovery.)
 
 ### F5 — [P2][DATA] bybit dated-futures fetches time out en masse (Tardis)
 
@@ -120,10 +133,11 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 ### F6 — [P3][DATA] DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes
 
 - **VM:** `mtds-lending-indices-20260628` (DEFI).
-- **Symptom:** 18k× `WARNING instruments-store-defi parquet missing for {aave_v3,compound_v3}/<chain>/<date>; falling
-  back to subgraph discovery`; ~39% of writes are 0-row (aave OPTIMISM/LINEA, compound mostly empty).
-- **Root cause:** upstream instruments-service reference data missing for those venue/chain/date combos → fallback yields
-  little. May be legit (venue not deployed on chain in period) or an instruments-service backfill gap.
+- **Symptom:** 18k×
+  `WARNING instruments-store-defi parquet missing for {aave_v3,compound_v3}/<chain>/<date>; falling back to subgraph discovery`;
+  ~39% of writes are 0-row (aave OPTIMISM/LINEA, compound mostly empty).
+- **Root cause:** upstream instruments-service reference data missing for those venue/chain/date combos → fallback
+  yields little. May be legit (venue not deployed on chain in period) or an instruments-service backfill gap.
 - **Fix:** confirm whether the missing instruments-store reference data is an instruments-service backfill gap; if so,
   backfill it. Not a quick MTDS code fix.
 
@@ -145,13 +159,13 @@ items below are dispatched by the **same 3-hourly `wave_launcher.py` host cron**
   `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` (the `is_mvp` equity-basis carve-out, `mvp_scope.py:1100-1119`). Out of scope =
   **173/200 SP500 + 54/78 ETF tickers (~227)**. These ride INSIDE the per-year VM (extra runtime/storage, not extra VMs;
   `PER_YEAR_VENUES`).
-- **F7b — CME roots (biggest VM-count waste).** `launch-tradfi-bf-cme-ohlcv-1m.sh` `CME_ROOTS` = **49** roots; CME shards
-  one VM **per (root, year)** (`PER_ROOT_VENUES`, `--only-root`). MVP CME underliers (`mvp_scope.py:628`) = **9**: ES NQ
-  GC SI PL PA NG CL HG (VX is on **CBOE**, captured separately). Out of scope = **~39 roots**, each its own VM/year:
-  6A 6B 6C 6E 6J 6L 6M 6N 6S 6Z (**10 FX FUTURES — FX returns in futures form**), ZB ZF ZN ZT (treasuries),
-  ZC ZL ZM ZS ZW (grains), HE LE (livestock), CT HO RB (softs/refined), NKD YM RTY (equity index),
-  **BTC ETH MBT MET (crypto — operator confirms OUT)**, MES (micro S&P — operator confirms micros OUT),
-  XAB XAF XAI XAK XAP XAU XAV XAY, ECES ECBTC ECRTY ECYM ECGC ECCL ECNG EC6E ECNQ (9 event contracts).
+- **F7b — CME roots (biggest VM-count waste).** `launch-tradfi-bf-cme-ohlcv-1m.sh` `CME_ROOTS` = **49** roots; CME
+  shards one VM **per (root, year)** (`PER_ROOT_VENUES`, `--only-root`). MVP CME underliers (`mvp_scope.py:628`) =
+  **9**: ES NQ GC SI PL PA NG CL HG (VX is on **CBOE**, captured separately). Out of scope = **~39 roots**, each its own
+  VM/year: 6A 6B 6C 6E 6J 6L 6M 6N 6S 6Z (**10 FX FUTURES — FX returns in futures form**), ZB ZF ZN ZT (treasuries), ZC
+  ZL ZM ZS ZW (grains), HE LE (livestock), CT HO RB (softs/refined), NKD YM RTY (equity index), **BTC ETH MBT MET
+  (crypto — operator confirms OUT)**, MES (micro S&P — operator confirms micros OUT), XAB XAF XAI XAK XAP XAU XAV XAY,
+  ECES ECBTC ECRTY ECYM ECGC ECCL ECNG EC6E ECNQ (9 event contracts).
 - **F7c — `ohlcv_1s`.** `wave_launcher.py:110` `OHLCV_DATA_TYPES={ohlcv_1m, ohlcv_1s}`; TradFi MVP = **`ohlcv_1m` only**
   (decision #7, `mvp_scope.py:603-627`). **Operator decision: KEEP pending per-item review** (likely a free byproduct of
   the same Databento pull → storage cost only, not VM cost; may feed the features layer). Do NOT auto-strip.
@@ -170,8 +184,8 @@ items below are dispatched by the **same 3-hourly `wave_launcher.py` host cron**
 - DeFi lending beyond Aave/Compound-Ethereum — `launch-mtds-lending-indices` (RUNNING NOW) covers Aave + **Morpho/Spark/
   Fluid/Kamino** (MVP lending = AAVE_V3 + COMPOUND_V3 Ethereum only). Check what protocols/chains it actually iterates.
 - Sports non-football — odds launcher hardcodes ~6 leagues incl **NFL/NBA/MLB/NHL/tennis** (MVP = 94 football leagues).
-- Prediction `financial` — backfill captures all conditionIds incl the **financial** market_group (MVP = crypto/politics/
-  sports).
+- Prediction `financial` — backfill captures all conditionIds incl the **financial** market_group (MVP =
+  crypto/politics/ sports).
 - DeFi non-MVP data_types — `gas_fees` (8 EVM chains), `vault_share_price`, `eigenlayer_rewards`, `flash_loan_events`,
   `risk_params`, `user/LP positions`, `liquidations` — none in MVP DeFi data_type set. **Operator decision: KEEP pending
   per-item review** (may be deliberate features-layer inputs). Do NOT auto-strip.
@@ -187,7 +201,7 @@ set through `is_mvp` (NASDAQ/NYSE → 105 basis tickers; CME `--only-root` → 9
 ## Cross-cutting observation (separate issue)
 
 The orchestrator agent that supervises these VMs gates only on **heartbeat/liveness**, not output correctness. It
-relaunches VMs that fail to *start*, but is blind to all-NaN output, WriteGate rejections, 4xx storms, and 0-row writes.
+relaunches VMs that fail to _start_, but is blind to all-NaN output, WriteGate rejections, 4xx storms, and 0-row writes.
 A correctness/output check is needed. Also: the feature-sports backfill (`fss-backfill-vm-*`) computes 66 leagues vs the
 Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
 
@@ -227,14 +241,14 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
   `_ASTER_TRADES_START_DATE = "2024-09-01"` (perp_funding_handler.py:136, cites UAC chain_env SSOT) + a native-launch
   guard at the top of `_write_aster_trades` (early-return + log, mirroring the funding leg's pre-launch pattern) so the
   aggTrades fetch is skipped for pre-native dates. Funding leg unchanged. Regression test
-  `tests/unit/test_aster_trades_launch_guard.py` (asserts no aggTrades fetch for 2024-06-01). QG green (106s).
-  **Status: 3 of 6 fixed (F1, F3, F2). F4 = BLOCKED-CREDENTIALS (operator key decision). F5/F6 = verify-first/upstream.**
+  `tests/unit/test_aster_trades_launch_guard.py` (asserts no aggTrades fetch for 2024-06-01). QG green (106s). **Status:
+  3 of 6 fixed (F1, F3, F2). F4 = BLOCKED-CREDENTIALS (operator key decision). F5/F6 = verify-first/upstream.**
 - 2026-06-30: **F7 captured (out-of-scope capture audit, operator-requested "find the other FX-class items")** — TradFi
   capture is the un-gated class: CeFi/DeFi readers call `is_mvp`, TradFi gates nowhere. Confirmed active out-of-scope
   under the same wave_launcher cron: NASDAQ/NYSE full equity universe (~227 of ~278 tickers out vs the 105 basis
   universe; `launch-tradfi-bf-nasdaq-ohlcv-1m.sh:70`), CME 49-root list vs 9 MVP underliers (~39 out, incl. **10 FX
-  futures** + crypto BTC/ETH/MBT/MET + micros — each a separate VM/year), `ohlcv_1s` (`wave_launcher.py:110`).
-  Plus a B-tier list (DeFi wrong-chain venues / non-Lido LST / multi-protocol lending / sports non-football / prediction
+  futures** + crypto BTC/ETH/MBT/MET + micros — each a separate VM/year), `ohlcv_1s` (`wave_launcher.py:110`). Plus a
+  B-tier list (DeFi wrong-chain venues / non-Lido LST / multi-protocol lending / sports non-football / prediction
   financial / DeFi non-MVP data_types) needing a cron-active check. **INVENTORY ONLY per operator** — no code changed.
   Operator scope decisions recorded in F7: CME crypto/micros OUT; `ohlcv_1s` + DeFi extra data_types KEEP pending
   per-item review. Open keystone: confirm whether the TradFi `expected_unattempted` enumerator is `is_mvp`-gated.

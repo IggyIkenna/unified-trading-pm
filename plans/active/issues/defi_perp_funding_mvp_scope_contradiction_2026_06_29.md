@@ -29,7 +29,9 @@ locked_by: live-defi-rollout
 drift_direction: advance-code
 execution_scope: orchestrator-agent
 depends_on: []
-last_updated: 2026-07-09
+last_updated:
+  "2026-07-12 (was: 2026-07-09 — verify-rerun-2 finding 49, corrected 2026-07-14 — Progress Log carries dated entries
+  through 2026-07-11 and 2026-07-12 [two entries]; frontmatter never bumped)"
 locked_since: 2026-05-21
 ---
 

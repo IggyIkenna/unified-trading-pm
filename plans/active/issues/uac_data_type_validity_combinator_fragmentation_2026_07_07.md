@@ -41,7 +41,9 @@ thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
-last_updated: 2026-07-07
+last_updated:
+  '2026-07-13 (was: 2026-07-07 — verify-rerun-2 finding 140, corrected 2026-07-14 — body''s debt_token finding (finding
+  2) marked "SUPERSEDED 2026-07-13"; frontmatter never bumped)'
 supersedes:
 superseded_by:
 depends_on:
@@ -94,10 +96,10 @@ locked_since:
    VENUS, RADIANT, EULER_V2, BENQI) now emit both `a_token` and `debt_token` with real captured rows (2,949 total), per
    the resolved `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s 2026-07-13 entry.
 3. **CEFI's per-instrument-type narrowing is three independently-bolted-on patches, not one mechanism**, in two files:
-   `DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` (`market_data_categories.py:549-553`, Deribit-only, instrument_type-keyed,
+   `DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` (`market_data_categories.py:549-553`, Deribit-only, instrument*type-keyed,
    consumed by MTDS fetch-scoping) · `CeFiMvpRule.instrument_type_data_types`/ `.venue_data_types`
    (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py:204-205, 465-467, 479-483`, a
-   _different_ sparser mechanism narrowing Deribit OPTION and cutting Coinbase to trades-only) · `FUTURE_BUNDLE_VENUES`
+   \_different* sparser mechanism narrowing Deribit OPTION and cutting Coinbase to trades-only) · `FUTURE_BUNDLE_VENUES`
    (`market_data_categories.py:809-812`, a grain-axis overlay affecting Deribit and OKX). Plus one confirmed-dead
    remnant, `MVP_VENUE_DATA_TYPES` (`market_data_categories.py:539-544`, zero consumers workspace-wide). Each was added
    independently for a different purpose (MVP cost-cutting vs. could-exist shape validity vs. capture-grain) with no
@@ -238,7 +240,7 @@ just belongs on a different layer than instrument_type does, and conflating the 
     - **Only `AAVE_V3-ETHEREUM`'s `oracle_prices`** has real `captured` rows (3,160) among all 34 flagged venues. Fixed:
       added `"oracle_prices"` (+ `"collect-oracle-prices"` mtds_operation) to `aave_v3`'s `PROTOCOL_CAPABILITIES` entry
       in `capability_declarations/_defi.py`. Verified: `defi_actual_data_types_not_declared_valid()` no longer flags any
-      AAVE_V3-* venue for `oracle_prices` (34→32 violations; the 2 dropped are AAVE_V3-SCROLL/ZKSYNC, whose ONLY
+      AAVE_V3-\* venue for `oracle_prices` (34→32 violations; the 2 dropped are AAVE_V3-SCROLL/ZKSYNC, whose ONLY
       violation was `oracle_prices`).
     - **The other 33 flagged (venue, data_type) pairs are ALL 100% `empty_confirmed` in prod — zero real captured rows
       anywhere** (spot-checked: GMX-ARBITRUM/AVALANCHE `oracle_prices`, DRIFT-SOLANA `dex_pool_swaps`, KAMINO-SOLANA

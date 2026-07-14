@@ -32,9 +32,11 @@ related:
   ]
 created: 2026-07-06
 last_updated:
-  2026-07-06 (2026-07-06 20:15Z — cefi sub-bucket blank-chain phantom audit cross-reference marker closed [4th marker];
-  cefi _index verified glued, defi _index verified 0 legacy-combined blank-chain rows across oracle/perp sub-buckets,
-  slot-7·planning)
+  "2026-07-12 (was: '2026-07-06 (2026-07-06 20:15Z — cefi sub-bucket blank-chain phantom audit cross-reference marker
+  closed [4th marker]; cefi _index verified glued, defi _index verified 0 legacy-combined blank-chain rows across
+  oracle/perp sub-buckets, slot-7·planning)' — verify-rerun-2 finding 142, corrected 2026-07-14 — body carries
+  substantive [2026-07-12 correction, finding 115] and [2026-07-12 correction, finding 344] annotations never reflected
+  in this field)"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
