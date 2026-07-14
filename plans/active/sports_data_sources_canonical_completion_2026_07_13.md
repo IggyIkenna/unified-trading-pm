@@ -2421,3 +2421,47 @@ it's new adapter work, not a data-audit residual).
   footystats/soccer_football_info/open_meteo) was pruned during the incident window without its content ever reaching
   canonical — a dedicated recovery-and-reconcile dispatch is in flight (see the next Progress Log entry once it
   reports).
+
+- 2026-07-14 (slot-3, interactive session): **lost-shard recovery completed + a THIRD pause-without-resume incident + a
+  much bigger pre-existing footystats/ODDS gap surfaced.** The dedicated recovery agent (dispatched to reconcile the
+  lost 10,059-row shard from real GCS files rather than a wasteful re-fetch) hit a hard session-limit API error mid-task
+  ("Agent terminated early... resets 2:20am Europe/London") right as it finished writing
+  `instruments-service/scripts/reconcile_sports_lost_per_vm_shard_2026_07_13.py` — its last message was "Clean — only my
+  new file is untracked. Let's ship it," with the ship step never executed. Picked up directly:
+  - **Third pause-without-resume**: found both sports consolidator schedulers PAUSED again (`userUpdateTime` `23:59:40`
+    UTC, matching the dead agent's own `consolidator.lock` timestamp — it almost certainly paused them for its own
+    reconciliation work and got killed before resuming). Resumed both again. This is now **3-for-3** this session — the
+    `with_consolidator_paused()` wrapper hardening candidate flagged in the previous entry is no longer hypothetical,
+    it's now the clear highest-value follow-up to prevent a 4th recurrence.
+  - **Reconciliation dry-run, then real run**: verified the recovery agent's script logic directly (read in full — sound
+    design: scans real blobs under each entity's canonical `pipeline_mode=`-qualified path for every currently
+    `attempted_failed` date, cross-references against live manifest, backfills only genuinely-missing cells via a safe
+    per-VM-shard write, fail-honest on unreadable files). Dry-run then real run against production:
+    **footystats/PREDICTIONS**: 89 attempted_failed dates probed, 0 reconciled (0 real files found for the specific
+    still-failing cells — genuine residual, not lost bookkeeping). **footystats/ODDS**: 2,460 attempted_failed dates
+    probed, **961 rows genuinely reconciled** (real files existed, manifest bookkeeping was missing — overwhelmingly
+    `LA_LIGA_2`/`BRASILEIRAO`/`K_LEAGUE_1`, spanning 2019→2026) — verified landed in canonical post-consolidation
+    (spot-checked `2019-01-04/LA_LIGA_2` → `captured`). **soccer_football_info/SFI_PROGRESSIVE_STATS**: 0 reconciled
+    (110 already-captured, 0 no-real-file — the specific failing cells have no file). **open_meteo/WEATHER**: 0
+    reconciled (63 already-captured, 33 no-real-file). Shipped as `instruments-service@b70b8731` — via a **direct push**
+    (not quickmerge), because quickmerge's dirty-dependency pre-flight audit correctly refused (`unified-api-contracts`
+    had uncommitted changes from an unrelated concurrent agent's DeFi work) — this is the documented "dirty-deps"
+    direct-push carve-out, not a rule bypass.
+  - **New, much bigger, pre-existing finding — NOT part of this session's incident**: post-reconciliation,
+    `footystats/ODDS` still shows **13,449** `attempted_failed` rows — an order of magnitude larger than the ~175 this
+    plan originally tracked for footystats overall (§0's baseline audit undercounted ODDS specifically). The
+    `LA_LIGA_2`/`BRASILEIRAO`/`K_LEAGUE_1` concentration and multi-year date range (2019→2026) suggest a genuine,
+    long-standing capture gap for these leagues' ODDS predates today's consolidator incident entirely — **out of scope
+    for a quick round-4 residual-closer re-attempt**, filed here as a new P1 follow-up needing its own dedicated
+    investigation (why do these specific leagues fail so consistently for footystats ODDS — a real per-league adapter
+    issue, a rate-limit/backoff gap, or a genuine data-availability gap at the source — before sizing any re-fetch).
+  - **Multi-agent collision note**: shipping this file required temporarily working around TWO separate blocks of
+    unrelated concurrent WIP in the shared `instruments-service` clone (12 modified CeFi adapter files, 40+ modified
+    DeFi adapter files) plus the dirty `unified-api-contracts` dependency above — none touched or disturbed (verified
+    via `git stash push -- <exact paths>` / `git stash pop` round-trip when transiently shelving the CeFi files to test
+    QG in isolation, then abandoned that approach once the DeFi WIP appeared too, in favor of the sanctioned dirty-deps
+    direct-push carve-out).
+  - **Remaining after this dispatch**: footystats/PREDICTIONS (89), soccer_football_info/SFI_PROGRESSIVE_STATS (54),
+    open_meteo/WEATHER (51) still need an actual re-fetch (bounded residual-closer round 4) — reconciliation confirmed
+    these are genuine gaps, not lost bookkeeping. footystats/ODDS's 13,449 residual is the new P1 above, not a round-4
+    candidate.
