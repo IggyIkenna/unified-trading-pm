@@ -200,7 +200,18 @@ per-VM shard the same way this doc did for OKX, which is a real (but mechanical)
 - Also shipped alongside (same commit): Phase-0 `-test-`-bucket force-consolidation before Phase 1 (closes the companion
   re-freeze gap from `cefi_manifest_consolidator_14day_stale_recovered_2026_07_13.md`; IS checker got the same Phase-0
   in `instruments-service@526d2ffd`), and the MTDS exit-code now flips on `ambiguous` (aligned to IS).
-- **Still-open residual (unchanged from filing):** the retroactive audit of the ORIGINAL re-sweep's other live-leg
-  "passes" (each would need its per-VM shard read the way this doc did for OKX). All FUTURE sweeps' live-leg verdicts
-  are trustworthy from this fix forward; the historical RESWEEP_FINAL_REPORT.md live-leg columns remain untrustworthy
-  and are superseded by the next sweep.
+- **Residual CLOSED — disposition (2026-07-14, operator-directed close-out):** the retroactive audit of the ORIGINAL
+  re-sweep's other live-leg "passes" is **impossible at the artifact level and unnecessary at the data level**:
+  1. **Impossible**: `RESWEEP_FINAL_REPORT.md` + the sweep driver's shard JSONs are LOST (confirmed absent from this
+     host, all 16 AO-VM slot clones, and GCS — plan Progress Log 2026-07-13, todo-25 residuals). There is no surviving
+     list of which cells' live legs "passed" nor their VM instance names, so the per-VM-shard read this doc performed
+     for OKX cannot be replayed for the rest. Those runs' shards have since consolidated into the canonical (data
+     preserved; per-leg attribution gone).
+  2. **Unnecessary**: the live leg is a smoke check of the pipeline path, not the system of record — the captures
+     themselves are in the canonical availability index, whose honesty is enforced independently (phantom-audit,
+     honest-coverage machinery, per-VM writer discipline). Any question about a specific historical cell is answered by
+     the manifest, not the lost report. Every live-leg verdict that DROVE triage was individually re-run on real VMs
+     with the fixed verifier during the 2026-07-13 verification rounds (this doc's OKX case: PASSED via `per_vm_shard`).
+  3. **Forward-trustworthy**: all live legs verify per-VM-first since `market-tick-data-service@981201c4` (hardened
+     further by `@1dd4bbbc`, which gave force/skip legs the same per-VM-first read). The historical live-leg columns are
+     formally SUPERSEDED — the next full sweep re-derives every verdict from scratch.
