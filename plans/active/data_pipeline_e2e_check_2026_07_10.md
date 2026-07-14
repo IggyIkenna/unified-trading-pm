@@ -192,52 +192,52 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
 ## Todos
 
 - [x] 1. ✅ [INFRA] P0. Phase-0 provisioning gate-check — unified-trading-pm (no code) — evidence: all 10 test buckets
-     (`instruments-store-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`,
-     `market-data-tick-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`) confirmed pre-existing via
-     `gcloud storage buckets describe`; no provisioning needed.
+      (`instruments-store-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`,
+      `market-data-tick-{cefi,defi,tradfi,sports,pred}-test-central-element-323112`) confirmed pre-existing via
+      `gcloud storage buckets describe`; no provisioning needed.
 
 - [x] 2. ✅ [INFRA] P0. `--venues`/`--vm-name`/`--test-run` added to `launch-instruments-backfill-vm.sh` —
-     deployment-service@2ef62f6 — evidence: dry-run printed correct `VM_VENUE`/`IS_TEST_RUN=true` metadata; real VMs
-     `instr-backfill-cefi-pchk-0710125724-{f,s}-binance-futures` both launched + completed (`EXIT_STATUS=0`) using these
-     exact flags.
+      deployment-service@2ef62f6 — evidence: dry-run printed correct `VM_VENUE`/`IS_TEST_RUN=true` metadata; real VMs
+      `instr-backfill-cefi-pchk-0710125724-{f,s}-binance-futures` both launched + completed (`EXIT_STATUS=0`) using
+      these exact flags.
 
 - [x] 3. ✅ [INFRA] P0. `--instrument-ids`/`--test-run` added to `launch-mtds-backfill-vm.sh` —
-     deployment-service@2ef62f6 — evidence: real VMs `mtds-backfill-cefi-pipelinecheck-20260710-13{57,58,02}*` launched
-     with `--instrument-ids BTCUSDT --test-run`, `EXIT_STATUS=0`.
+      deployment-service@2ef62f6 — evidence: real VMs `mtds-backfill-cefi-pipelinecheck-20260710-13{57,58,02}*` launched
+      with `--instrument-ids BTCUSDT --test-run`, `EXIT_STATUS=0`.
 
 - [x] 4. ✅ [BACKEND] P0. `unified_trading_library/pipeline_e2e_check/` (5 modules) built —
-     unified-trading-library@c8ffb4a4 (+6927f2bf, +30b77a90 follow-up fixes) — evidence: `quality-gates.sh` PASSED 4×
-     (32d7939c→c8ffb4a4→6927f2bf→30b77a90), each module unit-verified (ruff/basedpyright/functional import checks) at
-     every revision.
+      unified-trading-library@c8ffb4a4 (+6927f2bf, +30b77a90 follow-up fixes) — evidence: `quality-gates.sh` PASSED 4×
+      (32d7939c→c8ffb4a4→6927f2bf→30b77a90), each module unit-verified (ruff/basedpyright/functional import checks) at
+      every revision.
 
 - [x] 5. ✅ [BACKEND] P0. `instruments-service/scripts/pipeline_e2e_check.py` — instruments-service@8e6d7526 — evidence:
-     **`data_pipeline_e2e_check_is_2026_07_05.md`: `total=2 passed=2 failed=0 status=green`** — force leg `passed` (real
-     VM `instr-backfill-cefi-pchk-0710125724-f-binance-futures`, `EXIT_STATUS=0`, 687 real BINANCE-FUTURES instrument
-     records written to the TEST bucket, manifest `captured`), skip leg `passed` with `skip_proof: genuine` (real VM
-     `...-s-binance-futures`, `EXIT_STATUS=0`, skip-signal log line found, object fingerprint unchanged). Gate met in
-     full — **as scoped**: this proves the SCRIPT/MECHANISM works on one real shard, not full coverage. See "Scope
-     correction" above + todo 18/20 for the actual 108-shard matrix, not yet run.
+      **`data_pipeline_e2e_check_is_2026_07_05.md`: `total=2 passed=2 failed=0 status=green`** — force leg `passed`
+      (real VM `instr-backfill-cefi-pchk-0710125724-f-binance-futures`, `EXIT_STATUS=0`, 687 real BINANCE-FUTURES
+      instrument records written to the TEST bucket, manifest `captured`), skip leg `passed` with `skip_proof: genuine`
+      (real VM `...-s-binance-futures`, `EXIT_STATUS=0`, skip-signal log line found, object fingerprint unchanged). Gate
+      met in full — **as scoped**: this proves the SCRIPT/MECHANISM works on one real shard, not full coverage. See
+      "Scope correction" above + todo 18/20 for the actual 108-shard matrix, not yet run.
 
 - [x] 6. ✅ [BACKEND] P0. `market-tick-data-service/scripts/pipeline_e2e_check.py` — market-tick-data-service@b4c0bec5 —
-     evidence: real VM run (day=2026-07-05, CEFI/BINANCE-FUTURES/trades) correctly (a) sampled a real PROD-captured
-     instrument at runtime (no hardcode), (b) correctly fell back to `smoke_matrix`'s representative symbol (BTCUSDT) +
-     logged the honest reason when no PROD row existed for the exact day (day-filter fix, see Progress Log), (c)
-     genuinely downloaded 2,084,208 real BTCUSDT trade rows from Tardis on `--force` — proving the real adapter/download
-     path end-to-end. **One leg of this Gate is NOT met as originally scoped**: that force-run landed in the PROD
-     bucket, not the TEST bucket, due to a real bug now fixed (see Progress Log finding #8) — re-verification against a
-     real VM post-fix is the one item **not completed** in this session; flagged honestly below rather than claimed
-     done. **This is the SCRIPT working on one real shard (CEFI/BINANCE-FUTURES) — not the 344-shard, 5-asset-group
-     coverage matrix.** See "Scope correction" above + todo 19/21, not yet run.
+      evidence: real VM run (day=2026-07-05, CEFI/BINANCE-FUTURES/trades) correctly (a) sampled a real PROD-captured
+      instrument at runtime (no hardcode), (b) correctly fell back to `smoke_matrix`'s representative symbol (BTCUSDT) +
+      logged the honest reason when no PROD row existed for the exact day (day-filter fix, see Progress Log), (c)
+      genuinely downloaded 2,084,208 real BTCUSDT trade rows from Tardis on `--force` — proving the real
+      adapter/download path end-to-end. **One leg of this Gate is NOT met as originally scoped**: that force-run landed
+      in the PROD bucket, not the TEST bucket, due to a real bug now fixed (see Progress Log finding #8) —
+      re-verification against a real VM post-fix is the one item **not completed** in this session; flagged honestly
+      below rather than claimed done. **This is the SCRIPT working on one real shard (CEFI/BINANCE-FUTURES) — not the
+      344-shard, 5-asset-group coverage matrix.** See "Scope correction" above + todo 19/21, not yet run.
 
 - [x] 7. ✅ [DATA] P1. IS/MTDS read-bucket asymmetry verified live (not just by reading code) — evidence in Progress
-     Log: IS's skip-leg fired `skip_proof: genuine` self-contained against the TEST bucket (todo 5); MTDS's skip-leg
-     required a real PROD-side `read_prod_capture_status` match to label `genuine` (confirmed both the genuine and the
-     `ambiguous` case via real runs — see the RPL-USDT/day-mismatch run in the Progress Log, correctly labeled
-     `ambiguous` before the day-filter fix).
+      Log: IS's skip-leg fired `skip_proof: genuine` self-contained against the TEST bucket (todo 5); MTDS's skip-leg
+      required a real PROD-side `read_prod_capture_status` match to label `genuine` (confirmed both the genuine and the
+      `ambiguous` case via real runs — see the RPL-USDT/day-mismatch run in the Progress Log, correctly labeled
+      `ambiguous` before the day-filter fix).
 
 - [x] 8. ✅ [SCRIPT] P0. `data-pipeline-check-is/SKILL.md` — unified-trading-pm@4c5b294f — evidence:
-     `link-claude-skills.sh` ran (via `quality-gates.sh`), skill confirmed live/loaded in this session (appeared in the
-     available-skills list).
+      `link-claude-skills.sh` ran (via `quality-gates.sh`), skill confirmed live/loaded in this session (appeared in the
+      available-skills list).
 
 - [x] 9. ✅ [SCRIPT] P0. `data-pipeline-check-mtds/SKILL.md` — unified-trading-pm@4c5b294f — same evidence as todo 8.
 
@@ -414,17 +414,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-      is NOT a tooling bug or an adapter regression.
-      `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-      under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-      `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-      sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+              is NOT a tooling bug or an adapter regression.
+              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1098,9 +1098,16 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   from 697 → 645 (this triage round resolved 52 leg-results as documented-not-a-bug). The remaining 645 are the rest of
   todo 25's scope — not further triaged this round beyond the 4 venues sampled above.
 
-- [ ] 27. [DATA] P1. **Targeted re-run of the remaining plausibly-explained failure clusters with all 2026-07-13
-      residual-round fixes live** (NOT another full 452-shard sweep): TRADFI:KRX (IS+MTDS force/skip — in flight this
-      session), CEFI:COINBASE-CDE:trades on a day ≥2026-07-10 (new adapter 28ad6b38/971bdd35),
+- [x] 27. ✅ [DATA] P1. **ALL SIX CLUSTERS DONE (2026-07-14T11:00Z)** — the PREDICTION pair completed last: post-RC#5 IS
+      prediction re-run 2026-07-07..12 (`instr-backfill-pred-rc5b-20260714`, exit 0 — KALSHI's 1,362 lifecycle rows
+      restored, per-venue leafs both venues) + the first honest KALSHI MTDS capture
+      (`mtds-backfill-pred-kalshi-rc6-20260714`, exit 0: **6,407 trades / 423 captured manifest rows / real
+      per-instrument parquet**, after Root Cause #6 — Kalshi rejects ms timestamps — was unmasked and fixed at
+      `mtds@d2040f8f`). Legacy dishonest empties superseded (captured outranks). Full chain evidence:
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md` § BATCH CHAIN RESOLVED. Original todo text below.
+      **Targeted re-run of the remaining plausibly-explained failure clusters with all 2026-07-13 residual-round fixes
+      live** (NOT another full 452-shard sweep): TRADFI:KRX (IS+MTDS force/skip — in flight this session),
+      CEFI:COINBASE-CDE:trades on a day ≥2026-07-10 (new adapter 28ad6b38/971bdd35),
       CEFI:HYPERLIQUID:trades/book_snapshot_5 (c48096e7/01f23b8c), TRADFI:ICE ohlcv_24h (753fb81a/971bdd35),
       PREDICTION:KALSHI/POLYMARKET MTDS shards for a day inside the now-backfilled market_lifecycle window, and a
       post-fix PREDICTION IS re-run to supersede the 12 dishonest empty_confirmed rows (a52cbab1 must reach the code
@@ -1681,3 +1688,20 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   overnight CFE session). G4: baseline frozen (previous entry) + wave evidence appended to the tardis issue doc; full
   post-fix af-census delta belongs to `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 after PROD-scale lease-enabled
   waves.
+
+- 2026-07-14 (post-restart completion — Root Cause #6 + the first honest KALSHI batch capture; todo 27 fully closed) —
+  The RC#5 chain's production re-run let the Kalshi adapter self-discover all 1,362 real tickers for the first time —
+  and every request 400'd. Diagnosed live (curl): Kalshi's `/markets/trades` rejects millisecond timestamps with an
+  explicit `400 "min/max timestamp must be in seconds, not milliseconds"` — `download_batch` derived `after_ts` as
+  `timestamp()*1000`. **Root Cause #6**, unreachable until RC#1–5 restored the ticker-discovery path (six causes
+  stacked, each masking the next). Fixed + regression test pinning the exact seconds value: `mtds@d2040f8f` (QG green).
+  Tarball refreshed to `d2040f8f` → relaunched the KALSHI trades backfill for 2026-07-09
+  (`mtds-backfill-pred-kalshi-rc6-20260714`, DEPLOYMENT_COMPLETED exit 0):
+  `KalshiAdapter.download_batch: 2026-07-09 — 6407 trades (rejected pre=0 post=0)`; per-VM manifest **423 captured
+  trades rows + 23 captured prediction_canonical_question_group rows**; real per-instrument parquet at
+  `raw_tick_data/by_date/day=2026-07-09/pipeline_mode=batch_kalshi/...`. The e2e checker's earlier PREDICTION leg
+  failure round also surfaced two non-blocking notes: (a) the checker's representative-instrument sampler picked a
+  legacy dishonest row's group-name id (`DOGE_UP_DOWN_DAILY`) — self-heals now that real captured tickers exist to
+  sample; (b) `book_snapshot_5` is a LIVE-capture surface for prediction (no historical book restore) — a batch
+  force-leg on a past day is honestly empty by construction. SPOT-preemption ops note: two preemptions absorbed tonight
+  (rc5 first launch, KALSHI e2e trades leg) — both re-ran idempotently per the spot-vms-for-backfill design.

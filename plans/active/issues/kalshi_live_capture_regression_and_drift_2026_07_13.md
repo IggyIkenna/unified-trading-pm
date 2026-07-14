@@ -119,3 +119,34 @@ not sit un-triaged.
    third time.
 3. Triage the growing `kalshi/markets` / `kalshi/market_lookup` schema-drift GitHub issue chain (#45→#590) — decide
    whether this is a Kalshi-side API change requiring a UAC schema bump, or an endpoint that's been retired.
+
+---
+
+## 2026-07-14T11:00Z — BATCH CHAIN RESOLVED: all 6 root causes closed with a production capture (423 rows / 6,407 trades); doc stays open for the 3 live-side follow-ups
+
+The batch-capture half of this doc is CLOSED end to end. The final two links, shipped and production-verified today:
+
+- **Root Cause #5 — per-venue lifecycle partition** (`instruments-service@1fa9177f`): `_write_market_lifecycle` now
+  partitions `{group, day, venue}` → `day={d}/group={g}/venue={V}/market_lifecycle.parquet`; POLYMARKET's write can no
+  longer clobber KALSHI's rows. Production-verified after the forced IS prediction re-run 2026-07-07..12 (VM
+  `instr-backfill-pred-rc5b-20260714`, DEPLOYMENT_COMPLETED exit 0; the first launch was SPOT-preempted at 13 min —
+  idempotent relaunch per design): **KALSHI's 1,362 lifecycle rows are back** at
+  `day=2026-07-09/group=OTHER/venue=KALSHI/` with per-venue leafs present for BOTH venues on every checked day. MTDS
+  readers were verified layout-tolerant in advance (`mtds@5bb0e2c3` prefix-list + suffix-match).
+- **Root Cause #6 — Kalshi rejects millisecond timestamps** (`market-tick-data-service@d2040f8f`): with the lifecycle
+  restored, the adapter self-discovered all 1,362 real tickers for the first time — and every request 400'd with
+  Kalshi's explicit `"min/max timestamp must be in seconds, not milliseconds"` (verified live via curl).
+  `download_batch` derived `after_ts` as `timestamp()*1000`; now seconds, + a regression test pinning the exact value.
+  This bug was UNREACHABLE until RC#1–5 were fixed (the adapter never got past ticker discovery), which is why six root
+  causes stacked.
+- **Production capture proof (2026-07-09, VM `mtds-backfill-pred-kalshi-rc6-20260714`, DEPLOYMENT_COMPLETED exit 0)**:
+  `KalshiAdapter.download_batch: 2026-07-09 — 6407 trades (rejected pre=0 post=0)`; per-VM manifest shows **423
+  `captured` trades rows + 23 `captured` prediction_canonical_question_group rows (6,407 trades)**, superseding the
+  legacy dishonest empties (captured outranks non-captured in the consolidator); real per-instrument parquet at
+  `raw_tick_data/by_date/day=2026-07-09/pipeline_mode=batch_kalshi/...:trades/KALSHI:PREDICTION_MARKET:*.parquet`.
+- `book_snapshot_5` note: Kalshi has no historical order-book restore — book snapshots are a LIVE-capture surface; a
+  batch force-leg on a past day is honestly empty by construction (last night's `empty_confirmed SOURCE_RETURNED_ZERO`
+  row is the correct steady-state for that cell).
+- The three live-capture follow-ups listed above (live stall triage at day=2026-06-28, the e2e-testing host regression,
+  the schema-drift issue chain) remain open — they are the LIVE half, out of scope of the batch chain this doc's
+  root-causes cover.
