@@ -171,10 +171,22 @@ implement them under this SPEC-decision todo.
       shipping `quality-gates.sh` run itself queued 38s behind the K=1 token
       (`[qg-governor] token 1/1 acquired after 38s wait`) and still passed cleanly (94s wall, well under the 300s
       default `MAX_DURATION`) — full `quality-gates.sh` green + sentinel-verified before the final rebase-and-push.
-- [ ] [SCRIPT] P3. Gate `qg_governor_acquire()` on the caller's `QG_SLICE` at `base-service.sh:601` so a light slice
+- [x] ✅ [SCRIPT] P3. Gate `qg_governor_acquire()` on the caller's `QG_SLICE` at `base-service.sh:601` so a light slice
       (`QG_SLICE=lint-codex`, which never runs TESTS/TYPECHECK) doesn't queue behind the same heavy-phase token as full
       runs — it has nothing to protect against contention-wise. (repo: unified-trading-pm,
-      `scripts/quality-gates-base/base-service.sh` + `qg-host-governor.sh`)
+      `scripts/quality-gates-base/base-service.sh` + `qg-host-governor.sh`) — unified-trading-pm@9693a379d. Acquire is
+      now gated on `RUN_TESTS=true OR SKIP_TYPECHECK!=true` (both fully resolved by that point in the script, after
+      `QG_SLICE`/`--skip-*`/the DOCS-ONLY short-circuit all set their final values) in addition to the existing
+      sentinel-hit check — so `QG_SLICE=lint-codex`, a DOCS-ONLY changeset, and `--skip-tests --skip-typecheck` together
+      all skip the token entirely; `QG_SLICE=tests`/`typecheck` and the default full run still acquire as before.
+      `qg_governor_release()` needed no change (already idempotent/no-op when nothing was acquired). Verified live on
+      this repo: `QG_SLICE=lint-codex` now completes with ZERO governor lines in the output (previously queued/acquired
+      every time) and still exits 0; a full unsliced run afterward still queued + acquired normally (54s wait),
+      confirming the default path is unaffected. 8-case isolated replica self-test
+      (`scripts/quality-gates-base/tests/test-qg-governor-slice-gating.sh`, mirroring
+      `tests/test-step-5-63-run-lifecycle.sh`'s convention since `base-service.sh` is too large to source directly)
+      covers every `QG_SLICE` value, DOCS-ONLY, `--skip-tests`+`--skip-typecheck`, and the sentinel-hit override. Full
+      `quality-gates.sh` green + sentinel-verified on unified-trading-pm@9693a379d.
 - [ ] [SPEC] P3. Investigate whether the acquire loop has a fairness/starvation gap under ~20-way concurrent waiters (no
       fairness ordering — every waiter races the same non-blocking `flock -n` each ~2s tick), separate from the
       K=1-is-too-low policy question above; a single `/proc/locks` snapshot during today's incident showed zero lock
