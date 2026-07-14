@@ -98,10 +98,18 @@ they're trying to fix).
       "raise K on 61 GB hosts" quick-win (Phase 1) plus formally retiring the `bootstrap_vm.sh` pin (Phase 5). No code
       change needed from this todo — documenting the confirmation + cross-links is the close-out; the actual governor
       redesign is tracked and in progress in that plan, not duplicated here.
-- [ ] [INFRA] P2. Consider excluding `qg_governor_acquire` queue-wait time from the `MAX_DURATION` wall-clock check in
-      `scripts/quality-gates-base/base-service.sh` (~line 3637-3654) so host contention can't fail an otherwise
-      fully-green run. (repo: unified-trading-pm) — tracked as Phase 4 P2 ("MAX_DURATION fix") in
-      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`; not duplicating here.
+- [x] ✅ [INFRA] P2. Consider excluding `qg_governor_acquire` queue-wait time from the `MAX_DURATION` wall-clock check
+      in `scripts/quality-gates-base/base-service.sh` (~line 3637-3654) so host contention can't fail an otherwise
+      fully-green run. (repo: unified-trading-pm) — **Shipped: unified-trading-pm@f36ac5877** (slot-10, landed
+      concurrently with this dispatch while I was mid-implementation of the functionally-identical fix). Their
+      `qg_governor_acquire()` now exports `QG_GOVERNOR_WAIT_SECONDS`; `base-service.sh`/`base-library.sh` compute
+      `DUR_BILLABLE = DUR - QG_GOVERNOR_WAIT_SECONDS` and gate `MAX_DURATION` on it, plus 4 new committed bash-harness
+      unit tests (`tests/test-qg-governor-wait-time.sh`). I independently built + verified an equivalent fix (same
+      mechanism, isolated unit smoke tests, a full live `quality-gates.sh` run queuing 68s/226s behind other slots and
+      passing green) but hit `BEHIND_DIVERGED_CONFLICT` on quickmerge once slot-10's version had already merged —
+      discarded mine rather than push a duplicate/conflicting implementation; theirs is strictly better (has committed
+      regression tests, mine did not). Also flipped as todo 2 in their own issue doc
+      `qg_host_governor_severe_contention_2026_07_13.md`. No further code change needed from this todo.
 
 ## Progress Log
 
@@ -113,3 +121,12 @@ already independently confirmed by main on 2026-07-13 in the related issue doc
 `qg_host_adaptive_resource_governor_2026_07_14.md` active plan (human-driven), which formally replaces the fixed-K
 governor and retires this exact pin in its Phase 5. Flipped todo 1 only; todo 2 cross-linked to that plan's Phase 4 (not
 duplicated). No code changes needed.
+
+**2026-07-14, slot 6 (infra), todo 2**: implemented + verified (isolated unit smoke tests, shellcheck, a full live
+`quality-gates.sh` run — queued 68s then 226s behind other slots, passed green both times) a
+`QG_GOVERNOR_WAIT_SECONDS`-based fix identical in mechanism to slot-10's. Hit the exact quickmerge race this issue doc
+describes twice in a row (HEAD moved during Stage 0's auto-rebase, invalidating the sentinel) while retrying — on the
+third retry hit a genuine file conflict: slot-10 had independently shipped the same fix (`unified-trading-pm@f36ac5877`,
+with committed unit tests, superior to my ad-hoc smoke tests) moments earlier. Discarded my redundant local commit
+(`git reset --hard origin/live-defi-rollout`) rather than force a duplicate/conflicting version through. Flipped todo 2
+crediting their shipped commit.
