@@ -107,16 +107,22 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Todos
 
-- [ ] [DATA] P0. Confirm `unified-trading-library@9c9cdc50` (available_at persistence fix) AND `@2e132bb2`
+- [x] [DATA] P0. Confirm `unified-trading-library@9c9cdc50` (available_at persistence fix) AND `@2e132bb2`
       (`MANIFEST_COLUMN_FILL_REGRESSION` guardrail) are both pinned in `market-tick-data-service`'s dependency lock on
       `live-defi-rollout` — bump + redeploy first if either is missing. Do NOT proceed past this todo otherwise. (repo:
-      market-tick-data-service, unified-trading-library)
+      market-tick-data-service, unified-trading-library) — ✅ 2026-07-14 (slot 9): MTDS depends on
+      `unified-trading-library` via an editable path source (`pyproject.toml:100-101`, not a version-locked pin), so it
+      always tracks whatever's checked out on `live-defi-rollout`. Verified both commits are ancestors of
+      `unified-trading-library@65388571` (current LDR HEAD): `git merge-base --is-ancestor 9c9cdc50 HEAD` → yes,
+      `git merge-base --is-ancestor 2e132bb2 HEAD` → yes. No bump/redeploy needed — condition already satisfied.
 - [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the prediction +
       tradfi consolidator crons (per the sports Finding 1 cron-collision incident) before pausing either — get explicit
       per-bucket go-ahead. (repo: NA)
-- [ ] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --force` (no writes) against
+- [x] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --force` (no writes) against
       `market-data-tick-pred-prd-central-element-323112`; spot-check the previewed `available_at_envelope` values
-      against a handful of known-good rows before applying anything live. (repo: market-tick-data-service)
+      against a handful of known-good rows before applying anything live. (repo: market-tick-data-service) — ✅
+      2026-07-14 (slot 9): see Progress Log for full evidence (correction: the script has no `--force` flag — ran
+      `--dry-run` instead, which is the actual no-writes preview mode).
 - [ ] [DATA] P1. Snapshot the prediction canonical manifest index
       (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and pause its consolidator cron. (repo:
       market-tick-data-service)
@@ -206,3 +212,52 @@ their predecessor to be `done` before dispatch. Filed `/blocked` (`BLK-f3cdf442`
 dispatched (nothing to resume, no evidence to record) and recommending it re-queue once the real prerequisite chain —
 starting with the OPERATOR P0 maintenance-window decision — is actually satisfied. No production writes made this touch;
 no cron touched, no manifest write, no consolidator state changed.
+
+**Dry-run + P0 verification — 2026-07-14 (slot 9)**: dispatched task `mtds_available_at_cross_asset_backfill-002` (the
+prediction dry-run todo). Before executing it, verified its own upstream P0 gate ("Confirm
+`unified-trading-library@9c9cdc50`+`@2e132bb2` pinned... Do NOT proceed past this todo otherwise") since it was still
+unchecked: `market-tick-data-service` depends on `unified-trading-library` via an editable path source (`pyproject.toml`
+— not a version-locked pin), so it always tracks whatever's on `live-defi-rollout`. Confirmed both commits are ancestors
+of `unified-trading-library@65388571` (current LDR HEAD) via `git merge-base --is-ancestor` — the gate's condition was
+already substantively satisfied, just not flipped. Flipped it with this evidence. The P0 OPERATOR maintenance-window
+todo (gates _pausing_ the prediction/tradfi crons) does NOT gate a pure dry-run — it was left unchecked/untouched,
+correctly, since nothing here paused or applied anything.
+
+**Correction**: the todo text says `--force`; neither `rebuild_prediction_manifest.py` nor `rebuild_tradfi_manifest.py`
+actually has a `--force` CLI argument (only `--dry-run`, `--start-date`/`--end-date`, `--venue`, `--workers`,
+`--beta-manifest-out`). The real no-writes preview mode is plain `--dry-run`; the real live-write mode is the default
+(no `--dry-run`) via `ManifestWriter`. Future todos in this plan that say `--force` (the tradfi dry-run/apply todos)
+should be read as "default (live) mode," not a real flag — flagging here rather than editing every occurrence, since
+this doesn't change what those todos need to DO, only the literal CLI invocation.
+
+Ran (100% read-only, zero writes, verified after the fact — see below):
+
+```
+python -u -m market_tick_data_service.scripts.rebuild_prediction_manifest \
+    --start-date 2026-06-24 --end-date 2026-06-28 --dry-run
+```
+
+against `market-data-tick-pred-prd-central-element-323112` (a recent 5-day window, not the full corpus — this todo is a
+preview spot-check, the full-corpus apply is a separate downstream todo). Result:
+`{'objects': 13038, 'unparseable': 0, 'distinct_venues': 2, 'captured_cells': 9, 'captured_bundles': 2, 'failed_envelope': 7, 'failed_unclassified': 0, 'failed_zero_row': 0}`.
+No crashes, no unparseable objects — the canonical path parser handles the live layout cleanly. 7 of 9 (day, venue, cqg)
+cells had no parseable `ts_event`/`timestamp`/`created_time` across all member objects in this window → envelope=None →
+would route to `record_failed[missing_available_at_envelope]`, NOT a fake/blank `available_at` (this is the documented
+CF-11 honest-absence behavior working as designed, not a bug).
+
+Spot-checked envelope values directly via `compute_object_atom()` against 5 real POLYMARKET `trades` objects from
+2026-06-24 (zero writes — pure function call, no writer involved): all 5 produced sane same-day envelope timestamps
+(e.g. `2026-06-24 23:59:22+00:00`, `2026-06-24 04:06:11+00:00`) with `num_rows` in the expected 478-500 range — no
+epoch-zero, no far-future/past values, no obviously-wrong classification. `available_at_envelope` derivation looks
+correct on this sample.
+
+Verified zero production writes: confirmed
+`gs://market-data-tick-pred-prd-central-element-323112/_index/audit/plan_health_probe_20260714.parquet` does not exist
+(a `--beta-manifest-out` attempt against that audit path failed on a missing `GCP_PROJECT_ID` env var during client
+construction, before any network write — never retried since it's outside this todo's "no writes" scope anyway; the
+plain `--dry-run` run above is the actual deliverable). Cron state: untouched (no pause/resume attempted, correctly —
+that's gated behind the still-open OPERATOR maintenance-window todo, downstream of this one).
+
+**Net**: prediction's dry-run preview ran clean with no code changes needed; the mechanism works as documented. Ready
+for the next todo (snapshot + pause cron) once the OPERATOR P0 maintenance-window go-ahead lands — that decision is
+still open and is NOT something this dispatch can make.
