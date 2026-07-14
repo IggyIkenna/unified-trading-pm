@@ -401,6 +401,45 @@ since it fans in the others). Costs picked as the first backend perf fix.
 - **Phasing:** go straight to B. Only add a MINIMAL safety valve now if `/ops/costs` hurts before B ships — bound
   `CostWindowCache` + cap default `days` (do NOT build A's full coarse-window refactor; it's thrown away under B).
 
+**⚑ SETTLED billing decisions (operator-confirmed 2026-07-14) — billing design FINALISED:**
+
+Measured sizing (live `bq`, so the design is grounded, not estimated):
+
+- Raw BQ billing export table ≈ **2 GB** (all un-aggregated line items, all history + nested fields) — **we never
+  download this.** The snapshot is the AGGREGATED query result (`GROUP BY day, service, resource, region, sku, zone`).
+- A 180-day aggregated query **scans only ~271 MB** server-side (date filter + column pruning) and **returns ~167.6 K
+  rows**. Per refresh ≈ **$0.002** BQ on-demand; 2×/day = rounding-error cost.
+- **90-day and 180-day both return ~167,641 rows** → the export effectively holds only ~90 days, so "snapshot
+  everything" IS the full history and is still just ~168 K rows ≈ **~20–40 MB parquet** (GCP).
+- Reconciles the 1.9 GB: today's cache materialises EACH day-window (7/30/90 × current+prior = up to 6 overlapping
+  windows) as fat `CostRecord` Python objects (~1–3 KB/row). 6 × 168 K × ~2 KB ≈ ~2 GB. DuckDB replaces all of them with
+  ONE ~30 MB snapshot that every window queries by date-filter on the fly → tens-of-MB, no Python materialisation.
+
+Decisions locked:
+
+1. **Snapshot scope** — snapshot the **entire available table** (only ~90 days exist; ~168 K aggregated rows / ~30 MB).
+   No retention-window tuning needed.
+2. **Refresh cadence** — **every 12 h** (billing lags 2 days per `_PROVISIONAL_TRAILING_DAYS`; only the "today so far"
+   figure is ≤12 h stale — acceptable).
+3. **Layout** — **per-cloud parquet** (`gcp.parquet` / `aws.parquet` / `github.parquet`) in `gs://…-cost-snapshots/` —
+   mirrors the current `_safe` per-cloud isolation; AWS failing never blanks GCP; each refreshes independently.
+4. **Read path** — each API instance **downloads the per-cloud parquet to local `/tmp` on startup + each 12 h refresh
+   and queries via DuckDB locally** (fastest for repeat queries; ~30 MB in Cloud Run's in-memory `/tmp` is trivial).
+   Cold/scaled instance's first load = a ~30 MB GCS read, not a BQ scan → no cold-start penalty.
+
+Build notes (not decisions — the implementation shape + risks):
+
+- **GCP slice ships independently; AWS slice is gated** on the deployed-AWS gap (AWS shows LOCALLY but not on the
+  deployed service — **NOT a code bug** per operator: either the Cloud Run service account lacks AWS/Athena perms, or
+  the live revision `00152` (2026-07-12) is stale and newer code hasn't shipped). The snapshot worker needs the same AWS
+  access, so resolve that before `aws.parquet` populates.
+- **The bulk of the work + main risk = porting the in-Python aggregation to DuckDB SQL** view-by-view (cent-exact
+  reconciliation, native-GBP tally, top-N "Other" residual rollup, "Unattributed (no resource id)" row, spot/on-demand
+  `purchase_option` rollup, machine_type/memory detail) — each verified to match the current endpoint output.
+- **Topology is NOT fixed** (operator 2026-07-14): the 20-instance / 4-worker / 4 GB choices predate this and can all be
+  changed — so billing is designed to fit comfortably regardless, and D1/D2 (workers/RAM) stay open for the fleet-wide
+  right-sizing. **Redis parked** (§ D3) — GCS-snapshot already gives cross-instance sharing for the big datasets.
+
 **Codex SSOT to update on landing:** `codex/05-infrastructure/billing-cost-observability.md`.
 
 ## 5. Todos
@@ -445,16 +484,23 @@ Phase B — implementation (gated on Phase A decisions; each lands via quickmerg
       before first real use); B7 `lru_cache` 8192 → ~512; B2 turbo cache — add byte ceiling next to the 100-entry cap.
 - [ ] [BACKEND] P1. `/api/vm-deployments` — add the 45s SWR snapshot pattern per D5 (single-flight, background refresh),
       reusing `_load_inventory`'s proven shape. Target — instant-after-first-load instead of 94s.
-- [ ] [BACKEND] P1. **Costs — DuckDB-over-GCS snapshot (§4b Option B, chosen direction).** New ~12h worker (mirror
-      `data_status_rollup_worker.py`) scans BQ/Athena once → writes full-grain parquet to
-      `gs://…-cost-snapshots/{cloud}.parquet`; cost service downloads on startup + 12h refresh and queries via DuckDB
-      (arbitrary group-by). One snapshot serves all views. Replaces the in-Python `CostWindowCache` aggregation. Target:
-      /ops/costs 55s/1.9GB → ms/tens-MB. Codex: `codex/05-infrastructure/billing-cost-observability.md`.
+- [ ] [BACKEND] P1. **Costs — DuckDB-over-GCS snapshot (§4b Option B, DESIGN FINALISED, operator-confirmed
+      2026-07-14).** New ~12h worker (mirror `data_status_rollup_worker.py`) scans BQ/Athena once → writes the FULL
+      available aggregated history (~168K rows / ~30 MB GCP) as **per-cloud** parquet to
+      `gs://…-cost-snapshots/{gcp,aws,github}.parquet`; cost service downloads each to local `/tmp` on startup + 12h
+      refresh and queries via **DuckDB** (arbitrary group-by). One snapshot serves all views; replaces the in-Python
+      `CostWindowCache` aggregation. **Main work/risk = port every view's aggregation to DuckDB SQL** (cent-exact
+      reconciliation / native-GBP tally / top-N "Other" residual / "Unattributed" row / purchase_option rollup / machine
+      detail), each diffed against the current endpoint. **GCP slice ships first; AWS slice gated on the deployed-AWS
+      access fix below.** Target: /ops/costs 55s/1.9GB → ms/tens-MB. Codex:
+      `codex/05-infrastructure/billing-cost-observability.md`.
 - [ ] [BACKEND] P2. **Costs safety valve (only if /ops/costs hurts before DuckDB ships)** — bound `CostWindowCache`
       (entry cap + evict) + cap default `days`; do NOT build the full coarse-window refactor (thrown away under Option
       B).
-- [ ] [BACKEND] P3. **File AWS cost bug** — health tiles report "1 cloud"; AWS Athena CUR path returns no data. Separate
-      from perf; `plans/active/issues/<slug>.md` + verify against prod.
+- [ ] [INFRA] P2. **Deployed AWS cost data missing — perms or stale deploy (NOT a code bug; AWS works locally).** Check
+      the Cloud Run service account's AWS/Athena access + whether the live revision `00152` (2026-07-12) is behind the
+      AWS-enabling code; fix so both `/ops/costs` AWS and the `aws.parquet` snapshot slice populate. Verify against
+      prod.
 - [ ] [INFRA] P2. Background sync per D4 — single loop per instance + idle-skip on empty `deployments.prod/`; quantifies
       straight into GCS op-cost reduction.
 - [ ] [UI] P2. deployment-ui polling adjustments decided in § 4 (per-tab intervals, visibility-paused polling if
@@ -559,3 +605,11 @@ Phase C — verification + guardrails:
   (`/api/health/overview` = serial fan-in of 6–8 tiles incl. fleet census + cost load, no rollup cache → 9–17s live;
   deferred to LAST per operator); fleet/orphans = uncached full-project Compute API enumeration shared by 4+ endpoints
   (shared SWR cache fix identified). No code changes yet — all diagnosis; `bq` diagnostic queries were read-only.
+- 2026-07-14 (billing design FINALISED — operator-confirmed): Grounded the DuckDB snapshot sizing with live `bq` (raw
+  table ~2 GB but a 180-day aggregated query scans only ~271 MB and returns ~167.6 K rows; 90d≈180d rows → export holds
+  only ~90 days → full history ≈ ~30 MB parquet; the 1.9 GB is 6 overlapping day-windows materialised as Python objects,
+  which DuckDB collapses to one date-filtered snapshot). Locked the 4 decisions (§4b): snapshot full history / refresh
+  12h / per-cloud parquet / download-to-`/tmp`+DuckDB. Reworded the AWS item from "bug" → deployed AWS gap is
+  perms-or-stale-deploy (works locally, per operator). Topology (20×4×4GB) declared NOT fixed → billing designed to fit
+  regardless; Redis parked. **Billing page is DONE at the plan level; implementation starts once the whole plan is
+  finalised** (operator: finalise plan first). Still no code changes.
