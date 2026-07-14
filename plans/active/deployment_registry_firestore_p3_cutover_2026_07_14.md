@@ -42,8 +42,8 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 3)
 # Phase 3 — Cutover to Firestore-only + decommission the GCS registry
 
 > **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: high**.
-> `status: active`; `gate_on_depends` holds it until Phase 2 is done, `sequential: true` orders its todos. (Phase 4 runs
-> in parallel off Phase 1.) **Fully autonomous — NO operator gates.** The irreversible GCS deletion is made safe by the
+> `status: draft` — activated by Phase 2's last todo; `sequential: true` orders its todos. (Phase 4 runs in parallel off
+> Phase 1.) **Fully autonomous — NO operator gates.** The irreversible GCS deletion is made safe by the
 > snapshot-before-delete (recoverable), not a human sign-off; the "all readers migrated" check is an agent verification.
 
 ## Context (read first — self-contained)

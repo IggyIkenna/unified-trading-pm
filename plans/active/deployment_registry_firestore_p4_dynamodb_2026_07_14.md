@@ -39,9 +39,9 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 4)
 
 # Phase 4 — DynamoDB backend (AWS-ready)
 
-> **Dispatch:** `assigned_role: infra` · **model: Sonnet** (default) · **effort: high**. `status: active`
-> (`gate_on_depends`: Phase 1); **`depends_on` Phase 1** (needs the `DeploymentRegistryStore` Protocol) — NOT gated on
-> the Phase 3 cutover, so it can run in parallel once Phase 1 lands. Contract-defined + mechanical.
+> **Dispatch:** `assigned_role: infra` · **model: Sonnet** (default) · **effort: high**. `status: draft` — activated by
+> Phase 1's last todo (needs the `DeploymentRegistryStore` Protocol) — NOT gated on the Phase 3 cutover, so it can run
+> in parallel once Phase 1 lands. Contract-defined + mechanical.
 
 ## Context (read first — self-contained)
 

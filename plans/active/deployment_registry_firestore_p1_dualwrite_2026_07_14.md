@@ -42,9 +42,9 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 1)
 
 # Phase 1 — Firestore writer + dual-write foundation
 
-> **Dispatch:** `assigned_role: infra` · **model: Opus** (`opus-required`) · **effort: high**. `status: active`;
-> `gate_on_depends` holds it until Phase 0 is done, and `sequential: true` runs its todos strictly in order. **Additive
-> only — no reader touches this phase.**
+> **Dispatch:** `assigned_role: infra` · **model: Opus** (`opus-required`) · **effort: high**. `status: draft` —
+> activated by Phase 0's last todo; `sequential: true` runs its todos strictly in order. **Additive only — no reader
+> touches this phase.**
 
 ## Context (read first — self-contained)
 

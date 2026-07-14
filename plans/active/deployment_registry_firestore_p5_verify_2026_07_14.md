@@ -41,8 +41,8 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 5)
 
 # Phase 5 — Verify at scale + codex SSOT update
 
-> **Dispatch:** `assigned_role: review` · **model: Sonnet** (default) · **effort: high**. `status: active`;
-> `gate_on_depends` holds it until BOTH Phase 3 and Phase 4 are done. Final phase — closes the migration.
+> **Dispatch:** `assigned_role: review` · **model: Sonnet** (default) · **effort: high**. `status: draft` — activated by
+> whichever of Phase 3 / Phase 4 finishes last. Final phase — closes the migration.
 
 ## Context (read first — self-contained)
 

@@ -44,8 +44,8 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 2)
 # Phase 2 — Migrate readers to Firestore + decouple existence from enrichment
 
 > **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: max** — highest
-> blast-radius phase. `status: active`; `gate_on_depends` holds it until Phase 1 is done, `sequential: true` orders its
-> todos. Runs in PARALLEL with Phase 4 (both gate only on Phase 1).
+> blast-radius phase. `status: draft` — activated by Phase 1's last todo; `sequential: true` orders its todos. Runs in
+> PARALLEL with Phase 4 (both activated by Phase 1).
 
 > **SAFETY-CRITICAL SEQUENCING:** the Phase-1 dual-write must OUTLIVE the last reader. Do the reader INVENTORY (first
 > todo) BEFORE cutting any reader. A missed reader that still parses GCS after cutover reads stale/empty data.
