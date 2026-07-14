@@ -120,9 +120,11 @@ a config flip.
 - `instruments-sports` card → `phantoms 721154` (amber), no reprobe line — legitimate reference audit output, kept.
 - `market-data-sports` card → `reprobe 0 disagree`, no phantom line.
 - cefi / prediction / tradfi cards → both lines (phantom + reprobe) on one card.
-- defi → phantom line only; reprobe blocked separately by `read_manifest_index` single-shot `download_bytes` truncating
-  on defi's large index (`ChunkedEncodingError`, 3/3 attempts) — a related but distinct read-path fragility worth its
-  own fix.
+- defi → both lines (phantom 0 + reprobe 0). The reprobe read-path fragility that originally blocked it
+  (`read_manifest_index` single-shot `download_bytes` truncating on defi's large index — `ChunkedEncodingError`
+  mis-classified as "index not found" and silently skipping the AG) was **FIXED 2026-07-14** in `_dp_common.py` (narrow
+  `_is_not_found` off the blanket `OSError`; retry-with-backoff, raise-not-skip on exhaustion). Verified: defi reprobe
+  recovered on retry and wrote its blob.
 
 ## Decision
 
