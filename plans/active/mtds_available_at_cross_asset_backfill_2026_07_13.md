@@ -451,3 +451,17 @@ No production writes made this touch.
   ancestors of LDR HEAD `1177768b`; Cloud Build `7988ed3e-728d-4c92-bb5f-d0b3d0563f83` (createTime 2026-07-13T23:26:21Z,
   COMMIT_SHA=1177768b, SUCCESS) published digest `sha256:d4bcd124...`; `market-tick-data-service@4d84268b` (final
   post-rebase SHA, pushed to `live-defi-rollout`) pins that digest.
+
+**Re-verification, no new writes — 2026-07-14 (slot 6)**: dispatched task `mtds_available_at_cross_asset_backfill-003`
+again (the same task slot 4 already partially executed — see "Snapshot (safe half only)" entry above). Confirmed nothing
+has changed since that touch: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked,
+no operator go-ahead is on record. Re-verified (read-only, single-object GCS read, not a corpus walk) that the existing
+snapshot
+`gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet`
+still exists and is byte-identical (47,908,172 bytes) to what slot 4 recorded — did NOT re-run the snapshot script
+(would just produce a redundant duplicate snapshot object for no benefit; single-walk/efficiency discipline). Did not
+touch the cron. Rather than file a duplicate `/blocked` for the same still-open decision slot 4 already escalated
+(`BLK-f3cdf442`), called `/skip-current-task` (reason citing this entry + `BLK-f3cdf442`) so this slot stops being
+re-offered a task it cannot complete, while leaving the task queued for whichever slot picks it up once the operator
+decision lands. No production writes made this touch; no cron state changed, no live index mutated, checkbox left
+unflipped (todo's full scope — snapshot + pause — still incomplete).
