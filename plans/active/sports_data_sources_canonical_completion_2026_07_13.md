@@ -2465,3 +2465,72 @@ it's new adapter work, not a data-audit residual).
     open_meteo/WEATHER (51) still need an actual re-fetch (bounded residual-closer round 4) — reconciliation confirmed
     these are genuine gaps, not lost bookkeeping. footystats/ODDS's 13,449 residual is the new P1 above, not a round-4
     candidate.
+
+- 2026-07-14 (slot-3, dispatch — footystats/ODDS P1 root-cause RE-VERIFIED + round-4 confirmed genuinely closing it, not
+  a code bug): picked up the footystats/ODDS 13,449 P1 filed in the previous entry. The operator's own investigation
+  (relayed at dispatch, re-verified independently below rather than taken on faith) attributes 99%+ of it to
+  `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` — a conservative placeholder the v9 manifest-canonicalisation rebuild stamped
+  for `(league,date)` cells where it could not tell a genuine match-day-empty from a masked historical failure,
+  deliberately erring toward `attempted_failed` per the operator's 2026-06-02 CF-11 directive
+  (`plans/active/sports_manifest_canonicalisation_2026_06_01.md:441`) rather than risk silently swallowing a real gap —
+  **not a live fetch bug**, and the write-path bug that could originally cause such masking is already fixed
+  (`instruments-service@ceab7720` "CF-11", 2026-06-02 — verified real via `git log`/`git show`). Remediation is a live
+  re-attempt through the now-correct write path, which is exactly what
+  `sports_attempted_failed_residual_closer_2026_07_13.py` round 4 (PID 95616, launched ~02:31, `--max-rounds 8`,
+  `--vm-name sports-attempted-failed-residual-closer-round4`) already does for footystats broadly.
+  - **Re-verified live** (not trusted from the dispatch prompt): direct query of the canonical availability index
+    confirmed footystats/ODDS `attempted_failed` = 11,009 at first read (down from the 13,449 baseline — round 4 was
+    already chipping at it), breakdown `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE`=10,923 / `TimeoutError`=85 /
+    `ArrowTypeError`=1 — matches the operator's relayed figures almost exactly (99.2% CF-11 either way).
+    footystats/MATCHES already at 0 `attempted_failed`; PREDICTIONS steady at 89 (its residual dates haven't been
+    reached yet in round 4's chronological pass).
+  - **Round 4 confirmed genuinely progressing, not stalled/duplicated**: `ps aux` confirmed PID 95616 alive throughout
+    (a pre-existing zsh watcher, PID 4392, is already tailing its log to `/tmp/residual_closer_round4.log` on exit —
+    left untouched). Three live re-reads of the manifest ~7 minutes apart: 11,009 → 10,791 → 10,638 `attempted_failed`
+    (footystats/ODDS) — a real, monotonic drop of 371 rows in ~14 minutes, 0 `RAISED footystats` errors in the log, low
+    CPU (2-11%, confirming I/O-bound on the footystats API / GCS, not compute-bound). Per the dispatch's own instruction
+    ("if round 4 is still running... verify it's genuinely progressing rather than duplicating it"), this is the correct
+    call: **did NOT launch a round 5 or a VM** — round 4 is alive, healthy, and the single footystats API key means
+    added local/VM concurrency would mostly just risk hitting the SAME provider-side rate limit sooner, not speed up the
+    wall-clock. At the observed ~26 rows/min average (13,449→10,638 over ~105 min since round 4 started), full closure
+    is a multi-hour tail — consistent with the dispatch's own expectation, not a stall. Current state: **10,638
+    remaining** (footystats/ODDS), round 4 still running, no ETA promised beyond "hours, trending down."
+  - **ArrowTypeError row (1 of 11,009→10,638) investigated individually**: confirmed via `git show a4dfa6bd` that the
+    real historical bug (pyarrow rejecting a `pd.Timestamp` in the NaN-fill `kickoff_utc` string column) was fixed
+    2026-06-29, before this row's `written_at` (2026-07-13T23:50, almost certainly a re-stamp from the v9 rebuild's
+    blanket re-emission of pre-existing `attempted_failed` rows, preserving the original `error_reason` — not a fresh
+    failure). Directly re-invoked `_fetch_footystats_odds(date="2023-05-30", force=True)` live against prod: **succeeded
+    cleanly** — 12 real per-league odds rows fetched and captured, confirming the underlying fetch/parse has no live
+    bug. **However the specific manifest row does NOT self-clear**: the stale sentinel's `row_key` is the OUTER
+    catch-all `{date, data_type=ODDS}` with no `league_id` (from `footystats.py`'s top-level exception handler,
+    `_row_key` at line 880), while the current write path for a per-league date (confirmed: this date has genuine
+    per-league odds) always writes to the FINER `{date, data_type, league_id}` key — a coarse-vs-fine granularity
+    mismatch, not a parse bug. Re-read the manifest post-probe: the coarse sentinel is still `attempted_failed`
+    (expected — nothing writes to that exact coarse key once a date resolves per-league). Also checked whether
+    `reconcile_sports_lost_per_vm_shard_2026_07_13.py` (the sibling reconciliation tool) would clear it — no: its own
+    `_discover_real_cells` only matches league-partitioned blobs (`_LEAGUE_RE`) and explicitly documents bare-key files
+    as "not the observed shape for these 4 entities," so it never touches this row either. **Did NOT force a
+    `record_captured` at the coarse key** — no real parquet exists at that non-league-partitioned canonical path, and
+    writing one would manufacture a `phantom_captured_no_parquet_at_canonical_path` row, the exact class of bug this
+    plan exists to eliminate. **Verdict: one-off, already-explainable bookkeeping artifact, safe to leave** — real fix
+    (adding an explicit supersession write, e.g. a `record_empty`/similar at the coarse key once a date's per-league
+    loop completes with zero `_odds_failed_leagues`) is a genuine small code change but touches
+    `instruments_service/engine/orchestrator/footystats.py`'s shared write path; deferred as its own precise follow-up
+    rather than rushed in this dispatch (1 row out of >10,000, non-blocking). **Follow-up todo**: `footystats.py`
+    per-league ODDS success branch should also supersede any pre-existing coarse `{date, data_type=ODDS}`
+    `attempted_failed` sentinel once all expected leagues for that date resolve captured/empty, so this class of
+    residual can't recur or outlive its accuracy.
+  - **Consolidator safety**: no pause needed (only did per-VM-shard live reads + one exploratory per-VM-shard write for
+    the ArrowTypeError probe under a throwaway `VM_NAME`, both always-safe per the mandatory rules) — confirmed both
+    `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` schedulers `ENABLED` via a read-only
+    `gcloud scheduler jobs describe` (no 4th pause-without-resume incident this dispatch).
+  - **api_football's own separate residual closer** (PID 10471,
+    `--vm-name api-football-attempted-failed-residual-closer`, unrelated to footystats/ODDS, its own P1 from an earlier
+    entry) was seen alive in `ps aux` and left completely untouched — out of this dispatch's scope.
+  - **Net**: footystats/ODDS root cause re-confirmed as NOT a live code bug (write-path fix already shipped 2026-06-02);
+    round 4 is the correct, already-in-flight mechanism and is measurably closing the gap (13,449 → 10,638 so far); no
+    new process launched (would duplicate, and wouldn't clearly speed up an API-rate-limited workload); the 1
+    ArrowTypeError row is fully explained, confirmed non-bug, and documented with a precise (not-yet-shipped) follow-up.
+    **Not yet closed to 0** — this is expected and acceptable per the dispatch's own framing; round 4 should be left
+    running and re-checked later (`ps -p 95616`, then re-read `footystats/ODDS attempted_failed` off the canonical
+    index) rather than duplicated.
