@@ -153,3 +153,16 @@ every prior check — no stall, no crash, steady progress. Given the prereq stat
 two other slots, skipping the redundant full GCS-walk this dispatch (single-walk discipline — no value in a 4th
 identical corpus scan in under 20 minutes). Declining — no action taken, no code touched, checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-14T12:55 UTC — data_engineering slot-15 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 (identify + gap-fill pre-fix all-NaN cumulative-travel date-ranges) — still BLOCKED-PREREQ, unchanged.** This
+todo's own text is explicit: "After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches
+completion". Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]` — this same
+slot's own entries there ~5-8 min earlier (12:47/12:50 UTC) already found the fleet healthy at 2,519/4,210 (~59.8%).
+Cheap independent re-check this dispatch (non-snap `gcloud`/`gsutil`, `central-element-323112`): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps; features bucket
+unique-date count **2,525** (up from 2,519 ~8 min earlier, +6) — steady forward progress, no stall, no crash. The
+affected-range boundary for this todo's gap-fill isn't stable until Todo 1's full-history compute completes, so starting
+the identify/gap-fill work now would be premature. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
