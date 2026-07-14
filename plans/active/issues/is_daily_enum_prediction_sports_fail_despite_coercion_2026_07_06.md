@@ -250,3 +250,12 @@ one.
   green). SPORTS confirmed same class: 6dnq9 logged `exit_code=-9` at 23:37:23Z on 8Gi — doomed 8Gi retry cancelled, job
   bumped to 16Gi, verification execution launched 00:04Z (in flight). The durable chunked-scan todo stands for both
   (16Gi is a ceiling race against universe growth). Doc flips to resolved when the sports verification lands green.
+- 2026-07-14 02:05Z: SPORTS memory class is DEEPER than prediction's. is-daily-enum-sports OOM'd (-9) even at 16Gi
+  (executions 01:10 + 01:53); bumped to 32Gi/8cpu (13:30Z cron verifies). SEPARATELY the nightly
+  expected-universe-v2-sports run (01:30Z, execution -p8f9v) — previously green nightly at 8Gi — was SIGKILLed in ~90s
+  at the manifest `pd.concat` (enumerate_expected_universe.py:2722) on its FIRST run with the new image. Prime suspect:
+  the oscillation guard's `_build_captured_set` (instruments-service@ba306543) materializing ~5.5M Python row-key tuples
+  over the sports index (prediction at 26K rows unaffected — its 16Gi run was green). Mitigation: job bumped 8Gi/2cpu →
+  16Gi/4cpu, tonight's seeding re-executed (in flight). QUEUED CODE FIX (P1, joins the chunked-scan P2): memory-frugal
+  captured-set (asset-group-filtered semi-join / pd.Index instead of tuple set) + audit the concat path; owner:
+  follow-up to the staleness-trio ship (same file, sequenced to avoid same-file collision).
