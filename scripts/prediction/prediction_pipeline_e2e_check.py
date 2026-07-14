@@ -2,15 +2,23 @@
 # Epic: infrastructure_master
 # Lifecycle: permanent
 # Delete-when: NA
-"""End-to-end prediction pipeline test.
+"""End-to-end prediction pipeline manual smoke check.
 
 Tests the full flow: Polymarket API → URDI instruments → UMI trades → GCS hive partitions.
 Validates schemas, mappings, canonical IDs, and data types.
 
+A manual e2e driver, not a pytest suite (qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md)
+— several functions take non-fixture positional args pytest can't inject, and
+main() threads live state (fetched instruments → trades) between phases
+sequentially rather than running independent, isolated tests. Named
+``*_e2e_check.py`` (not ``test_*.py``) so pytest's `python_files = ["test_*.py"]`
+collection glob never picks it up; mirrors the same-purpose
+``pipeline_e2e_check.py`` scripts in instruments-service / market-tick-data-service.
+
 Usage:
-    python scripts/prediction/test_prediction_pipeline_e2e.py
-    python scripts/prediction/test_prediction_pipeline_e2e.py --write-gcs  # actually write to GCS
-    python scripts/prediction/test_prediction_pipeline_e2e.py --date 2026-03-25
+    python scripts/prediction/prediction_pipeline_e2e_check.py
+    python scripts/prediction/prediction_pipeline_e2e_check.py --write-gcs  # actually write to GCS
+    python scripts/prediction/prediction_pipeline_e2e_check.py --date 2026-03-25
 
 Requires: ADC credentials for GCS writes (--write-gcs mode only).
 """
@@ -29,7 +37,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 
-async def test_urdi_instruments() -> dict[str, list[dict[str, str]]]:
+async def check_urdi_instruments() -> dict[str, list[dict[str, str]]]:
     """Phase 1: Fetch instruments via URDI PolymarketReferenceDataAdapter."""
     from instruments_service.reference_data.adapters.polymarket import PolymarketReferenceDataAdapter
 
@@ -91,7 +99,7 @@ async def test_urdi_instruments() -> dict[str, list[dict[str, str]]]:
     }
 
 
-async def test_umi_trades(condition_ids: list[str]) -> list[dict[str, object]]:
+async def check_umi_trades(condition_ids: list[str]) -> list[dict[str, object]]:
     """Phase 2: Fetch trades via UMI PolymarketAdapter."""
     from unified_market_interface import PolymarketAdapter
 
@@ -121,7 +129,7 @@ async def test_umi_trades(condition_ids: list[str]) -> list[dict[str, object]]:
     return all_trades
 
 
-def test_canonical_id_format(instruments: dict[str, list[dict[str, str]]]) -> None:
+def check_canonical_id_format(instruments: dict[str, list[dict[str, str]]]) -> None:
     """Phase 3: Validate canonical ID conventions."""
     logger.info("")
     logger.info("=" * 60)
@@ -149,7 +157,7 @@ def test_canonical_id_format(instruments: dict[str, list[dict[str, str]]]) -> No
     logger.info("  Canonical ID validation: PASSED")
 
 
-def test_mappings() -> None:
+def check_mappings() -> None:
     """Phase 4: Validate Polymarket mapping infrastructure."""
     logger.info("")
     logger.info("=" * 60)
@@ -191,7 +199,7 @@ def test_mappings() -> None:
     logger.info("  Mapping validation: ALL PASSED")
 
 
-def test_data_types() -> None:
+def check_data_types() -> None:
     """Phase 5: Validate PREDICTION data types in registry."""
     logger.info("")
     logger.info("=" * 60)
@@ -264,24 +272,24 @@ async def main() -> None:
     logger.info("")
 
     # Phase 1: URDI instruments
-    instruments = await test_urdi_instruments()
+    instruments = await check_urdi_instruments()
 
     # Phase 2: UMI trades (use first 3 BTC market condition_ids)
     btc_cids = [m["instrument_key"] for m in instruments.get("btc", [])[:3]]  # noqa: qg-empty-fallback
     if btc_cids:
-        trades = await test_umi_trades(btc_cids)
+        trades = await check_umi_trades(btc_cids)
     else:
         logger.warning("No BTC markets found — skipping trade fetch")
         trades = []
 
     # Phase 3: Canonical IDs
-    test_canonical_id_format(instruments)
+    check_canonical_id_format(instruments)
 
     # Phase 4: Mappings
-    test_mappings()
+    check_mappings()
 
     # Phase 5: Data types + registry
-    test_data_types()
+    check_data_types()
 
     # Phase 6: GCS write (optional)
     if args.write_gcs:

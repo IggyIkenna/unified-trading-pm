@@ -105,7 +105,7 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/sync-catalogue-yaml.py"
     "!**/generate_system_topology.py"
     "!**/generate_unified_spec.py"
-    "!**/test_prediction_pipeline_e2e.py"
+    "!**/prediction_pipeline_e2e_check.py"
     "!**/validate-import-deps.py"
     "!**/generate_ui_reference_data.py"
     "!**/generate_capability_manifest.py"
@@ -153,7 +153,7 @@ GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/generate_capability_manifest.py"
     "!**/generate_capability_verdict_matrix.py"
     "!**/_capability_gaps.py"
-    "!**/test_prediction_pipeline_e2e.py"
+    "!**/prediction_pipeline_e2e_check.py"
     "!**/migrate_player_mappings_to_canonical.py"
     "!**/migrate_sports_gcs_to_hive.py"
     "!**/verify_env_tiered_buckets_provisioned.py"
@@ -186,7 +186,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/rollout-buildspec.py"
     "!**/flow_coverage_scorecard.py"
     "!**/synthetic_load_generator.py"
-    "!**/test_prediction_pipeline_e2e.py"
+    "!**/prediction_pipeline_e2e_check.py"
     "!**/generate_unified_spec.py"
     "!**/sync-catalogue-yaml.py"
     "!**/sync-to-mock.py"
@@ -228,7 +228,7 @@ BE_EXCLUDE_GLOBS=(
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_data_completeness.py"
-    "!**/test_prediction_pipeline_e2e.py"
+    "!**/prediction_pipeline_e2e_check.py"
     "!**/smoke-test-dev.py"
     "!**/check_env_canon.py"
     "!**/generate_ui_reference_data.py"
@@ -280,7 +280,7 @@ SCHEMA_PROVENANCE_SKIP=true  # PM checker scripts define local BaseModel (not do
 MANIFEST_ALIGNMENT_SKIP=true  # PM is infrastructure (L0) — scripts import libs for validation, not as runtime deps
 HARDCODED_PROJECT_EXCLUDE_GLOBS=(
     "!**/gcs_bucket_stats.py"
-    "!**/test_prediction_pipeline_e2e.py"
+    "!**/prediction_pipeline_e2e_check.py"
     "!**/migrate_player_mappings_to_canonical.py"
     "!**/migrate_sports_gcs_to_hive.py"
     "!**/generate_instrument_snapshot.py"

@@ -124,10 +124,19 @@ the audit implied by option 1 is out of scope for that task.
       exactly — the remaining structural assertions (all entries `pending_removal`, 3-tuple keys, non-empty
       `default_successor`) are unaffected and still hold vacuously true on the now-empty dict. 28/28 tests pass (was
       27/28).
-- [ ] [SCRIPT] P3. Decide `scripts/prediction/test_prediction_pipeline_e2e.py`'s disposition — it is a manual e2e driver
-      script, not a real pytest suite (2 functions take non-fixture args pytest can't inject). Either rename away from
-      the `test_*` prefix (so pytest stops trying to collect it as a unit test) or restructure it into a real
-      fixture-based suite. Out of scope for todo 2's wiring either way. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. Decide `scripts/prediction/test_prediction_pipeline_e2e.py`'s disposition — it is a manual e2e
+      driver script, not a real pytest suite (2 functions take non-fixture args pytest can't inject). Either rename away
+      from the `test_*` prefix (so pytest stops trying to collect it as a unit test) or restructure it into a real
+      fixture-based suite. Out of scope for todo 2's wiring either way. (repo: unified-trading-pm) — **RENAMED, slot 4
+      (infra), 2026-07-14**: `scripts/prediction/test_prediction_pipeline_e2e.py` →
+      `scripts/prediction/prediction_pipeline_e2e_check.py` (matches the established `pipeline_e2e_check.py` naming
+      already used in instruments-service/market-tick-data-service for the same "manual e2e driver, not a pytest suite"
+      pattern). `python_files = ["test_*.py"]` in `pyproject.toml` means the rename alone fully removes it from pytest
+      collection — no fixture-restructure needed for a script that legitimately hits live external APIs + writes real
+      GCS data by design. Also renamed the 5 internal `test_*` functions to `check_*` (honest naming, no lingering
+      `test_`-prefixed callables) and updated the module docstring's usage examples + the 5
+      `!**/test_prediction_pipeline_e2e.py` exclusion-glob references in `scripts/quality-gates.sh` (the QG
+      empty-string/dict-fallback checker exemptions this manual driver legitimately needs) to the new filename.
 - [ ] [DATA] P3. Add a UEFA Champions League entry to `POLYMARKET_SERIES_TO_LEAGUE`
       (`unified_api_contracts/external/polymarket/sports_mappings.py`) — currently has 40+ domestic-league entries but
       zero UCL/Champions-League mapping, so `get_canonical_league_for_polymarket_series("ucl-2025")` (and any other UCL
