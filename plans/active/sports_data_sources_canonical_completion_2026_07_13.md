@@ -389,14 +389,20 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       is uncaptured data, as the 15:02 run shows) and the skip-if-fresh guard works — identical verified behavior to
       footystats/soccer_football_info this session. Evidence: Cloud Run execution fvzzc succeeded + job-log lines
       above.**
-- [ ] [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
+- [x] ✅ [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
       `deployment-service@5da4b620` fixed `sports_trigger_state.py`'s fixture-calendar path/field-mapping bug (root
       cause of the ENTIRE pre-match/post-match trigger tier being silently dead ≥14 days — 0 fixtures ever found by
-      `get_upcoming_fixtures()`). Not yet re-verified live post-fix. Check over the next few hours:
+      `get_upcoming_fixtures()`). Check over the next few hours:
       `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="uts-prod-instruments-service-sports-fixtures" AND textPayload:"Sports entity filter from CLI"'`
       for any value beyond FIXTURES/STANDINGS (e.g. WEATHER, XG, LINEUPS, PREDICTIONS, FIXTURE_STATS) — their presence
       confirms the fix restored the whole Tier-3/4 mechanism (also feeds `features-sports-service-job`'s pre/post-match
-      compute triggers, a bigger blast radius than just this plan's 8 sources).
+      compute triggers, a bigger blast radius than just this plan's 8 sources). **✅ CONFIRMED 2026-07-14 (slot-5) — no
+      wait needed, evidence already present in today's logs (queried via the Cloud Logging Python SDK; gcloud CLI broken
+      on slot). The `uts-prod-instruments-service-sports-fixtures` job is running on its ~5-min cadence (16:01Z→16:36Z
+      sampled) and firing entity filters BEYOND FIXTURES/STANDINGS — observed distinct values: WEATHER, LINEUPS,
+      FIXTURE_STATS. Their presence confirms `get_upcoming_fixtures()` is now finding fixtures and the whole Tier-3/4
+      pre/post-match trigger mechanism is live post-fix. Evidence: 29 "Sports entity filter from CLI: {WEATHER|LINEUPS|
+      FIXTURE_STATS}" log lines today.**
 - [x] [DATA] P1. **`uts-prod-market-data-processing-t1-schedule` — daily NOT_FOUND, target Cloud Run Job deleted** — ✅
       DONE 2026-07-14 (see "MDPS T1-RECON + ODDS-HORIZON-BUCKET DAILY DRIVER" Progress Log entry for full detail). Root
       cause: the CRJ was never provisioned (F-41-class bug) — investigation found it's general T+1 candle aggregation
