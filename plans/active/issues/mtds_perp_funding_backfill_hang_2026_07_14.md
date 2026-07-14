@@ -170,14 +170,26 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `_collect_kalshi_perp` raises `ValueError` (honest `attempted_failed`) when ticker-discovery returns >100 tickers.
       Two regression tests added (`test_non_retryable_status_fails_fast`, `test_excessive_ticker_count_raises`). Full
       `quality-gates.sh` green.
-- [ ] [BACKEND/RESEARCH] P1. **Endpoint research (needs operator input)**: determine whether Kalshi's crypto
+- [x] [BACKEND/RESEARCH] P1. **Endpoint research (needs operator input)**: determine whether Kalshi's crypto
       perpetual-futures product (BTC-PERP/ETH-PERP/SOL-PERP/DOGE-PERP/~9 others per the module docstring) is reachable
       via a documented public endpoint at all — `category=Crypto` and `series_ticker=KXBTCPERP` on
       `api.elections.kalshi.com` both came up empty/irrelevant during this session's repro. If a real endpoint exists
       (different host, different query params, or requires auth), rewire `_fetch_kalshi_perp_market_tickers` to it. If
       it does not exist / requires credentials the workspace doesn't have, this is a `BLOCKED-CREDENTIALS` /
       `BLOCKED-OPERATOR-DECISION` case per the workspace's "external data always available" rule — build/keep the
-      scaffold, flag status accordingly, do not silently descope. Repo: `market-tick-data-service`.
+      scaffold, flag status accordingly, do not silently descope. Repo: `market-tick-data-service`. — ✅ RESOLVED
+      2026-07-14 (slot-9): the product IS reachable via a documented public endpoint — it is a SEPARATE margin/perps
+      REST API (`docs.kalshi.com/margin`, `perps_openapi.yaml`), not a `category` filter on the prediction-markets host.
+      Confirmed live: `GET https://external-api.kalshi.com/trade-api/v2/margin/markets` returns the real curated perp
+      list (`KXBTCPERP`, `KXETHPERP`, `KXDOGEPERP`, `KXBCHPERP`, `KXDOTPERP`, …), no auth required; funding rates via
+      `GET /margin/funding_rates/historical?ticker=&start_ts=&end_ts=` (Unix seconds, server-side windowed, no
+      pagination needed for either endpoint). Rewired `_fetch_kalshi_perp_market_tickers` +
+      `_fetch_kalshi_perp_funding_for_ticker` to the real host/paths/field names (`market_ticker`/`funding_time` replace
+      the old `ticker`/`timestamp` guesses), rebased on top of the P0 defensive-guard commit
+      (market-tick-data-service@5a163d02) so both fixes compose — non-retryable-status fail-fast and the ticker-count
+      sanity cap are preserved. Also corrected the `KALSHI_PERP` entry in the UAC endpoint registry (was pointing at the
+      prediction-markets host). 18/18 unit tests green (2 new endpoint-shape assertions), full `quality-gates.sh` green
+      both repos. market-tick-data-service@56efdd7d, unified-api-contracts@ea68ef46.
 - [ ] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
       `mtds-perp-funding-backfill --start 2026-05-29 --end 2026-07-14` (manifest-gated, skips already-captured dates)
       and verify it progresses past 2026-05-29 without hanging/churning (T+10min real-progress check, not just liveness)
