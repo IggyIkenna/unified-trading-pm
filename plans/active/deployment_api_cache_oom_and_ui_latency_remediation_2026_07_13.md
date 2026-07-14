@@ -471,8 +471,15 @@ Phase A — walkthrough + decisions (operator-joint; blocks Phase B):
       `gs://central-element-323112-data-status-rollups/` now contains a fresh
       `market-data-processing-service/full.json.gz` (written 2026-07-14T00:15:39Z) for the first time ever; full
       root-cause + fix detail in the Progress Log entry above.
-- [ ] [BACKEND] P1. Add the deployment-api fail-fast/refuse-large OOM-guard — elevated to near-term per the same
-      operator ruling; promoted from narrative to tracked todo (finding 53).
+- [x] ✅ [BACKEND] P1. Add the deployment-api fail-fast/refuse-large OOM-guard — elevated to near-term per the same
+      operator ruling; promoted from narrative to tracked todo (finding 53). **Resolved** — two-layer guard on the
+      manifest live-build fallback: (1) pre-flight byte-budget estimator (768MiB default ceiling, calibrated off the
+      measured 18/81/56GB anchors) refuses or serves-stale before attempting a build that would blow the container; (2)
+      defense-in-depth — any build that passes the estimate still runs inside a `resource.setrlimit(RLIMIT_AS,...)`
+      spawned child (mirrors the proven `8d260ad` pattern), so an underestimate raises a catchable error instead of
+      OOM-killing the parent worker. `deployment-api@030779f`. Does NOT touch the already-fine rollup-blob fast path;
+      does NOT attempt the full cell-grid re-architecture (stays deliberately deferred per the operator's 2026-07-13
+      ruling).
 - [x] ✅ [BACKEND] P0. Benchmark session (2026-07-13, agent-run per operator direction) — deployed-API curl suite (39
       reqs, cold/warm/503 sequences), Playwright page-level timings (6 pages), local 4-worker replica with
       phase-attributed RSS monitoring incl. the turbo data-status path. Results = § 2.7; § 4 "Today" column filled with
@@ -481,49 +488,82 @@ Phase A — walkthrough + decisions (operator-joint; blocks Phase B):
 
 Phase B — implementation (gated on Phase A decisions; each lands via quickmerge with QG-green tree):
 
-- [ ] [INFRA] P0. Apply D1/D2 — set `WORKERS=<decided>` env on `uts-shared-deployment-api` (gcloud run services update;
-      also encode in cloudbuild deploy step so it survives redeploys). Evidence — revision env + memory trend 24h after.
-- [ ] [BACKEND] P0. One bounded cache primitive (generalize the B9 pattern already in `routes/deployment_caching.py`, or
-      `cachetools.TTLCache` — already a transitive dep): max-entries + TTL + evict-on-set + a single periodic sweeper
-      task; expose per-cache stats (entries, est. bytes) on one debug endpoint (feeds D6).
-- [ ] [BACKEND] P0. B1 `data_status_cache` — cap entries (LRU ~8), store **gzipped JSON bytes** not live dicts, drop
+- [x] ✅ [INFRA] P0. Apply D1/D2 — set `WORKERS=<decided>` env on `uts-shared-deployment-api` (gcloud run services
+      update; also encode in cloudbuild deploy step so it survives redeploys). **Resolved** — `WORKERS=2` encoded in the
+      cloudbuild deploy step's `--update-env-vars` (not a manual live mutation — lands on next deploy, survives
+      redeploys) `deployment-api@ab07227`. D2 = keep 4GiB (no change made, per § 3). Memory-trend-after-24h evidence NOT
+      captured (24h soak explicitly dropped from this session's scope per operator instruction).
+- [x] ✅ [BACKEND] P0. One bounded cache primitive (generalize the B9 pattern already in `routes/deployment_caching.py`,
+      or `cachetools.TTLCache` — already a transitive dep): max-entries + TTL + evict-on-set + a single periodic sweeper
+      task; expose per-cache stats (entries, est. bytes) on one debug endpoint (feeds D6). **Resolved** —
+      `deployment_api/utils/bounded_cache.py` (`cachetools.TTLCache`-backed, named registry, single periodic sweeper
+      wired into `lifespan.py`, `GET /api/debug/cache-stats`) `deployment-api@0702aa3`.
+- [x] ✅ [BACKEND] P0. B1 `data_status_cache` — cap entries (LRU ~8), store **gzipped JSON bytes** not live dicts, drop
       `freshness_date` from the key (or normalize it) so keys actually repeat, kill the per-hit `deepcopy` (serve
-      pre-truncated variant computed once at store time).
-- [ ] [BACKEND] P1. B3 drilldown `_core.py` — bound with the primitive (day-keyed growth ends); B5 `log_analysis` —
+      pre-truncated variant computed once at store time). **Resolved** `deployment-api@0702aa3` — same commit as the
+      primitive above.
+- [x] ✅ [BACKEND] P1. B3 drilldown `_core.py` — bound with the primitive (day-keyed growth ends); B5 `log_analysis` —
       bound per-deployment entries; B6 `_repo_ci_github` `_response_cache` — bound + skip caching one-time per-SHA URLs;
-      B4b `_last_alerted_health` — prune names absent from the current census; delete dead B16.
-- [ ] [BACKEND] P1. `UnifiedCache.in_memory` — bound it; decide GCSCache fate per D3 (delete or fix whole-blob rewrite
-      before first real use); B7 `lru_cache` 8192 → ~512; B2 turbo cache — add byte ceiling next to the 100-entry cap.
-- [ ] [BACKEND] P1. `/api/vm-deployments` — add the 45s SWR snapshot pattern per D5 (single-flight, background refresh),
-      reusing `_load_inventory`'s proven shape. Target — instant-after-first-load instead of 94s.
-- [ ] [BACKEND] P1. **Costs — DuckDB-over-GCS snapshot (§4b Option B, DESIGN FINALISED, operator-confirmed
-      2026-07-14).** New ~12h worker (mirror `data_status_rollup_worker.py`) scans BQ/Athena once → writes the FULL
-      available aggregated history (~168K rows / ~30 MB GCP) as **per-cloud** parquet to
-      `gs://…-cost-snapshots/{gcp,aws,github}.parquet`; cost service downloads each to local `/tmp` on startup + 12h
-      refresh and queries via **DuckDB** (arbitrary group-by). One snapshot serves all views; replaces the in-Python
-      `CostWindowCache` aggregation. **Main work/risk = port every view's aggregation to DuckDB SQL** (cent-exact
-      reconciliation / native-GBP tally / top-N "Other" residual / "Unattributed" row / purchase_option rollup / machine
-      detail), each diffed against the current endpoint. **GCP slice ships first; AWS slice gated on the deployed-AWS
-      access fix below.** Target: /ops/costs 55s/1.9GB → ms/tens-MB. Codex:
-      `codex/05-infrastructure/billing-cost-observability.md`.
-- [ ] [BACKEND] P2. **Costs safety valve (only if /ops/costs hurts before DuckDB ships)** — bound `CostWindowCache`
-      (entry cap + evict) + cap default `days`; do NOT build the full coarse-window refactor (thrown away under Option
-      B).
-- [ ] [INFRA] P2. **Deployed AWS cost data missing — perms or stale deploy (NOT a code bug; AWS works locally).** Check
-      the Cloud Run service account's AWS/Athena access + whether the live revision `00152` (2026-07-12) is behind the
-      AWS-enabling code; fix so both `/ops/costs` AWS and the `aws.parquet` snapshot slice populate. Verify against
-      prod.
-- [ ] [INFRA] P2. Background sync per D4 — single loop per instance + idle-skip on empty `deployments.prod/`; quantifies
-      straight into GCS op-cost reduction.
-- [ ] [UI] P2. deployment-ui polling adjustments decided in § 4 (per-tab intervals, visibility-paused polling if
-      decided) — with `pw:L2 ✓` + cited regression spec per UI gate.
+      B4b `_last_alerted_health` — prune names absent from the current census; delete dead B16. **Resolved**
+      `deployment-api@0702aa3` — all five in the same cache-hygiene commit.
+- [x] ✅ [BACKEND] P1. `UnifiedCache.in_memory` — bound it; decide GCSCache fate per D3 (delete or fix whole-blob
+      rewrite before first real use); B7 `lru_cache` 8192 → ~512; B2 turbo cache — add byte ceiling next to the
+      100-entry cap. **Resolved** `deployment-api@0702aa3` — D3 resolved as DELETE (confirmed unused in prod,
+      grep-verified no other callers) rather than fix the flawed whole-blob-rewrite path.
+- [x] ✅ [BACKEND] P1. `/api/vm-deployments` — add the 45s SWR snapshot pattern per D5 (single-flight, background
+      refresh), reusing `_load_inventory`'s proven shape. Target — instant-after-first-load instead of 94s. **Resolved**
+      `deployment-api@3f1fc66`, 9 unit tests incl. single-flight-refresh and cold-path-collapses-concurrent-first-polls.
+- [x] ✅ [BACKEND] P1. **Costs — DuckDB-over-GCS snapshot (§4b Option B, DESIGN FINALISED, operator-confirmed
+      2026-07-14).** **Resolved across two increments, by two operators concurrently working this same plan** (flagged
+      to the operator mid-session — see Progress log): Increment 1 (`deployment-api@d7c0356`, this session) — the
+      `CostSnapshotStore`/`cost_snapshot_worker.py` GCS-parquet-snapshot infra + `_load_window` snapshot-first fallback.
+      Increment 2, the DuckDB SQL aggregation port (cent-exact reconciliation / native-GBP tally / top-N "Other" /
+      "Unattributed" row / purchase_option rollup), was shipped **independently by a concurrent operator session** —
+      `deployment-api@d82405c` + `6ca64d8` + `7b60273` — landed on the shared branch mid-session; this session's own
+      costs agent detected the overlap and did not duplicate it. **GCP slice ships; AWS slice** — see the AWS-gap todo
+      directly below (this session's addition, not pre-existing). Codex:
+      `codex/05-infrastructure/billing-cost-observability.md` (audit still pending — see Phase C).
+- [x] ✅ [BACKEND] P2. **Costs safety valve (only if /ops/costs hurts before DuckDB ships)** — superseded: DuckDB
+      shipped directly (see above), so the safety-valve refactor was never needed and was NOT built, matching the plan's
+      own phasing note that it would be "thrown away under Option B."
+- [x] ✅ [INFRA] P2. **Deployed AWS cost data missing — perms or stale deploy (NOT a code bug; AWS works locally).**
+      **Root-caused precisely** (not perms-on-an-existing-role, not a stale deploy): `AWSAnalyticsClient._boto3_client`
+      (unified-trading-library) used a bare `boto3.Session()` — no credential source exists for that in a GCP Cloud Run
+      container at all (verified live: zero AWS env vars on the deployed revision). **Fixed** by mirroring the
+      already-proven CodeBuild-reader keyless GCP→AWS WIF pattern (`_code_builds_aws.py:_assume_codebuild_reader_role`)
+      for Athena — `deployment_api/services/cost_observability/aws_wif.py`, config field `aws_athena_reader_role_arn` /
+      env `AWS_ATHENA_READER_ROLE_ARN` (`deployment-api@d8add54`). **New AWS IAM role provisioned**
+      `arn:aws:iam::427895769566:role/gcp-cloudrun-athena-cost-reader` (read-only, scoped to exactly the CUR data +
+      Athena workgroup + results bucket, trusting the same `unified-trading-sa` GCP SA the CodeBuild reader already
+      trusts) — this IS a real AWS-side IAM change, done directly (not deferred) per explicit operator instruction this
+      session. ARN wired into the Cloud Run deploy env (`deployment-api@fc53899`). Will take effect on the next deploy;
+      not yet verified against the live deployed revision (that deploy hasn't happened as of this writing).
+- [x] ✅ [INFRA] P2. Background sync per D4 — single loop per instance + idle-skip on empty `deployments.prod/`;
+      quantifies straight into GCS op-cost reduction. **Resolved** — leader-election via `worker_identity.py`
+      (`deployment-api@6d5a225`) + idle-skip on `sync_service.py` (`deployment-api@650e418`). Distinct from, and layered
+      on top of, a separate `reap_stale` tick fix a concurrent operator session shipped this same day
+      (`f83ac67`/`3fc1a06`) — the two do not overlap.
+- [x] ✅ [UI] P2. deployment-ui polling adjustments decided in § 4 (per-tab intervals, visibility-paused polling if
+      decided) — with `pw:L2 ✓` + cited regression spec per UI gate. **Resolved** — visibility-paused polling on every
+      interval poll except the safety-critical kill-switch tab (`deployment-ui@3c08c5f`), 90-day default data-status
+      range instead of full-history (`deployment-ui@18ba017`), loading skeletons on the two
+      previously-blank-while-loading pages (`deployment-ui@0ff25b5`). Each shipped with a green quality-gates.sh run + a
+      real Playwright spec (`pw:L2 ✓`); independently re-verified (SAFE_TO_TRUST) by a second agent that re-ran the
+      specs itself rather than trusting the implementer's report.
 
 Phase C — verification + guardrails:
 
 - [ ] [BACKEND] P1. Runtime verification — 24h soak after Phase B: memory p99 flat ≤50% at WORKERS=decided, zero OOM
       kills in logs, cockpit endpoints p95 &lt; 2s warm. Evidence — monitoring queries + log counts cited here.
-- [ ] [INFRA] P2. D6 alerting — Cloud Monitoring alert on memory utilization &gt;85% (5 min) for
-      uts-shared-deployment-api; wire to existing alerting channel.
+      **EXPLICITLY NOT ATTEMPTED this session** — operator directed dropping this from scope (2026-07-14); Phase B code
+      has landed on `live-defi-rollout` but has not yet promoted to `main`/redeployed, so there is no live window to
+      soak yet regardless. Remains open for whoever picks this plan up next, once Phase B is actually running in prod
+      for 24h.
+- [x] ✅ [INFRA] P2. D6 alerting — Cloud Monitoring alert on memory utilization &gt;85% (5 min) for
+      uts-shared-deployment-api; wire to existing alerting channel. **Resolved** —
+      `google_monitoring_alert_policy.deployment_api_memory_high` (`>85%` sustained 300s,
+      `run.googleapis.com/container/memory/utilizations`), reusing the existing `monitoring_deadman_email` channel
+      already wired to this service's uptime alert (not a new channel) `deployment-service@c6c6c8f`.
 - [ ] [BACKEND] P2. Post-phase codex audit — update `codex/05-infrastructure/deployment-observability.md` (cache
       architecture + stats endpoint + alert) and `codex/04-architecture/runtime-deployment-topology.md` if worker
       topology changed; SUPERSEDED-banner any invalidated statements.
@@ -659,3 +699,51 @@ Phase C — verification + guardrails:
   other open tab. By 11:08Z the crash-loop had subsided on its own (autoscaler cycled a fresh instance; `/api/health`
   and `/api/repo-ci/*` were 200 again) — no operator/agent action taken, no deploy performed. Read-only
   `gcloud logging read` / `gcloud run services describe` evidence only; no prod changes made.
+- 2026-07-14 (slot-3, operator directive: "action this plan in full"): Drove Phase A/B/C to near-completion in one
+  session. **§4 walkthrough** settled without a live click-through (operator-directed) — every Decision cell + D1–D6
+  filled from existing measured evidence + the Phase B landing in the same pass (§4 in place, commit
+  `unified-trading-pm@dfbeb788d`). **AWS billing gap** root-caused precisely (not perms-on-an-existing-role, not a stale
+  deploy — `AWSAnalyticsClient` had zero AWS credential source in the GCP Cloud Run container at all) and fixed with a
+  WIF credential path mirroring the proven CodeBuild-reader pattern; **a new AWS IAM role was provisioned live**
+  (`arn:aws:iam::427895769566:role/gcp-cloudrun-athena-cost-reader`, read-only, scoped to exactly the CUR data + Athena
+  workgroup + results bucket) per explicit operator instruction to do this directly rather than defer it.
+  **Cross-operator collision discovered mid-session**: a different operator (Harsh, slot-1/slot-5) was concurrently
+  shipping overlapping work on this same plan into the same shared `live-defi-rollout` branch — he landed the costs
+  DuckDB Increment 2 migration and a `reap_stale` background-sync fix independently. Flagged to the operator in-chat;
+  quickmerge's own rebase-autostash reconciliation handled the concurrent pushes with zero conflicts, and this session's
+  own costs agent detected the overlap and built only the non-duplicate AWS WIF piece instead of redoing Increment 2.
+  **Serious incident + recovery, mid-session**: three implementation agents (OOM guard, cache hygiene, vm-deployments
+  SWR) plus part of the costs agent's work (AWS WIF) each finished substantial, tested code but got cut off before their
+  `quality-gates.sh` run completed, so per the commit-only-from-green-tree rule none of them committed anything —
+  leaving ~34 files of real work sitting uncommitted in the shared `.tabs/3/deployment-api` clone for the better part of
+  two hours. This workspace runs an automated 5-minute cron sweep (`slot-cron-ff-pull.sh`) that force-cleans
+  long-uncommitted WIP in slot clones; it silently destroyed all of it (confirmed via `git fsck` — no dangling commits,
+  no unreachable blobs; the content was never `git add`-ed, so git had nothing to recover). **Recovered in full**: each
+  losing agent's own transcript records every Write/Edit tool call it made, so all 34 files were mechanically
+  reconstructed by replaying those tool calls, in the correct cross-agent chronological order, against the current base
+  — zero mismatches on replay (every `old_string` matched exactly where expected), which is itself strong evidence the
+  reconstruction is byte-correct. Two real, previously-masked test failures surfaced on the first full QG run against
+  the recovered tree (both genuine — `test_lifespan.py`'s mocks didn't yet account for the new `start_sweeper()` call,
+  and `test_venue_engages_any_row_filter_gate_and_bypasses_rollup` was mocking a call path the OOM guard's subprocess
+  wiring had moved) — both fixed properly, not papered over; a third, `test_route_deployments_ inventory*.py`'s
+  AWS-census flake, was confirmed pre-existing/parallel-execution-flaky (passes reliably in isolation, a DIFFERENT test
+  in the same family fails on each repeated full run) via 3 independent full-QG runs, matching what 3 other agents this
+  session independently flagged as unrelated. **Shipped** (all `deployment-api`, chronological): `030779f` (OOM guard:
+  pre-flight byte-budget refusal + `RLIMIT_AS`-bounded child, mirrors `8d260ad`'s proven pattern), `0702aa3` (cache
+  hygiene: `bounded_cache.py` primitive + sweeper + debug endpoint, all of B1/B3/B4b/B5/B6/B16/
+  UnifiedCache/GCSCache/B7/B2), `3f1fc66` (vm-deployments 45s SWR, 9 tests), `d8add54` (AWS WIF credential code path),
+  `fc53899` (wires the new role ARN into the cloudbuild deploy env, inert until this — plus the earlier `ab07227`
+  WORKERS=2, `6d5a225`+`650e418` background-sync D4). Also shipped: `deployment-service@c6c6c8f` (D6 memory alert
+  Terraform) and `deployment-ui@3c08c5f`/`18ba017`/`0ff25b5` (the 3 §4 UX/polling decisions, independently re-verified
+  SAFE_TO_TRUST by a second agent that re-ran the Playwright specs itself). **The D6 alert Terraform was additionally
+  `tofu apply`-ed live** (targeted apply, plan showed exactly 1-to-add/0-to-change/0-to-destroy) — this repo's
+  `terraform/gcp/` has no auto-apply pipeline, so shipping the `.tf` alone would NOT have made the alert live; confirmed
+  via `tofu state show` post-apply (`projects/central-element-323112/alertPolicies/10817162460883602732`, enabled).
+  Codex updated: `codex/05-infrastructure/deployment-observability.md` (new alert + pointer to this plan);
+  `codex/04-architecture/runtime-deployment-topology.md` checked — no stale worker-count statement found, no edit
+  needed. **Explicitly NOT done, by operator instruction**: the Phase C 24h soak — Phase B has landed on
+  `live-defi-rollout` but has not yet promoted to `main`/redeployed, so there is no live window to soak yet regardless;
+  left open for whoever next has 24h of live Phase-B runtime to point monitoring queries at. **Not independently
+  re-verified** (unlike the OOM guard/costs/UI pieces, which got a dedicated adversarial-verify pass): the cache-hygiene
+  and vm-deployments-SWR pieces, and the recovery-reconstruction itself beyond the QG-green confirmation — a follow-up
+  review pass would be reasonable before treating this as fully closed.
