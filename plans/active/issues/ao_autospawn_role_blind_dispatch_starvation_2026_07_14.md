@@ -82,9 +82,11 @@ all-`data_engineering` to a diversified fleet.
       can take).
 - [ ] [BACKEND] P2. **High-affinity task pinned to a DEAD slot never spills** —
       [dispatch.py](../../../agent-orchestrator/server/dispatch.py) `_task_is_routable_to`: `affinity == "high"` returns
-      False for every non-target slot, with no dead-target fallback. Currently stranded:
-      `mvp_backfill_defi_onchain_v10-002` → slot 15 (dead), `bybit_futures_chain_write_shape_migration-007` → slot 14
-      (dead). Add a spill when the pinned target slot has been dead/absent beyond a threshold.
+      False for every non-target slot, with no dead-target fallback. Two tasks were stranded this way
+      (`mvp_backfill_defi_onchain_v10-002` → slot 15 dead; `bybit_futures_chain_write_shape_migration-007` → slot 14
+      dead) and were **manually unblocked 2026-07-14** (runtime `release_task_to_queue(affinity="none")` + cleared
+      `target_slot`; both immediately dispatched to slots 8 and 3). The **code gap is still open**: add a spill when the
+      pinned target slot has been dead/absent beyond a threshold, so this doesn't recur.
 
 ## Codex SSOTs
 
