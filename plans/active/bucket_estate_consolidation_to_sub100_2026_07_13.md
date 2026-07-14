@@ -146,7 +146,8 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [x] ✅ [OPERATOR] P1. **RULED 2026-07-13 — retire BOTH dev/stg tiers** (operator answer to the audit question set; 20
       of 21 canonical dev/stg buckets empty). Remaining action rides the W1 delete todo above; the sole content-bearing
       exception `instruments-store-sports-dev` gets inspect + migrate/drop there. Resolver keeps supporting the tiers;
-      we just stop keeping empty buckets for them.
+      we just stop keeping empty buckets for them. — `instruments-store-sports-dev` sub-item DONE 2026-07-14: full
+      investigation + retirement, see Progress Log entry "instruments-store-sports-dev full retirement".
 
 ## Wave 2 — in-flight completions + audit-found breakages (estate ≈139 after)
 
@@ -382,6 +383,73 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-14, `instruments-store-sports-dev` full retirement — investigated, compared, retired, bucket deleted +
+  404-verified.** Live-verified (not trusted from plan text): a Cloud Run job
+  `uts-dev-instruments-service-sports-fixtures` was firing 4x/day (00:00/06:00/12:00/18:00 UTC via
+  `uts-dev-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule`) plus a separate `uts-dev-features-sports-t1-schedule`
+  at 02:30 UTC.
+  1. **Comparison (real content, both sides)**: `gcloud run jobs describe` on both `uts-dev-` and
+     `uts-prod-instruments-service-sports-fixtures` showed byte-identical args
+     (`--operation=instruments --mode=batch --asset-group=SPORTS --sports-provider=API_FOOTBALL --run-tag=t1-recon`) —
+     only `DEPLOYMENT_ENV` differs. Dev's job had actually been FAILING since at least 2026-07-10
+     (`gcloud run jobs executions list` — every execution 2026-07-10→2026-07-12T18:01 shows `FAILED_COUNT=1`); its first
+     success was an off-cadence run at 2026-07-12T22:31:09Z, so the bucket only ever held 3 days of content
+     (`day=2026-07-12/13/14`). Read real objects on both buckets for those 3 overlapping days: dev = 5 entities
+     (`fixtures_outcomes`, `fixtures_schedule`, `injuries`, `standings`, `teams`); prod = 9 entities for the same days,
+     including 4 dev never captured at all (`fixture_events`, `fixture_lineups`, `fixture_stats`, `player_stats`).
+     League breadth: prod's `standings`/`teams` cover ~90 leagues per day vs dev's ~30; for `fixtures_schedule`
+     specifically, day=2026-07-13 and day=2026-07-14 are IDENTICAL league-for-league between dev and prod (2 leagues and
+     4 leagues respectively, exact same names). The one divergent day (day=2026-07-12: dev's
+     `fixtures_schedule`/`fixtures_outcomes` had 8 leagues, prod only 1 — `K_LEAGUE_2`) was checked directly rather than
+     assumed unique: prod's `teams` entity for that SAME day already covers all 8 of dev's leagues (`ALLSVENSKAN`,
+     `ARGENTINA_PRIMERA_NACIONAL`, `BRASILEIRAO_SERIE_B`, `COPA_ARGENTINA`, `COPA_CHILE`, `ELITESERIEN`, `K_LEAGUE_1`,
+     `K_LEAGUE_2`) — so prod already had full reference coverage of every league dev touched that day; the
+     fixtures_schedule/outcomes narrowness that one day is best explained by dev's very first (off-cadence,
+     post-multi-day-failure) successful run sweeping a broader match- calendar window than prod's steady-state per-run
+     window, not a sustained unique capture. **Conclusion: dev held no genuinely unique data — prod is a strict
+     superset** (deeper entities, ~3x league breadth, longer history back to 2019 and forward-scheduled to 2026-12) — no
+     migration was needed or performed.
+  2. **Dead scheduler found + noted**: `uts-dev-features-sports-t1-schedule` targets a Cloud Run job
+     (`uts-dev-features-sports-service-t1-recon`) that has never existed on EITHER tier (`gcloud run jobs describe` 404s
+     for both dev and prod variants) — confirmed via `gcloud scheduler jobs describe` `status.code=5` (NOT_FOUND) on its
+     last attempt (2026-07-14T02:30:21Z) and via `gcloud logging read` showing `NOT_FOUND` errors on every fire. This
+     scheduler was never writing anything on either tier — a pre-existing dead entry, not a live producer this session's
+     task brief slightly overstated. The `features-sports-service-job`/`daily_workflow` Cloud Run job (a SEPARATE, real,
+     already-live service under `terraform/services/features-sports-service/`) is untouched — not the same pipeline, not
+     in scope.
+  3. **Retirement executed**: `deployment-service@926ba192` — `terraform/gcp/t1_batch_scheduler.tf`'s
+     `t1_batch_services` for_each now excludes `sports-fixtures-{6am,noon,6pm,midnight}` + `features-sports` keys when
+     `var.environment == "dev"` only (staging/prod entries for this exact pipeline are byte-unchanged); QG green (201s),
+     quickmerge → live-defi-rollout. Live resources deleted directly via `gcloud` (mirrors this session's earlier
+     cefi/defi/sports-legacy consolidator-cron removal pattern — terraform source edited first, no blind
+     `terraform apply` since dev's terraform state isn't safely applyable per this session's earlier tfvars finding):
+     all 5 `uts-dev-*` Cloud Scheduler jobs (`sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule` +
+     `features-sports-t1-schedule`) deleted; Cloud Run job `uts-dev-instruments-service-sports-fixtures` deleted.
+     Re-verified via `gcloud scheduler jobs list`/`gcloud run jobs list` post-delete: zero `uts-dev-*sports*` entries
+     remain anywhere (staging's `uts-staging-features-sports-t1-schedule` and all `uts-prod-*sports*` entries are
+     untouched, out of scope). Grep-clean: workspace-wide `rg` for `instruments-store-sports-dev`/`sports-dev-central`
+     found zero hardcoded construction sites (only this plan's own prose + a generic `resolve_bucket_name` docstring in
+     `instruments_service/reference_data/sports_dependency.py` documenting the resolver's general dev-tier support,
+     which the Wave-0 ruling explicitly keeps: "resolver keeps supporting the tiers"); `_tradfi-ohlcv-launcher-lib.sh`
+     checked and contains zero sports references (unrelated file for this pipeline).
+     `deployment_service/ cloud_run_job_registry.py`'s stem entries for
+     `instruments-service-sports-fixtures`/`features-sports-service-t1-recon` are environment-agnostic classification
+     stems (used by the deployment-observability dashboard across ALL tiers) — left unchanged since staging/prod jobs
+     still need them; the guard test (`test_cloud_run_job_registry_guard.py`) statically greps the raw `.tf` text for
+     `name=`/`job_name=` strings (does not evaluate the `var.environment` conditional), so it still passes post-change.
+  4. **Bucket deletion + 404-verify**: `gcloud storage buckets describe` confirmed no `versioning_enabled` field
+     (versioning OFF) before deleting — no version-aware handling needed;
+     `soft_delete_policy.retentionDurationSeconds = 604800` (7-day GCS soft-delete, does not block deletion).
+     `gcloud storage rm -r gs://instruments-store-sports-dev-central-element-323112` removed all live objects (306
+     parquet files across `_index/`, `instrument_availability/`, `sports_reference/`) then the bucket itself;
+     immediately re-verified via `gcloud storage buckets describe` → **404 confirmed**. Estate count: −1 (this bucket
+     only; no other buckets touched — tradfi/prediction and every other named-out-of-scope bucket were not touched).
+     Evidence: live `gcloud run jobs describe`/`executions list`/`scheduler jobs describe`/`logging read` transcripts
+     (comparison); `deployment-service@926ba192` (terraform, QG green 201s, quickmerge → live-defi-rollout); live
+     `gcloud scheduler jobs delete` ×5 + `gcloud run jobs delete` ×1 transcripts (scheduler/job retirement); live
+     `gcloud storage rm -r` + `buckets describe` 404 transcript (bucket deletion). Repos touched: deployment-service
+     only.
 
 - **2026-07-14, item A (`instruments-store-cefi` legacy twin) — investigated to a genuine resolution; the "27,225
   legacy-only objects" figure was a partition-shape-blind diff-tool false alarm, not a real data gap.** Full session
