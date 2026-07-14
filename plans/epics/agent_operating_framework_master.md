@@ -22,7 +22,7 @@ created: 2026-06-24
 name: agent_operating_framework_master
 tier: L5
 priority: P0
-assigned_vm: harsh_pc
+assigned_vm: planning # was: harsh_pc -- corrected 2026-07-14, finding 12: harsh_pc is a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot (this epic's own body-section correction already says so; this field was never updated to match); planning is the current single central-orchestrator VM id, matching the plan_hygiene_master.md epic precedent
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
@@ -65,8 +65,10 @@ honest and graduates delegation. The whole design is **grep-native, NOT vector-R
 >   `escalation_pipeline_mvp` + the `escalation_and_disaster_recovery_master` epic). They stay valid; they are not on
 >   the make-AO-usable critical path. Pausing those 4 child plans is the remaining O1 mechanic (operator to confirm).
 
-**Assigned VM**: `harsh_pc` (the local fleet-test host where this framework is being designed + driven; reassign
-per-workstream as work dispatches — D4).
+**Assigned VM**: `planning` (was: `harsh_pc` — corrected 2026-07-14, finding 12: `harsh_pc` was a pre-2026-06-27
+multi-VM host id, retired by the single-VM pivot; see this doc's own W6 role-instance table-row correction, which
+already flagged `harsh_pc` as retired but never fed back into this line). `planning` is the current single
+central-orchestrator VM (reassign per-workstream as work dispatches — D4).
 
 ## Why this epic exists
 
@@ -241,6 +243,11 @@ self-healing/auto-recovery substrate; composes with `observability_master`. The 
 **Fast-follow roles** (after the spine + Data-Eng pilot prove the pattern): DevOps, QA (UI-Playwright vs backend
 chaos/load split), Business-Dev (owns the criticality registry), Trading-Analysis, CTO. Quant-research stays P2 (least
 existing scaffolding). Starter set chosen by the operator (2026-06-25): **spine + PM + Data-Eng + Escalation-MVP** (4).
+(was: QA/UAT framed purely as a not-yet-started fast-follow — **corrected 2026-07-14, finding 9**: QA/UAT's Phase 0
+charter (`../active/uat_role_charter_2026_06_27.md`, W6 role instance) already shipped `agent-orchestrator@acbf930` —
+the SAME commit that shipped the spine's own Phase 1 — so QA/UAT work began concurrently with, not strictly after, the
+spine + Data-Eng pilot; this section was never revised to reflect that. `uat_role_charter_2026_06_27.md` is also missing
+from this epic's `related_plans` frontmatter.)
 
 ## Composition with other epics
 
@@ -263,6 +270,17 @@ existing scaffolding). Starter set chosen by the operator (2026-06-25): **spine 
 ## P0 — must complete first
 
 ### W1 — Strict per-plan VM matching (dispatch correctness)
+
+> **Stale-ownership + moot-premise notice (corrected 2026-07-14, finding 203):** the linked owner below
+> (`dispatch_strict_vm_matching_2026_06_24.md`) is `status: superseded` (archived at
+> `archive/2026_06/dispatch_strict_vm_matching_2026_06_24.md`), its open items folded into
+> `orchestrator_consolidated_remaining_2026_06_25.md`, which is now ALSO archived (`status: superseded`) with items
+> folded onward again. `epics/orchestrator_master.md` separately (and independently) claims this same D1–D6 scope via
+> that same now-archived plan. Neither owner needs reviving: the whole premise — matching a plan's `assigned_vm` to a
+> specific backend VM id in a multi-VM fleet — was itself superseded by the 2026-06-27 single-VM pivot (dispatch is now
+> role/skill-based via `assigned_role`, not per-VM `assigned_vm==backend` matching; see this epic's own 2026-06-26
+> reframe note above). The three `- [ ]` P0 todos below are stale/not-applicable under the current architecture, not
+> live blocking work.
 
 Owned by [`../active/dispatch_strict_vm_matching_2026_06_24.md`](../active/dispatch_strict_vm_matching_2026_06_24.md).
 The fail-closed `assigned_vm==backend` matcher (D1–D6) + immediate `harsh_pc` relief + the supersede-audit of the two
