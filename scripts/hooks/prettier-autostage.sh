@@ -61,15 +61,31 @@ fi
 
 # Locate prettier. Prefer repo-local (node_modules/.bin/prettier), fall back to npx,
 # then to a globally-installed prettier on PATH.
+#
+# MINIMUM VERSION GUARD (2026-07-14): prettier <3.9.5 with this workspace's proseWrap:always
+# deterministically CORRUPTS markdown — underscore identifiers rewritten as asterisks
+# (data_type -> data*type, LIVE_ -> LIVE*), paragraphs collapsed into blobs. Proven by
+# head-to-head repro (3.8.4 mangles, 3.9.5 clean); ~60 docs damaged before detection. SSOT:
+# unified-trading-pm/plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
+# So: a resolved binary older than $PRETTIER_MIN_VERSION is NEVER used — prefer a pinned npx
+# fetch instead, and if npx is unavailable skip the format pass (a skipped format is recoverable;
+# corrupted content is not). check_prettier_mangling.sh in the plan-hygiene gate is the backstop.
+PRETTIER_MIN_VERSION="3.9.5"
+
+_pa_version_ok() { # $1 = version string; true if >= PRETTIER_MIN_VERSION
+  [ "$(printf '%s\n%s\n' "$PRETTIER_MIN_VERSION" "$1" | sort -V | head -1)" = "$PRETTIER_MIN_VERSION" ]
+}
+
 PRETTIER=""
-if [ -x "./node_modules/.bin/prettier" ]; then
+if [ -x "./node_modules/.bin/prettier" ] && _pa_version_ok "$(./node_modules/.bin/prettier --version 2>/dev/null || echo 0)"; then
   PRETTIER="./node_modules/.bin/prettier"
-elif command -v prettier >/dev/null 2>&1; then
+elif command -v prettier >/dev/null 2>&1 && _pa_version_ok "$(prettier --version 2>/dev/null || echo 0)"; then
   PRETTIER="prettier"
 elif command -v npx >/dev/null 2>&1; then
-  PRETTIER="npx --no-install prettier"
+  # Pinned fetch — npm caches the package, so after the first run this is fast and offline-safe.
+  PRETTIER="npx -y prettier@$PRETTIER_MIN_VERSION"
 else
-  echo "[prettier-autostage] WARN: prettier not found locally; skipping format pass. CI will enforce." >&2
+  echo "[prettier-autostage] WARN: no prettier >=$PRETTIER_MIN_VERSION available and no npx; skipping format pass (older prettier corrupts markdown — see prettier_emphasis_mangling_corpus_corruption_2026_07_14.md). CI will enforce formatting." >&2
   exit 0
 fi
 

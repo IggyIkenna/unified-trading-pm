@@ -155,9 +155,9 @@ reconcilers + `mtds-s4-10` rescan complete.
 ### Shard granularity propagation (`shard_granularity_ssot_propagation`)
 
 - [x] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
-      [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction `456acb9`
-      + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate human
-      sign-off remaining] **CLOSED-AS-STALE 2026-05-08** — handover already folded; no separate sign-off needed.
+      [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction
+      `456acb9` + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate
+      human sign-off remaining] **CLOSED-AS-STALE 2026-05-08** — handover already folded; no separate sign-off needed.
 - [x] [AGENT] P0. **#1 MDPS 1440-NaN reproduction path** — the canonical per-shard test case for shard-atom alignment
       regressions. [AUDIT 2026-05-07: STALE — superseded by writegate Phase 2.A (`_create_empty_output` deletion across
       all asset_groups, MDPS@`5b52d0b`/`b9f9328`/`80cf141`/`e9520a0`) AND retrospective cleanup script MDPS@`d3be0ef`
@@ -372,9 +372,11 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
   - Compare the actual depth to the codex shard-key matrix expected depth. [AUDIT 2026-05-07: FRESH — actionable; gating
     audit step for Phase 3 verification]
 - [ ] [DOC] P0. Output a coverage matrix at `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`
-      listing every (service, asset*group, venue, data_type) tuple as one of: `WORKING` /
-      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/ `MISSING_DOWNLOAD_ICON`. Reference incidents (CBOE     ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot. [AUDIT 2026-05-07: FRESH —     actionable; verified `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`does NOT exist     (only`data-status-drilldown.md`+`shard-granularity-cefi.md`);
-      doc creation is greenfield]
+      listing every (service, `asset_group`, venue, data_type) tuple as one of: `WORKING` /
+      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/ `MISSING_DOWNLOAD_ICON`. Reference incidents (CBOE
+      ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot. [AUDIT 2026-05-07: FRESH —
+      actionable; verified `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`does NOT exist
+      (only`data-status-drilldown.md`+`shard-granularity-cefi.md`); doc creation is greenfield]
 - [ ] [VERIFY] P0. After B.2 Phase 3 deployment-ui renderer ships: re-walk the same audit; every entry in the matrix
       flips to `WORKING`. Block Phase 5 (MTDS CLI shard-targeting) sign-off until the matrix is 100% green. [AUDIT
       2026-05-07: BLOCKED-ON data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-3-renderer]

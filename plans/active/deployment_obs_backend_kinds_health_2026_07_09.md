@@ -373,13 +373,13 @@ source: deployment_observability_expansion_2026_07_08.md
       the gate is validated as defensive (backend already covers the edge case) rather than via a new pw:L2.
 - [x] ✅ [BACKEND] P1. **Wire `stalled` + `workload-dead` into `_composite_health_status`** (`deployment-api`,
       `deployments_inventory.py`) — both prerequisite signals now exist: `object_delta` via
-      `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-asset*group manifest lookup,
+      `deployment_freshness.compute_freshness()` / `_object_delta_for_bucket()` (per-`asset_group` manifest lookup,
       `deployment_freshness.py`), and `workload_alive` via the heartbeat daemon's `CMD_PID` liveness field
       (`unified-trading-library`/`deployment-service`, Workload-PID liveness todo above). `stalled`'s threshold table is
       per-`lifecycle_class` (backfill/batch → `object_delta==0` ≥15min AND cpu<10%; live-capture → no progress ≥5min in
       an expected-active window; paper → `work_delta==0` ≥15min) — `compute_freshness` needs a `deployment_id` +
-      resolves per-asset_group, not per-VM-entry, so this needs its own call-shape design (batch the lookup once per
-      asset_group per census cycle, not once per VM, to respect the zero-new-bucket-walk principle at scale), not a
+      resolves per-asset\*group, not per-VM-entry, so this needs its own call-shape design (batch the lookup once per
+      `asset_group` per census cycle, not once per VM, to respect the zero-new-bucket-walk principle at scale), not a
       copy-paste into the per-entry loop. Filed here rather than expanding deployment_obs_backend_kinds_health-015
       (deployment-api@f5f6ff4) — that diff was already large from 3 concurrent cross-slot rebases on this same file. —
       deployment-api@29f3be5. `workload-dead` fires unconditionally on `entry.workload_alive is False` (ahead of the
@@ -396,8 +396,15 @@ source: deployment_observability_expansion_2026_07_08.md
       wiring (deployment-api@5e25dce) on a genuinely-idle-but-healthy window. Also folded `object_delta>0` into the
       `working` state per the parent WS-D.3 spec's own OR clause (`object_delta>0 OR io_write_rate>0`), which the
       original `f5f6ff4` composite landed without since `object_delta` didn't exist yet. 10 new/updated unit tests
-      (`test_composite_health_workload_dead*_`, `test*composite_health_stalled_for_batch*_`,     `test*composite_health_batch_working_when_object_delta_positive*_`,     `test*composite_health_live_umbrella_stalled*_`, `test*batched_object_deltas_calls_once_per_distinct_asset_group`,     `test_build_inventory_threads_object_deltas*\*`) + `health_consolidator`/`deployment_freshness`object-delta tests     moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this     same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert     wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the     sibling's`cloud_run_services`param and my`object_deltas`
-      param). QG green (sentinel 29f3be5, 119s).
+      (`test_composite_health_workload_dead\**`, `test*composite_health_stalled_for_batch**`,
+      `test*composite_health_batch_working_when_object_delta_positive*\_`,
+      `test*composite_health_live_umbrella_stalled*\_`,
+      `test*batched_object_deltas_calls_once_per_distinct_asset_group`,
+      `test_build_inventory_threads_object_deltas*\*`) + `health_consolidator`/`deployment_freshness`object-delta tests
+      moved to their new home. Landed through 2 real rebase cycles against concurrently-shipped sibling work on this
+      same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert
+      wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the
+      sibling's`cloud_run_services`param and my`object_deltas` param). QG green (sentinel 29f3be5, 119s).
 - [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
       Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
       calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
@@ -428,9 +435,9 @@ source: deployment_observability_expansion_2026_07_08.md
 - [x] ✅ [REVIEW] P3. **Hand off the UI half** — already handed off + BUILT: the UI plan
       `deployment_obs_ui_popover_health_2026_07_09.md` is DONE (all 6 todos, `pw:L2` green), built interactively against
       the landed contract and now running against the real backend. **Frozen contract (2026-07-10)**: `DeploymentItem`
-      (`deployments_inventory.py`) — kind/umbrella(incl. `NONE`)/cloud/service/asset*group/status +
+      (`deployments_inventory.py`) — kind/umbrella(incl. `NONE`)/cloud/service/`asset_group`/status +
       `composite_health_status` (VMs: dead|hung|disk-full|oom-risk|working|stalled|workload-dead|unknown; services:
-      serving|scaled-to-zero|dead|degraded) + Tier-0 fields (machine_type/zone/rows*\*/uptime_hours) +
+      serving|scaled-to-zero|dead|degraded) + Tier-0 fields (machine_type/zone/rows\*\*/uptime_hours) +
       ECS/Lambda/Cloud-Run structural fields + `counts_by_kind`; `DeploymentDetailResponse`
       (`GET /deployments/{name}/detail`) — the D.1 vector + `host_metrics_window` (sparkline). Contract additions since
       the UI's first build the UI could still adopt: service `composite_health_status` (now live-wired, @5149af19e) +

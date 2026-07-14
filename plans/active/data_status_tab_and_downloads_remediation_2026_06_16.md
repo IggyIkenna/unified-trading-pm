@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Data-status tab + instruments download remediation (deployment-api / deployment-ui / CeFi universe)
-summary: Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9 manifest migration completion.
+summary:
+  Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9
+  manifest migration completion.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -24,7 +26,13 @@ locked_since: 2026-06-16
 supersedes:
 superseded_by:
 depends_on:
-source: ['plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H, file:line)', operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads across all asset_groups + fix globally)]
+source:
+  [
+    "plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H,
+    file:line)",
+    operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
+    across all asset_groups + fix globally),
+  ]
 assigned_role: backend-engineer
 drift_direction: advance-code
 ---
@@ -51,7 +59,7 @@ drift_direction: advance-code
 > `plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md` § Sequencing.
 
 > **🔴 APPLY GATE (operator 2026-06-17) — DRY-RUN EVERYTHING VIA MANIFEST-BETA BEFORE ANY `--apply`.** No v9 `--apply`
-> (path migration / object movement / `reconcile_phantom_manifest_rows_all.py --apply`) for ANY asset*group OR service
+> (path migration / object movement / `reconcile_phantom_manifest_rows_all.py --apply`) for ANY `asset_group` OR service
 > may run until the v9 **dry-run projected index has been built for EVERY service × asset_group** —
 > **instruments-service AND market-tick-data-service** (defi/cefi/tradfi/sports/prediction) AND the downstream services
 > — and each has been **eyeballed in the data-status tab under Manifest-beta mode** (the "m variable":
@@ -178,8 +186,8 @@ drift_direction: advance-code
       (`data-catalogue.instruments-service.yaml`), NOT the market-data `is_expected` registry (which the prior
       reproduction tested — wrong path). `reference_genesis` did an EXACT uppercased lookup, but the catalogue lists
       **base exchanges** (`COINBASE`, `OKX`, `DERIBIT`) while the instruments-store manifest qualifies them by role
-      (`COINBASE-SPOT`, `OKX-FUTURES/SPOT/SWAP`, `DERIBIT-COMBO`) → those resolved to `None` = out_of_scope. Two further
-      cefi venues (`BITFINEX-*`, `BITGET-*`) were real instruments-store venues simply absent from the catalogue.
+      (`COINBASE-SPOT`, `OKX-FUTURES/SPOT/SWAP`, `DERIBIT-COMBO`) → those resolved to `None` = out*of_scope. Two further
+      cefi venues (`BITFINEX-*`, `BITGET-_`) were real instruments-store venues simply absent from the catalogue.
       **FIX** (deployment-api `reference_scope.py`): `reference_genesis` now falls back to the base token after
       stripping a market-role suffix (`-SPOT/-FUTURES/-SWAP/-PERP/-PERPETUAL/-COMBO`) →
       COINBASE-SPOT/OKX-_/DERIBIT-COMBO resolve; **+** PM `configs/data-catalogue.instruments-service.yaml` adds

@@ -13,8 +13,13 @@ summary:
   split). Found during the 2026-07-14 verify-rerun-2 close-out; the reference repairs are unified-trading-pm@169a8c8cd
   and @65420c363. A corpus scan found ~31 plans docs (repair waves dispatched same session) and 13 codex docs (SSOTs —
   repair operator-gated) carrying the signature; plans/archive copies are left as historical record.
-status: open
+status: resolved
 resolved_by:
+  "doc-reconciliation session 2026-07-14 — corpus repaired (~60 docs: plans waves @6118a3258/@61bf72297/@6ad39dc29/
+  @d87565728/@9a914087d/@e1b983b90 + codex @f54f0e9d6 operator-approved + 9 late asset-group-token finds), prevention
+  shipped (PRETTIER_MIN_VERSION=3.9.5 guard in prettier-autostage.sh — 3.9.5 proven non-mangling by repro — +
+  check_prettier_mangling.sh backstop in the plan-hygiene gate), corpus scan 1,459 files clean. plans/archive copies
+  intentionally left as historical record."
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -95,19 +100,32 @@ Detection signature (has false positives — legit globs like `data_type=*/`, es
 
 ## Todos
 
-- [ ] [SCRIPT] P1. BLOCKED-OPERATOR-DECISION — codex repair wave. The 13 codex docs above carry verified mangling in
-      normative SSOT text. Options: (A, RECOMMENDED) approve a mechanical repair wave using the proven recipe (reference
-      commits 169a8c8cd/65420c363, per-hit false-positive verification, two-pass idempotence proof), one commit,
-      operator spot-review of the diff; (B) operator repairs by hand; (C) leave as-is (mangled SSOT text keeps
-      misleading readers and re-propagating into plans via copy-paste). Codex edits require an explicit operator ruling
-      per the plan-reconcile HARD GATE — do not execute without it.
-- [ ] [SCRIPT] P2. Gate hardening: add the detection signature (narrow, low-false-positive form:
-      `\{mode\}\*\{source\}|asset\*group=|schema\*version|[a-z]\*[a-z_]+ < v9`) as a PM quality-gate / prek check on
-      staged `.md` files so newly mangled text is rejected at commit time instead of accumulating. Home:
-      `scripts/quality_gates/` per script-homes SSOT; wire into the PM `quality-gates.sh`.
-- [ ] [SCRIPT] P3. Investigate a prettier-level fix: pin/bump the prettier version and minimally repro defect 2 upstream
-      (very-long list-item paragraph with many code spans); if an upstream issue exists, link it here; if a config
-      mitigation exists (e.g. `proseWrap`), evaluate against the repo's md conventions.
+- [x] ✅ [SCRIPT] P1. Codex repair wave — DONE unified-trading-pm@f54f0e9d6 (operator ruled option A in chat,
+      2026-07-14: "yeah repair it"). 17 spots / 13 codex docs mechanically de-mangled + backticked, every file two-pass
+      prettier-stable. (was: BLOCKED-OPERATOR-DECISION) — codex repair wave. The 13 codex docs above carry verified
+      mangling in normative SSOT text. Options: (A, RECOMMENDED) approve a mechanical repair wave using the proven
+      recipe (reference commits 169a8c8cd/65420c363, per-hit false-positive verification, two-pass idempotence proof),
+      one commit, operator spot-review of the diff; (B) operator repairs by hand; (C) leave as-is (mangled SSOT text
+      keeps misleading readers and re-propagating into plans via copy-paste). Codex edits require an explicit operator
+      ruling per the plan-reconcile HARD GATE — do not execute without it.
+- [x] ✅ [SCRIPT] P2. Gate hardening — DONE (this commit): `scripts/plan-hygiene/check_prettier_mangling.sh` (curated
+      signature, fenced-block + inline-code-span stripping so quoting docs and genuine backticked wildcards never
+      self-flag) wired into the plan-hygiene gate at all three paths: precommit staged-plans, precommit staged-codex,
+      and the full-sweep hard checks. Home is plan-hygiene (not scripts/quality*gates/) because that gate already runs
+      on exactly the staged plans/codex slice. First corpus run found + fixed 9 further `asset*group` mangles the
+      original `=`-anchored scan pattern had missed. (was:) add the detection signature (narrow, low-false-positive
+      form: `\{mode\}\*\{source\}|asset\*group=|schema\*version|[a-z]\*[a-z*]+ <     v9`) as a PM quality-gate / prek
+      check on staged `.md`files so newly mangled text is rejected at commit time instead of accumulating. Home:
+      `scripts/quality_gates/`per script-homes SSOT; wire into the PM`quality-gates.sh`.
+- [x] ✅ [SCRIPT] P3. Prettier-level fix — RESOLVED (this commit): head-to-head repro proves prettier 3.9.5 does NOT
+      mangle (3.8.4 mangles the same input; 3.9.5 output byte-correct incl. the split-code-span and repeated-wildcard
+      triggers). Fix shipped as a `PRETTIER_MIN_VERSION=3.9.5` guard in `scripts/hooks/prettier-autostage.sh`: a
+      resolved binary <3.9.5 is never used — pinned `npx -y     prettier@3.9.5` preferred, else the format pass is
+      SKIPPED (skipped format recoverable, corruption not). Global prettier upgraded to 3.9.5 on this host; the guard
+      propagates fleet-wide via the standardized prek hook install (PM@583b01b83, Harsh 2026-07-14). (was:) pin/bump the
+      prettier version and minimally repro defect 2 upstream (very-long list-item paragraph with many code spans); if an
+      upstream issue exists, link it here; if a config mitigation exists (e.g. `proseWrap`), evaluate against the repo's
+      md conventions.
 
 ## Additional findings from the repair waves (2026-07-14)
 
@@ -145,3 +163,12 @@ Detection signature (has false positives — legit globs like `data_type=*/`, es
   refs); dedicated fixer dispatched. Known unresolved residual: `master_data_canonicalisation_migration_catalogue` line
   ~1488 truncated value (needs domain verification, not a mechanical repair). The corpus long tail beyond the detection
   signature is expected — the P2 gate-hardening todo is the durable stop.
+- 2026-07-14 (RESOLVED): operator ruled "yeah repair it [codex] but also how do we make it so it doesn't happen again".
+  Codex repaired @f54f0e9d6 (17 spots / 13 docs). Prevention shipped: (1) root cause — head-to-head repro proved
+  prettier 3.9.5 fixed the bug upstream, so prettier-autostage.sh gained a PRETTIER_MIN_VERSION=3.9.5 guard (never
+  formats with an older binary; pinned npx fallback; skip-with-warning as last resort) and this host's global prettier
+  was upgraded; (2) backstop — check_prettier_mangling.sh added to the plan-hygiene gate (precommit staged plans +
+  staged codex + full sweep), which immediately caught 9 further mangled asset-group tokens missed by every earlier
+  sweep (fixed same commit; the gate sees mangled tokens in bare prose, so this Progress Log deliberately writes the
+  token as asset-group rather than quoting the mangled form literally — quoting it would self-flag). Corpus verified
+  clean: 1,459 files. Fleet propagation rides the standardized prek hook install (@583b01b83).

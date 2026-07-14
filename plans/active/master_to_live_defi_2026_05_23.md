@@ -1217,9 +1217,9 @@ real backend (not mock). Together with item 23 above, the canonical DART operato
       for any strategy archetype: (a) **side-by-side comparison** — batch / paper / live P&L curves, fills blotter,
       events, position trajectory, risk metrics in a tri-pane or stacked-line-series canvas; (b) **separate per-mode
       views** — pickable via `dart-scope-bar.tsx` Execution Stream toggle (extends current paper/live to add batch); (c)
-      **shared filter scope** — asset*group / instrument_type / strategy_family / archetype filters apply across all
+      **shared filter scope** — `asset_group` / instrument_type / strategy_family / archetype filters apply across all
       three lanes simultaneously. Wired to **real backend** (not mock fixtures): each lane reads from the mode-tagged
-      event stream + parquet results. *(folded from paper*vs_live_workflow_maturity_2026_05_08)* — **shipped
+      event stream + parquet results. *(folded from paper*vs_live_workflow_maturity_2026_05_08)\* — **shipped
       `ui@0c9fb81a` 2026-05-15** (`DartThreeWayView` 3-pane component + `fetchStrategyRuns` in dart-client.ts; 30s poll
       via Promise.all across 3 modes; wired into terminal/page.tsx)
 - [x] [AGENT] P0. `pvl-p23b-dart-mode-data-api`: `deployment-api` (or strategy-service) endpoint
