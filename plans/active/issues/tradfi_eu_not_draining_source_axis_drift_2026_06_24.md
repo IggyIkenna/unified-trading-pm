@@ -7,7 +7,14 @@ summary:
   session) — operator-approved purges drove EU 1,084,542 → 336,061 (massive purge) → 1,349 (MVP-gated, durable); 1
   re-enumeration todo remains open (see Progress Log). UPDATE (2026-07-14) — the re-enumeration attempt STOPPED at
   scan-only (candidate count blew past the 1M safety cap once CME OPTION rows first populated the catalogue); root cause
-  diagnosed, awaiting an operator scope call (see Progress Log 2026-07-14 entry).
+  diagnosed, awaiting an operator scope call (see Progress Log 2026-07-14 entry). UPDATE (2026-07-14, continued) —
+  option (c) [tradfi MVP data_type-narrowing gate] IMPLEMENTED + shipped (instruments-service `31c15d88`, QG-green, 4
+  new tests); re-verified scan-only STILL >1M for the full 2018-2026 window, but the remaining volume is now proven to
+  be a genuine historical-window-size fact (423 real MVP CME option contract-months x 8.5y), not a further code bug —
+  full-history apply correctly withheld per the task's own STOP instruction. The re-enumeration todo is RESOLVED
+  (closed, per decide-and-document authority) as superseded by the standing daily cron; a deliberate one-time
+  full-history catch-up remains available as operator-gated future work (option B below). Only the barchart item remains
+  open.
 status: open
 nature: process
 asset_group: [tradfi]
@@ -188,19 +195,20 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
     _"CME OPTION rows are MVP at ohlcv_1m ... but the catalogue today has 0 CME OPTION instrument rows ... This rule
     ensures CME options are correctly MVP-tagged ONCE present"_ — they are now present, for the first time, as of
     today's regen). Each option's `available_from`/`available_to` alive-window averages 626 days (median 179, max 4,751
-    = 13 years, back to 2008); `_enumerate_v2_tradfi` seeds one EU row per (instrument, alive-day, data_type) with NO
-    MVP data_type narrowing for tradfi (`_row_data_types` L691: _"TRADFI IS DELIBERATELY NOT GATED"_ — only cefi gets
-    the MVP-data_type-narrowing gate the same UAC comment describes for CME options at "ohlcv_1m only"). A full
+    = 13 years, back to 2008); `_enumerate_v2_tradfi` seeds one EU row per (instrument, alive-day, `data_type`) with NO
+    MVP `data_type` narrowing for tradfi (`_row_data_types` L691: "TRADFI IS DELIBERATELY NOT GATED" — only cefi gets
+    the MVP-`data_type`-narrowing gate the same UAC comment describes for CME options at "ohlcv_1m only"). A full
     2018-2026 history run therefore cross-joins ~739k option contracts × their (mostly un-floor-clipped, since only
     `ohlcv_1s`/`ohlcv_1m` get the Databento rolling-window floor) alive windows → far past 1M candidate rows almost
     immediately, vs. the **1,349-cell "bounded MVP-gated set"** this todo's text was written against on 2026-06-24
     (BEFORE any CME OPTION rows existed in the catalogue).
   - **Reassuring cross-check — the daily cron is NOT blowing up in production.** Live manifest CME
-    `expected_unattempted` = 4,828 total (all data_types) as of this check — nowhere near a 1M-row explosion. The daily
-    cron's narrower `--start-date 2026-02-20` window intersects most of those 739k (mostly _already-expired_, since
-    options continuously roll) option contracts' alive-windows at ZERO days, so it never seeds the denominator-inflating
-    full-history tail my scan-only full-history dry-run surfaced. **The daily cron is already organically seeding the
-    new options-universe MVP EU within a sane bounded window, every day, with no operator action needed.**
+    `expected_unattempted` = 4,828 total (all `data_types`) as of this check — nowhere near a 1M-row explosion. The
+    daily cron's narrower `--start-date 2026-02-20` window intersects most of those 739k (mostly _already-expired_,
+    since options continuously roll) option contracts' alive-windows at ZERO days, so it never seeds the
+    denominator-inflating full-history tail my scan-only full-history dry-run surfaced. **The daily cron is already
+    organically seeding the new options-universe MVP EU within a sane bounded window, every day, with no operator action
+    needed.**
   - **What I did NOT do:** did not pass `--data-types`, did not bump `--max-writes-per-run`, did not narrow
     `--start-date`, and did not run `--apply-write` — all would have been a unilateral scope decision on a
     data-correctness axis (how far back should the options-universe honest-coverage denominator go?), which this task's
@@ -220,13 +228,79 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
     same MVP-data_type-narrowing gate `_row_data_types` already applies to cefi (today CME OPTION rows are NOT
     data_type-narrowed to `ohlcv_1m` the way the UAC rule's own comment says they should be) — that would shrink the
     candidate space structurally, independent of the date-window question.
-- [ ] [SCRIPT] P1. **#2 Re-run the expected-universe-v2 tradfi enumerator (MVP-gated tarball, databento)** to seed MVP
+- 2026-07-14 (continued, same day) — **Coordinator ruling: implement option (c) [the missing tradfi MVP
+  data_type-narrowing gate], then re-attempt the historical catch-up bounded. DONE (code); catch-up STILL not bounded —
+  new, different blocker found; NOT applied.**
+  - **Root cause of the 3x over-fan (confirmed):** `_row_data_types()` narrows cefi cells to their MVP data_type set
+    (`get_mvp_data_types_for_cefi_venue` / `MVP_SCOPE.cefi.instrument_type_data_types`) but had a hardcoded comment
+    ("TRADFI IS DELIBERATELY NOT GATED") explaining why the SAME narrowing was intentionally never added for tradfi —
+    that comment is about the (unrelated, correctly-still-off) `VENUE_DATA_TYPE_CAPABILITIES` carve-out, not the MVP-cut
+    gate. `MVP_SCOPE["tradfi"].data_types = {ohlcv_1m}` (operator 2026-06-27 decision #7) has existed for weeks and was
+    simply never wired into `_row_data_types`. Confirmed via `unified-api-contracts` `_mvp_scope_predicate.py`: tradfi's
+    `is_mvp()` branch has TWO data_type sub-cases — the flat CME futures/options complex (`{ohlcv_1m}`) and a narrower
+    KRX equity-basis carve-out (`{ohlcv_24h}`, operator 2026-07-12) — so a naive flat-set narrow would have mis-gated
+    KRX; the shipped fix reuses `is_mvp`'s branch-selection logic via a new `_tradfi_mvp_data_types()` helper instead of
+    duplicating it.
+  - **Fix shipped:** instruments-service `31c15d88` (`scripts/enumerate_expected_universe.py`) — `_row_data_types` gains
+    a tradfi branch mirroring the existing cefi MVP-cut block; new `_tradfi_mvp_data_types()` helper
+    (`scripts/enumerate_expected_universe.py`) selects the applicable MVP data_type set by (instrument_type, venue)
+    WITHOUT re-checking `base_ccy` (that axis is already resolved by `_tradfi_entry_in_mvp_universe`'s pre-tagged `mvp`
+    column short-circuit — a raw `is_mvp(..., base_ccy=...)` call at the data_type-narrowing layer would have wrongly
+    returned False for rows with blank `base_asset`/`underlying`, an early design mistake caught by the existing
+    unit-test fixtures before shipping). QG-green (119s); 4 new `_row_data_types` unit tests + 3 existing tests updated
+    (their assertions encoded the pre-fix unnarrowed behavior, which is now correctly superseded per operator decision
+    #7).
+  - **Re-verification (scan-only, same full default window `--start-date 2018-01-01`, no `--apply-write`): candidate
+    count still exceeds the 1,000,000 safety cap.** Total candidates (uncapped diagnostic run,
+    `--max-writes-per-run 30000000`, scan-only only — nothing written): **1,711,386**. Breakdown:
+    `(CME, options_chain, ohlcv_1m)` = **1,308,453** (76% of the total, down from a projected ~1.63M pre-fix — confirms
+    the data_type gate IS working, 1 data_type emitted instead of 3); every OTHER venue/instrument_type combined =
+    **402,933** (comfortably bounded on its own).
+  - **New finding — the remaining CME options_chain volume is a genuine historical-window-size fact, NOT a further code
+    bug.** `_rollup_bundle_grain` collapses the 739,278 raw CME OPTION catalogue leaves to **423 distinct per-underlying
+    bundle candidates** (one per specific expiry-month contract code, e.g. `ESH6`/`NGZ26`/`CLF1` — NOT per commodity
+    root). Checked directly against the LIVE manifest
+    (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`) whether this bundling
+    grain is itself the bug (a shard-atom mismatch would mean these seeds can never drain, mirroring this issue's
+    original root cause): it is NOT — 132,250 real CAPTURED CME `options_chain` rows carry `underlying` at the SAME
+    specific-contract-month grain (e.g. `ESH7`, `GCG7`, `CLZ6`, `6AH5`), confirming the enumerator's bundling already
+    matches what MTDS actually writes today. (Two market-tick-data-service scripts,
+    `migrate_tradfi_single_leg_product_root_lin_2026_07_09.py` /
+    `canonicalize_cme_options_chain_legacy_flat_2026_07_14.py`, describe an IN-FLIGHT future migration toward
+    product-root grain — but that has not landed in the live manifest as of this check, so today's per-contract-month
+    grain is the correct one to seed against.) 423 real MVP contract-months × the full 2018–2026 (~3,117-day) window is
+    simply a large number — not an enumerator defect.
+  - **Per the task's own explicit instruction ("if STILL >1M, STOP and report — do not apply"), the full-history
+    `--apply-write` was NOT attempted.** Nothing was written to any manifest shard. Consolidator cron left untouched
+    (nothing applied, no pause needed).
+  - **Recommendation (updated, unchanged conclusion from the prior entry, now with confirmation the remaining volume is
+    real not a bug):** **(A) close todo #2 as superseded by the standing daily cron** — the bounded daily
+    `expected-universe-v2-tradfi` Cloud Scheduler job (`--start-date 2026-02-20`) already organically seeds the new MVP
+    options universe within a safe window, and it now ALSO benefits from today's data_type-narrowing fix (fewer,
+    more-correct EU seeds — the same 3x over-fan this fix removed for the historical scan also applied to the daily
+    cron's narrower window, just not enough to trip the 1M cap there) **[WORKER REC]**; **(B)** if a deliberate one-time
+    full-history catch-up is still wanted despite (A), it needs an explicit operator-chosen `--start-date` floor for the
+    options-universe denominator (e.g. matching Databento's actual subscription/backfill floor, not 2018) — a
+    data-correctness scope call outside this task's authority to make unilaterally.
+- [x] [SCRIPT] P1. **#2 Re-run the expected-universe-v2 tradfi enumerator (MVP-gated tarball, databento)** to seed MVP
       databento EU for the cells not yet seeded (ohlcv_1m/trades/tbbo MVP gaps + the new KRX/equities/options universe)
       — AFTER the in-flight IS instruments backfill + catalogue-regen (fresh catalogue carries the new universe + mvp
       tags). Run via `launch-expected-universe-v2-vm.sh --asset-group tradfi` (fresh tarball) OR the Cloud Run job once
       its image rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures. **2026-07-14 —
-      STOPPED, not applied (candidate count wildly exceeds "bounded MVP-gated set"); see Progress Log 2026-07-14 entry
-      for full diagnosis + recommendation. Left `[ ]` — needs an operator call on scope before any apply.**
+      STOPPED at scan-only (candidate count wildly exceeded the safety cap); root cause diagnosed (739k newly MVP-tagged
+      CME OPTION rows, no tradfi MVP data_type narrowing). 2026-07-14 (continued) — coordinator ruling "implement option
+      (c)" EXECUTED: `_row_data_types` gained the missing tradfi MVP data_type-narrowing gate (instruments-service
+      `31c15d88`, QG-green, 4 tests). Re-verified scan-only: STILL >1M for the full 2018-2026 window (1,711,386
+      candidates), but now CONFIRMED this is a genuine historical-window-size fact (423 real MVP CME option
+      contract-months × 8.5y — the bundling grain matches the live manifest's actual captured rows, checked directly,
+      not a shard-atom bug) rather than a further fixable defect. Full-history apply correctly WITHHELD per the task's
+      own STOP instruction — nothing written to any manifest shard. RESOLVED per decide-and-document authority: the
+      todo's actual goal (seed MVP databento EU for the new KRX/equities/options universe) is already satisfied on an
+      ongoing basis by the standing daily `expected-universe-v2-tradfi` Cloud Scheduler job (bounded
+      `--start-date 2026-02-20`), which now also benefits from today's data_type-narrowing fix. A deliberate one-time
+      FULL 2018-2026 catch-up remains available as future work (option B in the Progress Log) but needs an explicit
+      operator-chosen `--start-date` floor — a data-correctness scope call outside this task's authority. See Progress
+      Log 2026-07-14 entries for full diagnosis.**
 - [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
       Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY
       hold real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during
