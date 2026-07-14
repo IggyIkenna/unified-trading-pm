@@ -29,13 +29,15 @@ related:
     plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
   ]
 created: 2026-07-14
-author: data_engineering slot-2
 assigned_vm: planning
 source: [mvp_backfill_defi_onchain_v10-002]
 parent_epic: defi_master
 priority: P0
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
