@@ -2814,3 +2814,10 @@ slot-11's 19th dispatch) with no operator action yet on the gates themselves, an
 Understat + footystats M+P SPOT VMs) belong to P2b's own todos, not this task. A 7th duplicate ask adds no new
 information. Checkbox NOT flipped. Skipping this task for slot 12 (per skip-current-task semantics — other slots remain
 eligible) so this session moves to different available work instead of re-running the same multi-hour verification.
+
+- 2026-07-14 19:4xZ (autonomous tick 1): GW recompute fleet (fss-1/2/3) finished + self-deleted, BUT wrote a DIVERGENT
+  partition shape — day=<D>/league=<NUMERIC_AF_ID>/feature_group={derived,fixture}_features/ (observed 17:27Z→18:31Z
+  across the window) instead of the day-level canonical atom the gates/readers use; raw numeric af-ids as league keys
+  additionally suspect. ML-readiness re-verify HELD pending shape diagnosis (agent dispatched: writer-vs-reader shape
+  evidence, canonical ruling, redo cost). Enrichment fleet healthy (4/5 VMs writing, INJURIES VM completed); pre-2025
+  false-empty sweep mid-scan (PLAYER_STATS reached).
