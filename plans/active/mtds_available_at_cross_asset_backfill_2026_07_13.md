@@ -636,3 +636,21 @@ routes through `add()`, not `record_captured_from_counts`. Full `test_rebuild_tr
 was 20). Two-pass QG (committed first, then re-ran QG so the sentinel matched the real commit — caught my own ordering
 mistake before shipping) green in 120s. Shipped `market-tick-data-service@c8c01855` via `quickmerge --agent`. No
 production writes made — code + tests only, no cron touched, no manifest write.
+
+**Re-verification #4, no new writes — 2026-07-14 (data_engineering slot-7, task
+`mtds_available_at_cross_asset_backfill-003`)**: dispatched task `-003` a fifth time (slots 4, 6, 10, 12 already covered
+— see the four entries above). Fresh-pulled all 24 slot repos to `origin/live-defi-rollout` (all clean FF). Re-read this
+plan in full and confirmed nothing has changed: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is
+still unchecked, no operator go-ahead on record, `BLK-f3cdf442` remains open. Confirmed via
+`git log --oneline -10 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*' 'scripts/*prediction*'` on
+`market-tick-data-service` post-pull: only the prediction snapshot (`86467a0a`) and tradfi snapshot (`8f131104`) scripts
+exist; a repo-wide `find -iname '*pause*cron*' -o -iname '*cron*pause*'` returned zero hits — no cron-pause action
+exists anywhere. Declined to execute the underlying todo (pausing the prediction consolidator cron with no operator
+go-ahead would violate this plan's own HARD constraint re: the sports CF-8 precedent). Not filing a 6th duplicate
+`/blocked` for the same still-open root gate — calling `/skip-current-task` citing this entry +
+`BLK-f3cdf442`/`BLK-ccb6cd86`. **Flagging for main/operator, now 7 independent confirmations (slots 4/6/10/12/7) across
+this task and its `-005`/`-009`/`-014` siblings**: the fix remains either (a) resolve the P0 maintenance-window
+decision, or (b) main/operator applies the parking recipe from `RULES.md` §4 (`priority: 999` + a false
+`prereqs.conditions` gate) to `-003`/`-005`/`-009`/`-012`/`-014` — worker slots cannot edit the central `backlog.yaml`
+themselves (confirmed by slot 12). No production writes made this touch; no cron state changed, no manifest touched, no
+code changed.
