@@ -262,6 +262,55 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       This is a genuinely audit-scope task (many files) — size it as its own plan rather than folding into this issue
       doc's remaining todos. Repo: `market-tick-data-service`.
 
+## Update — 2026-07-14 (independent corroboration of the P2 relaunch, concurrent session)
+
+Dispatched to execute this doc's [INFRA] P2 todo. On arrival the todo was already flipped `[x]` and pushed
+(`unified-trading-pm@5a448b524`, slot-3) — HEAD ancestor-or-equal of `origin/live-defi-rollout` in this clone, synced by
+the slot-cron ff-pull mid-session. Rather than re-do the work, independently re-verified the live infra myself (both
+sessions were racing the same `mtds-perp-funding-backfill` VM name/GCS log path in real time, so my own checks are a
+genuine independent confirmation, not a re-read of slot-3's writeup):
+
+- **Old hung VM disposition**: `gcloud compute operations list --filter="targetLink~mtds-perp-funding-backfill"` shows
+  the 16:07:56Z-launched hung VM was `delete`d at **2026-07-14T17:58:00Z** by `ikenna@odum-research.com` (~37min after
+  this doc's last-observed-hang check at 17:21:44Z) — a deliberate human/operator-attributed delete, not a self-delete
+  or preemption. Confirms item 1 of the dispatch ("stop old VM if still churning") was already done before this session
+  started.
+- **Tarball freshness at each relaunch**: confirmed via `gsutil cat .../mtds-code.manifest.json` +
+  `.../unified-api-contracts-code.manifest.json` that the CURRENTLY published tarballs pin `commit_sha` exactly at
+  `56efdd7da517b525c7ad7feda77d06263fc1550a` (MTDS) / `ea68ef46ac7a011af6f3d25b63c89ac38440dcf7` (UAC), both fix
+  commits, republished at `2026-07-14T18:13:0x-14Z`. The first relaunch attempt (insert `17:59:11Z`, ~14min BEFORE that
+  republish) ran on the P0-only tarball and correctly produced honest `attempted_failed` (ticker-discovery >100 sanity
+  cap) for every `kalshi_perp` date — no churn, but no real data either, matching slot-3's writeup. The second relaunch
+  (insert `18:23:22Z`, AFTER the republish) is the one that actually exercises the endpoint fix.
+- **T+10 real-progress verify on the post-republish relaunch** (VM created 18:23:22Z, so T+10 = 18:33:22Z — this run
+  actually finished well before that): `run.log` shows `kalshi_perp: wrote <N> funding rate rows for <date>` for **all
+  47/47 dates** in the `2026-05-29`→`2026-07-14` range (e.g. 12 rows 2026-06-06, 39 rows 2026-07-13, 26 rows 2026-07-14)
+  against the real margin API host, **zero** `ticker-discovery returned ... exceeding the sanity cap` churn lines
+  anywhere in the full log (`grep -c` = 0), `Batch complete: 47 results collected` at `18:29:09Z` (~6min wall time, not
+  18min — this was a warm per-VM manifest shard from the prior run so most non-kalshi/non-polymarket work was already
+  cached), `[vm-exec] command exited rc=0`, clean self-delete. `polymarket_perp` continues to correctly fail honest
+  (`SOURCE_UNREACHABLE`, pre-existing unrelated DNS NXDOMAIN issue, not in scope). Confirms `attempted_failed` rows from
+  the first (pre-endpoint-fix) relaunch are NOT skip-worthy per `ManifestFreshnessCache.is_now_skip_worthy`
+  (`unified_trading_library/manifest_freshness.py:256-274` — only `captured`/`empty_confirmed`/`EXPECTED_*` are
+  skip-worthy; `attempted_failed` always retries), so the second relaunch correctly re-attempted every date rather than
+  skip-gating on the first run's honest failures.
+- **DRIFT resume-walker parts count** (dispatch item 4, cheap fleet check):
+  `mtds-drift-sig-walker-resume-20260714-134435` parts count
+  (`gsutil ls gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index_parts/ | wc -l`) was 8,798
+  at 17:45Z (per dispatch reference) → **9,549 at 18:49:13Z** → **+751 parts / 64.2min ≈ 11.7 parts/min (~702
+  parts/hour)**. Walker target is `--back-to 2025-07-01`; `oldest=` date reached 2025-10-30 as of 18:48:19Z (from a
+  session-start `oldest=2025-12-23` at 13:58:22Z — 54 calendar-days of history covered in ~4h50m of wall time ≈ 11.2
+  days/hour). Remaining floor distance 2025-10-30→2025-07-01 ≈ 121 days → **extrapolated ~10.8h more** to reach the
+  `--back-to` floor at the observed date-progress rate. Sibling gap walker (`mtds-drift-sig-walker-gap-20260714-134501`)
+  already reached ITS floor (`2025-01-15`) and self-deleted cleanly at 17:35:21Z
+  (`Walk complete: 229625000 new sigs ... across 2297 new parts`, exit_code=0) — not part of this rate calc.
+
+**Net effect**: no code/infra action needed from this session — the P2 todo's actual work (stop old VM, relaunch onto
+fresh fix-composed code, T+10 real-progress verify) is done and independently corroborated on live infra by two
+concurrent sessions. `mvp_backfill_defi_onchain_v10-002`'s G2 gate for `perp_funding` is unblocked on the
+`kalshi_perp`-hang axis; DRIFT's multi-day sig-walker drain remains the other tracked blocker (~10.8h ETA per the
+extrapolation above).
+
 ## Evidence
 
 - `mtds-perp-funding-backfill` full `run.log`, last progress line:
