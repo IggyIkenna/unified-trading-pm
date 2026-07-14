@@ -2860,3 +2860,16 @@ scanning early-2020 OKX-SPOT; full-range skip-scans are slow by design). Fleet a
 majors queue VM, futures-tail retry (18:04, new stall regex, healthy). Loop: event watcher on fleet <3 + hourly fallback
 wake; termination = both my queue VMs terminal + af for my scopes closed or honestly explained + final verdict in this
 log.
+
+### TRUE cold-start root cause — lease max-wait == stall threshold — 2026-07-14T18:50Z (autonomous tick)
+
+Tail retry (`...180440`) died the same WORKER_STALLED death at 18:43 — but its final log line is the smoking gun:
+`Tardis lease FAIL-OPEN: could not acquire within 1800s`. **The lease max-wait (1800s) exactly equals the stall
+threshold (1800s)**: a cold VM behind long-running lease holders waits silently (lease-wait emits no progress lines, so
+no regex can save it) and the watchdog kills it at precisely the fail-open moment. This one mechanism explains all four
+cold-start deaths today (2× DERIBIT spot_pair, 2× futures-tail). Fixes: (1) `STALL_TIMEOUT_SEC` metadata passthrough
+added to the cefi launcher (set >1800, e.g. 3900, for lease-ON launches into a busy fleet) — quickmerging; (2) per
+stall-safety, NO third blind tail relaunch: the tail (~86 af cells, minutes of real work) queues until a QUIET window
+(majors VM terminal or fleet ≤1), then launches with STALL_TIMEOUT_SEC=3900. **Run-#7 lane**: same prescription for
+DERIBIT spot_pair attempt 3 — quiet window + raised threshold, not another launch into a busy fleet. Watcher v7 armed on
+(majors terminal OR fleet ≤1).
