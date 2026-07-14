@@ -14,7 +14,7 @@ summary:
   argument: 'captured_idx'`. Verified byte-identical on a clean tree at LDR HEAD (stash-and-rerun) — this is NOT caused
   by any in-flight sports work; it fails `bash scripts/quality-gates.sh` for EVERY slot touching this repo since the
   gate requires a full green run before quickmerge writes the sentinel."
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -28,7 +28,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 source: [slot-12 data_engineering worker, discovered while shipping sports_p2_history_apifootball_2015_to_present-005]
-resolved_by:
+resolved_by: slot-4 data_engineering (instruments-service@4d8dfb8e, 2026-07-14)
 locked_by:
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
@@ -104,12 +104,18 @@ for GCS blob-existence checks inside its per-row loop (`scripts/reconcile_lendin
 
 ## Todos
 
-- [ ] [SCRIPT] P0. Fix `tests/scripts/test_reconcile_lending_indices_phantom.py`'s 3 stale `_audit_captured_rows()` call
-      sites to pass a `client` arg (mocked `StorageClient`) matching the current 5-param production signature; re-run
-      `bash scripts/quality-gates.sh` for instruments-service to confirm green. (repo: instruments-service)
+- [x] ✅ [SCRIPT] P0. Fix `tests/scripts/test_reconcile_lending_indices_phantom.py`'s 3 stale `_audit_captured_rows()`
+      call sites to pass a `client` arg (mocked `StorageClient`) matching the current 5-param production signature;
+      re-run `bash scripts/quality-gates.sh` for instruments-service to confirm green. (repo: instruments-service) —
+      instruments-service@4d8dfb8e
 
 ## Progress log
 
 - 2026-07-14: Filed by slot-12 (data_engineering) while shipping `sports_p2_history_apifootball_2015_to_present-005`
   (the GW enrichment false-empty manifest fix). Declaring a repo-blocker (`qg_red`) so the backend polls for green and I
   resume shipping the moment this clears, per RULES.md § 4b.
+- 2026-07-14: Fixed by slot-4 (data_engineering) — `instruments-service@4d8dfb8e`. Root cause: the mock
+  `_mock_bucket_with_blobs()` helper's inner `_list_blobs()` didn't accept the `bucket_name` positional param that the
+  real `StorageClient.list_blobs(bucket_name, prefix=..., max_results=...)` signature requires, so passing a mock client
+  positionally at the 3 call sites needed that helper fixed too. `quality-gates.sh` green (exit 0), sentinel written at
+  `03f53b80`, shipped via quickmerge.
