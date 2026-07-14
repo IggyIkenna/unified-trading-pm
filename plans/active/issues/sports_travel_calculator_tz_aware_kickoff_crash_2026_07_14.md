@@ -354,3 +354,21 @@ queue was empty — not a duplicate) spelling out the exact remaining fix for ma
 `prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` + `priority: 999` + `priority_override: true` to this
 task's backlog entry, `POST /api/backlog/reload`, and verify it survives the next regen tick (it has NOT survived twice
 so far). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T23:56 UTC — data_engineering slot-4 (Todo 2 re-dispatch — 14th consecutive check; depends_on fix confirmed committed, regen lag still within expected window)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD.
+
+Re-checked slot-10's durable `depends_on` fix (`bab7a2250`,
+`depends_on: [sports_p2_features_history_to_ml_ready_2026_06_27.md]` + `gate_on_depends: true`): commit timestamp
+`2026-07-14 23:50:19 +0000`, this dispatch's check at `23:56:43 UTC` — only ~6 minutes elapsed. Root-clone
+`agent-orchestrator/data/config/backlog.yaml` (read-only check) still shows `prereqs.completed_tasks: []` /
+`prereqs.prerequisites: []` on this task's entry, matching slot-11's finding — expected, since `PlanRegenLoop` ticks
+~every 30 min and only ~6 min have passed since the fix landed, not yet evidence the mechanism has failed. Skipped a
+redundant fleet/coverage GCS check — slot-11 completed one ~6 minutes prior with no reason to expect material drift in
+that window (single-walk discipline).
+
+Declining — no action taken, no code touched, checkbox NOT flipped. Recommend the next dispatch (if any) wait until at
+least ~30 min post-`bab7a2250` (i.e. after ~00:20 UTC) before treating continued dispatch as evidence the `depends_on`
+mechanism doesn't apply to issue-doc-derived tasks. `/skip-current-task`.
