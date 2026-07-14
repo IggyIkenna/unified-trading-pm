@@ -2420,3 +2420,13 @@ BOTH segments** — the Helius key quota exhaustion is not a burst/contention ar
 either segment would reproduce the identical failure, per the todo's own tripwire); no new `/blocked` filed (same open
 question as slot-6's). Checkbox NOT flipped — gate still not met, still blocked on the operator's Helius
 quota/plan-upgrade decision. `/skip-current-task`.
+
+**2026-07-14 ~13:20Z (main session, coordinator) — starved backfill VM STOPPED (protective, reversible).**
+`mtds-solana-drift-backfill` stopped via `gcloud compute instances stop` (zone `asia-northeast1-c`, confirmed
+`TERMINATED`): with the Helius key at `-32429 max usage reached`, the VM had produced 0 Helius/capture/error log lines
+across two independent checks (~13min and ~20min) — burning SPOT cost with no possible progress. Relaunch when the quota
+question is ruled:
+`cd deployment-service && bash scripts/vm/launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-07-14`
+(SPOT default). The walker-fleet ruling (b) from earlier today is MOOT until Helius quota exists — the live decision is
+now: top-up/upgrade the Helius plan vs wait for the billing-cycle reset vs accept the gap. Operator being asked in the
+main session; slot-6's open `/blocked` is the same question and will be resolved by the same ruling.
