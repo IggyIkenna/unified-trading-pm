@@ -21,6 +21,10 @@ summary: |
   Atom lists: regenerate with the single-index scan in this doc (or from the 2026-07-13 session CSVs). Also carries
   the two hardening follow-ups: reader-side captured-outranks tie-break in _merge_shard_frames, and redeploying the
   expected-universe-v2-sports Cloud Run image so the shipped enumerator oscillation guard takes effect at 01:30Z.
+  ADJUDICATED 2026-07-14 (scope grew to 244 atoms): 243 restamped captured via shard recency-repair-20260713,
+  verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
+  the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
+  nightly-image masking).
 status: open
 nature: notes
 asset_group: [sports]
@@ -59,28 +63,77 @@ depends_on: []
 
 ## Open work
 
-- [ ] [DATA] P1. Subclass (a) — 143 PLAYER_STATS atoms: probe on-disk objects (UAC `candidate_parquet_paths`,
+- [x] [DATA] P1. Subclass (a) — 143 PLAYER_STATS atoms: probe on-disk objects (UAC `candidate_parquet_paths`,
       PLAYER_STATS layout) for each (league, date); where an object with >=1 row exists, re-stamp captured at the
       canonical league-grain identity (same shard mechanism as osc-repair); where absent, DELETE-or-retype the stale
-      `fill-missing-player-stats` captured row instead (it is the dishonest side then). Never blind-flip.
-- [ ] [DATA] P1. Subclass (b) — 46 FIXTURES atoms: adjudicate truthset-flip vs captured row (row_count 1-11,
+      `fill-missing-player-stats` captured row instead (it is the dishonest side then). Never blind-flip. — ✅
+      2026-07-14 instruments-service@853cef81 (`scripts/recency_masked_adjudication_2026_07_13.py`): all 143 probed
+      objects exist + parse with >=1 row → verdict `restamp-captured`, re-stamped at the masking empty row's identity
+      via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing), and per
+      operator ruling absent-object atoms would have stayed masked (no delete/retype). `--verify` green twice (02:41Z +
+      02:52Z 2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
+      `availability_index.20260714-023838.recency_masked_adjudication_pre_apply.parquet` = 0 lost keys.
+- [x] [DATA] P1. Subclass (b) — 46 FIXTURES atoms: adjudicate truthset-flip vs captured row (row_count 1-11,
       venue=API_FOOTBALL). The 2026-06-28 truthset says no fixtures; the captured parquet says rows exist. Decide per
       atom by content (open the parquet; a header-only/placeholder parquet → keep the flip; real fixture rows → truthset
       was incomplete for that league-day → re-stamp captured + note truthset gap). Operator-evidenced flips must not be
-      silently undone.
-- [ ] [CODE] P2. Reader-side hardening: mirror the consolidator's 2026-07-12 captured-outranks-recency tie-break in
+      silently undone. — ✅ 2026-07-14 instruments-service@853cef81: scope grew to **100 FIXTURES atoms** (46 original
+      truthset-flips + 54 new post-doc maskings; operator ruled same evidence rules). Per-cell parquet inspection found
+      genuine fixture rows dated to the exact league/day in **ALL 100 cells** → `restamp-truthset-gap`; zero flips
+      upheld, zero ambiguous. See § "Truthset gap (PROMINENT)" below.
+- [x] [CODE] P2. Reader-side hardening: mirror the consolidator's 2026-07-12 captured-outranks-recency tie-break in
       `unified_trading_library/unified_trading_library/manifest_writer/_read_index.py::_merge_shard_frames` (and any
-      atom-grain collapse consumers) so a later bare `empty_confirmed` can never mask a captured row at read time.
+      atom-grain collapse consumers) so a later bare `empty_confirmed` can never mask a captured row at read time. — ✅
+      2026-07-14 unified-trading-library@17ee38de: leading captured-rank sort key mirroring the consolidator's
+      `CASE WHEN capture_status = 'captured' THEN 1 ELSE 0 END DESC` (manifest_consolidator.py:1884); recency unchanged
+      among equal-rank rows; degrades to pure recency on legacy frames without `capture_status`; +5 unit tests in
+      `tests/unit/test_manifest_writer_per_vm.py`.
 - [ ] [INFRA] P1. Redeploy the `expected-universe-v2-sports` Cloud Run job image with the shipped enumerator guard —
       until then the 01:30Z nightly keeps emitting season-gate empty rows over captured atoms (the consolidator's
       captured-outranks guard now protects same-identity groups, but the emission churn + cross-identity masking
-      persists).
+      persists). **Fresh evidence 2026-07-14**: a NEW masked atom appeared post-scan — TEAMS/TFF_FIRST_LEAGUE/2026-07-13
+      (captured row_count=20 by `backfill-teams-61-leagues`, masked by an `EXPECTED_NO_PROVIDER_COVERAGE` empty written
+      2026-07-14T00:04:24Z) — the unguarded image is still emitting over captured atoms nightly; adjudicate it with the
+      same script once the image is redeployed (deliberately NOT stamped 2026-07-14, outside the reviewed verdicts CSV).
 - [ ] [DATA] P3. Sweep other asset groups for the same seeder-over-captured pattern (the enumerate_v2 guard is active
       for every asset_group now via main(); verify the nightly jobs' images pick it up fleet-wide).
+
+## Adjudication outcome (2026-07-14, `scripts/recency_masked_adjudication_2026_07_13.py` @ instruments-service@853cef81)
+
+- Live re-scan flagged **244** atoms (189 from this doc + 54 new post-doc FIXTURES maskings + 1 blank-data_type oddity).
+  Verdicts: **143 PLAYER_STATS `restamp-captured`** + **100 FIXTURES `restamp-truthset-gap`** + **1
+  `report-only-non-empty-winner`** (blank-data_type row: a BITGET-FUTURES/UNDERSTAT `attempted_failed` winner sitting in
+  the SPORTS index dated 2026-06-26 — operator ruled OUT of scope, parked here; it is a cross-surface row-identity
+  oddity, not a recency-masking).
+- **243 re-stamps applied** via per-VM shard `_index/per_vm/recency-repair-20260713.parquet` (explicit `.write()`,
+  cron-absorbed + pruned within one `*/1` cycle; consolidation never manually triggered). `--verify` green twice
+  (02:41Z, 02:52Z): 243/243 atoms read captured in the canonical index; captured-key diff vs the pre-apply snapshot
+  shows **0 lost / 0 gained captured keys** (see next bullet); snapshots retained under `_index/snapshots/`.
+- **Finding — unattributed earlier apply at 2026-07-13T23:48–23:49Z**: the pre-apply snapshot already carried captured
+  rows at the exact winner identities (service_name=instruments-service, venue="", source=api_football) for these atoms,
+  stamped 23:48–23:49Z by an unidentified session (its shard was already absorbed + pruned by 02:33Z, no log found). The
+  02:38Z apply was therefore an idempotent re-write over the same identities (hence the 0-gained key diff) and upgraded
+  row_count evidence (the 23:49Z rows carried e.g. row_count=1.0 where the backing object holds 36/67 rows). End-state
+  content is verified correct either way. If a second slot ran the same repair, dedup the dispatch.
+- **Caveat**: FIXTURES/TFF_FIRST_LEAGUE/2018-03-08 resolves via the league-less day-level object
+  `sports_reference/by_date/day=2018-03-08/.../entity=fixtures/fixtures.parquet` (67 rows, all leagues); league
+  attribution was verified by content (`af_league_id=204` = TFF First League per UAC `league_data_other.py`, exactly 1
+  fixture row that day) but the stamped manifest row_count reflects the 67-row object, not the 1 league row.
+
+## Truthset gap (PROMINENT)
+
+**All 100 adjudicated FIXTURES cells contradicted the 2026-06-28 truthset**: every flipped league-day's on-disk parquet
+contains genuine fixture rows dated to that exact league/day (row*count 1–11). Zero flips were upheld. The
+`truthset_20260628_confirms_no_fixtures` evidence class was systematically WRONG for these cells — the 06-28
+truthset-flip class needs an **evidence-freshness lens** (a truthset snapshot must not outrank a newer/parseable on-disk
+capture without content inspection) before any future flip campaign reuses it. Anyone re-running
+`flipped_residual_attempted_failed*_\_*truthset*_`style campaigns must content-probe captures first (this script's`--adjudicate`
+phase is the template).
 
 ## Regeneration recipe (single index read, no corpus walk)
 
 Group the raw index by `(data_type, league_id, date)`; keep groups containing BOTH `captured` and `empty_confirmed`
 rows; within each, sort by `(attempted_at, written_at)` and flag groups whose last row is not `captured`. 2026-07-13
 measurement: 33,172 contested atoms total; 32,982 resolve captured on recency; 189 resolve empty_confirmed; 1 resolves
-attempted_failed.
+attempted_failed. Post-adjudication residual (2026-07-14 02:57Z): **2 masked atoms** — the parked blank-data_type row +
+the new TEAMS/TFF_FIRST_LEAGUE/2026-07-13 nightly-image masking (see the INFRA todo).
