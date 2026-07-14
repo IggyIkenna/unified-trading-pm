@@ -1162,3 +1162,9 @@ fleets competing for the shared api_football per-key rate budget the registry al
 wave. **Declined to start** — no launch made, no code touched. This is a genuine prereq-not-met (not a blocked
 question): the dispatcher handed it over without a wired gate-condition check between these two todos; deferring is the
 correct call per the todo's own stated sequencing, not a judgment call needing operator input.
+
+**Also re-dispatched to the "Features recompute for enriched dates" todo** (2 min later, 11:42Z) — same blocker: its own
+text says "after GW enrichment lands", fleet still RUNNING (unchanged from the check above). Declined for the same
+reason, no action taken. Not re-tabling the fleet-status table above since nothing material changed in 2 minutes — see
+the T+25min check immediately above for the last real evidence snapshot. Both this and the full-history todo will be
+genuinely actionable once the fleet self-deletes and the GW gate query (Todo 9) passes.
