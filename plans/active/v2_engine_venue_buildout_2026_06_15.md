@@ -112,7 +112,7 @@ regenerate + commit the verdict matrix; (7) `split_scope_tokens` no longer raise
       Phase V batch; matchbook already has an execution adapter; trader_joe routes through the generic DEX SwapHandler —
       both fully clear, no adapter gap, UNAFFECTED by this decommission.
 
-## Phase E1 — MARKET*MAKING*\* engines (5) — gated on an L2 orderbook microstructure feed
+## Phase E1 — `MARKET_MAKING_*` engines (5) — gated on an L2 orderbook microstructure feed
 
 Each: confirm the feed exists; if yes build real + backtest + tests + register + matrix-flip; if no, honest
 `not_available` + blocker todo.
@@ -311,10 +311,10 @@ matrix-flip; if no, honest `not_available` + a single shared blocker todo for th
 ## Phase E0 — prerequisite data audit (BLOCKING gate for E1/E2) — ✅ DONE 2026-06-15
 
 - [x] [SCRIPT] P1. ✅ **Audited the options vol-surface/greeks + L2 microstructure feeds.** VERDICT: **zero of the 22
-      engines are real-buildable today — the upstream data does not exist.** (a) VOL*\* (17): `CanonicalOptionsChain`
+      engines are real-buildable today — the upstream data does not exist.** (a) `VOL_*` (17): `CanonicalOptionsChain`
       schema exists (instruments-service `reference_data/schemas.py:19-27`) but NO captured options data, NO
       `greeks_snapshot`/`implied_vol_surface` data_type (UAC `registry/data_type_capability.py`), only TradFi CME
-      `options_chain` registered `live_capable=False`. (b) MARKET_MAKING*\* (5): `book_snapshot_5` IS live-capable for
+      `options_chain` registered `live_capable=False`. (b) MARKET_MAKING\*\* (5): `book_snapshot_5` IS live-capable for
       CeFi (Binance/OKX/Bybit/Deribit/Coinbase/Upbit) but `queue_position`/`order_flow_imbalance`/deeper-L2 absent +
       features-service exposes no book-microstructure features to the engine. (c) `GroupBRunner.on_tick` is
       feature-agnostic (`dict[str,float]`) but receives an empty dict for vol/microstructure → no real backtest
@@ -354,15 +354,9 @@ named operator credential ask. These are the engines' true predecessors.
       source-tagged deribit/tardis/massive); greeks-service computes the canonical
       `greeks_snapshot`/`implied_vol_surface` from any of them; features-service exposes them as `dict[str,float]`. NO
       backfill run (operator constraint). Repos: unified-api-contracts@fcc01ac + instruments-service@99a320d +
-      market-tick-data-service@4d32528 + greeks-service@0299b03 + features-service@73daa7fd. (a) UAC: register
-      `greeks_snapshot` + `implied_vol_surface` + live-capable crypto `options_chain` data*types in
-      `data_type_capability.py`. (b) instruments-service: Deribit public options-chain adapter (enumerate
-      strikes/expiries → `CanonicalOptionsChain`) + a connectivity test proving a live pull. (c) MTDS: live
-      options-chain + mark-IV handler (Deribit public); Tardis historical adapter SCAFFOLD = BLOCKED-CREDENTIALS (ping:
-      ikenna_orchestrator/pings/slot_1.md); Massive for TradFi-options history. (d) greeks-service: in-house
-      delta/gamma/vega/theta + IV-surface computation, wired + tested on a mock chain. (e) features-service: expose
-      vol-surface/greeks features to the engine feature dict. Unblocks all 17 VOL*\*. Repos: unified-api-contracts +
-      instruments-service + market-tick-data-service + greeks-service + features-service.
+      market-tick-data-service@4d32528 + greeks-service@0299b03 + features-service@73daa7fd.
+
+      (a) UAC: register `greeks_snapshot` + `implied_vol_surface` + live-capable crypto `options_chain` `data_types` in `data_type_capability.py`. (b) instruments-service: Deribit public options-chain adapter (enumerate strikes/expiries → `CanonicalOptionsChain`) + a connectivity test proving a live pull. (c) MTDS: live options-chain + mark-IV handler (Deribit public); Tardis historical adapter SCAFFOLD = BLOCKED-CREDENTIALS (ping: `ikenna_orchestrator/pings/slot_1.md`); Massive for TradFi-options history. (d) greeks-service: in-house delta/gamma/vega/theta + IV-surface computation, wired + tested on a mock chain. (e) features-service: expose vol-surface/greeks features to the engine feature dict. Unblocks all 17 `VOL_*`. Repos: unified-api-contracts + instruments-service + market-tick-data-service + greeks-service + features-service.
   - ✅ **part (b) — instruments-service Deribit public options-chain adapter** — instruments-service@99a320d.
     `DeribitOptionsReferenceDataAdapter` (`reference_data/adapters/cefi/deribit_options_adapter.py`, <100 lines logic)
     enumerates option instruments (strikes/expiries) for BTC/ETH/SOL/BNB/XRP via Deribit public
@@ -453,6 +447,7 @@ named operator credential ask. These are the engines' true predecessors.
     solved back), moneyness/tenor correctness, index grouping, honest-absence drop. QG `--no-fix` exit 0. No
     service↔service import (takes plain `OptionQuote` inputs, not the IS chain type). **Parts (a)+(c)+(e) now ALL landed
     (2026-06-15) — see sub-bullets above; the whole Phase D P1 todo is [x].**
+
 - [x] ✅ [SCRIPT] P2. **Build + connectivity-test the L2 microstructure feed (NO backfill).** ALL of (a)+(b)+(c) shipped
       — see sub-bullets. batch==live holds: ONE canonical `CanonicalBookMicrostructure` shape both the live venue-WS
       book and the Tardis batch book map to, derived from `book_snapshot_5`; an engine cannot tell live from batch. NO
@@ -460,19 +455,22 @@ named operator credential ask. These are the engines' true predecessors.
       features-service@93b39362. Unblocks (feed-level) **MARKET_MAKING_PASSIVE_SPREAD + MARKET_MAKING_INVENTORY_SKEW**
       (L5-sufficient now); **MARKET_MAKING_QUEUE_MICROSTRUCTURE** stays BLOCKED-DATA on `queue_position` (honest gap —
       needs a deeper-than-L5 book capture). NO batch==live divergence was forced.
-  - ✅ **part (a) — UAC data_types + canonical schema + SOURCE_PRIORITY** — unified-api-contracts@9b0b62e. NEW
+  - ✅ **part (a) — UAC `data_types` + canonical schema + SOURCE_PRIORITY** — unified-api-contracts@9b0b62e. NEW
     `canonical/domain/market/microstructure.py`: `CanonicalBookMicrostructure` (the ONE wire shape — L5-derivable
-    spread/relative*spread/mid/microprice/imbalance ALWAYS present; deeper-book
-    `queue_position*_`+`depth*levels*_`honest-absent on L5) +`CanonicalDepthLevel`; exported through market → domain →
-    root facade. `data_type_capability.py`: `order_flow_imbalance`registered **live_capable=True** (L5-derivable) for
-    the 9 CeFi venues carrying`book_snapshot_5`(Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT,
-    Upbit);`queue_position`+`depth_of_book_10`registered **live_capable=False + batch_capable=False** (honest gap — need
-    an L10/full-L2 book deeper than L5).`book_snapshot_5`reused (already live), not duplicated.
-    SOURCE_PRIORITY:`(cefi, order_flow_imbalance|depth_of_book_10| queue_position) → ["mtds_microstructure"]`(new
-    COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own source=tardis/venue stays on the
-    book_snapshot_5 shard). Wired`mtds_microstructure`into COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {B,L,R} +
-    EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE + AVAILABILITY_AT_SEMANTICS tick_timestamp +
-    validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG`--no-fix` exit 0.
+    spread/`relative_spread`/mid/microprice/imbalance ALWAYS present; deeper-book `queue_position_*` + `depth_levels_*`
+    honest-absent on L5) + `CanonicalDepthLevel`; exported through market → domain → root facade.
+
+    `data_type_capability.py`: `order_flow_imbalance` registered **live_capable=True** (L5-derivable) for the 9 CeFi
+    venues carrying `book_snapshot_5` (Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit);
+    `queue_position` + `depth_of_book_10` registered **live_capable=False + batch_capable=False** (honest gap — need an
+    L10/full-L2 book deeper than L5). `book_snapshot_5` reused (already live), not duplicated.
+
+    SOURCE_PRIORITY: `(cefi, order_flow_imbalance|depth_of_book_10| queue_position) → ["mtds_microstructure"]` (new
+    COMPUTED_SOURCE, mirrors `greeks_service` — the upstream L5 book's own source=tardis/venue stays on the
+    `book_snapshot_5` shard). Wired `mtds_microstructure` into COMPUTED_SOURCES + `SOURCE_MODE_CAPABILITY` {B,L,R} +
+    `EMISSION_LATENCY` 0 + PipelineMode `BATCH`/`LIVE`/`REPLAY_MTDS_MICROSTRUCTURE` + `AVAILABILITY_AT_SEMANTICS`
+    `tick_timestamp` + validity-matrix `COMPUTED_SERVICE_OUTPUT` exclusions. 8 unit tests; QG `--no-fix` exit 0.
+
   - ✅ **part (b) — MTDS derivation + handler scaffold + connectivity-test** — market-tick-data-service@0908bda. NEW
     pure `derived/book_microstructure_compute.py`
     (`compute_book_microstructure(L5BookInput) → CanonicalBookMicrostructure`, stateless, no I/O — mirrors the
@@ -487,7 +485,7 @@ named operator credential ask. These are the engines' true predecessors.
     backfill. QG `--no-fix` exit 0.
   - ✅ **part (c) — features-service book-microstructure features** — features-service@93b39362.
     `cefi/book_microstructure_feature_extractor.py` `extract_book_microstructure_feature_dict(micro) → dict[str,float]`
-    for a MARKET*MAKING*\* engine `on_tick`. Keys: spread, relative_spread, mid, microprice, microprice_tilt,
+    for a `MARKET_MAKING_*` engine `on_tick`. Keys: spread, relative_spread, mid, microprice, microprice_tilt,
     book_imbalance (L5-derivable); queue_position_bid/ask + book_depth_levels (present ONLY when a deeper capture filled
     them — honest absence omits the key on L5; never synthesised). Pure transforms of the canonical feed (no invented
     numbers; UAC types only, no service↔service import). `formula_version=1` on all NEW features (no math-change bump).
@@ -593,33 +591,34 @@ across any of the 21 open todos. Two decisions made and applied:
 
 ### 2026-06-15 — Phase D P1 (a)+(c)+(e) ALL DONE — whole P1 todo flipped [x]
 
-All five parts (a-e) landed; the Phase D P1 feed prereq for the 17 VOL*\* engines is COMPLETE (code + connectivity-test;
-NO backfill per operator constraint). Shipped: UAC@fcc01ac (a), instruments-service@99a320d (b, prior), MTDS@4d32528
-(c), greeks-service@0299b03 (d, prior), features-service@73daa7fd (e). batch==live VERIFIED: Deribit live + Tardis
-historical (BLOCKED-CREDENTIALS scaffold) + Massive TradFi all emit the IDENTICAL canonical `options_chain`;
-greeks-service computes the canonical `greeks_snapshot`/`implied_vol_surface` regardless of source; features-service
-exposes them as `dict[str,float]`. Real Deribit connectivity proof captured (BTC 23/23/23 legs, mark_iv 0.9088
-fractional). Tardis credential ask filed `ikenna_orchestrator/pings/slot_1.md`. NO divergence from batch==live was
-forced. NOTE: a concurrent agent had also landed prior `slot_1.md` content; the Tardis ask was mis-filed by a sub-agent
-to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical `ikenna_orchestrator/pings/slot_1.md` (rootm
-file deleted). The VOL*\_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
-separate later wave, NOT in this (a)+(c)+(e) scope.
+All five parts (a-e) landed; the Phase D P1 feed prereq for the 17 `VOL_*` engines is COMPLETE (code +
+connectivity-test; NO backfill per operator constraint). Shipped: UAC@fcc01ac (a), instruments-service@99a320d (b,
+prior), MTDS@4d32528 (c), greeks-service@0299b03 (d, prior), features-service@73daa7fd (e). batch==live VERIFIED:
+Deribit live + Tardis historical (BLOCKED-CREDENTIALS scaffold) + Massive TradFi all emit the IDENTICAL canonical
+`options_chain`; greeks-service computes the canonical `greeks_snapshot`/`implied_vol_surface` regardless of source;
+features-service exposes them as `dict[str,float]`. Real Deribit connectivity proof captured (BTC 23/23/23 legs,
+`mark_iv` 0.9088 fractional). Tardis credential ask filed `ikenna_orchestrator/pings/slot_1.md`. NO divergence from
+batch==live was forced. NOTE: a concurrent agent had also landed prior `slot_1.md` content; the Tardis ask was mis-filed
+by a sub-agent to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical
+`ikenna_orchestrator/pings/slot_1.md` (rootm file deleted). The `VOL_*`/`MARKET_MAKING_*` engine builds (Phase E1/E2)
+remain BLOCKED-DATA→now-unblocked-for-`VOL_*` — a separate later wave, NOT in this (a)+(c)+(e) scope.
 
-### 2026-06-15 — Phase E1 MARKET_MAKING\_\* (5) BUILT — strategy-service@257df34a
+### 2026-06-15 — Phase E1 `MARKET_MAKING_*` (5) BUILT — strategy-service@257df34a
 
-All 5 MARKET*MAKING\_\* engines shipped as real signal→quote logic + leg-derivation unit tests (24 tests, QG `--no-fix`
-exit 0), in `engine/strategies/v2/market_making/` (passive_spread / inventory_skew / queue_microstructure / prediction /
-ml_lean), Base = `BaseArchetypeEngineV2`, mirroring the VOL\_\* template-wave structure + honest-registration
-discipline. Each emits a single `QUOTE` `AtomicInstruction` carrying bid/ask `AtomicLeg`s with the derived price in
-`params`. Consume the shipped Phase D P2 microstructure feed (`microprice`/`mid`/`spread`/`book_imbalance` L5-derivable;
-`queue_position*\*`honest-absent on L5). **2 L5-buildable NOW** (PASSIVE_SPREAD + INVENTORY_SKEW); **3 BLOCKED** —
-QUEUE_MICROSTRUCTURE (BLOCKED-DATA on`queue_position`, degrades honestly to no-quote), PREDICTION + ML_LEAN
+All 5 `MARKET_MAKING_*` engines shipped as real signal→quote logic + leg-derivation unit tests (24 tests, QG `--no-fix`
+exit 0), in `engine/strategies/v2/market_making/` (`passive_spread` / `inventory_skew` / `queue_microstructure` /
+`prediction` / `ml_lean`), Base = `BaseArchetypeEngineV2`, mirroring the `VOL_*` template-wave structure +
+honest-registration discipline. Each emits a single `QUOTE` `AtomicInstruction` carrying bid/ask `AtomicLeg`s with the
+derived price in `params`.
+
+Consume the shipped Phase D P2 microstructure feed (`microprice`/`mid`/`spread`/`book_imbalance` L5-derivable;
+`queue_position_*` honest-absent on L5). **2 L5-buildable NOW** (PASSIVE_SPREAD + INVENTORY_SKEW); **3 BLOCKED** —
+QUEUE_MICROSTRUCTURE (BLOCKED-DATA on `queue_position`, degrades honestly to no-quote), PREDICTION + ML_LEAN
 (BLOCKED-model-variant on the MM ML direction model, wired+tested vs constructed `MLPrediction`s, honest symmetric quote
 on absence). **NONE registered in `ARCHETYPE_ENGINE_REGISTRY`; verdict matrix UNCHANGED** — no passing backtest (MM
 backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE; pinned by
-`test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py`or the
-full`generate-unified-openapi.sh`. 2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture
-P2).
+`test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py` or the full
+`generate-unified-openapi.sh`. 2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture P2).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
@@ -667,7 +666,7 @@ P2).
         (`capability-verdict-matrix.json:23809` `venue_buildable:true`, 44 rows total), full execution adapter
         (`kraken_rest_adapter.py`). Needs ONLY the category-map entry.
   - [x] **NASDAQ** — F43's "VENUE_CATEGORY_MAP gap" claim is a FALSE POSITIVE, closed as already-done.
-        `NASDAQ:     "tradfi"` already exists verbatim at `venue_constants.py:341`, plus `KNOWN_VENUE_TOKENS`,
+        `NASDAQ: "tradfi"` already exists verbatim at `venue_constants.py:341`, plus `KNOWN_VENUE_TOKENS`,
         `VENUE_TO_ADAPTER_KEY` (→databento), a full `NASDAQAdapter` routed in `factory.py:262`. The audit almost
         certainly grepped lowercase `nasdaq` against a dict keyed by the uppercase constant form. F43's OTHER claim (leg
         eligibility) is real and separate — `venue-coverage-report.md:69` confirms `leg_eligible=no` — that's an
@@ -685,6 +684,7 @@ P2).
     Repo: unified-api-contracts. Found 2026-06-15 (Phase V wiring) as F39/F42/F43; rescoped as its own follow-up
     2026-07-13; naming-mismatch verification completed 2026-07-13 (`wf_6df96698-5dc`, full evidence in that run's
     journal). This todo is now precisely scoped and buildable — no further audit needed before starting.
+
 - [ ] [SCRIPT] P2. **→ SPLIT to
       [`fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md`](fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md)
       2026-07-13, dispatched to AO** (bundled with the baseline ratchet below). **Bump cryptography fleet-wide off the
@@ -702,19 +702,19 @@ P2).
       [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
       to AO** (bundled with the multi-underlying vector below). **Expose a per-strike IV-by-moneyness surface feature
       (vol-surface grid)** — the features-service vol feed exposes the surface as FLAT scalar buckets (`iv_atm`,
-      `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a per-strike IV grid. VOL*VARIANCE_SWAP / VOL_RATIO_SPREAD /
-      VOL_SPREAD_STRUCTURES build their strips/structures from the 3 canonical buckets + configured leg instruments; a
-      denser strike ladder (a finer replication strip, arbitrary-strike condors) needs a per-strike surface feature.
-      Provenance: VOL*\* wave 2 (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service
-      (consume).
+      `iv_25d_call/put`, `iv_skew_25d`, term points) — NOT a per-strike IV grid. `VOL_VARIANCE_SWAP` /
+      `VOL_RATIO_SPREAD` / `VOL_SPREAD_STRUCTURES` build their strips/structures from the 3 canonical buckets +
+      configured leg instruments; a denser strike ladder (a finer replication strip, arbitrary-strike condors) needs a
+      per-strike surface feature. Provenance: `VOL_*` wave 2 (strategy-service@1a058e88). Repos: features-service
+      (feature) + strategy-service (consume).
 - [ ] [SCRIPT] P2. **→ SPLIT to
       [`vol_surface_feature_exposure_2026_07_13.md`](vol_surface_feature_exposure_2026_07_13.md) 2026-07-13, dispatched
       to AO.** **Expose a multi-underlying vol-surface feature vector (index + components / two assets)** — the flat
-      `dict[str,float]` on*tick feed exposes ONE surface per tick. VOL_DISPERSION runs a degraded single-surface
+      `dict[str,float]` `on_tick` feed exposes ONE surface per tick. `VOL_DISPERSION` runs a degraded single-surface
       index-only view when only `iv_atm` is present (full mode needs `index_iv_atm` +
-      `component_iv_atm`/`avg_component_iv_atm`); VOL_CROSS_ASSET_SPREAD requires both `iv_atm_asset_a` +
+      `component_iv_atm`/`avg_component_iv_atm`); `VOL_CROSS_ASSET_SPREAD` requires both `iv_atm_asset_a` +
       `iv_atm_asset_b` and honestly no-trades on a single surface. A multi-underlying surface feature (index +
-      per-component, or asset-pair) unlocks the full dispersion/cross-asset trade. Provenance: VOL*\* wave 2
+      per-component, or asset-pair) unlocks the full dispersion/cross-asset trade. Provenance: `VOL_*` wave 2
       (strategy-service@1a058e88). Repos: features-service (feature) + strategy-service (consume).
 - [ ] [SCRIPT] P3. **Train + register the vol-direction ML model variant (for VOL_ML_LEAN)** — `VolMlLeanEngine`
       (strategy-service@1a058e88) consumes a vol-direction `MLPrediction` (classes: 1=vol-up, 2=vol-down, 0=flat) but
