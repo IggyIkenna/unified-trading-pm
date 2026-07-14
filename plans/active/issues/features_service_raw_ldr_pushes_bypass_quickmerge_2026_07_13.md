@@ -12,7 +12,7 @@ summary: |
   slot-5), i.e. agent sessions raw-pushed rather than shipping via `quickmerge.sh --agent`. Operator ruling (via
   BLK-163a306c on this escalation): leave PR #751 unarmed — this is the gate working as intended, not a bug to route
   around; file this doc so remediation is tracked rather than left implicit in the blocked-question thread.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,7 +26,7 @@ related:
     ../../codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,6 +43,18 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "verification 2026-07-14 (slot 5, this doc) — no new provenance violations landed after the 3 flagged commits. PR #751
+  merged 2026-07-13T22:33:59Z (mergedBy IggyIkenna); its successor #752 (created immediately after, same provenance
+  range check) merged cleanly 2026-07-13T23:47:55Z with no further bypass commits blocking it. The one intervening
+  direct push (features-service@8ecce951, cloudbuild.yaml sha-tag-guard) is a documented dirty-deps carve-out, not a
+  violation, and the gate accepted it. Confirmed on the live fleet-promote run (unified-trading-pm run 29325493501,
+  2026-07-14T10:29Z): 'TIER A PASS features-service: ci_status=MAIN_GREEN' / 'SKIP features-service: main tree == LDR
+  tree (content-identical...)' / 'provenance: promote-range is quickmerge-clean (or carve-outs only)' — main is fully
+  caught up with LDR, provenance clean. Todo 2 satisfied; no auto-merge blockage remains for features-service. Note: the
+  OOM investigation this doc gated on (features_sports_unbounded_memory_early_history_dates_2026_07_13.md) has NOT
+  itself concluded (still status: open, active P0 root-cause work on compute_shot_quality_batch) — but the concrete
+  thing this todo asked to verify (clean auto-merge, no further provenance violations) already happened independently
+  and holds as of this check, so there is nothing further blocking on the promote side."
 ---
 
 # features-service — raw LDR pushes bypassing quickmerge block LDR->main auto-merge
@@ -113,6 +125,11 @@ merge, hold until re-shipped or reverted" resolution).
       "Reminder — ship via quickmerge, not raw git push" entry) rather than relying on a per-slot boot message this
       dispatch can't directly send — every future session reading that plan (the `sequential: true` + heavy per-touch
       convention this doc already follows) will see it before its next commit.
-- [ ] [SCRIPT] P3. Once the `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` investigation
+- [x] ✅ [SCRIPT] P3. Once the `features_sports_unbounded_memory_early_history_dates_2026_07_13.md` investigation
       concludes, verify PR #751 (or its successor per-SHA-ref PR) auto-merges cleanly on the next fleet drain with no
-      further provenance violations in range. (repo: features-service)
+      further provenance violations in range. (repo: features-service) — **VERIFIED, slot 5, 2026-07-14**: PR #751
+      merged 2026-07-13T22:33:59Z; successor #752 merged cleanly 2026-07-13T23:47:55Z with no further provenance
+      violations. Latest fleet-promote run (unified-trading-pm run 29325493501, 2026-07-14T10:29Z) confirms
+      features-service main tree == LDR tree, provenance clean. See `resolved_by` frontmatter for full evidence. The
+      gating OOM investigation had not itself formally concluded (still `status: open`) but the concrete auto-merge
+      behavior this todo asked to verify already held independently — see note in `resolved_by`.
