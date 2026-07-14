@@ -91,6 +91,44 @@ migration) or is this a genuine, unnoticed outage? (2) if genuine outage — wha
 template / launcher script / supervisor) for the live capture process, so a data_engineering dispatch can bring it back
 up and verify with a fresh manifest row within the hour, not just believe it's running?
 
+## Investigation update — 2026-07-14 (slot 3, todo 1 research)
+
+Dispatched to confirm intentional-pause vs. genuine-outage. Read-only git-history + doc grep across
+`market-tick-data-service`, `deployment-service`, `unified-trading-pm` (no VM relaunch attempted — that stays gated on
+operator confirmation per the recommendation above):
+
+- **No evidence of a deliberate pause/kill-switch.** No commit, terraform change, or plan doc turns CeFi live capture
+  off as an intentional decision. `codex/04-architecture/autonomous-recovery-matrix.md`'s kill-switch machinery is
+  scoped to trading/execution risk, not data-capture — unrelated.
+- **Strong circumstantial evidence of a stalled infra migration around 2026-06-27–29, not a clean outage:**
+  - `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh` (header dated 2026-06-27) redesigns CeFi live
+    capture from 16 VMs/shard (~$103/day) to one consolidated `e2-highmem-16` (~$17/day) — a genuine cost-control
+    rearchitecture landing right before the dormancy window.
+  - `market-tick-data-service` swapped the live tick sink twice in 3 days: `3043f2dc` (2026-06-26) reverted to
+    direct-GCS writes after finding the Pub/Sub `LiveEventFacadeSink` silently dropped data (`InMemoryTransport` bug);
+    `1e583b90` (2026-06-28) switched back to `LiveEventFacadeSink`; `7fae3c0b`/`78fc436f` (2026-06-29 05:24) made
+    `PubSubTransport` the active default again.
+  - `deployment-service@e87abb1` (2026-06-29 06:02): IAM fix ("use unified-trading-sa for prediction VM to unblock
+    pubsub publish") landing the same morning.
+  - `deployment-service@c540cd0`: "apply live_event_log warm-sink — 52 Cloud Storage subscriptions created" (terraform).
+  - The sibling **prediction** asset-group's consolidated live VM WAS successfully relaunched that same day
+    (`mtds-live-prediction-consolidated-20260629-060558`, per
+    `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md:2277`) — proving the team was actively
+    re-standing-up consolidated live VMs asset-group-by-asset-group on 2026-06-29. **No equivalent CeFi VM
+    launch/verification record exists after that date.**
+- **Conclusion (medium-high confidence): genuine, unnoticed outage** born from an incomplete migration — the CeFi leg of
+  the cost-control consolidation + Pub/Sub cutover appears to have stalled or the VM died post-launch, and attention
+  moved to the hundreds of subsequent unrelated commits without anyone confirming CeFi's new live VM ever landed rows.
+  Not a smoking-gun "we paused this" doc — timing correlation is strong but not a direct confirmation.
+- **Relaunch targets identified for todo 2** (not yet executed): primary =
+  `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh` (+ its startup script
+  `setup-cefi-live-consolidated-vm.sh`); legacy per-shard fallback =
+  `launch-mtds-live.sh --asset-group cefi --shard-spec ...`; working sibling pattern =
+  `launch-mtds-live-prediction-consolidated.sh`.
+
+Escalated to operator via `/blocked` (slot 3) for the intentional-pause vs. outage confirmation before todo 2 executes
+any relaunch.
+
 ## Todos
 
 - [ ] [DESIGN] P1. Operator/main: confirm intentional-pause vs. genuine outage for CeFi live WS tick capture. (repo:
