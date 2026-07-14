@@ -465,3 +465,19 @@ touch the cron. Rather than file a duplicate `/blocked` for the same still-open 
 re-offered a task it cannot complete, while leaving the task queued for whichever slot picks it up once the operator
 decision lands. No production writes made this touch; no cron state changed, no live index mutated, checkbox left
 unflipped (todo's full scope — snapshot + pause — still incomplete).
+
+**Re-verification #2, no new writes — 2026-07-14 (slot 10)**: dispatched task
+`mtds_available_at_cross_asset_backfill-003` a third time (same task slots 4 and 6 already covered — see the two entries
+above). Confirmed nothing has changed: the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still
+unchecked, no operator go-ahead is on record, `BLK-f3cdf442` remains open. Re-verified (single-object GCS
+`blob.reload()`, not a corpus walk) that
+`gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet`
+still exists, size=47,908,172 bytes — unchanged from slot 4/slot 6. Did not re-run the snapshot script (redundant) or
+touch the cron. Following the same precedent as slot 6: not filing a duplicate `/blocked` for the same open decision;
+calling `/skip-current-task` citing this entry + `BLK-f3cdf442` so this task stops being redispatched to slots that
+can't progress it further until the operator's maintenance-window decision lands. **Flagging for main/operator**: this
+task has now been dispatched 3 times (slots 4, 6, 10) with identical findings each time — the backlog dispatcher is not
+respecting the open `BLK-f3cdf442` block as a reason to stop offering this specific task; consider parking it
+(`priority: 999` + a false condition, per `RULES.md` § 4) until the P0 operator decision resolves, to stop burning slot
+cycles on redundant re-verification. No production writes made this touch; no cron state changed, no live index mutated,
+checkbox left unflipped (todo's full scope — snapshot + pause — still incomplete).
