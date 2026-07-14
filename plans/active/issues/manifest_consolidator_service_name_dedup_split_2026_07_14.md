@@ -134,6 +134,44 @@ collapse would be a no-op for them). Two findings this hands the operator:
    `GROUP BY (date,venue,data_type,+opt dims) HAVING count(DISTINCT service_name) > 1 AND count(DISTINCT capture_status WHERE=captured) > 1`
    over the canonical manifests of ≥2 non-sports asset_groups. Needs ADC/GCS read this slot lacks.
 
+## 🟡 2026-07-14 (slot-3) — corroborating evidence from TradFi/CME, but a DIFFERENT specific splitter column
+
+Found independently while verifying a TradFi CME `options_chain` migration
+(`tradfi_cme_options_chain_legacy_layout_2026_07_10.md`): the live TradFi manifest also has non-collapsing duplicate
+rows for the same real object — `date=2024-07-11 venue=CME data_type=options_chain underlying=NQU4_C20000` has 2
+`capture_status=captured` rows. This is the SAME bug family (dedup key fails to collapse a legitimate re-capture of an
+already-captured cell) but a **different specific splitter column** than this doc's `service_name` finding — worth
+recording since it broadens the "bug class RECURS" claim (§ Blast-radius scan) to a second mechanism, not just a second
+asset_group.
+
+Full column diff between the two real rows (all other columns, including `service_name`, are identical —
+`market-tick-data-service` on both):
+
+```
+written_at:        2026-07-07T09:28:32Z        | 2026-07-07T09:31:03Z
+instrument_type:    "options_chain"             | None
+attempted_at:       2026-07-07T09:28:32Z        | 2026-07-07T09:31:03Z
+pipeline_mode:       batch_databento             | batch_massive
+source:              databento                   | massive
+```
+
+`source` differing is fine per this doc's own precedent (already excluded from the dedup key,
+`manifest_consolidator.py :2106-2108`). The likely real splitter is **`instrument_type`: a real, non-empty value
+(`"options_chain"`) vs `None`** — NOT the NULL-vs-`""` case this doc's Proof 1 already confirmed is fixed (`f5ec2291`);
+this is NULL vs a genuinely different non-empty value, which the dedup key correctly treats as distinct (that part isn't
+a bug). The actual gap is upstream: the `massive`-sourced capture (older `attempted_at`, presumably an earlier/different
+writer path) never stamped `instrument_type`, so it can never collapse with the later `databento` capture that did. Did
+not investigate the `massive` writer path itself (out of scope for the CME migration this was found during) — flagging
+for whoever picks up the operator ruling above, since Option A/B's fix design should account for this second splitter
+axis too, not just `service_name`.
+
+**Not blocking**: the CME migration this was found during lists real objects directly via bounded GCS prefix listing
+(not manifest row-count arithmetic), so it is unaffected by this duplication — it correctly processed the real,
+de-duplicated set of files (confirmed: this exact underlying's 2 manifest rows correspond to exactly 1 real GCS object,
+which the migration found and bundled once). This DOES mean the manifest's summed `row_count` (used for scale estimates
+in the CME migration's own issue doc) overstates real unique row count by roughly 2x for at least this data_type — noted
+there, not re-litigated here.
+
 ## Todos (gated on the operator ruling above)
 
 - [ ] [DATA] P1. Apply the operator-chosen fix (A/B/C) to `unified_trading_library/manifest_consolidator.py`'s dedup key
