@@ -9,7 +9,6 @@ summary:
   (UAC/UTL/MDPS/MTDS/IS).
 status: open
 created: 2026-07-14
-author: ikennaigboaka [slot-5·planning]
 assigned_vm: planning
 parent_epic: infrastructure_master
 resolved_by:
