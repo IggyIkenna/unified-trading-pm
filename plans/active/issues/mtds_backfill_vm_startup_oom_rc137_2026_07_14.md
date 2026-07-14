@@ -1363,6 +1363,58 @@ inline here to keep this session's change small, tested, and immediately shippab
       residual-verification step for an infra session, mirroring the pattern used earlier in this issue for the other
       fixes.
 
+- [x] [BACKEND] P0. **Residual verification of the `date_range` fix above (`unified-trading-library@391f8196`) — the fix
+      as shipped did NOT actually resolve the OOM.** Picked up the "not independently re-verified on a live backfill VM"
+      gap the prior todo flagged, plus arrived at this issue independently via the sibling
+      `mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md` doc (same bug, different entry point, findings merged
+      here earlier in this doc). Local repro of the EXACT real-handler call
+      (`ManifestFreshnessCache(bucket=<defi>, ttl_seconds=60, date_range=(target_day, target_day)).bulk_load()`, real
+      27.4M-row DeFi index): **peak 14,856.6 MB (~14.86 GiB)** — matching the kernel-confirmed real-VM OOM
+      (`anon-rss:15379504kB`, "P0 infra diagnostics" section above) almost exactly. **Root cause of the gap**:
+      `date_range` was applied as a pandas boolean-mask filter AFTER `read_availability_index()` already
+      downloaded+decoded the FULL corpus into a DataFrame — filtering post-decode does nothing for peak memory, the
+      expensive step (decode) already happened. Confirmed via a raw pyarrow test on the same real index: reading with a
+      proper row-group predicate-pushdown `filters=[("date","==","2026-07-01")]` (skips non-matching row groups BEFORE
+      decode, not after) measured **peak=5.4 MB, elapsed=0.1s** for the identical single-day window — the manifest's row
+      groups ARE date-clustered enough for pushdown to work extremely well; the bug was that nothing in the read chain
+      was passing a filter down to pyarrow at all.
+
+      **Fix shipped**: `unified-trading-library@a5b07ff7e` — threaded an optional `filters:
+          list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
+          `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
+          `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
+          filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
+          would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
+          `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
+          belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
+          min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
+          out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
+          separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
+          blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
+          `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
+
+          **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
+          same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
+          self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
+          16 GiB.)
+
+          **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
+          a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
+          killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
+          **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
+          ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
+          exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
+          initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
+          _2026_07_14` has needed since it was filed.
+
+          Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
+          only, no code change).
+
+**Status: this specific OOM mechanism (unscoped `ManifestFreshnessCache` reads) is RESOLVED and production-verified.**
+The other 2 open threads on this doc (the `uts-prod-manifest-consolidator-market-data-defi` DuckDB consolidator crash
+and the `2ab54ce0` chunked-merge row-count regression) are separate, already-tracked issues on this same doc — not
+re-verified or touched by this entry.
+
 ## Evidence
 
 - `mtds-perp-funding-backfill` full `run.log` (crash at 2026-07-14T11:41Z): preflight complete → 1 RESOURCE_SAMPLE
@@ -1371,6 +1423,9 @@ inline here to keep this session's change small, tested, and immediately shippab
   (mem=9.9%) → `Killed` → `rc=137`.
 - `mtds-dex-pools-backfill` 3rd incarnation `run.log` (crash at 2026-07-14T11:49Z, 1-day/1-protocol job): handler
   initialized → **no RESOURCE_SAMPLE** → `Killed` → `rc=137`.
+- `mtds-dex-pools-backfill` POST-FIX `run.log` (`unified-trading-library@a5b07ff7e`, real production run):
+  `DEX pools handler initialized` → real collection proceeds → `DEX pools collection complete: 17 total records` →
+  `exit_code=0` → `DEPLOYMENT_COMPLETED`. The definitive before/after pair for this issue.
 - `gcloud compute operations list --filter="targetLink~mtds-{perp-funding,dex-swaps,dex-pools}-backfill"`: only
   `insert`/`delete` ops, no `preempted` — rules out SPOT preemption.
 - `f8cab3f0` (2026-07-12, `market-tick-data-service`) — the most recent change to `_register_all_catalog_readers()`,
