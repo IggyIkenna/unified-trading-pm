@@ -40,6 +40,14 @@ drift_direction: advance-code
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
+> **🟡 DRIFT SIG-INDEX + PERP_FUNDING FLEET RUNNING (2026-07-14 ~12:40Z, operator ruling (b))** — 3 SPOT VMs launched:
+> `mtds-solana-drift-backfill` (indexed-window perp_funding backfill 2025-01-09→2026-07-14, tarball 69d226dc carries the
+> 429 fix `market-tick-data-service@7a8bc43c`), `mtds-drift-sig-walker-resume-20260714-123928` (sig-index walker,
+> \_parts/ resume 2025-12-23→back-to 2025-07-01) and `mtds-drift-sig-walker-gap-20260714-123952` (anchored walker
+> 2025-07-01→back-to 2025-01-15, writes `_index/drift_v2_sig_index_parts_gap/`). Launcher `deployment-service@dd03b6f`.
+> Do NOT launch further Helius-consuming VMs until this fleet drains — all share ONE Helius key (already observed
+> hard-throttling 429s at 12:41Z). See G1.5 ruling-execution entry below.
+>
 > **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. defi
 > catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓), false-delist=0,
 > blank=0. Phantom: 219,529 (issue doc `phantom_captures_defi_2026_06_28.md`).
@@ -180,45 +188,72 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       `is_mvp("defi", "DRIFT-SOLANA", "PERPETUAL", "perp_funding")` now evaluates `True` — the 2026-06-29 provisional
       out-of-scope call above is superseded. Synced per
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 43).
-  - [ ] [SCRIPT] P0. **BLOCKED-OPERATOR-DECISION** — Backfill the DRIFT perp_funding cells (stale "424" figure; see
-        note) — reopened by ruling, blocked on the unresolved Helius sig-index throughput ceiling. AO-thrash fix
-        (2026-07-14): this todo re-dispatched 20+ times because every worker cited a `prereqs.conditions` field that
-        **does not exist** in the backlog schema (the real field is `prereqs.prerequisites` —
-        `agent-orchestrator/server/backlog.py` `TaskPrereqs`; already diagnosed as "Defect A" in
+  - [x] ✅ [SCRIPT] P0. (Was: **BLOCKED-OPERATOR-DECISION** — Backfill the DRIFT perp_funding cells, blocked on the
+        Helius sig-index throughput ceiling.) **UNBLOCKED + EXECUTED 2026-07-14: operator ruled (b)** ("more walker VMs,
+        no plan upgrade" — recorded in `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`, flip
+        `unified-trading-pm@3a95c785b`) and the fleet is LAUNCHED (see the three launch sub-todos below + the 🟡
+        banner). The launch itself is done; data-drain verification continues in the follow-up todo below. AO-thrash
+        history (kept for the record): this todo re-dispatched 20+ times because every worker cited a
+        `prereqs.conditions` field that **does not exist** in the backlog schema (the real field is
+        `prereqs.prerequisites` — `agent-orchestrator/server/backlog.py` `TaskPrereqs`; "Defect A" in
         `unified-trading-pm/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, RULES.md §4
-        already corrected `unified-trading-pm@f1585fb59`) — so the condition a slot created via
-        `POST /api/prerequisites/` was silently never attached to this task and the dispatcher kept offering it
-        (`_prereqs_met()` is vacuously `True` on an empty `prerequisites` list regardless of the condition's value). The
-        **`BLOCKED-OPERATOR-DECISION` marker above is the actual worker-safe fix**: `regen_backlog_from_plan.py`'s
-        `_NON_DISPATCHABLE_RE` (`BLOCKED-[A-Z]...`) excludes any todo carrying this marker from ingestion at ALL — no
-        `backlog.yaml` edit needed, this is a plan-markdown-only change. Once this plan is committed + the backlog
-        regenerates, the next skip-time re-check (`task_still_dispatchable()`) will find this brief no longer among the
-        plan's current dispatchable todos and auto-scrub the TaskRow — stopping the thrash for every slot, not just one.
-        Un-block by removing the marker once the operator rules per the note below (or leave it — the plan stays
-        visible, just not dispatched). Repos: `market-tick-data-service`, `deployment-service`. Tracks
-        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo 1 (the still-open Helius-throughput decision) and
-        todo 3 (this plan-cell). **"424" is STALE** — see 2026-07-14 Progress Log entry below: current manifest state
-        (2026-07-12) is `expected_unattempted=51,301, empty_confirmed=19,096, attempted_failed=39, captured=8`.
-        **CORRECTION 2026-07-14 (data_engineering slot-14) — the "429-burst code root-cause FIXED" claim below is FALSE,
-        not just incomplete.** Verified exhaustively (fresh-pull to `origin/live-defi-rollout`, `git log --all` +
-        `git reflog` + full-tree grep on `market-tick-data-service`): `solana_defi_drift.py` is still 853 lines
-        (unchanged since `874a0bbf`), no `solana_defi_drift_helius.py` module exists anywhere in history, no
-        `TokenBucket`/`VenueRateLimiter` reference in this file, no commit message matching "429"/"drift"/"helius
-        rate-limit" beyond pre-existing ones, and the two named regression tests
-        (`test_helius_429_honours_retry_after_then_succeeds`,
-        `test_helius_429_retry_exhausted_records_failed_not_partial_capture`) do not exist anywhere in the repo. The
-        claim below was written with a literal unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`) that
-        was never filled in — the fix was drafted/described but the quickmerge never actually landed (see this plan's
-        final Progress Log entry, which ends mid-shipping-note with no SHA). **RESOLUTION 2026-07-14 12:04 UTC — the
-        quickmerge HAS NOW LANDED: `market-tick-data-service@7a8bc43c`** (ancestor-verified on
-        `origin/live-defi-rollout`; 3 files, +404/−102; both named regression tests present; 71/71 green; QG exit 0
-        sentinel `fffd7f82`). Slot-14's check was correct at the time — the code sat uncommitted in the
-        operator-session's shared root clone waiting out foreign dirty files + the ≤2-concurrent-QG rule; the session's
-        real error was writing "FIXED/shipped" before the ship completed. The 429-burst code defect is NO LONGER live;
-        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`'s operator-P0 framing is restored (fix confirmed there
-        too, slot-14's re-implementation todo flipped ✅ with the SHA). Left unchecked: the actual backfill
-        (attempted_failed→0) has not run — the code path is fixed, the Helius-throughput operator decision and the VM
-        relaunch remain.
+        corrected `unified-trading-pm@f1585fb59`) — the interim fix was a `BLOCKED-OPERATOR-DECISION` marker on this
+        line (excluded from backlog ingestion via `_NON_DISPATCHABLE_RE`), now removed since the ruling landed. Repos:
+        `market-tick-data-service`, `deployment-service`. **"424" is STALE** — current manifest state (2026-07-12) is
+        `expected_unattempted=51,301, empty_confirmed=19,096, attempted_failed=39, captured=8`.
+    - [x] ✅ [INFRA] P0. Walker launcher + registries shipped: `deployment-service@dd03b6f` —
+          `scripts/vm/launch-mtds-drift-sig-walker-vm.sh` (SPOT default, generic `VM_TASK=mdps-backfill` BACKFILL_CMD
+          route, `VM_OPERATION=drift-sig-walk` to dodge the `download` OOM-preflight false positive) +
+          `vm_prefix_registry.py` `mtds-drift-sig-walker-` (heartbeat-only) + `launcher_registry.py` mapping. QG green
+          (sentinel `4f0daeb5`), quickmerge `--agent --files` scoped.
+    - [x] ✅ [INFRA] P0. Indexed-window perp_funding backfill VM launched: **`mtds-solana-drift-backfill`** (SPOT,
+          e2-standard-4, zone asia-northeast1-c, RUNNING at creation 12:37Z, IP 34.153.197.100), window
+          2025-01-09→2026-07-14, SOL-PERP. Tarball `mtds-code@69d226dc` verified to contain the 429 fix
+          `market-tick-data-service@7a8bc43c` (`git merge-base --is-ancestor` true) — refreshed via
+          `refresh_code_tarballs.sh` before launch (previous tarball `bc9cd08c` predated the fix by 4 min).
+    - [x] ✅ [INFRA] P0. Sig-index walker segment 1 launched: **`mtds-drift-sig-walker-resume-20260714-123928`** (SPOT,
+          RUNNING at creation 12:39Z) — `--resume` on the default `_parts/` prefix (seeds from its oldest persisted sig
+          @2025-12-23) walking backwards, `--back-to 2025-07-01`. Covers the gap's upper half (~175 days).
+    - [x] ✅ [INFRA] P0. Sig-index walker segment 2 launched: **`mtds-drift-sig-walker-gap-20260714-123952`** (SPOT,
+          RUNNING at creation 12:39Z) — anchored
+          `--before-sig TuJrZmpikU61sLg7aZdQCUR6u3s3ZFRJRhvMFvaXXPWZBhFpAKw74nw8n3rhhMWPk9qeZsvm16z68STPGoipam1` (a real
+          Drift V2 program sig at 2025-07-01T23:00Z, slot 350505940 — pulled from the Drift Velocity API fundingRates
+          records, NO Helius call needed), `--back-to 2025-01-15`, writing `_index/drift_v2_sig_index_parts_gap/`
+          (already in the MTDS reader's `_DRIFT_V2_SIG_INDEX_PARTS_PREFIXES` since 2026-05-30 — no code change). Covers
+          the gap's lower half (~167 days). **Segment count = 2 (not 3)**: all walkers + the backfill VM share ONE
+          Helius API key that was ALREADY observed hard-throttling (persistent 429s on single manual RPC calls at
+          12:41Z, `Retry-After`-honoring probe exhausted 6 attempts) — a 3rd walker would convert into 429/backoff
+          waste, exactly the failure mode the ruling warned about; 2 segments halve the gap and can be re-segmented
+          later if throughput allows.
+    - [ ] [DATA] P1. Verify the DRIFT fleet drains: (1) both walkers reach their `--back-to` floors (walk-complete log
+          line + parts counts growing: `_parts/` >6,293 baseline, `_parts_gap/` >0); (2) SPOT preemptions → relaunch
+          with the SAME launcher args (walkers `--resume` from their own parts; backfill re-skips captured dates); (3)
+          after walkers complete, re-run the backfill VM for the newly-indexed 2025-01-15→2025-12-23 window if it
+          finished before them; (4) gate: DRIFT perp_funding `attempted_failed=0` + `expected_unattempted=0`
+          post-genesis via `measure_honest_coverage.py --asset-group defi`. **If a walker shows flat parts-count
+          progress across 30+ min while RUNNING → the Helius key is saturated/exhausted — diagnose (check run.log for
+          429-retry-exhaust lines) BEFORE relaunching or adding segments; a credits/plan question goes back to the
+          operator.** Repos: `deployment-service`, `market-tick-data-service`, `instruments-service`. **CORRECTION
+          2026-07-14 (data_engineering slot-14) — the "429-burst code root-cause FIXED" claim below is FALSE, not just
+          incomplete.** Verified exhaustively (fresh-pull to `origin/live-defi-rollout`, `git log --all` +
+          `git reflog` + full-tree grep on `market-tick-data-service`): `solana_defi_drift.py` is still 853 lines
+          (unchanged since `874a0bbf`), no `solana_defi_drift_helius.py` module exists anywhere in history, no
+          `TokenBucket`/`VenueRateLimiter` reference in this file, no commit message matching "429"/"drift"/"helius
+          rate-limit" beyond pre-existing ones, and the two named regression tests
+          (`test_helius_429_honours_retry_after_then_succeeds`,
+          `test_helius_429_retry_exhausted_records_failed_not_partial_capture`) do not exist anywhere in the repo. The
+          claim below was written with a literal unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`)
+          that was never filled in — the fix was drafted/described but the quickmerge never actually landed (see this
+          plan's final Progress Log entry, which ends mid-shipping-note with no SHA). **RESOLUTION 2026-07-14 12:04 UTC
+          — the quickmerge HAS NOW LANDED: `market-tick-data-service@7a8bc43c`** (ancestor-verified on
+          `origin/live-defi-rollout`; 3 files, +404/−102; both named regression tests present; 71/71 green; QG exit 0
+          sentinel `fffd7f82`). Slot-14's check was correct at the time — the code sat uncommitted in the
+          operator-session's shared root clone waiting out foreign dirty files + the ≤2-concurrent-QG rule; the
+          session's real error was writing "FIXED/shipped" before the ship completed. The 429-burst code defect is NO
+          LONGER live; `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`'s operator-P0 framing is restored (fix
+          confirmed there too, slot-14's re-implementation todo flipped ✅ with the SHA). Left unchecked: the actual
+          backfill (attempted_failed→0) has not run — the code path is fixed, the Helius-throughput operator decision
+          and the VM relaunch remain.
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
@@ -2258,3 +2293,46 @@ cross-asset-group blast radius) so operator-notifying per CLAUDE.md's findings-t
 unrelated inherited dead-WIP commit from a prior slot-2 session while here: `unified-trading-library@9d1ce574`
 (setuptools CVE pin, QG-verified green, rebased cleanly onto another slot's independent fix of the same CVE). Calling
 `/skip-current-task` — this task cannot progress further until the OOM fix ships.
+
+### 2026-07-14 ~12:40Z — operator ruling (b) EXECUTED: 3-VM DRIFT fleet launched (backfill + 2 sig-index walker segments)
+
+Operator ruled option (b) on the Helius throughput question ("More walker VMs — no plan upgrade; close the
+2025-01-15→2025-12-23 sig-index gap with parallel SPOT walker segments; launch the indexed-window perp_funding backfill
+now"). Ruling recorded `unified-trading-pm@3a95c785b`. Execution (all evidence also on the flipped G1.5 sub-todos
+above):
+
+- **Consolidation (`build_drift_v2_sig_index.py --consolidate`) — deliberately SKIPPED**: `_consolidate_parts` holds the
+  full index in pandas RAM (~677 B/sig measured; the 6,293-part corpus ≈ hundreds of millions of sigs → 100+ GB RSS —
+  infeasible on this host and would need a bespoke high-mem VM); the shipped parts-metadata cache
+  (`market-tick-data-service@874a0bbf`) already collapses per-date parts overhead to ~20 MB/date after one boot-time
+  scan; consolidation folds ONLY `_parts/` by design (not `_parts_b/`/`_parts_gap/`) so it wouldn't cover the full index
+  anyway; and any consolidated file built now would immediately go stale as the two walkers append parts. Revisit after
+  the walkers complete if per-date load time matters then.
+- **Tarball freshness**: `refresh_code_tarballs.sh` run pre-launch → `mtds-code@69d226dc` (ancestor-verified to contain
+  the 429 fix `7a8bc43c`; the prior tarball `bc9cd08c` was built 4 minutes BEFORE the fix landed and would have silently
+  shipped the old burst-prone code — the exact silent-stale-tarball class the freshness guard exists for).
+- **Launcher shipped**: `deployment-service@dd03b6f` (launch-mtds-drift-sig-walker-vm.sh + both registry entries; QG
+  green; quickmerge scoped).
+- **VMs (all SPOT, asia-northeast1-c, RUNNING at creation — STARTED <60s satisfied)**:
+  - `mtds-solana-drift-backfill` 12:37Z — perp_funding backfill 2025-01-09→2026-07-14 (fills indexed windows now; dates
+    in the unindexed gap record honest `attempted_failed` until the walkers land their parts).
+  - `mtds-drift-sig-walker-resume-20260714-123928` 12:39Z — `_parts/` resume walker, 2025-12-23 → 2025-07-01.
+  - `mtds-drift-sig-walker-gap-20260714-123952` 12:39Z — anchored walker (anchor = a Drift V2 program txSig at
+    2025-07-01T23:00Z taken from the Drift Velocity API's fundingRates records — zero Helius spend), 2025-07-01 →
+    2025-01-15, into `_parts_gap/` (reader support pre-existing).
+- **Segment count = 2** (ruling allowed 2-3): every walker + the backfill VM share the ONE Helius key, and the key was
+  ALREADY hard-throttling at launch time (manual single-RPC probes at 12:41Z got persistent 429s through 6
+  Retry-After-honoring attempts — worth watching: if this reflects monthly credit exhaustion rather than transient
+  contention, the walkers will crawl and T+10/T+60 parts-counts will show it). 2 segments halve the gap; a 3rd would
+  most likely just convert into 429/backoff waste.
+- **Drain math (at previously-observed single-walker throughput, ~85-90 sig-pages/min ≈ 5.1-5.4M sigs/hr)**: gap ≈ 342
+  chain-days; observed program density ranged ~1.2M sigs/day (G1.5 2026-06-28 note) to ~6.4M sigs/day
+  (drift_v2_historical_handler docstring — likely includes vote/inner txs). At 1.2M/day density: ~410M sigs → one walker
+  ≈ 3.4 days, two segments ≈ **1.7-2 days**. At the pessimistic 6.4M/day density: ~2.2B sigs → two segments ≈ **~9
+  days**. Both estimates assume the key sustains ~85 pages/min/walker — the observed 429 hard-throttle may stretch these
+  materially; the follow-up todo's flat-progress check is the tripwire. Backfill VM drain for already-indexed windows
+  (2025-01-09→01-15, 2025-12-23→2026-05-29 + HEAD-side ≈ ~165 indexed days): at the fixed 5-rps shared limiter with
+  ~1.2M sigs/day ≈ 12k batch-calls/day ≈ 40min/day best-case → the two-walker + backfill contention makes wall-clock
+  here genuinely uncertain; the T+10 measured verdict + parts-count trend is the real signal, not these priors.
+- **T+10 verification armed** (background, measured verdicts: instance status + run.log mtime/tail + parts counts) —
+  results land in this Progress Log as a follow-up entry.
