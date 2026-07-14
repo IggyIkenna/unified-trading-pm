@@ -169,8 +169,22 @@ if [[ "$QG_MEM_CAP" != "0" ]]; then
     fi
 fi
 
-# ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
-_qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
+# ── TRAP: release the host governor + set ci_status=FAILING on non-zero exit ──
+# The happy-path governor release runs only after [4] TYPECHECK (see below). A run
+# that FAILS or is aborted between qg_governor_acquire and that point never reaches
+# it, leaking a reservation-ledger entry until the next acquirer's sweep reaps it
+# (correctness is unaffected — every admission decision sweeps dead PIDs first — but
+# the ledger stays needlessly dirty). Releasing here covers EVERY exit path. Idempotent:
+# qg_governor_release guards on _QG_RESERVED_PID / _QG_GOV_FD, both cleared after the
+# first call, so the happy-path release and this trap release never double-free. Must
+# not alter the script's exit code (rc is captured first; `return 0` is inert for an
+# EXIT trap — bash exits with the original status unless the trap calls `exit`).
+_qg_exit_handler() {
+    local rc=$?
+    if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
+    [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
+    return 0
+}
 trap '_qg_exit_handler' EXIT
 
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
