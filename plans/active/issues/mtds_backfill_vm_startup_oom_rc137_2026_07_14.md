@@ -854,7 +854,7 @@ only the rows relevant to its own job. None of the 9 DeFi handlers using this cl
 genuine API-shape change across those call sites, not a one-file patch — scoped as its own todo rather than attempted
 inline here to keep this session's change small, tested, and immediately shippable.
 
-- [ ] [BACKEND] P0. **Scope `ManifestFreshnessCache` reads to the caller's actual date range/row-key set** instead of
+- [x] [BACKEND] P0. **Scope `ManifestFreshnessCache` reads to the caller's actual date range/row-key set** instead of
       materialising the WHOLE corpus's `captured`/`skip_worthy` Python sets on every `bulk_load()` — the confirmed
       remaining ~20.74 GiB peak (post `_build_membership_sets` single-pass fix, see above) is dominated by ~15.2M Python
       tuple-in-a-set objects, not the parquet read itself (already column-pruned to 7 slim columns). Add an optional
@@ -864,7 +864,27 @@ inline here to keep this session's change small, tested, and immediately shippab
       instantiate this class (grep `ManifestFreshnessCache(` across `market-tick-data-service`) to pass their actual
       date/window once the param exists; keep the no-filter (whole-corpus) behavior as the default for back-compat with
       any caller that genuinely needs it. Repo: `unified-trading-library` (API) + `market-tick-data-service` (call-site
-      updates).
+      updates). — ✅ DONE 2026-07-14 (slot 5, backend_engineer): `unified-trading-library@391f8196` adds
+      `date_range: tuple[date, date] | None = None` to `ManifestFreshnessCache.__init__` (mirrors the existing
+      `date_range` convention already used by `read_capture_status_counts` in `_queries.py`), applied to the `date`
+      column via `pd.to_datetime(...).dt.date` boolean-mask filtering BEFORE `_build_membership_sets` runs — default
+      stays `None` (whole-corpus, unfiltered) for back-compat. 3 new regression tests added
+      (`test_date_range_none_default_covers_whole_corpus`, `test_date_range_scopes_membership_sets_to_window`,
+      `test_date_range_single_date_window_is_inclusive`); full `quality-gates.sh` green. All 9 DeFi handlers that
+      instantiate this class now pass `date_range=(target_day, target_day)` (or the handler's own single-date variable)
+      — `market-tick-data-service@e3bbb2a3`: `dex_swaps_handler.py`, `dex_pools_handler.py`, `perp_funding_handler.py`,
+      `liquidations_handler.py`, `liquidation_events_handler.py`, `lending_indices_handler.py`,
+      `risk_params_handler.py`, `lst_rates_handler.py`, `gas_fee_handler.py` — all confirmed via
+      `grep ManifestFreshnessCache(` to be the complete 9-call-site set. Full `market-tick-data-service`
+      `quality-gates.sh` green (repo's own `tests/unit/` suite ran and passed; the 3 handler test files with
+      `ManifestFreshnessCache` mocks —
+      `test_dex_pools_handler.py`/`test_dex_swaps_handler.py`/`test_liquidations_handler.py` — patch the constructor via
+      `patch.object(mod, "ManifestFreshnessCache", return_value=cache_mock)`, which accepts the new kwarg
+      transparently). **Not independently re-verified on a live backfill VM this session** (that's VM-launch/infra
+      craft, out of scope here) — the durable API-shape + all-9-call-sites work this todo asked for is complete; a fresh
+      VM relaunch to confirm the peak RSS actually drops below the 16 GiB ceiling is a natural next
+      residual-verification step for an infra session, mirroring the pattern used earlier in this issue for the other
+      fixes.
 
 ## Evidence
 
