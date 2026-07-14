@@ -117,6 +117,74 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 4 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; found the fleet had been fully dead for ~6.5h after a transient dual-consolidator staleness trip, both consolidators now healthy, relaunched all 3 gap-fill shards)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.** History is ~4,210 days; bucket unique-date count now **2,329** (~55%) — cannot honestly evaluate
+manifest-cleanliness while ~45% of history is unattempted, same structural gate every prior dispatch on this todo has
+found. Not re-running `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost.
+
+**New finding + concrete action taken (Todo 1-adjacent, in the same session)**: fast re-verify via non-snap
+`gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`, `central-element-323112`) found
+**ZERO** `fss`/`features` VMs running — a project-wide instance list confirmed none exist anywhere, not just outside the
+filter. The 3 shards slot-12's 2026-07-14T00:47Z check found running
+(`features-sports-sports-20260714-002915/-002934/-002956`) were gone. Bucket count had still climbed from slot-12's
+2,271 to 2,329 (+58) before dying, so real progress was made first.
+
+Checked each dead VM's final `run.log`: all 3 died within ~90s of each other around 2026-07-14T02:02-02:04Z on the
+**same fail-fast gate** as the earlier consolidator incident — `ManifestConsolidatorStaleError` — but this time hitting
+BOTH sports consolidator buckets simultaneously: `-002915` on `instruments-store-sports-prd` (236s stale, >120s budget),
+`-002934`/`-002956` on `market-data-tick-sports-prd` (179-216s stale). This is the SAME bucket whose DuckDB
+`BinderException` crash-loop was fixed in `unified-trading-library@0f55cc2b` per this doc's own 2026-07-14 slot-2 entry
+below — so this looked like it could be a recurrence of that bug class.
+
+**Verified it was NOT a recurrence** before taking any action: checked both consolidators' CURRENT state (not just the
+6.5h-old crash) — `instruments-store-sports-prd` and `market-data-tick-sports-prd` `_index/availability_index.parquet`
+both had `Update time` ~40s before check (well within the 120s budget). Cross-checked Cloud Run execution history for
+both jobs (`uts-prod-manifest-consolidator-instruments-sports`, `uts-prod-manifest-consolidator-market-data-sports`):
+both succeeding every ~60s cycle over the trailing 8 executions, zero failures. Conclusion: a genuine transient
+dual-bucket staleness blip (self-healed, same class as the 2026-07-13 incident this doc already documents), NOT a new
+crash-loop — but the fleet had sat fully dead for ~6.5h afterward with nobody relaunching despite the blocker clearing
+almost immediately.
+
+**Relaunched all 3 gap-fill shards** (same exact 3 ranges as every prior dispatch) via the collision-free
+`launch-features-vm.sh` after fixing two blockers: (1) PATH resolved to the broken snap `gcloud` (`cap_dac_override`
+error, consistent with every prior dispatch's own note) — prefixed `/home/ubuntu/google-cloud-sdk/bin` onto PATH; (2)
+first attempt reported all 5 code tarball manifests missing/stale — re-checked directly via `gsutil stat` and found 4/5
+already fresh (created by other fleet activity in the last few hours) and the 5th (`mtds-code.manifest.json`) present
+too once re-checked; the launcher's own freshness gate passed clean on retry (no republish needed):
+
+- `features-sports-sports-20260714-085642` — 2025-08-11→2026-07-13 (vm-1's range)
+- `features-sports-sports-20260714-085703` — 2018-01-07→2018-06-16 (vm-2's range)
+- `features-sports-sports-20260714-085726` — 2019-08-18→2020-10-05 (vm-3's range)
+
+**No-fire-and-forget verification (HARD RULE)**: `run.log` hadn't propagated yet (known tee-upload lag) so verified via
+direct SSH on all 3 — real `features_service` processes alive (PIDs 7839/7874/7880, 42-107% CPU, 500-684MB RSS, all
+nowhere near the 15-32GB OOM ceiling), all started cleanly at 08:58-08:59Z with the correct date ranges in their command
+line. **Confirmed the manifest-based idempotency (`_should_skip_attempted` in `batch_handler.py:407`) runs regardless of
+whether `--skip-existing` is passed** — the generic `launch-features-vm.sh` launcher does NOT append `--skip-existing`
+to its CMD (checked the actual invoked command line in a dead VM's `run.log`), but the always-on manifest capture_status
+check makes relaunching over the full range safe/idempotent anyway — not a new efficiency defect, just confirming the
+existing safety net covers the gap.
+
+**What I did NOT do**: did not touch `compute_shot_quality_batch` (separate, still-open P0 profiling todo, unrelated to
+this dual-consolidator-staleness finding). Did not modify the launcher script. Did not flip Todo 1 or Todo 3 — compute
+is still genuinely multi-day and in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,329
+once these 3 shards' progress lands — note the bucket's actual GCS path differs slightly from the `features-sports-prd-`
+prefix used in earlier handoffs; use `features-sports-prd-central-element-323112` as this session confirmed it). Watch
+for the SAME `ManifestConsolidatorStaleError` dual-bucket signature recurring — if it does soon after this relaunch,
+that would suggest an actual recurring crash-loop rather than a one-off transient, which would be a genuinely new
+finding worth escalating. Otherwise this matches the established transient-staleness pattern and just needs routine
+gap-fill relaunches when the fleet goes idle.
+
+Checkbox NOT flipped (Todo 3 still blocked; Todo 1 compute genuinely in progress). No repo code commit this entry (VM
+operations only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work — Todo 3 remains structurally blocked until Todo 1 approaches completion.
+
 ### 2026-07-14 — slot 12 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
