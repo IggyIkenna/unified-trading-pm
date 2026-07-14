@@ -1985,3 +1985,95 @@ reconcile + manifest hygiene** — still not re-run this session (same recurring
 **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** for the code fix shipped this session. Genuinely blocked on the P0
 migration collision for any further backfill launches — deliberately not fought this session, consistent with the "don't
 touch another workstream's active migration surface" guidance already recorded in that issue doc.
+
+---
+
+### G4 Session Close-out — 2026-07-13T22:34Z–2026-07-14T00:05Z (data_engineering slot-2, full session summary)
+
+**Net result: 4 real cross-repo bugs found and fixed this session, all shipped and live on `live-defi-rollout`.** Gate
+remains ❌ NOT MET (Layer-1 was 91.78% at last full re-run; one gap — COINBASE-CDE/future/trades — is now CONFIRMED
+closing in real time as this entry is written, see below). Session summary, in chronological order:
+
+1. **P0 blocker resolved by a peer mid-session**: `cefi_backfill_no_instruments_found_all_venues_2026_07_13.md` (every
+   CeFi backfill VM resolving zero instruments) was root-caused and fixed by another slot at
+   `market-tick-data-service@0da8be67` (layout-tolerant instrument-availability reads across all six read sites — the
+   2026-07-09 binancefix migration left `.bak` files at legacy flat paths that 6 readers still opened exactly). This
+   unblocked every launch below.
+2. **`chain=""` skip-sentinel manifest-write bug**: `_emit_skipped_venue_sentinels` unconditionally stamped
+   `"chain": ""` into `record_expected_unattempted`'s row_key for non-DeFi venues, tripping UTL's Phase-4
+   `hard_schema_enforcement` guard (`MalformedRowKeyError`) and silently dropping every honest-skip write for CeFi/
+   TradFi/sports/prediction venues. Fixed independently; converged with a peer's identical fix landed first
+   (`market-tick-data-service@be087cd8`) — verified line-by-line equivalence, discarded my duplicate commit
+   (`git reset --hard origin/live-defi-rollout`), no unique content lost.
+3. **BITGET-FUTURES relaunch — 2 launcher-invocation footguns found + documented**: (a) `ONLY="V:{Y1..Y2}:{g1,g2}"`
+   inside double quotes does NOT bash-brace-expand (braces must be unquoted) — the whole `ONLY` value becomes one
+   literal, never-matching token; (b) omitting `VENUES=` lets `launch-cefi-sharded-backfill.sh` default to its full
+   16-venue list, so the launcher iterates ~150-200+ venue×year×group combos doing a per-shard tarball-freshness check
+   before ever reaching the (never-matching, per bug a) `ONLY` filter — a ~20min stall producing ZERO
+   `gcloud compute operations`, confirmed via `gcloud compute operations list`. Corrected relaunch
+   (`VENUES="BITGET-FUTURES" YEARS="2024 2025 2026"`, no `ONLY=` needed) confirmed 6/6 shards RUNNING within 3 minutes;
+   3 self-completed with genuine Tardis fetch/write activity (verified via `run.log`, not just VM status) by session
+   end; 3 (`2024-heavy`/`2025-heavy`/`2026-heavy`) still actively working through the full `PERPETUAL`-itype catalogue
+   alphabetically (a `VM_FORCE=true` full-catalogue re-fetch — will take hours to reach `FUTURE`-itype symbols, per this
+   plan's own established precedent for this exact shape of relaunch).
+4. **COINBASE-CDE/future/trades — full saga, root cause found on the SECOND attempt, CONFIRMED WORKING on the third**:
+   - First launch (`VENUES="COINBASE-CDE" YEARS="2026"`) hit "No active venues" on every date, VM exited rc=0 with zero
+     rows.
+   - Diagnosed (incorrectly) as a venue-registration gap — same class as the 2026-07-12 OKX/DERIBIT-COMBO fix. Shipped
+     `market-tick-data-service@837b60a5` adding `"COINBASE-CDE"` to `get_venues_for_asset_groups`'s CEFI branch explicit
+     list. **This fix was actually REDUNDANT** — direct inspection after the fact showed `COINBASE-CDE` was already
+     registered in `_VENUE_MAPPING.all_cefi_onchain_clob_venues` (line 105 of UAC's `venue_mapping.py`), so it was
+     already reachable via the earlier `venues.extend(_VENUE_MAPPING. all_cefi_onchain_clob_venues)` line — my addition
+     just re-added the same string a second time (harmless, dedup'd by `dict.fromkeys`). Shipped anyway (harmless,
+     defensive, has a regression test) rather than reverted.
+   - Republished the tarball (a real gotcha independently re-learned this session: `create-code-tarballs.sh` must run
+     after every shipped fix or the next VM launch fetches pre-fix code — the launcher WARNS but does not block by
+     default) and relaunched. Still "No active venues" on every date.
+   - **Root-caused for real this time**: `launch_cefi_shard`'s date-range logic hardcoded `end_date="2026-05-22"` for
+     `year == "2026"` — a full 52+ days stale vs actual wall-clock (now 2026-07-13/14). COINBASE-CDE launched
+     2026-07-10, so EVERY date in the fixed `2026-01-01..2026-05-22` window genuinely predates the venue —
+     `is_venue_available_on_date` was correctly returning `False`, not buggy. This is why the venue- registration fix
+     (item above) had zero effect: the venue never even reached that check. Shipped `deployment-service@ec14cda`
+     (dynamic `date -u -d yesterday +%Y-%m-%d` cutoff, computed at launch time).
+   - Relaunched a third time. **Confirmed via direct VM metadata**: `VM_END_DATE=2026-07-12` (correctly includes the
+     venue's real launch window this time). **Confirmed via live `run.log` tail as this entry is being written**: real
+     `instrument_type=future/data_type=trades` rows landing for `day=2026-07-10` — 7 distinct dated-future contracts
+     (`PT-29DEC26-CDE`, `SHB-28AUG26-CDE`, `SHB-31JUL26-CDE`, `SHP-20DEC30-CDE`, `SLP-20DEC30-CDE`, `SLR-27AUG26-CDE`,
+     `SOL-28AUG26-CDE`), row counts 5–5,119 each, genuinely landing in
+     `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-10/…`. **This is the first
+     real data COINBASE-CDE has ever captured in this codebase's history.** The last full `measure_honest_coverage.py`
+     run (00:04:26Z) still shows this tuple missing because its manifest snapshot (`blob.updated=2026-07-13T23:24:39Z`)
+     predates these 00:03Z writes — the consolidator has not yet caught up. Confidently expect this tuple to close on
+     the next coverage re-run once the consolidator picks up this shard.
+
+**Commits shipped this session** (all QG-green, quickmerge --agent, verified live on `live-defi-rollout`):
+
+- `market-tick-data-service@837b60a5` — COINBASE-CDE venue registration (harmless, later found redundant)
+- `deployment-service@ec14cda` — dynamic yesterday cutoff for 2026 date ranges (the real COINBASE-CDE fix)
+- (converged, not separately shipped by me) `market-tick-data-service@be087cd8` — chain="" fix, peer's equivalent
+- (not shipped by me, credited) `market-tick-data-service@0da8be67` — layout-tolerant instrument-availability reads,
+  peer's P0 fix that unblocked this entire session
+
+**Gate verdict at session close: ❌ NOT MET** — Layer-1 91.78% at last full re-run (6 missing: BITGET-FUTURES×3,
+COINBASE-CDE/future/trades [confirmed closing, pending consolidator], COINBASE-FUTURES/spot_pair/trades [measurement
+anomaly, data confirmed safe, root cause not found — see the 2026-07-13T22:34Z entry above], DERIBIT-
+COMBO/options_chain/trades); Layer-2 af=1,829/eu=213,672 (both need 0, last full re-run). **Genuinely remaining work for
+the next session**:
+
+1. Re-run `measure_honest_coverage.py --asset-group cefi` after the consolidator catches up — expect COINBASE-CDE to
+   close.
+2. Let the 3 remaining BITGET-FUTURES VMs (`2024-heavy`/`2025-heavy`/`2026-heavy`) finish their full-catalogue
+   `VM_FORCE=true` re-fetch (hours, per established precedent) — verify T+ they actually reach `FUTURE`-itype symbols
+   and close those 3 Layer-1 tuples.
+3. COINBASE-FUTURES/spot_pair/trades measurement anomaly (data confirmed present via row-group-pushdown query, Layer-1
+   still reports it missing) — not root-caused this session, flagged in the 22:34Z entry with a concrete starting point
+   for the trace (merge-dedup key doesn't include `instrument_type`).
+4. DERIBIT-COMBO/options_chain/trades — not touched this session; prior sessions' Progress Log has the fullest context
+   (Addendum 5, 2026-07-13T01:03Z).
+5. Phantom reconcile + manifest hygiene — still not re-run (recurring note across many sessions).
+
+**Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** This was a highly productive session (4 real cross-repo bugs found,
+root-caused, and fixed; the session's own mistakes — wrong root-cause diagnosis, launcher-invocation errors — were each
+caught, corrected, and documented rather than papered over) but the gate is large enough that full closure spans
+multiple sessions, consistent with every prior "G4 Re-Verification Run #N" entry in this plan's history. Handing off
+cleanly here.
