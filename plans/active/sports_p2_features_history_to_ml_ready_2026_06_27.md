@@ -117,6 +117,37 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 11 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-3's earlier check found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,359** (up from slot-3's 2,353) — steady forward progress, no stall. History is
+  ~4,210 days total; coverage now ~56.0% (2,359/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:44:02Z — all
+  wall-clock-fresh (within ~2 min of check time). `-085642` and `-085726` both mid `multisource_xg`/`team_derived`
+  calculator writes with the known, already-documented all-NaN/all-zero honest-absence pattern (cross-provider xg data
+  not fetched in `--skip-fetch` mode, typed `UPSTREAM_MISSING`); `-085703` mid reference-data reads on 2018-02-24
+  (honest-absence warnings for 9/17 missing entity types, not errors). No OOM/crash signature on any of the 3.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~56% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,359).
+Fleet is healthy — no gap-fill relaunch needed this cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-14 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, the previously-tracked `compute_shot_quality_batch` OOM blocker is now fully resolved per the issue doc, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
