@@ -108,10 +108,25 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (`instruments-service@9ce3450e`, confirmed holding); re-attempt **in-flight, launched
       `instruments-service@e78d424f`, verify completion later** (see Progress Log "RE-ATTEMPT dispatch" entry below for
       the live PID/log-location/how-to-check-later detail and the 2 new adjacent findings it surfaced).
-- [ ] [DATA] P1. **api_football: resolve the 8,766 non-instruments-service rows.** Confirm whether
-      `fill-missing-player-stats` is a sanctioned dedicated service_name (check its origin script/plan) or another
-      instance of the service_name-drift bug class fixed today; handle the 88 `market-tick-data-service` orphans (no
-      canonical twin found by today's cleanup — investigate individually, they may be genuinely new data).
+- [x] [DATA] P1. **api_football: resolve the 8,766 non-instruments-service rows.** — ✅ DONE 2026-07-14 (slot-5,
+      live-manifest verify + close-out; the fix itself shipped earlier under the IMPLEMENTATION dispatch). Both classes
+      resolved and re-verified in the live `instruments-store-sports-prd` manifest today: (1) **88
+      `market-tick-data-service` orphans → re-stamped to `instruments-service`** via
+      `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` (applied) — live count of
+      `service_name=market-tick-data-service`+`source=api_football` rows is now **0**. (2) **`fill-missing-player-stats`
+      (8,678 rows, 100% PLAYER_STATS: 8,170 `empty_confirmed` + 508 `captured`) confirmed a SANCTIONED dedicated
+      one-off, NOT drift** — `instruments-service/scripts/fill_missing_player_stats.py` carries proper
+      `# Epic: instruments_master` / `# Lifecycle: oneoff` / `# Delete-when:` markers and calls the same orchestrator
+      fetch + `ManifestWriter` path with a deliberate `service_name` override; left as-is (delete only when its
+      Delete-when condition is met). **NEW observation (not drift, no action):** a THIRD non-instruments-service
+      service_name now exists that post-dates the §0 baseline — `backfill-teams-61-leagues` (165,148 TEAMS rows), the
+      TEAMS 61-league backfill's own service_name
+      (`instruments-service/scripts/backfill_teams_61_leagues_2026_07_13.py`, same sanctioned-one-off pattern: `# Epic`
+      / `# Lifecycle: oneoff` / `# Delete-when` markers + deliberate `service_name=`). It is honest provenance of which
+      script wrote those rows, NOT a service_name-drift bug; its only open wrinkle (its captured rows not collapsing the
+      coexisting `expected_unattempted` enumerator-seed twins) is already the tracked P1
+      `manifest_consolidator dedup-key NULL/""-normalization gap` todo, a consolidator-SQL issue, not a service_name
+      one. Full detail: Progress Log "2026-07-14 (slot-5) 8,766 NON-IS ROWS VERIFY" entry.
 - [x] [DATA] P0. **api_football TEAMS: root-cause + fix the 61-league per-league capture gap.** — ✅ DONE 2026-07-13
       (final RECONCILE + VERIFY dispatch, building on the CODE-FIX (`0d2ea24f`/`56aa1938`) and BACKFILL-LAUNCH entries
       below). **Backfill completed clean**: 162,032/162,032 cells written, 0 failed, per-VM shard drained
@@ -3080,3 +3095,22 @@ it's new adapter work, not a data-audit residual).
   - If any of these did NOT self-fire on schedule (Cloud Scheduler shows no new `lastAttemptTime` past its cron time, or
     the triggered Cloud Run Job execution list has no NEW entry beyond today's manual tests), that's a genuine
     regression from what was "shipped" today — diagnose and fix, don't just re-trigger manually and declare it fine.
+
+- **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
+  rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
+  slice grouped by `service_name`:
+  - `instruments-service` 2,497,227 (10 data_types) · `backfill-teams-61-leagues` 165,148 (TEAMS) ·
+    `fill-missing-player-stats` 8,678 (PLAYER_STATS: 8,170 empty_confirmed + 508 captured) · `market-tick-data-service`
+    **0**.
+  - **88 MTDS orphans**: RESOLVED — 0 `market-tick-data-service`+`api_football` rows remain (the
+    `restamp_orphan_mtds_player_stats_rows_2026_07_13.py --apply` re-stamp, shipped under the IMPLEMENTATION dispatch,
+    holds).
+  - **`fill-missing-player-stats` (8,678)**: sanctioned dedicated one-off (`scripts/fill_missing_player_stats.py`,
+    Epic/Lifecycle/Delete-when markers) — left as-is, correct.
+  - **`backfill-teams-61-leagues` (165,148)**: NEW post-§0 service_name, verified to be the TEAMS 61-league backfill's
+    own deliberate `service_name` (`scripts/backfill_teams_61_leagues_2026_07_13.py`, same sanctioned-one-off pattern) —
+    honest provenance, NOT drift. Its coexisting-twin non-collapse is the already-tracked P1 consolidator dedup-key
+    todo, not a service_name concern. No new work.
+  - **Deliverable**: todo closed — every non-`instruments-service` api_football service_name is now accounted for (2
+    sanctioned one-offs + 0 residual drift). No new code shipped (the restamp fix shipped earlier; the two remaining
+    one-offs are sanctioned). Verification: live manifest read (scratch `verify_svcname.py`, mtds `.venv` duckdb+gcsfs).
