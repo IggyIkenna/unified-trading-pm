@@ -2821,3 +2821,18 @@ GCS work is in flight; (5) phantom reconcile `--apply` still deferred pending a 
 08:10Z entry's race-condition finding). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Checkbox NOT flipped — gate
 genuinely not met; handing off with 3 VMs actively in-flight and verified running (bitget 2025-heavy/ light + the new
 DERIBIT spot launch), each with a concrete, checkable next state.
+
+### Wave B part 2 LAUNCHED + cold-start starvation observation — 2026-07-14T16:56Z (doc-reconciliation session)
+
+`cefi-queue-heavy-20260714-165647` (SPOT, lease-ON) — futures-tail queue VM (OKX-FUTURES + BINANCE-FUTURES +
+KRAKEN-FUTURES, trades+book5, 2020→now, ~86 af target). Launched into the slot freed at 16:54; guard passed 2+1=3. Used
+the new LAUNCH_GROUPS="heavy" filter (deployment-service; composed with the Run-#7 lane's ONLY= scoping after a semantic
+merge — both filters now applied identically in the guard estimator and launch path; also fixed: GROUPS is a bash
+special variable whose assignments are silently ignored, and an empty queue crashed the flush under set -u).
+
+**For the Run-#7 lane — DERIBIT spot_pair starvation pattern**: both deribit attempts (12:47Z and 16:17Z) died the same
+way — WORKER_STALLED at exactly 1800s with 403-heavy logs, lease-ON, while the two established VMs kept progressing.
+Hypothesis: at a full 3-VM cap, a COLD-STARTING VM loses lease rotations to established workers and never emits a
+progress marker inside the 30-min stall window. Suggested shapes for attempt 3: (a) launch when the fleet is ≤1 other VM
+(quiet window), or (b) bump STALL threshold for this small scoped run, or (c) piggyback the 10 spot_pair instruments
+onto an existing queue VM's venue list instead of a dedicated VM.
