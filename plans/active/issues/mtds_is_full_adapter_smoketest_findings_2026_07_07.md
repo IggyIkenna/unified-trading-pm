@@ -427,9 +427,9 @@ the todos already promised.
   this finding flagged, added the real previously-missing `SPOT_PAIR` noted at line 162 below — 46 real `{BASE}-USDC`
   INTX products, confirmed live). Also confirmed live (2026-07-10 production manifest read,
   `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): the pre-fix
-  `coinbase_futures_ws.py` connector recorded ZERO real rows under any live pipeline*mode from ship (`mtds@fd436aea`,
+  `coinbase_futures_ws.py` connector recorded ZERO real rows under any live `pipeline_mode` from ship (`mtds@fd436aea`,
   2026-07-06) through the fix — a genuine, confirmed silent capture-gap (all 16,819 real COINBASE-FUTURES manifest rows
-  are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live*\*` CeFi pipeline_modes that DO exist
+  are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live_*` CeFi pipeline_modes that DO exist
   in production).
 - **2026-07-10 (separate dispatch, "master record" fresh-context follow-up)** — Re-verified this whole doc against
   current code before touching anything (per-SHA verification: all previously-claimed commits confirmed real and

@@ -101,9 +101,9 @@ Citations are file:line or plan/commit.
     still KEPT alongside a new `OKX-SPOT` entry (2026-07-10), so A3's OKX half stands as originally written; only the
     COINBASE half is corrected here.
 - **A4 `LANDED`** — **sports = TWO registries, EXEMPT from set-equality.** IS owns reference-data providers
-  (API*FOOTBALL/FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO); UAC sports = MTDS **odds** venues
-  (ODDS_API/PINNACLE/BETFAIR\*/DRAFTKINGS/FANDUEL). Do **NOT** merge. *(registry Decision C.)\_ **Conflicts:** plans
-  that merge the two sports registries or expect odds venues in the IS producer.
+  (`API_FOOTBALL`/`FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/`SOCCER_FOOTBALL_INFO`/`OPEN_METEO`); UAC sports = MTDS
+  **odds** venues (`ODDS_API`/`PINNACLE`/`BETFAIR*`/`DRAFTKINGS`/`FANDUEL`). Do **NOT** merge. _(registry Decision C.)_
+  **Conflicts:** plans that merge the two sports registries or expect odds venues in the IS producer.
 - **A5 `LANDED`** — prediction venues `{POLYMARKET, KALSHI}` (binary markets) are **DISTINCT** from cefi
   `KALSHI-PERP`/`POLYMARKET-PERP`. **KEEP BOTH; no adapter collapse.** _(registry Decision B / INV-1.)_ **Conflicts:**
   plans proposing to collapse the prediction & perp adapters/venues into one.
@@ -206,13 +206,14 @@ tradfi_cme_event_contract_backfill, utl_uac_reuse_consolidation_remediation.
 **Coverage correction (2026-06-29):** the first deep-read wave (C1–C12) covered **31** subject plans, not all
 contested-signal subjects. **14 contested-signal plans were uncovered** (initially mis-bucketed as date-trusted before
 the no-date-exemption model was locked). Now covered by a **follow-up wave C13–C15**: _sports (10)_ —
-sports*p2_history_reference_and_odds (32 sig), sports_p2_history_apifootball (24), sports_p1_golden_window_apifootball
-(14), sports_pipeline_to_100pct_golden_window_first (7), sports_p2_daily_forward_catalogue_and_final_gate (4),
-sports_canonical_universe_and_apifootball_reference_expansion (3), sports_fixtures_schema_split_completion (2),
-sports_p1_golden_window_e2e_gate (2), sports_p2_features_history_to_ml_ready (1),
-sports_p0_sourcing_and_honest_coverage_correctness (1); \_misc (4)* — unified_deployment_health_cockpit (5),
-codex_violations_ratchet_to_five (4), work_split_2026_05_22_ikenna (3), repo_scripts_governance_audit (1). **Subject
-coverage after C13–C15 = 45/62 deep-read + 17 set-aside = 62/62 accounted.**
+`sports_p2_history_reference_and_odds` (32 sig), `sports_p2_history_apifootball` (24),
+`sports_p1_golden_window_apifootball` (14), `sports_pipeline_to_100pct_golden_window_first` (7),
+`sports_p2_daily_forward_catalogue_and_final_gate` (4), `sports_canonical_universe_and_apifootball_reference_expansion`
+(3), `sports_fixtures_schema_split_completion` (2), `sports_p1_golden_window_e2e_gate` (2),
+`sports_p2_features_history_to_ml_ready` (1), `sports_p0_sourcing_and_honest_coverage_correctness` (1); _misc (4)_ —
+`unified_deployment_health_cockpit` (5), `codex_violations_ratchet_to_five` (4), `work_split_2026_05_22_ikenna` (3),
+`repo_scripts_governance_audit` (1). **Subject coverage after C13–C15 = 45/62 deep-read + 17 set-aside = 62/62
+accounted.**
 
 ## Section C — Deep-read findings (wave 1: 12 cluster-agents, 31 plans; wave 2 C13–C15: +14 plans)
 
@@ -289,8 +290,8 @@ in the later alignment pass.
 
 **Plans:** `mvp_backfill_defi_onchain_v10`, `mvp_backfill_cefi_tick_v10`, `mvp_backfill_tradfi_ohlcv1m_v10`,
 `mvp_catalogue_finalization_v10`, `mvp_reconciliation_closeout_v10`. **SSOT:** A8 (v12), A9 (55-live denom), A10
-(ROCKETPOOL→pipeline). All 5 created 2026-06-27, two days before MVP-v12 landed. The "mvp*scope.py **v10** = the ONLY
-scope authority" banners are \_standing instructions to executing agents*, not historical notes. **Live risk:** the OPEN
+(ROCKETPOOL→pipeline). All 5 created 2026-06-27, two days before MVP-v12 landed. The "`mvp_scope.py` **v10** = the ONLY
+scope authority" banners are _standing instructions to executing agents_, not historical notes. **Live risk:** the OPEN
 G2 gate in `mvp_backfill_defi_onchain_v10` (L165) would mis-fire on ROCKETPOOL; `mvp_reconciliation_closeout_v10` would
 declare the system reconciled at v10. **Proposed resolution — operator picks:** (a) **update banners to v12 in place +
 re-run the closeout reconciliation at v12** (preserves the plans), or (b) **archive the v10 backfill + closeout plans as
@@ -403,8 +404,8 @@ black box. High-leverage additions (each is an axis a scored-ALIGNED plan may si
 - **A24 (MISSING-8)** — CeFi MVP capture universe is PERP-GATED (`is_in_mvp_capture_universe`) w/ named spot-only
   exceptions (UPBIT + 28-member STAKING_SPOT). A plan expecting every spot pair MVP over-counts the cefi denominator.
 - **A25 (MISSING-1)** — Catalogue lifecycle is VENUE-TRUTH-FIRST w/ thin-day liveness
-  (build*instrument_catalogue.py:674-701); last-seen only as labelled fallback. This is the \_producer of the Layer-1
-  denominator*; false-delist = fake-honest "complete".
+  (`build_instrument_catalogue.py`:674-701); last-seen only as labelled fallback. This is the _producer of the Layer-1
+  denominator_; false-delist = fake-honest "complete".
 - **A26 (MISSING-13)** — Availability gates on listing-window / chain-genesis / venue-launch; IS owns
   `source_archive_url_template`/`coverage_start/end`/`listed_at`/`delisted_at`; MTDS must NOT hardcode these (the A20
   doc's _contract_).
@@ -605,12 +606,12 @@ _Gaps (the "report back"):_
    (data-status scoping says expected) while `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` omits them (honest-coverage
    carve-out says cannot-exist). Ikenna's decision reconciles them — both types belong in the capability table **with
    `start_date` = the live-wire date**.
-3. **Date-gated seeding is the one real missing capability**: the capability table's VALUE is a per-(venue,data*type)
+3. **Date-gated seeding is the one real missing capability**: the capability table's VALUE is a per-(venue,`data_type`)
    `start_date`, but NEITHER `enumerate_expected_universe._row_data_types` NOR the Layer-1 checker reads
    `get_venue_data_type_start_date` — membership-only checks. Adding book5/liquidations to ASTER's entry TODAY would
    re-seed `expected_unattempted` across all history (re-creating the exact over-seed purged 2026-07-03). The
-   enumerator's date loop must honour the per-dt start_date (seed eu only from start_date; earlier days = typed
-   `EXPECTED*\*` absence or out-of-universe) BEFORE the capability flip.
+   enumerator's date loop must honour the per-dt `start_date` (seed eu only from `start_date`; earlier days = typed
+   `EXPECTED_*` absence or out-of-universe) BEFORE the capability flip.
 4. **Sequencing**: (a) enumerator start_date gating → (b) UAC capability flip (book5+liq @ wire-date) → (c) register +
    launch the connector → (d) re-measure. Doing (b)/(c) before (a) corrupts the denominator again.
 
@@ -658,9 +659,9 @@ every MVP ASTER perp emits book5+liquidations as `expected_unattempted` straight
   EXPECTED) — the over-seed, measured. Top entries: `(ASTER,PERPETUAL,book_snapshot_5)`,
   `(ASTER,PERPETUAL,liquidations)`, `(ASTER,PERPETUAL,options_chain/futures_chain/ohlcv_1m)`,
   `(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain/derivative_ticker)`. The venue-blind enumerator is
-  expanding every cefi instrument to the full instrument*type cross-product, exactly as predicted. *(Some are also
-  uppercase-vs-lowercase instrument*type artifacts — A15 grain — so the 118 is C2 over-seed ∪ A15 casing; both are the
-  same `build_expected`/denominator family.)*
+  expanding every cefi instrument to the full `instrument_type` cross-product, exactly as predicted. _(Some are also
+  uppercase-vs-lowercase `instrument_type` artifacts — A15 grain — so the 118 is C2 over-seed ∪ A15 casing; both are the
+  same `build_expected`/denominator family.)_
 - **Interaction with C1:** the three venue-aware paths are driven by `VENUE_DATA_TYPE_CAPABILITIES` /
   `get_mvp_data_types_for_cefi_venue`, so the **C1 capability-table fix would auto-propagate to the seed-fn + checker
   but NOT to the enumerator** (venue-blind). So C2 (producer reads the wrong source) must be fixed **independently** of
@@ -894,9 +895,9 @@ number and moves with C2/A17.)_
 "trades + book_snapshot_5 + derivative_ticker" was suspected stale (since UAC `VENUE_DATA_TYPE_CAPABILITIES[ASTER]`
 omits book5).
 
-**Ground-truth (re-read + C1's official-API check):** the comment (mvp*scope.py:412-415) reads *"All three
+**Ground-truth (re-read + C1's official-API check):** the comment (`mvp_scope.py`:412-415) reads _"All three
 [LIGHTER/EXTENDED/PACIFICA] are CLOB-based perp DEXs (confirmed: **same CLOB capture surface as HL/ASTER — trades +
-book_snapshot_5 + derivative_ticker**). PACIFICA is forward-poll-only for tick (no historical book/trades backfill)."\_
+book_snapshot_5 + derivative_ticker**). PACIFICA is forward-poll-only for tick (no historical book/trades backfill)."_
 C1's official AsterDex-API check found ASTER book5 IS the live CLOB surface (WS @depth5), not historically backfillable
 — **exactly what this comment says.** So the comment is **RIGHT**; the WRONG table is UAC `VENUE_DATA_TYPE_CAPABILITIES`
 (C1). This **INVERTS** the "stale comment" finding.

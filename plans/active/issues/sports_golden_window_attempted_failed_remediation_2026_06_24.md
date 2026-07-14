@@ -88,10 +88,10 @@ alerts trigger on VM ERRORs" — confirmed gap).
       then add `XG`/`XG_SHOTS` keys to `LEAGUE_ENTITY_COVERAGE` (built from understat's observed corpus, NOT
       API-Football's), and only then apply the `is_league_entity_covered`-first ordering. Provenance: coordinator
       refinement 2026-06-24 + diagnosis that the gate is API-Football-scoped.
-- [x] ✅ #3 [DATA] P1. api*football sports odds wipe DONE (operator: full wipe, odds-api is canonical). Dropped ALL
-      1,398,423 source=api_football MTDS-sports rows (trades + odds_horizon_bucket*\* + ARBITRAGE_OPPORTUNITY) + deleted
-      231,532 `batch_api_football` GCS objects. `_index` 1,760,262 → 361,839. `trades` now odds_api 211,299 captured /
-      **0 failed / 100.0%** (golden-window 5,265 failures gone). Snapshot:
+- [x] ✅ #3 [DATA] P1. `api_football` sports odds wipe DONE (operator: full wipe, odds-api is canonical). Dropped ALL
+      1,398,423 source=`api_football` MTDS-sports rows (trades + `odds_horizon_bucket_*` + ARBITRAGE_OPPORTUNITY) +
+      deleted 231,532 `batch_api_football` GCS objects. `_index` 1,760,262 → 361,839. `trades` now odds_api 211,299
+      captured / **0 failed / 100.0%** (golden-window 5,265 failures gone). Snapshot:
       `_index/snapshots/pre_api_football_wipe_2026_06_24.parquet` (reversible). Consolidator paused→resumed. Script:
       `market-tick-data-service/.../scripts/wipe_api_football_sports_odds_2026_06_24.py` (oneoff; commit pending a clean
       MTDS tree — foreign WIP present; delete after GCS-orphan-sweep).
@@ -117,19 +117,19 @@ alerts trigger on VM ERRORs" — confirmed gap).
 ## #6 — IS footystats `ODDS` is misplaced (odds = MTDS, not IS) — operator 2026-06-24
 
 **Principle:** odds (any bookmaker odds — footystats OR odds-api) are **market-tick-data (MTDS)**, never
-instruments-service. The ONLY footystats odds-like data*type that belongs in IS is **`PREDICTIONS`** (footystats'
-\_in-house* prediction model — a derived fixture attribute, not market odds). Measured: IS `ODDS` = 194,789 rows
-(194,727 footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` = 195,115 rows (footystats
-in-house) — **keep**.
+instruments-service. The ONLY footystats odds-like `data_type` that belongs in IS is **`PREDICTIONS`** (footystats'
+_in-house_ prediction model — a derived fixture attribute, not market odds). Measured: IS `ODDS` = 194,789 rows (194,727
+footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` = 195,115 rows (footystats in-house) —
+**keep**.
 
 - [x] CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27 (decision #6 REVERSED, see
       sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md L79-84) — do NOT execute; synced 2026-07-14,
       verify-rerun finding 215. (was:
-      `- [ ] [CODE] P2. Drop     "ODDS": "footystats" from UAC SPORTS_DATA_TYPE_TO_SOURCE (league_data.py:152); ODDS is not an IS data_type. Remove     the footystats ODDS capture path from the IS sports orchestrator (stop fetching odds into IS). Keep     "PREDICTIONS": "footystats".`)
+      `- [ ] [CODE] P2. Drop "ODDS": "footystats" from UAC SPORTS_DATA_TYPE_TO_SOURCE (league_data.py:152); ODDS is not an IS data_type. Remove the footystats ODDS capture path from the IS sports orchestrator (stop fetching odds into IS). Keep "PREDICTIONS": "footystats".`)
 - [x] CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27 (decision #6 REVERSED, see
       sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md L79-84) — do NOT execute; synced 2026-07-14,
       verify-rerun finding 215. (was:
-      `- [ ] [DATA] P2. Wipe     the existing IS footystats ODDS (194,789 manifest rows + the 29,701 captured cells' GCS objects) — snapshot-first,     consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds source (211,299     captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch PREDICTIONS.`)
+      `- [ ] [DATA] P2. Wipe the existing IS footystats ODDS (194,789 manifest rows + the 29,701 captured cells' GCS objects) — snapshot-first, consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds source (211,299 captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch PREDICTIONS.`)
 - [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in
       `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md`
       (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).

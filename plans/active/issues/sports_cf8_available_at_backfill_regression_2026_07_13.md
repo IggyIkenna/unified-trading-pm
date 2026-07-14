@@ -164,12 +164,12 @@ consolidation).
   `dataclasses.asdict()`) before handing rows to `df.to_parquet()`.
 - **IS apply-pass skipped 47,768 rows** (0.87% of corpus) on two pre-existing data-quality gaps, confirmed
   non-destructive (skipped rows retain prior state, not corrupted): (a) 35,361 rows carry historical free-text
-  EMPTY*CONFIRMED reason strings (`EXPECTED_NO_FIXTURE\_\_truthset*\*`variants) that don't match the current
-  closed-set`EmptyConfirmedReason`enum exactly — **independently found + already filed** by slot 6 (this same plan's
-  twenty-seventh touch) as`plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`(full
-  evidence + 3 actionable todos there; not duplicated here); (b) 12,407 rows (captured VENUES/LEAGUES) carry a
-  legacy`source='instruments_service'`stamp (the writing SERVICE's own name, not a real data vendor) that isn't in the
-  registered`SOURCE_PRIORITY`vendor list for`asset_group=sports` — not yet filed elsewhere, tracked as a todo below.
+  `EMPTY_CONFIRMED` reason strings (`EXPECTED_NO_FIXTURE__truthset_*` variants) that don't match the current closed-set
+  `EmptyConfirmedReason` enum exactly — **independently found + already filed** by slot 6 (this same plan's
+  twenty-seventh touch) as `plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`
+  (full evidence + 3 actionable todos there; not duplicated here); (b) 12,407 rows (captured VENUES/LEAGUES) carry a
+  legacy `source='instruments_service'` stamp (the writing SERVICE's own name, not a real data vendor) that isn't in the
+  registered `SOURCE_PRIORITY` vendor list for `asset_group=sports` — not yet filed elsewhere, tracked as a todo below.
   Both are candidates for a future cleanup pass but were correctly non-fatal here.
 
 ## Todos
@@ -228,14 +228,13 @@ consolidation).
       `_duckdb_merge_payload`'s `canon_read` was a plain `SELECT *` (unlike the union_cols-padded `shard_proj`), and
       `_check_column_fill_regression`'s own before/after fill-rate query assumed every `union_col` exists on the
       canonical — both crash with
-      `DuckDB BinderException: Set operations can only apply to expressions with the       same number of result columns`
-      the moment a shard introduces a column the canonical has never had. Root-caused via the exact scenario this todo
-      hit live, not speculatively; 2 new regression tests
-      (`tests/unit/test_manifest_consolidator_canon_schema_align.py`, full-rebuild + incremental paths) proven to fail
-      on pre-fix code, pass on post-fix. Full `test_manifest_consolidator.py` suite green (67 tests). Full
-      `quality-gates.sh` green (232s). - Both crons confirmed `ENABLED` (resumed) after all verification completed.
-      Snapshots taken before any write: `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` on both
-      surfaces.
+      `DuckDB BinderException: Set operations can only apply to expressions with the same number of result columns` the
+      moment a shard introduces a column the canonical has never had. Root-caused via the exact scenario this todo hit
+      live, not speculatively; 2 new regression tests (`tests/unit/test_manifest_consolidator_canon_schema_align.py`,
+      full-rebuild + incremental paths) proven to fail on pre-fix code, pass on post-fix. Full
+      `test_manifest_consolidator.py` suite green (67 tests). Full `quality-gates.sh` green (232s). - Both crons
+      confirmed `ENABLED` (resumed) after all verification completed. Snapshots taken before any write:
+      `_index/snapshots/pre_cf8_backfill_retry_20260713T233713Z.parquet` on both surfaces.
 - [x] ✅ [DATA] P0. **CF-8 backfill left `captured` rows specifically un-filled — confirms this doc's own candidate (a)
       hypothesis at line ~115 ("captured rows may go through a different path"), now quantified.** A fresh
       `cf_manifest_audit_2026_06_01.py` re-run (2026-07-14, data_engineering slot-2) confirms the 87.8%/85.3% aggregate
@@ -393,7 +392,7 @@ consolidation).
       operator has separately and explicitly said stop pending a scheduled window regardless. No further production
       write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
 - [ ] [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
-      `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN     COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
+      `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
       contributes to the captured-row `available_at` gap above — flagged as a plausible mechanism (a high-row-count
       stale row could out-rank a fresher low-row-count one) but NOT confirmed; needs a targeted check of whether any of
       the missing row_keys are genuinely multi-source before concluding either way. (repo: unified-trading-library)
@@ -413,13 +412,16 @@ consolidation).
       market-tick-data-service, unified-api-contracts) — **DECIDED, slot 8, 2026-07-13**:
   - **Root cause confirmed historical, not a live bug.** UAC `SOURCE_PRIORITY` (`_source_priority_data.py`) registers
     `("sports", "VENUES")` and `("sports", "LEAGUES")` under `["api_football"]` — `instruments_service` (the writing
-    SERVICE's own name) was never a valid vendor for these data*types. Traced the CURRENT active capture code
+    SERVICE's own name) was never a valid vendor for these `data_types`.
+
+    Traced the CURRENT active capture code
     (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py::_sports_ref_source()`): it derives
-    the manifest `source` from the entity's pipeline_mode (batch*-stripped), which correctly resolves to `api_football`
-    for VENUES/LEAGUES today, and `record_captured()` itself **fail-fasts** (`MissingSourceError`) on any source not in
-    `SOURCE_PRIORITY` — so the current write path CANNOT reproduce this mislabeling; it's guarded. The 12,407 rows are
-    therefore genuinely **legacy** (written before this source-derivation/validation existed), not an active, recurring
-    defect.
+    the manifest `source` from the entity's `pipeline_mode` (`batch_` stripped), which correctly resolves to
+    `api_football` for VENUES/LEAGUES today, and `record_captured()` itself **fail-fasts** (`MissingSourceError`) on any
+    source not in `SOURCE_PRIORITY` — so the current write path CANNOT reproduce this mislabeling; it's guarded. The
+    12,407 rows are therefore genuinely **legacy** (written before this source-derivation/validation existed), not an
+    active, recurring defect.
+
   - **Correct disposition: backfill to `api_football` (not "accept indefinitely")** — matches the registered vendor,
     corrects future SOURCE_PRIORITY-based auditing/attribution, and the actual DATA VALUES in these rows are already
     correct (only the `source` metadata column is wrong) — a narrow, low-risk metadata correction, not a data rewrite.
@@ -430,6 +432,7 @@ consolidation).
     `--force` full-rebuild pass on this canonical before Finding 2 is root-caused risks repeating the same silent
     corruption on a different column. **Action: defer this backfill and bundle it into the SAME future rebuild pass that
     resolves Finding 1's root cause** (todo 1/2 above) — do not run it as a separate, earlier operation.
+
 - [x] ✅ [INFRA] P1. Add a general column-fill-regression guardrail to the DuckDB consolidator merge (the "defensive
       check" suggested in "Recommended next steps" item 4 above) — so ANY future full-rebuild attempt (this backfill or
       otherwise) FAILS LOUD via `MANIFEST_COLUMN_FILL_REGRESSION` instead of silently repeating this exact class of
@@ -622,7 +625,7 @@ nothing had changed vs. the dispatch's own briefing, then worked independently. 
 root cause data_engineering slot-2 later also found (stale UTL base-image digest on instruments-service,
 `sha256:b7e391f8...` built 18:44:41Z, predating `f5f15e3a`/`9c9cdc50`/`2e132bb2`/`0f55cc2b` — all landed 22:59-00:22Z)
 via a live read showing the 2026-07-14 TEAMS/STANDINGS gap GROWING (439→790 rows, now spread across the ENTIRE
-`record_captured()` surface: WEATHER/INJURIES/ODDS/FIXTURE__/PLAYER__/MATCHES/PLAYER_VALUES too, not just
+`record_captured()` surface: WEATHER/INJURIES/ODDS/`FIXTURE__`/`PLAYER__`/MATCHES/PLAYER_VALUES too, not just
 TEAMS/STANDINGS — confirming a dependency-wide staleness, not a narrow code bug). Shipped the fix
 (`instruments-service@ca3902bb`, Dockerfile digest bump to `sha256:29e5b552...` = UTL HEAD `c7126116`) via the
 dirty-deps direct-push carve-out (repo has ~65 unrelated files mid-edit by another concurrent agent's cefi/defi adapter
