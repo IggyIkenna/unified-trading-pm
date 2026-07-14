@@ -177,3 +177,14 @@ creation timestamps; features bucket unique-date count **2,538** (up from 2,525 
 +13) — steady forward progress, ~60.3% of ~4,210-day history, no stall, no crash. The affected-range boundary for this
 todo's gap-fill still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code
 touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:12 UTC — data_engineering slot-9 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as every prior re-check above, this one only 3
+minutes after slot-16's. Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]`
+(grepped the plan directly). Cheap non-GCS-walk re-check (`gcloud compute instances list`, `central-element-323112`):
+same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps — no
+crash, no stall. Skipping a redundant full-corpus GCS date-count walk given slot-16 ran one 3 minutes ago (single-walk
+discipline — no value in a 5th identical scan within 20 minutes). The affected-range boundary for this todo's gap-fill
+still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code touched, checkbox
+NOT flipped. `/skip-current-task`.
