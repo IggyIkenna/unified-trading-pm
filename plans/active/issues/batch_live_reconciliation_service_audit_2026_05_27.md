@@ -314,7 +314,13 @@ code into BLRS — unless the operator wants centralisation (D1-(B)). The live m
   loop), `core/position_drift_monitor.py` (continuous drift → `POSITION_DRIFT_DETECTED` / `KILL_SWITCH_ACTIVATED`),
   deviation lifecycle (`deviation_tracker.py`: TRANSIENT→CONFIRMED→AUTO_RECONCILED|ESCALATED→RESOLVED), age fields on
   `ReconciliationSnapshot`, `v2/recon_freshness.py` (freshness feed to risk-service), and a full reconciliation API
-  (`api/reconciliation_routes.py`).
+  (`api/reconciliation_routes.py`). **⚠️ CAVEAT added 2026-07-14, doc-reconciliation verify-rerun-2 finding 19**: this
+  document's premise treats `core/reconciliation_engine.py` as reliable, functioning live-recon machinery (underpinning
+  D1 below + the "live safety reflex" note at §7.2). `active/canonical_id_p0_strategy_reconciliation_2026_07_08.md`
+  (status: complete) later found `_find_exchange_qty` (lines 175-180 at the time) compared the internal canonical
+  `instrument_id` against the raw ccxt-native symbol — a mismatch that silently defaulted every CCXT-venue position to
+  `exchange_qty=Decimal("0")`, defeating the venue↔internal match for every CCXT venue until fixed 2026-07-08. This
+  reliability defect predates and is not caveated anywhere in this still-open audit.
 - **execution-service**: `preflight/recon_freeze.py` (order-block on freeze), `services/{yield,funding}_recon_engine.py`
   (live venue accrual/funding recon), `services/account_history_client.py`.
 - **alerting-service**: `gateway/recovery_verifier.py` (the recovery callback codex attributes to BLRS — actually a
@@ -370,14 +376,25 @@ leave). The strategy-service surface is the more complete one and is real today;
   self-doable now (the bps gate is live; stage3 emits `alpha_pnl_gap_bps_{archetype}`). The **drawdown_pct + fill_rate**
   distributions depend on D3 (those gates aren't built → routed to Ikenna). Plan: build the bps analyzer now, extend for
   drawdown/fill once D3 lands. [→§7.1-3, §7.2 D3]
-- G6 (P1/❓) drawdown_pct + fill_rate_min green gates unimplemented (no `stage4_risk_recon`). [→§7.2 D3]
-- G7 (❓) Live recon machinery codex assigns to BLRS lives in 3 other repos; BLRS is T+1-only. [→§7.2 D1, §9.1]
-- G8 (❓) PBMS merged into strategy-service/position 2026-05-20; BLRS makes no position-query call. [→§7.2 D2, §9.2]
+- G6 (P1) ✅ decision resolved — see §7.2 D3 (was: "(P1/❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2
+  finding 18: §7.2 D3 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass,
+  that was never mirrored back to this ❓ marker) drawdown_pct + fill_rate_min green gates unimplemented (no
+  `stage4_risk_recon`) — build now per D3. [→§7.2 D3]
+- G7 ✅ decision resolved — see §7.2 D1 (was: "(❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding
+  18: §7.2 D1 is stamped "✅ DECIDED 2026-05-27 = (A)" and was never mirrored back to this ❓ marker) Live recon
+  machinery codex assigns to BLRS lives in 3 other repos; BLRS is T+1-only. [→§7.2 D1, §9.1]
+- G8 ✅ decision resolved — see §7.2 D2 (was: "(❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding
+  18: §7.2 D2 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass, that was
+  never mirrored back to this ❓ marker) PBMS merged into strategy-service/position 2026-05-20; BLRS makes no
+  position-query call. [→§7.2 D2, §9.2]
 - G9 ✅ RESOLVED (no-op) `AUTO_PAUSE_LIVE` is a **documented routing action** in the codex failure-routing closed set
   (`reconciliation-resolution.md`: alert / auto-pause-live / auto-demote-to-paper) — intentionally defined ahead of
   wiring, not dead code. Keep as-is. (Enum members don't trip unused-symbol lints.)
 - G10 (P3) UI→resolution-API wiring (`unified-trading-system-ui` use-reports.ts hooks) unverified.
-- G11 (P2/❓) Two `/reconciliation/resolve` APIs (BLRS mock + strategy-service real) — path collision. [→§7.2 D4, §5.5]
+- G11 (P2) ✅ decision resolved — see §7.2 D4 (was: "(P2/❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2
+  finding 18: §7.2 D4 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass,
+  that was never mirrored back to this ❓ marker) Two `/reconciliation/resolve` APIs (BLRS mock + strategy-service real)
+  — path collision. [→§7.2 D4, §5.5]
 - G12 (**P0/cross-repo — bigger than BLRS**) **`RECON_FREEZE_ARMED` is never published by any service.** Both
   execution-service `recon_freeze.py` and codex reference it, but no code arms the freeze → the
   reconciliation→order-block safety chain is **dormant**. Only `position_drift_monitor` independently fires

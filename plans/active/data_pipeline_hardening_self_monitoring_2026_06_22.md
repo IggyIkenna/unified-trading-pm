@@ -1012,16 +1012,27 @@ items:
       cells or it never reads 100% (refine the completion oracle). (b) host-cron is the immediate autonomy; the durable
       cloud-native form is a Cloud Scheduler → gcloud-equipped ephemeral runner (a Cloud Run Job can't launch VMs — no
       gcloud) — follow-up. (c) wave events emit mode='local' (DP_TRADFI_WAVE_LAUNCHED isn't registered in the alert
-      registry, so wouldn't route anyway; the VMs it launches ARE covered by the exit_code/heartbeat monitors). — NOT
-      DONE (the building agent hit the session limit at 22:10 UTC reset). Need
-      `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted` gaps by root×year×data_type,
-      launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12` never >20, dry-run-first, completion
-      at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it the 8-VM manual wave stalls; tradfi
-      never reaches 100% autonomously. The alerting is now live so launcher failures alert. — deployment-service
+      registry, so wouldn't route anyway; the VMs it launches ARE covered by the exit_code/heartbeat monitors). The
+      alerting is now live so launcher failures alert. **(was: trailing "— NOT DONE (the building agent hit the session
+      limit at 22:10 UTC reset). Need `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted`
+      gaps by root×year×data_type, launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12`
+      never >20, dry-run-first, completion at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it
+      the 8-VM manual wave stalls; tradfi never reaches 100% autonomously." — corrected 2026-07-14, doc-reconciliation
+      verify-rerun-2 finding 178: this same-bullet tail was stale leftover text from a pre-build session that hit the
+      limit before the launcher existed; it directly contradicted this bullet's own checked `[x]` + "LIVE-PROVEN"
+      framing above, and later sections of this doc (§ "wave-launcher multi-source" + the auto-kill heartbeat-stalled-VM
+      section) already treat the wave-launcher as live, functioning infrastructure with no correction of this tail.)** —
+      deployment-service
 - [x] ✅ [DATA] P1. **tradfi schema-drift — `DP_NOT_V9=13670` RESOLVED 2026-06-22**
       (`populate_v9_index_columns_inplace --asset-group tradfi --apply`: the 13,670 rows were `schema_version=4` legacy;
       derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
       already-v9 rows. Written index = 100% v9 / 6.81M rows, captures UNCHANGED (734102), GATE-passed, snapshot kept).
+      **(was: unqualified "100% v9" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 180: a 2026-06-27
+      audit — `active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`, after
+      fixing an unrelated string-vs-int display bug that had been masking the true count — found a genuine ~98,476-row
+      (~4%) tradfi non-v9 residual (legacy `'4'` + empty `''` + instrument-key-contaminated `schema_version` values)
+      still present 5 days after this "100% v9" claim. That audit's operator-decision item to clean the residual was
+      still `- [ ]` open as of this correction; the "100% v9" completeness claim above does not hold as stated.)**
       \*\*DP_NOT_V9 originally (13,670 tradfi rows NOT at canonical schema_version=9), surfaced by the now-live
       `manifest_hygiene_daily` audit. Re-walk/canonicalise those rows to v9. — market-tick-data-service
 - [ ] [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the digest. Re-run the

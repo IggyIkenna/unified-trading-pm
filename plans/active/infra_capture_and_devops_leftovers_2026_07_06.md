@@ -24,7 +24,10 @@ related:
     ../../codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-07
+last_updated:
+  2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
+  # carries a dated 2026-07-12 correction (finding id 114, §A2 B-queue ruling) on the ASTER-connector task that was
+  # never reflected in this frontmatter timestamp
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -152,9 +155,20 @@ source:
       second source [ack-pending]. Gate: quota decision documented; scaffold for the second source.
 - [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — rate-limit probe VM.** Needs a disposable-IP VM (operator-gated). Gate:
       probe design ready; awaits the operator's disposable-IP sanction.
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter / Pacifica /
-      Extended): are these cefi or a distinct on-chain-CLOB group? Operator classification call. Gate: classification
-      decided; the enumerator + data-status read it consistently.
+- [ ] [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
+      "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
+      cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
+      verify-rerun-2 finding 139: this framing is stale.
+      `active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (§3, 2026-07-07) records the
+      operator already ruled these are **hybrid on-chain-CLOB venues** — CEFI holds the instrument definitions, DEFI
+      holds the chain-level classification/context — the same pattern later extended to HYPERLIQUID/ASTER.
+      `active/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` (§Todos) also independently
+      confirms `git log` commit `2f7d4548` ("reclassify EXTENDED/PACIFICA/LIGHTER on-chain perp CLOBs defi->cefi")
+      already migrated these 3 venues onto their new canonical keys around 2026-06-25/26, before this BLOCKED item was
+      even filed. The open work is NOT "cefi vs distinct group" — that question is answered (hybrid) — it is widening
+      the enumerator + data-status to read HYPERLIQUID/ASTER consistently with the same pattern.) Gate: enumerator +
+      data-status read the hybrid classification consistently across all 5 venues (LIGHTER-ZKSYNC / PACIFICA-SOLANA /
+      EXTENDED-STARKNET / HYPERLIQUID / ASTER).
 
 ## Progress Log
 

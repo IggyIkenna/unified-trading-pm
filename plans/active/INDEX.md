@@ -142,17 +142,26 @@ reference + examples for testing any DeFi strategy
 
 ## Currently Active Plans
 
+**⚠️ STALE ENTRIES (flagged 2026-07-14, verify-rerun-2 finding 221 — violates this doc's own
+`INDEX.md must be updated whenever a plan is added or archived` rule, `PLAN_FORMAT.md:619`):** the 8 plans below are
+tagged **(ARCHIVED — was: listed as active, no tag)** — verified present only in `plans/archive/` as `<slug>.plan.md`,
+absent from `plans/active/`: `agent1_shell_navigation_2026_03_22.md`, `agent2_trading_service_2026_03_22.md`,
+`agent5_api_service_layer_2026_03_22.md`, `agent6_mock_data_quality_2026_03_22.md`,
+`agent8_e2e_tests_quality_2026_03_22.md`, `defi_phase3_infrastructure_2026_03_30.md`,
+`defi_strategies_phase2_2026_03_29.md`, `instruments_service_reorganisation_2026_03_27.md`. Do not dispatch or treat as
+current work.
+
 ### Infrastructure & Setup
 
-- agent1_shell_navigation_2026_03_22.md — Shell navigation framework
-- agent2_trading_service_2026_03_22.md — Trading service setup
-- agent5_api_service_layer_2026_03_22.md — API service layer
+- agent1_shell_navigation_2026_03_22.md — **(ARCHIVED)** Shell navigation framework
+- agent2_trading_service_2026_03_22.md — **(ARCHIVED)** Trading service setup
+- agent5_api_service_layer_2026_03_22.md — **(ARCHIVED)** API service layer
 
 ### DeFi Strategy Rollout
 
 - defi_ui_component_audit_2026_03_31.md — UI component audit
-- defi_phase3_infrastructure_2026_03_30.md — Infrastructure completion
-- defi_strategies_phase2_2026_03_29.md — Phase 2 strategies
+- defi_phase3_infrastructure_2026_03_30.md — **(ARCHIVED)** Infrastructure completion
+- defi_strategies_phase2_2026_03_29.md — **(ARCHIVED)** Phase 2 strategies
 
 ### Sports
 
@@ -188,8 +197,8 @@ reference + examples for testing any DeFi strategy
   Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild (cheap) vs
   backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
   `launch-mtds-prediction-backfill-vm.sh`, MTDS DeFi data-type launchers. Depends on instruments plan above.
-- agent6_mock_data_quality_2026_03_22.md — Mock data quality
-- agent8_e2e_tests_quality_2026_03_22.md — E2E testing
+- agent6_mock_data_quality_2026_03_22.md — **(ARCHIVED)** Mock data quality
+- agent8_e2e_tests_quality_2026_03_22.md — **(ARCHIVED)** E2E testing
 - ui_full_site_link_crawler_e2e_2026_04_22.md — Full-site Playwright link crawler in `unified-trading-system-ui`
   (bounded BFS, shadow-DOM link harvest, nav flyouts, tier0 registry fill, optional external HEAD/GET probes); harden
   `webServer` for Tier 0 (`PLAYWRIGHT_SKIP_API_WEBSERVER`, `/login` readiness); document wall-clock presets + optional
@@ -198,7 +207,7 @@ reference + examples for testing any DeFi strategy
 ### Service Remediation
 
 - citadel_per_service_remediation_2026_03_24.md — Per-service fixes
-- instruments_service_reorganisation_2026_03_27.md — Instruments service
+- instruments_service_reorganisation_2026_03_27.md — **(ARCHIVED)** Instruments service
 - prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
   capture-path dtype hardening (UTL Int64/bool/float coercion shipped; residuals split out, see below) + (B)
   KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination of cefi — guard + purge

@@ -114,6 +114,13 @@ depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering 
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one
 source: [audit-ref, operator request, ticket URL] # provenance
+sequential:
+  true # optional — SHIPPED (added 2026-07-14, verify-rerun-2 finding 224: was absent from this list —
+  # STRICT serial ordering, task N waits for task N-1 `done`; see task_template.md §4 for full semantics
+  # + `ao@ff6100ad` (`_wire_sequential_prereqs`) for the implementation)
+plan_order:
+  <N> # optional — SHIPPED (added 2026-07-14, verify-rerun-2 finding 224: was absent from this list —
+  # same-priority todos dispatch in `(tier, priority, plan_order)` order; see task_template.md §4)
 ---
 ```
 
@@ -164,11 +171,12 @@ type: epic
 tier: L0 | L1 | L2 | L3 | L4 | L5 # which layer this epic sits in
 status: active | paused | cancelled # NEVER "complete" — epics are everlasting
 priority: P0 | P1 | P2 | P3
-assigned_vm: NA # REQUIRED field (presence; docspec `registry_or_na`) — value is `NA` on every CURRENT epic
-                 # (epic-owns-VM dispatch DROPPED, D2 2026-06-24 + single-VM architecture 2026-06-27); a legacy
-                 # `vm-<id>` value still validates but is OPTIONAL-HISTORICAL (archaeology only, never
-                 # dispatch-resolved) — (was: `vm-<id> # REQUIRED — registry-resolved VM that owns this epic`,
-                 # finding 220, 2026-07-14)
+assigned_vm:
+  NA # REQUIRED field (presence; docspec `registry_or_na`) — value is `NA` on every CURRENT epic
+  # (epic-owns-VM dispatch DROPPED, D2 2026-06-24 + single-VM architecture 2026-06-27); a legacy
+  # `vm-<id>` value still validates but is OPTIONAL-HISTORICAL (archaeology only, never
+  # dispatch-resolved) — (was: `vm-<id> # REQUIRED — registry-resolved VM that owns this epic`,
+  # finding 220, 2026-07-14)
 parent: master_to_live_defi_2026_05_23 # always the cutover master (until cutover ships)
 owner: ikenna | harsh | claude-code
 created: YYYY-MM-DD
