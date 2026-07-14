@@ -2336,3 +2336,62 @@ above):
   here genuinely uncertain; the T+10 measured verdict + parts-count trend is the real signal, not these priors.
 - **T+10 verification armed** (background, measured verdicts: instance status + run.log mtime/tail + parts counts) —
   results land in this Progress Log as a follow-up entry.
+
+### 2026-07-14T12:50Z — data_engineering slot-6 (T+~10-13min follow-up: gap walker DEAD with 0 progress, Helius quota genuinely exhausted — not transient; escalating)
+
+**Dispatched to the "Verify the DRIFT fleet drains" todo.** Fresh-pulled all 24 slot repos clean. This is the T+10
+follow-up the prior session armed. Measured verdicts (`gcloud compute instances list` + GCS log tails + GCS parts-count,
+via `/home/ubuntu/google-cloud-sdk/bin/` — snap `gcloud`/`gsutil` broken on this slot too, same `cap_dac_override` error
+other slots have hit):
+
+**`mtds-drift-sig-walker-gap-20260714-123952` — DEAD, self-deleted, 0 progress toward its `--back-to 2025-01-15`
+floor.** `gcloud compute instances list` no longer shows it (VM_SHUTDOWN_ON_COMPLETION fired). Its full `run.log`:
+booted 12:42:32Z, first `getSignaturesForAddress` page hit `429 Too Many Requests` and retried 4× with exponential
+backoff (2s/4s/6s/8s), exhausted all 5 attempts by 12:42:53Z (20.1s total), then logged
+**`Walk complete: 0 new sigs in 20.1s (~0 sigs/s) across 0 new parts`** and exited `rc=0` →
+`DEPLOYMENT_COMPLETED exit_code=0` → self-deleted. **This "Walk complete" line is a false-positive completion signal**:
+the walk did NOT reach its `--back-to` floor, it gave up after one page of exhausted retries — but the log phrasing +
+`exit_code=0` are indistinguishable from a genuine completed walk to anyone reading the archived deployment status
+without opening the log body. `_index/drift_v2_sig_index_parts_gap/` confirms 0 real data: only 1 object (a directory
+placeholder, not a part file).
+
+**`mtds-drift-sig-walker-resume-20260714-123928` — RUNNING, but genuinely 0 measurable progress after ~8.5min, NOT yet
+alarming.** `_index/drift_v2_sig_index_parts/` count is flat at the 6,293 baseline (no growth). Read
+`build_drift_v2_sig_index.py`: `--resume` (no `--before-sig`) calls `_load_parts_summary()` first, which does a
+**sequential metadata-only download of all 6,293 existing part files** (`storage.download_bytes` + `pq.read_metadata`
+per part) to find the oldest persisted signature before it can even start walking — this easily explains several minutes
+of pure-heartbeat silence with zero `page=`/`429`/`Walk`-lines in the log; it hasn't reached its first Helius RPC call
+yet. Log object `update_time` is fresh (12:47:11Z, upload loop alive). **Not flat-30-min yet** (only ~8.5min) —
+correctly still within the todo's own tripwire's grace period; genuinely too early to call this walker stalled.
+
+**`mtds-solana-drift-backfill` — RUNNING, resource-sampling normally (~18% CPU, ~560MiB RSS), but 0 Helius/capture/error
+log lines in ~13min** — plausibly still in a bootstrap/catalog-load phase before its indexed-window walk starts; not
+independently diagnosed further this session (out of scope vs the two walkers, which are this todo's explicit subject).
+
+**DECISIVE finding — manually probed the shared Helius key directly (read-only, zero VM/code touched), replicating
+exactly what the plan's own 12:41Z probe did**:
+
+```
+POST https://mainnet.helius-rpc.com/?api-key=<the fleet's key>
+  {"method":"getHealth"}                                          → 200 {"result":"ok"}                (3/3 probes)
+  {"method":"getSignaturesForAddress", params:[DRIFT_V2_PROGRAM]} → 429 {"error":{"code":-32429,
+                                                                     "message":"max usage reached"}}     (2/2 probes)
+```
+
+**This is NOT the transient per-second throttle the plan hypothesized might clear** — `getHealth` (cheap, unmetered-ish)
+succeeds cleanly every time, but `getSignaturesForAddress` (the ONE method both walkers need) fails with Helius's
+`-32429 "max usage reached"` code specifically, which is Helius's quota-exhaustion message (distinct from a
+`Retry-After`-bearing rate-limit throttle). ~10 minutes have passed since the plan's own 12:41Z probe saw the same
+pattern (6 retries exhausted) — a transient burst-contention 429 (3 VMs launching within 24s of each other) would
+plausibly have cleared by now; it has not. **This reads as genuine plan/credit exhaustion on the shared Helius key, not
+launch-burst contention.**
+
+**Per this todo's own explicit tripwire ("a credits/plan question goes back to the operator")**: NOT relaunching the
+dead gap-walker segment, NOT adding a 3rd segment — both would just reproduce the identical `-32429` failure and burn
+SPOT VM-minutes for zero data, exactly as the todo warns. The resume walker is left running (still legitimately
+mid-metadata-scan, not yet proven stalled) but WILL hit this same wall the moment it starts walking. Filing a `/blocked`
+question to the operator: is this Helius key's usage quota exhausted for a billing period (needs a plan upgrade / wait
+for reset / swap to a different key), and if so what's the resolution path? Checkbox NOT flipped — gate not met, and the
+dead gap-walker segment means it structurally cannot be met without either a relaunch (blocked on the quota question) or
+an operator-accepted scope change. `/blocked` filed; continuing on other dispatchable work per RULES.md §"blocked" while
+awaiting the answer.
