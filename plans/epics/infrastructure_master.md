@@ -39,7 +39,7 @@ related_plans:
     ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md,
     ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
   ]
-last_updated: 2026-07-12 # was: 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
+last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -155,9 +155,9 @@ reconcilers + `mtds-s4-10` rescan complete.
 ### Shard granularity propagation (`shard_granularity_ssot_propagation`)
 
 - [x] [HUMAN] P0. Phase 0 → Phase 1 handover sign-off; user converts findings into per-service fix todos in Phase 1.
-      [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction
-      `456acb9` + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate
-      human sign-off remaining] **CLOSED-AS-STALE 2026-05-08** — handover already folded; no separate sign-off needed.
+      [AUDIT 2026-05-07: STALE — handover folded into umbrella; Phase 0 audit findings (multi-axis correction `456acb9`
+      + B.2/C.13) were converted by sub-agent into the per-service todos already in this plan; no separate human
+      sign-off remaining] **CLOSED-AS-STALE 2026-05-08** — handover already folded; no separate sign-off needed.
 - [x] [AGENT] P0. **#1 MDPS 1440-NaN reproduction path** — the canonical per-shard test case for shard-atom alignment
       regressions. [AUDIT 2026-05-07: STALE — superseded by writegate Phase 2.A (`_create_empty_output` deletion across
       all asset_groups, MDPS@`5b52d0b`/`b9f9328`/`80cf141`/`e9520a0`) AND retrospective cleanup script MDPS@`d3be0ef`
@@ -373,10 +373,8 @@ venue, data_type) combination so Phase 3 can verify the fix is comprehensive (no
     audit step for Phase 3 verification]
 - [ ] [DOC] P0. Output a coverage matrix at `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`
       listing every (service, asset*group, venue, data_type) tuple as one of: `WORKING` /
-      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/ `MISSING_DOWNLOAD_ICON`. Reference incidents (CBOE
-      ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot. [AUDIT 2026-05-07: FRESH —
-      actionable; verified `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`does NOT exist
-      (only`data-status-drilldown.md`+`shard-granularity-cefi.md`); doc creation is greenfield]
+      `STOPS_AT_INTERMEDIATE_LEVEL*<level>`/`MISSING_SCHEMA_MODAL`/ `MISSING_DOWNLOAD_ICON`. Reference incidents (CBOE     ohlcv_15m = WORKING, CME combo/\* = STOPS_AT_DATA_TYPE) per the operator screenshot. [AUDIT 2026-05-07: FRESH —     actionable; verified `unified-trading-pm/codex/02-data/deployment-ui-drilldown-depth-audit.md`does NOT exist     (only`data-status-drilldown.md`+`shard-granularity-cefi.md`);
+      doc creation is greenfield]
 - [ ] [VERIFY] P0. After B.2 Phase 3 deployment-ui renderer ships: re-walk the same audit; every entry in the matrix
       flips to `WORKING`. Block Phase 5 (MTDS CLI shard-targeting) sign-off until the matrix is 100% green. [AUDIT
       2026-05-07: BLOCKED-ON data_status_drilldown_shard_atom_alignment_2026_05_07:Phase-3-renderer]
@@ -433,7 +431,13 @@ without the cleanup-script output attached.
       `unified-trading-pm/audits/entity_lifecycle/` referenced in the commit body OR an `[entity-skip-cleanup]` tag with
       operator-explained reason. Fails CI otherwise. Note: shipped as STEP 5.91 (STEP 5.65 is already taken by
       removed-symbol AST-walk). — PM@4cc92ac20 + check_entity_registry_cleanup.py + base-service.sh. QG green.
-      2026-05-27 slot-7.
+      2026-05-27 slot-7. **(Collision note, [finding 228, synced 2026-07-14]:** this PM-base STEP 5.91 (entity-registry
+      gate) is a distinct check from features-service's own STEP 5.91 (formula-hash drift gate,
+      `plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md:368`) and MTDS's STEP 5.91
+      (reader/writer bucket-env parity) — three different per-repo checks share the number 5.91; unreconciled in the
+      codex STEP cross-reference table (`codex/06-coding-standards/quality-gates.md` jumps 5.85→L1/L2/L3→5.94/5.95).
+      CODEX-GATED: the cross-reference table itself lives in codex and is out of scope for this doc pass — flagging here
+      for the operator/codex owner to reconcile a per-repo STEP-numbering convention.)
 
 ### Hard schema enforcement at write boundary (NEW sub-plan reference)
 
@@ -490,6 +494,12 @@ sub-plan; this section is a pointer.
 > for the live roster. Was: "_1 active plans declare `parent_epic: infrastructure_master`..._". Corrected per findings
 > 60/76/84/68 (near-duplicates), operator ruling 2026-07-12, §A2 B-queue
 > (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`).
+>
+> **[2026-07-14 sync]** Two entries in the 2026-07-12 roster above are now stale (this roster is a point-in-time
+> snapshot, not a live query — re-run the `rg` above for the current set): `org_migration_to_odumresearch_2026_06_07`
+> flipped `status: active` → `paused` that same day (0/27 todos executed since 2026-06-07; finding 79/91);
+> `bucket_env_split_rollout_2026_06` was archived 2026-07-13 as `status: superseded` by
+> `bucket_estate_consolidation_to_sub100_2026_07_13` (finding 96). [findings 91, 96, synced 2026-07-14]
 
 _1 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
@@ -703,15 +713,15 @@ Active sub-plans owned by or closely coordinated with this epic:
 
 | Plan                                                                                                                                             | Role                                                                                                                                                                                     | Status                                                                                                                                                                                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`active/per_agent_worktrees_2026_05_10`](../active/per_agent_worktrees_2026_05_10.md)                                                           | Per-agent worktree setup + tab isolation — 3-tier parallel-agent infrastructure for workspace                                                                                            | Active                                                                                                                                                                                                                                                            |
-| [`active/ruff_workspace_cleanup_2026_05_12`](../active/ruff_workspace_cleanup_2026_05_12.md)                                                     | Ruff workspace cleanup — lint sweep + unsafe-fixes across workspace repos with foreign-file safety protocol                                                                              | Active                                                                                                                                                                                                                                                            |
-| [`active/features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)                                           | Features service QG cleanup — quality-gate repair for features-\* service family                                                                                                         | Active                                                                                                                                                                                                                                                            |
-| [`active/compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)                                     | Compute optimization + mock data — backtest compute sizing + mock-data pipeline benchmarking                                                                                             | Active                                                                                                                                                                                                                                                            |
-| [`active/context_fill_optimization_2026_05_14`](../active/context_fill_optimization_2026_05_14.md)                                               | Context fill optimization — agent context efficiency + prompt-fill compression for long-running slots                                                                                    | Active                                                                                                                                                                                                                                                            |
+| [`archive/per_agent_worktrees_2026_05_10`](../archive/per_agent_worktrees_2026_05_10.md)                                                         | Per-agent worktree setup + tab isolation — 3-tier parallel-agent infrastructure for workspace                                                                                            | ✅ ARCHIVED (was: link `../active/...` + status "Active"; file lives at `plans/archive/per_agent_worktrees_2026_05_10.md`, `status: draft`. [finding 85, synced 2026-07-14])                                                                                      |
+| [`archive/2026_05/ruff_workspace_cleanup_2026_05_12`](../archive/2026_05/ruff_workspace_cleanup_2026_05_12.md)                                   | Ruff workspace cleanup — lint sweep + unsafe-fixes across workspace repos with foreign-file safety protocol                                                                              | ✅ ARCHIVED, `status: complete` (was: link `../active/...` + status "Active". [finding 85, synced 2026-07-14])                                                                                                                                                    |
+| [`archive/2026_05/features_service_qg_cleanup_2026_05_11`](../archive/2026_05/features_service_qg_cleanup_2026_05_11.md)                         | Features service QG cleanup — quality-gate repair for features-\* service family                                                                                                         | ✅ ARCHIVED, `status: active-phase2-blocked` (was: link `../active/...` + status "Active". [finding 85, synced 2026-07-14])                                                                                                                                       |
+| [`archive/2026_05/compute_optimization_mock_data_2026_05_13`](../archive/2026_05/compute_optimization_mock_data_2026_05_13.md)                   | Compute optimization + mock data — backtest compute sizing + mock-data pipeline benchmarking                                                                                             | ✅ ARCHIVED, `status: complete` (was: link `../active/...` + status "Active". [finding 85, synced 2026-07-14])                                                                                                                                                    |
+| [`archive/context_fill_optimization_2026_05_14`](../archive/context_fill_optimization_2026_05_14.md)                                             | Context fill optimization — agent context efficiency + prompt-fill compression for long-running slots                                                                                    | ✅ ARCHIVED, `status: complete` (was: link `../active/...` + status "Active". [finding 85, synced 2026-07-14])                                                                                                                                                    |
 | [`archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13`](../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md)                       | Gate 3 phantom-audit execution runbook — one-shot phantom reconciliation pre-2026-05-15 freeze gate                                                                                      | ✅ ARCHIVED 2026-05-21 (was: link `../active/...` + status "Active" — plan moved to `plans/archive/2026_05/`; Gate 3 FIRED 2026-05-17, 0 phantoms all 5 asset_groups per `plans/epics/manifest_master.md:168`. [2026-07-12 correction, finding 318, §A2 B-queue]) |
 | [`archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19`](../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md) | agent-orchestrator: laptop nginx → Cloud Run + Firebase Hosting + Squarespace DNS + strict-auth + CI. P0–P4 + P6 done; P5 + Firebase first-deploy DEFERRED-HUMAN-GATE.                   | ✅ ARCHIVED 2026-05-21                                                                                                                                                                                                                                            |
-| [`active/agent_orchestrator_workers_on_vms_2026_05_19`](../active/agent_orchestrator_workers_on_vms_2026_05_19.md)                               | agent-orchestrator: asymmetric worker topology (Ikenna VM-primary + laptop-backup; Harsh PC-primary + VM-backup; both → GCS state sync). Successor to Cloud Run plan; gates parent's P5. | Active                                                                                                                                                                                                                                                            |
-| [`active/agent_orchestrator_slack_notifications_2026_05_19`](../active/agent_orchestrator_slack_notifications_2026_05_19.md)                     | agent-orchestrator: Slack push notifications for slot_blocked / slot_stale / slot_failed via incoming webhook (#agent-orchestrator-alerts). All 6 secrets in Secret Manager. Successor.  | Active                                                                                                                                                                                                                                                            |
+| [`archive/agent_orchestrator_workers_on_vms_2026_05_19`](../archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md)                        | agent-orchestrator: asymmetric worker topology (Ikenna VM-primary + laptop-backup; Harsh PC-primary + VM-backup; both → GCS state sync). Successor to Cloud Run plan; gates parent's P5. | ✅ ARCHIVED, `status: superseded` (was: link `../active/...` + status "Active"; file lives at `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md`. [finding 85, synced 2026-07-14])                                                              |
+| [`archive/agent_orchestrator_slack_notifications_2026_05_19`](../archive/agent_orchestrator_slack_notifications_2026_05_19.md)                   | agent-orchestrator: Slack push notifications for slot_blocked / slot_stale / slot_failed via incoming webhook (#agent-orchestrator-alerts). All 6 secrets in Secret Manager. Successor.  | ✅ ARCHIVED, `status: complete` (was: link `../active/...` + status "Active". [finding 85, synced 2026-07-14])                                                                                                                                                    |
 
 ## Folded plans (archived 2026-05-07)
 
