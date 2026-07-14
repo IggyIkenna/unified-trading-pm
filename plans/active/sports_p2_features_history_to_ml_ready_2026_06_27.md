@@ -3261,3 +3261,7 @@ eligible) so this session moves to different available work instead of re-runnin
   (implied-prob/vig/best-odds 13 non-NULL each) — exactly the mappable set; sole gap = 'Burgos CF' absent from the IS
   team mapping (P3 coverage todo filed on the layout issue doc, instruments-service scope). QG green, 7 unit tests
   added; issue-doc P2 checkbox flipped. Exporter atom UNCHANGED — no recompute of any historical odds parquet needed.
+- 2026-07-14 22:5xZ (autonomous tick 4): odds join-key fix SHIPPED (ml-service@5ee0a8e — deterministic 3-hop crosswalk,
+  merged matrix 24x870 with odds columns live, promote PR#248 auto-merge armed; details in the 22:3xZ entry + issue
+  doc). The assembled sports ML matrix now works end-to-end (loader trio + join). 68.6%-cluster P2 diagnosis DISPATCHED
+  (idle loop capacity while fleets grind). Enrichment fleet + pre-2025 sweep unchanged-healthy.
