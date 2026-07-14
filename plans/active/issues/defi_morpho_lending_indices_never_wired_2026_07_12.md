@@ -807,6 +807,44 @@ essay bloat. **Required action is main/operator-only**: gate this `…-001` back
 (e.g. `consolidator-fresh-and-vm-complete`) so it stops bouncing for the ~6h until the VM completes AND the consolidator
 (`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`) resumes. `skip-current-task`'d.
 
+### Re-verification pass ("fix any broken adaptors" dispatch) — 2026-07-14T~10:50Z (data_engineering)
+
+Picked up as part of a broader "fix broken DeFi adapters" sweep (targets: MORPHO lending_indices wiring — this doc —
+plus FLUID lending_indices, cross-referenced in `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`). Before
+touching anything, verified whether the code-side wiring fix (the item this doc's `[CODE] P1` todo already tracks as
+`[x]`) is actually still present and working on current `live-defi-rollout` HEAD (`market-tick-data-service@d2040f8f`) —
+confirmed rather than trusted, per the doc's own established pattern of catching stale "done" claims:
+
+- `_DEFAULT_PROTOCOLS` in `lending_indices_handler.py:172` still includes `"morpho"` — genuinely present, not reverted.
+- `morpho_adapter.py`'s `_MARKETS_QUERY` and `_RATE_INDICES_QUERY` (the live-connector mirror in
+  `live/connectors/morpho_defi_ws.py` too) use `marketId`, not the old broken `uniqueKey` field — the GraphQL-schema fix
+  (`591b020e`/`04f5de94`) is still in place.
+- `lending_indices_morpho.py` (the dedicated per-market collector stage module) still exists and is wired via
+  `_maybe_dedicated_collector`.
+- All directly-relevant existing unit tests green: `tests/unit/test_morpho_defi_ws_connector.py` (18),
+  `tests/unit/test_lending_indices_handler.py` (27), `tests/unit/test_lending_indices_handler_coverage.py` (45), and the
+  Morpho-tagged subset of `tests/market_interface/unit/test_defi_adapters_boost_2.py` (38 via `-k "morpho or fluid"`) —
+  128 tests total, 0 failures.
+- **Live 1-day smoke fetch** (scratchpad-only, no GCS/manifest writes — see
+  `/tmp/.../scratchpad/smoke_morpho_fluid.py` + `probe2.py` on the dispatching agent's host, not committed anywhere):
+  `MorphoAdapter.fetch_markets()` returned 53 real MVP markets from the live Blue API; picking a genuinely well-indexed
+  major market by TVL (USDT/wstETH, `0xe7e9694b754c4d4f7e21faf7223f6fa71abaeb10296a4c43a54a7977149687d2`,
+  ~$605M live TVL per a direct top-markets-by-TVL subgraph query) and calling `download_market_data()` for
+  `date=2025-06-01` returned **15 real hourly snapshots** with plausible on-chain values (utilization ~0.89-0.91, TVL
+  ~$13.8M,
+  real timestamps spanning the full day). Note: the adapter's own small/exotic "MVP markets" list (the first ~15 markets
+  `fetch_markets()` returns, e.g. `ysUSDS-USDC`, `PAXG-USDC`, `SPYx-USDC`) returned 0 rows for the same date — traced
+  this to genuine subgraph non-indexing / low-liquidity absence for those specific long-tail markets, not a code bug (no
+  GraphQL errors, no non-200 status, `data.marketHourlySnapshots: []` cleanly) — confirms the fix is
+  data-dependent-honest, not silently broken.
+
+**Conclusion: the MORPHO lending_indices wiring + GraphQL-field fixes this doc tracks are still genuinely in place and
+functioning as of 2026-07-14.** No code changes needed/made to this doc's scope. The doc's own remaining open todo
+(`[SCRIPT] P2. Re-run G2 gate for lending_indices after the backfill completes`) is a data/infra verification step, not
+an adapter-code fix — out of scope for this dispatch (per the operator's "fix broken adaptors" framing, and per this
+doc's own extensive re-check history #1-#13 already establishing that todo needs main/operator action, not another
+worker dispatch, to un-stick). Checkbox left as-is.
+
 ### Orphan `market-tick-data-service-code.tar.gz` + `.manifest.json` DELETED from GCS — 2026-07-13T~20:0xZ (tarball-sync sub-agent)
 
 Follow-up to the option (c) closing note above ("they'll simply stop being refreshed and age out"): with the producer
