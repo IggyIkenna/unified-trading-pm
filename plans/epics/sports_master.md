@@ -256,11 +256,11 @@ liquidity).
 > DRAFTKINGS/FANDUEL's own _direct_ browser-stub adapters only (still deferred/deleted, see "Scrapers retired
 > 2026-07-08" below) — it does NOT mean the venue keys are absent from UAC. `DRAFTKINGS` + `FANDUEL` were RE-ADDED to
 > `VENUES_BY_ASSET_GROUP["sports"]` on 2026-05-21 (`unified-api-contracts@19fbd924`, "fix(oracle): correct \_SPORTS
-> data*types — ODDS/trades, BETFAIR sub-venues, remove BET365 — mega-audit R2", verified on `live-defi-rollout`) as
+> `data_types` — ODDS/trades, BETFAIR sub-venues, remove BET365 — mega-audit R2", verified on `live-defi-rollout`) as
 > ODDS_API-fanout-sourced sub-venue keys, inline comment "US bookmaker via ODDS_API fan-out (manifest-confirmed)" —
 > distinct from the retired direct-scraper adapters. Live today: `VENUES_BY_ASSET_GROUP["sports"]` =
 > `[ODDS_API, PINNACLE, BETFAIR, BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU, DRAFTKINGS, FANDUEL]` (was: framed above
-> as exactly 3 venues — that framing describes the \_execution/direct-adapter* universe, not the full MTDS venue-key
+> as exactly 3 venues — that framing describes the execution/direct-adapter universe, not the full MTDS venue-key
 > registry).
 
 Shipped 2026-05-12:
@@ -709,9 +709,9 @@ Plan in `plans/ai/api_football_minimal_flattening_removal_2026_05_07.md` (5 phas
       — so quota cost is bounded to the 4-endpoint × historical-fixture-set product, NOT a full FIXTURES re-fetch.
       **SHIPPED 2026-05-23**: `INCOMPLETE_PAYLOAD_PRE_FLATTENING` added to `RecordFailedReason` (UAC@84c8c49d);
       migration script `flip_b1_thin_payload_to_reattempt.py` ships (instruments-service@b0a1d284). **Run after sports
-      PRD available_at migration completes** (in progress): `--dry-run` first, then `--apply     --delete-parquets` on
-      both base + PRD buckets. Then launch `af-backfill-flatten-{ts}` VM. [AUDIT 2026-05-07: FRESH — actionable;
-      coordinate with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
+      PRD available_at migration completes** (in progress): `--dry-run` first, then `--apply --delete-parquets` on both
+      base + PRD buckets. Then launch `af-backfill-flatten-{ts}` VM. [AUDIT 2026-05-07: FRESH — actionable; coordinate
+      with manifest_migration_SUPERSEDED_2026_05_21:Stage 3]
 - [x] [TEST] P0. Normalizer output shape tests. (UAC@c76e6d0 — 13 unit tests in
       `tests/unit/test_normalize_api_football.py` covering full payload shape, partial null-fill, unknown-stat-type
       skip, no-coach lineup, missing-fixture injury, malformed-input returns. `test_sports_contracts.py` parametrized
@@ -798,11 +798,11 @@ low-confidence fallback) but no writer implements it. Load-bearing for odds-sett
 `available_at` stamping.
 
 - [x] ✅ [SCRIPT] P0. **Step 1**: api_football FIXTURES write-time computation. When `status_short ∈ {FT, AET, PEN}`,
-      compute `match_end_time ≈ kickoff + periods.second.duration + et.duration +     injury_time` from the API
-      response. Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL
-      2026-05-12 slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to
-      `CanonicalFixture`; `detect_match_end_time()` helper shipped in SFI adapter. **UAC HALF SHIPPED 2026-05-13**:
-      UAC@0ba9e5b — `match_end_time` column added to SPORTS_FIXTURES schema (parquet-level). **COMPLETED 2026-05-23**:
+      compute `match_end_time ≈ kickoff + periods.second.duration + et.duration + injury_time` from the API response.
+      Add `match_end_time` column to UAC FIXTURES contract. [AUDIT 2026-05-07: FRESH — actionable] **PARTIAL 2026-05-12
+      slot 5 (instruments-service@9bffca2)**: UAC field `match_end_time: datetime | None` added to `CanonicalFixture`;
+      `detect_match_end_time()` helper shipped in SFI adapter. **UAC HALF SHIPPED 2026-05-13**: UAC@0ba9e5b —
+      `match_end_time` column added to SPORTS_FIXTURES schema (parquet-level). **COMPLETED 2026-05-23**:
       `detect_match_end_time()` wired into instruments-service SFI progressive-stats write path at
       orchestrator.py:6331-6349 — `match_end_time` + `report_time` populated per-match (instruments-service@af06124,
       backfill-flip 2026-05-23).
@@ -862,10 +862,15 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
     x/y coordinates, last_action, season, h_team, a_team, h_a, date, h_goals, a_goals). **Follow-up #2 below.**
   - **MATCHES (footystats) — PARTIAL FIELD-MAPPING.** `normalize_footystats_match`
     (`unified_api_contracts/external/footystats/normalize.py:26-114`): populates ~25 CanonicalFixture fields but
-    hardcodes 15+ to `None` (referee, halftime goals, shots*on_target, fouls, yellow/red cards, shots_blocked, offsides,
-    passes_total/accuracy) **despite the FootyStatsMatch source dataclass carrying**
-    `team_a*_`/ `team*b*_`for shots_on_target / yellow_cards / red_cards / fouls (verified via`rg` on schemas.py). Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`).
-    Smaller scope than full flatten; just rewire the field assignments. **Follow-up #3 below.**
+    hardcodes 15+ to `None` (referee, halftime goals, `shots_on_target`, fouls, yellow/red cards, `shots_blocked`,
+    offsides, `passes_total`/accuracy).
+
+    Despite this, the FootyStatsMatch source dataclass carries the equivalent `team_a_*` and `team_b_*` prefixed fields
+    (shots on target, yellow cards, red cards, fouls — verified via `rg` on schemas.py).
+
+    Source-to-canonical name-mapping miss (`team_a`→`home`, `team_b`→`away`). Smaller scope than full flatten; just
+    rewire the field assignments. **Follow-up #3 below.**
+
 - [x] [SCRIPT] P1. **Follow-up #1 — STANDINGS flatten.** UAC `normalize_api_football_standing` rewrite to unpack the
       nested `league.standings: [[...]]` array into per-(league, team, season, position) row records with full stats
       subobjects (all/home/away each have played/win/draw/lose/goals/goalsAgainst/goalDifference/points). Same migration
@@ -887,12 +892,16 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
 - [x] [SCRIPT] P1. **Follow-up #3 — MATCHES field-mapping fix.** Smaller-scope fix to `normalize_footystats_match`:
       replace 15+ hardcoded `None` with proper `team_a_*` / `team_b_*` → `home_*` / `away_*` mappings from the
       FootyStatsMatch source dataclass. Add `referee` mapping if FootyStats provides it on the match endpoint (verify
-      via raw-payload sample). Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new
-      normalizer + re-fetching going forward writes populated columns from now on; historical rows stay None-populated
-      and are NaN-tolerant); if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full
-      B.1-shape migration (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
-      (UAC@4e23bd9 — added home*goals_halftime/halftime, home_shots_on_target, home_yellow_cards, home_red_cards,
-      home_fouls, home_offsides + away*\* variants to FootyStatsMatch; normalized to CanonicalFixture fields)
+      via raw-payload sample).
+
+      Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
+      going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+      if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+      (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+
+      (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+      `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+      CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -928,10 +937,10 @@ helper hides the split so consumers don't need to refactor (per issue's preferre
       with schedule+outcome cols + `outcomes_available_at`; `read_fixtures_outcomes_pit_safe` wraps it with the existing
       PointInTimeEnforcer/LookaheadBiasError (per-row fire when compute-ts < outcomes_available_at + outcome cols read).
       Reads current entity=fixtures (TODO(walk-after) for the two-entity read post-split).** ~~UTL reader-side join
-      helper~~ `unified_trading_library.fixtures.read_fixtures_joined(day, league_id) ->     pd.DataFrame` returns
-      single fixture row with both schedule + outcome columns + a `outcomes_available_at` column. Consumers see one
-      DataFrame; LookaheadBiasError fires per-row when feature compute timestamp < outcomes_available_at AND any outcome
-      column is read.
+      helper~~ `unified_trading_library.fixtures.read_fixtures_joined(day, league_id) -> pd.DataFrame` returns single
+      fixture row with both schedule + outcome columns + a `outcomes_available_at` column. Consumers see one DataFrame;
+      LookaheadBiasError fires per-row when feature compute timestamp < outcomes_available_at AND any outcome column is
+      read.
 - [ ] [SCRIPT] P0. Per-league announcement-floor empirical audit (Phase 2 of issue). 2-week observation window per
       league; record api_football fixture-publication-time vs kickoff_time. Output: per-league
       `ANNOUNCEMENT_FLOOR_HOURS` table in UAC `unified_api_contracts.canonical.crosscutting.availability_semantics`
@@ -1083,7 +1092,7 @@ features silently miss bookmaker × market gaps.
 
 - [ ] [AGENT] P1. Empirical audit per league tier: which bookmakers + markets are expected to be present per (fixture,
       league_tier)? Output: UAC
-      `EXPECTED_BOOKMAKER_MARKET_SETS: dict[LeagueTier, dict[BookmakerKey,     list[MarketType]]]`. League tiers:
+      `EXPECTED_BOOKMAKER_MARKET_SETS: dict[LeagueTier, dict[BookmakerKey, list[MarketType]]]`. League tiers:
       TIER_1_DOMESTIC (EPL/LaLiga/SerieA/Bundesliga/Ligue1), TIER_2_DOMESTIC, TIER_1_INTERNATIONAL (UCL/UEL), etc.
       Empirical baseline: 2-week sample of fully-covered fixtures per tier.
 - [ ] [SCRIPT] P0. Orchestrator post-FIXTURES_SCHEDULE-capture step: for each fixture today, enumerate expected (fixture
@@ -1312,17 +1321,24 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       promotes via Tier-C, not lost.)
 - [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026 (from
       `get_reference_refresh_dates()`), run instruments-service with
-      `--season=X --start-date=trigger_date     --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh`
+      `--season=X --start-date=trigger_date --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh`
       pattern but iterates trigger dates not date ranges.
 - [ ] [SCRIPT] P2. **VM fleet run** for trigger-date backfill (parallelize by league). Operational.
 - [ ] [QG] P2. Validate GCS snapshots exist for all trigger dates × leagues × seasons.
 - [x] ✅ [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities
-      (teams/team*mapping/player_values). Depends on write-path item (must have data at `master/`/`snapshots/` to
-      denominate against). — **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1`
-      (~365/yr) and `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written
-      at trigger dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-      `\_sports_trigger_dates_for*{window,league}`helpers (union of`get_reference_refresh_dates`across leagues, clipped)     reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it works before the IS write-path lands — coverage shows 0%     until then, correctly).`TEAMS`→`global_trigger_date`, `PLAYER_VALUES`→`per_league_trigger_date`.
-      8 tests incl. the trigger-date≪daily-calendar invariant. QG exit 0.
+      (teams/`team_mapping`/`player_values`). Depends on write-path item (must have data at `master/`/`snapshots/` to
+      denominate against).
+
+      **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
+      `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+      dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+      `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+      clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+      coverage shows 0% until then, correctly).
+
+      `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+      trigger-date≪daily-calendar invariant. QG exit 0.
+
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans

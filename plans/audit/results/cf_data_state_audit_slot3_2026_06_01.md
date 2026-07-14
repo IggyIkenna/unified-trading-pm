@@ -1,21 +1,33 @@
 ---
 doc_type: audit-result
-title: Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments + downstream)
+title:
+  Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments +
+  downstream)
 summary:
-  CF-1…CF-12 data-state audit of slot-3 surfaces (cefi/tradfi/sports/prediction +
-  instruments-store) read against actual prod _index rows — systemic finding is
-  the v9 canonicalisation was a constant-bump only, never applied to data (CF-1
-  100% still v8, CF-3/CF-4/CF-8 columns absent everywhere, sports 584,177 empties
-  blanket-mislabeled SOURCE_RETURNED_ZERO); documents the per-AG bespoke
-  layout-dispatching migrator + ManifestWriter v9 rebuild recipe and the
-  irreversible delete-at-end gates before legacy is dropped.
+  CF-1…CF-12 data-state audit of slot-3 surfaces (cefi/tradfi/sports/prediction + instruments-store) read against actual
+  prod _index rows — systemic finding is the v9 canonicalisation was a constant-bump only, never applied to data (CF-1
+  100% still v8, CF-3/CF-4/CF-8 columns absent everywhere, sports 584,177 empties blanket-mislabeled
+  SOURCE_RETURNED_ZERO); documents the per-AG bespoke layout-dispatching migrator + ManifestWriter v9 rebuild recipe and
+  the irreversible delete-at-end gates before legacy is dropped.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, market-data-processing-service, instruments-service]
 scope: [engineer, admin]
-tags: [audit, honest-coverage, manifest, canonicalisation, data-correctness, pipeline-mode, cefi, tradfi, sports, prediction]
+tags:
+  [
+    audit,
+    honest-coverage,
+    manifest,
+    canonicalisation,
+    data-correctness,
+    pipeline-mode,
+    cefi,
+    tradfi,
+    sports,
+    prediction,
+  ]
 related:
   [
     ../instructions/canonical_form_cross_service_audit_checklist.md,
@@ -23,12 +35,11 @@ related:
   ]
 created: 2026-06-01
 audited_scope:
-  CF-1…CF-12 data-state on the canonical MTDS _index + instruments-store _index
-  for cefi/tradfi/sports/prediction (defi = slot-2, not covered here); read via
-  cf_manifest_audit_2026_06_01.py against actual prod rows, plus a Phase-0
-  all-layouts enumeration per AG. NOT covered — whole-corpus content rewrite
-  execution (dry-run/apply is a separate VM run).
-date: '2026-06-01'
+  CF-1…CF-12 data-state on the canonical MTDS _index + instruments-store _index for cefi/tradfi/sports/prediction (defi
+  = slot-2, not covered here); read via cf_manifest_audit_2026_06_01.py against actual prod rows, plus a Phase-0
+  all-layouts enumeration per AG. NOT covered — whole-corpus content rewrite execution (dry-run/apply is a separate VM
+  run).
+date: "2026-06-01"
 auditor: ikenna (slot-3)
 parent_epic: infrastructure_master
 severity: P0
@@ -37,7 +48,11 @@ lib_version:
 doc_versions_checked:
 type: analysis
 epic: [cefi_master, tradfi_master, sports_master, predictions_master, instruments_master, manifest_master]
-source: [plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT)]
+source:
+  [
+    plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these),
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT),
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md
 ---
 
@@ -63,16 +78,16 @@ plans. **defi = slot-2** (not audited here).
 Every canonical MTDS-AG `_index` **and** every instruments-store `_index` audited shows the **same** canonical-form debt
 — the v9 canonicalisation was only ever a **constant bump**, never applied to data:
 
-| CF   | invariant                      | data-state across ALL surfaces                                                                                                                                                                                                              |
-| ---- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CF-1 | schema_version = v9            | **RED — 100% v8** on every surface (0 rows v9)                                                                                                                                                                                              |
-| CF-3 | pipeline_mode partition/column | **RED — column blank/absent**, no `pipeline_mode=` path segment anywhere                                                                                                                                                                    |
-| CF-4 | `source` COLUMN                | **RED — column ABSENT** on every surface (prediction/sports also have `data_source=` in PATH)                                                                                                                                               |
-| CF-8 | `available_at` per-row         | **RED — column ABSENT** on every surface (only `written_at` write-time proxy)                                                                                                                                                               |
-| CF-2 | `asset_group=` not `category=` | rows: tradfi/pred/defi have `asset_group` col; cefi/sports vacuous (no col). PATHS: prediction still `category=`; cefi/tradfi/sports have no AG segment (flat / partial-hive) — **RED on paths**                                            |
-| CF-5 | typed empty reason             | GREEN everywhere EXCEPT **sports = RED-by-mislabel** (584,177 empties blanket-labeled `SOURCE_RETURNED_ZERO` on a schedule-driven AG → must become typed fixture/season/window reasons)                                                     |
-| CF-7 | canonical names                | mostly clean; drift to relabel: `UNKNOWN`+blank venues (tradfi/pred), `COINBASE`vs`COINBASE-SPOT` (cefi), ODDS case-drift (sports `ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower), blank `data_type` (instruments-store cells) |
-| CF-9 | env-split bucket               | GREEN (all canonical buckets are `-prd-`)                                                                                                                                                                                                   |
+| CF   | invariant                      | data-state across ALL surfaces                                                                                                                                                                                                                |
+| ---- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CF-1 | schema_version = v9            | **RED — 100% v8** on every surface (0 rows v9)                                                                                                                                                                                                |
+| CF-3 | pipeline_mode partition/column | **RED — column blank/absent**, no `pipeline_mode=` path segment anywhere                                                                                                                                                                      |
+| CF-4 | `source` COLUMN                | **RED — column ABSENT** on every surface (prediction/sports also have `data_source=` in PATH)                                                                                                                                                 |
+| CF-8 | `available_at` per-row         | **RED — column ABSENT** on every surface (only `written_at` write-time proxy)                                                                                                                                                                 |
+| CF-2 | `asset_group=` not `category=` | rows: tradfi/pred/defi have `asset_group` col; cefi/sports vacuous (no col). PATHS: prediction still `category=`; cefi/tradfi/sports have no AG segment (flat / partial-hive) — **RED on paths**                                              |
+| CF-5 | typed empty reason             | GREEN everywhere EXCEPT **sports = RED-by-mislabel** (584,177 empties blanket-labeled `SOURCE_RETURNED_ZERO` on a schedule-driven AG → must become typed fixture/season/window reasons)                                                       |
+| CF-7 | canonical names                | mostly clean; drift to relabel: `UNKNOWN`+blank venues (tradfi/pred), `COINBASE` vs `COINBASE-SPOT` (cefi), ODDS case-drift (sports `ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower), blank `data_type` (instruments-store cells) |
+| CF-9 | env-split bucket               | GREEN (all canonical buckets are `-prd-`)                                                                                                                                                                                                     |
 
 So per the **"Audit scope is a PRIOR, not a ceiling"** HARD RULE every AG walk is a **whole-corpus content rewrite**
 (download+transform+upload to add the source/asset_group/pipeline_mode/available_at columns + re-version v9 +
@@ -238,7 +253,7 @@ Confirms the multi-layout reality — each AG bucket has ≥2 distinct layouts t
 | cefi       | **FLAT** `raw_tick_data/by_date/{SYMBOL}.parquet` — NO path dims; day/venue/data_type only in parquet cols (`exchange,symbol,timestamp[epoch-µs],data_type`)                             | `processed_candles/by_date/day=/timeframe=/data_type=/venue=`                                    | flat → derive dims + fan-out to day= partitions                                                                                |
 | tradfi     | **HYPHEN pseudo-hive** `raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/{id}.parquet` (`-` not `=`, bare `equities`/`NYSE`) + a `databento-batch-registry/` tree   | same candle layout                                                                               | hyphen-delim parse; sample raw file had **0 rows** (verify not-empty); cols `timestamp,symbol,ohlcv,instrument_key,underlying` |
 | sports     | full hive `raw_tick_data/by_date/day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source` + `data_source` cols)                          | `processed/by_date/day=/data_type=/league_id=/timeframe=` (also has `source`/`data_source` cols) | category=→asset_group=, data_source= path→source col (already in col too), keystone reason relabel                             |
-| prediction | legacy `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canon) vs canonical pred-prd `…/category=/data_source=/venue=/…market_category=/underlying=/…` | candle layout                                                                                    | INVERTED legacy↔canonical; `rebuild_prediction_manifest.py` exists                                                            |
+| prediction | legacy `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canon) vs canonical pred-prd `…/category=/data_source=/venue=/…market_category=/underlying=/…` | candle layout                                                                                    | INVERTED legacy↔canonical; `rebuild_prediction_manifest.py` exists                                                             |
 
 **Conclusion**: per-AG bespoke migrators (matching the existing `migrate_{sports,tradfi,polymarket}_canonical.py`
 structure), NOT one generalized tool. cefi needs a NEW flat→hive fan-out migrator (none exists). Each converges its
@@ -363,14 +378,15 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
 
 1. **PATH**
    `raw_tick_data/by_date/day={D}/pipeline_mode={MODE}/asset_group={ag}/venue={V}/[chain={C}/]instrument_type={IT}/data_type={DT}/{file}`.
-   `pipeline_mode=` is **canonical IN the path** (operator decision 2026-06-01: "stick to pipeline*mode since it's
+   `pipeline_mode=` is **canonical IN the path** (operator decision 2026-06-01: "stick to `pipeline_mode` since it's
    canonical and fix the readers/writers" — lead the convention, do not retreat). **Known gap to close (cross-AG):** the
-   BASE
-   `build*{defi,cefi,tradfi,prediction}\_partition_path`does NOT include`pipeline_mode=`— only`candidate_parquet_paths(...,
-   pipeline_mode=…)[0]`prepends it (slot-2 primary-source finding). So readers/writers that call the BASE builder directly would miss pipeline_mode= data → they MUST be migrated to the pipeline_mode-aware path as PRIMARY (this is`pipeline_mode_partition_migration`/`pipeline_mode_implementation`intent). Migrators already emit it via`candidate_parquet_paths[0]`
-   — correct.
+   BASE `build_{defi,cefi,tradfi,prediction}_partition_path` does NOT include `pipeline_mode=` — only
+   `candidate_parquet_paths(..., pipeline_mode=…)[0]` prepends it (slot-2 primary-source finding). So readers/writers
+   that call the BASE builder directly would miss pipeline_mode= data → they MUST be migrated to the pipeline_mode-aware
+   path as PRIMARY (this is `pipeline_mode_partition_migration`/`pipeline_mode_implementation` intent). Migrators
+   already emit it via `candidate_parquet_paths[0]` — correct.
 2. **COLUMNS (v9)** schema_version=9 + asset_group + pipeline_mode + source + available_at. `ManifestWriter.add()` now
-   persists `pipeline_mode` (utl@b872bdf1; was dropped → CF-3 blank); `record_captured*` already did.
+   persists `pipeline_mode` (utl@b872bdf1; was dropped → CF-3 blank); `record_captured()` already did.
 3. **data_type = ON-DISK form, not the logical/manifest key** (the `dex_pool_state` / `_resolve_partition_data_type`
    lesson): dex_pools→`dex_pool_state`, dex_swaps→`dex_pool_swaps`, rate_indices→`lending_indices`,
    futures_chain→`options_chain` (data_type only; instrument_type kept). Migrators MUST mirror the live writer's merge.
@@ -395,10 +411,14 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
       2026-06-01 codex-alignment audit found docs MOSTLY aligned; this closes the residuals + the
       pipeline_mode-base-builder gap.)
 - [ ] [DOCS] P1. Banner the four superseded plan sections in the table above with `SUPERSEDED BY <plan> — <why>`.
-- [ ] [CODE] P0. pipeline*mode reader/writer alignment (cross-AG, coordinate w/ slot-2): make the pipeline_mode-aware
-      path the PRIMARY in
-      `build*_*partition_path`consumers (not just a`candidate_parquet_paths`fallback) so live     reads find migrated data. Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct    `build*_\_partition_path`
-      caller. (manifest_reader_fallback Level-0 already probes pipeline_mode= → readers using it are safe; this closes
+- [ ] [CODE] P0. `pipeline_mode` reader/writer alignment (cross-AG, coordinate w/ slot-2).
+
+      Make the `pipeline_mode`-aware path the PRIMARY in `build_*_partition_path` consumers (not just a
+      `candidate_parquet_paths` fallback) so live reads find migrated data.
+
+      Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct
+      `build_*_partition_path` caller. (`manifest_reader_fallback` Level-0 already probes `pipeline_mode=` → readers
+      using it are safe; this closes
       base-builder callers.)
 
 ## 🎬 NEXT-AGENT EXECUTION HANDOFF — non-DeFi migration + deletion (slot-3 → next, 2026-06-02)
@@ -446,7 +466,7 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
 ### THE GATES (run IN ORDER, per AG — never skip; the sample ≠ exhaustive)
 
 G1. **Full-corpus VM dry-run** in asia-northeast1 (re-tarball+pin first):
-`launch-canonical-migration-vm.sh <ag> <start>     <end> dry`. Confirm `TOTAL planned` ≈ full-corpus source object count
+`launch-canonical-migration-vm.sh <ag> <start> <end> dry`. Confirm `TOTAL planned` ≈ full-corpus source object count
 (cefi = millions across 2,613 day-dirs + bundles + 9 orphans, NOT 9). A shortfall = a missed layout → STOP + fix. This
 is the DEFINITIVE completeness gate. G2. Per-AG writer drained + snapshot `_index` →
 `_index/snapshots/pre_v9_canonical_2026_06_0X.parquet`. G3. `--apply` (additive copy only — non-destructive, safe to

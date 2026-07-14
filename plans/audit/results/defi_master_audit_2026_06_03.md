@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: DeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
 summary:
-  Code-verified DeFi acquisition-mechanics + batch/live + downstream-wiring audit
-  (instruments-service → MTDS → MDPS → features-onchain → strategy) — IS
-  acquisition GREEN-ish, MTDS tick AMBER (dex_swaps silently truncates at
-  5k swaps/day/pool, orca/raydium have no live WS, 3 hardcoded venue hosts), MDPS
-  AMBER, strategy GREEN (no batch=live signal branch). Adversarial pass narrowed
-  the gap list to survivors (dex_swaps truncation + orca/raydium live-WS
+  Code-verified DeFi acquisition-mechanics + batch/live + downstream-wiring audit (instruments-service → MTDS → MDPS →
+  features-onchain → strategy) — IS acquisition GREEN-ish, MTDS tick AMBER (dex_swaps silently truncates at 5k
+  swaps/day/pool, orca/raydium have no live WS, 3 hardcoded venue hosts), MDPS AMBER, strategy GREEN (no batch=live
+  signal branch). Adversarial pass narrowed the gap list to survivors (dex_swaps truncation + orca/raydium live-WS
   confirmed; funding_rate_apy_bps 0-producer REFUTED).
 status: partial
 nature: record
@@ -16,18 +14,12 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, defi, acquisition, batch-live, mtds, data-correctness, features]
-related:
-  [
-    ../instructions/defi_master_audit_instructions.md,
-    cefi_master_audit_2026_06_03.md,
-  ]
+related: [../instructions/defi_master_audit_instructions.md, cefi_master_audit_2026_06_03.md]
 created: 2026-06-03
 audited_scope:
-  acquisition-mechanics + batch/live wiring + downstream propagation
-  (CODE-VERIFIED) across instruments-service → MTDS → MDPS → features-onchain →
-  strategy on live-defi-rollout. NOT covered — data-state corpus coverage (defi
-  items o–z / CF-1…12, needs prod GCS/manifest reads) and an exhaustive swallow
-  audit across all 52 IS adapters.
+  acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED) across instruments-service → MTDS →
+  MDPS → features-onchain → strategy on live-defi-rollout. NOT covered — data-state corpus coverage (defi items o–z /
+  CF-1…12, needs prod GCS/manifest reads) and an exhaustive swallow audit across all 52 IS adapters.
 date: 2026-06-03
 auditor: harsh + claude (opus-4-8, 1M)
 parent_epic: defi_master
@@ -38,7 +30,13 @@ doc_versions_checked:
 type: audit-result
 epic: defi_master
 instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
-also_covers: [plans/audit/instructions/instruments_master_audit_instructions.md, plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new), plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new), plans/audit/instructions/strategy_master_audit_instructions.md]
+also_covers:
+  [
+    plans/audit/instructions/instruments_master_audit_instructions.md,
+    plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new),
+    plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new),
+    plans/audit/instructions/strategy_master_audit_instructions.md,
+  ]
 dimension: acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED)
 not_covered: data-state corpus coverage (defi items o–z, CF-1…12) — requires prod GCS/manifest reads; separate run
 ---
@@ -92,8 +90,8 @@ returning real `file:line` evidence; key findings independently spot-verified by
   (`get_solana_protocol_url`/`SUBGRAPH_IDS`). Per IS→MTDS codex contract, `source_record_types`/`coverage` being
   Drift-family-mostly is **by design** (archive-replay venues only), not a hole.
 - **instruments (h) / mtds (i) — fetch-failure swallow**: GREEN (audited venues) — raise → `VenueError` →
-  `record_failed`; no swallow-to-empty found in uniswap*v3/curve/jito/marinade/lido top-levels. \_Not exhaustive across
-  all 52 adapters.*
+  `record_failed`; no swallow-to-empty found in uniswap_v3/curve/jito/marinade/lido top-levels. \_Not exhaustive across
+  all 52 adapters.\*
 - **defi (j/k) — data_type names canonical**: GREEN —
   `dex_pool_swaps`/`dex_pool_state`/`lending_indices`/`perp_funding`/ `lst_rates`/`oracle_prices`/`vault_share_price`;
   no legacy `swap_events`/`funding_rates`.
@@ -155,10 +153,12 @@ returning real `file:line` evidence; key findings independently spot-verified by
 ## Aligned / positive (no action)
 
 - Fetch-failure → `attempted_failed` routing honest (audited venues); subgraph IDs from UAC `SUBGRAPH_IDS`; Drift
-  Velocity API proper `meta.nextPage` pagination; bloxroute removed; canonical data*type names; dedicated per-data_type
-  buckets (except dex_swaps); morpho batch-skip documented; features-onchain batch/live share the same
-  `compute*\*`; strategy batch=live single code path (no signal-mode branch); MDPS bypass-scope matches codex (`needs_candle_processing()`);
-  vault adapters are DefiLlama-backed (not stubs, but current-snapshot only).
+  Velocity API proper `meta.nextPage` pagination; bloxroute removed; canonical `data_type` names; dedicated
+  per-`data_type` buckets (except dex_swaps); morpho batch-skip documented.
+
+  features-onchain batch/live share the same `compute_*`; strategy batch=live single code path (no signal-mode branch);
+  MDPS bypass-scope matches codex (`needs_candle_processing()`); vault adapters are DefiLlama-backed (not stubs, but
+  current-snapshot only).
 
 ## Phase-0 contradiction resolved
 
