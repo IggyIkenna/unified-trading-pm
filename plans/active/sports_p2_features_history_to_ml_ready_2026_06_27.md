@@ -138,6 +138,42 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 22:54 UTC — data_engineering slot-10 (same session, cycle 2 — ROOT CAUSE CONFIRMED: consolidator Cloud Run Job intermittently takes 8-9min instead of ~40s; issue doc filed; 3rd relaunch wave succeeded past the startup gate by timing against a fresh manifest write)
+
+**Same slot-10 session, continuing.** The 22:28Z relaunch (all 3 VMs) **failed again within ~5 minutes**, at
+22:31:28-22:31:42Z, with the IDENTICAL `"Manifest consolidator appears DOWN"` error — ruling out a one-off transient
+blip from the first entry below; this is a recurring pattern.
+
+**Root-caused via
+`gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports --region=asia-northeast1`**
+(read-only diagnostic, not an infra action): the Cloud Scheduler trigger
+(`uts-prod-manifest-consolidator-instruments-sports-cron`, `*/1 * * * *`) IS firing reliably every minute — 15
+consecutive executions checked, zero gaps in the trigger cadence. But execution DURATION is bimodal: most complete in
+~30-45s, but a subset take **8-9 MINUTES** (confirmed via `gcloud run jobs executions describe ... 4q84g` →
+`status.conditions` `"Completed"` message: `"Execution completed successfully in 8m42.98s"` — genuinely slow, not a
+crash). Since a new execution triggers every 60s regardless of the prior one's state, an 8-9min execution means 7-8
+overlapping executions run concurrently — during that stretch the consolidated file's mtime can sit stale well past the
+120s freshness budget every consuming VM's startup gate checks against.
+
+**Filed `issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`** (P1 [INFRA] root-cause
+investigation + P2 [CODE] retry-with-backoff option + P3 [SCRIPT] pre-flight freshness check option) — this is a genuine
+infra reliability issue outside data_engineering craft scope (Cloud Run Job concurrency/locking), not something to fix
+inline here; documented with full evidence (execution IDs, timestamps, cost impact: 2 waves × 3 VMs = 6 failed SPOT
+launches with zero compute progress).
+
+**3rd relaunch, timed against a fresh manifest write**: confirmed the slow execution (`4q84g`) had just completed and
+written successfully (`gsutil stat` showed `Update time: 22:50:44Z`, 108s old at the 22:52:32Z check — within budget).
+Relaunched all 3 ranges immediately (first attempt collided on a shared timestamp-based VM name from launching all 3 in
+parallel within the same second — 2 of 3 hit `ERROR: ... already exists`; retried those 2 sequentially with a small
+gap). All 3 now RUNNING: **`features-sports-sports-20260714-225249`** (2018-07-09→2019-08-11), **`-225333`**
+(2020-03-07→2020-10-05), **`-225354`** (2025-08-11→2026-07-13). Consolidator confirmed still fresh (60s old) immediately
+after all 3 launches. No-fire-and-forget check passed: all 3 confirmed RUNNING via `gcloud compute instances list`.
+
+**Verdict: real forward action + a confirmed, actionable infra finding filed.** Checkbox NOT flipped — compute still
+genuinely in progress (3rd relaunch, not yet completed; success at the startup gate not yet confirmed past the first few
+minutes). Continuing to monitor for genuine calculator-write progress (not another repeat of the same startup failure)
+rather than declaring victory prematurely.
+
 ### 2026-07-14 22:28 UTC — data_engineering slot-10 (Todo 1 re-dispatch — all 3 tracked VMs failed IDENTICALLY at startup due to a transient stale manifest-consolidator heartbeat, correctly fail-fast; consolidator confirmed recovered; relaunched all 3 ranges; checkbox NOT flipped)
 
 **Fresh-pulled all 24 slot repos clean.** Followed the 21:52Z entry's explicit handoff: checked
