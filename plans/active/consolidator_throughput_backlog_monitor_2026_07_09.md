@@ -69,8 +69,9 @@ drift_direction: advance-code
 - **v2 (DESCOPED 2026-07-13 — no longer a workstream here) = the truthful merged-per-tick histogram.** Instrument the
   consolidator job to record `{ts, asset_group, shards_merged, backlog_after, rows_added, duration_ms}` per run; the
   endpoint returns the last N runs → an exact histogram. This is now a downstream consumer of **WS-H's
-  structured-progress event-facade spine** in `deployment_observability_expansion_2026_07_08.md` (see the Progress Log
-  descope note), NOT a separate build in this plan. The v1 inferred sparkline stays as the shipped view.
+  structured-progress event-facade spine** (see the Progress Log descope note — WS-H's home is unsettled, no longer
+  `deployment_observability_expansion_2026_07_08.md`, see finding 183), NOT a separate build in this plan. The v1
+  inferred sparkline stays as the shipped view.
 
 ## Codex SSOTs (READ before touching each area)
 
