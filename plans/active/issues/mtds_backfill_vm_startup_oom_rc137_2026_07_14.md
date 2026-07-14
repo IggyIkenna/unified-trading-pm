@@ -121,13 +121,54 @@ site, not a verified fix.
 - [ ] [BACKEND] P0. If confirmed: scope catalog-reader registration to the job's actual `asset_groups` (not
       unconditionally all four) in `_register_all_catalog_readers()` / its `process_ticks()` call site. Add a regression
       test asserting only the requested asset_group's reader(s) register. Repo: `market-tick-data-service`.
-- [ ] [SCRIPT] P1. Fleet-wide check: grep the deployment registry archive
+- [x] [SCRIPT] P1. Fleet-wide check: grep the deployment registry archive
       (`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-1{2,3,4}/*.json`) for `exit_code=137`
       `DEPLOYMENT_FAILED` entries across ALL asset_groups (not just DeFi) to gauge blast radius since `f8cab3f0` landed
-      (2026-07-12). Repo: `deployment-service`.
+      (2026-07-12). Repo: `deployment-service`. — ✅ DONE 2026-07-14, see "Fleet-wide blast-radius check" below.
 - [ ] [SCRIPT] P2. Once the fix lands, relaunch `mtds-perp-funding-backfill` and `mtds-dex-swaps-backfill` (same command
       as this session used) and verify past the first `RESOURCE_SAMPLE` without a crash before resuming
       `mvp_backfill_defi_onchain_v10-002`'s G2 verification. Repo: `deployment-service`.
+
+## Fleet-wide blast-radius check (2026-07-14, slot 3)
+
+Downloaded + parsed all **1958** deployment-registry archive JSON records for `2026-07-{12,13,14}`
+(`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-1{2,3,4}/*.json` — bounded 3-day fetch, not
+a corpus-wide walk). Note: the registry schema's field is `status: "failed"` + `exit_code: 137` (no literal
+`DEPLOYMENT_FAILED` string appears in the registry JSON itself — that phrasing was a VM-log convention, not a registry
+field. Grepped on the actual schema instead).
+
+**Total `exit_code=137` records: 70** — split cleanly by whether they started before or after `f8cab3f0` landed
+(**2026-07-12T23:52:29Z**, confirmed via `git log`):
+
+| Window                                 | Count  | Asset groups          |
+| -------------------------------------- | ------ | --------------------- |
+| **PRE-fix** (before 23:52:29 on 07-12) | 52     | CEFI only             |
+| **POST-fix** (at/after 23:52:29)       | **18** | **CEFI: 14, DEFI: 4** |
+
+**PRE-fix 52 CEFI crashes** are almost certainly the OLD bug `f8cab3f0` targeted (per-date catalog re-registration on
+multi-day backfills) — consistent with the commit message's own confirmed trigger case (2024 DERIBIT-COMBO OOM). Not
+this issue's concern; already addressed.
+
+**POST-fix 18 crashes are the ones relevant to this issue** — and they confirm the blast radius is **fleet-wide across
+CEFI+DEFI, not DeFi-specific**: 14 of 18 (78%) are CEFI backfills (okx-swap, bitfinex-spot, bybit-spot, binance-futures,
+bitget-futures ×7, deribit-2026-heavy), only 4 are the DEFI jobs already known from this issue's own repro session.
+Spans 07-13 10:32 through 07-14 11:49 — still actively recurring, not a one-time blip.
+
+One post-fix outlier, `opt-deribit-combo-2024` (07-13T00:36, 13 min after the fix landed) shows **mem_pct=82.5%** at its
+last sample — high-memory-load pattern distinct from the other 17 post-fix crashes (all single-digit-to-teens mem_pct at
+last sample, consistent with "OOM spike happens between samples" already noted in this doc's Evidence section). Flagging
+as possibly a separate, genuine large-data-volume OOM (options backfill, full-year range) rather than the baseline
+catalog-registration cost — worth excluding from the fix's regression scope unless a live repro says otherwise.
+
+**TRADFI and SPORTS backfills DID run in this window** (226 and 552 registry entries respectively, including 28 TRADFI
+and 31 SPORTS `failed` records) but **zero of their failures were `exit_code=137`** (TRADFI failures were all `rc=1`;
+SPORTS split `rc=1`/`rc=2`). So observed impact in this window is CEFI+DEFI only — this does NOT rule out latent risk
+for TRADFI/SPORTS (they may simply not have hit the crash-inducing code path), but there is no evidence of them being
+hit so far.
+
+**Bottom line for the BACKEND fix todos above**: the blast radius is bigger than "DeFi-only" — CEFI backfills are hit
+MORE often (14 vs 4) than DeFi post-fix. The fix (scope catalog-reader registration to the job's actual `asset_groups`)
+should be validated against BOTH a CEFI and a DEFI repro, not just DeFi, before this issue closes.
 
 ## Evidence
 
