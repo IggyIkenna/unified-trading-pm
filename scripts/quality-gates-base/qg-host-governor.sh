@@ -63,6 +63,72 @@ _qg_governor_default_k() {
 _qg_governor_k() { echo "${QG_HOST_CONCURRENCY:-$(_qg_governor_default_k)}"; }
 _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"; }
 
+# ── HOST CAPACITY INTROSPECTION (Phase 2) ────────────────────────────────────
+# Reads the host's real capacity so the (Phase-3) admission gates can size
+# themselves per host instead of a fixed K. Portable + bash 3.2-safe: Linux via
+# /proc + lscpu, macOS via sysctl + vm_stat. ADDITIVE — nothing here is wired
+# into acquire/release yet; `--probe` just prints capacity + derived budgets.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+_qg_is_macos() { [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; }
+
+# Total physical RAM, in KB. QG_MEMINFO_PATH overrides the source for tests.
+_qg_mem_total_kb() {
+    if _qg_is_macos; then
+        local b; b="$(sysctl -n hw.memsize 2>/dev/null || echo 0)"
+        echo $(( b / 1024 ))
+    else
+        awk '/^MemTotal:/{print $2; exit}' "${QG_MEMINFO_PATH:-/proc/meminfo}" 2>/dev/null || echo 0
+    fi
+}
+
+# Reclaimable-inclusive available RAM, in KB. Linux exposes MemAvailable directly;
+# macOS has no equivalent, so approximate with the pages the kernel can hand out
+# without swapping — free + inactive + purgeable + file-backed — times page size.
+_qg_mem_available_kb() {
+    if _qg_is_macos; then
+        local ps vms free inact purge filed pages
+        ps="$(sysctl -n hw.pagesize 2>/dev/null || echo 4096)"
+        vms="$(vm_stat 2>/dev/null)"
+        free="$(printf '%s\n' "$vms" | awk '/^Pages free/{gsub(/\./,"",$NF);print $NF;exit}')"
+        inact="$(printf '%s\n' "$vms" | awk '/^Pages inactive/{gsub(/\./,"",$NF);print $NF;exit}')"
+        purge="$(printf '%s\n' "$vms" | awk '/^Pages purgeable/{gsub(/\./,"",$NF);print $NF;exit}')"
+        filed="$(printf '%s\n' "$vms" | awk '/^File-backed pages/{gsub(/\./,"",$NF);print $NF;exit}')"
+        pages=$(( ${free:-0} + ${inact:-0} + ${purge:-0} + ${filed:-0} ))
+        echo $(( pages * ps / 1024 ))
+    else
+        awk '/^MemAvailable:/{print $2; exit}' "${QG_MEMINFO_PATH:-/proc/meminfo}" 2>/dev/null || echo 0
+    fi
+}
+
+# Physical core count (not logical/HT).
+_qg_physical_cores() {
+    local c=0
+    if _qg_is_macos; then
+        c="$(sysctl -n hw.physicalcpu 2>/dev/null || echo 0)"
+    else
+        c="$(lscpu -p=core 2>/dev/null | grep -v '^#' | sort -u | grep -c '')"
+        [[ "${c:-0}" -ge 1 ]] || c="$(nproc 2>/dev/null || echo 4)"
+    fi
+    [[ "${c:-0}" -ge 1 ]] || c=4
+    echo "$c"
+}
+
+# One-line capacity + derived budgets. Fractions are expressed as the documented
+# env vars (QG_MEM_SAFETY_FRAC=0.70, QG_CPU_FRAC=0.80) and converted to integer
+# percents via awk (bash has no float). Emits GB (integer, floor) for humans.
+qg_host_capacity() {
+    local frac cpufrac frac_pct cpu_pct mt ma cores ram_budget_kb cpu_slots
+    frac="${QG_MEM_SAFETY_FRAC:-0.70}"; cpufrac="${QG_CPU_FRAC:-0.80}"
+    frac_pct="$(awk -v f="$frac" 'BEGIN{printf "%d", f*100}')"
+    cpu_pct="$(awk -v f="$cpufrac" 'BEGIN{printf "%d", f*100}')"
+    mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
+    ram_budget_kb=$(( mt * frac_pct / 100 ))
+    cpu_slots=$(( cores * cpu_pct / 100 )); (( cpu_slots >= 1 )) || cpu_slots=1
+    printf 'mem_total_gb=%s mem_available_gb=%s cores=%s ram_budget_gb=%s cpu_slots=%s\n' \
+        "$(( mt / 1024 / 1024 ))" "$(( ma / 1024 / 1024 ))" "$cores" \
+        "$(( ram_budget_kb / 1024 / 1024 ))" "$cpu_slots"
+}
+
 # Base file-descriptor for the token locks. The original used bash >=4.1's
 # `exec {fd}>` auto-FD form, which is unparseable on bash 3.2 (the macOS
 # operator host) → the governor silently went INACTIVE there, so concurrent
@@ -146,6 +212,7 @@ _qg_governor_status() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     case "${1:-}" in
         --status) _qg_governor_status ;;
+        --probe) qg_host_capacity ;;
         --)
             shift
             [[ $# -ge 1 ]] || { echo "usage: qg-host-governor.sh -- <command> [args...]" >&2; exit 2; }
@@ -155,6 +222,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             qg_governor_release
             exit "$rc"
             ;;
-        *) echo "usage: qg-host-governor.sh [--status | -- <command...>]" >&2; exit 2 ;;
+        *) echo "usage: qg-host-governor.sh [--status | --probe | -- <command...>]" >&2; exit 2 ;;
     esac
 fi
