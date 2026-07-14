@@ -238,9 +238,13 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 ## DeFi data-loading dispatch (slot 7, 2026-06-01 — from `features_service_defi_data_loading_blockers_2026_05_29.md`)
 
 - [ ] [CODE] P1. **DeFi #1 — map `volume_analysis` / `vwap` / `microstructure` feature groups → `dex_pool_swaps`** via
-      UAC `resolve_data_type_for_feature_group()` so DeFi features resolve to the canonical dex_swaps data_type. Repo:
-      features-service (self-contained). Operator decision 2026-06-01. **Consumer-side mapping (NOT manifest work)** —
-      depends on `defi_manifest_canonicalisation_2026_06_01.md` § C2 establishing the canonical `dex_swaps` data_type.
+      UAC `resolve_data_type_for_feature_group()` so DeFi features resolve to the canonical `dex_pool_swaps` data_type
+      (was: "canonical dex_swaps data_type" — corrected 2026-07-14, verify-rerun-2 finding 68: `dex_swaps` is a BANNED
+      alias per the operator-locked `defi-canonical-naming-ssot.md` / archived
+      `defi_manifest_canonicalisation_2026_06_01.md` `test_data_type_canonicalization` `_BANNED_ALIASES`; the canonical
+      name is `dex_pool_swaps`, matching this same bullet's own mapping-target clause). Repo: features-service
+      (self-contained). Operator decision 2026-06-01. **Consumer-side mapping (NOT manifest work)** — depends on
+      `defi_manifest_canonicalisation_2026_06_01.md` § C2 establishing the canonical `dex_pool_swaps` data_type.
 - [ ] [DATA] P2. **DeFi #2 — legacy bucket = read-only historical archive; NO manifest rebuild.** Operator decision
       2026-06-01: the legacy DeFi bucket is a read-only historical archive; do NOT rebuild its manifest (that would be
       manifest-canon work). Treat as read-only when loading historical DeFi features. Repo: features-service (policy).

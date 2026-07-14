@@ -27,7 +27,7 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-28
+last_updated: 2026-06-29 # was: 2026-06-28 -- corrected 2026-07-14, verify-rerun-2 finding 65: body's wrap-up todo (item 5) cites CI/ship evidence timestamped 2026-06-29T11:41:11Z/T11:41:26Z, a day after the recorded last_updated
 locked_by:
 locked_since:
 supersedes:
@@ -86,7 +86,7 @@ both reasoned together.
       b55fdbb3 — sentinel `.qg_last_passed_sha=b55fdbb30f2977ca051315642483cdcabecc2a79` written, 228 s wall.)
 - [x] [IMPLEMENT] P1. ✅ Add the **candle+book-cols matcher** to execution-service: a fill model that uses the Plan-1
       intra-bar book columns (time-weighted spread for fill price, mean depth for slippage/partial-fill). Slot it
-      between L1_MBP OHLC and L2_MBP in the matching-engine selection. — Gate: the matcher fills a known order against a
+      between L1*MBP OHLC and L2_MBP in the matching-engine selection. — Gate: the matcher fills a known order against a
       candle carrying book columns and produces a deterministic, documented fill. — unified-api-contracts@344c2490 +
       execution-service@d07a0026 (UAC: added `BookType.CANDLE_BOOK_COLS` enum variant — slots between L1_MBP and L2_MBP
       in the StrEnum ordering. execution-service: new `execution_service.matching_engine.candle_book_cols` module with
@@ -94,7 +94,7 @@ both reasoned together.
       mirroring the UAC `BOOK_SUMMARY_COLUMNS` SSOT) + `CandleBookColsMatcher(BaseMatcher)`; registered in
       `MatchingEngine.__init__` keyed on `BookType.CANDLE_BOOK_COLS` (between L1Matcher + L2Matcher) so
       `engine.match_order(book_type=CANDLE_BOOK_COLS, ...)` dispatches correctly. Fill model — pure Decimal arithmetic
-      (no floats, no random sampling, no hidden state): half_spread_offset = mid _ spread_bps_tw_mean _ 0.5 / 10_000;
+      (no floats, no random sampling, no hidden state): half_spread_offset = mid * spread*bps_tw_mean * 0.5 / 10_000;
       best = mid ± half_spread; total_depth = sum of L1..L5 on the fill side; full-fill walks `qty/total_depth` of book
       with linear price impact (`fill_price = best + adverse_sign * half_spread * fill_frac`); partial-fill (IOC / LIMIT
       / MARKET) returns total_depth at walk-out edge; FOK rejects on depth exhaustion. Tests at

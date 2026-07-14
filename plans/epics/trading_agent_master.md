@@ -12,7 +12,7 @@ stage: [meta]
 repos: [trading-agent-service]
 scope: [engineer, admin]
 tags: [trading-agent, strategy, execution, orchestrator, reconciliation, ml]
-related: [../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related: [../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md] # was: ../active/trading_agent_service_architecture_unlock_2026_05_22.md -- corrected 2026-07-14, verify-rerun-2 finding 230: plan archived 2026-05-23, path never existed under active/ post-archival, body (line ~50) already used the correct archive path
 created: 2026-05-21
 name: trading_agent_master
 tier: L2
@@ -21,7 +21,7 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+related_plans: [../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md] # was: ../active/trading_agent_service_architecture_unlock_2026_05_22.md -- corrected 2026-07-14, verify-rerun-2 finding 230, same dangling-ref fix as `related:` above
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

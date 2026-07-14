@@ -118,7 +118,11 @@ watchdog runs fresh code: automatically if its cron re-downloads code tarballs e
 > **SAFETY (operator ruling 2026-07-12, finding 83, per
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2):** launch with `--dry-run` FIRST,
 > review the would-reap list, only then arm — the launcher defaults `dry_run=false` and this watchdog previously reaped
-> LIVE backfill VMs (that's this doc's own incident). Liveness-check code fix has NOT shipped (grep-verified).
+> LIVE backfill VMs (was: "that's this doc's own incident" — corrected 2026-07-14, verify-rerun-2 finding 104: that
+> 9-live-VM-reaped incident is tracked in the separate, still-open
+> `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`, not this doc — this doc's own subject is
+> TERMINATED/stopped VMs never being reaped, a different failure mode; the safety note applies regardless of which doc
+> owns the incident, but the attribution was wrong). Liveness-check code fix has NOT shipped (grep-verified).
 
 > **Distinct from** `plans/ai/vm_deployment_registry_reaper_and_ssot_2026_04_21.plan.md`, which reaps stale
 > `/api/vm-deployments` **registry JSON blobs** in GCS — a different artifact from the GCE **instances + disks** this
