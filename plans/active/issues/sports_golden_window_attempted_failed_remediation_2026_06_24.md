@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Sports golden-window attempted_failed remediation — mostly misclassification, not missing data
-summary: 'Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:'
+summary:
+  "Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The
+  ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:"
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -9,11 +11,20 @@ stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [sports, golden-window, manifest, data-correctness, honest-coverage, odds, instruments, backfill]
-related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md, plans/active/sports_p1_golden_window_mtds_odds_2026_06_27.md]
+related:
+  [
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md,
+    plans/active/sports_p1_golden_window_mtds_odds_2026_06_27.md,
+  ]
 created: 2026-06-24
 parent_epic: sports_master
 priority: P2
-source: ['Coverage audit 2026-06-24: golden window (2025-09-01..2025-11-30) instruments 98.0% / market-data 94.1%; ~5,900 attempted_failed cells']
+source:
+  [
+    "Coverage audit 2026-06-24: golden window (2025-09-01..2025-11-30) instruments 98.0% / market-data 94.1%; ~5,900
+    attempted_failed cells",
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -106,17 +117,19 @@ alerts trigger on VM ERRORs" — confirmed gap).
 ## #6 — IS footystats `ODDS` is misplaced (odds = MTDS, not IS) — operator 2026-06-24
 
 **Principle:** odds (any bookmaker odds — footystats OR odds-api) are **market-tick-data (MTDS)**, never
-instruments-service. The ONLY footystats odds-like data_type that belongs in IS is **`PREDICTIONS`** (footystats'
-_in-house_ prediction model — a derived fixture attribute, not market odds). Measured: IS `ODDS` = 194,789 rows (194,727
-footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` = 195,115 rows (footystats in-house) —
-**keep**.
+instruments-service. The ONLY footystats odds-like data*type that belongs in IS is **`PREDICTIONS`** (footystats'
+\_in-house* prediction model — a derived fixture attribute, not market odds). Measured: IS `ODDS` = 194,789 rows
+(194,727 footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` = 195,115 rows (footystats
+in-house) — **keep**.
 
-- [ ] [CODE] P2. Drop `"ODDS": "footystats"` from UAC `SPORTS_DATA_TYPE_TO_SOURCE` (league_data.py:152); ODDS is not an
-      IS data_type. Remove the footystats ODDS capture path from the IS sports orchestrator (stop fetching odds into
-      IS). Keep `"PREDICTIONS": "footystats"`.
-- [ ] [DATA] P2. Wipe the existing IS footystats `ODDS` (194,789 manifest rows + the 29,701 captured cells' GCS objects)
-      — snapshot-first, consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds
-      source (211,299 captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch `PREDICTIONS`.
+- [x] CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27 (decision #6 REVERSED, see
+      sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md L79-84) — do NOT execute; synced 2026-07-14,
+      verify-rerun finding 215. (was:
+      `- [ ] [CODE] P2. Drop     "ODDS": "footystats" from UAC SPORTS_DATA_TYPE_TO_SOURCE (league_data.py:152); ODDS is not an IS data_type. Remove     the footystats ODDS capture path from the IS sports orchestrator (stop fetching odds into IS). Keep     "PREDICTIONS": "footystats".`)
+- [x] CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27 (decision #6 REVERSED, see
+      sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md L79-84) — do NOT execute; synced 2026-07-14,
+      verify-rerun finding 215. (was:
+      `- [ ] [DATA] P2. Wipe     the existing IS footystats ODDS (194,789 manifest rows + the 29,701 captured cells' GCS objects) — snapshot-first,     consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds source (211,299     captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch PREDICTIONS.`)
 - [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in
       `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md`
       (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).

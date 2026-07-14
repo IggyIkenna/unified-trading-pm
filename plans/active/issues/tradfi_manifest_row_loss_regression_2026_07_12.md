@@ -9,8 +9,16 @@ summary:
   4 (manifest rebuild) and calls into question every downstream gate that reads this manifest (task 2 orphan-sweep E=0,
   task 7 EU-seed, task 8 IS catalogue) since all were certified against a manifest that has since silently lost
   coverage.
-status: open
+status: resolved
 resolved_by:
+  "slot-7 (2026-07-12), closing the final [INFRA] P2 audit-logging todo — see Progress Log for the full multi-slot
+  resolution (slot-2/3/4/5/6/7/8/10): writer identified, root-caused via two independent mechanisms, both fixed
+  (unified-trading-library@cf2e196b + @2ba20527), deployed (Evidence: cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2,
+  SUCCESS), the 1,017,024-row loss restored (market-tick-data-service@6993ea39), task 2's orphan-sweep gate re-confirmed
+  (orphan_class_E=0), a row-count regression guard shipped (unified-trading-library@52d5921a), and GCS Data Access audit
+  logging enabled + verified (deployment-service@d677c1e). Flipped open→resolved 2026-07-14 per verify-rerun-2 finding
+  127 (was: status: open, resolved_by: empty — all 8 numbered Todos independently re-verified [x] with cited evidence
+  before this flip)."
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -455,7 +463,7 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       CAS-wrote the patched index (`if_generation_match`, succeeded on attempt 1 — no concurrent-cycle conflict), row
       count unchanged at 5,088,423 (pure value-correction, 0 inserts, confirming slot-8's "0 missing groups" finding,
       not slot-4's contradicting sample). **Verified two ways**: (1) a targeted spot-check of a known
-      cross-source-collision key (`CHD`/2024-08-08/NYSE/ohlcv_1m) — pre-write showed the wrong `massive`/`row_count=0`
+      cross-source-collision key (`CHD`/2024-08-08/NYSE/ohlcv*1m) — pre-write showed the wrong `massive`/`row_count=0`
       survivor, post-write shows the correct `databento`/`row_count=539` row, byte-identical to the pre-loss snapshot's
       real captured row; (2) a corpus-wide aggregate: `source='massive' AND row_count=0 AND capture_status='captured'`
       count dropped by exactly 138,589 (758,567 → 619,978) while `source='databento' AND capture_status='captured'` rose
@@ -464,8 +472,8 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
       it was OOM-risking the shared host a second time (44GB+ resident, host down to 602MB free, swap climbing to 10GB)
       and was killed; the two verifications above are direct, cheaper, and conclusive. **⚠️ FALSE-COMPLETION FLAGGED
       2026-07-12 (slot-8, historical):** backlog task `tradfi_manifest_row_loss_regression-003` (this exact todo) was
-      previously marked `status=done, dispatched_to=4, done_sha=2ba20527` — but `2ba20527` is slot-4's _second
-      root-cause_ commit (the `_get_canonical_mtime()` fix, already correctly credited above), NOT a restoration.
+      previously marked `status=done, dispatched_to=4, done_sha=2ba20527` — but `2ba20527` is slot-4's \_second
+      root-cause* commit (the `_get_canonical_mtime()` fix, already correctly credited above), NOT a restoration.
       Escalated as BLK-5a10e96a at the time; main confirmed genuine false-completion. That state is now superseded — the
       restore has genuinely happened, verified per above.
 
@@ -593,6 +601,17 @@ stays in place for future dispatch; this one run proceeded ahead of it under the
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-14** — Doc-reconciliation fixer (verify-rerun-2, finding 127). Frontmatter `status` was `open` with an empty
+  `resolved_by` (was: `status: open` / `resolved_by:` blank), contradicting this doc's own 2026-07-12 slot-7 Progress
+  Log entry below ("All todos on this issue are now `- [x]` ... this issue is ready to close."). Independently
+  re-verified before flipping — all 8 numbered items under `## Todos` are genuinely `[x]` ✅ with cited, dated evidence
+  (writer identification; two independently root-caused mechanisms; both fixes shipped
+  (`unified-trading-library@cf2e196b`/`@2ba20527`); deploy `Evidence: cloudbuild=ee78c203-bc43-442f-8761-bfd3b2e10db2`
+  SUCCESS; restore `market-tick-data-service@6993ea39`; orphan-sweep re-confirmation `orphan_class_E=0`; row-count
+  regression guard `unified-trading-library@52d5921a`; GCS Data Access audit logging executed + verified
+  `deployment-service@d677c1e`) — no genuinely-open todo found. Flipped `status: open` → `resolved`, filled
+  `resolved_by`.
 
 - **2026-07-12** — slot-7 (opus/high, infra), dispatched to `tradfi_manifest_row_loss_regression-001` (P2, enable GCS
   Data Access audit logging). Closed the last open todo on this issue — see the flipped checkbox above for the full
