@@ -126,3 +126,18 @@ the fix is in the deployed tarball) as a normal follow-up backfill pass.
       is always a bare `YYYY-MM-DD` with no tzinfo — NOT vulnerable. **Gate met**: audited all 7 sites; found + fixed 1
       additional real instance (the other 6 are safe by construction). No further sports-calculator instances of this
       exact pattern remain.
+
+## Progress Log
+
+### 2026-07-14T12:5x UTC — data_engineering slot-6 (Todo 2 dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 (identify + gap-fill pre-fix all-NaN cumulative-travel date-ranges) — still BLOCKED-PREREQ.** This todo's own
+text is explicit: "After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches completion".
+Checked `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s own Progress Log (dozens of prior `Todo 1`/`Todo 3`
+re-dispatch entries, most recent at 12:33 UTC) — Todo 1 is still `[ ]`, genuinely in-progress multi-day compute.
+Independently re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps; features bucket
+unique-date count **2,519** (up from 2,502 at the 12:33Z parent-plan check ~20 min earlier) — steady forward progress
+(~59.8% of ~4,210-day history), no stall, no crash. Identifying pre-fix all-NaN date-ranges before Todo 1 finishes would
+be premature (the affected-range boundary isn't stable until the full-history compute completes). Declining — no action
+taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
