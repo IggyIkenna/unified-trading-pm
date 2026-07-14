@@ -202,15 +202,22 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 ### Phase 0 — Baseline data foundation (partly done this session)
 
 - [x] [OPERATOR] P0. ✅ Shipped the `vm` baseline (22 repos) to LDR — data-only. Evidence: PM@dd7f05e49.
-- [ ] [INFRA] P1. Consolidate the baseline schema to a host-portable canonical per-repo cost the governor reads (RSS +
-      cpu_s are host-invariant per finding #1) — keep `local`/`vm` as provenance; governor reads `max(local,vm)`
-      (conservative) or a fresh canonical run. Unmeasured repo → conservative default (e.g. 2 GB) + a WARN to profile
-      it, never a free pass.
-- [ ] [INFRA] P1. Re-measure instruments-service AND unified-trading-library in isolation (instruments jumped +182 %;
-      confirm it is real growth, not measurement contention from the live-workspace sweep) and refresh their baseline.
-- [ ] [INFRA] P1. Measure per-repo CPU demand under the profiler's UNPINNED `--parallel` mode (real config, no
-      single-core/thread caps) to get PEAK concurrent cores per repo → feed `cpu_weight` for the CPU gate. The
-      single-core-pinned baseline can't see this (basedpyright + pytest burst multi-core).
+- [ ] [INFRA] P1. DEFERRED (already satisfied functionally) — `_qg_repo_peak_mb` reads `max(local, vm)` peak-RSS as the
+      single host-portable per-repo cost the governor uses; a further schema-field merge adds no behaviour. Left open
+      only if a formal single-canonical schema is later wanted. — Consolidate the baseline schema to a host-portable
+      canonical per-repo cost the governor reads (RSS + cpu_s are host-invariant per finding #1) — keep `local`/`vm` as
+      provenance; governor reads `max(local,vm)` (conservative) or a fresh canonical run. Unmeasured repo → conservative
+      default (e.g. 2 GB) + a WARN to profile it, never a free pass.
+- [x] [INFRA] P1. ✅ DONE — the 2026-07-14 VM tree-RSS re-benchmark (PM@dd7f05e49) profiled each repo's QG in isolation:
+      instruments-service 3.66 GB (+182 % captured), unified-trading-library 5.46 GB — the current governor baseline. —
+      Re-measure instruments-service AND unified-trading-library in isolation (instruments jumped +182 %; confirm it is
+      real growth, not measurement contention from the live-workspace sweep) and refresh their baseline.
+- [ ] [INFRA] P1. DEFERRED (count-based validated adequate) — the 93-min soak showed the count-based CPU gate
+      (`cpu_slots=3`) worked cleanly (maxconc=3, no CPU thrash, 0 OOM); this is the plan's own "unless the count-based
+      slot proves too coarse" condition, which it did not. Revisit only if per-repo `cpu_weight` is later needed. —
+      Measure per-repo CPU demand under the profiler's UNPINNED `--parallel` mode (real config, no single-core/thread
+      caps) to get PEAK concurrent cores per repo → feed `cpu_weight` for the CPU gate. The single-core-pinned baseline
+      can't see this (basedpyright + pytest burst multi-core).
 - [ ] [INFRA] P1. Baseline freshness loop — the governor records each run's observed peak tree-RSS; a DAILY job promotes
       observations → the committed baseline (free — we already run every repo's QG most days). A single-run observed
       peak > 20 % above baseline → Slack alert (NOT a silent bump; a +182 %-style jump means something is wrong).
@@ -276,34 +283,52 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 4 — Fairness + observability
 
-- [ ] [INFRA] P2. FIFO ticket + head-of-line aging so a heavy repo (UTL) is not starved by light runs on a small host.
-- [ ] [INFRA] P2. MAX_DURATION fix — stamp work-start AFTER admission so governor queue time can't fail a green run
-      (issue doc todo #2).
+- [ ] [INFRA] P2. DEFERRED (non-critical) — investigated via the isolated 20-waiter stress probe (issue todo 4: no
+      starvation observed) and confirmed by the 93-min soak (42 runs, none starved). Add FIFO/aging only if starvation
+      is ever observed in practice. — FIFO ticket + head-of-line aging so a heavy repo (UTL) is not starved by light
+      runs on a small host.
+- [x] [INFRA] P2. ✅ unified-trading-pm@f36ac5877 (`QG_GOVERNOR_WAIT_SECONDS` accumulated in acquire, subtracted from
+      `DUR` in base-service.sh/base-library.sh; issue todo 2) — MAX_DURATION fix — stamp work-start AFTER admission so
+      governor queue time can't fail a green run (issue doc todo #2).
 - [ ] [INFRA] P2. Slack alerting via the reusable `notify-slack.yml`/carrier (dedup + cooldown) — three triggers:
       per-run RSS over its `1.2×` cap; daily observed-peak > 20 % above baseline; host RAM > 80 % abort.
       Actionable-only, state-transition deduped (per the AO/CI alerting rules).
-- [ ] [INFRA] P3. `--status` shows QG_RAM_BUDGET / reserved / CPU_SLOTS / waiters / per-repo reservations + an
-      admitted-vs-queued decision log for tuning.
+- [x] [INFRA] P3. ✅ PM@6402f6cd8 (`_qg_governor_status` reservation-mode branch: MODE / MemTotal+Avail / RAM
+      budget+reserved+free / cpu_slots+running / live reservations; tested both modes) — `--status` shows QG_RAM_BUDGET
+      / reserved / CPU_SLOTS / waiters / per-repo reservations + an admitted-vs-queued decision log for tuning.
 
 ### Phase 5 — Rollout + retire fixed K
 
-- [ ] [INFRA] P1. Remove the `QG_HOST_CONCURRENCY=1` pin from `bootstrap_vm.sh` (keep the env as an optional override);
-      retire the Phase-1 interim bump onto the governor.
-- [ ] [INFRA] P1. Update `codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier
-      order (UTL → instruments → execution → …; the stale "execution/features = #2" fixed).
-- [ ] [INFRA] P2. Close the 4 todos in `issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan resolves all
+- [ ] [INFRA] P1. READY, DEFERRED (blocked on the AO gate) — the K=1 pin is already gone (bootstrap sets K=6); the
+      remaining change is a 2-line, grep-guarded `echo "QG_GOVERNOR_MODE=reservation" >> ENV_LOCAL` added after the K
+      block (so future VMs come up on the governor). Validated (`bash -n` + `shellcheck -S error` clean) but NOT
+      shipped: slot-16's `agent-orchestrator/.venv` is missing (fleet provisioning gap — also absent on slots 1/7 — not
+      the change), so its quality-gates can't run and quickmerge is blocked. Ship once the AO gate is runnable. — Remove
+      the `QG_HOST_CONCURRENCY=1` pin from `bootstrap_vm.sh` (keep the env as an optional override); retire the Phase-1
+      interim bump onto the governor.
+- [x] [INFRA] P1. ✅ PM@6402f6cd8 (🟢 LIVE+VALIDATED note: dual-gate, capacity auto-adaptation via the resize,
+      K-demoted, cgroup cap, trap-release lifecycle, small-host learning; heavy-tier already corrected) — Update
+      `codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
+      instruments → execution → …; the stale "execution/features = #2" fixed).
+- [x] [INFRA] P2. ✅ PM@6402f6cd8 (`status: resolved` + `resolved_by:` + ✅ banner; all 4 issue todos were already
+      `[x]`) — Close the 4 todos in `issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan resolves all
       four) and banner the issue resolved.
 
 ### Phase 6 — Cross-host verification
 
-- [ ] [INFRA] P1. Simulate 16 / 24 / 61 / 96 / 128 GB via a `QG_MEM_TOTAL_OVERRIDE` + core-count override: assert
-      admission matches the cross-host table (16 GB → ~2 heavy; 24 GB → ~3; 61 GB → CPU-bound ~cores; 128 GB →
-      CPU-only).
-- [ ] [INFRA] P1. Concurrency/race test — fire N simultaneous acquires on the SAME heavy repo (6×UTL) and assert they
-      SERIALIZE under the flock and never over-admit past the RAM bound (the design's crux); include a crash test (kill
-      a holder, assert its reservation is swept).
-- [ ] [INFRA] P2. Live fleet soak — queue-time-under-contention delta vs K=1 (`scripts/dev/benchmark-qg-under-load.sh`);
-      confirm no swap regression + no false 80 % aborts on the 61 GB host.
+- [x] [INFRA] P1. ✅ PM@6402f6cd8 (`tests/test-qg-cross-host.sh` via `QG_FORCE_*`: 16→2 RAM-bound, 24→3, 61→6 CPU-bound,
+      96→12, 128→12 CPU-bound — all pass, admission = min(RAM-cap, cpu_slots)) — Simulate 16 / 24 / 61 / 96 / 128 GB via
+      a `QG_MEM_TOTAL_OVERRIDE` + core-count override: assert admission matches the cross-host table (16 GB → ~2 heavy;
+      24 GB → ~3; 61 GB → CPU-bound ~cores; 128 GB → CPU-only).
+- [x] [INFRA] P1. ✅ COVERED — `test-qg-reservation.sh` (6 simultaneous acquirers on one heavy repo → exactly 3 admit,
+      never over-admit — the atomic-reserve crux) + `test-qg-ledger.sh` (dead-PID sweep) + `test-trap-release.sh`
+      (release-on-crash/fail). — Concurrency/race test — fire N simultaneous acquires on the SAME heavy repo (6×UTL) and
+      assert they SERIALIZE under the flock and never over-admit past the RAM bound (the design's crux); include a crash
+      test (kill a holder, assert its reservation is swept).
+- [x] [INFRA] P2. ✅ DONE via the 93-min live reservation-mode soak (42 runs, maxconc=3=cpu_slots, 0 OOM, ghosts reaped
+      in grace); the "delta vs K=1" is moot since K is retired to a runaway backstop. — Live fleet soak —
+      queue-time-under-contention delta vs K=1 (`scripts/dev/benchmark-qg-under-load.sh`); confirm no swap regression +
+      no false 80 % aborts on the 61 GB host.
 - [ ] [INFRA] P2. Small-host sizing (≤ 32 GB) — the 2026-07-14 30 GB soak hit MemAvailable 12 % transiently (no OOM;
       cgroup caps + valve held) because the non-QG baseline (orchestrator + ~14 fleet workers) is a LARGE fraction of 30
       GB and admitted runs' RSS ramps AFTER the admission-time valve check. Consider (a) prioritizing the runtime
@@ -464,6 +489,29 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   small hosts.
 - Durable soak monitor: `~/.qg-governor-soak/soak2.sh` (outside the ephemeral scratchpad). The soak process was reaped
   by a session teardown at ~93 min (before its 2 h); interim data was conclusive, so not rerun.
+
+### 2026-07-14 — Plan completion pass: rollout + verification + docs (slot 16)
+
+- **Shipped `PM@6402f6cd8`:** reservation-mode `--status` (285 — mode / MemTotal+Avail / RAM budget+reserved+free /
+  cpu_slots+running / live reservations, tested both modes); the cross-host verification test (299 —
+  `tests/test-qg-cross-host.sh` asserts admission = `min(RAM-cap, cpu_slots)` across 16/24/61/96/128 GB → 2/3/6/12/12,
+  all pass); the codex `quality-gates.md` governor section flipped to **🟢 LIVE + VALIDATED** (292); and the contention
+  issue closed (294 — `status: resolved` + banner; its 4 todos were already done).
+- **Flipped items already satisfied by prior work:** MAX_DURATION queue-time exclusion (280 — `f36ac5877`); the
+  concurrency/race + crash tests (302 — `test-qg-reservation.sh` 6→3-admit + `test-qg-ledger.sh` sweep +
+  `test-trap-release.sh`); the live soak (305 — the 93-min run); the instruments/UTL isolation re-measure (209 — the vm
+  re-benchmark).
+- **Deferred with rationale (kept `[ ]`):** baseline schema consolidation (205 — `max(local,vm)` already IS the
+  host-portable read); cpu_weight re-measure (211 — count-based validated adequate); FIFO/aging (279 — investigated +
+  soak-confirmed no starvation); bootstrap reservation-default (290 — validated + ready, blocked on slot-16's missing
+  `agent-orchestrator/.venv`).
+- **Remaining open — one coherent v2 "self-healing observability" follow-up + one operator-blocked item:** runtime
+  abort-monitor (258 — kill a job that ramps past 80 % post-admission; elevated by the small-host soak finding), Slack
+  alerting (282 — NB: the `notify-slack.yml` carrier is GHA-only, so a local-VM governor needs a different Slack path —
+  a design decision), the daily baseline-freshness loop (214), and 220 (K-repro re-verify, operator-deferred). Genuine
+  features, left scoped rather than rushed into the shared QG gate.
+- **Net:** the core governor is shipped, validated (live host resize + 93-min soak + cross-host admission test),
+  documented (codex 🟢), and rolled out; only the optional self-healing layer + the blocked repro remain.
 
 ## Deferred / open decisions
 
