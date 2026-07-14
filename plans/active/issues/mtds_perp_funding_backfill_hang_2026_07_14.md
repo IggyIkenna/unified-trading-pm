@@ -98,39 +98,90 @@ load conditions.
   while it makes zero progress. Worth considering a "no data-progress for N minutes while RUNNING" liveness check at the
   deployment-observability layer, not just per-VM crash detection.
 
+## Update — 2026-07-14 (slot-8) — CONFIRMED root cause (supersedes the missing-timeout hypothesis above)
+
+No SSH access to the live VM was available (same constraint as noted above), so confirmation was via a **local repro
+against the actual Kalshi public REST endpoints the collector calls** — `_perp_funding_kalshi_polymarket.py` issues
+plain unauthenticated GETs, so the exact request shapes are reproducible without the VM. Findings:
+
+1. **Every individual HTTP call the collector makes already has an explicit timeout and completes fast** — confirmed
+   `GET /markets?category=Crypto&limit=1000` (`_fetch_kalshi_perp_market_tickers`) returns in ~0.3-1.2s/page, and
+   `GET /markets/{ticker}/funding_rates` (`_fetch_kalshi_perp_funding_for_ticker`) returns a fast 404 (~0.3s) for every
+   ticker probed. **The missing-timeout hypothesis is ruled out** — no individual request blocks.
+2. **The real problem: `category=Crypto` on Kalshi's public `/markets` endpoint does not return the ~13 crypto perpetual
+   contracts (BTC-PERP/ETH-PERP/etc.) the collector's docstring describes — it returns thousands of unrelated
+   prediction-market tickers** (esports/politics/sports markets tagged `Crypto` for unrelated reasons, e.g.
+   `KXMVESPORTSMULTIGAMEEXTENDED-...`). Paginating 15 pages (15,000 tickers) found **zero** tickers containing `PERP`,
+   and the endpoint still had a `cursor` (more pages available) — `_fetch_kalshi_perp_market_tickers`'s loop caps at 50
+   pages × 1000 = **up to 50,000 tickers**, all irrelevant. Also checked `/series?category=Crypto` (254 series, zero
+   `PERP`-named) and a guessed `series_ticker=KXBTCPERP` (empty result) — **found no evidence Kalshi's public
+   `api.elections.kalshi.com` host exposes a crypto-perpetuals product at all**; it may live on a different host, need
+   different auth/whitelisting, or not exist yet as documented.
+3. **Compounding bug**: `_fetch_kalshi_perp_funding_for_ticker`'s retry loop does not distinguish permanent failures
+   from transient ones — a 404 (`not in _RETRYABLE`) still falls through to `resp.raise_for_status()` → `ClientError` →
+   caught by the generic `except (aiohttp.ClientError, OSError)` → retried up to `_MAX_RETRIES` (3) with exponential
+   backoff. Each irrelevant ticker therefore burns ~4 requests + ~7s of backoff sleep (~8s total) before giving up.
+4. **Net effect**: iterating the (up to 50,000, confirmed ≥15,000) irrelevant tickers in batches of 5
+   (`_COIN_BATCH_SIZE`) with a 1.0s inter-batch delay (`_BATCH_DELAY_SECONDS`), each ticker taking ~8s to fail via the
+   retry loop above, works out to **hours-to-days of wall-clock churn, not a true infinite block** — it just presents
+   identically to a hang because there is no per-ticker/per-batch progress logging (only a per-_date_ "collection
+   complete" line, which never fires because the ticker loop for that date hasn't finished). This also means the
+   original "add a timeout" fix (item 2 below, original text) **would not resolve this** — every call already times out
+   fine; the loop is just processing an enormous irrelevant list.
+
+**Revised recommendation**: item 2 below is superseded — the real fix needs (a) an operator/research decision on whether
+Kalshi's crypto-perpetuals product is reachable at all (different host? different auth?) before more collector work is
+invested, and (b) regardless of (a), a defensive fix so no future run can repeat a multi-hour churn: stop retrying
+non-retryable HTTP statuses (404 is permanent, not transient) in the retry loop, and add a sanity cap on
+`_fetch_kalshi_perp_market_tickers`'s result size (a real curated perp-contract list should be ~13 tickers, not
+thousands) that short-circuits to an honest failure/log instead of silently proceeding into the funding-rate loop.
+
 ## Recommended decision
 
-1. **Confirm the hang site** — a fix-worker with SSH/shell access to the live VM (or a local repro against
-   `kalshi_perp`'s collector module with `--start 2026-05-29 --end 2026-05-30`) should attach/thread-dump or add
-   targeted logging immediately before/after `kalshi_perp`'s live-fetch call to confirm it's the blocking site.
-2. **If confirmed**: add a request timeout (and a `SOURCE_UNREACHABLE`/`attempted_failed` fallback on timeout, mirroring
-   the existing `polymarket_perp` DNS-outage handling) to `kalshi_perp`'s collector so a slow/hanging upstream degrades
-   to an honest failure record instead of hanging the whole process indefinitely.
-3. **VM action** (infra-craft scope, not this session's): once fixed, relaunch `mtds-perp-funding-backfill` from
-   `--start 2026-05-29` (its manifest-gated idempotency will skip everything already captured through 2026-05-28) and
-   verify it progresses past 2026-05-29 without hanging, before resuming `mvp_backfill_defi_onchain_v10-002`'s G2
-   verification for this data_type.
-4. Consider whether other venues with mid-backfill-range genesis dates (any DeFi/CeFi venue, not just kalshi_perp) share
-   this same missing-timeout risk — worth a quick grep across venue collectors for calls without an explicit timeout
-   once this one is confirmed/fixed.
+1. ✅ **Confirm the hang site** — DONE (see Update above): NOT a missing-timeout hang; a broken/likely-nonexistent
+   ticker-discovery query causing catastrophic (thousands-to-tens-of-thousands ticker) sequential retry churn.
+2. **NEEDS OPERATOR DECISION**: is Kalshi's crypto-perpetuals product actually reachable via a documented endpoint
+   (different host/auth from `api.elections.kalshi.com`)? Until answered, item 2 below (the collector fix) cannot pick
+   the right target query — only the defensive guard (no-retry-on-404 + ticker-count sanity cap) can ship without this
+   answer.
+3. **VM action** (infra-craft scope, not this session's): kill/relaunch `mtds-perp-funding-backfill` is NOT recommended
+   until the defensive guard (item 2, revised) ships — otherwise a relaunch just repeats the same
+   multi-hour-to-multi-day churn on 2026-05-29 onward.
+4. Consider whether other venues share the same non-retryable-status-gets-retried bug pattern — worth a quick grep
+   across venue collectors' retry loops once this one is fixed.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Confirm the hang site: attach to (or locally repro) `kalshi_perp`'s live-fetch collector for its
+- [x] [BACKEND] P1. Confirm the hang site: attach to (or locally repro) `kalshi_perp`'s live-fetch collector for its
       2026-05-29 genesis date; identify the blocking call (network request without timeout, retry loop, or lock wait).
-      Repo: `market-tick-data-service`.
-- [ ] [BACKEND] P1. If confirmed as a missing-timeout network call: add an explicit timeout + honest
-      `SOURCE_UNREACHABLE`/`attempted_failed` fallback on timeout to `kalshi_perp`'s collector (mirror the existing
-      `polymarket_perp` DNS-outage handling pattern in the same file). Add a regression test pinning the timeout
-      behavior. Repo: `market-tick-data-service`.
-- [ ] [INFRA] P2. Once fixed, relaunch `mtds-perp-funding-backfill --start 2026-05-29 --end 2026-07-14` (manifest-gated,
-      skips already-captured dates) and verify it progresses past 2026-05-29 without hanging (T+10min real-progress
-      check, not just liveness) before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification for perp_funding.
-      Repo: `deployment-service`.
-- [ ] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for calls made without an explicit request timeout,
-      particularly around genesis-date transition logic (the `EXPECTED_PRE_VENUE_LAUNCH`-to-real-fetch boundary pattern)
-      — this hang's root cause, if confirmed, may recur wherever that pattern exists elsewhere. Repo:
-      `market-tick-data-service`.
+      Repo: `market-tick-data-service`. — ✅ CONFIRMED 2026-07-14 (slot-8, local repro against the live Kalshi public
+      API, no code changes needed to reproduce): NOT a missing-timeout hang — every individual HTTP call already times
+      out and completes in <1.5s. Root cause is `_fetch_kalshi_perp_market_tickers`'s `category=Crypto` filter matching
+      thousands of irrelevant non-perp tickers (confirmed ≥15,000, capped at 50,000) instead of the ~13 real perp
+      contracts, combined with the retry loop retrying permanent 404s — see "Update" section above for full evidence.
+- [ ] [BACKEND] P0. **Defensive guard (ships regardless of the endpoint-research answer below)**: in
+      `_fetch_kalshi_perp_funding_for_ticker`, do not retry non-retryable HTTP statuses (404 and anything else outside
+      `_RETRYABLE`) — fail fast on the first attempt instead of burning `_MAX_RETRIES` backoff cycles. In
+      `_collect_kalshi_perp`, add a sanity cap on the tickers list returned by `_fetch_kalshi_perp_market_tickers` (e.g.
+      warn + truncate or fail honestly if len(tickers) > ~100 — a real curated perp-contract list is ~13 tickers) so a
+      broken ticker-discovery query can never again cause multi-hour-to-multi-day churn. Add a regression test pinning
+      both behaviors. Repo: `market-tick-data-service`.
+- [ ] [BACKEND/RESEARCH] P1. **Endpoint research (needs operator input)**: determine whether Kalshi's crypto
+      perpetual-futures product (BTC-PERP/ETH-PERP/SOL-PERP/DOGE-PERP/~9 others per the module docstring) is reachable
+      via a documented public endpoint at all — `category=Crypto` and `series_ticker=KXBTCPERP` on
+      `api.elections.kalshi.com` both came up empty/irrelevant during this session's repro. If a real endpoint exists
+      (different host, different query params, or requires auth), rewire `_fetch_kalshi_perp_market_tickers` to it. If
+      it does not exist / requires credentials the workspace doesn't have, this is a `BLOCKED-CREDENTIALS` /
+      `BLOCKED-OPERATOR-DECISION` case per the workspace's "external data always available" rule — build/keep the
+      scaffold, flag status accordingly, do not silently descope. Repo: `market-tick-data-service`.
+- [ ] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
+      `mtds-perp-funding-backfill --start 2026-05-29 --end 2026-07-14` (manifest-gated, skips already-captured dates)
+      and verify it progresses past 2026-05-29 without hanging/churning (T+10min real-progress check, not just liveness)
+      before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification for perp_funding. Repo:
+      `deployment-service`.
+- [ ] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for retry loops that retry non-retryable HTTP statuses (the
+      same "any `ClientError` gets retried regardless of status" bug pattern found here) — this may recur wherever a
+      similar generic-except retry loop exists. Repo: `market-tick-data-service`.
 
 ## Evidence
 
@@ -144,3 +195,13 @@ load conditions.
   the ~17:00Z and 17:21:44Z checks (not preempted, not crashed).
 - `gcloud compute operations list` for this instance shows no `preempted`/kill event during the hang window (checked as
   part of confirming this is not the sibling `rc=137` OOM-kill pattern).
+- **2026-07-14 (slot-8) local repro** against the live public Kalshi API (`api.elections.kalshi.com/trade-api/v2`, same
+  host + params `_perp_funding_kalshi_polymarket.py` uses):
+  - `GET /markets?category=Crypto&limit=1000` — 15 consecutive pages fetched (15,000 tickers), all `status=active`, zero
+    contain `PERP` in the ticker, `cursor` still present (more pages available; loop caps at 50 pages = 50,000).
+  - `GET /markets/{ticker}/funding_rates` for a sampled ticker → `404` in ~0.34s (fast, not a hang at the request
+    level).
+  - `GET /series?category=Crypto&limit=1000` → 254 series, zero contain `PERP`.
+  - `GET /markets?series_ticker=KXBTCPERP` (guessed real perp series ticker) → empty `markets: []`.
+  - Conclusion: no evidence of a reachable crypto-perpetuals product on this host; the collector's ticker-discovery
+    query returns thousands of unrelated prediction-market tickers instead.
