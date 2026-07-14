@@ -80,8 +80,10 @@ provision only. No `os.getenv`; UTC datetimes; QG-green.
       GSI `status-index`, `deployment_registry_dynamodb_billing_mode` var PAY_PER_REQUEST/PROVISIONED); activation step
       documented in `codex/05-infrastructure/deployment-observability.md` § "AWS backend activation (deployment-registry
       DynamoDB)".
-- [ ] [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items. (No phase handoff — Phase 5 is gated on
-      Phase 3; this phase just needs to be done before Phase 5's scale test if you want DynamoDB in that test.)
+- [ ] [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off — activate
+      the final phase ONLY IF Phase 3 is already `complete`: set `deployment_registry_firestore_p5_verify_2026_07_14.md`
+      frontmatter `status: draft`→`active` and commit. If Phase 3 is not yet done, leave P5 `draft` — Phase 3's last
+      todo activates it (whichever of P3/P4 finishes last flips P5).
 
 ## Success criteria
 

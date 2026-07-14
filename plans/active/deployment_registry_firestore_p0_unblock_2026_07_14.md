@@ -93,8 +93,10 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       than leaving it `running`. Run `bash scripts/quality-gates.sh` green in BOTH deployment-api and
       unified-trading-library.
 - [ ] [INFRA] P0. Ship: commit + push deployment-api and UTL changes (cite `<repo>@<sha>` each) and flip this plan's
-      items with the `docs(plans):` prefix. Phase 1 is already `active`, machine-held by its `gate_on_depends` until
-      this plan's tasks are all done — do NOT hand-edit any sibling plan's status.
+      items (`docs(plans):`). THEN hand off (draft-gated chain): edit
+      `deployment_registry_firestore_p1_dualwrite_2026_07_14.md` frontmatter `status: draft`→`active` and commit
+      (`docs(plans):`), so the fleet ingests Phase 1. Activate ONLY the immediate next phase, nothing further
+      downstream.
 
 ## Success criteria
 

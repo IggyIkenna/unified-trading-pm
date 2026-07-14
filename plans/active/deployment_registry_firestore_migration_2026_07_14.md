@@ -5,9 +5,10 @@ summary:
   Design overview + phase index for migrating the deployment registry (heartbeat + lifecycle state, one JSON blob per VM
   under deployments/active/ in GCS) to Firestore. The GCS-object-per-VM read pattern does not scale — the inventory
   census must download+parse every blob within a 45s bound, so ~3k stale entries already make the prod Deployments tab
-  render empty. The migration splits into an AO phase-chain ordered by gate_on_depends (P0 unblock now, P1 dual-write,
-  P2 reader migration + partial-render decouple, P3 cutover + GCS decommission, P4 DynamoDB for AWS-readiness, P5 verify
-  at scale + codex). This doc is the non-dispatched index — the phase-plans below are the dispatched work.
+  render empty. The migration splits into a draft-gated AO phase-chain — only P0 active, P1-P5 draft, each activated by
+  the prior phase (P0 unblock now, P1 dual-write, P2 reader migration + partial-render decouple, P3 cutover + GCS
+  decommission, P4 DynamoDB for AWS-readiness, P5 verify at scale + codex). This doc is the non-dispatched index — the
+  phase-plans below are the dispatched work.
 status: active
 nature: design
 asset_group: [meta]
@@ -46,9 +47,10 @@ source: interactive session 2026-07-14 (operator + agent diagnosis of empty-inve
 # Deployment registry → Firestore migration (OVERVIEW + phase index)
 
 > **This is the non-dispatched design/index doc** (`assigned_vm: NA`, `execution_scope: local-only`). The dispatchable
-> work lives in the six phase-plans below (`assigned_vm: planning`), all `status: active` and machine-ordered by
-> `gate_on_depends`: P0 has no prerequisites so it dispatches immediately; every other phase is ingested but held until
-> its `depends_on` phase(s) finish. Fully autonomous — no operator gates; the irreversible GCS deletion is made safe by
+> work lives in the six phase-plans below (`assigned_vm: planning`), run as a **draft-gated chain**: only **P0 is
+> `active`** (dispatches now); **P1–P5 are `draft`** (NOT ingested) and each phase's LAST todo flips the next phase
+> `draft`→`active` once its work completes — so no downstream phase can be worked out of order (`gate_on_depends` alone
+> proved leaky). Fully autonomous — no operator gates; the irreversible GCS deletion is made safe by
 > snapshot-before-delete (recoverable), so no human sits in the loop.
 
 ## Problem
@@ -93,16 +95,16 @@ heartbeat
 - **History in docs, not data** — after decommission the GCS blobs are deleted; a codex note records the GCS→Firestore
   lineage.
 
-## Phase index (the dispatched work — all `active`, ordered by `gate_on_depends`)
+## Phase index (the dispatched work — draft-gated chain: only P0 `active`, P1–P5 `draft`)
 
-| Phase  | Plan                                                                                                | Role             | Model / effort     | Status     | Gate                                      |
-| ------ | --------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ---------- | ----------------------------------------- |
-| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md) | infra            | Sonnet / high      | **active** | none — dispatches immediately             |
-| **P1** | [p1 — Firestore writer + dual-write](deployment_registry_firestore_p1_dualwrite_2026_07_14.md)      | infra            | **Opus** / high    | active     | held until P0 · `sequential`              |
-| **P2** | [p2 — reader migration + decouple](deployment_registry_firestore_p2_readers_2026_07_14.md)          | backend-engineer | **Opus** / **max** | active     | held until P1 · ∥ P4 · `sequential`       |
-| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)           | backend-engineer | **Opus** / high    | active     | held until P2 · `sequential` (autonomous) |
-| **P4** | [p4 — DynamoDB (AWS-ready)](deployment_registry_firestore_p4_dynamodb_2026_07_14.md)                | infra            | Sonnet / high      | active     | held until P1 · ∥ P2/P3                   |
-| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)               | review           | Sonnet / high      | active     | held until P3 + P4                        |
+| Phase  | Plan                                                                                                | Role             | Model / effort     | Status     | Gate                                        |
+| ------ | --------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ---------- | ------------------------------------------- |
+| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md) | infra            | Sonnet / high      | **active** | none — dispatches immediately               |
+| **P1** | [p1 — Firestore writer + dual-write](deployment_registry_firestore_p1_dualwrite_2026_07_14.md)      | infra            | **Opus** / high    | **draft**  | activated by P0's last todo · `sequential`  |
+| **P2** | [p2 — reader migration + decouple](deployment_registry_firestore_p2_readers_2026_07_14.md)          | backend-engineer | **Opus** / **max** | **draft**  | activated by P1 (∥ P4) · `sequential`       |
+| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)           | backend-engineer | **Opus** / high    | **draft**  | activated by P2 · `sequential` (autonomous) |
+| **P4** | [p4 — DynamoDB (AWS-ready)](deployment_registry_firestore_p4_dynamodb_2026_07_14.md)                | infra            | Sonnet / high      | **draft**  | activated by P1 (∥ P2/P3)                   |
+| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)               | review           | Sonnet / high      | **draft**  | activated by P3 or P4 (last to finish)      |
 
 ## Migration invariants (hold across every phase)
 
@@ -143,3 +145,7 @@ heartbeat
   run.log forensic marker (separate, related). 2026-07-14 — all 6 phase-plans set `status: active` and machine-ordered
   via `gate_on_depends` (+ `sequential: true` on P1–P3) per operator instruction; P0 dispatches immediately, the rest
   are held until their prerequisites finish.
+- 2026-07-14 (correction) — `gate_on_depends` proved LEAKY: AO worker slot-11 worked a P4 task out of order (DynamoDB
+  provisioning before P1 exists, `eb2a87e56`). Switched P1–P5 to `status: draft` (ironclad not-ingested) + a draft-gated
+  handoff (each phase's last todo activates the next); removed P3's `[OPERATOR]` gates (snapshot-before-delete is the
+  safeguard, no human in the loop). Only P0 is dispatchable now (`4efa7502c` + this follow-up).

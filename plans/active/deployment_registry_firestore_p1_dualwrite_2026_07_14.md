@@ -98,8 +98,11 @@ UTC datetimes only. QG-green per repo before commit.
 - [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
       last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
-- [ ] [INFRA] P1. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). Phase 2 is already
-      `active`, held by `gate_on_depends` until this plan is done — do NOT hand-edit any sibling plan's status.
+- [ ] [INFRA] P1. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off — activate
+      BOTH downstream branches (they depend only on this phase and run in parallel): set
+      `deployment_registry_firestore_p2_readers_2026_07_14.md` AND
+      `deployment_registry_firestore_p4_dynamodb_2026_07_14.md` frontmatter `status: draft`→`active`, commit
+      (`docs(plans):`).
 
 ## Success criteria
 

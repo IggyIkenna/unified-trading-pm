@@ -94,8 +94,9 @@ untouched. No `raise` in per-row enrichment (best-effort). UTC datetimes; QG-gre
       inject a registry-read failure and assert rows STILL render with enrichment "—" (not an empty tab); (c) with 1k+
       synthetic Firestore docs the query path stays well under the 45s bound. `bash scripts/quality-gates.sh` green in
       deployment-api and UTL.
-- [ ] [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). Phase 3 is already
-      `active`, held by `gate_on_depends` until this plan is done — do NOT hand-edit any sibling plan's status.
+- [ ] [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off — set
+      `deployment_registry_firestore_p3_cutover_2026_07_14.md` frontmatter `status: draft`→`active` and commit
+      (`docs(plans):`) so the fleet ingests Phase 3 (the cutover). Activate ONLY Phase 3, nothing further.
 
 ## Success criteria
 

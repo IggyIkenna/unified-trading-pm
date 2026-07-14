@@ -84,9 +84,10 @@ QG-green per repo.
       VERIFY the copy succeeded, THEN delete the originals via `gcs_delete_object` (never gsutil/subprocess). Remove the
       dead GCS registry code paths (`ACTIVE_PREFIX`/`ARCHIVE_PREFIX` read/write/list in `deployment_registry.py`) — no
       shims. `bash scripts/quality-gates.sh` green.
-- [ ] [INFRA] P3. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). Phase 5 is already
-      `active`, held by `gate_on_depends` until this plan and Phase 4 are done — do NOT hand-edit any sibling plan's
-      status.
+- [ ] [INFRA] P3. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off — activate
+      the final phase ONLY IF Phase 4 is already `complete`: set `deployment_registry_firestore_p5_verify_2026_07_14.md`
+      frontmatter `status: draft`→`active` and commit. If Phase 4 is not yet done, leave P5 `draft` — Phase 4's last
+      todo activates it (whichever of P3/P4 finishes last flips P5).
 
 ## Success criteria
 
