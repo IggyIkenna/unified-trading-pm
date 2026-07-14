@@ -274,3 +274,27 @@ chase or relaunch.
 
 Not re-filing a duplicate `/blocked` (slot-14's structural-gate ask still stands unanswered; a 3rd ask adds no new
 information). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-15T00:0x UTC — data_engineering slot-2 (Todo 2 re-dispatch — 11th consecutive check; filed fresh `/blocked`, prior ones had cleared unanswered)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD. Non-snap
+`gcloud compute instances list` (`central-element-323112`, filtered `sport|features`): **zero** matching instances
+currently running — the backfill fleet is between relaunch cycles right now (consistent with slot-8's 23:3xZ note that
+the fleet gets repeatedly relaunched under rotating name patterns); whether that's a stall or a normal gap is the parent
+plan's concern, out of this todo's scope. Skipped the full bounded by-date GCS listing this dispatch — it timed out at 2
+min on `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=*/` (bucket has grown large enough
+that even a prefix-only listing is now expensive); not worth a second attempt given zero VMs are actively writing right
+now anyway.
+
+**Checked the live orchestrator state directly** (`GET /api/state`): `blocked_queue` is **empty** — slot-14's original
+`/blocked` ask (14:0xZ) is no longer in the queue (answered-and-cleared or expired, not visibly resolved in this doc's
+history) but `prerequisites` confirms the exact half-applied state slot-15/slot-8 diagnosed: the condition
+`sports-p2-todo1-2015-present-complete` DOES exist (`set_by: "main"`, `set_at: 2026-07-14T13:23:26Z`, `value: false`)
+but reads `gates_queued: 0` — meaning it is not attached to ANY task, confirming main created the condition (step 1 of
+RULES.md §4's park recipe) but never did the YAML attach (step 2: `prereqs.prerequisites` on this task's `backlog.yaml`
+entry) — genuinely a root-clone edit outside worker write scope. Filed a fresh `/blocked` (`BLK-a1781d76`, since the
+queue was empty — not a duplicate) spelling out the exact remaining fix for main: attach
+`prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` + `priority: 999` + `priority_override: true` to this
+task's backlog entry, `POST /api/backlog/reload`, and verify it survives the next regen tick (it has NOT survived twice
+so far). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
