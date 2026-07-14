@@ -497,9 +497,12 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
   `consolidated_sports_prediction_pipeline_2026_04_15` which isn't in `active/` (likely archived) — update to point at
   `predictions_canonical_question_group_polymarket_migration_2026_05_06`. `defi_strategies_phase2_2026_03_29`
   `depends_on:` `defi-instrument-pipeline-and-rewards` (itself superseded → transitively dangling).
-- **Removed-providers references** (Elysium / Bloxroute / Arkham / Pyth / Infura) appear in technical scope of
+- **Removed-providers references** (Elysium / Bloxroute / Arkham / Infura) appear in technical scope of
   `consolidated_defi_data_pipeline_2026_04_15`, `mev_protection_and_execution_enhancements_2026_04_01`,
-  `mempool_feed_integration_2026_06_01` — scrub or archive.
+  `mempool_feed_integration_2026_06_01` — scrub or archive. (was: this list also named "Pyth" as a removed provider to
+  scrub — wrong: Pyth was UNBANNED for Solana 2026-05-06 (Hermes batch + PythNet live), per `epics/defi_master.md:1692`
+  and the workspace CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry; dozens of active todos treat it as a live
+  provider. Removed from this scrub list. [SYNCED 2026-07-14, finding 218])
 
 ### Frontmatter discipline (systemic)
 

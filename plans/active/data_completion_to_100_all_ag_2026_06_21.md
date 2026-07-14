@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated: 2026-06-27
+last_updated: 2026-07-14 # (was: 2026-06-27 -- finding-160: stale vs the 2026-07-13 9-plan fold-in + this session's finding-158 sync)
 locked_by: live-defi-rollout
 locked_since:
 supersedes: path_to_100pct_backfill_mtds_is_2026_06_17
@@ -406,7 +406,10 @@ before raw is complete merges incomplete raw — gate it.
 Termination: per-AG MTDS honest-cov% → ~100% (modulo genuine `empty_confirmed` honest absence) AND ≥1 `live_<source>`
 row present per AG AND IS sports/tradfi v9 complete. Progress metric = per-AG captured-row count climbing + `live_*`
 rows appearing. Monitor re-checks the consolidated `_index` per AG each tick; relaunches any stalled/failed/terminated
-backfill VM; flat metric → diagnose (`run.log`), never spin. Excluded from 100%: cefi batch-Tardis historical (billing).
+backfill VM; flat metric → diagnose (`run.log`), never spin. Excluded from 100%: ~~cefi batch-Tardis historical
+(billing)~~ — LIFTED 2026-07-12 (operator ruling, finding 228); billing paid, unlimited access confirmed, the 1.72M-cell
+Tardis backfill is IN SCOPE + DISPATCHABLE (lease-mode smoke run started 2026-07-13; see P1 item ~L188-190). No
+exclusions remain in this loop's termination criteria. [SYNCED 2026-07-14, finding 158]
 
 ## Wave-1 verify findings (2026-06-21) — fix before the sharded fan-out
 

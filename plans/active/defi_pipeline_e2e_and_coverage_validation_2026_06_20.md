@@ -25,7 +25,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-last_updated: 2026-06-27
+last_updated: 2026-07-14 # (was: 2026-06-27 -- finding-51: stale vs the 2026-07-12 Phase-D gate REOPENED event + this session's finding-46 sync)
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -88,7 +88,11 @@ remaining lower-priority half.
       parquets (BTC/ETH/HYPE/SOL/TON × 319 days, 2025-05-01→2026-05-06); PACIFICA-SOLANA 1408 parquets (ETH/HYPE/SOL/XRP
       × ~310 days, 2025-07-01→2026-05-06). Both exceed minimum estimates (~370/~310 were calendar-day window counts;
       actual parquet counts are higher due to multi-symbol coverage). Data ends 2026-05-06 = day before VM launch,
-      confirming full-window backfill completion.
+      confirming full-window backfill completion. [SYNCED 2026-07-14, finding 46]: this ✅ verifies the VM reached final
+      state for its OWN designed backfill window (2025-05-01+ Lighter / 2025-07-01+ Pacifica) — it does NOT satisfy
+      `epics/defi_master.md`'s stricter Success-gate bar of 2024-08-01+/2025-06-01+ (epic row "Lighter / Extended /
+      Pacifica historical-replay backfill", ~L336), which remains unreconciled/unmet. Do not read this checkbox as
+      satisfying that epic-level gate.
 
 ## P2 — AMM golden-swap on-chain validation (execution-service)
 
