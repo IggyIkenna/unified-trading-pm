@@ -124,6 +124,39 @@ needs the same venue-naming-divergence fix (`AAVEV3-*` → `AAVE_V3-*` etc.) alr
 Investigation script (read-only, nothing written to GCS): scratchpad `defi_shape_b_reconcile.py`, raw results
 `run5.json`/`run100.json` (session-local, not committed).
 
+## 🟡 2026-07-14 (later same day) — the 45.2% "mismatch" figure above is very likely a comparison-methodology bug, not
+
+real content divergence
+
+Operator asked to see the actual shapes in question before deciding. Also confirmed the real path structure differs from
+how this doc describes it — both shapes live NESTED under the SAME `instrument_availability/by_date/day={D}/` prefix
+(`venue={V}/...` for flat, `pipeline_mode=batch_instruments_service/asset_group=defi/venue={V}/...` for hive), not as
+sibling top-level prefixes.
+
+Pulled the exact cited mismatch example (`day=2026-02-28`, `AAVE_V3-ARBITRUM`) directly: real, confirmed byte-level diff
+(flat 33,105 bytes / MD5 `e6b6294c` vs hive 32,425 bytes / MD5 `a39f8786` — genuinely different files). But a
+field-level diff of the 22 common rows found the ONLY differing columns are `pool_fee_tier` and `quote_asset_decimals`,
+and in every case the "difference" is `FLAT=None` vs `HIVE=nan` — **the same null value, serialized differently** (one
+side writes the column `object`-dtype with Python `None`, the other `float64`-dtype with `NaN`) — not a real content
+divergence. A null-aware re-comparison (treating `None`/`NaN` as equal) found **0 real field-level diffs** on this pair.
+
+Re-ran across a stratified sample (10 venues × 7 dates = 70 real pairs, not the original 2,911, but deliberately spread
+across every major protocol family and the full date range): 46 byte-identical, 24 byte-different — and **0 of those 24
+have any real (null-aware) field-level diff**. Every single byte-diff pair is the same None-vs-NaN serialization
+artifact. Dates from `2026-05-05` onward are byte-identical outright.
+
+**This strongly suggests the original 45.2%/1,315-row mismatch count (and by extension the "Combined implication"
+verdict above) is inflated or entirely explained by the same comparison bug** — not confirmed at the original's full
+sample size, so not overriding that finding outright, but strong enough evidence that the original number should NOT be
+trusted without a corrected re-run. **Recommended next step**: re-run the original 2,911-pair reconciliation with a
+null-aware comparator before any decision on shape authority — the real open question may turn out to be much smaller
+than 45%, or zero.
+
+**Separately, independent of the divergence question**: hive is a confirmed FROZEN snapshot (last real write 2026-06-29)
+while flat is live and current. Even if content never diverges historically, hive will always be silently absent/stale
+for anything after 2026-06-29 — `match_instruments_blob`'s hive-wins policy is still wrong for that reason alone,
+addressed separately below.
+
 ## 🔵 2026-07-14 — "dex-pool second-writer-path" is this SAME population, not a separate issue; root cause identified
 
 A separate scoping pass (started to size a suspected distinct ~100K-400K-object "second-writer-path" migration) found
