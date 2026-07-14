@@ -359,8 +359,25 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (86→0); 4 real-per-league `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` ODDS rows remain (a different, legitimate,
       normally-closeable gap — see Progress Log 2026-07-14 entry). `expected_unattempted` legitimacy not re-verified
       this pass (out of this dispatch's Part A/B scope).
-- [ ] [DATA] P2. **soccer_football_info (SFI_PROGRESSIVE_STATS): close the small residual.** 10 attempted_failed
-      (`phantom_captured_no_parquet_at_canonical_path`), 94 expected_unattempted (verify legitimate).
+- [x] ✅ [DATA] P2. **soccer_football_info (SFI_PROGRESSIVE_STATS): close the small residual.** — DONE 2026-07-14
+      (slot-5) — instruments-service@db2c3c22. Root-caused: the SFI top-level `except` handler (`sfi.py:616`) wrote a
+      blank-`league_id` date-aggregate `record_failed` row alongside the correct per-league failure loop. That blank row
+      is unsupersedable — the success path keys on a real canonical `league_id` and writes NO blank date-level row — so
+      it sat `attempted_failed` forever even after a later re-attempt captured every league (proven: the 2
+      `TimeoutError` blank rows were freshly written 2026-07-14 by the residual-closer through this exact path, yet
+      those dates' per-league rows self-healed to captured/empty_confirmed). Identical class to the footystats
+      PREDICTIONS + weather WEATHER fixes. **Code fix**: removed the blank-`league_id` `record_failed`, keeping only the
+      per-league loop (mirrors `footystats.py`); strengthened `test_match_descriptors_exception_writes_record_failed` to
+      reject any blank-`league_id` failed row. **Data reconcile**: extended
+      `sports_blank_league_orphan_reconcile_2026_07_14.py` `_TARGETS` with SFI + ran it against prod GCS —
+      `record_expected_empty(EXPECTED_REFDATA_CADENCE_CHANGE)` at each of the 10 blank orphan row_keys. Pre-reconcile
+      live probe confirmed all 10 orphan dates already carry the full 94 per-league rows (captured/empty_confirmed, 0
+      per-league failures) — the blank row masked no real gap. **Canonical index verified**
+      (`availability_index.parquet` direct read post-consolidation): SFI_PROGRESSIVE_STATS `attempted_failed` **10 →
+      0**; all 10 dates' blank rows now `empty_confirmed` / `EXPECTED_REFDATA_CADENCE_CHANGE`. **expected_unattempted
+      verified legitimate**: 122 EU rows (94 → 122, more trailing-edge dates), 100% dated 2026-07-13/14 — the documented
+      self-closing daily rolling edge, 0 historical backlog. QG green (`.qg_last_passed_sha`=82dba912
+      pre-quickmerge-amend); shipped via quickmerge --agent. See Progress Log entry below.
 - [ ] [DATA] P2. **transfermarkt (PLAYER_VALUES): verify clean.** 0 attempted_failed already; confirm the 47
       expected_unattempted is legitimate (likely off-season/no-transfer-window dates).
 - [x] [DATA] P2. **weather (open_meteo): close the small residual.** — ✅ DONE 2026-07-14 (sub-agent). Root-caused: all
@@ -474,6 +491,40 @@ report written in this plan's Progress Log.
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Progress Log
+
+- **2026-07-14 (slot-5) — SFI_PROGRESSIVE_STATS residual CLOSED (code fix + data reconcile).**
+  instruments-service@db2c3c22.
+  - **Root cause (code):** `sfi.py`'s top-level `except` handler (fetch of `get_match_descriptors_for_date`) wrote a
+    blank-`league_id` date-aggregate `record_failed` row (`row_key={"date","data_type":"SFI_PROGRESSIVE_STATS"}`) in
+    ADDITION to the correct per-league failure loop. The SFI success path (`record_captured`) keys on a real canonical
+    `league_id` and writes NO blank date-level row, so the blank `attempted_failed` row can never be superseded by a
+    later successful capture — it sits `attempted_failed` forever. This is the IDENTICAL anti-pattern already fixed in
+    `footystats.py` (PREDICTIONS) + `weather.py` (WEATHER) on 2026-07-14. Direct proof: the 2 `TimeoutError` blank rows
+    (2025-03-05, 2025-03-08) were freshly written 2026-07-14T12:36 by the residual-closer's re-attempt through this
+    exact handler, yet those two dates' 94 per-league rows show clean captured/empty_confirmed — the per-league rows
+    self-heal on re-capture, the blank row cannot.
+  - **Live pre-reconcile probe (all 10 orphan dates):** each date carries the full 94 per-league rows (empty_confirmed +
+    captured, 0 per-league failures) — the blank date-aggregate row is a pure redundant orphan masking no real gap. 8
+    rows tagged `phantom_captured_no_parquet_at_canonical_path`, 2 tagged `TimeoutError`; all 10 `league_id=None`.
+  - **Fix (code):** removed the blank-`league_id` `record_failed` from the `sfi.py` handler, keeping only the per-league
+    loop (mirrors `footystats.py:408`); strengthened
+    `TestFetchSfiData::test_match_descriptors_exception_writes_record_failed` to assert every `record_failed` row_key
+    carries a real `league_id` (rejects any blank date-aggregate row) across a 2-league expected set.
+  - **Fix (data):** extended `sports_blank_league_orphan_reconcile_2026_07_14.py` `_TARGETS` with
+    `(soccer_football_info, SFI_PROGRESSIVE_STATS)` and ran it against prod GCS
+    (`instruments-store-sports-prd-central-element-323112`): dry-run found exactly the 10 SFI orphans (0 footystats/
+    weather — already closed), apply wrote `record_expected_empty(EXPECTED_REFDATA_CADENCE_CHANGE)` at each blank
+    row_key. The live per-minute consolidator cron absorbed the per-VM shard into the canonical index (operator
+    directive honoured — consolidator NOT manually invoked).
+  - **Verification (canonical `availability_index.parquet`, direct read post-consolidation):** SFI_PROGRESSIVE_STATS
+    `attempted_failed` **10 → 0**; `empty_confirmed` 204,546 → 204,556 (+10); all 10 dates' blank rows now
+    `empty_confirmed` / `EXPECTED_REFDATA_CADENCE_CHANGE`. `expected_unattempted` = 122 (94 → 122, additional
+    trailing-edge dates), 100% dated 2026-07-13/14 — the already-root-caused self-closing daily rolling edge, 0
+    historical backlog → legitimate.
+  - **Ship:** QG green on committed tree (`.qg_last_passed_sha`=82dba912, pre-quickmerge-amend); quickmerge --agent
+    landed on live-defi-rollout as db2c3c22. Regression test passes. (Unrelated pre-existing QG `⚠️` warning:
+    market-tick-data-service `solana_defi_drift.py` adapter-contract baseline — a different repo, untouched by this
+    change, QG exit 0.)
 
 - 2026-07-13 (slot-3, interactive session): plan created under operator-directed `/autonomous` + Workflow dispatch,
   immediately following the understat completion in the same session. Baseline audit in §0 above. Model tier flagged
