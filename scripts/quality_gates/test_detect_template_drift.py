@@ -297,6 +297,14 @@ class TestCheckWorkflows:
         # a .yml.tmpl must be IGNORED (substituted per-repo, not byte-comparable)
         (tmpl_dir / "semver-agent.yml.tmpl").write_text("name: semver {{SUB}}\n")
         monkeypatch.setattr(mod, "WORKFLOW_TEMPLATE_DIR", tmpl_dir)
+        # This class exercises the actual byte-comparison logic on synthetic fixtures, which
+        # is orthogonal to the CI-noop short-circuit (`_check_workflows` returns early whenever
+        # GITHUB_ACTIONS/CI is set — see 4b0a6d6be). Running this suite itself inside GH Actions
+        # would otherwise make every case here hit the same no-op branch regardless of fixture
+        # content. That branch gets its own dedicated coverage in
+        # test_ci_env_short_circuits_to_noop_warn below.
+        monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+        monkeypatch.delenv("CI", raising=False)
         return tmpl_dir
 
     def _write_copy(self, workspace: Path, repo: str, name: str, content: str) -> None:
@@ -336,3 +344,18 @@ class TestCheckWorkflows:
         report = _check_workflows("not-checked-out", "service", tmp_repo)
         assert report.has_warnings and not report.has_errors
         assert any(i.check == "workflow-repo-absent" for i in report.items)
+
+    def test_ci_env_short_circuits_to_noop_warn(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """GITHUB_ACTIONS/CI set -> no-op warn, even for a repo with a genuinely differing copy.
+
+        Workflow-template parity is a local/full-workspace-host gate (live-branch checkouts);
+        PM CI assembles dep-clone siblings at a release tag, so byte-drift there is a stale-tag
+        artifact, not a real violation (4b0a6d6be). This asserts the short-circuit fires and
+        preempts the normal byte-comparison this class otherwise exercises.
+        """
+        self._setup(tmp_repo, monkeypatch)
+        self._write_copy(tmp_repo, "svc", "tab-mirror-to-ldr.yml", "name: tab-mirror\non: {push: {}}\n# HAND EDIT\n")
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        report = _check_workflows("svc", "service", tmp_repo)
+        assert report.has_warnings and not report.has_errors
+        assert any(i.check == "workflow-drift-ci-noop" for i in report.items)
