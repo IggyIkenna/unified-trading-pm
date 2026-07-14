@@ -60,12 +60,25 @@ running VM / watcher / daily audit
        └─ alert_subscriber               # alerting-service subscribes the topic
             └─ router.route_event()       # fnmatch rule → channels + severity   (rules/data_pipeline_rules.py)
                  ├─ data_pipeline_slack   # mirror to #data-pipeline-alerts  (verbose)
-                 ├─ incident gateway       # dedup / ack / re-nag / recovery-verify  (CRITICAL only)
+                 ├─ incident gateway       # dedup / ack / re-nag / recovery-verify  (execution/strategy incidents only — see caveat below)
                  └─ escalation             # auto-recover  ▸  file plans/active/issues/<slug>_<date>.md  ▸  page
 ```
 
+> **Wiring caveat (found 2026-07-15, `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`):** the
+> "incident gateway" box (`IncidentStateMachine`/`RecoveryVerifier`/`gateway/dedup.py`) is reached ONLY via
+> `route_legacy_alert()` → `route_incident()`, keyed on `service/component/problem_type/strategy_id/venue/instrument_id`
+> — a scope tuple used for execution/strategy incidents, NOT the DP_\* family. `_route_data_pipeline_event` mirrors
+> DP_\* events to Slack + fires PagerDuty/Telegram directly and returns, bypassing the gateway entirely. DP_\* CRITICAL
+> events instead rely on `router.py`'s generic `AlertDeduplicator` (`ttl_seconds=60.0` default) plus a per-event
+> cooldown map (`_RECURRING_ALERT_COOLDOWNS`, event → cooldown seconds, ≥ that event's detector cadence) for any event
+> that opts in — e.g. `DP_RUN_MOSTLY_EMPTY` at 1800s. An event NOT in that map still only gets the 60s default dedup,
+> which does not bridge a `*/15`-or-slower detector cadence — a re-scanned-every-tick CRITICAL alert not yet in the map
+> will still repeat on every detector tick. Either wire DP_\* through the real incident gateway, or treat the cooldown
+> map as the DP_\* family's de facto dedup layer and keep it current as new manifest-scan-derived CRITICAL alerts are
+> added.
+
 - **Severity → routing** (mirror agent-orchestrator/CI): `INFO` = channel only; `WARN` = channel + dedup; `CRITICAL` =
-  channel + PagerDuty/Telegram + incident gateway (ack SLA + re-nag + recovery-verify).
+  channel + PagerDuty/Telegram, deduped via the cooldown-map mechanism above (not the incident gateway — see caveat).
 - **Escalation tiers** (mirror CI-failure-watcher's auto-recover-vs-escalate):
   1. **auto-recover** — deterministic, in-band (e.g. consolidator restart, key-pool rotate, stale-shard re-merge).
   2. **file issue** — a non-empty deterministic candidate list auto-files `plans/active/issues/<slug>_<date>.md` and
