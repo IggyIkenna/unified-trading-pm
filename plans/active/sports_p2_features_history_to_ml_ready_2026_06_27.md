@@ -138,6 +138,60 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 21:02 UTC — data_engineering slot-4 (Todo 1 re-dispatch — followed up on the prior entry's self-correction: MANIFEST-verified (not GCS-listing) the flagged 2018-07-09→2019-08-11 gap is genuine, launched a gap-fill VM for it; confirmed 2 more shards completed cleanly; checkbox NOT flipped)
+
+**Todo 1 (compute features 2015→present) — real forward action taken, following up on the prior dispatch's explicit
+self-correction. Checkbox NOT flipped (compute still genuinely in progress).**
+
+**Fleet check**: `gcloud compute instances list` showed only **1** VM running (`-201910`, the 2015-01-01→2017-02-01
+gap-fill from the prior dispatch) — the other 2 tracked VMs (`-085642`, `-085726`) were gone. Confirmed CLEAN completion
+via GCE audit log: both deletions (20:14-20:16Z) attributed to their own compute service account
+(`…-compute@developer.gserviceaccount.com`), matching the established self-delete-on-completion pattern, not a crash or
+another slot's action.
+
+**Verified `-201910`'s progress is real but low-value, confirming the prior entry's suspicion**: SSH'd in (process
+`features_service` at 34% CPU, genuinely running, not stuck) and tailed its actual `run.log` (at
+`gs://deployment-scripts-.../vm-logs/<vm>/run.log` — the GCS-hosted path, not serial console). Sampled ~22k log lines:
+9,503 `SKIP … manifest shows prior captured/empty` lines, **0** write/computed lines, spanning 2015-01-01 through
+2016-07-13 in ~35 min — i.e., 100% of what it's covered so far is already-manifest-attempted honest-absence (mid-summer
+off-season dates, 17/17 reference entities missing = genuinely no upstream data). This is exactly what the prior entry's
+self-correction predicted: cheap to finish (fast-skip), but not moving real coverage. Not killed — it's cheap and might
+still find a genuine gap in the tail of its range; no reason to intervene on a healthy, low-cost VM.
+
+**Addressed the prior entry's explicit handoff — verify the 2018-07-09→2019-08-11 candidate via the MANIFEST, not a
+`by_date/` listing diff, before launching**: ran
+`check_pipeline_completeness.py --start-date 2018-07-09 --end-date 2019-08-11 --services features-sports-service` (reads
+`read_availability_index()` — one manifest parquet read, not a GCS walk). Result: **0/399 dates present** — genuinely
+zero manifest rows for this entire span (contrast with the 2015-2017 range, where `-201910`'s log shows manifest rows DO
+exist for honest-absence dates — "prior captured/empty"). Zero manifest rows = never attempted, confirming this
+candidate (unlike the 2015-2017 one) is a REAL, actionable gap.
+
+**Action taken**: launched
+`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2018-07-09 --end-date 2019-08-11 --mode batch --operation compute --launch-mode full`.
+First attempt failed before VM creation (local snap-confine permission error from the launcher shelling out to a
+snap-packaged `gcloud`/`gsutil`); retried with `/home/ubuntu/google-cloud-sdk/bin` prioritized in `PATH` (the non-snap
+install every prior dispatch in this log already uses for its own `gcloud`/`gsutil` calls) — succeeded cleanly. New VM:
+**`features-sports-sports-20260714-210122`** (SPOT, RUNNING, `asia-northeast1-c`, launched 21:01:28Z). All 5 code
+tarballs reported fresh (no stale-tarball risk this launch, unlike the prior dispatch's `-201910`). No-fire-and-forget
+check passed: instance RUNNING within seconds, `vm-setup.log` progressing through package install ~40s post-SSH.
+
+**What I did NOT do**: did not touch `-201910` (healthy, cheap, no reason to kill). Did not re-run
+`check_pipeline_completeness.py` for the small 1-6 day scattered gaps noted in the prior entry (still lower priority,
+likely honest-absence, not worth the compute-cost check yet). Did not flip Todo 1 (compute still genuinely in progress —
+fleet is 2 VMs, one confirming honest-absence cheaply, one attacking a manifest-verified real gap).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,866 — should
+start climbing meaningfully once `-210122` gets into its assigned range, since that range is a genuine gap rather than
+honest-absence). Verify `-210122` is making real progress (its `run.log` should show non-SKIP writes, unlike
+`-201910`'s). Once either VM completes and frees capacity, use `check_pipeline_completeness.py` (manifest-based, NOT a
+`by_date/` listing diff — this dispatch's method, now proven) to find and confirm the next genuine gap before launching
+further capacity.
+
+No repo code commit this entry (VM launch + read-only manifest/serial/SSH verification only, no code changed); this
+plan-doc edit ships via the `docs(plans):` carve-out. This dispatch's `done_definition` ("checkbox flipped in plan +
+code shipped") isn't met — `/skip-current-task` follows per this task's established convention.
+
 ### 2026-07-14 20:15 UTC — diagnosis agent (GW recompute per-league-shape suspicion → VERDICT: shape CANONICAL, no defect, no redo; real gap is ml-service reader; ML-readiness re-verify RUN — gate NOT met on odds)
 
 **Dispatched off the loop's 17:xx suspicion that the recompute wrote a divergent per-league/numeric-id shape.
