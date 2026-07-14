@@ -1153,3 +1153,12 @@ scoped + launched correctly — there is no bug to fix or launch to make until t
 not met yet). Handing off with the fleet verified healthy and progressing; next session should re-check
 `gcloud compute instances list --filter='name~af-backfill'` — once all 5 have self-deleted
 (`VM_SHUTDOWN_ON_COMPLETION=true`), run the manifest-rescan + GW gate query per session 20's own next-step note above.
+
+**Immediately re-dispatched to the next todo** (full-history enrichment phase) by the queue in the same turn. That
+todo's own text is explicit: "**after the GW gate above is GREEN**" — and the GW gate (this todo, directly above) is NOT
+green yet (same fleet, same ~35-65min remaining). Launching a second, full-history-scoped `af-backfill-*` fleet now
+would violate the plan's own golden-window-first sequencing (session 20's explicit design choice) and risks the two
+fleets competing for the shared api_football per-key rate budget the registry allocator assumes is scoped to one active
+wave. **Declined to start** — no launch made, no code touched. This is a genuine prereq-not-met (not a blocked
+question): the dispatcher handed it over without a wired gate-condition check between these two todos; deferring is the
+correct call per the todo's own stated sequencing, not a judgment call needing operator input.
