@@ -138,6 +138,52 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 22:28 UTC — data_engineering slot-10 (Todo 1 re-dispatch — all 3 tracked VMs failed IDENTICALLY at startup due to a transient stale manifest-consolidator heartbeat, correctly fail-fast; consolidator confirmed recovered; relaunched all 3 ranges; checkbox NOT flipped)
+
+**Fresh-pulled all 24 slot repos clean.** Followed the 21:52Z entry's explicit handoff: checked
+`gcloud compute instances list` for the 3 tracked VMs (`-210122`, `-211514`, `-215235`) — **none were present**, all
+gone within the same ~90s window (22:09:15Z–22:10:36Z).
+
+**Root-caused via each VM's GCS `run.log` (not just "gone = done" assumption)**: all 3 failed identically —
+`"[HIGH] application error in features-service.compute_features: Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112': consolidated _index/availability_index.parquet heartbeat is 136s old (> 120s budget) while per-VM shards exist... do NOT fall back to the per-VM merge (can OOM on large buckets)"`
+— exit_code=1, self-deleted. This is the startup gate's CORRECT fail-fast behavior (matches
+`codex/05-infrastructure/manifest-consolidator-ssot.md`: consolidator loud-fails on stale index, never silently
+degrades) — none of the 3 VMs did any real compute work before failing, so nothing was lost, but nothing progressed
+either. All 3 died within the same ~90s window, strongly suggesting a shared transient consolidator-heartbeat blip
+(likely a Cloud Scheduler cycle gap), not 3 independent failures.
+
+**Verified the consolidator has since recovered** before relaunching (not assumed): `gsutil stat` on
+`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` showed
+`Update time: Tue, 14 Jul 2026 22:26:18 GMT` — fresh (11s old at the 22:26:29Z check), confirming this was transient and
+has resolved.
+
+**Relaunched all 3 previously-assigned ranges** (same launcher, `--skip-existing` means already-captured dates cost
+nothing):
+
+- `launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2018-07-09 --end-date 2019-08-11 --mode batch --operation compute --launch-mode full`
+  → **`features-sports-sports-20260714-222717`** (SPOT, RUNNING).
+- `--start-date 2020-03-07 --end-date 2020-10-05` → **`features-sports-sports-20260714-222750`** (SPOT, RUNNING).
+- `--start-date 2025-08-11 --end-date 2026-07-13` → **`features-sports-sports-20260714-222815`** (SPOT, RUNNING).
+
+Each launch flagged 2 stale tarballs (market-tick-data-service, unified-trading-library) — inspected both commit ranges
+directly (`git log`/`git diff --stat`) before accepting: MTDS's range was a single Dockerfile base-image digest bump (no
+functional change), UTL's range was pure merge/promote commits with an EMPTY diff — both confirmed zero-risk, not
+touching the sports compute/manifest-write path. No-fire-and-forget check passed: all 3 confirmed RUNNING via
+`gcloud compute instances list` immediately after launch and again ~1min later.
+
+**Verdict: real forward action taken, root cause diagnosed (transient infra blip, not a code defect), all 3 gaps
+relaunched.** Checkbox NOT flipped — compute still genuinely in progress (relaunched, not yet completed). No code change
+needed/shipped (the fail-fast behavior that caused the failure is itself correct per the consolidator SSOT; the root
+cause was the consolidator's own transient staleness, which self-resolved). This plan-doc edit ships via the
+`docs(plans):` carve-out.
+
+**Handoff for the next dispatch**: verify all 3 relaunched VMs (`-222717`, `-222750`, `-222815`) are making real
+progress (non-SKIP calculator-write lines in their GCS `run.log`s) rather than repeating the same consolidator-down
+failure — if ANY repeats the identical `Manifest consolidator appears DOWN` error, that's a recurring/systemic
+consolidator health issue worth escalating (Cloud Run Job + Scheduler check), not just another transient blip. Re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (was 2,881 at the 21:52Z
+entry) for forward progress.
+
 ### 2026-07-14 21:52 UTC — data_engineering slot-5 (Todo 1 re-dispatch — verified 2 existing gap-fill VMs healthy with genuine progress; MANIFEST-verified a new real gap in the previously-untouched 2025-08-11→2026-07-13 range and launched a gap-fill VM for it; checkbox NOT flipped)
 
 **Todo 1 (compute features 2015→present) — real forward action taken. Checkbox NOT flipped (compute still genuinely in
@@ -3204,3 +3250,18 @@ eligible) so this session moves to different available work instead of re-runnin
   same tick: odds event_id vs fixture_id join-key mismatch drops all odds columns from the assembled ML matrix (agent
   running). Enrichment fleet 4 VMs RUNNING (shards mtime-live 21:44Z); pre-2025 sweep process ALIVE (still scanning, no
   adjudication CSVs yet).
+- 2026-07-14 22:3xZ (odds join-key fix agent): **odds event_id↔fixture_id mismatch FIXED — odds columns now join the
+  assembled ML matrix** — ml-service@5ee0a8e. Root semantics proven on real day=2025-10-20 parquets: odds `event_id` is
+  the RAW the-odds-api 32-hex event id (MDPS `bucket_assignment_adapter.py:187-188` renames raw `event_id`→`fixture_id`;
+  the FSS odds exporter pivots it back out as `event_id`) — ZERO value overlap with the af numeric `fixture_id` the
+  other groups carry, and no crosswalk column exists in any features frame. Fix = deterministic merge-time 3-hop
+  crosswalk in the ml-service loader (MDPS bucketed shards' od team spellings → IS `odds_api_team_mapping.parquet` →
+  sibling frame team-id pair → fixture_id), exact-equality joins ONLY, unmapped events dropped with a logged count
+  (honest absence, never fuzzy). Real-bucket proof: merged matrix 24×870 (was 24×728), odds coverage on 13/24 fixtures
+  (implied-prob/vig/best-odds 13 non-NULL each) — exactly the mappable set; sole gap = 'Burgos CF' absent from the IS
+  team mapping (P3 coverage todo filed on the layout issue doc, instruments-service scope). QG green, 7 unit tests
+  added; issue-doc P2 checkbox flipped. Exporter atom UNCHANGED — no recompute of any historical odds parquet needed.
+- 2026-07-14 22:5xZ (autonomous tick 4): odds join-key fix SHIPPED (ml-service@5ee0a8e — deterministic 3-hop crosswalk,
+  merged matrix 24x870 with odds columns live, promote PR#248 auto-merge armed; details in the 22:3xZ entry + issue
+  doc). The assembled sports ML matrix now works end-to-end (loader trio + join). 68.6%-cluster P2 diagnosis DISPATCHED
+  (idle loop capacity while fleets grind). Enrichment fleet + pre-2025 sweep unchanged-healthy.
