@@ -580,3 +580,16 @@ acquisition observed, no lock 403s) via a REAL production wave rather than a syn
 `[DATA] P1` G4 re-measurement once real waves have run long enough to accumulate a post-fix af census — the lock
 mechanism itself is now production-verified. Pilots 1/2's all-skip failures were the (now-RESOLVED) instrument-
 resolution P0, not the lease.
+
+---
+
+## RECURRENCE — 2026-07-14T02:00Z: BITGET-FUTURES 6-VM wave launched WITHOUT the lease, all 6 failed
+
+The 2026-07-13T23:15Z BITGET-FUTURES relaunch (`cefi-bitget-futures-{2024,2025,2026}-{heavy,light}-20260713-231539`, G4
+Re-Verification Run #5 in `mvp_backfill_cefi_tick_v10_2026_06_27.md`) ran 6 parallel VMs with the lease NOT enabled
+(default-OFF) — every shard churned `Tardis HTTP 403 code=274 concurrent-IP-lock`, hit the 1800s no-progress stall
+watchdog, exited `DEPLOYMENT_FAILED exit_code=137`, and self-deleted. Full evidence in that plan's 2026-07-14T02:00Z
+CORRECTION entry. This is a process regression (parallel multi-VM launch without the lease), NOT a lease-mechanism
+failure — the lease remains production-verified per the entry above. Follow-up hardening candidate: the launcher should
+refuse (or force-serialize) >1 concurrent VM for Tardis-sourced venues unless the lease env is explicitly enabled, so
+this shape can't be launched by accident a third time. — doc-reconciliation close-out check, 2026-07-14

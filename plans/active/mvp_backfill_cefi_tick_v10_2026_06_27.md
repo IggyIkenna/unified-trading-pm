@@ -26,7 +26,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-last_updated: 2026-06-27
+last_updated: 2026-07-14 # (was: 2026-06-27 — bumped with the BITGET-FUTURES wave failure correction entry)
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
@@ -2081,3 +2081,29 @@ root-caused, and fixed; the session's own mistakes — wrong root-cause diagnosi
 caught, corrected, and documented rather than papered over) but the gate is large enough that full closure spans
 multiple sessions, consistent with every prior "G4 Re-Verification Run #N" entry in this plan's history. Handing off
 cleanly here.
+
+---
+
+### CORRECTION — BITGET-FUTURES 6-VM wave FAILED on Tardis concurrent-IP lockout — 2026-07-14T02:00Z (doc-reconciliation close-out check)
+
+The 23:00-23:22Z entry above left the 6 BITGET-FUTURES shards as "actively fetching — continuing to monitor". **Actual
+outcome: all 6 failed and self-deleted.** Run-log evidence
+(`gs://deployment-scripts-central-element-323112/vm-logs/cefi-bitget-futures-{2024,2025,2026}-{heavy,light}-20260713-231539/run.log`):
+
+- 3 shards (2024-heavy, 2025-light, 2026-light) show explicit terminal
+  `DEPLOYMENT_FAILED cause=stall reason=WORKER_STALLED mode=no-progress-marker stalled_for=1800` with `exit_code=137`
+  (deployment archive ids `3367691e`, `39dbb6f3`, `73d73b87`), followed by `VM_SHUTDOWN_ON_COMPLETION` self-delete.
+- The other 3 (2025-heavy, 2026-heavy, 2024-light) have log tails mid-churn on the SAME failure signature and the VMs
+  are gone from `gcloud compute instances list` (not even TERMINATED) — same stall→self-delete path, final log lines
+  just not uploaded.
+- Failure mode on every shard: `Tardis HTTP 403 code=274 concurrent-IP-lock` on effectively every streaming request —
+  **6 parallel VMs = 6 concurrent IPs against the single-concurrent-IP academic key**, the exact class documented in
+  `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` and the reason `TardisConcurrencyLease` exists and
+  the operator ruled "lease-only, slow burn" (single-VM / serialized shape). Some early requests before mutual lockout
+  may have landed rows; coverage delta unmeasured this check (next `measure_honest_coverage.py` run will show it).
+
+**Directive for the relaunch (do NOT repeat the parallel shape):** ONE VM at a time (or lease-serialized) for all
+Tardis-sourced venues — a single large VM gets one IP and can still parallelize intra-VM across symbol/day streams
+without tripping the per-IP lock. Relaunch decision deliberately left to the operator/owning lane rather than fired
+autonomously here, because the 23:22Z entry also records backfill launches as gated on the P0 migration collision.
+Operator has been notified via the doc-reconciliation session report.
