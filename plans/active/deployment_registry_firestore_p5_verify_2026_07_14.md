@@ -6,7 +6,7 @@ summary:
   render staying under budget, a recorded heartbeat-cadence cost recommendation — then close the loop in the docs by
   updating the deployment-observability codex SSOT with the Firestore-registry contract, the GCS-to-Firestore lineage
   note, and the DynamoDB backend-swap note, plus the CLAUDE.md one-liner.
-status: active
+status: draft
 nature: process
 asset_group: [meta]
 stage: [meta]

@@ -48,7 +48,8 @@ source: interactive session 2026-07-14 (operator + agent diagnosis of empty-inve
 > **This is the non-dispatched design/index doc** (`assigned_vm: NA`, `execution_scope: local-only`). The dispatchable
 > work lives in the six phase-plans below (`assigned_vm: planning`), all `status: active` and machine-ordered by
 > `gate_on_depends`: P0 has no prerequisites so it dispatches immediately; every other phase is ingested but held until
-> its `depends_on` phase(s) finish. Irreversible steps (prod cutover, GCS deletion) are `[OPERATOR]` gates.
+> its `depends_on` phase(s) finish. Fully autonomous — no operator gates; the irreversible GCS deletion is made safe by
+> snapshot-before-delete (recoverable), so no human sits in the loop.
 
 ## Problem
 
@@ -94,20 +95,21 @@ heartbeat
 
 ## Phase index (the dispatched work — all `active`, ordered by `gate_on_depends`)
 
-| Phase  | Plan                                                                                                | Role             | Model / effort     | Status     | Gate                                              |
-| ------ | --------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ---------- | ------------------------------------------------- |
-| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md) | infra            | Sonnet / high      | **active** | none — dispatches immediately                     |
-| **P1** | [p1 — Firestore writer + dual-write](deployment_registry_firestore_p1_dualwrite_2026_07_14.md)      | infra            | **Opus** / high    | active     | held until P0 · `sequential`                      |
-| **P2** | [p2 — reader migration + decouple](deployment_registry_firestore_p2_readers_2026_07_14.md)          | backend-engineer | **Opus** / **max** | active     | held until P1 · ∥ P4 · `sequential`               |
-| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)           | backend-engineer | **Opus** / high    | active     | held until P2 · `[OPERATOR]` gates · `sequential` |
-| **P4** | [p4 — DynamoDB (AWS-ready)](deployment_registry_firestore_p4_dynamodb_2026_07_14.md)                | infra            | Sonnet / high      | active     | held until P1 · ∥ P2/P3                           |
-| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)               | review           | Sonnet / high      | active     | held until P3 + P4                                |
+| Phase  | Plan                                                                                                | Role             | Model / effort     | Status     | Gate                                      |
+| ------ | --------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ---------- | ----------------------------------------- |
+| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md) | infra            | Sonnet / high      | **active** | none — dispatches immediately             |
+| **P1** | [p1 — Firestore writer + dual-write](deployment_registry_firestore_p1_dualwrite_2026_07_14.md)      | infra            | **Opus** / high    | active     | held until P0 · `sequential`              |
+| **P2** | [p2 — reader migration + decouple](deployment_registry_firestore_p2_readers_2026_07_14.md)          | backend-engineer | **Opus** / **max** | active     | held until P1 · ∥ P4 · `sequential`       |
+| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)           | backend-engineer | **Opus** / high    | active     | held until P2 · `sequential` (autonomous) |
+| **P4** | [p4 — DynamoDB (AWS-ready)](deployment_registry_firestore_p4_dynamodb_2026_07_14.md)                | infra            | Sonnet / high      | active     | held until P1 · ∥ P2/P3                   |
+| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)               | review           | Sonnet / high      | active     | held until P3 + P4                        |
 
 ## Migration invariants (hold across every phase)
 
 - Never a flag-day — dual-write outlives the last reader; every reader cutover is Firestore-first with a LOUD GCS
   fallback.
-- Irreversible steps (drop-GCS-write, delete-blobs) are `[OPERATOR]`-gated; snapshot before any GCS delete.
+- Irreversible steps (drop-GCS-write, delete-blobs) are made recoverable by snapshot-before-delete — no human gate; the
+  pipeline is fully autonomous.
 - Firestore/DynamoDB SDKs are lazy-imported (QG bans top-level `google.cloud`/`boto3` + `try/except ImportError`); flags
   are typed `UnifiedCloudConfig` fields (no `os.getenv`); GCS deletes via UTL `gcs_delete_object` (no gsutil); UTC
   datetimes; `quality-gates.sh`-green before every commit.
