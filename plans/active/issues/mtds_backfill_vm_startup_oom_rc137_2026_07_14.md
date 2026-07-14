@@ -637,7 +637,7 @@ over date-range partitions (not just tuning threads/memory_limit, both now exhau
 query-plan restructuring inside `unified_trading_library/manifest_consolidator.py` is Python service business logic,
 outside infra craft (`does_not: Python service business logic → backend_engineer`).
 
-- [ ] [BACKEND] P0. **`uts-prod-manifest-consolidator-market-data-defi`'s DuckDB incremental-merge still OOMs even with
+- [x] [BACKEND] P0. **`uts-prod-manifest-consolidator-market-data-defi`'s DuckDB incremental-merge still OOMs even with
       the `NOT MATERIALIZED` streaming fix (`unified-trading-library@39979c5a`) live-deployed and confirmed working (
       survival went from ~15-25s to ~208-232s at `threads=1`, ~60.6s at `threads=4` — both still crash)** — the real
       27.4M-row DeFi canonical's working set genuinely exceeds the NOT-MATERIALIZED-streamed footprint regardless of
@@ -653,7 +653,84 @@ outside infra craft (`does_not: Python service business logic → backend_engine
       it there until this lands. Also still open: Cloud Run's `execution.status` reads
       `"Completed     successfully"`/`succeededCount:1` on a pure no-op (locked, zero rows touched) — worth a follow-up
       to make `error_reason` the primary success signal instead of relying on someone checking `_index/latest.json` by
-      hand. Repo: `unified-trading-library` (`manifest_consolidator.py`).
+      hand. Repo: `unified-trading-library` (`manifest_consolidator.py`). — ✅ FIX SHIPPED 2026-07-14 (slot-3,
+      backend_engineer): `unified-trading-library@2ab54ce0` — see "P0 — date-range chunked batching shipped, NOT yet
+      live-verified" below for the design + evidence. **NOT a full close**: no `gcloud`/GCS access in this sandbox (same
+      limitation every prior session on this issue hit) to run against the real 27.4M-row canonical — verified via a
+      targeted synthetic multi-chunk regression test instead. Live Cloud Run verification filed as a new `[INFRA]` todo
+      below.
+
+## P0 — date-range chunked batching shipped, NOT yet live-verified (2026-07-14, slot-3, backend_engineer)
+
+Picked up the last open `[BACKEND] P0` todo (NOT MATERIALIZED confirmed insufficient — survival improved ~10x but the
+real canonical still OOMs at every thread setting tested). Root-caused the remaining O(canonical) cost: the `dupe_keys`
+self-heal `GROUP BY` on `survivors_raw` needs per-group hash-aggregate state for every row it visits —
+`NOT MATERIALIZED` only changes whether a CTE's result is buffered vs re-streamed, it does not shrink what an aggregate
+must visit. The ANTI JOIN / SEMI JOIN / window-dedup passes have the same property: their working set scales with
+however many rows flow through `canon` in one query, not with how the CTE is materialized.
+
+**Fix shipped**: `unified-trading-library@2ab54ce0` — `_duckdb_merge_payload`'s incremental branch now runs the
+identical merge SQL (anti-join, self-heal `dupe_keys`, contested/winners window-dedup, Option B collapse) once PER
+DATE-RANGE CHUNK instead of once over the whole corpus, writing each chunk to its own temp parquet file, then
+concatenating all chunk files into the final output via a plain (join-free) passthrough `COPY`. Chunk width is
+`CONSOLIDATOR_MERGE_CHUNK_DAYS` (default 30 days, operator-tunable live via `gcloud run jobs update --update-env-vars`,
+same pattern as `CONSOLIDATOR_DUCKDB_THREADS`/`CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` — no redeploy needed to tune further
+down if 30 days is still too wide for the real corpus). A safety cap (`_DUCKDB_MERGE_MAX_CHUNKS=2000`) widens the chunk
+width automatically if a corrupted/outlier `date` value would otherwise blow the date span out to thousands of
+near-empty chunk queries.
+
+**Provably safe** (not just empirically): `date` is the FIRST column of `_BASE_DEDUP_COLS` — two rows can only share a
+dedup key if they share the same `date` value, so chunking strictly on date can NEVER split a dedup/self-heal group
+across two chunks. This is the same invariant the codebase already leans on elsewhere (`ORDER BY date, venue, data_type`
+in the full-rebuild path).
+
+**Regression coverage** (`tests/unit/test_manifest_consolidator.py`, both new, full `quality-gates.sh` green including
+the pre-existing 3549-line suite — 0 basedpyright errors, 0 lint failures):
+
+- `test_duckdb_incremental_merge_splits_into_date_range_chunks` — with `CONSOLIDATOR_MERGE_CHUNK_DAYS=1` and rows on 3
+  dates ~89 days apart, spies on executed SQL and asserts the merge fires as MULTIPLE `COPY ... survivors_raw ...`
+  queries (not the pre-fix single monolithic one) each still carrying the `NOT MATERIALIZED` hints, plus a single
+  join-free passthrough concat `COPY`, then asserts the final consolidated output is byte-correct (all 3 venues, all 3
+  dates present).
+- `test_duckdb_incremental_merge_chunking_preserves_dedup_across_chunk_boundary` — a pre-existing canonical-internal
+  duplicate on one date (self-heal target) plus a contested-key shard update on a date ~5 months away, both under
+  `CONSOLIDATOR_MERGE_CHUNK_DAYS=1` (forcing them into different chunk queries): asserts the duplicate still collapses
+  to one row (later `attempted_at` wins) AND the contested key still correctly picks up the shard's newer write — i.e.
+  chunking doesn't regress either dedup mechanism.
+- Coverage report (`coverage.xml` from the full suite run) confirms the new bounds-query / chunk-loop / per-chunk-merge
+  / concat code paths were actually exercised (hit-count ≥1 on every new line except the degenerate no-parseable-dates
+  fallback branch, which no test data exercises — a defensive no-op path, not new correctness-critical logic).
+
+**What this does NOT prove**: no live run against the real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run
+job / the actual 27.4M-row DeFi canonical — this sandbox has no working `gcloud`/GCS access (the same `cap_dac_override`
+snap failure every prior diagnostic session on this issue hit, confirmed not re-checked this session since the fix
+itself needed no cloud access to implement or unit-test). The synthetic tests prove the chunking mechanism is correct
+and exercises the new code paths; they do NOT prove the real corpus's per-chunk working set actually stays under the
+container's memory budget at the default 30-day chunk width. Filed as a new `[INFRA]` P0 todo below, mirroring this
+issue's own established verification pattern (bump the digest-pinned MTDS base image if `update-dependency-version.yml`
+hasn't auto-fired, confirm via direct content inspection not just git-ancestor math, watch a real `duckdb_merge_start`
+cycle for survival vs. `Container terminated on signal 9`).
+
+- [ ] [INFRA] P0. **Live-verify `unified-trading-library@2ab54ce0` (date-range chunked incremental merge) against the
+      real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job** — confirm the image picks up the new code
+      (per this issue's own repeated digest-pin-staleness gotcha: the job's `market-tick-data-service:latest` base image
+      is digest-pinned in `market-tick-data-service/Dockerfile`'s `ARG BASE_IMAGE_DIGEST` and needs an explicit bump if
+      `update-dependency-version.yml` hasn't auto-fired since 2ab54ce0 landed; verify via direct content inspection —
+      pull + grep the deployed `manifest_consolidator.py` for `"merge_chunks"` or `CONSOLIDATOR_MERGE_CHUNK_DAYS`, not
+      just git-ancestor math; also re-check the Cloud Run JOB itself re-resolves `:latest` at update time, not just the
+      image existing — a prior session on this issue found the job kept running a stale digest even after a fresh image
+      existed until `gcloud run jobs update --image=...:latest` was re-applied). Then watch the next real
+      `duckdb_merge_start` cycle (lock TTL ~300s, so only ~1-in-5 once-a-minute scheduled executions actually reach it)
+      for `Container terminated on signal 9` vs. a successful write. If it survives, confirm
+      `_index/availability_index.parquet` for `market-data-tick-defi-prd-central-element-323112` advances past its
+      long-frozen `2026-07-14T12:56:34Z` timestamp. If it STILL crashes, the default 30-day chunk width is still too
+      wide for the real 27.4M-row corpus — lower `CONSOLIDATOR_MERGE_CHUNK_DAYS` live via
+      `gcloud run jobs update --update-env-vars` (no redeploy needed, same lever already proven for
+      `CONSOLIDATOR_DUCKDB_THREADS`) before concluding the chunking design itself is insufficient. Once a cycle
+      succeeds, `CONSOLIDATOR_DUCKDB_THREADS` (currently live-set to `1` as a stopgap) may be worth raising back up now
+      that each chunk's working set is far smaller — re-test rather than assume. Repo: `deployment-service` (Cloud Run
+      job image/digest verification) + `unified-trading-library` (if `CONSOLIDATOR_MERGE_CHUNK_DAYS` needs tuning down
+      after this verification).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
