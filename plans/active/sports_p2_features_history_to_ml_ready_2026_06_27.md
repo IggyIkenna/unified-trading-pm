@@ -2963,7 +2963,40 @@ eligible) so this session moves to different available work instead of re-runnin
   > artifact untouched by this recompute. NEW TODO captured below. Cross-repo P1 dispatched: ml-service loader cannot
   > read the per-league layout (issue doc sports_derived_features_per_league_layout_unread_by_ml_loader _2026_07_14.md)
   > — fix agent running (loader layout-awareness + failure-atom alignment + 27 stale-row cleanup).
-- [ ] [DATA] P2. Diagnose the 9-day exact-68.6% ML-readiness cluster (2025-09-02/03/04/09/10, 10-07/14/23, 11-11/13 at
-      T-24h/T-1h) + the other 8 sub-95% days — odds-side signature (identical pct = identical missing column block;
+- [x] ✅ [DATA] P2. Diagnose the 9-day exact-68.6% ML-readiness cluster (2025-09-02/03/04/09/10, 10-07/14/23, 11-11/13
+      at T-24h/T-1h) + the other 8 sub-95% days — odds-side signature (identical pct = identical missing column block;
       suspect MDPS odds_horizon_bucket gaps or bookmaker-tier absence those days). Provenance: autonomous tick 2
-      ML-readiness re-run 2026-07-14; predates the enrichment/recompute work (odds_features untouched by it).
+      ML-readiness re-run 2026-07-14; predates the enrichment/recompute work (odds_features untouched by it). —
+      unified-trading-pm (this plan-doc + issue doc), diagnosis complete 2026-07-14, see Progress Log entry below +
+      `plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`.
+
+- 2026-07-14 20:3xZ (slot-4, data_engineering, task sports_p2_features_history_to_ml_ready-003): **diagnosis COMPLETE —
+  root cause is NOT simple honest-absence, it's a real MTDS ingestion bug.** Re-ran
+  `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30 --bucket features-sports-prd-central-element-323112`:
+  confirmed 74/91 pass, 17 fail (9 exact-68.6131%, 8 in the 70.1-94.9% range), avg 95.3% — matches the prior autonomous
+  tick 2 finding, no drift. Downloaded + column-analyzed all 9 cluster-date `odds_features/features.parquet` files at
+  T-24h/T-1h (`features_service.sports.calculators.odds_columns.ODDS_COLUMNS`, 137 cols): the SAME 43 columns
+  (velocity__/acceleration__/steam__/clv__/delta_prob_6h,1h__/exchange_price__/move_direction,sign__/
+  market_reversal,chop__/velocity_prob__,acceleration_prob__) are 100% NaN on every one of the 9 dates regardless of row
+  count (1 fixture on 8/9, 3 on 2025-10-23) — 94/137=68.6131% is a fixed column-block ratio, not a row-count
+  coincidence. Traced into MDPS's bucketed odds
+  (`market-data-tick-sports-prd-central-element-323112/processed/by_date/ day=<D>/pipeline_mode=batch_mdps_odds_horizon_bucket/.../data_type=odds_horizon_bucket/`):
+  each cluster date has only 1-3 league shards, each with exactly ONE `horizon_name` (never the full ladder), so
+  `odds_features_exporter._find_best_snapshot`'s documented nearest-earlier-horizon fallback duplicates that single
+  snapshot into both the T-24h and T-1h export rows, honestly NaN-ing everything that needs a 2nd distinct snapshot —
+  that part of features-service is CORRECT (no bug). **The real bug**: inspected the Russia Premier League shard's row
+  content across 5 independent dates (09-02/03/09, 10-07, 11-11) — byte-identical fixture_id=a4a57e155f2e9d54fd7bca7
+  2470db842 / bookmaker=bovada / kickoff_utc=2022-03-05T16:00:00Z re-appears under every date's `day=<D>` partition
+  (only `fetch_utc` advances); confirmed a 2nd instance (Australia A-League fixture_id=237d3bb63e77fb7661f7aa531cb3c609,
+  kickoff 2025-05-31) repeating on 09-03 + 09-09; raw pre-bucket ticks
+  (`raw_tick_data/.../venue=PINNACLE/league_id=SOCCER_RUSSIA_PREMIER_LEAGUE/.../ticks.parquet` for 2025-10-23) show the
+  same signature one layer upstream (bm_time frozen at 2022-03-04, fetch_utc=today). MTDS's odds-api ingestion for
+  low-activity leagues is re-serving the LAST cached fixture's odds under every new day's partition instead of honest-
+  absence when the live pull returns nothing new — 8/9 cluster dates fall inside the Sep 1-9/Oct 6-14/Nov 10-18 2025
+  FIFA international windows (real fixture volume craters, so these stale re-serves become 100% of the day's rows,
+  giving the exact deterministic ratio). Filed `plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`
+  (P1 MTDS ingestion fix; P2 contamination sweep; P3 re-verify + gate-semantics reassessment) — NOTIFY-OPERATOR banner
+  set (cross-repo data-correctness). No code change made in features-service (correctly implements honest-absence,
+  nothing to fix there); no relaunch of the GW recompute (unrelated — that fleet only touches derived/fixture features,
+  odds untouched). Checkbox flipped — the todo's ask ("diagnose") is fully satisfied with a concrete, evidence-backed
+  root cause; the fix itself is tracked in the new issue doc, not this plan.
