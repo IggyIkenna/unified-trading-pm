@@ -2225,3 +2225,27 @@ result before this slot's next action. Leaving the G2 checkbox unchecked — the
 data_types honest-complete) is not yet met. Calling `/skip-current-task` so the dispatcher can offer other work while
 the backfills run; a future dispatch (or this slot's own T+10 follow-up) re-runs the coverage script once the VMs have
 had time to make real progress. `/skip-current-task`.
+
+### 2026-07-14 (data_engineering slot-2, continued) — T+10min check reveals a NEW blocking defect: both relaunched VMs crashed rc=137, systemic across 3 handlers
+
+**Correction to the entry above**: the T+10min background watchdog reported back — both relaunched VMs
+(`mtds-perp-funding-backfill`, `mtds-dex-swaps-backfill`) crashed with `rc=137` (SIGKILL) within ~1-2 minutes of
+starting, **before any per-venue data collection began**. Opportunistically checked `mtds-dex-pools-backfill` (already
+running from G1.6, not touched by this session) — same crash pattern, and its auto-relaunched 3rd incarnation crashed
+identically even on a trivial 1-day/1-protocol job, ruling out backfill-size as the cause.
+`gcloud compute operations list` shows no `preempted` op for any of the three — not SPOT preemption. Filed
+`issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` with full evidence + a root-cause candidate
+(`_register_all_catalog_readers()` in `market-tick-data-service/engine/orchestrator/__init__.py:684` loads ALL FOUR
+asset groups' combined ~1.6M-row instrument catalogue once per process, regardless of the job's actual `asset_groups` —
+plausible OOM site on `e2-standard-4`, and NOT DeFi-specific if confirmed: could be affecting any MTDS backfill VM
+fleet-wide since `f8cab3f0` landed 2026-07-12).
+
+**This means the operator's `BLK-5b8c2938` ruling (Option A: relaunch) is correctly executed but does not currently
+work** — not a "wait longer" situation. Re-relaunching either VM again would reproduce the identical crash (3/3 so far)
+and burn SPOT VM-minutes for zero data. **Do not re-relaunch until the issue doc's P0 fix todos land.** G2 remains
+blocked, now on a genuine infra defect rather than an operator decision — NOT filing a new `/blocked` (no decision
+needed from the operator here, this needs a backend fix), but this is a **big finding** (data-pipeline-correctness,
+cross-asset-group blast radius) so operator-notifying per CLAUDE.md's findings-triage HARD RULE. Also shipped an
+unrelated inherited dead-WIP commit from a prior slot-2 session while here: `unified-trading-library@9d1ce574`
+(setuptools CVE pin, QG-verified green, rebased cleanly onto another slot's independent fix of the same CVE). Calling
+`/skip-current-task` — this task cannot progress further until the OOM fix ships.
