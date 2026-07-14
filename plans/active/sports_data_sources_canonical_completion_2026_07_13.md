@@ -194,6 +194,33 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       209,526→200,165 (all now `data_type=odds_horizon_bucket` lowercase, 0 uppercase remaining), 9,361 stale
       disjoint-cell rows dropped (atoms already genuinely `captured`), 0 remaining stale overlap, 0 duplicate dedup-key
       rows, stable across 10+ live manifest-consolidator cycles (~9 min) post-apply.
+- [ ] [DATA] P1. **mdps_odds_horizon_bucket: close the 200,259-row historical backlog (NEW 2026-07-14).** — 4-VM sharded
+      `reprocess_sports_odds.py --force` backfill LAUNCHED and verified genuinely progressing (2020-06-06→ 2026-07-14,
+      see Progress Log "2026-07-14 ... launch bounded historical backfill" entry for full detail, VM names, and how to
+      check later) — **not yet closed to 0**, this is a multi-hour bounded job left running by design. Re-check later:
+      live-manifest re-read (`source=mdps_odds_horizon_bucket`, expect `expected_unattempted` trending down from 200,259
+      / `captured` up from 137,972 once each VM's end-of-run flush lands) or
+      `gcloud compute instances list --filter="name~mdps-sports-bucket-20260714-05"` for liveness (VMs self-delete on
+      completion). Small expected residual: the 2025-01-01→2026-07-14 shard crosses the already-documented 2026-06-21+
+      meta-snapshot raw-shape boundary — expect ~2,256 rows to land `attempted_failed` (`RAW_ODDS_SHAPE_UNRECOGNIZED`),
+      tracked as its own pre-existing gap, not a new defect.
+- [x] [DATA] P0. **reprocess_sports_odds.py: fix uncaught UnprovenHonestAbsenceError crash on every empty day (NEW
+      2026-07-14, found live while launching the historical backfill above).** — DONE, code fix +
+      production-scale-verified: `market-data-processing-service@7c5c74d`. 2 of the first 4 launched backfill VMs
+      crashed within ~10 minutes of launch (`mdps-sports-bucket-20260714-041833`/`-041913`) — `main()` called
+      `ManifestWriter.record_empty(reason=SOURCE_RETURNED_ZERO)` with no `FetchEvidence`, hard-raising
+      `UnprovenHonestAbsenceError` the moment it hit its FIRST genuinely-empty date (every real historical range has at
+      least one), silently losing every date's already-computed work since the single end-of-run `writer.write()` flush
+      never got reached. Root cause: this script was never updated when UTL's 2026-06-22
+      `data_pipeline_hardening_self_monitoring_2026_06_22` honest-absence-hardening keystone landed, requiring
+      `FetchEvidence` for that reason code. Fix: `reprocess_date()` now returns a 3rd `empty_kind` discriminator
+      distinguishing the one genuinely-clean, provable absence (`"no_raw_data"`, eligible for a synthetic
+      `FetchEvidence`) from two anomalous non-absence cases (`"missing_column"`/`"adapter_empty"`, raw bytes DO exist —
+      now correctly route to `record_failed` instead of being silently folded into `empty_confirmed`). Unit tests
+      updated + 2 new tests added; `quality-gates.sh --no-fix` green (incl. the pre-existing STEP 5.99 gate that would
+      have caught this). **Production-scale re-verified, not just unit-tested**: relaunched all 4 backfill VMs with the
+      fix — all 4 have now each hit multiple genuine `"no_raw_data"` empty-day events (the exact prior crash trigger)
+      with zero tracebacks, all still running. Full detail + evidence in the Progress Log entry below.
 - [x] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** — DONE, code fix +
       tests + live-verified: `market-data-processing-service@e8f6709` (also carried a pre-existing uncommitted,
       inherited-dead-WIP `_resolve_bucket()` project_id fix found sitting in the working tree at session start — see
@@ -2698,3 +2725,116 @@ it's new adapter work, not a data-audit residual).
   `mdps_odds_horizon_bucket` (currently VM-launch-only). **No consolidator schedulers were paused in this dispatch**
   (read-only `describe` checks only) — both `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron`
   confirmed `ENABLED` throughout, healthy executions every ~1 min start to finish of this session.
+
+- 2026-07-14 (sub-agent, dispatch: launch bounded `mdps_odds_horizon_bucket` historical backfill now that the root-cause
+  grain-realignment fix was already shipped/verified). **Backlog confirmed + closed a NEW P0 production-blocking bug
+  discovered live; backfill now genuinely running.**
+  - **Backlog re-confirmed via live manifest read** (`instruments-store-sports-prd-central-element-323112`,
+    `read_availability_index` + `resolve_bucket_name(kind="instruments-store", asset_group="sports")`):
+    `source=mdps_odds_horizon_bucket` — captured **137,972**, attempted_failed **0**, expected_unattempted **200,259** —
+    matches the dispatch brief exactly. 2,230 distinct backlog dates, 2020-06-06→2026-07-14, ~90 rows/date (median 92,
+    max 94) — confirmed this is NOT a sparse recent-days-only gap: EVERY one of the 2,230 backlog dates already has SOME
+    captured rows too (1,813 of 2,230 dates overlap 100% with the captured-date set), meaning the backlog is cells
+    scattered THROUGHOUT already-partially-processed history, not just the daily-job's trailing edge. This directly
+    determined the launch mode: `reprocess_sports_odds.py`'s pre-flight skip key is COARSE (`{date, venue, data_type}`,
+    no `league_id`/`timeframe`) — a plain (non-`--force`) run would skip nearly every backlog date outright (since
+    almost all already have a coarse `captured` row from a prior partial pass), permanently missing the true per-shard
+    gap. **`--force` across the FULL date range is therefore required**, not optional — documented in the launcher's own
+    docstring now (see code-fix below).
+  - **Decision: VM-sharded, not local/direct.** 2,230 dates × real per-league/per-bookmaker GCS reads is squarely
+    outside "small enough to run directly on this host" — confirmed by the launcher's OWN docstring precedent (built for
+    exactly this kind of full-history sweep, target <1hr via 4-VM sharding). Reused
+    `deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` unmodified in its core logic (found via the
+    documented grep-the-registry-first pattern — this launcher already existed, registered in
+    `vm_prefix_registry.py`/`launcher_registry.py`, dispatched by `setup-data-pipeline-vm.sh`'s
+    `VM_TASK= mdps-sports-bucket` branch). Sharded the 2020-06-06→2026-07-14 range across 4 VMs, `--workers 16`, `force`
+    mode, mirroring the launcher's own documented example slicing (extended past its original 2026-04-14 end date to
+    today): `2020-06-06→2021-12-31` / `2022-01-01→2023-06-30` / `2023-07-01→2024-12-31` / `2025-01-01→2026-07-14`.
+  - **Pre-launch fix #1 — launcher had NO SPOT provisioning at all (bug, not just missing polish).** Read the launcher
+    end-to-end before using it (per the mandatory grep-then-READ rule) and found it called
+    `gcloud compute instances create` with zero `--provisioning-model` flag — silently defaulting every VM to on-demand,
+    a direct violation of `codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Fixed:
+    `deployment-service@0e7d771` adds
+    `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure` by default with a
+    `--on-demand`/`ON_DEMAND=true` opt-out, mirroring `launch-mdps-backfill-vm.sh`'s existing convention exactly.
+    Shipped via direct push (dirty-deps carve-out — `scripts/vm/setup-data-pipeline-vm.sh` had unrelated foreign
+    uncommitted WIP from another concurrent agent in this shared clone throughout this entire dispatch, confirmed
+    untouched via `git status`/`git diff --cached --stat` before every commit).
+  - **Pre-launch fix #2 — 2 of 5 code tarballs stale** (`unified-trading-library`, `deployment-service`) vs local HEAD,
+    per `lc_verify_tarball_freshness`'s own live check. Republished via `create-code-tarballs.sh`; hit the SAME
+    dirty-foreign-file blocker (script `set -euo pipefail`s on ANY dirty CORE repo, aborting before it even reaches the
+    upload step) — worked around with a `git worktree add --detach HEAD` clean checkout + a `WORKSPACE_ROOT`-overridden
+    symlink tree pointing the tarball builder at the clean worktree instead of the dirty real clone, leaving the foreign
+    agent's uncommitted WIP completely untouched throughout. Confirmed all 5 repo tarballs byte-exact-SHA-matched local
+    HEAD before the first launch.
+  - **FIRST launch (4 VMs, 04:18-04:20 UTC) — 2 of 4 CRASHED within ~10 minutes, a NEW P0 bug, not a launch-config
+    issue.** `mdps-sports-bucket-20260714-041833` (2020-06-06→2021-12-31, reached 542/574) and `-041913`
+    (2022-01-01→2023-06-30, reached 513/546) both terminated with an uncaught
+    `unified_api_contracts.canonical.crosscutting.honest_coverage.UnprovenHonestAbsenceError` the moment `main()`'s
+    per-day consumption loop processed its FIRST `empty_confirmed`-status date
+    (`writer.record_empty(reason= SOURCE_RETURNED_ZERO)` called with NO `FetchEvidence`). Root cause:
+    `reprocess_sports_odds.py` was never updated when UTL's 2026-06-22
+    `data_pipeline_hardening_self_monitoring_2026_06_22` honest-absence-hardening keystone started HARD-requiring a
+    `FetchEvidence` proving a clean 200+empty result for that reason code — every meaningful-length historical date
+    range contains at least one genuinely-empty day, so this was a 100%-reproducible crash for ANY non-trivial run,
+    silently losing every date's already-computed captured/bucketed work in that run (the single end-of-run
+    `writer.write()` flush never got reached). Confirmed via live VM tracebacks (`row_key={'date': '2022-01-04', ...}`
+    etc) — both crashed VMs self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`; the other 2 (`-041954`, `-042032`, still
+    healthy, not yet hit an empty day) were manually deleted rather than left to run toward the same guaranteed fate.
+  - **Fix shipped**: `market-data-processing-service@7c5c74d`. `reprocess_date()` now returns a 3rd `empty_kind`
+    discriminator distinguishing the ONE genuinely-clean, provable absence (`"no_raw_data"` — both canonical GCS
+    prefixes + the legacy fallback listed successfully, zero blobs found anywhere; eligible for a synthetic
+    `FetchEvidence` mirroring the existing correct pattern in
+    `market-tick-data-service/scripts/_rebuild_sports_write.py`'s historical-rebuild evidence construction) from two
+    anomalous, NOT-honest-absence cases (`"missing_column"` / `"adapter_empty"` — raw bytes DO exist but are malformed
+    or filtered to zero by the adapter) which now correctly route to `record_failed` with new
+    `_MISSING_REQUIRED_COLUMN_ERROR_CODE`/`_ADAPTER_EMPTY_OUTPUT_ERROR_CODE` instead of being silently folded into
+    `empty_confirmed`. Threaded through `_process_one_date`'s and `main()`'s tuple signatures; updated the existing unit
+    test file for the new 3-tuple return + added 2 new tests covering the missing_column/adapter_empty → record_failed
+    paths. `quality-gates.sh --no-fix` green, including STEP 5.99 ("every except-reachable SOURCE_RETURNED_ZERO write
+    carries fetch_evidence") passing clean for this file — this QG rule already existed and would have caught this exact
+    defect class had it been re-run against this script since 2026-06-22.
+  - **Direct reproduction against the actual crash-triggering date** (`2022-01-04`, local one-off `--force` run, single
+    date, pre-relaunch): confirmed the fix works — `"No raw odds data for 2022-01-04 — skipping"` →
+    `"Writing manifest (0 captured + 1 empty_confirmed + 0 attempted_failed + 0 shard entries)..."` with NO traceback
+    (pre-fix this exact date crashed the whole process). The run then hit several
+    `ManifestWriter: generation conflict (attempt N/15), retrying...` cycles against the LIVE per-minute consolidator —
+    a separate, already-documented, self-resolving CAS-contention pattern (same class as this plan's earlier
+    `reconcile_mdps_odds_horizon_bucket_eu_grain` entry), NOT a bug; killed after ~7 min mid-retry (CAS is
+    all-or-nothing, no partial-write risk) once the relaunched VMs had already independently confirmed the real fix
+    end-to-end at production scale (see below) — not worth blocking further on a slow local single-date diagnostic.
+  - **RELAUNCHED all 4 VMs (05:02-05:04 UTC) with the fixed code, same 4 date shards, all 5 tarballs re-verified fresh**
+    (`market-data-processing-service@7c5c74d`, `deployment-service@0f862b6` — one more unrelated commit had landed on
+    deployment-service meanwhile; `market-tick-data-service` also had unrelated foreign dirty files this time, same
+    clean-worktree-symlink workaround applied). **Definitive fix confirmation, live-verified ~5-6 minutes into the
+    relaunch**: all 4 VMs have now each hit MULTIPLE genuine `"no_raw_data"` empty-day events — the EXACT condition that
+    crashed 2 of 4 VMs on the first launch — with **zero tracebacks, zero crashes, all 4 still RUNNING**:
+    `mdps-sports-bucket-20260714-050241` 12 empty-days hit, at [183/574]; `-050324` 4 empty-days hit, at [201/546];
+    `-050402` 15 empty-days hit, at [131/550]; `-050444` 1 empty-day hit, at [55/560]. This is conclusive,
+    production-scale proof the crash is fixed, not just a unit-test assertion.
+  - **Current state as of this entry (do not re-poll faster than ~hourly — this is a multi-hour bounded job)**: all 4
+    VMs RUNNING, SPOT-provisioned, genuinely progressing (confirmed via both live idx counters AND real bucketed parquet
+    files landing in GCS, e.g.
+    `gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/ day=2022-08-08/pipeline_mode=batch_mdps_odds_horizon_bucket/.../league_id={9 leagues}/`),
+    each `VM_SHUTDOWN_ON_ COMPLETION=true` (self-terminates on completion or failure — check
+    `gcloud compute instances list --project= central-element-323112 --filter="name~mdps-sports-bucket-20260714-05"` for
+    liveness). **How to check on it later**:
+    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -50` per VM name below,
+    or re-read the live manifest (`source=mdps_odds_horizon_bucket`, `expected_unattempted` should trend down from
+    200,259 and `captured` up from 137,972 once each VM's single end-of-run `writer.write()` flush lands — expect that
+    flush itself to take several minutes per VM due to the same CAS-generation-conflict-retry pattern documented above,
+    this is normal, not a stall). VM names: `mdps-sports-bucket-20260714-050241` (2020-06-06→ 2021-12-31),
+    `mdps-sports-bucket-20260714-050324` (2022-01-01→2023-06-30), `mdps-sports-bucket-20260714-050402`
+    (2023-07-01→2024-12-31), `mdps-sports-bucket-20260714-050444` (2025-01-01→2026-07-14). **Known, expected,
+    non-blocking residual**: `-050444`'s range crosses the already-documented 2026-06-21+ "meta-snapshot" raw-odds shape
+    boundary (`RawOddsShapeUnrecognizedError`, existing 2026-07-13 fix scope) — expect a small (~24-day × ~94-rows/day ≈
+    2,256-row) `attempted_failed` residual for that VM specifically, tracked separately, NOT a regression from this
+    dispatch's work. **Consolidator safety**: no pause needed or performed — this dispatch used only VM per-shard
+    writes + one local single-date CAS-safe write (killed mid-retry, all-or-nothing, no partial state) — confirmed both
+    `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` schedulers `ENABLED` and untouched throughout
+    via read-only `describe` checks.
+  - **No todo left open for the mdps_odds_horizon_bucket historical-backlog closure task itself** — the backfill is
+    genuinely, verifiably running at production scale with the correct fix; final full-closure verification (all 4 VMs
+    reach 100%, manifest `expected_unattempted` for this source trending to ~0 or a documented residual) is correctly
+    left for a LATER check per this dispatch's own "don't need to wait for full completion, verify genuine progress"
+    mandate — not a gap, an intentional multi-hour-job handoff.
