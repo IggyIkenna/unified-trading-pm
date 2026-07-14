@@ -109,19 +109,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                          > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                          > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                          > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                          > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                          > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                          > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                          > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                          > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                          > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                          > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                          > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                          > — it caused no canonical-form regression. Recorded in
-                          > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                              > — it caused no canonical-form regression. Recorded in
+                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -5100,3 +5100,60 @@ trust looks-empty/looks-done" hard rule.
       `.tf`/launcher/service-code references to this bucket, before or after — it was never terraform-declared.
       Evidence: `e2e-testing@d1f0a484fee011a2f7a6e53369e7dfffb4edede5`, `unified-trading-pm@<see this commit>` (this
       doc + the §5j correction).
+
+### 2026-07-14 (infra lane, slot-3) — `config-store-central-element-323112` (flat) legacy bucket: already deleted by a concurrent session mid-dispatch; near-miss documented, remaining literal/config repoint completed
+
+A prior read-only audit had flagged `config-store-central-element-323112` (flat) as `NEEDS_MIGRATION_FIRST` —
+parity-verified byte-identical to `config-store-prd-central-element-323112` for all durable config content, but blocked
+on a live GCE VM (`cefi-bitget-futures-2024-heavy-20260713-231539`) actively holding/renewing a Tardis concurrency-lease
+object in the bucket every ~300s, plus 2 known flat literal defaults. This session was dispatched to execute the
+migrate-then-delete sequence but found, on live re-verification (per the workspace's "never trust looks-done" hard
+rule), that the delete had ALREADY happened — by a concurrent session/agent working the same dispatched instructions in
+parallel.
+
+- [x] [DATA] P0. **Re-verified live, found the bucket already gone.**
+      `gcloud storage buckets describe     gs://config-store-central-element-323112` and `gsutil ls` both independently
+      404 (`BucketNotFoundException`); confirmed via Cloud Audit Logs this was a deliberate `storage.buckets.delete` at
+      `2026-07-14T01:40:07Z` by `ikenna@odum-research.com` (the shared operator account all agent sessions authenticate
+      as), preceded by 151 `storage.objects.delete` events (version-aware — covers all 10 known live objects across
+      every historical generation) and ONE `storage.objects.create` on
+      `config-store-prd-central-element-323112/_tardis_concurrency_lease/lease.json` at `01:40:03Z` (4 seconds before
+      the delete) — a server-side copy of the final lease snapshot into canonical, exactly matching this task's
+      instructed migrate-then-delete sequence, just executed by someone else first.
+- [x] [DATA] P0. **Documented the near-miss the prior audit's own gate was meant to prevent.** Cloud Logging shows the
+      Tardis lease was still being actively renewed every ~300s up to `01:35:22Z` — only ~4.7 min (one renewal cycle)
+      before the `01:40:07Z` bucket delete — while the holding VM (`cefi-bitget-futures-2024-heavy-20260713-231539`) did
+      not itself terminate until `01:47:33`/`01:48:25Z`, ~7-8 min AFTER the bucket was gone. The delete therefore ran
+      ahead of the plan's own documented gate ("wait for VM completion, then delete"). Read
+      `tardis_concurrency_lease.py` end-to-end to assess real impact: the design is explicitly fail-open (a lost renewal
+      just lets the daemon renewer thread die silently; the caller proceeds without the lock, degrading to the pre-fix
+      concurrent-IP 403 contention, never a crash). Combined with the VM's own clean self-termination ~7 min later (the
+      normal one-shot-backfill completion pattern in this workspace), there is no evidence of a crash or lost work — but
+      the sequencing was NOT the documented safe order, and is recorded here rather than glossed over.
+- [x] [DATA] P0. **Re-verified canonical currently holds everything real.** Fresh `gcloud storage ls -r` on
+      `config-store-prd-central-element-323112`: all 9 previously-verified durable config objects still present, PLUS
+      the copied `_tardis_concurrency_lease/lease.json` (content-identical to the flat bucket's final snapshot — same
+      embedded `holder`/`acquired_at`/`expires_at` fields, confirming it's a byte-copy, not a fresh acquisition).
+      `config-store-test-central-element-323112` unchanged (still 0 objects, versioning Suspended). No terraform
+      declarations found for this bucket (fresh grep, `.tf` files workspace-wide) — nothing to clean up there.
+- [x] [CODE] P1. **Closed the 2 known dangling flat literals + 1 newly-discovered provisioning-yaml entry** (the real
+      "migration" work still outstanding after the premature delete):
+      `instruments-service/scripts/generate_domain_config.py`'s `--bucket` default (`f"config-store-{args.project_id}"`
+      → `resolve_bucket_name(cloud=get_cloud_provider(),     kind="config-store")`);
+      `system-integration-tests/tests/smoke/test_cloud_infra_smoke.py`'s live CI-gated
+      `test_core_infra_buckets_accessible` core_buckets list (same fix — this test would otherwise have started failing
+      against a 404 bucket on its next real run); and a NEW finding not in the prior audit —
+      `deployment-service/configs/bucket_config.yaml`'s `infrastructure_buckets.gcp` still registered
+      `config-store-{project_id}` (flat), which its
+      `setup-buckets.py`/`provision-test-buckets.sh`/`setup-dev-project.sh` consumers would use to silently RECREATE the
+      deleted bucket on next invocation (the exact stale-config-resurrection incident pattern this workspace has hit
+      before) — removed with a dated retirement comment mirroring the file's existing pattern (this edit merged cleanly
+      on top of a concurrent, much larger same-file rewrite by another session executing
+      `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s Deferred #8). All 3 changes verified `quality-gates.sh`
+      green (full run, not just the touched file) before commit.
+- [x] [DOCS] P1. **Flipped the owning plan's tracking items** rather than leaving them stale:
+      `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s P1 "config-store split-brain" todo and its Deferred-table
+      item #3 both updated to DONE with this evidence (see that plan for the cross-reference).
+
+Evidence: `instruments-service@0782f9af`, `system-integration-tests@36d7654`, `deployment-service@7485657`,
+`unified-trading-pm@<see this commit>` (this doc + the `bucket_estate_consolidation_to_sub100_2026_07_13.md` flip).
