@@ -1978,3 +1978,18 @@ approved, (2) once dex_pool_swaps + perp_funding are genuinely complete (or the 
 re-run `measure_honest_coverage.py` for the next real reading, (4) still needs MORPHO wiring fix shipped + DRIFT Helius
 throughput ruling before those two data_types can close, (5) PYTH `oracle_prices` 873 `attempted_failed` remains an
 open, never-investigated loose end worth a dedicated look.
+
+### 2026-07-14 (slot 5) — 7th dispatch, ~35s after run #6; unchanged, skip (no duplicate `/blocked`)
+
+Picked up on `/boot` (`already_in_progress: true`, `dispatch_reason: resume`). Fresh-pulled all repos clean.
+Cross-checked `GET /api/state`: `BLK-5b8c2938` (slot 8's run-#6 question, filed 2026-07-14T10:57:04Z) is still
+`answered_at: null` — confirmed both immediately after boot and again ~3 min later post an orchestrator-server restart
+(state persisted through the restart; nothing lost). No new operator/main messages on this slot. Not re-running
+`measure_honest_coverage.py` or any GCS/manifest check — run #6 completed under a minute before this dispatch, the gate
+already fails on the coverage numbers alone, and re-scanning would only reproduce byte-identical output while
+re-confirming, not adding signal (same reasoning documented on every prior run of this task and on the sibling `-001`
+task's 20-dispatch thrash). Not filing a duplicate `/blocked` — one is already open on this exact question with a clear
+recommendation (A: relaunch) awaiting operator/main sign-off, and this worker slot shouldn't unilaterally relaunch an
+operator-stopped VM (same reasoning as run #6: could reflect a deliberate scope/cost call). Calling
+`/skip-current-task`; unblocking requires either the operator answering `BLK-5b8c2938` or main parking/deprioritizing
+this task so the dispatcher stops re-offering an unchanged blocked state every cycle.
