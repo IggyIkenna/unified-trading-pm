@@ -19,8 +19,13 @@ summary:
   genuinely executed and genuinely returned zero rows for all 4 venues simultaneously — pointing at ONE systemic cause
   (a dataset/date entitlement edge, or requested parent/raw symbols not resolving to any instrument_id for that specific
   day) rather than 4 independent coincidences. Static code reading alone cannot distinguish those two hypotheses; a live
-  diagnostic (`client.symbology.resolve(...)`) is needed to confirm which."
-status: open
+  diagnostic (`client.symbology.resolve(...)`) is needed to confirm which. RESOLVED 2026-07-14
+  (market-tick-data-service@69d226dc): that original narrowing was WRONG — the SDK was never called on the smoke-check
+  path at all. `_apply_instrument_filter` could not match the smoke-checker's raw dated-contract `--instrument-ids`
+  ('ESM26'/'VXU26') against curated parent symbols ('ES.FUT') or exchange_codes ('ES'), so `by_dataset` collapsed to
+  `{}` before the fetch loop; entitlement/symbology hypotheses moot. Production backfills (no --instrument-ids) were
+  always immune."
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -46,7 +51,7 @@ source:
     errors reference),
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: market-tick-data-service@69d226dc
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -58,6 +63,50 @@ depends_on: []
 ---
 
 # TradFi Databento OHLCV — silent zero-row success, no local guard involved
+
+## RESOLVED 2026-07-14 — root cause: the SDK was NEVER called; the filter ate the request
+
+**Fixed in market-tick-data-service@69d226dc.** The "clean 0-record success" was never a vendor-API mystery — the live
+Databento SDK call was **never made** on the smoke-check path. The actual chain:
+
+1. `scripts/pipeline_e2e_check.py` falls back to `scripts/smoke_matrix.py`'s `_REPRESENTATIVE_SYMBOL` map, which
+   supplies a **raw dated-contract symbol** as `--instrument-ids` — `"ESM26"` for CME/NYSE/NASDAQ and a
+   `_resolve_current_cboe_vx_symbol()`-derived `"VX<M><YY>"` (e.g. `"VXU26"`) for CBOE.
+2. `_apply_instrument_filter()` (`market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py`)
+   only matched a caller-supplied id against a curated def's parent `symbol` (`"ES.FUT"`) or exact `exchange_code`
+   (`"ES"`). A dated-contract symbol (`"ESM26"`) matches **neither**, so `by_dataset` collapsed to `{}`.
+3. With `by_dataset == {}`, the fetch loop in `download_batch_df` never iterates — zero `_fetch_and_stream_chunks`
+   calls, zero SDK calls — and the unconditional `"DatabentoAdapter.download_batch_df: %s %s — %d records"` log line
+   prints "— 0 records" as a clean success.
+
+**Both live-API hypotheses (i entitlement, ii symbology) are therefore moot** — they were already directly ruled out by
+the 2026-07-13 live diagnostic below (parent-symbol `get_range` returned 1,628 real rows for 2026-07-09), and the true
+discrepancy vs. production was exactly the "mvp_mode-like filter unexpectedly narrowing defs to zero" family that entry
+predicted: an instrument_ids filter, not the dataset bucket.
+
+**Production backfills are immune**: they pass no `--instrument-ids`, so `_apply_instrument_filter` never runs — this
+bug only broke the smoke-checker's diagnostic accuracy (false-negative "0 rows").
+
+Fix (additive-only, market-tick-data-service@69d226dc):
+
+- `_dated_contract_root()` + `_FUTURES_MONTH_CODES` in `databento_enrichment.py`: parses ROOT+MONTHCODE+1-3-digit-year
+  shapes (`"ESM26"`→`"ES"`, `"VXU26"`→`"VX"`); `_apply_instrument_filter` now also accepts a curated symbol whose
+  `exchange_code` matches a dated contract's root — a strict superset of the old matching (exact symbol/exchange_code
+  matches cannot regress).
+- Hardening: `download_batch_df` now logs a WARNING when a non-empty pre-filter `by_dataset` narrows to `{}`, naming the
+  dropped instrument_ids and the available curated symbols — this silent-empty class can never be invisible again.
+- Tests: `tests/market_interface/adapters/tradfi/test_databento_instrument_filter.py` (11 tests: parent-symbol match,
+  exchange_code match, ESM26/VXU26 dated-root matches, non-matching id still filters to empty, warning-path regression).
+- Repro (repo `.venv`, real CME/CBOE registry inputs): BEFORE — `instrument_ids=["ESM26"]` → 0 symbols matched,
+  `by_dataset={}`; AFTER — 2 symbols (`ES.FUT`, `ES.OPT`) on `GLBX.MDP3`. CBOE `["VXU26"]`: BEFORE 0 → AFTER 1 (`VX.FUT`
+  on `XCBF.PITCH`).
+
+**Correction to an earlier side-claim**: the diagnosis pass's side-claim that "CME has zero manifest rows ever" was
+**REFUTED** by the orchestrator against the live manifest (CME: 2,430,317 rows, 1,077,959 captured as of 2026-07-14). Do
+not propagate that claim.
+
+**Residual note**: the smoke-checker false-negative is fixed; real production tradfi gaps are tracked elsewhere (OOM
+completion run, fleet drain).
 
 ## Context
 
@@ -218,3 +267,14 @@ honest "no trading that day" result going forward.
     a `mvp_mode` filter unexpectedly narrowing `defs` to zero for the CME dataset bucket, or a subtly different
     `start`/`end` window) rather than an external/unfixable issue — re-prioritize accordingly (was P2, arguably still P2
     but now much closer to resolvable than "root cause unknown" implied).
+- 2026-07-14: **RESOLVED — market-tick-data-service@69d226dc** (see the "RESOLVED 2026-07-14" section at the top for the
+  full mechanism). The 2026-07-13 "narrow, solvable bug" prediction was exactly right: the discrepancy between the
+  working direct diagnostic and the production smoke run was the `--instrument-ids` filter — `pipeline_e2e_check.py`
+  (via `smoke_matrix.py`'s `_REPRESENTATIVE_SYMBOL`) passes raw dated-contract symbols ("ESM26"/"VXU26") that
+  `_apply_instrument_filter` could not match against parent symbols ("ES.FUT") or exchange_codes ("ES"), collapsing
+  `by_dataset` to `{}` BEFORE any SDK call — the SDK was never called on this path, so the entitlement/symbology
+  hypotheses were moot from the start. Evidence: `- [x]` fix + matched-nothing warning + 11-test regression file shipped
+  — market-tick-data-service@69d226dc; repro before/after: CME `["ESM26"]` 0→2 matched symbols (`ES.FUT`, `ES.OPT`),
+  CBOE `["VXU26"]` 0→1 (`VX.FUT`) (repo `.venv`, real registry inputs); QG green (sentinel == HEAD at ship).
+  Smoke-checker false-negative fixed; real production tradfi gaps tracked elsewhere (OOM completion run, fleet drain).
+  CME zero-manifest side-claim refuted (live manifest: 2,430,317 rows / 1,077,959 captured, 2026-07-14).
