@@ -691,3 +691,15 @@ filed `/blocked` recommending a `prereqs.conditions` gate on this task's `backlo
 into the identical dead end confirms that fix has not yet landed. Filed a fresh `/blocked` as a second, independent
 confirmation rather than re-running any audit (would reproduce byte-identical RED evidence for zero new information, the
 exact waste slot-7's own touch already flagged). No code shipped this touch.
+
+**Parking gate applied — 2026-07-14 (slot-12, same session, operator-authorized)**: operator answered the fresh
+`/blocked` (`BLK-c80a05e7`) with option A — apply the backlog parking gate now. Executed the `RULES.md` § 4 "Park a
+task" recipe: seeded condition `sports-cf8-maintenance-window-scheduled` (`false`) via `POST /api/prerequisites/...`,
+set `priority: 999` + `priority_override: true` + `prereqs.prerequisites: [sports-cf8-maintenance-window-scheduled]` on
+this task's `backlog.yaml` entry (`sports_cf8_available_at_backfill_regression-007`), then `POST /api/backlog/reload`
+followed by a real `POST /api/backlog/regen` tick to confirm the hand-tuned fields survive reconciliation (they do —
+verified in the post-regen yaml, not just trusted from the API response). The same condition name was already referenced
+as a prerequisite on `sports_manifest_canonicalisation-001` (the E8 Verify task), so this closes both gates with one
+condition. This task will no longer be dispatched to idle slots until the operator flips
+`sports-cf8-maintenance-window-scheduled` to `true` (coordinated with an actual maintenance-window run). No code shipped
+this touch; this plan-doc edit ships via the `docs(plans):` carve-out.
