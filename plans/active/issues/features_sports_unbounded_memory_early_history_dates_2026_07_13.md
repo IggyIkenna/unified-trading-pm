@@ -212,12 +212,27 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
       "Update — production re-test" section below for full evidence. Leaving the original checkmark + evidence in place
       (the profiling + the precompute-once change are real, verified improvements) but the completion claim itself does
       NOT hold — treat this todo as still open pending a second investigation.
-- [ ] [INFRA] P2. Fix `lc_log_upload_trap_block`'s EXIT_STATUS to reflect an OOM-killed/crashed workload subprocess's
+- [x] ✅ [INFRA] P2. Fix `lc_log_upload_trap_block`'s EXIT_STATUS to reflect an OOM-killed/crashed workload subprocess's
       real exit code, not just the wrapper shell's — so a crashed shard is never reported as `EXIT_STATUS=0`. (repo:
       deployment-service) — NOW CONFIRMED WORSE than originally scoped: the 2026-07-13 re-test found the OOM killer can
       take down the entire `google-startup-scripts.service` systemd unit (wrapper shell + tee + python child all
       killed), not just the workload subprocess — so the existing trap may not even get a chance to run. Verify the
-      trap's EXIT-signal path survives a whole-unit OOM kill, not only a clean subprocess non-zero exit.
+      trap's EXIT-signal path survives a whole-unit OOM kill, not only a clean subprocess non-zero exit. — **DONE, slot
+      11, 2026-07-14, deployment-service@21dfaaf.** A whole-unit SIGKILL bypasses bash EXIT traps entirely (nothing can
+      trap SIGKILL), so `_lc_final_upload` categorically cannot run in that case — no fix can make the trap itself
+      "survive" it. The actual observable gap was different and IS fixable: backfill shards reuse the same `vm_name`
+      across relaunches (same GCS `EXIT_STATUS` path), so when a whole-unit kill hits BEFORE the trap ever runs, the
+      blob is left holding whatever a PRIOR run of that same `vm_name` wrote — e.g. a stale `"0"` from an earlier
+      successful completion — which a fleet monitor would misread as THIS run's (crashed) result succeeding. Fixed by
+      stamping a non-integer `"RUNNING"` sentinel to `GCS_EXIT_URI` as the very first action in the injected snippet,
+      before the streamer/trap install — verified via `data_pipeline_monitors._gcs.     read_terminal_exit_code()` (the
+      canonical reader): `int("RUNNING")` raises `ValueError`, so it correctly falls through to `None` ("never
+      terminated"), matching the function's own documented contract, instead of ever returning a stale/false `0`. For
+      the case the trap DOES get to fire (a clean subprocess non-zero exit under `set -e`), `rc=$?` was already correct
+      — that path needed no change. 2 tests added: a bash-level test (`test_vm_launcher_scripts.py`) asserting the
+      sentinel write precedes `trap _lc_final_upload EXIT` in the generated snippet, and a Python-level test
+      (`test_data_pipeline_monitors.py`) asserting `read_terminal_exit_code()` returns `None` (never `0`) for a
+      `"RUNNING"` blob. `quality-gates.sh` green, shipped via quickmerge.
 - [x] ✅ [DATA] P0. **NEW (2026-07-13, slot 12) — real root-cause investigation needed, the b05f48ad fix is insufficient
       on production data.** Re-profile (`memray`/`tracemalloc`) against the REAL 2018-06-17 GCS data (not a synthetic
       repro) end-to-end through `run_new_calculators`, because the shot_quality precompute fix did not stop the OOM.
