@@ -50,6 +50,22 @@ check_decision "6xUTL 4th blocked live" WAIT_RAM_LIVE        1  5500 16500 3 430
 check_decision "reservation == budget"  ADMIT                0  3000 40000 0 43000 30000 6000 6
 check_decision "live == this+floor"     ADMIT                0  5500     0 0 43000 11500 6000 6
 check_decision "cpu == slots"           ADMIT                0  1000  1000 5 43000 30000 6000 6
+# Host-pressure valve (8th arg min_avail): refuse ANY admit when avail < min_avail (host >80% used).
+check_decision "host >80% used, tiny run blocked" WAIT_HOST_PRESSURE 1  1000 1000 1 43000  8000 6000 6 12200
+check_decision "host <80% used, min_avail set, admits" ADMIT        0  1000 1000 1 43000 30000 6000 6 12200
+check_decision "min_avail=0 disables the valve"        ADMIT        0  1000 1000 1 43000  5000 2000 6 0
+
+# ── _qg_repo_mem_cap — 1.2 × baseline, floored at 2048M (needs the fixture baseline below) ──
+if command -v python3 >/dev/null 2>&1; then
+    export QG_BASELINE_PATH="$TMP/baseline.json"
+    cat > "$QG_BASELINE_PATH" <<'EOF'
+{ "utl": {"vm": {"peak_rss_mb": 5500}}, "tiny": {"vm": {"peak_rss_mb": 630}} }
+EOF
+    eq "mem_cap 1.2×5500"        6600M "$(_qg_repo_mem_cap utl)"
+    eq "mem_cap floor 2048M"     2048M "$(_qg_repo_mem_cap tiny)"
+    eq "mem_cap unmeasured 1.2×5500" 6600M "$(_qg_repo_mem_cap no-such-repo)"
+    unset QG_BASELINE_PATH
+fi
 
 # ── _qg_repo_peak_mb on a fixture baseline (needs python3; skip peak tests if absent) ──
 if command -v python3 >/dev/null 2>&1; then

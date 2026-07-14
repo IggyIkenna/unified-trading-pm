@@ -230,7 +230,11 @@ _qg_ledger_count_unlocked() {
 #   else ADMIT. Echoes the decision token; returns 0 iff the run may proceed now.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 _qg_admit_check() {
-    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7"
+    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7" min_avail="${8:-0}"
+    # 0. Host-pressure valve — refuse ANY admit (regardless of this run's size) if the host is
+    #    already past 80 % used, i.e. avail < min_avail (= 20 % of MemTotal). Catches aggregate /
+    #    non-QG pressure the per-run clauses miss. min_avail=0 (default/omitted) disables it.
+    if (( min_avail > 0 && avail < min_avail )); then echo "WAIT_HOST_PRESSURE"; return 1; fi
     if (( this > budget )); then
         if (( reserved == 0 )); then echo "SOLO_ADMIT"; return 0; fi
         echo "SOLO_WAIT"; return 1
@@ -262,10 +266,20 @@ PY
     [[ "${peak:-0}" -gt 0 ]] && echo "$peak" || echo "${QG_UNMEASURED_PEAK_MB:-5500}"
 }
 
+# Per-repo HARD cgroup cap for QG_MEM_CAP = 1.2 × baseline peak, as a systemd size string
+# (e.g. "6600M"). The reservation governor sets QG_MEM_CAP to this so a run that outgrows its
+# baseline is OOM-killed in its OWN scope, never the host. Floored at 2048M (never absurdly tight).
+_qg_repo_mem_cap() {
+    local mb; mb="$(_qg_repo_peak_mb "$1")"
+    mb=$(( mb * 12 / 10 ))
+    (( mb >= 2048 )) || mb=2048
+    echo "${mb}M"
+}
+
 # Live admission decision for <repo>: gathers ledger + capacity, calls _qg_admit_check.
 # Echoes the decision token; returns 0 iff admit-now. (Not yet wired into acquire.)
 _qg_admit() {
-    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots
+    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots min_avail
     this="$(_qg_repo_peak_mb "$repo")"
     reserved="$(_qg_ledger_reserved_mb)"
     running="$(_qg_ledger_count)"
@@ -277,7 +291,8 @@ _qg_admit() {
     floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}" # MB (default 10% of total)
     (( floor >= 2048 )) || floor=2048
     slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
-    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots"
+    min_avail=$(( mt / 1024 * 20 / 100 ))             # 20% of MemTotal → host-pressure floor
+    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots" "$min_avail"
 }
 
 # Base file-descriptor for the token locks. The original used bash >=4.1's
@@ -307,7 +322,7 @@ _qg_governor_deprioritise() {
 
 # UNLOCKED body — call ONLY via _qg_ledger_with_lock. Decides + reserves atomically.
 _qg_try_reserve() { # <repo> <this_peak_mb> <pid>
-    local repo="$1" this="$2" pid="$3" f reserved running mt ma cores frac_pct cpu_pct budget avail floor slots decision
+    local repo="$1" this="$2" pid="$3" f reserved running mt ma cores frac_pct cpu_pct budget avail floor slots min_avail decision
     _qg_ledger_sweep_unlocked
     f="$(_qg_ledger_file)"
     reserved="$( [[ -f "$f" ]] && awk '{s+=$3} END{printf "%d", s+0}' "$f" || echo 0 )"
@@ -318,7 +333,8 @@ _qg_try_reserve() { # <repo> <this_peak_mb> <pid>
     budget=$(( mt / 1024 * frac_pct / 100 )); avail=$(( ma / 1024 ))
     floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}"; (( floor >= 2048 )) || floor=2048
     slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
-    decision="$(_qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots")"
+    min_avail=$(( mt / 1024 * 20 / 100 ))  # host-pressure floor (20% of MemTotal)
+    decision="$(_qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots" "$min_avail")"
     case "$decision" in ADMIT|SOLO_ADMIT) _qg_ledger_add_unlocked "$pid" "$repo" "$this" 0 ;; esac
     echo "$decision"
 }
