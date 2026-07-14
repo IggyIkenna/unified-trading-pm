@@ -131,8 +131,10 @@ authorized yet per `l2_book_microstructure_capture_2026_07_13.md` todo 7).
       `depth_of_book_10`/`queue_position` the same way `book_snapshot_5` is aggregated today, then repoint the features
       extractor). (repo: unified-trading-pm — plan decision) — **DONE: Option C confirmed via BLK-e5571ccf, see
       Resolution above.**
-- [ ] [SCRIPT] P3. **Not authorized today** — deferred until the `MarketMakingQueueMicrostructureEngine` backtest gate
-      is actually picked up. If/when Option A is authorized at that point: author
-      `mdps_book_microstructure_deeper_depth_columns_<date>.md` scoping the `book_summary_spec.py` extension + MDPS
-      aggregation change + the features-service extractor follow-on, depends_on this issue doc. (repo:
-      unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. **NOT APPLICABLE — Option A not authorized** (operator ruling 2026-07-14, `BLK-e5571ccf`): no
+      MDPS-scoped plan to author today. Deferred until the `MarketMakingQueueMicrostructureEngine` backtest gate is
+      actually picked up — whoever picks that up then authors `mdps_book_microstructure_deeper_depth_columns_<date>.md`
+      scoping the `book_summary_spec.py` extension + MDPS aggregation change + the features-service extractor follow-on,
+      depends_on this issue doc. Closing this todo now (rather than leaving it open) so it stops being redispatched —
+      re-opening requires a fresh operator decision when the backtest gate is actually picked up, tracked as a new
+      plan/todo at that time, not this one re-firing. (repo: unified-trading-pm)
