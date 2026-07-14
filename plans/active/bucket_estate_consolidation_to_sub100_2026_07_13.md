@@ -303,6 +303,20 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   setup-gcs-lifecycle-policies.sh deleted, e2e fixtures deleted) now resolved. QG green (43s), quickmerge →
   live-defi-rollout.
 
+- **2026-07-14, L6 pre-purge verification CAUGHT A SECOND REAL GAP.** The lean legacy-vs-prd diff found
+  **instruments-store-cefi flat holds 27,725 legacy-only objects** (2020-era `instrument_availability/by_date/` trees)
+  absent from the canonical `-prd` bucket — the June ratio-1.00 verification evidently covered the tick corpus, not
+  instruments availability history. Purge-arm correctly HELD on all 6 twins (chain gates on any truncated gap). Verified
+  clean: instruments-store-tradfi (0 legacy-only of 11,460), instruments-store-defi (0 of 69,108);
+  market-data-tick-tradfi diff still running. Fix in flight: detached `gcloud storage rsync -r` legacy→prd for
+  instruments-store-cefi (PID on VM, log /home/ubuntu/tmp/cefi_rsync.log); purge arms only after re-diff = 0. Estate
+  count now **155** (from 241). Also shipped: deployment-service@1dd2159 (lending-indices-prd TF block removed —
+  resurrection class; flat lending bucket found to have a LIVE writer: subgraph-health-probe fingerprints via t1_batch
+  IAM — its `_resolve_bucket()` must be repointed before that bucket can ever be deleted). State-surgery side-note: a
+  straggler sweep over-matched 7 live+declared non-bucket resources (liquidations/solana-defi collect crons+pubsub+jobs
+  — data_types remain LIVE into the shared bucket; only bucket kinds were retired) — they now show as plan ADDS;
+  re-import commands belong to the drift review (Deferred #5, import IDs enumerated there).
+
 - **2026-07-13/14 (round 2 landings).** deployment-api prod VERIFIED on the flat fix without intervention (auto
   promote+build pipeline; revision 00158-m5x live-curled — all 3 strategy-store entries flat) → strategy-store per-AG
   trio RETIRED (cefi's 105 residual objects preserved to flat `legacy_cefi/`, count-verified, 3 buckets deleted).
