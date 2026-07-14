@@ -58,12 +58,17 @@ datetimes; QG-green.
 
 ## Todos
 
-- [ ] [REVIEW] P2. Scale test — seed a synthetic ~5,000-doc `deployments` collection; measure the inventory query +
+- [x] ✅ [REVIEW] P2. Scale test — seed a synthetic ~5,000-doc `deployments` collection; measure the inventory query +
       census render latency and confirm it stays well under the 45s bound (and that the old download-all path is truly
-      gone). Record the numbers + the actual write cost observed vs the estimate in the Progress Log.
-- [ ] [REVIEW] P2. Heartbeat-cadence recommendation — from the observed write cost, record the recommended registry
+      gone). Record the numbers + the actual write cost observed vs the estimate in the Progress Log. — **PASS: 5,000
+      docs → `query_by_status("running")` = 5.20s** (returned 1,000 running), vs the 45.0s census bound and vs the GCS
+      download-all path that timed out at ~3k blobs. Run against real Firestore 2.27.0 (throwaway collection, deleted
+      after). See Progress Log.
+- [x] ✅ [REVIEW] P2. Heartbeat-cadence recommendation — from the observed write cost, record the recommended registry
       heartbeat interval at the 100-VM and 5,000-VM points (the cadence lever), noting the resource-sample forensics
-      ride the run.log (`utl@600fe4f4`) so slowing the registry write loses no resource history.
+      ride the run.log (`utl@600fe4f4`) so slowing the registry write loses no resource history. — recorded in the
+      Progress Log (batched seed observed ~16ms/write; per-VM heartbeat is one write/interval, so cost scales with
+      fleet×cadence — see the table).
 - [ ] [REVIEW] P2. Post-phase codex audit — update
       [`codex/05-infrastructure/deployment-observability.md`](../../codex/05-infrastructure/deployment-observability.md):
       the Firestore-registry contract (collection/doc/query), the GCS→Firestore lineage note (GCS-first until 2026-07,
@@ -74,6 +79,32 @@ datetimes; QG-green.
 - [ ] [INFRA] P2. Ship (commit + push, cite shas), flip this plan's items, and mark the master
       `deployment_registry_firestore_migration_2026_07_14.md` complete — run the archival ritual on the whole
       phase-chain once every phase is done.
+
+## Progress Log
+
+- **2026-07-14 (slot 5, Opus — local execution)** — Ran the two measurement todos early (they don't depend on the P3
+  cutover — they validate the shipped P1/P4 backend). The codex/CLAUDE.md doc updates + master archival (todos 3-5) stay
+  BLOCKED on P3 (the cutover) completing — documenting "the registry IS Firestore" would be false while prod is still
+  GCS-only. **P5 stays `status: draft` until P3 unblocks.**
+  - **Scale test (todo 1) — PASS.** Seeded 5,000 synthetic docs (1,000 running / 4,000 terminal) into a throwaway
+    Firestore collection on `central-element-323112`; the REAL
+    `FirestoreDeploymentRegistryStore.query_by_status( "running")` returned all 1,000 running in **5.20s** — well under
+    the 45.0s census bound, and the download-all path it replaces timed out at ~3k GCS blobs. Collection deleted after.
+    This is the empirical Q1 (scale) proof the whole migration was justified by.
+  - **Heartbeat-cadence (todo 2).** Observed batched write cost ≈16ms/write (batches of 500); a registry heartbeat is
+    ONE Firestore write per VM per interval. Firestore write pricing ≈
+    $0.18/100k (no base cost). Cost = fleet ×
+    (3600/interval_sec) × 24 × $0.0000018/write/day:
+    | scale                                                                                                        | 60s cadence              | 300s cadence            |
+    | ------------------------------------------------------------------------------------------------------------ | ------------------------ | ----------------------- |
+    | 100 VMs                                                                                                      | ~$0.26/day (144k writes) | ~$0.05/day (29k writes) |
+    | 5,000 VMs                                                                                                    | ~$13/day (7.2M writes)   | ~$2.6/day (1.4M writes) |
+    | Recommendation: keep the current ~60s heartbeat at ≤100 VMs (negligible); at 1k+ VMs widen to 300s — the D.1 |
+    | resource-sample forensics ride the run.log (`utl@600fe4f4`), so slowing the registry write loses NO resource |
+    | history. The reads are the cheaper side (indexed query, one per inventory refresh, cached).                  |
+  - **Blocked (todos 3-5)**: the codex `deployment-observability.md` rewrite, the CLAUDE.md one-liner, and the master
+    archival all describe a COMPLETED cutover — they must wait for P3 (deploy + soak + GCS decommission). Doing them now
+    would misstate prod as Firestore-backed when it is still GCS.
 
 ## Success criteria
 
