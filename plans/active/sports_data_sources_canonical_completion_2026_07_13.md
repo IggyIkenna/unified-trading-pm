@@ -194,8 +194,12 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       (service_name = identity or provenance, like `source` which is already excluded). Full evidence + options A/B/C/D:
       `plans/active/issues/manifest_consolidator_service_name_dedup_split_2026_07_14.md`; operator /blocked posted from
       slot-5 (BLK-9fc56b5c; re-surfaced as BLK-17603e1f on the 2026-07-14 resume dispatch — same decision, still
-      awaiting the operator ruling; slot has no ADC so the Option-A rule-11 GCS blast-radius proof cannot be pre-run
-      here either). Do NOT re-dispatch as a NULL/`""` fix — it is a no-op for this symptom.**
+      awaiting the operator ruling). **UPDATE 2026-07-14 (slot-5): the owed rule-11 GCS blast-radius proof is now DONE
+      (ADC works via the Python SDK; only the gcloud CLI was broken). It found Option A is NOT a no-op — it would
+      collapse 607 defi MTDS-subgraph ✕ MDPS-rpc captured-vs-captured atoms (distinct row_counts) on top of the sports
+      EU twins — so the lean shifts to Option B (collapse captured-vs-NON-captured only). Full numbers + the sharpened
+      A-vs-B decision in the issue doc's "🔬 Rule-11 LIVE blast-radius proof" section.** Do NOT re-dispatch as a
+      NULL/`""` fix — it is a no-op for this symptom.**
 - [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
       found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
       `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's

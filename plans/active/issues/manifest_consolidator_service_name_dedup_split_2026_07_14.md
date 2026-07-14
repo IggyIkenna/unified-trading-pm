@@ -103,15 +103,17 @@ provenance, not venue identity — collapsing two vendors' rows for one cell is 
 same logic `service_name` = which service/script wrote the row = provenance, and two services capturing the same
 `(date, venue, data_type, +optional dims)` cell should collapse for coverage.
 
-- **Option A (recommended): exclude `service_name` from the consolidator dedup key** (drop it from `_BASE_DEDUP_COLS`,
-  and from the writer's mirror), exactly as `source` already is. The status-aware tie-break then keeps the captured
-  survivor; its `service_name` provenance is preserved on the winning row. Cleanest, principled, matches the `source`
-  precedent. Requires a rule-11 fleet blast-radius proof (confirm no asset_group legitimately keeps DISTINCT-coverage
-  rows that differ ONLY on service_name) — and that proof needs GCS/ADC read access this slot currently lacks.
-- **Option B: status-aware cross-`service_name` collapse only.** Keep `service_name` in the key for the general case,
-  but when a `captured` row and a non-captured row are identical on all OTHER dedup dims, collapse them keeping the
-  captured one (mirrors the existing source-aware `row_count` collapse). More surgical, preserves multi-service cells,
-  but more complex SQL and murkier semantics.
+- **Option A: exclude `service_name` from the consolidator dedup key** (drop it from `_BASE_DEDUP_COLS`, and from the
+  writer's mirror), exactly as `source` already is. The status-aware tie-break then keeps the captured survivor; its
+  `service_name` provenance is preserved on the winning row. Cleanest/most principled if `service_name` is purely
+  provenance — BUT the rule-11 live proof below found this is NOT a no-op: it collapses **607 defi captured-vs-captured
+  dual-source atoms** (MTDS-subgraph ✕ MDPS-rpc, distinct row_counts) in addition to the sports captured-vs-EU twins,
+  dropping one source's captured record. That collapse is a second, separate coverage-accounting decision A forces.
+- **Option B (now the safer lean per the rule-11 proof): status-aware cross-`service_name` collapse only.** Keep
+  `service_name` in the key for the general case, but when a `captured` row and a NON-captured row (e.g.
+  `expected_unattempted`) are identical on all OTHER dedup dims, collapse them keeping the captured one (mirrors the
+  existing source-aware `row_count` collapse). Fixes the sports EU-twin bug (165,148 TEAMS) WITHOUT collapsing the 607
+  defi captured-vs-captured dual-source rows (both captured → B leaves them alone). More surgical; more complex SQL.
 - **Option C: data remediation only.** Rewrite the 165,148 backfill rows' `service_name` to `instruments-service` so
   they collapse under the current key. One-off, does NOT prevent recurrence, and contradicts the plan's own ruling
   (lines 120-128) that the custom `service_name` is "honest provenance… NOT a service_name-drift bug."
@@ -128,11 +130,52 @@ collapse would be a no-op for them). Two findings this hands the operator:
    `dr-drill-cutover`, `backfill-teams-61-leagues`, etc. Every such one-off that captures cells previously seeded by the
    main service re-creates the non-collapsing-twin bug. This argues for a GENERAL fix (A or B) over the one-off data
    remediation (C).
-2. **Option A's residual risk is a live-only question.** Static code can't prove that NO two service_names ever write
-   the SAME `(date, venue, data_type, +optional dims)` atom with distinct real coverage (e.g. mtds vs mdps on an
-   overlapping data_type, or `*-test` fixtures). That's the exact rule-11 GCS check still owed before A lands — a
-   `GROUP BY (date,venue,data_type,+opt dims) HAVING count(DISTINCT service_name) > 1 AND count(DISTINCT capture_status WHERE=captured) > 1`
-   over the canonical manifests of ≥2 non-sports asset_groups. Needs ADC/GCS read this slot lacks.
+2. **Option A's residual risk is a live-only question — NOW ANSWERED (see the rule-11 LIVE proof section below).**
+   Static code could not prove whether two service_names ever write the SAME `(date, venue, data_type, +optional dims)`
+   atom with distinct real coverage. The live GCS proof found they DO: 607 defi atoms carry MTDS-subgraph ✕ MDPS-rpc
+   captured pairs with distinct row_counts. So Option A's collapse is real, not a no-op — this is what shifts the lean
+   to Option B.
+
+## 🔬 Rule-11 LIVE blast-radius proof (2026-07-14 slot-5) — Option A is NOT a no-op; Option B is safer
+
+The rule-11 GCS proof owed above (finding #2) is now DONE. ADC works via the Python SDK on this slot (only the `gcloud`
+CLI was broken — the earlier "no ADC" note was a CLI artifact). Read the CONSOLIDATED canonical index
+(`_index/availability_index.parquet`) for all four non-sports asset_groups — one bounded download each, no corpus walk —
+and ran, per AG, the exact query owed: over the atom
+`(date, venue, data_type + present optional dedup dims, normalized with the consolidator's own `_dedup_key_sql`, EXCLUDING `service_name`)`,
+how many atoms have ≥2 DISTINCT `service_name` values that EACH carry a `capture_status='captured'` row? (Repro:
+`scratchpad/rule11_service_name_blast_radius.py` + `scratchpad/rule11_defi_deepdive.py`.)
+
+| asset_group | captured rows | Option-A collapse-risk atoms | who splits                                                                              |
+| ----------- | ------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| cefi        | 3,123,369     | **0**                        | — (only `market-tick-data-service` + a NULL-service legacy set; no two-service overlap) |
+| defi        | 3,010,913     | **607**                      | `market-tick-data-service` (subgraph) ✕ `market-data-processing-service` (rpc)          |
+| tradfi      | 1,608,390     | **1**                        | one-off `migrate-tradfi-canonical` + mtds + is + mdps                                   |
+| prediction  | 45,988        | **1**                        | one-off `migrate-polymarket-canonical` + mtds + is + mdps                               |
+
+**Fleet total: 609 collapse-risk atoms.** The tradfi/prediction 1-each involve one-off migration `service_name`s (the
+same recurrence pattern as sports' `backfill-teams-61-leagues`). The **607 defi atoms are the material finding** and
+they are NOT phantom duplicates:
+
+- data_types: `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` (606 each), `dex_pool_state` (598), `dex_pool_swaps` (593), + a
+  long tail of 1-atom onchain types.
+- The two captured rows are genuine **dual-source captures of the same cell**: the MTDS row is `source=onchain_subgraph`
+  / `pipeline_mode=batch_onchain_subgraph`; the MDPS row is `source=onchain_rpc` / `pipeline_mode=batch_onchain_rpc`.
+- Redundant-vs-distinct test (do the MTDS and MDPS `row_count`s match on the same atom?): **0 of 607 match** — 465 have
+  DIFFERENT row_counts, 142 have one side NULL. So each source row carries distinct measured coverage, not an identical
+  duplicate.
+- Because `source` is ALREADY excluded from the dedup key, these rows are currently kept apart **solely by
+  `service_name`**. Excluding `service_name` too (Option A) would collapse all 607 defi dual-source captured pairs into
+  one survivor and DROP the other source's captured record from the consolidated manifest — a real change to defi
+  dual-source coverage accounting, not a cosmetic dedup.
+
+**What this does to the recommendation:** it flips the lean from A to **B**. Option B (collapse a `captured` row only
+against a NON-captured twin — the sports captured-vs-`expected_unattempted` case — while leaving captured-vs-captured
+rows untouched) fixes the sports bug (165,148 TEAMS EU twins) WITHOUT touching the 607 defi captured-vs-captured
+dual-source rows. Option A fixes sports but simultaneously collapses the defi dual-source pairs; whether that is
+desirable (the cell is "covered", period) or lossy (downstream wants to see subgraph AND rpc coverage separately) is a
+second operator judgment Option A forces and Option B avoids. **The operator ruling should now be A-vs-B with this defi
+dual-source consequence explicit, not "A recommended".**
 
 ## 🟡 2026-07-14 (slot-3) — corroborating evidence from TradFi/CME, but a DIFFERENT specific splitter column
 
@@ -174,8 +217,14 @@ there, not re-litigated here.
 
 ## Todos (gated on the operator ruling above)
 
+- [x] [DATA] P1. Rule-11 blast-radius DISCOVERY proof — DONE 2026-07-14 (slot-5). Ran the owed live GCS query over all
+      four non-sports canonical indexes (cefi/defi/tradfi/prediction). Result: 609 fleet collapse-risk atoms, 607 of
+      them defi MTDS-subgraph ✕ MDPS-rpc captured-vs-captured with distinct row_counts → Option A is NOT a no-op; lean
+      shifts to Option B. Full numbers in the "🔬 Rule-11 LIVE blast-radius proof" section above. Repro:
+      `scratchpad/rule11_service_name_blast_radius.py` + `rule11_defi_deepdive.py`.
 - [ ] [DATA] P1. Apply the operator-chosen fix (A/B/C) to `unified_trading_library/manifest_consolidator.py`'s dedup key
       (+ the writer mirror `manifest_writer/_writer_io.py::_OPTIONAL_DEDUP_DIMS_NULL_NORMALIZE` / `_rows.py` if the key
-      set changes), with a rule-11 blast-radius proof against a representative sample from ≥2 non-sports asset_groups
-      before landing (repo: unified-trading-library). BLOCKED-OPERATOR-DECISION until the identity-vs-provenance ruling
-      is given.
+      set changes), then RE-RUN the rule-11 proof post-fix to confirm the chosen option behaves as intended (Option B
+      must leave the 607 defi captured-vs-captured atoms intact; Option A must collapse exactly the 609) before landing
+      (repo: unified-trading-library). BLOCKED-OPERATOR-DECISION until the A-vs-B ruling (with the defi dual-source
+      consequence explicit) is given.
