@@ -695,6 +695,10 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
+    # Optional per-repo extra test paths OUTSIDE the tests/ tree (e.g. checker-adjacent
+    # test_*.py files that pyproject.toml's testpaths=["tests"] never collects). Set
+    # EXTRA_PYTEST_PATHS as a bash array before sourcing this script — default unset/empty
+    # is behavior-identical to today for every repo that doesn't set it.
     # RUN_INTEGRATION=true: include tests/integration/ when the directory exists.
     # Repos without tests/integration/ run unit tests only — no failure, no skip.
     # Integration tests are library contract tests (no real GCS/network calls).
@@ -716,7 +720,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     #     if ! $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} ... ; then
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix from both branches below.
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
-        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} ${EXTRA_PYTEST_PATHS[@]+"${EXTRA_PYTEST_PATHS[@]}"} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
             cat "$_pytest_log"
             exit 1
         fi
@@ -725,7 +729,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
             log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
         fi
     else
-        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
+        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ ${EXTRA_PYTEST_PATHS[@]+"${EXTRA_PYTEST_PATHS[@]}"} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
             cat "$_pytest_log"
             exit 1
         fi
