@@ -181,7 +181,12 @@ paths (PROJECT_ID/account-derived) · GCS bucket names (`cloud-providers.yaml`, 
 
 ### PHASE 0 — Pre-migration: finish CI/CD hardening on the CURRENT owner (operator: do this FIRST)
 
-Migrate a GREEN, drained fleet. Gate: the `cicd_contract_hardening_2026_06_01.md` drain is complete.
+Migrate a GREEN, drained fleet. Gate: the `cicd_contract_hardening_2026_06_01.md` drain is complete (was: cited as the
+live precondition — that plan was **ARCHIVED 2026-06-18**, superseded by the cicd consolidation, open items migrated to
+4 themed plans. Current live gate SSOT is `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` [`status: active`],
+which as of 2026-07-12 declares the pipeline healthy/simplified end-to-end (Phase 3 verify-healthy todo checked).
+Re-verify pipeline health against that doc, not this stale reference, before un-pausing Phase 0. [finding 92, synced
+2026-07-14])
 
 - [ ] [CICD] P0. Finish the fleet LDR→staging→main drain (deployment-service 31 / greeks 15 / uac 7 behind LDR; 11/18
       promote PRs DIRTY/BLOCKED on uac-0.2.0/utl-0.4.0 dep-bumps). Pipeline self-sustaining BEFORE the cut.
