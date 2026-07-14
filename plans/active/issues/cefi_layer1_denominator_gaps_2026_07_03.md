@@ -218,9 +218,40 @@ enough). The % is neither an upper nor lower bound of the real value.
       trades-only scoped); adding a dependency on the retired key would work against that migration. Shipped
       `unified-api-contracts@5626079e`.
 
-- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION — OKX-SPOT has ZERO EXPECTED tuples anywhere (denominator hole) — TRACKED
-      IN FULL at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`.** Surfaced 2026-07-08
-      (slot-8 planning) while verifying `-004`'s Gate; root-caused to `unified-api-contracts@23fa3a99` (deliberate,
+- [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
+      instrument catalogue is permanently LIVE-ONLY — can never backfill historical data.**
+      `unified_api_contracts.registry.venue_adapter_keys.VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` is a
+      HARD, mode-independent mapping — `instruments_service/reference_data/factory.py::get_adapter_for_canonical_venue`
+      only special-cases mode-routing (batch→Tardis / live→CCXT-or-live-adapter) for venues resolving to `"tardis"` or
+      `"databento"` FIRST via `_resolve_uac_adapter_key`; DERIBIT-COMBO never reaches that branch because its adapter
+      key is already pinned to `"deribit_combo"` (`DeribitComboReferenceDataAdapter`,
+      `instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py`) regardless of `mode="batch"` vs
+      `"live"`. That adapter's own docstring says it's LIVE-only ("real-time active combos... complements the Tardis
+      adapter which covers historical data") — but the historical Tardis-sourced combo path
+      (`TardisReferenceDataAdapter` with `canonical_venue_override="DERIBIT-COMBO"`, `combos.py`'s leg parser already
+      exists and is wired for it) is never actually invoked by the catalogue refresh for this venue. **Live-verified**:
+      `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` filtered to `venue=DERIBIT-COMBO`
+      has exactly **4 rows**, all `mvp=False`, all `available_from` in **2026-07** (i.e. "currently active as of the
+      last live refresh"), zero rows for any earlier date — despite
+      `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT-COMBO"]["trades"] = "2022-08-23"` (live-verified against
+      `api.tardis.dev/v1/exchanges/deribit`'s `type=='combo'` symbols per this plan's Addendum 5, 2026-07-12) declaring
+      a real, much larger historical universe. **Consequence, confirmed by a real backfill VM this session**: relaunched
+      `cefi-deribit-combo-2024-heavy` (post-fix — see `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4 Re-Verification Run
+      #6 for the accompanying MTDS venue-collapse fix, `market-tick-data-service@c9e6080f`) targeting `2024-01-01`;
+      `run.log` shows the venue routing is now CORRECT (no more `venue=DERIBIT` collapse) but
+      `NO SYMBOLS for deribit on 2024-01-01` — because the catalogue genuinely has zero DERIBIT-COMBO instruments dated
+      that far back. **This means `(DERIBIT-COMBO, options_chain, trades)` can NEVER close as a G4 Layer-1 tuple until
+      this catalogue-population gap is fixed** — no amount of backfill-VM relaunching will help; the denominator itself
+      is starved. **Recommended fix** (not attempted this session — architectural, touches
+      `factory.py::get_adapter_for_canonical_venue`'s mode-routing, which every other CeFi Tardis venue also depends on;
+      scoping as its own todo rather than risking a same-session change to shared routing logic): make
+      `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` resolve to `"tardis"` (with `canonical_venue_override="DERIBIT-COMBO"`,
+      `exchanges=["deribit"]`) for `mode="batch"`, and keep `"deribit_combo"` (the live REST adapter) only for
+      `mode="live"` — the SAME pattern `get_adapter_for_canonical_venue` already uses for CeFi Tardis venues on the
+      `live→CCXT` branch, just inverted (DERIBIT-COMBO's "live-native" adapter is `deribit_combo`, not CCXT, but the
+      batch-should-prefer-Tardis principle is identical). (repo: instruments-service, unified-api-contracts) IN FULL at
+      `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`.** Surfaced 2026-07-08 (slot-8
+      planning) while verifying `-004`'s Gate; root-caused to `unified-api-contracts@23fa3a99` (deliberate,
       production-verified bare-OKX/BYBIT `SPOT_PAIR` removal) orphaning `OKX-SPOT`'s capability entry since `OKX-SPOT`
       was never declared its own cefi venue (unlike `BYBIT-SPOT`, which IS declared and unaffected). Also blocks
       `instruments-service` QG (2 pre-existing red tests: the OKX-fold test here + a separate stale `lighter-zksync`
