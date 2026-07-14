@@ -94,10 +94,14 @@ table) instead of emitting a misleading `count=1` finding row.
 
 ## Todos
 
-- [ ] [CODE] P2. Asset_group-scope `file_escalation_issue`'s output filename in
+- [x] ✅ [CODE] P2. Asset_group-scope `file_escalation_issue`'s output filename in
       `e2e-testing/scripts/audit/_dp_common.py` (repo: e2e-testing) so a `defi`-only and a `cefi`-only run on the same
       UTC day never collide. Add a regression test asserting two same-day, different-asset_group calls produce two
-      distinct files.
+      distinct files. — e2e-testing@d83f12c. Added `asset_groups` param folded into the filename
+      (`{slug}_{ag_scope}_     {date}.md`, `all` when covering the full universe); wired both
+      `manifest_hygiene_daily.py` and `reprobe_new_empty_confirmed.py` (same collision class) to pass their `ag_results`
+      keys; 2 regression tests added (`test_file_escalation_issue_asset_group_scope_avoids_collision`,
+      `test_file_escalation_issue_full_universe_scope_collapses_to_all`).
 - [ ] [CODE] P2. In `e2e-testing/scripts/audit/manifest_hygiene_daily.py`, classify a `BucketNamingError`/missing-env
       failure from the phantom-reconcile subprocess call the same way the 4-pillar harness error is already handled
       (log + `SKIPPED`, never a `count=1` finding row) (repo: e2e-testing).
