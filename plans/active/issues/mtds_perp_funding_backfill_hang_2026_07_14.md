@@ -26,6 +26,7 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    plans/active/mtds_retry_safe_default_audit_2026_07_14.md,
   ]
 created: 2026-07-14
 assigned_vm: planning
@@ -283,7 +284,10 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `prediction/polymarket_adapter.py:510` precedent — zero functional/behavioral change (raise is unconditional at
       every site) but removes the latent "silently becomes a live bug if someone later wires retry_safe into a retry
       decision" risk the prior todo flagged. Full `quality-gates.sh` green (5473 passed, 16 skipped).
-      market-tick-data-service@f82f29c1.
+      market-tick-data-service@f82f29c1. **Follow-up (2026-07-14, dispatched P1/P3 agent)**: the convention is now
+      pinned by its own plan — `plans/active/mtds_retry_safe_default_audit_2026_07_14.md` (QG lint banning the
+      `else True` idiom, decision on the 2 residual non-status transient-path sites in glassnode/helius, codex SSOT
+      update to `shard-level-failure-isolation.md`, issue-doc closeout).
 
 ## Update — 2026-07-14 (independent corroboration of the P2 relaunch, concurrent session)
 

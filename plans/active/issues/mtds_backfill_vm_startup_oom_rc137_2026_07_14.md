@@ -468,7 +468,7 @@ downside, until a fix-worker restructures the merge SQL/query-plan itself. Filed
 DuckDB merge SQL/query-plan restructuring inside `unified_trading_library/manifest_consolidator.py` is Python service
 business logic, outside infra craft scope (`does_not: Python service business logic → backend_engineer`).
 
-- [ ] [BACKEND] P0. **`uts-prod-manifest-consolidator-market-data-defi`'s DuckDB incremental-merge working set genuinely
+- [x] [BACKEND] P0. **`uts-prod-manifest-consolidator-market-data-defi`'s DuckDB incremental-merge working set genuinely
       exceeds 24GB regardless of thread count** — confirmed via a controlled 3-point live experiment (see "P0 infra
       residual verification — threads pragma confirmed insufficient" above): `CONSOLIDATOR_DUCKDB_THREADS` at 4/2/1
       survived ~23s/~39.5s/~96s respectively before `Container terminated on signal 9` — a clear thread-count-correlated
@@ -484,7 +484,92 @@ business logic, outside infra craft scope (`does_not: Python service business lo
       which does not set `CONSOLIDATOR_DUCKDB_THREADS` at all — only `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` is codified in
       `manifest_consolidator_scheduler.tf`; the unset env var falls back to the code default of `"4"`) as a stopgap; a
       real fix should restore/codify a sane value once the merge itself no longer OOMs regardless of thread count. Repo:
-      `unified-trading-library` (`manifest_consolidator.py`).
+      `unified-trading-library` (`manifest_consolidator.py`). — ✅ ROOT-CAUSED + FIX SHIPPED 2026-07-14 (slot-9,
+      backend_engineer): `unified-trading-library@39979c5a` — see "P0 — DuckDB CTE materialization root-caused + fixed
+      (NOT MATERIALIZED)" below for the full mechanism + measured evidence. **NOT a full close**: verified via a
+      synthetic local repro (real module functions, real DuckDB 1.5.3), not against the actual Cloud Run job / real
+      27.4M-row DeFi canonical — that redeploy + live-cycle verification is infra scope, filed as a new `[INFRA]` P0
+      todo below.
+
+## P0 — DuckDB CTE materialization root-caused + fixed (NOT MATERIALIZED) (2026-07-14, slot-9, backend_engineer)
+
+Picked up the last open `[BACKEND] P0` todo (thread-tuning confirmed insufficient, memory_limit confirmed insufficient —
+both from "P0 infra residual verification — threads pragma confirmed insufficient" above). Given this issue's own
+history of shipping unverified DuckDB fixes that turned out insufficient (3 prior rounds: memory_limit 8GB→24GB, threads
+4→2→1, both confirmed NOT to fix the crash), built a local, empirical repro BEFORE touching any code, using the real
+module's own SQL-construction helpers (`_dedup_key_sql`/`_resolve_dedup_cols`/`_stale_drop_predicate`) against a
+synthetic ~5M-row/31-column parquet canonical (mirrors the live 27.4M-row DeFi shape's dedup-key width) — this sandbox
+has no working `gcloud`/GCS access (same `cap_dac_override` snap failure prior sessions on this issue hit), so a real
+27.4M-row live repro was not possible; the synthetic repro isolates the QUERY-PLAN mechanism, which is
+data-shape-independent.
+
+**Root cause**: in the incremental-merge CTE chain (`_duckdb_merge_payload`), `canon` is referenced twice
+(`survivors_raw` + `contested`) and `survivors_raw` is referenced three times (`dupe_keys` + `survivors_clean` +
+`survivors_deduped`). DuckDB's default CTE-materialization heuristic buffers a multiply-referenced CTE's FULL result
+ONCE rather than re-streaming it per reference — so both `canon` (the entire filtered canonical, ~27.4M rows wide) and
+`survivors_raw` (canon minus the tiny contested set — nearly the same size) get held as full-width intermediate buffers
+simultaneously with every downstream operator that reads them.
+
+**The missing piece prior sessions' `memory_limit`/`threads` tuning couldn't reach**: on Cloud Run gen2,
+`temp_directory` (DuckDB's spill-to-disk target once a materialized buffer exceeds `memory_limit`) is a **RAM-backed
+tmpfs** — so a materialized CTE that spills still consumes real container memory, just outside DuckDB's own
+`memory_limit`-tracked accounting. This is why raising `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` 8GB→24GB (3x) barely moved
+crash timing (~22-25s→~15s, i.e. got WORSE): the pragma only reallocates HOW MUCH of the SAME oversized materialized
+working set lives in DuckDB-tracked RSS vs. tmpfs-spilled bytes — never how big that working set actually is. Same
+explanation for the threads experiment's floor-still-OOMs result: fewer threads delays the crash (less **concurrent**
+scratch overhead) but the underlying serial materialization is the same size regardless.
+
+**Local confirmation** (synthetic 5,000,000-row canon.parquet + 3,000-row incremental changed-shard, real DuckDB 1.5.3,
+`temp_directory` pointed at `/dev/shm` to mimic Cloud Run gen2's tmpfs, tracking BOTH the process's own RSS
+(`/proc/self/status VmRSS`) AND the tmpfs spill size (`du -sm`) — the sum approximates what a Cloud Run cgroup would
+actually see):
+
+| Config                            | DuckDB-tracked RSS | tmpfs spill | **TOTAL real footprint** | elapsed |
+| --------------------------------- | ------------------ | ----------- | ------------------------ | ------- |
+| BEFORE, `memory_limit=1GB`        | 1.53 GB            | 6.98 GB     | **8.51 GB**              | 32.7s   |
+| BEFORE, `memory_limit=4GB`        | 4.56 GB            | 4.01 GB     | **8.57 GB**              | 10.2s   |
+| **AFTER (NOT MATERIALIZED), 1GB** | 1.51 GB            | 3.67 GB     | **5.20 GB** (−39%)       | 27.8s   |
+| **AFTER (NOT MATERIALIZED), 4GB** | 3.61 GB            | 0 GB        | **3.61 GB** (−60%)       | 4.5s    |
+
+The BEFORE rows reproduce the exact insensitivity-to-`memory_limit` signature this issue already documented live (TOTAL
+footprint ~8.5GB regardless of the 1GB vs 4GB pragma — the SAME real working set, just relocated between DuckDB-tracked
+and tmpfs-spilled). The AFTER rows (adding `NOT MATERIALIZED` to `canon` and `survivors_raw`) cut the TOTAL real
+footprint 39-60% at this scale, AND ran faster (streaming avoids the spill I/O entirely at 4GB budget). Output verified
+byte-identical to the unmodified query both directions (`SELECT * FROM a EXCEPT SELECT * FROM b` = 0 rows, both ways) —
+`NOT MATERIALIZED` is a pure execution-plan hint, the SQL semantics are unchanged.
+
+**Fix shipped**: `unified-trading-library@39979c5a` — `WITH canon AS NOT MATERIALIZED (...)` and
+`survivors_raw AS NOT MATERIALIZED (...)` in the incremental-merge branch of `_duckdb_merge_payload`. Regression-guard
+test added (`test_duckdb_incremental_merge_marks_wide_ctes_not_materialized`) that spies on the executed SQL text and
+asserts both hints are present — a future refactor silently dropping them would NOT be caught by any output-correctness
+test (the hint changes only the execution plan), so this pins the SQL text directly. Full
+`test_manifest_consolidator.py` suite (76→78 tests) + `test_manifest_consolidator_canon_schema_align.py` green; full
+`quality-gates.sh` green.
+
+**What this does NOT prove**: the 39-60% reduction is measured at 5M rows / 1-4GB budgets, not the real 27.4M-row DeFi
+canonical against the actual 32Gi Cloud Run container (5.5x the row count, ~30x the memory budget) — the scaling
+relationship at that scale is plausible-but-unconfirmed. Also unexplored: whether `changed`/`changed_keys` (each
+referenced twice) would benefit from the same hint — left untouched since they hold only the small incremental shard set
+(cheap either way), to keep this fix's blast radius minimal and its evidence precise. Filed as a new `[INFRA]` P0 todo
+below for the live Cloud Run verification this session's sandboxed `gcloud` (same broken snap `cap_dac_override` prior
+sessions on this issue hit) cannot perform.
+
+- [ ] [INFRA] P0. **Live-verify `unified-trading-library@39979c5a` (NOT MATERIALIZED fix) against the real
+      `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job** — confirm the image picks up the new code (per
+      "P0 infra residual verification" above, this job's `market-tick-data-service:latest` base image is digest-pinned
+      and needs an explicit bump if `update-dependency-version.yml` hasn't auto-fired; verify via direct content
+      inspection — pull + grep for `NOT MATERIALIZED` in the deployed `manifest_consolidator.py`, not just git-ancestor
+      math), then watch the next real `duckdb_merge_start` cycle (lock TTL ~300s, so only ~1-in-5 once-a-minute
+      scheduled executions actually reach it) for `Container terminated on signal 9` vs. a successful write. If it
+      survives, confirm `_index/availability_index.parquet` for `market-data-tick-defi-prd-central-element-323112`
+      advances past its current frozen timestamp (currently stale since 2026-07-14T12:56:34Z per this issue's own
+      diagnostics above). If it STILL crashes, that means the real 27.4M-row canonical's working set exceeds even the
+      NOT-MATERIALIZED-streamed footprint — next step would be restoring `CONSOLIDATOR_DUCKDB_THREADS` from its current
+      live stopgap value (`1`) upward now that the dominant materialization cost is gone (may restore useful parallelism
+      without the OOM this issue's thread experiment hit), or genuinely batching the anti-join over date-range
+      partitions (this issue's `ManifestFreshnessCache` sibling fix's `date_range`-scoping idea, applied to the
+      consolidator side). Repo: `deployment-service` (Cloud Run job redeploy/trigger) + `unified-trading-library` (if a
+      further code change is needed).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
