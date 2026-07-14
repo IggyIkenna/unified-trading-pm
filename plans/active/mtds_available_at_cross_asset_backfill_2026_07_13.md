@@ -675,3 +675,26 @@ decision, or (b) main/operator applies the parking recipe from `RULES.md` §4 (`
 `prereqs.conditions` gate) to `-003`/`-005`/`-009`/`-012`/`-014` — worker slots cannot edit the central `backlog.yaml`
 themselves (confirmed by slot 12). No production writes made this touch; no cron state changed, no manifest touched, no
 code changed.
+
+**Premature-dispatch finding #8, tradfi apply lane — 2026-07-14 (data_engineering slot-6, task
+`mtds_available_at_cross_asset_backfill-014`)**: dispatched task `-014` again — the SAME task slots 9, 10, 11, and 4
+already declined (see "Premature-dispatch finding #3/#4/#5/#7" above). Fresh-pulled all 24 slot repos to
+`origin/live-defi-rollout` (all clean FF). Re-read this plan in full and re-verified read-only: the P0
+`[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked, no operator go-ahead on record.
+Confirmed via `git log --oneline -20 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*'` on
+`market-tick-data-service` post-pull (HEAD `58b0b538`): only the tradfi snapshot script (`8f131104`) and prediction
+snapshot script (`86467a0a`) exist — no cron-pause action, no apply action, anywhere in history; a repo-wide search for
+`*pause*cron*`/`*cron*pause*` and a content grep for "pause...consolidator" returned zero hits. Also checked whether the
+standing parking recommendation (flagged 7× already) has been actioned via the orchestrator API: `GET /api/backlog`
+still shows `mtds_available_at_cross_asset_backfill-014` at `priority: 20` with `prereqs: None` (no gating condition
+attached) — confirms slot-12's finding that this requires main/operator's central `backlog.yaml` access, which has not
+happened across 8 dispatch cycles now. Declined to execute the apply: running a full-corpus `rebuild_tradfi_manifest.py`
+apply with no cron pause and no operator go-ahead would repeat the exact sports CF-8 production-data-regression risk
+this plan's "HARD constraint" section exists to prevent. Did NOT touch production (no apply, no consolidate, no cron
+state change, no code change). Not filing a duplicate `/blocked` for the same still-open root gate — calling
+`/skip-current-task` citing this entry + the existing `BLK-f3cdf442`/`BLK-ccb6cd86` escalations, per established
+precedent. **Flagging again for main/operator, now at 8 independent confirmations across slots 9/10/11/12/4/6**: the P0
+operator maintenance-window decision remains the sole blocker for the tradfi/prediction apply lanes; recommend
+main/operator action the parking recipe on `-003`/`-005`/`-009`/`-012`/`-014` directly, or resolve the
+maintenance-window decision, before further slot cycles are spent on redundant re-verification. No production writes
+made this touch; no cron state changed, no manifest touched.
