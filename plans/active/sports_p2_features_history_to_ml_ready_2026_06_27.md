@@ -117,6 +117,89 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 2 (Todo 1 re-dispatch — found + root-caused a P0 production consolidator crash-loop that had silently stalled the fleet for ~3h; independently fixed, converged with a peer's identical fix, relaunched)
+
+**Todo 1 (compute features 2015→present) — took concrete action (found a real P0, relaunched 3 dead shards). Checkbox
+NOT flipped (multi-day operation, not yet complete).**
+
+Fast re-verify first (per this plan's established precedent):
+`gcloud compute instances list --filter="name~fss OR name~features"` returned **ZERO** VMs (the 3 shards slot-6/slot-9's
+last checks found — `features-sports-sports-20260713-200043/-200456/-200525` — were entirely gone). Features bucket
+unique-date count: **2,266** (barely up from slot-6's 2,262, a +4 movement over ~3 hours — a real stall, not steady
+progress).
+
+**Root-caused the silent stall**: all 3 shards' `run.log`s showed `DEPLOYMENT_FAILED exit_code=1` within ~90 seconds of
+each other (~21:09-21:10 UTC 2026-07-13) — a fleet-wide simultaneous death, not 3 independent failures. Cause: a
+`ManifestConsolidatorStaleError` fail-fast gate (`instruments-store-sports-prd` heartbeat 144s old, budget 120s).
+Confirmed the consolidator had self-healed for THAT bucket (33s fresh at check time) and relaunched the exact 3 original
+ranges (`features-sports-sports-20260714-000856` [2025-08-11→2026-07-13], `-000924` [2018-01-07→2018-06-16], `-000944`
+[2019-08-18→2020-10-05]) via the collision-safe `launch-features-vm.sh --launch-mode full` (per slot-14's own documented
+precedent above — the parallel launcher's delete-before-create naming collision footgun).
+
+**All 3 relaunches died again within ~1 minute — a DIFFERENT, more severe consolidator failure this time.** Not the same
+bucket: `market-data-tick-sports-prd-central-element-323112`'s consolidator heartbeat was **1108-1109s stale** (18+
+minutes, not 144s). Checked the actual Cloud Run job (`uts-prod-manifest-consolidator-market-data-sports`) directly — it
+WAS running (every ~1min per its Scheduler cadence) but **crash-looping continuously since at least 00:02:34 UTC** with
+`_duckdb.BinderException: Binder Error: Set operations can only apply to expressions with the same number of result columns`
+in `_duckdb_consolidate_and_write`. This is a genuine, currently-active P0 (data-pipeline-correctness HARD RULE)
+blocking the ENTIRE sports feature pipeline, not just this plan's 3 shards.
+
+**Root-caused fully** (schema comparison of the canonical index vs. per-VM shards): the canonical
+`availability_index.parquet` had 40 columns; two recently-written per-VM shards had 41 (extra column: `available_at`, a
+real, actively-used schema field per `unified_trading_library/availability_stamping.py`/`_writer_io.py` — NOT stale
+debris, a genuine in-progress schema migration). Traced to `unified_trading_library/manifest_consolidator.py`:
+`shard_proj` (the shard-side merge projection) is explicitly padded to the full `union_cols` list, but `canon_read` (the
+canonical-side projection) was a bare `SELECT *` — narrower than `union_cols` whenever canon predates a new column, so
+UNIONing the two raises DuckDB's BinderException at bind time (data-independent, fires on every cycle). Found a SECOND
+instance of the identical bug in `_check_column_fill_regression` (a column-fill-rate observability check) doing
+`count("available_at")` directly against canon without checking it exists there.
+
+**Fixed both sites** (pad `canon_read` to `union_cols` the same way `shard_proj` already is; skip/zero-count columns
+`_check_column_fill_regression` can't find in canon), added a regression test proven to fail pre-fix (reproduces the
+EXACT production `BinderException`) and pass post-fix, full `test_manifest_consolidator.py` suite green (66→67 tests).
+**While shipping, discovered a peer (slot-11) had independently found + fixed the IDENTICAL bug** (same 2 sites, same
+root cause, same fix shape) — verified: the resulting `manifest_consolidator.py` content was **byte-identical** between
+my fix and theirs (`unified-trading-library@0f55cc2b`). Their fix additionally verified against REAL production data
+during a coordinated maintenance window (cross-referenced their commit: IS `available_at` fill 62.9%→87.8%, MDPS
+0%→85.3%, zero row-count regression) — more thorough than my synthetic-fixture verification alone. Discarded my
+duplicate (`git reset --hard origin/live-defi-rollout`) and kept the landed commit, matching this session's own
+established precedent for concurrent convergence (see the CeFi plan's Progress Log the same day for 2 prior instances of
+this exact reconciliation pattern).
+
+**Confirmed the production incident had genuinely cleared by the time of relaunch** (not just "should be fixed now" —
+verified live): the consolidator's most recent Cloud Run execution succeeded (`succeededCount=1`), the
+`market-data-tick-sports-prd` index was updating fresh again, and zero new BinderException log lines in the trailing 5
+minutes. **Relaunched the 3 gap-fill shards a second time** (`features-sports-sports-20260714-002915/-002934/-002956`,
+same exact 3 ranges) and verified via `run.log` — `-002934` (2018-01-07→2018-06-16 range) is confirmed genuinely
+computing: `sports batch startup gate: market-data consolidator healthy for sports` (the EXACT gate that was
+crash-looping) now passes, real reference-data reads (leagues, 1228 rows) and `--skip-existing` correctly resuming from
+prior progress. The other 2 shards were still RUNNING with no crash signature but hadn't hit their first log-upload
+cycle at last check — not treated as a separate finding, consistent with normal startup latency.
+
+**What I did NOT do**: did not attempt to determine WHY the production incident self-cleared between my two relaunch
+attempts (likely the offending shard aged out of the consolidator's mtime-based incremental-changed-shard window before
+my fix even landed) — not necessary for closing this finding, and speculative root-causing of an already-resolved
+transient window isn't actionable. Did not touch any OTHER bucket's consolidator even though this exact bug class could
+recur on any bucket whose canon predates a future new schema column — the shipped fix is general (keyed off `union_cols`
+vs. each file's own DESCRIBE, not sports-specific), so no further per-bucket action is needed. Did not flip Todo 1 —
+full-history compute is still genuinely multi-day and in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/ by_date/ | wc -l` (should climb from 2,266,
+now with the 3 new relaunches' contributions); watch for the SAME `ManifestConsolidatorStaleError`/`BinderException`
+signature recurring (would indicate the fix didn't fully hold, or a DIFFERENT bucket hit the same schema-migration
+window) — if it does, that's a genuinely new finding, not a repeat of this one (this exact class is now fixed at the
+source). Once the bucket approaches the full ~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and
+reassess Todo 1 + Todo 3 for real. `compute_shot_quality_batch`'s P0 profiling todo (a SEPARATE, still-open finding from
+2026-07-13) remains unowned — this session's finding is unrelated to it (a different bucket's consolidator infra bug,
+not a features-service compute-path OOM).
+
+Checkbox NOT flipped (compute genuinely in progress). Repo code commits this entry: none of my own landed
+(`unified-trading-library@0f55cc2b` — peer's, credited above; my byte-identical duplicate was discarded); VM operations
+
+- this plan-doc entry ship via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other
+  dispatchable work.
+
 ### 2026-07-13 — slot 6 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
