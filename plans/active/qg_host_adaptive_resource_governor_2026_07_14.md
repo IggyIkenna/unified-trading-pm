@@ -304,6 +304,11 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       a holder, assert its reservation is swept).
 - [ ] [INFRA] P2. Live fleet soak — queue-time-under-contention delta vs K=1 (`scripts/dev/benchmark-qg-under-load.sh`);
       confirm no swap regression + no false 80 % aborts on the 61 GB host.
+- [ ] [INFRA] P2. Small-host sizing (≤ 32 GB) — the 2026-07-14 30 GB soak hit MemAvailable 12 % transiently (no OOM;
+      cgroup caps + valve held) because the non-QG baseline (orchestrator + ~14 fleet workers) is a LARGE fraction of 30
+      GB and admitted runs' RSS ramps AFTER the admission-time valve check. Consider (a) prioritizing the runtime
+      abort-monitor (directly addresses the post-admission ramp — matters most on small hosts) and/or (b) a lower
+      `QG_MEM_SAFETY_FRAC` / effective concurrency on ≤ 32 GB hosts. No change needed while no OOM occurs.
 
 ## Progress Log
 
@@ -446,6 +451,19 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   runtime abort-monitor is still pending hardening.
 - **A clean 2 h soak with the corrected monitor is running on the (now 30 GB) host** — a more stringent contention test
   than the original 61 GB soak.
+
+### 2026-07-14 — Reservation-mode soak CONCLUDED, validated (slot 16)
+
+- **93-min soak on the (downsized) 30 GB host — operator: "conclude, it's validated."** Results: **42** reservation-mode
+  QG runs; **maxconc = 3** (= cpu_slots on the 4-core host — the CPU gate binds exactly as designed); **OOM = 0**; **10
+  ghosts, max linger 136 s** — all reaped well within the 300 s grace, so **the trap-release fix is validated live** (no
+  stuck reservations). Reservation mode confirmed working fleet-wide on the smaller host.
+- **One caveat (safe, logged as the Phase-6 small-host todo):** MemAvailable dipped to **12 %** for a ~7-min window
+  (13:59–14:06Z), then recovered. No OOM — cgroup caps + the 80 % admission valve held. Post-admission RSS ramp on a
+  host whose non-QG baseline eats a large fraction of 30 GB → reinforces that the runtime abort-monitor matters most on
+  small hosts.
+- Durable soak monitor: `~/.qg-governor-soak/soak2.sh` (outside the ephemeral scratchpad). The soak process was reaped
+  by a session teardown at ~93 min (before its 2 h); interim data was conclusive, so not rerun.
 
 ## Deferred / open decisions
 
