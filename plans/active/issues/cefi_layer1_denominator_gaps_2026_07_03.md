@@ -218,6 +218,38 @@ enough). The % is neither an upper nor lower bound of the real value.
       trades-only scoped); adding a dependency on the retired key would work against that migration. Shipped
       `unified-api-contracts@5626079e`.
 
+- [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): BITGET-FUTURES's
+      16 real dated-quarterly FUTURE symbols are now RESOLVABLE (base/quote + margin_type fixed this session,
+      `instruments-service@cd902fb1` + `@75bdf02d`) but still can't reach `prod/catalog.parquet` — a live re-fetch grew
+      the raw URDI universe 714→1010 (confirmed via
+      `--operation instruments --mode batch --venues BITGET-FUTURES     --force`, log: "Venue count OK: BITGET-FUTURES
+      grew 714 → 1010 (+296)"), but ALL 16 dated futures had ALREADY EXPIRED by the fetch date (2026-07-14) — Tardis's
+      own `availableTo` for every one of them predates today (e.g. `BTCUSDH25` availableTo=2025-03-29) — so the per-day
+      `instrument_availability/by_date/day=2026-07-14/...` snapshot's date-active filter drops them all (confirmed:
+      `day=2026-07-14/venue=BITGET-FUTURES` is 718/718 PERPETUAL, 0 FUTURE). Per
+      `scripts/build_instrument_catalogue.py`'s own docstring, `prod/catalog.parquet` is a **pure roll-up of the by_date
+      snapshot history** (`available_from`/`available_to` = first/last day an instrument APPEARS in a by_date snapshot)
+      — so a symbol that expired before its FIRST correctly-parsing fetch can never enter the catalogue via the normal
+      daily refresh, no matter how many times it's re-run today or in the future. **Same bug class as the 2026-07-09
+      Bybit/Kraken-Futures precedent** (see `scripts/canonicalize_bybit_kraken_futures_catalog_2026_07_09.py`'s
+      docstring: "confirmed 0/46 present in `prod/catalog.parquet` today (this bug silently dropped them at write time,
+      historically, every day — there is nothing to relabel because nothing was ever captured). Re-capturing them is a
+      separate live re-capture run via the normal adapter path") — that precedent's fix was a DEDICATED one-off script
+      (`scripts/recapture_bybit_legacy_quarterly_futures_2026_07_09.py`, already cleaned up post-use, lifecycle=oneoff)
+      that inserted new rows directly. **Recommended fix for BITGET-FUTURES** (not attempted this session — real
+      engineering effort, deliberately scoped out to keep this session's 3 fixes independently reviewable): a similar
+      one-off script that (1) re-fetches BITGET-FUTURES's 16 dated-future symbols via
+      `TardisReferenceDataAdapter.get_instruments()` (now correctly resolving base/quote/margin_type/expiry with this
+      session's fixes) — cheap, no whole-corpus walk needed since Tardis's own `availableSince`/`availableTo` metadata
+      already IS the lifecycle window; (2) APPENDS the 16 new rows directly to `prod/catalog.parquet` (backup-first,
+      monotonic-row-count-grows guard, refuse on new duplicate `instrument_id`, matching the established
+      `canonicalize_*_catalog_2026_07_*.py` safety pattern) rather than relying on `build_instrument_catalogue.py`'s
+      by_date roll-up (which would require also backfilling 16×~2-year-span `instrument_availability/by_date/**`
+      snapshot files — the whole-corpus-walk-adjacent, more expensive path). **Only once this lands** can a
+      lease-enabled BITGET-FUTURES backfill VM actually resolve any dated-future symbols to request from Tardis, and
+      `(BITGET-FUTURES, future, {book_snapshot_5,derivative_ticker,trades})` can close as G4 Layer-1 tuples. (repo:
+      instruments-service)
+
 - [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
       instrument catalogue is permanently LIVE-ONLY — can never backfill historical data.**
       `unified_api_contracts.registry.venue_adapter_keys.VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` is a
