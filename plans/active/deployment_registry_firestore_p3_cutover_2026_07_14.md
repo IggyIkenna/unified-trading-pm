@@ -146,12 +146,13 @@ QG-green per repo.
      counters, resource fields). Only when 1–4 hold does the snapshot→delete run (and even then: snapshot to a dated
      cold prefix FIRST, verify the copy, then delete). Until then the GCS registry stays authoritative and untouched.
 
-- **2026-07-14 (slot 5, Opus) — detail-read routing shipped toward the gate.** To make GO/NO-GO items 2–3 achievable,
-  the per-VM point reads (`/{id}/detail` drill-down + the experiment-detail `.get`) now route Firestore-first via a new
-  `resolve_deployment_by_id()` (GCS fallback), companion to P2's `resolve_active_registry()`. So once dual-write is on,
-  per-VM data + resource stats come from Firestore. This is additive + safe (fallback preserved); it does NOT drop the
-  GCS write or delete anything — those stay blocked per the checklist above. Evidence in the P2-reader plan's log /
-  deployment-api commit.
+- **2026-07-14 (slot 5, Opus) — detail-read routing shipped toward the gate (deployment-api@543860c).** To make GO/NO-GO
+  items 2–3 achievable, the per-VM point reads now route Firestore-first via a new `resolve_deployment_by_id()` (GCS
+  fallback), companion to P2's `resolve_active_registry()`: the `vm_deployments GET /{id}` + the experiment-action
+  pre-read. The `/{name}/detail` drill-down + its resource-stat columns (cpu/mem/disk/host-metrics) ALREADY read
+  Firestore via the census cache P2 routed. So once dual-write is on, per-VM data + resource stats come from Firestore.
+  Additive + safe (fallback preserved); it does NOT drop the GCS write or delete anything — those stay blocked per the
+  checklist above.
 
 ## Codex SSOTs
 
