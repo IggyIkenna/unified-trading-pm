@@ -3095,6 +3095,29 @@ it's new adapter work, not a data-audit residual).
   - If any of these did NOT self-fire on schedule (Cloud Scheduler shows no new `lastAttemptTime` past its cron time, or
     the triggered Cloud Run Job execution list has no NEW entry beyond today's manual tests), that's a genuine
     regression from what was "shipped" today — diagnose and fix, don't just re-trigger manually and declare it fine.
+  - **INTERIM STATUS 2026-07-14 13:35 UTC (slot-5, live REST verify — checkbox intentionally NOT flipped, self-fire not
+    yet possible)**: the INFRA half is fully verified in place, but the actual unattended self-fire — the operator's
+    explicit DoD — CANNOT be proven until the **2026-07-15** overnight cron, because every cron time (00:35–01:15 UTC)
+    is EARLIER than today's scheduler/run-job creation times (03:41–10:34 UTC), so no daily driver has had a single
+    self-fire opportunity yet (all `lastAttemptTime=<never>`). Verified live via the Cloud Scheduler + Cloud Run v2 REST
+    APIs (gcloud CLI is broken in the slot env — `snap-confine` capability error; used an ADC bearer token instead — and
+    the scheduler LIST endpoint misleadingly returns 0, but direct GET-by-name works): **all 5 schedulers exist +
+    `state=ENABLED` with correct crons + correctly-wired targets** — `uts-prod-sports-enrichment-footystats-daily`
+    (`35 0 * * *`), `-transfermarkt-daily` (`40 0 * * *`), `-soccer-football-info-daily` (`45 0 * * *`),
+    `uts-prod-mdps-odds-horizon-bucket-daily` (`15 1 * * *`), `uts-prod-market-data-processing-t1-schedule`
+    (`0 1 * * *`); every backing Cloud Run Job exists and its manual test executions succeeded (soccer-football-info
+    exec 04:05:15Z succeeded=1; mdps-odds-horizon exec 11:11:59Z succeeded=1; t1-recon exec 11:17:05Z succeeded=1;
+    footystats + transfermarkt run jobs exist but have 0 executions ever — never cron-fired, manual "live-verify" used
+    the `sports-fixtures` provider path, not these dedicated jobs). **Specific tomorrow-watch item**: t1-schedule's ONLY
+    fire so far (2026-07-14T01:00:19Z) returned `status.code=5` (NOT_FOUND) — but that fire predates the fix
+    (`deployment-service@de117f5` landed ~10:34Z) and the scheduler now correctly targets
+    `uts-prod-market-data-processing-service-t1-recon:run` which EXISTS, so the 2026-07-15 01:00Z fire is the real test
+    that the NOT_FOUND regression is closed. **Re-check after 2026-07-15 ~01:30 UTC** (all 5 schedulers'
+    `lastAttemptTime` advanced past their cron + `status.code=0` + a NEW cron-triggered — not manual — Cloud Run
+    execution + fresh `captured` rows for 2026-07-14/15 in the canonical manifest). REST recipe archived in the slot-5
+    scratch (`check_named.py`/`check_final.py`, ADC token + `cloudscheduler.googleapis.com` / `run.googleapis.com/v2`).
+    No regression found in the infra itself; this todo stays open purely on the time-gate. Raised to the operator/main
+    via a slot-5 blocked-note (time-gated, recommend park until 2026-07-15 ~01:30 UTC).
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
