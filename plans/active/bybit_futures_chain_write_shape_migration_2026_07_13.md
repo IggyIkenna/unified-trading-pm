@@ -202,9 +202,27 @@ venues, or change instrument_type classification? Phase 1 owns this).
       considers this specific (day, symbol) pair safe-to-delete-source. Output written to
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/bybit_futures_chain_reshape_post_apply_verify_2026_07_13.parquet`
       (835 rows).
-- [ ] [DATA] P1. Rewrite/extend the canonical `_index/availability_index.parquet` manifest rows for the reshaped objects
-      (mirrors the pattern in `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 3) — dedup any rows that
-      collapse to the same canonical key.
+- [x] ✅ [DATA] P1. Rewrite/extend the canonical `_index/availability_index.parquet` manifest rows for the reshaped
+      objects (mirrors the pattern in `aster_cefi_data_defi_bucket_migration_2026_07_13.md` Phase 3) — dedup any rows
+      that collapse to the same canonical key. — **DONE, slot 3, market-tick-data-service@`f2668925`
+      (`scripts/rewrite_bybit_futures_chain_manifest_2026_07_13.py`)**. Sourced the definitive migrated-object list from
+      the Phase 3.5 parity-verify parquet
+      (`_index/audit/bybit_futures_chain_reshape_phase35_parity_verify_2026_07_13.parquet`, 835 rows, single-walk
+      discipline — no fresh GCS scan). Confirmed the correct shard atom against LIVE manifest data first (450
+      pre-existing correctly-shaped rows, 2023-04-05→2025-07-18): this is a per-underlying BUNDLE row
+      (venue/data_type=trades/instrument_type=futures_chain/underlying/date), with `instrument_id`/`pipeline_mode`
+      uniformly blank — NOT a per-instrument_id row like the ASTER script's key. **Caught + fixed a serious bug in
+      dry-run before applying**: a corpus-wide dedup on that key is unsafe against the full 7.5M-row manifest (every
+      non-bundled row shares blank `underlying`, so a naive drop_duplicates collapsed 7,314,258 of 7,531,218 rows in the
+      first dry-run). Fixed by scoping the dedup to ONLY the touched
+      `(venue=BYBIT, instrument_type=futures_chain,     data_type=trades)` slice, leaving every other manifest row
+      byte-identical. Re-verified dry-run then `--apply`d for real against production: backed up the pre-write index to
+      `_index/backups/availability_index.pre_bybit_futures_chain_manifest_20260713.parquet` first. **Result: 835 new
+      rows proposed, 11 collapsed in dedup (11 pre-existing hive rows in the 2025-02-11→2026-05-22 coexistence window
+      already covered the same (day, underlying) key), touched slice 450→1274 rows, net manifest growth
+      7,531,221→7,532,045 rows.** Post-apply live-read verification: 1,274 unique `(date, underlying)` pairs, 0
+      duplicates, total row count reconciles exactly, and a spot-check of a known reshaped day (2025-03-15 BTC/SOL)
+      shows `capture_status=captured`.
 
 ## Finding (2026-07-13, discovered while re-dispatched to this plan's Phase 2 build todo — a DUPLICATE dispatch of
 
