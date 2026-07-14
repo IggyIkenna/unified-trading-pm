@@ -163,14 +163,39 @@ depends_on: []
 - [ ] [DOC] P3. **Write the features-bucket path SSOT** (codex/02-data) documenting: odds day-level; derived/fixture
       per-league with RAW af-id keys (historical, addressable); manifest key = canonical league NAME; readers must
       handle both layouts. Cite `writer.py:26-27` + `batch_handler.py:300-323`.
-- [ ] [CODE] P2. **ml-service: odds_features cannot join the fixture matrix — join-key mismatch** (found during the P1
+- [x] [CODE] P2. **ml-service: odds_features cannot join the fixture matrix — join-key mismatch** (found during the P1
       real-bucket runtime verify, 2026-07-14): the real `odds_features` parquet keys rows on **`event_id`** (columns:
       `event_id, home_implied_prob, …`), but `_merge_sports_groups_for_date`
       (`ml_service/training/app/core/sports_feature_loader.py`) requires a **`fixture_id`** column and skips the group
       with a warning ("Sports group 'odds_features' … has no fixture_id column") — so odds features load from GCS but
       never enter the merged matrix. Pre-existing (independent of the layout fix; visible now that loading works). Needs
       an event_id↔fixture_id mapping decision (features-service exporter emits fixture_id? or ml-service maps via the
-      fixtures reference?) — cross-repo, decide atom on the features-service side first.
+      fixtures reference?) — cross-repo, decide atom on the features-service side first. — **ml-service@5ee0a8e** +
+      evidence: **ROOT SEMANTICS (real day=2025-10-20 parquets)**: odds `event_id` = the RAW the-odds-api event id
+      (32-hex, e.g. `6a16dc29e606…`) — MDPS `bucket_assignment_adapter.py:187-188` renames raw ODDS_API
+      `event_id`→`fixture_id` and the FSS odds exporter (`_pivot_bucketed_to_fixture`) pivots it back out as `event_id`;
+      derived/fixture `fixture_id` = af numeric id (`1390899`) — **ZERO value overlap, NOT a same-value rename**; no
+      crosswalk column exists in ANY features/fixtures frame (the odds parquet carries no team/kickoff/league metadata —
+      dropped at `compute_odds_batch`). **Decision (read-side, deterministic, never fuzzy)**: merge-time 3-hop crosswalk
+      in the loader, exact-equality joins only — (1) MDPS bucketed shards for the same day (the ONLY holder of hex id +
+      od team spellings; canonical `pipeline_mode=` prefix probed first, legacy fallback, mirrors FSS
+      `read_bucketed_odds`) → (2) IS `sports_reference/mappings/odds_api_team_mapping.parquet`
+      (`od_team_name → af_team_id`; the table behind UAC `mapping_resolver`) → (3) sibling same-date loaded frame
+      (`home_team_id`+`away_team_id` → `fixture_id`; derived/fixture frames carry all three). Unmapped/ambiguous events
+      DROPPED with logged count — honest absence. features-service exporter atom UNCHANGED (no recompute; all historical
+      odds parquets stay readable). 7 new unit tests (`TestOddsJoinKeyCrosswalk`:
+      attach/unmapped-drop/float-id-normalize/ambiguous-drop/empty-ref-passthrough/ end-to-end-merge/odds-only-no-reads)
+      green in `quality-gates.sh --no-fix` exit 0. **REAL-bucket runtime verify day=2025-10-20**: merged matrix **24
+      fixtures × 870 cols (was 24×728 — odds' 142 cols now join)**; odds coverage on **13/24 fixtures** = the exact
+      deterministically-mappable set (`home/draw/away_implied_prob`, `market_vig`, `best_odds_home` each 13 non-NULL;
+      sparse `clv_home` 4); 30/31 odds rows mapped, kept row per fixture = T-24h (pre-existing keep="first" dedup
+      semantics unchanged).
+- [ ] [DATA] P3. **instruments-service: odds_api_team_mapping coverage gap** (found during the P2 fix, 2026-07-14): the
+      IS crosswalk `sports_reference/mappings/odds_api_team_mapping.parquet` (658 rows) has no row for `Burgos CF`
+      (SEGUNDA_DIVISION) — the sole unmappable odds event on 2025-10-20 (event `81fcdc22656530bb4daca2deb3f1845f`,
+      Burgos CF vs Córdoba). Smaller-league od spellings are likely under-covered; audit mapping coverage against the
+      distinct od team names in MDPS bucketed odds and extend the table (IS owns reference data). Until then those
+      fixtures' odds rows drop at merge time (honest absence, logged).
 
 ## Non-actions (explicit)
 

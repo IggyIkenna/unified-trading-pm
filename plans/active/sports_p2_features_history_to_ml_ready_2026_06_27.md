@@ -3250,3 +3250,14 @@ eligible) so this session moves to different available work instead of re-runnin
   same tick: odds event_id vs fixture_id join-key mismatch drops all odds columns from the assembled ML matrix (agent
   running). Enrichment fleet 4 VMs RUNNING (shards mtime-live 21:44Z); pre-2025 sweep process ALIVE (still scanning, no
   adjudication CSVs yet).
+- 2026-07-14 22:3xZ (odds join-key fix agent): **odds event_id↔fixture_id mismatch FIXED — odds columns now join the
+  assembled ML matrix** — ml-service@5ee0a8e. Root semantics proven on real day=2025-10-20 parquets: odds `event_id` is
+  the RAW the-odds-api 32-hex event id (MDPS `bucket_assignment_adapter.py:187-188` renames raw `event_id`→`fixture_id`;
+  the FSS odds exporter pivots it back out as `event_id`) — ZERO value overlap with the af numeric `fixture_id` the
+  other groups carry, and no crosswalk column exists in any features frame. Fix = deterministic merge-time 3-hop
+  crosswalk in the ml-service loader (MDPS bucketed shards' od team spellings → IS `odds_api_team_mapping.parquet` →
+  sibling frame team-id pair → fixture_id), exact-equality joins ONLY, unmapped events dropped with a logged count
+  (honest absence, never fuzzy). Real-bucket proof: merged matrix 24×870 (was 24×728), odds coverage on 13/24 fixtures
+  (implied-prob/vig/best-odds 13 non-NULL each) — exactly the mappable set; sole gap = 'Burgos CF' absent from the IS
+  team mapping (P3 coverage todo filed on the layout issue doc, instruments-service scope). QG green, 7 unit tests
+  added; issue-doc P2 checkbox flipped. Exporter atom UNCHANGED — no recompute of any historical odds parquet needed.
