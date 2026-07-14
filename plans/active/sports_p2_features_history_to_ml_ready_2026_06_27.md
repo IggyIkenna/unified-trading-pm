@@ -2865,3 +2865,15 @@ eligible) so this session moves to different available work instead of re-runnin
   additionally suspect. ML-readiness re-verify HELD pending shape diagnosis (agent dispatched: writer-vs-reader shape
   evidence, canonical ruling, redo cost). Enrichment fleet healthy (4/5 VMs writing, INJURIES VM completed); pre-2025
   false-empty sweep mid-scan (PLAYER_STATS reached).
+- 2026-07-14 20:0xZ (autonomous tick 2 — decide-and-document): shape diagnosis VERDICT (a) — per-league layout is
+  canonical-by-design for derived/fixture features (batch_handler.py:530, since @b144552d 2026-05-08); GW recompute
+  COMPLETE and correct (91/91 dates rc=0, 1,672 captured per group, manifest canonical). GW ML-readiness re-run: 74/91
+  strict, avg 95.3%, 0 missing — IDENTICAL state to the P1d-accepted bar (2026-07-12 precedent: aggregate
+  > =95% PASS), so the GW recompute + re-verify criteria are met on precedent; the strict-gate shortfall is an ODDS-side
+  > artifact untouched by this recompute. NEW TODO captured below. Cross-repo P1 dispatched: ml-service loader cannot
+  > read the per-league layout (issue doc sports_derived_features_per_league_layout_unread_by_ml_loader _2026_07_14.md)
+  > — fix agent running (loader layout-awareness + failure-atom alignment + 27 stale-row cleanup).
+- [ ] [DATA] P2. Diagnose the 9-day exact-68.6% ML-readiness cluster (2025-09-02/03/04/09/10, 10-07/14/23, 11-11/13 at
+      T-24h/T-1h) + the other 8 sub-95% days — odds-side signature (identical pct = identical missing column block;
+      suspect MDPS odds_horizon_bucket gaps or bookmaker-tier absence those days). Provenance: autonomous tick 2
+      ML-readiness re-run 2026-07-14; predates the enrichment/recompute work (odds_features untouched by it).
