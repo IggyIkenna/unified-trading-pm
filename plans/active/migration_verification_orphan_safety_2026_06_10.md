@@ -228,9 +228,9 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
 - [x] ✅ [SCRIPT] P1. `beta_manifest_writer.py` — `write_projected_index(df, --beta-manifest-out gs://<dev>/…)` writes
-      the projected v9 `_index` (schema*version stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
-      prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. *(The per-AG dev
-      render + operator goalpost eyeball remains — next item.)\_
+      the projected v9 `_index` (`schema_version` stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
+      prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. _(The per-AG dev
+      render + operator goalpost eyeball remains — next item.)_
 - [x] ✅ [VERIFY] P1. Per-AG dev render — **DONE via the superseding `DATA_STATUS_BETA_MANIFEST_BLOB` mechanism**
       (deployment-api `services/manifest_source.py`, landed 2026-06-11: the env var redirects EVERY data-status surface
       to `_index/audit/projected_index_{asset_group}.parquet` in the SAME prd bucket — read-only, no dev-bucket copy,
