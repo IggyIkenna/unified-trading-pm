@@ -134,6 +134,80 @@ qg_host_capacity() {
         "$(( ram_budget_kb / 1024 / 1024 ))" "$cpu_slots"
 }
 
+# ── RESERVATION LEDGER (Phase 3 — additive; NOT yet wired into acquire/release) ─
+# A host-shared, flock-protected record of in-flight QG heavy-phase reservations
+# so the upcoming dual-gate admission can bound the SUM of concurrent peak-RSS
+# (the 6×UTL stacking case) instead of a fixed count. One row per reservation:
+#     <pid> <repo> <rss_mb> <ts>
+# HOST-SHARED path: strip the per-slot `/.tabs/<N>` suffix off WORKSPACE_ROOT so
+# every slot on a host shares ONE ledger — raw WORKSPACE_ROOT is per-slot (set by
+# setup-tab-worktrees.sh), which would make the ledger per-slot and defeat
+# cross-slot coordination. On a single-clone host the strip is a no-op.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+_QG_LEDGER_FD=220
+
+_qg_shared_root() {
+    local ws="${WORKSPACE_ROOT:-}"
+    case "$ws" in
+        "")        echo "${TMPDIR:-/tmp}" ;;
+        */.tabs/*) echo "${ws%/.tabs/*}" ;;
+        *)         echo "$ws" ;;
+    esac
+}
+_qg_ledger_dir()  { echo "${QG_LEDGER_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor}"; }
+_qg_ledger_file() { echo "$(_qg_ledger_dir)/reservations"; }
+
+# Run "$@" holding the ledger lock (explicit numeric FD — bash 3.2-safe). Degrades
+# to unlocked (best-effort) if the dir can't be made or flock(1) is absent.
+_qg_ledger_with_lock() {
+    local dir; dir="$(_qg_ledger_dir)"
+    mkdir -p "$dir" 2>/dev/null || { "$@"; return; }
+    command -v flock >/dev/null 2>&1 || { "$@"; return; }
+    eval "exec ${_QG_LEDGER_FD}>\"\$dir/.lock\"" 2>/dev/null || { "$@"; return; }
+    flock "$_QG_LEDGER_FD"
+    "$@"; local rc=$?
+    flock -u "$_QG_LEDGER_FD" 2>/dev/null || true
+    eval "exec ${_QG_LEDGER_FD}>&-" 2>/dev/null || true
+    return "$rc"
+}
+
+# Prune dead-PID rows in place — crash-safe: a killed QG can't leak its reservation
+# (replaces the old flock-auto-release guarantee). UNLOCKED — call under the lock.
+_qg_ledger_sweep_unlocked() {
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || return 0
+    local tmp="${f}.tmp.$$" pid repo mb ts
+    : > "$tmp"
+    while read -r pid repo mb ts; do
+        [[ -n "$pid" ]] || continue
+        kill -0 "$pid" 2>/dev/null && printf '%s %s %s %s\n' "$pid" "$repo" "$mb" "$ts" >> "$tmp"
+    done < "$f"
+    mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
+}
+
+# Sum of LIVE reservations (MB), after a sweep. Public (locks internally).
+_qg_ledger_reserved_mb() { _qg_ledger_with_lock _qg_ledger_reserved_mb_unlocked; }
+_qg_ledger_reserved_mb_unlocked() {
+    _qg_ledger_sweep_unlocked
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || { echo 0; return; }
+    awk '{s+=$3} END{printf "%d", s+0}' "$f"
+}
+
+# Add a reservation. Public (locks internally).
+_qg_ledger_add() { _qg_ledger_with_lock _qg_ledger_add_unlocked "$1" "$2" "$3" "${4:-0}"; } # <pid> <repo> <rss_mb> [ts]
+_qg_ledger_add_unlocked() { printf '%s %s %s %s\n' "$1" "$2" "$3" "$4" >> "$(_qg_ledger_file)"; }
+
+# Remove all rows for a PID (on release). Public (locks internally).
+_qg_ledger_remove() { _qg_ledger_with_lock _qg_ledger_remove_unlocked "$1"; } # <pid>
+_qg_ledger_remove_unlocked() {
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || return 0
+    local tmp="${f}.tmp.$$"
+    grep -v "^${1} " "$f" > "$tmp" 2>/dev/null || : > "$tmp"
+    mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
+}
+
 # Base file-descriptor for the token locks. The original used bash >=4.1's
 # `exec {fd}>` auto-FD form, which is unparseable on bash 3.2 (the macOS
 # operator host) → the governor silently went INACTIVE there, so concurrent
