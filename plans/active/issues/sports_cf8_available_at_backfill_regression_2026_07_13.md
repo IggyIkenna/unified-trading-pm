@@ -359,3 +359,28 @@ dispatch, and Finding 1's cron-collision history argues against an uncoordinated
 
 **E8 checkbox NOT flipped** — CF-8 is genuinely still RED on both surfaces (for a narrower, now-understood reason). This
 plan-doc + issue-doc edit ship via the `docs(plans):` carve-out.
+
+**Independent re-verification — 2026-07-14 (slot 3, laptop, dispatched per the operator's Part-1-4 CF-8
+authorization)**: read this doc + the plan in full. Verified `f5f15e3a`/`9c9cdc50` logically close the exact traced
+mechanism (no gap); fixed + shipped this same session's own previously-broken uncommitted repro test
+(`unified-trading-library@dbc5447f`), confirmed via revert-and-retest that it reproduces the real regression shape and
+that `2e132bb2` genuinely fires on it. Separately found (via a live `gcloud run jobs executions list` check, not
+speculatively) that `market-data-tick-sports-prd`'s consolidator had crash-looped ~24 cycles (23:54Z-00:17Z) on a
+related but distinct bug — `canon_read` not schema-aligned to `union_cols`, crashing on `DuckDB BinderException` the
+moment a shard introduces a column (`available_at`) the canonical never had. Root-caused + fixed it independently, then
+found via `git pull` that slot-11 had landed the identical fix (`unified-trading-library@0f55cc2b`) while re-running the
+real backfill — reconciled by dropping my duplicate source fix, keeping only the still-needed test fix.
+
+Independently re-verified todo 2's backfill results via a direct `google-cloud-storage`/`pyarrow` read of both live
+canonicals (own read, not trusted from any log): MDPS 85.3%, IS 88.5% — both match the reported figures to within normal
+incremental drift. Confirmed both crons `ENABLED`. Re-ran the full `cf_manifest_audit_2026_06_01.py` on both surfaces:
+**unchanged verdict** — MDPS `RED — ['CF-8', 'L6-legacy-only']`, IS
+`RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']`. Independently corroborated the captured-row gap this
+doc's P0 todo above already quantifies (IS captured 60.2% filled/39.8% missing = 651,991 rows, MDPS 50.2% filled/49.8%
+missing = 286,839 rows — both within ~150 rows of this doc's own numbers, i.e. no material drift). Traced
+`_write_captured_rows` + `ManifestWriter.add()` myself: both correctly thread `available_at` through to the
+`AvailabilityRecord` on CURRENT code — the residual is consistent with this doc's own candidate (b) (pre-existing
+captured rows never re-emitted by a captured-row-scoped pass) rather than a still-broken write path; did not
+disambiguate further or attempt a captured-row backfill myself — that stays this P0 todo's own scope, not duplicated
+here, and today's 3-times-recurred cron-collision history argues for a fresh, separately-coordinated window rather than
+a same-session fourth attempt. Neither surface is ready for an E8 ask. No checkbox flipped.
