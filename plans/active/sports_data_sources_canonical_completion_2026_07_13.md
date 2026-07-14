@@ -78,14 +78,32 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
 
 # 1. Todos
 
-- [ ] [DATA] P0. **api_football deep investigation.** Characterize the 453,961 `expected_unattempted`: is this a
-      legitimate could-exist-universe seed (many leagues × many years × many data_types, most cells genuinely
-      no-fixture) or a real gap? Root-cause the 3,257 `attempted_failed` by class: (a) INJURIES
-      `ApiFootballResponseError` (1,946) — likely rate-limit/quota or a schema drift, check the adapter; (b) FIXTURES
-      `FIXTURES_FETCH_FAILED` (665); (c) blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` (461) — a write-path bug
-      (data_type should never be blank at write time, find where); (d) `phantom_captured_no_parquet_at_canonical_path`
-      across several data_types (claims captured, no file — a storage/path-resolution mismatch). File as an issue doc if
-      root cause spans multiple commits' worth of work.
+- [x] [DATA] P0. **api_football deep investigation.** — ✅ DONE 2026-07-14 (slot-5, live-manifest re-verify + root-cause
+      close-out). **(1) `expected_unattempted` = legitimate could-exist seed, CONFIRMED and now demonstrably
+      shrinking**: 453,961 (§0 baseline) → **287,207** live today, the ~166k drop dominated by TEAMS 192,384→26,385 as
+      the 61-league TEAMS backfill + consolidator dedup fix converted seed cells to captured — a real gap would not
+      shrink under backfill, a could-exist seed does. Not a gap; no action. **(2) all 4 original `attempted_failed`
+      classes root-caused + fixed under the "fix root causes" todo below** (`instruments-service@9ce3450e` +
+      IMPLEMENTATION dispatch) and re-verified holding in the live manifest: (a) INJURIES `ApiFootballResponseError`
+      1,642 (silent-swallow + misclassification), (b) FIXTURES `FIXTURES_FETCH_FAILED` 612 (false-positive trigger), (c)
+      blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` 461 (completeness-gate leak — now 0 NEW blank rows, 121
+      `empty_confirmed` prove the fix routes correctly), (d) `phantom_captured_no_parquet_at_canonical_path` 484
+      (reconcile-tooling output, not a live bug). MTDS orphan re-stamp holds (0
+      `market-tick-data-service`+`api_football` rows). **(3) NEW class characterized during this re-verify —
+      `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` (1,090 FIXTURE_STATS/EVENTS/LINEUPS rows)**: root-caused to the v9-rebuild
+      step-6.7 CF-11 gate (`market-tick-data-service/scripts/rebuild_sports_manifest_v9.py:378` +
+      `_rebuild_sports_write.py:191`, operator directive 2026-06-02) which correctly upgrades a per-fixture-entity
+      `empty_confirmed` to `attempted_failed` when `(league_id, date)` IS in `fixtures_truth` (a match genuinely
+      happened) — deliberate honest-coverage behavior, NOT a defect; these are genuine backfill candidates, filed as the
+      new P2 todo below. Full evidence: Progress Log "2026-07-14 (slot-5) API_FOOTBALL DEEP-INVESTIGATION RE-VERIFY +
+      CLOSE-OUT" entry. Original characterization prompt retained for provenance: Characterize the 453,961
+      `expected_unattempted`: is this a legitimate could-exist-universe seed (many leagues × many years × many
+      data_types, most cells genuinely no-fixture) or a real gap? Root-cause the 3,257 `attempted_failed` by class: (a)
+      INJURIES `ApiFootballResponseError` (1,946) — likely rate-limit/quota or a schema drift, check the adapter; (b)
+      FIXTURES `FIXTURES_FETCH_FAILED` (665); (c) blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` (461) — a write-path
+      bug (data_type should never be blank at write time, find where); (d)
+      `phantom_captured_no_parquet_at_canonical_path` across several data_types (claims captured, no file — a
+      storage/path-resolution mismatch). File as an issue doc if root cause spans multiple commits' worth of work.
 - [x] [DATA] P0. **api_football: fix root causes + re-attempt failed cells** — root-cause + fix DONE
       (`instruments-service@9ce3450e`, confirmed holding); re-attempt **in-flight, launched
       `instruments-service@e78d424f`, verify completion later** (see Progress Log "RE-ATTEMPT dispatch" entry below for
@@ -163,6 +181,21 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
 - [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running.
+- [ ] [DATA] P2. **api_football: backfill the 1,090 `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` per-fixture-entity gaps (NEW
+      2026-07-14, found during the deep-investigation re-verify).** FIXTURE_EVENTS 372 / FIXTURE_STATS 363 /
+      FIXTURE_LINEUPS 355 across 114 distinct match-days (2020-10-06→2026-03-26), lower-tier/cup leagues (DANISH_CUP,
+      KNVB_CUP, EERSTE_DIVISIE, ENG_NATIONAL_LEAGUE, CHILE_PRIMERA_B, …). These are NOT a defect: the v9-rebuild
+      step-6.7 CF-11 gate (`market-tick-data-service/scripts/rebuild_sports_manifest_v9.py:378`, operator directive
+      2026-06-02) correctly upgraded a match-day per-fixture-entity `empty_confirmed` (no honest-absence proof) to
+      `attempted_failed` because `fixtures_truth` says a match happened and STATS/EVENTS/LINEUPS are in
+      `_FIXTURE_GUARANTEED_DATA_TYPES` (absence-on-a-match-day is never legitimate for these). Resolution = a real
+      re-fetch backfill of exactly these (date, league, entity) shards via the existing per-fixture recovery path
+      (`instruments-service` `_fetch_sports_reference_data` with `fixture_ids_override`, same as the
+      `api_football_attempted_failed_residual_closer_2026_07_13.py` pattern). Whatever genuinely re-fetches to 0 rows
+      with a clean 2xx `FetchEvidence` is then honestly re-labelled `empty_confirmed(SOURCE_RETURNED_ZERO)` with proof
+      (api_football may simply not publish fixture-level detail for some low-profile lower-league matches) — the
+      operator-directed point is these must be SURFACED for backfill, never silently frozen empty. Folds into the
+      `[VERIFY] P1 final re-verify` "0 attempted_failed" target above.
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
@@ -2975,3 +3008,49 @@ it's new adapter work, not a data-audit residual).
   `NOT_FOUND` (its target CRJ now exists, is live-tested, and is Terraform-managed); `mdps_odds_horizon_bucket` now has
   a real, verified, self-sustaining daily driver (01:15 UTC) distinct from the manual VM-backfill path. Not left for
   "another agent to pick up" — both live-tested end-to-end this session, both shipped, both journaled.
+
+- **2026-07-14 (slot-5, data_engineering) — API_FOOTBALL DEEP-INVESTIGATION RE-VERIFY + CLOSE-OUT (todo "api_football
+  deep investigation").** Single-parquet live read of `instruments-store-sports-prd-central-element-323112`
+  `_index/availability_index.parquet` (5,759,709 total rows), api_football slice, via the mtds `.venv` duckdb+gcsfs
+  (single-walk compliant — consolidated index only, no corpus walk). Closes the P0 investigation todo:
+  - **api_football slice capture_status**: captured **740,120** (§0 baseline 365,592 — +374k from the TEAMS backfill +
+    residual re-attempt + odds/orphan migrations landing) · empty_confirmed 1,639,435 · expected_unattempted **287,207**
+    (§0 453,961) · attempted_failed **4,291** (§0 3,257).
+  - **(1) `expected_unattempted` is a legitimate could-exist seed — CONFIRMED, and now demonstrably shrinking under
+    backfill** (the decisive evidence a seed vs a real gap). 453,961 → 287,207, the ~166k drop dominated by TEAMS
+    192,384 → **26,385** (the 61-league TEAMS backfill + `manifest_consolidator` dedup work converting seed cells to
+    captured). Current by data_type: ODDS 82,501 · FIXTURE_LINEUPS 47,376 · FIXTURE_EVENTS 47,090 · FIXTURE_STATS 36,707
+    · PLAYER_STATS 26,409 · TEAMS 26,385 · INJURIES 20,721 · FIXTURES 18. A genuine gap does not shrink when you
+    backfill the universe; a per-league × per-year × per-data_type could-exist cross-product does. No action — this is
+    denominator, not a gap (matches the prior investigation-only pass's conclusion, now with a shrink-under-backfill
+    proof it did not yet have).
+  - **(2) all 4 original `attempted_failed` classes re-verified holding** (root-caused + fixed under the "fix root
+    causes" todo, `instruments-service@9ce3450e` + IMPLEMENTATION dispatch): `ApiFootballResponseError` 1,642 (INJURIES
+    silent-swallow + UAC-classify-key misclassification) · `FIXTURES_FETCH_FAILED` 612 (was 665 — the false-positive
+    `_fixtures_fetch_failed` trigger, some cells re-resolved) · blank-`data_type` `UNCLASSIFIED_ADAPTER_ERROR` 461
+    (completeness-gate pseudo-venue leak — **0 NEW blank rows since the fix, 121 `empty_confirmed` blank-data_type rows
+    prove the enrichment pseudo-venues now route correctly**) · `phantom_captured_no_parquet_at_canonical_path` 484
+    (reconcile-tooling output, not a live write-path bug). The 88 `market-tick-data-service` orphan re-stamp holds:
+    **0** `market-tick-data-service`+`api_football` rows remain. These pre-existing rows are unchanged-by-design (the
+    code fixes stop RECURRENCE; clearing the historical rows is the deferred backfill tracked by the
+    `[VERIFY] P1 final re-verify` todo).
+  - **(3) NEW class root-caused this pass — `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` (1,090)**. By data_type
+    FIXTURE_EVENTS 372 / FIXTURE_STATS 363 / FIXTURE_LINEUPS 355; 114 distinct match-days 2020-10-06 → 2026-03-26; 100%
+    `service_name=instruments-service`; no captured/empty twin for the same (date, data_type, league_id). Traced the
+    literal reason string to `market-tick-data-service/scripts/_rebuild_sports_write.py:191`, written by the v9
+    manifest-canonicalisation rebuild's **step-6.7 CF-11 gate** (`rebuild_sports_manifest_v9.py:378` +
+    `_rebuild_sports_classify.py`, **operator directive 2026-06-02**): for a data_type in
+    `_FIXTURE_GUARANTEED_DATA_TYPES` (FIXTURES/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/STANDINGS/ODDS/…), if
+    `(league_id, date)` IS in `fixtures_truth` (a match genuinely happened) → upgrade the `empty_confirmed` row to
+    `attempted_failed` so the gap is SURFACED for backfill instead of being frozen as a false honest-absence. The gate's
+    own comment states the operator's priority explicitly: a wrongly-kept FIXTURE_STATS empty (silent incompleteness
+    that blocks backfill forever) is WORSE than a wrongly-upgraded failure. **So CF11 is deliberate, correct
+    honest-coverage behavior — NOT a defect, NOT a false-positive over-flag** (the gate only fires when a fixture
+    provably happened). These 1,090 rows are genuine per-fixture-entity backfill candidates — filed as the new
+    `[DATA] P2 backfill the CF11 gaps` todo, folding into the `[VERIFY] P1 final re-verify` "0 attempted_failed" target.
+  - **Deliverable**: investigation todo closed — all of api_football's `attempted_failed` is now characterized to a
+    named class with a code-level root cause and a tracked resolution owner; `expected_unattempted` is confirmed a
+    (shrinking) legitimate seed. No new code shipped by this investigation pass (the fixes were shipped under the "fix
+    root causes" todo it drove; CF11 is operator-directed correct behavior, not a bug). Verification method: live
+    single-parquet manifest read (scratch `verify_af.py` / `verify_cf11.py`, mtds `.venv` duckdb 1.5.3 + gcsfs, ADC on
+    `central-element-323112`).
