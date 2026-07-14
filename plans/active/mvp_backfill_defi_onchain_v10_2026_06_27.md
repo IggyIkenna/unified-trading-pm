@@ -2395,3 +2395,28 @@ for reset / swap to a different key), and if so what's the resolution path? Chec
 dead gap-walker segment means it structurally cannot be met without either a relaunch (blocked on the quota question) or
 an operator-accepted scope change. `/blocked` filed; continuing on other dispatchable work per RULES.md §"blocked" while
 awaiting the answer.
+
+### 2026-07-14T13:0xZ — data_engineering slot-3 (re-dispatch ~10min after slot-6 — CONFIRMS prediction: resume walker also now dead, same -32429 wall)
+
+**Dispatched to the same "Verify the DRIFT fleet drains" todo.** No operator answer yet on slot-6's open `/blocked`
+(checked `/api/slots/3/progress` — `messages: []`). Not re-filing a duplicate `/blocked` — same root cause, same open
+question. Cheap re-check only, but it resolves slot-6's one open uncertainty (the resume walker's fate):
+
+- **`mtds-drift-sig-walker-resume-20260714-123928` — now also DEAD, exactly as slot-6 predicted.** Log shows it finished
+  its `_load_parts_summary()` metadata scan at 12:53:45Z (6,293 parts, oldest sig dated 2025-12-23, floor 2025-07-01),
+  immediately issued its first real `getSignaturesForAddress` call, hit the identical `429`/`-32429 max usage reached`
+  wall (4 retries, exponential backoff, exhausted by 12:54:05Z), logged the same false-positive
+  `"Walk complete: 0 new sigs in 20.1s (~0 sigs/s) across 0 new parts"`, exited `rc=0`, self-deleted
+  (`gcloud compute instances list` now shows it `STOPPING`). Parts count confirmed still flat at 6,293 (0 growth) —
+  matches the gap-walker's earlier fate exactly. **Both DRIFT sig-index walker segments are now dead with a combined 0
+  parts of real progress toward their `--back-to` floors.**
+- `mtds-solana-drift-backfill` — still `RUNNING`, still 0 Helius/capture/error log lines after ~20min (was ~13min at
+  slot-6's check) — resource-sampling only (17-20% CPU, ~560-860MiB RSS), plausibly still pre-walk bootstrap; not
+  further diagnosed (same out-of-scope call as slot-6 made).
+
+**This upgrades slot-6's finding from "plausible, not yet fully confirmed for the resume walker" to fully confirmed for
+BOTH segments** — the Helius key quota exhaustion is not a burst/contention artifact, it blocks every real
+`getSignaturesForAddress` call regardless of which walker or how long after launch. No new action taken (relaunching
+either segment would reproduce the identical failure, per the todo's own tripwire); no new `/blocked` filed (same open
+question as slot-6's). Checkbox NOT flipped — gate still not met, still blocked on the operator's Helius
+quota/plan-upgrade decision. `/skip-current-task`.
