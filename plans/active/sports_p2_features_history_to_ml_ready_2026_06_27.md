@@ -138,6 +138,32 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 23:18 UTC — data_engineering slot-10 (same session, cycle 3 — CONFIRMED BLOCKING: 3rd relaunch wave ALSO failed identically; manual freshness-timing is not a reliable workaround; issue doc escalated to P1; stopping blind relaunches, checkbox NOT flipped)
+
+**Same slot-10 session, cycle 3.** The 22:54Z 3rd relaunch wave (timed against a confirmed-fresh manifest read, 108s-old
+at launch) **ALSO failed identically** — all 3 VMs (`-225249`, `-225333`, `-225354`) failed ~3-4 minutes after launch
+with the same `"Manifest consolidator appears DOWN... heartbeat is 151s old"` error (22:55:51-22:56:45Z).
+
+**This confirms manual pre-flight freshness timing is NOT a reliable workaround**: a point-in-time `gsutil stat` check
+from outside the VM doesn't predict the manifest's freshness at the moment the VM's own internal startup gate runs,
+several minutes later after boot/code-fetch/dependency-install overhead — by which time the consolidator has often gone
+stale again (its own cadence is unpredictable per the root-cause finding). **9 total VM launches across 3 waves have now
+failed identically (0/9 success this session).**
+
+**Updated `issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`**: escalated priority
+P2→P1 (no longer an occasional nuisance — currently blocking ALL features-sports gap-fill compute for this bucket),
+documented the 3rd-wave failure as confirming disqualification of the manual-timing workaround, and updated the
+recommendation to favor a bounded retry-with-backoff INSIDE the compute VM itself (the only mechanism positioned to
+re-check freshness right before doing real work) over external pre-flight timing.
+
+**Stopping further relaunch attempts this session** — per the same discipline applied to a repeat-429-death walker
+earlier today (don't blindly retry a failing pattern a 4th time without addressing root cause): a 4th relaunch has no
+reason to succeed where 3 consecutive waves failed for the same structural reason. This todo's Todo 1 compute is now
+genuinely blocked pending either (a) the consolidator's own reliability fix, or (b) a code change to the compute VM's
+startup-gate retry behavior — both are `[INFRA]`/`[CODE]` scoped fixes outside a single verification/gap-fill dispatch's
+craft. Checkbox NOT flipped. `/skip-current-task` so this todo returns to the queue; the next session picking it up
+should check whether the issue doc's P1 fix has landed before attempting another relaunch wave.
+
 ### 2026-07-14 23:0x UTC — tick-4 diagnosis dispatch (68.6% cluster P2: prior slot-4 diagnosis ADVERSARIALLY RE-VERIFIED — all evidence confirmed; root-cause mechanism CORRECTED (upstream-API zombie boards through MDPS bucket assignment, NOT an MTDS cache re-serve); re-capture ruled out with proof; no code shipped, doc-only)
 
 Dispatched at tick 4 against the already-flipped P2 diagnosis todo — treated as an adversarial verification pass rather

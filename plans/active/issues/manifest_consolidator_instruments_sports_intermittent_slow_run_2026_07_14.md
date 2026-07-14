@@ -26,7 +26,7 @@ created: 2026-07-14
 assigned_vm: planning
 source: [sports_p2_features_history_to_ml_ready-001]
 parent_epic: sports_master
-priority: P2
+priority: P1
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
@@ -93,3 +93,16 @@ across this and future plans pays this same SPOT-launch tax blind until this is 
    provisioning the VM (a cheap `gsutil stat` check pre-flight) rather than paying the full VM-boot cost to discover
    staleness at the startup gate — would turn a wasted SPOT VM-launch into a cheap pre-check + short wait. (repo:
    deployment-service)
+
+## Update 2026-07-14 23:18Z — escalated to P1: 3rd wave ALSO failed, manual pre-flight timing is NOT a reliable workaround
+
+Tried timing a relaunch against a confirmed-fresh manifest read (`gsutil stat` showed 108s-old at launch time, within
+the 120s budget) as a workaround. **All 3 VMs in this 3rd wave ALSO failed with the identical error** ~3-4 minutes after
+launch (`heartbeat is 151s old` at 22:55:51Z) — confirming that a point-in-time freshness check taken from outside the
+VM does NOT reliably predict the freshness at the moment the VM's own internal startup gate runs its check, minutes
+later after boot/code-fetch/dependency-install overhead. **9 total VM launches across 3 waves have now failed
+identically** (0/9 success rate observed this session). Bumped priority P2→**P1** — this is not an occasional nuisance,
+it is currently blocking ALL features-sports gap-fill compute for this bucket. Recommend option 2 (bounded
+retry-with-backoff inside the compute VM itself, since it's the only mechanism positioned to re-check freshness right
+before doing real work, closest to the actual check-then-act window) as the most promising near-term fix, pending option
+1's root-cause investigation.

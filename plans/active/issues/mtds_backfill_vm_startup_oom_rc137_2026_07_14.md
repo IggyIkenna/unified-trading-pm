@@ -811,7 +811,7 @@ correctly found nothing new after `2kqdc`'s fresh write) touched row counts furt
 big finding (data-correctness, already live in production) — via `/blocked` to the operator in the same turn as this
 commit, not deferred.
 
-- [ ] [BACKEND] P0 CRITICAL. **Investigate the `2ab54ce0` chunked-merge ROW COUNT REGRESSION** — the first successful
+- [x] [BACKEND] P0 CRITICAL. **Investigate the `2ab54ce0` chunked-merge ROW COUNT REGRESSION** — the first successful
       post-fix consolidator write (`2kqdc`, 2026-07-14T22:47:29Z) dropped 34,961 rows (0.1274%) versus the pre-merge
       canonical, tripping `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (`manifest_consolidator.py:1733`, "suspected merge
       bug, not routine dedup/prune" per the check's own log message). This output is ALREADY LIVE in
@@ -826,9 +826,102 @@ commit, not deferred.
       (revert to a known-good prior snapshot if one exists, or a corrective re-merge) — do NOT let downstream consumers
       keep reading it uninvestigated. The scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`) is
       currently PAUSED (this session's own remediation) — leave it paused until this is resolved and re-verified; do not
-      silently un-pause. Repo: `unified-trading-library` (`manifest_consolidator.py`).
+      silently un-pause. Repo: `unified-trading-library` (`manifest_consolidator.py`). — ✅ INVESTIGATED 2026-07-14
+      (slot-3, backend_engineer) — **verdict: (b) legitimate one-time backlog clear, NOT a chunking bug** — see "P0
+      investigation — chunking cleared, verdict (b) legitimate first-run backlog collapse" below for the full evidence
+      (code-level boundary-safety review + a new adversarial regression test + a git-history timeline proof). **NOT a
+      full close**: could not be verified against the REAL dropped rows (no `gcloud`/GCS access in this sandbox, same
+      limitation every prior session on this issue hit) — filed a residual `[INFRA]` todo below for a live sample-based
+      confirmation before the scheduler is un-paused.
 
-- [ ] [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
+## P0 investigation — chunking cleared, verdict (b) legitimate first-run backlog collapse (2026-07-14, slot-3, backend_engineer)
+
+**Code-level boundary-safety review** of `_duckdb_merge_payload`
+(`unified-trading-library/unified_trading_library/manifest_consolidator.py`): the chunk predicate
+(`TRY_CAST(date AS DATE) >= start AND < end`) partitions `[min_date, max_date]` into a provably gapless, non-overlapping
+half-open sequence (`start = end` of the prior chunk on every loop iteration), plus a separate `IS NULL` chunk for
+unparseable dates — together these cover every row in `canon_select_all ∪ changed_select` exactly once. The dedup-key
+NULL/`''` sentinel normalization (`_dedup_key_sql`) collapses both representations to the same key, but `TRY_CAST` also
+maps both to `NULL` — so a dedup group that spans the NULL/`''` distinction still lands in the SAME (null-date) chunk,
+no boundary split. `date` is always the first column of both the base dedup key (`_BASE_DEDUP_COLS`) and Option B's
+`service_name`-excluded key (`part_norm_excl_svc`), so — since `TRY_CAST` is a pure, deterministic function of the raw
+`date` value — two rows sharing an (unnormalized) dedup key are provably assigned to the same chunk by both mechanisms.
+No boundary-splitting defect found by inspection.
+
+**Adversarial regression test** (`unified-trading-library@0bd7cc27`,
+`tests/unit/test_manifest_consolidator.py::test_duckdb_incremental_merge_chunking_preserves_self_heal_and_option_b_across_chunks`):
+the existing 2 chunk-boundary tests each exercise exactly ONE dedup mechanism at a time. This new test forces
+canonical-internal duplicate self-heal (`dupe_keys`), Option B cross-`service_name` collapse specifically on the
+UNTOUCHED `survivors` path (harder than the `winners`/contested path, not previously chunk-boundary-tested), a
+dual-source captured-vs-captured negative control (must survive intact), and a contested-key shard update — into FOUR
+separate 1-day chunks (`CONSOLIDATOR_MERGE_CHUNK_DAYS=1`, dates ~90-270 days apart). All four resolved exactly as the
+unchunked semantics predict. **PASSED** — full `quality-gates.sh` green, 80/80 tests in the file green.
+
+**Git-history timeline proof**: Option B collapse (`unified-trading-library@9bc06261`) shipped 2026-07-14T16:31:18Z —
+the SAME DAY, ~6h before the flagged write. Per this issue's own earlier sections, the DeFi bucket's canonical had been
+frozen/stale since 12:56:34Z and every consolidation attempt OOM-crashed continuously until the chunking fix
+(`2ab54ce0`, 21:44:36Z) landed and was confirmed deployed (~22:06-22:11Z, "P0 infra live-verify — OOM fixed" above).
+This means `2kqdc` (22:47:23Z) is **provably the first time Option B's collapse logic has ever executed against this
+bucket's real 27.4M-row canonical** — every attempt between 16:31Z and ~22:11Z crashed before completing. The
+pre-existing canonical self-heal (`dupe_keys`, since `0de04b6e`/`800af156`, 2026-07-10) is in the same position — this
+bucket had not completed a successful cycle in a long time, so any accumulated internal duplicates clear in this SAME
+first-successful cycle too.
+
+**Threshold-design context**: `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD = 0.001` (added `52d5921a`, 2026-07-12) is
+calibrated, per its own code comment, for "a small, self-limiting stale-row self-heal" under NORMAL, frequently-cycling
+operation — not a multi-hour backlog compounding through TWO dedup mechanisms (one brand new) completing for the first
+time in one cycle. 34,961/27,445,013 = 0.1274% is only marginally over the 0.1%/27,445-row cutoff — a bounded,
+one-time-backlog-sized excess, not a proportional-to-corpus-size runaway that would suggest a genuine merge bug.
+
+**Verdict: (b) — legitimate one-time cleanup, not a chunking/merge bug.** The chunking fix's role was purely enabling
+the merge to survive to completion; it did not change merge semantics, and the adversarial test found no chunk-boundary
+defect. **Recommendation: do NOT revert or re-merge the already-live index** — the evidence indicates it is a legitimate
+cleanup, not corruption. Leave the scheduler PAUSED per this issue's own standing instruction until the residual
+live-sample verification below completes.
+
+- [x] [INFRA] P1. **Residual live verification (2026-07-14, slot-3, backend_engineer)**: the "verdict (b)" conclusion
+      above is evidence-based (code review + adversarial synthetic test + git-history timeline) but NOT verified against
+      the REAL ~34,961 dropped rows — this sandbox has no working `gcloud`/GCS access (same limitation every prior
+      session on this issue hit). Needs: (1) if a backup/snapshot of the pre-`2kqdc` canonical still exists (check GCS
+      object versioning / any pre-write snapshot this session's remediation may have taken), diff it against the live
+      `27,410,052`-row index and sample ~20-50 of the dropped keys; (2) for each sampled dropped key, confirm it matches
+      ONE of the two predicted patterns — either (a) a canonical-internal duplicate (same full dedup key including
+      `service_name`, differing only in `attempted_at`/`written_at`/`instrument_count`) or (b) an Option B twin (same
+      key EXCLUDING `service_name`, one row `capture_status='captured'`, the other not) — if a sampled dropped row
+      matches NEITHER pattern, that reopens the "(a) real bug" hypothesis and needs escalation; (3) once confirmed,
+      resume the scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`, currently PAUSED) — do NOT resume it
+      based on this todo's evidence alone, only after the live sample check in (1)-(2) passes. Repo:
+      `deployment-service` (GCS sample pull) + `unified-trading-library` (if a sampled row contradicts the verdict). —
+      ✅ DONE 2026-07-14 (slot-3, infra) — **row-level live verification is INFEASIBLE, not merely inconvenient;
+      escalated + operator-ruled, not silently skipped.** Found the exact pre-`2kqdc` snapshot: bucket versioning is
+      `Suspended`, but soft-delete IS enabled, and generation `1784033794988708` (soft-deleted at
+      `2026-07-14T22:47:29Z`, the exact `2kqdc` write instant) has `creation_time=2026-07-14T12:56:34Z` — an exact match
+      to the frozen-canonical timestamp cited throughout this issue, confirmed via
+      `gcloud storage objects describe --soft-deleted`. However, **GCS soft-delete blocks reading a soft-deleted
+      object's CONTENT via any API** — confirmed directly: a JSON API `alt=media` request for that generation returns
+      HTTP 400 `"Cannot request object data for soft-deleted object"`. The only way to read its bytes is
+      `gcloud storage restore`, which writes back to the **same live path** (no destination override exists) — reading
+      the pre-image would require briefly overwriting the current production `availability_index.parquet` (est. 10-30s
+      window) with the stale pre-fix content before restoring today's generation back, exposing any of the fleet's
+      unaudited downstream readers (feature builders, honesty-coverage, gating checks) to reverted data during that
+      window. Also checked and ruled out the alternative of independent ground truth: `_index/per_vm/*.parquet` (the
+      per-VM shard files the consolidator merges from) have already been pruned post-absorption — only
+      `_legacy_seed.parquet` remains — so there is no raw-shard cross-check available either; the soft-deleted
+      generation was the only remaining path to a pre-image, and it's unreadable without a live revert. **Escalated via
+      `/blocked` (`BLK-a8931895`)** rather than deciding solo, given this is a genuine production-risk judgment call the
+      todo itself didn't anticipate (it assumed a passive backup, not a live-swap). **Operator ruling: Option B — do NOT
+      perform the live restore.** Rationale (verbatim reasoning from the ruling): reintroducing the ~9h-stale pre-fix
+      canonical into the live path — even byte-exact-staged for ~10-30s — would deliberately inject known-worse content
+      into a production path read by unenumerable fleet consumers, which violates the current protective posture
+      (downstream is being gated OFF the suspect revision, not fed staler data on purpose); the existing adversarial
+      regression test + git-history timeline proof already establish verdict (b) with high confidence, so finalize that
+      documented verdict and record row-level live verification as INFEASIBLE without a prod revert, rather than
+      pursuing it. **Scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`) stays PAUSED** — resuming it /
+      unfreezing `mvp_backfill_defi_onchain_v10-002`'s G2 gate remains operator+backend-owned and will be decided on its
+      own evidence, not unblocked by this verdict alone. Repo: `deployment-service` (GCS soft-delete investigation) +
+      `unified-trading-pm` (this doc).
+
+- [x] ✅ [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
       chunked-merge duration (24-30+ min observed) and causes a lock-stealing livelock** — every cron tick past the TTL
       treats a still-running legitimate cycle as orphaned and starts a competing concurrent merge (observed 3+
       simultaneous executions this session, each re-downloading the full 27.4M-row canonical). This is a hardcoded
@@ -840,7 +933,35 @@ commit, not deferred.
       executions only) as a stopgap — worth codifying in Terraform
       (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) once a stable value is confirmed by a
       clean run under the new lock TTL. Repo: `unified-trading-library` (lock TTL) + `deployment-service` (Terraform
-      task-timeout codification).
+      task-timeout codification). — ✅ DONE 2026-07-14 (slot 5, backend_engineer): mirrored the existing
+      env-var-with-code-default pattern — `unified-trading-library@9358fb0b` makes `_LOCK_TTL_SECONDS` read
+      `CONSOLIDATOR_LOCK_TTL_SECONDS` from the environment (default unchanged at 300.0, so every fast bucket keeps
+      today's prompt crash-recovery; two new regression tests: `test_lock_ttl_seconds_env_default`,
+      `test_lock_ttl_seconds_env_override`). `deployment-service@fe67a53` codifies this session's live `--task-timeout`
+      bump (1800s→3600s for `market-data-defi` only) in `manifest_consolidator_timeouts` and adds a new
+      `manifest_consolidator_lock_ttl_seconds` Terraform map wiring `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` for
+      `market-data-defi` only (mirroring the existing per-bucket `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`/`_THREADS` override
+      pattern) — set comfortably above the bucket's own 3600s task-timeout so a "fresh" lock can only belong to a
+      still-legitimately-running execution, structurally eliminating the livelock class rather than just widening the
+      number. Both repos' full `quality-gates.sh` green. **Not live-verified against the real Cloud Run job** (this
+      sandbox's `gcloud` is non-functional, same `cap_dac_override` snap failure prior sessions on this issue hit) — the
+      Terraform change needs a real `tofu apply`/`gcloud run jobs update` + a watched cron cycle to confirm the env var
+      actually reaches the job and the livelock stops recurring; filing that as a residual `[INFRA]` todo below.
+
+- [ ] [INFRA] P1. **Residual (2026-07-14, slot 5, backend_engineer)**: live-verify `deployment-service@fe67a53`
+      (market-data-defi task-timeout 1800s→3600s + new `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` Terraform override) against
+      the real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job/scheduler — confirm the live
+      `gcloud run jobs     update` values already match (this session's Terraform change codifies what was live-set
+      earlier, but per this issue's own repeated digest/config-drift gotcha, verify by direct inspection, not just
+      assuming Terraform state matches reality), and confirm the deployed
+      `market-tick-data-service`/`unified-trading-library` image actually contains `unified-trading-library@9358fb0b`
+      (the `CONSOLIDATOR_LOCK_TTL_SECONDS` env-read) — bump the digest-pinned base image in
+      `market-tick-data-service/Dockerfile` if `update-dependency-version.yml` hasn't auto-fired, same recipe this issue
+      has used repeatedly. Then un-pause the scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`,
+      currently PAUSED per this issue's own prior remediation pending the row-count-regression investigation above — do
+      NOT un-pause until that P0 CRITICAL todo is separately resolved) and watch a full `duckdb_merge_start` cycle for
+      whether the lock-stealing/concurrent-execution pattern is actually gone. Repo: `deployment-service` (Cloud Run
+      job/scheduler verification).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
@@ -1242,6 +1363,58 @@ inline here to keep this session's change small, tested, and immediately shippab
       residual-verification step for an infra session, mirroring the pattern used earlier in this issue for the other
       fixes.
 
+- [x] [BACKEND] P0. **Residual verification of the `date_range` fix above (`unified-trading-library@391f8196`) — the fix
+      as shipped did NOT actually resolve the OOM.** Picked up the "not independently re-verified on a live backfill VM"
+      gap the prior todo flagged, plus arrived at this issue independently via the sibling
+      `mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md` doc (same bug, different entry point, findings merged
+      here earlier in this doc). Local repro of the EXACT real-handler call
+      (`ManifestFreshnessCache(bucket=<defi>, ttl_seconds=60, date_range=(target_day, target_day)).bulk_load()`, real
+      27.4M-row DeFi index): **peak 14,856.6 MB (~14.86 GiB)** — matching the kernel-confirmed real-VM OOM
+      (`anon-rss:15379504kB`, "P0 infra diagnostics" section above) almost exactly. **Root cause of the gap**:
+      `date_range` was applied as a pandas boolean-mask filter AFTER `read_availability_index()` already
+      downloaded+decoded the FULL corpus into a DataFrame — filtering post-decode does nothing for peak memory, the
+      expensive step (decode) already happened. Confirmed via a raw pyarrow test on the same real index: reading with a
+      proper row-group predicate-pushdown `filters=[("date","==","2026-07-01")]` (skips non-matching row groups BEFORE
+      decode, not after) measured **peak=5.4 MB, elapsed=0.1s** for the identical single-day window — the manifest's row
+      groups ARE date-clustered enough for pushdown to work extremely well; the bug was that nothing in the read chain
+      was passing a filter down to pyarrow at all.
+
+      **Fix shipped**: `unified-trading-library@a5b07ff7e` — threaded an optional `filters:
+              list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
+              `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
+              `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
+              filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
+              would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
+              `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
+              belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
+              min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
+              out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
+              separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
+              blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
+              `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
+
+              **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
+              same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
+              self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
+              16 GiB.)
+
+              **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
+              a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
+              killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
+              **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
+              ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
+              exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
+              initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
+              _2026_07_14` has needed since it was filed.
+
+              Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
+              only, no code change).
+
+**Status: this specific OOM mechanism (unscoped `ManifestFreshnessCache` reads) is RESOLVED and production-verified.**
+The other 2 open threads on this doc (the `uts-prod-manifest-consolidator-market-data-defi` DuckDB consolidator crash
+and the `2ab54ce0` chunked-merge row-count regression) are separate, already-tracked issues on this same doc — not
+re-verified or touched by this entry.
+
 ## Evidence
 
 - `mtds-perp-funding-backfill` full `run.log` (crash at 2026-07-14T11:41Z): preflight complete → 1 RESOURCE_SAMPLE
@@ -1250,7 +1423,61 @@ inline here to keep this session's change small, tested, and immediately shippab
   (mem=9.9%) → `Killed` → `rc=137`.
 - `mtds-dex-pools-backfill` 3rd incarnation `run.log` (crash at 2026-07-14T11:49Z, 1-day/1-protocol job): handler
   initialized → **no RESOURCE_SAMPLE** → `Killed` → `rc=137`.
+- `mtds-dex-pools-backfill` POST-FIX `run.log` (`unified-trading-library@a5b07ff7e`, real production run):
+  `DEX pools handler initialized` → real collection proceeds → `DEX pools collection complete: 17 total records` →
+  `exit_code=0` → `DEPLOYMENT_COMPLETED`. The definitive before/after pair for this issue.
+- `mtds-lending-indices-20260715-002613` POST-FIX `run.log` (same `a5b07ff7e` + full fix chain, a SECOND, independent
+  handler — `lending_indices_handler.py`, not `dex_pools_handler.py`): `Lending indices handler initialized`
+  23:29:00.959Z → `RESOURCE_SAMPLE`s healthy (rss=693MiB→896MiB, mem=10.7%→11.8%) → real per-day Morpho collection
+  proceeds well past the old ~20-90s kill window → `Lending indices collection complete: 554/479/340 total records` for
+  days 2026-03-27/28/29 respectively, real parquet objects confirmed landing in
+  `market-data-tick-defi-prd-central-element-323112`. See "P0 residual live-verify — lending_indices_handler.py / Morpho
+  backfill" below for the full session.
 - `gcloud compute operations list --filter="targetLink~mtds-{perp-funding,dex-swaps,dex-pools}-backfill"`: only
   `insert`/`delete` ops, no `preempted` — rules out SPOT preemption.
 - `f8cab3f0` (2026-07-12, `market-tick-data-service`) — the most recent change to `_register_all_catalog_readers()`,
   confirms it loads a combined ~1.6M-row cross-asset-group catalogue once per process.
+
+## P0 residual live-verify — lending_indices_handler.py / Morpho backfill (2026-07-14/15, autonomous dispatch)
+
+Dispatched independently to relaunch the long-pending Morpho `lending_indices` backfill
+(`bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 — a real, ground-truth-confirmed 108-day gap,
+`2026-03-27`→`2026-07-12`, in `market-data-tick-defi-prd-central-element-323112` for `venue=MORPHO`). This is a SECOND,
+independent real-VM confirmation of the fix chain (the "Status: RESOLVED and production-verified" section above verified
+`dex_pools_handler.py` only) — extends coverage to a different handler, a different data path (Morpho via TheGraph
+subgraph, `lending_indices` data_type), and a much longer (108-day, ~3.5-4hr) real backfill window rather than a 3-day
+smoke window.
+
+**Pre-launch verification, by content not just SHA-math**: confirmed via `git log` that the full fix chain (items 1-4:
+`market-tick-data-service@d6846f1c`, `unified-trading-library@0aa284e8`, `unified-trading-library@391f8196`,
+`market-tick-data-service@e3bbb2a3`) plus the `a5b07ff7` row-group-pushdown fix documented above were all already merged
+to `live-defi-rollout`. Downloaded + unpacked the actual `mtds-code.tar.gz` / `unified-trading-library-code.tar.gz` from
+`gs://deployment-scripts-central-element-323112/code/` and grepped the extracted `.py` files directly (not just each
+tarball's `.manifest.json` `commit_sha`) — confirmed `_date_range_filters()`
+
+- `filters=` pushdown present in `manifest_freshness.py`, and all 9 handlers (incl. `lending_indices_handler.py:341`)
+  pass `date_range=(target_day, target_day)`. All 4 relevant tarball manifests (`mtds-code`,
+  `unified-api-contracts-code`, `unified-trading-library-code`, `deployment-service-code`) matched local `HEAD` exactly
+  (built ~4min before launch by the same concurrent session that shipped `a5b07ff7`) — no rebuild needed.
+
+**Launch**:
+`bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh --lending-protocols morpho 2026-03-27 2026-07-12`.
+VM `mtds-lending-indices-20260715-002613` created 23:26:33Z, `RUNNING` 23:26:43Z (~32s). The launcher's own
+`lc_verify_tarball_freshness` gate independently confirmed all 4 tarballs current.
+
+**Result so far (interim — backfill still running at time of writing)**: `DEPLOYMENT_STARTED` 23:29:00.400Z, handler
+initialized 23:29:00.959Z, two healthy `RESOURCE_SAMPLE`s (rss=693MiB/mem=10.7% at 23:29:01Z, rss=896MiB/mem=11.8% at
+23:29:31Z) — sailed past the old ~20-90s kill window with zero crash signature. Days 2026-03-27 (554 records),
+2026-03-28 (479 records), 2026-03-29 (340 records) each completed cleanly; day 4 (2026-03-30) in progress as of 23:37Z.
+Independently ground-truth-verified (not just trusting the log) that day 1's real parquet object exists at
+`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-03-27/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=MORPHO/chain=ETHEREUM/instrument_type=lending/data_type=lending_indices/morpho_ETHEREUM_20260714_232900.parquet`.
+Pace ~2min/day ⇒ 108 days ≈ 3.5-4hr total.
+
+**Not yet a full close for this handler** — the backfill was still running at the time this entry was written; see
+`bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 / its Progress Log for the plan-side tracking and any
+later update on full completion (or a crash, if one occurs later in the 108-day window — if it crashes with the SAME
+rc=137 signature despite the confirmed-fresh, content-verified tarballs, that would mean the fix chain is insufficient
+for this handler specifically and needs a fresh finding appended here, not a duplicate doc). Combined with the
+`dex_pools_handler.py` production verification above, this is the second of 9 DeFi handlers to get a real-VM
+confirmation; the other 7 remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
+runs.
