@@ -19,8 +19,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
@@ -43,8 +43,10 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 3)
 
 > **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: high**.
 > `status: draft` — activated by Phase 2's last todo; `sequential: true` orders its todos. (Phase 4 runs in parallel off
-> Phase 1.) **Fully autonomous — NO operator gates.** The irreversible GCS deletion is made safe by the
-> snapshot-before-delete (recoverable), not a human sign-off; the "all readers migrated" check is an agent verification.
+> Phase 1.) **Fully autonomous — NO operator gates.** **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` /
+> `execution_scope: local-only`, same as the rest of this phase chain) — see Phase 0's Dispatch note for why. The
+> irreversible GCS deletion is made safe by the snapshot-before-delete (recoverable), not a human sign-off; the "all
+> readers migrated" check is an agent verification.
 
 ## Context (read first — self-contained)
 
