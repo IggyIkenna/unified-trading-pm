@@ -243,7 +243,24 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       with a clean 2xx `FetchEvidence` is then honestly re-labelled `empty_confirmed(SOURCE_RETURNED_ZERO)` with proof
       (api_football may simply not publish fixture-level detail for some low-profile lower-league matches) — the
       operator-directed point is these must be SURFACED for backfill, never silently frozen empty. Folds into the
-      `[VERIFY] P1 final re-verify` "0 attempted_failed" target above.
+      `[VERIFY] P1 final re-verify` "0 attempted_failed" target above. **PREP DONE 2026-07-14 (slot-5), execution
+      BLOCKED-ENVIRONMENT (not run — no false progress). Exact live scope re-measured from the sports canonical: 1,152
+      CF11 attempted_failed shards (FIXTURE_STATS 408 / FIXTURE_LINEUPS 384 / FIXTURE_EVENTS 360) across 180 match-days
+      / 74 leagues — full `(date, league_id, data_type)` list saved to `scratchpad/cf11_gaps.json`. Confirmed
+      rate-limit-safe execution recipe: RE-RUN the existing `instruments-service` closer
+      `scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py` — its `_live_read()` self-discovers
+      the CURRENT `source=api_football & capture_status=attempted_failed` slice (so it picks up these CF11 shards
+      without code changes), re-drives reference entities via `_fetch_sports_reference_data` and FIXTURES via
+      `process_instruments()` with `redo_all=False` + explicit `sports_entity_filter` (the docstring-mandated
+      no-blind-rescan path; `redo_all=True` blows provider rate-limits), and relabels a clean-2xx-zero to
+      `empty_confirmed(SOURCE_RETURNED_ZERO)`. Do a `--dry-run` first, then a live run. **Why not executed here:** this
+      slot has NO instruments-service `.venv` (can't run the closer locally) and the closer is designed as a VM job
+      (`--vm-name` arg); the proper path is a backfill VM launch (infra craft) which also needs the gcloud CLI — BROKEN
+      on this slot (snap-confine cap error). Re-dispatch to an infra worker for a VM launch, or a properly-provisioned
+      data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
+      non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
+      `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
+      operation closes both.**
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
