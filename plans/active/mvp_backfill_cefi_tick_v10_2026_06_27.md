@@ -2462,13 +2462,72 @@ code-shipped.
 **Commits credited to peers** (found via `git log`, not duplicated): `instruments-service@ad4be6d6` (catalogue
 backfill), `@4c2e354f` (collision disambiguation), `@e6fdfd00` (DERIBIT-COMBO routing).
 
-**Concretely remaining for the next session, in priority order**: (1) DERIBIT-COMBO catalogue-population gap (routing
-fix `e6fdfd00` is live, unexercised — `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` is a hard live-only mapping, needs a
-mode-aware adapter-key resolution per the filed P1 finding); (2) the `DERIBIT spot_pair` legacy-bucket-merge anomaly
-(carried over, unresolved, 2 of the 3 remaining Layer-1 tuples); (3) the new small BITGET-FUTURES pre-listing-window
-finding above (attempted_failed=562, likely a quick pre-listing-filter-coverage fix, not architectural); (4) phantom
-reconcile + manifest hygiene (recurring note, still not re-run). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** — an
-extremely long, extremely productive session (8 real bugs found+fixed+shipped across 3 repos, all independently verified
-with regression tests AND live infra; every VM kill or relaunch was evidence-driven, never a guess). Handing off cleanly
-— the remaining Layer-1 gaps are both already-scoped, already-filed, architectural DERIBIT work, not a repeat of today's
-BITGET-FUTURES investigation.
+### G4 Re-Verification Run #6 continued — 2026-07-14T07:00-07:55Z: delisted-symbol filter shipped, DTZ ratchet fix, DERIBIT-COMBO routing fix live-validated, manifest hygiene audit completed
+
+**BITGET-FUTURES `attempted_failed=562` residual — root-caused, fixed, shipped.** The finding flagged above (previous
+entry) was precisely diagnosed: `_resolve_symbols`'s pre-listing filter only ever checked
+`available_from_datetime > date` (not-yet-listed); it had no symmetric check for `available_to < date` (delisted), and
+the by_date snapshot it reads carries no `available_to` column at all — so an explicit `VM_INSTRUMENT_IDS` symbol past
+its expiry (e.g. `BTCUSDU26`/`BTCUSDZ24` requested on `2025-01-01`) was sent straight to Tardis, a real HTTP 400
+recorded as `attempted_failed` instead of the honest `empty_confirmed(EXPECTED_INSTRUMENT_DELISTED)`. Fixed by adding a
+second, catalogue-based filter (the SAME rolled-up lifecycle catalogue the no-explicit-instrument_ids path already
+consults, which the earlier `ad4be6d6` catalogue-backfill already populated correctly for these exact 16 symbols —
+verified directly: `BTCUSDZ24 available_to=2024-12-28` etc, confirmed against `prod/catalog.parquet`). New function
+`filter_delisted_symbols`, split into a NEW file `tardis_delisted_symbol_filter.py` (codex file-size ratchet —
+`tardis_symbol_resolution.py` was already near the 900-line cap; inlining pushed it to 925-951L across two failed
+attempts before extracting to a sibling module, same pattern as the original `tardis_adapter.py` split). 12 new/updated
+regression tests across every call site. 447+ tests green (only the 4 already-known pre-existing failures remain —
+confirmed via `git stash` A/B comparison against the clean committed HEAD both times a suspicious result appeared, not
+assumed). **Shipped: `market-tick-data-service@34550740`**, QG green, `quickmerge --agent`.
+
+**Bonus fix — pre-existing DTZ ratchet violation, unrelated to this session's work, blocking the gate.** QG failed with
+`dtz: 31 violation(s) > baseline 30` pointing at `migrate_cefi_dated_perps_margin_marker_2026_07_09.py:418`
+(`date.today()`, a naive-datetime call) — confirmed via `git show HEAD:<path>` that this line was ALREADY present in the
+committed tree before any of today's edits (not a peer's concurrent commit, not mine). Since the ratchet baseline must
+never be raised (CLAUDE.md), fixed the actual violation (`date.today()` → `datetime.now(UTC).date()`) rather than bump
+the baseline — 1-line, mechanical, verified via the ratchet checker script directly before re-running full QG.
+
+**DERIBIT-COMBO routing fix (`e6fdfd00`/`89511de8`) — live-validated, NOT closed (correctly not rushed).** Ran
+`instruments-service --operation instruments --mode batch --venues DERIBIT-COMBO --start-date 2024-01-01 --end-date 2024-01-01 --force`
+as a direct empirical test: correctly fetched 68,847 real Tardis combo instruments, derived 203 genuinely active on
+2024-01-01, wrote a real by_date snapshot — **confirms the routing fix works end-to-end**. But `prod/catalog.parquet`
+still carries only the old 4 stale (2026-07-dated) rows; the catalogue rollup derives `available_from`/`available_to` by
+scanning ALL existing by_date snapshots, so running the rollup now (with only ONE sampled date) would incorrectly derive
+`available_from=available_to=2024-01-01` for every symbol — a correctness regression, not a fix. **Did not run the
+rollup.** Corrected the issue doc's prior "next step" note (which understated this) with the live-verified detail; real
+remaining scope is a historical by_date backfill across a representative date range, matching — and validating — the
+issue's own `design`-class / `assigned_vm: planning` scoping. See `issues/cefi_layer1_denominator_gaps_2026_07_03.md`
+(2026-07-14T07:00Z correction entry) for the full detail.
+
+**Manifest hygiene audit — completed (recurring deferred item, finally run this session).**
+`manifest_hygiene_daily.py --asset-group cefi --mode full` ran to completion (~46 min, mostly the phantom-reconcile
+dry-run + a 4-pillar validation step that itself timed out at 1800s and was skipped gracefully). Verdict: **cefi hygiene
+RED** — `schema_version_not_v9=458,304` (pre-canonicalization legacy rows, does not block G4 per prior G0 scope
+exclusion), `oracle_expects_but_empty=22,797`, `oracle_expects_no_manifest_row=71,805`, `shard_4pillar_fail=1`.
+Auto-filed as `issues/manifest_hygiene_red_2026_07_14.md` (had to hand-fix missing required frontmatter fields — the
+auto-filing template in `manifest_hygiene_daily.py` doesn't fully match the current doc schema, a small separate gap
+worth noting for whoever owns that script next) + candidate CSV
+(`plans/audit/results/manifest_hygiene_cefi_2026_07_14.csv`, 22 rows). Triage NOT attempted this session (out of scope,
+needs its own dedicated pass per the issue doc's own recommended-decision section).
+
+**PM repo branch drift — hit twice this session, handled per protocol both times.** Multiple concurrent
+agent-orchestrator workers pushed to `unified-trading-pm`'s `live-defi-rollout` mid-session (Firestore-migration plan
+docs, workspace-manifest updates); `git pull --ff-only` cleanly resolved both times before committing, no conflicts, no
+lost work.
+
+**Commits shipped this continuation:**
+
+9. `unified-trading-pm@f6fadcd47` — DERIBIT-COMBO next-step correction (live-verified, catalogue backfill still needed)
+10. `market-tick-data-service@34550740` — delisted-symbol filter (closes the BITGET-FUTURES Layer-2 residual) + DTZ
+    ratchet fix
+11. `unified-trading-pm@1a0ad97a8` — manifest_hygiene_red_2026_07_14 escalation issue + candidate CSV
+
+**Concretely remaining for the next session, in priority order**: (1) DERIBIT-COMBO catalogue-population gap — now
+CONFIRMED the routing fix works; the remaining scope is precisely a historical by_date backfill + safe rollup
+(`assigned_vm: planning`, design-class, already filed); (2) the `DERIBIT spot_pair` legacy-bucket-merge anomaly (carried
+over, unresolved, 2 of the 3 remaining Layer-1 tuples); (3) triage `issues/manifest_hygiene_red_2026_07_14.md` (22
+candidate rows, cefi RED); (4) phantom reconcile `--apply` (dry-run completed this session, apply not attempted). **Not
+blocked by CREDENTIALS/OPERATOR/UPSTREAM.** 10 real bugs/gaps found+fixed+shipped across 4 repos this full session
+(instruments-service, market-tick-data-service, deployment-service, + this PM repo's own hygiene/frontmatter gaps),
+every fix independently regression-tested, several live-infra-verified end-to-end. Handing off cleanly — every remaining
+Layer-1 gap is precisely scoped with a concrete next action, not a vague "investigate further."
