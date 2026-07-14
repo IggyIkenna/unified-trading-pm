@@ -28,6 +28,11 @@
 #        ... pytest / basedpyright ...
 #        qg_governor_release        # frees the token (also auto-freed on process exit)
 #
+#      qg_governor_acquire also sets QG_GOVERNOR_WAIT_SECONDS (0 if never throttled)
+#      — the caller's MAX_DURATION wall-clock check subtracts this from billable
+#      duration, so queueing behind the shared token cannot fail an otherwise-green
+#      run purely for having queued (qg_host_governor_severe_contention_2026_07_13.md).
+#
 #   B) Wrapper CLI (wrap any command under one token):
 #        bash qg-host-governor.sh -- <command> [args...]
 #
@@ -148,6 +153,13 @@ _qg_governor_deprioritise() {
 }
 
 # Acquire one host token (blocks until free). Holds an flock'd fd for the run's lifetime.
+#
+# Exposes QG_GOVERNOR_WAIT_SECONDS (global, accumulated across calls — 0 if never
+# throttled) so a caller's MAX_DURATION wall-clock check can subtract pure queue
+# time from billable work time: queueing under K=1-vs-20-way-demand contention is
+# not "the run got slow", it's "the run was waiting its turn", and must not fail
+# an otherwise-green run on that basis alone
+# (qg_host_governor_severe_contention_2026_07_13.md).
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
@@ -171,6 +183,7 @@ qg_governor_acquire() {
             if flock -n "$fd"; then
                 _QG_GOV_FD=$fd
                 _qg_governor_deprioritise
+                QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
                 [[ "$waited" -gt 0 ]] && echo "[qg-governor] token $i/$k acquired after ${waited}s wait" >&2
                 return 0
             fi

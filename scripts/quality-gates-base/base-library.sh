@@ -1451,7 +1451,10 @@ fi
 # single-core profile run cannot false-fail the meta-gate; unset → unchanged behaviour.
 MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
-[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
+# Governor queue-wait excluded from billable time — mirror of base-service.sh
+# (qg_host_governor_severe_contention_2026_07_13.md). 0 when ungoverned/uncontended.
+DUR_BILLABLE=$(( DUR - ${QG_GOVERNOR_WAIT_SECONDS:-0} ))
+[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR_BILLABLE -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR_BILLABLE}s work + ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait = ${DUR}s wall)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) — mirror of
