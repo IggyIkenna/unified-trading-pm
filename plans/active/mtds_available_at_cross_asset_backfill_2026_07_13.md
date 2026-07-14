@@ -508,6 +508,26 @@ respecting the open `BLK-f3cdf442` block as a reason to stop offering this speci
 cycles on redundant re-verification. No production writes made this touch; no cron state changed, no live index mutated,
 checkbox left unflipped (todo's full scope — snapshot + pause — still incomplete).
 
+**Premature-dispatch finding #3, tradfi apply lane — 2026-07-14 (slot 9)**: dispatched task
+`mtds_available_at_cross_asset_backfill-014` ("Apply `rebuild_tradfi_manifest.py` full date range, omit `--dry-run`,
+force-consolidate, verify fill rate + guardrail + row count"). Verified read-only after a fresh-pull of all slot repos:
+the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked (no operator go-ahead on
+record), and the tradfi snapshot+pause-cron todo (this task's immediate prerequisite) is still unchecked — no tradfi
+snapshot or cron-pause action exists anywhere in `market-tick-data-service` git history (only the prediction snapshot,
+`86467a0a`). This is the SAME premature-dispatch class already found twice in this plan (slot 5 on `-005`,
+`BLK-f3cdf442`; slot 4 on `-009`, `BLK-ccb6cd86`) — `sequential: true` is still not preventing a downstream apply-todo
+from being offered ahead of its prerequisite snapshot/pause/operator-decision chain. Declined to execute: running a
+full-corpus `rebuild_tradfi_manifest.py` apply with no snapshot, no cron pause, and no operator go-ahead would repeat
+exactly the sports CF-8 production-data-regression risk this plan's "HARD constraint" section exists to prevent. Did NOT
+touch production (no apply, no consolidate, no cron state change). Rather than file a fourth duplicate `/blocked` for
+the same still-open root gate, called `/skip-current-task` citing this entry + the existing
+`BLK-f3cdf442`/`BLK-ccb6cd86` escalations, per the precedent slot 6/slot 10 already established for the sibling
+prediction-lane task. **Flagging again for main/operator**: this plan's downstream apply/resume todos keep getting
+redispatched despite three independent findings now on record that the P0 operator maintenance-window decision is the
+blocker — recommend parking every tradfi/prediction todo downstream of that gate (`priority: 999` + a false condition,
+per `RULES.md` § 4) until the operator actually decides, to stop burning slot cycles on redundant re-verification. No
+production writes made this touch; no cron state changed, no manifest touched.
+
 **Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
 `mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
 (snapshot the prediction index) after fresh-pull — already fully worked by slot 4 (safe half done, cron-pause half
