@@ -1542,6 +1542,49 @@ parquet-presence re-verify, in progress under another slot). `/skip-current-task
 duplicating in-flight work; next genuinely-actionable point is once all 5 VMs self-delete and the parquet-presence
 cross-check runs.
 
+### 2026-07-14T16:12Z — session 36 (operator-mandated fix-now agent): presence-based absence completed (4th+5th legs found live), shipped instruments-service@86cc71ff; fleet EVENTS+INJURIES complete, 3 VMs still running
+
+**Fix-completion audit of `0d9ffabd` against the running 14:43Z fleet found two MORE live legs** (both reproduced in the
+fleet's own run.logs, fixed + shipped `instruments-service@86cc71ff`, QG green 137s/113s, sentinel==HEAD, quickmerge
+`--files`-scoped):
+
+1. **Factory adapter-pool date-pinning (root cause of the "33-league markers" leg)**: `reference_data/factory.py` pooled
+   the api_football URDI adapter WITHOUT the date in the pool key (`pool_date` only for databento/massive) — a
+   multi-date `--force` run reused the FIRST date's `self._date` for all dates. Observed live on the 14:46Z INJURIES VM
+   (`af-backfill-20260714-144603`, ran `--force --sports-entity INJURIES`): 91/91 URDI fetches all `date=2025-09-01` →
+   dates 2..91 read "0 instruments active" → `process_zero_records` wrote **false `EXPECTED_NO_FIXTURE` FIXTURES markers
+   for 33 leagues × 90 real fixture days (~2,970 rows)** — masked at read time only by captured>empty dedup precedence
+   (FIXTURES cells all have captured rows), so the effective state is unchanged, but the same-class pollution keeps
+   flowing until this fix deploys. Fixed: api_football added to the date-aware pool key + regression test
+   (`test_api_football_not_pooled_across_dates`).
+2. **`_zero_sports_empty_fixture_markers` was STILL prediction-tier (33)** — `get_all_prediction_league_ids()` not the
+   94-league `get_expected_leagues_for_source("api_football")` (the mission's leg-c; session 33's fix covered
+   `emit_empty_gaps_for_entity` but not this `process_zero_records.py` marker path). Fixed 33→94 + presence guard.
+3. **Emit-boundary PRESENCE guard (hardens leg 1 for ALL paths)**: `0d9ffabd`'s pre-captured tracking is bypassed under
+   `redo_all` (`--force`) and when `fixture_ids` is empty (the zero-day path) — new
+   `_list_present_parquet_leagues(bucket, date, entity)` (list-only GCS probe) is unioned into the captured set inside
+   `emit_empty_gaps_for_entity` itself, so a cell with an existing per-league parquet is NEVER stamped `empty_confirmed`
+   no matter how the captured set was computed. FAIL-SAFE: probe failure → skip empty emission (cannot prove absence
+   without presence). Same guard wired into the zero-day FIXTURES markers.
+
+**Regression tests shipped (the issue's exact three legs + the new ones)**: skip-as-present cell not demoted (leg 1);
+presence guard under `redo_all`; league map covers a 150-fixture day through a non-prediction-tier league with
+`max_results=None` (leg 2); off-season `EXPECTED_PAUSED_LEAGUE` typed row (leg 3); zero-day markers = 94-universe minus
+presence-guarded; adapter not pooled across dates; probe-failure fail-safe. 121 tests green across the 5 affected files;
+`test_league_partitioning.py` zero-marker tests updated to the new denominator contract.
+
+**Fleet status at 16:10Z (14:43Z wave, tarball @0d9ffabd)**: EVENTS `144333` COMPLETE 15:18Z exit_code=0 — **0 bare-path
+drops (was 91/91 dates)**, league maps up to 300 mappings/day (>100 proves the pagination lift), 91/91 presence-skip;
+INJURIES `144603` COMPLETE 15:15Z exit_code=0 — but carried the factory bug above (its 2025-09-01 full-pipeline pass
+also dropped 2,802 rows against a 16-mapping day → now `record_failed LEAGUE_MAP_INCOMPLETE`, loud not silent); LINEUPS
+`144423` / STATS `144457` / PLAYER_STATS `144531` still RUNNING, actively writing rows, zero Tracebacks. The 3 running
+VMs are per-fixture entity VMs WITHOUT `--force` (URDI stage skipped entirely) — the factory and zero-day legs cannot
+fire on them; their write path is protected by `0d9ffabd`. **No relaunch needed for `86cc71ff`** on this wave; the 2020+
+fleet MUST verify its tarball includes `86cc71ff` before launch.
+
+Next (this agent, same mission): Phase-2 false-empty repair (object-probe → `record_captured` via per-VM shard
+`gw-false-empty-repair-20260714`), fleet-completion watch, Phase-4 parquet-presence re-verify, then the held launches.
+
 ### 2026-07-14T14:52Z — session 35 (data_engineering slot-6): cheap re-check, fleet healthy 7-9min in, decline
 
 Dispatched to Todo 9 (this task, `sports_p2_history_apifootball_2015_to_present-001`). Fresh-pulled all 24 slot repos
