@@ -463,6 +463,17 @@ consolidation).
       explains the pause, mirroring the existing pause-aware `scheduler_state_reader` pattern in `check_cron_fired`.
       **Does NOT retrofit the existing ad-hoc CF-8 backfill scripts to call this** — that adoption (which scripts, when)
       is a separate operator/infra-owner decision; this ships the primitive + CLI for that decision to act on.
+  - **Bug fix, slot 6 (backend_engineer), 2026-07-14**: a review of `deployment-service@1090c3e` flagged that
+    `resume_after_maintenance()` released the maintenance window BEFORE resuming the scheduler jobs — inverted vs.
+    `pause_for_maintenance()`'s acquire-before-act ordering. If `act(job)` raised partway through a multi-job resume
+    (e.g. a Cloud Scheduler API error on job 2 of N), the window was already released while jobs remained paused — a
+    second caller checking `--status` would see "clear" on a surface that was actually still mid-resume, the exact race
+    this module exists to prevent. Fixed: authorization is now checked first (still refuses an unauthorized caller
+    before it touches any job, preserving the enforcement point), jobs are resumed, and the window is released only
+    after every job resumes successfully — a raised exception now leaves the window HELD. Added a regression test
+    (`test_partial_resume_failure_leaves_window_held`, `deployment-service/tests/unit/test_scheduler_maintenance.py`)
+    that fails on the pre-fix ordering and passes post-fix. Full `quality-gates.sh` green (deployment-service, coverage
+    confirmed via `coverage.xml`), shipped via `quickmerge --agent`: `deployment-service@d58506e`.
 - [x] ✅ [DATA] P2. Decide disposition for the 12,407 legacy `source='instruments_service'` rows (VENUES/LEAGUES) —
       backfill a real vendor source or accept as a known residual. (The 35,361 free-text-reason rows are tracked
       separately in `sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.) (repo:
