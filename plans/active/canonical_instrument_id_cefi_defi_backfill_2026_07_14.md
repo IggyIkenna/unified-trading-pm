@@ -128,10 +128,19 @@ complete backfill — running `build_instrument_catalogue.py --mode full` for ce
 - [ ] [DATA] P1. Run `build_instrument_catalogue.py --asset-group cefi --mode full` against real prod GCS
       (manifest-verified row count, monotonic guard expected to ACCEPT — this is a metadata-only backfill, row count
       should be unchanged or grow, never shrink). Evidence: rows before/after + guard decision.
-- [ ] [DATA] P1. Run `build_instrument_catalogue.py --asset-group defi --mode full` against real prod GCS. Same evidence
-      bar. Additionally spot-check: (a) canonical_instrument_id is non-blank catalog-wide post-regen, (b)
-      glued_pair_id's Uniswap-V3-family prefix is 100% with-underscore post-regen (re-run the same measurement query
-      used to find the 87.7%/12.3% split in §2).
+- [x] ✅ [DATA] P1. **Attempted `build_instrument_catalogue.py --asset-group defi --mode full` — BLOCKED by the
+      monotonic-shrink guard (correctly), redirected to a targeted in-place patch instead.** The full rebuild produced
+      9,456 rows vs the live 10,372 and was rejected. Root-caused: unrelated pre-existing durability gap in
+      `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s Stage 4 (a catalog-only migration not
+      reproducible from `by_date`) — see that doc's 2026-07-14 Progress Log entry for the full mechanism. Nothing was
+      promoted; live catalogue untouched. `--mode full` is not currently safe for DeFi until that gap is closed.
+- [ ] [DATA] P1. **Corrected approach**: write a targeted, safe, in-place one-off migration (same pattern as
+      `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py` — dry-run, timestamped backup, `--apply`) that
+      reads the live `prod/catalog.parquet` directly and (a) sets `canonical_instrument_id = instrument_key` wherever
+      blank, (b) recomputes `glued_pair_id` for POOL rows using the now-fixed `glued_venue_prefix()`. Does not touch
+      `by_date`, does not risk the Stage-4 durability landmine. Evidence: rows before/after, spot-check (a)
+      canonical_instrument_id non-blank catalog-wide, (b) glued_pair_id's Uniswap-V3-family prefix 100% with-underscore
+      post-patch (re-run the 87.7%/12.3% measurement from §2).
 - [ ] [VERIFY] P2. Confirm deployment-api's `instrument_coverage.py` (the one identified live consumer of
       `prod/catalog.parquet`) reads the new field/corrected prefix without needing its own code change (expected — it's
       schema-compatible, additive-only) — a quick read-path check, not a code change unless something's wrong.
