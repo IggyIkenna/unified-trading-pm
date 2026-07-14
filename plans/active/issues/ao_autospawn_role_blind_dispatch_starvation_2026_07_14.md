@@ -87,11 +87,22 @@ all-`data_engineering` to a diversified fleet.
       dead) and were **manually unblocked 2026-07-14** (runtime `release_task_to_queue(affinity="none")` + cleared
       `target_slot`; both immediately dispatched to slots 8 and 3). The **code gap is still open**: add a spill when the
       pinned target slot has been dead/absent beyond a threshold, so this doesn't recur.
+- [x] [BACKEND] P1. **Context-saturation resume loop (FIXED)** — a dead worker with a (near-)full context window was
+      `--resume`d into the SAME saturated conversation, which re-wedged instantly; AutoSpawn retried the resume until
+      the spawn-retry cap, then gave up ("stays down until manual respawn or reclaim") — the slot-2 100%-context /
+      38-compaction heartbeat-silent wedge that needed a manual reclaim. **Fix (agent-orchestrator, 2026-07-14):**
+      `resume_lifecycle.classify_dead_worker` now requeues (fresh spawn) when `context_used_pct >=`
+      `resume_fresh_context_pct` (default **95** — a saturated session is un-continuable), and `autospawn._do_spawn`
+      leads the resume nudge with an explicit `/compact`-FIRST instruction when the resumed context is `>=`
+      `resume_compact_first_context_pct` (default **80**) so it preserves a summary of the prior run instead of
+      re-saturating. Also surfaced **model + context%** columns in the dashboard AgentTypesPanel (parity with the fleet
+      slot view) so an approaching-saturation main/review/typed agent is visible before it wedges. Remaining hardening
+      (optional): also force a fresh session when a worker goes heartbeat-silent at high context even outside the resume
+      path.
 
 ## Codex SSOTs
 
 - `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (role-based dispatch)
-- `codex/04-architecture/runtime-deployment-topology.md`
-</content>
+- `codex/04-architecture/runtime-deployment-topology.md` </content>
 
 </invoke>
