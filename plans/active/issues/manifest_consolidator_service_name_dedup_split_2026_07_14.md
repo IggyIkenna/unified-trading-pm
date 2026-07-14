@@ -116,6 +116,24 @@ same logic `service_name` = which service/script wrote the row = provenance, and
   they collapse under the current key. One-off, does NOT prevent recurrence, and contradicts the plan's own ruling
   (lines 120-128) that the custom `service_name` is "honest provenance… NOT a service_name-drift bug."
 
+## Blast-radius scan (static, code-side — 2026-07-14 slot-5)
+
+`rg` of all `service_name=` writer/`setup_events` call sites fleet-wide shows `service_name` is dominated by REAL,
+distinct services — `features-service` / `instruments-service` / `market-tick-data-service` (`mtds`) /
+`market-data-processing-service` / `strategy-service` / `execution-service` / `ml-service` — each of which owns a
+DIFFERENT `data_type` set, so a `(date, venue, data_type)` atom is normally owned by exactly one service (Option A's
+collapse would be a no-op for them). Two findings this hands the operator:
+
+1. **The bug class RECURS.** Custom one-off `service_name`s are a standing pattern: `migrate-cefi-v2`,
+   `dr-drill-cutover`, `backfill-teams-61-leagues`, etc. Every such one-off that captures cells previously seeded by the
+   main service re-creates the non-collapsing-twin bug. This argues for a GENERAL fix (A or B) over the one-off data
+   remediation (C).
+2. **Option A's residual risk is a live-only question.** Static code can't prove that NO two service_names ever write
+   the SAME `(date, venue, data_type, +optional dims)` atom with distinct real coverage (e.g. mtds vs mdps on an
+   overlapping data_type, or `*-test` fixtures). That's the exact rule-11 GCS check still owed before A lands — a
+   `GROUP BY (date,venue,data_type,+opt dims) HAVING count(DISTINCT service_name) > 1 AND count(DISTINCT capture_status WHERE=captured) > 1`
+   over the canonical manifests of ≥2 non-sports asset_groups. Needs ADC/GCS read this slot lacks.
+
 ## Todos (gated on the operator ruling above)
 
 - [ ] [DATA] P1. Apply the operator-chosen fix (A/B/C) to `unified_trading_library/manifest_consolidator.py`'s dedup key
