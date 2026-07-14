@@ -288,9 +288,18 @@ class TestCheckWorkflows:
 
     @staticmethod
     def _setup(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        """Point WORKFLOW_TEMPLATE_DIR at a tmp template dir holding one flat .yml template."""
+        """Point WORKFLOW_TEMPLATE_DIR at a tmp template dir holding one flat .yml template.
+
+        This class exercises the LOCAL / full-workspace-host code path of `_check_workflows`
+        (byte-parity enforcement) — clear the CI-noop env vars so the assertions are
+        deterministic whether pytest itself runs on a laptop or inside GitHub Actions;
+        `_check_workflows`'s own CI-noop short-circuit is covered by its docstring/design,
+        not by these tests.
+        """
         import detect_template_drift as mod  # type: ignore[import-not-found]
 
+        monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+        monkeypatch.delenv("CI", raising=False)
         tmpl_dir = workspace / "unified-trading-pm" / "scripts" / "workflow-templates"
         tmpl_dir.mkdir(parents=True, exist_ok=True)
         (tmpl_dir / "tab-mirror-to-ldr.yml").write_text("name: tab-mirror\non: {push: {}}\n")
