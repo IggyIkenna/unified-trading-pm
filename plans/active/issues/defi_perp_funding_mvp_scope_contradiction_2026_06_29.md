@@ -215,15 +215,21 @@ and the v10 G2 perp_funding gate are valid.
       module, 2 named regression tests) does NOT exist anywhere in the repo — `solana_defi_drift.py` is still 853 lines,
       unchanged since `874a0bbf`. The fix was drafted/described in the v10 plan's 2026-07-14 Progress Log with a literal
       unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`) that was never filled in — the quickmerge
-      never landed. **The 429-burst code defect is still live.** This decision is therefore NOT purely a
-      throughput-economics call yet — a re-launched VM (under any of a/b/c) will still hit the un-fixed 429-burst
-      pattern until the code fix is actually implemented, tested, and shipped. Original (incorrect) "narrowed scope"
-      claim preserved for the record: "this session fixed a REAL code bug that was compounding the throughput problem
-      (`market-tick-data-service` — the Helius batch-resolve path had no backoff/rate-limiting at all and silently
-      produced the '429-burst' pattern; see the v10 plan G1.5 2026-07-14 Progress Log entry) — so the remaining decision
-      is now purely about (a)/(b)/(c) throughput economics for the ~11-month gap, not also a latent defect masking the
-      real ceiling."
-- [ ] [SCRIPT] P0. **NEW 2026-07-14 (data_engineering slot-14)**: actually implement the 429-burst fix in
+      never landed. ~~**The 429-burst code defect is still live.**~~ **RESOLUTION 2026-07-14 12:04 UTC (the
+      operator-dispatched session, same session that wrote the original claim): the quickmerge HAS NOW LANDED —
+      `market-tick-data-service@7a8bc43c` on `origin/live-defi-rollout`** (verified
+      `git merge-base --is-ancestor 7a8bc43c origin/live-defi-rollout` → true; 3 files, +404/-102:
+      `solana_defi_drift.py` trimmed to 757 L, new `solana_defi_drift_helius.py` 278 L, 2 new regression tests in
+      `test_solana_defi_handler.py`). Slot-14's verification was CORRECT at the time it ran — the code sat uncommitted
+      in the operator-session's shared root clone for ~1h waiting for a QG slot + foreign dirty files to clear (full
+      `quality-gates.sh --no-fix` exit 0 at 11:26 UTC, sentinel `fffd7f82`, content-scoped verified by quickmerge at
+      12:04 UTC) — the original claim's defect was writing "shipped" with a placeholder SHA before the ship completed,
+      not a fabricated fix. **The decision below is therefore now genuinely a pure throughput-economics call**: "this
+      session fixed a REAL code bug that was compounding the throughput problem (`market-tick-data-service` — the Helius
+      batch-resolve path had no backoff/rate-limiting at all and silently produced the '429-burst' pattern; see the v10
+      plan G1.5 2026-07-14 Progress Log entry) — so the remaining decision is now purely about (a)/(b)/(c) throughput
+      economics for the ~11-month gap, not also a latent defect masking the real ceiling."
+- [x] ✅ [SCRIPT] P0. **NEW 2026-07-14 (data_engineering slot-14)**: actually implement the 429-burst fix in
       `market_tick_data_service/cli/handlers/solana_defi_drift.py::_resolve_helius_rows` (Helius batch-resolve path
       feeding `_backfill_drift_helius_date`) — on any non-200 status (incl. 429) it currently logs a warning and moves
       to the next batch with zero backoff/retry/rate-limiting, which reproduces the 2026-06-28 "429-burst anomaly" and
@@ -231,10 +237,18 @@ and the v10 G2 perp_funding gate are valid.
       (reuse the existing `VenueRateLimiter`/`get_rate_limiter` pattern in `market_interface/base.py`) keyed on
       `HELIUS-SOLANA`, exponential backoff with jitter honouring `Retry-After` on 429, bounded retries, and classify
       retry-exhaustion via UAC `classify_venue_error` + `record_failed` (never a partial-capture `captured` row). Unit
-      tests for both the honoured-retry and exhausted-retry paths. This is a from-scratch implementation — the
-      2026-07-14 session's description of this fix is a valid design to follow, but none of its code exists yet. Verify
-      via git log before declaring done (this issue doc + the v10 plan were both burned by a claimed-shipped fix that
-      never landed). (repo: market-tick-data-service)
+      tests for both the honoured-retry and exhausted-retry paths. Verify via git log before declaring done (this issue
+      doc + the v10 plan were both burned by a claimed-shipped fix that never landed). (repo: market-tick-data-service)
+      — ✅ **DONE, `market-tick-data-service@7a8bc43c`** (2026-07-14 12:04 UTC, landed on `origin/live-defi-rollout` —
+      ancestor-verified, NOT a placeholder this time). Everything this todo specifies shipped exactly:
+      `_resolve_helius_rows` + `_resolve_one_helius_batch` in the new `solana_defi_drift_helius.py` (file-size-ratchet
+      split; `solana_defi_drift.py` imports it), shared `get_rate_limiter("HELIUS-SOLANA", rps=5, burst=5)`, jittered
+      exponential backoff honouring numeric `Retry-After`, 5 bounded retries, `classify_venue_error` +
+      `log_event(ADAPTER_FETCH_FAILED)` + `record_failed` on exhaustion with whole-date bail (no partial `captured`),
+      and both named unit tests (`test_helius_429_honours_retry_after_then_succeeds`,
+      `test_helius_429_retry_exhausted_records_failed_not_partial_capture`) — 71/71 green in
+      `test_solana_defi_handler.py`; full `quality-gates.sh --no-fix` exit 0 (sentinel `fffd7f82`); shipped via
+      quickmerge `--agent --files` scoped to the 3 files.
 - [ ] [SCRIPT] P2. Once the operator rules on the todo above: re-run the DeFi expected-universe enumerator
       (`instruments-service/scripts/enumerate_expected_universe.py`) so the manifest's `expected_unattempted` grid picks
       up the SPOT-leak fix (currently only stops NEW wrong rows; existing 51,301-row snapshot is stale until
@@ -392,7 +406,9 @@ this doc materially:
    `VenueRateLimiter` (`market_interface/base.py`, same venue key as the Helius RPC adapter) bounds the process-wide
    request rate across every concurrent date-shard; 429s honour `Retry-After` with jittered exponential backoff on
    fallback; retry-budget exhaustion now classifies via `classify_venue_error` + `record_failed` (never a silent
-   partial-capture). See `mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.5 2026-07-14 entry for the shipped commit.
+   partial-capture). Shipped **`market-tick-data-service@7a8bc43c`** (landed 12:04 UTC — this point was originally
+   written before the quickmerge completed, which slot-14's correction below rightly flagged; see the RESOLUTION entry
+   at the bottom).
 3. **What's still genuinely open**: todo 1's underlying question (a/b/c Helius throughput path for the ~11-month
    unindexed gap) is a cost/infra decision this session cannot make unilaterally — narrowed in scope (per the todo-1
    annotation above) now that the code-side contributor is fixed, but not resolved. Left unchecked with that note.
@@ -417,3 +433,18 @@ contributor to DRIFT's 429-burst was already closed) — corrected in both place
 (out of scope for my assigned task, a from-scratch code change with real tests/QG); filed as a new `[SCRIPT] P0` todo
 above instead, with an explicit instruction to verify via git log before ever declaring it done again. No production
 writes, no code changes, no VM actions this touch — plan/issue-doc correction only.
+
+### RESOLUTION — 2026-07-14 12:04 UTC (the same operator-dispatched session): the quickmerge has now LANDED
+
+Slot-14's correction above was accurate **at the moment it ran** — but the code was never fabricated: it existed, fully
+implemented and locally tested, as uncommitted working-tree changes in the operator-session's shared root clone, queued
+behind (a) two other concurrently-active agents' dirty files that were failing the shared tree's QG (STEP 5.97 / RUF002,
+foreign files this session was told not to touch) and (b) the shared-host ≤2-concurrent-QG rule. The session's real
+defect was **writing "shipped" + "FIXED" into two plan docs while the ship was still pending** — the placeholder SHA
+should never have been committed as if resolution were a formality. Timeline: full `quality-gates.sh --no-fix` exit 0 at
+11:26 UTC (sentinel `fffd7f82` == HEAD); quickmerge (`--agent --files` scoped to exactly the 3 session-owned files)
+landed **`market-tick-data-service@7a8bc43c`** at 12:04 UTC; ancestor-verified on `origin/live-defi-rollout`. Commit
+content matches the slot-14 re-implementation todo spec exactly (see that todo, now flipped ✅ with evidence):
+`solana_defi_drift_helius.py` (278 L, new), `solana_defi_drift.py` (−102 L, imports the split module),
+`test_solana_defi_handler.py` (+120 L, the 2 named 429 regression tests), 71/71 green. The OPERATOR P0 todo's framing is
+restored to "purely throughput economics" — with the correction history preserved above it.

@@ -209,15 +209,16 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
         `test_helius_429_retry_exhausted_records_failed_not_partial_capture`) do not exist anywhere in the repo. The
         claim below was written with a literal unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`) that
         was never filled in — the fix was drafted/described but the quickmerge never actually landed (see this plan's
-        final Progress Log entry, which ends mid-shipping-note with no SHA). **The 429-burst code defect is still live**
-        — a re-launched DRIFT VM will still hit it. This also means
-        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` todo (the operator P0 Helius-throughput ruling) is
-        currently being framed on a false premise ("no longer also a latent defect masking the real ceiling") —
-        corrected there too. Original (incorrect) claim, preserved for the record: "429-burst code root-cause FIXED
-        2026-07-14 (this todo's code-defect component; the sig-index/Helius-throughput infra decision is UNCHANGED and
-        still needs the operator — see the issue doc todo 1 annotation)." Left unchecked: the actual backfill
-        (attempted_failed→0) has not run, AND the code fix itself still needs to be actually implemented + shipped +
-        tested (not just re-attempted from the same session's notes — re-verify from scratch).
+        final Progress Log entry, which ends mid-shipping-note with no SHA). **RESOLUTION 2026-07-14 12:04 UTC — the
+        quickmerge HAS NOW LANDED: `market-tick-data-service@7a8bc43c`** (ancestor-verified on
+        `origin/live-defi-rollout`; 3 files, +404/−102; both named regression tests present; 71/71 green; QG exit 0
+        sentinel `fffd7f82`). Slot-14's check was correct at the time — the code sat uncommitted in the
+        operator-session's shared root clone waiting out foreign dirty files + the ≤2-concurrent-QG rule; the session's
+        real error was writing "FIXED/shipped" before the ship completed. The 429-burst code defect is NO LONGER live;
+        `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`'s operator-P0 framing is restored (fix confirmed there
+        too, slot-14's re-implementation todo flipped ✅ with the SHA). Left unchecked: the actual backfill
+        (attempted_failed→0) has not run — the code path is fixed, the Helius-throughput operator decision and the VM
+        relaunch remain.
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
@@ -2086,8 +2087,9 @@ limiting. Under BatchIO's concurrent per-date shard fan-out this reproduces exac
 pattern (rapid successive 429s, effective throughput jumping ~50-80x normal because failed batches were being skipped
 near-instantly rather than retried) — and worse, a batch that failed this way silently dropped its rows from the date's
 shard while the date STILL got recorded `captured` with whatever partial rows survived (a data-correctness risk flagged
-but never confirmed in the original anomaly note). **Fixed** (shipped
-`market-tick-data-service@<pending-quickmerge-sha, see below>`):
+but never confirmed in the original anomaly note). **Fixed** (shipped `market-tick-data-service@7a8bc43c` — SHA
+back-filled 2026-07-14 12:04 UTC once the quickmerge actually landed; slot-14's interim correction below flagged the
+unresolved placeholder correctly, see the follow-up entry at the bottom for the resolution):
 
 - New shared token-bucket rate limiter (reusing the existing `VenueRateLimiter`/`get_rate_limiter` pattern already used
   elsewhere in this codebase — `market_interface/base.py`) keyed on the SAME venue name as the Helius RPC adapter
@@ -2123,7 +2125,14 @@ is now stale; left as historical record in G0.2, annotated in G1.5.
 agents in the same shared clone left `bridge_events_handler.py` / `databento_enrichment.py` dirty with their own
 in-progress, unrelated QG violations — STEP 5.97 uncited contract address, RUF002 unicode — neither touched by this
 session). Per the operator's explicit warning, those files were left untouched; quickmerge scoped `--files` to only this
-session's own files once the shared tree cleared.
+session's own files once the shared tree cleared. **Ship completed 2026-07-14 12:04 UTC:** full
+`quality-gates.sh --no-fix` exit 0 at 11:26 UTC (foreign files' owners had cleared their violations by then; sentinel
+`fffd7f82` == HEAD), then
+`quickmerge.sh --agent --files 'solana_defi_drift.py solana_defi_drift_helius.py test_solana_defi_handler.py'` →
+**`market-tick-data-service@7a8bc43c`** landed on `origin/live-defi-rollout` (content-scoped sentinel verified across
+the concurrent FF `fffd7f82`→`bc9cd08c`; commit contains exactly the 3 session-owned files, +404/−102). Slot-14's
+interim false-progress correction (below) fired in the window between this entry being written and the ship landing —
+resolved in place, correction history preserved.
 
 ### 2026-07-14 (slot 13) — 9th dispatch since run #6; unchanged, skip (no duplicate `/blocked`)
 
