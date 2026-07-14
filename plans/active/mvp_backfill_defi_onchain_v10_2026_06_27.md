@@ -1890,3 +1890,91 @@ main (would just add a 2nd duplicate escalation with zero new information). Call
 this still requires either the operator ruling on todo 3, or main attaching
 `prereqs.conditions: [drift_perp_funding_helius_throughput_ruled]` / parking the task (main/operator scope per RULES.md
 §4, not a worker-slot edit).
+
+### G2 verification run #6 — manifest consolidator caught up (first real reading since run #1); gate still FAILS; NEW finding: operator explicitly stopped both remaining G1 VMs mid-backfill (2026-07-14 10:50-11:10 UTC, slot 8)
+
+Picked up `mvp_backfill_defi_onchain_v10-002` on `/boot`. Fresh-pulled all repos clean.
+
+**1) VM roster** (`~/google-cloud-sdk/bin/gcloud compute instances list --filter="name~mtds"` — snap `gcloud` still
+broken in this sandbox, same `snap-confine`/`cap_dac_override` issue every prior slot hit): both VMs that were still
+in-flight across runs #2-#5 are now `TERMINATED` — `mtds-dex-swaps-backfill`, `mtds-perp-funding-backfill`. No other
+DEFI-relevant VM running (only an unrelated `mtds-backfill-pred-kalshi-rc6-20260714`, a different asset_group).
+
+**2) NEW finding — both VMs were explicitly STOPPED by the operator, not preempted/crashed/self-completed.** Neither
+run.log shows an exit/completion marker; both cut off mid-work (dex-swaps still processing day `2025-01-21` of its
+`2023-01-01→2026-06-27` target range — roughly 40% through calendar span; perp-funding mid-forward-catchup at
+`2026-05-30`, ~6 weeks from "today"). `gcloud compute instances describe` shows `lastStopTimestamp` for both at
+`2026-07-13T23:42:2{9,4}-07:00` = `2026-07-13T23:42Z`, matching exactly where both run.logs' last heartbeats stop
+(`23:39:5{1,08}Z`). Confirmed via Cloud Logging audit trail
+(`gcloud logging read 'protoPayload.methodName:"compute.instances.stop"'`): `v1.compute.instances.stop` issued by
+`ikenna@odum-research.com` at `23:40:1{3,4}Z` AND again `23:42:3{4,5}Z` for both instance IDs — a deliberate,
+human-attributed stop (not SPOT preemption: `scheduling.provisioningModel=STANDARD`, `automaticRestart=false` confirms
+these were the earlier ON-DEMAND-switched VMs, and preemption would show a different audit trail actor). **Not
+relaunching unilaterally** — an operator-initiated stop of an in-flight backfill, even one short of its target range,
+may reflect a deliberate scope/cost/priority call (budget, VM-quota reallocation, or a decision to accept partial DeFi
+MVP coverage) that a worker slot shouldn't second-guess by just restarting the job. Filed as a `/blocked` question (see
+below) instead.
+
+**3) Manifest consolidator — RESOLVED, first real (non-frozen) reading since run #1.**
+`_index/availability_index.parquet` `Update time` now `2026-07-14T10:50:45Z` (fresh, <1min old at check time) — was
+pinned at `2026-07-10T21:42:30Z` through runs #2-#5 (peaked ~92h stale).
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md` appears to have landed its fix or the scheduler otherwise
+recovered; not independently re-verified here (out of this task's craft scope), but the live blob timestamp speaks for
+itself.
+
+**4) Ran `measure_honest_coverage.py --asset-group defi`** (10:52-10:53 UTC) against the now-fresh manifest: 27,445,013
+rows (vs 24.7M dedup at runs #2/#3, which were reading the same frozen 2026-07-10 snapshot). Layer-1 completeness 86.2%
+(12 missing / 169 stray tuples — unchanged from runs #2/#3, pre-existing definitional gap, not re-investigated).
+Aggregated by MVP data_type across all venues (via `by_venue_data_type`, script's `--output-path` JSON, not eyeballed
+off the printed summary):
+
+| data_type       | captured  | attempted_failed | expected_unattempted | gate |
+| --------------- | --------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 1,580,941 | 2,109            | 2,305,986            | FAIL |
+| dex_pool_swaps  | 642,747   | 21,624           | 3,928,084            | FAIL |
+| lending_indices | 133,695   | 1,010            | 606,864              | FAIL |
+| lst_rates       | 14,979    | 851              | 12,392               | FAIL |
+| perp_funding    | 3,365     | 214              | 81,724               | FAIL |
+| oracle_prices   | 29,884    | 873              | 209,934              | FAIL |
+
+**G2 GATE STATUS: FAIL (checkbox NOT flipped)** — all 6 data_types still non-zero on both failure buckets. Absolute gap
+sizes are LARGER than any prior reading, because this is the first time the denominator reflects the full backlog the
+consolidator absorbed (new UAC-expected tuples + ~92h of previously-invisible per-VM shard growth), not a regression.
+Root-cause breakdown, cross-checked against already-open issue docs (no duplicate filing):
+
+- **dex_pool_swaps (largest gap, 3.93M expected_unattempted)**: UNISWAP_V3 alone = 1.63M expected_unattempted + 16.6K
+  attempted_failed — direct, mechanical consequence of finding 2 above (the VM was stopped ~40% through its range).
+  Once/if the VM resumes, this shrinks the most of any single data_type.
+- **dex_pool_state**: ORCA/RAYDIUM/KAMINO (208K/93K/105K expected_unattempted) + TRADER_JOE_V2/VELODROME_V2 (333K/88K)
+  still show large gaps despite G1.6's `mtds-solana-defi-backfill` VM having reportedly completed a full pass —
+  consistent with, not contradicting, that VM's documented forward-only-honest design (historical days stay
+  honest-absence, only the run-day gets `captured`) and with TRADER_JOE_V2/VELODROME_V2's already-tracked "zero
+  forward-capture code" finding in `defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`. Not a new gap.
+- **lending_indices**: MORPHO still `captured=0` (416K expected_unattempted) — matches the still-unshipped
+  `defi_morpho_lending_indices_never_wired_2026_07_12.md` fix-todos.
+- **perp_funding**: DRIFT still the dominant gap (51.3K expected_unattempted) — matches the still-unresolved,
+  condition-gated Helius sig-index throughput blocker tracked on the sibling `-001` task (20 re-dispatches, unchanged,
+  per the entries directly above).
+- **oracle_prices**: JITO/MARINADE/LIDO/ETHERFI/ETHENA gaps match the still-open `BLOCKED-OPERATOR-DECISION` on the Pyth
+  LST Solana backfill first noted in run #1's Progress Log (`launch-mtds-pyth-lst-backfill-vm.sh` hard-stop pending
+  operator ack). PYTH `attempted_failed=873` is byte-identical to the G0.2 baseline (2026-06-27) — unchanged and
+  un-investigated across all 6 verification runs; flagging as a loose end for whichever slot picks this up next with
+  bandwidth to dig into it (likely a code-level fix, not a launch-more-VMs fix).
+
+**Not re-run this dispatch**: `manifest_hygiene_daily.py --mode full` /
+`reconcile_phantom_manifest_rows_all.py --dry-run` — the gate already clearly fails on the coverage numbers alone, so
+the more expensive hygiene/phantom pass would add cost without changing the verdict (matches every prior run's same
+reasoning).
+
+**Filed `/blocked`**: asked whether to relaunch `mtds-dex-swaps-backfill` (resume from `2025-01-21`, ~1.4y of range
+left) and `mtds-perp-funding-backfill` (resume from `2026-05-30`, ~6 weeks of range left) to finish the G1 backfill
+toward this gate, or whether the operator's stop reflects an intentional scope/cost decision this plan should absorb
+(e.g. accept partial dex_pool_swaps/perp_funding coverage as the DeFi MVP's final state). Recommended: relaunch both
+(cheapest path to closing the largest remaining gate gap; DeFi on-chain backfill is documented as low-cost in this
+plan's Budget posture section) unless the operator's stop was itself budget-driven.
+
+**Next re-dispatch should**: (1) check the `/blocked` answer — relaunch both stopped VMs from their last checkpoint if
+approved, (2) once dex_pool_swaps + perp_funding are genuinely complete (or the operator rules to accept partial), (3)
+re-run `measure_honest_coverage.py` for the next real reading, (4) still needs MORPHO wiring fix shipped + DRIFT Helius
+throughput ruling before those two data_types can close, (5) PYTH `oracle_prices` 873 `attempted_failed` remains an
+open, never-investigated loose end worth a dedicated look.
