@@ -109,19 +109,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                              > — it caused no canonical-form regression. Recorded in
-                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                  > — it caused no canonical-form regression. Recorded in
+                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -5157,3 +5157,85 @@ parallel.
 
 Evidence: `instruments-service@0782f9af`, `system-integration-tests@36d7654`, `deployment-service@7485657`,
 `unified-trading-pm@<see this commit>` (this doc + the `bucket_estate_consolidation_to_sub100_2026_07_13.md` flip).
+
+### 2026-07-14 (infra lane, slot-3) — `ml-models-store-central-element-323112` (flat) legacy bucket: fresh re-verification confirms the prior audit exactly; 0 unique data (nothing to copy) but 3 hardcoded live infra references fixed, bucket NOT deleted (redeploy unconfirmed)
+
+A prior read-only audit had flagged `ml-models-store-central-element-323112` (flat) as `NEEDS_MIGRATION_FIRST` —
+byte-size-parity-verified against the canonical `ml-models-store-prd-central-element-323112`, blocked on 3 hardcoded
+consumers that still resolved the flat name directly (deployment-service's `catalog.py` + `manifest_reader.py`,
+ml-service's `dependency_checker.py`). This session was dispatched to migrate the real unique data, re-verify, and
+delete if the gate cleared. Per the workspace's "never trust looks-done" hard rule, every audit claim was re-run live
+from scratch rather than taken on faith.
+
+- [x] [DATA] P0. **Fresh live re-verification reconfirmed every audit number exactly.** `gcloud storage ls -l -r`
+      (today, not reused from the audit): flat=38 objects, prd=157 objects, test=0 objects
+      (`ERROR: ... matched no     objects` — genuinely empty). Versioning `Suspended` (disabled) on all 3, confirmed via
+      `gsutil versioning get` (not just `buckets describe`, which returned an empty `versioning` block that could
+      otherwise be misread). Flat bucket's own newest object timestamp is `2026-04-17T20:10:45Z` — no writes to flat at
+      all since well before the 2026-07-10 migration date the audit cited, i.e. the "verify no new writes since"
+      condition in `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s P1 "ml legacy variants" todo is independently
+      satisfied.
+- [x] [DATA] P0. **Re-derived the byte-size parity diff myself (not reused from the audit) — confirms ZERO unique
+      data.** Normalized both bucket listings to (relative-path, size) pairs and ran `comm -23 flat prd`: completely
+      EMPTY (every one of flat's 38 objects has an identical-path+identical-byte-size twin already in prd); `comm -13`
+      shows prd has 119 MORE objects than flat (the `legacy_football` migration, 38+119=157, exact arithmetic match).
+      **Conclusion: there was no unique data to migrate — the "migrate the real unique data" step of this task is a
+      confirmed no-op**, since the full 38-object migration already happened 2026-07-10 and is independently re-verified
+      here, not merely re-read from the prior audit's own numbers.
+- [x] [DATA] P0. **Terraform re-verified clean — nothing to clean up.** Fresh grep of
+      `deployment-service/terraform/gcp/` found no live resource for the flat bucket (only a dated removal-comment in
+      `outputs.tf`); `canonical_buckets.tf`'s `for_each` + `cloud-providers.yaml` line 98 only know the env-tiered
+      (`-prd-`/`-test-`) form. The terraform cleanup this task's instructions asked for (if any stale declarations were
+      found) was already done 2026-07-13, before this session started.
+- [x] [CODE] P0. **Fixed the 3 live hardcoded flat-bucket references the audit found — the actual gate blocking
+      deletion.** All 3 re-verified live-in-repo (not assumed from the audit) before editing:
+      `deployment-service/deployment_service/catalog.py`'s `SERVICE_GCS_CONFIGS["ml-service"]["bucket_template"]`
+      (imported live by the served `/state` route, `api/routes/state.py:221-224`) and
+      `deployment-service/deployment_service/cli/utils/manifest_reader.py`'s `BUCKET_TEMPLATES["ml-service"]` both added
+      `"ml-service": "ml-models-store"` to their existing `_SERVICE_TO_CANONICAL_KIND` dispatch maps — the exact same
+      established, already-proven-safe pattern used today for `market-tick-data-service`/
+      `market-data-processing-service` (this makes `_resolve_service_bucket()`/`_resolve_bucket()` call
+      `resolve_bucket_name(kind="ml-models-store")` instead of formatting the dead flat template).
+      `ml-service/ml_service/training/app/core/dependency_checker.py`'s `OUTPUT_BUCKETS` (CEFI/TRADFI/DEFI, consumed by
+      the live `train_handler.py` CLI via `BaseDependencyChecker.get_output_bucket()`) repointed from
+      `ml-models-store-{project_id}` to the literal `ml-models-store-prd-{project_id}`, mirroring this same file's own
+      pre-existing `OUTPUT_BUCKETS_TEST` literal `-test-` tier convention (its base-class `get_output_bucket()` only
+      does `template.format(project_id=...)` — no kind-based resolver hook exists there today, so a literal-tier fix is
+      the minimal, in-pattern change; a full `resolve_bucket_name()` migration is a separate, larger follow-up per the
+      `ml_artefact_path_resolver` issue already noted in this file's comments).
+      `resolve_bucket_name(kind="ml-models-store")` was independently confirmed already-proven-safe in production before
+      use here (`unified_trading_library/ml/model_registry.py`, `config_interface/ml_config.py` both already call it;
+      `bucket_naming.py` confirms `ml-models-store` is a flat/cross-cutting kind — `asset_group` is ignored). All 3
+      edits verified `quality-gates.sh` green (full run, both repos, not just the touched files) before commit —
+      including recovering from a self-inflicted QG false-positive (STEP 5.11 protocol-symbol scan matched the literal
+      substring `gcs_bucket` inside a comment citing the `gcs_bucket_estate_cleanup_2026_07_10.md` plan filename;
+      reworded to cite the plan by description instead of verbatim filename).
+- [x] [DATA] P0. **Did NOT delete the bucket — the task's own stated gate is not met.** The task's explicit condition
+      for deletion is "0 remaining unique data AND no live infra references." The first half is true (verified above);
+      the second half is NOT: the 3 fixes just shipped repoint the **source code**, but the **currently-deployed**
+      `deployment-service` and `ml-service` instances still run the pre-fix code until their next redeploy — no Cloud
+      Run revision / redeploy check was performed in this session, so I cannot claim the live-serving processes have
+      actually stopped reading the flat bucket. Deleting now, before that's confirmed, would repeat exactly the
+      premature-delete-ahead-of-completion pattern this same file's own 2026-07-14 `config-store` near-miss entry
+      documents (a bucket deleted ~4.7 min ahead of its own gate's VM-completion condition). Per the task's explicit
+      instruction ("if re-verification finds anything unexpected, STOP and report rather than deleting"), this is
+      reported honestly as a real gate failure, not forced through.
+- [x] [DOCS] P1. **Cross-referenced (did not edit) the sibling tracking plan.**
+      `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s P1 "ml legacy variants" todo and its Deferred-table item
+      #2 both independently track this same bucket (worded as "resolver fixed §5h — verify no new writes since, then
+      delete" / "UTL PATH_REGISTRY ml rows still resolve the flat names (live deployment-api data-status readers)").
+      That plan's own gate is about a DIFFERENT consumer set (UTL `PATH_REGISTRY`-based readers feeding
+      `deployment-api`, already repointed via `utl@8cec8786` per this file's earlier 2026-07-14 entry) than the one this
+      session fixed (deployment-service's own local dicts + ml-service's own local dict, neither of which route through
+      UTL `PATH_REGISTRY` at all). Left that plan's checkboxes un-flipped rather than guess at wording that conflates
+      the two gates — flagging here for whoever next executes that todo that BOTH gates (this session's 2 repos + that
+      plan's `deployment-api` redeploy) must clear, with a no-new-writes re-check, before the flat bucket is actually
+      safe to delete.
+
+**Next step (not done here, explicitly deferred per the gate above)**: confirm `deployment-service` + `ml-service` have
+redeployed onto commits `deployment-service@3af067b` / `ml-service@83ea9f9` (or later), re-confirm zero new writes to
+the flat bucket since `2026-04-17T20:10:45Z`, confirm `deployment-api`'s own redeploy gate
+(`bucket_estate_consolidation_to_sub100_2026_07_13.md` Deferred #2) has also cleared, THEN delete
+`ml-models-store-central-element-323112` (no version-aware handling needed — versioning confirmed `Suspended`/off).
+
+Evidence: `deployment-service@3af067b`, `ml-service@83ea9f9`, `unified-trading-pm@<see this commit>` (this doc entry).
