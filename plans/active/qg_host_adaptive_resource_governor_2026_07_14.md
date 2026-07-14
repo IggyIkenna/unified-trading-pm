@@ -106,10 +106,14 @@ TYPE CHECK) and releases after.
 - `QG_RAM_BUDGET = QG_MEM_SAFETY_FRAC × MemTotal` — the ceiling on the SUM of in-flight QG peak reservations (STATIC;
   `SAFETY_FRAC` default **0.70**, operator-specified). Bounds QG's own total footprint.
 - `QG_MEM_FLOOR` — live-availability floor reserving OS + orchestrator + interactive headroom (default
-  `max(2 GB, 0.1 × MemTotal)`; Mac skews higher).
-- `CPU_SLOTS = max(1, floor(cores × QG_CPU_FRAC))` — `CPU_FRAC` default ~**0.80** (leave cores for the orchestrator +
-  interactive). One `PYTEST_WORKERS=1` run ≈ 1–1.5 cores at peak, so a count-based slot ≈ cores works for v1; a per-repo
-  `cpu_weight = ceil(cpu_s / wall_s)` refinement is optional.
+  `max(2 GB, 0.1 × MemTotal)`).
+- `CPU_SLOTS = max(1, floor(cores × QG_CPU_FRAC))` — `CPU_FRAC` default ~**0.80**. NOTE (operator 2026-07-14): a
+  `PYTEST_WORKERS=1` single-core-pinned run UNDER-represents real core demand (basedpyright + pytest burst multi-core),
+  so `cpu_weight` per repo MUST come from an UNPINNED parallel re-measure (Phase 0), not the single-core baseline — the
+  pinned `cpu_s` can't see peak concurrent cores.
+- `K` (host-concurrency count) is DEMOTED to a loose runaway backstop, NOT the primary control — RAM-derived default
+  (generous, e.g. up to ~20 on large hosts) so small/light repos never wait on a count; the RAM + CPU gates do the real
+  limiting. Per-host overridable.
 
 **Admission (ALL must hold) — the check-and-reserve is ATOMIC under one flock, so N simultaneous acquirers serialize
 instead of all-admitting:**
@@ -134,14 +138,19 @@ MemAvail 30 ≥ 11.5 ✓), run 2 → 11, run 3 → 16.5 — but as they climb `M
 admit, the rest QUEUE (FIFO, with aging). No OOM. On an idle 61 GB host the same math admits ~7; on a 24 GB Mac, ~1–2.
 
 **Reservation ledger** (replaces the K flock tokens): a flock-protected record of `{pid, repo, rss_mb, ts}` per
-in-flight heavy phase. On admit → append; on release/exit → remove. **PID-liveness sweep** on every admission attempt
-prunes dead PIDs' reservations (crash-safe — a killed QG can't leak its reservation; replaces the old flock-auto-release
-guarantee).
+in-flight heavy phase, at a HOST-SHARED path so every slot on a host coordinates —
+`${SHARED_ROOT}/.benchmarks/qg-governor/` where `SHARED_ROOT = ${WORKSPACE_ROOT%/.tabs/*}`. The strip matters:
+`setup-tab-worktrees.sh` sets `WORKSPACE_ROOT` PER-SLOT to `.tabs/<N>`, so using it raw would put the ledger under one
+slot and the governor would NOT coordinate across slots (the exact silent-degradation bug this guards against);
+stripping the `/.tabs/<N>` suffix lands all slots on the shared parent, and on a single-clone laptop the strip is a
+no-op. On admit → append; on release/exit → remove. **PID-liveness sweep** on every admission attempt prunes dead PIDs'
+reservations (crash-safe — a killed QG can't leak its reservation; replaces the old flock-auto-release guarantee).
 
-**Oversize-solo escape (critical for small hosts):** if `this_repo_peak > QG_RAM_BUDGET` (e.g. UTL 5.5 GB on an 8 GB
-host where budget ≈ 5.6 GB and the live-floor clause can never be met alongside anything else), the run must **wait
-until `sum_reserved_peak == 0` then run SOLO** and log LOUDLY that the host is undersized for this repo (it will swap —
-accept or resize). Without this the run waits forever for budget that never exists → deadlock.
+**Oversize-solo guard (defensive only — min supported host = 16 GB):** QG is never run below **16 GB**, where
+`QG_RAM_BUDGET` ≈ 11 GB comfortably exceeds the heaviest repo (UTL 5.5 GB), so no run is ever oversize in practice. Keep
+a trivial guard — a run whose peak somehow exceeds the whole budget waits for `sum_reserved_peak == 0`, then runs solo
+with a loud warning — but the fairness/drain complexity for STACKED oversize runs is out of scope (cannot occur ≥ 16
+GB).
 
 **Fairness / anti-starvation:** current governor has no ordering (20 waiters free-for-all the same `flock -n`). On a
 small host a heavy repo (UTL) can be starved by a stream of light runs slipping into the leftover headroom. Add a FIFO
@@ -155,17 +164,37 @@ nothing — no queueing. Resolves the issue doc's light-slice todo.
 meta-gate — a legitimate queue wait can no longer fail an otherwise-green run. Resolves the issue doc's measurement-bug
 todo.
 
-### Cross-host behaviour (the "fix it once" proof) — budget = 0.7×RAM − floor
+**Enforcement backstops (operator 2026-07-14 — reservations are advisory; these are hard, defence in depth):**
 
-| Host                   | RAM_BUDGET | Heavy concurrency                                                 | Binding gate      |
-| ---------------------- | ---------- | ----------------------------------------------------------------- | ----------------- |
-| 8 GB VM (future)       | ~3.6 GB    | UTL/instruments run **SOLO** (>budget, warn+swap); light repos ~1 | RAM (solo escape) |
-| 24 GB Mac (Ikenna, M5) | ~14 GB     | UTL+instruments+execution (11.3 GB) → ~**3 heavy**                | RAM               |
-| 61 GB worker VM (now)  | ~37 GB     | all 29 GB fits → RAM never binds → ~**12** (16×0.8)               | CPU               |
-| 96 GB PC (Harsh)       | ~64 GB     | everything fits                                                   | CPU               |
-| 128 GB VM (future)     | ~88 GB     | RAM never binds                                                   | CPU (sole)        |
+- **Per-repo cgroup cap.** Each admitted run is wrapped at `QG_MEM_CAP = 1.2 × baseline_peak` (the existing base-service
+  `QG_MEM_CAP` hook, currently 0/off) so a mis-measured or runaway run is OOM-killed in ITS OWN cgroup, never taking the
+  host down. Per-repo, derived from that repo's baseline.
+- **Global 80 % valve + kill-switch.** If live host used-RAM crosses **80 %** at any point, ABORT the offending/newest
+  QG run and Slack-alert. Catches aggregate pressure the per-repo caps miss (many runs each just under their cap) and
+  non-QG spikes — and doubles as the fast kill-switch, so no separate rollback path is needed.
+- **Overrun alert.** A run whose actual tree-RSS exceeds its `1.2 × baseline` cap → Slack alert (this repo grew or a
+  test regressed — investigate + re-baseline).
 
-Same code, same config defaults — each host self-tunes from its own `MemTotal` + cores. No per-host K.
+**Baseline freshness loop (keeps the governor honest, for free):** the governor already samples each run's actual
+tree-RSS (for the live checks), so it records the observed peak per repo. A **daily** job promotes observations → the
+committed baseline — we already run every repo's QG most days after changes, so the data arrives free, and by design
+changes aren't drastic so drift stays small. A single run whose observed peak is **> 20 % above** its baseline is
+treated as anomalous → **Slack alert instead of a silent bump** (a +182 %-style jump signals something wrong — exactly
+the instruments-service case that motivated this plan). This closes the staleness gap: no repo silently outgrows its
+reservation and OOMs.
+
+### Cross-host behaviour (the "fix it once" proof) — reservation budget = 0.7 × RAM; min supported host = 16 GB
+
+| Host                   | QG_RAM_BUDGET | Heavy concurrency                                      | Binding gate |
+| ---------------------- | ------------- | ------------------------------------------------------ | ------------ |
+| 16 GB (fleet floor)    | ~11 GB        | UTL + instruments (9.2 GB) → ~**2 heavy**              | RAM          |
+| 24 GB Mac (Ikenna, M5) | ~17 GB        | UTL + instruments + execution (11.3 GB) → ~**3 heavy** | RAM          |
+| 61 GB worker VM (now)  | ~43 GB        | all 29 GB fits → RAM never binds → CPU-bound (~cores)  | CPU          |
+| 96 GB PC (Harsh)       | ~67 GB        | everything fits                                        | CPU          |
+| 128 GB VM (future)     | ~90 GB        | RAM never binds                                        | CPU (sole)   |
+
+Same code, same config defaults — each host self-tunes from its own `MemTotal` + cores. No per-host K (K is only a loose
+runaway backstop). QG is never run below 16 GB, so no host ever needs the oversize-solo path in practice.
 
 ## Phases + todos
 
@@ -179,45 +208,64 @@ Same code, same config defaults — each host self-tunes from its own `MemTotal`
       it, never a free pass.
 - [ ] [INFRA] P1. Re-measure instruments-service AND unified-trading-library in isolation (instruments jumped +182 %;
       confirm it is real growth, not measurement contention from the live-workspace sweep) and refresh their baseline.
+- [ ] [INFRA] P1. Measure per-repo CPU demand under the profiler's UNPINNED `--parallel` mode (real config, no
+      single-core/thread caps) to get PEAK concurrent cores per repo → feed `cpu_weight` for the CPU gate. The
+      single-core-pinned baseline can't see this (basedpyright + pytest burst multi-core).
+- [ ] [INFRA] P1. Baseline freshness loop — the governor records each run's observed peak tree-RSS; a DAILY job promotes
+      observations → the committed baseline (free — we already run every repo's QG most days). A single-run observed
+      peak > 20 % above baseline → Slack alert (NOT a silent bump; a +182 %-style jump means something is wrong).
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
 - [ ] [INFRA] P0. Re-verify the 2026-05-29 swap-incident repro does NOT recur at higher K on a 61 GB host (drive N
       concurrent heavy QG runs; watch `free -h` swap-in rate + load) — the issue doc requires this before touching the
       floor. Capture evidence.
-- [ ] [INFRA] P0. Raise `QG_HOST_CONCURRENCY` on 61 GB fleet hosts from 1 to a safe RAM-derived value
-      (`floor(0.7×RAM / heaviest-single-run-RSS)` ≈ 6, or a flat 6–8) in `agent-orchestrator/scripts/bootstrap_vm.sh` +
-      live `.env.local`; measure the fleet queue-time drop. (Interim — the governor replaces this in Phase 5.)
+- [ ] [INFRA] P0. Raise `QG_HOST_CONCURRENCY` on 61 GB fleet hosts from 1 to `floor(0.7×RAM / heaviest-single-run-RSS)`
+      = floor(43 / 5.5) = **7** (use **6** for margin — NOT 8: 8×UTL = 44 GB > the 43 GB ceiling) in
+      `agent-orchestrator/scripts/bootstrap_vm.sh` + live `.env.local`; measure the fleet queue-time drop. (Interim —
+      once the gates land in Phase 3, K loosens to the runaway backstop, RAM-derived per host.)
 
 ### Phase 2 — Host capacity introspection (portable)
 
 - [ ] [INFRA] P1. `qg_host_capacity` in `qg-host-governor.sh`: emit MemTotal + MemAvailable + physical cores — Linux
-      (`/proc/meminfo`, `lscpu -p=core`/`nproc`) AND macOS (`sysctl hw.memsize`/`hw.physicalcpu`, `vm_stat` for
-      available); bash 3.2-safe. Add `--probe` printing detected capacity + derived RAM/CPU budgets.
+      (`/proc/meminfo`, `lscpu -p=core`/`nproc`) AND macOS (`sysctl hw.memsize`/`hw.physicalcpu`; a REAL MemAvailable
+      equivalent from `vm_stat` — (free + inactive + purgeable + file-backed) × pagesize, net of the compressor — not a
+      raw "free"); bash 3.2-safe. Add `--probe` printing detected capacity + derived RAM/CPU budgets.
 - [ ] [INFRA] P2. Unit tests for the capacity parser on captured Linux + macOS `/proc/meminfo`/`vm_stat` fixtures (no
       live-host dependence).
 
 ### Phase 3 — Reservation ledger + dual-gate admission
 
-- [ ] [INFRA] P1. Replace the K-token flock bucket with a reservation ledger (flock-protected; per-PID reservation files
-      or a locked JSON) + PID-liveness sweep pruning dead reservations.
+- [ ] [INFRA] P1. Reservation ledger (replaces the K-token bucket) at the HOST-SHARED path
+      `${WORKSPACE_ROOT%/.tabs/*}/.benchmarks/qg-governor/` (strip the per-slot `.tabs/<N>` suffix — raw
+      `WORKSPACE_ROOT` is per-slot, which would silently break cross-slot coordination); flock-protected; PID-liveness
+      sweep prunes dead reservations.
 - [ ] [INFRA] P1. RAM gate — TWO independent clauses (never a single `min()`): (1) reservation bound
       `sum_reserved_peak + this_repo_peak ≤ QG_RAM_BUDGET` (caps stacking of same/mixed heavy repos — the 6×UTL case);
       (2) live backstop `MemAvailable ≥ this_repo_peak + QG_MEM_FLOOR` (external pressure + climb headroom). Per-repo
       peak from the canonical baseline; unmeasured → conservative default. Check-and-reserve ATOMIC under one flock.
-- [ ] [INFRA] P1. CPU gate — `running_heavy_count + 1 ≤ floor(cores × QG_CPU_FRAC)`.
-- [ ] [INFRA] P0. Oversize-solo escape — a repo whose peak > `QG_RAM_BUDGET` (or can't meet the live clause beside
-      anything) waits for `sum_reserved_peak==0` then runs SOLO + LOUD undersized-host warning (prevents 8 GB deadlock).
+- [ ] [INFRA] P1. CPU gate — `running_weight + this_cpu_weight ≤ floor(cores × QG_CPU_FRAC)`, `cpu_weight` from the
+      Phase-0 unpinned parallel measure (peak concurrent cores), NOT a flat 1-per-run.
+- [ ] [INFRA] P1. Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak` (existing
+      base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not the host.
+- [ ] [INFRA] P0. Global 80 % valve + kill-switch — if live host used-RAM crosses 80 %, ABORT the offending/newest run +
+      Slack-alert. Catches aggregate pressure per-repo caps miss; doubles as the fast rollback.
 - [ ] [INFRA] P2. Light-slice bypass — only TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
-- [ ] [INFRA] P2. Env knobs — `QG_MEM_SAFETY_FRAC` (0.70) / `QG_MEM_FLOOR_GB` / `QG_CPU_FRAC` (0.80) /
-      `QG_HOST_CONCURRENCY` demoted to an OPTIONAL hard-cap override (no longer the primary control).
+- [ ] [INFRA] P3. Oversize guard (defensive) — peak > `QG_RAM_BUDGET` waits for `sum_reserved_peak==0` then runs solo +
+      loud warning. Rare-to-never ≥ 16 GB (heaviest 5.5 GB < 11 GB budget); no stacked-oversize drain logic needed.
+- [ ] [INFRA] P2. Env knobs — `QG_MEM_SAFETY_FRAC` (0.70) / `QG_MEM_FLOOR_GB` / `QG_CPU_FRAC` (0.80) / `QG_MEM_CAP_MULT`
+      (1.20) / `QG_HOST_RAM_ABORT_PCT` (80) / `QG_HOST_CONCURRENCY` demoted to a loose runaway backstop (RAM-derived
+      default, no longer the primary control).
 
 ### Phase 4 — Fairness + observability
 
 - [ ] [INFRA] P2. FIFO ticket + head-of-line aging so a heavy repo (UTL) is not starved by light runs on a small host.
 - [ ] [INFRA] P2. MAX_DURATION fix — stamp work-start AFTER admission so governor queue time can't fail a green run
       (issue doc todo #2).
-- [ ] [INFRA] P3. `--status` shows RAM_BUDGET / reserved / CPU_SLOTS / waiters / per-repo reservations + an
+- [ ] [INFRA] P2. Slack alerting via the reusable `notify-slack.yml`/carrier (dedup + cooldown) — three triggers:
+      per-run RSS over its `1.2×` cap; daily observed-peak > 20 % above baseline; host RAM > 80 % abort.
+      Actionable-only, state-transition deduped (per the AO/CI alerting rules).
+- [ ] [INFRA] P3. `--status` shows QG_RAM_BUDGET / reserved / CPU_SLOTS / waiters / per-repo reservations + an
       admitted-vs-queued decision log for tuning.
 
 ### Phase 5 — Rollout + retire fixed K
@@ -231,11 +279,14 @@ Same code, same config defaults — each host self-tunes from its own `MemTotal`
 
 ### Phase 6 — Cross-host verification
 
-- [ ] [INFRA] P1. Simulate 8 / 24 / 61 / 96 / 128 GB via a `QG_MEM_TOTAL_OVERRIDE` + core-count override: assert
-      admission behaves per the cross-host table (8 GB → UTL solo, no deadlock; 24 GB → ~3 heavy; 61 GB → CPU-bound ~12;
-      128 GB → CPU-only).
+- [ ] [INFRA] P1. Simulate 16 / 24 / 61 / 96 / 128 GB via a `QG_MEM_TOTAL_OVERRIDE` + core-count override: assert
+      admission matches the cross-host table (16 GB → ~2 heavy; 24 GB → ~3; 61 GB → CPU-bound ~cores; 128 GB →
+      CPU-only).
+- [ ] [INFRA] P1. Concurrency/race test — fire N simultaneous acquires on the SAME heavy repo (6×UTL) and assert they
+      SERIALIZE under the flock and never over-admit past the RAM bound (the design's crux); include a crash test (kill
+      a holder, assert its reservation is swept).
 - [ ] [INFRA] P2. Live fleet soak — queue-time-under-contention delta vs K=1 (`scripts/dev/benchmark-qg-under-load.sh`);
-      confirm no swap regression on the 61 GB host.
+      confirm no swap regression + no false 80 % aborts on the 61 GB host.
 
 ## Progress Log
 
@@ -259,6 +310,15 @@ Same code, same config defaults — each host self-tunes from its own `MemTotal`
   the shrinking `MemAvailable` AND the reservation sum) and would have blocked admits too early. Check-and-reserve is
   atomic under one flock so N simultaneous acquirers serialize. Worked example (6×UTL, 50 %-used 61 GB → ~3–4 admit,
   rest queue) added to the design section.
+- **Gap-review round (operator 2026-07-14 — 11 gaps raised, decisions folded in):** (1/2) baseline freshness = a daily
+  free promotion of the governor's own observed peaks + a > 20 % anomaly Slack alert; hard backstops = per-repo cgroup
+  cap at `1.2×baseline` + a global 80 %-host-RAM abort (also the kill-switch). (4) `K` demoted to a loose RAM-derived
+  runaway backstop (interim bump capped at 7, not 8 — 8×UTL = 44 > 43 GB). (5) ledger at
+  `${WORKSPACE_ROOT%/.tabs/*}/.benchmarks/qg-governor/` — VERIFIED `WORKSPACE_ROOT` is set PER-SLOT by
+  `setup-tab-worktrees.sh`, so the `.tabs/<N>` strip is required or the governor silently wouldn't coordinate across
+  slots. (6/10) `cpu_weight` + the race test come from an unpinned parallel re-measure. (7) min supported host = 16 GB,
+  so oversize-solo is defensive-only (heaviest 5.5 GB < 11 GB budget) — no stacked-oversize drain logic. (8) real macOS
+  `MemAvailable` equivalent from `vm_stat`. (3/9) de-scoped per operator.
 
 ## Deferred / open decisions
 
