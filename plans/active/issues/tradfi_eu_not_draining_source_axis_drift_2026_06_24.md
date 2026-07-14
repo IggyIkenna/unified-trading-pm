@@ -5,12 +5,14 @@ summary:
   The tradfi `expected_unattempted` (EU) was dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento
   backfill campaign burns compute. **Root cause = the EU seeds were materialised under ... UPDATE (2026-06-24, same
   session) — operator-approved purges drove EU 1,084,542 → 336,061 (massive purge) → 1,349 (MVP-gated, durable); 1
-  re-enumeration todo remains open (see Progress Log).
+  re-enumeration todo remains open (see Progress Log). UPDATE (2026-07-14) — the re-enumeration attempt STOPPED at
+  scan-only (candidate count blew past the 1M safety cap once CME OPTION rows first populated the catalogue); root cause
+  diagnosed, awaiting an operator scope call (see Progress Log 2026-07-14 entry).
 status: open
 nature: process
 asset_group: [tradfi]
 stage: [meta]
-repos: [deployment-service]
+repos: [deployment-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [tradfi, manifest, expected-unattempted, pipeline-mode, databento, data-correctness, single-walk, backfill]
 related: [instruments_catalogue_incremental_rollup_2026_06_29]
@@ -32,7 +34,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-14
 ---
 
 # TradFi EU not draining — source-axis seed/capture drift (PROVEN)
@@ -158,12 +160,75 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
   - **#3 retire 748k orphaned massive EU** → DONE (subsumed by the massive purge — all 3,978,526 massive rows gone).
   - **#4 source-resolve the wave-launcher gap (CODE)** → DONE: deployment-service `096298bd` (logical-cell groupby — a
     cell is a gap only if NO source captured), QG-green 80s, 5 tests. Deployed via rebuilt DS tarball.
+- 2026-07-14 — **#2 attempted, STOPPED at the scan-only dry-run per the task's own >1M safety instruction — new finding,
+  not yet fixed, needs an operator call.**
+  - **Pre-checks (before running anything):** confirmed `--enumerator-version=v2` is the only supported value (v1
+    retired) and that IS `.venv` has ADC. Confirmed the code is current: instruments-service `:latest` image
+    (`asia-northeast1-docker.pkg.dev/.../instruments-service:latest`) resolves to commit `5cedb03` as of today
+    (`gcloud artifacts docker images list --sort-by=~UPDATE_TIME`), far after `6c893be` (2026-06-24) — the MVP gate has
+    been live in every deployed path for weeks, so the "AFTER 6c893be's promotion" precondition is already satisfied.
+    Confirmed the tradfi catalogue was freshly regenerated TODAY
+    (`gs://instruments-store-tradfi-prd- central-element-323112/prod/catalog.parquet`,
+    `update_time: 2026-07-14T01:02:32Z`) — the "in-flight IS instruments backfill + catalogue-regen" precondition is
+    also satisfied. Also found: there is a **standing daily Cloud Scheduler + Cloud Run Job**
+    (`expected-universe-v2-tradfi-daily`, `30 1 * * *` UTC → job `expected-universe-v2- tradfi`) that ALREADY runs this
+    exact enumerator with `--apply-write --start-date 2026-02-20 --max-writes-per-run 50000000` every day (completed
+    2026-07-14T01:31:36Z, ~90s, i.e. it ran against the freshly-regenerated catalogue 28 min after the regen) — this is
+    NOT documented in this issue's todo text, which only mentions the VM launcher / a one-off Cloud Run rebuild.
+  - **Scan-only dry-run (as instructed, full default window `--start-date 2018-01-01`, no `--apply-write`):** ran
+    directly from the instruments-service `.venv` (`GCP_PROJECT_ID`/`PROJECT_ID`/`CLOUD_PROVIDER`/`DEPLOYMENT_ENV` set
+    to match the Cloud Run job's env). Loaded catalog (1,170,558 instruments) + manifest (5,109,048 rows incl. 3 live
+    per-VM shards) in ~30s, then **hit the hard `--max-writes-per-run` safety cap almost instantly (~6s into
+    enumeration): 1,000,001 candidates > 1,000,000 → `ENUMERATOR_FAILED reason=max_writes_exceeded`, exit 5.** Per this
+    task's own instruction ("if it's wildly large — >1M — STOP and report instead of applying"), STOPPED here. No
+    `--apply-write` was ever attempted; nothing was written to any manifest shard.
+  - **Root cause (diagnosed, not yet fixed):** the tradfi catalogue now carries **739,278 `CME OPTION` rows tagged
+    `mvp=True`** (checked via `pd.read_parquet` on the catalogue) — this is the "new ... options universe" the todo
+    itself anticipated, and it is now correctly MVP-tagged per `unified-api-contracts` `_mvp_scope_rules.py` (comment:
+    _"CME OPTION rows are MVP at ohlcv_1m ... but the catalogue today has 0 CME OPTION instrument rows ... This rule
+    ensures CME options are correctly MVP-tagged ONCE present"_ — they are now present, for the first time, as of
+    today's regen). Each option's `available_from`/`available_to` alive-window averages 626 days (median 179, max 4,751
+    = 13 years, back to 2008); `_enumerate_v2_tradfi` seeds one EU row per (instrument, alive-day, data_type) with NO
+    MVP data_type narrowing for tradfi (`_row_data_types` L691: _"TRADFI IS DELIBERATELY NOT GATED"_ — only cefi gets
+    the MVP-data_type-narrowing gate the same UAC comment describes for CME options at "ohlcv_1m only"). A full
+    2018-2026 history run therefore cross-joins ~739k option contracts × their (mostly un-floor-clipped, since only
+    `ohlcv_1s`/`ohlcv_1m` get the Databento rolling-window floor) alive windows → far past 1M candidate rows almost
+    immediately, vs. the **1,349-cell "bounded MVP-gated set"** this todo's text was written against on 2026-06-24
+    (BEFORE any CME OPTION rows existed in the catalogue).
+  - **Reassuring cross-check — the daily cron is NOT blowing up in production.** Live manifest CME
+    `expected_unattempted` = 4,828 total (all data_types) as of this check — nowhere near a 1M-row explosion. The daily
+    cron's narrower `--start-date 2026-02-20` window intersects most of those 739k (mostly _already-expired_, since
+    options continuously roll) option contracts' alive-windows at ZERO days, so it never seeds the denominator-inflating
+    full-history tail my scan-only full-history dry-run surfaced. **The daily cron is already organically seeding the
+    new options-universe MVP EU within a sane bounded window, every day, with no operator action needed.**
+  - **What I did NOT do:** did not pass `--data-types`, did not bump `--max-writes-per-run`, did not narrow
+    `--start-date`, and did not run `--apply-write` — all would have been a unilateral scope decision on a
+    data-correctness axis (how far back should the options-universe honest-coverage denominator go?), which this task's
+    own escalation rule reserves for the operator. Consolidator cron
+    (`uts-prod-manifest-consolidator-market-data-tradfi-cron`, `*/1 * * * *`, ENABLED) was left untouched — no pause was
+    needed since nothing was applied.
+  - **Recommendation for the operator (not yet actioned):** the todo's original goal — "seed MVP databento EU for the
+    new KRX/equities/options universe" — appears to already be satisfied on an ongoing basis by the existing daily
+    `expected-universe-v2-tradfi` Cloud Scheduler job (bounded `--start-date 2026-02-20`, `--apply-write`, runs since
+    2026-06-19, confirmed running successfully today post-catalogue-regen). A manual FULL 2018-2026 history run is a
+    much bigger ask than the todo's text implies (per-option-strike CME history back to 2008) and is very likely NOT
+    what's wanted — Databento's own rolling-subscription floor exists specifically so the denominator isn't inflated
+    with unfetchable-vintage cells. Suggested options: **(A)** close this todo as "superseded by the standing daily
+    cron" (no manual run needed) **[WORKER REC]**; **(B)** if a deliberate one-time catch-up IS wanted, re-run scan-only
+    with an explicit narrower `--start-date` (e.g. matching Databento's actual OPTION/ohlcv_1m floor, not full history)
+    and re-check the candidate count before any `--apply-write`; **(C)** separately, consider whether tradfi needs the
+    same MVP-data_type-narrowing gate `_row_data_types` already applies to cefi (today CME OPTION rows are NOT
+    data_type-narrowed to `ohlcv_1m` the way the UAC rule's own comment says they should be) — that would shrink the
+    candidate space structurally, independent of the date-window question.
 - [ ] [SCRIPT] P1. **#2 Re-run the expected-universe-v2 tradfi enumerator (MVP-gated tarball, databento)** to seed MVP
       databento EU for the cells not yet seeded (ohlcv_1m/trades/tbbo MVP gaps + the new KRX/equities/options universe)
       — AFTER the in-flight IS instruments backfill + catalogue-regen (fresh catalogue carries the new universe + mvp
       tags). Run via `launch-expected-universe-v2-vm.sh --asset-group tradfi` (fresh tarball) OR the Cloud Run job once
-      its image rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures.
+      its image rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures. **2026-07-14 —
+      STOPPED, not applied (candidate count wildly exceeds "bounded MVP-gated set"); see Progress Log 2026-07-14 entry
+      for full diagnosis + recommendation. Left `[ ]` — needs an operator call on scope before any apply.**
 - [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
       Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY
       hold real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during
-      the 2026-06-24 massive purge.
+      the 2026-06-24 massive purge. **2026-07-14: confirmed this remains the doc's only OTHER open item besides #2 above
+      — no action taken this session (operator-gated, unchanged).**

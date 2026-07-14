@@ -20,7 +20,7 @@ summary:
   classified as a harness error like the 4-pillar one; it was recorded as a `phantom_captured_no_parquet: count=1`
   finding with an uninformative detail string (`phantom CLI rc=1`), i.e. an environment-config failure silently posing
   as a real data finding."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -42,7 +42,7 @@ source:
     "e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: e2e-testing@407a6f9
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -94,10 +94,18 @@ table) instead of emitting a misleading `count=1` finding row.
 
 ## Todos
 
-- [ ] [CODE] P2. Asset_group-scope `file_escalation_issue`'s output filename in
+- [x] ✅ [CODE] P2. Asset_group-scope `file_escalation_issue`'s output filename in
       `e2e-testing/scripts/audit/_dp_common.py` (repo: e2e-testing) so a `defi`-only and a `cefi`-only run on the same
       UTC day never collide. Add a regression test asserting two same-day, different-asset_group calls produce two
-      distinct files.
-- [ ] [CODE] P2. In `e2e-testing/scripts/audit/manifest_hygiene_daily.py`, classify a `BucketNamingError`/missing-env
+      distinct files. — e2e-testing@d83f12c. Added `asset_groups` param folded into the filename
+      (`{slug}_{ag_scope}_     {date}.md`, `all` when covering the full universe); wired both
+      `manifest_hygiene_daily.py` and `reprobe_new_empty_confirmed.py` (same collision class) to pass their `ag_results`
+      keys; 2 regression tests added (`test_file_escalation_issue_asset_group_scope_avoids_collision`,
+      `test_file_escalation_issue_full_universe_scope_collapses_to_all`).
+- [x] ✅ [CODE] P2. In `e2e-testing/scripts/audit/manifest_hygiene_daily.py`, classify a `BucketNamingError`/missing-env
       failure from the phantom-reconcile subprocess call the same way the 4-pillar harness error is already handled
-      (log + `SKIPPED`, never a `count=1` finding row) (repo: e2e-testing).
+      (log + `SKIPPED`, never a `count=1` finding row) (repo: e2e-testing). — e2e-testing@407a6f9. Added a
+      `BucketNamingError`/`Required environment variable` text match in `_check_phantom` (mirrors `_check_4pillar`'s
+      rc=2 harness-error branch): sets `fc.skipped = "phantom_harness_error"` + logs a warning instead of falling
+      through to the generic rc!=0 branch that recorded a misleading `phantom_captured_no_parquet: count=1` finding.
+      Regression test `test_check_phantom_missing_env_is_harness_error_not_fail` added.

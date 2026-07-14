@@ -208,14 +208,22 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       cross-service non-captured twins; the 607 defi dual-source captured pairs preserved. NB: the ORIGINAL 165,148
       TEAMS EU twins had already self-resolved in the live manifest (0 coexisting now) — the fix targets the live bug
       CLASS + prevents recurrence. Evidence: issue doc "✅ Option B live-data verification" section.**
-- [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
-      found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
-      `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's
-      own fetch phase (`0 teams returned — no roster to backfill with` for each, not a script/API-key issue). These
-      should be relabelled `empty_confirmed` (e.g. `EXPECTED_NO_ROSTER_DATA`/similar, honest-absence pattern) rather
-      than sitting as `expected_unattempted` forever. Small, mechanical, low priority — blocked on the P1 dedup-key fix
-      above landing first (no point writing `empty_confirmed` rows while the consolidator can't reconcile them against
-      the enumerator seed either).
+- [x] ✅ [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams`.** — DONE
+      2026-07-14 (slot-5), instruments-service@fad73bb1. The 8 leagues (`COPA_LIGA_PROFESIONAL`, `COPA_MX`,
+      `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`, `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`,
+      `SUPERCOPPA_ITALIANA`) each had 3,022 historical (2018-01-01→2026-07-10) `expected_unattempted` TEAMS rows =
+      **24,176 total**. Root cause confirmed: `is_league_entity_covered(...,"TEAMS")` is ALREADY `False` for all 8, and
+      the live writer (`emit_empty_gaps_for_entity`) already emits `EXPECTED_NO_PROVIDER_COVERAGE` for them (776 such
+      rows existed) — the residual was purely historical dates the season-cached TEAMS fetch never processed. **No code
+      change needed** (coverage map + writer already correct). Data-only reconcile via new
+      `scripts/backfill/api_football_teams_no_roster_leagues_reconcile_2026_07_14.py` →
+      `record_empty(EXPECTED_NO_PROVIDER_COVERAGE)` per cell, matching the existing 776 exactly. Prereq (the P1
+      dedup-key fix) was already landed. **Verified in the canonical `availability_index.parquet` (direct read, stable
+      across consolidator cycles): the 8 leagues' TEAMS = `expected_unattempted` 24,176 → 0, `empty_confirmed` 776 →
+      24,952 (100% `EXPECTED_NO_PROVIDER_COVERAGE`).** Note: the first write was eaten by a transient
+      manifest-consolidator prune-race (known issue
+      `manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md`); a re-apply consolidated cleanly and
+      holds. See Progress Log entry below.
 - [x] ✅ [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
       confirm any relevant scheduled jobs are running. **VERIFY DONE 2026-07-14 (slot-5) against the live sports
@@ -516,6 +524,23 @@ report written in this plan's Progress Log.
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Progress Log
+
+- **2026-07-14 (slot-5) — api_football TEAMS 8-no-roster-cup-leagues residual CLOSED (data-only reconcile).**
+  instruments-service@fad73bb1. The 8 cup/one-off competitions return 0 teams from api_football `/teams` (no persistent
+  roster). Diagnosis: `is_league_entity_covered(canon, "TEAMS")` returns `False` for all 8 (coverage map already
+  correct) and the live TEAMS writer already emits `EXPECTED_NO_PROVIDER_COVERAGE` for uncovered (league, entity) pairs
+  (776 rows existed) — so NO code change was warranted; the residual was 24,176 historical (2018-01-01→2026-07-10)
+  `expected_unattempted` cells (3,022 × 8) that the season-cached `_fetch_teams_and_standings` never processed.
+  Data-only reconcile via `scripts/backfill/api_football_teams_no_roster_leagues_reconcile_2026_07_14.py`:
+  `record_empty(row_key={date, TEAMS, league_id}, reason=EXPECTED_NO_PROVIDER_COVERAGE)` per cell, matching the 776
+  already-correct rows. Prereq (the P1 manifest_consolidator dedup-key fix) confirmed already landed. **Verification
+  (direct canonical `availability_index.parquet` read, stable across consolidator cycles): the 8 leagues' TEAMS =
+  `expected_unattempted` 24,176 → 0; `empty_confirmed` 776 → 24,952, all `EXPECTED_NO_PROVIDER_COVERAGE`.** Operational
+  note: the FIRST reconcile write (per-VM shard, 24,176 rows) was pruned WITHOUT merge by an overlapping
+  manifest-consolidator execution (the known prune-race,
+  `plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md` — a transient recurrence
+  for a large shard; EU stayed 24,176 and the shard vanished); a straight re-apply consolidated cleanly within one cycle
+  (`[poll 0] EU=0`) and holds stable. Reconcile script shipped via quickmerge; QG green.
 
 - **2026-07-14 (slot-5) — mdps_t1_recon_job two-bug todo: (a) FIXED, (b) escalated (cross-repo UAC SSOT).**
   - **(a) PREDICTION instrument_key abort — FIXED (market-data-processing-service@2dc6860).** Live-probed the prod

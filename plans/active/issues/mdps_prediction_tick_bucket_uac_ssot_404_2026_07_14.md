@@ -7,11 +7,13 @@ summary:
   completed (legacy bucket deleted, pred-prd is the sole live SSOT), so the UAC template's deliberate mid-migration
   guard precondition is met and should be flipped to market-data-tick-pred-{env}-{pid}. Fleet-wide
   (UAC/UTL/MDPS/MTDS/IS).
-status: open
+status: resolved
 created: 2026-07-14
 assigned_vm: planning
 parent_epic: infrastructure_master
 resolved_by:
+  "unified-api-contracts@511a9c62, unified-trading-library@4378685 (verify-only), market-data-processing-service@5febb77
+  — all 5 todos complete"
 source:
   - plans/active/sports_data_sources_canonical_completion_2026_07_13.md (todo -022, bug (b))
   - unified-api-contracts/unified_api_contracts/canonical/gcs_paths.py (lines 103-113)
@@ -75,20 +77,58 @@ correctness (the old target is already deleted, so nothing can regress to it). V
 recognition (`_asset_group_for_market_data_bucket`) is preserved for reading any legacy-named references before
 flipping.
 
-- [ ] [SCHEMA] P1. Flip `(AssetGroup.PREDICTION, BucketKind.MARKET_DATA)` in `canonical/gcs_paths.py` from
+- [x] ✅ [SCHEMA] P1. Flip `(AssetGroup.PREDICTION, BucketKind.MARKET_DATA)` in `canonical/gcs_paths.py` from
       `market-data-tick-prediction-{env}-{project_id}` to `market-data-tick-pred-{env}-{project_id}`, and replace the
       stale mid-migration guard comment with a note that the migration completed (legacy bucket deleted 2026-07-12, plan
-      `prediction_manifest_canonicalisation_2026_06_01.md` archived). (repo: unified-api-contracts)
-- [ ] [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred` token.
-      (repo: unified-api-contracts)
-- [ ] [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
+      `prediction_manifest_canonicalisation_2026_06_01.md` archived). (repo: unified-api-contracts) —
+      unified-api-contracts@511a9c62.
+- [x] ✅ [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred`
+      token. (repo: unified-api-contracts) — unified-api-contracts@511a9c62 (same commit; required to keep QG green
+      after the template flip). Supplementary: unified-api-contracts@41827a6e adds an explanatory comment on the
+      PREDICTION MARKET_DATA parametrize case matching the existing INSTRUMENTS-case convention.
+- [x] ✅ [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
       `manifest_consolidator.py`, `upgrade_manifest_to_v8.py`, `detect_manifest_divergence.py`, `test_bucket_naming.py`,
       `test_cloud_constants.py`, `test_manifest_consolidator.py`) — KEEP `_asset_group_for_market_data_bucket`
-      recognizing BOTH tokens for back-compat asset-group inference. (repo: unified-trading-library)
-- [ ] [BACKEND] P2. Update MDPS `test_dependency_checker_sports_prediction.py` + `test_consolidator_preflight_sports.py`
-      to assert the `pred` token now that OUTPUT_BUCKETS/UPSTREAM_DEPS resolve via the flipped UAC template. (repo:
-      market-data-processing-service)
-- [ ] [DATA] P2. Update the long-form assertions in `market-tick-data-service`
+      recognizing BOTH tokens for back-compat asset-group inference. (repo: unified-trading-library) —
+      **unified-trading-library@4378685**. Re-verified: NO code change needed. All 4 named UTL modules resolve the
+      prediction market-data bucket via `resolve_bucket_name(kind="market-data-tick-prediction")`, which reads the
+      SEPARATE `unified_api_contracts/config/cloud-providers.yaml` kind-map SSOT — not the `canonical/gcs_paths.py`
+      `bucket_template()` per-(AssetGroup,BucketKind) dict item -001 flips. Confirmed live in the packaged yaml
+      (`cloud-providers.yaml:160,326`): `market-data-tick-prediction` already maps to
+      `market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-${...}` on BOTH GCP and AWS — unaffected by the gcs_paths.py
+      drift/flip. `_asset_group_for_market_data_bucket`'s regex (`manifest_consolidator.py:392`,
+      `r"market-data-tick-(cefi|defi|tradfi|sports|prediction|pred)\b"`) already recognizes both tokens (back-compat
+      preserved, tests at `test_manifest_consolidator.py:1602-1614` pass unchanged). `test_bucket_naming.py` /
+      `test_cloud_constants.py` already assert the abbreviated `pred` token for the resolved bucket name.
+      `quality-gates.sh` full run GREEN (580s), sentinel = HEAD, tree unmodified.
+- [x] ✅ [BACKEND] P2. Update MDPS `test_dependency_checker_sports_prediction.py` +
+      `test_consolidator_preflight_sports.py` to assert the `pred` token now that OUTPUT_BUCKETS/UPSTREAM_DEPS resolve
+      via the flipped UAC template. (repo: market-data-processing-service) — **market-data-processing-service@5febb77**.
+      Updated 4 assertions in `test_dependency_checker_sports_prediction.py` (`test_prediction_in_output_buckets`,
+      `test_get_output_bucket_prediction`, `test_prediction_mtds_bucket`,
+      `test_prediction_dep_check_passes_when_present`) that test `OUTPUT_BUCKETS`/`UPSTREAM_DEPS_BY_ASSET_GROUP` — the
+      path that calls `bucket_template()` directly and was affected by the flip. `test_consolidator_preflight_sports.py`
+      needed **NO change** — its PREDICTION tests
+      (`test_prediction_calls_assert_consolidator_healthy_for_both_flat_kinds`) mock `resolve_bucket_name` and assert on
+      the `kind=` yaml-key argument (`"market-data-tick-prediction"`), the same already-correct yaml-key path as todo 3
+      — unaffected by the `gcs_paths.py` dict flip. 46/46 MDPS tests green; also re-ran 17 UAC + 18 UTL
+      prediction-scoped tests, all green (no regressions). `quality-gates.sh` full run GREEN, sentinel = HEAD
+      (`3d889a7`→amended `5febb77` for the Quickmerge trailer).
+- [x] ✅ [DATA] P2. Update the long-form assertions in `market-tick-data-service`
       `test_migrate_prediction_to_pred_prd_v9_coverage.py` and `instruments-service`
       `test_enumerate_expected_universe.py` (they reference the now-deleted legacy bucket as `LEGACY` — keep as an
-      explicit legacy constant or update per the flip). (repo: market-tick-data-service, instruments-service)
+      explicit legacy constant or update per the flip). (repo: market-tick-data-service, instruments-service) —
+      **Re-verified: NO code change needed.** `test_migrate_prediction_to_pred_prd_v9_coverage.py`'s
+      `LEGACY =     "market-data-tick-prediction-test-project"` constant tests the **migration script's**
+      move-FROM-legacy logic (`migrate_prediction_to_pred_prd_v9.py`) — a standalone script taking explicit bucket-name
+      arguments, not routed through `bucket_template()`; keeping it as an explicit legacy constant (the issue doc's own
+      suggested option) is correct since the script's job is specifically to move data OUT of that bucket.
+      `test_enumerate_expected_universe.py` already asserts the canonical `pred-{tier}-` shape and explicitly asserts
+      `pred != "market-data-tick-prediction-test-project"` — its `_default_bucket_for("prediction")` resolves via
+      `resolve_bucket_name(kind="market-data-tick-prediction")`, the same already-correct yaml-key path as todos 3/4's
+      verification. 91 MTDS + 14 IS tests in the named files re-ran green, confirming no regression from the flip.
+      Follow-up (independent concurrent verification): landed doc-only comment clarifications so both files no longer
+      read as stale — `test_enumerate_expected_universe.py`'s "slated for L6 delete" comment now says "deleted
+      2026-07-12"; `test_migrate_prediction_to_pred_prd_v9_coverage.py`'s `LEGACY` constant now carries an explicit
+      comment stating it is the intentional historical migration-source name, not the live UAC SSOT. No assertions
+      changed (none were needed). — instruments-service@0a1f13e9, market-tick-data-service@9ed52332.

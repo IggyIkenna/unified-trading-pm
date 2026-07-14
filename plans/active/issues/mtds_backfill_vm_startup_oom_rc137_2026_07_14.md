@@ -27,6 +27,7 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
+    plans/active/issues/mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md,
   ]
 created: 2026-07-14
 assigned_vm: planning
@@ -338,7 +339,7 @@ for the same slim column set on the same real 27.4M-row index (see "P0 confirm �
 Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`ManifestFreshnessCache` code investigation
 (pyarrow column-pruning verification + self-shard-merge memory profiling), outside infra craft.
 
-- [ ] [BACKEND] P0. **DeFi manifest consolidator Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) still
+- [x] [BACKEND] P0. **DeFi manifest consolidator Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) still
       SIGKILLs every cycle even at `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB`** (was 8GB; container is 8vCPU/32Gi) — crash
       timing ~15s post-`duckdb_merge_start`, no better than the 8GB run's ~22-25s, so raising the memory budget 3x did
       not meaningfully change the outcome. Canonical `availability_index.parquet` for
@@ -353,7 +354,40 @@ Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`
       lock — anyone checking Cloud Run execution history instead of `_index/latest.json.error_reason` gets a false
       all-clear; worth a follow-up to make `MANIFEST_CONSOLIDATION_FAILED`/stall alerting the primary signal instead.
       Repo: `unified-trading-library` (`manifest_consolidator.py`). See "P0 infra diagnostics — consolidator
-      misconfiguration fixed but crash persists" above for the full evidence.
+      misconfiguration fixed but crash persists" above for the full evidence. — ✅ ACTED ON hypothesis (a), NOT YET
+      LIVE-VERIFIED 2026-07-14 (slot-4, backend_engineer): `unified-trading-library@6b229121`. Reasoning for
+      prioritizing (a) over (b): the observed crash-timing INSENSITIVITY to a 3x `memory_limit` increase (8GB→24GB gave
+      ~22-25s→~15s, i.e. got WORSE not better) is the signature of a threads-driven FIXED overhead exceeding the
+      container regardless of the pragma, not a genuinely oversized single working set (which would show SOME relief
+      from 3x more memory headroom). DuckDB parallelises hash/anti-joins and sorts across `os.cpu_count()` threads by
+      default (8 vCPU on this container, no `SET threads=` override anywhere in the module before this fix), each thread
+      carrying its own scratch buffers not fully accounted against `memory_limit`. Added `CONSOLIDATOR_DUCKDB_THREADS`
+      (default `"4"`, operator-tunable without a redeploy, mirrors the existing `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`
+      pattern) and wired `SET threads=<N>` into the merge connection alongside `SET memory_limit`; also logs the thread
+      count in the existing `phase=duckdb_merge_start` lines so a future diagnostic session has it in Cloud Run logs
+      directly (closing the "no DuckDB-side memory profile, only kernel dmesg" evidence gap this issue's prior sessions
+      kept hitting). Two regression tests added (`test_duckdb_merge_applies_threads_pragma`,
+      `test_duckdb_threads_env_default`). Full `quality-gates.sh` green. **NOT closing this issue**: this is a
+      defensible, testable action on hypothesis (a) — it does NOT prove the OOM is fixed, only ships the fix for the
+      most probable cause given the evidence. Live verification (does the Cloud Run job actually survive its next cycle
+      post-deploy) is infra-craft (Cloud Run job redeploy), out of this backend_engineer session's scope — filed as a
+      new `[INFRA]` todo below. The "Also flag" alerting-signal item (Cloud Run `execution.status` false all-clear) is
+      UNADDRESSED — still open, needs its own follow-up (infra/observability scope, not touched this session).
+
+- [ ] [INFRA] P0. **Residual verification (2026-07-14, slot-4, backend_engineer)**: `unified-trading-library@6b229121`
+      shipped `CONSOLIDATOR_DUCKDB_THREADS` (default `"4"`, bounds DuckDB's thread-parallel scratch memory) as the fix
+      attempt for the `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job's SIGKILL-every-cycle. This has
+      NOT been live-verified — needs: (1) confirm the Cloud Run job picks up the new code on its next deploy (image
+      rebuild/redeploy per the job's normal rollout path — check whether it auto-redeploys from
+      `unified-trading-library`'s latest or needs an explicit trigger); (2) watch the NEXT consolidation cycle's Cloud
+      Run logs for the new `phase=duckdb_merge_start ... threads=4` log line (confirms the fix is live) and whether
+      `Container terminated on signal 9` still fires; (3) if it still SIGKILLs, that refutes hypothesis (a) — try
+      progressively lower `CONSOLIDATOR_DUCKDB_THREADS` (e.g. 2, 1) via `gcloud run jobs update` (live, no redeploy
+      needed, mirrors how `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB` was set) before concluding (a) is wrong and escalating
+      to hypothesis (b) (SQL/query-plan restructuring, a bigger `[BACKEND]` follow-up); (4) once a cycle succeeds,
+      confirm `_index/availability_index.parquet` for `market-data-tick-defi-prd-central-element-323112` advances past
+      its current `2026-07-14T12:56:34Z` freeze (`gsutil stat` / `_index/latest.json`). Repo: `deployment-service`
+      (Cloud Run job trigger/redeploy) + `unified-trading-library` (if a further code change is needed after (3)).
 
 - [ ] [BACKEND] P0. **`mtds-dex-swaps-backfill` VM still OOMs (kernel-confirmed, anon-rss≈14.67GiB on a 16GB
       `e2-standard-4`) inside `ManifestFreshnessCache.bulk_load()`'s "fixed" slim-read path** (`_refresh_locked()` →
@@ -621,6 +655,67 @@ hit so far.
 **Bottom line for the BACKEND fix todos above**: the blast radius is bigger than "DeFi-only" — CEFI backfills are hit
 MORE often (14 vs 4) than DeFi post-fix. The fix (scope catalog-reader registration to the job's actual `asset_groups`)
 should be validated against BOTH a CEFI and a DEFI repro, not just DeFi, before this issue closes.
+
+## P0 — full `bulk_load()` path repro closes most of the 5.3GiB→14.67GiB gap; it's the Python-level tuple/set build, not the self-shard merge (2026-07-14, slot 3)
+
+Picked up the 2nd open `[BACKEND] P0` todo above (the 5.30 GiB isolated-slim-read vs 14.67 GiB kernel-confirmed-OOM gap)
+independently, via `/autonomous` re-dispatch on the DeFi dex-pools backfill issue (this doc's sibling
+`mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md`, which I've cross-linked here — same underlying bug,
+different original entry point).
+
+**What I ran**: unlike the prior isolated-slim-read repro (which hand-called
+`read_availability_index(bucket, columns=[...])` directly), I called
+`ManifestFreshnessCache(bucket=bucket)._maybe_refresh()` — the SAME internal method `bulk_load()` calls — with
+`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` set (matching the real VM launcher's metadata value, avoiding the
+local-default-120s stale-raise branch the earlier repro in "P0 full-path RSS trace" hit). This exercises
+`_refresh_locked()` end-to-end: whichever read branch fires, PLUS the downstream
+`_index_to_tuples`/`_index_to_skip_worthy_tuples` calls that build the Python-level `set`s `_captured`/`_skip_worthy` —
+the exact part the isolated SLIM/FULL table (5.30 GiB / 19.72 GiB) did NOT include.
+
+**Result**: completed successfully (no exception — the 86400s threshold avoided the stale-raise path), so no
+`ManifestReader: ... falling back to per-VM shards` warning appeared in my run's output either, meaning this run took
+the FAST direct-consolidated-read branch, **not** the `_read_self_shard()`/`_merge_shard_frames()` per-VM-shard-merge
+path the open todo flagged as the leading suspect for the gap:
+
+```
+elapsed: 176.9s
+tracemalloc current=17440.7MB peak=24286.5MB
+ru_maxrss after=5888528.0 (KB, ~5.9GB resident at process end)
+captured rows: 3,010,913
+```
+
+**Peak 24.3 GiB — HIGHER than the kernel-confirmed real-VM OOM figure (14.67 GiB)**, on the FAST path, without ever
+touching the self-shard-merge code the open todo suspected. This is new information for that todo's two candidate
+explanations:
+
+1. **`_read_parquet_columns_safe` column-pruning itself** — not independently re-verified here (would need a
+   pyarrow-level trace to confirm true predicate-pushdown decode vs. read-then-select), still worth checking per the
+   todo's item (1), but the SLIM-vs-FULL table already measured (5.30 GiB vs 19.72 GiB) shows pruning IS doing
+   _something_ real — the open question is just how much more it could still save.
+2. **`_read_self_shard()` + `_merge_shard_frames()`** — my repro's peak EXCEEDED the real kernel-confirmed OOM without
+   this path ever executing (fast-path branch, no fallback warning), which argues this is likely **not** the dominant
+   unmeasured cost the todo hypothesized — since a run that skips it entirely still overshoots the real OOM figure.
+
+**Most likely actual gap-closer**: the Python-level `set` construction
+(`_index_to_tuples`/`_index_to_skip_worthy_tuples` building `_captured`/`_skip_worthy` from ~3M rows) that neither the
+SLIM/FULL isolated table NOR the self-shard-merge hypothesis accounted for — tuple + hash-set overhead in CPython
+routinely runs 3-5x raw data size, which is directionally consistent with going from a ~5.3 GiB pandas DataFrame to a
+24+ GiB peak once that DataFrame gets converted into millions of Python tuples inside a `set`. Not conclusively isolated
+here (would need a tracemalloc snapshot diff bracketing specifically `_index_to_tuples`/`_index_to_skip_worthy_tuples`
+vs. the read itself to prove the split) — flagging as the most promising next-step for whoever closes the two remaining
+`[BACKEND] P0` todos, since it reframes the fix direction: **the real fix is almost certainly NOT "prune more columns"
+(diminishing returns once you're already at 7 slim columns) but "don't materialize millions of Python tuples/sets at
+all"** — e.g. a `pyarrow.Table`-native hash-join / `.isin()` check against the caller's actual row-keys instead of
+building the full corpus into an in-process Python set, or (simplest) actually scoping the read by the caller's known
+date range (this doc's sibling issue's own recommended fix design: an optional `date_range` filter on
+`ManifestFreshnessCache.__init__`, since none of the 9 DeFi handlers that use this class today pass one, and none of the
+diagnostic sessions on this doc tested a date-scoped read specifically).
+
+**Also note for whoever profiles this next**: the manifest's real row count keeps growing between diagnostic sessions
+(27.4M raw rows / 3.01M "captured" rows as of this run, vs whatever it was when the 5.30 GiB/14.67 GiB figures were
+measured earlier the same day) — every fresh repro on this bucket will report a bigger number than the last purely from
+organic growth, independent of any code change. Worth pinning a snapshot of the index for reproducible before/after
+comparison once a fix is actually implemented, rather than re-measuring against the live (growing) bucket each time.
 
 ## Evidence
 

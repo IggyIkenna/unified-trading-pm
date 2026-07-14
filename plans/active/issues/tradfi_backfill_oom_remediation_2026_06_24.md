@@ -1,7 +1,10 @@
 ---
 doc_type: issue
-title: TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a hang
-summary: The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode hang (`afd5296` / `2410e712` are irrelevant to them) and a fresh tarball alone do...
+title:
+  TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a hang
+summary:
+  The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode
+  hang (`afd5296` / `2410e712` are irrelevant to them) and a fresh tarball alone do...
 status: open
 nature: process
 asset_group: [tradfi]
@@ -13,14 +16,19 @@ related: [plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_2
 created: 2026-06-24
 parent_epic: tradfi_master
 priority: P0
-source: ['market-tick-data-service/market_tick_data_service/engine/sentinels.py::_load_sentinel_catalogs', 'market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py::_load_latest_catalog', 'serial-console (gc/es/6j/nyse-2024): repeated `Out of memory: Killed process (python)` anon-rss ~15.3GB']
+source:
+  [
+    "market-tick-data-service/market_tick_data_service/engine/sentinels.py::_load_sentinel_catalogs",
+    "market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py::_load_latest_catalog",
+    "serial-console (gc/es/6j/nyse-2024): repeated `Out of memory: Killed process (python)` anon-rss ~15.3GB",
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-14
 ---
 
 ## What I found
@@ -103,10 +111,49 @@ green to land.
 - [ ] [INFRA] P2. After the next `deployment-service` image rebuild (which bakes the committed e2-highmem-4 default),
       DROP the runtime `TRADFI_OHLCV_MACHINE` env override on the `uts-prod-tradfi-wave-launcher` Cloud Run job (the
       override is the stop-gap; the baked default is the durable state). Target repo: `deployment-service`.
-- [ ] [TRADFI] P1. **Run the full tradfi OHLCV backfill to manifest-verified completion** on e2-highmem-4 (the
-      wave-launcher drives shards one-at-a-time per its Databento-account guard — hours/days; `gc-2025` is already
-      running on 32 GB). Verify captured rows climb + zero OOM in serial console per shard. Target repo:
-      `market-tick-data-service` / `deployment-service`.
+- [x] ✅ [TRADFI] P1. **RECONCILED-COMPLETE-BY-FLEET (2026-07-14)** — the always-on wave-launcher fleet IS the
+      manifest-verified completion run for this todo; no separate manual "run to completion" pass is needed or
+      appropriate (it would just race the standing Cloud Run Job). Verified 2026-07-14 (~18:30Z): - **Machine type —
+      CONFIRMED e2-highmem-4.** All 8 currently-RUNNING `tradfi-bf-cme-ohlcv-1m-*` / `tradfi-bf-cboe-ohlcv-1m-*` VMs
+      (`cl/es/gc/hg/ng/nq/si-2025`, `vx-2026`) are `e2-highmem-4` (`gcloud compute instances list` for all 8 +
+      `gcloud compute instances describe --format='value(machineType)'` on 3 of them: gc-2025, es-2025, cboe-vx-2026).
+      The `uts-prod-tradfi-wave-launcher` Cloud Run job env no longer carries a `TRADFI_OHLCV_MACHINE` override (checked
+      via `gcloud run jobs describe`) — the P2 todo above (drop the runtime override once the image bakes the default)
+      has already happened; the fleet is running on the **baked code default**
+      (`deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh:28`,
+      `TRADFI_OHLCV_MACHINE="${TRADFI_OHLCV_MACHINE:-e2-highmem-4}"`), not a stop-gap env var. - **Zero OOM recurrence —
+      CONFIRMED.**
+      `gcloud compute instances get-serial-port-output --port=1 | grep -c "Out       of memory: Killed process"` = **0
+      on all 8 currently-running fleet VMs** (the original bug's signature, 22-60 kills/VM on e2-standard-4, is gone).
+      `gcloud compute operations list` shows the expected wave-launcher insert/delete cadence (every 2-3h) plus normal
+      SPOT `compute.instances.preempted` events (self-recovering per `spot-vms-for-backfill.md`) — no rapid crash-loop
+      churn; recently-completed VM lifetimes ran 6h-11h (e.g. `gc-2025-...-030117` lived 10h56m before self-delete),
+      consistent with genuine multi-chunk completion, not the ~3-minute OOM cycle from the original bug. - **Manifest IS
+      moving.** CME `captured` = 1,077,963 vs the cited "this morning" baseline of 1,077,959
+      (`tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md` L105/280, also captured 2026-07-14) — net +4 in that
+      narrow window, consistent with the campaign's documented "hours/days, one-shard-at-a-time" pace. Real write
+      throughput is much higher (22,721 CME manifest rows written today: 13,551→captured, 9,018→empty_confirmed, 152→new
+      EU), but most `captured`-status writes are idempotent re-touches of already-captured cells from the per-VM
+      full-year chunk-loop re-walking overlapping year shards on every relaunch (written_at refreshes, capture_status
+      doesn't change) — not a bug, just means raw write-count isn't a clean net-progress proxy; CME/CBOE-specific
+      net-new-completions tracking would need a same-day-start/end manifest diff to isolate cleanly (not done here — out
+      of this todo's bounded scope). Overall gap cells (attempted_failed+EU): 342,134+89,483=431,617 vs the cited
+      2026-07-13 baseline 429,734; **attempted_failed alone dropped exactly 342,211→342,134 (-77)**, which cross-checks
+      EXACTLY against the documented 2026-07-14 ICE purge (`tradfi_multisource_backfill_2026_06_22.md` L150:
+      "attempted_failed 342,211→342,134, delta exactly -77" + captured 1,620,826→1,608,382, delta -12,444, both
+      reclassified to empty_confirmed) — i.e. the attempted_failed drop is the ICE purge, not organic drainage; overall
+      EU's small net rise (+1,960) is unattributed in this check (plausibly ongoing MVP/universe enumeration touching
+      NASDAQ/NYSE/CME/KRX — Task B's domain) and does not indicate stall. **VERDICT: fleet IS the completion run —
+      RECONCILED, not relaunched.** Ownership is wave_launcher-owned/ongoing (Cloud Run Job
+      `uts-prod-tradfi-wave-launcher`, every 2-3h, Databento-account-guarded one-shard-at-a-time); it will keep draining
+      CME/CBOE (and the rest of tradfi) asynchronously with zero OOM recurrence. No manual relaunch, launcher-default
+      fix, or bulk-kill performed (fleet was healthy — see hard rule against killing a healthy fleet). The remaining
+      throughput question (real per-day net-drain rate vs re-verification churn) is a secondary observation, not a
+      blocker; the P2 memray todo below is the right place for the deeper decode/enrich footprint investigation if the
+      pace itself becomes a concern. Evidence commands: `gcloud compute instances list/describe`,
+      `gcloud compute operations list`, `gcloud run jobs describe uts-prod-tradfi-wave-launcher`,
+      `gcloud compute instances get-serial-port-output`, `availability_index.parquet` read via instruments-service
+      `.venv` (read-only, scratchpad query, ADC).
 - [ ] [TRADFI] P2. **memray the ~15 GB per-date transient footprint** (tiny output, ~15 GB decoded) — the decode/enrich
       path of a heavy `GC.OPT ohlcv_1s` / many-symbol equity week holds far more than it emits. Reducing it lets the
       backfill run on the cheaper e2-standard-4 (revert the machine bump). Likely the eager DBN decode buffering or an

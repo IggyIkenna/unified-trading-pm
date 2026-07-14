@@ -190,11 +190,25 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       sanity cap are preserved. Also corrected the `KALSHI_PERP` entry in the UAC endpoint registry (was pointing at the
       prediction-markets host). 18/18 unit tests green (2 new endpoint-shape assertions), full `quality-gates.sh` green
       both repos. market-tick-data-service@56efdd7d, unified-api-contracts@ea68ef46.
-- [ ] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
+- [x] [INFRA] P2. Once the P0 defensive guard (and ideally the endpoint fix) ship, relaunch
       `mtds-perp-funding-backfill --start 2026-05-29 --end 2026-07-14` (manifest-gated, skips already-captured dates)
       and verify it progresses past 2026-05-29 without hanging/churning (T+10min real-progress check, not just liveness)
       before resuming `mvp_backfill_defi_onchain_v10-002`'s G2 verification for perp_funding. Repo:
-      `deployment-service`.
+      `deployment-service`. — ✅ deployment-service (2026-07-14, slot-3): confirmed the then-running VM was still stuck
+      at 2026-05-28 (89min+ silent) on the STALE pre-fix tarball (`mtds-code.manifest.json` pinned `ecd3a4d4`, predates
+      `5a163d02`). Republished core tarballs (`create-code-tarballs.sh`) at MTDS `8d6b5644` (P0 fix only), deleted the
+      hung VM, relaunched `launch-mtds-perp-funding-backfill-vm.sh --start 2026-05-29 --end 2026-07-14`. That run
+      progressed cleanly past 2026-05-29 to full completion (`Batch complete: 47 results`, exit_code=0, clean
+      self-delete) in ~18min real time — `kalshi_perp` fails FAST via the P0 sanity-cap guard instead of
+      hanging/churning, confirmed on live infra. Mid-run, the endpoint-fix todo above landed on LDR
+      (market-tick-data-service@56efdd7d + unified-api-contracts@ea68ef46), so that first completed run only recorded
+      honest `attempted_failed` for kalshi_perp (pre-fix ticker-discovery code). Re-pulled, republished tarballs at MTDS
+      `56efdd7d` (P0 fix + endpoint fix composed), relaunched the SAME range once more: also completed cleanly
+      (`Batch complete: 47 results`, exit_code=0) and this time wrote REAL `kalshi_perp` funding-rate data (e.g.
+      39/39/26 rows for 2026-07-12/13/14 to
+      `gs://market-data-tick-defi-prd-central-element-323112/.../venue=KALSHI_PERP/...`) instead of honest-failure
+      records — both the hang fix and the endpoint fix verified working end-to-end on live infra.
+      `mvp_backfill_defi_onchain_v10-002`'s G2 gate for perp_funding is unblocked.
 - [x] [SCRIPT] P3. Grep other DeFi/CeFi venue collectors for retry loops that retry non-retryable HTTP statuses (the
       same "any `ClientError` gets retried regardless of status" bug pattern found here) — this may recur wherever a
       similar generic-except retry loop exists. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot-14).
@@ -227,7 +241,7 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `cli/handlers/_defi_manifest.py:698`, and `market_interface/adapters/prediction/polymarket_adapter.py:510` all
       default unclassified errors to `retry_safe = False` (fail fast, don't blindly retry unknowns) — this is the
       correct/safe convention and should become the standard, not the ~60-site `else True` default.
-- [ ] [BACKEND] P1. **Fix the 2 confirmed live-loop instances** from the grep above: in
+- [x] [BACKEND] P1. **Fix the 2 confirmed live-loop instances** from the grep above: in
       `market_interface/adapters/onchain/glassnode.py::_get` and
       `market_interface/adapters/onchain/helius_solana.py::_rpc_call`, do not treat an unregistered venue in
       `VENUE_ERROR_MAP` as `retry_safe=True` by default — either register `GLASSNODE`/`HELIUS` in
@@ -236,8 +250,14 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       otherwise) before ever consulting `classify_venue_error`. Also fix `helius_solana.py::get_enhanced_transactions`'s
       retry loop (line 325) to add the same status check even though it has no current callers (latent bug, cheap to fix
       now). Add regression tests pinning the fixed behavior (mirror `test_non_retryable_status_fails_fast` from the
-      Kalshi fix, `market-tick-data-service@5a163d02`). Repo: `market-tick-data-service`.
-- [ ] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
+      Kalshi fix, `market-tick-data-service@5a163d02`). Repo: `market-tick-data-service`. — ✅
+      market-tick-data-service@b8218f8a (2026-07-14, slot-4): both `_get` and `_rpc_call` (plus
+      `get_enhanced_transactions`, which had no status check at all) now branch on `exc.status` via a shared
+      `_handle_response_error` helper in each module — retry only on 429/5xx, fail fast on everything else — before ever
+      consulting `classify_venue_error`. Two regression tests added per adapter (`test_non_retryable_status_fails_fast`,
+      mirroring the Kalshi fix). Full `quality-gates.sh` green (611s, host under heavy multi-slot contention; extended
+      `PYRIGHT_TIMEOUT=400` used to ride out a transient basedpyright timeout — no code-side issue).
+- [x] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
       `classification.retry_safe if     classification is not None else True` call sites found by
       `grep -rn "classification.retry_safe if classification is not None else True" market_tick_data_service/` —
       classify each as (a) gates a live retry loop → same bug class, fix like the P1 todo above, or (b) pure `log_event`
@@ -246,7 +266,73 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `cli/handlers/_defi_manifest.py`, `prediction/polymarket_adapter.py:510`) for consistency and to stop the pattern
       from silently becoming a live bug if someone later wires `retry_safe` into a retry decision at one of these sites.
       This is a genuinely audit-scope task (many files) — size it as its own plan rather than folding into this issue
-      doc's remaining todos. Repo: `market-tick-data-service`.
+      doc's remaining todos. Repo: `market-tick-data-service`. — ✅ DONE 2026-07-14 (slot-8): read all 70 grep hits
+      (with ±8 lines context) across the 37 files. **Classification result: 2 of 70 sites gate a live retry loop
+      (category a)** — `onchain/glassnode.py:191` and `onchain/helius_solana.py:167`, both already identified by the
+      preceding P1-scoping todo and covered by the still-open `[BACKEND] P1` todo directly above (left untouched here to
+      avoid colliding with that in-flight fix). **The other 68 sites across 35 files are category (b)** — every one is
+      `classification = classify_venue_error(...)` →
+      `log_event("ADAPTER_FETCH_FAILED", details={...,     "retry_safe": classification.retry_safe if classification is not None else True})`
+      → an immediately-following unconditional `raise` / `raise CanonicalError(...)` / `raise exc` (a handful of tradfi
+      adapters — e.g. `fear_greed_adapter.py`, `baker_hughes_adapter.py`, `eia_adapter.py`, `cftc_cot_adapter.py`,
+      `databento_symbology.py` — log-and-continue with no raise at all). `retry_safe` is never read back or consulted
+      for a retry decision at any of these 68 sites — confirmed functionally inert, matching the
+      `hyperliquid_adapter.py:419` spot-check from the prior todo, generalized to the full set. **Fix shipped**:
+      standardized all 68 to the safer `else False` convention per the recommendation, matching the existing
+      `defi/utils.py` / `prediction/kalshi_adapter.py` / `cli/handlers/_defi_manifest.py` /
+      `prediction/polymarket_adapter.py:510` precedent — zero functional/behavioral change (raise is unconditional at
+      every site) but removes the latent "silently becomes a live bug if someone later wires retry_safe into a retry
+      decision" risk the prior todo flagged. Full `quality-gates.sh` green (5473 passed, 16 skipped).
+      market-tick-data-service@f82f29c1.
+
+## Update — 2026-07-14 (independent corroboration of the P2 relaunch, concurrent session)
+
+Dispatched to execute this doc's [INFRA] P2 todo. On arrival the todo was already flipped `[x]` and pushed
+(`unified-trading-pm@5a448b524`, slot-3) — HEAD ancestor-or-equal of `origin/live-defi-rollout` in this clone, synced by
+the slot-cron ff-pull mid-session. Rather than re-do the work, independently re-verified the live infra myself (both
+sessions were racing the same `mtds-perp-funding-backfill` VM name/GCS log path in real time, so my own checks are a
+genuine independent confirmation, not a re-read of slot-3's writeup):
+
+- **Old hung VM disposition**: `gcloud compute operations list --filter="targetLink~mtds-perp-funding-backfill"` shows
+  the 16:07:56Z-launched hung VM was `delete`d at **2026-07-14T17:58:00Z** by `ikenna@odum-research.com` (~37min after
+  this doc's last-observed-hang check at 17:21:44Z) — a deliberate human/operator-attributed delete, not a self-delete
+  or preemption. Confirms item 1 of the dispatch ("stop old VM if still churning") was already done before this session
+  started.
+- **Tarball freshness at each relaunch**: confirmed via `gsutil cat .../mtds-code.manifest.json` +
+  `.../unified-api-contracts-code.manifest.json` that the CURRENTLY published tarballs pin `commit_sha` exactly at
+  `56efdd7da517b525c7ad7feda77d06263fc1550a` (MTDS) / `ea68ef46ac7a011af6f3d25b63c89ac38440dcf7` (UAC), both fix
+  commits, republished at `2026-07-14T18:13:0x-14Z`. The first relaunch attempt (insert `17:59:11Z`, ~14min BEFORE that
+  republish) ran on the P0-only tarball and correctly produced honest `attempted_failed` (ticker-discovery >100 sanity
+  cap) for every `kalshi_perp` date — no churn, but no real data either, matching slot-3's writeup. The second relaunch
+  (insert `18:23:22Z`, AFTER the republish) is the one that actually exercises the endpoint fix.
+- **T+10 real-progress verify on the post-republish relaunch** (VM created 18:23:22Z, so T+10 = 18:33:22Z — this run
+  actually finished well before that): `run.log` shows `kalshi_perp: wrote <N> funding rate rows for <date>` for **all
+  47/47 dates** in the `2026-05-29`→`2026-07-14` range (e.g. 12 rows 2026-06-06, 39 rows 2026-07-13, 26 rows 2026-07-14)
+  against the real margin API host, **zero** `ticker-discovery returned ... exceeding the sanity cap` churn lines
+  anywhere in the full log (`grep -c` = 0), `Batch complete: 47 results collected` at `18:29:09Z` (~6min wall time, not
+  18min — this was a warm per-VM manifest shard from the prior run so most non-kalshi/non-polymarket work was already
+  cached), `[vm-exec] command exited rc=0`, clean self-delete. `polymarket_perp` continues to correctly fail honest
+  (`SOURCE_UNREACHABLE`, pre-existing unrelated DNS NXDOMAIN issue, not in scope). Confirms `attempted_failed` rows from
+  the first (pre-endpoint-fix) relaunch are NOT skip-worthy per `ManifestFreshnessCache.is_now_skip_worthy`
+  (`unified_trading_library/manifest_freshness.py:256-274` — only `captured`/`empty_confirmed`/`EXPECTED_*` are
+  skip-worthy; `attempted_failed` always retries), so the second relaunch correctly re-attempted every date rather than
+  skip-gating on the first run's honest failures.
+- **DRIFT resume-walker parts count** (dispatch item 4, cheap fleet check):
+  `mtds-drift-sig-walker-resume-20260714-134435` parts count
+  (`gsutil ls gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index_parts/ | wc -l`) was 8,798
+  at 17:45Z (per dispatch reference) → **9,549 at 18:49:13Z** → **+751 parts / 64.2min ≈ 11.7 parts/min (~702
+  parts/hour)**. Walker target is `--back-to 2025-07-01`; `oldest=` date reached 2025-10-30 as of 18:48:19Z (from a
+  session-start `oldest=2025-12-23` at 13:58:22Z — 54 calendar-days of history covered in ~4h50m of wall time ≈ 11.2
+  days/hour). Remaining floor distance 2025-10-30→2025-07-01 ≈ 121 days → **extrapolated ~10.8h more** to reach the
+  `--back-to` floor at the observed date-progress rate. Sibling gap walker (`mtds-drift-sig-walker-gap-20260714-134501`)
+  already reached ITS floor (`2025-01-15`) and self-deleted cleanly at 17:35:21Z
+  (`Walk complete: 229625000 new sigs ... across 2297 new parts`, exit_code=0) — not part of this rate calc.
+
+**Net effect**: no code/infra action needed from this session — the P2 todo's actual work (stop old VM, relaunch onto
+fresh fix-composed code, T+10 real-progress verify) is done and independently corroborated on live infra by two
+concurrent sessions. `mvp_backfill_defi_onchain_v10-002`'s G2 gate for `perp_funding` is unblocked on the
+`kalshi_perp`-hang axis; DRIFT's multi-day sig-walker drain remains the other tracked blocker (~10.8h ETA per the
+extrapolation above).
 
 ## Evidence
 

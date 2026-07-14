@@ -57,12 +57,92 @@ resolved_by:
 
 ## Fix direction
 
-1. Decide the canonical home: add a `recon` kind to cloud-providers.yaml (env-tiered `recon-{env}-{pid}`?) OR fold recon
-   outputs into an existing store bucket under a `recon/` prefix (estate-consolidation-friendlier). Operator call — it
-   changes whether the estate grows by 1-2 buckets or by 0.
-2. Provision the chosen target; point `config.py` at the resolver (not an f-string); fix the launcher header.
-3. Confirm what should produce the upstream `t1-recon/{ml,strategy}/{date}/_SUCCESS` inputs stage0 polls — the producers
-   presumably also never wrote (same missing bucket): the whole T1 chain needs an end-to-end run, not just the bucket
-   creation.
-4. Verify the next scheduled run goes green; check dev/staging siblings; add the recon job to whatever failure alerting
-   watches Cloud Run (55 consecutive failures paged nobody — that's its own gap).
+1. ✅ DONE 2026-07-13: `recon` kind added to cloud-providers.yaml (env-tiered `recon-{env}-{pid}`), buckets provisioned.
+2. ✅ DONE: `config.py` repointed to the resolver (`blrs@2f0380b`); launcher header fixed (`ds@ccfaca26`).
+3. ✅ INVESTIGATED 2026-07-14 to a precise, well-scoped, genuinely out-of-scope finding — see "2026-07-14 update" below.
+4. ⏳ STILL OPEN: no real green scheduled run yet (blocked on #3's finding, out of this issue's fixable scope without
+   the multi-repo feature work described below); Cloud Run failure alerting not yet wired (55+ silent failures).
+
+## 2026-07-14 update
+
+**(a) prod digest issue found + fixed + verified; (b) producer chain investigated to a precise, well-scoped, genuinely
+out-of-scope finding.**
+
+**(a) BLRS prod image — a SECOND digest issue, now fixed + verified with a real triggered execution.** The 2026-07-13
+digest bump (`28a18fa`, bumping `BASE_IMAGE_DIGEST` to `sha256:b7e391f8`) and the config fix (`2f0380b`) were both
+already on `main` and already picked up by the live `:latest` prod image (built off `7b65341`) — but the real 06:00Z
+2026-07-14 scheduled run (`uts-prod-batch-live-reconciliation-service-v8jt9`) STILL failed, with a NEW error not
+previously documented here: `BucketNamingError: Unknown kind 'recon' for cloud 'gcp'`, thrown from
+`resolve_bucket_name()` before Stage 0 even starts. Root cause (found via `docker pull`/`inspect` of the exact deployed
+image): the UTL base image digest BLRS pinned (`sha256:b7e391f8`, itself refreshed 2026-07-13T17:44Z) bundles a UAC
+snapshot at commit `21dde0f8` (16:39:42Z that same day) — confirmed (via `git merge-base --is-ancestor`) to be an
+ANCESTOR of, i.e. from BEFORE, `uac@f84e5b37` (20:11:34Z), the commit that actually added the `recon` kind. A same-day
+base-image-refresh-vs-upstream-fix race, not a bug in BLRS's own code. **Fixed**: bumped `Dockerfile`'s
+`BASE_IMAGE_DIGEST` to `sha256:9594091a` (the current UTL `:latest` as of 2026-07-14T18:17:27Z, confirmed via image
+inspection to bundle UAC commit `ed622d8b1`, a genuine descendant of `f84e5b37` — its packaged `cloud-providers.yaml`
+greps 7 hits for `recon`) — `batch-live-reconciliation-service@be056b1` (quickmerge, QG green). Built + verified
+directly off LDR (`gcloud builds triggers run batch-live-reconciliation-service-build --branch=live-defi-rollout`, build
+`ab591245-708a-4c84-a080-7f4d3a9d6a15`, SUCCESS, new image `sha256:763b5446` pushed to `:latest` 2026-07-14T20:07:32Z)
+rather than waiting on the LDR→staging→main promotion chain. **Verified with a real triggered execution**
+(`uts-prod-batch-live-reconciliation-service-pn4f7`): config now resolves
+`recon_bucket=recon-prd-central-element-323112` correctly, and Stage 0 fails at the EXPECTED, already-documented gate —
+`Missing upstream data for 2026-07-13: execution config snapshot: gs://execution-store-cefi-.../configs/snapshots/2026-07-13/config.json; ML t1-recon outputs: gs://recon-prd-.../t1-recon/ml/2026-07-13/_SUCCESS; strategy t1-recon outputs: gs://recon-prd-.../t1-recon/strategy/2026-07-13/_SUCCESS`
+— real, live proof (a) is genuinely closed.
+
+**(b) The upstream `t1-recon/{ml,strategy}` producer chain — traced concretely, not guessed.** Cross-referenced
+`codex/08-workflows/t1-batch-dag.md` (the SSOT) against LIVE Cloud Scheduler + Cloud Run Job state:
+
+- **execution-service config-snapshot** (00:30 UTC, feeds Stage 0's `configs/snapshots/{date}/config.json` check):
+  scheduler `uts-prod-execution-config-snapshot-t1-schedule` is `ENABLED` and fires daily, but its target Cloud Run Job
+  (`uts-prod-execution-service-config-snapshot`) has **never been provisioned** (`gcloud run jobs list` — zero matches;
+  only unrelated manifest-consolidator jobs match a name filter for "execution").
+- **ml-service t1-recon** (03:00 UTC, feeds `t1-recon/ml/{date}/_SUCCESS`): scheduler `uts-prod-ml-t1-schedule`
+  `ENABLED`, fires daily at `0 3 * * *`, but the target Cloud Run Job (`uts-prod-ml-service-t1-recon`) has **never been
+  provisioned** either (`gcloud run jobs describe` → "Cannot find job"; the scheduler's own execution logs show
+  `NOT_FOUND`/`UNAVAILABLE` on every daily fire, checked 2026-07-13 and 2026-07-14). ml-service DOES already have a
+  `--run-tag` CLI flag (`ml_service/inference/cli/main.py`, help text literally references t1-recon) but it is
+  **completely unwired** — a workspace grep found zero consumers of `run_tag` anywhere downstream of the argparse
+  definition; no GCS writer respects it and there is no `_SUCCESS`-marker writer anywhere in the service.
+- **strategy-service t1-recon** (04:00 UTC, feeds `t1-recon/strategy/{date}/_SUCCESS`): the Cloud Run Job DID exist
+  (provisioned 2026-05-23 per a prior F-41-followup fix in
+  `deployment-service/terraform/gcp/ audit03_cron_provisioning.tf`) but was **fundamentally broken at the container-exec
+  level**: Terraform passed bare `args = ["--operation", "backtest", "--mode", "batch"]` with no `command` override,
+  while strategy-service's own Dockerfile deliberately sets
+  `ENTRYPOINT [] + CMD=["uvicorn", "strategy_service.api.main:app", ...]` (it is primarily a live API service, not a
+  CLI-only image like its batch siblings). Confirmed via `docker inspect` on the exact deployed image
+  (`Entrypoint=null`) + a local repro (`docker run <image> --operation backtest --mode batch` →
+  `exec: "--operation": executable file not found in $PATH`) — every daily execution since creation (10/10 checked,
+  2026-07-05 through 2026-07-14) failed at the OCI level with **zero application-level log output** ("Application failed
+  to start: The container may have exited abnormally"). **Fixed the exec bug in scope** (small, safe, well-understood —
+  a broken container-invocation config, not new feature work): added `command = ["python", "-m", "strategy_service"]` to
+  the Terraform module (a real, tested CLI entrypoint — `strategy_service/__main__.py` → `cli/service_entry.py`, covered
+  by `tests/unit/cli/test_cli_flag_combinations.py`) — `deployment-service@ea42a699` (quickmerge, QG green), also
+  applied directly to the live job via `gcloud run jobs update` (local `terraform apply` against the shared remote state
+  wasn't safe this session — a backend-config mismatch surfaced on `terraform init`, and other agents are concurrently
+  touching this same state). **Verified with a real triggered execution** (`uts-prod-strategy-service-t1-recon-nfkbj`):
+  the container now genuinely starts and runs (~2 min, full application bootstrap logs, live GCS bucket connectivity — a
+  complete change in failure signature from the prior instant OCI crash) — but fails one layer deeper:
+  `_resolve_date_args()` hard-requires an explicit `--date` or `--start-date`/`--end-date` (unlike ml-service/mdps,
+  which self-default to T-1 when omitted), and the Terraform args pass neither, raising
+  `ValueError: batch operation requires --date or both --start-date and --end-date`.
+
+**Why this is genuinely out of scope, not just one more bug to fix**: strategy-service has **no `--run-tag` concept
+anywhere in its codebase** (grep-clean workspace-wide) and, like ml-service, **no `_SUCCESS`-marker writer anywhere** —
+so even a fully-running, correctly-dated invocation of this job would write to the default `batch/` thermal-backtest
+namespace, which `t1-batch-dag.md`'s own "Batch vs Thermal Backtest Distinction" table states is **never read by the
+reconciliation orchestrator**. Separately confirmed (live) that all 7 feature-family t1-recon schedulers this chain
+depends on upstream of ml (calendar/delta-one/volatility/cross-instrument/multi-timeframe/commodity/sports) are in state
+`PAUSED`, and `features-onchain` isn't even a key in `t1_batch_scheduler.tf`'s service map despite being listed as a
+producer in the codex DAG doc.
+
+**Conclusion**: reaching a real green 06:00Z run requires standing up genuine multi-repo feature work — provisioning 2
+missing Cloud Run Jobs (execution config-snapshot, ml-inference) via the same container-job Terraform pattern already
+used for strategy/mdps; implementing an actual run-tag-aware GCS writer + `_SUCCESS`-marker emission in at least
+ml-service and strategy-service (not just parsing a flag); adding a self-default date fallback to strategy-service's
+batch CLI; and un-pausing + validating the 7 feature-family schedulers (plus registering the missing onchain entry).
+This spans execution-service, ml-service, strategy-service, and features-service — correctly out of scope for the
+bucket-consolidation plan this issue is filed under. Recommend this becomes its own scoped plan/epic item when picked up
+(not created here per the plan-destination ASK-BEFORE-CREATING rule).
+
+Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md` Progress Log,
+"2026-07-14, item D" entry.
