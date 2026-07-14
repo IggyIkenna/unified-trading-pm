@@ -74,7 +74,12 @@ ONLY about the historical backlog on already-captured rows.
 - **prediction** (`rebuild_prediction_manifest.py`) — confirmed 2026-07-14: prediction's entire captured-row corpus is
   bundled-by-design (the whole asset_group routes through the "bundled cqg atom") and `emit_manifest_rows` calls
   `writer.record_captured_from_counts(..., available_at_envelope=..., ...)` uniformly. **This asset_group's claim
-  holds** — a `--force` re-run backfills the full prediction corpus, no new code needed.
+  holds** — a full-date-range re-run (no `--dry-run`) backfills the full prediction corpus, no new code needed.
+  **Correction, 2026-07-14 (slot 5)**: neither `rebuild_prediction_manifest.py` nor `rebuild_tradfi_manifest.py` has a
+  `--force`/`--no-dry-run` flag (confirmed via `_build_parser()` — both only accept `--project-id`/`--start-date`/
+  `--end-date`/`--dry-run`[/`--venue`/`--workers`/`--beta-manifest-out`]); "apply for real" is simply omitting
+  `--dry-run` over the target date range. Every `--force` mention below for these two scripts is stale plan language —
+  read it as "full-range apply, `--dry-run` omitted", not a literal flag.
 - **tradfi** (`rebuild_tradfi_manifest.py`) — **CORRECTION, 2026-07-14 (slot 3)**: the claim below (as originally
   written) overstated tradfi's coverage. `scan_and_rebuild`'s object-scan loop (line ~515) branches on
   `parsed.data_type in BUNDLED_DATA_TYPES`: ONLY that branch (line ~555-567, `_emit_bundled_shard_row` →
@@ -118,9 +123,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 - [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the prediction +
       tradfi consolidator crons (per the sports Finding 1 cron-collision incident) before pausing either — get explicit
       per-bucket go-ahead. (repo: NA)
-- [x] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --force` (no writes) against
-      `market-data-tick-pred-prd-central-element-323112`; spot-check the previewed `available_at_envelope` values
-      against a handful of known-good rows before applying anything live. (repo: market-tick-data-service) — ✅
+- [x] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --dry-run` (no `--force` flag exists — see correction above)
+      against `market-data-tick-pred-prd-central-element-323112`; spot-check the previewed `available_at_envelope`
+      values against a handful of known-good rows before applying anything live. (repo: market-tick-data-service) — ✅
       2026-07-14 (slot 9): see Progress Log for full evidence (correction: the script has no `--force` flag — ran
       `--dry-run` instead, which is the actual no-writes preview mode).
 - [ ] [DATA] P1. Snapshot the prediction canonical manifest index
@@ -132,33 +137,56 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       Cron-pause half deliberately NOT done — same still-open P0 `BLOCKED-OPERATOR-DECISION` maintenance-window gate
       slot 5 (`BLK-f3cdf442`) and slot 9 already deferred on; no operator go-ahead is on record. Leaving this checkbox
       unflipped since the todo's full scope isn't complete.
-- [ ] [DATA] P1. Apply `rebuild_prediction_manifest.py --no-dry-run --force`, force-consolidate, then re-run
-      `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill rate rose from 0% — verify the
-      `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is unchanged before declaring
-      success. (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. Apply `rebuild_prediction_manifest.py` (full date range, omit `--dry-run` — no such flag as `--force`/
+      `--no-dry-run`), force-consolidate, then re-run `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to
+      confirm fill rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row
+      count is unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the prediction consolidator cron; record the before/after fill-rate evidence in this plan's
       Progress Log. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index for the bundled
-      (`options_chain`/`futures_chain`/`event_contract`) vs non-bundled row-count split on `capture_status=captured`
-      rows, so the true post-`--force` fill-rate ceiling is known BEFORE claiming success (a `--force` re-run only fixes
-      the bundled subset — see "What we already know" correction above). If the non-bundled majority is material, thread
-      `available_at=` into the `target.add(...)` call at `rebuild_tradfi_manifest.py:568` (same honest
+- [ ] [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
+      single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
+      non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
+      BEFORE claiming success (a full-range apply only fixes the bundled subset — see "What we already know" correction
+      above). **Sharper signal, 2026-07-14 (slot 5) dry-run todo below**: a bounded 260-object GCS sample (7 days, 2
+      venues, `batch_databento`) found the bundled_count was 0/260 — `data_type` is always an OHLCV-granularity string
+      (`ohlcv_1m`/`ohlcv_1s`), never a `BUNDLED_DATA_TYPES` literal, even under
+      `instrument_type=options_chain/     futures_chain`. This is a SAMPLE, not the corpus-wide count this todo asks for
+      — but it raises the possibility the true bundled fraction is ~0%, not just "non-bundled majority". This todo now
+      must also explain/reconcile that sample finding, not just produce a count. If the non-bundled majority is
+      material, thread `available_at=` into the `target.add(...)` call at `rebuild_tradfi_manifest.py:568` (same honest
       `written_at`-proxy pattern sports's `_available_at_from_row` uses, per `AVAILABILITY_AT_SEMANTICS`), unit-tested,
       BEFORE the apply todo below — otherwise scope this asset_group's non-bundled backfill as its own follow-up
       (mirroring defi's audit-and-decide gate) rather than declaring tradfi done on a partial fix. (repo:
       market-tick-data-service)
-- [ ] [DATA] P1. Dry-run `rebuild_tradfi_manifest.py --force` against
+- [x] 1. ✅ [DATA] P1. Dry-run `rebuild_tradfi_manifest.py --dry-run` (no `--force` flag — see correction above) against
       `market-data-tick-tradfi-prd-central-element-323112`; sanity-check envelope values across a sample of tradfi
       data_types/venues (bundled + non-bundled shards) — confirm non-bundled shards' `available_at` behavior matches
-      whatever the prior todo decided (either newly threaded, or knowingly still blank pending follow-up). (repo:
-      market-tick-data-service)
+      whatever the prior todo decided (either newly threaded, or knowingly still blank pending follow-up). —
+      market-tick-data-service (no code change, diagnostic only) 2026-07-14 (slot 5). **Ran for real**:
+      `python -m market_tick_data_service.scripts.rebuild_tradfi_manifest --start-date 2026-07-01 --end-date     2026-07-10 --dry-run`
+      → 260 shards parsed cleanly (0 unparseable), venues CBOE(16)/CME(244). Then used the script's own
+      `parse_tradfi_path` + `BUNDLED_DATA_TYPES` against the same 260 objects directly: EVERY shard's `data_type` value
+      is an OHLCV granularity string (`ohlcv_1m`/`ohlcv_1s`) — `(instrument_type, data_type)` pairs observed:
+      `(futures_chain, ohlcv_1m/1s)`, `(combo, ohlcv_1m/1s)`, `(options_chain, ohlcv_1m/1s)`. **None** of these match
+      `BUNDLED_DATA_TYPES` (`options_chain`/`futures_chain`/`event_contract`/…) literally — `data_type` is never the
+      chain-type string itself, it's always the candle granularity. **bundled_count=0, nonbundled_count=260 (100%) in
+      this sample.** Same pattern held across all 3 pipeline_modes spot-checked (`batch_databento`, `batch_massive`,
+      `batch_yahoo`) and 6 instrument_types (`futures_chain`/`options_chain`/`combo`/`equity`/`etf`/ `spot_pair`).
+      **This is a bigger finding than the prior todo's framing**: the plan assumed a "bundled fraction" exists and a
+      full-range apply would at least fix that slice. This sample found **zero** shards whose `data_type` matches
+      `BUNDLED_DATA_TYPES` — the bundled branch (`_emit_bundled_shard_row`) may never fire for tradfi's real captured
+      objects at all (pending the still-open canonical-index row-count-split todo below for a corpus-wide confirmation
+      via the single-walk-safe consolidated index, not a GCS walk). If this generalizes, a full-range apply gives **~0%
+      fill-rate uplift** for tradfi, not just "won't fix the non-bundled majority" — do NOT snapshot/pause/apply tradfi
+      until the split todo below is confirmed at corpus scale, otherwise the pause/apply/resume cycle carries real
+      production risk (per the sports CF-8 precedent) for no measurable gain.
 - [ ] [DATA] P1. Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo:
       market-tick-data-service)
-- [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py --no-dry-run --force`, force-consolidate, then verify fill rate +
-      guardrail + row count via the audit script, same protocol as prediction. **Do not declare tradfi's backlog fully
-      resolved from this alone** — confirm the resulting fill rate matches the bundled-vs-non-bundled ceiling measured
-      above (a rate matching only the bundled fraction means the non-bundled follow-up is still open, not a bug). (repo:
-      market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run`
+      flag exists), force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol
+      as prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill
+      rate matches the bundled-vs-non-bundled ceiling measured above (a rate matching only the bundled fraction means
+      the non-bundled follow-up is still open, not a bug). (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the tradfi consolidator cron; record evidence in the Progress Log. (repo:
       market-tick-data-service)
 - [ ] [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how (or
@@ -291,3 +319,19 @@ pause the consolidator cron — deliberately, per the same open OPERATOR gate. C
 — snapshot + pause — is not complete). Filed `/blocked` for this task rather than declaring it done, recommending the
 operator resolve the maintenance-window decision (todo 2) so the remaining prediction + tradfi cron-pause/apply todos
 can proceed. No cron state changed, no live index mutated this touch.
+
+**Tradfi dry-run + CLI-doc fix — 2026-07-14 (slot 5)**: executed task `mtds_available_at_cross_asset_backfill-006`
+(tradfi dry-run + sample sanity-check), read-only/no-writes throughout (verified `writer=None` on `dry_run=True` by
+reading `scan_and_rebuild()` before running anything). Two findings: **(1)** neither `rebuild_prediction_manifest.py`
+nor `rebuild_tradfi_manifest.py` has a `--force`/`--no-dry-run` flag — every such reference in this plan's todos was
+stale; fixed the literal command text in both prediction and tradfi apply/dry-run todos so a future agent doesn't hit
+`unrecognized arguments`. **(2)** ran the real dry-run (`--start-date 2026-07-01 --end-date 2026-07-10 --dry-run`, 260
+shards, 0 unparseable) and cross-tabbed the same 260 objects through the script's own `parse_tradfi_path` +
+`BUNDLED_DATA_TYPES`: **0/260 classified bundled** — `data_type` is always an OHLCV granularity string, never a
+`BUNDLED_DATA_TYPES` literal, even under `instrument_type=options_chain/futures_chain`. This is a bounded sample (7
+days, `batch_databento`/`batch_massive`/`batch_yahoo` spot-checked), not the corpus-wide count the still-open
+row-count-split todo asks for — left that todo OPEN but annotated with this finding, since if it generalizes, tradfi's
+planned apply step yields ~0% fill-rate uplift, not just "misses the non-bundled majority", and the snapshot/pause/apply
+sequence should not run until that's confirmed (real production risk for no measured gain otherwise, per the sports CF-8
+precedent this plan exists to avoid repeating). Flipped tradfi's dry-run todo done (diagnostic only, no code shipped).
+No production writes made this touch.
