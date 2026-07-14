@@ -25,7 +25,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-06-27
+last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
@@ -47,6 +47,11 @@ drift_direction: advance-code
 > today's audit per operator verify-first ruling (findings 246/247).
 
 # Sports P2a — API-Football history 2015→present
+
+> **🟢 2026-07-14: golden-window enrichment SPOT fleet RUNNING** — 5 `af-backfill-20260714-111*` VMs
+> (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES, window 2025-09-01..2025-11-30, asia-northeast1-c). Operator
+> un-park ruling 2026-07-14 (reverses BLK-b37df00d Option A); see Todo 9 + Progress Log session 20. Do not launch
+> another `af-*` VM without `--fleet-vms` re-allocation — the 5 VMs consume the shared api_football key budget.
 
 ## Scope + coverage clips (the "zero expected-missing" definition)
 
@@ -151,19 +156,38 @@ drift_direction: advance-code
       52,747 due to consolidator activity since session 7). Snapshot at
       `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/availability_index_20260628_213954.parquet`.
       Gate verified: 0 phantom EU rows. unified-trading-pm@TODO
-- [ ] [VERIFY] P2. BLOCKED-OPERATOR-DECISION: **Enrichment data_type cleanliness** — TRACKER-ONLY, NOT an agent-executed
-      backfill. The enrichment backfill runs as the detached coordinator process on the `planning` VM; an agent's only
-      role here is to TRACK progress (coordinator PID liveness via `kill -0`, coordinator-log chunk advance) — it MUST
-      NOT gate on EU→0 (409k+ per-fixture EU is weeks away at the 54s/fixture API-Football rate, so gating an agent task
-      on it thrashes the slot — the 2026-07-06 slot-4 BLOCKED alerts). **Unblock condition** (operator decides the
-      per-fixture path): (a) raise the API-Football key tier / parallelize keys to drop the 54s/fixture sleep, (b) move
-      the coordinator to a dedicated SPOT backfill VM, or (c) accept partial enrichment. THEN, once the coordinator
-      exits 0 AND the full-history enrichment cleanliness audit is GREEN, flip
-      `sports-p2a-enrichment-coordinator-complete: true` and REMOVE the `BLOCKED-OPERATOR-DECISION` marker to re-ingest
-      this VERIFY todo. **Verify gate (runs only after unblock)**: query IS index for
-      FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS → 0 pending-fetch (canonical leagues, within
-      coverage windows), 0 blank-reason; all AF enrichment data_types show `expected_unattempted_pending_fetch == 0` for
-      coverage dates.
+- [ ] [VERIFY] P2. **Enrichment data_type cleanliness — UN-PARKED (operator ruling 2026-07-14, interactive; reverses the
+      2026-07-06 BLK-b37df00d Option A accept-partial parking)** — **golden-window-first sequencing**: enrich the golden
+      window (2025-09-01..2025-11-30, the 94-league trading universe) FIRST; full coverage-window history follows as the
+      next phase (new todo below). Mechanism = option (b) of the old BLK: dedicated SPOT `af-backfill-*` VMs via
+      `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` — the launcher stamps the registry-allocated
+      `SPORTS_ADAPTER_RATE_RPM`/`SPORTS_ADAPTER_CONCURRENCY` into VM metadata so the adapter's token-bucket replaces the
+      54s/fixture class-default crawl that made the planning-VM coordinator unviable (that coordinator mechanism is
+      RETIRED; PID 3837082 dead, TEAMS EU flat since 2026-07-06). **GW fleet launched 2026-07-14 11:13–11:15 UTC** (5
+      SPOT VMs, entity-sharded, `--fleet-vms 5` → 75-76 req/min/VM, concurrency 6, live /status
+      remaining_daily_quota=290,613): `af-backfill-20260714-111307` FIXTURE_EVENTS · `af-backfill-20260714-111346`
+      FIXTURE_LINEUPS · `af-backfill-20260714-111414` FIXTURE_STATS · `af-backfill-20260714-111447` PLAYER_STATS ·
+      `af-backfill-20260714-111518` INJURIES. STANDINGS skipped (window EU=0, AF=0 — nothing pending); TEAMS skipped
+      (window EU=728 = exactly 8 no-coverage cup/one-off leagues × 91 days —
+      `sports_data_sources_canonical_completion_2026_07_13.md` owns the honest-empty flip + the consolidator dedup-key
+      NULL/`""` fix; fetching would no-op). **GW gate**: window query → the 4 per-fixture data_types at 0
+      pending-fetch + 0 blank-reason, presence gap (fixture-days lacking a captured enrichment row: EVENTS 1,356 /
+      LINEUPS 1,377 / STATS 1,699 / PLAYER_STATS 1,582 of 1,848 captured-fixture shards) closed to
+      captured-or-typed-`EXPECTED_*`; INJURIES window EU 30→0. Full-history verify gate moves to the follow-on todo.
+- [ ] [DATA] P2. **Full-history enrichment phase (after the GW gate above is GREEN)** — extend the same entity-sharded
+      SPOT `af-backfill-*` fleet across the full coverage windows (per-fixture types 2020-06-06→present; INJURIES
+      2021-01-01→; STANDINGS 2018-01-01→; TEAMS after the `sports_data_sources_canonical_completion_2026_07_13.md`
+      dedup-key fix lands so EU actually drops), year-chunked per entity, `--fleet-vms` sized off the live `/status`
+      daily quota (never exceed the shared per-key budget — registry `allocate_rate_budget("api_football", …)` is the
+      SSOT math). **Gate** (the original todo-9 verify gate): full-history query → all AF enrichment data_types
+      `expected_unattempted_pending_fetch == 0` within coverage windows, 0 blank-reason.
+- [ ] [DATA] P2. **Features recompute for enriched dates** — after GW enrichment lands, re-run sports features with
+      `--force`/`--no-skip-existing` for the enriched dates: `derived_features` + `fixture_features` ONLY
+      (`odds_features` unaffected — odds inputs unchanged by enrichment). Mechanics + gates per
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md`. Repeat after the full-history phase.
+- [ ] [VERIFY] P2. **ML-readiness re-verify after the features recompute** — re-run the ML-readiness verification per
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md` over the recomputed golden-window features (then again
+      after the full-history phase).
 
 **Full-execution criterion**:
 
@@ -1030,3 +1054,78 @@ parser (`regen_backlog_from_plan.py`) only honors `- [ ]` / `- [x]` / `~~…~~` 
 
 **Checkbox NOT flipped** — gate met condition (INJURIES/STANDINGS/TEAMS EU=0) not yet reached; coordinator PID 3837082
 still working.
+
+### 2026-07-14 — session 20 (Todo 9 UN-PARKED: golden-window-first SPOT fleet launched)
+
+**Operator ruling (2026-07-14, interactive)**: UN-PARK the per-fixture enrichment backfill (reverses the 2026-07-06
+BLK-b37df00d Option A accept-partial parking). **Golden-window-first sequencing**: enrich 2025-09-01..2025-11-30 (the
+94-league trading universe) FIRST; full coverage-window history follows as a later phase. Three follow-on todos added
+(full-history phase → features recompute `--force` for `derived_features`+`fixture_features` only → ML-readiness
+re-verify).
+
+**Mechanism change (why the fleet, not the coordinator)**: the planning-VM coordinator (last PID 3837082) is DEAD —
+TEAMS EU flat since 2026-07-06; single-threaded 54s/fixture was the adapter's _class-default_ throttle because no rate
+budget was stamped. The registered launcher `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` stamps
+the registry allocation (`allocate_rate_budget("api_football", n_vms=5, …)` off the LIVE `/status` read) into VM
+metadata → `SPORTS_ADAPTER_RATE_RPM` → `set_rate_budget_rpm()` token-bucket. Verified in code:
+`instruments_service/reference_data/adapters/sports/adapters/base.py` (`set_rate_budget_rpm`), per-fixture skip is
+PRESENCE-based (existing per-league parquet rows at `af_fixture_id` grain, `sports_reference_fixtures.py`) — so
+`empty_confirmed` manifest rows do NOT mask the presence gap; genuinely-missing enrichment is fetched.
+
+**Scoping (availability index snapshot 2026-07-14 11:07 UTC, 5,759,604 rows; window slice 213,144 rows)**:
+
+- FIXTURES on window: 1,848 captured (date,league) shards deduped · 86 leagues · 91 match days · **4,787 fixtures**
+  (max-dedup `instrument_count` sum).
+- Per-fixture presence gap (captured-fixture days lacking a captured enrichment row, of 1,848): FIXTURE_EVENTS 1,356 ·
+  FIXTURE_LINEUPS 1,377 · FIXTURE_STATS 1,699 · PLAYER_STATS 1,582. Genuine deduped window EU is small (35/35/33/33).
+- INJURIES: EU=30, attempted_failed=91 (90 proven-FetchEvidence `ApiFootballResponseError` from P1a + 1 phantom).
+- STANDINGS: EU=0, AF=0 → **skipped** (nothing pending on the window).
+- TEAMS: EU=728 = exactly 8 no-coverage cup/one-off leagues × 91 days (COPA_MX, SUPERCOPPA_ITALIANA, SUPERCOPA_ESPANA,
+  SCOTTISH_LEAGUE_CUP, GREEK_SUPER_LEAGUE_2, EMPEROR_CUP, COPA_LIGA_PROFESIONAL, J2_LEAGUE) → **skipped**; owned by
+  `sports_data_sources_canonical_completion_2026_07_13.md` (honest-empty flip todo + consolidator dedup-key NULL/`""`
+  fix; a fetch would no-op — live `/teams` returns 0 for those leagues).
+- Work estimate: ≤ 4×4,787 ≈ 19.1k per-fixture calls (minus already-present ~10-35%) + INJURIES ≈ **~15-17k API calls**
+  vs 290,613 remaining daily quota at launch — the shared per-key budget (Custom plan 1200 req/min / 450k req/day) makes
+  a bigger fleet pointless; 5 entity-sharded VMs at 75-76 req/min each is the right size (sharding by entity, not
+  date-chunks: only 5 non-empty entity shards exist on the window and per-VM wall clock is minutes of API budget +
+  91-day iteration overhead).
+
+**Launch evidence (2026-07-14 11:13–11:15 UTC, zone asia-northeast1-c, SPOT e2-standard-8, explicit-date mode
+2025-09-01..2025-11-30, `--fleet-vms 5`, `MANIFEST_PER_VM_SHARDS=true` default with `VM_NAME=<instance>` per-VM
+shards)**:
+
+| VM                            | entity          |
+| ----------------------------- | --------------- |
+| `af-backfill-20260714-111307` | FIXTURE_EVENTS  |
+| `af-backfill-20260714-111346` | FIXTURE_LINEUPS |
+| `af-backfill-20260714-111414` | FIXTURE_STATS   |
+| `af-backfill-20260714-111447` | PLAYER_STATS    |
+| `af-backfill-20260714-111518` | INJURIES        |
+
+Rate budget per VM: 75-76 req/min, concurrency 6, interval ~0.8s (effective source ceiling 378-380 req/min — live
+daily-quota-aware). Tarballs verified FRESH pre-launch (instruments-service@e15cb376a822, UAC@40c751fc4d44,
+UTL@04c72ef51829, deployment-service@1c8df1776d1b). STARTED/T+10min progress evidence appended below.
+
+**AO backlog disposition**: read-only check via `check-ao-backlog-status.sh` (SSM) — **no `sports_p2_history` task
+exists in the live backlog** (58 tasks total, 0 matching); the 19×-no-op-bounce class is moot. The adjacent
+`sports_data_sources_canonical_completion-001` (characterize 453,961 full-history api_football EU) is queued, not
+dispatched — full-history EU work coordinates with that plan (this session annotated, did not touch it). `backlog.yaml`
+NOT hand-edited; the parser re-derives from this plan's todos.
+
+**No-fire-and-forget evidence (session 20)**:
+
+- **STARTED**: all 5 `run.log`s present in `gs://deployment-scripts-central-element-323112/vm-logs/` by 11:19:15Z;
+  `DEPLOYMENT_STARTED` emitted seconds after pipeline start on each VM (11:16:07 / 11:16:50 / 11:17:16 / 11:17:51 /
+  11:17:54 UTC); each log confirms the correct `--sports-entity`, the explicit window, and
+  `rate-budget set: 75 req/min -> _min_request_interval=0.8000s` (the 54s crawl is GONE); real per-fixture fetches at
+  ~0.8s cadence (`Fetched 19 events for fixture=1353509`, …).
+- **T+10min (11:29:13Z)**: all 5 VMs advancing, 0 Tracebacks/ERRORs — FIXTURE_EVENTS at date=2025-09-21 (21/91 days,
+  1,438 log lines) · LINEUPS 2025-09-13 (1,050) · STATS 2025-09-13 (1,054) · PLAYER_STATS 2025-09-13 (1,052) · INJURIES
+  2025-09-08 (838). Per-VM manifest shards writing AND consolidating: 4 shards at 11:22Z
+  (`_index/per_vm/af-backfill-20260714-111{307,346,414,447}.parquet`, 22-28KB) → consolidator swept between reads; at
+  11:29Z fresh shards for 111307 (27KB, 11:28:29Z) + 111518 (86KB, 11:29:12Z). ETA ~1-1.5h/VM at the observed ~1.4
+  dates/min pace. VMs self-delete on completion (`VM_SHUTDOWN_ON_COMPLETION=true`); preemption writes the `PREEMPTED`
+  blob → benign relaunch, re-run the same launcher command (idempotent, presence-based skip).
+- **Next after fleet completes**: rerun `launch-sports-manifest-rescan-vm.sh` (materialise `empty_confirmed` for
+  no-enrichment cells), then the GW gate query in Todo 9, then the follow-on todos (full-history phase → features
+  recompute → ML re-verify).
