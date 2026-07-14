@@ -378,8 +378,14 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       verified legitimate**: 122 EU rows (94 → 122, more trailing-edge dates), 100% dated 2026-07-13/14 — the documented
       self-closing daily rolling edge, 0 historical backlog. QG green (`.qg_last_passed_sha`=82dba912
       pre-quickmerge-amend); shipped via quickmerge --agent. See Progress Log entry below.
-- [ ] [DATA] P2. **transfermarkt (PLAYER_VALUES): verify clean.** 0 attempted_failed already; confirm the 47
-      expected_unattempted is legitimate (likely off-season/no-transfer-window dates).
+- [x] ✅ [DATA] P2. **transfermarkt (PLAYER_VALUES): verify clean.** — VERIFIED CLEAN 2026-07-14 (slot-5), no code
+      change needed. Fresh canonical `availability_index.parquet` read: PLAYER_VALUES `attempted_failed`=**0**,
+      `expected_unattempted`=**0** (the 47 baseline EU rows have SELF-CLOSED to `empty_confirmed` via the daily capture
+      pass — definitive proof they were the legitimate self-closing rolling trailing edge the plan predicted, not a real
+      gap), dedup-key duplicate groups=**0** (corrected full-identity key
+      `date+venue+data_type+league_id+fixture_id+timeframe+service_name`), 94 distinct leagues, captured span
+      2014-01-01→2026-07-14. Meets the understat-standard bar (0/0/0) literally. Verify-only todo — no findings to file.
+      See Progress Log entry below.
 - [x] [DATA] P2. **weather (open_meteo): close the small residual.** — ✅ DONE 2026-07-14 (sub-agent). Root-caused: all
       51 rows carried a blank `league_id` — a legacy pre-per-league-migration date-aggregate shard key that no current
       write path can ever supersede (the WEATHER writer's real per-league success path was already correct; only the
@@ -491,6 +497,16 @@ report written in this plan's Progress Log.
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Progress Log
+
+- **2026-07-14 (slot-5) — transfermarkt PLAYER_VALUES VERIFIED CLEAN (verify-only, no code change).** Fresh direct read
+  of the canonical `availability_index.parquet` (`instruments-store-sports-prd-central-element-323112`):
+  `transfermarkt`/`PLAYER_VALUES` = 58,092 `captured` + 211,626 `empty_confirmed`, **0 `attempted_failed`**, **0
+  `expected_unattempted`**. The 47 baseline EU rows (2026-07-13 audit) have self-closed to `empty_confirmed` on the next
+  daily capture pass — confirming they were the legitimate self-closing daily rolling trailing edge (the plan's
+  "off-season/no-transfer-window / today-dated" hypothesis), NOT a real gap. Dedup-key duplicate groups = **0** under
+  the corrected full-identity key (`date+venue+data_type+league_id+fixture_id+timeframe+service_name`); 94 distinct
+  leagues; captured span 2014-01-01→2026-07-14 (full, current-to-today). Meets the understat-standard 0/0/0 bar
+  literally — no findings, no issue doc, no code change required.
 
 - **2026-07-14 (slot-5) — SFI_PROGRESSIVE_STATS residual CLOSED (code fix + data reconcile).**
   instruments-service@db2c3c22.
