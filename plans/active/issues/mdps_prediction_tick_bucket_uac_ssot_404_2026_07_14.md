@@ -75,12 +75,14 @@ correctness (the old target is already deleted, so nothing can regress to it). V
 recognition (`_asset_group_for_market_data_bucket`) is preserved for reading any legacy-named references before
 flipping.
 
-- [ ] [SCHEMA] P1. Flip `(AssetGroup.PREDICTION, BucketKind.MARKET_DATA)` in `canonical/gcs_paths.py` from
+- [x] ✅ [SCHEMA] P1. Flip `(AssetGroup.PREDICTION, BucketKind.MARKET_DATA)` in `canonical/gcs_paths.py` from
       `market-data-tick-prediction-{env}-{project_id}` to `market-data-tick-pred-{env}-{project_id}`, and replace the
       stale mid-migration guard comment with a note that the migration completed (legacy bucket deleted 2026-07-12, plan
-      `prediction_manifest_canonicalisation_2026_06_01.md` archived). (repo: unified-api-contracts)
-- [ ] [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred` token.
-      (repo: unified-api-contracts)
+      `prediction_manifest_canonicalisation_2026_06_01.md` archived). (repo: unified-api-contracts) —
+      unified-api-contracts@511a9c62.
+- [x] ✅ [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred`
+      token. (repo: unified-api-contracts) — unified-api-contracts@511a9c62 (same commit; required to keep QG green
+      after the template flip).
 - [x] ✅ [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
       `manifest_consolidator.py`, `upgrade_manifest_to_v8.py`, `detect_manifest_divergence.py`, `test_bucket_naming.py`,
       `test_cloud_constants.py`, `test_manifest_consolidator.py`) — KEEP `_asset_group_for_market_data_bucket`
