@@ -2531,3 +2531,35 @@ blocked by CREDENTIALS/OPERATOR/UPSTREAM.** 10 real bugs/gaps found+fixed+shippe
 (instruments-service, market-tick-data-service, deployment-service, + this PM repo's own hygiene/frontmatter gaps),
 every fix independently regression-tested, several live-infra-verified end-to-end. Handing off cleanly — every remaining
 Layer-1 gap is precisely scoped with a concrete next action, not a vague "investigate further."
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T07:56-08:10Z: `DERIBIT spot_pair` "legacy-bucket-merge artifact" hypothesis CORRECTED — this is a real, catalogue-confirmed capture gap, not a measurement artifact
+
+**Correction to the 04:30Z entry's hypothesis (this run, read-only diagnosis only — no fix attempted).** The earlier
+framing — "likely a legacy-bucket-merge artifact — re-check once the legacy bucket is reachable again" — does NOT hold
+up under direct verification:
+
+1. **The legacy bucket (`market-data-tick-cefi-central-element-323112`) is still empty right now** — `gsutil ls -b`
+   confirms the bucket exists, but `gsutil ls gs://.../` on its root returns zero objects (not an access-denied error, a
+   genuinely empty listing). Same result as the 04:30Z entry — this is a standing condition, not a transient outage that
+   "clears up" on its own.
+2. **The PRIMARY manifest (`availability_index.parquet`, 162 MiB, downloaded + queried directly) has ZERO rows for
+   `(venue=DERIBIT, instrument_type=SPOT_PAIR)`** — not `captured`, not `attempted_failed`, not even
+   `expected_unattempted`. This means a DERIBIT spot backfill has never even been ATTEMPTED against the primary
+   pipeline, not that it ran and got lost in a merge.
+3. **But the lifecycle catalogue (`prod/catalog.parquet`) DOES correctly enumerate 15 real DERIBIT SPOT_PAIR
+   instruments, 10 of them `mvp=True` and currently active** (`BTC_USDC`, `ETH_USDC`, `BTC_USDT`, `ETH_USDT`,
+   `SOL_USDC`, `XRP_USDC`, `BNB_USDC`, `PAXG_USDC`, `STETH_USDC`, plus one expired `MATIC_USDC`) — confirming Deribit
+   genuinely has spot markets and the catalogue correctly knows about them (matches `venue_constants.py`'s own
+   `DERIBIT: {"SPOT_PAIR", ...}` declaration + its comment confirming `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT"]` has
+   carried trades/book_snapshot_5 since 2019-03-30 — this is real capability, not stale routing).
+
+**Net: this is the SAME bug class as this morning's BITGET-FUTURES gap — a real, catalogue-confirmed, MVP-tagged capture
+universe that has simply never been targeted by a backfill run** — not an architectural routing problem (unlike
+DERIBIT-COMBO) and not a measurement-merge quirk (the prior hypothesis). **Not attempted further this session** — a
+proper fix-and-verify cycle (launch a DERIBIT-scoped or `VM_INSTRUMENT_IDS`-scoped spot backfill, confirm real captures
+land, rule out a write-time classification bug the way BITGET-FUTURES needed 3 separate fixes) is a full investigation
+in its own right and this session is already extremely long. **Concrete next step**: launch
+`VENUES="DERIBIT" VM_INSTRUMENT_IDS="BTC_USDC,ETH_USDC,BTC_USDT,ETH_USDT,SOL_USDC,XRP_USDC,BNB_USDC,PAXG_USDC,STETH_USDC"`
+(the 9 active mvp symbols, excluding expired `MATIC_USDC`) via `launch-cefi-sharded-backfill.sh`, lease-enabled, and
+watch `run.log` for real `instrument_type=spot_pair/` writes vs. a write-time crash/misclassification — exact same
+playbook proven twice already today.
