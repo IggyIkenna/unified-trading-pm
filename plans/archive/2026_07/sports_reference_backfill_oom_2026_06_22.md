@@ -26,9 +26,9 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-last_updated: 2026-07-12 # (was: 2026-06-27)
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -36,6 +36,12 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** Both P1+P2 todos
+> and the DEFERRED follow-up are `[x]` with verified-commit evidence (`unified-trading-library@39eccc9c` slim reads +
+> regression suites; status flipped complete 2026-07-12, finding-281 §A2) — no open items, no unmigrated deferrals. The
+> durable fix lives as code + regression tests in UTL/instruments-service (no codex-level contract change introduced).
+> Lock cleared per the ruling; historical/frozen.
 
 # Sports reference backfill OOM — per-league skip-check re-read the 6.5 GB index
 

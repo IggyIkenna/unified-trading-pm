@@ -22,15 +22,23 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-20
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
 source:
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival — with FORWARD
+> pointer).** Both P1 todos `[x]` with cited evidence (features-service@62de3d1d + features-service@9b29b834; status
+> flipped complete 2026-07-10). **Successors:** the golden-window FSS-run items were absorbed by
+> `sports_p1_golden_window_features_2026_06_27.md` (archived alongside this plan, same ruling), and the FULL-HISTORY
+> execution criterion (FSS over the real 5+ year bucketed GCS dataset with the ≥95% non-NULL gate measured on real rows)
+> is absorbed and owned by the ACTIVE `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`. Lock cleared
+> per the ruling; historical/frozen.
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure. Migrated from the epic's "Sports half of `sports_predictions_e2e` — 288M ODDS_API row migration" section
