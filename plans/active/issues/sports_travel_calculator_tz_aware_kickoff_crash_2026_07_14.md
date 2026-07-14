@@ -141,3 +141,15 @@ unique-date count **2,519** (up from 2,502 at the 12:33Z parent-plan check ~20 m
 (~59.8% of ~4,210-day history), no stall, no crash. Identifying pre-fix all-NaN date-ranges before Todo 1 finishes would
 be premature (the affected-range boundary isn't stable until the full-history compute completes). Declining — no action
 taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:0x UTC — data_engineering slot-3 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as slot-6's check above. The parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` was independently touched 3 minutes before this dispatch by two
+sibling slots (15 @ 12:48 UTC, 16 @ 12:33/12:50 UTC): Todo 1 confirmed still `[ ]` at ~59.8% coverage (2,519/4,210
+unique dates), Todo 3 still BLOCKED-PREREQ. Re-confirmed independently via non-snap `gcloud compute instances list`: all
+3 backfill VMs (`features-sports-sports-20260714-085642/-085703/-085726`) still `RUNNING`, same creation timestamps as
+every prior check — no stall, no crash, steady progress. Given the prereq state was verified fleet-wide 3 minutes ago by
+two other slots, skipping the redundant full GCS-walk this dispatch (single-walk discipline — no value in a 4th
+identical corpus scan in under 20 minutes). Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
