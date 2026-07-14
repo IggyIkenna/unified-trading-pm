@@ -115,9 +115,19 @@ QG-tooling audit).
       `scripts/recency_masked_adjudication_2026_07_13.py` added 8 new unannotated sites, offset by other noqa
       annotations elsewhere) — coincidental but the gate only requires count <= baseline at push time, so this is not a
       regression risk to re-open. No code change needed from this dispatch; the fix already shipped.
-- [ ] [INFRA] P2. Fix `check_no_empty_string_fallback.py`'s over-baseline reporting to do git-diff-based new-site
+- [x] ✅ [INFRA] P2. Fix `check_no_empty_string_fallback.py`'s over-baseline reporting to do git-diff-based new-site
       detection against the baseline-setting commit instead of `scan.sites[allowed:]` (a positional tail-slice that can
-      report arbitrary old code, as it did here). (repo: unified-trading-pm)
+      report arbitrary old code, as it did here). (repo: unified-trading-pm) — unified-trading-pm@0736f7055.
+      `--update-baseline` now stamps each repo's HEAD sha (`Baseline.commit_for`); an over-baseline failure git-diffs
+      against that commit to report genuinely NEW sites, falling back to the old positional tail-slice (clearly
+      labelled) when no commit is on record yet. Repos not yet re-baselined (incl. instruments-service itself, still
+      `count: 366` with no `commit:`) keep the old, unchanged, safe behavior until their next legitimate
+      `--update-baseline` run — no blind fleet-wide backfill done here. 9 new unit tests (17 total) reproduce the exact
+      old-bug repro from this issue (alphabetically-last pick vs. the real new site) plus the diff-detection/fallback
+      paths; verified via direct `pytest` (17 passed) since `quality-gates.sh`'s TESTS phase doesn't collect
+      `scripts/quality_gates/test_*.py` (filed as a separate finding:
+      `qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md`). Full `quality-gates.sh` green on
+      unified-trading-pm@0736f7055 (sentinel-verified).
 
 ## Progress Log
 
