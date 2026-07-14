@@ -138,6 +138,22 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 21:40 UTC — data_engineering (per-league-layout issue doc P2 SHIPPED: failure atom aligned with success atom + 30 stale day-level failed rows purged; GW window manifest now failure-free)
+
+**Issue doc `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14` P2 flipped —
+features-service@4f83f8db (atom fix + tests + purge script) + @76f234ce (backup-location fix).** `_run_feature_group`
+failures now land on the per-league canonical atom whenever a `league_ids` scope is present (identical to the
+success/expected_unattempted atoms → consolidator dedup supersedes them naturally on retry); unfiltered-run failures
+deliberately keep the day-level atom (league dimension is an output-df property, unknowable when compute raises) —
+rationale documented in-code. **Cleanup executed on the real bucket** (evidence-gated deletion, snapshot-first,
+dry-run→apply→verify): 28 consolidated rows (27 GW-window + 1 same-class 2026-05-13) + 2 `_legacy_seed` shard rows.
+Post-apply verification across a FRESH consolidator cycle (21:35:42Z): 0 day-level attempted_failed derived/fixture rows
+corpus-wide; **GW window = 1,672/1,672/91 captured, 0 attempted_failed**. Operational lesson captured on the issue doc:
+a `.bak.parquet` inside `_index/per_vm/` is a live shard to the consolidator (first apply resurrected rows from its own
+backup — fixed; instruments-service `delete_phantom_rows_from_shards.py` carries the same hazard, annotated not fixed).
+Remaining on the issue doc: P3 features-bucket path SSOT (codex/02-data) + the new odds `event_id`/`fixture_id` join-key
+finding.
+
 ### 2026-07-14 21:15 UTC — data_engineering slot-9 (Todo 1 re-dispatch — followed up on the prior entry's handoff: confirmed `-201910` completed cleanly with ZERO writes over its whole 763-day range (closes 2015-2017 as genuine honest-absence, not a gap); MANIFEST-verified a new real gap (2020-03-07→2020-10-05, 161 missing dates, mostly a 147-day contiguous block) and launched a gap-fill VM for it; checkbox NOT flipped)
 
 **Todo 1 (compute features 2015→present) — real forward action taken, following the prior dispatch's explicit handoff.
