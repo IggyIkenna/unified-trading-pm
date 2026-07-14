@@ -339,7 +339,7 @@ for the same slim column set on the same real 27.4M-row index (see "P0 confirm �
 Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`ManifestFreshnessCache` code investigation
 (pyarrow column-pruning verification + self-shard-merge memory profiling), outside infra craft.
 
-- [ ] [BACKEND] P0. **DeFi manifest consolidator Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) still
+- [x] [BACKEND] P0. **DeFi manifest consolidator Cloud Run job (`uts-prod-manifest-consolidator-market-data-defi`) still
       SIGKILLs every cycle even at `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB`** (was 8GB; container is 8vCPU/32Gi) — crash
       timing ~15s post-`duckdb_merge_start`, no better than the 8GB run's ~22-25s, so raising the memory budget 3x did
       not meaningfully change the outcome. Canonical `availability_index.parquet` for
@@ -354,7 +354,40 @@ Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`
       lock — anyone checking Cloud Run execution history instead of `_index/latest.json.error_reason` gets a false
       all-clear; worth a follow-up to make `MANIFEST_CONSOLIDATION_FAILED`/stall alerting the primary signal instead.
       Repo: `unified-trading-library` (`manifest_consolidator.py`). See "P0 infra diagnostics — consolidator
-      misconfiguration fixed but crash persists" above for the full evidence.
+      misconfiguration fixed but crash persists" above for the full evidence. — ✅ ACTED ON hypothesis (a), NOT YET
+      LIVE-VERIFIED 2026-07-14 (slot-4, backend_engineer): `unified-trading-library@6b229121`. Reasoning for
+      prioritizing (a) over (b): the observed crash-timing INSENSITIVITY to a 3x `memory_limit` increase (8GB→24GB gave
+      ~22-25s→~15s, i.e. got WORSE not better) is the signature of a threads-driven FIXED overhead exceeding the
+      container regardless of the pragma, not a genuinely oversized single working set (which would show SOME relief
+      from 3x more memory headroom). DuckDB parallelises hash/anti-joins and sorts across `os.cpu_count()` threads by
+      default (8 vCPU on this container, no `SET threads=` override anywhere in the module before this fix), each thread
+      carrying its own scratch buffers not fully accounted against `memory_limit`. Added `CONSOLIDATOR_DUCKDB_THREADS`
+      (default `"4"`, operator-tunable without a redeploy, mirrors the existing `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`
+      pattern) and wired `SET threads=<N>` into the merge connection alongside `SET memory_limit`; also logs the thread
+      count in the existing `phase=duckdb_merge_start` lines so a future diagnostic session has it in Cloud Run logs
+      directly (closing the "no DuckDB-side memory profile, only kernel dmesg" evidence gap this issue's prior sessions
+      kept hitting). Two regression tests added (`test_duckdb_merge_applies_threads_pragma`,
+      `test_duckdb_threads_env_default`). Full `quality-gates.sh` green. **NOT closing this issue**: this is a
+      defensible, testable action on hypothesis (a) — it does NOT prove the OOM is fixed, only ships the fix for the
+      most probable cause given the evidence. Live verification (does the Cloud Run job actually survive its next cycle
+      post-deploy) is infra-craft (Cloud Run job redeploy), out of this backend_engineer session's scope — filed as a
+      new `[INFRA]` todo below. The "Also flag" alerting-signal item (Cloud Run `execution.status` false all-clear) is
+      UNADDRESSED — still open, needs its own follow-up (infra/observability scope, not touched this session).
+
+- [ ] [INFRA] P0. **Residual verification (2026-07-14, slot-4, backend_engineer)**: `unified-trading-library@6b229121`
+      shipped `CONSOLIDATOR_DUCKDB_THREADS` (default `"4"`, bounds DuckDB's thread-parallel scratch memory) as the fix
+      attempt for the `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job's SIGKILL-every-cycle. This has
+      NOT been live-verified — needs: (1) confirm the Cloud Run job picks up the new code on its next deploy (image
+      rebuild/redeploy per the job's normal rollout path — check whether it auto-redeploys from
+      `unified-trading-library`'s latest or needs an explicit trigger); (2) watch the NEXT consolidation cycle's Cloud
+      Run logs for the new `phase=duckdb_merge_start ... threads=4` log line (confirms the fix is live) and whether
+      `Container terminated on signal 9` still fires; (3) if it still SIGKILLs, that refutes hypothesis (a) — try
+      progressively lower `CONSOLIDATOR_DUCKDB_THREADS` (e.g. 2, 1) via `gcloud run jobs update` (live, no redeploy
+      needed, mirrors how `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=24GB` was set) before concluding (a) is wrong and escalating
+      to hypothesis (b) (SQL/query-plan restructuring, a bigger `[BACKEND]` follow-up); (4) once a cycle succeeds,
+      confirm `_index/availability_index.parquet` for `market-data-tick-defi-prd-central-element-323112` advances past
+      its current `2026-07-14T12:56:34Z` freeze (`gsutil stat` / `_index/latest.json`). Repo: `deployment-service`
+      (Cloud Run job trigger/redeploy) + `unified-trading-library` (if a further code change is needed after (3)).
 
 - [ ] [BACKEND] P0. **`mtds-dex-swaps-backfill` VM still OOMs (kernel-confirmed, anon-rss≈14.67GiB on a 16GB
       `e2-standard-4`) inside `ManifestFreshnessCache.bulk_load()`'s "fixed" slim-read path** (`_refresh_locked()` →
