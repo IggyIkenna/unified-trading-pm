@@ -109,11 +109,33 @@ independently verified**, first todo below.
       violation along the way (`dex_swaps_handler.py` grew past the 900-line file cap; relocated the new V4 swaps parser
       to the module-level `_dex_swaps_queries.py`, matching the existing `_parse_uniswap_v2_swaps` pattern, to land
       exactly at the cap). Quickmerge shipped `market-tick-data-service@476d30994`.
-- [ ] [DATA] P2. Real end-to-end smoke: run `dex_pools_handler`/`dex_swaps_handler` for each of the 4 protocols against
-      a real (small, bounded) date range and confirm non-empty, schema-valid rows — not just unit-test green. Evidence:
-      row counts + a sample row per protocol. **Not yet run** — the adversarial-review pass flagged this as the gap that
-      would have caught the uniswap_v4 swaps bug immediately; still real, uncompleted verification even though the bug
-      it would have caught is now already fixed by direct schema cross-check instead.
+- [x] ✅ [DATA] P2. **Real end-to-end smoke run, all 8 shard combinations (4 protocols × pools/swaps), real day
+      (2026-07-12), real live subgraph calls — 100% success, zero errors:**
+
+      | protocol       | chain     | pools rows | swaps rows |
+          | -------------- | --------- | ---------: | ---------: |
+          | velodrome_v2   | OPTIMISM  |        296 |       1000 |
+          | trader_joe_v2  | AVALANCHE |        950 |       1000 |
+          | uniswap_v4     | ETHEREUM  |       1000 |       1000 |
+          | uniswap_v2     | ETHEREUM  |       1000 |       1000 |
+
+          Called `_query_and_parse`/`_run_cascade` directly against the real subgraph endpoints (bypassing manifest
+          writes, so nothing touched prod GCS) with a real loaded `TheGraph` API key pool (9 keys). uniswap_v4's swaps
+          side — the exact shard the adversarial review's uniswap_v4/`recipient` finding predicted would fail — came back
+          1000 real rows with the `token_a`/`token_b` normalized columns present, confirming the dedicated-query fix
+          actually works against the live schema, not just the unit tests. velodrome_v2/trader_joe_v2 pools legitimately
+          hit the messari-schema-drift fallback path once each before landing on the working schema — expected cascade
+          behavior, not an error.
+
+- [x] ✅ [BACKEND] P2. **Checked whether the 4 protocols are covered by `/data-pipeline-check-mtds` (the shard
+      smoke-test skill) — they are NOT, and adding them isn't a code fix.** That skill's Phase 1/2 matrix is
+      deliberately MVP-scoped (`unified_api_contracts.canonical.crosscutting.mvp_scope.is_mvp()`), not a hardcoded
+      protocol list — none of velodrome_v2/trader_joe_v2/uniswap_v4/uniswap_v2 are in MVP scope today, so the skill's
+      automatic per-day check will not exercise them regardless of this plan's changes. Making the skill cover them
+      requires an MVP-scope decision (a UAC registry change extending `MVP_SCOPE` to include these 4 protocols for
+      dex_pools/dex_swaps), not a skill-script edit — flagging as a real, undecided gap rather than silently leaving it
+      uncovered or unilaterally expanding MVP scope. The direct smoke test above is the real verification until that
+      decision is made.
 - [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` documents the
       dex_pools/dex_swaps protocol dispatch list; update if it asserts the old (incomplete) set.
 
