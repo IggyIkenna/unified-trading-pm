@@ -4,7 +4,7 @@ title: Sports P1d — golden-window derived features to ML-ready
 summary:
   Compute derived sports features over the golden window to ML-ready after all upstream sources reach 100% honest
   coverage.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [features]
@@ -24,9 +24,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated: 2026-07-12 # (was: 2026-06-27) 2026-07-12 finding-263 §A2 B-queue ruling: Progress Log has dated entries through 2026-07-12 (slot 4, Todo 3 ML-ready verify) — frontmatter was never bumped
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -41,6 +41,12 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
+> complete (0 open; audited complete 2026-07-13; Progress Log through 2026-07-12 ML-ready verify). Full-history features
+> continuation is owned by the ACTIVE successor `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`.
+> Feature-versioning / honest-absence learnings were codified in the cited Codex SSOTs during the work — no unmigrated
+> durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Computes the **derived
 > features** (R2) on the golden window to ML-ready, AFTER all upstream sources are 100% on the window (P1a+P1b+P1c). One
@@ -112,10 +118,14 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
       P1-002, absorbed into this plan): 91 dates checked, aggregate **95.3% non-NULL at target horizons (T-24h/T-1h)** —
       clears the ≥95% bar. Per-date strict gate: 74/91 pass; 17 dip below 95%, concentrated on low-fixture-count days
       (e.g. 2025-09-02: 1 fixture). Sampled proof (Sep 2, Sep 17, Sep 25): 100% of the NaN on every failing date is in
-      columns matching `WRITE_GATE_CONFIG.sparse_columns["odds_features"]`
-      (`velocity*`, `acceleration*`,     `clv*`/`sharp*`, `steam*`, `exchange*price*`, `delta*prob*`, `move*direction_agreement*`/`move*sign_consistency*`,     `odds*movement*`) — the same columns `features-service@192d74ce`/`774645dc`already documented+exempted as     structurally sparse (require 2-3+ odds snapshots / multiple bookmakers; absent for single-fixture or low-liquidity     days). Honest-absence, not a calculator skip. No further backfill needed —    `sports_p2_features_history_to_ml_ready-001`
-      (full 2015→present) is a separate, much larger scope and was NOT a real blocker for this golden-window verify (the
-      2026-06-29 park note conflated the two); superseded by the direct re-run above.
+      columns matching `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` (`velocity*`, `acceleration*`,
+      `clv*`/`sharp*`, `steam*`, `exchange*price*`, `delta*prob*`, `move*direction_agreement*`/`move*sign_consistency*`,
+      `odds*movement*`) — the same columns `features-service@192d74ce`/`774645dc`already documented+exempted as
+      structurally sparse (require 2-3+ odds snapshots / multiple bookmakers; absent for single-fixture or low-liquidity
+      days). Honest-absence, not a calculator skip. No further backfill needed —
+      `sports_p2_features_history_to_ml_ready-001` (full 2015→present) is a separate, much larger scope and was NOT a
+      real blocker for this golden-window verify (the 2026-06-29 park note conflated the two); superseded by the direct
+      re-run above.
 - [x] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
       the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness.
       ✅ 4. features-service@192d74ce (2026-07-03): WriteGate sparse*columns fix for odds_features

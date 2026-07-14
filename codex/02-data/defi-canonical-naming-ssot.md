@@ -100,8 +100,8 @@ union, not EVM-only:
 
 The **discriminators are `instrument_type` + `chain`** (+ the superset columns, which co-exist and are null where N/A —
 e.g. an EVM cell has `sqrt_price=null`, a Solana cell has `price_a=null`). A consumer that wants only EVM (or only
-Solana) pool state filters by `instrument_type`/`chain`, NOT by a separate data*type. **Implication for
-`solana_defi_legacy_migration`**: its `SOLANA_AMM_POOL`/`SOLANA_VAULT` instrument_types are the discriminator \_within*
+Solana) pool state filters by `instrument_type`/`chain`, NOT by a separate `data_type`. **Implication for
+`solana_defi_legacy_migration`**: its `SOLANA_AMM_POOL`/`SOLANA_VAULT` instrument_types are the discriminator \_within\*
 `dex_pool_state` — Solana pools must NOT be re-keyed to a distinct data_type (that would re-split the SSOT). Same logic
 for `lending_indices` (EVM `lending` + Solana `solana_lending` instrument_types under one data_type).
 

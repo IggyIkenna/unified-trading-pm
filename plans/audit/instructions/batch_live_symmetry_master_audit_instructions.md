@@ -121,12 +121,12 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       (a)–(f) prove batch and live adapters EXIST in equal count with identical schema / field sets; this item proves
       that where batch and live acquire the SAME cell from a **different upstream source**, the two are _semantically_
       equivalent — count parity (a6) is blind to a live WS path that produces a different shape/cadence than the batch
-      source. **Step 1 — enumerate the different-source pairs**: for every (service, asset*group, venue, data_type),
+      source. **Step 1 — enumerate the different-source pairs**: for every (service, `asset_group`, venue, data_type),
       record the batch upstream vs the live upstream from `codex/02-data/mtds-data-source-coverage-matrix.md` + the
       adapter code. Known classes: CeFi `trades` / `book_snapshot_5` = Tardis bulk CSV (batch) vs venue WebSocket
       (live); DeFi DEX = The Graph subgraph-historical (batch) vs subgraph-current / WS (live); Solana DEX
       (Orca/Raydium/Drift/Phoenix) = S3 archive / RPC snapshot (batch) vs WebSocket (live). **Step 2 — verify
-      equivalence** on an overlapping window: same \_populated* field set (not merely same schema), comparable
+      equivalence** on an overlapping window: same \_populated\* field set (not merely same schema), comparable
       cadence/granularity, and a 1-pair reconciliation fixture where the two sources agree on overlapping-timestamp
       values within tolerance (no systematic shift, no field one source carries that the other silently drops). **Step 3
       — accepted-divergence register**: any pair that diverges BY DESIGN (e.g. Morpho batch skipped — no historical

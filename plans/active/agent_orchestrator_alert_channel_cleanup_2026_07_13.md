@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [alerts, slack, agent-orchestrator, dedup, observability, notifications]
 related: [alert_quality_overhaul_2026_06_18.md, alert_quality_audit_2026_06_18.md, orchestrator_master.md]
 created: "2026-07-13"
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -162,29 +162,29 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
 ## Todos
 
 - [x] 1. ✅ [BACKEND] P1. WS-A: dropped the `_post(...)` Slack call in the six churn notifiers in
-     `server/notifications/slack.py` (`notify_plan_health_dispatched`, `notify_escalation_dispatched`,
-     `notify_agent_stuck_respawned`, `notify_spawn_recovered`, `notify_slot_recovered`, `notify_git_staleness_resolved`)
-     — now `logger.info` (AO logs) instead. `test_alert_quality_overhaul.py` asserts each logs + does NOT page. —
-     agent-orchestrator@038beeb; full `quality-gates.sh` green (1212 pytest).
+      `server/notifications/slack.py` (`notify_plan_health_dispatched`, `notify_escalation_dispatched`,
+      `notify_agent_stuck_respawned`, `notify_spawn_recovered`, `notify_slot_recovered`,
+      `notify_git_staleness_resolved`) — now `logger.info` (AO logs) instead. `test_alert_quality_overhaul.py` asserts
+      each logs + does NOT page. — agent-orchestrator@038beeb; full `quality-gates.sh` green (1212 pytest).
 - [x] 2. ✅ [BACKEND] P1. WS-A: added `notify_plan_health_dispatch_failed` (GCS-persisted + deduped 1h via
-     `dedup_state.plan_health_dispatch_failed_path`), fired from the `plan_health.py` do_spawn failure branch (was
-     Slack-silent); test asserts dispatch SUCCESS is silent but FAILURE pages. Escalation failure already pages via
-     `alert_spawn_failed`. — agent-orchestrator@038beeb.
+      `dedup_state.plan_health_dispatch_failed_path`), fired from the `plan_health.py` do_spawn failure branch (was
+      Slack-silent); test asserts dispatch SUCCESS is silent but FAILURE pages. Escalation failure already pages via
+      `alert_spawn_failed`. — agent-orchestrator@038beeb.
 - [x] 3. ✅ [BACKEND] P1. WS-B: added `DailySummaryLoop` (`server/daily_summary.py`) — reads the DB activity log since a
-     persisted cursor via `activity_rollup`, posts one `notify_daily_summary` digest (counts by type + failures +
-     total), advances the cursor; wired `.start()/.stop()` + supervision in `server.py`; `test_daily_summary.py` covers
-     aggregation + cursor advance. — agent-orchestrator@038beeb.
+      persisted cursor via `activity_rollup`, posts one `notify_daily_summary` digest (counts by type + failures +
+      total), advances the cursor; wired `.start()/.stop()` + supervision in `server.py`; `test_daily_summary.py` covers
+      aggregation + cursor advance. — agent-orchestrator@038beeb.
 - [x] 4. ✅ [BACKEND] P1. WS-B: added `daily_summary_cursor_path()` to `server/dedup_state.py` + `notify_daily_summary`
-     and `notify_daily_summary_failed` in `slack.py`; `_tick_and_report` wraps the tick so any exception fires the
-     failure page (tested). Config: `daily_summary_enabled`/`daily_summary_interval_seconds`. —
-     agent-orchestrator@038beeb.
+      and `notify_daily_summary_failed` in `slack.py`; `_tick_and_report` wraps the tick so any exception fires the
+      failure page (tested). Config: `daily_summary_enabled`/`daily_summary_interval_seconds`. —
+      agent-orchestrator@038beeb.
 - [x] 5. ✅ [INFRA] P1. WS-C: added state-file dedup to `scripts/fleet-git-health-guard.sh` — posts only on
-     signature-change / RESOLVED / 1h re-remind (D2); `--self-test` proves the state machine (new→skip→remind→new→
-     resolved→none, PASS). Guard KEPT, just deduped. — agent-orchestrator@038beeb.
+      signature-change / RESOLVED / 1h re-remind (D2); `--self-test` proves the state machine (new→skip→remind→new→
+      resolved→none, PASS). Guard KEPT, just deduped. — agent-orchestrator@038beeb.
 - [x] 6. ✅ [BACKEND] P2. WS-D: threaded `req.options` + `req.recommendation` from `routes/slots_worker.py` into
-     `notify_slot_blocked`; options now render as a bulleted full-width section + a `*Recommendation:*` section (was
-     crammed onto one line via the 2-column `fields` layout); `test_slack_notifications.py` asserts the multi-line
-     render. — agent-orchestrator@038beeb.
+      `notify_slot_blocked`; options now render as a bulleted full-width section + a `*Recommendation:*` section (was
+      crammed onto one line via the 2-column `fields` layout); `test_slack_notifications.py` asserts the multi-line
+      render. — agent-orchestrator@038beeb.
 - [x] [OPERATOR] P1. ✅ D1/D2/D3 all resolved by operator (2026-07-13) — see Decisions. Plan unblocked for
       implementation.
 - [ ] [BACKEND] P2. WS-E: **auto-deploys — verification pending only.** Code is landed on LDR (WS-A/B/C/D). The prod
@@ -198,14 +198,14 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       window**: re-pull with `alerts_audit/fetch_alerts.py` after the code has been live ~24–48 h, confirm lifecycle
       churn is gone / volume at the actionable-only target, and drop the post-deploy jsonl in `alerts_audit/`.
 - [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
-     contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
-     (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
+      contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
+      (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
 - [x] 9. ✅ [BACKEND] P2. WS-B follow-up (first live digest, 2026-07-13 16:15 UTC, 1706 events / 5 failures): the digest
-     announced "5 failure event(s) — see the counts below" but showed only the top-25 types by frequency, and the
-     failure rows (`worker_kick_failed` etc.) ranked below #25 were truncated out of view. Fixed `notify_daily_summary`
-     to append any below-#25 failure row (🔴-marked) rather than drop it; `test_daily_summary.py` locks it
-     (`test_digest_never_truncates_a_failure_out_of_view`); full `quality-gates.sh` green (1216 pytest). —
-     agent-orchestrator@f79f028.
+      announced "5 failure event(s) — see the counts below" but showed only the top-25 types by frequency, and the
+      failure rows (`worker_kick_failed` etc.) ranked below #25 were truncated out of view. Fixed `notify_daily_summary`
+      to append any below-#25 failure row (🔴-marked) rather than drop it; `test_daily_summary.py` locks it
+      (`test_digest_never_truncates_a_failure_out_of_view`); full `quality-gates.sh` green (1216 pytest). —
+      agent-orchestrator@f79f028.
 - [x] 10. ✅ [REVIEW] P2. Documented **every digest field + every `event_type`** in the codex SSOT
       `codex/04-architecture/agent-orchestrator-alerting.md` (operator ask, 2026-07-13): a "Digest anatomy" field table
       (Since / Total events / N failure event(s) / Activity / Footer) + a "Digest event glossary" grouping all ~25 event
@@ -241,13 +241,13 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       classified by GUESSING from the pane-tail (`_spawn_failure_is_auth_shaped`: `/login`, `invalid api key`) — which
       mislabelled a busy-but-alive worker (slot 8: pane showed live tasks + "wait for it") as "likely a dead/expired
       setup-token." Replaced the guess at `do_spawn`'s failure branch with a **definitive token probe**
-      (`_classify_spawn_failure_via_token_probe`, the same 1-token call the poller uses): `401/403` → dead token → drop
-      - CRITICAL `notify_account_auth_failed` re-mint page (the alert the operator cares about); `429` → mark
-        `rate_limited` (transient, NO page); `200` → token healthy → NOT auth → summary-only spawn record (a working
-        account is never dropped on a misleading pane); `5xx`/network → transient, no mark. Verified all 4 live tokens
-        probe 200 (no dead token now; that's why no auth alert fired). Tests: dead-token drops, healthy-token-with-auth
-        -pane does NOT drop, 429 marks rate_limited, 403 drops, network no-op. codex "code-based classification" section
-        added. Full `quality-gates.sh` green (1225 pytest). — agent-orchestrator@67de599.
+      (`_classify_spawn_failure_via_token_probe`, the same 1-token call the poller uses): `401/403` → dead token →
+      drop - CRITICAL `notify_account_auth_failed` re-mint page (the alert the operator cares about); `429` → mark
+      `rate_limited` (transient, NO page); `200` → token healthy → NOT auth → summary-only spawn record (a working
+      account is never dropped on a misleading pane); `5xx`/network → transient, no mark. Verified all 4 live tokens
+      probe 200 (no dead token now; that's why no auth alert fired). Tests: dead-token drops, healthy-token-with-auth
+      -pane does NOT drop, 429 marks rate_limited, 403 drops, network no-op. codex "code-based classification" section
+      added. Full `quality-gates.sh` green (1225 pytest). — agent-orchestrator@67de599.
 - [x] 15. ✅ [BACKEND] P1. Operator ("check EVERY alert, do the audit properly") — **complete pager audit** instead of
       one-at-a-time. Enumerated all 40 `slack._post` notifiers + grouped the live 7-day channel by shape; found 3
       automatic self-healing/lifecycle events still paging. Downgraded to `logger.info` (ledger persist kept; callers
@@ -263,6 +263,29 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       (`hard failures: 1, soft     warnings: 1`) every day with no dedup (7/wk). Fix the underlying hygiene failure OR
       add read-back dedup to that job — it does NOT flow through `slack._post`, so it's out of the AO-notifier scope.
       Owner: PM/infra.
+- [x] 16. ✅ [BACKEND] P1. Operator (2026-07-14): "the agent working on it haven't done the job properly... check the
+      channel for the past 24 hours." Pulled a fresh 24h window via `SLACK_ALERTS_READER_BOT_TOKEN` (134 msgs) and found
+      the SAME-DAY git-staleness restore (commit `1be792c`, todo above the fold — a separate operator-directed fix that
+      landed same-day, outside this plan's own todos) was flapping badly: 21x `git RED >30min` + 19x `git RECOVERED`,
+      several "recovered after 0m" repeating every few minutes for hours. Root cause: `slot-git-status-report.sh`
+      rebuilds each slot's whole repo snapshot via a bash walk that can transiently drop one repo for a single ~5-min
+      cycle (a `pushd`/`git status` hiccup); that lone blip read as "recovered," which cleared the 4h re-alert throttle,
+      so the next real-red tick re-alerted immediately. Fixed: a clean reading must sustain past a new
+      `GIT_CLEAN_CONFIRM_S` (15 min) before it fires the RESOLVED bookend or clears the throttle — a single blip now
+      leaves the episode fully armed. — agent-orchestrator@50557aa; full `quality-gates.sh` green (1255 pytest).
+- [x] 17. ✅ [BACKEND] P1. Same sweep, two more repeat-page sources fixed in the same commit: (1)
+      `notify_plan_health_dispatch_failed`'s 1h cooldown had a read-check-write race (no lock) — two near-concurrent
+      dispatch failures could both read a stale cooldown, observed live as the same slot paging twice 6 minutes apart;
+      fixed with an in-process `threading.Lock` (single-process `uvicorn`, no cross-process lock needed). (2)
+      `notify_escalation_unresolved` repeated 7x for one repo in <3h — not a missing dedup but escalation OVER-CREATION:
+      `_find_open_escalation` only collapses duplicates while non-terminal, so a wall still red after a prior escalation
+      hit the re-escalation cap spawns a brand-new escalation that repeats its own full re-escalate/cap-hit page pair.
+      Left self-healing (fresh-worker retry) untouched — cooldown-deduped the PAGE only, per
+      `{repo}:{wall_type}:{reescalating|cap_hit}` (3h), cleared on resolution so a genuinely new break still pages
+      immediately. — agent-orchestrator@50557aa (same commit as todo 16).
+- [x] 18. ✅ [REVIEW] P2. Codex SSOT `codex/04-architecture/agent-orchestrator-alerting.md` updated with the flap
+      root-cause + the two repeat-page-hardening fixes (new "Git-staleness paging" bullet + a "Repeat-page hardening"
+      section); `last_reviewed` bumped to 2026-07-14. — unified-trading-pm (this commit).
 
 ## Progress Log
 
@@ -321,6 +344,23 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   **agent-orchestrator@f79f028** (QG green, 1216 pytest). Also documented every digest field + `event_type` in the codex
   SSOT per operator ask (todo 10). The stray `fleet-git-health-guard.sh` prune-hazard fix in the tree was a concurrent
   agent's WIP (shipped independently as `agent-orchestrator@a96c07c`) — left untouched.
+- **2026-07-14 (post-cleanup flap + repeat-page sweep)** — Operator reported the channel was STILL noisy with new (not
+  the old) noise, pasted a live `git RED` / `git RECOVERED` pair, and asked for a proper fix rather than more
+  whack-a-mole. Pulled a fresh 24h window (134 msgs, `SLACK_ALERTS_READER_BOT_TOKEN`) and found: (1) the same-day
+  git-staleness restore (`1be792c`, an operator-directed fix outside this plan's own todos, landed in response to a
+  2-day-unpaged root-PM dirty-repo incident) was flapping — 21x RED + 19x RECOVERED in 24h, several "recovered after 0m"
+  repeating for hours, root-caused to a single-tick reporter blip (`slot-git-status-report.sh` transiently dropping a
+  repo from one snapshot) clearing the 4h throttle; (2) `notify_plan_health_dispatch_failed`'s cooldown had a
+  read-check-write race (paged twice 6 and 21 minutes apart on two occasions); (3) `notify_escalation_unresolved`
+  repeated 7x for one repo in <3h because `_find_open_escalation` only dedupes non-terminal escalations, so a
+  persistently-red wall spawns a fresh escalation (and a fresh page pair) every cycle. All three fixed in one commit — a
+  debounced clean-confirm for the git flap, an in-process lock for the dispatch-failed race, and a per-stage cooldown
+  for the escalation repeat (self-healing retry behavior left untouched, only the operator page deduped). Verified via
+  `verify_dispatched_escalations`/`_git_alerts` regression tests reproducing each exact observed pattern before fixing.
+  **agent-orchestrator@50557aa**, full `quality-gates.sh` green (1255 pytest, ruff/basedpyright/dashboard tsc+vitest
+  clean), pushed to `live-defi-rollout` and confirmed on `origin`. Codex SSOT updated (todo 18). **Remaining:** the same
+  24–48h post-deploy re-pull (WS-E, still open) should now also confirm this second round of fixes actually drops the
+  volume — fold into that same verification pass rather than opening a new one.
 
 ## Deferred work after 2026-07-13
 

@@ -752,9 +752,9 @@ ineffective and mildly harmful. Deletion NOT performed; checkbox flipped `RESOLV
 2. **Live code consumer in deployment-api.**
    `deployment-api/deployment_api/services/tarball_staleness.py:114,127,141,150,160` — `_ASSET_GROUP_TARBALLS` lists
    `market-tick-data-service-code.tar.gz` as the expected MTDS tarball for **all 5** asset groups (its docstring: bundle
-   membership mirrors `create-code-tarballs.sh`'s per-asset*group repo lists — which it correctly does, because the
+   membership mirrors `create-code-tarballs.sh`'s per-`asset_group` repo lists — which it correctly does, because the
    category arrays DO derive that name). The module is Phase-2-pending (not yet wired into a route), so deleting the
-   object has no runtime effect \_today*, but leaves a landmine: once wired, `compute_bundle_oldest_mtime` treats a
+   object has no runtime effect \_today\*, but leaves a landmine: once wired, `compute_bundle_oldest_mtime` treats a
    missing tarball as "stale by definition" → every bundle reads stale → spurious Cloud Build refresh triggers.
 3. **Regenerated after the "orphaned" audit.** The object's own manifest
    (`gsutil cat .../code/market-tick-data-service-code.manifest.json`) reads

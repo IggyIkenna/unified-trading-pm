@@ -72,6 +72,10 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 - `python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS --start-date <Y>-01-01 --end-date <Y>-12-31 --skip-existing`
   (year-chunked, resumable); or `launch-features-sports-parallel-backfill-vm.sh`.
+- For a single-shard gap-fill relaunch, prefer `launch-features-vm.sh --feature-family sports` (timestamp-suffixed VM
+  naming) over `launch-features-sports-parallel-backfill-vm.sh --vms 1` — the latter always names the VM
+  `fss-backfill-vm-1`, which can collide with and silently delete another concurrent gap-fill's live VM of the same name
+  (`plans/active/issues/features_sports_parallel_backfill_vm_name_collision_2026_07_13.md`).
 - `features-service/scripts/sports/check_pipeline_completeness.py` to verify per-range.
 - Asserts upstream manifest health first → P2a/P2b must be GREEN (the `depends_on` edge).
 
@@ -116,6 +120,133 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-14 11:26 UTC — data_engineering slot-14 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-13's check ~15min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,447** (up from slot-13's 2,435, +12 in ~15 min) — steady forward progress, no
+  stall. History is ~4,210 days total; coverage now ~58.1% (2,447/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T11:26Z — all
+  wall-clock-fresh (heartbeats within the last minute), no crash signature. All 3 mid `team_derived`/`multisource_xg`
+  calculator writes with the same, already-documented all-NaN/all-zero honest-absence pattern (cross-provider xg data
+  not fetched in `--skip-fetch` mode, typed `UPSTREAM_MISSING`). No OOM/crash signature on any of the 3.
+- "Features manifest clean over FULL history" cannot be honestly evaluated while ~42% of history is unattempted — same
+  structural gate every prior dispatch on this todo has found. Not re-running `check_pipeline_completeness.py` — would
+  just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, and slot-13's check ~15 min earlier already
+  confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py`. Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,447).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 11:11 UTC — slot 13 (Todo 3 re-dispatch — fast re-verify, immediately following this same session's Todo 1 check ~3min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Immediately following my own Todo 1 dispatch above (fleet health confirmed, no new action): features bucket unique-date
+count **2,435** (up from my own 2,431 check ~3 min earlier) — steady forward progress, no stall. History is ~4,210 days
+total; coverage now ~57.8% (2,435/4,210). "Features manifest clean over FULL history" cannot be honestly evaluated while
+~42% of history is unattempted — same structural gate every prior dispatch on this todo has found. Not re-running
+`check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, and my own
+Todo 1 check moments earlier already confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (none dead). Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,435).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 11:08 UTC — slot 13 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-11's check ~47min earlier, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,431** (up from slot-11's 2,391, +40 in ~47 min) — steady forward progress, no
+  stall. History is ~4,210 days total; coverage now ~57.7% (2,431/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T11:08Z — all
+  wall-clock-fresh (within ~1-2 min of check time), no crash signature. `-085642` mid reference-data reads on 2026-01-19
+  (honest-absence warnings for 6/17 missing entity types, not errors), fresh `PIPELINE_HEARTBEAT` at 11:07:55Z;
+  `-085703` mid fixture-history reads (400-day lookback, historical fixtures from 2018-03-18), team_form/
+  team_xg/team_goals/h2h calculator writes with the known, already-documented all-zero honest-absence pattern (missing
+  `fixture_events`/`fixture_lineups`); `-085726` mid halftime/goal_timing/referee/multisource_xg calculator writes with
+  the known, already-documented all-NaN/all-zero honest-absence pattern (cross-provider xg data not fetched in
+  `--skip-fetch` mode, typed `UPSTREAM_MISSING`). No OOM/crash signature on any of the 3.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~58% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,431).
+Fleet is healthy — no gap-fill relaunch needed this cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-14 10:21 UTC — slot 11 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-6's check ~7min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,391** (up from slot-6's 2,385, +6 in ~7 min) — steady forward progress, no
+  stall. History is ~4,210 days total; coverage now ~56.8% (2,391/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T10:21:11Z — all
+  wall-clock-fresh (within ~1-2 min of check time), no crash signature. `-085642` mid reference-data reads on 2026-01-04
+  (honest-absence warnings for 3/17 missing entity types, not errors), fresh `PIPELINE_HEARTBEAT` at 10:19:55Z;
+  `-085703` mid fixture-history reads on 2018-03-06 (honest-absence warnings for missing entities, not errors);
+  `-085726` mid `multisource_xg`/`team_derived` calculator writes with the known, already-documented all-NaN
+  honest-absence pattern (cross-provider xg data not fetched in `--skip-fetch` mode, typed `UPSTREAM_MISSING`). No
+  OOM/crash signature on any of the 3.
+- "Features manifest clean over FULL history" cannot be honestly evaluated while ~43% of history is unattempted — same
+  structural gate every prior dispatch on this todo has found. Not re-running `check_pipeline_completeness.py` — would
+  just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, and slot-6's check ~7 min earlier already
+  confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py`. Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,391).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
 
 ### 2026-07-14 10:14 UTC — slot 6 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-7's check ~16min earlier, steady progress, still BLOCKED-PREREQ, no new action)
 

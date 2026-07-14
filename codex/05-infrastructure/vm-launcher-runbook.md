@@ -419,6 +419,26 @@ Forward-poll VMs run continuously (no end date). Self-delete on shutdown.
 
 ---
 
+## Tardis Concurrent-VM Cap (HARD RULE — operator, 2026-07-14)
+
+**At most 3 Tardis-consuming VMs run at a time, across BOTH clouds (one shared key), and the lease does NOT lift the
+cap.** Before launching ANY VM that touches Tardis (cefi sharded backfills, `cefi-queue-*` combined VMs,
+`mtds-backfill-cefi-*` backfill/pipelinecheck), the launcher MUST count the running fleet — the shared guard
+`deployment-service/scripts/vm/tardis-concurrency-guard.sh` does this (GCP + best-effort AWS) and refuses when
+`running + planned > 3`. Agents launching manually MUST run the same check.
+
+Empirical basis (2026-07-14, SSOT: `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` § "EMPIRICAL
+CONCURRENCY TEST"): the shared academic key allows a single revolving active slot. A lease-serialized
+(`TARDIS_CONCURRENCY_LEASE=1`) N=3 wave grinds through at ~50-70% request efficiency (net ~1.5-2× one serialized VM);
+the lease-OFF N=6 wave (2026-07-13T23:15Z) starved below the 1800s stall watchdog and ALL SIX VMs died with zero usable
+progress. There is no datapoint showing lease-OFF works at any N>1 — **always set `TARDIS_CONCURRENCY_LEASE=1` on
+multi-VM Tardis waves**; the guard warns when it's missing.
+
+Overrides: `FORCE=1` on the sharded launchers (operator-only, accepts collapse risk); `TARDIS_MAX_CONCURRENT_VMS=<n>`
+env raises/lowers the cap explicitly. Intra-VM stream concurrency is a separate axis (`TARDIS_MAX_CONCURRENT_DOWNLOADS`,
+default 16/VM + `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` 4/VM) — keep the fleet total ≲60 streams (operator guidance
+2026-07-14: bundle more shards per VM rather than more VMs).
+
 ## Common Failure Patterns (All Launchers)
 
 | Failure                                                          | Diagnosis                                                                               | Fix                                                                                     |

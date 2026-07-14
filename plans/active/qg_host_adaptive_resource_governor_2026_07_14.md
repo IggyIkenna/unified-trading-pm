@@ -201,8 +201,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 0 — Baseline data foundation (partly done this session)
 
-- [ ] [OPERATOR] P0. Review + ship the `vm` baseline written to `scripts/dev/qg_resource_baseline.json` (22 repos,
-      uncommitted in slot 16) to LDR — data-only file change.
+- [x] [OPERATOR] P0. ✅ Shipped the `vm` baseline (22 repos) to LDR — data-only. Evidence: PM@dd7f05e49.
 - [ ] [INFRA] P1. Consolidate the baseline schema to a host-portable canonical per-repo cost the governor reads (RSS +
       cpu_s are host-invariant per finding #1) — keep `local`/`vm` as provenance; governor reads `max(local,vm)`
       (conservative) or a fresh canonical run. Unmeasured repo → conservative default (e.g. 2 GB) + a WARN to profile
@@ -218,22 +217,26 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
-- [ ] [INFRA] P0. Re-verify the 2026-05-29 swap-incident repro does NOT recur at higher K on a 61 GB host (drive N
-      concurrent heavy QG runs; watch `free -h` swap-in rate + load) — the issue doc requires this before touching the
-      floor. Capture evidence.
-- [ ] [INFRA] P0. Raise `QG_HOST_CONCURRENCY` on 61 GB fleet hosts from 1 to `floor(0.7×RAM / heaviest-single-run-RSS)`
-      = floor(43 / 5.5) = **7** (use **6** for margin — NOT 8: 8×UTL = 44 GB > the 43 GB ceiling) in
-      `agent-orchestrator/scripts/bootstrap_vm.sh` + live `.env.local`; measure the fleet queue-time drop. (Interim —
-      once the gates land in Phase 3, K loosens to the runaway backstop, RAM-derived per host.)
+- [ ] [INFRA] P0. BLOCKED-OPERATOR-DECISION — DEFERRED (operator 2026-07-14, "raise K to 6 for now"): the live
+      load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33 GB < the 43 GB (70 %)
+      ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope (`tmux_spawn` §6.2) + 16 GB
+      host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at K=6. The Phase-6 soak (no
+      swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the live repro.
+- [x] [INFRA] P0. ✅ Raised `QG_HOST_CONCURRENCY` from 1 to **6** across all three layers — live tmux global env
+      (`setenv -g`, new workers inherit as they cycle) + root `agent-orchestrator/.env.local` (survives restart) +
+      `bootstrap_vm.sh` template (survives re-bootstrap). Evidence: AO@222369f (bootstrap) + `.env.local=6` +
+      `tmux show-environment -g → QG_HOST_CONCURRENCY=6`. Fleet queue-time delta to be measured in the Phase-6 soak.
+      (Interim — once the gates land in Phase 3, K loosens to the runaway backstop, RAM-derived per host.)
 
 ### Phase 2 — Host capacity introspection (portable)
 
-- [ ] [INFRA] P1. `qg_host_capacity` in `qg-host-governor.sh`: emit MemTotal + MemAvailable + physical cores — Linux
-      (`/proc/meminfo`, `lscpu -p=core`/`nproc`) AND macOS (`sysctl hw.memsize`/`hw.physicalcpu`; a REAL MemAvailable
-      equivalent from `vm_stat` — (free + inactive + purgeable + file-backed) × pagesize, net of the compressor — not a
-      raw "free"); bash 3.2-safe. Add `--probe` printing detected capacity + derived RAM/CPU budgets.
-- [ ] [INFRA] P2. Unit tests for the capacity parser on captured Linux + macOS `/proc/meminfo`/`vm_stat` fixtures (no
-      live-host dependence).
+- [x] [INFRA] P1. ✅ `qg_host_capacity` + `--probe` in `qg-host-governor.sh`: MemTotal/MemAvailable/physical-cores on
+      Linux (`/proc/meminfo`, `lscpu`/`nproc`) AND macOS (`sysctl` + `vm_stat` free+inactive+purgeable+file-backed);
+      bash 3.2-safe; ADDITIVE (not yet wired into acquire/release). Evidence: PM@dd7f05e49 (`--probe` green on the 61 GB
+      VM → `mem_total_gb=61 cores=8 ram_budget_gb=43 cpu_slots=6`; shellcheck clean; `--status` unregressed).
+- [x] [INFRA] P2. ✅ Fixture-based parser unit tests (Linux `/proc/meminfo` + macOS faked `sysctl`/`vm_stat`), no
+      live-host dependence. Evidence: PM@dd7f05e49 (`tests/test-qg-host-capacity.sh` — 3 blocks green; negative control
+      confirms failures propagate across the subshell boundary).
 
 ### Phase 3 — Reservation ledger + dual-gate admission
 
@@ -320,6 +323,48 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   slots. (6/10) `cpu_weight` + the race test come from an unpinned parallel re-measure. (7) min supported host = 16 GB,
   so oversize-solo is defensive-only (heaviest 5.5 GB < 11 GB budget) — no stacked-oversize drain logic. (8) real macOS
   `MemAvailable` equivalent from `vm_stat`. (3/9) de-scoped per operator.
+
+### 2026-07-14 — Phase 2 shipped + Phase 1 recon (slot 16, interactive)
+
+- **Phase 2 (host capacity introspection) SHIPPED** — `qg_host_capacity` + `--probe` in `qg-host-governor.sh` +
+  fixture-based unit tests. `PM@dd7f05e49` (quickmerge; PR #1010 → main auto-merge). Additive, no behavior change to the
+  live governor. `--probe` on this VM: `mem_total_gb=61 mem_available_gb=53 cores=8 ram_budget_gb=43 cpu_slots=6`. The
+  `vm` baseline data shipped in the same commit (Phase 0 P0).
+- **Calibration finding:** this "16-core" VM is **8 physical / 16 logical** cores. The probe reports PHYSICAL (8), so
+  `cpu_slots = floor(8 × 0.8) = 6`, not the ~12 the plan narrative assumed from logical count. Physical-vs-logical for
+  the CPU gate is a Phase-3/6 tuning decision that the unpinned parallel `cpu_weight` measure (Phase 0) will settle.
+- **Phase 1 recon — the K-bump is LESS risky than the plan assumed.** `bootstrap_vm.sh` §6.1 pins
+  `QG_HOST_CONCURRENCY=1` specifically on the CENTRAL DISPATCH (planning) host because the orchestrator co-resides
+  there. But §6.2 already wraps every spawned worker's QG in a `systemd-run --user --scope` with **MemoryMax=10 G + 2 G
+  swap**, and the 05-29 mitigations (16 G host swap + `orchestrator.service` MemoryMax=56 G) are persistent. So the
+  32–57 GB single-pytest OOM that motivated the K=1 floor is ALREADY contained per-worker at 10 G — the repro cannot
+  recur the same way. Phase 1's re-verify should confirm the 10 G scope cap holds under N-concurrent, then raise K.
+
+### 2026-07-14 — Phase 1 K=6 raised (slot 16, operator-directed)
+
+- **Operator: "raise the floor of K to 6 for now."** Corrected my earlier over-claim (see below), confirmed 6×UTL = 33
+  GB < 43 GB ceiling, raised K to 6 across all three layers: live tmux global env (`setenv -g QG_HOST_CONCURRENCY 6` on
+  the default socket → new worker sessions inherit 6 as they cycle) + root `.env.local=6` (survives restart) +
+  `bootstrap_vm.sh` template `AO@222369f` (survives re-bootstrap). Existing 13 worker sessions keep K=1 until they
+  cycle. Live repro DEFERRED per operator; Phase-6 soak is the empirical confirmation.
+- **Correction to the Phase-1 recon (operator caught it):** the per-worker 10 GB scope cap does NOT make K=6 safe by
+  itself — it is per-worker, so K workers = up to K×10 GB and does not bound the aggregate. K=6 is safe because the
+  AGGREGATE math holds (6×UTL 5.5 = 33 GB < 43 GB, typical mix far less); the 10 GB scope cap + 16 GB swap are the
+  single-runaway BACKSTOP that turns a would-be host OOM into an isolated per-scope kill. Two distinct guarantees.
+
+### 2026-07-14 — Phase 3a reservation-ledger primitives shipped (slot 16)
+
+- **Ledger primitives SHIPPED** in `qg-host-governor.sh` — `PM@88a4925af` (quickmerge; the LDR push succeeded, the
+  inline PR-to-main step exited non-zero but the standing LDR→main promote flow covers promotion). ADDITIVE: the
+  functions exist but are NOT yet wired into `acquire`/`release`, so zero change to live admission.
+- Shipped: host-shared ledger path `_qg_shared_root` (strips the per-slot `/.tabs/<N>` off WORKSPACE_ROOT — verified in
+  all 4 cases), `_qg_ledger_add`/`_remove`/`reserved_mb` (flock-protected, explicit-FD bash-3.2-safe) + a PID-liveness
+  sweep (dead-PID rows pruned → crash-safe, replacing the flock-auto-release guarantee). Test `tests/test-qg-ledger.sh`
+  (6 assertions + negative control; shellcheck clean).
+- **NEXT (Phase 3b/3c) is the safety-critical part:** the dual-gate admission logic (RAM two-clause + CPU + oversize)
+  built additively + tested, then the CUTOVER that wires it into `acquire`/`release` (+ cgroup cap + 80 % valve). The
+  cutover changes live admission fleet-wide — an operator-aware step, not an autonomous flip. Ledger + capacity probe
+  are the two foundations it stands on; both are now in place.
 
 ## Deferred / open decisions
 

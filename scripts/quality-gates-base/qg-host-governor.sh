@@ -28,6 +28,11 @@
 #        ... pytest / basedpyright ...
 #        qg_governor_release        # frees the token (also auto-freed on process exit)
 #
+#      qg_governor_acquire also sets QG_GOVERNOR_WAIT_SECONDS (0 if never throttled)
+#      — the caller's MAX_DURATION wall-clock check subtracts this from billable
+#      duration, so queueing behind the shared token cannot fail an otherwise-green
+#      run purely for having queued (qg_host_governor_severe_contention_2026_07_13.md).
+#
 #   B) Wrapper CLI (wrap any command under one token):
 #        bash qg-host-governor.sh -- <command> [args...]
 #
@@ -129,6 +134,149 @@ qg_host_capacity() {
         "$(( ram_budget_kb / 1024 / 1024 ))" "$cpu_slots"
 }
 
+# ── RESERVATION LEDGER (Phase 3 — additive; NOT yet wired into acquire/release) ─
+# A host-shared, flock-protected record of in-flight QG heavy-phase reservations
+# so the upcoming dual-gate admission can bound the SUM of concurrent peak-RSS
+# (the 6×UTL stacking case) instead of a fixed count. One row per reservation:
+#     <pid> <repo> <rss_mb> <ts>
+# HOST-SHARED path: strip the per-slot `/.tabs/<N>` suffix off WORKSPACE_ROOT so
+# every slot on a host shares ONE ledger — raw WORKSPACE_ROOT is per-slot (set by
+# setup-tab-worktrees.sh), which would make the ledger per-slot and defeat
+# cross-slot coordination. On a single-clone host the strip is a no-op.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+_QG_LEDGER_FD=220
+
+_qg_shared_root() {
+    local ws="${WORKSPACE_ROOT:-}"
+    case "$ws" in
+        "")        echo "${TMPDIR:-/tmp}" ;;
+        */.tabs/*) echo "${ws%/.tabs/*}" ;;
+        *)         echo "$ws" ;;
+    esac
+}
+_qg_ledger_dir()  { echo "${QG_LEDGER_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor}"; }
+_qg_ledger_file() { echo "$(_qg_ledger_dir)/reservations"; }
+
+# Run "$@" holding the ledger lock (explicit numeric FD — bash 3.2-safe). Degrades
+# to unlocked (best-effort) if the dir can't be made or flock(1) is absent.
+_qg_ledger_with_lock() {
+    local dir; dir="$(_qg_ledger_dir)"
+    mkdir -p "$dir" 2>/dev/null || { "$@"; return; }
+    command -v flock >/dev/null 2>&1 || { "$@"; return; }
+    eval "exec ${_QG_LEDGER_FD}>\"\$dir/.lock\"" 2>/dev/null || { "$@"; return; }
+    flock "$_QG_LEDGER_FD"
+    "$@"; local rc=$?
+    flock -u "$_QG_LEDGER_FD" 2>/dev/null || true
+    eval "exec ${_QG_LEDGER_FD}>&-" 2>/dev/null || true
+    return "$rc"
+}
+
+# Prune dead-PID rows in place — crash-safe: a killed QG can't leak its reservation
+# (replaces the old flock-auto-release guarantee). UNLOCKED — call under the lock.
+_qg_ledger_sweep_unlocked() {
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || return 0
+    local tmp="${f}.tmp.$$" pid repo mb ts
+    : > "$tmp"
+    while read -r pid repo mb ts; do
+        [[ -n "$pid" ]] || continue
+        kill -0 "$pid" 2>/dev/null && printf '%s %s %s %s\n' "$pid" "$repo" "$mb" "$ts" >> "$tmp"
+    done < "$f"
+    mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
+}
+
+# Sum of LIVE reservations (MB), after a sweep. Public (locks internally).
+_qg_ledger_reserved_mb() { _qg_ledger_with_lock _qg_ledger_reserved_mb_unlocked; }
+_qg_ledger_reserved_mb_unlocked() {
+    _qg_ledger_sweep_unlocked
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || { echo 0; return; }
+    awk '{s+=$3} END{printf "%d", s+0}' "$f"
+}
+
+# Add a reservation. Public (locks internally).
+_qg_ledger_add() { _qg_ledger_with_lock _qg_ledger_add_unlocked "$1" "$2" "$3" "${4:-0}"; } # <pid> <repo> <rss_mb> [ts]
+_qg_ledger_add_unlocked() { printf '%s %s %s %s\n' "$1" "$2" "$3" "$4" >> "$(_qg_ledger_file)"; }
+
+# Remove all rows for a PID (on release). Public (locks internally).
+_qg_ledger_remove() { _qg_ledger_with_lock _qg_ledger_remove_unlocked "$1"; } # <pid>
+_qg_ledger_remove_unlocked() {
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || return 0
+    local tmp="${f}.tmp.$$"
+    grep -v "^${1} " "$f" > "$tmp" 2>/dev/null || : > "$tmp"
+    mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
+}
+
+# Count of LIVE reservations (running heavy-phase count), after a sweep.
+_qg_ledger_count() { _qg_ledger_with_lock _qg_ledger_count_unlocked; }
+_qg_ledger_count_unlocked() {
+    _qg_ledger_sweep_unlocked
+    local f; f="$(_qg_ledger_file)"
+    [[ -f "$f" ]] || { echo 0; return; }
+    awk 'END{print NR+0}' "$f"
+}
+
+# ── DUAL-GATE ADMISSION DECISION (Phase 3b — additive; NOT wired into acquire) ──
+# _qg_admit_check is PURE (all inputs explicit, no live reads) so every branch is
+# unit-testable. It encodes the two-clause RAM gate + CPU gate + oversize-solo:
+#   1. oversize      : this_peak > budget      → SOLO (run alone; wait for reserved==0)
+#   2. RAM reserve   : reserved + this > budget → WAIT_RAM_RESERVATION (ledger bound; the 6×UTL stacking cap)
+#   3. RAM live      : avail < this + floor     → WAIT_RAM_LIVE (external pressure + climb headroom)
+#   4. CPU           : running + 1 > slots      → WAIT_CPU
+#   else ADMIT. Echoes the decision token; returns 0 iff the run may proceed now.
+# SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+_qg_admit_check() {
+    local this="$1" reserved="$2" running="$3" budget="$4" avail="$5" floor="$6" slots="$7"
+    if (( this > budget )); then
+        if (( reserved == 0 )); then echo "SOLO_ADMIT"; return 0; fi
+        echo "SOLO_WAIT"; return 1
+    fi
+    if (( reserved + this > budget )); then echo "WAIT_RAM_RESERVATION"; return 1; fi
+    if (( avail < this + floor )); then echo "WAIT_RAM_LIVE"; return 1; fi
+    if (( running + 1 > slots )); then echo "WAIT_CPU"; return 1; fi
+    echo "ADMIT"; return 0
+}
+
+# Per-repo peak-RSS (MB) from the committed baseline — max(local, vm) is conservative
+# and host-portable. Unmeasured repo → QG_UNMEASURED_PEAK_MB (default 5500 = treat as
+# heaviest, never a low guess that would under-reserve). QG_BASELINE_PATH overrides for tests.
+_qg_repo_peak_mb() {
+    local repo="$1" baseline peak
+    baseline="${QG_BASELINE_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../dev" 2>/dev/null && pwd)/qg_resource_baseline.json}"
+    peak="$(python3 - "$baseline" "$repo" 2>/dev/null <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    e = d.get(sys.argv[2], {}) or {}
+    vals = [(e.get(k) or {}).get("peak_rss_mb") for k in ("local", "vm")]
+    vals = [v for v in vals if isinstance(v, (int, float))]
+    print(int(max(vals)) if vals else 0)
+except Exception:
+    print(0)
+PY
+)"
+    [[ "${peak:-0}" -gt 0 ]] && echo "$peak" || echo "${QG_UNMEASURED_PEAK_MB:-5500}"
+}
+
+# Live admission decision for <repo>: gathers ledger + capacity, calls _qg_admit_check.
+# Echoes the decision token; returns 0 iff admit-now. (Not yet wired into acquire.)
+_qg_admit() {
+    local repo="$1" this reserved running mt ma cores frac_pct cpu_pct budget avail floor slots
+    this="$(_qg_repo_peak_mb "$repo")"
+    reserved="$(_qg_ledger_reserved_mb)"
+    running="$(_qg_ledger_count)"
+    mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
+    frac_pct="$(awk -v f="${QG_MEM_SAFETY_FRAC:-0.70}" 'BEGIN{printf "%d", f*100}')"
+    cpu_pct="$(awk -v f="${QG_CPU_FRAC:-0.80}" 'BEGIN{printf "%d", f*100}')"
+    budget=$(( mt / 1024 * frac_pct / 100 ))          # MB
+    avail=$(( ma / 1024 ))                             # MB
+    floor="${QG_MEM_FLOOR_MB:-$(( mt / 1024 / 10 ))}" # MB (default 10% of total)
+    (( floor >= 2048 )) || floor=2048
+    slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
+    _qg_admit_check "$this" "$reserved" "$running" "$budget" "$avail" "$floor" "$slots"
+}
+
 # Base file-descriptor for the token locks. The original used bash >=4.1's
 # `exec {fd}>` auto-FD form, which is unparseable on bash 3.2 (the macOS
 # operator host) → the governor silently went INACTIVE there, so concurrent
@@ -148,6 +296,13 @@ _qg_governor_deprioritise() {
 }
 
 # Acquire one host token (blocks until free). Holds an flock'd fd for the run's lifetime.
+#
+# Exposes QG_GOVERNOR_WAIT_SECONDS (global, accumulated across calls — 0 if never
+# throttled) so a caller's MAX_DURATION wall-clock check can subtract pure queue
+# time from billable work time: queueing under K=1-vs-20-way-demand contention is
+# not "the run got slow", it's "the run was waiting its turn", and must not fail
+# an otherwise-green run on that basis alone
+# (qg_host_governor_severe_contention_2026_07_13.md).
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
@@ -171,6 +326,7 @@ qg_governor_acquire() {
             if flock -n "$fd"; then
                 _QG_GOV_FD=$fd
                 _qg_governor_deprioritise
+                QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
                 [[ "$waited" -gt 0 ]] && echo "[qg-governor] token $i/$k acquired after ${waited}s wait" >&2
                 return 0
             fi

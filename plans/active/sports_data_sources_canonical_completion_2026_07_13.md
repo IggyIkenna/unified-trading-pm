@@ -11,7 +11,14 @@ nature: process
 asset_group: [sports]
 stage: [data]
 repos:
-  [instruments-service, market-tick-data-service, unified-trading-library, unified-api-contracts, deployment-service]
+  [
+    instruments-service,
+    market-tick-data-service,
+    market-data-processing-service,
+    unified-trading-library,
+    unified-api-contracts,
+    deployment-service,
+  ]
 scope: [engineer]
 tags: [sports, api_football, footystats, sfi, transfermarkt, weather, odds, manifest, data-correctness, autonomous]
 related:
@@ -20,7 +27,7 @@ related:
     plans/active/sports_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -285,17 +292,33 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       for any value beyond FIXTURES/STANDINGS (e.g. WEATHER, XG, LINEUPS, PREDICTIONS, FIXTURE_STATS) — their presence
       confirms the fix restored the whole Tier-3/4 mechanism (also feeds `features-sports-service-job`'s pre/post-match
       compute triggers, a bigger blast radius than just this plan's 8 sources).
-- [ ] [DATA] P1. **`uts-prod-market-data-processing-t1-schedule` — daily NOT_FOUND, target Cloud Run Job deleted** (NEW
-      2026-07-14, scheduled-capture audit). Confirmed via `gcloud logging read     resource.type="cloud_scheduler_job"`
-      that this 01:00 UTC daily cron has failed `NOT_FOUND` every day for at least 07-12 through 07-14 (2 attempts/day,
-      both ERROR) — its target `uts-prod-market-data-processing-service-t1-recon` does not exist in
-      `gcloud run jobs list` at all. This is market-data-processing-service's generic T+1 candle-aggregation job (out of
-      this plan's `deployment-service`- scoped fix authority — needs a market-data-processing-service repo
-      investigation: was the job intentionally retired, or genuinely orphaned?). Separately, and more relevant to this
-      plan's `mdps_odds_horizon_bucket` scope: confirm whether that data_type's actual production path
-      (`deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` → `reprocess_sports_odds.py`) has ANY recurring
-      scheduled trigger at all, or is genuinely VM-launch-only (manual) — if the latter, design + ship a real daily
-      driver (same "sustained ≥99% going forward" bar as todo items above), not just another one-off launch.
+- [x] [DATA] P1. **`uts-prod-market-data-processing-t1-schedule` — daily NOT_FOUND, target Cloud Run Job deleted** — ✅
+      DONE 2026-07-14 (see "MDPS T1-RECON + ODDS-HORIZON-BUCKET DAILY DRIVER" Progress Log entry for full detail). Root
+      cause: the CRJ was never provisioned (F-41-class bug) — investigation found it's general T+1 candle aggregation
+      across all 5 asset groups, NOT sports-odds-specific, so its fix (provisioning the missing CRJ) is SEPARATE from
+      the `mdps_odds_horizon_bucket` daily-driver gap this todo also flagged — both fixed: `deployment-service@de117f5`
+      provisions `mdps_t1_recon_job` (the missing general CRJ, live-tested end-to-end after 3 more live-test fixes:
+      SKIP_DEPENDENCY_CHECK bridge, PROTOCOL_DATA_SOURCE_BUCKET_* env vars, 16Gi→32Gi OOM fix) +
+      `mdps_odds_horizon_scheduler.tf` (new dedicated daily scheduler for `reprocess_sports_odds.py`, 01:15 UTC, rolling
+      3-day window); `market-data-processing-service@3f1065f` makes both scripts' date args self-default (required for
+      either job to run off a static Cloud Scheduler trigger). One pre-existing, unrelated bug surfaced (Polymarket
+      prediction adapter: `instrument_key` column missing from instruments data, aborts PREDICTION category processing)
+      — new followup todo below, out of this todo's scope.
+- [ ] [DATA] P2. **market-data-processing-service: two pre-existing bugs found live-testing the new `mdps_t1_recon_job`
+      (NEW 2026-07-14, out of this plan's `deployment-service`-scoped fix authority — needs a
+      market-data-processing-service repo dispatch)**: (a) the PREDICTION category's candle-processing path aborts with
+      `❌ instrument_key column missing from instruments data` (columns present are the raw Polymarket CLOB schema —
+      `condition_id`/`question_id`/`clob_token_ids`/etc — never mapped to the `instrument_key` the orchestrator's filter
+      step expects; find + fix the missing mapping step, likely in the Polymarket instrument-loading path the
+      orchestrator calls before `_process_one_category`); (b) `DependencyChecker`'s PREDICTION upstream-bucket lookup
+      404s against `market-data-tick-prediction-prd-*` — a bucket decommissioned 2026-07-12 in favor of the abbreviated
+      `market-data-tick-pred-prd-*` (see
+      `market-data-processing-service/scripts/reprocess_sports_odds.py::_resolve_bucket`'s own comment on this exact
+      2026-07-12 rename) — `DependencyChecker` was never updated for the rename. Both bugs are currently masked by
+      `SKIP_DEPENDENCY_CHECK=true` on the T1-recon job (bug (b) never triggers) and a caught-not-fatal
+      `_process_one_category` exception (bug (a) logs an ERROR but doesn't crash the run) — so the general T1
+      candle-aggregation job runs GREEN every day but PREDICTION candles are never actually produced until both are
+      fixed.
 
 # 2. Definition of DONE
 
@@ -2838,3 +2861,117 @@ it's new adapter work, not a data-audit residual).
     reach 100%, manifest `expected_unattempted` for this source trending to ~0 or a documented residual) is correctly
     left for a LATER check per this dispatch's own "don't need to wait for full completion, verify genuine progress"
     mandate — not a gap, an intentional multi-hour-job handoff.
+
+### MDPS T1-RECON + ODDS-HORIZON-BUCKET DAILY DRIVER (2026-07-14, follow-up dispatch, /autonomous)
+
+- **Task as dispatched**: investigate `uts-prod-market-data-processing-t1-schedule` (failing `NOT_FOUND` ≥3 days) and
+  provision a real daily scheduler+job for `mdps_odds_horizon_bucket` (`reprocess_sports_odds.py`) — the background
+  framing assumed the broken scheduler WAS the odds-horizon gap.
+- **Investigation found this framing was wrong — a genuine discrepancy, decided-and-documented per rule 1/2, not a
+  silent scope pivot**: `gcloud scheduler jobs describe uts-prod-market-data-processing-t1-schedule` shows
+  `description: "market-data-processing-service T+1 recon batch — candle aggregation (depends on MTDS)"`, targeting
+  Cloud Run Job `uts-prod-market-data-processing-service-t1-recon` — confirmed genuinely missing
+  (`gcloud run jobs describe` errors "Cannot find job"; no `google_cloud_run_v2_job` resource anywhere named it). This
+  is `t1_batch_scheduler.tf`'s `"market-data-processing"` entry — GENERAL T+1 candle aggregation across ALL 5 asset
+  groups (per the orphaned `terraform/services/market-data-processing-service/gcp/main.tf` workflow.yaml's
+  `--CEFI --TRADFI --DEFI --SPORTS --PREDICTION` args — that whole module/Workflow/CRJ was never applied to this
+  project, confirmed absent from both `gcloud run jobs list` and `gcloud workflows list`), same F-41 class bug as the
+  already-fixed `strategy_t1_recon_job`. It was NEVER sports-odds-specific. Decision: fix BOTH — the literally-broken
+  existing scheduler (genuinely adjacent, explicitly named in the dispatch's own investigation steps) AND provision the
+  NEW dedicated `mdps_odds_horizon_bucket` scheduler+job the dispatch's core intent actually called for.
+- **Fix A — `uts-prod-market-data-processing-service-t1-recon` (general candle aggregation)**:
+  `deployment-service@de117f5` adds `mdps_t1_recon_job` to `audit03_cron_provisioning.tf` (mirrors the
+  `strategy_t1_recon_job` co-located-module pattern exactly; reuses `google_service_account.unified_trading`, no new
+  IAM). `market-data-processing-service@3f1065f` adds a `_build_legacy_argv` self-default (yesterday, T-1 UTC) when the
+  caller supplies neither `--start-date` nor `--end-date` — required because a `google_cloud_scheduler_job`
+  `http_target`'s args are static (no per-trigger date computation, unlike the orphaned Workflow), and the legacy
+  sub-parser's dates are `required=True`. Three MORE bugs surfaced only via live execution
+  (`gcloud run jobs execute --wait`, not just code review — the "run it, don't read it" verification standard):
+  1. **Dependency hard-fail**: first live execution exit(1)'d — `_check_dependencies` aborted the WHOLE date because 4/5
+     asset groups had no upstream MTDS `raw_tick_data` for yesterday yet (one, PREDICTION, doesn't even have its
+     legacy-named bucket: `market-data-tick-prediction-prd-*` 404s — see finding 3 below). Root cause: this ONE combined
+     job processes all 5 groups at 01:00 UTC, but `t1_batch_scheduler.tf`'s OWN documented DAG splits MTDS's upstream
+     captures into a FAST phase (00:30) and a SLOW CeFi phase (06:00) — a quiet DeFi/TradFi/Prediction day is normal,
+     not a fault, for a 5-asset-group combined job. Tried the legacy `--no-fail-on-missing-deps` flag first — REJECTED
+     at the container's actual entrypoint (`ServiceBootstrap`'s top-level parser never exposes it; only
+     `_build_legacy_argv`'s bridged subset reaches the internal parser). Fixed via the SUPPORTED bridge instead:
+     `SKIP_DEPENDENCY_CHECK=true` env var.
+  2. **Every category then failed with "No source bucket configured for category=X"**: `config.py`'s
+     `get_bucket_for_asset_group()` reads `PROTOCOL_DATA_SOURCE_BUCKET_{CATEGORY}` directly (a legacy env-var path, not
+     `resolve_bucket_name()`) — no `.tf` in this repo had EVER set it for any category. Verified real bucket names live
+     via `gcloud storage buckets list` (NOT the config.py docstring's stale example — missing the `-prd-` env tier — nor
+     `DependencyChecker`'s own PREDICTION bucket name, which 404s: it looks up `market-data-tick-prediction-prd-*`,
+     decommissioned 2026-07-12 in favor of the abbreviated `market-data-tick-pred-prd-*` — a separate, pre-existing
+     latent bug in `DependencyChecker`, NOT fixed here since `SKIP_DEPENDENCY_CHECK` bypasses that path entirely;
+     tracked as a followup todo below). Added all 5 `PROTOCOL_DATA_SOURCE_BUCKET_{CEFI,TRADFI,DEFI,SPORTS,PREDICTION}`
+     env vars with the CORRECT (`-prd-`, `pred`) bucket names.
+  3. **OOM (signal 9) at 16Gi**: after the bucket fix, the job genuinely started reading real GCS data — RSS hit ~9.3GB
+     after TradFi's 75,336-instrument corpus ALONE, before even reaching DeFi/Sports/Prediction in the SAME process
+     (single-date runs use `--no-subprocess-per-date`, so all 5 categories' instrument corpora accumulate in one process
+     — no per-category isolation exists). Bumped 16Gi→32Gi (matching this file's own largest proven-safe allocation, the
+     sports-enrichment jobs) rather than guessing an intermediate value — RSS peaked at ~22GB, comfortable margin.
+  - **Final live-test result** (`uts-prod-market-data-processing-service-t1-recon-zf96z`, digest
+    `sha256:4f2972de7a1c98fb3312dd593c67a2399956c8823335a1adf7afbc1abaa012c2`): exit 0, all 5 categories processed (cefi
+    22.3s / tradfi 13.0s / defi 51.0s / sports 6.0s / prediction 0.2s), 0 crashes. **One pre-existing, unrelated bug
+    surfaced**: PREDICTION aborted with `❌ instrument_key column missing from instruments data` (Polymarket instruments
+    schema) — a real data-processing bug in a different code area (the prediction/Polymarket instrument loader, not
+    scheduler/infra), genuinely out of this dispatch's scope to fix blind; **new followup todo added** (§1) rather than
+    silently dropped.
+- **Fix B — `mdps_odds_horizon_bucket` (the actual dispatch target)**: new file
+  `deployment-service/terraform/gcp/mdps_odds_horizon_scheduler.tf` — `uts-prod-mdps-odds-horizon-bucket` Cloud Run
+  Job + `uts-prod-mdps-odds-horizon-bucket-daily` scheduler (01:15 UTC, after the 00:30 MTDS fast phase), mirroring the
+  `sports_enrichment_provider_scheduler.tf` / `understat_eu_typing_scheduler.tf` pattern exactly: reuses
+  `unified-trading-sa` (image) + `t1_batch` SA (scheduler invoker, already project-wide `run.invoker` — zero new IAM),
+  8cpu/32Gi (same manifest-read cost class as the sports-enrichment jobs, sized right the first time instead of guessing
+  low). `market-data-processing-service@3f1065f`'s OTHER half: `reprocess_sports_odds.py`'s `--start-date`/`--end-date`
+  made optional (previously `required=True`), self-defaulting to a rolling `[today-2, today]` (UTC) window when BOTH
+  omitted (a caller supplying exactly one is still a loud usage error) — absorbs bookmakers' late-arriving raw ticks;
+  extracted into `_resolve_date_window()` to keep `main()`'s cyclomatic complexity under the ruff C901 ceiling.
+  Registered `mdps-odds-horizon-bucket` in `cloud_run_job_registry.py::_SINGLETON_JOBS` (guard test requirement).
+  - **Image note**: the `:latest` image at dispatch time predated this fix. Manually submitted a Cloud Build
+    (`gcloud builds submit --config=cloudbuild.yaml .`, build `afe2d235-0dd3-4fdf-b60b-1fe0d4a1606e`) to bake the fix in
+    before the real CI trigger (push-to-`main`) would have produced one — the manual build's Docker
+    build/quality-gates/push steps all succeeded (image pushed at digest
+    `sha256:4f2972de7a1c98fb3312dd593c67a2399956c8823335a1adf7afbc1abaa012c2`, confirmed matching `:latest` via
+    `gcloud artifacts docker images describe`), but the OVERALL build status is `FAILURE` — a LATER, unrelated
+    `publish-wheel` step fails because a bare `gcloud builds submit` tarball has no `.git/` (setuptools-scm can't
+    resolve a version; the file's own `fetch-tags` step comment already anticipates this for non-trigger builds). Do
+    **not** treat build `afe2d235` as SUCCESS evidence — the DECISIVE evidence is the live Cloud Run executions below,
+    verified by DIGEST match, not the build's terminal status. Also had to `gcloud run jobs update --image=...:latest`
+    on both jobs after the rebuild — Cloud Run Jobs pin the resolved digest at job-create/update time, so pushing a new
+    `:latest` does NOT retroactively update an already-provisioned job's execution image (the FIRST live-test attempt on
+    each job still ran the OLD pre-fix digest and failed on the old `--start-date required` error, confirmed via
+    `executions describe`'s `spec.template.spec.containers[0].image`).
+  - **Live-test 1** (`uts-prod-mdps-odds-horizon-bucket-pvpqq`, no explicit args — the actual daily-trigger invocation):
+    self-defaulted to `[2026-07-12, 2026-07-14]`, found all 3 dates already `empty_confirmed` (from the earlier VM
+    backfill fleet), correctly skipped all 3 (`skipped_manifest=3`), exit 0 in 1m22s.
+  - **Live-test 2** (`uts-prod-mdps-odds-horizon-bucket-925jn`, `--start-date 2026-07-13 --end-date 2026-07-14 --force`,
+    digest `sha256:4f2972de7...`): forced re-check of the 2 most recent dates — both genuinely `no_raw_data` (0 raw
+    ODDS_API blobs found), so `writer.record_empty(...)` fired with a FRESH `attempted_at` timestamp for both — real
+    manifest write, not a no-op. Hit the SAME `ManifestWriter: generation conflict` CAS-contention pattern already
+    documented earlier in this plan (self-resolving, non-blocking) — this time it exhausted all 15 retries (contention
+    with the periodic per-minute consolidator) and correctly fell back to an "unconditional write"
+    (`WARNING: generation conflict after 15 retries, falling back to unconditional write`) — completed successfully,
+    exit 0, 16m44s total (dominated by the retry backoff, not real work). This IS the "confirm it actually wrote real
+    data / fresh written_at" evidence the dispatch required — a genuine read-modify-write round-trip through the
+    CAS-contention path to a successful terminal write.
+- **Both jobs verified live in real prod Terraform state** (backend `terraform/state/prod`, confirmed correct per the
+  dispatch's own caution —
+  `tofu init -backend-config="bucket=uts-terraform-state-central-element-323112" -backend-config="prefix=terraform/state/prod"`,
+  matching `.terraform/terraform.tfstate`'s recorded backend exactly): `tofu apply` (targeted,
+  `-target=module.mdps_t1_recon_job -target=module.mdps_odds_horizon_job -target=google_cloud_scheduler_job.mdps_odds_horizon_daily`,
+  plus 3 follow-up targeted applies for the live-test fixes above) — `gcloud run jobs describe` /
+  `gcloud scheduler jobs describe` confirm all 3 resources exist and are `ENABLED`.
+- **Shipped**: `market-data-processing-service@3f1065f` (`quality-gates.sh --no-fix` green both passes — first pass
+  caught a ruff C901 complexity violation from the inline date-window logic, fixed by extracting
+  `_resolve_date_window()`), `deployment-service@de117f5` (`quality-gates.sh --no-fix` green, including the
+  `cloud_run_job_registry` guard test). Both landed on `live-defi-rollout` via `quickmerge.sh --agent`.
+- **New followup todo** (§1, added per rule 1/2 "capture every side-discovery as a plan todo immediately"): the
+  Polymarket `instrument_key`-missing-column bug (finding above) and the `DependencyChecker` PREDICTION
+  legacy-bucket-name bug (finding above) both need a market-data-processing-service-scoped fix — out of this dispatch's
+  scheduler/infra-scoped authority to fix blind under time pressure; the general T1 job's PREDICTION category will keep
+  silently no-op'ing (caught, logged, non-fatal) until either is fixed.
+- **Definition-of-DONE check for this specific dispatch**: `uts-prod-market-data-processing-t1-schedule` no longer hits
+  `NOT_FOUND` (its target CRJ now exists, is live-tested, and is Terraform-managed); `mdps_odds_horizon_bucket` now has
+  a real, verified, self-sustaining daily driver (01:15 UTC) distinct from the manual VM-backfill path. Not left for
+  "another agent to pick up" — both live-tested end-to-end this session, both shipped, both journaled.

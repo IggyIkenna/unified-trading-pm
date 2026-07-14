@@ -109,11 +109,58 @@ independently verified**, first todo below.
       violation along the way (`dex_swaps_handler.py` grew past the 900-line file cap; relocated the new V4 swaps parser
       to the module-level `_dex_swaps_queries.py`, matching the existing `_parse_uniswap_v2_swaps` pattern, to land
       exactly at the cap). Quickmerge shipped `market-tick-data-service@476d30994`.
-- [ ] [DATA] P2. Real end-to-end smoke: run `dex_pools_handler`/`dex_swaps_handler` for each of the 4 protocols against
-      a real (small, bounded) date range and confirm non-empty, schema-valid rows — not just unit-test green. Evidence:
-      row counts + a sample row per protocol. **Not yet run** — the adversarial-review pass flagged this as the gap that
-      would have caught the uniswap_v4 swaps bug immediately; still real, uncompleted verification even though the bug
-      it would have caught is now already fixed by direct schema cross-check instead.
+- [x] ✅ [DATA] P2. **Real end-to-end smoke run, all 8 shard combinations (4 protocols × pools/swaps), real day
+      (2026-07-12), real live subgraph calls — 100% success, zero errors:**
+
+      | protocol       | chain     | pools rows | swaps rows |
+              | -------------- | --------- | ---------: | ---------: |
+              | velodrome_v2   | OPTIMISM  |        296 |       1000 |
+              | trader_joe_v2  | AVALANCHE |        950 |       1000 |
+              | uniswap_v4     | ETHEREUM  |       1000 |       1000 |
+              | uniswap_v2     | ETHEREUM  |       1000 |       1000 |
+
+              Called `_query_and_parse`/`_run_cascade` directly against the real subgraph endpoints (bypassing manifest
+              writes, so nothing touched prod GCS) with a real loaded `TheGraph` API key pool (9 keys). uniswap_v4's swaps
+              side — the exact shard the adversarial review's uniswap_v4/`recipient` finding predicted would fail — came back
+              1000 real rows with the `token_a`/`token_b` normalized columns present, confirming the dedicated-query fix
+              actually works against the live schema, not just the unit tests. velodrome_v2/trader_joe_v2 pools legitimately
+              hit the messari-schema-drift fallback path once each before landing on the working schema — expected cascade
+              behavior, not an error.
+
+- [x] ✅ [BACKEND] P2. **CORRECTION to the todo below's original claim: the 4 protocols ARE already MVP — no scope
+      change needed.** My first check used wrong parameter names (`is_mvp(venue="UNISWAP_V2", data_type="dex_pools")` —
+      bare venue instead of the real chain-suffixed form, and a made-up `data_type` label instead of the real canonical
+      ones). Re-tested with the actual values (`venue="UNISWAP_V2-ETHEREUM"`, `instrument_type="POOL"`,
+      `data_type="dex_pool_state"`/`"dex_pool_swaps"` — the real constants from `dex_pools_handler.py`'s
+      `_DEX_POOLS_DATA_TYPE` / `dex_swaps_handler.py`'s `_DEX_SWAPS_DATA_TYPE`): all 4 protocols return `is_mvp=True`,
+      identically to `UNISWAP_V3-ETHEREUM` (control). v13's "DeFi MVP = every IS-producible venue" ruling already covers
+      them via `_mvp_defi_venues()` (all 4 have `DEFI_VENUE_PHASE="live"`) + `_mvp_defi_data_types()` (both
+      `dex_pool_state`/`dex_pool_swaps` are in the full DeFi data_type set). No UAC change shipped — none needed.
+- [x] ✅ [BACKEND] P2. **Checked whether `/data-pipeline-check-mtds` will now exercise these protocols — yes,
+      automatically**, once real historical data exists for them (see backfill below); the skill's matrix reads
+      `is_mvp()` live, so it needs no code change either.
+- [x] ✅ [INFRA] P1. **Verified single write path before backfilling (no repeat of the shape-B/TradFi-CME bucket-name
+      class of bug)**: both `dex_pools_handler.py` (`get_write_bucket_name("market_data", "defi")`) and
+      `dex_swaps_handler.py` (`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`) resolve to the
+      identical canonical env-tiered bucket `market-data-tick-defi-prd-central-element-323112`. Confirmed its manifest
+      consolidator (`uts-prod-manifest-consolidator-market-data-defi`) is the only one, cron ENABLED, and the manifest
+      is fresh (updated within the last hour) — no paused/legacy sibling consolidator watching a different bucket name
+      for this asset_group.
+- [x] ✅ [INFRA] P1. **Launched backfill VMs for the 4 protocols, scoped (not a full re-run of all 13 protocols)**:
+      added a `--protocols` passthrough (`VM_DEX_POOLS_PROTOCOLS`/`VM_DEX_SWAPS_PROTOCOLS` metadata keys, mirroring the
+      existing `VM_LENDING_PROTOCOLS` pattern) to `setup-data-pipeline-vm.sh` +
+      `launch-mtds-dex-{pools,swaps}-backfill-vm.sh` — `deployment-service@ecb956e8e`. Launched both
+      `mtds-dex-pools-backfill` and `mtds-dex-swaps-backfill` (2023-01-01→today, SPOT,
+      `--protocols     "velodrome_v2;trader_joe_v2;uniswap_v4;uniswap_v2"` — semicolons, not commas, to avoid colliding
+      with gcloud's `--metadata` key-separator). Found + deleted a dead `mtds-dex-swaps-backfill` VM first (TERMINATED
+      since 2026-06-27, heartbeats stopped ~12h before this launch — a stale leftover, not live work) before relaunching
+      under that name. Both VMs confirmed `RUNNING` at launch; tarball-freshness warnings for mtds/UAC were checked
+      against real git ancestry (`git merge-base --is-ancestor`) and confirmed to already include both the
+      canonical_instrument_id/glued_pair_id fix and this plan's own capture-code fix — the "stale" tarballs just trailed
+      HEAD by unrelated sibling commits, not missing anything this backfill needs.
+- [ ] [DATA] P2. Verify the backfill VMs actually produced real historical rows once they've run a while — spot-check
+      row counts + manifest `capture_status=captured` for a sample of dates for each of the 4 protocols, both
+      dex_pool_state and dex_pool_swaps.
 - [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` documents the
       dex_pools/dex_swaps protocol dispatch list; update if it asserts the old (incomplete) set.
 

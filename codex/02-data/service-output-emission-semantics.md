@@ -2,27 +2,42 @@
 doc_type: codex-ssot
 title: Service-output emission semantics
 summary: >-
-  Service-output emission semantics SSOT — every derived/aggregated service routes its publish
-  boundary through UTL publish_with_policy() / publish_with_manifest_lookup(), resolving a 4-policy
-  set (STRICT_FAIL / PARTIAL_OK / NAN_FILL / BLOCK_CRITICAL) from UAC SERVICE_OUTPUT_POLICIES against
-  a completeness_fraction, emitting 1 of 4 lifecycle events and the v8 service_emission_state manifest
-  column; MTDS raw capture is n/a (it is the originator, not a derived emitter).
+  Service-output emission semantics SSOT — every derived/aggregated service routes its publish boundary through UTL
+  publish_with_policy() / publish_with_manifest_lookup(), resolving a 4-policy set (STRICT_FAIL / PARTIAL_OK / NAN_FILL
+  / BLOCK_CRITICAL) from UAC SERVICE_OUTPUT_POLICIES against a completeness_fraction, emitting 1 of 4 lifecycle events
+  and the v8 service_emission_state manifest column; MTDS raw capture is n/a (it is the originator, not a derived
+  emitter).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
+repos:
+  [
+    alerting-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-trading-pm,
+  ]
 scope: [engineer]
 tags: [manifest, data-correctness, mdps, features, ml, execution, honest-coverage]
-related: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
+related:
+  [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
 created: 2026-05-11
 authoritative_for: [service-output emission policy gate, service_emission_state manifest column]
-referenced_by: [codex/02-data/per-asset-group-bucket-layouts.md, codex/04-architecture/service-emission-policy.md, plans/epics/manifest_master.md]
+referenced_by:
+  [
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/04-architecture/service-emission-policy.md,
+    plans/epics/manifest_master.md,
+  ]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:
 last_updated: 2026-05-11
-related_codex: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md]
+related_codex:
+  [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md]
 ---
 
 # Service-output emission semantics
@@ -183,10 +198,10 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 ## When the policy gate is n/a — MTDS raw capture
 
 Not every service is a derived-output emitter. **MTDS is n/a per the slice (c) Phase 6.1 audit** (2026-05-12, harsh slot
-3). MTDS is the ORIGINATOR of every data*type it produces: ticks / candles / book snapshots / DeFi reserve params all
+3). MTDS is the ORIGINATOR of every `data_type` it produces: ticks / candles / book snapshots / DeFi reserve params all
 come from external APIs (Databento / Tardis / Hyperliquid REST / Pyth Hermes / chain RPCs / sportstats vendors). There
-is no \_upstream MTDS service* whose completeness gates the write — the upstream is the venue / vendor, and the manifest
-layer (`record_captured` / `record_empty(reason=)` / `record_failed`) is sufficient.
+is no \_upstream MTDS service\* whose completeness gates the write — the upstream is the venue / vendor, and the
+manifest layer (`record_captured` / `record_empty(reason=)` / `record_failed`) is sufficient.
 
 Workspace audit (2026-05-12): `rg "publish_with_policy|publish_with_manifest_lookup" market_tick_data_service/` returns
 **zero** callsites. MTDS adapters universally call `ManifestWriter.record_captured` for raw captures. Adapters that _do_

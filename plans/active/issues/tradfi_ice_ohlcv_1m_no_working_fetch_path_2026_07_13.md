@@ -186,3 +186,13 @@ triage pattern used for the KRX gap.
     D2a "could-exist" expected-universe enumeration doesn't count ICE's DXY index cell (pre-existing, independent of
     this fix); (3) `venue_mapping.py`'s separate per-venue start-date `"ICE": "2020-01-01"` was not aligned to the
     2019-01-02 DXY genesis (different mechanism; KRX's precedent commit didn't touch its equivalent either).
+- 2026-07-14: **Historical non-24h ICE residue PURGED** (operator descope ruling 2026-07-14, executing the narrowing's
+  data-side counterpart). The 2026-07-13 registry narrowing left the live tradfi manifest + tick bucket carrying the
+  dead granularities' history; today's operator ruling ("ICE isn't in MVP outside 24h bars from Yahoo Finance … purged
+  from manifest and honest status and GCS data") authorized removing it: market-tick-data-service@fffd7f82
+  `scripts/purge_tradfi_ice_non_24h_2026_07_14.py` reclassed 12,444 `captured` + 77 `attempted_failed` ICE non-24h
+  manifest rows → `empty_confirmed[EXPECTED_NO_PROVIDER_COVERAGE]` (row-preserving; total 5,090,813 rows unchanged;
+  snapshot `pre_ice_purge_2026_07_14.parquet`) and deleted the 10,918 non-24h ICE GCS objects (re-list verified 0
+  remain). Zero `ohlcv_24h` rows/objects touched — the DXY route's first capture is still pending (honest residual (1)
+  above, unchanged). The consolidator cron was paused/resumed around the write (11:06:16Z → 11:12:43Z, first post-resume
+  run Completed=True 11:13:59Z).

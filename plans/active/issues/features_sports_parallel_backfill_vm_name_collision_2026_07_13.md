@@ -124,7 +124,8 @@ dispatcher on this plan; a real fix needs its own scoped review + testing (verif
       `--force-replace` overrides. Wired into `launch-features-sports-parallel-backfill-vm.sh` immediately before the
       delete-then-create step. Verified with `gcloud`/`gsutil` stubs across all 4 branches (running+fresh refuses;
       force-replace / not-running / stale-log all allow); `shellcheck` clean; full `quality-gates.sh` green.
-- [ ] [DOCS] P3. Add a one-line note to `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s `## Mechanics` section
-      recommending `launch-features-vm.sh --feature-family sports` (collision-free timestamped naming) over
+- [x] ✅ [DOCS] P3. Add a one-line note to `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s `## Mechanics`
+      section recommending `launch-features-vm.sh --feature-family sports` (collision-free timestamped naming) over
       `launch-features-sports-parallel-backfill-vm.sh --vms 1` for single-shard gap-fill relaunches on this plan. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — **DONE, slot 4 (infra), 2026-07-14**: added the note as a new `## Mechanics` bullet on
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md`, linking back to this issue doc.

@@ -372,9 +372,9 @@ at UAC@`d47b232`). Rules filter out synthetic by default. Operator can opt-in sy
 2. **Source-environment tag** — `details["environment"] in {"development", "mock", "demo", "staging"}` → drop unless the
    matching `AlertRule.allow_synthetic` is True. Rationale: rehearsal procedures (per `rehearsal-procedure.md:181`
    `rehearsal=true` tag) opt-in synthetic alerting for the LIVE rehearsal-only window; default-drop everywhere else.
-3. **Correlation-ID prefix** — `details["correlation_id"]` prefix matches the per-asset*group synthetic generator
-   namespace (e.g.
-   `synth_cefi*_`, `synth*defi*_` — per slot 6 generator taxonomy at UAC@`d47b232`) → drop unless `AlertRule.allow_synthetic`is True. Rationale: backstop for services that forget to populate`is_synthetic`.
+3. **Correlation-ID prefix** — `details["correlation_id"]` prefix matches the per-`asset_group` synthetic generator
+   namespace (e.g. `synth_cefi_*`, `synth_defi_*` — per slot 6 generator taxonomy at UAC@`d47b232`) → drop unless
+   `AlertRule.allow_synthetic` is True. Rationale: backstop for services that forget to populate `is_synthetic`.
 
 ### Per-rule opt-in (`AlertRule.allow_synthetic`)
 

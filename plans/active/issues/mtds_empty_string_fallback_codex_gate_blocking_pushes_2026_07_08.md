@@ -219,7 +219,7 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   per-site reasoning): 5 reported sites + the adjacent `venue` read in
   `reconcile_phantom_manifest_rows_all.py::_build_triage_records` (a cross-asset-group best-effort Gate-3 triage-report
   builder — `main()` already guards `"venue" in phantom_df.columns` a few lines below the same function, confirming
-  these columns are genuinely optional depending on asset*group/schema vintage) +
+  these columns are genuinely optional depending on `asset_group`/schema vintage) +
   `reconcile_sports_blank_empty_reason_2026_06_24.py`'s `VM_NAME` read (same optional-env-flag pattern as the
   98198613/86df11b3 precedent). Verified via direct re-run: 377 → 368 (< baseline 369, real fix, not a baseline edit —
   `write_baseline()` is hard-clamped DOWN-only regardless). Landed as `instruments-service@a326f6b9`
@@ -240,13 +240,14 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   `quickmerge.sh --agent --files "scripts/reconcile_phantom_manifest_rows_all.py scripts/reconcile_sports_blank_empty_reason_2026_06_24.py" --skip-preflight`
   (pre-flight skipped because an unrelated dependency repo, `unified-api-contracts`, has unrelated uncommitted changes
   from another session) reaches Stage 3 (Local Quality Gates) and fails on 4 pre-existing, unrelated test failures in
-  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs*\*`— root cause confirmed (not assumed) by inspecting`git
-  status`: another agent has a **live** uncommitted WIP on `instruments*service/reference_data/adapters/tradfi/databento/{**init**,adapter,symbology}.py`
-  (mtime ~5 min old at observation time, actively multi-file, matches this session's explicit "DO NOT touch databento
-  files" scope boundary) that has \_temporarily* reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while
-  the already-committed test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature
-  (corrected 2026-07-14, finding 145: this was a mid-transition snapshot, not the durable target — the 1-arg form is the
-  intentional, permanent signature per the venue-drop decision in
+  `tests/unit/test_cefi_tradfi_comprehensive.py::TestDatabentoHelpers::test_parse_cme_spread_legs*\*`— root cause
+  confirmed (not assumed) by inspecting`git status`: another agent has a **live** uncommitted WIP on
+  `instruments*service/reference_data/adapters/tradfi/databento/{**init**,adapter,symbology}.py` (mtime ~5 min old at
+  observation time, actively multi-file, matches this session's explicit "DO NOT touch databento files" scope boundary)
+  that has \_temporarily\* reverted `_parse_cme_calendar_spread_legs` to a 1-arg signature, while the already-committed
+  test file (from `86df11b3`) expects the real, current 2-arg `(raw_symbol, venue)` signature (corrected 2026-07-14,
+  finding 145: this was a mid-transition snapshot, not the durable target — the 1-arg form is the intentional, permanent
+  signature per the venue-drop decision in
   `active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md:153-156`, which fixed the 2-arg test calls as
   the actual regression, shipped 2026-07-09; live code confirms 1-arg —
   `instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py:244`

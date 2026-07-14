@@ -2608,3 +2608,108 @@ attempted this session, time-boxed out).
 09:21Z — `2024-light` self-terminated). Will retry once `gcloud compute instances list --filter='name~bitget'` returns
 empty. The 2,546 real phantom rows this session found are still accurately diagnosed (dry-run confirmed, unaffected by
 this race) — only the `--apply` write-back needs a clean, VM-free window.
+
+---
+
+### OPERATOR RULINGS — 2026-07-14T11:30Z (chat, doc-reconciliation session)
+
+1. **DERIBIT-COMBO gaps DEPRIORITIZED — not MVP-essential.** Operator: "deribit combo gaps i dont care about much for
+   now tbh — we can always derive synthetic combos; it's not MVP essential to fill those." The Layer-1 tuple-present vs
+   Layer-2 ~0% divergence stays flagged (honesty), but no backfill VM / catalogue-rollup work is scheduled for combos in
+   the MVP window. Synthetic derivation from legs remains the fallback.
+2. **Tardis concurrency HARD RULE: max 3 concurrent Tardis VMs (both clouds), lease does NOT lift the cap** — enforced
+   in code (deployment-service `tardis-concurrency-guard.sh`, wired into the cefi GCP/AWS sharded launchers +
+   `launch-mtds-backfill-vm.sh`), hard-ruled in `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap) +
+   workspace CLAUDE.md. Correction to the 2026-07-14T10:55Z lockout-issue entry: the surviving N=3 wave runs WITH the
+   lease (VM metadata verified `TARDIS_CONCURRENCY_LEASE=1`) — the 403 churn is lease-rotation handoff; the N=6 collapse
+   was lease-OFF. No lease-OFF multi-VM datapoint works.
+3. **Next-wave shape (operator guidance): bundle more shards per VM, keep fleet total ≲60 Tardis streams** — don't add
+   VMs. Staged Wave B (launch when the running bitget wave frees slots): SINGLE_VM_QUEUE=1 combined VM(s),
+   lease-enabled, covering DERIBIT spot_pair (10 instruments, the true Layer-1 blocker) + the majors trades/book5 mop-up
+   (BINANCE-SPOT 598 af, UPBIT 471, COINBASE-SPOT 471, OKX-SPOT 471, BINANCE-SPOT book5 139)
+   - the OKX-FUTURES/BINANCE-FUTURES/KRAKEN-FUTURES tail (~86 af). ~2,100+ af closure potential. The 82 af under legacy
+     venue names (BYBIT-FUTURES/BYBIT-SPOT/OKEX-SWAP/COINBASE-INTERNATIONAL/bare-OKX — non-canonical variants coexisting
+     in `venue_adapter_keys.py`) are manifest hygiene, NOT backfill targets.
+
+### G4 Re-Verification Run #7 — 2026-07-14T11:22-11:35Z (data_engineering slot-7): stale-code BITGET-FUTURES wave killed+relaunched, DERIBIT spot_pair backfill launched for the first time, a launcher guard bug found
+
+**Fresh `measure_honest_coverage.py --asset-group cefi` (11:24Z) — Layer-1 improved to 97.26%** (71/73 matched,
+missing=2, down from 95.89%/3-missing at the 06:44Z run): `(DERIBIT-COMBO, options_chain, trades)` is now **CONFIRMED
+CLOSED** (closed by a peer's continuation between the two runs — not this session's work). **Only 2 tuples remain**:
+`(DERIBIT, spot_pair, book_snapshot_5)` and `(DERIBIT, spot_pair, trades)`. Layer-2: captured=2,308,709 /
+attempted_failed=12,028 / expected_unattempted=0 / coverage=99.48%. Also noted 32 "stray" Layer-1 tuples (writer emits
+combos UAC doesn't sanction, mostly `liquidations` under unexpected instrument_type buckets) — not part of the gate's
+own criterion (`missing_tuples`, not `stray_tuples`) and pre-existing, not investigated further this session.
+
+**Bug found: 3 running BITGET-FUTURES VMs were executing code from BEFORE the delisted-symbol-filter fix
+(`market-tick-data-service@34550740`, shipped ~07:00-07:55Z this same day) — confirmed via VM metadata
+(`launched 2026-07-14T06:37:37Z`, predates the fix) and via the currently-published tarball manifest
+(`mtds-code@d2040f8f`, created 10:54:38Z, confirmed `git merge-base --is-ancestor 34550740 d2040f8f` = true). These VMs
+were VM_INSTRUMENT_IDS-scoped to the same 16 known dated-future symbols the fix specifically targets, so every date
+outside a symbol's real listing window was generating a fresh, avoidable `attempted_failed` row instead of the fix's
+intended `empty_confirmed(EXPECTED_INSTRUMENT_DELISTED)` — confirmed by live Layer-2 numbers: BITGET-FUTURES af grew to
+8,428 (system total af=12,028) despite `captured` only growing modestly since the 06:44Z close-out (was af=4,158
+system-wide then). Per this plan's own established precedent (killing misrouted/wasteful VMs on discovery), killed all 3
+(`cefi-bitget-futures-{2025-heavy,2025-light,2026-heavy}-20260714-063737`) — already-captured shards are preserved via
+per-shard manifest resume, so no real work was lost — and relaunched `VENUES="BITGET-FUTURES" YEARS="2025"` (2 shards;
+scoped to 2025 only to fit the new 3-VM cap, see below) with the SAME `VM_INSTRUMENT_IDS`, `TARDIS_CONCURRENCY_LEASE=1`,
+against the current (fixed) tarball. **Live-verified T+~10min**: both VMs RUNNING, `run.log` shows genuine
+`ManifestWriter`/`TardisAdapter.download_batch` writes landing (1.1M + 0.8M rows respectively on the first processed
+date) — real progress, not a stall.
+
+**Environment gotcha hit twice, self-diagnosed**: this session's `gcloud`/`gsutil` calls initially failed with
+`snap-confine ... cap_dac_override not found` (the snap-packaged CLI is sandboxed in this execution environment) —
+critically, a bare `gcloud secrets versions access ... 2>&1 || true` pattern SWALLOWED this error text INTO the "secret
+value" itself (looked like a 160-char string, actually the error message), which then made the launcher's own
+Tardis-key-validity probe (same failure mode internally) falsely report "key expired/absent" and abort — the key is
+genuinely valid (directly verified: HTTP 200, academic access through 2027-06-20, `bitget-futures` entitled). Fixed for
+this session by prepending `/snap/google-cloud-cli/current/bin` to `PATH` before invoking any launcher (matches the
+`/snap/google-cloud-cli/current/bin/gcloud` workaround multiple prior sessions in this doc already used ad hoc for
+direct CLI calls — this entry generalizes it to "export PATH before sourcing any launcher that shells out to
+gcloud/gsutil internally", since the bare-binary workaround doesn't propagate into a script's own internal `gcloud`
+calls otherwise).
+
+**New operator rule discovered mid-session**: `tardis-concurrency-guard.sh` (new since this plan's last session,
+2026-07-14 operator rule) now caps Tardis-consuming VMs at **3 total**, checked by every CeFi/TradFi Tardis launcher
+before creating VMs — SSOT `issues/tardis_concurrent_ip_lockout_2026_07_12.md`. Scoped the BITGET-FUTURES relaunch to
+`YEARS="2025"` only (2 shards) to fit under the cap with room for one more launch.
+
+**DERIBIT spot_pair backfill — LAUNCHED for the first time this plan's history.** Per the 07:56-08:10Z entry's own
+"concrete next step", launched `VENUES="DERIBIT" YEARS="2026" ONLY="DERIBIT:2026:heavy"` scoped to the 9 active MVP
+symbols (`BTC_USDC,ETH_USDC,BTC_USDT,ETH_USDT,SOL_USDC,XRP_USDC,BNB_USDC,PAXG_USDC,STETH_USDC`), lease-enabled. **Found
+a real (if minor) launcher bug along the way**: `tardis_concurrency_guard`'s planned-VM estimate (`PLANNED_TARDIS_VMS`
+in `launch-cefi-sharded-backfill.sh`) always counts DERIBIT as heavy+light=2 regardless of an `ONLY="venue:year:group"`
+scope that narrows the actual launch to ONE group — confirmed via `DRY_RUN=1` showing exactly 1 VM would launch, then
+the real (non-dry-run) invocation refusing on a phantom "2 running + 2 planned = 4 > 3" (planned should have been 1).
+Verified the TRUE total (2 running + 1 real launch = 3) stays within the operator's actual cap and used `FORCE=1` to
+proceed (a verified-safe override, not a cap violation) rather than spend more time patching the estimator in this
+session — filed as a small, scoped follow-up below rather than fixed inline (touches shared guard logic every
+Tardis-consuming launcher sources). VM `cefi-deribit-2026-heavy-20260714-113328` confirmed RUNNING via
+`gcloud compute instances list`; still in early boot (`run.log` not yet populated) at this entry's write time — first
+real attempt at this Layer-1 gap in the plan's history, genuinely untested until this launch, so no outcome claimed yet.
+
+**New finding filed (not fixed, small/scoped, P3):** `tardis_concurrency_guard`'s planned-VM estimator in
+`launch-cefi-sharded-backfill.sh` doesn't account for `ONLY=` group-scoping, overcounting DERIBIT/derivatives-venue
+launches by up to 2x when `ONLY` narrows to a single group — causes spurious cap-exceeded refusals requiring `FORCE=1`
+workarounds even when the real launch is safely under cap. Fix: thread the `ONLY` filter into the `PLANNED_TARDIS_VMS`
+loop (skip a group-count increment when `ONLY` excludes that (venue,year,group) combo). Low risk, scoped to one
+function, `deployment-service` only.
+
+**Gate verdict: ❌ NOT MET** — Layer-1 97.26% (2 tuples short); Layer-2 af=12,028 (requires 0), currently elevated by
+the now-killed stale-code wave's residual writes and will only fully resolve once the relaunched, fixed-code
+BITGET-FUTURES VMs finish reprocessing the same date range. **Concretely remaining for the next session**: (1) verify
+the 2 relaunched BITGET-FUTURES VMs (`cefi-bitget-futures-{2025-heavy,2025-light}-20260714-112939`) complete and confirm
+af trends toward 0 for that venue (then widen to `YEARS="2026"` under the 3-VM cap once slots free); (2) verify the
+DERIBIT spot_pair VM (`cefi-deribit-2026-heavy-20260714-113328`) completes and confirm real `instrument_type=spot_pair`
+writes land (this is the actual Layer-1-closing action — first attempt, unproven); (3) once DERIBIT 2026 confirms
+working, widen to earlier years for full historical coverage; (4) phantom reconcile `--apply` still deferred (per the
+prior entry's race-condition finding — needs a VM-free window, still not achieved); (5) the small guard-estimator bug
+filed above. **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM.** Checkbox NOT flipped — gate genuinely not met; handing
+off with 3 VMs actively in-flight and verified running (not fire-and-forget), each with a concrete, checkable next
+state.
+
+**Note on operator ruling above (posted 11:30Z, mid-session for this entry)**: item 1 (DERIBIT-COMBO deprioritized) is
+moot for this session's numbers — that tuple was already confirmed CLOSED in the 11:24Z coverage run, before the ruling
+landed. Item 2 (3-VM cap) matches exactly what this session hit and worked within. Item 3 (bundle via
+`SINGLE_VM_QUEUE=1` rather than add VMs) is genuinely better guidance than this session's per-shard `ONLY=` scoping for
+any FUTURE wave — noted for whoever picks up the "widen to earlier years" next step above.

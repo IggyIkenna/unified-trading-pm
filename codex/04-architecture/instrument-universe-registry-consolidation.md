@@ -11,10 +11,22 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [instruments, uac, canonicalisation, honest-coverage, registry, refactor]
-related: [instruments-service-as-ssot-for-mtds.md, tier-and-import-architecture.md, ../02-data/honest-coverage-model.md, asset-class-ownership.md]
+related:
+  [
+    instruments-service-as-ssot-for-mtds.md,
+    tier-and-import-architecture.md,
+    ../02-data/honest-coverage-model.md,
+    asset-class-ownership.md,
+  ]
 created: 2026-06-29
 authoritative_for: [UAC VENUE_TO_ADAPTER_KEY and venue-enumeration consolidation]
-referenced_by: [codex/04-architecture/asset-class-ownership.md, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md, plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md]
+referenced_by:
+  [
+    codex/04-architecture/asset-class-ownership.md,
+    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md,
+  ]
 owner:
 last_reviewed: 2026-06-29
 code_refs:
@@ -94,10 +106,10 @@ honest-coverage Layer-1 EXPECTED matrix  (denominator now provably == UAC)
 
 ## Invariant this buys
 
-`set(IS expected venues for ag) == set(UAC.VENUES_BY_ASSET_GROUP[ag])` for every asset*group, enforceable as a single
-test/QG check. The honest-coverage Layer-1 denominator becomes \_provably* the UAC canonical universe instead of a
-mirror that has to be eyeballed. MVP filtering (`is_mvp` / `get_mvp_data_types_for_cefi_venue`) is unchanged — it
-composes on top of the canonical venue set exactly as today.
+`set(IS expected venues for ag) == set(UAC.VENUES_BY_ASSET_GROUP[ag])` for every `asset_group`, enforceable as a single
+test/QG check. The honest-coverage Layer-1 denominator becomes _provably_ the UAC canonical universe instead of a mirror
+that has to be eyeballed. MVP filtering (`is_mvp` / `get_mvp_data_types_for_cefi_venue`) is unchanged — it composes on
+top of the canonical venue set exactly as today.
 
 ## Non-goals / explicitly out of scope
 

@@ -69,6 +69,11 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # Conflict-marker gate — catches committed git markers incl. mid-line + prettier-mangled
     # (`> > > > > > >`) forms the other checks miss (see check_conflict_markers.sh, 2026-06-21).
     "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ No conflict markers (staged plans)" || { echo "  ❌ Conflict marker(s) in staged plans — resolve before commit"; PF=$(( PF + 1 )); }
+    # Prettier emphasis-mangling gate — blocks landing underscore-identifiers rewritten as
+    # asterisks by prettier <3.9.5 (data*type, asset*group, ...). Backstop to the >=3.9.5
+    # version guard in scripts/hooks/prettier-autostage.sh. SSOT + repair recipe:
+    # plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md
+    "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ No prettier mangling (staged plans)" || { echo "  ❌ Prettier emphasis-mangling in staged plans — run: bash scripts/plan-hygiene/check_prettier_mangling.sh <file> for lines + see the corruption issue doc for the repair recipe"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
@@ -82,6 +87,7 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # check_frontmatter_schema.py (the exact checker the lint-codex slice invokes).
     python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ Frontmatter schema (staged codex)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged codex)"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No conflict markers (staged codex)" || { echo "  ❌ Conflict marker(s) in staged codex — resolve before commit"; PF=$(( PF + 1 )); }
+    "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No prettier mangling (staged codex)" || { echo "  ❌ Prettier emphasis-mangling in staged codex — see plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe"; PF=$(( PF + 1 )); }
   fi
   if [ "$PF" -gt 0 ]; then
     echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED files — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py; todo format: bash scripts/plan-hygiene/fix_todo_format.sh)."
@@ -124,6 +130,7 @@ run_check "Frontmatter validity"             hard "$SCRIPT_DIR/check_frontmatter
 run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_format.sh"
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
+run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
 run_check "Line caps (500 soft/1000 hard)"   soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"

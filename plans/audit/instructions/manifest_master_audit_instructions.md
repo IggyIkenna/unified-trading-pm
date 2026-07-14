@@ -303,15 +303,15 @@ READ-SIDE — every downstream consumer handles each of the four states per poli
       cross-product). Green: module is the single import, `rg "prefix_tpls\s*=\s*\["` / bespoke cross-products return 0
       hits across instruments-service · mtds · mdps · deployment-api.
 
-- [ ] **(CF-17) bidirectional manifest ≡ GCS + bucket prefix taxonomy + sizing** — per asset*group run the orphan sweep
-      `migration_orphan_sweep.py --asset-group <ag>` (GCS→manifest) AND the phantom reconciler
+- [ ] **(CF-17) bidirectional manifest ≡ GCS + bucket prefix taxonomy + sizing** — per `asset_group` run the orphan
+      sweep `migration_orphan_sweep.py --asset-group <ag>` (GCS→manifest) AND the phantom reconciler
       `reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` (manifest→GCS); assert `orphan_class_E==0`
       (real data with no manifest row) AND `phantom_count==0`. Assert the bucket prefix taxonomy reports **0 `unknown`
       prefixes** (every top-level prefix labelled {service-data, manifest-infra, logs, run-artifact, terraform,
-      tarball}); assert the sizing rollup parquet
-      `\_index/audit/data_sizing*<ag>.parquet`was produced (bytes + object-count per    `(asset_group, data_type, venue,
-      pipeline_mode)`). **Class (E) → `record_captured`backfill, NEVER delete** (it is     the "v10 hole"); non-data paths (VM logs, terraform, tarballs) are understood + NEVER deleted. Green: both counts     0, 0`unknown`
-      prefixes, sizing published, every AG.
+      tarball}); assert the sizing rollup parquet `\_index/audit/data_sizing*<ag>.parquet`was produced (bytes +
+      object-count per `(asset_group, data_type, venue,     pipeline_mode)`). **Class (E) → `record_captured`backfill,
+      NEVER delete** (it is the "v10 hole"); non-data paths (VM logs, terraform, tarballs) are understood + NEVER
+      deleted. Green: both counts 0, 0`unknown` prefixes, sizing published, every AG.
 
 - [ ] **(CF-21) verified-delete safety for legacy/duplicate objects** — dry-run the legacy-twin cleanup
       `cleanup_legacy_twins_<ag>.py --asset-group <ag> --dry-run`; assert EVERY delete candidate passes the gate: its

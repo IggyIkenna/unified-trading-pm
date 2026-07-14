@@ -244,9 +244,46 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
       `strategy-service@6514fe87`, `execution-service@05289cb4`. Both repos' `strategy_instructions` buckets are
       currently empty (per this doc's own audit) so no production backfill was needed — this closes the gap before the
       bucket ever receives its first row.
-- [ ] [INFRA] P3. Investigate the stale/down manifest consolidator for
+- [x] ✅ [INFRA] P3. Investigate the stale/down manifest consolidator for
       `market-data-tick-cefi-prd-central-element-323112` (consolidated blob age observed 267s→390s and rising against
       the 120s staleness threshold during this audit, 2026-07-13 ~23:29 UTC) — this bucket could not be read via
       `read_availability_index()` (correctly refused the OOM-risk per-VM-shard fallback), so cefi's `available_at` fill
       rate is UNKNOWN, not confirmed-green. (repo: deployment-service, per
-      `codex/05-infrastructure/manifest-consolidator-ssot.md`)
+      `codex/05-infrastructure/manifest-consolidator-ssot.md`) — **INVESTIGATED, slot 10 (infra), 2026-07-14. Verdict:
+      NOT a current outage; a real, still-open root-cause gap found instead.**
+  - **Live health, verified directly (not from logs/cache)**: `uts-prod-manifest-consolidator-market-data-cefi`'s last 8
+    Cloud Run executions (checked via the Cloud Run Admin API REST, `google-auth` — `gcloud` is broken on this host,
+    same snap-confine `cap_dac_override` issue every prior touch on this host hit) are ALL
+    `succeededCount=1, failedCount=None`, firing on a steady `*/1` cron (createTime deltas ~60-70s apart, 11:10-11:17
+    UTC today). Direct GCS read of `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`:
+    `blob.updated` age = **7.1s** at check time. The consolidator is healthy and actively writing right now.
+  - **Root cause of yesterday's 267-390s reading: NOT the same as the outage this todo's title implies.**
+    `codex/05-infrastructure/manifest-consolidator-ssot.md` already documents (finding 205, 2026-07-12,
+    `deployment-api@90ace9f`) that cefi is a legitimate ~60-70s-cadence-but-**86400s**-budget consolidator (matching its
+    launchers' own `MANIFEST_CONSOLIDATED_STALENESS_SEC` override) — its blob age naturally swings within that cadence,
+    and any reader applying the generic **120s** default sees false "stale" positives roughly 60% of the time. That
+    finding fixed `deployment-api`'s cockpit health endpoint (`_AG_STALENESS_BUDGET_SEC: dict[str,int]={"cefi":86400}`
+    in `deployment_api/routes/health_consolidator.py`, confirmed via direct grep — the ONLY place that dict exists in
+    the fleet).
+  - **The gap this touch actually found**: `unified-trading-library`'s `read_availability_index()` — the REAL data-read
+    gate the sports audit script (and any production reader) hits, via `_read_slow_path()` in
+    `manifest_writer/_read_index.py` calling `_resolve_consolidated_staleness_sec()` in `manifest_writer/_state.py` — is
+    **NOT** per-asset-group-aware. It resolves a single global `manifest_consolidated_staleness_sec` config value
+    (default 120, per `UnifiedCloudConfig`) with no bucket/asset_group parameter anywhere in the call chain. The
+    `deployment-api@90ace9f` fix only ever reached the COCKPIT DISPLAY layer, never this actual read-refusal gate — so
+    any process reading cefi manifest data without its OWN environment overriding
+    `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` (as cefi's dedicated launchers do) will still intermittently and
+    incorrectly raise `ManifestConsolidatorStaleError` on a perfectly healthy consolidator — exactly what the sports
+    audit hit on 2026-07-13. This is the higher-stakes gap: a raised error here blocks real reads/audits/backfills, not
+    just a UI display.
+  - **Follow-up todo filed below** (new engineering — extending the read-path budget resolution to be asset-group-aware
+    needs its own review, not a blind port of the cockpit dict into a shared library function many callers depend on) —
+    not implemented in this investigate-scoped touch.
+- [ ] [INFRA] P2. Make UTL's `read_availability_index()` staleness-refusal gate (`_resolve_consolidated_staleness_sec()`
+      in `manifest_writer/_state.py`, consumed by `_read_slow_path()` in `manifest_writer/_read_index.py`)
+      asset-group-aware, mirroring `deployment-api@90ace9f`'s already-shipped `_AG_STALENESS_BUDGET_SEC` cockpit fix —
+      so a cefi (or any future daily-batch-cadence) bucket read doesn't intermittently false-positive-refuse against the
+      generic 120s default the way the sports audit hit on 2026-07-13. Needs a bucket→asset_group resolution path
+      threaded into `read_availability_index(bucket, ...)` (it currently only takes a raw bucket string) — a design
+      decision, not a batch-size judgment call, per this doc's own precedent for similar write-path fixes. (repo:
+      unified-trading-library)

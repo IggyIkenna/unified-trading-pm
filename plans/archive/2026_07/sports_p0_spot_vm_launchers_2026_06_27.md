@@ -1,8 +1,9 @@
 ---
 doc_type: plan
 title: Sports P0-spot — force SPOT/preemptible on all sports VM launchers
-summary: Add SPOT/preemptible support to all 8 sports VM launchers to cut compute costs for idempotent backfill workloads.
-status: active
+summary:
+  Add SPOT/preemptible support to all 8 sports VM launchers to cut compute costs for idempotent backfill workloads.
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -18,9 +19,9 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on: []
@@ -28,6 +29,11 @@ source:
 assigned_role: infra
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
+> complete (0 open; audited complete 2026-07-13). The durable rule this plan pioneered is codified as the workspace-wide
+> "Backfill VMs default to SPOT" HARD RULE — SSOT `codex/05-infrastructure/spot-vms-for-backfill.md` (+ CLAUDE.md
+> one-liner). No unmigrated durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 0). Forces every sports VM the
 > plan set launches to be **spot/preemptible** (cost). This is **infra-craft** (`assigned_role: infra`, Sonnet/medium) —
@@ -69,20 +75,25 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
       `launch-features-sports-parallel-backfill-vm.sh`. Provide an explicit `--on-demand` override for the rare case
       spot capacity is unavailable. **Gate**: each launcher's `gcloud compute instances create` carries the SPOT flag by
       default; a dry-run prints it; a real launched sports backfill VM shows `scheduling.provisioningModel=SPOT` via
-      `gcloud compute instances describe`. ✅ — deployment-service@feb84bb (all 7 backfill launchers; `--on-demand` escape hatch; `--provisioning-model=SPOT --instance-termination-action=DELETE` pattern).
+      `gcloud compute instances describe`. ✅ — deployment-service@feb84bb (all 7 backfill launchers; `--on-demand`
+      escape hatch; `--provisioning-model=SPOT --instance-termination-action=DELETE` pattern).
 - [x] [INFRA] P0. **Sports-scheduler daemon on SPOT with auto-relaunch.** Add SPOT to `launch-sports-scheduler-vm.sh`;
       because it is a long-lived daemon, ensure a preemption triggers a relaunch (the singleton-lock + GCS
       `sports_scheduler_state/` make restart safe — it resumes its tier cadence). **Gate**: the scheduler VM launches
       SPOT; a simulated/observed preemption results in a fresh scheduler VM re-acquiring the singleton lock and
-      continuing from GCS state (no tier double-fire, no gap > one poll interval). ✅ — deployment-service@5d24b3c (`--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure`; preemption detected via GCE metadata, shutdown-script relaunches a fresh scheduler VM with `nohup gcloud … --force` within the 30s preemption window).
+      continuing from GCS state (no tier double-fire, no gap > one poll interval). ✅ — deployment-service@5d24b3c
+      (`--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure`; preemption detected via
+      GCE metadata, shutdown-script relaunches a fresh scheduler VM with `nohup gcloud … --force` within the 30s
+      preemption window).
 - [x] [INFRA] P0. **Make the fleet monitors preemption-aware (no false `DP_VM_GONE_NO_CAPTURE`).** A spot preemption
       self-deletes the VM the same way an OOM does — the exit-code / meta watcher must classify a GCE **preemption
       event** (`gcloud compute operations` `compute.instances.preempted`, or the `--instance-termination-action` signal)
       as a benign relaunch, not a CRITICAL silent-failure alert (R5 — no false errors). **Gate**: a preempted sports
       backfill VM produces NO `DP_VM_GONE_NO_CAPTURE` CRITICAL; instead a benign `preempted→relaunch` INFO;
       `quality-gates.sh` green with a unit test for the preemption-classification path. ✅ — deployment-service@2792fff
-      (PREEMPTED_BLOB + is_vm_preempted() in _gcs.py; TerminationVerdict.PREEMPTED highest-priority in exit_code_fleet_monitor.py;
-      7 backfill launchers write gs://…/vm-logs/{vm}/PREEMPTED via shutdown-script; 5 new unit tests incl. sweep no-CRITICAL).
+      (PREEMPTED_BLOB + is_vm_preempted() in _gcs.py; TerminationVerdict.PREEMPTED highest-priority in
+      exit_code_fleet_monitor.py; 7 backfill launchers write gs://…/vm-logs/{vm}/PREEMPTED via shutdown-script; 5 new
+      unit tests incl. sweep no-CRITICAL).
 - [x] [QG] P0. **Ship via quickmerge.** `quality-gates.sh` green on `deployment-service`; shipped
       `--agent --files '<the launcher scripts + monitor change>'`. **Gate**: `.qg_last_passed_sha == HEAD`; quickmerge
       landed on `live-defi-rollout`. ✅ — deployment-service@2792fff; QG green (68s, all gates pass); landed on LDR.

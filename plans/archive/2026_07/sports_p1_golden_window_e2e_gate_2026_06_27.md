@@ -3,7 +3,7 @@ doc_type: plan
 title: Sports P1e — golden-window e2e GATE (manifest-clean + catalogue + alerts-zero)
 summary:
   E2E gate proving the full sports stack is 100% and clean on the golden window before Phase 2 history expansion begins.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -23,9 +23,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-12
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -40,6 +40,11 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
+> complete (0 open; audited complete 2026-07-13); the P1e gate formally flipped GREEN 2026-07-12 (0/0/0/0 re-audit — see
+> the Progress Log and P2b's NOTE 2026-07-12). E2e-gate / manifest-clean learnings were codified in the cited Codex
+> SSOTs during the work — no unmigrated durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1, the GATE). This is the
 > **climbing-metric gate** — it proves the FULL sports stack is 100% + clean on the golden window (**2025-09-01 ..

@@ -391,13 +391,49 @@ consolidation).
       **not attempting that design in this dispatch**: it is genuinely new engineering needing its own review, and the
       operator has separately and explicitly said stop pending a scheduled window regardless. No further production
       write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
-- [ ] [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
+- [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
       contributes to the captured-row `available_at` gap above — flagged as a plausible mechanism (a high-row-count
       stale row could out-rank a fresher low-row-count one) but NOT confirmed; needs a targeted check of whether any of
-      the missing row_keys are genuinely multi-source before concluding either way. (repo: unified-trading-library)
-- [ ] [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
-      `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service)
+      the missing row_keys are genuinely multi-source before concluding either way. (repo: unified-trading-library) —
+      **RULED OUT, slot 4 (infra), 2026-07-14**, via a direct empirical check (no code change; read-only, no production
+      write, no cron pause/resume). The consolidator's real dedup key is `_BASE_DEDUP_COLS + _OPTIONAL_DEDUP_COLS`
+      (`manifest_consolidator.py:393-407` — date/venue/data_type/service_name + timeframe/league_id/chain/
+      instrument_type/underlying/feature_group/model_family/training_period/strategy_id/client_id/instruction_type/
+      instrument_id; deliberately excludes `source`). `captured_distinct_sources` is
+      `count(DISTINCT source) FILTER (WHERE capture_status='captured') OVER (PARTITION BY <that same key>)` — so the
+      tie-break's `> 1` branch can only ever fire on a dedup-key group that genuinely has 2+ different `source` values.
+      Single-object read of the LIVE `_index/availability_index.parquet` on both sports surfaces (no new whole-corpus
+      walk — same single-object-read method prior touches on this doc used), grouped ALL `capture_status='captured'`
+      rows by the real dedup key (NULL/`""` normalized the same way `_dedup_key_sql` does) and counted distinct `source`
+      per group: **IS — 1,645,101 captured rows → 1,645,101 dedup-key groups, 0 with >1 distinct source. MDPS — 575,671
+      captured rows → 575,671 dedup-key groups, 0 with >1 distinct source.** Every currently-captured row is already at
+      a unique key on both surfaces — there is no live multi-source ambiguity for the tie-break to resolve either way,
+      on the FULL corpus, not just the data_types named in the gap breakdown above. (Sanity-checked the two data_types
+      that looked most suspicious first: IS `TEAMS`/`STANDINGS` are single-source [`api_football`] only; MDPS `trades`
+      has 2 distinct sources present [`api_football` 47,253 rows + `odds_api` 362,746 rows] but they never share a dedup
+      key — `api_football`'s `trades` rows are a disjoint legacy slice, not a same-cell competitor to `odds_api`'s,
+      matching this doc's own precedent for the 12,407 legacy `source='instruments_service'` VENUES/LEAGUES rows.)
+      **Caveat honestly noted**: this proves no ACTIVE multi-source ambiguity exists right now (so the tie-break cannot
+      be silently misfiring today, and a future consolidation cycle is safe from this specific mechanism) — it cannot
+      retroactively prove the tie-break never fired on a since-collapsed historical duplicate, since a post-dedup
+      canonical only ever retains the winning row. Given zero live evidence of the precondition
+      (`captured_distinct_sources>1`) anywhere in either surface's current captured population, and that the same-source
+      duplicates the doc's investigation trail already traced (targeted-re-emit gap, service_name-scoped dedup) fully
+      explain the gap via other confirmed mechanisms, this tie-break is not a contributing cause. No further action
+      needed on this todo.
+- [x] ✅ [INFRA] P2. Fix the `write_projected_index`/`SportsProjectionCollector` FetchEvidence-serialization crash so
+      `--beta-manifest-out` dry-run previews work again. (repo: market-tick-data-service) —
+      market-tick-data-service@cae3a3fb. `ProjectionCollector._emit()` (the single choke point every
+      `add`/`record_empty`/`record_failed`/`emit_passthrough` row passes through) now coerces any dataclass-instance
+      value (e.g. `FetchEvidence`, threaded via `record_empty(fetch_evidence=...)` for honest-absence validation) to a
+      JSON string via `dataclasses.asdict()` before `write_projected_index` hands rows to
+      `pd.DataFrame(...).to_parquet()` — pyarrow's type inference cannot serialize a raw dataclass instance, which is
+      exactly the `pyarrow.lib.ArrowInvalid` this todo names. New regression test
+      (`test_fetch_evidence_dataclass_does_not_crash_parquet_write`) confirmed to FAIL with the exact same
+      `ArrowInvalid` on pre-fix code (verified via a temporary `git stash` revert) and PASS post-fix, round-tripping
+      `fetch_evidence` as valid JSON. Confirmed this never touched the real `--no-dry-run` write path (only
+      preview/dry-run tooling). Full `quality-gates.sh` green + sentinel-verified; shipped via `quickmerge --agent`.
 - [ ] [INFRA] P2. The sports-consolidator-cron collision (Finding 1) has now recurred at least 3 times in one day
       (original incident 2026-07-13 + twice more during the 2026-07-14 re-attempt above) despite operator coordination
       each time — manual "please don't touch this" coordination is not holding up under real fleet concurrency. Worth a
@@ -681,3 +717,42 @@ and is NOT this touch's call to make. Not flipping the P1 todo's checkbox: the t
 done, and CF-8 remains RED on both surfaces, unchanged from the pre-session baseline. A future operator-coordinated
 attempt now has a design that should actually close the gap instead of repeating the net-zero 500-row result — that is
 this touch's whole contribution.
+
+**Redispatch-churn confirmed a second time — 2026-07-14 (slot-12, resumed session)**: this same slot's crashed prior
+session (the touch immediately above) was resumed and re-dispatched to this identical task. Fresh-pulled all repos
+(clean); confirmed `market-tick-data-service@af627b5b` is live and unchanged. A separate touch (slot-7, on the parent
+plan doc) already diagnosed this exact pattern — ~30 re-dispatches since 2026-06-27 with data_engineering craft work
+fully closed and only an operator-scheduled maintenance-window run remaining, still STOP-gated by `BLK-d9137d48` — and
+filed `/blocked` recommending a `prereqs.conditions` gate on this task's `backlog.yaml` entry. Getting re-dispatched
+into the identical dead end confirms that fix has not yet landed. Filed a fresh `/blocked` as a second, independent
+confirmation rather than re-running any audit (would reproduce byte-identical RED evidence for zero new information, the
+exact waste slot-7's own touch already flagged). No code shipped this touch.
+
+**Parking gate applied — 2026-07-14 (slot-12, same session, operator-authorized)**: operator answered the fresh
+`/blocked` (`BLK-c80a05e7`) with option A — apply the backlog parking gate now. Executed the `RULES.md` § 4 "Park a
+task" recipe: seeded condition `sports-cf8-maintenance-window-scheduled` (`false`) via `POST /api/prerequisites/...`,
+set `priority: 999` + `priority_override: true` + `prereqs.prerequisites: [sports-cf8-maintenance-window-scheduled]` on
+this task's `backlog.yaml` entry (`sports_cf8_available_at_backfill_regression-007`), then `POST /api/backlog/reload`
+followed by a real `POST /api/backlog/regen` tick to confirm the hand-tuned fields survive reconciliation (they do —
+verified in the post-regen yaml, not just trusted from the API response). The same condition name was already referenced
+as a prerequisite on `sports_manifest_canonicalisation-001` (the E8 Verify task), so this closes both gates with one
+condition. This task will no longer be dispatched to idle slots until the operator flips
+`sports-cf8-maintenance-window-scheduled` to `true` (coordinated with an actual maintenance-window run). No code shipped
+this touch; this plan-doc edit ships via the `docs(plans):` carve-out.
+
+**Multi-source dedup tie-break check — 2026-07-14 (slot 4, infra, dispatched to
+`sports_cf8_available_at_backfill_regression-008`, the P2 verify-only todo)**: read this doc in full first; fresh-pulled
+every slot repo (clean). Task scope is explicitly read-only investigation — no production write, no cron pause/resume,
+so the operator's `BLK-d9137d48` STOP and the parking gate above (which only gates task `-007`'s live re-emit) do not
+apply here. Confirmed the todo (this exact one) is a distinct backlog task ID from the parked `-007`, so dispatch was
+correct.
+
+Ruled out the tie-break via a single-object read of the live `_index/availability_index.parquet` on both sports surfaces
+(no new whole-corpus walk), grouping every `capture_status='captured'` row by the consolidator's REAL dedup key
+(`_BASE_DEDUP_COLS`+`_OPTIONAL_DEDUP_COLS`, source deliberately excluded) and counting distinct `source` per group —
+full evidence + numbers recorded on the todo's own checkbox above (not duplicated here). Zero dedup-key groups with more
+than one distinct source on either surface's full captured population; the one data_type that looked genuinely
+multi-source at first glance (MDPS `trades`: `api_football` + `odds_api`) turned out to occupy fully disjoint dedup
+keys, not a same-cell collision. This closes the todo's own open question — the answer is a confirmed negative, not an
+unconfirmed flag. No code changed, no crons touched, no production write. This plan-doc edit ships via the
+`docs(plans):` carve-out.

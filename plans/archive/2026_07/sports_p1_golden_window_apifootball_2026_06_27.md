@@ -4,7 +4,7 @@ title: Sports P1a — golden-window API-Football to 100% (fixtures + enrichment 
 summary:
   Drive all API-Football data_types to 100% honest coverage on the golden window (2025-09-01..2025-11-30) for the
   94-league universe.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -25,9 +25,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -40,6 +40,12 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
+> complete (0 open; audited complete 2026-07-13); golden-window API-Football gate ALL PASS (attempted_failed=0,
+> unattempted=0, blank_reason=0 — see the banner below). Golden-window / honest-coverage learnings were codified in the
+> cited Codex SSOTs during the work — no unmigrated durable contract found. Lock cleared per the ruling;
+> historical/frozen.
 
 > **✅ FIXTURES BACKFILL COMPLETE** — `af-backfill-20260627-182057` SPOT asia-northeast1-c, 18:20–18:32 UTC 2026-06-27,
 > 2903/2904 shards resolved via re-fetch. 1 residual (A_LEAGUE/2025-09-01, off-season) fixed via reconcile script. Gate

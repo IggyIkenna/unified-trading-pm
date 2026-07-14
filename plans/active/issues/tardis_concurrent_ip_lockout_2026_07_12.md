@@ -621,3 +621,27 @@ Progress Log entry; the full post-fix af-census delta re-measures after PROD-sca
 the affected shards (owned by `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4). Operational lesson recorded: driver-level
 concurrency still contends at the vendor even with the lease (two lease-enabled drivers + one no-lease foreign wave) —
 run Tardis re-run waves strictly serialized; the launcher-refusal hardening candidate above stands.
+
+---
+
+## EMPIRICAL CONCURRENCY TEST — 2026-07-14T10:55Z (operator-directed "try and see", total connections < 1k)
+
+Operator hypothesis: the academic licence permits ~100 concurrent same-region IPs and only dislikes ~2k total
+connections. Test conditions were already live: a reduced 3-VM bitget relaunch
+(`cefi-bitget-futures-{2025-heavy,2025-light,2026-heavy}-20260714-063737`, launched 06:37Z, lease OFF, default 16+4
+streams/VM ≈ 60 total connections) had been running 4h15m at check time. Findings from the run.logs:
+
+- **The lock is a REVOLVING single-active-slot, not a hard lockout**: 403 `code=274` fires continuously at N=3 IPs
+  (~300-870/hr/VM, steady across 4h — so the multi-IP entitlement is NOT what this key exhibits), yet every VM also
+  banks captures (~3,000 lines each) because the active slot keeps changing hands. Request efficiency ≈ 50-70%.
+- **N=6 collapses, N=3 grinds**: re-reading the 2026-07-13T23:15Z 6-VM failure through this model — more contenders →
+  shorter slot tenure → per-VM win rate below the 1800s progress threshold → stall watchdog killed all 6. At N=3 each VM
+  wins often enough to live. Net throughput at N=3 ≈ 1.5-2.1 VM-equivalents, i.e. moderately better than one serialized
+  VM, far below linear.
+- **Single-IP control**: the pipelinecheck VM (01:59-02:03Z, sole IP) ran 26 Tardis requests with zero 403s.
+
+Practical guidance (supersedes the 2026-07-14T02:00Z "ONE VM at a time" directive): 2-3 concurrent Tardis VMs is a
+workable, mildly-net-positive shape with the lease OFF; >3 risks contention collapse; the lease (serialized) remains the
+zero-waste option. The launcher-hardening candidate refines to: warn (not refuse) at 2-3 concurrent Tardis VMs,
+refuse >3 unless the lease is enabled. Did NOT add more VMs on top of the live 06:37Z wave (risk of tipping it into
+collapse). — doc-reconciliation session, 2026-07-14

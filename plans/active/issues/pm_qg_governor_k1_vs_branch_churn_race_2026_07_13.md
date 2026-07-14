@@ -80,9 +80,53 @@ they're trying to fix).
 
 ## Todos
 
-- [ ] [INFRA] P2. Investigate whether `QG_HOST_CONCURRENCY=1` (vs. the CLAUDE.md-documented `>=2` floor) is intentional
-      for this host; if not, restore the floor or document why 1 is correct here. (repo: unified-trading-pm,
-      scripts/quality-gates-base/qg-host-governor.sh)
-- [ ] [INFRA] P2. Consider excluding `qg_governor_acquire` queue-wait time from the `MAX_DURATION` wall-clock check in
-      `scripts/quality-gates-base/base-service.sh` (~line 3637-3654) so host contention can't fail an otherwise
-      fully-green run. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P2. Investigate whether `QG_HOST_CONCURRENCY=1` (vs. the CLAUDE.md-documented `>=2` floor) is
+      intentional for this host; if not, restore the floor or document why 1 is correct here. (repo: unified-trading-pm,
+      scripts/quality-gates-base/qg-host-governor.sh) — **CONFIRMED intentional, not a drifted misconfiguration.**
+      `agent-orchestrator/scripts/bootstrap_vm.sh:1199-1209` deliberately pins `QG_HOST_CONCURRENCY=1` specifically on
+      the **central-dispatch (planning) host** — the CLAUDE.md `max(2, floor(cores/4))` floor is the general WORKER-host
+      default; this host is the narrower, documented exception because the orchestrator process co-resides here and must
+      not absorb heavy QG/pytest RSS alongside it (SSOT cited in the script:
+      `plans/archive/issues/api_host_chronic_impairment_2026_05_29.md`). Verified live on this exact host (nproc=16,
+      `free -h` 61Gi total / 3.9Gi swap in use, uvicorn `server.server:app --port 8765` confirmed running locally — i.e.
+      this session IS the central-dispatch host): `.env.local` carries `QG_HOST_CONCURRENCY=1` per that pin, and the
+      session env matches. This is the SAME host + same finding already independently confirmed by main on 2026-07-13 in
+      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` (a duplicate/related report of the same
+      K=1-vs-branch-churn contention), and is now the subject of an in-flight active plan —
+      `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (human-driven, `assigned_vm: NA`) — which replaces
+      the fixed-K token bucket with a host-adaptive RAM+CPU admission controller and includes a data-backed interim
+      "raise K on 61 GB hosts" quick-win (Phase 1) plus formally retiring the `bootstrap_vm.sh` pin (Phase 5). No code
+      change needed from this todo — documenting the confirmation + cross-links is the close-out; the actual governor
+      redesign is tracked and in progress in that plan, not duplicated here.
+- [x] ✅ [INFRA] P2. Consider excluding `qg_governor_acquire` queue-wait time from the `MAX_DURATION` wall-clock check
+      in `scripts/quality-gates-base/base-service.sh` (~line 3637-3654) so host contention can't fail an otherwise
+      fully-green run. (repo: unified-trading-pm) — **Shipped: unified-trading-pm@f36ac5877** (slot-10, landed
+      concurrently with this dispatch while I was mid-implementation of the functionally-identical fix). Their
+      `qg_governor_acquire()` now exports `QG_GOVERNOR_WAIT_SECONDS`; `base-service.sh`/`base-library.sh` compute
+      `DUR_BILLABLE = DUR - QG_GOVERNOR_WAIT_SECONDS` and gate `MAX_DURATION` on it, plus 4 new committed bash-harness
+      unit tests (`tests/test-qg-governor-wait-time.sh`). I independently built + verified an equivalent fix (same
+      mechanism, isolated unit smoke tests, a full live `quality-gates.sh` run queuing 68s/226s behind other slots and
+      passing green) but hit `BEHIND_DIVERGED_CONFLICT` on quickmerge once slot-10's version had already merged —
+      discarded mine rather than push a duplicate/conflicting implementation; theirs is strictly better (has committed
+      regression tests, mine did not). Also flipped as todo 2 in their own issue doc
+      `qg_host_governor_severe_contention_2026_07_13.md`. No further code change needed from this todo.
+
+## Progress Log
+
+**2026-07-14, slot 6 (infra)**: dispatched to investigate todo 1. Confirmed `QG_HOST_CONCURRENCY=1` is a deliberate,
+documented pin for the central-dispatch host (`bootstrap_vm.sh:1199-1209`), verified live on this exact host (this
+session IS the central-dispatch host — uvicorn `server.server:app` running locally on :8765). Same finding + same host
+already independently confirmed by main on 2026-07-13 in the related issue doc
+`qg_host_governor_severe_contention_2026_07_13.md`, and superseded by the in-flight
+`qg_host_adaptive_resource_governor_2026_07_14.md` active plan (human-driven), which formally replaces the fixed-K
+governor and retires this exact pin in its Phase 5. Flipped todo 1 only; todo 2 cross-linked to that plan's Phase 4 (not
+duplicated). No code changes needed.
+
+**2026-07-14, slot 6 (infra), todo 2**: implemented + verified (isolated unit smoke tests, shellcheck, a full live
+`quality-gates.sh` run — queued 68s then 226s behind other slots, passed green both times) a
+`QG_GOVERNOR_WAIT_SECONDS`-based fix identical in mechanism to slot-10's. Hit the exact quickmerge race this issue doc
+describes twice in a row (HEAD moved during Stage 0's auto-rebase, invalidating the sentinel) while retrying — on the
+third retry hit a genuine file conflict: slot-10 had independently shipped the same fix (`unified-trading-pm@f36ac5877`,
+with committed unit tests, superior to my ad-hoc smoke tests) moments earlier. Discarded my redundant local commit
+(`git reset --hard origin/live-defi-rollout`) rather than force a duplicate/conflicting version through. Flipped todo 2
+crediting their shipped commit.

@@ -207,7 +207,12 @@ orchestrator-dispatched).
       lingering `captured` cells to honest-empty/absent as predicted. Gate MET — Phase 0 fully closed (all 4 todos now
       done).
 
-### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL
+> **🟡 2026-07-14 OPERATOR RULING: Kalshi/Polymarket perps are NOT part of MVP** — Polymarket perps are beta-gated and
+> Kalshi requires member-rollout enrollment ("extra work"); there is nothing actionable until access exists. Phases 1–3
+> perp-adapter repoint items + Phase 4 prod cutover are **DESCOPED/parked — do not dispatch**. Still ACTIVE (not
+> perps-dependent): Phase 3's prediction event-capture-gap `[VERIFY]` and the Phase 5 write-time guardrail.
+
+### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL [DESCOPED-NOT-MVP 2026-07-14]
 
 - [ ] [CODE] P1. Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via `UnifiedCloudConfig`, default
       `demo`) resolving the host; delete the hardcoded `_KALSHI_BASE_URL` events-host const from the perp adapters.
@@ -217,7 +222,7 @@ orchestrator-dispatched).
       credential blob via the injection path (secret ref `kalshi-perp-demo`). Gate: signed-header unit test on the
       shared helper.
 
-### Phase 2 — repoint kalshi_perp to the margin API (demo) — SEQUENTIAL after Phase 1
+### Phase 2 — repoint kalshi_perp to the margin API (demo) — SEQUENTIAL after Phase 1 [DESCOPED-NOT-MVP 2026-07-14]
 
 - [ ] [CODE] P1. Rewrite `KalshiPerpReferenceDataAdapter.get_instruments` to hit `…/trade-api/v2/markets/margin` on the
       demo host, parse `MarginMarket` → `InstrumentRecord(instrument_type=PERPETUAL)` (ticker; `underlying`→base_asset;
@@ -227,7 +232,7 @@ orchestrator-dispatched).
       **0 event contracts**. Capture into a NON-PROD / dry-run sink — demo data MUST NOT enter the prod cefi store.
       Gate: demo run yields real perp instruments; a `KXMVE*` event ticker would be rejected.
 
-### Phase 3 — polymarket_perp repoint (demo) + prediction event-capture gap — SEQUENTIAL
+### Phase 3 — polymarket_perp repoint (demo) + prediction event-capture gap — SEQUENTIAL [perp-repoint items DESCOPED-NOT-MVP 2026-07-14; the event-capture-gap VERIFY stays ACTIVE]
 
 - [ ] [RESEARCH] P1. `docs.polymarket.com` perps API — find the markets-listing endpoint + auth (beta-gated; launched
       2026-04-21). Gate: endpoint + auth documented in the issue doc's reference section.
@@ -241,14 +246,18 @@ orchestrator-dispatched).
       quantified — either "prediction captures them, purge loses nothing" (close), OR a named coverage gap (`N` markets
       missing) → file the fix in the PREDICTION Kalshi/Polymarket adapter (NOT by relocating the malformed cefi rows).
 
-### Phase 4 — prod cutover (BLOCKED-OPERATOR-DECISION / -CREDENTIALS — Ikenna)
+### Phase 4 — prod cutover [RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps not MVP]
 
-- [ ] [BLOCKED-OPERATOR-DECISION] P1. Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout
+- [x] [BLOCKED-OPERATOR-DECISION] P1. Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout
       enrollment; Polymarket beta enrollment) + provide prod credential blobs (`kalshi-perp-prod`,
-      `polymarket-perp-prod`). Gate: operator answers Q1 (access) + provides prod secrets.
-- [ ] [INFRA] P1. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403 (enrollment live); **re-enumerate
-      against prod** → prod cefi catalogue. Gate: prod perps land as genuine `PERPETUAL` crypto perps; `KALSHI-PERP`/
-      `POLYMARKET-PERP` catalogue rows are real (spot-check tickers); `Evidence: cloudbuild=<id>`.
+      `polymarket-perp-prod`). Gate: operator answers Q1 (access) + provides prod secrets. — **ANSWERED 2026-07-14
+      (operator, chat): NO prod access — Kalshi/Polymarket perps are NOT part of MVP.** Polymarket perps beta-gated;
+      Kalshi requires extra enrollment work. No prod secrets will be provided. Re-open only on an explicit operator
+      announcement that access exists.
+- [ ] [INFRA] [DESCOPED-NOT-MVP 2026-07-14] P3. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403
+      (enrollment live); **re-enumerate against prod** → prod cefi catalogue. Gate: prod perps land as genuine
+      `PERPETUAL` crypto perps; `KALSHI-PERP`/`POLYMARKET-PERP` catalogue rows are real (spot-check tickers);
+      `Evidence: cloudbuild=<id>`. (Parked behind the access ruling above — not dispatchable.)
 
 ### Phase 5 — guardrail so this class can't recur
 
@@ -261,6 +270,13 @@ orchestrator-dispatched).
 
 ## Progress log
 
+- **2026-07-14 — Operator ruling: Kalshi/Polymarket perps NOT MVP (Workstream B descoped).** Operator (chat, main
+  session): "Kalshi/Polymarket perps prod access — not part of MVP, nothing we can do, we can't get perps on those yet;
+  Polymarket is in beta mode and Kalshi requires some extra work." Effect: Phase 4's `BLOCKED-OPERATOR-DECISION` is
+  RESOLVED as a descope (flipped above); Phases 1–3 perp-repoint items parked `DESCOPED-NOT-MVP` (banner added). Kept
+  active: Phase 3's prediction event-capture-gap `[VERIFY]` (protects the PREDICTION store universe, not
+  perps-dependent) and Phase 5's write-time `*-PERP` guardrail (P2, prevents recurrence of the cefi contamination
+  class). No code change in this edit — plan-state only.
 - **2026-07-10 — Phase 0 CLOSED for real (sub-agent verification pass, part of the instruments-completion-tracker
   sweep).** The one remaining Phase 0 todo (self-heal of the 9 lingering `KALSHI-PERP` `captured` manifest cells) was
   verified live rather than assumed: read

@@ -49,6 +49,17 @@ measured the real per-repo counts below):
 The baseline ONLY shrinks: re-run with ``--update-baseline`` after fixing
 sites (counts are clamped DOWN — never raised).
 
+Over-baseline reporting: each ``--update-baseline`` run also stamps the
+scanned repo's own current HEAD sha into the baseline row (``commit:``). A
+later over-baseline failure git-diffs the repo against that recorded commit
+to report the sites genuinely ADDED since then, instead of an arbitrary
+positional tail-slice of the full (alphabetically-sorted) site list — the
+old approach could report 2-month-old code that merely sorted last
+(``instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md``).
+A repo whose baseline predates this field (no ``commit:`` recorded yet, or
+the recorded commit is unreachable in a shallow/rebased clone) falls back to
+the old positional tail-slice, clearly labelled as such in the failure line.
+
 Usage::
 
     # per-repo (run by base-service.sh / base-library.sh STEP 5.101):
@@ -67,6 +78,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
@@ -147,10 +159,19 @@ class Baseline:
     """Per-repo allowed counts of empty-string-fallback sites."""
 
     counts: dict[str, int] = field(default_factory=dict)
+    #: repo -> the HEAD sha of that repo's own git history at the moment its
+    #: `count` was last set via `--update-baseline`. Powers git-diff-based
+    #: over-baseline reporting (see `_diff_added_empty_string_sites`) — a repo
+    #: whose baseline predates this field simply has no entry and falls back
+    #: to the positional tail-slice.
+    commits: dict[str, str] = field(default_factory=dict)
     note: str = ""
 
     def allowed(self, repo: str) -> int:
         return int(self.counts.get(repo, 0))
+
+    def commit_for(self, repo: str) -> str | None:
+        return self.commits.get(repo)
 
 
 def load_baseline(path: Path | None = None) -> Baseline:
@@ -160,31 +181,71 @@ def load_baseline(path: Path | None = None) -> Baseline:
     raw = yaml.safe_load(baseline_file.read_text(encoding="utf-8")) or {}
     repos_raw = raw.get("repos") or {}
     counts: dict[str, int] = {}
+    commits: dict[str, str] = {}
     for repo, val in repos_raw.items():
         if isinstance(val, dict):
             counts[str(repo)] = int(val.get("count", 0))
+            commit = val.get("commit")
+            if commit:
+                commits[str(repo)] = str(commit)
         else:
             counts[str(repo)] = int(val)
-    return Baseline(counts=counts, note=str(raw.get("note") or ""))
+    return Baseline(counts=counts, commits=commits, note=str(raw.get("note") or ""))
 
 
-def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None = None) -> None:
+def _current_commit(repo_root: Path) -> str | None:
+    """Best-effort HEAD sha for *repo_root* — None if it isn't a git repo (or git
+    is unavailable). Never raises: this is a nice-to-have for diff-based
+    reporting, not load-bearing for the baseline check itself."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    sha = result.stdout.strip()
+    return sha or None
+
+
+def write_baseline(
+    counts: dict[str, int],
+    existing: Baseline,
+    path: Path | None = None,
+    repo_roots: dict[str, Path] | None = None,
+) -> None:
     """Persist a new baseline. Counts are clamped DOWN — never raised above the
     existing baseline (a higher count means a new site landed; fix it, don't
-    bake it in)."""
+    bake it in). When *repo_roots* is given, also stamp each scanned repo's
+    current HEAD sha so a future over-baseline failure can git-diff against it
+    instead of guessing from a positional tail-slice."""
     baseline_file = path if path is not None else _baseline_path()
-    merged: dict[str, dict[str, int]] = {}
+    merged: dict[str, dict[str, int | str]] = {}
     all_repos = set(counts) | set(existing.counts)
     for repo in sorted(all_repos):
         if repo not in counts:
             # Not scanned this run (scoped --update-baseline) — carry the existing
             # row forward verbatim. Treating unobserved as 0 + down-clamp zeroes the
             # fleet (same defect class as check_ruff_rule_ratchet, incident 2026-06-10).
-            merged[repo] = {"count": existing.allowed(repo)}
+            row: dict[str, int | str] = {"count": existing.allowed(repo)}
+            existing_commit = existing.commit_for(repo)
+            if existing_commit:
+                row["commit"] = existing_commit
+            merged[repo] = row
             continue
         observed = int(counts[repo])
         prior = existing.allowed(repo)
-        merged[repo] = {"count": min(observed, prior) if repo in existing.counts else observed}
+        row = {"count": min(observed, prior) if repo in existing.counts else observed}
+        repo_root = (repo_roots or {}).get(repo)
+        commit = (_current_commit(repo_root) if repo_root is not None else None) or existing.commit_for(repo)
+        if commit:
+            row["commit"] = commit
+        merged[repo] = row
     header = (
         '# Baseline for QG STEP 5.101 — .get("key", "") empty-string-fallback ratchet.\n'
         "#\n"
@@ -199,7 +260,13 @@ def write_baseline(counts: dict[str, int], existing: Baseline, path: Path | None
         "# LOWER a count (re-run `--update-baseline`) the moment sites are fixed.\n"
         "# NEVER raise a count. Repos not listed default to count=0.\n"
         "#\n"
-        "# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.\n"
+        "# `repos[<repo>].commit` is that repo's own HEAD sha at the moment `count`\n"
+        "# was last set — used to git-diff-detect genuinely NEW over-baseline sites\n"
+        "# instead of an arbitrary positional tail-slice. Set automatically by\n"
+        "# `--update-baseline`; do not hand-edit.\n"
+        "#\n"
+        "# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,\n"
+        "# plans/active/issues/instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md.\n"
     )
     body = yaml.safe_dump(
         {
@@ -291,6 +358,77 @@ def scan_repo(scan_root: Path, repo_name: str, repo_root: Path | None = None) ->
     return RepoScan(repo=repo_name, count=len(sites), sites=sorted(sites))
 
 
+# ── Git-diff-based over-baseline reporting ──────────────────────────────────
+
+
+def _diff_added_empty_string_sites(repo_root: Path, baseline_commit: str) -> set[tuple[str, str]] | None:
+    """Return {(repo-relative-file, line-content)} of `.get(key, "")` sites ADDED
+    in *repo_root* since *baseline_commit* — i.e. lines a unified diff shows as
+    `+` that themselves match the empty-string-fallback pattern (and don't carry
+    the noqa opt-out). Line numbers drift across commits, so this dedupes on
+    content, not (file, lineno).
+
+    Returns None (not an empty set) when the diff can't be computed at all —
+    unknown/unreachable commit, not a git repo, git unavailable — so the caller
+    can tell "diff came back empty" apart from "diff wasn't possible" and fall
+    back to the positional tail-slice instead of reporting a false "no new
+    sites".
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "diff", "--unified=0", f"{baseline_commit}..HEAD", "--", "*.py"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+
+    added: set[tuple[str, str]] = set()
+    current_file: str | None = None
+    for line in result.stdout.splitlines():
+        if line.startswith("+++ "):
+            raw_path = line[4:].strip()
+            current_file = None if raw_path == "/dev/null" else raw_path.removeprefix("b/")
+            continue
+        if line.startswith(("+++", "---")):
+            continue
+        if not line.startswith("+"):
+            continue
+        content = line[1:]
+        if current_file is None or _is_excluded_path(Path(current_file)):
+            continue
+        if _EMPTY_STR_PATTERN.search(content) and not _has_empty_fallback_noqa(content):
+            added.add((current_file, content.rstrip()))
+    return added
+
+
+def _resolve_over_baseline_sites(
+    scan: RepoScan, allowed: int, repo_root: Path, baseline_commit: str | None
+) -> tuple[list[tuple[str, int, str]], str]:
+    """Return (sites-to-report, detection-note). Prefers git-diff-based detection
+    of genuinely NEW sites since *baseline_commit*; falls back to the old
+    positional tail-slice (`scan.sites[allowed:]`) — which can surface arbitrary
+    pre-existing code that merely sorts last — when no baseline commit is on
+    record yet, or the diff can't be computed (e.g. the commit isn't reachable
+    in a shallow/rebased clone)."""
+    fallback = scan.sites[allowed:] if allowed < len(scan.sites) else scan.sites
+    if not baseline_commit:
+        return fallback, " (positional tail-slice — no baseline commit on record for this repo yet)"
+    diff_sites = _diff_added_empty_string_sites(repo_root, baseline_commit)
+    if diff_sites is None:
+        return fallback, " (positional tail-slice — git-diff against the baseline commit failed)"
+    over = [site for site in scan.sites if (site[0], site[2]) in diff_sites]
+    if not over:
+        # Diff-detected zero live matches (e.g. sites moved/reformatted since the
+        # baseline commit) — still tell the caller something over-baseline exists.
+        return fallback, " (positional tail-slice — git-diff found no new sites still present; may be a move/reformat)"
+    return over, ""
+
+
 # ── Scope resolution ─────────────────────────────────────────────────────────
 
 
@@ -349,19 +487,22 @@ def main(argv: Iterable[str] | None = None) -> int:
         return 0  # nothing to check — not a failure
 
     observed: dict[str, int] = {}
+    repo_roots: dict[str, Path] = {}
     failures: list[str] = []
     info_lines: list[str] = []
     for repo_name, scan_root in scopes:
         repo_root = workspace_root / repo_name if (workspace_root / repo_name).is_dir() else scan_root
+        repo_roots[repo_name] = repo_root
         scan = scan_repo(scan_root, repo_name, repo_root=repo_root)
         observed[repo_name] = scan.count
         allowed = baseline.allowed(repo_name)
         if scan.count > allowed:
-            over = scan.sites[allowed:] if allowed < len(scan.sites) else scan.sites
+            baseline_commit = baseline.commit_for(repo_name)
+            over, detection_note = _resolve_over_baseline_sites(scan, allowed, repo_root, baseline_commit)
             sites_str = "; ".join(f"{f}:{ln}" for f, ln, _content in over[:20])
             failures.append(
                 f"[FAIL] {repo_name}: {scan.count} empty-string-fallback site(s) > baseline {allowed}. "
-                f"New/over-baseline site(s): {sites_str}" + (" ..." if len(over) > 20 else "")
+                f"New/over-baseline site(s){detection_note}: {sites_str}" + (" ..." if len(over) > 20 else "")
             )
         elif scan.count < allowed:
             info_lines.append(
@@ -372,7 +513,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             info_lines.append(f"[OK]   {repo_name}: {scan.count} (== baseline)")
 
     if args.update_baseline:
-        write_baseline(observed, baseline, baseline_file)
+        write_baseline(observed, baseline, baseline_file, repo_roots=repo_roots)
         print(f"[check_no_empty_string_fallback] baseline updated at {baseline_file or _baseline_path()}")
         for line in sorted(f"  {r}: {c}" for r, c in observed.items()):
             print(line)

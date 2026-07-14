@@ -1,15 +1,22 @@
 ---
 doc_type: plan
 title: Sports P1b — golden-window reference sources to 100% (weather · SFI · transfermarkt · understat · footystats)
-summary: Drive all non-API-Football reference sources (weather, SFI, transfermarkt, understat, footystats) to 100% honest coverage on the golden window.
-status: active
+summary:
+  Drive all non-API-Football reference sources (weather, SFI, transfermarkt, understat, footystats) to 100% honest
+  coverage on the golden window.
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
 repos: []
 scope: [engineer, admin]
 tags: [sports, reference-sources, golden-window, weather, understat, footystats, transfermarkt, sfi, backfill]
-related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_reference_backfill_oom_2026_06_22.md, plans/active/data_completion_to_100_all_ag_2026_06_21.md]
+related:
+  [
+    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/sports_reference_backfill_oom_2026_06_22.md,
+    plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+  ]
 created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: planning
@@ -18,16 +25,27 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-14
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
-depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27, sports_reference_backfill_oom_2026_06_22]
+depends_on:
+  [
+    sports_p0_spot_vm_launchers_2026_06_27,
+    sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27,
+    sports_reference_backfill_oom_2026_06_22,
+  ]
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
+> complete (0 open; audited complete 2026-07-13). Golden-window / honest-coverage learnings were codified in the cited
+> Codex SSOTs during the work (`codex/02-data/availability-manifest-and-data-status.md`,
+> `codex/02-data/honest-absence-downstream-handling.md`, `codex/02-data/sports-gcs-path-ssot.md`) — no unmigrated
+> durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
 > NON-API-Football reference source to 100% honest coverage on the golden window (**2025-09-01 .. 2025-11-30**,
@@ -65,50 +83,48 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 ## Todos
 
-- [x] ✅ [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days (forecast-issue-time
-      stamped); weather is per-venue once the home team is known, so the expected set follows the fixtures captured in
-      P1a. **Gate**: window query → `(open_meteo, WEATHER)` 0 `pending_fetch`, 0 blank-reason; any silent-day gap (the
-      historical open-meteo-silence class) re-fetched or typed.
-      — 2026-06-27: read_availability_index(instruments-store-sports-prd): (open_meteo, WEATHER) 2025-09-01..11-30:
-        579 captured, 0 pending_fetch, 0 attempted_failed, 0 blank-reason EC. Gate ALL PASSED. No gap-fill needed.
+- [x] ✅ [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days
+      (forecast-issue-time stamped); weather is per-venue once the home team is known, so the expected set follows the
+      fixtures captured in P1a. **Gate**: window query → `(open_meteo, WEATHER)` 0 `pending_fetch`, 0 blank-reason; any
+      silent-day gap (the historical open-meteo-silence class) re-fetched or typed. — 2026-06-27:
+      read_availability_index(instruments-store-sports-prd): (open_meteo, WEATHER) 2025-09-01..11-30: 579 captured, 0
+      pending_fetch, 0 attempted_failed, 0 blank-reason EC. Gate ALL PASSED. No gap-fill needed.
 - [x] ✅ [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
       historical SFI failure cluster to a typed reason (the retired `SFI_STANDINGS`/`SFI_LEAGUES` are NOT in scope; only
       the active `SFI_PROGRESSIVE_STATS`). **Gate**: window query → `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` 0
-      `pending_fetch`, 0 un-evidenced `attempted_failed`; no 429-storm (rate honoured).
-      — 2026-06-27: source name in IS is `soccer_football_info`. read_availability_index 2025-09-01..11-30:
-        889 captured, 2119 empty_confirmed (all EXPECTED_NO_FIXTURE), 0 pending_fetch, 0 AF, 0 blank-reason.
-        Gate ALL PASSED. No backfill needed.
+      `pending_fetch`, 0 un-evidenced `attempted_failed`; no 429-storm (rate honoured). — 2026-06-27: source name in IS
+      is `soccer_football_info`. read_availability_index 2025-09-01..11-30: 889 captured, 2119 empty_confirmed (all
+      EXPECTED_NO_FIXTURE), 0 pending_fetch, 0 AF, 0 blank-reason. Gate ALL PASSED. No backfill needed.
 - [x] ✅ [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
       (transfer-window-aware; PER_DAY_PER_SEASON bulk layout). **Gate**: window `(transfermarkt, PLAYER_VALUES)`
-      `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed.
-      — 2026-06-27: read_availability_index 2025-09-01..11-30: 2287 captured, 2718 EC (1634 EXPECTED_NO_MAPPING +
-        1084 EXPECTED_NO_PROVIDER_COVERAGE), 0 AF, 0 pending_fetch, 0 blank-reason. Gate ALL PASSED.
-- [x] ✅ [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers only
-      `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
+      `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed. — 2026-06-27:
+      read_availability_index 2025-09-01..11-30: 2287 captured, 2718 EC (1634 EXPECTED_NO_MAPPING + 1084
+      EXPECTED_NO_PROVIDER_COVERAGE), 0 AF, 0 pending_fetch, 0 blank-reason. Gate ALL PASSED.
+- [x] ✅ [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers
+      only `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
       `EXPECTED_NO_PROVIDER_COVERAGE`, not failed. **Gate**: window query → `XG` + `XG_SHOTS` at 100% honest coverage
       for understat-native leagues; non-native leagues typed `EXPECTED_NO_PROVIDER_COVERAGE`; 0 over-broad-404 failures.
-      — 2026-06-27: VM `us-backfill-20260627-163214` rc=0; rescan `sports-manifest-rescan-20260627-180901` rc=0.
-        Prd index (instruments-store-sports-prd-central-element-323112): XG 546 rows (3 captured, 543 EC: 455
-        SOURCE_RETURNED_ZERO + 88 EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. XG_SHOTS 455 rows (455
-        EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. Prior 45 HTTP_NOT_FOUND → EXPECTED_NO_FIXTURE
-        (0 matches in understat-native leagues for 2025-11-20..2025-11-29). Gate ALL PASSED.
-- [x] ✅ [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason PREDICTIONS
-      empties to `SOURCE_RETURNED_ZERO` (or re-fetch where genuinely missing); MATCHES `SOURCE_RETURNED_ZERO` no-match
-      days are honest absence (keep). Note: footystats `ODDS` are KEPT in IS (operator 2026-06-27 — predictive); P1b
-      does not change them. **Gate**: window query → `(footystats, PREDICTIONS)` 0 blank-reason; `(footystats, MATCHES)`
-      every non-captured cell typed; footystats `ODDS` rows retained (unchanged).
+      — 2026-06-27: VM `us-backfill-20260627-163214` rc=0; rescan `sports-manifest-rescan-20260627-180901` rc=0. Prd
+      index (instruments-store-sports-prd-central-element-323112): XG 546 rows (3 captured, 543 EC: 455
+      SOURCE_RETURNED_ZERO + 88 EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. XG_SHOTS 455 rows (455
+      EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. Prior 45 HTTP_NOT_FOUND → EXPECTED_NO_FIXTURE (0
+      matches in understat-native leagues for 2025-11-20..2025-11-29). Gate ALL PASSED.
+- [x] ✅ [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason
+      PREDICTIONS empties to `SOURCE_RETURNED_ZERO` (or re-fetch where genuinely missing); MATCHES
+      `SOURCE_RETURNED_ZERO` no-match days are honest absence (keep). Note: footystats `ODDS` are KEPT in IS (operator
+      2026-06-27 — predictive); P1b does not change them. **Gate**: window query → `(footystats, PREDICTIONS)` 0
+      blank-reason; `(footystats, MATCHES)` every non-captured cell typed; footystats `ODDS` rows retained (unchanged).
       — 2026-06-27: `reconcile_sports_blank_empty_reason_2026_06_24.py` dry-run → blank_before=0 (already typed by prior
-        run). Confirmed via direct manifest query on golden window 2025-09-01..2025-11-30:
-        PREDICTIONS 3,290 EC, 0 blank (EXPECTED_NO_FIXTURE:2694, SOURCE_RETURNED_ZERO:596);
-        MATCHES 3,471 EC, 0 blank (SOURCE_RETURNED_ZERO:3328, EXPECTED_NO_FIXTURE:143);
-        ODDS 3,204 EC retained (EXPECTED_NO_FIXTURE:2587, SOURCE_RETURNED_ZERO:617), 0 blank. All gates PASSED.
+      run). Confirmed via direct manifest query on golden window 2025-09-01..2025-11-30: PREDICTIONS 3,290 EC, 0 blank
+      (EXPECTED_NO_FIXTURE:2694, SOURCE_RETURNED_ZERO:596); MATCHES 3,471 EC, 0 blank (SOURCE_RETURNED_ZERO:3328,
+      EXPECTED_NO_FIXTURE:143); ODDS 3,204 EC retained (EXPECTED_NO_FIXTURE:2587, SOURCE_RETURNED_ZERO:617), 0 blank.
+      All gates PASSED.
 - [x] ✅ [DATA] P1. **No-blank-reason invariant** across all reference sources on the window — DONE slot-2 2026-06-28.
-      Gate: window `_index` has 0 empty_confirmed rows with blank/null error_reason for all 5 sources.
-      Verified (2025-09-01..2025-11-30, 94-league universe):
-      footystats rows=21242 blank=0 ✅; open_meteo rows=5554 blank=0 ✅;
+      Gate: window `_index` has 0 empty_confirmed rows with blank/null error_reason for all 5 sources. Verified
+      (2025-09-01..2025-11-30, 94-league universe): footystats rows=21242 blank=0 ✅; open_meteo rows=5554 blank=0 ✅;
       soccer_football_info rows=8559 blank=0 ✅; transfermarkt rows=9282 blank=0 ✅; understat rows=16941 blank=0 ✅.
-      Note: footystats 51 attempted_failed + open_meteo 4975 expected_unattempted from EU write (task ⑦) — separate coverage concern.
-      GATE ALL PASSED.
+      Note: footystats 51 attempted_failed + open_meteo 4975 expected_unattempted from EU write (task ⑦) — separate
+      coverage concern. GATE ALL PASSED.
 
 **Full-execution criterion**:
 
@@ -133,18 +149,20 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 ### 2026-06-27 — Understat XG/XG_SHOTS verify (slot 6)
 
-Re-fetch VM: `us-backfill-20260627-163214` SPOT asia-northeast1-c, 2025-09-01..2025-11-30 → rc=0.
-Manifest rescan: `sports-manifest-rescan-20260627-180901` → rc=0 (2,594,563 rows consolidated).
+Re-fetch VM: `us-backfill-20260627-163214` SPOT asia-northeast1-c, 2025-09-01..2025-11-30 → rc=0. Manifest rescan:
+`sports-manifest-rescan-20260627-180901` → rc=0 (2,594,563 rows consolidated).
 
 **Gate check (prd index: instruments-store-sports-prd-central-element-323112):**
-| data_type | captured | empty_confirmed | attempted_failed | unattempted | blank_reason | Gate |
-|---|---|---|---|---|---|---|
-| XG | 3 | 543 (SOURCE_RETURNED_ZERO:455, EXPECTED_NO_FIXTURE:88) | 0 | 0 | 0 | ✅ PASS |
-| XG_SHOTS | 0 | 455 (EXPECTED_NO_FIXTURE:455) | 0 | 0 | 0 | ✅ PASS |
+
+| data_type | captured | empty_confirmed                                        | attempted_failed | unattempted | blank_reason | Gate    |
+| --------- | -------- | ------------------------------------------------------ | ---------------- | ----------- | ------------ | ------- |
+| XG        | 3        | 543 (SOURCE_RETURNED_ZERO:455, EXPECTED_NO_FIXTURE:88) | 0                | 0           | 0            | ✅ PASS |
+| XG_SHOTS  | 0        | 455 (EXPECTED_NO_FIXTURE:455)                          | 0                | 0           | 0            | ✅ PASS |
 
 **Finding — HTTP_NOT_FOUND resolved:** Prior 45 `HTTP_NOT_FOUND` failures on 2025-11-20..2025-11-29 × 5 understat-native
-leagues converted to `EXPECTED_NO_FIXTURE`. VM found 0 matches in understat-native leagues for those dates (end-of-season
-fixture gap / international break). No over-broad-404 failures. Both XG and XG_SHOTS at 100% honest coverage.
+leagues converted to `EXPECTED_NO_FIXTURE`. VM found 0 matches in understat-native leagues for those dates
+(end-of-season fixture gap / international break). No over-broad-404 failures. Both XG and XG_SHOTS at 100% honest
+coverage.
 
 ## References
 

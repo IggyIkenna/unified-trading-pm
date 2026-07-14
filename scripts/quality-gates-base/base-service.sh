@@ -598,8 +598,15 @@ fi
 # Blocks until <=K QG heavy-phases run host-wide (K=max(2, floor(cores/4))); released after
 # TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
 # No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent. Skipped on a sentinel hit
-# (no heavy phase to govern).
-[ "$_QG_SENTINEL_HIT" = true ] || qg_governor_acquire
+# (no heavy phase to govern) AND skipped whenever THIS run has no heavy phase to protect
+# at all (RUN_TESTS=false AND SKIP_TYPECHECK=true — QG_SLICE=lint-codex, a DOCS-ONLY
+# changeset, or --skip-tests+--skip-typecheck together): such a run never touches
+# pytest/basedpyright, so it has nothing to gain from the token and nothing to protect
+# other waiters from — yet it previously queued behind the same K=1 heavy-phase token as
+# full runs anyway (qg_host_governor_severe_contention_2026_07_13.md todo 3).
+if [ "$_QG_SENTINEL_HIT" != true ] && { [ "$RUN_TESTS" = true ] || [ "$SKIP_TYPECHECK" != "true" ]; }; then
+    qg_governor_acquire
+fi
 
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
@@ -3637,6 +3644,12 @@ fi
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
+# Governor queue-wait (qg_governor_acquire, if this run went through the heavy-phase
+# token) is NOT work — exclude it from the MAX_DURATION billable time so contention
+# under the K=1-vs-many-slots floor cannot fail an otherwise-green run purely for
+# having queued (qg_host_governor_severe_contention_2026_07_13.md). 0 when ungoverned
+# or never contended.
+DUR_BILLABLE=$(( DUR - ${QG_GOVERNOR_WAIT_SECONDS:-0} ))
 
 # ── 2× RESOURCE-DRIFT GUARD (qg-perrepo-baseline) ─────────────────────────────
 # WARN (never fail) when this run's wall-clock exceeds 2× the committed per-repo
@@ -3651,8 +3664,8 @@ if [ -f "$_QG_BASELINE" ] && command -v python3 >/dev/null 2>&1; then
     fi
 fi
 
-if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
-    log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
+if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR_BILLABLE -gt $MAX_DURATION ]; then
+    log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR_BILLABLE}s work + ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait = ${DUR}s wall)"
     exit 1
 fi
 
