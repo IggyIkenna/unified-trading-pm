@@ -93,11 +93,15 @@ ONLY about the historical backlog on already-captured rows.
   not yet measured (new todo below) — do not assume "re-run --force" alone closes tradfi's gap.
 - **defi** (`rebuild_defi_manifest.py`) and **cefi** (`rebuild_cefi_manifest.py`) call ONLY `record_empty`/
   `record_failed` (gap-filling) — **never** `record_captured`/`record_captured_from_counts` — confirmed by grep, no call
-  sites in either file. There is no existing rebuild entrypoint that touches captured rows for defi. DeFi's live
-  captures instead run through ~30 separate `market_tick_data_service/cli/handlers/*_handler.py` collectors, each
-  presumably deriving `available_at` its own way at capture time — a retroactive defi backfill needs to reuse each
-  data_type's OWN formula, not one blanket rule. This is real, not-yet-scoped engineering work, not a "rerun a script"
-  job like prediction/tradfi.
+  sites in either file. There is no existing rebuild entrypoint that touches captured rows for defi. **Correction,
+  2026-07-14 (data_engineering slot-8)**: the "~30 separate collectors, each presumably deriving `available_at` its own
+  way" framing was WRONG — see the completed audit todo below. In reality **36 of ~40 `cli/handlers/*.py` files route
+  through ONE shared shim** (`DefiManifestRecorder` in `_defi_manifest.py`), and that shim's captured-row path never
+  threads `available_at` at all (same root-cause shape as tradfi's non-bundled majority, fixed in
+  `market-tick-data-service@65a6f9e0`) — a defi backfill is a SINGLE shim-level fix, not ~30 independent formulas. Still
+  real, not-yet-scoped engineering work (the fix touches every defi write going forward, so needs the same
+  dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction/tradfi), just much narrower in surface
+  area than originally scoped.
 
 ## The sports precedent this plan must respect (HARD constraint)
 
@@ -259,17 +263,27 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       re-investigation before declaring success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Resume the tradfi consolidator cron; record evidence in the Progress Log.
       (repo: market-tick-data-service)
-- [ ] [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how (or
-      whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula each
-      already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket rule
-      (confirmed via grep, 2026-07-13: `rebuild_defi_manifest.py` itself has zero
+- [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
+      (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
+      each already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket
+      rule (confirmed via grep, 2026-07-13: `rebuild_defi_manifest.py` itself has zero
       `record_captured`/`record_captured_from_counts` call sites — no shared rebuild entrypoint exists to extend).
-      (repo: market-tick-data-service)
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — present the defi audit (prior todo) plus a scoped design option (e.g. a
-      new `--backfill-available-at-only` mode on `rebuild_defi_manifest.py` that calls `record_captured_from_counts` per
-      data_type's derivation without touching `capture_status`, OR a narrower manifest-only patch tool) for a go/no-go —
-      defi's 3.0M rows and heterogeneous per-handler derivation make this materially riskier than prediction/tradfi's
-      centralized-rebuild-script case; do not write the defi backfill code before this is decided. (repo: NA)
+      (repo: market-tick-data-service) — ✅ 2026-07-14 (data_engineering slot-8): see Progress Log for full evidence.
+      **Headline correction**: not ~30 independent formulas — 36 of the ~40 handler files share ONE write path
+      (`DefiManifestRecorder` in `_defi_manifest.py`) that never threads `available_at` at all (blanket `""` for all of
+      them, not a per-data_type formula gap). A handful of non-defi files living in the same directory (cefi/tradfi) use
+      different, unrelated write paths.
+- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — present the defi audit (prior todo) plus a scoped design option for a
+      go/no-go. **Updated design option, 2026-07-14 (slot-8) per the audit's headline correction**: since 36/~40 handler
+      files share ONE write path (`DefiManifestRecorder._emit_captured_add` → `ManifestWriter.add()` with no
+      `available_at=`), the fix is a single shim-level change — thread an honest per-shard `available_at` proxy (mirror
+      the tradfi/sports blob-`time_created` pattern from `market-tick-data-service@65a6f9e0`) into
+      `_emit_captured_add`'s `self._writer.add(...)` call, then rebuild-and-apply via a NEW backfill entrypoint (no
+      existing rebuild script touches captured defi rows — `rebuild_defi_manifest.py` only does gap-filling). This is
+      narrower in CODE surface than originally scoped (one shim, not ~30 formulas) but the blast radius is still ALL
+      defi captured rows at once (3.0M rows, one shared code path) — still materially riskier than prediction/tradfi's
+      centralized-rebuild-script case, still needs its own dry-run/snapshot/pause-cron/guardrail-verify/resume-cron
+      protocol; do not write the defi backfill code before this is decided. (repo: NA)
 - [ ] [DATA] P3. _(stretch, optional)_ Once the prior todo is decided GO, implement the chosen defi backfill mechanism
       with unit-test coverage and a `--force` dry-run preview before any live write — follow the same
       dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction and tradfi above. (repo:
@@ -793,3 +807,65 @@ remain open, unaffected by this marker change — the operator maintenance-windo
 any of the 6 todos can proceed). Shipped via the `docs(plans):` carve-out (plan-doc-only change, no code touched).
 Calling `/skip-current-task` for `-003` itself — its remaining scope (the cron-pause half) is still genuinely blocked on
 the operator decision; the marker only stops it from being needlessly redispatched, it doesn't complete the todo.
+
+**DeFi handler audit (task `mtds_available_at_cross_asset_backfill-012`, reassigned to `-010`) — 2026-07-14
+(data_engineering slot-8)**: dispatched to `-012` (the prediction full-range apply todo) first. Verified read-only
+(fresh-pulled all 25 slot repos, clean FF): the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is
+still unchecked, and this exact todo already carries the `BLOCKED-OPERATOR-DECISION` marker slot-13 applied specifically
+to exclude it from dispatch — `GET /api/backlog` confirmed `-012` is no longer in the dispatchable backlog at all, so my
+assignment was a stale `already_in_progress` carryover. Did not touch production; called `/skip-current-task` citing the
+existing `BLK-f3cdf442`/`BLK-ccb6cd86` escalations (10th+ confirmation of the same finding, no new entry needed). Next
+heartbeat dispatched `-010`, the genuinely-open DeFi handler audit todo (line ~262) — worked that instead.
+
+Read every file matching `market_tick_data_service/cli/handlers/*_handler.py` (38 files) plus the private submodules
+they delegate to. **Headline finding: the plan's framing was wrong.** This is NOT ~30 handlers each deriving
+`available_at` its own way — it's overwhelmingly ONE shared code path:
+
+- `grep -l DefiManifestRecorder market_tick_data_service/cli/handlers/*.py` → **36 handler/submodule files** construct
+  and call `DefiManifestRecorder` (`_defi_manifest.py`), the shim built for Phase 7 honest-coverage wiring (its own
+  docstring: "the shared shim that every DeFi handler calls once per (venue, chain, data_type) attempt").
+- Traced `DefiManifestRecorder.record_captured()` → `_emit_captured_add()` (`_defi_manifest.py:448-494`): it calls
+  `self._writer.add(asset_group="defi", processing_date=..., row_count=..., venue=..., chain=..., data_type=..., instrument_type=..., instrument_id=..., pipeline_mode=..., source=...)`
+  — **no `available_at=` kwarg passed at all**. Read `ManifestWriter.add()`'s signature directly
+  (`unified-trading-library/unified_trading_library/manifest_writer/ _writer_ingest.py:63-105`):
+  `available_at: str = ""` — optional, defaults to blank, added 2026-06-26 (`sports_mtds_available_at_manifest_gap`),
+  same v9 kwarg the tradfi fix (`market-tick-data-service@65a6f9e0`) had to thread into its own non-bundled `.add()`
+  call. **This is the exact same root-cause shape as tradfi's non-bundled majority bug** — a shared write path that
+  accepts `available_at=` but never passes it — except here it's ONE shim covering effectively the entire defi handler
+  fleet at once, not a per-handler gap.
+- **Only 4 of the 40 files in this directory do NOT use the shim** — all 4 turned out to be misfiled/non-defi, not real
+  gaps in this plan's scope: `deribit_volatility_index_handler.py` (`_ASSET_GROUP = "cefi"`) and
+  `onchain_perp_batch_handler.py` (`_ASSET_GROUP = "cefi"`, explicit docstring: "written directly via `ManifestWriter`
+  with explicit `asset_group="cefi"`") are CeFi, not DeFi — out of this plan's scope entirely (cefi's consolidator is
+  stale/down per the parent issue doc). `massive_futures_backfill_handler.py` (`_ASSET_GROUP = "tradfi"`) is tradfi, not
+  defi, and correctly threads `available_at` via the `record_captured(df=...)` variant (confirmed:
+  `_make_stub_df(row_count, available_at)` builds a df with a populated `available_at` column, then
+  `ManifestWriter.record_captured(df=df, ...)` — the df-shape variant — enforces + derives `available_at` as
+  `max(df["available_at"])` via `assert_available_at_present()` + `_writer_captured.py:329-330` — this is the CORRECT
+  pattern, same one prediction already uses). `websocket_streaming_ handler.py` has no `_ASSET_GROUP` — it's generic
+  live-streaming infra parametrized by `--shard-spec asset_group:venue:data_type` at runtime (works across ALL asset
+  groups, not defi-specific), writes via `MTDSShardManifestRecorder` (a different, already-live-hardened path per its
+  own docstring reference to `record_captured`'s "Live bookkeeping-row escape hatch" — the live bookkeeping df is built
+  with `available_at` populated by design, per `_writer_captured.py:99` comment) — out of scope for a
+  batch/rebuild-style defi backfill. **Also incidentally found `onchain_perp_batch_handler.py` (cefi) has the identical
+  `.add()`-without-`available_at=` bug as the defi shim** — flagging for whoever eventually works a cefi backfill plan
+  (that plan is explicitly out of scope here per this plan's own header — NOT filing a separate issue doc for it, just
+  noting it so it isn't rediscovered from scratch).
+- Spot-verified 3 representative shim callers end-to-end (not just grep) to confirm none locally overrides/re-adds
+  `available_at` before calling the shim: `evm_defi_handler.py`, `gas_fee_handler.py`, `dex_pools_handler.py` — all
+  construct a `DefiManifestRecorder` and call `.record_captured(...)` with the same kwarg set the shim documents, no
+  handler-local `available_at` derivation anywhere in any of the three.
+
+**Practical upshot for the next todo (defi go/no-go)**: a defi backfill does NOT need to reuse ~30 different per-handler
+formulas — it needs ONE shim-level fix (thread an honest `available_at` proxy, e.g. mirroring the tradfi/sports
+blob-`time_created` pattern, into `_emit_captured_add`'s `self._writer.add(...)` call) plus a NEW rebuild/backfill
+entrypoint (confirmed again: `rebuild_defi_manifest.py` still has zero `record_captured`/`record_captured_from_counts`
+call sites — gap-filling only). Narrower CODE surface than originally scoped, but the blast radius of that one shim
+touches ALL 3.0M defi captured rows' go-forward writes at once, so it is not lower-risk in the aggregate — updated the
+"What we already know" section and the OPERATOR go/no-go todo's design-option text above with this correction so the
+next dispatch doesn't re-scope from the stale "~30 formulas" framing.
+
+Shipped via the `docs(plans):` carve-out (plan-markdown-only change — this todo is audit/documentation, no
+`market-tick-data-service` code touched, no production reads/writes beyond local git greps + reads on the already
+fresh-pulled clone). Flipped this todo's checkbox `[x]` — its full scope (map the derivation, feed the go/no-go todo) is
+complete.
