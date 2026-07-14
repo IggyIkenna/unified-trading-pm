@@ -1287,3 +1287,24 @@ tails confirm active fetches at ~12:42-12:44Z on all 3 (lineup/stat/player-stat 
 Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing to launch or fix here,
 matching sessions 20-26's reasoning. Not re-running the manifest-rescan/GW gate query (would reproduce the same
 not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:48Z — session 28 (data_engineering slot-5): 9th dispatch of this gated cluster — decline + recommend a dispatch gate to stop the bounce
+
+Dispatched (again) to the "Features recompute for enriched dates" todo. Verified fleet unchanged since session 27's
+12:45Z check (only 3 min elapsed): `gcloud compute instances list --filter='name~af-backfill'` (non-snap
+`/home/ubuntu/google-cloud-sdk/bin/`) shows the same 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447`
+PLAYER_STATS) still `RUNNING`, same creation timestamps. Did NOT re-tail run.logs — session 27's evidence stands
+(nothing changes in 3 min), and re-polling what a check moments earlier confirmed is the anti-pattern. Recompute is
+genuinely blocked: it needs all 5 golden-window enrichment entities present, only 2 (FIXTURE_EVENTS, INJURIES) have
+landed, so a recompute now would run against incomplete enrichment. Declining — no action taken, no code touched.
+
+**Meta-observation (the reason this entry is not just a 9th identical re-check)**: this todo cluster (Todo 9 GW-verify ·
+full-history-enrichment · features-recompute · ML-re-verify) has now been auto-dispatched **~9 times across sessions
+20–28** and skip-bounced every time, because there is **no wired dispatch gate** between the GW-enrichment fleet and
+these four downstream todos — the exact "no-op-bounce" waste the plan's own session-20 note flagged as moot only because
+no live backlog task existed at the time (one clearly exists now). Each bounce burns a fresh worker spawn (this one an
+Opus/high slot) while ~50 other tasks sit queued. **Recommendation for main/operator**: gate these four downstream todos
+behind a prerequisite condition (e.g. `gw-enrichment-landed`, seeded false) so the dispatcher stops handing them out
+until the fleet self-deletes + the Todo-9 GW gate goes green — per `RULES.md` §4 "Adding new conditions mid-cycle" (a
+main/operator backlog-tuning action, not a worker one; not doing it unilaterally here). Until then every dispatch of
+this cluster is a guaranteed no-op. `/skip-current-task` so this Opus slot serves genuinely-actionable queued work.
