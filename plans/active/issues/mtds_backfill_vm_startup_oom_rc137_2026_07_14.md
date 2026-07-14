@@ -27,6 +27,7 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
+    plans/active/issues/mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md,
   ]
 created: 2026-07-14
 assigned_vm: planning
@@ -621,6 +622,67 @@ hit so far.
 **Bottom line for the BACKEND fix todos above**: the blast radius is bigger than "DeFi-only" — CEFI backfills are hit
 MORE often (14 vs 4) than DeFi post-fix. The fix (scope catalog-reader registration to the job's actual `asset_groups`)
 should be validated against BOTH a CEFI and a DEFI repro, not just DeFi, before this issue closes.
+
+## P0 — full `bulk_load()` path repro closes most of the 5.3GiB→14.67GiB gap; it's the Python-level tuple/set build, not the self-shard merge (2026-07-14, slot 3)
+
+Picked up the 2nd open `[BACKEND] P0` todo above (the 5.30 GiB isolated-slim-read vs 14.67 GiB kernel-confirmed-OOM gap)
+independently, via `/autonomous` re-dispatch on the DeFi dex-pools backfill issue (this doc's sibling
+`mtds_defi_dex_backfill_vm_immediate_sigkill_2026_07_14.md`, which I've cross-linked here — same underlying bug,
+different original entry point).
+
+**What I ran**: unlike the prior isolated-slim-read repro (which hand-called
+`read_availability_index(bucket, columns=[...])` directly), I called
+`ManifestFreshnessCache(bucket=bucket)._maybe_refresh()` — the SAME internal method `bulk_load()` calls — with
+`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` set (matching the real VM launcher's metadata value, avoiding the
+local-default-120s stale-raise branch the earlier repro in "P0 full-path RSS trace" hit). This exercises
+`_refresh_locked()` end-to-end: whichever read branch fires, PLUS the downstream
+`_index_to_tuples`/`_index_to_skip_worthy_tuples` calls that build the Python-level `set`s `_captured`/`_skip_worthy` —
+the exact part the isolated SLIM/FULL table (5.30 GiB / 19.72 GiB) did NOT include.
+
+**Result**: completed successfully (no exception — the 86400s threshold avoided the stale-raise path), so no
+`ManifestReader: ... falling back to per-VM shards` warning appeared in my run's output either, meaning this run took
+the FAST direct-consolidated-read branch, **not** the `_read_self_shard()`/`_merge_shard_frames()` per-VM-shard-merge
+path the open todo flagged as the leading suspect for the gap:
+
+```
+elapsed: 176.9s
+tracemalloc current=17440.7MB peak=24286.5MB
+ru_maxrss after=5888528.0 (KB, ~5.9GB resident at process end)
+captured rows: 3,010,913
+```
+
+**Peak 24.3 GiB — HIGHER than the kernel-confirmed real-VM OOM figure (14.67 GiB)**, on the FAST path, without ever
+touching the self-shard-merge code the open todo suspected. This is new information for that todo's two candidate
+explanations:
+
+1. **`_read_parquet_columns_safe` column-pruning itself** — not independently re-verified here (would need a
+   pyarrow-level trace to confirm true predicate-pushdown decode vs. read-then-select), still worth checking per the
+   todo's item (1), but the SLIM-vs-FULL table already measured (5.30 GiB vs 19.72 GiB) shows pruning IS doing
+   _something_ real — the open question is just how much more it could still save.
+2. **`_read_self_shard()` + `_merge_shard_frames()`** — my repro's peak EXCEEDED the real kernel-confirmed OOM without
+   this path ever executing (fast-path branch, no fallback warning), which argues this is likely **not** the dominant
+   unmeasured cost the todo hypothesized — since a run that skips it entirely still overshoots the real OOM figure.
+
+**Most likely actual gap-closer**: the Python-level `set` construction
+(`_index_to_tuples`/`_index_to_skip_worthy_tuples` building `_captured`/`_skip_worthy` from ~3M rows) that neither the
+SLIM/FULL isolated table NOR the self-shard-merge hypothesis accounted for — tuple + hash-set overhead in CPython
+routinely runs 3-5x raw data size, which is directionally consistent with going from a ~5.3 GiB pandas DataFrame to a
+24+ GiB peak once that DataFrame gets converted into millions of Python tuples inside a `set`. Not conclusively isolated
+here (would need a tracemalloc snapshot diff bracketing specifically `_index_to_tuples`/`_index_to_skip_worthy_tuples`
+vs. the read itself to prove the split) — flagging as the most promising next-step for whoever closes the two remaining
+`[BACKEND] P0` todos, since it reframes the fix direction: **the real fix is almost certainly NOT "prune more columns"
+(diminishing returns once you're already at 7 slim columns) but "don't materialize millions of Python tuples/sets at
+all"** — e.g. a `pyarrow.Table`-native hash-join / `.isin()` check against the caller's actual row-keys instead of
+building the full corpus into an in-process Python set, or (simplest) actually scoping the read by the caller's known
+date range (this doc's sibling issue's own recommended fix design: an optional `date_range` filter on
+`ManifestFreshnessCache.__init__`, since none of the 9 DeFi handlers that use this class today pass one, and none of the
+diagnostic sessions on this doc tested a date-scoped read specifically).
+
+**Also note for whoever profiles this next**: the manifest's real row count keeps growing between diagnostic sessions
+(27.4M raw rows / 3.01M "captured" rows as of this run, vs whatever it was when the 5.30 GiB/14.67 GiB figures were
+measured earlier the same day) — every fresh repro on this bucket will report a bigger number than the last purely from
+organic growth, independent of any code change. Worth pinning a snapshot of the index for reproducible before/after
+comparison once a fix is actually implemented, rather than re-measuring against the live (growing) bucket each time.
 
 ## Evidence
 
