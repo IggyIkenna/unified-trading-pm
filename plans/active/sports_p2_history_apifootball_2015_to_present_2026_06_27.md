@@ -1395,3 +1395,48 @@ index was hand-edited; no manifest rows written; consolidator cron-absorb only.
 **is-daily-enum-sports 13:30Z verdict (32Gi verification, issue
 `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`)**: execution `is-daily-enum-sports-5vchf` created
 13:30:03Z — verdict recorded in that issue doc once terminal (in flight at this entry's write).
+
+### 2026-07-14T14:20Z — session 32 (data_engineering slot-3): fleet-completion watch + narrow EU flip (shipped) + independent corroboration of session-31's leg-2 finding — Todo 9 still NOT flipped
+
+Picked up Todo 9 independently (parallel to session 31's more thorough content-verification pass, whose finding I did
+not see until after shipping). Watched the last 3 fleet VMs (LINEUPS/STATS/PLAYER_STATS) to genuine completion (all 5
+`DEPLOYMENT_COMPLETED exit_code=0` by 13:37:36Z, matches session 31's timestamps) via an armed background poll +
+Monitor, not busy-polling. Ran the naive manifest-level GW gate query (same one the issue doc calls out as
+untrustworthy) and found 166 residual `expected_unattempted` cells (35/35/33/33/30 across
+EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES) plus a small presence gap (3/2/11/0).
+
+**166-row EU flip (shipped, narrow, verified non-overlapping with session 31's false-empty set)**: confirmed all 166 EU
+cells' `(date, league_id)` keys map to a FIXTURES row that is ITSELF `empty_confirmed` (zero fixtures — mostly
+A_LEAGUE/AUSTRALIA_CUP, whose season starts in October, so Sept/early-Oct window dates genuinely have no matches;
+FIXTURES predates this fleet entirely, unaffected by the write-path bug). 0/166 had a captured-FIXTURES counterpart.
+This is the **opposite** condition from session 31's false-empty set (which requires captured-FIXTURES count ≥1 with
+real per-fixture parquet data) — disjoint, and consistent with the issue doc's own fix-order item 1 ("never stamp
+EXPECTED_NO_FIXTURE where captured-FIXTURES count ≥1" — my flips are all captured-FIXTURES count 0). Shipped
+`instruments-service@6a318ff4` (`flip_golden_window_no_fixture_enrichment_eu_2026_07_14.py`, dry-run verified before
+apply, per-VM shard write, consolidator-merge pattern per the Todo-8 precedent). Post-flip naive gate: EU 0/0/0/0/0
+across all 5 entities.
+
+**Presence-gap investigation → independent corroboration of the issue doc's leg-2 mechanism**: the residual 3/2/11/0
+presence-gap cells were all `attempted_failed` with reason `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` (a genuine,
+evidenced-but-retriable partial-failure classification per `TestCF11PerFixtureEntityFailurePath` in
+`test_orchestrator_sports_pipeline.py` — NOT a permanent gap). Retried via direct narrow-date-range CLI calls
+(`python -m instruments_service --sports-entity {FIXTURE_EVENTS,FIXTURE_LINEUPS,FIXTURE_STATS} --start-date ... --end-date ...`,
+run locally in-slot, not a VM — small enough scope (≤16 shards) not to warrant a fleet launch). Real per-fixture data
+WAS fetched each time (e.g. "493 fixture_events rows written", "801 fixture_lineups rows written") but every retry
+logged
+`"<entity> bare-path fallback triggered for date=<D> — data shape regression: no fixture-id column or empty af_fid->league map"`
+and explicitly **skipped the manifest row write** ("to keep manifest honest") — so the presence gap count was unchanged
+post-retry (3/2/11/0), confirming: (a) my retries did NOT compound the false-empty problem (the fallback's honest-skip
+behavior held), and (b) this is an independent reproduction, via a completely different code path (single-date CLI vs
+the fleet's date-range loop), of the SAME `_build_fixture_league_map_from_gcs` truncation/mapping-gap mechanism session
+31 diagnosed as leg 2 in `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`
+— added as a corroborating note there. Useful evidence for whoever picks up the `[CODE] P0` fix todo: the bug reproduces
+even on a narrow, single-entity, single-digit-day range, so a minimal repro/test fixture doesn't need the full 91-day
+window.
+
+**Todo 9: NOT flipped.** Session 31's parquet-content verification (filed minutes before I reached this point) is
+authoritative and I defer to it — the naive manifest-level gate this session and session-20-28 relied on is confirmed
+unsound (3,720 false-empty cells system-wide). My 166-row flip is a real, narrow, non-conflicting improvement (closes a
+genuinely-separate no-fixture-day residual) but does not and cannot close Todo 9's gate — that requires the `[CODE] P0`
+write-path fix + the `[DATA] P0` post-fix re-run/re-verify todos session 31 already added. Not duplicating those todos.
+`/skip-current-task` after this entry (code shipped, checkbox correctly left unflipped).

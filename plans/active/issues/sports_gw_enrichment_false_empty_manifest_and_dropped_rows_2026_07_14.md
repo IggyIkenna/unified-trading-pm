@@ -152,3 +152,14 @@ cells. Honest-absence integrity is the entire point of the manifest
 
 - 2026-07-14 ~14:10Z: Filed by the gw-verify agent after the content verification above. No code changed; no manifest
   rows written; launches held; P2a plan updated in the same commit (session-31 entry + banner).
+- 2026-07-14 ~14:20Z (P2a session 32, data_engineering slot-3): independent corroboration of leg 2
+  (`_build_fixture_league_map_from_gcs` truncation/mapping-gap). Retried FIXTURE_EVENTS/LINEUPS/STATS for the ~16
+  residual `attempted_failed` (`CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE`) cells via direct narrow-date-range CLI calls
+  (single entity, ≤10-day windows, run in-slot, not a VM). Every retry fetched real rows but logged the same
+  `"<entity> bare-path fallback triggered ... no fixture-id column or empty af_fid->league map"` warning and skipped the
+  manifest write. Confirms the mapping-gap bug reproduces on a narrow single-entity/single-digit-day range, not just the
+  full 91-day fleet run — a fast, cheap repro surface for whoever picks up the `[CODE] P0` fix todo (no need to run the
+  full fleet to test the fix). Also shipped a narrow, non-overlapping fix (`instruments-service@6a318ff4`) for a
+  distinct 166-cell EU residual (genuinely fixture-less days, captured-FIXTURES count 0) — does not touch or mask any of
+  the 3,720 false-empty cells this issue tracks. Full writeup:
+  `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` session 32.
