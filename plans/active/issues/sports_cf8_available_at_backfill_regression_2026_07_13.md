@@ -681,3 +681,13 @@ and is NOT this touch's call to make. Not flipping the P1 todo's checkbox: the t
 done, and CF-8 remains RED on both surfaces, unchanged from the pre-session baseline. A future operator-coordinated
 attempt now has a design that should actually close the gap instead of repeating the net-zero 500-row result — that is
 this touch's whole contribution.
+
+**Redispatch-churn confirmed a second time — 2026-07-14 (slot-12, resumed session)**: this same slot's crashed prior
+session (the touch immediately above) was resumed and re-dispatched to this identical task. Fresh-pulled all repos
+(clean); confirmed `market-tick-data-service@af627b5b` is live and unchanged. A separate touch (slot-7, on the parent
+plan doc) already diagnosed this exact pattern — ~30 re-dispatches since 2026-06-27 with data_engineering craft work
+fully closed and only an operator-scheduled maintenance-window run remaining, still STOP-gated by `BLK-d9137d48` — and
+filed `/blocked` recommending a `prereqs.conditions` gate on this task's `backlog.yaml` entry. Getting re-dispatched
+into the identical dead end confirms that fix has not yet landed. Filed a fresh `/blocked` as a second, independent
+confirmation rather than re-running any audit (would reproduce byte-identical RED evidence for zero new information, the
+exact waste slot-7's own touch already flagged). No code shipped this touch.
