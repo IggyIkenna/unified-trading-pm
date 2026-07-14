@@ -259,3 +259,27 @@ one.
   16Gi/4cpu, tonight's seeding re-executed (in flight). QUEUED CODE FIX (P1, joins the chunked-scan P2): memory-frugal
   captured-set (asset-group-filtered semi-join / pd.Index instead of tuple set) + audit the concat path; owner:
   follow-up to the staleness-trio ship (same file, sequenced to avoid same-file collision).
+- 2026-07-14 03:16Z: **P1 CODE FIX SHIPPED — instruments-service@633d7af4**
+  (`fix(enum): memory-frugal manifest load path — column-project index reads`). Root cause of the
+  expected-universe-v2-sports 8Gi OOM measured on the REAL 5.75M-row sports index (profiled locally,
+  `/usr/bin/time -v`): the enumerator loaded the index FULL-WIDTH — 42 object columns ≈ **5.6GB** in pandas — then the
+  per-VM-shard `pd.concat` copy peaked ≈6GB; `_build_captured_set` added a full-width copy of the ~captured rows on top.
+  Only 4 columns are ever consumed (sports present-set grain `data_type, league_id, date` + `capture_status`). Fix: (1)
+  every manifest parquet read (cache / canonical / per-VM shards) column-projects at READ time via new
+  `_needed_manifest_columns` + `_read_manifest_parquet_projected` (schema read first; full-width fallback only for a
+  degenerate parquet with zero key columns); (2) `_build_captured_set` filters+projects in one `df.loc[mask, cols]`
+  select (no full-width captured-rows copy); (3) `main()` releases the manifest frame before the enumeration loop.
+  **Measured peak RSS (real script, scan-only, frozen 2026-07-14 index snapshot, identical inputs): 6,746MB before →
+  1,619MB after (−76%, 4.2x)**; stage-level profile 5,967MB → 1,590MB with the concat-stage peak 5,967MB → 1,140MB.
+  **Semantics proven byte-identical**: present-set (4,816,144) + captured-set (757,476 — exactly the -v97dj green run's
+  logged size) sha256-identical old-vs-new on the real index; guard dropped the same 35 rows; the 44,386-row candidate
+  CSVs byte-identical across before/after runs. Unit tests:
+  `tests/unit/scripts/test_enumerate_manifest_memory_frugal.py` (55 tests — old-vs-new equivalence oracle on edge-case
+  fixtures incl. NaN/dup/numeric keys + end-to-end guard-drop equivalence + a memory-shape pin that sports projection
+  reads EXACTLY 4 of the 42 index columns). QG green, quickmerged to LDR. **Bump-back evaluation (recommendation, NOT
+  executed)**: once the next instruments-service image rebuild carries 633d7af4, expected-universe-v2-sports can very
+  likely return to 8Gi/2cpu — the fixed load path peaks ~1.6GB on today's index and scales per-row far shallower
+  (retained cost is now the key-tuple sets, not the full-width frame). Leave the 16Gi mitigation until one green nightly
+  run on the fixed image, then downsize. NOTE: is-daily-enum-sports (32Gi mitigation) is the SAME memory family but a
+  DIFFERENT binary path (`daily_is_enumeration.py` universe scan, not this loader) — its 13:30Z 32Gi verdict + the
+  chunked-scan P2 remain open and are NOT addressed by this ship.
