@@ -218,10 +218,10 @@ enough). The % is neither an upper nor lower bound of the real value.
       trades-only scoped); adding a dependency on the retired key would work against that migration. Shipped
       `unified-api-contracts@5626079e`.
 
-- [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): BITGET-FUTURES's
-      16 real dated-quarterly FUTURE symbols are now RESOLVABLE (base/quote + margin_type fixed this session,
-      `instruments-service@cd902fb1` + `@75bdf02d`) but still can't reach `prod/catalog.parquet` — a live re-fetch grew
-      the raw URDI universe 714→1010 (confirmed via
+- [x] ✅ [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4):
+      BITGET-FUTURES's 16 real dated-quarterly FUTURE symbols are now RESOLVABLE (base/quote + margin_type fixed this
+      session, `instruments-service@cd902fb1` + `@75bdf02d`) but still can't reach `prod/catalog.parquet` — a live
+      re-fetch grew the raw URDI universe 714→1010 (confirmed via
       `--operation instruments --mode batch --venues BITGET-FUTURES     --force`, log: "Venue count OK: BITGET-FUTURES
       grew 714 → 1010 (+296)"), but ALL 16 dated futures had ALREADY EXPIRED by the fetch date (2026-07-14) — Tardis's
       own `availableTo` for every one of them predates today (e.g. `BTCUSDH25` availableTo=2025-03-29) — so the per-day
@@ -236,19 +236,48 @@ enough). The % is neither an upper nor lower bound of the real value.
       historically, every day — there is nothing to relabel because nothing was ever captured). Re-capturing them is a
       separate live re-capture run via the normal adapter path") — that precedent's fix was a DEDICATED one-off script
       (`scripts/recapture_bybit_legacy_quarterly_futures_2026_07_09.py`, already cleaned up post-use, lifecycle=oneoff)
-      that inserted new rows directly. **Recommended fix for BITGET-FUTURES** (not attempted this session — real
-      engineering effort, deliberately scoped out to keep this session's 3 fixes independently reviewable): a similar
-      one-off script that (1) re-fetches BITGET-FUTURES's 16 dated-future symbols via
-      `TardisReferenceDataAdapter.get_instruments()` (now correctly resolving base/quote/margin_type/expiry with this
-      session's fixes) — cheap, no whole-corpus walk needed since Tardis's own `availableSince`/`availableTo` metadata
-      already IS the lifecycle window; (2) APPENDS the 16 new rows directly to `prod/catalog.parquet` (backup-first,
-      monotonic-row-count-grows guard, refuse on new duplicate `instrument_id`, matching the established
-      `canonicalize_*_catalog_2026_07_*.py` safety pattern) rather than relying on `build_instrument_catalogue.py`'s
-      by_date roll-up (which would require also backfilling 16×~2-year-span `instrument_availability/by_date/**`
-      snapshot files — the whole-corpus-walk-adjacent, more expensive path). **Only once this lands** can a
-      lease-enabled BITGET-FUTURES backfill VM actually resolve any dated-future symbols to request from Tardis, and
-      `(BITGET-FUTURES, future, {book_snapshot_5,derivative_ticker,trades})` can close as G4 Layer-1 tuples. (repo:
-      instruments-service)
+      that inserted new rows directly. **DONE 2026-07-14 — instruments-service@ad4be6d6 (slot-6 planning).** Shipped
+      `scripts/recapture_bitget_futures_dated_futures_2026_07_14.py` (lifecycle=oneoff): (1) re-fetches BITGET-FUTURES's
+      full universe live via `TardisReferenceDataAdapter.get_instruments()` (single free no-auth Tardis REST call, no
+      whole-corpus GCS walk), filters to the 16 real FUTURE rows; (2) APPENDS the new rows directly to
+      `prod/catalog.parquet` (backup-first — `prod/catalog.20260714-043942.bitgetfuturesfix.bak.parquet` — monotonic
+      row-count-grows guard, refuse-on-duplicate-`instrument_id`), matching the established
+      `canonicalize_*_catalog_2026_07_*.py` safety pattern. Ran `--apply --confirm` against prod: rows 358,439 → 358,451
+      (+12), 0 duplicate `instrument_id` introduced (live-verified post-write). QG-green (174s, sentinel `94f53b20`).
+      Dynamic Gate verification: `build_expected("cefi")` now yields
+      `(BITGET-FUTURES, future, {book_snapshot_5, trades, derivative_ticker})` — previously silently zero.
+      **Stop-on-surprise finding surfaced mid-run (NOT silently resolved)**: 4 of the 16 fetched rows (2 BTC + 2 ETH)
+      hit a REAL canonical-`instrument_id` collision — `BTCUSDM26` (Jun-2026 contract) and `BTCUSDU26` (Sep-2026
+      contract) both report `availableTo=2026-04-28` in Tardis's own metadata (live-verified 2026-07-14 via
+      `api.tardis.dev/v1/exchanges/bitget-futures`; same for the ETH siblings), so the SHARED
+      `_build_canonical_future_key` (parsing.py — every CeFi venue's dated-future capture routes through it) collapses
+      two genuinely distinct real contracts onto one id (`BITGET-FUTURES:FUTURE:BTC-USD@INV-20260428` /
+      `...ETH-USD@INV-20260428`). The script detects this defensively and skips the WHOLE collision group rather than
+      silently keeping one contract and losing the other — those 4 rows (`BTCUSDM26`/`BTCUSDU26`/`ETHUSDM26`/
+      `ETHUSDU26`) remain OUT of `prod/catalog.parquet`, tracked as the follow-up todo directly below (shared-code fix,
+      out of scope for this one-off append — touches every CeFi venue's dated-derivative id construction). 12/16 real
+      dated futures now close as G4 Layer-1 tuples; the remaining 4 need the disambiguation fix first.
+
+- [ ] [CODE] P2. **NEW FINDING 2026-07-14 (data_engineering slot-6): shared `_build_canonical_future_key` can collide
+      two DISTINCT real dated-derivative contracts onto ONE canonical `instrument_id` when Tardis's own `availableTo`
+      (the source the adapter falls back to for `expiry` when no symbol-string date-parse branch exists for the
+      exchange) happens to coincide for both.** Surfaced while shipping the BITGET-FUTURES append directly above:
+      `BTCUSDM26` (real Jun-2026 quarterly) and `BTCUSDU26` (real Sep-2026 quarterly) both report
+      `availableTo=2026-04-28` (live-verified via `api.tardis.dev/v1/exchanges/bitget-futures`, same for
+      `ETHUSDM26`/`ETHUSDU26`) — plausibly Bitget delisted/rotated both far-dated quarterlies on the same day, or
+      Tardis's replay collection for this exchange hit a common cutoff. Either way, `adapter.py`'s
+      `_build_canonical_future_key(venue, base, quote, margin_type, expiry)` (parsing.py) has no disambiguator beyond
+      `expiry.strftime('%Y%m%d')`, so both contracts resolve to the identical id — a data-loss risk (whichever the
+      catalogue roll-up captures LAST silently overwrites/aliases the other) for ANY CeFi venue where this shape recurs,
+      not just BITGET-FUTURES. **This is the same collision-prone construction every CeFi venue's dated-future capture
+      shares** (touches `instruments_service/reference_data/adapters/cefi/tardis/{adapter.py,parsing.py}` — out of scope
+      for a one-off append script; recommend a disambiguation input beyond `expiry` alone, e.g. the CME month-code
+      letter itself (`_BYBIT_MONTH_CODE_RE`'s `group(2)`, already parsed for the no-dash shape) folded into the
+      canonical key, or falling back to `raw_symbol` in `instrument_key` specifically when two distinct symbols'
+      `_build_canonical_future_key` outputs would otherwise collide. Gate: `BITGET-FUTURES:FUTURE:BTC-USD@INV-20260428`
+      /`...ETH-USD@INV-20260428` each resolve to TWO distinct ids (one per real `raw_symbol`); the 4 rows currently
+      skipped by `recapture_bitget_futures_dated_futures_2026_07_14.py` land in `prod/catalog.parquet` without
+      introducing a duplicate. (repo: instruments-service)
 
 - [ ] [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
       instrument catalogue is permanently LIVE-ONLY — can never backfill historical data.**
