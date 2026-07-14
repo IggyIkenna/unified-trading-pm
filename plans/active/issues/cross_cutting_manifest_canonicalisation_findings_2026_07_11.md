@@ -184,7 +184,7 @@ above.
    not hold for it; re-confirmed unchanged across 5+ sessions 2026-07-08→07-13, see the "Adjudication 2026-07-14"
    section above). Do not reclassify tradfi's Era-B rows on the strength of this playbook item.
 7. **CF-4 source population** — `record_captured(source=…)` is required; cefi has 54% blank. Backfill from the
-   pipeline*mode `{mode}*{source}` or the venue→source map.
+   `pipeline_mode` `{mode}_{source}` or the venue→source map.
 8. **Physical-path relabel is a VM `--apply`** — objects lacking `pipeline_mode=`/`asset_group=` segments require the
    migrator's operational relabel run (fleet-drain-gated), not a manifest-only fix. **UPDATE 2026-07-14 (finding 196):
    this has now RUN and is CONFIRMED DONE for sports (E3+E4 fleet, 2026-07-12) and tradfi/defi (GCS-reverified

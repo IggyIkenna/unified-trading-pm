@@ -131,12 +131,14 @@ definitional data exists and already covers all five asset groups uniformly:**
 ## Update 2026-07-07 (later same day): the sibling UI bug is fixed, and the writer-side bug generalizes to DeFi
 
 **1. A distinct-but-related UI bug is now fixed in code (implemented + tested, not yet committed).** Separately from the
-instrument*type-generalization question above, the operator found live (via screenshot, then confirmed in a real
+`instrument_type`-generalization question above, the operator found live (via screenshot, then confirmed in a real
 browser) that `deployment-ui/src/components/DataStatusTab.tsx`'s "Asset group breakdown" card had
-`{!(catData.chains && ...) && <Venues section>}` — any category with \_any* `chains` breakdown suppressed its **entire**
-venue list. Fine for DeFi (~every venue has a chain); wrong for CEFI, where only 2 of 24 venues (PACIFICA, LIGHTER) are
-on-chain — the other 22 (ASTER, BINANCE-FUTURES, DERIBIT, everything) were silently dropped from the card. Fixed by
-extracting `getUncoveredVenueNames(catData)` and gating/filtering on that instead of on chains-presence alone. Verified:
+`{!(catData.chains && ...) && <Venues section>}` — any category with any `chains` breakdown suppressed its **entire**
+venue list.
+
+Fine for DeFi (~every venue has a chain); wrong for CEFI, where only 2 of 24 venues (PACIFICA, LIGHTER) are on-chain —
+the other 22 (ASTER, BINANCE-FUTURES, DERIBIT, everything) were silently dropped from the card. Fixed by extracting
+`getUncoveredVenueNames(catData)` and gating/filtering on that instead of on chains-presence alone. Verified:
 `tsc`/`eslint` clean, 3 new unit tests + all 40 pre-existing DataStatusTab tests pass, and live-rendered against real
 production data in a local dev server (had to route around a Cloud Run↔Node-proxy "socket hang up" issue by serving a
 real fetched payload locally) — confirmed the CEFI card now shows both Chains and all 22 other Venues, no duplicates.

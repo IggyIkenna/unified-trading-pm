@@ -134,11 +134,11 @@ resolved_by:
    investigation split from the defi 2e seeding" and this is one of the two remaining tradfi Layer-1 surfaces per the
    sibling plan.
 3. **Recent enumerator fixes already closed the tradfi structural gaps**: `instruments-service@6c893be` (MVP-gate the
-   tradfi EU enumerator, mirror cefi), `@a510db1` (NYSE ETF alive-dates → EXPECTED*SOURCE_DELIVERY_LAG for ARCX-primary
-   ETFs not in XNYS.PILLAR), `@9be20c9` (align enumerator seed_instrument_id with MTDS raw_symbol), `@814b14a` (VIX
-   cash-index drop + Databento rolling-history floor-clip), `@f6d479f` (axis-3 bundle grain). Honest-cov moved 5.3% →
-   13.8% (source: `data_completion*…#L2516`). No further DeFi-scale canonical re-seed appears warranted at the
-   enumerator layer; the residual backlog is the two items above.
+   tradfi EU enumerator, mirror cefi), `@a510db1` (NYSE ETF alive-dates → `EXPECTED_SOURCE_DELIVERY_LAG` for
+   ARCX-primary ETFs not in XNYS.PILLAR), `@9be20c9` (align enumerator `seed_instrument_id` with MTDS raw*symbol),
+   `@814b14a` (VIX cash-index drop + Databento rolling-history floor-clip), `@f6d479f` (axis-3 bundle grain). Honest-cov
+   moved 5.3% → 13.8% (source: `data_completion*…#L2516`). No further DeFi-scale canonical re-seed appears warranted at
+   the enumerator layer; the residual backlog is the two items above.
 
 ### prediction (owning plans = `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` + `prediction_capture_incident_remediation_2026_07_06.md`)
 
@@ -148,15 +148,15 @@ resolved_by:
    `instrument_availability` parquet, and the `lifecycle-catalogue-regen-prediction-daily` job that WOULD populate it is
    currently PAUSED. **This is the largest genuine never-seeded backlog on prediction**: the token-id dimension for
    Polymarket (~17,772 resolved tokens, per Plan-5 progress log) × per-token daily availability × the captured
-   data*types is not currently under any EU denominator, so the honest-cov denominator is catalogue-cqg-bundle-only.
+   `data_types` is not currently under any EU denominator, so the honest-cov denominator is catalogue-cqg-bundle-only.
    Quantum, per plan-cited baseline: prediction Layer-2 v9 capture reads 5.3% honest-cov (captured 102,936 / empty
-   1,007k / failed 10,013 / `expected_unattempted` 818k, source `data_completion*…#L2320`) — the 818k EU is
+   1,007k / failed 10,013 / `expected_unattempted` 818k, source `data_completion_…#L2320`) — the 818k EU is
    CQG-bundle-scoped; the token-id lane is a separate off-manifest dimension.
 2. **Kalshi launcher gap** (source: `data_completion_…#L3275`, P1 open). `KalshiAdapter` is wired (per plan +
    `prediction_venue_perps_and_live_clob_depth_2026_06_20`) but `launch-mtds-prediction-backfill-vm.sh` does not
    currently launch a Kalshi backfill VM → Kalshi cells never move out of `expected_unattempted` (or fail to be seeded
-   for pre-adapter days). Quantum: Kalshi resolved-market coverage × trades/book*snapshot_5 data_types × per-day (per
-   plan progress log: `kalshi book_snapshot_5 = 2,107 parquets/06-26` shows \_current* capture; the historical seed is
+   for pre-adapter days). Quantum: Kalshi resolved-market coverage × trades/`book_snapshot_5` `data_types` × per-day
+   (per plan progress log: `kalshi book_snapshot_5 = 2,107 parquets/06-26` shows current capture; the historical seed is
    the gap).
 3. **Decision-338 per-conditionId exclusion** (source:
    `instruments-service/scripts/enumerate_expected_universe.py:1737-1747`). `_enumerate_v2_prediction` explicitly
@@ -355,7 +355,7 @@ resolved_by:
       at `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` — filter logic keeps ONLY the
       cqg-bundle-grain rows (`_cqg_rows = [c for c in catalog if c.data_type == _PREDICTION_CQG_DATA_TYPE]`) with an
       explicit
-      `logger.info("prediction v2: cqg-bundle-grain filter active — %d cqg rows kept of %d catalogue rows     (per-conditionId trades/market_lifecycle EXCLUDED; decision 338)", …)`
+      `logger.info("prediction v2: cqg-bundle-grain filter active — %d cqg rows kept of %d catalogue rows (per-conditionId trades/market_lifecycle EXCLUDED; decision 338)", …)`
       runtime log tag. (2) The >50M-row catastrophic denominator-inflation risk is VISIBLE in the function docstring at
       `enumerate_expected_universe.py:1728-1738` — "**cqg-bundle grain ONLY (decision 338, 2026-06-19).** … Seeding
       `expected_unattempted` at per-conditionId grain emits >50M FALSE rows (435K conditionIds x ~574 days x 2
