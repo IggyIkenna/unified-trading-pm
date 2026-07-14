@@ -1,0 +1,23 @@
+asset_group,finding,event,detail
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BINANCE-FUTURES/book_snapshot_5 1,400"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BINANCE-FUTURES/futures_chain 2,335"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BITFINEX-FUTURES/book_snapshot_5 792
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BITFINEX-FUTURES/trades 794
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,BYBIT/book_snapshot_5 870
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"BYBIT/futures_chain 1,968"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,DERIBIT/futures_chain 808
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-FUTURES/book_snapshot_5 1,425"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-FUTURES/trades 1,073"
+cefi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"OKX-SWAP/book_snapshot_5 1,751"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BITGET-SPOT/book_snapshot_5 2,480"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BITGET-SPOT/trades 2,480"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BYBIT-SPOT/book_snapshot_5 2,392"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"BYBIT-SPOT/trades 2,392"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/book_snapshot_5 2,628"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/derivative_ticker 2,628"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/futures_chain 2,629"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/liquidations 2,628"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"COINBASE-FUTURES/trades 2,628"
+cefi,oracle_expects_no_manifest_row,DP_DIVERGENT_EMPTY,"OKX-SPOT/book_snapshot_5 2,469"
+cefi,schema_version_not_v9,DP_NOT_V9,"458304/7510496 rows non-v9 (legacy_version=343194, missing=115110, contaminated=0); dist={9.0: 7052192, 5.0: 178484, 6.0: 132960, nan: 115110, 4.0: 31750}"
+cefi,shard_4pillar_fail,DP_SHARD_PILLAR_FAIL,4-pillar rc=1 for cefi
