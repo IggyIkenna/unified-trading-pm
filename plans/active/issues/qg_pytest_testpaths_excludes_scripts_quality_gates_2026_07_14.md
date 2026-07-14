@@ -115,11 +115,15 @@ the audit implied by option 1 is out of scope for that task.
       checker self-tests actually run on every gate invocation. Scope: the 17 confirmed-clean files above (241 tests)
       only — do NOT include `test_check_banned_placeholder_methods.py` or `test_prediction_pipeline_e2e.py` until their
       own todos below are resolved (wiring them as-is would turn QG red immediately). (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Fix `test_load_baseline_real_workspace_baseline`'s stale `len(baseline) >= 1` assertion in
+- [x] ✅ [SCRIPT] P3. Fix `test_load_baseline_real_workspace_baseline`'s stale `len(baseline) >= 1` assertion in
       `scripts/quality_gates/test_check_banned_placeholder_methods.py` — the real baseline is correctly empty (ratchet
       fully cleared 2026-05-17 per its own `entries_postscript`); the test should assert the baseline parses cleanly
       (e.g. `isinstance(baseline, dict)`) without requiring non-empty content, or assert `len(baseline) >= 0` as a
-      structural sanity check only. (repo: unified-trading-pm)
+      structural sanity check only. (repo: unified-trading-pm) — **FIXED, slot 4 (infra), 2026-07-14**: replaced
+      `assert len(baseline) >= 1` with `assert isinstance(baseline, dict)`, matching the todo's own recommended fix
+      exactly — the remaining structural assertions (all entries `pending_removal`, 3-tuple keys, non-empty
+      `default_successor`) are unaffected and still hold vacuously true on the now-empty dict. 28/28 tests pass (was
+      27/28).
 - [ ] [SCRIPT] P3. Decide `scripts/prediction/test_prediction_pipeline_e2e.py`'s disposition — it is a manual e2e driver
       script, not a real pytest suite (2 functions take non-fixture args pytest can't inject). Either rename away from
       the `test_*` prefix (so pytest stops trying to collect it as a unit test) or restructure it into a real

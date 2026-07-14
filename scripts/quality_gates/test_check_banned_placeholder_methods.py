@@ -60,13 +60,20 @@ def test_banned_name_set_shape() -> None:
 
 
 def test_load_baseline_real_workspace_baseline() -> None:
-    """The real workspace baseline must always parse cleanly + be all pending_removal."""
+    """The real workspace baseline must always parse cleanly + be all pending_removal.
+
+    A shrinking ratchet — the entries dict is expected to reach (and stay) empty
+    once every baselined occurrence is cleaned up (it did, 2026-05-17, per the
+    baseline file's own ``entries_postscript``). This asserts the STRUCTURE
+    (parses to a dict, every entry — if any — is pending_removal + a proper
+    3-tuple key), not a non-empty count.
+    """
     here = Path(__file__).resolve().parent
     real = here / "banned_placeholder_methods_baseline.yaml"
     if not real.is_file():  # pragma: no cover — defensive
         pytest.skip("real baseline not yet shipped")
     baseline, default_successor = load_baseline()
-    assert len(baseline) >= 1, "real baseline unexpectedly empty"
+    assert isinstance(baseline, dict)
     assert all(e.status == "pending_removal" for e in baseline.values())
     assert default_successor  # non-empty
     # Keys are (repo, file, method) tuples.
