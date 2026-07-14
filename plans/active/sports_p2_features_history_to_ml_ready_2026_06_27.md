@@ -121,6 +121,52 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 11:52-12:05 UTC — data_engineering slot-12 (Todo 3 re-dispatch — still BLOCKED-PREREQ per established pattern; found + fixed a new silent-NaN correctness bug in travel_calculator, filed follow-up issue doc, checkbox NOT flipped)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`): same **3** VMs every recent dispatch has found
+(`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`. Features bucket unique-date count **2,471**
+(up from slot-14's 2,447 ~26 min earlier) — steady forward progress, no stall. History is ~4,210 days total; coverage
+now ~58.7% (2,471/4,210). "Features manifest clean over FULL history" cannot be honestly evaluated while ~41% of history
+is unattempted — same structural gate every prior dispatch on this todo has found.
+
+**New finding + concrete fix shipped (Todo-2-adjacent, in the same session)**: while tailing all 3 VMs' `run.log`s for
+the routine crash-signature check, `-085703`'s log was NOT the known-closed tz-naive/tz-aware venue-comparison noise
+(see `sports_venue_id_numeric_coercion_data_loss_2026_07_13.md`) — it was a DIFFERENT, previously-undocumented
+`ValueError` in `travel_calculator.compute_travel_batch` (`pd.Timestamp(fixture["kickoff_utc"], tz="UTC")` raising
+whenever `kickoff_utc` arrives already tz-aware), caught by the per-fixture shard-isolation try/except and silently
+defaulting the cumulative-travel columns to NaN — **8,648 occurrences on this one VM within ~2h41m** of live backfill
+traffic. This is a code-defect NaN masquerading as honest-absence NaN (craft north-star #1 violation), not a crash (no
+OOM/dead-process signature — the fleet stayed healthy throughout).
+
+Root-caused + fixed: switched to `pd.to_datetime(..., utc=True, errors="coerce")`, matching the tz-naive/tz-aware
+normalization already used 2 lines above for `fixtures_history`. Shipped **features-service@d878f11a** (QG green,
+`quickmerge --agent --files`). Filed
+[`issues/sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md`](issues/sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md)
+with 2 follow-up todos: (P2) once Todo 1 completes, gap-fill re-run date-ranges computed before this fix whose
+cumulative-travel columns are suspiciously all-NaN; (P3) audit other sports calculators for the same
+`tz="UTC"`-on-possibly-aware-value pattern (2nd distinct tz inconsistency found in this pipeline in 2 days).
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy running VMs (none dead, steady progress; killing
+a >55%-through live backfill to force-adopt a NaN-default fix mid-flight is a bigger, riskier action than this finding
+warrants — see issue doc's "Recommended decision"). Did not re-run `check_pipeline_completeness.py` (Todo 2/gate) —
+would just reconfirm the same BLOCKED-PREREQ verdict at real compute cost; history is still only ~59% covered. Did not
+flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,471).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real — and when doing so, also spot-check
+cumulative-travel columns per the new issue doc's P2 todo.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). Real
+code fix shipped this entry (features-service@d878f11a) — this plan-doc edit + the new issue doc ship together via the
+`docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other dispatchable work (Todo 3's own
+done_definition — checkbox flip — cannot be honestly met yet).
+
 ### 2026-07-14 11:26 UTC — data_engineering slot-14 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-13's check ~15min earlier, steady progress, still BLOCKED-PREREQ, no new action)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
