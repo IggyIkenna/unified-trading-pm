@@ -1225,3 +1225,14 @@ VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creation timesta
 change. This todo is transitively gated on the GW gate (Todo 9) going green, which needs the fleet to finish; nothing to
 launch or fix here, matching sessions 20-22's reasoning. Not re-running the manifest-rescan/GW gate query (would
 reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:05Z — session 24 (data_engineering slot-13): T+~1h cheap re-check, unchanged, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 24 slot repos clean. Cheap re-check
+only (~3 min since session 23's 12:02Z check): `gcloud compute instances list --filter='name~af-backfill'` shows all 4
+remaining VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creation timestamps as every prior session.
+`run.log` tails (via `/home/ubuntu/google-cloud-sdk/bin/gsutil`, the snap `gsutil`/`gcloud` on this slot is broken —
+`cap_dac_override` error, same as session 22's note) confirm active per-fixture fetches at ~12:03-12:05Z, zero
+Tracebacks/ERRORs. No material change — still transitively gated on the GW gate (Todo 9) going green, session 22's
+slowest-VM ETA (~4.2h from 11:52Z) puts completion around ~16:00Z. Not re-running the manifest-rescan/GW gate query
+(would reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
