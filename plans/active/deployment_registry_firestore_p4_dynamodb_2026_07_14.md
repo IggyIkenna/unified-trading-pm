@@ -73,9 +73,13 @@ provision only. No `os.getenv`; UTC datetimes; QG-green.
 - [ ] [REVIEW] P2. Contract-test the DynamoDB store against the SAME suite the Firestore store passes (run against
       DynamoDB Local or `moto`): round-trip register/heartbeat/complete, conditional-write ordering rejects a stale
       heartbeat, and the `status` GSI query returns only matching docs. `bash scripts/quality-gates.sh` green.
-- [ ] [DATA] P2. Provision (do not activate) — add the DynamoDB `deployments` table + GSI via terraform in
+- [x] ✅ [DATA] P2. Provision (do not activate) — add the DynamoDB `deployments` table + GSI via terraform in
       deployment-service (on-demand capacity, or the 25-WCU/25-RCU free-tier provisioned mode), left inactive. Document
-      the one-line activation step (flip the cloud selector) in the AWS-migration runbook.
+      the one-line activation step (flip the cloud selector) in the AWS-migration runbook. — deployment-service@4d39f44:
+      `terraform/aws/deployment_registry_dynamodb.tf` (table `unified-trading-{env}-deployments`, PK `deployment_id`,
+      GSI `status-index`, `deployment_registry_dynamodb_billing_mode` var PAY_PER_REQUEST/PROVISIONED); activation step
+      documented in `codex/05-infrastructure/deployment-observability.md` § "AWS backend activation (deployment-registry
+      DynamoDB)".
 - [ ] [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items. (No phase handoff — Phase 5 is gated on
       Phase 3; this phase just needs to be done before Phase 5's scale test if you want DynamoDB in that test.)
 

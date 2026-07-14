@@ -140,6 +140,22 @@ stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wr
 - **AWS: Phase 5** — EC2 backfill VMs + Batch Fargate ride the same `DeploymentTarget`/`cloud=AWS` contract;
   `/api/deployments/inventory` returns `cloud=aws` items once the AWS census is wired.
 
+## AWS backend activation (deployment-registry DynamoDB)
+
+The deployment-registry `DeploymentRegistryStore` (UTL `cloud_interface`) has a DynamoDB backend implementing the SAME
+Protocol as the GCP Firestore backend — provisioned now (Phase 4 of
+`plans/active/deployment_registry_firestore_p4_dynamodb_2026_07_14.md`) but **inactive**: the store factory selects the
+backend from the active cloud (mirrors `resolve_bucket_name`'s GCS/S3 selection) and defaults to Firestore on GCP.
+
+- **Table**: `unified-trading-{environment}-deployments` (terraform
+  `deployment-service/terraform/aws/deployment_registry_dynamodb.tf`) — partition key `deployment_id`, GSI
+  `status-index` on `status` (the DynamoDB analogue of the Firestore `query_by_status` query). `PAY_PER_REQUEST` billing
+  by default (`deployment_registry_dynamodb_billing_mode` var toggles to the 25-WCU/25-RCU free-tier `PROVISIONED`
+  mode). Server-side encryption enabled.
+- **Activation is one line**: flip the active-cloud selector to AWS — the store factory then instantiates
+  `DynamoDbDeploymentRegistryStore` instead of `FirestoreDeploymentRegistryStore`; no caller changes. Until that flip,
+  the table sits provisioned + empty (no writes, negligible cost).
+
 ## The cockpit + health rollup + per-deployment freshness (2026-06-24)
 
 The unified **`/cockpit`** is the deployment-ui DEFAULT page (`src/pages/Cockpit.tsx`): one place to answer "is
