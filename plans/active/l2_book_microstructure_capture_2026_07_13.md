@@ -213,9 +213,41 @@ sequential: true
 - [ ] [SCRIPT] P2. Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent
       plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest (which needs historical
       deeper-book replay, still no backfill authorised). This todo is DONE when the feed is honestly live for the
-      capable venues, not when the engine registers.
+      capable venues, not when the engine registers. **BLOCKED-DATA-CORRECTNESS (2026-07-14, slot-11):** verified the
+      done-condition before flipping — it is NOT true. Manifest check found `depth_of_book_10` has 0 rows ever captured,
+      AND — much bigger — the entire CeFi live WS tick-capture pipeline (every `live_*` pipeline_mode, every data_type,
+      every venue) has produced no manifest rows since 2026-06-29 (15 days stale); no running compute instance in the
+      project looks like a persistent live-WS process. Filed
+      [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+      (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything
+      myself (needs operator context on the correct deployment target + whether this is an intentional pause).
+      **Checkbox NOT flipped** pending that finding's resolution; the engine-registration guard itself is trivially
+      satisfied (not touched), but that's not what this todo's done-condition actually gates on.
 
 ## Progress Log
+
+### 2026-07-14 — slot 11 (Todo 7 — verified done-condition false, filed a bigger NOTIFY-OPERATOR finding)
+
+Dispatched task `l2_book_microstructure_capture-007` right after `/done`-ing todo 6. Todo 7's action item (don't touch
+the engine registration) is trivially satisfied by not touching strategy-service. But its actual done-condition is "the
+feed is honestly live for the capable venues" — checked that before flipping anything, rather than treating "the action
+item is a no-op" as "the todo is done".
+
+Widened the manifest check from todo 6's `depth_of_book_10`-only finding to `book_snapshot_5` (this plan's own stated
+foundation) and then to every `live_*` pipeline_mode row in the CeFi manifest: **no live-mode manifest row anywhere
+newer than 2026-06-29** (15 days stale at check time), across every data_type and venue, not just this plan's 5.
+Cross-checked via bounded (non-recursive) GCS listing on 4 sampled recent days — only `pipeline_mode=batch_*`
+directories present, zero `live_*`. `gcloud compute instances list` (project-wide) shows only backfill/batch VMs
+running; no GKE clusters. This reads as the entire CeFi live tick-capture pipeline being dormant, not a
+`depth_of_book_10`-specific gap — filed
+[`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+(P1, NOTIFY-OPERATOR per the data-pipeline-correctness HARD RULE) rather than trying to relaunch anything myself (no
+context on the correct deployment target or whether this is an intentional pause — real production infra, not a call to
+make unilaterally).
+
+**Checkbox NOT flipped** — the done-condition is honestly false. This plan-doc + issue-doc edit ships via the
+`docs(plans):` carve-out (no code this dispatch). `/done`-ing this dispatch with the finding + issue doc as the evidence
+— same posture as the todo 5 premise-correction earlier in this session.
 
 ### 2026-07-14 — slot 11 (Todo 6 shipped — deeper-book connectivity check)
 
