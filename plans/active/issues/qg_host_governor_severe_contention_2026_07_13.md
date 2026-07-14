@@ -7,7 +7,7 @@ summary:
   prior chronic-impairment incident (confirmed by main, not a misconfiguration) — filed for the infra/host owner to
   decide whether it still fits current fleet size, plus a separate measurement-bug finding (MAX_DURATION counts governor
   queue time as work time).
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -24,7 +24,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 locked_by:
 source: [plans/archive/issues/api_host_chronic_impairment_2026_05_29.md, scripts/quality-gates-base/qg-host-governor.sh]
 related: [plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md]
@@ -33,6 +33,14 @@ depends_on: []
 ---
 
 # qg-host-governor severe contention — QG_HOST_CONCURRENCY=1 floor vs 20-way slot demand
+
+> **✅ RESOLVED 2026-07-14.** All 4 todos below are complete. The root cause — a fixed K-token bucket that can't fit a
+> heterogeneous fleet — is superseded by the host-adaptive RAM+CPU **reservation governor** (now LIVE + validated; SSOT
+> `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`). Todo 1 (K policy) → K demoted to a runaway backstop,
+> the reservation gate is the live limiter (auto-adapts per host). Todo 2 (MAX_DURATION counts queue time) → fixed
+> `unified-trading-pm@f36ac5877`. Todo 3 (light-slice queues needlessly) → fixed `unified-trading-pm@9693a379d`. Todo 4
+> (fairness/starvation) → investigated (isolated 20-waiter probe, no starvation), and the reservation soak (42 runs, no
+> starvation) confirms — FIFO aging deferred as non-critical.
 
 ## What I found
 

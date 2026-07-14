@@ -419,8 +419,30 @@ qg_governor_release() {
 }
 
 _qg_governor_status() {
+    # Reservation mode: show live capacity, the dual-gate budgets, and current reservations.
+    if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
+        local mt ma cores frac_pct cpu_pct budget avail slots reserved running f pid repo mb ts
+        mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
+        frac_pct="$(awk -v x="${QG_MEM_SAFETY_FRAC:-0.70}" 'BEGIN{printf "%d", x*100}')"
+        cpu_pct="$(awk -v x="${QG_CPU_FRAC:-0.80}" 'BEGIN{printf "%d", x*100}')"
+        budget=$(( mt / 1024 * frac_pct / 100 )); avail=$(( ma / 1024 ))
+        slots=$(( cores * cpu_pct / 100 )); (( slots >= 1 )) || slots=1
+        reserved="$(_qg_ledger_reserved_mb)"; running="$(_qg_ledger_count)"   # both sweep dead PIDs first
+        echo "qg-host-governor: MODE=reservation  ledger=$(_qg_ledger_file)  flock=$(command -v flock >/dev/null 2>&1 && echo yes || echo MISSING)"
+        echo "  host: MemTotal=$(( mt/1024/1024 ))GiB  MemAvailable=$(( ma/1024/1024 ))GiB  physical_cores=${cores}"
+        echo "  RAM budget (${frac_pct}%): ${budget}MB  reserved: ${reserved}MB  free: $(( budget - reserved ))MB  (live avail ${avail}MB)"
+        echo "  CPU slots (${cpu_pct}% x ${cores}): ${slots}  running heavy phases: ${running}  (K runaway-backstop=$(_qg_governor_k))"
+        f="$(_qg_ledger_file)"
+        if [[ -s "$f" ]]; then
+            echo "  live reservations (pid repo mb):"
+            while read -r pid repo mb ts; do [[ -n "$pid" ]] && echo "    ${pid}  ${repo}  ${mb}MB"; done < "$f"
+        else
+            echo "  live reservations: none"
+        fi
+        return 0
+    fi
     local k dir; k="$(_qg_governor_k)"; dir="$(_qg_governor_dir)"
-    echo "qg-host-governor: K=${k}  dir=${dir}  flock=$(command -v flock >/dev/null 2>&1 && echo yes || echo MISSING)"
+    echo "qg-host-governor: MODE=token  K=${k}  dir=${dir}  flock=$(command -v flock >/dev/null 2>&1 && echo yes || echo MISSING)"
     if [[ -d "$dir" ]]; then
         local held=0 i tfd="$_QG_GOV_PROBE_FD"
         for (( i=1; i<=k; i++ )); do
