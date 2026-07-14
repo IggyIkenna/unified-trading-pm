@@ -13,7 +13,7 @@ summary: >
   normal-commit path and its pre-commit-retry path), never on the already-committed fast path. The resulting push then
   fails the local `pre-push-strict-quickmerge.sh` hook (`check_strict_quickmerge.py --block`), which requires every code
   commit reaching `live-defi-rollout` to carry the trailer unless it matches a carve-out.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,7 +38,7 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@431fda545 (fix, slot 4) + this sweep (slot 14, 2026-07-14)
 source:
   [
     scripts/quickmerge.sh:1471-1501,
@@ -119,10 +119,12 @@ its own reviewed change rather than be folded into an unrelated task's diff.
       single-repo ship (commit → quality-gates.sh Pass 1 → quickmerge --agent) that the resulting push no longer trips
       `check_strict_quickmerge.py`/`pre-push-strict-quickmerge.sh`. (repo: unified-trading-pm) —
       unified-trading-pm@431fda545
-- [ ] [INFRA] P3. Sweep recent `live-defi-rollout` history across repos for other trailer-less
+- [x] ✅ [INFRA] P3. Sweep recent `live-defi-rollout` history across repos for other trailer-less
       already-committed-fast-path pushes that may have landed via `--no-verify` or a hook-less clone (this doc's audit
       only checked `unified-api-contracts`'s last ~20 commits) — confirm whether this is a widespread,
-      silently-tolerated gap or mostly caught by the hook as it was here. (repo: unified-trading-pm)
+      silently-tolerated gap or mostly caught by the hook as it was here. (repo: unified-trading-pm) — see Progress Log
+      2026-07-14 slot 14 entry: 168 genuine trailer-less bypass commits found across 15/24 repos in the last 30 days —
+      widespread, not a one-off. Todo 1's fix (landed same day, `431fda545`) should close it going forward.
 
 ## Progress Log
 
@@ -156,3 +158,32 @@ triggers Phase-1's tree-wide lint-fix (ruff+Prettier over the whole repo, ~1900 
 prior session used successfully on `unified-api-contracts` does NOT work on PM itself. Discarded the resulting unstaged
 tree-wide diff via `git restore .` (verified it was pure auto-fix churn from this session, not foreign WIP) and shipped
 via `--agent` instead.
+
+**2026-07-14, slot 14 (infra)**: closed todo 2 (the sweep). Wrote a standalone Python script (scratchpad, not committed
+— see below) that ports `check_strict_quickmerge.py`'s exact `commit_violates()`/`_on_promoted_tip()` logic (same
+merge/promoted-tip/bot/skip-ci/carve-out exemptions) and runs it per-repo over
+`git rev-list --since '30 days ago' origin/live-defi-rollout` across all 24 repos under this slot's worktree. First pass
+over-counted: 319 "violations", because the sweep only fetched `origin/live-defi-rollout` and never
+`origin/main`/`origin/staging`, so `_on_promoted_tip()`'s ancestor check silently failed for every already-promoted
+backmerge commit (123 of the 319 were `chore(promote): LDR → main (Option-B direct)` commits, verified false-positive
+via `git merge-base --is-ancestor` after fetching `origin/main` fresh — exactly the fail-safe over-flagging the check's
+own docstring warns about). Re-ran with `origin/main` + `origin/staging` fetched fresh per repo before the walk:
+
+**168 genuine trailer-less bypass commits** remain (0 of them `chore(promote)` — all real conventional-commit
+fix/feat/refactor messages), spanning **15 of 24 repos** in the last 30 days: unified-api-contracts 35,
+unified-trading-library 29, deployment-api 25, market-tick-data-service 22, deployment-service 17, deployment-ui 16,
+instruments-service 13, execution-service 4, strategy-service 3, agent-orchestrator 2, alerting-service 1, ml-service 1.
+Clean (30d): batch-live-reconciliation-service, client-reporting-api, e2e-testing, features-service,
+fund-administration-service, greeks-service, ibkr-gateway-infra, market-data-processing-service,
+system-integration-tests, trading-agent-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui.
+
+All 168 postdate the hook's 2026-06-26 install (61 landed 2026-07-13/14, i.e. in the ~36h before this fix shipped), and
+authorship spans both slot-VM (`slot-N·planning`) and operator-laptop (`main·laptop`/`main·harsh_pc`) origins — **this
+confirms a widespread, silently-tolerated gap, not a one-off the hook mostly caught.** Every sample checked matches this
+doc's diagnosis exactly (real message, no `Quickmerge:` trailer, not a promote/backmerge, not bot/skip-ci) — consistent
+with every one of them hitting the `_QM_ALREADY_COMMITTED=1` fast-path gap that todo 1's fix (already landed same day,
+`unified-trading-pm@431fda545`) closes going forward. Did not investigate further why the pre-push hook itself let these
+168 through locally (hook-not-installed-yet on that clone vs. `--no-verify` vs. stale hook copy) — that's a distinct
+question from "is the gap widespread" and out of scope for this P3 todo; flagging as a possible follow-up if the pattern
+recurs post-fix. Sweep script kept at this session's scratchpad only (not committed — throwaway analysis tool, not
+project code).

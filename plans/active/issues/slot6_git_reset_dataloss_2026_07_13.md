@@ -122,9 +122,22 @@ diverged / detached").
       suite green. Verified 2026-07-14 (slot 4): guard present at `_branch_state.py:383,460-476` + `911036c4` is an
       ancestor of `origin/live-defi-rollout`. (Todo 2 below — the backward-HEAD-movement canary/alert — is a separate
       P2, not yet done.)
-- [ ] [INFRA] P2. Add a canary/alert: if a slot's local HEAD for a repo the slot has an in-flight task on ever moves
+- [x] ✅ [INFRA] P2. Add a canary/alert: if a slot's local HEAD for a repo the slot has an in-flight task on ever moves
       backward (loses a commit that was previously at HEAD) without the agent's own git action causing it, page — this
-      class of failure is currently silent.
+      class of failure is currently silent. — DONE `agent-orchestrator@5297819` (slot 12, 2026-07-14). Shipped
+      `server/head_backward_canary.py` — a `HeadBackwardCanary` daemon (started in `server.py` lifespan, cadence
+      `ORCHESTRATOR_HEAD_BACKWARD_CANARY_INTERVAL_SECONDS`, default 180s) that scans every `.tabs/<slot>/<repo>` reflog
+      for the out-of-band `branch: Reset to origin/<branch>` fingerprint discarding a `commit:` now reachable from
+      neither HEAD nor origin (the exact `AT_RISK_REFLOG_ONLY` signature `audit-fleet-reflog-resets.sh` classifies), and
+      pages `notify_head_backward_dataloss` (new, `notifications/slack.py`) with the per-clone `git cherry-pick <sha>`
+      recovery. First-tick-baselined + disk-persisted seen-set dedup (`dedup_state.head_backward_canary_*`) so it pages
+      each NEW loss exactly once and never re-pages the ~276-hit historical backlog (UPDATE 3) or floods on a restart.
+      Read-only wrt every slot clone. Deliberately scans ALL slot repos (not just DB-"in-flight" ones) because the
+      claim/tmux liveness that defines "in-flight" is precisely what false-negatives a live worker (UPDATE 7) — gating
+      on it would blind the canary to the case it exists to catch. 7 unit tests (`tests/test_head_backward_canary.py`),
+      full `quality-gates.sh` green (1276 passed, sentinel `4319e577`). Alerting SSOT
+      `codex/04-architecture/agent-orchestrator-alerting.md` updated (new PAGE row). This was the last open todo in this
+      doc — both P1 (Todo-1 realign guard) and this P2 (Todo-2 detection canary) are now shipped.
 
 ## Progress Log
 

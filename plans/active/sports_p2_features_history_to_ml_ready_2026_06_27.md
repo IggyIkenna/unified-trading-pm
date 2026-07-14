@@ -46,6 +46,18 @@ drift_direction: advance-code
 
 # Sports P2c — derived features history to ML-ready
 
+> **🔴 2026-07-14 ~14:15Z: GW enrichment features recompute (`derived_features`+`fixture_features` --force,
+> 2025-09-01..2025-11-30) is HELD** — the GW enrichment fleet completed but content verification came back RED (3,720
+> false-empty manifest cells + 225,854 enrichment rows fetched-then-dropped by the instruments-service write path, so
+> the parquet inputs the recompute would read are still materially incomplete). Recomputing now guarantees a full second
+> recompute after the fix. Resume trigger: P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`) Todo 9
+> flips green after the post-fix GW re-run; evidence
+> `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`. The working invocation
+> for when it resumes:
+> `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2025-09-01 --end 2025-11-30 --tables derived_features,fixture_features --force --vms 3 --env prod`
+> (SPOT; `--force` maps to `--no-skip-existing`; `odds_features` deliberately excluded — odds inputs unchanged by
+> enrichment). ML-readiness re-verify follows its completion.
+
 ## Scope
 
 Compute the three feature groups over 2015→present where upstream exists; pre-source-coverage cells inherit honest
@@ -120,6 +132,46 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-14 13:57 UTC — data_engineering slot-8 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-15's check ~67min earlier, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,580** (up from slot-15's 2,519 ~67 min earlier, +61) — steady forward progress,
+  no stall. History is ~4,210 days total; coverage now ~61.3% (2,580/4,210).
+- **Went past `RUNNING` status**: GCS run.log path from prior entries is stale (bucket has no `logs/` prefix — only
+  `_index/` and `sports_features/`); used serial-port output instead — `-085642`'s console shows a fresh
+  `snap.google-cloud-cli.gsutil` scope activating/deactivating every ~60s through 13:57:13Z (last checked), consistent
+  wall-clock-fresh heartbeat activity, no crash/OOM signature.
+- Checked for new issue docs touched since the last check:
+  `sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md` (last commit 13:27Z, Todo 2 still BLOCKED-PREREQ per
+  its own 9th check — unrelated to Todo 1) and `sports_cf8_available_at_backfill_regression_2026_07_13.md` (last commit
+  13:31Z, deployment-service fix — unrelated to this plan's compute). Also noted a new `features-service@81036512`
+  commit (`fix(sports): correct tz-aware kickoff_utc handling in european_fatigue_calculator`) shipped by another slot —
+  same bug class as the already-fixed `travel_calculator` issue, already landed, nothing for me to do here.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~61% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,580).
+Fleet is healthy — no gap-fill relaunch needed this cycle. The bucket has no `logs/` GCS prefix — use
+`gcloud compute instances get-serial-port-output <vm> --zone=asia-northeast1-c` for freshness checks instead of the
+GCS-hosted `run.log` path prior entries referenced (may have been a stale path or the log sink changed). Once the bucket
+approaches the full ~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for
+real.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
 
 ### 2026-07-14 12:50 UTC — data_engineering slot-15 (Todo 3 re-dispatch — immediately following this same session's Todo 1 check ~3min earlier, still BLOCKED-PREREQ, no new action)
 

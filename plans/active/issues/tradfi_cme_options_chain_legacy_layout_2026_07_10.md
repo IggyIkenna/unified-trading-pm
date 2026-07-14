@@ -8,22 +8,25 @@ summary:
   (`CC__FMH0025!.parquet`), manifest `underlying` values are per-contract keys (`ESU4_C5675`). Real, confirmed via live
   GCS listing; correctly excluded rather than risked at this scale, but the historical instrument-id canonicalization
   for this population remains open.
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
-repos: [market-tick-data-service, instruments-service]
+repos: [market-tick-data-service, instruments-service, deployment-service]
 scope: [engineer]
 tags: [instrument-id, canonicalization, tradfi, cme, options-chain, legacy-layout]
 related:
   [
     instrument_id_format_canonicalization_2026_07_08.md,
     ../canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    manifest_consolidator_service_name_dedup_split_2026_07_14.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master
 assigned_vm:
 resolved_by:
+  "2026-07-14, slot-3: real --apply migration ran to completion on
+  canonical-migration-tradfi-cme-options-20260714-150207 (291/291 real days, 210,589,799 rows, exit_code=0)."
 source:
   "Real finding surfaced by the TradFi single-leg migrate-stage agent (wf_118d8268-18c, 2026-07-09) while scoping the
   @LIN/@INV historical migration against the real availability_index.parquet manifest (single-walk discipline, not a
@@ -280,3 +283,73 @@ above — neither has recurred since the dtype/idempotency fixes landed).
 
 **Status**: script is now validated against real production data across single-day, multi-day, and re-run/idempotency
 scenarios. Next: ship this fix, then scope + launch the real VM execution for the remaining 287 real days.
+
+## 🟢 2026-07-14 (later same day) — VM launched for the full remaining run (287 real days)
+
+Extended `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` with a new `tradfi-cme-options` category
+(`deployment-service@11ed8f7fe`) rather than forking a new launcher — its VM name
+(`canonical-migration-tradfi-cme-options-<ts>`) deliberately stays under the already-registered
+`canonical-migration-tradfi-` `VM_PREFIX_TO_BUCKET` prefix (longest-prefix match), so no new registry entry was needed.
+Rebuilt + republished the code tarballs (`create-code-tarballs.sh`, all 4 core repos clean, mtds SHA `e4c04c64`
+confirmed to include the dedup/dtype fix) before launching.
+
+**Near-miss during testing**: a "smoke test" invocation with `DRY_RUN=true` was NOT actually a no-op in this launcher —
+that env var only gates the tarball-freshness check, not the real `gcloud compute instances create` call — so a real VM
+launched with `--apply` against production on an UNVERIFIED (pre-tarball-rebuild) code state. Caught within ~1 minute
+(VM was still in early boot/cloud-init, had not reached the Python script or the manifest-write phase — confirmed via
+serial console + scheduler state unchanged), deleted before any real writes could happen. No production impact. Lesson
+for next time: this launcher has no safe preview mode: **only invoke it when ready to launch for real.**
+
+**Real launch**: `canonical-migration-tradfi-cme-options-20260714-150207`, `e2-standard-16` (per the TradFi migration's
+own documented OOM precedent), SPOT, zone `asia-northeast1-c`, `--stamp 20260714T140207Z`. The tarball-freshness check
+flagged mtds + UAC as "MISSING" manifest — a false alarm (a local `mktemp` collision in the freshness-check tooling, not
+an actual missing/stale tarball; independently re-verified both manifests exist, are fresh (`created_at` minutes before
+launch), and match local HEAD exactly). VM reached `RUNNING` within seconds; serial console confirmed genuine, active
+progress (real package installation output, not a hang) as of the last check. Monitoring to terminal state — full
+progress/completion update to follow in this doc once the run finishes (or fails, per the workspace's no-fire-and-forget
+VM rule).
+
+## 🟢 2026-07-14 (later same day) — RESOLVED: VM run completed successfully, all 291/291 real days migrated
+
+Full run finished in **1,569.7s (~26 minutes)**, `exit_code=0`, self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`
+(confirmed via `EXIT_STATUS=0` + `DEPLOYMENT_COMPLETED` in the GCS-tee'd run log, not just VM disappearance — VM
+disappearing alone would be ambiguous between success and a `--instance-termination-action` after a SPOT preemption;
+`gcloud compute operations list` confirmed the terminal operation was a self-triggered `delete`, not a preemption).
+
+**Final real output**:
+
+- `bundle_CME_futures_chain`: 2,095 canonical files, 177,376,591 rows
+- `bundle_ICE_futures_chain`: 661 canonical files, 29,571,221 rows (the venue-misfiled ICE commodity futures, now
+  correctly routed to `venue=ICE` paths)
+- `bundle_CME_options_chain`: 129 canonical files, 3,641,987 rows
+- **Total: 2,885 real canonical bundle files, 210,589,799 rows**, `unclassified=0` on every single one of the 291 days
+  (zero silent drops) — 140,155 real source files read + classified across the whole run.
+- Manifest: `5,090,821 → 5,093,698` rows (+2,877 new; the 8 rows from my earlier local testing were correctly skipped by
+  the idempotency dedup — `Skipping 8 already-captured row(s)`).
+
+**Two real, non-blocking issues surfaced by the VM run (neither affected correctness)**:
+
+1. **The VM's service account lacks Cloud Scheduler IAM permissions** (`cloudscheduler.jobs.pause`/`.enable`) — both
+   pause/resume calls failed with `PERMISSION_DENIED` (logged as WARNING, not fatal, exactly as designed). The cron was
+   never actually paused during the VM's manifest write. This is why the run hit ONE real CAS-write conflict (attempt 1
+   failed, attempt 2 succeeded) — the defense-in-depth pause did nothing from VM context, and the CAS-write retry (the
+   actual correctness guarantee) is what handled it, exactly as designed. Not fixed here (VM service-account IAM grants
+   are an operator action, and the fallback already proved sufficient); worth a follow-up IAM grant if pause-from-VM is
+   wanted for future migrations to reduce retry frequency, but not required for correctness.
+2. **Reconciled the "380M vs 210M rows" gap** (flagged as an open question in the earlier same-day entry): investigated
+   ONE real duplicate-underlying case (`2024-07-11`/`NQU4_C20000`) and found the SOURCE manifest itself has ~2x
+   duplicate `capture_status=captured` rows per real object (4,875 manifest rows vs 2,438 unique `underlying` values for
+   that one day — almost exactly matching my migration's own 2,437 real files found via direct GCS listing). This is a
+   manifest dedup-key gap (same bug FAMILY as `manifest_consolidator_service_name_dedup_split_2026_07_14.md`, a
+   different specific splitter column — `instrument_type` None-vs-populated rather than `service_name`; full evidence
+   added to that doc). **Not a data-loss issue for this migration**: the migration lists real objects via bounded GCS
+   prefix listing, not manifest row-count arithmetic, so it correctly processed the true de-duplicated file set. The
+   manifest's summed `row_count` simply over-counts real unique data for this data_type by roughly 2x — a pre-existing,
+   separate data-quality issue, not something this migration caused or needs to fix.
+
+**Status: RESOLVED.** All real CME `options_chain`/`futures_chain` legacy-flat data (both genuine options AND the two
+misclassified-futures contamination axes — CME currency futures and ICE commodity futures) is now canonicalized and
+bundled at the correct `underlying=`/venue= paths, manifest-registered, `capture_status=captured`. Source per-contract
+objects were left in place (copy-not-move, per this workspace's established convention) — a separate, later,
+operator-gated cleanup pass can delete confirmed-safe legacy originals once downstream readers are verified against the
+new canonical paths.

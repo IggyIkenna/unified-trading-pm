@@ -268,6 +268,16 @@ Three layers, each independent of the one it watches (so a dead watcher is never
   alerting-service SPOF, so they page even when the alerting path itself is down. `/health` returns 2xx
   (alerting-service is auth-gated → accept 403 = alive-but-protected). **No `notification_rate_limit`** (API rejects it
   for metric-threshold policies).
+- **deployment-api memory (2026-07-14, `deployment_api_memory_alert.tf`)** — `uts-shared-deployment-api`
+  OOM-crash-looped twice this week (4GiB container, unbounded per-worker caches); uptime checks (Layer 3 above) only
+  fire AFTER the service is already down, i.e. post-crash-loop. Closes that gap one step earlier:
+  `google_monitoring_alert_policy.deployment_api_memory_high` fires on
+  `run.googleapis.com/container/memory/utilizations` &gt;85% sustained 300s, reusing the SAME `monitoring_deadman_email`
+  channel as the uptime alert above (deliberately not a new channel). Remediation SSOT:
+  `plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` (bounded-cache architecture, the
+  manifest live-build OOM guard, `WORKERS=2`). Applied live via targeted `tofu apply` 2026-07-14 (policy
+  `projects/central-element-323112/alertPolicies/10817162460883602732`) — remember **no auto-apply pipeline exists for
+  `terraform/gcp/`** (see the box below), a shipped `.tf` here is not live until someone runs `tofu apply`.
 
 > **No terraform-apply pipeline for `terraform/gcp/`** — there is NO auto-apply. New infra there (uptime checks,
 > schedulers) needs a deliberate `tofu apply` (remote GCS state `uts-terraform-state-{pid}`, prefix

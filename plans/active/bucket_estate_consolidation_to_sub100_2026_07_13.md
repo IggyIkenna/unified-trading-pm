@@ -41,7 +41,7 @@ related:
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
   ]
 created: "2026-07-13"
-last_updated: "2026-07-13"
+last_updated: "2026-07-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -343,33 +343,87 @@ COMPLETE" pattern above. This row will flip again once a delete attempt actually
 happened yet as of this update. | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL
 PATH_REGISTRY repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api
 data-status readers until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a
-no-new-writes check. | | C | `lending-indices` + `-prd` | `subgraph_health_probe.py::_resolve_bucket()` writes
-fingerprints to the flat bucket via `t1_batch` IAM (TF binding at subgraph_health_probe_scheduler.tf:71) — repoint that
-writer first (TF resource block already removed, ds@1dd2159), then delete both. | | D | recon end-to-end green | recon
-buckets exist + BLRS config resolver-repointed, but the upstream `t1-recon/{ml,strategy}` `_SUCCESS` producers have
-never run anywhere + BLRS prod image needs the digest fan-out; investigate the producer chain (recon issue-doc
-fix-direction #3) then verify a 06:00Z run. | | E | Terraform state re-import | **RESOLVED 2026-07-14** (see "TERRAFORM
-RECONCILIATION" log entry below) — all 6 over-removed live resources (defi_collect_cron/job × liquidations+solana-defi,
-the liquidations pubsub topic+sub) re-imported; re-plan confirmed zero of this work pending. Residual full-apply delta
-(odum_portal domain, governance/digest features, legacy-consolidator teardown) is other-workstream, deliberately NOT
-auto-applied — owner/operator green-light needed, not a bucket-plan gate. | | F | ASTER originals | MOVED to
-`aster_cefi_data_defi_bucket_migration_2026_07_13.md` (operator ruling) — re-migrate the high_dup schema-narrower band,
-then delete there. | | G | sports legacy pair (`market-data-tick-sports`/`instruments-store-sports` flat) | owned by
-`sports_manifest_canonicalisation_2026_06_01` E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS
-surface 140 legacy-only cells, all verified phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real
-cells migrated this session (down from 1,854), FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down
-to 28 accepted-phantom cells remaining (not 316, that count is stale). **Actual remaining blocker is CF-8
-(`available_at`)**: code fixed + a coordinated backfill already ran (85.3%/87.7% overall fill), but the real captured
-(non-empty) rows are only ~50-60% filled and a targeted re-emit attempt today found a genuine architectural gap (the
-manifest consolidator's dedup key includes `service_name`, and a naive backfill can never supersede rows owned by a
-different original service — rolled back cleanly, no data harm). The real operator (separate concurrent session) has
-explicitly instructed: wait for a scheduled maintenance window + a service_name-aware write redesign before another live
-attempt. Full detail: `plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
-`plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Still HELD — do not purge/delete
-either bucket.** | | H | W3 structural folds (features 25→5, ml 8→2, stores) | design drafted
-(`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its
-own plan(s). | | I | Findings #11/#12 (`dependencies.py` + SIT `_resolve_bucket()` `{category_lower}` bug) + item 10
-ops-singleton registration | small contained fixes, captured above. |
+no-new-writes check. | | C | `lending-indices` + `-prd` | **UPDATED 2026-07-14 (this session) — writer fixed, real
+historical data migrated, purge ARMED (not yet 404).** `_resolve_bucket()` was CONFIRMED still writing to the flat
+bucket (domain string `"lending-indices"` isn't in UTL's `_DOMAIN_TO_YAML_KIND`, so `get_write_bucket_name()` fell
+through the legacy no-env fallback to `lending-indices-{pid}`) — the Cloud Scheduler cron (`0 */6 * * *`, ENABLED, last
+run SUCCEEDED 06:01Z) is a LIVE recurring writer via this path, confirmed via `gcloud run jobs executions list`. Fixed
+to `get_write_bucket_name("market_data", "defi")`, mirroring `lending_indices_handler.py`'s own writer (same file) —
+mtds@8e4d4960. The job re-clones `live-defi-rollout` HEAD every 6h run (no image pin), so the fix took effect on the
+next scheduled fire with no rebuild needed. TF: the `t1_batch` IAM binding on the flat bucket
+(`subgraph_health_probe_scheduler.tf:71`) removed from config (TF-unmanaged until the flat bucket is deleted, matching
+the lending-indices-prd precedent) — t1_batch already has `objectAdmin` on the canonical shared bucket via
+`t1_batch_defi_raw_tick_writer` (qg_snapshot_scheduler.tf), no new binding needed — ds@2399d674. VM
+`mtds-lending-indices-20260712-112557` confirmed gone (`gcloud compute instances list` empty) — **but its run.log shows
+it was SIGKILLed (`rc=137`) mid-Morpho-backfill, not a clean completion as this row previously assumed**; it wrote
+directly to the canonical bucket (not either bucket in scope here, so no interference with this deletion) but leaves a
+real Morpho lending-indices gap in canonical for ~2026-03-27→2026-07-12 — **flagged as a NEW, separate finding, NOT
+fixed here** (out of this todo's narrow scope; needs its own relaunch + a fix to the `VM_SHUTDOWN_ON_COMPLETION`
+watchdog not to treat a SIGKILL exit as "done"). **Real unique historical data found in BOTH buckets, not just
+fingerprints** (this row's original framing undersold the scope) — three legacy path-shapes discovered by direct GCS
+inspection, none previously documented: (1) `raw_tick_data/by_date/day=D/asset_group=defi/` AAVE_V3/COMPOUND_V3/SPARK
+(bare pre-`pipeline_mode=` shape) — day-key diff against canonical found 78 gap-days (the 2022-01-01→2022-03-11 head of
+history + 8 scattered 2025-09/11 days a second contention-free re-check caught); ALL migrated + reshaped
+(`pipeline_mode=batch_onchain_subgraph/` inserted) into `market-data-tick-defi-prd`, 1898 objects, verified
+byte-identical (size+md5) on every sample checked, zero errors. (2) top-level `day=D/category=defi/`
+KAMINO/SOLEND/MARGINFI Solana-lending (bare pre-canonicalisation shape, `instrument_type=solana_lending` not `=lending`)
+— a FULL day×venue existence check (2,776 pairs) found 2,699 missing from canonical entirely; ALL migrated
+
+- reshaped, **2,698/2,698 copies succeeded (0 errors)**, spot-checked byte-identical. (3) legacy
+  `lending_indices/{protocol}/{chain}/date=D/` tree confirmed a pure historical SUBSET of tree (1)'s date range (same
+  start, ends earlier) — no separate migration needed, fully covered by (1). `_index/` (availability_index/per_vm/
+  snapshots/subgraph_fingerprints) is disposable bucket-local manifest bookkeeping, not migrated (dies with the bucket,
+  canonical has its own independent manifest). **Also found + fixed 2 live readers that would have broken on delete**
+  (neither previously flagged in this row): `deployment-api/deployment_api/services/data_status/defi.py`'s
+  `_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS` still read `lending-indices-{env}-{pid}` for the DeFi
+  data-status drilldown (a same-day-earlier commit, b5641cf, dropped 9 sibling overrides but called lending-indices "the
+  only survivor" — incorrectly; its write path was already broken per the fix above) — dropped the override, falls
+  through to the same main-DEFI-bucket read as every other Phase-2 type now — deployment-api@963d8e8 (dirty-deps direct
+  push carve-out; this repo currently has 30+ uncommitted files from a concurrent agent incl. a `NameError`-broken
+  `cache.py`, unrelated to this change). `deployment-service/deployment_service/vm_prefix_registry.py`'s
+  `VM_PREFIX_TO_BUCKET["mtds-lending-indices-"]` zombie-watchdog shard-check pointed at the flat bucket too — repointed
+  to `_TICK_DEFI` (same canonical bucket, matching every sibling MTDS DeFi VM prefix entry) — ds@539213a. **NOT fixed,
+  flagged for follow-up** (adjacent, out of this narrow todo's scope, affects siblings too): `features-service`'s
+  `onchain/app/core/dependency_checker.py` `UPSTREAM_DEPS_DEFI` still has a `required: True` pre-flight dependency entry
+  for `lending_indices` pointing `bucket_template` at the flat bucket (`"lending-indices-{project_id}"`) — and its 3
+  sibling entries (`lst-rates`/`oracle-prices`/`perp-funding`, same file) already point at buckets deleted EARLIER this
+  session, confirmed still 404 today, so this is a pre-existing, wider gap this task didn't introduce, not a new
+  regression — but genuinely needs a follow-up fix (repoint all 4 to the manifest-based canonical-bucket check, matching
+  how `vault_share_price`'s entry in the same dict already does it correctly). Also not fixed (low-priority, one-off,
+  `# Lifecycle: oneoff` marked): `deployment-api/scripts/cleanup_ghost_venue_manifest_rows.py`'s `DEFI_MTDS_BUCKETS`
+  list still names the flat bucket (9 of its 10 entries are already-deleted buckets too — this script is itself
+  stale/dead, awaiting its own delete-when condition). **Purge-lifecycle ARMED on both buckets 2026-07-14T14:00Z UTC**
+  (identical `age=0(isLive)+daysSinceNoncurrentTime=0(non-live)` JSON used for the 6-sibling precedent) — flat bucket
+  unversioned, prd bucket `versioning_enabled=true`/`soft_delete_policy.retentionDurationSeconds=604800`, both confirmed
+  live via `buckets describe` immediately after arming. **STATUS: ARMED, DRAINING — NOT YET 404.** Bucket delete is the
+  follow-up one-liner once GCS's ~24-48h async lifecycle drain confirms 0 live+noncurrent objects (retry
+  `gcloud storage buckets delete gs://<bucket> --quiet`; success = proof of true zero-version state, confirm with
+  `buckets describe` → expect 404 — exactly the 6-sibling pattern). Full narrative + exact evidence in the Progress Log
+  entry below. | | D | recon end-to-end green | recon buckets exist + BLRS config resolver-repointed, but the upstream
+  `t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod image needs the digest fan-out;
+  investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z run. | | E | Terraform state
+  re-import | **RESOLVED 2026-07-14** (see "TERRAFORM RECONCILIATION" log entry below) — all 6 over-removed live
+  resources (defi_collect_cron/job × liquidations+solana-defi, the liquidations pubsub topic+sub) re-imported; re-plan
+  confirmed zero of this work pending. Residual full-apply delta (odum_portal domain, governance/digest features,
+  legacy-consolidator teardown) is other-workstream, deliberately NOT auto-applied — owner/operator green-light needed,
+  not a bucket-plan gate. | | F | ASTER originals | MOVED to `aster_cefi_data_defi_bucket_migration_2026_07_13.md`
+  (operator ruling) — re-migrate the high_dup schema-narrower band, then delete there. | | G | sports legacy pair
+  (`market-data-tick-sports`/`instruments-store-sports` flat) | owned by `sports_manifest_canonicalisation_2026_06_01`
+  E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS surface 140 legacy-only cells, all verified
+  phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real cells migrated this session (down from
+  1,854), FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down to 28 accepted-phantom cells
+  remaining (not 316, that count is stale). **Actual remaining blocker is CF-8 (`available_at`)**: code fixed + a
+  coordinated backfill already ran (85.3%/87.7% overall fill), but the real captured (non-empty) rows are only ~50-60%
+  filled and a targeted re-emit attempt today found a genuine architectural gap (the manifest consolidator's dedup key
+  includes `service_name`, and a naive backfill can never supersede rows owned by a different original service — rolled
+  back cleanly, no data harm). The real operator (separate concurrent session) has explicitly instructed: wait for a
+  scheduled maintenance window + a service_name-aware write redesign before another live attempt. Full detail:
+  `plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
+  `plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Still HELD — do not purge/delete
+  either bucket.** | | H | W3 structural folds (features 25→5, ml 8→2, stores) | design drafted
+  (`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its
+  own plan(s). | | I | Findings #11/#12 (`dependencies.py` + SIT `_resolve_bucket()` `{category_lower}` bug) + item 10
+  ops-singleton registration | small contained fixes, captured above. |
 
 ## Appendix A — Wave-1 deletion list (81, all confirmed empty 2026-07-13; suffix `-central-element-323112` omitted)
 
@@ -400,6 +454,139 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-14, item C (`lending-indices` + `-prd`) — writer repointed, real historical data migrated, purge ARMED
+  (draining, not yet 404).** Sub-task per this plan's item C row. Nothing trusted from the row text alone — every claim
+  independently re-verified live before acting, per this session's standing rule (two prior real near-misses/catches
+  documented above).
+  1. **`_resolve_bucket()` state check**: read `subgraph_health_probe.py` live — CONFIRMED still broken, NOT already
+     fixed by a concurrent agent. `_LENDING_INDICES_BUCKET_KIND = "lending-indices"` is passed to
+     `get_write_bucket_name(domain)`; traced the call into `unified_trading_library/core/cloud_constants.py` —
+     `"lending-indices"` is absent from `_DOMAIN_TO_YAML_KIND` and `BUCKET_PREFIXES` (the DeFi-kind removal earlier this
+     session dropped it from `cloud-providers.yaml`), so resolution falls through the legacy no-env fallback branch and
+     returns `f"{domain}-{pid}"` = the flat bucket, exactly as this row predicted. **Live-verified this is an ACTIVE
+     writer, not dormant**: `gcloud scheduler jobs describe uts-prod-subgraph-health-probe-cron` — `state: ENABLED`,
+     `schedule: 0 */6 * * *`; `gcloud run jobs executions list` — 5 most-recent executions all `succeededCount=1`, last
+     completed 2026-07-14T06:01:19Z. The Cloud Run Job entrypoint (`cron_subgraph_health_probe_entrypoint.sh`)
+     `git clone --depth=10 --branch=live-defi-rollout` fresh on every 6h run (no image digest pin, unlike BLRS) —
+     confirmed a code fix alone, once merged to LDR, needs no image rebuild to take effect on the next scheduled fire.
+  2. **Fix shipped**: `_resolve_bucket()` → `get_write_bucket_name("market_data", "defi")`, the IDENTICAL call
+     `lending_indices_handler.py`'s own writer already uses in the same file/repo (line ~592) — mirrors, doesn't invent,
+     the established resolution pattern. `market-tick-data-service@8e4d4960` (quickmerge, clean QG; the pre-existing
+     `bandit B105` false-positive on an unrelated line in this file, confirmed via `git stash` + re-bandit that it
+     exists identically on clean HEAD, did not block — quickmerge's content-scoped QG sentinel correctly isolated it).
+  3. **TF binding**: `subgraph_health_probe_scheduler.tf:71`'s
+     `google_storage_bucket_iam_member. t1_batch_lending_indices_object_admin` (granting `t1_batch` SA `objectAdmin` on
+     the FLAT bucket) is a live, currently-applied binding (confirmed via `gcloud storage buckets get-iam-policy` —
+     `uts-prod-batch-sa` present with `objectAdmin`) — NOT the same resource ds@1dd2159 removed earlier (that one was
+     the `lending-indices-prd` BUCKET resource in `main.tf`, a different resource entirely; this row's parenthetical "TF
+     resource block already removed" was about that bucket resource, not this IAM binding, which was still live).
+     Removed from config (TF-unmanaged until the flat bucket is deleted, matching the established resurrection-safe
+     pattern); confirmed `t1_batch` already has `objectAdmin` on the canonical shared bucket via the pre-existing
+     `t1_batch_defi_raw_tick_writer` binding (`qg_snapshot_scheduler.tf`) — no new binding needed.
+     `deployment-service@2399d674` (quickmerge).
+  4. **VM write-target verification (was "inconclusive")**: `gcloud compute instances list --filter="name~lending"` and
+     the AWS equivalent both empty — VM confirmed gone. Read its full run.log
+     (`gs://deployment-scripts-.../vm-logs/mtds-lending-indices-20260712-112557/run.log`) rather than trusting
+     "completed" — it wrote fingerprint-adjacent Morpho lending-indices data DIRECTLY to the canonical shared bucket
+     (`market-data-tick-defi-prd-.../raw_tick_data/by_date/day=2026-03-26/.../venue=MORPHO/...`, confirmed via
+     `ManifestWriter: per-VM shard updated ... at market-data-tick-defi-prd-...`), so it never touched either bucket in
+     this row's scope — no interference with this deletion. **But it did NOT cleanly complete**: the log's last lines
+     are
+     `bash: line 1: 7371 Killed .../python -m market_tick_data_service --operation collect-lending-indices ... --start-date 2023-01-01 --end-date 2026-07-12 --lending-protocols morpho`
+     / `[vm-exec] command exited rc=137` (SIGKILL, likely OOM) followed immediately by
+     `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete` — the watchdog's shutdown condition doesn't distinguish a
+     killed process from a genuinely finished one. Last date it reached before being killed: 2026-03-26 (of a
+     2023-01-01→2026-07-12 requested range) — leaves a real, unquantified Morpho lending-indices gap in the canonical
+     bucket for roughly 2026-03-27→2026-07-12. **Flagged as a new, separate finding — NOT fixed here** (a multi-day
+     Morpho backfill relaunch is well outside this narrow bucket-deletion todo's scope; needs its own plan/task, plus a
+     fix to the shutdown-on-completion watchdog logic itself since this is the same "silent-skip on kill" class of bug
+     documented elsewhere in this workspace).
+  5. **Real unique data found in BOTH buckets (this row's original framing significantly undersold the scope — it wasn't
+     just fingerprints)**: direct GCS inspection (shallow, targeted listings — not a whole-corpus walk) found FOUR
+     distinct trees in the flat bucket, THREE of them real data:
+     - `raw_tick_data/by_date/day=D/asset_group=defi/venue={AAVE_V3,COMPOUND_V3,SPARK}/...` (bare pre-`pipeline_mode=`
+       shape, exactly the class documented in `codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE)
+       — day-key diff (`comm -23` on shallow day-folder listings, both buckets) against the canonical shared bucket
+       found **78 gap-days**: the 2022-01-01→2022-03-11 head-of-history (70 days) plus, after a contention-free re-check
+       caught 12 false-negatives from the first (heavily-loaded) pass and confirmed 8 true ones, 8 more scattered days
+       (2025-09-29/30, 2025-11-25 through 2025-11-30). Migrated via per-day `gcloud storage cp -r` (day's
+       `asset_group=defi` subtree → canonical, inserting the missing `pipeline_mode=batch_onchain_subgraph/` segment) —
+       **1,898 objects, verified byte-identical (size + md5)** on every spot-checked object, zero copy failures.
+     - Top-level `day=D/category=defi/venue={KAMINO,SOLEND,MARGINFI}/chain=SOLANA/instrument_type=solana_lending/...`
+       (Solana lending protocols, a SEPARATE pre-canonicalisation shape never covered by tree 1) — a FULL existence
+       check (not a sample) across all 2,776 (day,venue) pairs the flat bucket has for these 3 venues found **2,699
+       missing from canonical** entirely (only 77 pre-existing, apparently from an earlier ad-hoc single-date copy).
+       Migrated per (day,venue) — **2,698/2,698 succeeded (0 errors)**, spot-checked byte-identical (the 2,699th was a
+       manual pre-batch test, also verified). This is the largest single tree found in this bucket and was NOT
+       anticipated by this row's original framing.
+     - Legacy `lending_indices/{protocol}/{chain}/date=D/...` (matches the file's own, now-stale, docstring path
+       pattern) — day-range diffed against tree 1: identical start date, ends 44 days earlier — confirmed a pure
+       historical SUBSET, no separate migration needed.
+     - `_index/` (`availability_index.parquet`, `per_vm/*.parquet`, `snapshots/pre_migration_2026_06_01.parquet`,
+       `subgraph_fingerprints/`) — bucket-local manifest/fingerprint bookkeeping, not source data; the canonical bucket
+       has its own independent manifest — not migrated, dies with the bucket by design.
+  6. **Two live readers found + fixed that would have broken silently on delete** (neither previously flagged in this
+     row, found via a targeted cross-repo grep for the bucket-name-construction pattern, not a blind trust that "nothing
+     references it"): `deployment-api/deployment_api/services/data_status/defi.py` still read
+     `lending-indices-{env}-{pid}` for the DeFi data-status drilldown's sub-dimension merge — a SAME-DAY-EARLIER commit
+     (b5641cf) had dropped 9 sibling dead-bucket overrides from this exact dict but explicitly called lending-indices
+     "the only survivor" (incorrect — its write path was already broken per fix #2 above; the real current data has been
+     in the shared bucket all along). Dropped the override + sub-dimension entry so it falls through to the same
+     main-DEFI-bucket read every other Phase-2 type already uses — `deployment-api@963d8e8`. Shipped via the
+     **dirty-deps direct-push carve-out**: this repo currently carries 30+ uncommitted files from a concurrent agent's
+     live WIP (confirmed via mtime — one file modified within the same minute), including a `NameError: STATE_BUCKET`
+     genuinely broken `cache.py` (confirmed this breaks `deployment-service`'s own test suite via cross-repo import,
+     unrelated to anything in this row); staged + committed ONLY the one intended file, used
+     `git pull --rebase --autostash` to reconcile a 1-commit branch-drift without disturbing the foreign WIP (verified
+     diff-stat unchanged after the autostash pop), then pushed directly (quickmerge would have tried to run QG against
+     the genuinely broken tree). `deployment-service/deployment_service/vm_prefix_registry.py`'s
+     `VM_PREFIX_TO_BUCKET["mtds-lending-indices-"]` zombie-watchdog shard-check also pointed at the flat bucket
+     (`_LENDING_INDICES` hardcoded constant) — repointed to `_TICK_DEFI` (the same canonical bucket every sibling
+     `mtds-*` DeFi VM-prefix entry already uses) — `deployment-service@539213a` (quickmerge).
+  7. **Not fixed, flagged for follow-up** (adjacent, wider than this row's scope): `features-service`'s
+     `onchain/app/core/dependency_checker.py` `UPSTREAM_DEPS_DEFI["market-tick-data-service-lending"]` is a
+     `required: True` pre-flight gate whose `bucket_template` still points at the flat bucket — but its 3 siblings in
+     the SAME dict (`lst-rates`/`oracle-prices`/`perp-funding`) already point at buckets deleted EARLIER this session
+     (confirmed still 404 today via live `gcloud storage buckets describe`), so this is a pre-existing, wider gap this
+     task didn't create — genuinely needs its own fix (repoint all 4 to the manifest-based check `vault_share_price`'s
+     entry in the same dict already correctly uses), just out of this narrow todo's scope. Also left alone
+     (low-priority, self-describing as disposable): `deployment-api/scripts/cleanup_ghost_venue_manifest_rows.py`
+     (`# Lifecycle: oneoff`) still lists the flat bucket among 10 target buckets, 9 of which are already-deleted — the
+     script itself is stale/dead pending its own delete-when condition.
+  8. **Purge-lifecycle ARMED on both buckets, 2026-07-14T~14:00Z UTC** — identical
+     `{"rule":[{"action":{"type":"Delete"},"condition":{"age":0,"isLive":true}}, {"action":{"type":"Delete"},"condition":{"daysSinceNoncurrentTime":0,"isLive":false}}]}`
+     JSON used for the 6-sibling precedent earlier this session, applied via
+     `gcloud storage buckets update --lifecycle-file=`, verified live on both via `buckets describe` immediately after
+     arming. Flat bucket: unversioned, `soft_delete_policy.retentionDurationSeconds=604800`. `-prd` bucket:
+     `versioning_enabled=true`, same soft-delete retention. **STATUS: ARMED, DRAINING — NOT YET 404** (a
+     `gcloud storage buckets delete --quiet` attempt on either bucket right after arming would still fail "not empty",
+     exactly as expected — the migrated objects above are additive copies into the CANONICAL bucket, not removals from
+     the source buckets, so both still hold their full original object counts pending the async drain). Bucket delete is
+     the follow-up one-liner once the drain confirms 0 live+noncurrent (same recipe as the 6-sibling precedent: retry
+     `gcloud storage buckets delete gs://<bucket> --quiet`, success ⇒ immediately re-verify 404 via `buckets describe`).
+     **Terraform note for whoever next runs `terraform apply` on the live state**: this session's TF edit only removed
+     the IAM-binding resource block from config (source-level, resurrection-safe); the corresponding
+     `terraform state rm google_storage_bucket_iam_member.t1_batch_lending_indices_object_admin` against the live
+     `terraform/state/prod` state (on the orchestrator VM) has NOT been run from this session (no orchestrator-VM access
+     here) — run it before the next apply, else the config-less state entry plans a destroy that may error depending on
+     the binding's live state at that time.
+  9. Repos touched: `market-tick-data-service@8e4d4960`, `deployment-service@2399d674` + `@539213a`,
+     `deployment-api@963d8e8`. No repo QG-red from this row's own changes (deployment-service's own full-suite QG
+     failure and market-tick-data-service's bandit finding were both independently confirmed pre-existing / unrelated
+     before shipping — see points 2 and 6 above).
+  10. **Post-migration full re-verification CLOSED — 2,776/2,776 (day,venue) pairs confirmed present in canonical**,
+      with a methodology caveat worth recording: a 20-way-parallel `gcloud storage ls`-based re-check of the Kamino/
+      Solend/Marginfi tree flagged 16 pairs as "missing" (0 objects). Re-checked every one of the 16 individually
+      (isolated, unbatched `gcloud storage ls` / `objects describe` calls, no concurrency) — **all 16 were false
+      negatives**: the objects were confirmably present (real size + md5 via `objects describe`) every single time when
+      checked in isolation, and the SAME 16 flip-flopped between "found"/"not found" across repeated identical isolated
+      re-checks run seconds apart — i.e. `gcloud storage ls` on a prefix is measurably unreliable under heavy concurrent
+      load in this environment (likely connection-pool/auth-token contention, not a GCS-side consistency issue —
+      `objects describe` on an exact path was consistently authoritative). Defensively re-ran the copy for all 16 anyway
+      (idempotent — harmless whether already present or not) before closing this out. **Net: migration is genuinely 100%
+      complete, 0 real gaps** — flagging the tooling quirk so a future high-concurrency re-verification pass in this
+      workspace isn't misread as a data-safety regression.
 
 - **2026-07-14, item A (`instruments-store-cefi` legacy twin) — OPERATOR-AUTHORIZED, purge RE-ARMED, async drain IN
   FLIGHT (not yet complete).** Operator explicitly authorized proceeding on the analysis already documented in this

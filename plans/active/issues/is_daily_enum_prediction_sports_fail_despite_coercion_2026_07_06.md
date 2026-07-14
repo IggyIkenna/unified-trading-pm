@@ -14,7 +14,7 @@ summary:
   cloud-image/environment-specific. This doc is a HANDOFF: it records everything the slot-2 perp-correction agent tried
   (it was out of that agent's assigned scope — perp correction — so it is being handed to the capture-hardening owner
   rather than debugged further)."
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction, sports]
 stage: [data]
@@ -38,6 +38,10 @@ source:
     both prediction+sports cloud enum jobs still fail even after the coercion reached the image 2026-07-06,
   ]
 resolved_by:
+  [
+    "OOM root cause (exit -9) fixed by memory bumps: prediction 16Gi green 2026-07-13T23:54Z (wrbsm); sports 32Gi green
+    2026-07-14T15:02:44Z (5vchf, the 13:30Z scheduled cron run) — both daily enum jobs verified green end-to-end",
+  ]
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -283,3 +287,18 @@ one.
   run on the fixed image, then downsize. NOTE: is-daily-enum-sports (32Gi mitigation) is the SAME memory family but a
   DIFFERENT binary path (`daily_is_enumeration.py` universe scan, not this loader) — its 13:30Z 32Gi verdict + the
   chunked-scan P2 remain open and are NOT addressed by this ship.
+- 2026-07-14 15:05Z: **SPORTS RESOLVED — the 13:30Z scheduled cron run on 32Gi is GREEN.** Execution
+  `is-daily-enum-sports-5vchf` (created 13:30:03Z, the exact verification run this doc was waiting on): completed
+  2026-07-14T15:02:44Z, `succeededCount=1`, `failedCount` empty, `retriedCount` empty (fields read explicitly, one at a
+  time per this doc's own advice). Cloud Logging confirms the full app-level success path (sink carve-out working):
+  `"IS enum OK asset_group=sports"` + `"IS daily enumeration DONE OK — all 1 AG(s) succeeded"` +
+  `"Container called exit(0)"` at 15:02:41Z; per-VM shard updated (`_index/per_vm/is-daily-enum-sports.parquet`, 485
+  entries, 93 new). Runtime ~92.7 min at 32Gi/8cpu — no OOM. **Both jobs now green → doc flipped `status: resolved` per
+  its own criterion** ("flips to resolved when the sports verification lands green"; prediction went green
+  2026-07-13T23:54Z on 16Gi). **Standing follow-ups that survive this resolution (owners noted, do not lose):** (1) the
+  P2 durable chunked-scan fix above (both AGs — 16Gi/32Gi are ceiling races against universe growth); (2) bump-back
+  evaluation — sports 32Gi→lower + prediction 16Gi→lower after a few green scheduled runs, and
+  expected-universe-v2-sports 16Gi→8Gi once a nightly runs green on an image carrying instruments-service@633d7af4; (3)
+  backfill the missed windows (prediction 07-01→07-13, sports 06-28→07-13) now that the daily jobs are green —
+  coordinate with the sports GW/enrichment work in
+  `sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md` (same index, avoid double-writing).
