@@ -157,7 +157,7 @@ implement them under this SPEC-decision todo.
       today's observed memory pressure; if raised, re-verify against the 2026-05-29 incident's original repro. (repo:
       infra/host config, not a specific service repo) — ✅ **Decision: keep K=1** — swap still ~3.9Gi in use (same
       magnitude as the original incident trigger) despite concurrent-QG demand dropping to ~2; see "Update 2026-07-14"
-      above. unified-trading-pm@<pending-sha>.
+      above. unified-trading-pm@1aa6038d1.
 - [ ] [SCRIPT] P2. Make `qg-host-governor.sh` / `base-service.sh`'s `MAX_DURATION` wall-clock check measure only
       post-token-acquisition work time, not governor queue wait, so queueing under contention cannot fail an
       otherwise-green run. (repo: unified-trading-pm, `scripts/quality-gates-base/`)
