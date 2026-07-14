@@ -38,6 +38,12 @@ drift_direction: advance-code
 
 # Kalshi + Polymarket perps + live CLOB depth
 
+> **🟡 2026-07-14 OPERATOR RULING: Kalshi/Polymarket perps are NOT part of MVP.** "Nothing we can do — we can't get
+> perps on those yet; Polymarket is in beta mode and Kalshi requires some extra work." All perp-universe items in this
+> plan are parked until the operator announces access (see
+> `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Phase 4, resolved-by-ruling same day). The
+> PREDICTION token-id live-capture lane items in this plan are unaffected.
+
 Operator 2026-06-20: Kalshi (May–Jun 2026, 13 CFTC crypto perps BTC+alts) and Polymarket (Apr 21 2026 beta,
 crypto+stocks, 10–20x) both launched **perpetual futures**. Add them to the universe, map them, download data — for
 **basis trades, funding-rate arb, and cross-venue dispersion**. Also: historical prediction data is trades-only, but
@@ -1113,13 +1119,13 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-        REAL paired samples (no false pairs — operator). Repos:
-        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-        (residual after parser UAC@3effe2fc).
+            `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+            Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+            extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+            REAL paired samples (no false pairs — operator). Repos:
+            unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+            enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+            (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
