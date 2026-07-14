@@ -811,7 +811,7 @@ correctly found nothing new after `2kqdc`'s fresh write) touched row counts furt
 big finding (data-correctness, already live in production) — via `/blocked` to the operator in the same turn as this
 commit, not deferred.
 
-- [ ] [BACKEND] P0 CRITICAL. **Investigate the `2ab54ce0` chunked-merge ROW COUNT REGRESSION** — the first successful
+- [x] [BACKEND] P0 CRITICAL. **Investigate the `2ab54ce0` chunked-merge ROW COUNT REGRESSION** — the first successful
       post-fix consolidator write (`2kqdc`, 2026-07-14T22:47:29Z) dropped 34,961 rows (0.1274%) versus the pre-merge
       canonical, tripping `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (`manifest_consolidator.py:1733`, "suspected merge
       bug, not routine dedup/prune" per the check's own log message). This output is ALREADY LIVE in
@@ -826,7 +826,72 @@ commit, not deferred.
       (revert to a known-good prior snapshot if one exists, or a corrective re-merge) — do NOT let downstream consumers
       keep reading it uninvestigated. The scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`) is
       currently PAUSED (this session's own remediation) — leave it paused until this is resolved and re-verified; do not
-      silently un-pause. Repo: `unified-trading-library` (`manifest_consolidator.py`).
+      silently un-pause. Repo: `unified-trading-library` (`manifest_consolidator.py`). — ✅ INVESTIGATED 2026-07-14
+      (slot-3, backend_engineer) — **verdict: (b) legitimate one-time backlog clear, NOT a chunking bug** — see "P0
+      investigation — chunking cleared, verdict (b) legitimate first-run backlog collapse" below for the full evidence
+      (code-level boundary-safety review + a new adversarial regression test + a git-history timeline proof). **NOT a
+      full close**: could not be verified against the REAL dropped rows (no `gcloud`/GCS access in this sandbox, same
+      limitation every prior session on this issue hit) — filed a residual `[INFRA]` todo below for a live sample-based
+      confirmation before the scheduler is un-paused.
+
+## P0 investigation — chunking cleared, verdict (b) legitimate first-run backlog collapse (2026-07-14, slot-3, backend_engineer)
+
+**Code-level boundary-safety review** of `_duckdb_merge_payload`
+(`unified-trading-library/unified_trading_library/manifest_consolidator.py`): the chunk predicate
+(`TRY_CAST(date AS DATE) >= start AND < end`) partitions `[min_date, max_date]` into a provably gapless, non-overlapping
+half-open sequence (`start = end` of the prior chunk on every loop iteration), plus a separate `IS NULL` chunk for
+unparseable dates — together these cover every row in `canon_select_all ∪ changed_select` exactly once. The dedup-key
+NULL/`''` sentinel normalization (`_dedup_key_sql`) collapses both representations to the same key, but `TRY_CAST` also
+maps both to `NULL` — so a dedup group that spans the NULL/`''` distinction still lands in the SAME (null-date) chunk,
+no boundary split. `date` is always the first column of both the base dedup key (`_BASE_DEDUP_COLS`) and Option B's
+`service_name`-excluded key (`part_norm_excl_svc`), so — since `TRY_CAST` is a pure, deterministic function of the raw
+`date` value — two rows sharing an (unnormalized) dedup key are provably assigned to the same chunk by both mechanisms.
+No boundary-splitting defect found by inspection.
+
+**Adversarial regression test** (`unified-trading-library@0bd7cc27`,
+`tests/unit/test_manifest_consolidator.py::test_duckdb_incremental_merge_chunking_preserves_self_heal_and_option_b_across_chunks`):
+the existing 2 chunk-boundary tests each exercise exactly ONE dedup mechanism at a time. This new test forces
+canonical-internal duplicate self-heal (`dupe_keys`), Option B cross-`service_name` collapse specifically on the
+UNTOUCHED `survivors` path (harder than the `winners`/contested path, not previously chunk-boundary-tested), a
+dual-source captured-vs-captured negative control (must survive intact), and a contested-key shard update — into FOUR
+separate 1-day chunks (`CONSOLIDATOR_MERGE_CHUNK_DAYS=1`, dates ~90-270 days apart). All four resolved exactly as the
+unchunked semantics predict. **PASSED** — full `quality-gates.sh` green, 80/80 tests in the file green.
+
+**Git-history timeline proof**: Option B collapse (`unified-trading-library@9bc06261`) shipped 2026-07-14T16:31:18Z —
+the SAME DAY, ~6h before the flagged write. Per this issue's own earlier sections, the DeFi bucket's canonical had been
+frozen/stale since 12:56:34Z and every consolidation attempt OOM-crashed continuously until the chunking fix
+(`2ab54ce0`, 21:44:36Z) landed and was confirmed deployed (~22:06-22:11Z, "P0 infra live-verify — OOM fixed" above).
+This means `2kqdc` (22:47:23Z) is **provably the first time Option B's collapse logic has ever executed against this
+bucket's real 27.4M-row canonical** — every attempt between 16:31Z and ~22:11Z crashed before completing. The
+pre-existing canonical self-heal (`dupe_keys`, since `0de04b6e`/`800af156`, 2026-07-10) is in the same position — this
+bucket had not completed a successful cycle in a long time, so any accumulated internal duplicates clear in this SAME
+first-successful cycle too.
+
+**Threshold-design context**: `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD = 0.001` (added `52d5921a`, 2026-07-12) is
+calibrated, per its own code comment, for "a small, self-limiting stale-row self-heal" under NORMAL, frequently-cycling
+operation — not a multi-hour backlog compounding through TWO dedup mechanisms (one brand new) completing for the first
+time in one cycle. 34,961/27,445,013 = 0.1274% is only marginally over the 0.1%/27,445-row cutoff — a bounded,
+one-time-backlog-sized excess, not a proportional-to-corpus-size runaway that would suggest a genuine merge bug.
+
+**Verdict: (b) — legitimate one-time cleanup, not a chunking/merge bug.** The chunking fix's role was purely enabling
+the merge to survive to completion; it did not change merge semantics, and the adversarial test found no chunk-boundary
+defect. **Recommendation: do NOT revert or re-merge the already-live index** — the evidence indicates it is a legitimate
+cleanup, not corruption. Leave the scheduler PAUSED per this issue's own standing instruction until the residual
+live-sample verification below completes.
+
+- [ ] [INFRA] P1. **Residual live verification (2026-07-14, slot-3, backend_engineer)**: the "verdict (b)" conclusion
+      above is evidence-based (code review + adversarial synthetic test + git-history timeline) but NOT verified against
+      the REAL ~34,961 dropped rows — this sandbox has no working `gcloud`/GCS access (same limitation every prior
+      session on this issue hit). Needs: (1) if a backup/snapshot of the pre-`2kqdc` canonical still exists (check GCS
+      object versioning / any pre-write snapshot this session's remediation may have taken), diff it against the live
+      `27,410,052`-row index and sample ~20-50 of the dropped keys; (2) for each sampled dropped key, confirm it matches
+      ONE of the two predicted patterns — either (a) a canonical-internal duplicate (same full dedup key including
+      `service_name`, differing only in `attempted_at`/`written_at`/`instrument_count`) or (b) an Option B twin (same
+      key EXCLUDING `service_name`, one row `capture_status='captured'`, the other not) — if a sampled dropped row
+      matches NEITHER pattern, that reopens the "(a) real bug" hypothesis and needs escalation; (3) once confirmed,
+      resume the scheduler (`uts-prod-manifest-consolidator-market-data-defi-cron`, currently PAUSED) — do NOT resume it
+      based on this todo's evidence alone, only after the live sample check in (1)-(2) passes. Repo:
+      `deployment-service` (GCS sample pull) + `unified-trading-library` (if a sampled row contradicts the verdict).
 
 - [ ] [BACKEND] P1. **`_LOCK_TTL_SECONDS = 300.0` (`manifest_consolidator.py`) is now far too short for the real
       chunked-merge duration (24-30+ min observed) and causes a lock-stealing livelock** — every cron tick past the TTL
