@@ -1216,3 +1216,12 @@ session 21's reasoning stands unchanged.
 call. Slowest ETA ~4.2h (FIXTURE_STATS/PLAYER_STATS, unchanged bottleneck from session 21). Next session should re-check
 `gcloud compute instances list --filter='name~af-backfill'` (via the google-cloud-sdk path above, not the broken snap) —
 once all 4 remaining VMs have self-deleted, run the manifest-rescan + GW gate query per session 20's next-step note.
+
+### 2026-07-14T12:02Z — session 23 (data_engineering slot-2): T+~50min cheap re-check, unchanged, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 25 slot repos clean. Cheap re-check
+only (~10 min since session 22's T+40min check, well inside the ~4.2h slowest-VM ETA): all 4 remaining `af-backfill-*`
+VMs (`111307`/`111346`/`111414`/`111447`) still `RUNNING`, same creation timestamps as every prior session — no material
+change. This todo is transitively gated on the GW gate (Todo 9) going green, which needs the fleet to finish; nothing to
+launch or fix here, matching sessions 20-22's reasoning. Not re-running the manifest-rescan/GW gate query (would
+reproduce the same not-green result). Declining — no action taken, no code touched. `/skip-current-task`.
