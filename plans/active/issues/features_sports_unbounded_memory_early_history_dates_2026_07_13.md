@@ -470,14 +470,25 @@ not attempt to re-verify the full 2015→present fleet's manifest-cleanliness ga
 separate, larger piece of infra execution). Did not fix the still-open `[INFRA] P2` EXIT_STATUS todo above (orthogonal
 observability gap, different craft).
 
-- [ ] [INFRA] P3. **NEW (slot 9, 2026-07-13)** — add alerting/monitoring so a paused (non-`-legacy-`)
+- [x] ✅ [INFRA] P3. **NEW (slot 9, 2026-07-13)** — add alerting/monitoring so a paused (non-`-legacy-`)
       manifest-consolidator Cloud Scheduler job is caught quickly, instead of silently degrading to stale-index
       fail-fasts across an entire asset_group/bucket pair for an unbounded period (discovered this session:
       `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` were both PAUSED with no apparent
       deliberate reason, blocking the first relaunch attempt above). Scope: a Cloud Monitoring alert (or an addition to
       the existing consolidator-health check surface) on `state=PAUSED` for any `uts-prod-manifest-consolidator-*-cron`
       job NOT matching `*-legacy-*`. (repo: deployment-service or infrastructure, whichever owns the existing
-      consolidator alerting)
+      consolidator alerting) — **SHIPPED, slot 4 (infra), 2026-07-14**: new DP-WATCHER-003
+      (`DP_CONSOLIDATOR_SCHEDULER_PAUSED`) — `unified-trading-library@147535be` (event constant) +
+      `deployment-service@e2a62cc` (`consolidator_scheduler_watcher.check_consolidator_scheduler_paused`, wired into the
+      `--mode meta` sweep). Deliberately the INVERSE of `check_cron_fired`'s existing pause-awareness (KEY #2, which
+      suppresses on PAUSED for schedulers paused by design during a backfill campaign) — this new check pages CRITICAL
+      specifically when a job is paused and NOT `-legacy-`-tagged. Discovers jobs LIVE via `list_jobs` (filtered on
+      `"manifest-consolidator" in name`) rather than reconstructing names from a per-asset_group/kind list — the
+      existing `cloud_run_job_registry.py` enumeration only has 5 entries (one per asset_group) vs. the real 10+-key
+      `manifest_consolidator_buckets` map in `manifest_consolidator_scheduler.tf` (split by market-data/instruments +
+      legacy variants), so a static list would have missed exactly the `instruments-sports` job this incident hit. 4 new
+      unit tests (pages on non-legacy PAUSED, skips `-legacy-`, skips ENABLED, empty lister pages nothing). Full
+      `quality-gates.sh` green on both repos.
 
 ## Update — real-data re-profile could NOT reproduce the THIRD recurrence (slot 10, 2026-07-13)
 
