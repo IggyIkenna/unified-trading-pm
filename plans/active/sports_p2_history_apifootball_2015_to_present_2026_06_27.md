@@ -1266,3 +1266,13 @@ still `RUNNING`, same creation timestamps as every prior session; `run.log` tail
 fetches at ~12:18-12:20Z, zero Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing
 to launch or fix here, matching sessions 20-24's reasoning. Not re-running the manifest-rescan/GW gate query (3/4 VMs
 not yet done). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-14T12:32Z — session 26 (data_engineering slot-16): cheap re-check, unchanged (9min since session 25), decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Cheap re-check only (~9 min since session 25's 12:23Z
+check): `gcloud compute instances list --filter='name~af-backfill'` (non-snap `/home/ubuntu/google-cloud-sdk/bin/`)
+shows the same 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447` PLAYER_STATS) still `RUNNING`, same creation
+timestamps — no death, no new completion. `run.log` tails confirm active fetches at ~12:30-12:32Z on all 3, zero
+Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing to launch or fix here,
+matching sessions 20-25's reasoning. Not re-running the manifest-rescan/GW gate query. Declining — no action taken, no
+code touched. `/skip-current-task`.
