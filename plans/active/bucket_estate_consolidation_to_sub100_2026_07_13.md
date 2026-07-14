@@ -575,6 +575,18 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      `deployment-api@963d8e8`. No repo QG-red from this row's own changes (deployment-service's own full-suite QG
      failure and market-tick-data-service's bandit finding were both independently confirmed pre-existing / unrelated
      before shipping — see points 2 and 6 above).
+  10. **Post-migration full re-verification CLOSED — 2,776/2,776 (day,venue) pairs confirmed present in canonical**,
+      with a methodology caveat worth recording: a 20-way-parallel `gcloud storage ls`-based re-check of the Kamino/
+      Solend/Marginfi tree flagged 16 pairs as "missing" (0 objects). Re-checked every one of the 16 individually
+      (isolated, unbatched `gcloud storage ls` / `objects describe` calls, no concurrency) — **all 16 were false
+      negatives**: the objects were confirmably present (real size + md5 via `objects describe`) every single time when
+      checked in isolation, and the SAME 16 flip-flopped between "found"/"not found" across repeated identical isolated
+      re-checks run seconds apart — i.e. `gcloud storage ls` on a prefix is measurably unreliable under heavy concurrent
+      load in this environment (likely connection-pool/auth-token contention, not a GCS-side consistency issue —
+      `objects describe` on an exact path was consistently authoritative). Defensively re-ran the copy for all 16 anyway
+      (idempotent — harmless whether already present or not) before closing this out. **Net: migration is genuinely 100%
+      complete, 0 real gaps** — flagging the tooling quirk so a future high-concurrency re-verification pass in this
+      workspace isn't misread as a data-safety regression.
 
 - **2026-07-14, item A (`instruments-store-cefi` legacy twin) — OPERATOR-AUTHORIZED, purge RE-ARMED, async drain IN
   FLIGHT (not yet complete).** Operator explicitly authorized proceeding on the analysis already documented in this
