@@ -31,14 +31,17 @@
 #   - `|| true` so an offline tick falls back to the last-good local copy, never skips a tick
 #     (offline `git show` emits nothing -> cmp differs -> the write attempt fails -> temp removed).
 #
-# Literal `$(mktemp)` / `$t` / `$u` are kept LITERAL in the emitted line (single-quoted printf
-# format / escaped in the data snippet) — cron writes them verbatim and /bin/sh expands at run time.
+# Literal `$(mktemp)` / `$t` / `$u` / `$b` / `$s` / `$d` are kept LITERAL in the emitted line
+# (single-quoted printf format / escaped in the data snippet) — cron writes them verbatim and
+# /bin/sh expands at run time. The branch/script/data paths are bound ONCE to short shell vars
+# (`b=` / `s=` / `d=`) at the head of the snippet: cron rejects a crontab line past ~1000 chars
+# ("command too long"), and repeating each path 4× under the cmp-guard blew that budget.
 emit_cron_self_pull() {
     local pm_dir="$1" branch="$2" script="$3"; shift 3
-    local data_checkouts="" d
+    local data_snippets="" d
     for d in "$@"; do
-        data_checkouts+=" git show origin/${branch}:${d} 2>/dev/null | cmp -s - ${d} 2>/dev/null || { u=\$(mktemp); git show origin/${branch}:${d} > \"\$u\" 2>/dev/null && mv \"\$u\" ${d} && chmod 644 ${d} || rm -f \"\$u\"; };"
+        data_snippets+=" d=${d}; git show \"origin/\$b:\$d\" 2>/dev/null | cmp -s - \"\$d\" 2>/dev/null || { u=\$(mktemp); git show \"origin/\$b:\$d\" > \"\$u\" 2>/dev/null && mv \"\$u\" \"\$d\" && chmod 644 \"\$d\" || rm -f \"\$u\"; };"
     done
-    printf 'cd "%s" && { git fetch -q origin %s 2>/dev/null; if ! git show origin/%s:%s 2>/dev/null | cmp -s - %s 2>/dev/null; then t=$(mktemp); if git show origin/%s:%s > "$t" 2>/dev/null && bash -n "$t" 2>/dev/null; then mv "$t" %s && chmod 755 %s; else rm -f "$t"; fi; fi;%s } || true' \
-        "${pm_dir}" "${branch}" "${branch}" "${script}" "${script}" "${branch}" "${script}" "${script}" "${script}" "${data_checkouts}"
+    printf 'cd "%s" && { b=%s; s=%s; git fetch -q origin "$b" 2>/dev/null; git show "origin/$b:$s" 2>/dev/null | cmp -s - "$s" 2>/dev/null || { t=$(mktemp); if git show "origin/$b:$s" > "$t" 2>/dev/null && bash -n "$t" 2>/dev/null; then mv "$t" "$s" && chmod 755 "$s"; else rm -f "$t"; fi; };%s } || true' \
+        "${pm_dir}" "${branch}" "${script}" "${data_snippets}"
 }
