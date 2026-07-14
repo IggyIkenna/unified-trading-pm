@@ -178,7 +178,7 @@ drift_direction: advance-code
       pending-fetch + 0 blank-reason, presence gap (fixture-days lacking a captured enrichment row: EVENTS 1,356 /
       LINEUPS 1,377 / STATS 1,699 / PLAYER_STATS 1,582 of 1,848 captured-fixture shards) closed to
       captured-or-typed-`EXPECTED_*`; INJURIES window EU 30→0. Full-history verify gate moves to the follow-on todo.
-- [ ] [CODE] P0. **Fix the enrichment manifest write path (3 legs) — instruments-service** (discovered 2026-07-14
+- [x] ✅ [CODE] P0. **Fix the enrichment manifest write path (3 legs) — instruments-service** (discovered 2026-07-14
       session 31, GW content verification RED; evidence
       `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`): (1)
       skip-as-already-present cells must resolve to `record_captured` (parquet-derived counts) — a no-op run must never
@@ -187,7 +187,21 @@ drift_direction: advance-code
       `sports_fixtures.py::_build_fixture_league_map_from_gcs` (94-league mapping not `get_prediction_leagues()`;
       `max_results=100` truncation; fixture-id column drift) and convert the bare-path row DROP into `record_failed`;
       (3) INJURIES per-date loop → `get_expected_leagues_for_source("api_football")` (33→94 leagues; closes the 30
-      A_LEAGUE blank-EU cells).
+      A_LEAGUE blank-EU cells). — **instruments-service@0d9ffabd**: (1)
+      `sports_reference_fixtures.py::_gather_per_fixture_rows`/`_write_per_fixture_entities` now track leagues that were
+      skip-as-already-present (no task queued this run, non-empty pre-existing captured_set) and union them into the
+      captured-league set passed to `emit_empty_gaps_for_entity`, in both the partial-rows and zero-rows branches — a
+      no-op re-run can no longer demote a present cell to empty; bare-path unmapped-row drops now also `record_failed`
+      (was silent — 225,854 rows dropped with no manifest trace in the 2026-07-14 GW run); (2)
+      `_build_fixture_league_map_from_gcs` now reverse-maps via `get_expected_leagues_for_source("api_football")` (94)
+      instead of `get_prediction_leagues()` (33), and lifts the `max_results=100` GCS-listing cap to unbounded; (3)
+      root-caused leg-3 more precisely than "33→94": `emit_empty_gaps_for_entity` was silently skipping (no manifest
+      write at all) any expected league whose `get_league_fixture_calendar` came back empty (off-season per
+      `SEASON_BY_COUNTRY`) — A_LEAGUE's season starts in October, so every 2025-09 date fell in that skip, leaving all
+      30 cells permanently blank-reason `expected_unattempted`. Now records a typed `EXPECTED_PAUSED_LEAGUE`
+      empty-confirmed row instead of skipping. QG green (sentinel-verified, 2 runs — 97s/134s), sentinel SHA==HEAD at
+      quickmerge time. Unrelated pre-existing MTDS adapter-contract warning (`solana_defi_drift.py`, tracked since
+      2026-05-20 per `lint_sweep_774602ea8_regression_audit_2026_05_20.md`) is untouched by this change.
 - [ ] [DATA] P0. **Post-fix GW re-run + parquet-level re-verify** — re-run the SAME 5-entity GW fleet (idempotent;
       presence-skip makes it cheap — only the 225,854 dropped rows re-fetch), then re-run the parquet-presence cross
       (NOT the naive gate query alone: the current index reads 0-pending/0-blank/0-missing while 3,720 cells are
@@ -1440,3 +1454,55 @@ unsound (3,720 false-empty cells system-wide). My 166-row flip is a real, narrow
 genuinely-separate no-fixture-day residual) but does not and cannot close Todo 9's gate — that requires the `[CODE] P0`
 write-path fix + the `[DATA] P0` post-fix re-run/re-verify todos session 31 already added. Not duplicating those todos.
 `/skip-current-task` after this entry (code shipped, checkbox correctly left unflipped).
+
+### 2026-07-14T14:47Z — session 33 (data_engineering slot-13): CODE P0 write-path fix SHIPPED (3 legs) — proceeding to the post-fix GW re-run
+
+Dispatched to the `[DATA] P0` "Post-fix GW re-run + parquet-level re-verify" todo (task -006). That todo's own text
+requires the `[CODE] P0` write-path fix to land first — still `[ ]` unchecked, no evidence any other slot had picked it
+up, and it's squarely in-craft (data_engineering, instruments-service pipeline code) and the single blocking
+prerequisite for my assigned task, so I implemented it directly rather than declining (this differs from the GW-fleet
+todos in sessions 20-30, which were blocked on an external SPOT VM fleet nobody could accelerate — this one was blocked
+on nobody having written the code yet).
+
+**Root-cause read of all 3 legs against the current `live-defi-rollout` HEAD** (re-derived independently, not assumed
+from the issue doc's phrasing):
+
+- **Leg 1** — confirmed exactly as diagnosed: `_write_per_fixture_entities` built the captured-league set passed to
+  `emit_empty_gaps_for_entity` purely from `entity_rows` (rows fetched THIS run). A league whose every fixture was
+  skip-as-already-present (pre-fetch skip, `_gather_per_fixture_rows`) contributed zero rows this run and so fell out of
+  that set — a no-op re-run demoted an already-captured cell to `empty_confirmed`/`EXPECTED_NO_FIXTURE`. Fixed by having
+  `_gather_per_fixture_rows` additionally track, per (entity, league), whether the league had a non-empty pre-existing
+  `captured_set` AND zero tasks queued AND was provider-covered (i.e. skip was for "already captured", not "out of
+  provider coverage") — those leagues are unioned into the captured set at both `emit_empty_gaps_for_entity` call sites
+  in `_write_per_fixture_entities` (the `if all_rows:` branch and the zero-rows `else` branch — the second one matters
+  when literally nothing was fetched for an entity because every fixture was pre-captured).
+- **Leg 2** — confirmed: `_build_fixture_league_map_from_gcs`'s `af_league_id` fallback reverse-map used
+  `get_prediction_leagues()` (33) instead of `get_expected_leagues_for_source("api_football")` (94) — same
+  classification-filter mismatch class as the 2026-07-13 TEAMS/STANDINGS fix. Also lifted `max_results=100` → unbounded
+  on the underlying GCS listing (candidate truncation risk per the issue doc). Also converted the bare-path unmapped-row
+  DROP (`_without_league`) into a `record_failed` call so it's never silent. Session 32's presence-gap investigation
+  (immediately above) independently reproduced this exact mechanism on a narrow single-date CLI repro — useful
+  corroboration, not duplicated work.
+- **Leg 3** — root-caused MORE PRECISELY than the todo's "33→94" framing: `_fetch_injuries` already called
+  `get_expected_leagues_for_source("api_football")` (94) via `emit_empty_gaps_for_entity` on this HEAD (likely already
+  fixed by the same 2026-07-13 TEAMS/STANDINGS work, since the function is shared). The REAL bug: when
+  `get_league_fixture_calendar(league, date, date)` returns empty (off-season per `SEASON_BY_COUNTRY` — NOT "no fixture
+  that specific day", the function name is misleading), `emit_empty_gaps_for_entity` did a bare `continue` — no manifest
+  write at all, leaving the cell permanently blank-reason `expected_unattempted`. A_LEAGUE's season runs Oct-May, so
+  every 2025-09 date is off-season → exactly the 30 blank A_LEAGUE INJURIES cells. Confirmed by session 32's peer commit
+  (`6a318ff4`, landed mid-session via rebase) manually flipping 166 residual EU rows including A_LEAGUE/AUSTRALIA_CUP
+  pre-season cells — same root symptom, independently found. Fixed by emitting a typed
+  `EmptyConfirmedReason.EXPECTED_PAUSED_LEAGUE` row instead of skipping.
+
+**Shipped**: `instruments-service@0d9ffabd` (3 files: `sports_reference_core.py`, `sports_fixtures.py`,
+`sports_reference_fixtures.py`). QG green twice (97s and 134s — re-ran after two branch-drift rebases from concurrent
+peer pushes, `6a318ff4` then a main-backmerge pair; sentinel SHA verified == HEAD at quickmerge time both times). No
+regressions in the 3 CF-11 per-fixture-entity failure-path tests (`test_orchestrator_sports_pipeline.py`) — traced
+through manually: all three patch `_build_fixture_league_map_from_gcs` to return `{}`, so `af_fid_to_league` is empty
+and `pre_captured_leagues` resolves to all-empty sets, making my change a no-op for those fixtures. Unrelated
+pre-existing MTDS adapter-contract-count warning (`solana_defi_drift.py`, tracked since 2026-05-20) untouched. Checkbox
+flipped above with evidence.
+
+**Next**: re-launch the same 5-entity GW SPOT fleet (idempotent, presence-skip — only the 225,854 previously-dropped
+rows should re-fetch) per session 20's launcher recipe, then re-run the parquet-presence cross-check (not the naive
+gate) to confirm the 3,720 false-empty cells resolve, then flip Todo 9 + this task's own checkbox.
