@@ -20,7 +20,12 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator central API host (systemd limits + watchdog + auto-reboot)]
-referenced_by: [codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/05-infrastructure/agent-orchestrator-worker-topology.md]
+referenced_by:
+  [
+    codex/05-infrastructure/agent-orchestrator-deploy.md,
+    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    codex/05-infrastructure/agent-orchestrator-worker-topology.md,
+  ]
 owner:
 last_reviewed: 2026-05-30
 code_refs:
@@ -213,7 +218,7 @@ Evidence archive: `plans/active/issues/api_host_chronic_impairment_2026_05_29.md
 aws ssm send-command \
   --instance-ids i-0c9b283b31d6b5ca7 \
   --document-name "AWS-RunShellScript" \
-  --parameters 'commands=["bash /home/ubuntu/agent-orchestrator/scripts/orchestrator/apply_resource_limits.sh"]'
+  --parameters 'commands=["bash /home/ubuntu/unified-trading-system-repos/agent-orchestrator/scripts/orchestrator/apply_resource_limits.sh"]'
 ```
 
 ### Check auto-reboot ceiling state
