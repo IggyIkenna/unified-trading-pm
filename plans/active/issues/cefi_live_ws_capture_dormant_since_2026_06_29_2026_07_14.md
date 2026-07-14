@@ -11,7 +11,7 @@ summary: >
   looks like a persistent live-WS process (every RUNNING instance is a bounded backfill/batch job); no GKE clusters
   exist. This looks like the entire CeFi live tick-capture pipeline stopped running 15 days ago, not a
   data-type-specific gap.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -34,7 +34,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-14
 locked_by:
-resolved_by:
+resolved_by: "operator/main via BLK-55d45a68 (2026-07-14) — intentional pause confirmed, not a genuine outage"
 ---
 
 # CeFi live WS tick capture appears dormant since 2026-06-29
@@ -129,11 +129,20 @@ operator confirmation per the recommendation above):
 Escalated to operator via `/blocked` (slot 3) for the intentional-pause vs. outage confirmation before todo 2 executes
 any relaunch.
 
+## Resolution (2026-07-14, BLK-55d45a68)
+
+**Operator/main confirmed: INTENTIONAL PAUSE** — cost-control freeze / planned migration still in flight (the
+VM-consolidation redesign + Pub/Sub live-sink cutover documented in the investigation update above). This is NOT a
+genuine outage; no relaunch is being dispatched. Noted in `codex/02-data/honest-absence-downstream-handling.md` §
+"Reference incidents" so a future audit doesn't re-raise this as a fresh alarm before the migration completes and a live
+row lands again.
+
 ## Todos
 
-- [ ] [DESIGN] P1. Operator/main: confirm intentional-pause vs. genuine outage for CeFi live WS tick capture. (repo:
-      unified-trading-pm — decision, routes the next todo)
-- [ ] [INFRA] P1. If genuine outage: identify + relaunch the correct live-capture deployment target for CeFi
+- [x] [DESIGN] P1. Operator/main: confirm intentional-pause vs. genuine outage for CeFi live WS tick capture. (repo:
+      unified-trading-pm — decision, routes the next todo) — ✅ RESOLVED 2026-07-14: intentional pause (BLK-55d45a68)
+- [x] [INFRA] P1. If genuine outage: identify + relaunch the correct live-capture deployment target for CeFi
       (`book_snapshot_5`/`trades`/`depth_of_book_10` etc.), verify a fresh `captured` manifest row lands within the hour
       post-relaunch (not just VM `RUNNING` status — the "no fire-and-forget" HARD RULE). (repo: market-tick-data-service
-      / deployment-service)
+      / deployment-service) — ✅ N/A 2026-07-14: confirmed intentional pause, not a genuine outage — no relaunch
+      executed.
