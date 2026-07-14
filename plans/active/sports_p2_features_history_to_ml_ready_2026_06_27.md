@@ -3147,3 +3147,10 @@ eligible) so this session moves to different available work instead of re-runnin
   nothing to fix there); no relaunch of the GW recompute (unrelated — that fleet only touches derived/fixture features,
   odds untouched). Checkbox flipped — the todo's ask ("diagnose") is fully satisfied with a concrete, evidence-backed
   root cause; the fix itself is tracked in the new issue doc, not this plan.
+- 2026-07-14 21:45Z (autonomous tick 3): ml-loader P1 COMPLETE and deeper than filed — three read-side gaps fixed
+  (per-league layout awareness, WRONG-BUCKET resolution repointed to the env-tiered prd bucket, failure-atom alignment +
+  30 stale rows purged with a .bak-in-per_vm resurrection hazard found+fixed) — ml-service@360da40,
+  features-service@4f83f8db + @76f234ce, real-bucket proof 24x728 derived matrix loads. NEW adjacent defect dispatched
+  same tick: odds event_id vs fixture_id join-key mismatch drops all odds columns from the assembled ML matrix (agent
+  running). Enrichment fleet 4 VMs RUNNING (shards mtime-live 21:44Z); pre-2025 sweep process ALIVE (still scanning, no
+  adjudication CSVs yet).
