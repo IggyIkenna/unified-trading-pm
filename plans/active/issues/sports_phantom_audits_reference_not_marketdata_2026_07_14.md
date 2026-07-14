@@ -15,8 +15,12 @@ summary:
   path templates match the instruments-store sports_reference layout — proven by 923,942 real captures matched), so this
   is NOT a wrong-bucket bug and the naive one-line map flip would BREAK it (market-data-tick-sports has no
   `sports_reference/...` paths → ~100% false-flag). The 44% phantom rate (721,154 of 1,645,101 captured) on the
-  reference manifest is UNVERIFIED — it may be a genuine large sports-reference phantom problem or a stale path-template
-  gap. Operator decision 2026-07-14: leave code as-is, document only.'
+  reference manifest was UNVERIFIED at filing time — since verified (2026-07-14/15 addendum) as 99.8% (719,818 rows)
+  confirmed phantom-AUDITOR false positives across two distinct mechanisms (unregistered data_type → empty
+  candidate-path list for trades/odds_horizon_bucket; PER_DAY_PER_SEASON path assumes a file per exact day but
+  transfermarkt cache-hit design only writes on refresh-trigger days), with ZERO real data loss found — only a
+  ~1,335-row (0.19%) residual left unexamined. The two-card audit-split design gap itself remains open. Operator
+  decision 2026-07-14: leave code as-is, document only.'
 status: open
 nature: notes
 asset_group: [sports]
@@ -131,3 +135,98 @@ a config flip.
 Operator decision 2026-07-14: **leave code as-is, document only.** No bucket-map change, no `--apply`, no market-data
 sports phantom path added in this session. This doc tracks the inconsistency and the unverified count for a future
 deliberate fix.
+
+## Addendum 2026-07-14 (slot-3, later same day) — the 721,154 unverified count, broken down and mostly explained
+
+Downloaded and analyzed the triage JSONL
+(`gs://central-element-323112-phantom-triage/triage_sports_20260714_063147.jsonl`, 721,154 rows, all
+`confidence: MEDIUM`) directly. Breakdown by `data_type`:
+
+| data_type             | count   | % of total | disposition                                        |
+| --------------------- | ------- | ---------- | -------------------------------------------------- |
+| `trades`              | 561,048 | 77.8%      | **confirmed false positive**                       |
+| `odds_horizon_bucket` | 143,594 | 19.9%      | **confirmed false positive**                       |
+| `PLAYER_VALUES`       | 15,176  | 2.1%       | spot-checked, appears genuine — needs its own look |
+| `STANDINGS`           | 460     | <0.1%      | not checked                                        |
+| `TEAMS`               | 460     | <0.1%      | not checked                                        |
+| `XG`                  | 300     | <0.1%      | not checked                                        |
+| `WEATHER`             | 106     | <0.1%      | not checked                                        |
+| `MATCHES`             | 7       | ~0%        | not checked                                        |
+| `FIXTURES`            | 2       | ~0%        | not checked                                        |
+
+**97.7% (704,642 rows) is a confirmed tool false-positive, not a data problem.** Root cause, read directly from
+`unified_api_contracts/canonical/domain/sports/gcs_paths.py::candidate_parquet_paths()`:
+`folder = SPORTS_DATA_TYPE_TO_FOLDER.get(data_type); if folder is None: return []`. Neither `"trades"` nor
+`"odds_horizon_bucket"` is a registered key in `SPORTS_DATA_TYPE_TO_FOLDER` — they're MTDS/MDPS market-data types that
+only started appearing in this REFERENCE bucket (`instruments-store-sports-prd`) because of the manifest-bucket-routing
+fixes shipped earlier today (2026-07-13/14, `market-tick-data-service@ad76547c` + the `mdps_odds_horizon_bucket`
+migrations). An empty candidate list means the phantom checker's `for c in candidates:` loop never executes, so
+`is_real` stays `False` by construction — **every row of an unmapped data_type is flagged phantom regardless of whether
+real data exists.** Independently re-verified real data exists for both: `odds_horizon_bucket` captured-row counts and a
+specific spot-check (date `2020-06-06`, `venue=ODDS_API`) were directly confirmed against live GCS earlier today during
+the MDPS venue-grain-mismatch investigation (see this plan's own Progress Log, same date); `trades` is the raw
+`odds_api` ticks, separately confirmed ~100% healthy (561,048 captured / 6 attempted_failed) via direct manifest reads
+today. This confirms sub-item 1 in "Open sub-items" above precisely: it's the "no market-data phantom audit for sports"
+design gap, manifesting as blanket false positives rather than as an absence — `SPORTS_DATA_TYPE_TO_FOLDER` needs
+entries (or the phantom auditor needs an explicit skip-list) for these two data_types before this count means anything.
+
+**The remaining 2.3% (~16,511 rows) is NOT explained by the above** — these are all registered reference data_types with
+real candidate-path templates. Spot-checked one `PLAYER_VALUES` row directly (`day=2021-06-27`,
+`manifest_status: captured`, `manifest_capture_time: 2026-07-13T23:49:29Z` — i.e. written only hours before this audit
+ran): listed the full `sports_reference/by_date/day=2021-06-27/` tree directly via `gcsfs` — no `entity=player_values`
+(or `entity=transfermarkt_teams`) blob exists anywhere, under either the `pipeline_mode=` canonical prefix or the legacy
+bare path, at any pipeline_mode folder present for that day (`batch_api_football`, `batch_footystats`,
+`batch_instruments_service`, `batch_open_meteo`, `batch_soccer_football_info` — no `batch_transfermarkt` folder exists
+for this date at all). This one row looks like a genuine phantom, not a template gap — but it's a single spot-check, not
+a full verification of all 15,176. Given the recent `manifest_capture_time`, this may be freshly-introduced by whatever
+wrote it in the last day, rather than old debt — worth checking whether it's the same write-without-file pattern class
+already found and fixed today for footystats/`open_meteo` (`instruments-service@ed3e75b8`) applied to transfermarkt's
+`PLAYER_VALUES` writer, or something PLAYER_VALUES-specific (this exact data_type had a near-identical false-positive
+history — see the `gcs_paths.py` code comment on the 2026-05-05 SSOT realignment and the deleted
+`write_player_values_placeholders.py` band-aid — so a regression of THAT class is also plausible and should be checked
+first).
+
+**Update — PLAYER_VALUES root-caused, also NOT a data-loss problem.** Read the writer directly:
+`instruments-service/instruments_service/engine/orchestrator/transfermarkt.py::_fetch_transfermarkt_data` (or equivalent
+teams/player_values fetch function, ~lines 440-692). Confirmed `"player_values"` IS correctly registered in UAC's
+`_SPORTS_ENTITY_TO_PIPELINE_MODE` → `PipelineMode.BATCH_TRANSFERMARKT` (`pipeline_mode.py:473`) — so this is **not** the
+TEAMS/STANDINGS-style pipeline_mode-mislabeling bug, a different mechanism entirely:
+
+- The function has a cache-hit short-circuit (lines 446-496): when the cached team/value roster for the season is still
+  fresh (`_cache_is_fresh`) and no league needs a refresh trigger that day (`get_leagues_needing_refresh` returns
+  empty), it skips the live API loop and populates `_captured_league_counts` **from the cache** instead (lines 469-475)
+  — `all_teams` (the live-fetch accumulator) stays empty.
+- The real per-day parquet write (`_gated_sink_write` to the `by_date/day={D}/pipeline_mode=batch_transfermarkt/` sink,
+  plus the `master/`-accumulator and `snapshots/`-by-season writes) only happens inside `if all_teams:` (line 570) —
+  **which cache-hit days never enter.**
+- But the per-league manifest write loop (lines 644-688, `manifest.record_captured_from_counts(...)`) runs
+  **unconditionally**, using `_captured_league_counts` regardless of which branch populated it. The code comment at line
+  644 confirms this is deliberate: _"Per-league honest-coverage manifest rows — identical between the cache-hit and
+  live-fetch branches."_
+
+Net effect: on every cache-hit day (the vast majority of days — refreshes only fire on `get_leagues_needing_refresh`
+trigger dates, not daily), the manifest stamps `captured` for that exact `day=D`, but no file is ever written at
+`by_date/day={D}/pipeline_mode=batch_transfermarkt/entity=player_values/` for that day — by design, since the underlying
+roster/valuation data didn't change and a real file already exists at the season's trigger date(s).
+`candidate_parquet_paths()`'s PER_DAY_PER_SEASON template hardcodes `day={day}` (the exact day being checked) with no
+allowance for "real file lives at a different trigger day within the same season" — so every cache-hit day false-flags
+phantom.
+
+**Confirmed real data is NOT missing** — directly listed the accumulator paths in prod:
+`sports_reference/master/entity=player_values/master.parquet` exists, and
+`sports_reference/snapshots/entity=player_values/season={Y}/` has real per-season snapshot data for
+`Y ∈ {2014, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026}`. The transfermarkt player-values pipeline is healthy
+and has been producing real data across its entire history; the 15,176 phantom flags are a **second, distinct class of
+phantom-auditor false positive** (audit-path assumes one file per exact day; writer intentionally reuses a season's
+trigger-date file across cache-hit days) — layered on top of the first class (unregistered data_type → empty candidate
+list). Combined, **both PLAYER_VALUES and the 704,642 `trades`/`odds_horizon_bucket` rows are now confirmed tool false
+positives** — together 719,818 of 721,154 rows (99.8%). Only the small remainder (STANDINGS 460, TEAMS 460, XG 300,
+WEATHER 106, MATCHES 7, FIXTURES 2 — 1,335 rows, 0.19% of the original count) is unaccounted for and would need its own
+spot-check if this is ever picked back up; given the scale, that's low-priority relative to the two confirmed classes
+above.
+
+**Still not done, still respecting the operator's "leave code as-is" decision**: no code changed, no `--apply` run, no
+bucket-map edit, no change to the transfermarkt cache-hit behavior (which is working as intended — the bug, if any, is
+in the phantom auditor's path-matching assumption, not in the writer). This addendum narrows the original "44%
+unverified" down to a fully-explained 99.8% (two confirmed tool-limitation classes, zero real data loss found) plus a
+~1,335-row (0.19%) residual left unexamined for a future pass.
