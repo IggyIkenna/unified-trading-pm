@@ -288,8 +288,17 @@ class TestCheckWorkflows:
 
     @staticmethod
     def _setup(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        """Point WORKFLOW_TEMPLATE_DIR at a tmp template dir holding one flat .yml template."""
+        """Point WORKFLOW_TEMPLATE_DIR at a tmp template dir holding one flat .yml template.
+
+        These tests exercise the LOCAL byte-comparison path, not the documented CI no-op
+        (detect_template_drift._check_workflows short-circuits when GITHUB_ACTIONS/CI is set —
+        see test_ci_env_noops_workflow_check for that path). Delenv both so a run inside actual
+        GitHub Actions doesn't trip the no-op branch before reaching the logic under test.
+        """
         import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+        monkeypatch.delenv("CI", raising=False)
 
         tmpl_dir = workspace / "unified-trading-pm" / "scripts" / "workflow-templates"
         tmpl_dir.mkdir(parents=True, exist_ok=True)
@@ -336,3 +345,14 @@ class TestCheckWorkflows:
         report = _check_workflows("not-checked-out", "service", tmp_repo)
         assert report.has_warnings and not report.has_errors
         assert any(i.check == "workflow-repo-absent" for i in report.items)
+
+    def test_ci_env_noops_workflow_check(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Inside actual CI (GITHUB_ACTIONS set), the check short-circuits to a warn-only no-op —
+        dep-clone siblings are tag-pinned snapshots there, not live branches, so byte-parity
+        would false-positive. This is the documented design (see _check_workflows docstring)."""
+        self._setup(tmp_repo, monkeypatch)
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        self._write_copy(tmp_repo, "svc", "tab-mirror-to-ldr.yml", "name: tab-mirror\non: {push: {}}\n# HAND EDIT\n")
+        report = _check_workflows("svc", "service", tmp_repo)
+        assert report.has_warnings and not report.has_errors
+        assert any(i.check == "workflow-drift-ci-noop" for i in report.items)
