@@ -231,8 +231,12 @@ BLOCKED.
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
       (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
       (Layer-1) `layer_1.by_asset_group.cefi.denominator_complete == True` (100%, `missing_tuples == []`) in the same
-      coverage.json — Layer-1 currently 79.55% with 9 real holes + the denominator-gap work in
-      `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, so G4 cannot close before that lands. Verdict to Progress
+      coverage.json — **[Corrected 2026-07-14, finding 26]** (was: a baked-in "Layer-1 currently 79.55% with 9 real
+      holes" baseline that never matched any logged run in this doc, incl. the 07-03 runs closest to it at 61.4%/17 and
+      73.61%/19 tuples) — Layer-1 last measured 91.78% (6 missing tuples) at the 2026-07-13T23:22Z→2026-07-14T00:05Z
+      session close (see Progress Log "G4 Session Close-out"); re-run `measure_honest_coverage.py` fresh before relying
+      on any number here, this line is a point-in-time snapshot, not the gate's live source of truth. G4 cannot close
+      before the denominator-gap work in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` lands. Verdict to Progress
       Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
 - [x] ✅ [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a
       pre-purge `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12,
@@ -1919,8 +1923,8 @@ remaining Layer-1 gaps below in this same session.
 **Gate verdict:** ❌ **NOT MET** — Layer-1 91.78% (6 missing); Layer-2 af=1,829/eu=213,672. **Blocking items
 remaining:**
 
-1. ~~`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md`
-   (P0)`~~ — **RESOLVED** (see addendum above); `market-tick-data-service@0da8be67`.
+1. ~~`cefi_backfill_no_instruments_found_all_venues_2026_07_13.md` (P0)`~~ — **RESOLVED** (see addendum above);
+   `market-tick-data-service@0da8be67`.
 2. **BITGET-FUTURES ×3 / COINBASE-CDE/trades / DERIBIT-COMBO/options_chain-trades** — genuine remaining Layer-1 gaps,
    attempting relaunch now that the P0 above is resolved.
 3. **COINBASE-FUTURES/spot_pair/trades measurement anomaly** — data confirmed safe; root-cause not yet found (see

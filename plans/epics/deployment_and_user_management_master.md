@@ -22,7 +22,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans: [../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md]
-last_updated: 2026-05-21
+last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -47,7 +47,12 @@ All active plans under this epic that touch any UI repo (`deployment-ui`, `unifi
 before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` §
 "Plan-Level Enforcement":
 
-- **`[UI]` tag**: every UI-touching todo MUST use `[AGENT][UI]` or `[HUMAN][UI]` (not bare `[AGENT]`).
+- **`[UI]` tag**: every UI-touching todo MUST carry a `[UI]` marker — either combined (`[AGENT][UI]`/`[HUMAN][UI]`) or
+  bare `[UI]` (the established convention in this epic's own child plans); a role tag with no `UI` marker at all (bare
+  `[AGENT]`/`[HUMAN]`) is what's disallowed. **[Corrected 2026-07-14, finding 55]** (was: text required ONLY the
+  combined form, contradicting a corpus grep showing bare `[UI]` is the majority-used, already-accepted tag on
+  evidence-backed shipped ticks, e.g. `data_status_tab_and_downloads_remediation_2026_06_16.md:152`; the substantive
+  gate — `pw:L2 ✓` + `regression:` evidence below — is unchanged and still mandatory).
 - **pw:L2 ✓**: `npx playwright test --project=chromium tests/smoke/` exits 0 before tick.
 - **regression guard**: spec written/updated in `tests/e2e/`, `tests/playbooks/`, `tests/widgets/`, or `tests/smoke/`
   matched to the change layer (widget→L1.5, route→L2, playbook flow→L3a, visual→L4).
@@ -74,7 +79,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_3 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 > **Corrected 2026-07-12 (was: banner + P0/P2 blocks below showed 0 active plans, unrun since the two plans below were
@@ -84,12 +89,23 @@ priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies
 > plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
 > blanket ruling.
 
+> **Corrected 2026-07-14, finding 54** (was: roster + count above still said "2 active plans" / omitted the
+> `deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13` plan entirely) — that plan was created 2026-07-13,
+> one day after the prior resync above, with `status: active`, `priority: P0`,
+> `parent_epic: deployment_and_user_management_master` matching this epic's own inclusion criteria; re-synced against a
+> fresh grep of `plans/active/*.md`.
+
 ## P0 — must complete before next foundation gate
 
 ### [`data_status_tab_and_downloads_remediation_2026_06_16`](../active/data_status_tab_and_downloads_remediation_2026_06_16.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) · **title**: Data-status tab + instruments download
 remediation (deployment-api / deployment-ui / CeFi universe)
+
+### [`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13`](../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **title**: deployment-api cache OOM + UI latency
+remediation — bounded caching architecture that fits 4GB. **[Added 2026-07-14, finding 54]**
 
 ## P1 — important; post-current-gate
 
