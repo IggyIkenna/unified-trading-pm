@@ -201,8 +201,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 0 — Baseline data foundation (partly done this session)
 
-- [ ] [OPERATOR] P0. Review + ship the `vm` baseline written to `scripts/dev/qg_resource_baseline.json` (22 repos,
-      uncommitted in slot 16) to LDR — data-only file change.
+- [x] [OPERATOR] P0. ✅ Shipped the `vm` baseline (22 repos) to LDR — data-only. Evidence: PM@dd7f05e49.
 - [ ] [INFRA] P1. Consolidate the baseline schema to a host-portable canonical per-repo cost the governor reads (RSS +
       cpu_s are host-invariant per finding #1) — keep `local`/`vm` as provenance; governor reads `max(local,vm)`
       (conservative) or a fresh canonical run. Unmeasured repo → conservative default (e.g. 2 GB) + a WARN to profile
@@ -228,12 +227,13 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 2 — Host capacity introspection (portable)
 
-- [ ] [INFRA] P1. `qg_host_capacity` in `qg-host-governor.sh`: emit MemTotal + MemAvailable + physical cores — Linux
-      (`/proc/meminfo`, `lscpu -p=core`/`nproc`) AND macOS (`sysctl hw.memsize`/`hw.physicalcpu`; a REAL MemAvailable
-      equivalent from `vm_stat` — (free + inactive + purgeable + file-backed) × pagesize, net of the compressor — not a
-      raw "free"); bash 3.2-safe. Add `--probe` printing detected capacity + derived RAM/CPU budgets.
-- [ ] [INFRA] P2. Unit tests for the capacity parser on captured Linux + macOS `/proc/meminfo`/`vm_stat` fixtures (no
-      live-host dependence).
+- [x] [INFRA] P1. ✅ `qg_host_capacity` + `--probe` in `qg-host-governor.sh`: MemTotal/MemAvailable/physical-cores on
+      Linux (`/proc/meminfo`, `lscpu`/`nproc`) AND macOS (`sysctl` + `vm_stat` free+inactive+purgeable+file-backed);
+      bash 3.2-safe; ADDITIVE (not yet wired into acquire/release). Evidence: PM@dd7f05e49 (`--probe` green on the 61 GB
+      VM → `mem_total_gb=61 cores=8 ram_budget_gb=43 cpu_slots=6`; shellcheck clean; `--status` unregressed).
+- [x] [INFRA] P2. ✅ Fixture-based parser unit tests (Linux `/proc/meminfo` + macOS faked `sysctl`/`vm_stat`), no
+      live-host dependence. Evidence: PM@dd7f05e49 (`tests/test-qg-host-capacity.sh` — 3 blocks green; negative control
+      confirms failures propagate across the subshell boundary).
 
 ### Phase 3 — Reservation ledger + dual-gate admission
 
@@ -320,6 +320,22 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   slots. (6/10) `cpu_weight` + the race test come from an unpinned parallel re-measure. (7) min supported host = 16 GB,
   so oversize-solo is defensive-only (heaviest 5.5 GB < 11 GB budget) — no stacked-oversize drain logic. (8) real macOS
   `MemAvailable` equivalent from `vm_stat`. (3/9) de-scoped per operator.
+
+### 2026-07-14 — Phase 2 shipped + Phase 1 recon (slot 16, interactive)
+
+- **Phase 2 (host capacity introspection) SHIPPED** — `qg_host_capacity` + `--probe` in `qg-host-governor.sh` +
+  fixture-based unit tests. `PM@dd7f05e49` (quickmerge; PR #1010 → main auto-merge). Additive, no behavior change to the
+  live governor. `--probe` on this VM: `mem_total_gb=61 mem_available_gb=53 cores=8 ram_budget_gb=43 cpu_slots=6`. The
+  `vm` baseline data shipped in the same commit (Phase 0 P0).
+- **Calibration finding:** this "16-core" VM is **8 physical / 16 logical** cores. The probe reports PHYSICAL (8), so
+  `cpu_slots = floor(8 × 0.8) = 6`, not the ~12 the plan narrative assumed from logical count. Physical-vs-logical for
+  the CPU gate is a Phase-3/6 tuning decision that the unpinned parallel `cpu_weight` measure (Phase 0) will settle.
+- **Phase 1 recon — the K-bump is LESS risky than the plan assumed.** `bootstrap_vm.sh` §6.1 pins
+  `QG_HOST_CONCURRENCY=1` specifically on the CENTRAL DISPATCH (planning) host because the orchestrator co-resides
+  there. But §6.2 already wraps every spawned worker's QG in a `systemd-run --user --scope` with **MemoryMax=10 G + 2 G
+  swap**, and the 05-29 mitigations (16 G host swap + `orchestrator.service` MemoryMax=56 G) are persistent. So the
+  32–57 GB single-pytest OOM that motivated the K=1 floor is ALREADY contained per-worker at 10 G — the repro cannot
+  recur the same way. Phase 1's re-verify should confirm the 10 G scope cap holds under N-concurrent, then raise K.
 
 ## Deferred / open decisions
 
