@@ -278,6 +278,27 @@ ff_one() {
                 log "[auto-clean] ${repo_name} — discarded ci_status-only manifest churn (CI-authoritative)"
             fi
         fi
+        # Cron self-pull artifact heal (2026-07-14): the crontab self-pull snippet
+        # (cron-self-pull-lib.sh) asserts the origin/<int_branch> version of its managed cron
+        # files into the main PM clone's WORKING TREE each tick without moving HEAD. On a behind
+        # clone the file then differs from HEAD → [skip:dirty] below → the clone can never FF →
+        # HEAD never catches up → the file stays dirty FOREVER (self-inflicted starvation;
+        # root-PM incident 2026-07-14: 1138 commits behind with the self-pull as sole tracked
+        # dirt). These files are documented LDR-authoritative (install-slot-cron-ff-pull.sh:
+        # local edits to them are overwritten every tick BY DESIGN), so a working copy
+        # byte-identical to origin/<int_branch> carries zero local information — restore it to
+        # HEAD (index + worktree; the old checkout-based data self-pull also STAGED its write)
+        # so the FF below proceeds and brings HEAD, and the file, forward to that same content.
+        local _managed
+        for _managed in scripts/dev/slot-cron-ff-pull.sh scripts/dev/cron-branch-overrides.txt \
+            scripts/verify-slot-host-symmetry.sh scripts/dev/slot-git-status-report.sh; do
+            git ls-files --error-unmatch "${_managed}" >/dev/null 2>&1 || continue
+            [[ -n "$(git status --porcelain -- "${_managed}" 2>/dev/null)" ]] || continue
+            if git show "origin/${int_branch}:${_managed}" 2>/dev/null | cmp -s - "${_managed}" 2>/dev/null; then
+                git checkout -q HEAD -- "${_managed}" 2>/dev/null || true
+                log "[auto-clean] ${repo_name} — restored ${_managed} to HEAD (cron self-pull artifact; content already on origin/${int_branch})"
+            fi
+        done
     fi
     # Auto-flush agent ping ledgers: they accumulate append-only cross-agent content that
     # legitimately blocks FF (can't discard — real data, unlike the regen artifacts above).

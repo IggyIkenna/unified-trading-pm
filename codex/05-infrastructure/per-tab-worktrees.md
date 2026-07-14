@@ -336,6 +336,21 @@ parses — so one bad commit can never propagate fleet-wide and stop the cron. T
 `slot-git-status-report`. All installed/updated by `install-slot-cron-ff-pull.sh` (run once per host from the ROOT
 clone, never a slot — the Phase-D guard refuses a `.tabs/` cwd).
 
+**Cmp-guarded writes + managed-file heal (codified 2026-07-14).** The original self-pull overwrote its files
+UNCONDITIONALLY every tick, which on a behind root PM clone left them permanently dirty-vs-HEAD — and that dirt tripped
+`ff_one()`'s own `[skip:dirty]`, starving the clone of the very FF that would have healed it (self-inflicted
+chicken-and-egg; reference incident 2026-07-14: root PM clone 1138 commits behind with the self-pull artifact as the
+only tracked dirt). Two-sided fix, both halves must stay: (1) `emit_cron_self_pull` writes ONLY when the working copy
+differs from `origin/<branch>` content (`git show | cmp -s` guard), and data siblings are written via cmp-guarded
+`git show`→temp→`mv` — **never `git checkout origin/<branch> -- <file>`, which also writes the INDEX and leaves STAGED
+dirt**; (2) `ff_one()` carries the matching heal — a managed cron file that is dirty but **byte-identical to
+`origin/<int_branch>`** is restored to HEAD (`git checkout HEAD -- <file>`, clearing index + worktree) so the FF
+proceeds and brings HEAD forward to that same content. The heal ships inside `slot-cron-ff-pull.sh` itself, so it
+reaches hosts still running an older unguarded crontab line without a reinstall; re-running
+`install-slot-cron-ff-pull.sh` upgrades the crontab line to the guarded emission. Local edits to the four managed cron
+files remain LDR-authoritative and are still overwritten by design — ship changes to them via PR→LDR, never by editing a
+clone in place.
+
 **Per-uid log paths — a root-owned log must never block the operator cron (codified 2026-06-23).** All three crons
 redirect to `${XDG_RUNTIME_DIR:-/tmp}/<name>.$(id -u).log` (uid-suffixed), matching the already-per-uid lock
 (`slot-cron-ff-pull.$(id -u).lock`). **Why:** the lock was per-uid but the LOG was a shared `/tmp/slot-cron-ff-pull.log`
@@ -389,9 +404,9 @@ set does not block `--ff-only`. **De-duplication:** one ping per (slot, repo) st
 
 ## Slot is durable; theme is daily
 
-The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with
-the operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents
-read on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
+The mapping of slot ↔ theme is daily-updated and lives authoritatively on the **agent-orchestrator dashboard**, with the
+operator LEDGER `## Today's slot assignments` table as the offline fallback (forward index that fresh slot agents read
+on bootstrap), mirroring the day's work-split plan (`plans/active/work_split_<YYYY_MM_DD>_<operator>.md`).
 
 Three benefits of fixed slots over ephemeral spin-ups:
 
