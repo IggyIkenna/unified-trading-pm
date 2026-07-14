@@ -51,7 +51,7 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated:
+last_updated: 2026-06-27
   2026-07-10 # was: 2026-06-27 (predates own `created: 2026-07-06` — corrected 2026-07-14,
   # doc-reconciliation finding 135; body's Progress Log + top banner show S1-S7 actively landing through 2026-07-10)
 locked_by: live-defi-rollout
