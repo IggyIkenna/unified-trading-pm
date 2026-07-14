@@ -155,9 +155,9 @@ Read these before any doc edit + before any code change in the affected scopes:
 
 - **Shard atom**: `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is a row-level column inside
   the parquet, NOT a shard axis (per Q1 resolution; supersedes the earlier 2026-05-06 per-fixture sharding proposal).
-  Per-fixture data*types (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
+  Per-fixture `data_types` (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`,
   `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`) use cluster validation
-  (`cluster_extractor=lambda row: row["fixture_id"]` or `bookmaker` for ODDS*\*) to enforce per-fixture coverage within
+  (`cluster_extractor=lambda row: row["fixture_id"]` or `bookmaker` for ODDS\*\*) to enforce per-fixture coverage within
   the parquet. Aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, etc. share the same shard atom (no
   cluster validation needed for inherently-aggregate data). Avoids ~10× manifest-row inflation vs treating `fixture_id`
   as a shard axis.

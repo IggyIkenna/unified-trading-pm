@@ -399,9 +399,9 @@ unchanged.
 >    `canonicalize_defi_manifest_venue_2026_06_14.canonicalise_venue_column` + captured-preferring spelling-dedup, in
 >    the SAME single `_index` walk (resolves the "DeFi venue-naming drift" — chain-suffixed `AAVEV3-ARBITRUM` and bare
 >    `AAVE_V3`+chain twins collapse to the canonical `AAVE_V3-ETHEREUM`). Snapshots →
->    `\_index/snapshots/pre_is_v9*{ag}\_\*`. Verified live: every applied AG `schema_v9=100%`,
->    `source`/`asset_group`/`pipeline_mode`=100%, `captured` preserved (defi −861 = the legitimate legacy↔canonical
->    spelling-dedup, all all-captured twins; 0 captured cell shadowed).
+>    `\_index/snapshots/pre_is_v9*{ag}\_\*`. Verified live: every applied AG `schema_v9=100%`, `source`/`asset_group`/`pipeline_mode`=100%, `captured`
+>    preserved (defi −861 = the legitimate legacy↔canonical spelling-dedup, all all-captured twins; 0 captured cell
+>    shadowed).
 > 2. **Writer root-fix (no regression)** — the IS writer left producer-row `source` BLANK by design (the C-#6
 >    auto-resolve-at-read pattern), so a fresh capture would re-introduce a blank `source`. Fixed at the UTL SSOT:
 >    `ManifestWriter._stamp_producer_source` stamps `source_string_for(pipeline_mode)` on a BATCH captured row whose
@@ -951,7 +951,7 @@ including the `expected_unattempted_known_empty` vs `expected_unattempted_pendin
 | **Expected-empty**            | yes           | `empty_confirmed`      | Source returned 200 + zero rows on this date (paused league, pre-launch, pre-genesis, holiday, weekend). Counts in denominator only. `error_reason` must be a typed `EMPTY_CONFIRMED_REASON` from the closed UAC set.                        |
 | **Attempted-failed**          | yes           | `attempted_failed`     | Adapter raised an exception classified via `error_reason`. Counts in denominator + triggers alerts. `_should_skip_shard` does NOT skip these — they auto-retry on the next VM run.                                                           |
 | **Expected-unattempted**      | yes           | `expected_unattempted` | Downstream service (MTDS/MDPS/features) skipped this shard because upstream manifest was `empty_confirmed`/`expected_unattempted` OR instrument is outside runtime scope. Counts in denominator. Superseded by `captured` when data arrives. |
-| **Outside expected universe** | no row        | —                      | No manifest entry — pipeline gap or (asset*group, venue, data_type, day) triple is outside expected universe. The expected-universe enumerator (v1/v2) writes `empty_confirmed + EXPECTED*\*` rows to close this gap.                        |
+| **Outside expected universe** | no row        | —                      | No manifest entry — pipeline gap or (`asset_group`, venue, `data_type`, day) triple is outside expected universe. The expected-universe enumerator (v1/v2) writes `empty_confirmed + EXPECTED*\*` rows to close this gap.                    |
 
 Before Phase 1.9 + Phase A we could not distinguish empty-vs-failed-vs-missing — any day without a manifest entry looked
 identical whether the source was silent or the pipeline had never run. `write_with_zero_fill`
@@ -1137,8 +1137,8 @@ venues), the catalogue is **complete** for the asset_group. Cross-references:
 7. **DeFi migrated-bundle wildcard** (added 2026-05-07 — C.9 audit) — `migrate_mtds_defi_legacy_venue_underscore.py`
    produced `ticks_migrated_*.parquet` bundle files at the combined-venue prefix
    (`raw_tick_data/by_date/day=*/asset_group=defi/venue=PROTOCOL-CHAIN/`) WITHOUT the trailing
-   `instrument_type=*/data_type=*/` segments. The bundle holds ALL data*types for that (date, protocol, chain) tuple in
-   one parquet. The audit's standard `data_type={dt}/` substring check fails because the bundle path has no such
+   `instrument_type=*/data_type=*/` segments. The bundle holds ALL `data_types` for that (date, protocol, chain) tuple
+   in one parquet. The audit's standard `data_type={dt}/` substring check fails because the bundle path has no such
    substring; the wildcard accepts any `ticks_migrated*\*.parquet` file under a matching combined-venue prefix as
    evidence of capture for any (data_type, instrument_type). DeFi-only — the migration bundle pattern is not used by
    other asset_groups.
@@ -1353,7 +1353,7 @@ The enumerator has two grain levels that map to these two layers:
   owns the canonical per-asset-group grain matrix — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
 - **v1 (shipped 2026-05-07)** — venue-grain expected universe; ~1.4M rows merged into canonical across all 5
-  asset*groups (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
+  `asset_groups` (numbers above). Walks UAC SSOTs to enumerate every `(asset_group, venue, data_type, day)` row that
   SHOULD exist; pre-skips per-source / per-chain / per-calendar windows; emits
   `record_expected_empty(reason=EXPECTED*\*)`for everything in the gap.
   Implementation:`instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.

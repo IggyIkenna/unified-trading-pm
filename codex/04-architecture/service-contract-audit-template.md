@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Service-Contract Audit — Reusable Template
 summary:
-  Reusable 7-pattern upstream-to-downstream service-contract audit template (SSOT reference flow, manifest
-  emission, schema-version, honest-absence reasons, expected_coverage, error classification, bucket-SSOT)
-  with grep recipes, a 4-dimensional matrix, and a QG-ratchet phase.
+  Reusable 7-pattern upstream-to-downstream service-contract audit template (SSOT reference flow, manifest emission,
+  schema-version, honest-absence reasons, expected_coverage, error classification, bucket-SSOT) with grep recipes, a
+  4-dimensional matrix, and a QG-ratchet phase.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,12 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer]
 tags: [audit, manifest, ssot, data-correctness, quality-gates, instruments]
-related: [../02-data/availability-manifest-and-data-status.md, ../02-data/honest-absence-downstream-handling.md, shard-level-failure-isolation.md]
+related:
+  [
+    ../02-data/availability-manifest-and-data-status.md,
+    ../02-data/honest-absence-downstream-handling.md,
+    shard-level-failure-isolation.md,
+  ]
 created: 2026-05-20
 authoritative_for: [service-contract audit reusable template (7-pattern upstream-downstream matrix)]
 referenced_by:
@@ -53,9 +58,9 @@ status: in-flight | complete
 
 ### What this pattern governs
 
-The upstream service owns the **canonical universe** for every (asset*group, venue, instrument_type) it manages: adapter
-metadata (URLs, coverage windows, record-type names), catalogue entries (InstrumentRecord / PoolRecord / etc.), and
-enumeration results (which instruments existed on which day). The downstream service MUST source all of this via an
+The upstream service owns the **canonical universe** for every (`asset_group`, venue, `instrument_type`) it manages:
+adapter metadata (URLs, coverage windows, record-type names), catalogue entries (InstrumentRecord / PoolRecord / etc.),
+and enumeration results (which instruments existed on which day). The downstream service MUST source all of this via an
 explicit read-call (e.g. `load*\*\_metadata_for_date()` — the dex_pools_handler.py canonical pattern) rather than
 re-fetching the upstream API or hardcoding any symbol, URL, or universe.
 
@@ -104,7 +109,7 @@ rg 'source_archive_url_template\|source_record_types\|coverage_start' \
 | ---------------- | --------------------------------------------------------- | --------- |
 | `<handler_a>.py` | ✅ Reads upstream via `load_<domain>_metadata_for_date()` | lines X-Y |
 | `<handler_b>.py` | ❌ Hardcodes URL constant                                 | lines X-Y |
-| `<handler_c>.py` | ⚠ Partial — fallback hardcodes                           | lines X-Y |
+| `<handler_c>.py` | ⚠ Partial — fallback hardcodes                            | lines X-Y |
 
 ### Remediation pattern (per ❌/⚠ handler)
 
@@ -123,8 +128,8 @@ rg 'source_archive_url_template\|source_record_types\|coverage_start' \
 
 ### What this pattern governs
 
-Every (data*type × shard_key × date) iteration in a handler MUST emit exactly one of: `record_captured(...)`,
-`record_empty(reason=<EmptyConfirmedReason>)`, or `record_failed(...)`. Silent returns (no record*\* call) are the
+Every (`data_type` × `shard_key` × date) iteration in a handler MUST emit exactly one of: `record_captured(...)`,
+`record_empty(reason=<EmptyConfirmedReason>)`, or `record_failed(...)`. Silent returns (no record\*\* call) are the
 Drift-bug class — they leave the manifest index in DIVERGENT_EMPTY state without any signal for the operator.
 
 ### Dim 3 — Manifest emission per handler
@@ -133,7 +138,7 @@ Drift-bug class — they leave the manifest index in DIVERGENT_EMPTY state witho
 | ---------------- | ----------------------------------------------------------------- | --------- |
 | `<handler_a>.py` | ✅ Emits record_captured + record_empty + record_failed per shard | lines X-Y |
 | `<handler_b>.py` | ❌ Silent absence — returns without record\_\* call               | lines X-Y |
-| `<handler_c>.py` | ⚠ Emits record_captured but no record_empty path                 | lines X-Y |
+| `<handler_c>.py` | ⚠ Emits record_captured but no record_empty path                  | lines X-Y |
 
 **Pre-audit grep recipe:**
 

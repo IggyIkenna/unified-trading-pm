@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Market-Tick-Data-Service (MTDS) — Coverage Matrix SSOT
 summary: >-
-  MTDS honest-coverage denominator SSOT — per (category, venue, data_type) the responsible adapter,
-  the expected shard set, the coverage axis, and whether record_empty is expected across
-  CEFI/TRADFI/DEFI/SPORTS/PREDICTION; the v5 aggregator uses a Tier-3 per-instrument denominator
-  (|instruments| x |dates|) capped by --per-instrument-sentinel-cap.
+  MTDS honest-coverage denominator SSOT — per (category, venue, data_type) the responsible adapter, the expected shard
+  set, the coverage axis, and whether record_empty is expected across CEFI/TRADFI/DEFI/SPORTS/PREDICTION; the v5
+  aggregator uses a Tier-3 per-instrument denominator (|instruments| x |dates|) capped by --per-instrument-sentinel-cap.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -22,7 +21,17 @@ related:
   ]
 created: 2026-04-21
 authoritative_for: [MTDS per-(category venue data_type) coverage-matrix denominator model]
-referenced_by: [codex/02-data/README.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/mtds-download-api.md, codex/02-data/mvp-scope-canonical.md, codex/02-data/per-instrument-sentinel-rollout.md, codex/02-data/pipeline-coverage-matrix.md, codex/02-data/prediction-data-types-catalog.md]
+referenced_by:
+  [
+    codex/02-data/README.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/mtds-download-api.md,
+    codex/02-data/mvp-scope-canonical.md,
+    codex/02-data/per-instrument-sentinel-rollout.md,
+    codex/02-data/pipeline-coverage-matrix.md,
+    codex/02-data/prediction-data-types-catalog.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -224,7 +233,7 @@ coverage because the denominator assumes every (conditionId × day) combo should
 
 ## 7. Aggregator algorithm (v5 honest-coverage) — MTDS
 
-Two tiers depending on whether the data*type is per-instrument or venue-level. UAC
+Two tiers depending on whether the `data_type` is per-instrument or venue-level. UAC
 `is_per_instrument_shard_data_type(dt)` is the discriminator — returns True for `trades` / `book_snapshot_5` /
 `derivative_ticker` / `options_chain` / `futures_chain` / `dex_swaps` / `dex_pools` / `lending_indices` /
 `oracle_prices` / `lst_rates` / `rewards` / `risk_params` / `prediction_trades` / `prediction_book_snapshot` /
@@ -295,14 +304,15 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
 - ✅ **SPORTS per-bookmaker × per-league Tier-2 sentinel** (Phase 7 #3) — orchestrator emits
   `(bookmaker, league_id, fixture_date)` sentinel rows for the league-partitioned ODDS_API path. Size-capped to ~12
   bookmakers × 33 PREDICTION leagues × in-season fixture dates per day (~396/day vs 4M naive fan-out).
-- ✅ **Instrument-level expected** (Phase 8) — shipped. Per-instrument shard data*types (`trades` / `book_snapshot_5` /
-  `derivative_ticker` / `options_chain` / `futures_chain` / `dex_swaps` / `dex_pools` / `lending_indices` /
-  `oracle_prices` / `lst_rates` / `rewards` / `risk_params` / `prediction*\*`) now use a `|expected_instruments| ×
-  |expected_dates|`Tier-3 denominator. UAC accessor`get_expected_instruments_for_venue(venue, data_type,
-  cap=N)`returns the expected instrument list. MVP seed tables now cover CEFI/TRADFI spot/perp/options **and** DEFI + PREDICTION (Wave 8G). MTDS orchestrator emits Tier-3 sentinels per`(venue,
-  data_type, instrument_id,
-  date)`; deployment-api aggregator reads those and computes honest coverage. Size-capped via `--per-instrument-sentinel-cap`CLI flag — see`codex/02-data/per-instrument-sentinel-rollout.md`
-  for the 3-tier progression.
+- ✅ **Instrument-level expected** (Phase 8) — shipped. Per-instrument shard `data_types` (`trades` / `book_snapshot_5`
+  / `derivative_ticker` / `options_chain` / `futures_chain` / `dex_swaps` / `dex_pools` / `lending_indices` /
+  `oracle_prices` / `lst_rates` / `rewards` / `risk_params` / `prediction*\*`) now use a
+  `|expected_instruments| × |expected_dates|`Tier-3 denominator. UAC
+  accessor`get_expected_instruments_for_venue(venue, data_type, cap=N)`returns the expected instrument list. MVP seed
+  tables now cover CEFI/TRADFI spot/perp/options **and** DEFI + PREDICTION (Wave 8G). MTDS orchestrator emits Tier-3
+  sentinels per`(venue, data_type, instrument_id, date)`; deployment-api aggregator reads those and computes honest
+  coverage. Size-capped via `--per-instrument-sentinel-cap`CLI flag —
+  see`codex/02-data/per-instrument-sentinel-rollout.md` for the 3-tier progression.
 - ✅ **Phase 8G DeFi + PREDICTION seeds** (2026-04-20) — MVP seed tables populated in UAC
   `registry/defi_prediction_instrument_seeds.py`: top-20 UniswapV3-Ethereum pools (by TVL from live
   `dex-pools-central-element-323112`), top-10 AaveV3-Ethereum reserves (`USDC`, `USDT`, `DAI`, `WETH`, `WBTC`, `AAVE`,
@@ -330,8 +340,8 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
   `2947dd2`) + deployment-api aggregator (`c059e6f`); UAC `get_expected_instruments_for_venue` +
   `is_per_instrument_shard_data_type` accessors landed (`74e278c`); `--per-instrument-sentinel-cap` CLI flag wired with
   3-tier rollout doc at `codex/02-data/per-instrument-sentinel-rollout.md` (MTDS `629e414c` + PM `4cc0ce7a`).
-  Per-instrument denominator replaces the per-(venue, data*type, date) shard axis for 15 per-instrument data_types;
-  venue-level data_types (liquidations, ohlcv*\*, tbbo, gas_fees, perp_funding, odds) stay on Tier-2. Remaining
+  Per-instrument denominator replaces the per-(venue, `data_type`, date) shard axis for 15 per-instrument `data_types`;
+  venue-level data_types (liquidations, ohlcv\*\*, tbbo, gas_fees, perp_funding, odds) stay on Tier-2. Remaining
   follow-ups: Wave 8G DeFi + PREDICTION seed tables, and VM FIXTURES backfill.
 - **2026-04-20** — Wave 8G closeout. DEFI + PREDICTION MVP seed tables landed in UAC
   `registry/defi_prediction_instrument_seeds.py` (new module — top-20 UNIv3-ETH pools, top-10 AaveV3-ETH reserves,

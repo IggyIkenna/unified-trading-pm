@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: Data Partitioning Conventions
 summary: >-
   Data partitioning conventions SSOT — the universal by_date/day={date} hive axis, bucket naming
-  {domain}-{asset_group}-{project_id} (canonical asset_group= vs legacy category=), per-service extra
-  dims (data_type/instrument_type/timeframe/feature_group), the BigQuery external-table hive
-  requirement, and live/ vs by_date/ micro-batch routing with end-of-day GCS compose.
+  {domain}-{asset_group}-{project_id} (canonical asset_group= vs legacy category=), per-service extra dims
+  (data_type/instrument_type/timeframe/feature_group), the BigQuery external-table hive requirement, and live/ vs
+  by_date/ micro-batch routing with end-of-day GCS compose.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,12 +16,17 @@ tags: [partitioning, manifest, data-pipeline, mtds, mdps, features]
 related: [codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
 authoritative_for:
+  [GCS hive-partitioning conventions, BigQuery external-table partition requirement, live-vs-batch GCS path routing]
+referenced_by:
   [
-    GCS hive-partitioning conventions,
-    BigQuery external-table partition requirement,
-    live-vs-batch GCS path routing,
+    codex/02-data/README.md,
+    codex/02-data/chart-candle-delivery-flow.md,
+    codex/02-data/data-lineage-MTDS-features-ml.md,
+    codex/02-data/instrument-pipeline-defi.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/02-data/schema-governance.md,
+    codex/02-data/shard-granularity-cefi.md,
   ]
-referenced_by: [codex/02-data/README.md, codex/02-data/chart-candle-delivery-flow.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/instrument-pipeline-defi.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/schema-governance.md, codex/02-data/shard-granularity-cefi.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -48,8 +53,8 @@ code_refs:
   partitioned by that axis. Legacy term: "category". **Canonical hive vocab (post-2026-04 rename)**: `asset_group=` for
   new writes; `category=` is legacy-preserved on disk (do NOT rekey existing data per workspace CLAUDE.md
   `§ Asset-group vocabulary`). Readers try canonical `asset_group=` first then fall back to legacy `category=`.
-- **Sports per-fixture row-level shape** (writegate Phase 2.B, post-2026-05-06; Q1 resolution): per-fixture data*types
-  (ODDS*\_, FIXTURE\_\_, INJURIES) shard at `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is
+- **Sports per-fixture row-level shape** (writegate Phase 2.B, post-2026-05-06; Q1 resolution): per-fixture `data_types`
+  (ODDS\*\_, FIXTURE\_\_, INJURIES) shard at `(asset_group=sports, source, data_type, league_id, day)` — `fixture_id` is
   a row-level column NOT a shard axis. Cluster validation (`cluster_extractor=bookmaker`) enforces per-fixture coverage
   within the parquet. Avoids ~10× manifest-row inflation.
 - **Predictions canonical_question_group** (predictions Plan A, post-2026-05-06; Q1 resolution): Polymarket / Kalshi

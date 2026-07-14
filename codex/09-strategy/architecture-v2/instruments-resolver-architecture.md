@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Strategy → Instruments Resolver Architecture
-summary: SSOT for joining the strategy catalogue (capability declaration) to instruments-service concrete records — stub vs real (--with-real-instruments) resolver modes, the catalogue-venue→parquet-venue mapping, per-slot instrument resolution, and universal persona instrument hydration via assigned_strategies.
+summary:
+  SSOT for joining the strategy catalogue (capability declaration) to instruments-service concrete records — stub vs
+  real (--with-real-instruments) resolver modes, the catalogue-venue→parquet-venue mapping, per-slot instrument
+  resolution, and universal persona instrument hydration via assigned_strategies.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,7 +12,8 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
 tags: [strategy, instruments, catalogue, uac, ui, single-walk]
-related: [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, ../../05-infrastructure/bucket-isolation-model.md]
+related:
+  [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, ../../05-infrastructure/bucket-isolation-model.md]
 created: 2026-04-25
 authoritative_for: [strategy-catalogue to instruments-service resolver join]
 referenced_by:
@@ -25,8 +29,8 @@ code_refs:
 > `unified-api-contracts/scripts/enumerate_envelope.py`, `unified-api-contracts/scripts/enumerate_availability.py`,
 > `unified-trading-system-ui/lib/architecture-v2/envelope-loader.ts`.
 
-The strategy catalogue is a _capability declaration_: archetype × category × instrument*type × venue. The
-instruments-service writes \_concrete records* of what's actually tradable today: per-(category, day, venue) parquet
+The strategy catalogue is a _capability declaration_: archetype × category × `instrument_type` × venue. The
+instruments-service writes \_concrete records\* of what's actually tradable today: per-(category, day, venue) parquet
 rolls. This doc describes how the two are joined and surfaced to UI / terminal / admin consumers.
 
 ---
