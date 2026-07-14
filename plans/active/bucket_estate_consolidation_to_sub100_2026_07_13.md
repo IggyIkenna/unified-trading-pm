@@ -251,18 +251,35 @@ shards silently absent post-cutover), flat `config-store` deleted (lease + all d
 kinds removed from all 5 yaml copies (34); UAC `mapping_resolver` fixed (item 9 ✅, uac@401b0b18); setup-buckets.py
 resolver rewrite (item 8 ✅); codex updated (item 7 ✅, pm@0f319f8f).
 
-**Async purge in flight (lifecycle Delete@age0+noncurrent0 armed; buckets self-empty ~24-48h, then delete the shell):**
-5 legacy twins `market-data-tick-{cefi,defi,tradfi}` + `instruments-store-{defi,tradfi}` + `dex-pools-prd`. Follow-up
-one-liner once each is empty: `gcloud storage buckets delete gs://<b>`. That lands the estate at ~147.
+**Async purge COMPLETE 2026-07-14 (follow-up sub-task, all 6 confirmed 404-deleted).** The 6 lifecycle-purge-armed
+buckets — `market-data-tick-{cefi,defi,tradfi}`, `instruments-store-{defi,tradfi}`, `dex-pools-prd` (all
+`-central-element-323112`) — were re-verified live (not trusted from plan text): `gcloud storage buckets describe`
+showed all 6 still existed with `versioning_enabled=true` (dex-pools-prd: no versioning field, i.e. unversioned) and
+`soft_delete_policy.retentionDurationSeconds` = `604800` (the 3 tick buckets + dex-pools-prd) or `0`/disabled (the 2
+instruments-store buckets); live-object listing (`gcloud storage objects list`) was already 0 on all 6. Per-bucket, ran
+the safe non-destructive check the task specified — a real `gcloud storage buckets delete gs://<b> --quiet` attempt
+(this errors "not empty" without deleting anything if any live-or-noncurrent version remains; GCS refuses bucket
+deletion with any surviving version regardless of soft-delete config) — and all 6 **succeeded** (no "not empty" error),
+confirming true zero-version state, immediately re-verified via `gcloud storage buckets describe` → **404 on all 6**:
+`market-data-tick-cefi-central-element-323112`, `market-data-tick-defi-central-element-323112`,
+`market-data-tick-tradfi-central-element-323112`, `instruments-store-defi-central-element-323112`,
+`instruments-store-tradfi-central-element-323112`, `dex-pools-prd-central-element-323112`. Independently re-counted
+estate via `gcloud storage buckets list`: **145** (vs the ~147 estimate). No force-purge was needed — the async
+lifecycle had already fully drained all 6 by the ~24-48h window (armed 2026-07-13, checked 2026-07-14T10:57Z UTC).
+`instruments-store-cefi` (the 7th twin, real 2019-era `instrument_availability/` data, 27k+-object legacy-vs-prd gap)
+remains explicitly OUT of this sub-task's scope — separate task/owner, purge deliberately still NOT armed there.
 
 **Still HELD / genuinely open (each with a real gate — NOT force-run):**
 
 | # | Item | Gate | | --- |
 --------------------------------------------------------------------------------------------------------------------------
+
 |
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 |
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 | | A | `instruments-store-cefi` legacy twin | 27,225 "legacy-only" objects are 2020-era `instrument_availability/`
 under a DIFFERENT partition shape than canonical prd (prd already has 51,611 availability objects) — same class as the
 sports legacy-cells; needs the instruments/migration owner's shape-aware reconcile, not a blind copy. Purge deliberately
@@ -326,6 +343,21 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-14, Async purge follow-up sub-task COMPLETE — all 6 L6/dex-pools-prd twins confirmed 404-deleted.**
+  Live-re-verified (not trusted from plan text) all 6 lifecycle-purge-armed buckets named in the prior "Async purge in
+  flight" note: `market-data-tick-{cefi,defi,tradfi}`, `instruments-store-{defi,tradfi}`, `dex-pools-prd` (all
+  `-central-element-323112`). Pre-check: `gcloud storage buckets describe` confirmed versioning + soft-delete config (3
+  tick buckets + dex-pools-prd: `soft_delete_policy.retentionDurationSeconds=604800`; 2 instruments-store buckets:
+  retention `0`/disabled); live-object listing already 0 on all 6. Per the task's specified safe non-destructive check,
+  ran a real `gcloud storage buckets delete gs://<b> --quiet` per bucket (refuses with a "not empty" error, no deletion,
+  if any live-or-noncurrent version survives) — **all 6 succeeded** on the first attempt (no force-purge needed; the
+  async lifecycle had already fully drained within its ~24-48h window, armed 2026-07-13, checked 2026-07-14T10:57Z),
+  each immediately re-verified 404 via `gcloud storage buckets describe`. Independently re-counted estate:
+  `gcloud storage buckets list` → **145** (vs ~147 estimate). `instruments-store-cefi` (7th twin, real 2019-era data,
+  27k+-object legacy-vs-prd gap) explicitly left untouched — out of this sub-task's scope, owned separately. Evidence:
+  live `gcloud` describe/delete/describe transcript this session (no code changes, no repo shipped — GCS operations
+  only); plan doc updated in this same commit, `unified-trading-pm` (docs(plans) commit, this file).
 
 - **2026-07-14, Deferred #8 done — setup-buckets.py + bucket_config.yaml rewritten onto the canonical resolver.**
   `deployment-service@344958c1` (+359/−528 across `scripts/setup-buckets.py`, `configs/bucket_config.yaml`,
