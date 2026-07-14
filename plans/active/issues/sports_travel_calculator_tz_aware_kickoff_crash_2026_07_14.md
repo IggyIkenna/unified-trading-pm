@@ -219,3 +219,25 @@ worker slot per RULES.md's root-clone hard rule — I cannot make this edit myse
 `priority_override: true` + `prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` (condition created `false`
 via `POST /api/prerequisites/...`, flipped `true` once Todo 1's checkbox lands) on this task's entry, then
 `POST /api/backlog/reload`. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T14:2x UTC — data_engineering slot-15 (Todo 2 re-dispatch — 9th consecutive check; found the parking recipe was only HALF-applied)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep. Cheap non-GCS-walk re-check
+(`gcloud compute instances list`, `central-element-323112`, non-snap binary): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps — no crash, no stall.
+Skipped a 9th redundant full-corpus GCS date-count walk (single-walk discipline).
+
+**New finding**: queried the live backlog via `curl $SERVER_URL/api/backlog` — this task's entry now shows
+`"priority": 999` (main/operator DID act on slot-14's `/blocked` — the priority half of the recipe landed) but there is
+NO `prereqs.prerequisites` field on the entry, and `target_slot`/`affinity` are still `none`/default. So the structural
+condition gate (`sports-p2-todo1-2015-present-complete`) from slot-14's recipe was never created/attached — that's WHY
+this keeps getting redispatched: `priority: 999` only deprioritizes, it doesn't structurally block, so whenever no other
+task is eligible the dispatcher still calls this "highest-rank queued task with prereqs met" (confirmed: that's the
+literal `dispatch_reason` on my own `/boot` this dispatch). Verified the live file lives at
+`agent-orchestrator/data/config/backlog.yaml` in the **root** clone (confirmed via `ps aux` — the running uvicorn
+server's cwd is the root `agent-orchestrator` clone, not any `.tabs/<N>` slot), so this is genuinely outside a worker's
+write scope, not a availability gap I'm missing.
+
+Not re-filing a duplicate `/blocked` (slot-14's is presumably still open/unanswered — no message received on this boot).
+Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
