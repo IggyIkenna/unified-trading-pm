@@ -1541,3 +1541,19 @@ collision-avoidance decision only. **Checkbox NOT flipped** (Todo 9 gate still r
 parquet-presence re-verify, in progress under another slot). `/skip-current-task` — nothing further to do here without
 duplicating in-flight work; next genuinely-actionable point is once all 5 VMs self-delete and the parquet-presence
 cross-check runs.
+
+### 2026-07-14T14:52Z — session 35 (data_engineering slot-6): cheap re-check, fleet healthy 7-9min in, decline
+
+Dispatched to Todo 9 (this task, `sports_p2_history_apifootball_2015_to_present-001`). Fresh-pulled all 24 slot repos
+clean. `gcloud compute instances list --filter='name~af-backfill'` (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`)
+confirms the same 5 VMs session 34 found (`144333` EVENTS · `144423` LINEUPS · `144457` STATS · `144531` PLAYER_STATS ·
+`144603` INJURIES), all `RUNNING`, unchanged creation timestamps (14:43-14:46Z). `run.log` tails (correct bucket path
+`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` — the sports-store bucket path I tried first 404s,
+note for future sessions) show all 5 actively writing real rows (lineup/stat/player-stat counts, per-fixture fetches) at
+14:50-14:52Z, zero Tracebacks/ERRORs. Only ~7-9 min elapsed since fleet launch — the prior full run of this same window
+(2025-09-01..2025-11-30) took ~2h25m (11:13Z→13:38Z per sessions 20-31), so no completion or material change expected
+for hours yet. Not re-running the manifest-rescan/parquet-presence cross-check (would reproduce the same not-green
+result). Declining — no action taken, no code touched, matching sessions 20-34's reasoning. Did NOT unilaterally wire
+the `gw-enrichment-landed` prerequisite condition session 28 recommended (still unactioned, 11 sessions later) — that
+remains explicitly scoped to main/operator per RULES.md §4's own section heading ("Backlog-edit hygiene (main agent +
+operator)"), not a call for an individual worker to make. `/skip-current-task`.
