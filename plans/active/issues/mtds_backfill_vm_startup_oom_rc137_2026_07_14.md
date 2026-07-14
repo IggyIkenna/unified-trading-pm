@@ -160,7 +160,7 @@ site, not a verified fix.
       exact issue slug) — see below for the RSS evidence and the residual VM-relaunch-verify gap (filed as a new [INFRA]
       todo, out of data_engineering craft scope). Repo: `market-tick-data-service` (diagnosis) /
       `unified-trading-library` (fix, already shipped).
-- [ ] [INFRA] P1. **Residual verification gap (2026-07-14, slot 9, data_engineering)**: relaunch
+- [x] [INFRA] P1. **Residual verification gap (2026-07-14, slot 9, data_engineering)**: relaunch
       `mtds-dex-swaps-backfill` one more time with BOTH the `mtds-code` tarball (≥ `d6846f1c`) AND the
       `unified-trading-library-code` tarball (≥ `0fc088a9`) freshly rebuilt via
       `deployment-service/scripts/vm/create-code-tarballs.sh` for `unified-trading-library` (its own tarball is separate
@@ -171,7 +171,36 @@ site, not a verified fix.
       session**: VM launches are out of this craft's scope (`does_not: infra/VM launches → infra`), and this worker
       sandbox's `gcloud` CLI is non-functional (`snap-confine` capability error, `cap_dac_override` missing) — confirmed
       via `gcloud auth list` failing identically to `gcloud compute instances list`, so launch/verify must happen from a
-      session with working `gcloud` (e.g. the operator/planning VM). Repo: `deployment-service`.
+      session with working `gcloud` (e.g. the operator/planning VM). Repo: `deployment-service`. — ✅ DONE 2026-07-14
+      (slot 2, infra): the local `gcloud`/`gsutil` (snap) ARE broken in this sandbox too (same `cap_dac_override`
+      error), but a working NON-snap install at `~/google-cloud-sdk/bin/gcloud` exists and is already in documented use
+      by other slots (see this plan's Progress Log) — used that (PATH-prepended) instead of escalating. Rebuilt fresh
+      core tarballs (`create-code-tarballs.sh`, no `--asset-group` = UAC+UTL+MTDS+ deployment-service):
+      `mtds-code @ ecd3a4d4366f` (descendant of required `d6846f1c`, confirmed via `git merge-base --is-ancestor`),
+      `unified-trading-library-code @ 9bc06261292d` (descendant of required `0fc088a9`). Relaunched
+      `mtds-dex-swaps-backfill` (`launch-mtds-dex-swaps-backfill-vm.sh`, defaults — `2023-01-01→2026-07-14`); the
+      launcher's own `lc_verify_tarball_freshness` confirmed all 4 core tarballs current at launch time. **Verification
+      task was performed as specified — but the outcome is a FAILED verification, not a pass: the VM crashed AGAIN,
+      identically, even with both confirmed fixes present.** See "P0 residual — dex_swaps STILL crashes on both
+      confirmed fixes" below; **this reopens the diagnosis, it does not close it.** New [BACKEND] P0 todo filed below
+      for a fix-worker; escalating to operator given this contradicts the prior "fix already shipped, no code change
+      needed" closure claim.
+
+- [ ] [BACKEND] P0. **NEW FINDING (2026-07-14, slot 2, infra)** — `mtds-dex-swaps-backfill` STILL crashes `rc=137`
+      identically even with BOTH confirmed fixes present (`market-tick-data-service@d6846f1c`+ AND
+      `unified-trading-library@0fc088a9`+, tarball-freshness-verified at launch time, not just git-ancestor-checked).
+      This means the `ManifestFreshnessCache` slim-read fix that this issue's "P0 confirm — dex_swaps NEW FINDING
+      closed" section credited with resolving the crash does **not** actually fix it — the crash symptom is
+      byte-identical to every prior attempt (handler-init log → ONE `RESOURCE_SAMPLE` at low mem_pct → `Killed` →
+      `rc=137`, dead within ~20s of process start, self-deleted before SSH is useful). Needs: (a) a live/attached repro
+      — e.g. relaunch with `VM_SHUTDOWN_ON_COMPLETION=false` so the box survives its own crash for `ps`/`dmesg`
+      inspection, since the RESOURCE_SAMPLE sampler (5s interval) keeps missing whatever spikes between samples (a
+      pattern this issue already flagged twice); or (b) a local RSS-instrumented repro of `dex_swaps_handler.py`'s full
+      `process()` path (not just `ManifestFreshnessCache.bulk_load`, which the local repro in "P0 confirm — dex_swaps
+      NEW FINDING closed" measured in isolation, not as part of the actual handler invocation) using real prod GCS data,
+      same technique as this issue's other RSS-instrumented repros. Repo: `market-tick-data-service` (+
+      `unified-trading-library` if the real culprit is elsewhere in a shared cache/reader). See "P0 residual" below for
+      the full run.log evidence.
 
 ## P0 confirm — dex_swaps NEW FINDING closed (2026-07-14, slot 9, data_engineering)
 
@@ -215,6 +244,51 @@ index has grown to a similarly dangerous size).
 **What's NOT yet done**: the fix landing in `unified-trading-library` doesn't by itself prove a freshly-packaged
 `mtds-dex-swaps-backfill` VM survives — that needs an actual relaunch with BOTH tarballs rebuilt post-fix (see the new
 `[INFRA]` todo above). Flagging as the residual gap rather than closing this out as fully verified.
+
+## P0 residual — dex_swaps STILL crashes on both confirmed fixes (2026-07-14, slot 2, infra)
+
+Relaunched `mtds-dex-swaps-backfill` with fresh core tarballs, both required fixes tarball-freshness-verified present at
+launch time (not just git-ancestor-checked): `mtds-code @ ecd3a4d4366f` (descendant of `d6846f1c`),
+`unified-trading-library-code @ 9bc06261292d` (descendant of `0fc088a9`). `lc_verify_tarball_freshness` (the launcher's
+own built-in gate) confirmed all 4 core tarballs current immediately before `gcloud compute instances create` ran — so
+this is not a stale-tarball repeat of the prior gap.
+
+**Result: identical crash, 4th time running.** Full `run.log` (VM `mtds-dex-swaps-backfill`, launched ~17:01Z, dead by
+17:04:44Z):
+
+```
+17:04:23,884 INFO TheGraph key pool loaded: 9 keys available
+17:04:23,884 INFO DEX swaps handler initialized (api_key_pool=9 keys)
+17:04:24,547 INFO RESOURCE_SAMPLE ... mem=10.3% rss=679MiB ...
+bash: line 1: 7012 Killed   .../python -m market_tick_data_service --operation collect-dex-swaps ...
+[vm-exec] command exited rc=137
+17:04:44,161 INFO received signal 15 — initiating shutdown
+17:04:44,998 INFO DEPLOYMENT_FAILED 57f6560e-... (exit_code=137)
+```
+
+Dead within ~20s of process start, one `RESOURCE_SAMPLE` at a perfectly healthy 10.3%/679MiB (nowhere near the 85%
+threshold), then `Killed`/`rc=137` — byte-for-byte the same signature as every crash this issue has already documented
+(`mtds-perp-funding-backfill`'s original crash, `mtds-dex-pools-backfill`'s 3rd incarnation, and the "NEW FINDING"
+`dex_swaps` crash that `unified-trading-library@0fc088a9` was credited with fixing).
+
+**This contradicts the "P0 confirm — dex_swaps NEW FINDING closed" section's conclusion below.** That section's
+RSS-instrumented repro measured `ManifestFreshnessCache.bulk_load()` in isolation (downloading + parsing the real
+27.4M-row availability index two ways, FULL vs SLIM schema) and found FULL alone would OOM a 16GiB VM — a real and
+almost certainly genuine hazard — but this relaunch proves that fix, as shipped, does not prevent the actual VM crash.
+Possible explanations for a fix-worker to investigate (not diagnosed further here — out of infra craft scope): the
+slim-read fix may not be on the actual code path `dex_swaps_handler.py` exercises at this point (e.g. a different call
+site still uses the unqualified full-schema `read_availability_index`), or the true spike is elsewhere entirely and the
+`ManifestFreshnessCache` full-schema repro was a real-but-not-THE-culprit hazard (the "P0 confirm + fix" section below
+found a similar false-lead pattern with `_register_all_catalog_readers()` itself being cheap while a downstream call was
+the actual cost).
+
+**Escalating per governance** (this contradicts a previously-recorded "fix confirmed + shipped, no code change needed"
+closure, and blocks `mvp_backfill_defi_onchain_v10-002`'s G2 gate for the 4th consecutive relaunch attempt): posting a
+`/blocked` to the operator recommending a `VM_SHUTDOWN_ON_COMPLETION=false` diagnostic relaunch (or an
+attach-before-delete window) so a fix-worker can inspect the box's actual memory/process state at time of kill, since
+the 5s `RESOURCE_SAMPLE` cadence keeps missing whatever the real spike is — this is the same "invisible-between-samples"
+gap this issue has now hit 3 times (dex-pools 3rd incarnation, this issue's own dex_swaps NEW FINDING, and this
+relaunch).
 
 ## P0 confirm + fix (2026-07-14, slot 2)
 

@@ -16,7 +16,7 @@ summary:
   wrote markers for only the 33 prediction-tier leagues (94 expected), leaving 30 A_LEAGUE September EU cells
   blank-reason. Todo-9 GW gate NOT flipped; the 2020+ full-enrichment fleet launch and the GW features recompute are
   HELD (same write path would replicate the damage at ~400k-call scale)."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -35,6 +35,13 @@ execution_scope: local-only
 priority: P0
 source: [gw-verify agent 2026-07-14 (operator-ruled GW verify -> 2020+ launch chain; chain halted at RED verification)]
 resolved_by:
+  [
+    "instruments-service@0d9ffabd (3-leg write-path fix)",
+    "instruments-service@86cc71ff (presence guard + factory pool-date + 94-league zero-day markers + regression tests)",
+    "instruments-service@0fe2f17b (gw_false_empty_repair one-off; 4170 restamps)",
+    "deployment-service@a79fa65 + e2e-testing@b6b04b8 (launcher --skip-lock + features --force chain)",
+    "2026-07-14 16:54Z parquet-presence cross GREEN (false-empty 0 / phantom 0 / blank 0; INJURIES EU 0)",
+  ]
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -173,6 +180,17 @@ cells. Honest-absence integrity is the entire point of the manifest
   `_index/per_vm/gw-false-empty-repair-20260714.parquet` written 16:29:06Z (4,170 captured rows, explicit `.write()`);
   consolidator cron-absorbs. Parquet-level `--cross` re-verify runs after the post-fix fleet completes (LINEUPS+STATS
   still RUNNING at 16:35Z) + ≥1 consolidator cycle.
+- 2026-07-14 ~17:30Z (fix-now agent): **RESOLVED — verification GREEN, chain resumed.** Fleet completed 5/5
+  `exit_code=0` (LINEUPS 16:5xZ, STATS 16:5xZ; 0 bare-path drops vs 225,854); repair shard cron-absorbed by 16:52:55Z;
+  `--verify` 4,170/4,170 restamps read captured; `--cross` 16:54Z: false-empty 0 / phantom-captured 0 / untyped-blank 0
+  across all 4 per-fixture entities over the 1,848 GW cells; INJURIES window EU 0 (was 30), the 30 A_LEAGUE cells typed
+  `EXPECTED_PAUSED_LEAGUE`; independently matched by the peer verify script (`instruments-service@c06fbf1b`, same
+  numbers, incl. its second-pass 50-cell residual repair). Todo 9 + the post-fix re-run todo flipped in P2a. Held
+  launches RESUMED: GW features recompute relaunched 17:1xZ after fixing a launcher no-op defect (`--force` chain broken
+  — `e2e-testing@b6b04b8` + `deployment-service@a79fa65`, see P2c banner); 2020+ enrichment fleet launched 17:24-17:27Z
+  (5 SPOT VMs, tarball `@86cc71ff`, NO redo_all via the new `--skip-lock`, quota-budgeted 172,782 with 15% headroom —
+  see P2a banner). Residuals routed: pre-2025-09 history false-empty restamp (widened repair window) noted in P2a
+  session 36b; INJURIES 91 blank-league legacy failed rows → `sports_data_sources_canonical_completion_2026_07_13.md`.
 - 2026-07-14 ~14:20Z (P2a session 32, data_engineering slot-3): independent corroboration of leg 2
   (`_build_fixture_league_map_from_gcs` truncation/mapping-gap). Retried FIXTURE_EVENTS/LINEUPS/STATS for the ~16
   residual `attempted_failed` (`CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE`) cells via direct narrow-date-range CLI calls

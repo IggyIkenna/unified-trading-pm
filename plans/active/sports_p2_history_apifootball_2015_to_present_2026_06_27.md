@@ -48,6 +48,16 @@ drift_direction: advance-code
 
 # Sports P2a — API-Football history 2015→present
 
+> **🟡 2026-07-14 17:24-17:27Z: the 2020+ FULL-ENRICHMENT FLEET IS RUNNING (multi-day).** 5 entity-sharded SPOT
+> `af-backfill-*` VMs on tarball `instruments-service@86cc71ff` (presence-guard + factory-pool fix included):
+> `af-backfill-20260714-172403` FIXTURE_EVENTS · `-172437` FIXTURE_LINEUPS · `-172532` FIXTURE_STATS · `-172618`
+> PLAYER_STATS (all 2020-06-06→2026-07-13) · `-172708` INJURIES (2021-01-01→2026-07-13). NO `--force` anywhere
+> (presence-skip active — the new `--skip-lock` launcher flag, `deployment-service@a79fa65`, cleared the singleton lock
+> without redo_all); `--fleet-vms 5` registry rate split; `REMAINING_DAILY_QUOTA=172,782` (live /status 217,782 minus
+> the 45k = 15% daily-pipeline headroom). Multi-day run — expect quota-aware slowdown near daily reset; do NOT launch
+> competing api-football VMs. The GW features recompute (`fss-backfill-vm-1/2/3`, RELAUNCHED 17:1xZ after the first wave
+> no-op'd — see P2c banner) runs concurrently. Fix-now agent session, Progress Log below.
+
 > **🟢 2026-07-14 ~16:55Z: Todo 9 GW gate GREEN, checkbox flipped.** The 2026-07-14 14:43Z fleet re-run (tarball
 > `@0d9ffabd`) + the write-path hardening (`86cc71ff`) + the false-empty repair one-off (`0fe2f17b`, main-agent) + a
 > second repair pass (this session, catching 50 cells the first pass's early scan missed because LINEUPS/STATS were
@@ -1561,6 +1571,49 @@ collision-avoidance decision only. **Checkbox NOT flipped** (Todo 9 gate still r
 parquet-presence re-verify, in progress under another slot). `/skip-current-task` — nothing further to do here without
 duplicating in-flight work; next genuinely-actionable point is once all 5 VMs self-delete and the parquet-presence
 cross-check runs.
+
+### 2026-07-14T17:30Z — session 36b (same fix-now agent): repair VERIFIED, cross GREEN, held launches RESUMED (features recompute relaunched post-no-op-fix + 2020+ fleet up) — two launcher defects found live and fixed
+
+**Phase-2 repair + Phase-4 verification (converged with the peer slot's second pass)**: repair one-off
+`scripts/gw_false_empty_repair_2026_07_14.py` shipped `instruments-service@0fe2f17b` (recency-adjudication mechanics;
+snapshots `availability_index.20260714-161952/-162832…`); adjudication over the 5,726 empty_confirmed scope cells →
+restamp-captured 4,170 (EVENTS 974 / LINEUPS 1,205 / STATS 1,082 / PLAYER_STATS 909), adjudicated-empty 1,556 (no
+attributable parquet — listed, left as-is), attempted_failed report-only 13; per-VM shard
+`gw-false-empty-repair-20260714` (4,170 captured rows) written 16:29:06Z, cron-absorbed by 16:52:55Z. `--verify`:
+4,170/4,170 restamped cells read captured. `--cross` (the full session-31 manifest-vs-parquet presence cross, 16:54Z):
+**FALSE-EMPTY 0 / PHANTOM-CAPTURED 0 / untyped-blank 0** across all 4 entities over the 1,848 GW cells (captured
+1,731/1,718/1,245/1,179); INJURIES window EU 0 (was 30), blank-reason 0, the 30 A_LEAGUE cells typed
+`EXPECTED_PAUSED_LEAGUE`; anti-clobber spot-check: 29 sampled cells' parquet row counts unchanged pre/post-rerun.
+Matches the peer verify (`@c06fbf1b`, 16:54Z) exactly — two independent instruments agree on GREEN. Fleet re-run
+evidence: all 5 VMs `DEPLOYMENT_COMPLETED exit_code=0`; EVENTS/LINEUPS/STATS run.logs carry **0 bare-path drops** (was
+225,854 rows over 91/91 dates).
+
+**Launch (i) — GW features recompute: the first wave NO-OP'd; found + fixed a 2-leg launcher defect, relaunched.** The
+17:02Z `fss-backfill-vm-1/2/3` wave "completed" rc=0 in ~8 min having SKIPPED every date ("SKIP <table> — manifest shows
+prior captured/empty (use --force)"): the launcher mapped `--force` → `--no-skip-existing` only (GCS-existence skip),
+but the features CLI's manifest-attempted skip (`_should_skip_attempted`) is gated on the CLI's OWN `--force`, which the
+runner never forwarded. Fixed: `e2e-testing@b6b04b8` (`vm_fss_features.sh` `--force` passthrough) +
+`deployment-service@a79fa65` (launcher `--force` → `--no-skip-existing --force`). RELAUNCHED 17:1xZ, same recipe
+(`--start 2025-09-01 --end 2025-11-30 --tables derived_features,fixture_features --force --vms 3 --env prod`, SPOT);
+verified COMPUTING (per-date Calculator activity, zero SKIP lines) on all 3 VMs.
+
+**Launch (ii) — 2020+ enrichment fleet up (see 🟡 banner at top).** Second launcher defect found first: `--force` was
+the only way to clear the singleton lock for a fleet fan-out but ALSO set `VM_FORCE=true` (redo_all) on the VM — the
+14:43Z GW re-run wave's VMs 2-5 all ran redo_all inadvertently (full re-fetch, ~30k wasted calls; harmless over 91 days,
+catastrophic over 2020→present). Added `--skip-lock` (lock-only bypass, `deployment-service@a79fa65`) and launched the
+5-VM fleet WITHOUT redo_all: measured scope = 42,709 captured-FIXTURES cells (95 leagues / 2,381 days); manifest
+pending-ish cells EVENTS 3,141 / LINEUPS 3,213 / STATS 1,298 / PLAYER_STATS 722 / INJURIES 605; quota budget 172,782
+(live /status 82,218/300,000 used at launch, 15% headroom reserved). All launch VMs verified STARTED with real per-date
+progress (no fire-and-forget).
+
+**Residual discoveries captured**: (a) pre-2025-09 history likely carries the SAME false-empty class from earlier
+broken-binary runs — the fixed fleet presence-guards (won't re-stamp) but does NOT restamp captured; if the full-history
+verify gate (Todo "Full-history enrichment phase") reads red on false-empties, re-run
+`gw_false_empty_repair_2026_07_14.py` with widened window constants (cheap, no quota). (b) The INJURIES 91 blank-league
+`attempted_failed` legacy rows (written ≤2026-07-13) remain owned by
+`sports_data_sources_canonical_completion_2026_07_13.md` (dedup-key NULL/`""` fix). (c) Out-of-map fixtures are still
+FETCHED before being dropped+record_failed (quota waste on out-of-universe fixtures) — optimization candidate, typed
+loudly since 86cc71ff.
 
 ### 2026-07-14T16:12Z — session 36 (operator-mandated fix-now agent): presence-based absence completed (4th+5th legs found live), shipped instruments-service@86cc71ff; fleet EVENTS+INJURIES complete, 3 VMs still running
 

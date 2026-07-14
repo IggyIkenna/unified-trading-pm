@@ -46,17 +46,18 @@ drift_direction: advance-code
 
 # Sports P2c — derived features history to ML-ready
 
-> **🔴 2026-07-14 ~14:15Z: GW enrichment features recompute (`derived_features`+`fixture_features` --force,
-> 2025-09-01..2025-11-30) is HELD** — the GW enrichment fleet completed but content verification came back RED (3,720
-> false-empty manifest cells + 225,854 enrichment rows fetched-then-dropped by the instruments-service write path, so
-> the parquet inputs the recompute would read are still materially incomplete). Recomputing now guarantees a full second
-> recompute after the fix. Resume trigger: P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`) Todo 9
-> flips green after the post-fix GW re-run; evidence
-> `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`. The working invocation
-> for when it resumes:
-> `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2025-09-01 --end 2025-11-30 --tables derived_features,fixture_features --force --vms 3 --env prod`
-> (SPOT; `--force` maps to `--no-skip-existing`; `odds_features` deliberately excluded — odds inputs unchanged by
-> enrichment). ML-readiness re-verify follows its completion.
+> **🟢 2026-07-14 ~17:15Z: GW enrichment features recompute is RUNNING** (`fss-backfill-vm-1/2/3`, SPOT, chunked
+> 2025-09-01→09-30 / 10-01→10-30 / 10-31→11-30; `--tables derived_features,fixture_features --force`). Resume trigger
+> met: P2a Todo 9 flipped GREEN 16:55Z (post-fix GW re-run + parquet-presence cross: false-empty 0 / phantom 0 / blank
+> 0; issue `sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md` resolved). **NOTE — the first
+> recompute wave (17:02Z) NO-OP'd**: the launcher's `--force` mapped to `--no-skip-existing` only, but the features
+> CLI's manifest-attempted skip (`_should_skip_attempted`) needs the CLI's OWN `--force`, which the runner never
+> forwarded — all 3 VMs "completed" rc=0 in ~8 min having skipped 91/91 dates. Fixed (`e2e-testing@b6b04b8` runner
+> `--force` passthrough + `deployment-service@a79fa65` launcher mapping `--no-skip-existing --force`), relaunched
+> 17:1xZ, verified genuinely COMPUTING (per-date Calculator activity, zero SKIP lines) on all 3 VMs. Any past
+> "recompute" run via this launcher predating these fixes silently no-op'd on manifest-attempted dates — treat prior
+> recompute claims accordingly. ML-readiness re-verify follows completion. Concurrent: the P2a 2020+ enrichment fleet
+> (multi-day) — its enriched dates need the follow-on recompute per the todos below.
 
 ## Scope
 
