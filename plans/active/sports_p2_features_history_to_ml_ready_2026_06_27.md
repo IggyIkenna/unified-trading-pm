@@ -138,6 +138,74 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 23:0x UTC — tick-4 diagnosis dispatch (68.6% cluster P2: prior slot-4 diagnosis ADVERSARIALLY RE-VERIFIED — all evidence confirmed; root-cause mechanism CORRECTED (upstream-API zombie boards through MDPS bucket assignment, NOT an MTDS cache re-serve); re-capture ruled out with proof; no code shipped, doc-only)
+
+Dispatched at tick 4 against the already-flipped P2 diagnosis todo — treated as an adversarial verification pass rather
+than a redo. **All slot-4 evidence CONFIRMED from fresh bucket downloads**: identical 43-column all-NULL block
+(intersection==union across 09-02/09-09/10-23), exact 94/137=68.6131% on each cluster day, 100.0% + 0 NULL cols on
+passing day 09-06; zombie event `a4a57e15…` (CSKA Moscow, kickoff 2022-03-05) present at T-24h on all 3 checked cluster
+days. **Three material refinements shipped to the issue doc**
+(`plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`):
+
+1. **Mechanism corrected** — raw scrapes are LIVE (same-pass EPL rows have fresh `bm_time=2025-09-02T11:55`, fixtures
+   Sep 13-20 correctly beyond all buckets); the staleness is the-odds-api serving frozen boards for dead league keys.
+   The reinjection point is MDPS `bucket_assignment_adapter.py` — buckets purely on `bm_minutes_to_kickoff` (frozen at
+   1423≈T-24h for the zombie, forever), its staleness caps are bm-relative only, `staleness_seconds` (≈3.5 YEARS) never
+   checked. Issue-doc P1 re-targeted to MDPS (repos frontmatter updated); original candidate (a) cache-fallback theory
+   disproven.
+2. **Third event class** — 2 of the 3 events on 10-23 are REAL China Superleague fixtures (kickoff 10-24T11:35, 11
+   bookmakers, fresh bm_time) caught at ONE horizon by the once-daily 12:00Z snapshot; ladder completes in day=10-24.
+   Not contamination — must NOT be purged (P2 discriminator added: staleness_seconds separates zombies cheaply).
+   Partial-fail days are the graduated form (10-20: 4 full-ladder + 9 shallow-ladder events, 91.1%).
+3. **Re-capture ruled out with evidence** — on 09-02 every covered league's LIVE board had zero fixtures within 24h (MLS
+   Sep 7, Argentina Sep 11+, EPL Sep 13+): re-capture target = ∅, historical-endpoint fetch buys nothing, quota
+   untouched, no fetch plan needed. **Gate check**: all 43 NULL-block columns verified ⊂
+   `WRITE_GATE_CONFIG.sparse_columns["odds_features"]` (writer.py:181-200, 0 unmatched) → P3 gate fix = P1d's
+   sparse-column exemption + zero-in-window-fixture vacuous-pass semantics (both now spelled out on the issue doc P3).
+
+**Verdict (task taxonomy)**: (a) honest absence for every gate-relevant cell — the market data genuinely doesn't exist
+on those days — POLLUTED by purgeable zombie rows (issue-doc P1/P2), with the gate's per-day semantics as the remaining
+fix surface (issue-doc P3). NOT (b) capture gap (nothing re-fetchable), NOT (c) exporter compute bug
+(`_find_best_snapshot` fallback correct). No ML-readiness re-run this dispatch — no (b)/(c) action was executed, so
+74/91 stands until issue-doc P1-P3 land. No code shipped (fix scoped to the issue doc, different repo/owner —
+findings-triage "fits another plan → annotate, don't fix"). Doc-only edits via the `docs(plans):` carve-out.
+
+### 2026-07-14 22:54 UTC — data_engineering slot-10 (same session, cycle 2 — ROOT CAUSE CONFIRMED: consolidator Cloud Run Job intermittently takes 8-9min instead of ~40s; issue doc filed; 3rd relaunch wave succeeded past the startup gate by timing against a fresh manifest write)
+
+**Same slot-10 session, continuing.** The 22:28Z relaunch (all 3 VMs) **failed again within ~5 minutes**, at
+22:31:28-22:31:42Z, with the IDENTICAL `"Manifest consolidator appears DOWN"` error — ruling out a one-off transient
+blip from the first entry below; this is a recurring pattern.
+
+**Root-caused via
+`gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports --region=asia-northeast1`**
+(read-only diagnostic, not an infra action): the Cloud Scheduler trigger
+(`uts-prod-manifest-consolidator-instruments-sports-cron`, `*/1 * * * *`) IS firing reliably every minute — 15
+consecutive executions checked, zero gaps in the trigger cadence. But execution DURATION is bimodal: most complete in
+~30-45s, but a subset take **8-9 MINUTES** (confirmed via `gcloud run jobs executions describe ... 4q84g` →
+`status.conditions` `"Completed"` message: `"Execution completed successfully in 8m42.98s"` — genuinely slow, not a
+crash). Since a new execution triggers every 60s regardless of the prior one's state, an 8-9min execution means 7-8
+overlapping executions run concurrently — during that stretch the consolidated file's mtime can sit stale well past the
+120s freshness budget every consuming VM's startup gate checks against.
+
+**Filed `issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`** (P1 [INFRA] root-cause
+investigation + P2 [CODE] retry-with-backoff option + P3 [SCRIPT] pre-flight freshness check option) — this is a genuine
+infra reliability issue outside data_engineering craft scope (Cloud Run Job concurrency/locking), not something to fix
+inline here; documented with full evidence (execution IDs, timestamps, cost impact: 2 waves × 3 VMs = 6 failed SPOT
+launches with zero compute progress).
+
+**3rd relaunch, timed against a fresh manifest write**: confirmed the slow execution (`4q84g`) had just completed and
+written successfully (`gsutil stat` showed `Update time: 22:50:44Z`, 108s old at the 22:52:32Z check — within budget).
+Relaunched all 3 ranges immediately (first attempt collided on a shared timestamp-based VM name from launching all 3 in
+parallel within the same second — 2 of 3 hit `ERROR: ... already exists`; retried those 2 sequentially with a small
+gap). All 3 now RUNNING: **`features-sports-sports-20260714-225249`** (2018-07-09→2019-08-11), **`-225333`**
+(2020-03-07→2020-10-05), **`-225354`** (2025-08-11→2026-07-13). Consolidator confirmed still fresh (60s old) immediately
+after all 3 launches. No-fire-and-forget check passed: all 3 confirmed RUNNING via `gcloud compute instances list`.
+
+**Verdict: real forward action + a confirmed, actionable infra finding filed.** Checkbox NOT flipped — compute still
+genuinely in progress (3rd relaunch, not yet completed; success at the startup gate not yet confirmed past the first few
+minutes). Continuing to monitor for genuine calculator-write progress (not another repeat of the same startup failure)
+rather than declaring victory prematurely.
+
 ### 2026-07-14 22:28 UTC — data_engineering slot-10 (Todo 1 re-dispatch — all 3 tracked VMs failed IDENTICALLY at startup due to a transient stale manifest-consolidator heartbeat, correctly fail-fast; consolidator confirmed recovered; relaunched all 3 ranges; checkbox NOT flipped)
 
 **Fresh-pulled all 24 slot repos clean.** Followed the 21:52Z entry's explicit handoff: checked
@@ -3211,7 +3279,10 @@ eligible) so this session moves to different available work instead of re-runnin
       suspect MDPS odds_horizon_bucket gaps or bookmaker-tier absence those days). Provenance: autonomous tick 2
       ML-readiness re-run 2026-07-14; predates the enrichment/recompute work (odds_features untouched by it). —
       unified-trading-pm (this plan-doc + issue doc), diagnosis complete 2026-07-14, see Progress Log entry below +
-      `plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`.
+      `plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`. Adversarially re-verified + mechanism
+      refined by the tick-4 dispatch (2026-07-14 23:0xZ entry): evidence confirmed, root cause corrected to upstream-API
+      zombie boards passing MDPS bucket assignment (not an MTDS cache re-serve); nothing re-fetchable; verdict = honest
+      absence + purgeable contamination + two-part gate fix (see issue doc refinement section).
 
 - 2026-07-14 20:3xZ (slot-4, data_engineering, task sports_p2_features_history_to_ml_ready-003): **diagnosis COMPLETE —
   root cause is NOT simple honest-absence, it's a real MTDS ingestion bug.** Re-ran
