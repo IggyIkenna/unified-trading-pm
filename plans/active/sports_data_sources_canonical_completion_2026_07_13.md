@@ -216,9 +216,19 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       than sitting as `expected_unattempted` forever. Small, mechanical, low priority — blocked on the P1 dedup-key fix
       above landing first (no point writing `empty_confirmed` rows while the consolidator can't reconcile them against
       the enumerator seed either).
-- [ ] [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
+- [x] ✅ [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
       acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
-      confirm any relevant scheduled jobs are running.
+      confirm any relevant scheduled jobs are running. **VERIFY DONE 2026-07-14 (slot-5) against the live sports
+      canonical (5,759,085 rows). PASS: 0 dedup-key dup groups; service_name = only the 3 sanctioned values. 🔴 RED (3
+      findings FILED, not silently frozen — see
+      `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`): (A) 4,268
+      attempted_failed — ~1,152 the already-tracked CF11 P2 class + ~3,116 UNDOCUMENTED (INJURIES 1,946 / FIXTURES 612 /
+      blank-dt 461 / PLAYER_STATS 73 / TEAMS 24) → new P1 re-fetch-backfill todo; (B) 22,668 blank-asset_group
+      api_football sports rows (instruments-store bucket never gets the consolidator asset_group heal) → new P1
+      consolidator-heal todo; (C) 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under source=api_football
+      → new P2 remove/relabel todo. Residual: the api_football-specific scheduled-jobs sub-check was NOT performed here
+      (needs Cloud Scheduler access; partly covered by the sibling scheduled-job VERIFY todos below). The RED findings
+      are tracked as auto-dispatchable fix todos in the issue doc; api_football is NOT clean until they land.**
 - [ ] [DATA] P2. **api_football: backfill the 1,090 `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` per-fixture-entity gaps (NEW
       2026-07-14, found during the deep-investigation re-verify).** FIXTURE_EVENTS 372 / FIXTURE_STATS 363 /
       FIXTURE_LINEUPS 355 across 114 distinct match-days (2020-10-06→2026-03-26), lower-tier/cup leagues (DANISH_CUP,
