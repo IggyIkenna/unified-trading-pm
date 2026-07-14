@@ -6,7 +6,7 @@ summary:
   then delete the GCS registry blobs after a snapshot, keeping only a codex note of the GCS-to-Firestore lineage. The
   two irreversible steps (drop-GCS-write, delete-blobs) are made safe by snapshot-before-delete, so the phase runs fully
   autonomously with no human gate.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
