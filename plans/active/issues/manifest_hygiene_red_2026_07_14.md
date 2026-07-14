@@ -11,19 +11,20 @@ locked_by:
 summary:
   "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi. Finding-classes:
   schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur..."
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [meta]
-repos: [market-tick-data-service]
+repos: [e2e-testing]
 scope: [engineer, admin]
 tags: [manifest-hygiene, data-pipeline, daily-audit]
 related: []
 priority: P2
-resolved_by:
+resolved_by: e2e-testing@0fa7148
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: 2026-07-14
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_07_14)
@@ -59,7 +60,27 @@ Cold-start context: read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_
 
 ## Todos
 
-- [ ] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_07_14) — diagnose + fix the root cause
-      (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in
-      `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate
-      CSV(s) above first (source `manifest_hygiene_daily.py`).
+- [x] [CODE] P1. ✅ Manifest hygiene RED — 1 AG(s) with findings (2026_07_14) — root cause diagnosed as a
+      NON-ACTIONABLE-SAMPLE bug in the AUDIT code itself (`e2e-testing/scripts/audit/manifest_hygiene_daily.py`), NOT a
+      real MTDS gap in this finding's escalation. `_apply_link_tracking` suppresses a divergence finding-class only when
+      EVERY distinct venue is covered by the active `mvp_backfill_cefi_tick_v10_2026_06_27.md` roster (all-or-nothing),
+      but the emitted CSV/issue sample was always the top-10 venue×data_type pairs BY COUNT. Verified: all 6 venues in
+      today's `oracle_expects_but_empty` sample (BINANCE-FUTURES, BITFINEX-FUTURES, BYBIT, DERIBIT, OKX-FUTURES,
+      OKX-SWAP) ARE present in the roster table (confirmed via git blame — committed 2026-06-28, byte-identical across
+      slot clones) — the escalation's visible sample was 100% already backfill-tracked, meaning an unlisted long-tail
+      venue outside the top-10 was the actual, invisible reason link-tracking couldn't suppress the class (the
+      `oracle_expects_no_manifest_row` finding independently confirms the roster-diff methodology: BYBIT-SPOT +
+      COINBASE-FUTURES are genuinely uncovered — only mentioned in the plan's prose, never in a `| VENUE |     ... |`
+      table row the link-tracking regex matches). Fixed: `FindingClass` now carries the full unsliced venue×data_type
+      breakdown; `_apply_link_tracking` re-prioritizes a partially-covered finding's sample toward its uncovered
+      venue(s) before slicing to top-10, so a future escalation is actually triageable instead of hiding the real signal
+      behind an already-tracked majority. The suppress/escalate decision is unchanged (no findings are newly silenced).
+      Also fixed 9 pre-existing RUF002/RUF003 ambiguous-unicode lint violations in the same file (quality-gates.sh was
+      already red on these before this task; fixed inline per findings-triage "in your file → fix in same commit"). 4
+      new/updated tests (`test_check_divergence_populates_breakdown`, `test_check_missing_expected_reads_csv` breakdown
+      assertion, `test_apply_link_tracking_partial_coverage_prioritizes_uncovered_sample`), 61/61 green. The underlying
+      BYBIT-SPOT/COINBASE-FUTURES gap + the cefi non-v9 residual + the 4-pillar signal are real data-correctness
+      surfaces already covered by `mvp_backfill_cefi_tick_v10_2026_06_27.md`'s in-progress backfill wave — extension of
+      that plan's scope, not a code fix in this task. — e2e-testing@0fa7148 + evidence:
+      `tests/unit/test_dp_audit.py::test_apply_link_tracking_partial_coverage_prioritizes_uncovered_sample` + 3 more; QG
+      green sentinel `0fa714869f7c9a517b019ee407aff547fbb15b3d`.
