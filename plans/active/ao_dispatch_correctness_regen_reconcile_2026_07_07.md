@@ -9,8 +9,10 @@ summary:
   replaces hard role-refusal with dynamic per-task roles loaded as additive boot prompts, adds the
   fable-opus-sonnet-haiku capability chain with stop-and-resume for already-dispatched retiers, and adds slot_skips
   hygiene. Human-driven — done here with the operator, pushed to agent-orchestrator via quickmerge only after each phase
-  is complete and verified. Fable + new effort-level enablement is a deferred later phase. Records the incident in
-  issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md.
+  is complete and verified. (Was — this line previously read "Fable + new effort-level enablement is a deferred later
+  phase," now stale — corrected 2026-07-14, finding 186 — Phase 7 shipped fable-as-a-spawnable-model, the haiku-effort
+  gate, and the full effort-ladder [ao@f52d3cc4, ao@4d93a751]; only the narrow per-account Fable capability-gating
+  sub-item remains DEFERRED.) Records the incident in issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md.
 status: active
 nature: process
 asset_group: [meta]

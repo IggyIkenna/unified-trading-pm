@@ -468,18 +468,25 @@ preserve-on-handoff (the ONLY auto-commit point):
   `has_session` met the churn's real `orch-slot-5`). VERIFY next: first post-reload spawn survives >5 min + attaches a
   task; `reclaiming idle lingering` on fresh spawns → 0.
 
-- 2026-07-09 ~15:45Z — **Deploy + first-hour runtime findings.** Deploy mechanism confirmed: uvicorn runs under systemd
-  with `--reload --reload-dir server`, so the 5-min FF-pull cron IS the deploy — the reloader restarted the app on the
-  new code at 15:06 with no manual restart. LIVE WINS: (1) the dispatch-ACK reconciler fired in production at 14:51 —
-  `slot_dispatch_unacked` on the slot-3 zombie (dispatched >1h, frozen pane), task requeued PINNED and re-dispatched
-  cleanly at 14:53 (§1.6 class closed); (2) shipped commits carry `[slot-16·planning]` attribution end-to-end; (3) host
-  identity sweep: 419 repos, 117 drifted → 0 (`check-slot-commit-identity.sh --fix`). REGRESSION found + fixed:
-  `_boot_submitted` (B5) initially failed EVERY fresh spawn — two false-pending sources caught by frame-by-frame pane
-  watch: Claude's greyed GHOST placeholder (`Try "write a test for <filepath>"`) reads as typed text in a capture, and
-  large boot pastes take ~8-10s to ingest (the single rescue C-m at +2s hit the same ingestion window). Fix: ghost
-  filter + patient ~30s verify window with up to 3 rescue C-m (window widened 24→30s per operator). Also: slot-10's
-  PM/UAC/UTL were SYMLINKS to the root workspace clones — the checker stamped "slot-10" through them into the ROOT
-  configs; links removed, roots re-stamped, checker + provisioner now refuse symlinked repo dirs
+- 2026-07-09 ~15:45Z — **Deploy + first-hour runtime findings.** ~~Deploy mechanism confirmed: uvicorn runs under
+  systemd with `--reload --reload-dir server`, so the 5-min FF-pull cron IS the deploy — the reloader restarted the app
+  on the new code at 15:06 with no manual restart.~~ **CORRECTED 2026-07-14 (findings 184/193/202, verify-rerun-2)**:
+  this was wrong, same class of error already caught + struck through in sibling plans
+  `ao_dispatch_correctness_regen_reconcile_2026_07_07.md` and `ao_worker_lifecycle_audit_and_corrections_2026_07_10.md`
+  on 2026-07-12 but left uncorrected here. Ground truth (VM-verified): the installed systemd unit runs uvicorn WITHOUT
+  `--reload`; deploy-currency is instead handled by the pre-existing `scripts/ao-self-pull.sh` 15-min root cron
+  (agent-orchestrator@589b711, 2026-06-01) FF-pulling the root AO checkout and `systemctl restart`-ing it on HEAD change
+  — SSOT `epics/orchestrator_master.md` (ao-self-pull section, ~L427-430). The 15:06 restart narrated above did happen,
+  just via that cron's restart, not a `--reload` hot-reload. LIVE WINS: (1) the dispatch-ACK reconciler fired in
+  production at 14:51 — `slot_dispatch_unacked` on the slot-3 zombie (dispatched >1h, frozen pane), task requeued PINNED
+  and re-dispatched cleanly at 14:53 (§1.6 class closed); (2) shipped commits carry `[slot-16·planning]` attribution
+  end-to-end; (3) host identity sweep: 419 repos, 117 drifted → 0 (`check-slot-commit-identity.sh --fix`). REGRESSION
+  found + fixed: `_boot_submitted` (B5) initially failed EVERY fresh spawn — two false-pending sources caught by
+  frame-by-frame pane watch: Claude's greyed GHOST placeholder (`Try "write a test for <filepath>"`) reads as typed text
+  in a capture, and large boot pastes take ~8-10s to ingest (the single rescue C-m at +2s hit the same ingestion
+  window). Fix: ghost filter + patient ~30s verify window with up to 3 rescue C-m (window widened 24→30s per operator).
+  Also: slot-10's PM/UAC/UTL were SYMLINKS to the root workspace clones — the checker stamped "slot-10" through them
+  into the ROOT configs; links removed, roots re-stamped, checker + provisioner now refuse symlinked repo dirs
   (`unified-trading-pm@9f53f2b99`); slot 10 needs re-provisioning (todo below).
 - 2026-07-09 ~15:15Z — **Phases A + B + B2 (6/7) + C SHIPPED**: `agent-orchestrator@5b07bd3` (quickmerge → LDR; QG
   green, 1137 tests incl. 12 new lifecycle tests in `tests/test_task_lifecycle_done_gate_resume.py`). The commit itself

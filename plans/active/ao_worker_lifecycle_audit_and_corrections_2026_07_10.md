@@ -262,10 +262,17 @@ is operator-review-gated (A6) and can lag the worker cutover.
      post-cutover because `_extract_template` raises on a template-less role file): `autospawn.py:1073/1075` (autospawn;
      escalation + plan-health funnel through it), `routes/agents.py:93/135` (manual spawn), **`server.py:764`
      (`spawn_with_account_bg` — the account-failover respawn; MISSED by the original list)**, and
-     **`main_agent_keeper.py:701` (main-agent spawn; MISSED)**. (`tmux_spawn.py` is the tmux layer — it never renders;
-     mislabel removed.) While touching `server.py:764`, fix two pre-existing defects on that path: it calls
-     `render("worker")` not `render_worker(assigned_role, …)` (failover respawns silently LOSE the craft-role block
-     today) and passes the RETIRED `branch=tab/<op>/<slot>` var (`server.py:771`) — finding 2's staleness, live in code.
+     **`main_agent_keeper.py:701` (main-agent spawn; MISSED)** (was: presented here as added/covered by this cutover —
+     **corrected 2026-07-14, finding 194**: `git log -- server/main_agent_keeper.py` shows the file was NOT actually
+     touched by this cutover's commits — it kept its pre-cutover `rendered.replace('"role": "main"', ...)`
+     agent_id-injection surgery unchanged, which silently broke because that literal substring stopped existing in the
+     post-cutover slot-less stub, so the keeper's `_spawn()` returned `False` every tick and main was never actually
+     respawned for ~3 days; the real fix landed 2026-07-13 in
+     `active/main_agent_spawn_surgery_regression_2026_07_13.md`, agent-orchestrator@43dc13d). (`tmux_spawn.py` is the
+     tmux layer — it never renders; mislabel removed.) While touching `server.py:764`, fix two pre-existing defects on
+     that path: it calls `render("worker")` not `render_worker(assigned_role, …)` (failover respawns silently LOSE the
+     craft-role block today) and passes the RETIRED `branch=tab/<op>/<slot>` var (`server.py:771`) — finding 2's
+     staleness, live in code.
 - [x] 3. ✅ [CODE] P0. Add the `/boot` read-confirmation gate — a worker cannot proceed to dispatch until it confirms
      (via `/boot`) it has READ its role file + RULES.md. Restores the in-context guarantee the paste gave for free.
 - [x] 10. ✅ [CODE] P1. Diagnose-on-boot-timeout + alert-at-cap — agent-orchestrator@3f1d0ef09.

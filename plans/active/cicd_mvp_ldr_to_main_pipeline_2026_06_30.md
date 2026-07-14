@@ -66,9 +66,14 @@ drift_direction: advance-code
 
 1. **SIT-green** — the cross-repo SIT suite validated this repo's LDR tree (`full-workspace-sit` on the promoted
    content). ✅ 2026-07-12 (finding 78): SIT-green is now an ENFORCED required check on every `ldr_main` repo's LDR→main
-   promote PR — closes the 2026-07-07/08 incident gap (a promote proceeded while SIT was red because the per-repo
-   breaking-change SIT gate only ever consulted SIT for a BREAKING/unknown delta; a non-breaking delta, the common case,
-   never checked SIT at all). See the DONE P1 todo below for the mechanism + fleet proof.
+   promote PR (was: "closes the 2026-07-07/08 incident gap" outright — **narrowed 2026-07-14, finding 199**: this closes
+   only the Layer-1 half of that incident — the gate now fires unconditionally instead of only consulting SIT for a
+   BREAKING/unknown delta. It does NOT close Layer-2: on the actual 2026-07-07/08 incident, `full-workspace-sit` itself
+   ran green due to a separate SIT test-coverage gap [no test re-derives IS's expected-universe from the live UAC
+   registry], so this exact break class would still slip through even with SIT-green unconditionally enforced. Layer-2
+   remains open, unresolved, all todos unchecked, per
+   `issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`). See the DONE P1 todo below for the
+   Layer-1 mechanism + fleet proof.
 2. **quality-gates-v2** — the required check on the promote PR (per-repo correctness).
 3. **quickmerge-provenance** — only quickmerge'd content reaches main (already enforced on the LDR side).
 
@@ -208,6 +213,14 @@ Phase 1:
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
       dispatch from quickmerge when content lands on a repo's LDR. The fleet still drains, just on a 30–90 min cadence.
+- [ ] [CICD] P1. **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops on a
+      new-file-only ship — `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints "No
+      differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
+      guard (`git diff origin/main`, worktree-vs-commit) does not see untracked files (unlike the clean-tree guard
+      elsewhere, which correctly uses `git status --porcelain`). Full repro + root cause + recommended fix:
+      `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (re-verified still-live 2026-07-12, current
+      `quickmerge.sh` ~line 1188). This plan claims sole SSOT status for the pipeline/quickmerge area, so this bug is
+      recorded here as the tracking home; fix not yet implemented.
 - [x] [CICD] P1. ✅ **YAML-valid gate now fleet-wide, single-source** — moved the invocation from PM's repo-specific
       `quality-gates.sh` into the shared `base-service.sh` (referencing the ONE PM-hosted checker via `WORKSPACE_ROOT`),
       so every repo validates its own `.github/workflows` with zero per-repo copies. PM@`44280bb3` (LDR; live for all
