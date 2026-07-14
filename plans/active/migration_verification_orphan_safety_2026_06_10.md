@@ -726,9 +726,20 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       concurrency / larger VM" — stale.) Corrected per operator ruling 2026-07-12, plan-reconciliation finding 128
       (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2).
 - [ ] [DATA] P1. **RESUME runbook (48 paused GCP schedulers + 26 AWS rules) un-pause** — runs ONLY after TradFi G4 also
-      verified; that precondition is now MET (2026-07-12). Owning todo tracked in
-      `tradfi_v9_stage1_finish_2026_07_06.md` (added this edit, plan-reconciliation finding 128). Fleet drained +
-      `pre_migration` snapshot in place; AG-by-AG, operator OK between each.
+      verified; that precondition is now MET (2026-07-12). **CORRECTED 2026-07-14 (doc-reconciliation verify-rerun-2,
+      finding 154): the runbook's own precondition text
+      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"RESUME runbook") requires TWO conditions, not
+      one — "every AG `--apply` complete + verified" AND "the new manifests are consolidated". Only the FIRST is met (G4
+      verified all 5 AGs); the SECOND is NOT met for tradfi** (a 13,971-row / 0.27% v4 schema/`pipeline_mode`/`source`
+      tail from an actively-running backfill fleet — see `tradfi_v9_stage1_finish_2026_07_06.md`'s own RESUME-runbook
+      todo, which stays `BLOCKED-PREREQUISITES` for exactly this reason, sequenced after the fleet-drain + re-stamp
+      task). (was: "that precondition is now MET (2026-07-12)" without qualification — accurate for the G4-verified
+      precondition alone, but read in isolation it overstates overall runbook readiness.) **Do not run the RESUME
+      runbook until tradfi's fleet-drain + re-stamp closes** — cefi/defi/sports/pred are not separately confirmed clean
+      on the "consolidated" precondition either (no fresh audit found either way beyond tradfi's), so treat fleet-wide
+      readiness as unconfirmed, not just tradfi-gated. Owning todo tracked in `tradfi_v9_stage1_finish_2026_07_06.md`
+      (added this edit, plan-reconciliation finding 128). Fleet drained + `pre_migration` snapshot in place; AG-by-AG,
+      operator OK between each.
 - [x] ✅ [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness — DONE (data-grounded).** — uac@f8fb613 (QG-green
       212s, 69 tests). Enumerated ALL declared-but-uncapabilitied defi venues: 19 of 124 `ALL_DEFI_VENUES` lacked a
       capability entry; cross-referenced `DEFI_VENUE_PHASE` + the prod `projected_index_defi.parquet` (1.58M rows) for
