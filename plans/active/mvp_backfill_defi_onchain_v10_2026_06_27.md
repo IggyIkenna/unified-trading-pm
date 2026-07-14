@@ -271,40 +271,40 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
           and the VM relaunch remain.
 
           **VERIFICATION 2026-07-14 13:15Z (data_engineering slot-2) — fleet did NOT drain, gate NOT met.** Ran this
-                                                                          todo's own checklist: (1) FALSE — neither walker reached its `--back-to` floor. Both
-                                                                          (`mtds-drift-sig-walker-resume-20260714-123928`, `mtds-drift-sig-walker-gap-20260714-123952`) exhausted 5
-                                                                          Helius 429 retries on page 1 within ~1-15 min of launch, logged `"Walk complete: 0 new sigs"` (a
-                                                                          false-positive — see the code-defect fix below), exited 0, and self-deleted; zero parts written to either
-                                                                          `_parts/` or `_parts_gap/` (confirmed via `aggregated_list_instances` — both VMs gone entirely, not merely
-                                                                          TERMINATED — and `gs://deployment-scripts-.../vm-logs/<vm>/run.log` for both). This is NOT a SPOT preemption
-                                                                          (sub-item 2 doesn't apply) — the Helius API key shared by all 3 fleet VMs is saturated/exhausted, exactly
-                                                                          the scenario this todo's own inline warning anticipated. (3) N/A — no new indexing happened, nothing to
-                                                                          re-run the backfill VM against. (4) FALSE — `measure_honest_coverage.py --asset-group defi` (2026-07-14
-                                                                          13:13Z): DRIFT perp_funding `captured=8, empty_confirmed=1816, attempted_failed=39,
-                                                                          expected_unattempted=0` (17.02% coverage_pct / 0.43% all_shards_coverage_pct) — `attempted_failed` is NOT 0.
-                                                                          **Code-defect fix shipped: `market-tick-data-service@e4c04c64`** —
-                                                                          `_walk_signatures_chunked` returned the identical `(0 sigs, 0 parts)` tuple whether the walk genuinely
-                                                                          reached its floor OR retry-exhausted on page 1 (both logged as "Walk complete"), silently masking the
-                                                                          failure as success; now returns a `retry_exhausted` flag and `_async_main` exits 1 + logs ERROR on
-                                                                          saturation instead. 3 new unit tests (genuine-empty-page vs retry-exhaustion vs partial-batch-flush-on-abort),
-                                                                          33/33 green, QG sentinel `e4c04c64`.
+                                                                              todo's own checklist: (1) FALSE — neither walker reached its `--back-to` floor. Both
+                                                                              (`mtds-drift-sig-walker-resume-20260714-123928`, `mtds-drift-sig-walker-gap-20260714-123952`) exhausted 5
+                                                                              Helius 429 retries on page 1 within ~1-15 min of launch, logged `"Walk complete: 0 new sigs"` (a
+                                                                              false-positive — see the code-defect fix below), exited 0, and self-deleted; zero parts written to either
+                                                                              `_parts/` or `_parts_gap/` (confirmed via `aggregated_list_instances` — both VMs gone entirely, not merely
+                                                                              TERMINATED — and `gs://deployment-scripts-.../vm-logs/<vm>/run.log` for both). This is NOT a SPOT preemption
+                                                                              (sub-item 2 doesn't apply) — the Helius API key shared by all 3 fleet VMs is saturated/exhausted, exactly
+                                                                              the scenario this todo's own inline warning anticipated. (3) N/A — no new indexing happened, nothing to
+                                                                              re-run the backfill VM against. (4) FALSE — `measure_honest_coverage.py --asset-group defi` (2026-07-14
+                                                                              13:13Z): DRIFT perp_funding `captured=8, empty_confirmed=1816, attempted_failed=39,
+                                                                              expected_unattempted=0` (17.02% coverage_pct / 0.43% all_shards_coverage_pct) — `attempted_failed` is NOT 0.
+                                                                              **Code-defect fix shipped: `market-tick-data-service@e4c04c64`** —
+                                                                              `_walk_signatures_chunked` returned the identical `(0 sigs, 0 parts)` tuple whether the walk genuinely
+                                                                              reached its floor OR retry-exhausted on page 1 (both logged as "Walk complete"), silently masking the
+                                                                              failure as success; now returns a `retry_exhausted` flag and `_async_main` exits 1 + logs ERROR on
+                                                                              saturation instead. 3 new unit tests (genuine-empty-page vs retry-exhaustion vs partial-batch-flush-on-abort),
+                                                                              33/33 green, QG sentinel `e4c04c64`.
 
-                                                                          **BLOCKED-OPERATOR-DECISION (2026-07-14, slot-2):** the still-running `mtds-solana-drift-backfill` VM is
-                                                                          ALSO absorbing 429s (557+ so far) but surviving via a longer per-batch retry budget — it is consuming
-                                                                          Helius-key headroom that starved both walkers on their very first request. Options: **(A)** stop
-                                                                          `mtds-solana-drift-backfill` temporarily, relaunch the 2 walkers alone (no contention) with the SAME
-                                                                          launcher args (`--resume` picks up from 0 parts = fresh start, no data lost), then re-launch the backfill
-                                                                          VM once the sig-index gap is filled; **(B)** request a higher-tier/higher-rate-limit Helius API key/plan
-                                                                          before relaunching anything; **(C)** leave the backfill VM running (it IS making genuine progress through
-                                                                          Dec 2025 despite 429s) and accept the sig-index gap (2025-01-15→2025-12-23) will not be built — the backfill
-                                                                          VM's own fallback will keep recording `empty_confirmed`/`SOURCE_RETURNED_ZERO` for those dates via the
-                                                                          parts-only index (7169 parts, pre-existing), which is a DATA-CORRECTNESS RISK worth flagging separately:
-                                                                          Drift V2 has been an actively-traded perp market throughout 2025, so "0 sigs in window" for that gap may be
-                                                                          an artifact of missing sig-index coverage, not genuine inactivity — needs verification once/if the gap is
-                                                                          properly indexed. **Recommendation: (A)** — the walkers are cheap or free to retry from scratch (no parts
-                                                                          lost) and removing the backfill VM's contention gives them a real chance to actually build the index;
-                                                                          revisit whether (B) is needed only if (A) still saturates. Repos: `deployment-service`,
-                                                                          `market-tick-data-service`, `instruments-service`.
+                                                                              **BLOCKED-OPERATOR-DECISION (2026-07-14, slot-2):** the still-running `mtds-solana-drift-backfill` VM is
+                                                                              ALSO absorbing 429s (557+ so far) but surviving via a longer per-batch retry budget — it is consuming
+                                                                              Helius-key headroom that starved both walkers on their very first request. Options: **(A)** stop
+                                                                              `mtds-solana-drift-backfill` temporarily, relaunch the 2 walkers alone (no contention) with the SAME
+                                                                              launcher args (`--resume` picks up from 0 parts = fresh start, no data lost), then re-launch the backfill
+                                                                              VM once the sig-index gap is filled; **(B)** request a higher-tier/higher-rate-limit Helius API key/plan
+                                                                              before relaunching anything; **(C)** leave the backfill VM running (it IS making genuine progress through
+                                                                              Dec 2025 despite 429s) and accept the sig-index gap (2025-01-15→2025-12-23) will not be built — the backfill
+                                                                              VM's own fallback will keep recording `empty_confirmed`/`SOURCE_RETURNED_ZERO` for those dates via the
+                                                                              parts-only index (7169 parts, pre-existing), which is a DATA-CORRECTNESS RISK worth flagging separately:
+                                                                              Drift V2 has been an actively-traded perp market throughout 2025, so "0 sigs in window" for that gap may be
+                                                                              an artifact of missing sig-index coverage, not genuine inactivity — needs verification once/if the gap is
+                                                                              properly indexed. **Recommendation: (A)** — the walkers are cheap or free to retry from scratch (no parts
+                                                                              lost) and removing the backfill VM's contention gives them a real chance to actually build the index;
+                                                                              revisit whether (B) is needed only if (A) still saturates. Repos: `deployment-service`,
+                                                                              `market-tick-data-service`, `instruments-service`.
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
@@ -3024,3 +3024,67 @@ completes. **Todo sub-item 4** (honest-coverage gate) not re-run — no capture 
 newly-indexed range (that requires the backfill VM to actually process 2025-01-15→2025-12-23, which hasn't started).
 Checkbox NOT flipped — sub-items 1 and 4 remain unmet. Continuing to hold this todo per operator direction; next watch
 cycle narrows focus to the resume walker (now the sole gating segment) and the backfill VM's progress.
+
+### G2 final verification run (2026-07-14 18:10-18:35Z, data_engineering slot-16) — GATE NOT MET, checkbox NOT flipped
+
+Ran this todo's own checklist fresh (no reliance on stale numbers):
+`python scripts/measure_honest_coverage.py --asset-group defi` (instruments-service, 18:10-18:12Z; manifest
+`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 27,445,013 rows,
+`blob.updated=2026-07-14T12:56:34Z`).
+
+**Overall defi: 19.71% honest coverage** (captured=3,010,913 / reachable=15,277,756; `all_shards_coverage_pct=10.97%`).
+Tool's own caveat: `denominator_status: INCOMPLETE` — Layer-1 catalogue alignment is only 86.21% (EXPECTED=87,
+ENUMERATED=244, matched=75, missing=12, stray=169 post-align) and "MERGE DISABLED for defi: legacy bucket(s) unreachable
+(`market-data-tick-defi-central-element-323112`), expected_unattempted skeleton may be incomplete" — so these numbers
+are a **lower bound**, not necessarily the full picture.
+
+**Per-data_type aggregate (summed across all venues, `by_venue_data_type` in the coverage JSON) — Gate =
+`attempted_failed=0 AND expected_unattempted=0`:**
+
+| data_type       | captured  | attempted_failed | expected_unattempted | gate |
+| --------------- | --------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 1,580,941 | 2,109            | 2,305,986            | FAIL |
+| dex_pool_swaps  | 642,747   | 21,624           | 3,928,084            | FAIL |
+| lending_indices | 133,695   | 1,010            | 606,864              | FAIL |
+| lst_rates       | 14,979    | 851              | 12,392               | FAIL |
+| oracle_prices   | 29,884    | 873              | 209,934              | FAIL |
+| perp_funding    | 3,365     | 214              | 81,724               | FAIL |
+
+**All 6 MVP data_types FAIL the gate** — this is not close; `expected_unattempted` alone totals ~7.1M rows across the 6
+types, with the largest single contributors being `UNISWAP_V3` (`dex_pool_swaps` expected_unattempted=1,631,694;
+`dex_pool_state` expected_unattempted=669,447), `BALANCER` (`dex_pool_swaps`=954,070), `MORPHO`
+(`lending_indices`=416,522), and the Solana REST-only venues `ORCA`/`RAYDIUM`/`KAMINO`/`TRADER_JOE_V2`/`VELODROME_V2` (0
+captured each, still draining per the `mtds-solana-defi-backfill` VM launched in G1.6 — see that section; a
+single-day-run VM against a multi-year window cannot close a multi-million-row gap in one pass, more waves needed).
+DRIFT perp_funding specifically: `captured=8, attempted_failed=39, expected_unattempted=51,301` — **NOTE**: this
+`expected_unattempted` figure is materially different from the 13:15Z banner's `expected_unattempted=0` claim for the
+same cell; not reconciled in this pass (possible Layer-1 catalogue-expansion effect vs a real regression — flagged for
+whoever next touches G1.5, not chased down here to keep this verification task in scope).
+
+Also ran the phantom-reconcile dry-run directly
+(`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`, required
+`GCP_PROJECT_ID=central-element-323112` in-shell — bucket-name template resolution needs it and it isn't set in this
+agent sandbox by default) — launched at 18:32Z, still running a full-manifest load (27M rows) as of this writing; result
+to follow in a subsequent Progress Log entry once it completes (single-walk discipline: not re-running this again once
+done, and not blocking this checkbox decision on it since the primary coverage gate above already fails by orders of
+magnitude regardless of the phantom count).
+
+**Fleet status cross-check** (GCS heartbeat blobs, since `gcloud`/`gsutil` CLI are unavailable in this sandbox —
+snap-confine blocked — used the `google.cloud.storage` Python client directly):
+`mtds-drift-sig-walker-resume-20260714-134435` and `mtds-solana-drift-backfill` heartbeats fresh at 18:34:58-59Z (both
+still RUNNING); `mtds-drift-sig-walker-gap-20260714-134501` heartbeat stale since 17:35:33Z, consistent with this plan's
+own 17:44Z note that the gap walker already reached its floor and self-deleted. No fleet action taken — backfill is
+progressing per the existing watch cadence, nothing here changes that.
+
+**Two tooling defects found and NOT fixed inline (out of this task's scope, filed as their own issue)**: (1) running the
+audit orchestrator `e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group defi --mode full` almost clobbered
+the ALREADY-RESOLVED `plans/active/issues/manifest_hygiene_red_2026_07_14.md` (a same-day `cefi`-only run by another
+slot) — the escalation-issue filename is date-keyed only, not asset_group-keyed; caught via `git diff` before it
+committed, restored via `git restore`, nothing lost. (2) that same run's internal phantom-reconcile subprocess call
+failed on the same missing-`GCP_PROJECT_ID` issue and was mis-recorded as a genuine
+`phantom_captured_no_parquet: count=1` finding instead of a harness error. Both filed as P2 actionable todos in
+`issues/manifest_hygiene_daily_tooling_defects_2026_07_14.md` (repo: e2e-testing).
+
+**Verdict: G2 gate NOT met for any of the 6 MVP data_types. Checkbox NOT flipped.** This is expected given the backfill
+fleet (G1/G1.5/G1.6) is still actively draining multi-year, multi-venue history — re-run this same verification once the
+fleet reports all VMs TERMINATED/complete rather than RUNNING.
