@@ -103,27 +103,45 @@ TYPE CHECK) and releases after.
 
 **Budgets:**
 
-- `RAM_BUDGET = min(QG_MEM_SAFETY_FRAC × MemTotal, MemAvailable − QG_MEM_FLOOR)` — `SAFETY_FRAC` default **0.70**
-  (operator-specified); `MEM_FLOOR` reserves OS + orchestrator + interactive headroom (default
+- `QG_RAM_BUDGET = QG_MEM_SAFETY_FRAC × MemTotal` — the ceiling on the SUM of in-flight QG peak reservations (STATIC;
+  `SAFETY_FRAC` default **0.70**, operator-specified). Bounds QG's own total footprint.
+- `QG_MEM_FLOOR` — live-availability floor reserving OS + orchestrator + interactive headroom (default
   `max(2 GB, 0.1 × MemTotal)`; Mac skews higher).
 - `CPU_SLOTS = max(1, floor(cores × QG_CPU_FRAC))` — `CPU_FRAC` default ~**0.80** (leave cores for the orchestrator +
   interactive). One `PYTEST_WORKERS=1` run ≈ 1–1.5 cores at peak, so a count-based slot ≈ cores works for v1; a per-repo
   `cpu_weight = ceil(cpu_s / wall_s)` refinement is optional.
 
-**Admission (BOTH must hold), under a flock:**
+**Admission (ALL must hold) — the check-and-reserve is ATOMIC under one flock, so N simultaneous acquirers serialize
+instead of all-admitting:**
 
-1. RAM: `reserved_rss + this_repo_rss ≤ RAM_BUDGET`
-2. CPU: `running_heavy_count + 1 ≤ CPU_SLOTS`
+1. **RAM reservation bound** (pure ledger): `sum_reserved_peak + this_repo_peak ≤ QG_RAM_BUDGET`. This is what stops 6
+   UTL runs (6 × 5.5 = 33 GB) from stacking — each admitted run's peak is reserved, so the run that would exceed the
+   budget queues instead.
+2. **Live-availability backstop** (pure live reading): `MemAvailable ≥ this_repo_peak + QG_MEM_FLOOR`. Ensures free RAM
+   actually exists NOW for this run to climb into — catches memory pressure from NON-QG sources (orchestrator, OS, other
+   processes) the ledger can't see, and the "host already 50 % used" case.
+3. **CPU**: `running_heavy_count + 1 ≤ CPU_SLOTS`.
+
+**Two INDEPENDENT memory clauses, never a single `min()`.** Clause 1 is pure-ledger (bounds QG's own stack); clause 2 is
+pure-live (bounds external pressure + climb headroom). Folding them into `min(frac×MemTotal, MemAvailable − floor)`
+DOUBLE-COUNTS in-flight QG memory — a climbing run appears in BOTH the shrinking `MemAvailable` AND the reservation sum
+— which blocks admits far too early. Separate clauses guard the two distinct failure modes without double-counting.
+
+**Worked example — 6 agents QG UTL, host already 50 % used (61 GB / 16-core):** `QG_RAM_BUDGET` = 0.7 × 61 = 43 GB;
+`MemAvailable` ≈ 30 GB; `FLOOR` ≈ 6 GB. Acquires serialize under the flock: run 1 reserves 5.5 GB (sum 5.5 ≤ 43 ✓,
+MemAvail 30 ≥ 11.5 ✓), run 2 → 11, run 3 → 16.5 — but as they climb `MemAvailable` falls, so by ~run 3–4 the LIVE clause
+(`MemAvailable ≥ 11.5`) blocks further admits even though the reservation clause alone would allow ~7. ~3–4 UTL runs
+admit, the rest QUEUE (FIFO, with aging). No OOM. On an idle 61 GB host the same math admits ~7; on a 24 GB Mac, ~1–2.
 
 **Reservation ledger** (replaces the K flock tokens): a flock-protected record of `{pid, repo, rss_mb, ts}` per
 in-flight heavy phase. On admit → append; on release/exit → remove. **PID-liveness sweep** on every admission attempt
 prunes dead PIDs' reservations (crash-safe — a killed QG can't leak its reservation; replaces the old flock-auto-release
 guarantee).
 
-**Oversize-solo escape (critical for small hosts):** if `this_repo_rss > RAM_BUDGET` (e.g. UTL 5.5 GB on an 8 GB host
-where budget ≈ 3.6 GB), the run must **wait until `reserved_rss == 0` then run SOLO** and log LOUDLY that the host is
-undersized for this repo (it will swap — accept or resize). Without this the run waits forever for budget that never
-exists → deadlock.
+**Oversize-solo escape (critical for small hosts):** if `this_repo_peak > QG_RAM_BUDGET` (e.g. UTL 5.5 GB on an 8 GB
+host where budget ≈ 5.6 GB and the live-floor clause can never be met alongside anything else), the run must **wait
+until `sum_reserved_peak == 0` then run SOLO** and log LOUDLY that the host is undersized for this repo (it will swap —
+accept or resize). Without this the run waits forever for budget that never exists → deadlock.
 
 **Fairness / anti-starvation:** current governor has no ordering (20 waiters free-for-all the same `flock -n`). On a
 small host a heavy repo (UTL) can be starved by a stream of light runs slipping into the leftover headroom. Add a FIFO
@@ -183,11 +201,13 @@ Same code, same config defaults — each host self-tunes from its own `MemTotal`
 
 - [ ] [INFRA] P1. Replace the K-token flock bucket with a reservation ledger (flock-protected; per-PID reservation files
       or a locked JSON) + PID-liveness sweep pruning dead reservations.
-- [ ] [INFRA] P1. RAM gate — `reserved_rss + this_repo_rss ≤ RAM_BUDGET`; per-repo RSS from the canonical baseline;
-      unmeasured → conservative default.
+- [ ] [INFRA] P1. RAM gate — TWO independent clauses (never a single `min()`): (1) reservation bound
+      `sum_reserved_peak + this_repo_peak ≤ QG_RAM_BUDGET` (caps stacking of same/mixed heavy repos — the 6×UTL case);
+      (2) live backstop `MemAvailable ≥ this_repo_peak + QG_MEM_FLOOR` (external pressure + climb headroom). Per-repo
+      peak from the canonical baseline; unmeasured → conservative default. Check-and-reserve ATOMIC under one flock.
 - [ ] [INFRA] P1. CPU gate — `running_heavy_count + 1 ≤ floor(cores × QG_CPU_FRAC)`.
-- [ ] [INFRA] P0. Oversize-solo escape — a repo whose RSS > RAM_BUDGET waits for `reserved==0` then runs SOLO + LOUD
-      undersized-host warning (prevents the 8 GB-host deadlock).
+- [ ] [INFRA] P0. Oversize-solo escape — a repo whose peak > `QG_RAM_BUDGET` (or can't meet the live clause beside
+      anything) waits for `sum_reserved_peak==0` then runs SOLO + LOUD undersized-host warning (prevents 8 GB deadlock).
 - [ ] [INFRA] P2. Light-slice bypass — only TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
 - [ ] [INFRA] P2. Env knobs — `QG_MEM_SAFETY_FRAC` (0.70) / `QG_MEM_FLOOR_GB` / `QG_CPU_FRAC` (0.80) /
       `QG_HOST_CONCURRENCY` demoted to an OPTIONAL hard-cap override (no longer the primary control).
@@ -232,6 +252,13 @@ Same code, same config defaults — each host self-tunes from its own `MemTotal`
   GB host all-at-once = 29 GB ≪ 43 GB ceiling (RAM not binding — CPU is); fleet `PYTEST_WORKERS=1`.
 - Operator decisions (2026-07-14): human-driven plan; raise K now as interim quick-win (Phase 1), gated on the
   2026-05-29 repro re-verify.
+- **Design refinement (operator review — same/mixed-repo stacking, e.g. 6 agents QG UTL on a half-full host):** the RAM
+  gate is now TWO independent clauses, not the single `min()` first drafted. Clause 1 (reservation-sum ≤
+  `QG_RAM_BUDGET`) caps stacking of concurrent heavy runs via the ledger; clause 2 (`MemAvailable ≥ this_peak + FLOOR`)
+  catches non-QG pressure + climb headroom. The single-`min()` form double-counted in-flight QG memory (present in both
+  the shrinking `MemAvailable` AND the reservation sum) and would have blocked admits too early. Check-and-reserve is
+  atomic under one flock so N simultaneous acquirers serialize. Worked example (6×UTL, 50 %-used 61 GB → ~3–4 admit,
+  rest queue) added to the design section.
 
 ## Deferred / open decisions
 
