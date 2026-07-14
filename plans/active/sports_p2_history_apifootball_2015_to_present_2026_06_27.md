@@ -1129,3 +1129,27 @@ NOT hand-edited; the parser re-derives from this plan's todos.
 - **Next after fleet completes**: rerun `launch-sports-manifest-rescan-vm.sh` (materialise `empty_confirmed` for
   no-enrichment cells), then the GW gate query in Todo 9, then the follow-on todos (full-history phase → features
   recompute → ML re-verify).
+
+### 2026-07-14T11:40Z — session 21 (data_engineering slot-7): T+25min health check — genuine forward progress confirmed, still in-flight
+
+Picked up this task via the queue; nothing new to launch (session 20's scoping + fleet launch is correct and complete)
+so this check confirms the fleet is healthy, not stalled, before handing off — no code/config change needed this
+session. Compared against session 20's own T+10min (11:29:13Z) checkpoint:
+
+| VM (entity)            |       T+10min (11:29Z) | T+25min (11:40Z, this check) | log lines (10min→25min) |
+| ---------------------- | ---------------------: | ---------------------------: | ----------------------: |
+| 111307 FIXTURE_EVENTS  | 2025-09-21 (day 21/91) |       2025-09-30 (day 30/91) |           1,438 → 2,387 |
+| 111346 FIXTURE_LINEUPS | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,050 → 2,078 |
+| 111414 FIXTURE_STATS   | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,054 → 1,930 |
+| 111447 PLAYER_STATS    | 2025-09-13 (day 13/91) |       2025-09-20 (day 20/91) |           1,052 → 1,929 |
+| 111518 INJURIES        |  2025-09-08 (day 8/91) |       2025-10-28 (day 58/91) |             838 → 1,887 |
+
+All 5 `gcloud compute instances list` STILL RUNNING; zero Tracebacks/ERRORs in any `run.log` tail; INJURIES is per-date
+(not per-fixture) so it's moving much faster (58/91 = 64%) than the 4 per-fixture entities (~20-33%, on pace with
+session 20's own ~1-1.5h/VM ETA estimate). **Not fire-and-forget** — this is a real, evidenced re-check, not a status
+assumption. **Nothing actionable right now**: the GW gate query (Todo 9's own gate) and the manifest-rescan relaunch
+both depend on the fleet finishing (~35-65 more minutes at the observed per-entity pace), and session 20 already
+scoped + launched correctly — there is no bug to fix or launch to make until then. Checkbox NOT flipped (gate correctly
+not met yet). Handing off with the fleet verified healthy and progressing; next session should re-check
+`gcloud compute instances list --filter='name~af-backfill'` — once all 5 have self-deleted
+(`VM_SHUTDOWN_ON_COMPLETION=true`), run the manifest-rescan + GW gate query per session 20's own next-step note above.
