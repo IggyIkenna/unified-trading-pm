@@ -71,10 +71,10 @@ Verified from code (no changes made — diagnosis only):
    actually catches the repeat (this is not a hashing bug; the identity-hash would correctly collapse two
    truly-simultaneous fires — it is a pure TTL-vs-cadence mismatch, same failure class the codex-cited CI-alerting rule
    was written to prevent: _"cooldowns track a condition's MEASURED cadence, not its declared cron"_).
-4. _*The codex-documented "incident gateway # dedup/ack/re-nag/recovery-verify (CRITICAL only)"
+4. _\*The codex-documented "incident gateway # dedup/ack/re-nag/recovery-verify (CRITICAL only)"
    (`alerting-service/alerting_service/gateway/*`, e.g. `gateway/dedup.py`'s `compute_incident_key`, 5-min window) is
-   real, wired code — but it is NOT in the DP_* code path._* `_route_data_pipeline_event` (router.py:357-397) mirrors to
-   Slack + fires PagerDuty/Telegram directly and returns; the gateway machinery (`wrap_legacy_alert` /
+   real, wired code — but it is NOT in the DP_* code path._\* `_route_data_pipeline_event` (router.py:357-397) mirrors
+   to Slack + fires PagerDuty/Telegram directly and returns; the gateway machinery (`wrap_legacy_alert` /
    `IncidentStateMachine` / `RecoveryVerifier`) is only reached via the separate `route_legacy_alert()` →
    `route_incident()` path (router.py:996-1009), keyed on
    `service/component/problem_type/strategy_id/venue/instrument_id` — a scope tuple that has no `asset_group`/
@@ -120,10 +120,11 @@ finding.
 
 ## Open work (tracked todos)
 
-- [ ] [CODE] P1. `alerting-service`: add a cadence-aware cooldown for `DP_RUN_MOSTLY_EMPTY` (and audit the rest of the
+- [x] [CODE] P1. `alerting-service`: add a cadence-aware cooldown for `DP_RUN_MOSTLY_EMPTY` (and audit the rest of the
       CRITICAL DP-\* family for the same "re-scanned every tick, no ongoing suppression" shape — e.g. any future
       manifest-scan-derived CRITICAL alert) per fix #1 above; +regression test asserting two identical
-      `DP_RUN_MOSTLY_EMPTY` fires 900s apart collapse to one delivered alert.
+      `DP_RUN_MOSTLY_EMPTY` fires 900s apart collapse to one delivered alert. —
+      `alerting-service@fe76ded34a46f0cfa880c563fe462c155d50809f`
 - [ ] [CODE] P2. `deployment-service`: add a persisted re-nag interval to `check_high_attempted_failed` per fix #2
       (defense-in-depth, source-side fix independent of the alerting-service cooldown table).
 - [x] [DOCS] P2. Correct/update the incident-gateway wiring claim in `codex/05-infrastructure/data-pipeline-alerts.md`
@@ -138,3 +139,18 @@ finding.
   (deployment-service) dispatched to parallel sub-agents in the same session, tracked in
   `plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md`. Fix #3 (this doc's docs todo) done directly in
   this commit.
+- 2026-07-15: Fix #1 shipped — `alerting-service@fe76ded34a46f0cfa880c563fe462c155d50809f`. Replaced
+  `_RECURRING_WARN_EVENTS: frozenset[str]` (`router.py`) with `_RECURRING_ALERT_COOLDOWNS: dict[str, float]` (event →
+  cooldown seconds), preserving `DP_VM_STALL`/`DP_EVENT_LOOP_STARVED` at 1800.0s and adding
+  `"DP_RUN_MOSTLY_EMPTY": 1800.0` (≥ the 900s meta-sweep cadence). `_dedup_window_for()` now does a plain dict lookup
+  (`.get(event_name)`); the "CRITICAL events intentionally NOT here" comment was rewritten to state the real criterion —
+  a CRITICAL event opts in only when its condition is a static, re-scanned-every-tick signal (not a flappy one-shot)
+  with a cooldown ≥ its detector's measured cadence, so it still re-nags/pages every cooldown window while unresolved,
+  it just stops literally duplicating every tick. Added a route_event-level regression test
+  (`tests/unit/rules/test_data_pipeline_rules.py::TestRouteEventDataPipeline::test_dp_run_mostly_empty_collapses_across_meta_sweep_cadence`)
+  asserting two identical `DP_RUN_MOSTLY_EMPTY` fires 900s apart collapse to one delivered alert (mirror + PagerDuty/
+  Telegram page both fire once) and a third fire at 1801s IS delivered again (re-nag boundary), plus a
+  `_dedup_window_for("DP_RUN_MOSTLY_EMPTY") == 1800.0` unit assertion in `tests/unit/notifiers/test_router.py`. Full
+  `quality-gates.sh --no-fix` green (tests + basedpyright + codex compliance); shipped via quickmerge --agent scoped to
+  the 3 touched files. Did not touch todo 2 (deployment-service) — being handled by a parallel agent per this doc's
+  Progress Log above.
