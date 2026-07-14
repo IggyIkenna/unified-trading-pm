@@ -593,9 +593,13 @@ resume Phase 3 (+ 6/7) without re-discovering it.
   `127.0.0.1:8765`.
 - **Test fast**: `cd agent-orchestrator && .venv/bin/python -m pytest tests/<file> -q`. **Full gate before quickmerge**:
   `bash scripts/quality-gates.sh` (records a green-SENTINEL tied to HEAD + files).
-- **Ship**: `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'` → lands on LDR (AO is **staging-first**: Tier-C
-  drain promotes LDR→staging, v2-gated — NOT direct-to-main like PM). Plan flips = `docs(plans):` direct push
-  (carve-out). Commit identity on this host = `harshkantariya [main·harsh_pc]`.
+- **Ship**: `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'` → lands on LDR (was: "AO is **staging-first**:
+  Tier-C drain promotes LDR→staging, v2-gated — NOT direct-to-main like PM"; **corrected 2026-07-14, finding 200**: per
+  `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` [the pipeline SSOT], staging is DORMANT fleet-wide as of the
+  2026-06-30/07-12 MVP switch and agent-orchestrator is a normal `ldr_main` repo — the drain promotes LDR→main DIRECT,
+  v2-gated, same as PM; this section's older historical "staging-first" ship-log entries below reflect the
+  pre-MVP-switch mechanism and are not the current path). Plan flips = `docs(plans):` direct push (carve-out). Commit
+  identity on this host = `harshkantariya [main·harsh_pc]`.
 
 ### Shipping gotchas hit this session (save the re-discovery)
 
