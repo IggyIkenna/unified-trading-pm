@@ -109,9 +109,19 @@ diverged / detached").
 
 ## Todos
 
-- [ ] [INFRA] P1. Identify the process doing `checkout -B <branch> origin/<branch>` against per-slot worktrees
-      mid-session and fix its ahead/diverged detection so it never discards local commits (repo: agent-orchestrator or
-      unified-trading-pm scripts, TBD once identified).
+- [x] ✅ [INFRA] P1. Identify the process doing `checkout -B <branch> origin/<branch>` against per-slot worktrees
+      mid-session and fix its ahead/diverged detection so it never discards local commits — DONE via the superseding
+      master doc `slot11_silent_branch_reset_data_loss_2026_07_13.md` UPDATE 7 + todos 1/2. Root cause:
+      `heal_dead_slot_branch_quarantine()` (`agent-orchestrator/server/worktree_clean_check/_branch_state.py`) issuing
+      `git checkout -B <base> origin/<base>` — empirically the exact `branch: Reset to origin/<base>` reflog signature
+      this doc reported (its code comment falsely claimed the form was reflog-silent). Fix shipped
+      `agent-orchestrator@911036c4`: `_MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN = 900` recent-commit guard
+      (`_branch_state.py:383`, param `min_ahead_age_seconds`) — refuses to touch (genuine no-op, leaves quarantined for
+      the `_alert_branch_quarantine` human-page path) any stop-state repo whose HEAD commit is younger than 15 min, so a
+      live/heartbeating worker with a stale claim file no longer has its fresh commit discarded. 2 unit tests, full
+      suite green. Verified 2026-07-14 (slot 4): guard present at `_branch_state.py:383,460-476` + `911036c4` is an
+      ancestor of `origin/live-defi-rollout`. (Todo 2 below — the backward-HEAD-movement canary/alert — is a separate
+      P2, not yet done.)
 - [ ] [INFRA] P2. Add a canary/alert: if a slot's local HEAD for a repo the slot has an in-flight task on ever moves
       backward (loses a commit that was previously at HEAD) without the agent's own git action causing it, page — this
       class of failure is currently silent.
