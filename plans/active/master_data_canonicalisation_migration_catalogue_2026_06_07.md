@@ -558,15 +558,18 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
 
 ### Ratification todos (the dispatch — owners per slot map)
 
-- [x] ✅ [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** — **E==0 +
-      unknown_prefixes==0 GREEN on all four hive AGs 2026-06-11 ~14:32Z** (defi/cefi/prediction/tradfi; sports = R8).
+- [x] ✅ [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→`record_captured` backfill** — **E==0 +
+      `unknown_prefixes`==0 GREEN on all four hive AGs 2026-06-11 ~14:32Z** (defi/cefi/prediction/tradfi; sports = R8).
       Tool `backfill_orphan_class_e.py` (is@0a2e542 + c49d957 + row-key/parser/footer fixes through is@f73abe4+):
-      characterize→convert-to-v9→record*captured with per-cell sample-verify; headline: most E was matcher
+      characterize→convert-to-v9→`record_captured` with per-cell sample-verify; headline: most E was matcher
       false-positive (venue-spelling/grain — defi 254,984 ALL covered); real backfills = tradfi 15,694 converted,
-      prediction 7,462 converted, cefi 74,392 record-only; tbbo spec carries (uac@715e2ed lineage + ts_init/bid_size/
-      ask_size); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere — no loss). Full
-      narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
-      `\_index/audit/orphan_sweep*<ag>.parquet`+`orphan*backfill*<ag>.parquet`.
+      prediction 7,462 converted, cefi 74,392 record-only; tbbo spec carries (uac@715e2ed lineage +
+      `ts_init`/`bid_size`/ `ask_size`); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere —
+      no loss).
+
+      Full narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
+      `_index/audit/orphan_sweep_<ag>.parquet` + `orphan_backfill_<ag>.parquet`.
+
 - [x] ✅ [UAC] P0. **R2-schema — carry ALL dropped columns into v9** — **unified-api-contracts@715e2ed**: v9
       `SchemaSpec` registry extended so CF-18 is GREEN per AG — all 11 polymarket trades columns carried (amount, asset,
       conditionId→`condition_id`, outcomeIndex→`outcome_index`, transactionHash→`transaction_hash`,
@@ -581,7 +584,7 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       run)** — verdict packs in `plans/audit/results/r3_verdict_packs_2026_06_17/` (per-AG projected-v9 render + status
       distribution + `manifest_diff` report + verdict line; `manifest_diff_<ag>.json` + `analyze_diff.py` attached). All
       regenerated on HEAD vs the live 06-14 `_index`. **4/5 GREEN outright + prediction GREEN after a stale-projection
-      correction:** defi GREEN (cap 348K→440K, removed=39,867 = legacy `dex_swaps`→`swaps_ohlcv_<tf>` data*type
+      correction:** defi GREEN (cap 348K→440K, removed=39,867 = legacy `dex_swaps`→`swaps_ohlcv_<tf>` `data_type`
       supersession, 105 phantom downgrades; projection REGENERATED — defi rebuild changed mtds@89807b4) · cefi GREEN
       (cap 1.33M→2.49M CF-11 honest re-emit; removed=733 garbage venues 0-objects; 375 phantom) · tradfi GREEN (cap
       100K→902K legacy pre-hive parser; 2,902 phantom closed-market-day downgrades **spot-verified on HEAD**: CME
@@ -593,7 +596,7 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       M-COORD-7 corroborated GREEN (STEP 5.85 + AST = 0). **Operator clear to V6-eyeball + G4 --apply on ALL FIVE AGs.**
       Original "dev restart-deployment-stack render" is the operator's own live eyeball (recipe in the pack README;
       beta-blob projections live in GCS); the verdict packs embed the textual coverage render. mtds@df69ada · is/uac
-      HEAD · reports `\_index/audit/projected_index*_<ag>_.parquet`.
+      HEAD · reports `\_index/audit/projected_index\**<ag>\_.parquet`.
 - [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
@@ -1012,7 +1015,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > `data_type=options_chain` rows.
 
 > **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
-> `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
+> `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL `data_types` over
 > EVERY instrument with **no `(instrument_type × data_type)` validity filter and no bundle-grain handling**. cefi
 > ground-truth: options/futures are captured as per-underlying `options_chain`/`futures_chain` BUNDLES (~0 per-OPTION /
 > per-COMBO rows), yet the catalog has 72,156 OPTION + 17,472 COMBO → `OPTION/COMBO × 7 data_types` never match the
@@ -1020,21 +1023,21 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > `expected_unattempted` rows → distort the exact denominator G1 exists to make honest.** The dry-run caught it
 > pre-write. **This is the SAME root as slot-4's sports finding** (generic producer is fixture-grain, sports atom is
 > league-grain; prediction already solved it with a per-cqg granularity-aware producer). **Cross-AG**: the
-> `for dt in data_types` no-filter pattern is in EVERY
-> `\_enumerate_v2*\*`. **FIX (owner: slot-7 G1-foundation in instruments-service)**: the generic producer becomes instrument-shape-aware — `(instrument_type
-> ×
-> data_type)`validity filter + bundle-grain (mirror the prediction per-cqg producer); **each AG owner (slots 2-6) verifies their slice** before any G1.run apply-write. **Gates every AG's`--apply-write`seed** (a G1 prerequisite). Tracked: P0 in cefi plan + must land in`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
-> (central fix) + a verify-slice todo in each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be
-> AG-shape-aware, NOT one-size fan-out.
+> `for dt in data_types` no-filter pattern is in EVERY `_enumerate_v2_*`. **FIX (owner: slot-7 G1-foundation in
+> instruments-service)**: the generic producer becomes instrument-shape-aware — `(instrument_type × data_type)` validity
+> filter + bundle-grain (mirror the prediction per-cqg producer); **each AG owner (slots 2-6) verifies their slice**
+> before any G1.run apply-write. **Gates every AG's `--apply-write` seed** (a G1 prerequisite). Tracked: P0 in cefi
+> plan + must land in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (central fix) + a verify-slice todo in
+> each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be AG-shape-aware, NOT one-size fan-out.
 >
 > **✅ G1-V8 (P0, cross-AG, the SECOND G1 long pole): the instruments-store v9 MIGRATOR IS BUILT 2026-06-07
 > (`is@febb899e`) + dry-run-green for all 5 AGs — see "Two G1 long poles" item 2 below. The `--apply` RUN stays G4-gated
 > per-AG. Historical context (now RESOLVED):** Confirmed v8 across **cefi (100% v8), sports (v8), tradfi (0.8% v9 /
 > 20,218 rows v8)** — and slot-6 found the fix is "a gated G4-class single-walk `--apply` with **no migrator built yet**
-> (instruments*manifest **E2**, vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to
+> (instruments_manifest **E2**, vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to
 > fix it hasn't been written**. This gates EVERY AG's G1.run apply-write alongside G1-ENUM. **Owner: vm-cross-cutting
 > must BUILD the `instruments_manifest` E2 v9 single-walk migrator**
-> (asset_group=/pipeline_mode=batch*<source>/source/transport/ available_at/typed data_type) for the instruments-store
+> (asset_group=/pipeline_mode=batch\*<source>/source/transport/ available_at/typed data_type) for the instruments-store
 > buckets — the analogue of the per-AG MTDS migrators, which don't exist for the IS reference surface. Until it lands,
 > no AG's instruments-store goes v9 → no honest G1 seed. Tracked: `instruments_manifest_canonicalisation_2026_06_01`
 > (must spawn the E2 migrator) + each AG plan's §H.
@@ -1404,9 +1407,8 @@ does not require a second whole-corpus walk.
 
 - [ ] [DATA] P1. **G1.run-defi seed — BLOCKED on GATE C**: do NOT `--apply-write` the defi could-exist seed until (c)
       the `instruments-store-defi` `_index` is v9-canonical (currently 0% v9) AND the defi
-      `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
-      empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
-      manifest_master.
+      `instrument_availability/by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is empty).
+      Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic: manifest_master.
 - [ ] [UAC] [MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
       `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`** 🟢
       **SAFETY GUARD SHIPPED (uac@93961df3, slot-7 2026-06-08)**: `assert_era_b_purge_safe()`
@@ -1421,7 +1423,7 @@ does not require a second whole-corpus walk.
       AFTER, inside the same migrator walk.** Full surface to drop atomically once an AG's rows are relabeled (all
       cascade-coupled — a partial purge breaks the closed-set round-trips): - UAC: `SOURCE_PRIORITY` +
       `AVAILABILITY_AT_SEMANTICS` (4 entries each — bidirectional round-trip) + `expected_coverage` venue lists
-      (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/       futures_chain]` +
+      (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/futures_chain]` +
       `DATA_TYPES_BY_ASSET_GROUP["cefi"]` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` +
       `BASE_GRANULARITY_BY_DATA_TYPE` + the `DataType` enum `OPTIONS_CHAIN`/`FUTURES_CHAIN` + the snapshot
       `SchemaContract`s `(ag, options_chain, options_chain)`/`(ag, futures_chain, futures_chain)` +
@@ -1502,8 +1504,8 @@ does not require a second whole-corpus walk.
       **`bash scripts/quality-gates.sh --no-fix` now exits 0 and WRITES `.qg_last_passed_sha`** (verified slot-7: "All
       checks passed!", sentinel==HEAD) — the ~16 `❌` list was STALE (the >900 files were already split + the rest gated
       behind the uv.lock abort). The e2e-testing prediction basedpyright errors are a PERIPHERAL-consumer warning,
-      non-blocking. MTDS QG is GREEN. Repo: market-tick-data-service. parent*epic: mtds_mdps_master. *(Original finding
-      retained below for provenance.)\_ ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
+      non-blocking. MTDS QG is GREEN. Repo: market-tick-data-service. `parent_epic`: `mtds_mdps_master`. _(Original
+      finding retained below for provenance.)_ ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
       `migrate_sports_canonical_v9`/`rebuild_sports_manifest_v9`/`rebuild_prediction_manifest`/`solana_lst_archival`/
       `websocket_runner`), deep-UAC-imports / asyncio.run-in-loop / raw-response.json / empty-fallbacks in untouched
       handlers, STEP 5.85 inline-`pipeline_mode=` literals across the migration scripts, + macOS-environmental
@@ -1736,7 +1738,7 @@ unified-api-contracts.
       (BLOCKED-OPERATOR-DECISION).** `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend
       lending via **Solana RPC / Helius / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` /
       `(defi,lending_indices)` resolve to `onchain_subgraph` for ALL chains →
-      `derive_pipeline_mode_for_row(ORCA,defi,     dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
+      `derive_pipeline_mode_for_row(ORCA,defi,dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
       migrator AND a derive-based live handler would stamp `source=onchain_subgraph` on genuinely Solana-RPC/DeFiLlama
       data — a coarse provenance mislabel (the DATA is correct; only the `source` label is wrong). NOT introduced by the
       migration (pre-existing model coarseness it bakes). Proper fix needs per-chain (or per-venue) source resolution in
@@ -1964,9 +1966,9 @@ P1 redirect todo below.)
       enum members** to UAC `pipeline_mode.py` (+ `source_string_for` `defillama` + `default_transport_for_source`
       `defillama→rest` + the closed-set symmetry tests). Then drop the handler hardcodes so
       `derive_pipeline_mode_for_row` is the single SSOT. Repos: unified-trading-library + unified-api-contracts +
-      market-tick-data-service. Owner: vm-defi. parent*epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
+      market-tick-data-service. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
       **EXTENDED 2026-06-08 — multi-VENUE perp has the same coarseness**:
-      `SOURCE_PRIORITY(defi, perp_funding)=     [hyperliquid]` (single) so `derive_pipeline_mode_for_row` returns
+      `SOURCE_PRIORITY(defi, perp_funding)=[hyperliquid]` (single) so `derive_pipeline_mode_for_row` returns
       `batch_hyperliquid` for ALL defi perp venues — ASTER, GMX, PACIFICA, **Solana DRIFT** all resolve to
       `batch_hyperliquid`/`source=hyperliquid` (only LIGHTER has an override → `batch_tardis`). This is CONSISTENT
       (object==manifest==migrator all derive the same, so the M-COORD-7 fix + the migration are correct) but the source
@@ -2200,18 +2202,18 @@ speed-note (both deferred optimisations, non-blocking).
       but the could-exist SEED + any matrix-driven consumer must ADMIT these chain data_types, not just `trades`. slot-3
       (cefi) verify: probe `market-data-tick-cefi-prd` chain shards for `data_type=derivative_ticker` under
       `instrument_type=options_chain/futures_chain` and widen
-      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("cefi",     options_chain/futures_chain)]` accordingly. tradfi
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("cefi", options_chain/futures_chain)]` accordingly. tradfi
       (Databento) chains carry only `{trades, ohlcv_1m}` (no IV) — so the IV slice is cefi-specific.** **SCOPE: the
       gated G1.run `--apply-write` SEED only — NOT the G4 data/manifest `--apply`** (that walk is content-preserving;
       tradfi/cefi v9 DATA migration has ZERO regression from this; cefi's low candidate count (3,454) means its phantom
       is small because cefi captures `options_chain` bundles that DO cancel — tradfi's combo-dominant present-set is the
       exposed case). **Quantify first**: re-run `enumerate --asset-group {tradfi,cefi} --dry-run` with an
-      instrument*type breakdown to count the phantom `(options_chain|futures_chain, trades)` cells. **Fix options (owner
-      decides)**: (a) apply the SAME `_rollup_bundle_grain` normalization to the present-set before the set-difference
-      (symmetric); (b) writer/rebuild relabel `combo`→`options_chain` to match the seed; (c) admit
-      `ohlcv*\*`/`tbbo` for     chain instrument_types in the validity matrix. Owner: vm-cross-cutting / slot-7 (the central enumerate producer).     Repos: instruments-service (`scripts/enumerate_expected_universe.py`) +
-      unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
-      2026-06-08.
+      `instrument_type` breakdown to count the phantom `(options_chain|futures_chain, trades)` cells. **Fix options
+      (owner decides)**: (a) apply the SAME `_rollup_bundle_grain` normalization to the present-set before the
+      set-difference (symmetric); (b) writer/rebuild relabel `combo`→`options_chain` to match the seed; (c) admit
+      `ohlcv_*`/`tbbo` for chain instrument_types in the validity matrix. Owner: vm-cross-cutting / slot-7 (the central
+      enumerate producer). Repos: instruments-service (`scripts/enumerate_expected_universe.py`) + unified-api-contracts
+      (validity matrix). `parent_epic`: manifest_master. Provenance: tradfi pre-apply audit, slot-6 2026-06-08.
 
 - [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@a28cbd4d7 +
       pm@51863c157 + pm@05456c343)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
@@ -2237,7 +2239,7 @@ speed-note (both deferred optimisations, non-blocking).
       coordinator's registry (not duplicated). Residual: cite CF-13/14 in each `*_master_audit_instructions.md`
       ownership matrix on next touch. parent_epic: manifest_master.
 - [x] ✅ [CHORE] P1. **M-COORD-4 — gate-state board WIRED** (pm@docs 2026-06-16): added the
-      `## 🟦 Gate-State Board     (G0–G5 × asset_group)` block at the top of this coordinator (above §Dispatch waves) —
+      `## 🟦 Gate-State Board (G0–G5 × asset_group)` block at the top of this coordinator (above §Dispatch waves) —
       🟢/🟡/🔴 per AG, sourced from the WAVE checkboxes + the A–H cross-cutting verdict + the per-AG `G4 --apply` ticks,
       with a per-cell basis + a refresh note (re-read at each gate promotion, or `regenerate_active_plan_inventory.py`).
       Current state: G0🟢 G1🟢(dry) G2🟡 G3🟢 G4🟡(operator-gated) G5🔴 across all 5 AGs. parent_epic: manifest_master.
@@ -2245,42 +2247,50 @@ speed-note (both deferred optimisations, non-blocking).
       `writer.add(...)` now passes `asset_group=defi` + the source-aware `pipeline_mode` + `source` + `transport` (no
       more blank `pipeline_mode`/`source` — standardisation finding #1 resolved); migrator likewise stamps source-aware
       in path+column. Tests green 25/25. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: rebuild*tradfi (direct read :316) + rebuild_prediction (via
-      reemit_honest_absence_rows) + rebuild_defi (defensive — unguarded log_event via ManifestWriter.add validation);
-      cefi/sports pre-existing; the 5 migrate*_\*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
-      not needed) \*\*M-COORD-6 — every AG `rebuild***manifest\*`/`migrate**\_v9`script must`setup_events()` before
-      reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship gated
-      on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits
-      `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns — the
-      **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards). Without
-      an events init,`log_event`raises`RuntimeError:     Event logging not     initialized`and **crashes the rebuild
-      `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",     sink=None)`in`main()`
+- [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: `rebuild_tradfi` (direct read :316) + `rebuild_prediction` (via
+      `reemit_honest_absence_rows`) + `rebuild_defi` (defensive — unguarded `log_event` via `ManifestWriter.add`
+      validation); cefi/sports pre-existing; the 5 `migrate_*_v9` movers + IS `migrate_instruments_store_v9` VERIFIED
+      no-manifest-read → not needed) **M-COORD-6 — every AG `rebuild_*_manifest*` / `migrate_*_v9` script must
+      `setup_events()` before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit
+      2026-06-08; sports ship gated on M-COORD-7).** ROOT CAUSE: `read_availability_index()` → `_backfill()` emits
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event` whenever the per-VM fallback shards carry pre-v9 columns —
+      the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).
+      Without an events init, `log_event` raises `RuntimeError: Event logging not initialized` and **crashes the rebuild
+      `--no-dry-run` apply**. The v8-era migration scripts ALL call `setup_events(mode="local", sink=None)` in `main()`
       (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/
-      `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it\*\*. Confirmed
-      MISSING in: `rebuild_defi_manifest.py`,
-      `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
-      mode="local",
-      sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
-      — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
-      instruments-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+      `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**.
+
+      Confirmed MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest*`, `rebuild_tradfi_manifest*`,
+      `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and
+      IS `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
+      `setup_events(service_name="...", mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
+      migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do
+      NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
+      instruments-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+
 - [x] ✅ [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
-      WRITE path** were NOT swept: ~29 `cli/handlers/*` (perp*funding/position_data/lst_rates/gas_fee/liquidations/
-      flash_loan_events/native_staking/eigenlayer_rewards/bridge_events/jupiter_quote/oracle_prices/orca_whirlpool/
-      phoenix_orderbook/raydium_classic_amm/solana_defi/staking_yields/token_transfers/vault_share_price/
-      websocket_streaming/mev_events/governance*_/lending_indices/aggregator_route/protocol_outage_detector/…), the 5
-      `engine/__catalog_reader.py`, + tradfi `massive_tradfi_rest_connector`/`tardis_adapter` + clients
-      (`alchemy_\*`/`extended*base`/`tardis_base`/`thegraph_base`). Each is commented "Coarse ingestion mode → canonical     pipeline_mode= path segment (Live=Batch)". **TWO consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi     live-written data lands at `pipeline_mode=batch/`(coarse) while migrated DeFi batch data lands at     `pipeline_mode=batch*<source>/` (source-aware mtds@f80c50f1) → the migration CREATES a split the audit's ⑪     keystone forbids; (2) **STEP 5.85 (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28)     hard-fails → mtds `quality-gates.sh`exits non-zero → NO`.qg_last_passed_sha`written →`quickmerge
-      --agent`     refuses → NO mtds code (any AG) can ship** (it currently blocks slot-4's verified sports`setup_events`fix). **FIX     (slot-2 DeFi + cross-cutting)**: each handler/reader must pass the SOURCE-AWARE`PipelineMode.<BATCH_SOURCE>`     (or`derive_pipeline_mode_for_row(venue,
-      ag,
-      data_type)`/`resolve_pipeline_mode()`), the SAME value the v9     migrator + the shared `engine/orchestrator.py`
-      write path use, so DeFi live == DeFi migrated-batch. Per-handler source derivation is DeFi-domain (the handler
-      knows its venue/source) — slot-4 did NOT edit (collision + correctness risk across 41 DeFi sites). Repo:
-      market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08
-      (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY verdict above, which covered
-      migrator/rebuild but not the live handlers).
+      WRITE path** were NOT swept: ~29 `cli/handlers/*`
+      (`perp_funding/position_data/lst_rates/gas_fee/liquidations/flash_loan_events/native_staking/eigenlayer_rewards/bridge_events/jupiter_quote/oracle_prices/orca_whirlpool/phoenix_orderbook/raydium_classic_amm/solana_defi/staking_yields/token_transfers/vault_share_price/websocket_streaming/mev_events/governance_*/lending_indices/aggregator_route/protocol_outage_detector`/…),
+      the 5 `engine/__catalog_reader.py`, + tradfi `massive_tradfi_rest_connector`/`tardis_adapter` + clients
+      (`alchemy_*`/`extended_base`/`tardis_base`/`thegraph_base`).
+
+      Each is commented "Coarse ingestion mode → canonical pipeline_mode= path segment (Live=Batch)". **TWO
+      consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi live-written data lands at `pipeline_mode=batch/`
+      (coarse) while migrated DeFi batch data lands at `pipeline_mode=batch_<source>/` (source-aware mtds@f80c50f1) →
+      the migration CREATES a split the audit's ⑪ keystone forbids; (2) **STEP 5.85
+      (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28) hard-fails → mtds
+      `quality-gates.sh` exits non-zero → NO `.qg_last_passed_sha` written → `quickmerge --agent` refuses → NO mtds
+      code (any AG) can ship** (it currently blocks slot-4's verified sports `setup_events` fix). **FIX (slot-2 DeFi +
+      cross-cutting)**: each handler/reader must pass the SOURCE-AWARE `PipelineMode.<BATCH_SOURCE>` (or
+      `derive_pipeline_mode_for_row(venue, ag, data_type)`/`resolve_pipeline_mode()`), the SAME value the v9 migrator +
+      the shared `engine/orchestrator.py` write path use, so DeFi live == DeFi migrated-batch. Per-handler source
+      derivation is DeFi-domain (the handler knows its venue/source) — slot-4 did NOT edit (collision + correctness
+      risk across 41 DeFi sites). Repo: market-tick-data-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4
+      sports pre-apply audit 2026-06-08 (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY
+      verdict above, which covered migrator/rebuild but not the live handlers).
 
       **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
                       the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
@@ -2299,11 +2309,11 @@ speed-note (both deferred optimisations, non-blocking).
                       `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
                       the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
-- [x] ✅ [DEFI] P2. **dex\*pools_handler honest-absence `record_failed`/`record*\*` calls hardcode mode** — they passed
+- [x] ✅ [DEFI] P2. **`dex_pools_handler` honest-absence `record_failed`/`record_*` calls hardcode mode** — they passed
       `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at
-      `dex_pools_handler.py:410/467/     475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence
-      rows mislabel the mode (batch vs live). **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for
-      defi" so this IS live-reachable.** Added `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME
+      `dex_pools_handler.py:410/467/475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows
+      mislabel the mode (batch vs live). **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for defi"
+      so this IS live-reachable.** Added `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME
       source-aware upgrade as the data chokepoint (`canonical_write.py` mtds@c4c5f15): live →
       `resolve_pipeline_mode(..., "live")` = `live_onchain_subgraph`, batch → `derive_pipeline_mode_for_row` =
       `batch_onchain_subgraph` (no batch regression). All 4 `record_*` calls now use it; +regression test. Repo:

@@ -122,7 +122,7 @@ phantom-NaN. The current model has no defined continuity contract, no capability
 
 ## The model (refined with operator 2026-06-05) — capability registry × per-shard availability × mode-contextual precedence
 
-### M1 — pipeline*mode form: `{mode}*{source}[_{transport}]`
+### M1 — `pipeline_mode` form: `{mode}_{source}[_{transport}]`
 
 `mode ∈ {batch, live, replay}` × `source = vendor` × optional `transport ∈ {rest, websocket, flat_file}`. Source-aware
 for ALL modes (`live_<source>`, not the single `live_websocket`) → fixes the live path collision (#5), makes
@@ -441,7 +441,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       `unified-trading-library@2afb22bd` + `unified-api-contracts@28bd50e` (LIVE_WEBSOCKET member deleted) +
       `system-integration-tests@ec46de8` (live leg un-skipped, green) — spot-checked shas (execution-service@04218fbc,
       unified-api-contracts@28bd50e) verified present on `live-defi-rollout` + `main` via read-only
-      `git log`/`git     branch --contains`. See "### Success criteria (GATE 0 met)" below. Corrected per
+      `git log`/`git branch --contains`. See "### Success criteria (GATE 0 met)" below. Corrected per
       plan-reconciliation finding 168, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
       B-queue ruling.
 - [ ] [CODE] P0. **T+1 batch/live reconciliation + `live` TTL** (next tranche, GATED on M4 precedence + M1-breaking live
@@ -466,10 +466,14 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       sub-agents don't inherit it). **Pre-audit already done (2026-06-05, agent E)**: all 4 layers implicitly assume
       `pipeline_mode` encodes source (batch-only assumption); none acknowledge the live asymmetry, the cadence axis, or
       replay. **Post-ratify**: a SECOND pass once M1–M8 land, so the docs match the new contract (no stale
-      "pipeline*mode==source" / "live_websocket" / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
+      `pipeline_mode==source` / `live_websocket` / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
       codex). Owner: slot-6 can drive the audit; per-repo doc deltas to owners. **PARTIAL 2026-06-07 — pm@9120464fe**:
-      codex `02-data/pipeline-mode-partition.md` reconciled to the
-      `{mode}*{source}[_{transport}]` form (documents     replay_<source> + the transport suffix-vs-column rule + the hyperliquid vendor split; DELETED the stale "Don't use     replay_*" / "replay writes to live_websocket" lines). **REMAINING**: the other codex docs     (`availability-manifest-and-data-status.md`, `pipeline-mode-and-batch-live-reconciliation.md`— still     has`BATCH_HYPERLIQUID_REST`/`hyperliquid_rest`refs — `honest-absence-downstream-handling.md`,     `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans + `SUB_AGENT_MANDATORY_RULES.md`.
+      codex `02-data/pipeline-mode-partition.md` reconciled to the `{mode}_{source}[_{transport}]` form (documents
+      `replay_<source>` + the transport suffix-vs-column rule + the hyperliquid vendor split; DELETED the stale "Don't
+      use `replay_*`" / "replay writes to `live_websocket`" lines). **REMAINING**: the other codex docs
+      (`availability-manifest-and-data-status.md`, `pipeline-mode-and-batch-live-reconciliation.md` — still has
+      `BATCH_HYPERLIQUID_REST`/`hyperliquid_rest` refs — `honest-absence-downstream-handling.md`,
+      `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans + `SUB_AGENT_MANDATORY_RULES.md`.
 - [ ] [CODE] P1. **UI reference-data registry regen** — `lib/registry/ui-reference-data.json` still lists the stale
       `batch_hyperliquid_rest` PipelineMode value. It is GENERATED from UAC (`generate_ui_reference_data.py` →
       `uac-registry-sync.yml`), so regenerate from the now-fixed UAC SSOT (uac@cc69b123) rather than hand-edit. **GATED
@@ -539,13 +543,13 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
   **unified-trading-system-ui PARITY GAP** — `HierarchicalShardDrilldown` does NOT exist there; port it + wire into the
   data-status view (UI, needs Node≥22 + pw:L2). Non-breaking.
 - **M1-BREAKING — `live_websocket`→`live_<source>`/`replay_<source>` migration.** The enum FOUNDATION is shipped
-  (`pipeline_mode.py` has the source-aware members + Mode/mode*of/transport). Remaining BREAKING tranche: writers (mtds
-  `live/websocket_runner.py:77` `_LIVE_PIPELINE_MODE`, `live/manifest_recorder.py`, mdps `live_aggregator.py`, execution
-  `live/data_sink.py`) stamp `pipeline_mode_for_source(source,Mode.LIVE)` not the literal; readers (mdps
+  (`pipeline_mode.py` has the source-aware members + Mode/`mode_of`/transport). Remaining BREAKING tranche: writers
+  (mtds `live/websocket_runner.py:77` `_LIVE_PIPELINE_MODE`, `live/manifest_recorder.py`, mdps `live_aggregator.py`,
+  execution `live/data_sink.py`) stamp `pipeline_mode_for_source(source,Mode.LIVE)` not the literal; readers (mdps
   `live_workers.py`, deployment-api `_live_coverage.py`, BLRS `stage0`) stratify via `is_live`/`mode_of`; UTL
-  `pipeline_mode_resolver.py:157-229` derive live*<source>/replay\_<source>; **delete the `LIVE_WEBSOCKET` alias LAST**
-  (0 refs). The writer blocker = "source not in writer scope" → derive venue→source from SOURCE_PRIORITY/IS-catalogue.
-  BREAKING (enum-value removal → SIT cascade) — alias removal is the final gated step.
+  `pipeline_mode_resolver.py:157-229` derive `live_<source>`/`replay_<source>`; **delete the `LIVE_WEBSOCKET` alias
+  LAST** (0 refs). The writer blocker = "source not in writer scope" → derive venue→source from
+  SOURCE_PRIORITY/IS-catalogue. BREAKING (enum-value removal → SIT cascade) — alias removal is the final gated step.
 - **GATE-0 SIT.** repo `system-integration-tests`. NEW `tests/integration/test_gate0_write_manifest_union_read.py`
   (pattern: `test_pipeline_manifest_wiring.py`; `@pytest.mark.code_test`, credential-free, NO real GCS). 4 legs: (1)
   writer stamps pm+source+cadence+transport; (2) manifest carries all 4 as AvailabilityRecord cols; (3) union-read
@@ -615,11 +619,11 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
     cadence dim, now unblocked by I6a).
 - **2026-06-16 (tick 2) — WAVE B COMPLETE (6/9 criteria).** M4 unified-api-contracts@7441a692 (`select_for_mode` —
   live-ctx [LIVE,REPLAY,BATCH], batch-ctx [BATCH,REPLAY,LIVE], replay-ctx reuses live order) +
-  batch-live-reconciliation-service@0e17d7ee (`engine/mode_resolver.py` delegates to UAC select*for_mode; stage0
+  batch-live-reconciliation-service@0e17d7ee (`engine/mode_resolver.py` delegates to UAC `select_for_mode`; stage0
   untouched — resolver is the primitive, no read consumer wired yet = follow-on). M5b deployment-api@66e8562d (cadence
   dim threaded through the union/drilldown like transport; blank-safe). Contention: M5b blocked on M4's in-progress UAC
   edit → shipped after M4 landed UAC (dep-order). Next: WAVE C — GATE-0 SIT (system-integration-tests; legs 1-3
-  greenable now, leg-4 gate uses M3/M4 which are landed) + M1-BREAKING (live_websocket→live*<source>
+  greenable now, leg-4 gate uses M3/M4 which are landed) + M1-BREAKING (`live_websocket`→`live_<source>`
   writers/readers/resolver + alias removal LAST — the breaking tranche). M5c/d UI cadence drilldown (Node22/pw:L2)
   deferred to a UI pass — display-only, not part of the SIT gate.
 - **2026-06-16 (tick 3) — GATE-0 SIT GREEN (7/9). The GATE-0 foundation + SIT are landed → Phase-1 BATCH dry-runs
@@ -652,7 +656,7 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   it is LARGER than the dispatch's writer/reader enumeration — it also pulls in (a) UTL `streaming/candle_writer.py`
   `close_candle_writer` DEFAULT param `= PipelineMode.LIVE_WEBSOCKET` (public API; MDPS `canonical_writer*` /
   `candle_write_mixin` / `live_aggregator` are the callers → must pass explicit), (b) UTL `pipeline_mode_resolver.py`
-  BOTH `resolve_pipeline_mode` (:125 live→LIVE*WEBSOCKET) and `derive_pipeline_mode_for_row` (:187-192 live→None), (c)
+  BOTH `resolve_pipeline_mode` (:125 live→LIVE_WEBSOCKET) and `derive_pipeline_mode_for_row` (:187-192 live→None), (c)
   many docstrings/comments, and (d) ~dozens of TEST files across UTL/mdps/deployment-api/BLRS asserting the literal.
   **Helper confirmed landed**: UAC `live_pipeline_mode_for_venue(asset_group, venue, data_type, mode=Mode.LIVE)` lives
   in `canonical/crosscutting/source_priority.py`, exported from the `unified_api_contracts` root (NOT in
@@ -663,10 +667,12 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   forward+backward-compatible fix the deployment-api/BLRS readers need. **Execution waves (all NON-breaking until Wave
   3; alias coexists)**: W1 consumers in parallel (mtds·mdps·execution·deployment-api·BLRS) migrate every in-repo ref →
   writers stamp source-aware via the helper (GCS path segment + manifest row derive from the SAME value), readers
-  string-prefix-match, tests → concrete
-  `live*<source>`member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO, defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each QG-green + quickmerge. W2 UTL (resolver source-aware +`close_candle_writer`pipeline_mode REQUIRED + tests/docstrings) — after W1 so MDPS already passes explicit. W3 UAC delete the`LIVE_WEBSOCKET`member + the internal`if
-  mode is PipelineMode.LIVE_WEBSOCKET`special-cases in`source_string_for`/`transport_of` + UAC tests (breaking → SIT
-  cascade). W4 un-skip the SIT live leg + verify green. THEN M5c/d UI cadence drilldown (Node22/pw:L2).
+  string-prefix-match, tests → concrete `live*<source>`member (cefi→LIVE_BINANCE/venue, tradfi→LIVE_DATABENTO,
+  defi→LIVE_ONCHAIN_RPC/LIVE_SOLANA_RPC), each QG-green + quickmerge. W2 UTL (resolver
+  source-aware +`close_candle_writer`pipeline_mode REQUIRED + tests/docstrings) — after W1 so MDPS already passes
+  explicit. W3 UAC delete the`LIVE_WEBSOCKET`member + the internal`if mode is PipelineMode.LIVE_WEBSOCKET`special-cases
+  in`source_string_for`/`transport_of` + UAC tests (breaking → SIT cascade). W4 un-skip the SIT live leg + verify green.
+  THEN M5c/d UI cadence drilldown (Node22/pw:L2).
 - **2026-06-16 (tick 5) — FINDING (a) FIXED (the tick-1 serializer drop).** Confirmed + fixed the
   `_writer_io._records_to_dataframe:340` v6–v9 column drop. **Diagnosis (write-path trace):** the runtime live+batch
   path (`record_*` → `write()`/`flush()` → `_write_to_gcs()` → `_records_to_dataframe()`), the per-VM shard write
@@ -708,21 +714,58 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   `source`/`pipeline_mode`/`transport` post-v9. The P2 dedup follow-on (above) remains the only open residue.
 - **2026-06-16 (tick 7) — M2/M3-REFINEMENT SHIPPED (resolves tick-1 finding (b)).** `modes_for(source, data_type)`
   landed in **unified-api-contracts@a56a7fc2** (`canonical/crosscutting/source_priority.py`), DERIVED from the EXISTING
-  per-operation `SourceCapability.operations` (registry/capability*declarations) — NOT a parallel registry: a
-  `ws*<data_type>`op ⇒`LIVE`, a REST op ⇒ `BATCH`, and `REPLAY`is the live-gap-fill tier (M4) so it drops WITH live.`could_exist`now composes`modes_for(source,
-  data_type)`instead of the coarse`modes_for_source`, fixing the M3 over-approximation. **Surgically scoped (the key design decision):** the refinement ONLY narrows the LIVE/REPLAY axis for sources that are BOTH live-capable AND use the ws/REST op convention (the CeFi venues + hyperliquid — exactly where the bug lived); every other source (tardis/yahoo/sports = no LIVE; databento/massive vendor feeds + chain RPCs + internal services = LIVE-but-no-ws-convention) returns the coarse `modes_for_source`set UNCHANGED → **zero regression** (verified:`tardis`ohlcv_1m +`databento`trades-replay stay coarse; no ohlcv-style false-zeroing). Contract verified vs the live registry + locked by tests:`modes_for("hyperliquid","trades")⊇{LIVE}`, `modes_for("hyperliquid",
-  "funding_rates")=={BATCH}`(no ws funding op),`could_exist("cefi","funding_rates",Mode.LIVE)==False`(no CeFi venue declares a`ws_funding\*`op),`could_exist("cefi","trades",Mode.LIVE)==True`. Tests: `test_source_mode_capability.py`(+8`modes_for`cases incl. never-widens + batch-only-unchanged + non-ws-unchanged) +`test_shard_source_availability.py`(+3 per-data_type`could_exist`cases).`modes_for_source`KEPT for the coarse callers (the capability matrix, the replay-capable set). Cycle note:`modes_for`lazy-imports the static`CAPABILITY_DECLARATIONS`(registry↔crosscutting would cycle at module level). **No downstream consumer of`could_exist`yet** (it is brand-new M3) → no per-data_type-assumption breakage. Codex aligned (target→LANDED):`codex/02-data/pipeline-mode-partition.md`+`pipeline-mode-and-batch-live-reconciliation.md`. UAC QG green (`--no-fix`); `Quickmerge:
-  agent`trailer; landed on LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off`origin/live-defi-rollout`
-  because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3 files) — never stomped/bundled
-  it.
+  per-operation `SourceCapability.operations` (`registry/capability_declarations`) — NOT a parallel registry: a
+  `ws_<data_type>` op ⇒ `LIVE`, a REST op ⇒ `BATCH`, and `REPLAY` is the live-gap-fill tier (M4) so it drops WITH live.
+
+  `could_exist` now composes `modes_for(source, data_type)` instead of the coarse `modes_for_source`, fixing the M3
+  over-approximation. **Surgically scoped (the key design decision):** the refinement ONLY narrows the LIVE/REPLAY axis
+  for sources that are BOTH live-capable AND use the ws/REST op convention (the CeFi venues + hyperliquid — exactly
+  where the bug lived); every other source (tardis/yahoo/sports = no LIVE; databento/massive vendor feeds + chain RPCs
+  - internal services = LIVE-but-no-ws-convention) returns the coarse `modes_for_source` set UNCHANGED → **zero
+    regression** (verified: `tardis` `ohlcv_1m` + `databento` trades-replay stay coarse; no ohlcv-style false-zeroing).
+    Contract verified vs the live registry + locked by tests: `modes_for("hyperliquid","trades")⊇{LIVE}`,
+    `modes_for("hyperliquid", "funding_rates")=={BATCH}` (no ws funding op),
+    `could_exist("cefi","funding_rates",Mode.LIVE)==False` (no CeFi venue declares a `ws_funding_*` op),
+    `could_exist("cefi","trades",Mode.LIVE)==True`. Tests: `test_source_mode_capability.py` (+8 `modes_for` cases incl.
+    never-widens + batch-only-unchanged + non-ws-unchanged) + `test_shard_source_availability.py` (+3 per-data_type
+    `could_exist` cases). `modes_for_source` KEPT for the coarse callers (the capability matrix, the replay-capable
+    set).
+
+  Cycle note: `modes_for` lazy-imports the static `CAPABILITY_DECLARATIONS` (registry↔crosscutting would cycle at module
+  level). **No downstream consumer of `could_exist` yet** (it is brand-new M3) → no per-data_type-assumption breakage.
+  Codex aligned (target→LANDED): `codex/02-data/pipeline-mode-partition.md` +
+  `pipeline-mode-and-batch-live-reconciliation.md`. UAC QG green (`--no-fix`); `Quickmerge: agent` trailer; landed on
+  LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off
+  `origin/live-defi-rollout` because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3
+  files) — never stomped/bundled it.
+
 - **2026-06-16 (tick 5) — WAVE 1 (M1-BREAKING consumers) shipping.** Fanned out parallel sub-agents (one per consumer
-  repo). **Shipped + grep-clean + QG-green**: execution-service@04218fbc (data*sink →
+  repo). **Shipped + grep-clean + QG-green**: execution-service@04218fbc (`data_sink` →
   `live_pipeline_mode_for_venue(self.asset_group,venue,data_type)`), batch-live-reconciliation-service@3bad2fe (stage0
-  `_is_live_mode` STRING-prefix
-  `startswith("live*")`+ split-string legacy regression), deployment-api@aa18d8ae (readers`pipeline*mode.strip().lower().startswith("live")`— FIXES the exact-match bug that DROPPED all`live*<source>`rows; legacy + live_<source> regressions). **mtds + mdps**: the first spawn attempts hit transient server rate-limits mid-run; I finished mtds DIRECTLY (the dead agent's writer edits were correct — GCS-path segment + all 3 manifest call sites + backfill all derive from ONE`self._live_pipeline_mode
-  =
-  live_pipeline_mode_for_venue(asset_group,venue,data_type)`resolved per-shard in`**init**`, fail-loud; Protocol/impl `record\_\_`defaults made REQUIRED; log event names`MTDS*LIVE_WEBSOCKET*_`→`MTDS*LIVE_WS*\*`to clear the uppercase grep token, verified 0 external consumers); fixed 2 recorder tests the dead agent left inconsistent with its own required-kwarg change. mdps migrated by a respawn (live_aggregator path+manifest both from the helper;`live_workers.py:190`→`is_live(pm)`); it correctly did NOT stomp concurrent foreign UAC/UTL WIP that drained (UAC@6c74eaf could-exist + UTL@d3324e90 v6-v9 serializer — both unrelated to live_websocket, both beneficial) → re-QG'ing mdps against current UAC before shipping. mtds+mdps QGs re-running, then quickmerge. **FINDING (captured — sports-plan test-hermeticity, fixed to unblock GATE-0 mtds shipping)**: mtds QG surfaced 7 PRE-EXISTING failing sports unit tests (`test_sports_v9_canonical_path`/`test_orchestrator_per_data_type_sentinel`/`test_sports_odds_available_at`) — `process_ticks()`runs the`\_check_sports_v9_columns` preflight against a SEEDED GCS emulator manifest that CI injects (`base-service.sh`: "CI injects emulators via env") but a hermetic local run lacks; CI-GREEN, order-flaky, fail on clean LDR (NOT my change); the guard's OWN coverage lives in `test_sports_v9_preflight_guard.py`. Fix: a scoped `autouse`fixture in each of the 3 files stubs the incidental guard to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132 tests green after). Belongs to`sports_manifest_canonicalisation_2026_06_01`;
-  done here to unblock the mtds QG gate.
+  `_is_live_mode` STRING-prefix `startswith("live_")` + split-string legacy regression), deployment-api@aa18d8ae
+  (readers `pipeline_mode.strip().lower().startswith("live")` — FIXES the exact-match bug that DROPPED all
+  `live_<source>` rows; legacy + `live_<source>` regressions).
+
+  **mtds + mdps**: the first spawn attempts hit transient server rate-limits mid-run; I finished mtds DIRECTLY (the dead
+  agent's writer edits were correct — GCS-path segment + all 3 manifest call sites + backfill all derive from ONE
+  `self._live_pipeline_mode = live_pipeline_mode_for_venue(asset_group,venue,data_type)` resolved per-shard in
+  `__init__`, fail-loud; Protocol/impl `record_*` defaults made REQUIRED; log event names
+  `MTDS_LIVE_WEBSOCKET_*`→`MTDS_LIVE_WS_*` to clear the uppercase grep token, verified 0 external consumers); fixed 2
+  recorder tests the dead agent left inconsistent with its own required-kwarg change. mdps migrated by a respawn
+  (`live_aggregator` path+manifest both from the helper; `live_workers.py:190`→`is_live(pm)`); it correctly did NOT
+  stomp concurrent foreign UAC/UTL WIP that drained (UAC@6c74eaf could-exist + UTL@d3324e90 v6-v9 serializer — both
+  unrelated to `live_websocket`, both beneficial) → re-QG'ing mdps against current UAC before shipping. mtds+mdps QGs
+  re-running, then quickmerge.
+
+  **FINDING (captured — sports-plan test-hermeticity, fixed to unblock GATE-0 mtds shipping)**: mtds QG surfaced 7
+  PRE-EXISTING failing sports unit tests (`test_sports_v9_canonical_path` / `test_orchestrator_per_data_type_sentinel` /
+  `test_sports_odds_available_at`) — `process_ticks()` runs the `_check_sports_v9_columns` preflight against a SEEDED
+  GCS emulator manifest that CI injects (`base-service.sh`: "CI injects emulators via env") but a hermetic local run
+  lacks; CI-GREEN, order-flaky, fail on clean LDR (NOT my change); the guard's OWN coverage lives in
+  `test_sports_v9_preflight_guard.py`. Fix: a scoped `autouse` fixture in each of the 3 files stubs the incidental guard
+  to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132 tests green after). Belongs to
+  `sports_manifest_canonicalisation_2026_06_01`; done here to unblock the mtds QG gate.
+
 - [ ] [TEST] P2. **DEFERRED-followup** — make the broader sports `process_ticks` unit suite emulator-independent
       fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports unit tests in mtds for the
       same `_check_sports_v9_columns` seeded-emulator dependency). Provenance: GATE-0 tick-5 sports-hermeticity finding.
@@ -831,8 +874,16 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   SIT runs → sit-unlock releases lock → PRs auto-merge (watcher confirming).
 - [ ] [CICD] P1. **SYSTEMIC: extend the stale-FAILING ci_status self-heal to the SIT-gate precondition (the same fix I
       shipped for the Tier-C drain Tier-A gate).** `sit-gate.yml`/`lock-staging` hard-blocks when any pending
-      repo`s ci_status==FAILING, even when that status is STALE vs the repo`s current LDR HEAD (no v2 run for
-      HEAD`s sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions stall fleet-wide. Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml`+     the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).     Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not     pipeline_mode — belongs to`cicd_retire_staging_branch_2026_06_27`
+      repo`s ci_status==FAILING, even when that status is STALE vs the repo`s current LDR HEAD (no v2 run for HEAD`s
+      sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions
+      stall fleet-wide.
+
+      Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current
+      LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror
+      `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
+      the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
+      Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
+      `pipeline_mode` — belongs to `cicd_retire_staging_branch_2026_06_27`
       / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
       touch.
 
