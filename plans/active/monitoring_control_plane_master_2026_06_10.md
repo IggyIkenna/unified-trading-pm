@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Monitoring control-plane master — CI dashboard (deployment-ui) + fleet git-health (orchestrator)
-summary: Master coordinator for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a single-pane view of repo pipeline state and slot health.
+summary:
+  Master coordinator for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the
+  orchestrator, providing a single-pane view of repo pipeline state and slot health.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: [monitoring, ci-dashboard, fleet-health, observability, coordinator, deployment-ui, orchestrator]
-related: [plans/active/ci_dashboard_deployment_ui_2026_06_10.md, plans/active/fleet_git_health_orchestrator_2026_06_10.md, plans/active/ci_status_firestore_side_store_2026_06_10.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+related:
+  [
+    plans/active/ci_dashboard_deployment_ui_2026_06_10.md,
+    plans/active/fleet_git_health_orchestrator_2026_06_10.md,
+    plans/active/ci_status_firestore_side_store_2026_06_10.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+  ]
 created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
@@ -24,7 +32,12 @@ locked_since: 2026-06-10
 supersedes:
 superseded_by:
 depends_on: []
-source: ['operator direction 2026-06-10 ("our own GitHub UI — repo dropdown, SHA history across feature/staging/main, deployed-or-not; Slack alerts should be ALERTS, the dashboard is the look-inside-the-cycle monitoring surface; fleet crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")']
+source:
+  [
+    'operator direction 2026-06-10 ("our own GitHub UI — repo dropdown, SHA history across feature/staging/main,
+    deployed-or-not; Slack alerts should be ALERTS, the dashboard is the look-inside-the-cycle monitoring surface; fleet
+    crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")',
+  ]
 drift_direction: advance-code
 ---
 
@@ -395,7 +408,15 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       data-pipeline domain, not the CI/CD `/repos` pane). Approach: a `data-status` backend signal reading `_index`
       freshness + per-VM shard count per asset-group manifest bucket (a direct GCS read via UTL
       `assert_consolidator_healthy` — NOT a workflow-verdict, so genuinely buildable now) + a data-status UI element.
-      **IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up.**
+      **IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up.** **(was: this line had no update
+      since 2026-06-12; sync 2026-07-14, finding 182 — `health_consolidator.py` /`ConsolidatorAgHealth`/`_ag_health` was
+      actually shipped by the separate `unified_deployment_health_cockpit_2026_06_23` plan [status: complete] via the
+      deployment-ui health-overview cockpit, NOT via this G3 item's "home = DATA-STATUS surface" 2026-06-12 decision —
+      confirmed by deployment-api git history (`8134134 feat(cockpit): health rollup +     consolidator drill-down...`).
+      `active/consolidator_throughput_backlog_monitor_2026_07_09.md` (2026-07-09/13) now builds an extensive further
+      "Consolidators tab" on top of that endpoint as a pre-existing SSOT, with no cross-reference back to this G3 item.
+      This G3 todo should be re-scoped/closed against what actually shipped rather than left open as slot-3-owned "IN
+      PROGRESS", or reconciled with the operator on what remains distinct from the cockpit surface.)**
 - [ ] [CODE] P3. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
