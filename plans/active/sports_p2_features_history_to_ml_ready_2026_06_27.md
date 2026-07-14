@@ -180,6 +180,74 @@ Grep-then-READ diagnosis, evidence file:line:**
 **No relaunch performed; no redo needed (cost 0). No checkbox flipped (Todo 1 full-history compute remains in-flight on
 the separate `features-sports-sports-*` fleet).**
 
+### 2026-07-14 20:12-20:22 UTC — data_engineering slot-14 (Todo 1 re-dispatch — real action: found 2 large unclaimed date-range gaps via a full by_date/ listing diff, launched a gap-fill VM for the biggest one, confirmed GW enrichment fleet completed; checkbox NOT flipped)
+
+**Todo 1 (compute features 2015→present) — real forward action taken, not just a fast re-verify. Checkbox NOT flipped
+(compute still genuinely in progress).**
+
+**Fleet composition CHANGED since the last dispatch (13:57Z, slot-8)**: `gcloud compute instances list` now shows only
+**2** of the previously-tracked 3 features-sports VMs RUNNING (`-085642`, `-085726`); `-085703` is gone — confirmed this
+is a CLEAN completion, not a crash: its `EXIT_STATUS` blob reads `0`, its `run.log` tail shows
+`Processing completed successfully` / `DEPLOYMENT_COMPLETED … exit_code=0` followed by
+`VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`, and the GCE audit log shows the delete call attributed to the
+VM's own service account (`…-compute@developer.gserviceaccount.com`), not a human or another slot's launcher. Its
+assigned range was `2018-01-07→2018-06-16` (per its `run.log` head) — a small, now fully-done shard.
+
+**Also confirmed complete**: the banner's GW enrichment fleet (`fss-backfill-vm-1/2/3`) all show `EXIT_STATUS=0` and
+`FSS Features complete` (30/30/31 = 91/91 dates GENUINELY recomputed this time, ~19:03-19:05Z) — updated the stale
+`RUNNING` banner above to reflect completion.
+
+**Gap analysis (single non-recursive `gsutil ls .../by_date/` listing — the SAME call every prior dispatch already makes
+for the coverage count, just capturing the full date list instead of piping straight to `wc -l`; not a new whole-corpus
+walk)**: diffed the 2,866 covered dates against the full 2015-01-01→2026-07-13 calendar (4,212 days). Two of the three
+currently-tracked VMs' assigned ranges (`-085642`: 2025-08-11→2026-07-13; `-085726`: 2019-08-18→2020-10-05) don't come
+close to covering full history — this plan's history is built from dozens of prior targeted gap-fill dispatches, not 3
+VMs splitting 2015→present evenly. The real, currently-UNCLAIMED gaps found:
+
+- **2015-01-01 → 2017-02-01 (763 days)** — the single biggest gap in the whole history, no VM has ever claimed it in the
+  visible fleet.
+- **2018-07-09 → 2019-08-11 (399 days)** — sits between the now-completed `-085703` shard and `-085726`'s start; also
+  unclaimed.
+- Everything else in the diff is either the tail end of a currently-running VM's still-in-progress range (e.g.
+  2020-05-12→2020-10-05 inside `-085726`'s active range; 2026-07-02→2026-07-13 inside `-085642`'s active range — NOT
+  real gaps, just not-yet-reached) or small 1-6 day scattered gaps (several 1-3 day slivers in Feb-Mar 2017;
+  2024-02-03→2024-02-08) consistent with honest-absence (no fixtures those particular days) — not actioned, low
+  priority, would need a per-day fixture-count check to confirm if ever revisited.
+
+**Action taken**: with `-085703` freeing a capacity slot (fleet dropped 3→2), and craft north-star #2 (efficiency —
+don't leave capacity idle when a genuine gap exists), launched a replacement VM via the collision-free consolidated
+launcher
+(`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2015-01-01 --end-date 2017-02-01 --mode batch --operation compute --launch-mode full`),
+targeting the 763-day gap — the highest-value target since it's the largest unclaimed span. New VM:
+**`features-sports-sports-20260714-201910`** (SPOT, RUNNING, `asia-northeast1-c`, launched 20:19:10Z). Fleet is back to
+3 VMs. Launcher flagged one stale tarball (`unified-trading-library` 1 commit behind — `git log` showed only
+`feat(manifest): scope ManifestFreshnessCache reads to caller's date range`, an unrelated read-scoping perf change, not
+a correctness fix) — accepted as low-risk rather than killing/relaunching the just-started VM to republish.
+
+**What I did NOT do**: did not touch the 2 healthy running VMs (`-085642`, `-085726`) — no reason to. Did not launch a
+second VM for the 2018-07-09→2019-08-11 gap this dispatch (no more freed capacity; the plan's established fleet size for
+this todo has consistently been ~3 concurrent VMs across dozens of dispatches — adding a 4th unprompted would be scope
+creep beyond "restore what just freed up"). Did not re-run `check_pipeline_completeness.py` (Todo 2/gate) — still would
+just reconfirm BLOCKED-PREREQ at real compute cost with ~68% coverage. Did not flip Todo 1.
+
+**Handoff for the next dispatch**: verify `features-sports-sports-20260714-201910` is genuinely progressing (not stuck
+at boot) — check its `run.log` for per-date Calculator activity, and re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,866,
+now with 3 VMs contributing again). Once ANY of the 3 current VMs (`-085642`, `-085726`, `-201910`) completes and frees
+capacity again, the next-highest-value unclaimed target is **2018-07-09 → 2019-08-11 (399 days)** — launch via the same
+`launch-features-vm.sh --feature-family sports` pattern. The small scattered 1-6 day gaps (Feb-Mar 2017,
+2024-02-03→2024-02-08) are lower priority and likely honest-absence; only worth a dedicated check once the two large
+gaps are claimed.
+
+No repo code commit this entry (VM launch + read-only verification only, no code changed); this plan-doc edit (banner
+update + this Progress Log entry) ships via the `docs(plans):` carve-out. `/done` follows — this dispatch's
+`done_definition` ("checkbox flipped in plan + code shipped") doesn't fit cleanly (no code shipped, checkbox correctly
+not flipped since compute isn't done) but real, concrete forward progress was made (a genuine gap identified
+
+- closed with a new VM) — evidenced by the launched VM name/timestamp above.
+
+### 2026-07-14 13:57 UTC — data_engineering slot-8 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-15's check ~67min earlier, steady progress, no new action)
+
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
 
 Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
