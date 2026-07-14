@@ -1768,3 +1768,12 @@ false-green this whole exercise exists to catch.
 **Checkbox flipped above** with full evidence (fleet re-launch, verify-script methodology + results, the residual
 investigation, and the peer-repair convergence). Todo 9 was already correctly flipped by the peer with matching evidence
 by the time I reached this point — left as-is, no duplicate edit needed.
+
+- 2026-07-14 ~18:2xZ (session 37 — /autonomous loop armed): operator invoked /autonomous on the chain "GW→2020+
+  enrichment + features recompute to verified done-state". Loop contract: AUTONOMOUS_AGENT_RULES + SUB_AGENT_MANDATORY
+  read in full; self-paced wakeups; progress metrics = enrichment captured-cells/quota climbing + features-recompute
+  parquet mtimes advancing + sweep restamp counts; termination = (1) GW features recompute complete + ML-readiness
+  re-verify flipped, (2) 2020+ enrichment fleet complete + parquet-level verify GREEN, (3) historical features
+  recompute + final gates, (4) pre-2025 false-empty sweep done, (5) rule-9 final report here. State at arming: both
+  fleets RUNNING+healthy (5× af-backfill-1724xx enrichment, shards mtime-live 18:15Z; 3× fss-backfill features
+  recompute, launched 17:22Z); pre-2025 false-empty sweep DISPATCHED (hist-false-empty-repair-20260714, no quota).
