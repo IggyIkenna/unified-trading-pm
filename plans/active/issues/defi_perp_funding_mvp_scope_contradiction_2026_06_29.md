@@ -203,21 +203,25 @@ and the v10 G2 perp_funding gate are valid.
 - [x] [SCRIPT] P1. Fix the DRIFT SPOT_PAIR `perp_funding` leak (bundled `_PERPS` instrument_types with no
       per-instrument_type data_types split) via `VALID_DATA_TYPES_VENUE_EXCLUSIONS`; add regression tests. Repo:
       `unified-api-contracts`. ✅ — `unified-api-contracts@b7cf3106` (2026-07-11).
-- [ ] [OPERATOR] P0. Decide the DRIFT V2 sig-index Helius throughput path: (a) upgrade the Helius API plan for higher
+- [x] ✅ [OPERATOR] P0. Decide the DRIFT V2 sig-index Helius throughput path: (a) upgrade the Helius API plan for higher
       RPS, (b) launch N more parallel-walker VM segments (`build_drift_v2_sig_index.py --before-sig`) to divide the
       ~11-month unindexed gap (2025-01-15 → 2025-12-23), or (c) accept the gap and mark those dates
       `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`-equivalent out-of-reach, closing the AO item without full coverage.
-      Blocks the actual DRIFT perp_funding backfill VM re-launch (AO item `mvp_backfill_defi_onchain_v10-010`). **Still
-      genuinely open (2026-07-14)** — this is a cost/infra decision only the operator can make. **CORRECTION 2026-07-14
-      (data_engineering slot-14): the "narrowed scope" claim below is FALSE — re-verify before ruling.** Exhaustively
-      confirmed (fresh-pull, `git log --all` + `git reflog` + full-tree grep on `market-tick-data-service`) that the
-      claimed 429-burst code fix (new `VenueRateLimiter`/`TokenBucket` usage, a `solana_defi_drift_helius.py` split
-      module, 2 named regression tests) does NOT exist anywhere in the repo — `solana_defi_drift.py` is still 853 lines,
-      unchanged since `874a0bbf`. The fix was drafted/described in the v10 plan's 2026-07-14 Progress Log with a literal
-      unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`) that was never filled in — the quickmerge
-      never landed. ~~**The 429-burst code defect is still live.**~~ **RESOLUTION 2026-07-14 12:04 UTC (the
-      operator-dispatched session, same session that wrote the original claim): the quickmerge HAS NOW LANDED —
-      `market-tick-data-service@7a8bc43c` on `origin/live-defi-rollout`** (verified
+      Blocks the actual DRIFT perp_funding backfill VM re-launch (AO item `mvp_backfill_defi_onchain_v10-010`). —
+      **RESOLVED BY OPERATOR RULING (b) — 2026-07-14, main session (relayed via coordinator to the dispatched worker)**:
+      "More walker VMs. No plan upgrade; close the 2025-01-15→2025-12-23 sig-index gap with parallel SPOT walker
+      segments within the current plan, and launch the perp_funding backfill for indexed windows now." Modest segment
+      count mandated (2-3; each VM shares the same Helius key, so aggressive parallelism converts to 429/backoff waste).
+      Execution + VM evidence tracked in `mvp_backfill_defi_onchain_v10_2026_06_27.md` G1.5 (2026-07-14 ruling-execution
+      entry). **CORRECTION 2026-07-14 (data_engineering slot-14): the "narrowed scope" claim below is FALSE — re-verify
+      before ruling.** Exhaustively confirmed (fresh-pull, `git log --all` + `git reflog` + full-tree grep on
+      `market-tick-data-service`) that the claimed 429-burst code fix (new `VenueRateLimiter`/`TokenBucket` usage, a
+      `solana_defi_drift_helius.py` split module, 2 named regression tests) does NOT exist anywhere in the repo —
+      `solana_defi_drift.py` is still 853 lines, unchanged since `874a0bbf`. The fix was drafted/described in the v10
+      plan's 2026-07-14 Progress Log with a literal unresolved placeholder SHA (`@<pending-quickmerge-sha, see below>`)
+      that was never filled in — the quickmerge never landed. ~~**The 429-burst code defect is still live.**~~
+      **RESOLUTION 2026-07-14 12:04 UTC (the operator-dispatched session, same session that wrote the original claim):
+      the quickmerge HAS NOW LANDED — `market-tick-data-service@7a8bc43c` on `origin/live-defi-rollout`** (verified
       `git merge-base --is-ancestor 7a8bc43c origin/live-defi-rollout` → true; 3 files, +404/-102:
       `solana_defi_drift.py` trimmed to 757 L, new `solana_defi_drift_helius.py` 278 L, 2 new regression tests in
       `test_solana_defi_handler.py`). Slot-14's verification was CORRECT at the time it ran — the code sat uncommitted
