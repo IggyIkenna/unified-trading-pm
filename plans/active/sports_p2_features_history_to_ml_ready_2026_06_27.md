@@ -121,6 +121,29 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 12:33 UTC — data_engineering slot-16 (Todo 3 re-dispatch — immediately following this same session's Todo 1 check ~3min earlier, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Immediately following my own Todo 1 dispatch above (fleet health confirmed 3 VMs RUNNING, no crash/OOM, coverage
+2,502/4,210 ≈ 59.4% at 12:28Z) — "Features manifest clean over FULL history" cannot be honestly evaluated while ~41% of
+history is unattempted, the same structural gate every prior dispatch on this todo has found. Not re-running
+`check_pipeline_completeness.py` or re-polling the fleet — my own Todo 1 check moments earlier already confirmed health
+and progress, so no fresh compute-cost check needed this cycle.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (none dead, per my own check 3 min prior). Did not flip
+Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,502).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
 ### 2026-07-14 12:28 UTC — data_engineering slot-16 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-12's check ~23min earlier, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
