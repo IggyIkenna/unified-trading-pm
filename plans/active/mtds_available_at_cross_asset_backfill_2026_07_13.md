@@ -617,10 +617,10 @@ section exists to prevent. Did NOT touch production (no apply, no consolidate, n
 Not filing a duplicate `/blocked` for the same still-open root gate — calling `/skip-current-task` citing this entry +
 the existing `BLK-f3cdf442`/`BLK-ccb6cd86` escalations, per established precedent. **Flagging again for main/operator,
 now at 7 independent confirmations across slots 9/10/11/12/4**: the P0 operator maintenance-window decision remains the
-sole blocker for the tradfi/prediction apply lanes, and the parking fix genuinely requires main/operator's
-central-host `backlog.yaml` access — recommend actioning the parking directly, or resolving the maintenance-window
-decision itself, before this task burns further slot cycles. No production writes made this touch; no cron state
-changed, no manifest touched.
+sole blocker for the tradfi/prediction apply lanes, and the parking fix genuinely requires main/operator's central-host
+`backlog.yaml` access — recommend actioning the parking directly, or resolving the maintenance-window decision itself,
+before this task burns further slot cycles. No production writes made this touch; no cron state changed, no manifest
+touched.
 
 **Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
 `mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
