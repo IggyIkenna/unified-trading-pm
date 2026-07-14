@@ -6,8 +6,8 @@ summary:
   each host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM
   budget (reserved + this-run peak-RSS ≤ safety-fraction of host RAM) AND a CPU budget (running heavy count ≤ cores ×
   fraction) allow it — using host-portable per-repo cost baselines. Fixes the K=1 floor that taxes the fleet 15–40 min
-  per ship on 61 GB hosts while being correct on an 8 GB VM, a 24 GB Mac, and a 128 GB VM. Interim quick-win — raise K
-  on current 61 GB hosts now (data-backed) — precedes the full governor.
+  per ship on 61 GB hosts while being correct from the 16 GB fleet floor through a 24 GB Mac to a 128 GB VM. Interim
+  quick-win — raise K on current 61 GB hosts now (data-backed) — precedes the full governor.
 status: active
 nature: process
 asset_group: [meta]
@@ -64,8 +64,9 @@ The governor caps concurrent QG heavy phases host-wide at a fixed K (flock token
 `QG_HOST_CONCURRENCY=1` on worker hosts — a floor from the 2026-05-29 chronic-impairment (swap) incident. At current
 fleet size (≈16–20 slots) K=1 turns every `quality-gates.sh` into a 15–40 min queue wait purely to acquire the token.
 The floor is a **fixed number**, so it is simultaneously **too low** for a 61/96/128 GB host (abundant RAM idle) and
-potentially **too high** for an 8 GB VM (two heavy runs would swap). A fixed K cannot be right across a heterogeneous
-fleet: Harsh 96 GB PC, Ikenna 24 GB Apple-silicon laptop, 61 GB worker VMs, plus future 8 GB / 128 GB VMs.
+potentially **too high** for a small host near the 16 GB floor (a few heavy runs would swap). A fixed K cannot be right
+across a heterogeneous fleet: Harsh 96 GB PC, Ikenna 24 GB Apple-silicon laptop, 61 GB worker VMs, plus future 16 GB
+laptops / 128 GB VMs.
 
 ## Goal
 
