@@ -370,13 +370,25 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       already-running bounded process. See the "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below for the
       full table, per-category verdicts, and the precise remaining-work list (each item is an existing `- [ ]` todo in
       §1, none newly discovered, none `BLOCKED-OPERATOR`).
-- [ ] [VERIFY] P1. **Live-execute the new `uts-prod-sports-enrichment-transfermarkt` daily job once** (NEW 2026-07-14,
-      scheduled-capture audit). footystats + soccer_football_info enrichment jobs were live-verified end-to-end this
-      session (see "SCHEDULED/DAILY CAPTURE AUDIT" Progress Log entry); transfermarkt shares the identical
-      `_sports_provider_short_circuit` code path but was not independently executed to avoid piling a 3rd concurrent
-      execution onto an already heavily-contended manifest mid-audit.
+- [x] ✅ [VERIFY] P1. **Live-execute the new `uts-prod-sports-enrichment-transfermarkt` daily job once** (NEW
+      2026-07-14, scheduled-capture audit). footystats + soccer_football_info enrichment jobs were live-verified
+      end-to-end this session (see "SCHEDULED/DAILY CAPTURE AUDIT" Progress Log entry); transfermarkt shares the
+      identical `_sports_provider_short_circuit` code path but was not independently executed to avoid piling a 3rd
+      concurrent execution onto an already heavily-contended manifest mid-audit.
       `gcloud run jobs execute     uts-prod-sports-enrichment-transfermarkt --region=asia-northeast1 --project=central-element-323112`,
-      then confirm a real `PLAYER_VALUES` write lands in the canonical `instruments-store-sports-prd` manifest.
+      then confirm a real `PLAYER_VALUES` write lands in the canonical `instruments-store-sports-prd` manifest. **✅
+      DONE 2026-07-14 (slot-5). Executed via the google.cloud.run_v2 SDK (gcloud CLI is broken on this slot —
+      snap-confine cap error): execution `uts-prod-sports-enrichment-transfermarkt-fvzzc`, start 16:48:29Z → completion
+      16:49:20Z, succeeded=1 failed=0. Job logs confirm the intended code path end-to-end: "Sports provider filter from
+      CLI: TRANSFERMARKT" → "TRANSFERMARKT short-circuit: skipping orchestrator" (the shared
+      `_sports_provider_short_circuit` path) → "ManifestWriter cleanup: flushed buffers for
+      [instruments-store-sports-prd-…]" (correct manifest bucket). No NEW PLAYER_VALUES row landed because the job
+      correctly IDEMPOTENTLY SKIPPED: "PLAYER_VALUES: skipping date=2026-07-14 (all canonical leagues captured)" — the
+      data was already captured by today's 15:02Z scheduled run (58,092 transfermarkt PLAYER_VALUES `captured` rows
+      already in the canonical, max attempted_at 2026-07-14T15:02:35Z). So the write PATH is proven (it lands when there
+      is uncaptured data, as the 15:02 run shows) and the skip-if-fresh guard works — identical verified behavior to
+      footystats/soccer_football_info this session. Evidence: Cloud Run execution fvzzc succeeded + job-log lines
+      above.**
 - [ ] [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
       `deployment-service@5da4b620` fixed `sports_trigger_state.py`'s fixture-calendar path/field-mapping bug (root
       cause of the ENTIRE pre-match/post-match trigger tier being silently dead ≥14 days — 0 fixtures ever found by
