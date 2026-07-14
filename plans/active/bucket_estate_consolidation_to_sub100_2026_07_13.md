@@ -346,15 +346,12 @@ the 6-sibling precedent, verified live via `buckets describe` immediately after 
 `gcloud storage buckets delete --quiet` attempt right after arming correctly failed ("Bucket is not empty") — expected,
 since unlike the 6 siblings (already 0 live objects before their purge was armed) this bucket still holds its full
 ~28,228-object legacy corpus untouched (the prior session only diffed + reverted, never deleted anything). **STATUS:
-ARMED, DRAINING — IN FLIGHT, NOT YET COMPLETE.** GCS's lifecycle evaluator runs ~once/24h and must process an order of
-magnitude more objects than the near-empty siblings did, so full drain likely runs LONGER than the siblings' ~24-48h
-window. Do not force a `gcloud storage rm -r` bulk delete (bypasses the async lifecycle path this task deliberately
-mirrors) — instead periodically retry
-`gcloud storage buckets delete gs://instruments-store-cefi-central-element-323112 --quiet`; success = proof of true
-zero-version state, confirm immediately with `buckets describe` → expect 404, exactly per the 6-sibling "Async purge
-COMPLETE" pattern above. This row will flip again once a delete attempt actually succeeds — no bucket-shell deletion has
-happened yet as of this update. | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL
-PATH_REGISTRY repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api
+COMPLETE 2026-07-15** — follow-up
+`gcloud storage buckets delete gs://instruments-store-cefi-central-element-323112 --quiet` succeeded (no "not empty"
+error — proof of true zero-version state), confirmed via `buckets describe` → 404. Drain finished in well under 24h from
+the 2026-07-14 13:31:43Z arm, faster than the conservative estimate above given the ~28,228-object corpus size. **Item A
+CLOSED — bucket genuinely deleted.** | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`)
+| UTL PATH_REGISTRY repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api
 data-status readers until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a
 no-new-writes check. | | C | `lending-indices` + `-prd` | **UPDATED 2026-07-14 (this session) — writer fixed, real
 historical data migrated, purge ARMED (not yet 404).** `_resolve_bucket()` was CONFIRMED still writing to the flat
@@ -408,15 +405,16 @@ KAMINO/SOLEND/MARGINFI Solana-lending (bare pre-canonicalisation shape, `instrum
   stale/dead, awaiting its own delete-when condition). **Purge-lifecycle ARMED on both buckets 2026-07-14T14:00Z UTC**
   (identical `age=0(isLive)+daysSinceNoncurrentTime=0(non-live)` JSON used for the 6-sibling precedent) — flat bucket
   unversioned, prd bucket `versioning_enabled=true`/`soft_delete_policy.retentionDurationSeconds=604800`, both confirmed
-  live via `buckets describe` immediately after arming. **STATUS: ARMED, DRAINING — NOT YET 404.** Bucket delete is the
-  follow-up one-liner once GCS's ~24-48h async lifecycle drain confirms 0 live+noncurrent objects (retry
-  `gcloud storage buckets delete gs://<bucket> --quiet`; success = proof of true zero-version state, confirm with
-  `buckets describe` → expect 404 — exactly the 6-sibling pattern). Full narrative + exact evidence in the Progress Log
-  entry below. **UPDATED 2026-07-14 (autonomous dispatch, separate session) — both follow-up findings this row flagged
-  are now investigated to ground truth; see the "2026-07-14, autonomous dispatch — dependency-checker fix + VM watchdog
-  investigation" Progress Log entry below for full evidence.** Summary: (1) the `features-service` dependency-checker
-  gap flagged above IS fixed now — `onchain/app/core/dependency_checker.py`'s `UPSTREAM_DEPS_DEFI` (4 entries:
-  lst-rates/lending/oracle/perp) and the base `UPSTREAM_DEPS`'s 3 sibling entries all repointed to the shared canonical
+  live via `buckets describe` immediately after arming. **STATUS: COMPLETE 2026-07-15** — follow-up
+  `gcloud storage buckets delete --quiet` on BOTH `lending-indices-central-element-323112` and
+  `lending-indices-prd-central-element-323112` succeeded (no "not empty" error), both confirmed 404 via
+  `buckets describe`. Drain finished within ~24h of the 2026-07-14T14:00Z arm. **Item C CLOSED — both buckets genuinely
+  deleted.** Full narrative + exact evidence in the Progress Log entry below. **UPDATED 2026-07-14 (autonomous dispatch,
+  separate session) — both follow-up findings this row flagged are now investigated to ground truth; see the
+  "2026-07-14, autonomous dispatch — dependency-checker fix + VM watchdog investigation" Progress Log entry below for
+  full evidence.** Summary: (1) the `features-service` dependency-checker gap flagged above IS fixed now —
+  `onchain/app/core/dependency_checker.py`'s `UPSTREAM_DEPS_DEFI` (4 entries: lst-rates/lending/oracle/perp) and the
+  base `UPSTREAM_DEPS`'s 3 sibling entries all repointed to the shared canonical
   `market-data-tick-{asset_group_lower}-{project_id}` bucket; ALSO found + fixed a deeper, previously-undiscovered
   sibling bug in the same repo — `onchain/app/core/data_loader.py::_resolve_mtds_parquet_files()` independently
   constructed the SAME now-404 dedicated bucket names via `get_bucket_name(bucket_domain)` for the actual DeFi
