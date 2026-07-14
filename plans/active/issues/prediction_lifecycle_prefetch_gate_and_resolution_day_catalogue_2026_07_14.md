@@ -75,17 +75,29 @@ locked_since:
 
 ## Todos
 
-- [ ] [VERIFY] P0. Trace the propagation: IS lifecycle/catalogue cron → `market_lifecycle/by_canonical_group/day=` store
-      → `_load_lifecycles_from_gcs` → `cid_to_shard` (Polymarket) and the Kalshi equivalent. Quantify the distribution
-      of (attempted day − market `end_date`) over a sampled backfill window; pull the existing
+- [x] ✅ [VERIFY] P0. Trace the propagation: IS lifecycle/catalogue cron → `market_lifecycle/by_canonical_group/day=`
+      store → `_load_lifecycles_from_gcs` → `cid_to_shard` (Polymarket) and the Kalshi equivalent. Quantify the
+      distribution of (attempted day − market `end_date`) over a sampled backfill window; pull the existing
       `rejected_pre`/`rejected_post` gate counters from Cloud Logging rather than re-deriving. Gate: a one-page
-      confirmed data-flow diagram + counts, appended here.
-- [ ] [CODE] P1. Pre-fetch lifecycle gate in both adapters: filter `cid_to_shard`/`ticker_lifecycles` to ids whose
+      confirmed data-flow diagram + counts, appended here. — evidence: `unified-trading-pm@dea6c88fa` (Progress Log
+      data-flow + real-GCS-partition A/B + Cloud Logging attempt, see entry above); verdict CONDITIONALLY CONFIRMED
+      (resolution-day-scoped for backfilled dates, active-window for live-captured dates).
+- [x] ✅ [CODE] P1. Pre-fetch lifecycle gate in both adapters: filter `cid_to_shard`/`ticker_lifecycles` to ids whose
       bounds overlap the target day BEFORE `get_trades_batch`, reusing `_apply_lifecycle_gate`'s bounds comparison as a
       pre-check. Skipped combos write typed no-fetch honest absence (`EXPECTED_INSTRUMENT_NOT_LISTED` /
       `EXPECTED_INSTRUMENT_DELISTED` via the sentinel path), NOT attempted `SOURCE_RETURNED_ZERO`; shard atom unchanged;
       decision-338 untouched (no new EU seeding). Gate: unit test — a pre-genesis and a post-resolution day for a
-      fixture market produce zero network calls + EXPECTED_* rows; QG green.
+      fixture market produce zero network calls + EXPECTED_* rows; QG green. — evidence:
+      `market-tick-data-service@abe0904d` (shared `compute_lifecycle_window_ts`/`classify_lifecycle_prefetch_skip`/
+      `prefilter_ids_by_lifecycle_window` in `base_prediction_adapter.py`; pre-fetch gate in
+      `polymarket_adapter.py::_fetch_trades_for_date` + `_polymarket_helpers.py::_prefilter_trade_cids`;
+      `kalshi_adapter.py::_fetch_trades_for_date`; typed sentinel-path routing in
+      `engine/orchestrator/sentinels.py::_emit_tier3_for_dt` via new
+      `engine/orchestrator/     prediction_tier3_lifecycle.py`; fail-open coverage guard for the 07-01-outage class; 45
+      new/updated unit tests across `test_polymarket_adapter_lifecycle_gating.py` /
+      `test_kalshi_adapter_lifecycle_gating.py` / `test_sentinels_prediction_lifecycle_tier3.py`, all green; QG
+      `.qg_last_passed_sha=f4b19bad2` == HEAD before quickmerge; 173 total tests re-run clean (36 new/touched + 137
+      broader prediction/sentinel regression sweep, 0 failures)).
 - [ ] [CODE] P1 (contingent on the P0 VERIFY confirming propagation). Widen the per-day catalogue derivation from
       resolution-day-only to active-window (`created_at ≤ day ≤ end_date`) — MUST land together with (or after) the
       pre-fetch gate, otherwise attempt volume explodes. Gate: sampled day's cid list contains active non-resolving
@@ -161,9 +173,36 @@ locked_since:
   90-day window. Per the todo's "if reachable" qualifier, this is a clean negative rather than a blocker; the
   GCS-partition A/B comparison above is the load-bearing evidence for this VERIFY.
 
-- 2026-07-14 [CODE P1 — SHIPPED]: Implemented the pre-fetch lifecycle gate exactly as scoped (adapters only, no
-  catalogue widening). See `## Catalogue-widening scope (contingent P1 — NOT implemented this pass)` below for the item
-  deliberately deferred per the task's explicit instruction.
+- 2026-07-14 [CODE P1 — SHIPPED, `market-tick-data-service@abe0904d`]: Implemented the pre-fetch lifecycle gate exactly
+  as scoped (adapters + the Tier-3 sentinel-path typed reason; no catalogue widening — see below).
+  - **Shared bounds SSOT**: extracted `compute_lifecycle_window_ts` / `classify_lifecycle_prefetch_skip` /
+    `prefilter_ids_by_lifecycle_window` into `base_prediction_adapter.py` — the exact bounds comparison
+    `_apply_lifecycle_gate` (Polymarket) and `_collect_kalshi_frames` (Kalshi) already used for the post-fetch gate, now
+    reused for the NEW pre-fetch gate so both layers can never disagree. Both post-fetch gates were refactored to call
+    the shared helper (behavior-preserving; only a sub-second-truncation edge case, already Polymarket's convention, is
+    now uniform across both venues).
+  - **Pre-fetch gate**: `polymarket_adapter.py::_fetch_trades_for_date` (+
+    `_polymarket_helpers.py:: _prefilter_trade_cids`) and `kalshi_adapter.py::_fetch_trades_for_date` (new, extracted
+    from `download_batch` to stay ≤50L) now filter the known-id list to ids whose lifecycle window overlaps the target
+    day BEFORE `get_trades_batch` — zero network calls for out-of-window ids. Fail-open guard
+    (`_MIN_LIFECYCLE_COVERAGE_FRACTION=0.5`): an empty or suspiciously-small lifecycle map bypasses gating entirely for
+    that day (fetches every known id, logs a WARNING) — the 07-01-outage-class guard the task required.
+  - **Typed no-fetch honest absence via "the sentinel path"**: `engine/orchestrator/sentinels.py::_emit_tier3_for_dt`
+    (new `engine/orchestrator/prediction_tier3_lifecycle.py` module, extracted to stay ≤900L) now classifies each
+    expected-but-uncaptured POLYMARKET/KALSHI `trades` instrument_id via the SAME bounds comparison and routes to
+    `record_expected_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED|EXPECTED_INSTRUMENT_DELISTED)` instead of the fallback
+    `record_empty(reason=SOURCE_RETURNED_ZERO)` — scoped to POLYMARKET/KALSHI `trades` only (verified via a dedicated
+    regression test that BINANCE/other dts never touch the new lifecycle loader). Decision-338 untouched: no new
+    manifest rows/EU-seeding at per-conditionId grain in the enumerator — this only re-types the reason on rows that
+    already exist in the Tier-3 fan-out today.
+  - **Post-fetch gate kept as defense-in-depth** (unchanged behavior, just refactored onto the shared helper).
+  - **Tests**: 45 new/updated unit tests (pre-genesis / post-resolution / empty-map-bypass / active-window-fetched ×
+    both adapters + 6 new sentinels.py Tier-3 tests) — all green; a 137-test broader regression sweep across
+    prediction/sentinel/manifest-finalize/CF-11 test files — 0 failures. QG `.qg_last_passed_sha=f4b19bad2` ==
+    pre-quickmerge HEAD; quickmerge landed `abe0904d` on `live-defi-rollout` (confirmed ancestor of
+    `origin/live-defi-rollout`).
+  - See `## Catalogue-widening scope (contingent P1 — NOT implemented this pass)` below for the item deliberately
+    deferred per the task's explicit instruction (now CONFIRMED necessary by the P0 VERIFY, not merely hypothesized).
 
 ## Catalogue-widening scope (contingent P1 — NOT implemented this pass)
 
