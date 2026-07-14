@@ -138,6 +138,20 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 21:10 UTC — data_engineering (per-league-layout issue doc P1 SHIPPED: ml-service loader is now layout-aware + bucket-corrected; derived_features loads from GCS for the first time)
+
+**Issue doc `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14` P1 flipped — ml-service@360da40**
+(quickmerge → LDR). Two read-side gaps closed in one commit: (1) `SportsFeatureLoaderMixin` now probes the day-level
+blob AND (single prefix list per (date, group)) the per-league `league=<raw_af_id>` partitions, concatenating league
+frames; horizon sidecar falls back to any one league's copy. (2) `Settings.get_sports_bucket()` was resolving the legacy
+FLAT `features-sports-{pid}` bucket (near-empty; only `day=2020-01-01`) — repointed through
+`get_bucket_name("features_sports")` → env-tiered `features-sports-prd-{pid}` (template kept as override escape hatch).
+**Real-bucket proof (day=2025-10-20)**: derived_features 24 fixtures × 728 cols across 17 leagues; fixture_features
+24×29; odds day-level 31×143 unregressed; horizon schema 876 cols; full `_query_sports_features` returns the 24×728
+matrix. 8 new unit tests; QG --no-fix green. **New side-finding filed on the issue doc**: real odds_features parquets
+key on `event_id` (no `fixture_id`), so the cross-group merge skips odds — odds features load but can't join the matrix
+(pre-existing, now visible). P2 (failure-atom alignment + 27-row stale-failed cleanup) in progress this session.
+
 ### 2026-07-14 21:02 UTC — data_engineering slot-4 (Todo 1 re-dispatch — followed up on the prior entry's self-correction: MANIFEST-verified (not GCS-listing) the flagged 2018-07-09→2019-08-11 gap is genuine, launched a gap-fill VM for it; confirmed 2 more shards completed cleanly; checkbox NOT flipped)
 
 **Todo 1 (compute features 2015→present) — real forward action taken, following up on the prior dispatch's explicit
