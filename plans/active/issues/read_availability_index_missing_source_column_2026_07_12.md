@@ -9,7 +9,7 @@ summary: >-
   raw canonical parquet carries it. Any downstream code that filters or groups by `source` via the normal full-schema
   reader silently gets source="" for every row instead of an error — a silent-placeholder class bug on a field CLAUDE.md
   calls out as crosscutting and required.
-status: open
+status: resolved # corrected 2026-07-14, was: open (both todos [x]; 2026-07-12 Progress Log: item #2 "AUDIT COMPLETE ... No new code needed" — verify-rerun-2 finding 100)
 nature: notes
 asset_group: [cross-cutting]
 stage: [data]
@@ -25,7 +25,7 @@ related:
 created: 2026-07-12
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-library@a45066a9 (slot-7 data_engineering) — reader fix + item #2 audit (slot-8) confirmed no further callers affected
 source: [sports_manifest_consolidator_duckdb_crash_and_silent_empty_read-003, slot-7 data_engineering]
 priority: P1
 execution_scope: orchestrator-agent
