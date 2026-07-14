@@ -16,6 +16,7 @@ REG = docspec.Registries(
     vms=frozenset({"harsh_pc", "vm-defi", "NA"}),
     epics=frozenset({"agent_operating_framework_master", "defi_master"}),
     repos=frozenset({"mtds", "instruments-service"}),
+    roles=frozenset({"data_engineering", "infra", "backend-engineer", "ui-developer", "review"}),
 )
 
 
@@ -174,6 +175,25 @@ def test_optional_assigned_vm_empty_is_ok():
     vs = validate_frontmatter("issue", issue, REG)
     assert "assigned_vm" not in _fields(vs, Sev.HARD)
     assert "assigned_vm" not in _fields(vs, Sev.SOFT)
+
+
+def test_assigned_role_absent_is_ok():
+    # elective: absent is fine (plan predates the field / never got one) — not HARD, not SOFT
+    vs = validate_frontmatter("plan", _valid_plan(), REG)
+    assert "assigned_role" not in _fields(vs, Sev.HARD)
+    assert "assigned_role" not in _fields(vs, Sev.SOFT)
+
+
+def test_assigned_role_known_role_is_ok():
+    fm = _valid_plan()
+    fm["assigned_role"] = "data_engineering"
+    assert "assigned_role" not in _fields(validate_frontmatter("plan", fm, REG), Sev.HARD)
+
+
+def test_assigned_role_unknown_role_is_hard():
+    fm = _valid_plan()
+    fm["assigned_role"] = "data-pipeline-engineer"  # not a role: value under agents/*.md
+    assert "assigned_role" in _fields(validate_frontmatter("plan", fm, REG), Sev.HARD)
 
 
 def test_unknown_doc_type_is_hard():
