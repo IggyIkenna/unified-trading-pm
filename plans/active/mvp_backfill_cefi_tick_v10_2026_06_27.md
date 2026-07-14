@@ -2725,3 +2725,12 @@ spot_pair; this session owns the majors mop-up + the OKX/BINANCE/KRAKEN-FUTURES 
 slot) + the post-wave coverage re-measure. Launcher fix shipped en route: SINGLE_VM_QUEUE planned-count estimate now
 counts 1 for heavy-only (spot venues) launches instead of a blanket 2 (deployment-service, quickmerged) — without it the
 guard wrongly refused queue launches at 2 running.
+
+### Cap-breach note — 4 Tardis VMs running (2026-07-14T13:18Z check)
+
+Fleet: bitget 2025-heavy/light (Run-#7 relaunch, 11:29Z) + `cefi-queue-heavy-20260714-123340` (this session, 12:33Z,
+STARTED 12:42Z and streaming healthily) + `cefi-deribit-2026-heavy-20260714-124710` (Run-#7 lane, 12:47Z) = **4 > the
+3-VM cap**. The deribit launch is lease-ON/VM_FORCE=false; it passed either via launcher FORCE=1 or a checkout that
+predated the guard ship (deployment-service quickmerge ~12:0xZ; slot FF-pull cadence 5min — close race). All 4 are
+lease-serialized so this degrades per-VM efficiency rather than risking the lease-OFF collapse mode; no VM killed (never
+bulk-kill a peer slot's running work). Next launch from this session waits for fleet < 3. Operator notified.
