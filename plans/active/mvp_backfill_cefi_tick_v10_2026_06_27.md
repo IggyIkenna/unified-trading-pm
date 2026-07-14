@@ -2572,3 +2572,39 @@ silently) — did NOT use `FORCE=1` to override it; that would reintroduce the e
 parallel-wave shape" directive (03:45Z entry) already warned against. **Next session: check
 `gcloud compute instances list --filter='name~bitget'` first — once those 6 VMs have self-terminated, this exact launch
 command is ready to run as-is.**
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T08:10-09:22Z: phantom-reconcile `--apply` — a real concurrent-writer race condition found (NOT a manifest-consolidator/reconcile-script bug; a genuine new risk class for maintenance ops run against a live manifest)
+
+**Environment finding (unrelated to data correctness, noted for future sessions): background bash tasks in this
+execution environment appear to have a hard ~13-14 minute lifetime cap** — two separate long-running operations (the
+phantom-reconcile `--apply` full-corpus GCS walk, and a simple 3-min-interval VM-status polling loop) both died with
+exit code 144 at almost exactly the same elapsed wall-clock mark on two independent launches, despite doing completely
+different work. Not a script bug — confirmed by relaunching the exact same phantom-reconcile command fully detached via
+`nohup ... < /dev/null & disown`, which then ran to completion at 14+ minutes elapsed, well past both prior death
+points.
+
+**The detached run completed its own audit + write-back cycle successfully** (log: "Uploading reconciled manifest
+(7526168 rows, 2546 phantoms flipped, 0 unphantomed)" then "Done." at 09:18:01) — **but direct verification (never trust
+the log alone, per this session's own established discipline) showed the flip did NOT survive**: a fresh download of
+`availability_index.parquet` immediately after showed the SAME 13,489 phantom-marker rows as the pre-session baseline —
+zero net change. The bucket's own `Update time` (09:20:16 GMT) was ~2 minutes AFTER the reconcile script's own "Done."
+(09:18:01) and the live row count had grown by 937 rows in that gap — **strong evidence a concurrently-running
+BITGET-FUTURES capture VM did its own read-modify-write cycle on the SAME `availability_index.parquet` object using a
+manifest snapshot it had already loaded BEFORE the reconcile's flip landed, silently overwriting the flip when its own
+write completed afterward.**
+
+**This is a genuine, previously-undocumented risk class**: `reconcile_phantom_manifest_rows_all.py`'s own "staleness
+guard" (re-read + re-merge immediately before its OWN write, module docstring) only protects against staleness relative
+to OTHER shards that landed BEFORE the reconcile's write — it has no protection against a writer that lands AFTER the
+reconcile's write completes. Unlike `launch-cefi-sharded-backfill.sh` (which refuses to launch a second concurrent
+sharded-backfill wave — the guard I hit earlier this session), `reconcile_phantom_manifest_rows_all.py` has NO check for
+actively-running backfill VMs before an `--apply` run. **Recommendation for whoever picks this up**: either (a) always
+run `--apply` only when `gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-"'` returns empty
+(manual discipline, what this session will now do), or (b) file a code fix adding the same concurrent-VM guard
+`launch-cefi-sharded-backfill.sh` already has to this script's `--apply` path (a real, scoped, low-risk hardening — NOT
+attempted this session, time-boxed out).
+
+**Action taken**: did NOT retry `--apply` again while BITGET-FUTURES VMs remain active (5 of 6 still running as of
+09:21Z — `2024-light` self-terminated). Will retry once `gcloud compute instances list --filter='name~bitget'` returns
+empty. The 2,546 real phantom rows this session found are still accurately diagnosed (dry-run confirmed, unaffected by
+this race) — only the `--apply` write-back needs a clean, VM-free window.
