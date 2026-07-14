@@ -142,7 +142,12 @@ the entire date's capture (schema mismatch, uncaught).
 
 - **[DERIBIT]** 273 real rows tagged `venue=DERIBIT` (not `DERIBIT-COMBO`) with `instrument_type=COMBO` in the same-day
   production parquet — possible regression/duplicate-source, root cause NOT traced (needs a follow-up investigation,
-  flagged not fixed).
+  flagged not fixed). **Cross-reference (added 2026-07-14, doc-reconciliation finding 134):** the sibling same-day doc
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:221-226` independently examined this exact fact
+  and confirmed `_split_by_instrument_type` reproduces it as part of a clean 5-way split (OPTION=2,586/COMBO=273/
+  FUTURE=71/PERPETUAL=21/SPOT_PAIR=14, summing to the real 2,965-row snapshot) — that verifies the writer's split logic
+  is faithful to the source snapshot, but does not itself root-cause why these 273 rows carry `instrument_type=COMBO`
+  under bare `DERIBIT`; this doc's root-cause todo (P1, below) stays open.
 - **[DERIBIT-COMBO]** no live WS connector registered for this venue at all — combo trades/book cannot be captured live,
   only via batch.
 - **[OKX]** `market-tick-data-service/.../live/connectors/okx_ws.py` — OKX-SWAP trades registered under the wrong venue

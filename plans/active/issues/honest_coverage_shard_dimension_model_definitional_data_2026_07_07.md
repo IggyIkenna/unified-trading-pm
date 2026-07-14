@@ -225,6 +225,14 @@ directly against it. It correctly split into **5** groups (not 4 as earlier assu
 DERIBIT): OPTION=2,586, COMBO=273, FUTURE=71, PERPETUAL=21, SPOT_PAIR=14, summing exactly to 2,965. Quality gates
 (`bash scripts/quality-gates.sh --no-fix`) passed clean (153s).
 
+**Cross-reference (added 2026-07-14, doc-reconciliation finding 134):** the sibling same-day doc
+`mtds_is_full_adapter_smoketest_findings_2026_07_07.md:143-145` independently flags this exact 273-row
+`venue=DERIBIT`/`instrument_type=COMBO` fact as a "possible regression/duplicate-source, root cause NOT traced" open P1.
+Neither doc had cross-referenced the other before this pass. This confirmation only establishes that
+`_split_by_instrument_type` faithfully reproduces the real per-instrument snapshot's shape (273+2,586+71+21+14 = 2,965,
+no rows lost or invented); it does NOT itself root-cause why 273 real production rows carry `instrument_type=COMBO`
+under bare `DERIBIT` rather than under `DERIBIT-COMBO` — that question stays open in the sibling doc, not resolved here.
+
 **Not yet done**: raw-parquet spot-check of the 5 flagged additional CeFi venues; a live backfill/re-run to populate
 historical dates with the corrected per-type rows (today's fix only affects NEW writes going forward); DERIBIT-COMBO
 venue-identity retirement (separate todo below, deliberately deferred).

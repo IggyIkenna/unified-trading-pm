@@ -51,7 +51,9 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated:
+  2026-07-10 # was: 2026-06-27 (predates own `created: 2026-07-06` — corrected 2026-07-14,
+  # doc-reconciliation finding 135; body's Progress Log + top banner show S1-S7 actively landing through 2026-07-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
@@ -652,17 +654,16 @@ is:
   the Nautilus-boundary map, decide the UAC-facing branch by audit at execution time). Filed as `status: draft`,
   `assigned_vm: NA` (LOCAL track, default per CLAUDE.md), `depends_on: [coinbase_bare_name_migration_2026_07_06]` — do
   not execute before S1-S6 of THIS plan land.
-- **2026-07-10** — **S4 flipped** by slot-11 (data_engineering, PM-only `docs(plans):` commit — no instruments-service
+- **2026-07-10** — **S4 flipped** by slot-11 (data*engineering, PM-only `docs(plans):` commit — no instruments-service
   code diff). Audited the §2b file list outside S1's `check_enumeration_completeness.py` and S2's `venue_core.py` (both
   in-flight under tasks 001/002 at the time): `cefi_per_venue_capture_summary.py`, `enumerate_expected_universe.py`,
   `local_cefi_recent_gap_fill.sh` already reference `COINBASE-SPOT` exclusively — zero bare-COINBASE lookups to re-key.
-  The 2 historical `reconcile_*_2026_*_*.py` scripts only carry bare COINBASE in documentary comments, correctly left
-  as-is. §2b table updated with confirmed line numbers replacing the `(grep)` placeholders. Note for future dispatch:
-  this plan's S1→S6 steps have a real internal dependency chain (documented in §4) but no
-  `depends_on`/`sequential: true` gating between the per-step backlog tasks, so S1-S6 dispatched to multiple slots in
-  parallel with prereqs reported as "met" — S4 happened to be safe to complete independent of S1/S3 landing order
-  because its target files were already compliant, but that was a lucky audit outcome, not a guarantee; a future step in
-  this DAG shape could be genuinely blocked by out-of-order dispatch.
+  The 2 historical
+  `reconcile*_*2026*_\_\*.py`scripts only carry bare COINBASE in documentary comments, correctly left as-is. §2b table updated with confirmed line numbers replacing the`(grep)`placeholders. Note for future dispatch: this plan's S1→S6 steps have a real internal dependency chain (documented in §4) but no`depends_on`/`sequential:
+  true` gating between the per-step backlog tasks, so S1-S6 dispatched to multiple slots in parallel with prereqs
+  reported as "met" — S4 happened to be safe to complete independent of S1/S3 landing order because its target files
+  were already compliant, but that was a lucky audit outcome, not a guarantee; a future step in this DAG shape could be
+  genuinely blocked by out-of-order dispatch.
 - **2026-07-06** — **Plan drafted** by slot-10 (data_engineering) as gap-016 of
   `wsfeedconnector_phase35_gap_2026_07_06`. Per BLK-22e5f8a5 answered by main: `assigned_vm: NA`, `status: draft`,
   `assigned_role: data_engineering`; execution-service callers documented as out-of-scope with a §7 follow-on task

@@ -112,10 +112,16 @@ locked_since:
 2. **CeFi monotonicity guard has zero alerting — LIGHTER/PACIFICA dark 11+ days**, live incident — CODE_PATH §1.1.
 3. **is-daily-enum-{prediction,sports} still exit(1) in the cloud** despite the fixed UTL coercion, root cause unknown
    (shard-isolation swallows the traceback) — CODE_PATH §1.2.
-4. **59-bug MTDS + instruments-service adapter smoke test** — master record, 12 fully open todos incl. multiple P0 crash
-   risks (Deribit live-WS misclassification, Polymarket `book_snapshot_5` schema crash) — CODE_PATH §1.3.
+4. **59-bug MTDS + instruments-service adapter smoke test** — master record (was: "12 fully open todos incl. multiple P0
+   crash risks (Deribit live-WS misclassification, Polymarket `book_snapshot_5` schema crash)" — corrected 2026-07-14,
+   doc-reconciliation finding 132: both headline P0 crash risks are already fixed (`market-tick-data-service@c55c1509`
+   Deribit dash-count classification fix; `unified-api-contracts@42ce2de3`+`market-tick-data-service@f4a118be`
+   Polymarket schema fix), per this doc's own later Progress Log (§ item 4, "9 todos flipped with commit-sha evidence")
+   and the source doc's `[x]`-flipped checkboxes; only ~2 of 13 todos genuinely remain open — 273-row root-cause, mockup
+   update) — CODE_PATH §1.3.
 5. **Instruments Completion Tracker** — the master coordinator itself, 33 of 37 items still open
-   (denominator-correctness, Stage 3 re-measure, Stage 5 capture-to-100, Decision Gate D6) — MANIFEST_COVERAGE §2.2.
+   (denominator-correctness, Stage 3 re-measure, Stage 5 capture-to-100, D6 implementation follow-ups — decision itself
+   approved 2026-07-07, see item 2 below) — MANIFEST_COVERAGE §2.2.
 6. **Layer-1 re-measure + certify** — cefi/defi/prediction/sports done; tradfi `BLOCKED-PLAN2` on
    `tradfi_v9_stage1_finish` tasks 2–11 — MANIFEST_COVERAGE §2.3.
 
@@ -341,7 +347,14 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    Stages 0–6: TradFi v9 apply completion + legacy-twin bucket deletes, denominator-correctness (single `build_expected`
    producer, cefi gate-authority fix, IS-catalogue B0→B2, LIGHTER/EXTENDED/PACIFICA denominator-gap reapply), Stage 3
    re-measure+certify (blocked on KALSHI-PERP contamination purge), Stage 4 foundation sign-offs, Stage 5
-   capture-to-100, Stage 6 hygiene, + open Decision Gate D6 (shard-dimension model).
+   capture-to-100, Stage 6 hygiene, + Decision Gate D6 (shard-dimension model) — decision itself **APPROVED 2026-07-07**
+   (was: "open Decision Gate D6"; corrected 2026-07-14, doc-reconciliation finding 131: operator go-ahead already given
+   per `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:379-386`, writer fix, DataStatusTab UI
+   fix, and bare-BYBIT/OKX phantom removal already shipped; only downstream implementation follow-ups remain open —
+   DERIBIT-COMBO venue retirement, Solana DeFi widening — not the decision gate itself. NOTE: the tracker this D6 was
+   originally a candidate on, `active/instruments_completion_tracker_2026_07_06.md`'s own Decision Gates table, still
+   shows D6 "⏳ OPEN" with no operator-call date recorded — that file is outside this pair's scope, flagged not fixed
+   here).
 
 3. **Layer-1 re-measure + certify (Stage 3), AO Plan 4** `plans/active/layer1_remeasure_and_certify_2026_07_06.md` 1 of
    8 open: tradfi `BLOCKED-PLAN2` pending `tradfi_v9_stage1_finish` tasks 2–11 (cannot certify against a stale pre-v9
@@ -874,8 +887,13 @@ the source docs if this list is used for dispatch planning.
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — **COMPLETE**, 8/8 agents returned. Real per-item verdict:
 
-- **OKX-SPOT + Kraken marker**: landed (`instruments-service@300b0767` for OKX-SPOT fold-invert; Kraken marker part was
-  mid-quickmerge waiting on a background QG run when the agent's window closed — verify it shipped, re-dispatch if not).
+- **OKX-SPOT + Kraken marker**: landed (`instruments-service@c0f5529c` for OKX-SPOT fold-invert (was:
+  `instruments-service@300b0767` — corrected 2026-07-14, doc-reconciliation finding 133: that SHA is a factual
+  misattribution, it is actually the COINBASE `_CEFI_VENUE_FOLD` invert
+  (`plans/active/coinbase_bare_name_migration_2026_07_06.md:339-347`, `scripts/check_enumeration_completeness.py` only,
+  no OKX-SPOT mention); the real "stop folding OKX-SPOT to bare OKX" fix landed as `c0f5529c` (2026-07-10 12:43 UTC),
+  with a same-day follow-on `60c2e3b6`); Kraken marker part was mid-quickmerge waiting on a background QG run when the
+  agent's window closed — verify it shipped, re-dispatch if not).
 - **DeFi backlog apply**: correctly did NOT execute the stale command — found the same 46× v1→v2 scale explosion this
   doc's Progress Log already recorded; superseded by the operator decision + real launch this session (see above).
 - **Archetype registry CEFI cells**: DONE, `unified-api-contracts@7f20bdee`, two-sided-audit contradiction count 2→0,

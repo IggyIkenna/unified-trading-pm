@@ -104,26 +104,30 @@ before implementation starts (target window: post-cutover, 2026-06-01).
 >    on "Phase 3 / 4 / 5"; the "Archived plans" section below (and the archived discovery plan's own phase headers —
 >    Phase 3=late-arriving-data, Phase 4=writer-side gap analysis [not ack-gated], Phase 5=pricing+greeks [ack-gated, >
 >    > includes greeks-home], Phase 6=treasury cohort [ack-gated]) confirm the correct ack-gated set is **Phase 3 / 5 /
->    6**, not 3/4/5. This line is corrected to match.
+>    > 6**, not 3/4/5. This line is corrected to match.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
 ## Codex SSOTs
 
-| Doc                                                                  | Owns                                                                                                                              |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/04-architecture/global-ledger-architecture.md`                | 4-SSOT-+-4-derived ledger model; universal PnL recipe; ownership table; per-service writer/reader gap status                      |
-| `codex/02-data/ledger-event-taxonomy.md`                             | `EventOrigin` / `EventType` (37) / `AssetClass` (17) / `Direction` / `OptionRight` enum SSOT + routing summary + invariant tables |
-| `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` | Carry-as-theta-family attribution framing; ledger→factor decomposition (delta/gamma/theta/vega/carry/funding/settlement/residual) |
-| `codex/04-architecture/client-funds-isolation.md`                    | Cross-client transfer HARD RULE — `client_id == counterparty_client_id` on every transfer/bridge row                              |
+| Doc                                                                  | Owns                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/04-architecture/global-ledger-architecture.md`                | 4-SSOT-+-4-derived ledger model; universal PnL recipe; ownership table; per-service writer/reader gap status                                                                                                                                                                                                                                                                             |
+| `codex/02-data/ledger-event-taxonomy.md`                             | `EventOrigin` / `EventType` (39, was: 37 — corrected 2026-07-14, doc-reconciliation finding 70: this epic's own 2026-07-12 correction callout above already established 39 at HEAD, `unified-api-contracts@dc67ae6f`; the codex doc itself still says 37, CODEX-GATED, not edited here) / `AssetClass` (17) / `Direction` / `OptionRight` enum SSOT + routing summary + invariant tables |
+| `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` | Carry-as-theta-family attribution framing; ledger→factor decomposition (delta/gamma/theta/vega/carry/funding/settlement/residual)                                                                                                                                                                                                                                                        |
+| `codex/04-architecture/client-funds-isolation.md`                    | Cross-client transfer HARD RULE — `client_id == counterparty_client_id` on every transfer/bridge row                                                                                                                                                                                                                                                                                     |
 
 **VERIFIED 2026-07-12** (re-audit): all 4 docs exist at HEAD, `status: current`, substantial (185-864 lines each, not
 stubs), last git-touched 2026-07-04 — CONTRADICTS this epic's own "Archived plans" claim below that codex SSOT docs are
-"DEFERRED-POST-CUTOVER." **CODEX-GATED finding** (not edited by this audit — operator-gated codex edit; flagged in the
-re-audit plan's Progress Log for a follow-up `[DOCS]` todo): `global-ledger-architecture.md`'s own "Current-State Gaps"
-table (§ "Current-State Gaps (Audit 2026-05-23)") still lists `execution-service` as having a
-`build_attribution_rows() stub` — this is itself stale/CONTRADICTED-BY-CODE per the Phase 7 evidence above (the function
-is real, 140 lines, tested).
+"DEFERRED-POST-CUTOVER." **CODEX-GATED finding — ACTIONED 2026-07-13** (was: "not edited by this audit — operator-gated
+codex edit; flagged in the re-audit plan's Progress Log for a follow-up `[DOCS]` todo" — corrected 2026-07-14,
+doc-reconciliation finding 73: operator authorization was granted 2026-07-13 and the codex doc was edited the same day —
+see `plans/active/global_ledger_epic_reaudit_2026_07_12.md`'s Progress Log): `global-ledger-architecture.md`'s
+"Current-State Gaps" table's `execution-service` row (§ "Current-State Gaps (Audit 2026-05-23)") — which listed a
+`build_attribution_rows() stub`, itself stale/CONTRADICTED-BY-CODE per the Phase 7 evidence above (the function is real,
+140 lines, tested) — now carries a `[DELTA 2026-07-13]`-banner-backed `(was: …)` correction citing
+`execution-service@a4145838`→`49f42f77` + `tests/unit/pnl_attribution/test_build_attribution_rows.py`; verified live in
+the codex doc at HEAD.
 
 ## Cross-epic handshakes
 
@@ -145,9 +149,11 @@ pick up in priority order (P0 first)."_) — finding 315,
 below are actually active — both `global_ledger_pnl_attribution_discovery_2026_05_21` and
 `global_ledger_pnl_attribution_migration_2026_06_01` are ✅ ARCHIVED / `status: complete` (verified in their own
 frontmatter). The actual current active child is
-[`global_ledger_epic_reaudit_2026_07_12`](../active/global_ledger_epic_reaudit_2026_07_12.md) (status: active,
+[`global_ledger_epic_reaudit_2026_07_12`](../active/global_ledger_epic_reaudit_2026_07_12.md) (status: complete, was:
+"status: active" — corrected 2026-07-14, doc-reconciliation finding 72: the child plan's own frontmatter flipped
+`active` → `complete` on 2026-07-13, per its own Progress Log; this epic was never re-synced after the child closed —
 `parent_epic: global_ledger_pnl_attribution_master`, created 2026-07-12 per finding-366 operator ruling — full epic
-re-audit, not yet reflected in the priority blocks below).
+re-audit, its findings folded into the "Codex SSOTs" section above and the correction callout below).
 
 ### P0 — Discovery + target-state spec
 
