@@ -138,6 +138,72 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 21:52 UTC — data_engineering slot-5 (Todo 1 re-dispatch — verified 2 existing gap-fill VMs healthy with genuine progress; MANIFEST-verified a new real gap in the previously-untouched 2025-08-11→2026-07-13 range and launched a gap-fill VM for it; checkbox NOT flipped)
+
+**Todo 1 (compute features 2015→present) — real forward action taken. Checkbox NOT flipped (compute still genuinely in
+progress).**
+
+**Fleet check**: `gcloud compute instances list` showed the same **2** VMs the 21:15Z entry launched:
+`features-sports-sports-20260714-210122` (2018-07-09→2019-08-11) and `-211514` (2020-03-07→2020-10-05), both RUNNING.
+Features bucket unique-date count: **2,881** (up from the 21:15Z entry's 2,870, +11 in ~35 min) — steady forward
+progress. Tailed both VMs' GCS `run.log`s at 21:48Z: both show fresh `PIPELINE_HEARTBEAT` lines (~2 min before check)
+and genuine calculator writes (`season_context`/`halftime`/`multisource_xg`/`team_derived` columns added) with the
+known, already-documented all-NaN/all-zero honest-absence pattern (cross-provider xg not fetched in `--skip-fetch` mode)
+— no crash/OOM signature on either.
+
+**Addressed the 21:15Z entry's explicit handoff — verified the untouched `-085642` old range (2025-08-11→2026-07-13) via
+the MANIFEST (`check_pipeline_completeness.py`, one manifest read, not a `by_date/` listing diff)**: result **308/337
+dates present (91.4%), 29 genuinely MISSING** (confirmed via source: `present=False` only fires when the per-date
+manifest slice is empty, i.e. zero manifest rows of any kind — the script's own defined semantics, not
+honest-absence-with-rows). Most misses are scattered 1-2 day slivers across May-June 2026 (plausible honest-absence, not
+actioned), but one contiguous **12-day tail block: 2026-07-02 → 2026-07-13** stood out as the most likely genuine,
+uncaptured gap — recent enough that no VM in this plan's history has ever claimed it.
+
+**Action taken**: launched
+`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2025-08-11 --end-date 2026-07-13 --mode batch --operation compute --launch-mode full`
+(one run spanning the full range; `--skip-existing` means the already-captured 308 dates cost nothing, only the 29
+genuine gaps + the 12-day tail get real compute). New VM: **`features-sports-sports-20260714-215235`** (SPOT, RUNNING,
+`asia-northeast1-c`, launched 21:52:35Z). Fleet is now 3 VMs. Launcher flagged 2 stale tarballs (features-service:
+`76f234ce` — a purge-script backup-location fix, unrelated to compute; unified-trading-library: `2ab54ce0` — a
+DeFi-canonical manifest-consolidator OOM/chunking fix, unrelated to the sports write path) — inspected both commits'
+diffs directly before accepting; neither touches the features-service compute or manifest-write path this VM exercises,
+so accepted as low-risk rather than killing/relaunching. No-fire-and-forget check passed: instance RUNNING 45s
+post-launch, confirmed again via `describe`.
+
+**What I did NOT do**: did not touch `-210122` or `-211514` (both healthy, genuinely computing, no reason to intervene).
+Did not action the scattered 1-2 day May-June slivers in the same range — lower priority, likely honest- absence, not
+worth a per-day fixture-count check this cycle. Did not re-run `check_pipeline_completeness.py` (Todo 2/3 gates) — would
+just reconfirm BLOCKED-PREREQ at real compute cost while `-210122`/`-211514`/`-215235` are still mid-flight. Did not
+flip Todo 1 (compute still genuinely in progress — fleet is 3 VMs across 3 distinct manifest-verified real gaps).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,881 — should
+climb further once `-210122`/`-211514`/`-215235` progress). Verify `-215235` is making real progress (non-SKIP
+calculator-write lines in its GCS `run.log`, same check this dispatch used for the other two). Once any VM completes and
+frees capacity, the small scattered 1-2 day May-June-2026 slivers found this dispatch are the next lowest-hanging target
+if worth a dedicated per-day fixture-count check; otherwise fall back to re-scanning older history ranges this plan's
+log hasn't manifest-verified yet.
+
+No repo code commit this entry (VM launch + read-only manifest/GCS-log verification only, no code changed); this
+plan-doc edit ships via the `docs(plans):` carve-out. This dispatch's `done_definition` ("checkbox flipped in plan +
+code shipped") isn't met — `/skip-current-task` follows per this task's established convention.
+
+### 2026-07-14 21:40 UTC — data_engineering (per-league-layout issue doc P2 SHIPPED: failure atom aligned with success atom + 30 stale day-level failed rows purged; GW window manifest now failure-free)
+
+**Issue doc `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14` P2 flipped —
+features-service@4f83f8db (atom fix + tests + purge script) + @76f234ce (backup-location fix).** `_run_feature_group`
+failures now land on the per-league canonical atom whenever a `league_ids` scope is present (identical to the
+success/expected_unattempted atoms → consolidator dedup supersedes them naturally on retry); unfiltered-run failures
+deliberately keep the day-level atom (league dimension is an output-df property, unknowable when compute raises) —
+rationale documented in-code. **Cleanup executed on the real bucket** (evidence-gated deletion, snapshot-first,
+dry-run→apply→verify): 28 consolidated rows (27 GW-window + 1 same-class 2026-05-13) + 2 `_legacy_seed` shard rows.
+Post-apply verification across a FRESH consolidator cycle (21:35:42Z): 0 day-level attempted_failed derived/fixture rows
+corpus-wide; **GW window = 1,672/1,672/91 captured, 0 attempted_failed**. Operational lesson captured on the issue doc:
+a `.bak.parquet` inside `_index/per_vm/` is a live shard to the consolidator (first apply resurrected rows from its own
+backup — fixed; instruments-service `delete_phantom_rows_from_shards.py` carries the same hazard, annotated not fixed).
+Remaining on the issue doc: P3 features-bucket path SSOT (codex/02-data) + the new odds `event_id`/`fixture_id` join-key
+finding.
+
 ### 2026-07-14 21:15 UTC — data_engineering slot-9 (Todo 1 re-dispatch — followed up on the prior entry's handoff: confirmed `-201910` completed cleanly with ZERO writes over its whole 763-day range (closes 2015-2017 as genuine honest-absence, not a gap); MANIFEST-verified a new real gap (2020-03-07→2020-10-05, 161 missing dates, mostly a 147-day contiguous block) and launched a gap-fill VM for it; checkbox NOT flipped)
 
 **Todo 1 (compute features 2015→present) — real forward action taken, following the prior dispatch's explicit handoff.
@@ -3131,3 +3197,10 @@ eligible) so this session moves to different available work instead of re-runnin
   nothing to fix there); no relaunch of the GW recompute (unrelated — that fleet only touches derived/fixture features,
   odds untouched). Checkbox flipped — the todo's ask ("diagnose") is fully satisfied with a concrete, evidence-backed
   root cause; the fix itself is tracked in the new issue doc, not this plan.
+- 2026-07-14 21:45Z (autonomous tick 3): ml-loader P1 COMPLETE and deeper than filed — three read-side gaps fixed
+  (per-league layout awareness, WRONG-BUCKET resolution repointed to the env-tiered prd bucket, failure-atom alignment +
+  30 stale rows purged with a .bak-in-per_vm resurrection hazard found+fixed) — ml-service@360da40,
+  features-service@4f83f8db + @76f234ce, real-bucket proof 24x728 derived matrix loads. NEW adjacent defect dispatched
+  same tick: odds event_id vs fixture_id join-key mismatch drops all odds columns from the assembled ML matrix (agent
+  running). Enrichment fleet 4 VMs RUNNING (shards mtime-live 21:44Z); pre-2025 sweep process ALIVE (still scanning, no
+  adjudication CSVs yet).

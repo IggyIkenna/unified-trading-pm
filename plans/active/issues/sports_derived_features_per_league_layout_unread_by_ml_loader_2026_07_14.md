@@ -133,11 +133,33 @@ depends_on: []
       `features-sports-prd-{pid}` (cloud-providers.yaml kind=`features-sports`). Now resolves via UTL
       `get_bucket_name("features_sports")` with the template kept as an explicit override escape hatch (mirrors
       ml-service@32f5c94). So pre-fix, ml-service read the wrong bucket AND the wrong layout.
-- [ ] [CODE] P2. **features-service: align the failure atom with the success atom** — `record_failed` in
+- [x] [CODE] P2. **features-service: align the failure atom with the success atom** — `record_failed` in
       `_run_feature_group` should carry the same league granularity as `_write_per_league` successes (or a documented
       day-level sentinel that data-status readers treat as superseded when per-league captured rows exist for the same
       (date, feature_group)). Then clean the 27 stale `attempted_failed(ValueError, league_id='')` window rows
-      (restamp/supersede), so the window manifest is failure-free.
+      (restamp/supersede), so the window manifest is failure-free. — **features-service@4f83f8db + @76f234ce** +
+      evidence: **Decision (both halves of the "or")**: (a) when the run has an explicit `league_ids` scope,
+      `record_failed` now records one attempted_failed per CANONICAL league — the exact success/expected_unattempted
+      atom, so the consolidator's captured-outranks + latest-attempted_at dedup supersedes it naturally on retry
+      (proof-of-mechanism: the 06-27 wave's day-level odds_features failure self-healed precisely because odds success
+      atoms share the day-level key); (b) WITHOUT a filter the day-level atom is retained DELIBERATELY and documented
+      in-code — the league dimension is a property of the output df, which does not exist when the compute raises;
+      enumerating a hypothetical league universe would fabricate un-supersedable failed rows for leagues that
+      legitimately produce no output. 2 unit tests (per-league atoms under filter / day-level without). **Cleanup
+      mechanism (recorded per the manifest rules)**: evidence-gated DELETION via one-off
+      `scripts/sports/purge_stale_daylevel_failed_rows_2026_07_14.py` (dry-run default; snapshot/backup-then-write;
+      predicate = attempted_failed + blank league_id + derived/fixture + >=1 per-league captured twin with NEWER
+      attempted_at, i.e. superseded-in-fact; applied to consolidated index AND `_index/per_vm/*` shards). **Counts**: 28
+      consolidated rows (the 27 window rows + one same-class out-of-window row 2026-05-13 fixture_features
+      LookaheadBiasError, failed→captured 5s apart) + 2 `_legacy_seed.parquet` shard rows. **Verified across a fresh
+      consolidator cycle** (index rebuilt 21:35:42Z post-apply): 0 day-level attempted_failed derived/fixture rows
+      corpus-wide; window = DERIVED 1,672 captured / FIXTURE 1,672 captured / ODDS 91 captured, **0 attempted_failed —
+      failure-free**. **Hard-learned during apply**: a backup written inside `_index/per_vm/` with a `.parquet` suffix
+      IS a shard to the consolidator fan-in (no `.bak` exclusion in `_read_and_merge_per_vm_shards`) — the first apply
+      resurrected the 2 seed rows from its own backup; fixed by relocating backups to `_index/purge_backups/`
+      (features-service@76f234ce). ⚠️ The instruments-service precedent `scripts/delete_phantom_rows_from_shards.py`
+      carries the SAME hazard (`_backup_path` writes `.bak.parquet` next to the shard under `_index/per_vm/`) —
+      annotated here per findings-triage (fits instruments-service scope; do not fix from this plan).
 - [ ] [DOC] P3. **Write the features-bucket path SSOT** (codex/02-data) documenting: odds day-level; derived/fixture
       per-league with RAW af-id keys (historical, addressable); manifest key = canonical league NAME; readers must
       handle both layouts. Cite `writer.py:26-27` + `batch_handler.py:300-323`.
