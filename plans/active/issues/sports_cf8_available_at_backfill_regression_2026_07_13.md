@@ -352,7 +352,46 @@ consolidation).
       history) — coordinate the maintenance window with the operator first per Finding 1. Expected volume: ~652K rows on
       IS, ~287K on MDPS (per the P0 addendum's breakdown, dominated by pre-2026-06-26 `trades`/`odds_api` +
       `odds_horizon_bucket` historical residue). Verify with the new `_check_captured_column_fill_regression` guardrail
-      active during consolidation. (repo: market-tick-data-service, unified-trading-library)
+      active during consolidation. (repo: market-tick-data-service, unified-trading-library) — **ATTEMPTED (small-scale
+      test only) — BLOCKED on a NEW root cause, safely rolled back, slot 3, 2026-07-14.** Dispatched independently
+      (per-CF-8-backfill-ask), read this doc in full at dispatch start (before `280d3f9fc`/`1fb0344aa` landed) and
+      proceeded per the dispatch's own explicit small-scale-test-first authorization; did **not** re-check this doc
+      again immediately before writing, so did not see the operator's `BLK-d9137d48` STOP answer (committed
+      `2026-07-14T01:57:45Z`, ~4 minutes before this touch's write at `02:01:59Z`) until AFTER the test+rollback below
+      was already complete — flagging this timing gap honestly rather than omitting it; net effect was safe (see below)
+      but the process lesson is to re-pull+re-read immediately before the write step, not just at dispatch start, on a
+      doc this hot. Built `sports_captured_available_at_targeted_backfill_2026_07_14.py` (reuses
+      `_write_captured_rows`/`_available_at_from_row` exactly) + `sports_cf8_captured_backfill_snapshot_2026_07_14.py`.
+      Snapshotted both canonicals, confirmed 0 in-flight consolidator executions, paused both crons. Ran the required
+      500-row small-scale test on MDPS ONLY (IS never touched beyond dry-run) — **fill rate did NOT improve**
+      (captured=575,671, missing=286,839, BYTE-IDENTICAL before vs. after). A row-content hash diff proved only 71/500
+      written rows survived consolidation, and those 71 replaced ALREADY-FILLED rows (2026-07-13 backfill residue), not
+      blank ones — net zero, not an improvement. **Root-caused why — a NEW finding, more fundamental than the
+      "point-in-time snapshot" hypothesis above**: the consolidator's dedup key includes `service_name`.
+      `ManifestWriter(service_name=service_name_for_surface(surface), ...)` stamps EVERY backfill-written row with ONE
+      fixed value per surface (`market-tick-data-service` MDPS / `instruments-service` IS). Live query: on BOTH
+      surfaces, 100% of currently-FILLED captured rows carry that exact fixed service_name, while 100% of
+      currently-MISSING rows carry a DIFFERENT, original owning service_name — MDPS: `market-data-processing-service`
+      (109,313) + `migrate-sports-canonical` (176,428); IS: `market-tick-data-service` (209,741) +
+      `migrate-sports-canonical` (167,220) + `backfill-teams-61-leagues` (165,148) + `market-data-processing-service`
+      (109,312). A rewrite stamped with the wrong service_name can never dedupe-supersede the true target row — every
+      attempt (past or future) using the CURRENT write path only adds a permanently separate, non-collapsible duplicate.
+      **This is why the P1 todo above's "targeted re-emit" framing itself needs revision before ANY further attempt**:
+      it is not safe/effective to scale up `sports_captured_available_at_targeted_backfill_2026_07_14.py` as currently
+      designed — a correct fix needs to group target rows by their OWN `service_name` and write each group through a
+      `ManifestWriter` constructed with THAT service_name (new, unreviewed engineering — a design + review step, not a
+      batch-size judgment call). Per the dispatch's own absolute safety floor ("genuine ambiguity about data correctness
+      → STOP, roll back, report") — independently of, and reinforcing, the operator's separately-recorded STOP — did NOT
+      scale to the remaining ~286K/~652K rows. **Rolled back**: restored MDPS's live index from the pre-test snapshot
+      (`pre_cf8_captured_backfill_20260714T015810Z.parquet`, byte-identical verified: 1,958,499 rows / 575,671 captured
+      / 286,839 missing — exact pre-test baseline, confirmed via a fresh `cf_manifest_audit_2026_06_01.py` run showing
+      `RED — ['CF-8', 'L6-legacy-only']`, non-null=1,670,401/1,958,499, unchanged from history). Both crons resumed +
+      confirmed healthy (`succeededCount=1`, 0 failures, 3+ consecutive cycles observed). Both scripts shipped
+      (`market-tick-data-service@41b3c8fa`) with a prominent "DO NOT RUN AT SCALE — BLOCKED" docstring warning + this
+      finding, kept as reference read/filter/dry-run scaffolding for whoever designs the per-service_name write fix —
+      **not attempting that design in this dispatch**: it is genuinely new engineering needing its own review, and the
+      operator has separately and explicitly said stop pending a scheduled window regardless. No further production
+      write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
 - [ ] [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN     COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
       contributes to the captured-row `available_at` gap above — flagged as a plausible mechanism (a high-row-count
@@ -576,3 +615,36 @@ than chase an unrelated third failure or misapply a direct-push carve-out I'm no
 production, satisfying the operator's "ship the digest fix" instruction (via a converged independent fix, not my own
 commit). Per the operator's explicit STOP instruction, the actual targeted re-emit (todo 2) remains untouched, correctly
 — it needs a separately operator-scheduled maintenance window, not this dispatch. Closing this dispatch here.
+
+**Targeted captured-row backfill attempt + new blocking finding — 2026-07-14 (slot 3, laptop, dispatched to finish CF-8
+completely)**: read this doc + the plan in full at dispatch start (before `280d3f9fc`/`1fb0344aa` landed), confirmed
+nothing had changed vs. the dispatch's own briefing, then worked independently. Confirmed the same deployment-freshness
+root cause data_engineering slot-2 later also found (stale UTL base-image digest on instruments-service,
+`sha256:b7e391f8...` built 18:44:41Z, predating `f5f15e3a`/`9c9cdc50`/`2e132bb2`/`0f55cc2b` — all landed 22:59-00:22Z)
+via a live read showing the 2026-07-14 TEAMS/STANDINGS gap GROWING (439→790 rows, now spread across the ENTIRE
+`record_captured()` surface: WEATHER/INJURIES/ODDS/FIXTURE__/PLAYER__/MATCHES/PLAYER_VALUES too, not just
+TEAMS/STANDINGS — confirming a dependency-wide staleness, not a narrow code bug). Shipped the fix
+(`instruments-service@ca3902bb`, Dockerfile digest bump to `sha256:29e5b552...` = UTL HEAD `c7126116`) via the
+dirty-deps direct-push carve-out (repo has ~65 unrelated files mid-edit by another concurrent agent's cefi/defi adapter
+refactor, causing an unrelated golden-fixture QG failure) — confirmed by data_engineering slot-2's later touch above as
+the same fix they independently converged on; still pending LDR→main promotion as of this write-up (standing fleet
+automation owns it from here, not blocking).
+
+Then built + ran the todo-2 targeted re-emit (evidence + full finding recorded on that todo's own checkbox above — not
+duplicated here). Summary: a 500-row MDPS small-scale test produced a **net-zero** fill-rate change (not an
+improvement), traced to a genuinely new root cause — the manifest consolidator's dedup key includes `service_name`, and
+the current backfill write path stamps one fixed service_name per surface regardless of which service originally owned
+the target row, making every currently-missing row's true dedup twin unreachable by any rewrite using the existing
+convention. Rolled back the test write (restored MDPS's live index from the pre-test snapshot, byte-verified), resumed
+both crons (confirmed healthy), and did not proceed to IS or to full scale. **Independently re-ran the full
+`cf_manifest_audit_2026_06_01.py` on both surfaces post-rollback**: MDPS `RED — ['CF-8', 'L6-legacy-only']`
+(non-null=1,670,401/1,958,499 = 85.3%, unchanged); IS `RED — ['CF-8', ...]` (unchanged from history — see below for the
+full current verdict). Neither surface is closer to GREEN than before this session, but CF-8's true blocker is now
+understood one level deeper than "needs a coordinated maintenance window" — it needs a per-original-service_name write
+redesign FIRST, independent of when that window happens. Filed as an explicit caveat on the existing P1 todo rather than
+a new todo (same scope, sharper understanding) so a future agent doesn't repeat the same ineffective attempt. Discovered
+the operator's `BLK-d9137d48` STOP-pending-scheduled-window answer only after this test+rollback had already completed
+(it was committed 4 minutes before this session's write) — the outcome was safe and fully reverted regardless, and this
+session's own independent finding reaches the same "do not proceed" conclusion for a different, technical reason, but
+the timing gap (not re-checking this doc immediately before the write step) is noted honestly as a process lesson for
+next time on a doc this actively contested.
