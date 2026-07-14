@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: features-service DeFi end-to-end test blocked on multiple data layer issues
-summary: While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29 after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la...
+summary:
+  While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29
+  after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -19,11 +21,18 @@ related:
 created: 2026-05-29
 parent_epic: features_and_ml_master
 priority: P2
-source: [features-service@9f6bc119, market-data-tick-defi-central-element-323112 (legacy), market-data-tick-defi-prd-central-element-323112 (prd)]
+source:
+  [
+    features-service@9f6bc119,
+    market-data-tick-defi-central-element-323112 (legacy),
+    market-data-tick-defi-prd-central-element-323112 (prd),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
-master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk + §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk +
+  §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -171,6 +180,10 @@ processed is sparse — see `mdps_filter_pushdown_memory_audit_and_fix_2026_05_2
 
 ## Recommended decision
 
+> **(was: framed below as still-open operator design calls — RESOLVED 2026-06-01, see the OPERATOR DECISION LEDGER
+> banner at the top of this doc, which rules on all 4 items; kept verbatim below for historical/reproduction context
+> only.) [finding 66, synced 2026-07-14]**
+
 **Operator-only design calls needed**:
 
 1. **DEFI data_type mapping** — Should `features_service.delta_one.engine.orchestrator.DEFI_DATA_TYPE_OVERRIDES` map
@@ -239,9 +252,13 @@ features-service --feature-family delta_one --operation compute --mode batch \
 
 ## Status taxonomy
 
-`BLOCKED-OPERATOR-DECISION` — operator must pick between (1) extend DEFI_DATA_TYPE_OVERRIDES to PRD's data_type names,
-(2) rebuild legacy manifest, or (3) wait for MDPS refactor + canonical migration to finish before any features-service
-work against DeFi. Until one of these lands, features-service smoke tests against real DeFi data cannot proceed.
+`BLOCKED-OPERATOR-DECISION` (was: open as of 2026-05-29 — **RESOLVED 2026-06-01** per the OPERATOR DECISION LEDGER
+banner at the top of this doc: ruling was (1) map to `dex_pool_swaps` via UAC resolver, not a hardcoded override;
+legacy-bucket rebuild explicitly declined in favor of read-only-historical-archive policy. Execution routed to slot 7 /
+`features_and_ml_master`. This taxonomy line is retained only to document the pre-ruling state.) [finding 66, synced
+2026-07-14] — operator must pick between (1) extend DEFI_DATA_TYPE_OVERRIDES to PRD's data_type names, (2) rebuild
+legacy manifest, or (3) wait for MDPS refactor + canonical migration to finish before any features-service work against
+DeFi. Until one of these lands, features-service smoke tests against real DeFi data cannot proceed.
 
 ## Unblock progress 2026-05-29 evening — CeFi path-of-least-resistance kicked off
 
@@ -358,7 +375,10 @@ replacement.
   - **19 BTCUSDT days present** (04-16 → 05-04). Edges 04-15 + 05-05 were source-missing in legacy raw, not a canary
     failure.
 - **Drift gate operational** — features-service@dd2ed36f shipped `BASELINE_FORMULA_HASHES` + QG STEP 5.91 +
-  DRIFTED-detection. State: MATCH=5 / DRIFTED=0 / NEW=29.
+  DRIFTED-detection. State: MATCH=5 / DRIFTED=0 / NEW=29. (Note: this STEP 5.91 is features-service's own local
+  formula-hash-drift check — a per-repo numbering collision with PM's STEP 5.91 (entity-registry gate,
+  `epics/infrastructure_master.md`) and MTDS's STEP 5.91 (reader/writer bucket-parity); three distinct checks share the
+  number, unreconciled in the codex STEP cross-reference table. [finding 228, synced 2026-07-14])
 - **Audit shipped** — `plans/audit/results/features_and_ml_master_audit_2026_05_29.md`. 14 GREEN / 3 DRIFT (text-fixed
   in same commit) / 3 BLOCKED (l + live-versioning + batch-live, all waiting on the first features-delta-one parquet) /
   2 NOT-RUN (ml-service).
