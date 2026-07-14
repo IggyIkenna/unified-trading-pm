@@ -123,3 +123,29 @@ needs the same venue-naming-divergence fix (`AAVEV3-*` → `AAVE_V3-*` etc.) alr
 
 Investigation script (read-only, nothing written to GCS): scratchpad `defi_shape_b_reconcile.py`, raw results
 `run5.json`/`run100.json` (session-local, not committed).
+
+## 🔵 2026-07-14 — "dex-pool second-writer-path" is this SAME population, not a separate issue; root cause identified
+
+A separate scoping pass (started to size a suspected distinct ~100K-400K-object "second-writer-path" migration) found
+fresh real numbers that corroborate this doc almost exactly and confirm it is **the same population, not a different
+one**: hive shape `day={D}/pipeline_mode=batch_instruments_service/asset_group=defi/venue={V}/instruments.parquet` =
+**103,944 objects / 2,353 distinct days, frozen 2020-01-20→2026-06-29**; flat shape = **74,947 objects / 2,368 days,
+still live through today**. Matches this doc's "~104K" / "2,353 days" figures exactly — no separate migration item
+exists, and no VM-scale migration/deletion job should be scoped for it.
+
+**Root cause, now identified**: the hive tree is not an accidental duplicate writer — it's a **frozen, partially-run
+snapshot of the v9 canonicalization migration** (`instruments-service/scripts/migrate_instruments_store_v9.py`,
+`# Lifecycle: oneoff`). That migration's ownership moved from the archived
+`instruments_manifest_canonicalisation_2026_06_01.md` (status: complete, folded 2026-06-26) to the currently **active**
+`plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md`, whose "reader cutover DONE" covers
+`raw_tick_data`/deployment-api drilldown only — **not** `instrument_availability/defi`. The live daily writer
+(`instruments_service/engine/orchestrator/writers.py::_write_venue`, confirmed single-write, no dual-write) only ever
+wrote the flat shape; the hive copy simply stopped advancing when the v9 migration run stalled at day=2026-06-29.
+
+**This reframes the fix**: not a bounded copy/backup/delete job, but (a) a **reader-preference bug/decision** in
+`market_tick_data_service/instrument_availability_paths.py::match_instruments_blob` (hive-wins is very likely wrong
+given hive is stale-and-frozen while flat is live — strong evidence now, still an explicit operator call per this doc's
+existing NO-GO/operator-decision stance, not unilaterally changed here), and (b) either finishing the v9 migration's
+real cutover for this specific tree under `instruments_mtds_subset_consistency_remediation_2026_06_17.md`, or
+abandoning/deleting the stale hive snapshot once (a) is resolved and flat is confirmed the sole reader target. No new
+plan needed for this — it folds into the already-active v9-remediation plan once the operator decision lands.
