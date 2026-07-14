@@ -142,7 +142,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       count is unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the prediction consolidator cron; record the before/after fill-rate evidence in this plan's
       Progress Log. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
+- [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
       single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
       non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
       BEFORE claiming success (a full-range apply only fixes the bundled subset — see "What we already know" correction
@@ -156,7 +156,27 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `written_at`-proxy pattern sports's `_available_at_from_row` uses, per `AVAILABILITY_AT_SEMANTICS`), unit-tested,
       BEFORE the apply todo below — otherwise scope this asset_group's non-bundled backfill as its own follow-up
       (mirroring defi's audit-and-decide gate) rather than declaring tradfi done on a partial fix. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — ✅ 2026-07-14 (slot 10): **corpus-wide split via `read_availability_index()`**
+      (single-walk-safe): of 1,620,826 captured rows, bundled (`data_type` ∈ `BUNDLED_DATA_TYPES`, all `options_chain`;
+      zero `futures_chain`/`event_contract` present) = 242,210 (14.9%), non-bundled = 1,378,616 (85.1%) — material.
+      **Reconciled slot 5's zero-bundled-count sample**: not a contradiction — `parse_tradfi_path()` (this script's own
+      parser) NEVER derives `data_type` as a chain-type literal from a current canonical path; the chain-type only ever
+      lands in `instrument_type` (matched against the separate `BUNDLED_ITYPES` set, e.g. line ~304). So the branch at
+      `scan_and_rebuild` line 555 (`if parsed.data_type in BUNDLED_DATA_TYPES`) can never fire for anything this script
+      parses off today's canonical bucket — it looks like DEAD CODE post-v9-migration (the existing manifest's 242,210
+      `options_chain` rows are residual from a different write convention — pre-migration path shape or a live-capture
+      handler — not something a fresh object-scan rebuild reproduces). **Practical upshot: a full rescan-and-apply will
+      route effectively 100% of emitted rows through the non-bundled path**, not just 85% — making the fix below even
+      more necessary than the corpus split alone suggested. **Implemented + shipped**
+      `market-tick-data-service@65a6f9e0`: added `_available_at_from_blob()` (honest proxy = the shard blob's own GCS
+      `time_created`, mirroring sports's `written_at`-proxy pattern — no per-shard parquet re-read, single-walk
+      discipline preserved) and threaded it into the non-bundled `target.add(...)` call
+      (`rebuild_tradfi_manifest.py:578`, shifted by the earlier `_available_at_from_blob` insertion). 3 new unit tests
+      (`_available_at_from_blob` direct + a `scan_and_rebuild` apply-path integration test asserting `available_at` on
+      the writer's `.add()` call); full suite green (`quality-gates.sh` exit 0, sentinel-verified at
+      `market-tick-data-service@65a6f9e0`). **Filed a new follow-up todo below** for the suspected
+      `BUNDLED_DATA_TYPES`/`BUNDLED_ITYPES` branch-check mismatch — did NOT fix it in this touch (bigger blast radius:
+      changes which shards get bundled shard-atom treatment; needs its own corpus-scale confirmation before touching).
 - [x] 1. ✅ [DATA] P1. Dry-run `rebuild_tradfi_manifest.py --dry-run` (no `--force` flag — see correction above) against
       `market-data-tick-tradfi-prd-central-element-323112`; sanity-check envelope values across a sample of tradfi
       data_types/venues (bundled + non-bundled shards) — confirm non-bundled shards' `available_at` behavior matches
@@ -179,13 +199,28 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       fill-rate uplift** for tradfi, not just "won't fix the non-bundled majority" — do NOT snapshot/pause/apply tradfi
       until the split todo below is confirmed at corpus scale, otherwise the pause/apply/resume cycle carries real
       production risk (per the sports CF-8 precedent) for no measurable gain.
+- [ ] [DATA] P2. **NEW — 2026-07-14 (slot 10)**: confirm/fix the suspected dead-code bundled-branch check in
+      `rebuild_tradfi_manifest.py`'s `scan_and_rebuild` (line ~555: `if parsed.data_type in BUNDLED_DATA_TYPES`) —
+      `parse_tradfi_path()` never derives `data_type` as a chain-type literal from a current canonical path (only
+      `instrument_type`, matched elsewhere against the separate `BUNDLED_ITYPES` set, e.g. line ~304), so this branch
+      appears to never fire post-v9-migration (see the corroborating todo above: corpus-wide 0% `futures_chain`/
+      `event_contract`, and slot 5's raw-object sample found 0/260 bundled). Confirm at corpus scale (not just the
+      260-object sample) whether ANY current canonical object still routes through `_emit_bundled_shard_row`, and if
+      truly dead, decide whether to (a) fix the check to `parsed.instrument_type in BUNDLED_ITYPES` so bundled shards
+      once again get the `record_captured_from_counts` shard-atom treatment they were presumably designed for, or (b)
+      confirm bundling is intentionally retired for tradfi's current write convention and delete the dead branch. NOT
+      fixed in this touch (changes which shards get bundled shard-atom treatment — bigger blast radius than the
+      available_at threading above, needs its own confirmation before a code change). (repo: market-tick-data-service)
 - [ ] [DATA] P1. Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo:
       market-tick-data-service)
 - [ ] [DATA] P1. Apply `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run`
       flag exists), force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol
       as prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill
       rate matches the bundled-vs-non-bundled ceiling measured above (a rate matching only the bundled fraction means
-      the non-bundled follow-up is still open, not a bug). (repo: market-tick-data-service, unified-trading-library)
+      the non-bundled follow-up is still open, not a bug). **Update, 2026-07-14 (slot 10)**: per the reconciliation
+      above, expect the post-apply fill rate to approach ~100% (not ~85%) since the bundled branch appears dead code — a
+      rate near 85% instead would mean the dead-code theory is wrong and needs re-investigation before declaring
+      success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. Resume the tradfi consolidator cron; record evidence in the Progress Log. (repo:
       market-tick-data-service)
 - [ ] [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how (or
@@ -231,6 +266,24 @@ call site (its CF-11 honest-absence function, not this plan's defi gap) — conf
 (non-projection) apply path (the script's own test asserts `writer.add.assert_not_called()` when `projection=False`),
 consistent with this plan's existing "defi has NO existing capture-path threading" conclusion — no action needed there,
 just corroboration. No production writes made this touch.
+
+**2026-07-14 (slot 10)**: dispatched to the tradfi bundled/non-bundled split todo. Ran the corpus-wide
+`read_availability_index()` query the todo asked for: 1,620,826 captured rows, 242,210 (14.9%) tagged `data_type` ∈
+`BUNDLED_DATA_TYPES` (all `options_chain`; zero `futures_chain`/`event_contract` observed), 1,378,616 (85.1%)
+non-bundled — material. Reconciled slot 5's zero-bundled-count 260-object sample: not a contradiction — confirmed by
+reading `parse_tradfi_path()` end to end that it never derives `data_type` as a chain-type literal from a current
+canonical path (chain-type lands in `instrument_type` only, checked against `BUNDLED_ITYPES`, a DIFFERENT set than the
+`BUNDLED_DATA_TYPES` the `scan_and_rebuild` branch check at line ~555 tests). This means the branch is very likely dead
+code post-v9-migration and a full rescan will route ~100% of emitted rows through the non-bundled path — filed a new P2
+follow-up todo for that (not fixed here — bigger blast radius, needs its own corpus-scale confirmation). Implemented
+
+- shipped the assigned fix regardless (correct either at 85% or ~100%): `_available_at_from_blob()` threads
+  `available_at` into the non-bundled `target.add(...)` call using the shard blob's own GCS `time_created` as the honest
+  proxy (mirrors sports's `written_at`-proxy pattern, no per-shard parquet re-read). 3 new unit tests; full
+  `quality-gates.sh` green, sentinel-verified. Shipped `market-tick-data-service@65a6f9e0` via quickmerge (rebased twice
+  over concurrent peer pushes to the same branch — `86467a0a`, `1dd4bbbc` — neither touched this file). No production
+  writes made this touch (code + tests only; the P0 operator maintenance-window gate for pausing crons is still open and
+  was not touched).
 
 **Dispatch-order finding — 2026-07-14 (slot 5)**: dispatched task `mtds_available_at_cross_asset_backfill-005` ("Resume
 the prediction consolidator cron; record before/after fill-rate evidence"), the LAST prediction-lane todo in this plan,
