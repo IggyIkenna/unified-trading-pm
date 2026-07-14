@@ -1254,3 +1254,15 @@ Tracebacks/ERRORs.
 
 **Gate**: still FAILS — 3/5 entities not yet at 0 pending. **Checkbox NOT flipped.** Background watchdog continues
 polling; next log entry will land when the fleet shrinks further or completes.
+
+### 2026-07-14T12:23Z — session 25 (data_engineering slot-3): cheap re-check, FIXTURE_EVENTS completed, 3 remain, decline
+
+Dispatched to the "Features recompute for enriched dates" todo. Fresh-pulled all 25 slot repos clean. Cheap re-check
+(`gcloud compute instances list --filter='name~af-backfill'` via `/home/ubuntu/google-cloud-sdk/bin/gcloud` — snap
+`gcloud` on this slot is broken too, same `cap_dac_override` error noted by sessions 22/24): **111307 (FIXTURE_EVENTS)
+has completed and self-deleted** (no longer in the instance list — consistent with session 22's ~17min ETA from its
+11:51Z check, i.e. finished ~12:09Z). The 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447` PLAYER_STATS) are
+still `RUNNING`, same creation timestamps as every prior session; `run.log` tails via `gcloud storage cat` show active
+fetches at ~12:18-12:20Z, zero Tracebacks/ERRORs. Still transitively gated on the GW gate (Todo 9) going green — nothing
+to launch or fix here, matching sessions 20-24's reasoning. Not re-running the manifest-rescan/GW gate query (3/4 VMs
+not yet done). Declining — no action taken, no code touched. `/skip-current-task`.
