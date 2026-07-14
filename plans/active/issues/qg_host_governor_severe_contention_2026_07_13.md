@@ -158,9 +158,19 @@ implement them under this SPEC-decision todo.
       infra/host config, not a specific service repo) — ✅ **Decision: keep K=1** — swap still ~3.9Gi in use (same
       magnitude as the original incident trigger) despite concurrent-QG demand dropping to ~2; see "Update 2026-07-14"
       above. unified-trading-pm@1aa6038d1.
-- [ ] [SCRIPT] P2. Make `qg-host-governor.sh` / `base-service.sh`'s `MAX_DURATION` wall-clock check measure only
+- [x] ✅ [SCRIPT] P2. Make `qg-host-governor.sh` / `base-service.sh`'s `MAX_DURATION` wall-clock check measure only
       post-token-acquisition work time, not governor queue wait, so queueing under contention cannot fail an
-      otherwise-green run. (repo: unified-trading-pm, `scripts/quality-gates-base/`)
+      otherwise-green run. (repo: unified-trading-pm, `scripts/quality-gates-base/`) — unified-trading-pm@f36ac5877.
+      `qg_governor_acquire()` now accumulates `QG_GOVERNOR_WAIT_SECONDS`; `base-service.sh` and `base-library.sh` (the
+      two base scripts that call the governor) subtract it from `DUR` before the `MAX_DURATION` comparison — 0
+      subtracted (unchanged behavior) when ungoverned or uncontended. `base-ui.sh`/`base-codex.sh` untouched (never call
+      the governor, so the bug doesn't reach them). 4 new bash tests
+      (`scripts/quality-gates-base/tests/test-qg-governor-wait-time.sh`, mirroring `test-qg-host-capacity.sh`'s
+      convention) verified against a real `flock(1)` token dir: uncontended (wait=0), contended (wait>0, bounded by real
+      elapsed), idempotent re-acquire (no double-count), and `QG_GOVERNOR_DISABLE=true` (no-op). Live-fired proof: the
+      shipping `quality-gates.sh` run itself queued 38s behind the K=1 token
+      (`[qg-governor] token 1/1 acquired after 38s wait`) and still passed cleanly (94s wall, well under the 300s
+      default `MAX_DURATION`) — full `quality-gates.sh` green + sentinel-verified before the final rebase-and-push.
 - [ ] [SCRIPT] P3. Gate `qg_governor_acquire()` on the caller's `QG_SLICE` at `base-service.sh:601` so a light slice
       (`QG_SLICE=lint-codex`, which never runs TESTS/TYPECHECK) doesn't queue behind the same heavy-phase token as full
       runs — it has nothing to protect against contention-wise. (repo: unified-trading-pm,
