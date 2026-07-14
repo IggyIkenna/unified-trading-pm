@@ -455,15 +455,34 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       either job to run off a static Cloud Scheduler trigger). One pre-existing, unrelated bug surfaced (Polymarket
       prediction adapter: `instrument_key` column missing from instruments data, aborts PREDICTION category processing)
       — new followup todo below, out of this todo's scope.
-- [ ] [DATA] P2. **market-data-processing-service: two pre-existing bugs found live-testing the new `mdps_t1_recon_job`
-      (NEW 2026-07-14, out of this plan's `deployment-service`-scoped fix authority — needs a
-      market-data-processing-service repo dispatch)**: (a) the PREDICTION category's candle-processing path aborts with
-      `❌ instrument_key column missing from instruments data` (columns present are the raw Polymarket CLOB schema —
-      `condition_id`/`question_id`/`clob_token_ids`/etc — never mapped to the `instrument_key` the orchestrator's filter
-      step expects; find + fix the missing mapping step, likely in the Polymarket instrument-loading path the
-      orchestrator calls before `_process_one_category`); (b) `DependencyChecker`'s PREDICTION upstream-bucket lookup
-      404s against `market-data-tick-prediction-prd-*` — a bucket decommissioned 2026-07-12 in favor of the abbreviated
-      `market-data-tick-pred-prd-*` (see
+- [x] ✅ [DATA] P2. **market-data-processing-service: two pre-existing bugs found live-testing the new
+      `mdps_t1_recon_job`.** — (a) FIXED + shipped, (b) root-caused deeper than task scope → issue doc filed +
+      operator-notified, 2026-07-14 (slot-5). **(a) instrument_key abort — FIXED
+      (market-data-processing-service@2dc6860):** the raw Polymarket `instrument_availability` parquet carries the CLOB
+      schema (`condition_id`/`question_id`/`clob_token_ids`/…) with NO `instrument_key`, so
+      `CloudDataProvider.get_instruments_for_date` returned a df the orchestrator's tradable-key filter
+      (`_load_tradable_context`) aborted on. Added the canonical derivation
+      `instrument_key = POLYMARKET:PREDICTION_MARKET:{condition_id}` (matches `prediction/trades_adapter.py::preprocess`
+      exactly) in `get_instruments_for_date` — the single upstream method BOTH `_get_tradable_instruments` impls
+      (scanner + scheduling) route through. Live-verified the schema (real `condition_id`, no `instrument_key`); unit
+      test `test_prediction_derives_instrument_key_from_condition_id` added; QG green (sentinel 90a6b27). **(b)
+      DependencyChecker 404 — root cause is a CROSS-REPO UAC SSOT drift, NOT an MDPS-local bug → issue doc
+      `plans/active/issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md`:**
+      `bucket_template(PREDICTION,     MARKET_DATA)` in `unified-api-contracts/canonical/gcs_paths.py:113` still returns
+      the long-form `market-data-tick-prediction-{env}-{pid}` (live-probed → 404 NotFound; `market-data-tick-pred-prd-*`
+      HAS_OBJECTS). The template is a DELIBERATELY-guarded mid-migration value whose guard says "re-evaluate once
+      pred-prd is the sole complete SSOT" — that precondition is now met (migration plan
+      `prediction_manifest_canonicalisation_2026_06_01.md` ARCHIVED, legacy bucket deleted). The fix is a coordinated
+      UAC-SSOT flip rippling UAC/UTL/MDPS/MTDS/IS (code + tests) — a "big finding" (cross-repo + SSOT) filed as an
+      auto-dispatchable issue doc rather than unilaterally flipping a fleet-wide guarded template from this MDPS-scoped
+      task. Note bug (b) is MASKED by `SKIP_DEPENDENCY_CHECK=true` on the T1-recon job (never triggers today), so (a)
+      alone unblocks PREDICTION candle production. See Progress Log entry below. **Original finding text:** (a) the
+      PREDICTION category's candle-processing path aborts with `❌ instrument_key column missing from instruments data`
+      (columns present are the raw Polymarket CLOB schema — `condition_id`/`question_id`/`clob_token_ids`/etc — never
+      mapped to the `instrument_key` the orchestrator's filter step expects; find + fix the missing mapping step, likely
+      in the Polymarket instrument-loading path the orchestrator calls before `_process_one_category`); (b)
+      `DependencyChecker`'s PREDICTION upstream-bucket lookup 404s against `market-data-tick-prediction-prd-*` — a
+      bucket decommissioned 2026-07-12 in favor of the abbreviated `market-data-tick-pred-prd-*` (see
       `market-data-processing-service/scripts/reprocess_sports_odds.py::_resolve_bucket`'s own comment on this exact
       2026-07-12 rename) — `DependencyChecker` was never updated for the rename. Both bugs are currently masked by
       `SKIP_DEPENDENCY_CHECK=true` on the T1-recon job (bug (b) never triggers) and a caught-not-fatal
@@ -497,6 +516,32 @@ report written in this plan's Progress Log.
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Progress Log
+
+- **2026-07-14 (slot-5) — mdps_t1_recon_job two-bug todo: (a) FIXED, (b) escalated (cross-repo UAC SSOT).**
+  - **(a) PREDICTION instrument_key abort — FIXED (market-data-processing-service@2dc6860).** Live-probed the prod
+    prediction instruments bucket (`instruments-store-pred-prd-central-element-323112`,
+    `instrument_availability/by_date/.../venue=POLYMARKET/instruments.parquet`): columns are the raw Polymarket CLOB
+    schema (`condition_id`/`question_id`/`clob_token_ids`/…) with a real `condition_id` but NO `instrument_key`.
+    `orchestration_service._load_tradable_context` aborts category processing when `instrument_key` is absent. Fixed at
+    the single upstream loader `CloudDataProvider.get_instruments_for_date` (both `_get_tradable_instruments` impls —
+    scanner + scheduling — route through it): for PREDICTION, derive
+    `instrument_key = "POLYMARKET:PREDICTION_MARKET:" + condition_id` (polars `with_columns`), which matches
+    `prediction/trades_adapter.py::preprocess` exactly so the tradable-key set aligns with the tick adapter's key. Added
+    regression test `test_prediction_derives_instrument_key_from_condition_id`; existing CEFI test unaffected. QG green
+    (sentinel 90a6b27), shipped via quickmerge --agent.
+  - **(b) DependencyChecker 404 — root cause is CROSS-REPO UAC SSOT drift, escalated to issue doc.** Not an MDPS-local
+    bug: `unified_api_contracts.canonical.gcs_paths.bucket_template(AssetGroup.PREDICTION, BucketKind.MARKET_DATA)`
+    returns the long-form `market-data-tick-prediction-{env}-{pid}` (live-probed → **404 NotFound**), while UTL's
+    `resolve_bucket_name(kind="market-data-tick-prediction")` AND UAC's INSTRUMENTS template both already return the
+    live abbreviated `market-data-tick-pred-prd-*` (HAS_OBJECTS). The UAC template carries a deliberate mid-migration
+    guard (gcs_paths.py:103-113) saying to re-evaluate once `pred-prd` is the sole complete SSOT — that precondition is
+    now met (migration plan `prediction_manifest_canonicalisation_2026_06_01.md` ARCHIVED, legacy bucket deleted
+    2026-07-12). Flipping the template is the root fix but ripples UAC/UTL/MDPS/MTDS/instruments-service (code + tests),
+    and UTL's `_asset_group_for_market_data_bucket` intentionally still recognizes the long-form — a coordinated
+    fleet-wide SSOT change, filed as `plans/active/issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md`
+    (assigned_vm: planning, auto-dispatchable) rather than unilaterally flipping a guarded SSOT from this task. Bug (b)
+    is MASKED by `SKIP_DEPENDENCY_CHECK=true` on the T1-recon job, so it does not block candle production — (a) alone
+    unblocks PREDICTION candles.
 
 - **2026-07-14 (slot-5) — transfermarkt PLAYER_VALUES VERIFIED CLEAN (verify-only, no code change).** Fresh direct read
   of the canonical `availability_index.parquet` (`instruments-store-sports-prd-central-element-323112`):
