@@ -258,7 +258,7 @@ enough). The % is neither an upper nor lower bound of the real value.
       out of scope for this one-off append — touches every CeFi venue's dated-derivative id construction). 12/16 real
       dated futures now close as G4 Layer-1 tuples; the remaining 4 need the disambiguation fix first.
 
-- [ ] [CODE] P2. **NEW FINDING 2026-07-14 (data_engineering slot-6): shared `_build_canonical_future_key` can collide
+- [x] ✅ [CODE] P2. **NEW FINDING 2026-07-14 (data_engineering slot-6): shared `_build_canonical_future_key` can collide
       two DISTINCT real dated-derivative contracts onto ONE canonical `instrument_id` when Tardis's own `availableTo`
       (the source the adapter falls back to for `expiry` when no symbol-string date-parse branch exists for the
       exchange) happens to coincide for both.** Surfaced while shipping the BITGET-FUTURES append directly above:
@@ -277,7 +277,25 @@ enough). The % is neither an upper nor lower bound of the real value.
       `_build_canonical_future_key` outputs would otherwise collide. Gate: `BITGET-FUTURES:FUTURE:BTC-USD@INV-20260428`
       /`...ETH-USD@INV-20260428` each resolve to TWO distinct ids (one per real `raw_symbol`); the 4 rows currently
       skipped by `recapture_bitget_futures_dated_futures_2026_07_14.py` land in `prod/catalog.parquet` without
-      introducing a duplicate. (repo: instruments-service)
+      introducing a duplicate. (repo: instruments-service) **DONE 2026-07-14 — instruments-service@4c2e354f (slot-9
+      planning).** Added `_disambiguate_colliding_dated_derivatives` (adapter.py) as a post-pass over one exchange's
+      parsed FUTURE batch (no extra API calls): when raw_symbols collide, it prefers the real CME month-code-derived
+      expiry (the letter the raw_id itself already encodes — M=Jun, U=Sep, etc.) over the coincidentally-shared
+      `availableTo` fallback when it genuinely separates the group, else falls back to embedding the always-unique
+      `raw_symbol` in the legacy `VENUE:TYPE:RAW_ID` shape. Scoped to colliding groups only — already-correct rows are
+      untouched (verified via a dedicated no-op regression test). 4 new tests in
+      `tests/unit/test_bybit_kraken_futures_canonical_id.py::TestDisambiguateCollidingDatedDerivatives` (real-collision
+      repro, 4-row disambiguation, non-colliding no-op, fallback-path unit test); 146/146 tests pass in the touched
+      files; QG-green (97s, sentinel `4c2e354f`). **Gate closed dynamically, not just unit-tested**: re-ran
+      `recapture_bitget_futures_dated_futures_2026_07_14.py` (dry-run) post-fix — the 4 previously-skipped rows now
+      resolve to `BITGET-FUTURES:FUTURE:{BTC,ETH}-USD@INV-20260626` (Jun) /
+      `BITGET-FUTURES:FUTURE:{BTC,ETH}-USD@INV-20260925` (Sep), zero collision-skip warnings, 12/16 already_present
+      (unaffected). Applied for real (`--apply --confirm`): `prod/catalog.parquet` 358,451 → 358,455 rows (+4), backup
+      `prod/catalog.20260714-051106.bitgetfuturesfix.bak.parquet`. Re-ran dry-run post-apply to confirm idempotency:
+      `new=0 already_present=16 (of 16 fetched)` — all 16 real BITGET-FUTURES dated-quarterly FUTURE rows now present, 0
+      duplicates (script's own monotonic-row-count-grows + duplicate-`instrument_id` guard passed before write). G4
+      BITGET-FUTURES finding fully closed. One-off script deleted post-use per its own `Delete-when:` criteria (both now
+      met) — `instruments-service@b9d0f6fc`.
 
 - [x] ✅ [SCRIPT] P1. **NEW FINDING 2026-07-14 (data_engineering slot-2, mvp_backfill_cefi_tick_v10 G4): DERIBIT-COMBO's
       instrument catalogue is permanently LIVE-ONLY — can never backfill historical data.**
@@ -306,36 +324,36 @@ enough). The % is neither an upper nor lower bound of the real value.
       is starved.
 
       **DONE 2026-07-14 (data_engineering slot-7 planning) — `unified-api-contracts@89511de8` +
-          `instruments-service@e6fdfd00`.** Live-verified the premise first (`api.tardis.dev/v1/exchanges/deribit`
-          genuinely carries 68,847 `type=='combo'` symbols back to `availableSince=2022-08-23`, matching the finding
-          exactly). Implemented the recommended fix: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` flipped `"deribit_combo"` →
-          `"tardis"` (UAC); `factory.py::get_adapter_for_canonical_venue` special-cases `mode="live"` DERIBIT-COMBO to keep
-          routing to the `deribit_combo` REST adapter (extracted into `_build_deribit_combo_live_adapter` to stay under the
-          200-line function cap), so `mode="batch"` (default) now resolves to Tardis with `exchanges=["deribit"]` +
-          `canonical_venue_override="DERIBIT-COMBO"` (the `("DERIBIT-COMBO","OPTION"):"deribit"` itype-routing entry
-          already existed in `venue_instrument_type_to_tardis`, landed 2026-07-12). Went one step further than the
-          recommendation flagged: since the "deribit" Tardis exchange slug is shared with bare DERIBIT's own
-          option/future/perpetual/spot universe, `canonical_venue_override` alone would have mistagged that ENTIRE universe
-          as DERIBIT-COMBO — added a self-filter in `TardisReferenceDataAdapter.get_instruments()` restricting to
-          `type=='combo'` rows when the override is set (the venue_mapping.py comment had already flagged this as
-          not-yet-done). Corrected the adapter's own docstrings + the `honest-absence-downstream-handling.md` codex SSOT
-          § "DERIBIT-COMBO historical unavailability" (2026-06-27), which had over-broadly concluded "no data source can
-          serve it" — that was only ever true of Deribit's own REST `get_combos` endpoint, not Tardis's independent
-          archived feed; SUPERSEDED-banner added rather than deleted, per the codex-alignment rule. Added regression tests:
-          factory batch/live routing (`test_deribit_combo_batch_routes_to_tardis`,
-          `test_deribit_combo_live_routes_to_rest_adapter`), the Tardis combo-type self-filter
-          (`test_deribit_combo_override_filters_to_combo_type_only`), and fixed a stale assertion
-          (`test_factory_contains_deribit_combo` previously asserted the old `"deribit_combo"` value). QG-green both repos
-          (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` UAC,
-          `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5` instruments-service; 4409+ tests). **Next step (not
-          this todo — a backfill VM relaunch, not code)**: re-run `cefi-deribit-combo-2024-heavy` against this fixed code to
-          close `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple; tracked in
-          `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
+              `instruments-service@e6fdfd00`.** Live-verified the premise first (`api.tardis.dev/v1/exchanges/deribit`
+              genuinely carries 68,847 `type=='combo'` symbols back to `availableSince=2022-08-23`, matching the finding
+              exactly). Implemented the recommended fix: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` flipped `"deribit_combo"` →
+              `"tardis"` (UAC); `factory.py::get_adapter_for_canonical_venue` special-cases `mode="live"` DERIBIT-COMBO to keep
+              routing to the `deribit_combo` REST adapter (extracted into `_build_deribit_combo_live_adapter` to stay under the
+              200-line function cap), so `mode="batch"` (default) now resolves to Tardis with `exchanges=["deribit"]` +
+              `canonical_venue_override="DERIBIT-COMBO"` (the `("DERIBIT-COMBO","OPTION"):"deribit"` itype-routing entry
+              already existed in `venue_instrument_type_to_tardis`, landed 2026-07-12). Went one step further than the
+              recommendation flagged: since the "deribit" Tardis exchange slug is shared with bare DERIBIT's own
+              option/future/perpetual/spot universe, `canonical_venue_override` alone would have mistagged that ENTIRE universe
+              as DERIBIT-COMBO — added a self-filter in `TardisReferenceDataAdapter.get_instruments()` restricting to
+              `type=='combo'` rows when the override is set (the venue_mapping.py comment had already flagged this as
+              not-yet-done). Corrected the adapter's own docstrings + the `honest-absence-downstream-handling.md` codex SSOT
+              § "DERIBIT-COMBO historical unavailability" (2026-06-27), which had over-broadly concluded "no data source can
+              serve it" — that was only ever true of Deribit's own REST `get_combos` endpoint, not Tardis's independent
+              archived feed; SUPERSEDED-banner added rather than deleted, per the codex-alignment rule. Added regression tests:
+              factory batch/live routing (`test_deribit_combo_batch_routes_to_tardis`,
+              `test_deribit_combo_live_routes_to_rest_adapter`), the Tardis combo-type self-filter
+              (`test_deribit_combo_override_filters_to_combo_type_only`), and fixed a stale assertion
+              (`test_factory_contains_deribit_combo` previously asserted the old `"deribit_combo"` value). QG-green both repos
+              (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` UAC,
+              `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5` instruments-service; 4409+ tests). **Next step (not
+              this todo — a backfill VM relaunch, not code)**: re-run `cefi-deribit-combo-2024-heavy` against this fixed code to
+              close `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple; tracked in
+              `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
 
-          *(Historical note: this todo's text previously carried a garbled, unrelated OKX-SPOT/QG-red pointer glued onto
-          the end from an editing mistake — removed 2026-07-14 during this flip. That OKX-SPOT content is tracked
-          independently and in full at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
-          which already carries its own open DESIGN todo — nothing was lost.)*
+              *(Historical note: this todo's text previously carried a garbled, unrelated OKX-SPOT/QG-red pointer glued onto
+              the end from an editing mistake — removed 2026-07-14 during this flip. That OKX-SPOT content is tracked
+              independently and in full at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
+              which already carries its own open DESIGN todo — nothing was lost.)*
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 
