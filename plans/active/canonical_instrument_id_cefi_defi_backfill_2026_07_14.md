@@ -125,25 +125,30 @@ complete backfill — running `build_instrument_catalogue.py --mode full` for ce
 - [x] ✅ [SCRIPT] P1. Ship all of the above — `unified-api-contracts@9341ac6` then `instruments-service@f90d0e0`
       (quality-gates-green both, quickmerge). Also fixed 2 unrelated pre-existing QG blockers hit along the way (stale
       golden fixture `instruments-service@bdb2dc6`; empty-string-fallback ratchet `instruments-service@272b012`).
-- [ ] [DATA] P1. Run `build_instrument_catalogue.py --asset-group cefi --mode full` against real prod GCS
-      (manifest-verified row count, monotonic guard expected to ACCEPT — this is a metadata-only backfill, row count
-      should be unchanged or grow, never shrink). Evidence: rows before/after + guard decision.
+- [x] ✅ [DATA] P1. Ran `build_instrument_catalogue.py --asset-group cefi --mode full` against real prod GCS — monotonic
+      guard ACCEPTED (no durability landmine on CeFi, unlike DeFi). Verified 358,439/358,439 rows (100%) with
+      `canonical_instrument_id` populated, correctly mirroring `instrument_key`.
 - [x] ✅ [DATA] P1. **Attempted `build_instrument_catalogue.py --asset-group defi --mode full` — BLOCKED by the
       monotonic-shrink guard (correctly), redirected to a targeted in-place patch instead.** The full rebuild produced
       9,456 rows vs the live 10,372 and was rejected. Root-caused: unrelated pre-existing durability gap in
       `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`'s Stage 4 (a catalog-only migration not
       reproducible from `by_date`) — see that doc's 2026-07-14 Progress Log entry for the full mechanism. Nothing was
       promoted; live catalogue untouched. `--mode full` is not currently safe for DeFi until that gap is closed.
-- [ ] [DATA] P1. **Corrected approach**: write a targeted, safe, in-place one-off migration (same pattern as
-      `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py` — dry-run, timestamped backup, `--apply`) that
-      reads the live `prod/catalog.parquet` directly and (a) sets `canonical_instrument_id = instrument_key` wherever
-      blank, (b) recomputes `glued_pair_id` for POOL rows using the now-fixed `glued_venue_prefix()`. Does not touch
-      `by_date`, does not risk the Stage-4 durability landmine. Evidence: rows before/after, spot-check (a)
-      canonical_instrument_id non-blank catalog-wide, (b) glued_pair_id's Uniswap-V3-family prefix 100% with-underscore
-      post-patch (re-run the 87.7%/12.3% measurement from §2).
-- [ ] [VERIFY] P2. Confirm deployment-api's `instrument_coverage.py` (the one identified live consumer of
-      `prod/catalog.parquet`) reads the new field/corrected prefix without needing its own code change (expected — it's
-      schema-compatible, additive-only) — a quick read-path check, not a code change unless something's wrong.
+- [x] ✅ [DATA] P1. **Corrected approach, executed**: wrote + dry-ran + applied
+      `instruments-service/scripts/backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py` (same dry-run/backup/
+      `--apply` pattern as the lending migration) directly against `prod/catalog.parquet` — (a) backfilled
+      `canonical_instrument_id = instrument_id` wherever blank (mechanically always-correct: for non-pool rows the
+      catalog's own `instrument_id` already IS the resolved instrument_key; for POOL rows `instrument_id` is BY
+      DEFINITION `pool_address.lower()`, which is also exactly `canonical_instrument_id`'s pool-row definition — no
+      recomputation needed, verified `canonical_instrument_id == instrument_id` for all 10,372 rows post-patch); (b)
+      fixed `glued_pair_id`'s venue-chain prefix in-place (same idempotent regex `_insert_version_underscore` uses,
+      applied only to the existing prefix segment — no quote_asset/fee recomputation needed). Backup:
+      `prod/catalog.20260714-042725.canonicalidgluedprefix.bak.parquet`. **Verified live**: 10,372 rows (unchanged),
+      canonical_instrument_id 0 blank / 10,372 backfilled, glued_pair_id 3,502/7,145 pool rows had their prefix fixed, 0
+      remaining no-underscore prefixes catalog-wide.
+- [x] ✅ [VERIFY] P2. Confirmed deployment-api's `instrument_coverage.py` (the identified live consumer of
+      `prod/catalog.parquet`) matches purely on `instrument_id` — never reads `canonical_instrument_id` or
+      `glued_pair_id` — confirmed schema-compatible/additive-only via direct code read, no code change needed.
 - [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` or
       `codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
       polarity or canonical_instrument_id's CeFi/DeFi scope; update/SUPERSEDED-banner if they assert the old (wrong)
@@ -158,3 +163,11 @@ complete backfill — running `build_instrument_catalogue.py --mode full` for ce
   unrelated failure (`test_expected_universe_golden.py::test_expected_matches_golden[tradfi]`, a stale TradFi golden
   fixture — confirmed via `git stash` that it fails identically without this plan's changes; not touched here, out of
   scope). Shipping + the real prod catalog regens are the remaining todos above.
+- **2026-07-14 (catalog regens)** — CeFi `--mode full` ran clean (guard ACCEPT), 358,439/358,439 rows verified
+  populated. DeFi `--mode full` was correctly BLOCKED by the shrink guard — root-caused to an unrelated pre-existing
+  durability gap (the 2026-07-13 lending A_TOKEN/DEBT_TOKEN migration patches the catalog directly and isn't
+  reproducible from `by_date`; documented in `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md`). Redirected
+  to a targeted in-place patch script instead of forcing the shrink through — both fixes (canonical_instrument_id
+  backfill, glued_pair_id prefix) turned out to be simple, always-correct transforms on existing catalog columns, no
+  by_date rebuild needed. Applied + fully verified: 10,372/10,372 rows have canonical_instrument_id, 0 rows have a
+  no-underscore glued_pair_id prefix remaining. Remaining: P3 codex audit only.
