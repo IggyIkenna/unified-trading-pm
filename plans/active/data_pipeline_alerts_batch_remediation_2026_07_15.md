@@ -95,11 +95,9 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [ ] [INFRA] P0. Diagnose (via background agent, in flight) and fix the alert-repeat/no-dedup/no-RESOLVED-green bug so
-      `DP_RUN_MOSTLY_EMPTY` (and other CRITICAL DP-\* alerts) stop re-posting byte-identical payloads on every detector
-      tick and instead follow fire-on-change / dedup-while-unchanged / explicit RESOLVED-on-fix, mirroring the
-      `codex/04-architecture/ci-alerting.md` dedup_key+cooldown model. Repo: alerting-service (+ whichever detector cron
-      owns the DP-FETCH-007 post-run manifest scan). File/update the issue doc either way.
+- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — `alerting-service@fe76ded34a4`
+      (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) + `deployment-service` source-side re-nag (in flight, see
+      Progress Log). Issue doc: `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
 - [ ] [CODE] P1. Implement bounded retry-with-backoff in the features-service compute VM startup gate (Option 2 from
       `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) so a transient consolidator-stale
       reading doesn't burn a full SPOT VM launch. Ship + update that issue doc with the fix commit.
