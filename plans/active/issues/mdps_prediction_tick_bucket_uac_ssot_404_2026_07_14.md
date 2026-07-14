@@ -81,10 +81,21 @@ flipping.
       `prediction_manifest_canonicalisation_2026_06_01.md` archived). (repo: unified-api-contracts)
 - [ ] [SCHEMA] P1. Update `tests/unit/test_gcs_paths_facade.py` PREDICTION MARKET_DATA expectation to the `pred` token.
       (repo: unified-api-contracts)
-- [ ] [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
+- [x] ✅ [BACKEND] P1. Re-verify + update UTL prediction-bucket references and their tests (`cloud_constants.py`,
       `manifest_consolidator.py`, `upgrade_manifest_to_v8.py`, `detect_manifest_divergence.py`, `test_bucket_naming.py`,
       `test_cloud_constants.py`, `test_manifest_consolidator.py`) — KEEP `_asset_group_for_market_data_bucket`
-      recognizing BOTH tokens for back-compat asset-group inference. (repo: unified-trading-library)
+      recognizing BOTH tokens for back-compat asset-group inference. (repo: unified-trading-library) —
+      **unified-trading-library@4378685**. Re-verified: NO code change needed. All 4 named UTL modules resolve the
+      prediction market-data bucket via `resolve_bucket_name(kind="market-data-tick-prediction")`, which reads the
+      SEPARATE `unified_api_contracts/config/cloud-providers.yaml` kind-map SSOT — not the `canonical/gcs_paths.py`
+      `bucket_template()` per-(AssetGroup,BucketKind) dict item -001 flips. Confirmed live in the packaged yaml
+      (`cloud-providers.yaml:160,326`): `market-data-tick-prediction` already maps to
+      `market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-${...}` on BOTH GCP and AWS — unaffected by the gcs_paths.py
+      drift/flip. `_asset_group_for_market_data_bucket`'s regex (`manifest_consolidator.py:392`,
+      `r"market-data-tick-(cefi|defi|tradfi|sports|prediction|pred)\b"`) already recognizes both tokens (back-compat
+      preserved, tests at `test_manifest_consolidator.py:1602-1614` pass unchanged). `test_bucket_naming.py` /
+      `test_cloud_constants.py` already assert the abbreviated `pred` token for the resolved bucket name.
+      `quality-gates.sh` full run GREEN (580s), sentinel = HEAD, tree unmodified.
 - [ ] [BACKEND] P2. Update MDPS `test_dependency_checker_sports_prediction.py` + `test_consolidator_preflight_sports.py`
       to assert the `pred` token now that OUTPUT_BUCKETS/UPSTREAM_DEPS resolve via the flipped UAC template. (repo:
       market-data-processing-service)
