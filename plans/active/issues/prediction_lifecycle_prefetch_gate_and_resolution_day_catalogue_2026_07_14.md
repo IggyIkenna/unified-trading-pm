@@ -98,12 +98,27 @@ locked_since:
       `test_kalshi_adapter_lifecycle_gating.py` / `test_sentinels_prediction_lifecycle_tier3.py`, all green; QG
       `.qg_last_passed_sha=f4b19bad2` == HEAD before quickmerge; 173 total tests re-run clean (36 new/touched + 137
       broader prediction/sentinel regression sweep, 0 failures)).
-- [ ] [CODE] P1 (contingent on the P0 VERIFY confirming propagation). Widen the per-day catalogue derivation from
+- [x] ✅ [CODE] P1 (contingent on the P0 VERIFY confirming propagation). Widen the per-day catalogue derivation from
       resolution-day-only to active-window (`created_at ≤ day ≤ end_date`) — MUST land together with (or after) the
       pre-fetch gate, otherwise attempt volume explodes. Gate: sampled day's cid list contains active non-resolving
-      markets; attempt volume bounded by the gate; QG green.
+      markets; attempt volume bounded by the gate; QG green. — evidence: `instruments-service@41ca79d7`
+      (`clob.py::_fetch_clob_markets` active-window overlap + new `_clob_market_window_ts` bounds helper mirroring
+      MTDS's `compute_lifecycle_window_ts` comparison; creation-date fields `start_date`/`startDate`/`created_at`/
+      `createdAt` with `accepting_order_timestamp`/`game_start_time` fallback, fail-OPEN on unknown creation,
+      fail-CLOSED on unknown `end_date_iso`; 7 new + 1 updated unit tests in
+      `tests/unit/test_polymarket_boost.py::TestFetchClobMarkets` — active-not-resolving included / pre-created excluded
+      / post-resolution excluded / resolution-day unchanged / creation fail-open / end-date fail-closed / fallback-field
+      consulted — all green in full QG, exit 0, `.qg_last_passed_sha=7d8b1ed8`==pre-quickmerge HEAD; sampled-day gate
+      PROVEN on real data: 2026-07-06 NEW catalogue = 97,113 markets of which only 10,089 resolve that day, see the
+      quantification section below; Kalshi IS adapter audited — NO equivalent defect, already active-window, see the
+      widening-scope section). Kalshi verdict: no change needed.
 - [ ] [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
       before/after counts here and to the coverage docs if the model description changes.
+- [ ] [INFRA] P1 [BLOCKED-OPERATOR-DECISION]. Launch the historical prediction re-backfill under the widened catalogue —
+      cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch attempts
+      over 2025-03-14→2026-07-14, ≈9–11 days single-process wall-clock at the adapter's 20 req/s cap, ÷N for N sharded
+      VMs; expected NEW captured cells order 10^6); operator go/no-go — this launch decision is explicitly reserved by
+      the operator's 2026-07-14 dispatch (quantify, don't fire).
 
 ## Progress log
 
@@ -204,6 +219,34 @@ locked_since:
   - See `## Catalogue-widening scope (contingent P1 — NOT implemented this pass)` below for the item deliberately
     deferred per the task's explicit instruction (now CONFIRMED necessary by the P0 VERIFY, not merely hypothesized).
 
+- 2026-07-14 [CONTINGENT CODE P1 — SHIPPED, `instruments-service@41ca79d7`]: Widened `clob.py::_fetch_clob_markets` from
+  resolution-day-only to active-window overlap, exactly per the widening-scope section below (which is now historical:
+  "NOT implemented this pass" refers to the abe0904d pass).
+  - **Filter**: keep a market when its `[created, resolved)` window overlaps `[day 00:00Z, day+1 00:00Z)`. New
+    `_clob_market_window_ts()` mirrors MTDS `base_prediction_adapter.compute_lifecycle_window_ts` bit-for-bit (date-only
+    settlement extended to end-of-day) — REIMPLEMENTED locally, not imported (no T4 service→service dep).
+  - **Fields chosen** (verified against the UAC `PolymarketGammaMarket` schema + `markets.py`'s 43a enrichment note):
+    creation = first non-empty of `start_date`/`startDate`/`created_at`/`createdAt`, falling back to
+    `accepting_order_timestamp`/`game_start_time` (the raw CLOB `/markets` shape usually lacks the gamma creation fields
+    entirely — the fallbacks are the CLOB-native listing-date proxies). Unknown creation → FAIL OPEN (include from
+    earliest known; per the dispatch instruction). Settlement = `end_date_iso` (raw key, `endDateIso` alias fallback);
+    unknown settlement → FAIL CLOSED (the old filter already required it; fail-open here would put unbounded markets in
+    EVERY day's catalogue).
+  - **Kalshi IS adapter audited — NO defect** (see the widening-scope section's Kalshi bullet):
+    `kalshi.py:: _fetch_markets_page:463-471` already keeps `open_d <= target <= close_d` (active-window), and deep
+    pre-cutoff dates route to honest-absence, not a narrowed catalogue. No change made.
+  - **Tests**: 7 new + 1 updated in `tests/unit/test_polymarket_boost.py::TestFetchClobMarkets` (active-not-resolving
+    included / pre-created excluded / post-resolution excluded / resolution-day unchanged / creation fail-open /
+    end-date fail-closed / `game_start_time` fallback consulted / validation-error continue) — all green inside full QG
+    (`--no-fix`, exit 0, `.qg_last_passed_sha=7d8b1ed8` == pre-quickmerge HEAD, re-run FRESH after `31c15d88`/`7d8b1ed8`
+    moved the tree mid-session); quickmerge landed `41ca79d7` on `live-defi-rollout` (confirmed ancestor of origin).
+    Test docstrings state the volume rationale: attempt volume stays bounded because the MTDS pre-fetch gate (abe0904d)
+    re-applies the same bounds before any network call.
+  - **Quantification**: see `## Re-backfill cost quantification` below — measured by running BOTH filter predicates (the
+    shipped code, not a model) over a real 1,801,017-market CLOB scan for 6 sampled days; ≈16.1M additional (cid × day)
+    attempts for a full-history re-backfill, ≈9–11 days single-process at 20 req/s (÷N sharded), new captured cells
+    order 10^6. The launch itself is the new [INFRA] P1 BLOCKED-OPERATOR-DECISION todo.
+
 ## Catalogue-widening scope (contingent P1 — NOT implemented this pass)
 
 Per the P0 VERIFY above, this item is now CONFIRMED necessary (not merely hypothesized) for the backfilled portion of
@@ -217,12 +260,16 @@ the historical corpus. Scope, written up per instruction rather than implemented
   shared helper `base_prediction_adapter.classify_lifecycle_prefetch_skip`/`compute_lifecycle_window_ts` already encode
   for MTDS's gates (2026-07-14, this issue's Finding 1 fix); IS's widened filter should mirror that comparison so both
   services agree on "what counts as active that day."
-- **Kalshi side**: Kalshi's IS adapter
-  (`instruments-service/instruments_service/reference_data/adapters/prediction/ kalshi.py`) was NOT inspected for an
-  equivalent per-date filter in this pass — must be checked for the same resolution-day-vs-active-window distinction
-  before/alongside the Polymarket fix (Kalshi's MTDS-side lifecycle store is fed by the SAME
-  `market_lifecycle/by_canonical_group/` writer, so if Kalshi's IS-side catalogue fetch has an analogous per-date
-  filter, it needs the identical widening).
+- **Kalshi side — AUDITED, NO DEFECT FOUND (2026-07-14)**:
+  `instruments-service/instruments_service/reference_data/ adapters/prediction/kalshi.py::KalshiReferenceDataAdapter._fetch_markets_page`
+  (`:369-479`) already implements an ACTIVE-WINDOW filter for a dated (historical) call, not a resolution-day filter:
+  `:463-471` parses `open_time` / `close_time` per raw market and keeps it only when
+  `open_d is not None and close_d is not None and open_d <= target <= close_d` — i.e. the market's `[open, close]`
+  trading window must SPAN the target date, the exact active-window semantics Polymarket's `_fetch_clob_markets` lacked.
+  Kalshi's `get_instruments(date=...)` (`:271-367`) routes a PAST date to `/historical/markets` (signed, newest-first
+  cursor pagination, `_MAX_HISTORICAL_PAGES=40`) with this per-page filter applied client-side; deep pre-cutoff dates
+  beyond `_HISTORICAL_GAP_EDGE_DAYS=3` from the live/historical boundary return honest-absence (`:303-316`) rather than
+  a false-narrow catalogue, so there is no resolution-day-scoping analog to fix. **No code change made to `kalshi.py`.**
 - **Ordering dependency (why this waits on Finding 1's fix, not the reverse)**: the MTDS pre-fetch gate MUST land BEFORE
   (or with) this widening — otherwise widening the catalogue explodes attempt volume: EVERY (venue, active-window-day)
   pair becomes a fetch attempt again, undoing the whole point of this issue. With the pre-fetch gate live (shipped this
@@ -241,3 +288,56 @@ the historical corpus. Scope, written up per instruction rather than implemented
   audit for the same defect. (3) Widen `_fetch_clob_markets` (+ Kalshi equivalent if found) behind an operator-reviewed
   plan, since it changes attempt volume materially and gates a historical re-backfill cost/benefit call. (4) Re-measure
   per this issue's P2 VERIFY todo.
+
+## Re-backfill cost quantification (2026-07-14, contingent-P1 pass — real data, read-only)
+
+**Method.** One bounded full CLOB `/markets` scan (the SAME scan every IS backfill process pays once —
+`_get_raw_clob_markets_cached`), then for each of 6 sampled days, both filter predicates were executed over the
+identical in-memory corpus: (a) OLD = the pre-fix resolution-day predicate (`end_date_iso.startswith(f"{date}T")`), (b)
+NEW = the shipped `instruments-service@41ca79d7` active-window `_fetch_clob_markets` (actual production code, not a
+reimplementation). NEW_w/lifecycle = the subset of NEW producing a strict `MarketLifecycle` row (`classify_lifecycle()`
+— exactly what the `market_lifecycle/by_canonical_group/` store MTDS's pre-fetch gate reads is built from). Scan
+measured **1,801,017 markets in 660.7 s** (~11 min; the "~900K" figure in older docs is stale). No GCS whole-corpus walk
+(single-walk discipline): the only GCS reads were the 6 day-partitions (bounded).
+
+**Measured per-day counts:**
+
+| day        | OLD (resolution-day) | NEW (active-window) | NEW w/ strict lifecycle row | additional (NEW−OLD) | lifecycle coverage of NEW |
+| ---------- | -------------------: | ------------------: | --------------------------: | -------------------: | ------------------------: |
+| 2025-03-14 |                  157 |               6,030 |                       4,343 |                5,873 |                       72% |
+| 2025-06-15 |                  378 |               8,107 |                       6,426 |                7,729 |                       79% |
+| 2025-09-15 |                1,250 |              14,807 |                      13,257 |               13,557 |                       90% |
+| 2025-12-15 |                1,301 |              31,637 |                      30,327 |               30,336 |                       96% |
+| 2026-03-15 |                8,317 |              62,625 |                      61,769 |               54,308 |                     98.6% |
+| 2026-07-06 |               10,089 |              97,113 |                      96,757 |               87,024 |                     99.6% |
+
+**MTDS pre-fetch gate interaction (abe0904d):** every NEW market's lifecycle window overlaps its day BY CONSTRUCTION
+(IS's widened filter mirrors the gate's own bounds comparison), so the gate passes ~all of NEW; the (NEW −
+NEW_w/lifecycle) sliver lacks a strict lifecycle row and FAILS OPEN in the gate (fetched anyway). Lifecycle coverage of
+NEW is ≥72% on every sampled day — comfortably above the gate's 50% fail-open-bypass threshold, so gating stays ACTIVE
+(no bypass day). Net: **per-day fetch attempts ≈ NEW**; what the gate protects against is the pre-widening
+catalogue×gate mismatch and out-of-window ids, not this in-window growth.
+
+**Extrapolation (trapezoid over the 6 samples, 2025-03-14 → 2026-07-14 = the existing 482-partition corpus):**
+
+- Additional (conditionId × day) fetch attempts: **≈ 16.1M** (segment sums 0.63M + 0.98M + 2.00M + 3.81M + 7.99M +
+  0.70M). OLD-filter total ≈ 1.77M → NEW total ≈ 17.9M ≈ **10.1×** the old attempt volume.
+- Wall-clock at the adapter's observed/configured throughput (MTDS `_POLYMARKET_RATE_PER_SEC = 20` req/s token bucket,
+  `get_trades_batch max_concurrent=10`; inactive-day cids cost 1 data-api request each): 16.1M ÷ 20/s ≈ 805 ks ≈ **9.3
+  days single-process**; ~11 days at a pagination-inclusive ~1.2 req/pair. Sharded across N workers (Polymarket rate
+  limits are per-process/IP; no Tardis-style fleet cap applies): **÷N — e.g. ~2.5–3 days on 4 SPOT VMs**. The IS
+  catalogue re-derivation itself is negligible: one ~11-min CLOB scan per process + in-memory per-day filtering.
+- Expected NEW captured rows (order-of-magnitude): the current corpus captures 6.0% of attempts under
+  resolution-day-biased scoping (where trade incidence peaks); mid-life days trade less for most markets, but every
+  widening addition is definitionally an open, live market. At a 3–10% ≥1-trade incidence band on the 16.1M additional
+  attempts: **~0.5M–1.6M new captured (cid × day) cells — order 10^6**. Trade-ROW volume is dominated by the small
+  high-volume cohort (crypto up/down, major politics), so cell count is the honest metric.
+
+**Caveats:** (1) The NEW/OLD ratio FALLS over time (38× → 10×) — recent days are dominated by short-cycle (5m/15m
+up-down, per-match ITF) markets that live <1 day and appear in exactly one day's catalogue under BOTH filters; the
+widening's additional mass is multi-day markets. (2) Mid-month spot samples; sports-calendar variance not modeled. (3)
+Window = the existing backfilled corpus (2025-03-14 →); extending earlier grows the numbers — no partitions exist there
+today. (4) Cross-check: the 2025-03-14 GCS partition (backfilled) holds 155 rows vs OLD live-count 157 (2 parse-dropped)
+— corpus↔live-API consistent; the 2026-07-06 LIVE-captured partition holds 4,592 rows vs NEW=97,113, i.e. even
+live-captured days would widen ~20× on re-backfill (the live Gamma path snapshots currently-tradeable markets, not the
+full CLOB active-window universe).
