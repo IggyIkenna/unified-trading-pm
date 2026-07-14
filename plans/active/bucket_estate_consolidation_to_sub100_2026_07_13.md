@@ -146,7 +146,8 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [x] ✅ [OPERATOR] P1. **RULED 2026-07-13 — retire BOTH dev/stg tiers** (operator answer to the audit question set; 20
       of 21 canonical dev/stg buckets empty). Remaining action rides the W1 delete todo above; the sole content-bearing
       exception `instruments-store-sports-dev` gets inspect + migrate/drop there. Resolver keeps supporting the tiers;
-      we just stop keeping empty buckets for them.
+      we just stop keeping empty buckets for them. — `instruments-store-sports-dev` sub-item DONE 2026-07-14: full
+      investigation + retirement, see Progress Log entry "instruments-store-sports-dev full retirement".
 
 ## Wave 2 — in-flight completions + audit-found breakages (estate ≈139 after)
 
@@ -318,35 +319,52 @@ verified a sample object still intact after revert, zero data lost) upon finding
 shape-aware diff reaches 28,224/28,228 = 99.986% literal per-key twin coverage, not literal 100% (the 4-key residual is
 confidently explained above as superseded-by-rename, not missing data, but that is an interpretive judgment, not a
 path-verified twin) — so arming the actual purge/delete is correctly left for an OPERATOR go given the HARD RULE's
-letter, not executed autonomously. **Recommended next step**: operator reviews the 4-key finding above (or waves it
-through as obviously-superseded) and the ~6,286-object orphan cleanup question, then re-arm the same purge-lifecycle
-(command reproduced in the Progress Log entry below) — the bucket delete itself follows once GCS's async drain confirms
-0 live + 0 noncurrent, exactly per the 6-sibling precedent. | | B | Flat ml trio
-(`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL PATH_REGISTRY repointed to `-prd-` (utl@8cec8786)
-but the flat `ml-models-store` still has live deployment-api data-status readers until deployment-api's prod image
-rebuilds off the promoted UTL. Delete after that rebuild + a no-new-writes check. | | C | `lending-indices` + `-prd` |
-`subgraph_health_probe.py::_resolve_bucket()` writes fingerprints to the flat bucket via `t1_batch` IAM (TF binding at
-subgraph_health_probe_scheduler.tf:71) — repoint that writer first (TF resource block already removed, ds@1dd2159), then
-delete both. | | D | recon end-to-end green | recon buckets exist + BLRS config resolver-repointed, but the upstream
-`t1-recon/{ml,strategy}` `_SUCCESS` producers have never run anywhere + BLRS prod image needs the digest fan-out;
-investigate the producer chain (recon issue-doc fix-direction #3) then verify a 06:00Z run. | | E | Terraform state
-re-import | **RESOLVED 2026-07-14** (see "TERRAFORM RECONCILIATION" log entry below) — all 6 over-removed live resources
-(defi_collect_cron/job × liquidations+solana-defi, the liquidations pubsub topic+sub) re-imported; re-plan confirmed
-zero of this work pending. Residual full-apply delta (odum_portal domain, governance/digest features,
-legacy-consolidator teardown) is other-workstream, deliberately NOT auto-applied — owner/operator green-light needed,
-not a bucket-plan gate. | | F | ASTER originals | MOVED to `aster_cefi_data_defi_bucket_migration_2026_07_13.md`
-(operator ruling) — re-migrate the high_dup schema-narrower band, then delete there. | | G | sports legacy pair
-(`market-data-tick-sports`/`instruments-store-sports` flat) | owned by `sports_manifest_canonicalisation_2026_06_01`
-E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS surface 140 legacy-only cells, all verified
-phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real cells migrated this session (down from 1,854),
-FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down to 28 accepted-phantom cells remaining (not
-316, that count is stale). **Actual remaining blocker is CF-8 (`available_at`)**: code fixed + a coordinated backfill
-already ran (85.3%/87.7% overall fill), but the real captured (non-empty) rows are only ~50-60% filled and a targeted
-re-emit attempt today found a genuine architectural gap (the manifest consolidator's dedup key includes `service_name`,
-and a naive backfill can never supersede rows owned by a different original service — rolled back cleanly, no data
-harm). The real operator (separate concurrent session) has explicitly instructed: wait for a scheduled maintenance
-window + a service_name-aware write redesign before another live attempt. Full detail:
-`plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
+letter, not executed autonomously. **OPERATOR AUTHORIZED 2026-07-14 (later this session)** — operator explicitly ruled
+"lets fix the below and delete old buckets after migrations confirmed," referring to this bucket + the analysis above.
+Re-verified live state before acting (nothing trusted from plan text): `lifecycle_config` still the ORIGINAL reverted
+rule (`NEARLINE@90` + `Delete daysSinceNoncurrentTime=30,numNewerVersions=3`), `versioning_enabled=true`,
+`soft_delete_policy.retentionDurationSeconds=0` — unchanged since the prior analysis. Newest `day=` partition under
+`instrument_availability/by_date/` is still `day=2026-05-22` (`day=2026-06*`/`day=2026-07*` listings both return zero
+objects — no new legacy-side writes in the ~53 days since); the 4-key residual re-spot-checked directly
+(`day=2026-03-01`/`day=2026-03-02` listings) still show bare `venue=COINBASE`/`venue=OKX` alongside the already-split
+`COINBASE-SPOT`/`OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP` sub-venue keys for the same 2 days, exactly as documented above —
+live state materially UNCHANGED, so proceeded. **Purge RE-ARMED 2026-07-14T13:31:43Z UTC** — identical lifecycle JSON to
+the 6-sibling precedent, verified live via `buckets describe` immediately after arming. A baseline
+`gcloud storage buckets delete --quiet` attempt right after arming correctly failed ("Bucket is not empty") — expected,
+since unlike the 6 siblings (already 0 live objects before their purge was armed) this bucket still holds its full
+~28,228-object legacy corpus untouched (the prior session only diffed + reverted, never deleted anything). **STATUS:
+ARMED, DRAINING — IN FLIGHT, NOT YET COMPLETE.** GCS's lifecycle evaluator runs ~once/24h and must process an order of
+magnitude more objects than the near-empty siblings did, so full drain likely runs LONGER than the siblings' ~24-48h
+window. Do not force a `gcloud storage rm -r` bulk delete (bypasses the async lifecycle path this task deliberately
+mirrors) — instead periodically retry
+`gcloud storage buckets delete gs://instruments-store-cefi-central-element-323112 --quiet`; success = proof of true
+zero-version state, confirm immediately with `buckets describe` → expect 404, exactly per the 6-sibling "Async purge
+COMPLETE" pattern above. This row will flip again once a delete attempt actually succeeds — no bucket-shell deletion has
+happened yet as of this update. | | B | Flat ml trio (`ml-models-store`/`ml-configs-store`/`ml-predictions-store`) | UTL
+PATH_REGISTRY repointed to `-prd-` (utl@8cec8786) but the flat `ml-models-store` still has live deployment-api
+data-status readers until deployment-api's prod image rebuilds off the promoted UTL. Delete after that rebuild + a
+no-new-writes check. | | C | `lending-indices` + `-prd` | `subgraph_health_probe.py::_resolve_bucket()` writes
+fingerprints to the flat bucket via `t1_batch` IAM (TF binding at subgraph_health_probe_scheduler.tf:71) — repoint that
+writer first (TF resource block already removed, ds@1dd2159), then delete both. | | D | recon end-to-end green | recon
+buckets exist + BLRS config resolver-repointed, but the upstream `t1-recon/{ml,strategy}` `_SUCCESS` producers have
+never run anywhere + BLRS prod image needs the digest fan-out; investigate the producer chain (recon issue-doc
+fix-direction #3) then verify a 06:00Z run. | | E | Terraform state re-import | **RESOLVED 2026-07-14** (see "TERRAFORM
+RECONCILIATION" log entry below) — all 6 over-removed live resources (defi_collect_cron/job × liquidations+solana-defi,
+the liquidations pubsub topic+sub) re-imported; re-plan confirmed zero of this work pending. Residual full-apply delta
+(odum_portal domain, governance/digest features, legacy-consolidator teardown) is other-workstream, deliberately NOT
+auto-applied — owner/operator green-light needed, not a bucket-plan gate. | | F | ASTER originals | MOVED to
+`aster_cefi_data_defi_bucket_migration_2026_07_13.md` (operator ruling) — re-migrate the high_dup schema-narrower band,
+then delete there. | | G | sports legacy pair (`market-data-tick-sports`/`instruments-store-sports` flat) | owned by
+`sports_manifest_canonicalisation_2026_06_01` E1/E8 — **UPDATED 2026-07-14 (this session's extensive work)**: MTDS
+surface 140 legacy-only cells, all verified phantom-capture (accepted, not a data-loss gap). IS surface: 1,786+ real
+cells migrated this session (down from 1,854), FIXTURES cell-key mismatch fixed, 49/77 further anomaly rows fixed — down
+to 28 accepted-phantom cells remaining (not 316, that count is stale). **Actual remaining blocker is CF-8
+(`available_at`)**: code fixed + a coordinated backfill already ran (85.3%/87.7% overall fill), but the real captured
+(non-empty) rows are only ~50-60% filled and a targeted re-emit attempt today found a genuine architectural gap (the
+manifest consolidator's dedup key includes `service_name`, and a naive backfill can never supersede rows owned by a
+different original service — rolled back cleanly, no data harm). The real operator (separate concurrent session) has
+explicitly instructed: wait for a scheduled maintenance window + a service_name-aware write redesign before another live
+attempt. Full detail: `plans/active/sports_manifest_canonicalisation_2026_06_01.md` +
 `plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Still HELD — do not purge/delete
 either bucket.** | | H | W3 structural folds (features 25→5, ml 8→2, stores) | design drafted
 (`bucket_estate_fold_design_2026_07_13.md`, status draft) — the path from ~147 to the &lt;100 target; activate as its
@@ -382,6 +400,123 @@ strategy-store-pred-{dev,stg}
 of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cleanup never-touch list.
 
 ## Progress Log
+
+- **2026-07-14, item A (`instruments-store-cefi` legacy twin) — OPERATOR-AUTHORIZED, purge RE-ARMED, async drain IN
+  FLIGHT (not yet complete).** Operator explicitly authorized proceeding on the analysis already documented in this
+  plan's item A row and the "2026-07-14, item A" log entry below: "lets fix the below and delete old buckets after
+  migrations confirmed." Before acting, re-pulled this plan fresh and re-verified the bucket's live state had not
+  materially changed since that prior analysis (spot-check, not a full corpus re-walk — the prior session's own
+  full-corpus shape-aware diff already established the 28,228/51,637 legacy/prd counts and the true 4-key residual;
+  re-running that identical full diff again would itself be the kind of redundant whole-corpus walk this task's floor
+  rules caution against):
+  1. **Lifecycle/versioning unchanged**: `gcloud storage buckets describe` showed the exact same reverted lifecycle
+     (`NEARLINE@90` + `Delete daysSinceNoncurrentTime=30,numNewerVersions=3`), `versioning_enabled=true`,
+     `soft_delete_policy.retentionDurationSeconds=0` as the prior session left it — no drift.
+  2. **No new legacy-side writes**: listed `instrument_availability/by_date/day=2026-06*` and `day=2026-07*` — both zero
+     objects; listed all `day=2026-05*` partitions sorted — newest is still `day=2026-05-22` (today is 2026-07-14, so
+     ~53 days stale, exactly matching the prior finding, consistent with the documented ~53+-day zero-live-writer
+     claim).
+  3. **4-key residual re-confirmed present, unchanged**: listed `day=2026-03-01/` and `day=2026-03-02/` directly — both
+     still show bare `venue=COINBASE` and `venue=OKX` alongside the already-split `COINBASE-SPOT`,
+     `OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP` sub-venue keys for the same 2 days, exactly as the prior session documented.
+     Attempted a fresh live-object-count baseline (`gcloud storage du -s`) to gauge magnitude per the task brief — it
+     did not complete within a 280s bound (consistent with a genuinely large, ~28k-object corpus, not a shrunk one); did
+     not force a longer full enumeration since the partition-level spot-checks above already positively confirm no
+     material change.
+  4. **Conclusion: live state materially UNCHANGED from the documented analysis** — proceeded per the operator's
+     authorization (which was scoped to "the analysis as documented," and it still holds).
+  5. **Purge re-armed**: applied the identical lifecycle JSON used for the 6 already-deleted siblings
+     (`gcloud storage buckets update gs://instruments-store-cefi-central-element-323112 --lifecycle-file=...` with
+     `{"rule":[{"action":{"type":"Delete"},"condition":{"age":0,"isLive":true}},{"action":{"type":"Delete"},"condition":{"daysSinceNoncurrentTime":0,"isLive":false}}]}`)
+     at **2026-07-14T13:31:43Z UTC**; immediately verified live via `gcloud storage buckets describe` (new rule
+     present). Unlike the prior session's arm-then-revert-within-1-minute, this arm is being LEFT IN PLACE per the
+     operator's instruction to let it run to completion.
+  6. **Baseline delete attempt**:
+     `gcloud storage buckets delete gs://instruments-store-cefi-central-element-323112 --quiet` immediately after arming
+     → failed with "Bucket is not empty" (expected — this bucket, unlike the 6 siblings which already had 0 live objects
+     before their purge was armed, still holds its full ~28,228-object legacy corpus; nothing has been deleted from it
+     yet by any prior session). This failure is the correct/expected baseline, not a problem.
+  7. **Bucket shell NOT yet deleted — this is an in-flight async operation, not a completed one.** GCS's lifecycle
+     evaluator runs on a roughly-24h cadence and must drain an order of magnitude more objects than the near-empty 6
+     siblings did, so full drain plausibly takes materially longer than their ~24-48h window. Per this task's own
+     framing and the async-wait-discipline rule (`codex/12-agent-workflow/async-wait-and-poll-discipline.md`), this is
+     not something to force or block on synchronously — the correct completion path is a follow-up session re-running
+     the same `buckets describe`/`buckets delete --quiet` check (exactly the 6-sibling "Async purge in flight" → "Async
+     purge follow-up sub-task COMPLETE" two-step pattern already used earlier today), NOT a forced
+     `gcloud storage rm -r` bulk delete (which would bypass the async lifecycle path this task deliberately mirrors).
+     Repos touched: none (GCS metadata + a failed delete attempt only; no code changes, no repo shipped). Evidence: live
+     `gcloud storage buckets describe`/`ls` transcripts this session (lifecycle/versioning check, day-partition
+     spot-checks), live `gcloud storage buckets update --lifecycle-file=...` + `buckets describe` transcript (re-arm +
+     verify), live `gcloud storage buckets delete --quiet` transcript (baseline "not empty" failure). Plan doc updated
+     in this same commit, `unified-trading-pm` (docs(plans) commit, this file) — direct push per the PM-plan-docs
+     carve-out.
+
+- **2026-07-14, `instruments-store-sports-dev` full retirement — investigated, compared, retired, bucket deleted +
+  404-verified.** Live-verified (not trusted from plan text): a Cloud Run job
+  `uts-dev-instruments-service-sports-fixtures` was firing 4x/day (00:00/06:00/12:00/18:00 UTC via
+  `uts-dev-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule`) plus a separate `uts-dev-features-sports-t1-schedule`
+  at 02:30 UTC.
+  1. **Comparison (real content, both sides)**: `gcloud run jobs describe` on both `uts-dev-` and
+     `uts-prod-instruments-service-sports-fixtures` showed byte-identical args
+     (`--operation=instruments --mode=batch --asset-group=SPORTS --sports-provider=API_FOOTBALL --run-tag=t1-recon`) —
+     only `DEPLOYMENT_ENV` differs. Dev's job had actually been FAILING since at least 2026-07-10
+     (`gcloud run jobs executions list` — every execution 2026-07-10→2026-07-12T18:01 shows `FAILED_COUNT=1`); its first
+     success was an off-cadence run at 2026-07-12T22:31:09Z, so the bucket only ever held 3 days of content
+     (`day=2026-07-12/13/14`). Read real objects on both buckets for those 3 overlapping days: dev = 5 entities
+     (`fixtures_outcomes`, `fixtures_schedule`, `injuries`, `standings`, `teams`); prod = 9 entities for the same days,
+     including 4 dev never captured at all (`fixture_events`, `fixture_lineups`, `fixture_stats`, `player_stats`).
+     League breadth: prod's `standings`/`teams` cover ~90 leagues per day vs dev's ~30; for `fixtures_schedule`
+     specifically, day=2026-07-13 and day=2026-07-14 are IDENTICAL league-for-league between dev and prod (2 leagues and
+     4 leagues respectively, exact same names). The one divergent day (day=2026-07-12: dev's
+     `fixtures_schedule`/`fixtures_outcomes` had 8 leagues, prod only 1 — `K_LEAGUE_2`) was checked directly rather than
+     assumed unique: prod's `teams` entity for that SAME day already covers all 8 of dev's leagues (`ALLSVENSKAN`,
+     `ARGENTINA_PRIMERA_NACIONAL`, `BRASILEIRAO_SERIE_B`, `COPA_ARGENTINA`, `COPA_CHILE`, `ELITESERIEN`, `K_LEAGUE_1`,
+     `K_LEAGUE_2`) — so prod already had full reference coverage of every league dev touched that day; the
+     fixtures_schedule/outcomes narrowness that one day is best explained by dev's very first (off-cadence,
+     post-multi-day-failure) successful run sweeping a broader match- calendar window than prod's steady-state per-run
+     window, not a sustained unique capture. **Conclusion: dev held no genuinely unique data — prod is a strict
+     superset** (deeper entities, ~3x league breadth, longer history back to 2019 and forward-scheduled to 2026-12) — no
+     migration was needed or performed.
+  2. **Dead scheduler found + noted**: `uts-dev-features-sports-t1-schedule` targets a Cloud Run job
+     (`uts-dev-features-sports-service-t1-recon`) that has never existed on EITHER tier (`gcloud run jobs describe` 404s
+     for both dev and prod variants) — confirmed via `gcloud scheduler jobs describe` `status.code=5` (NOT_FOUND) on its
+     last attempt (2026-07-14T02:30:21Z) and via `gcloud logging read` showing `NOT_FOUND` errors on every fire. This
+     scheduler was never writing anything on either tier — a pre-existing dead entry, not a live producer this session's
+     task brief slightly overstated. The `features-sports-service-job`/`daily_workflow` Cloud Run job (a SEPARATE, real,
+     already-live service under `terraform/services/features-sports-service/`) is untouched — not the same pipeline, not
+     in scope.
+  3. **Retirement executed**: `deployment-service@926ba192` — `terraform/gcp/t1_batch_scheduler.tf`'s
+     `t1_batch_services` for_each now excludes `sports-fixtures-{6am,noon,6pm,midnight}` + `features-sports` keys when
+     `var.environment == "dev"` only (staging/prod entries for this exact pipeline are byte-unchanged); QG green (201s),
+     quickmerge → live-defi-rollout. Live resources deleted directly via `gcloud` (mirrors this session's earlier
+     cefi/defi/sports-legacy consolidator-cron removal pattern — terraform source edited first, no blind
+     `terraform apply` since dev's terraform state isn't safely applyable per this session's earlier tfvars finding):
+     all 5 `uts-dev-*` Cloud Scheduler jobs (`sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule` +
+     `features-sports-t1-schedule`) deleted; Cloud Run job `uts-dev-instruments-service-sports-fixtures` deleted.
+     Re-verified via `gcloud scheduler jobs list`/`gcloud run jobs list` post-delete: zero `uts-dev-*sports*` entries
+     remain anywhere (staging's `uts-staging-features-sports-t1-schedule` and all `uts-prod-*sports*` entries are
+     untouched, out of scope). Grep-clean: workspace-wide `rg` for `instruments-store-sports-dev`/`sports-dev-central`
+     found zero hardcoded construction sites (only this plan's own prose + a generic `resolve_bucket_name` docstring in
+     `instruments_service/reference_data/sports_dependency.py` documenting the resolver's general dev-tier support,
+     which the Wave-0 ruling explicitly keeps: "resolver keeps supporting the tiers"); `_tradfi-ohlcv-launcher-lib.sh`
+     checked and contains zero sports references (unrelated file for this pipeline).
+     `deployment_service/ cloud_run_job_registry.py`'s stem entries for
+     `instruments-service-sports-fixtures`/`features-sports-service-t1-recon` are environment-agnostic classification
+     stems (used by the deployment-observability dashboard across ALL tiers) — left unchanged since staging/prod jobs
+     still need them; the guard test (`test_cloud_run_job_registry_guard.py`) statically greps the raw `.tf` text for
+     `name=`/`job_name=` strings (does not evaluate the `var.environment` conditional), so it still passes post-change.
+  4. **Bucket deletion + 404-verify**: `gcloud storage buckets describe` confirmed no `versioning_enabled` field
+     (versioning OFF) before deleting — no version-aware handling needed;
+     `soft_delete_policy.retentionDurationSeconds = 604800` (7-day GCS soft-delete, does not block deletion).
+     `gcloud storage rm -r gs://instruments-store-sports-dev-central-element-323112` removed all live objects (306
+     parquet files across `_index/`, `instrument_availability/`, `sports_reference/`) then the bucket itself;
+     immediately re-verified via `gcloud storage buckets describe` → **404 confirmed**. Estate count: −1 (this bucket
+     only; no other buckets touched — tradfi/prediction and every other named-out-of-scope bucket were not touched).
+     Evidence: live `gcloud run jobs describe`/`executions list`/`scheduler jobs describe`/`logging read` transcripts
+     (comparison); `deployment-service@926ba192` (terraform, QG green 201s, quickmerge → live-defi-rollout); live
+     `gcloud scheduler jobs delete` ×5 + `gcloud run jobs delete` ×1 transcripts (scheduler/job retirement); live
+     `gcloud storage rm -r` + `buckets describe` 404 transcript (bucket deletion). Repos touched: deployment-service
+     only.
 
 - **2026-07-14, item A (`instruments-store-cefi` legacy twin) — investigated to a genuine resolution; the "27,225
   legacy-only objects" figure was a partition-shape-blind diff-tool false alarm, not a real data gap.** Full session

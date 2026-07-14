@@ -1497,8 +1497,19 @@ fi
 
 if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
   # Nothing staged and (--files paths | whole tree) clean — changes were already committed
-  # in a previous quickmerge run. Skip commit and go straight to push + PR.
-  echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+  # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
+  # the documented --agent flow). That pre-existing commit never passed through the trailer
+  # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
+  # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
+  if git log -1 --format=%B | grep -q '^Quickmerge:'; then
+    echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+  else
+    _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
+    { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
+    git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
+    rm -f "$_QM_AMEND_MSG_FILE"
+    echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
+  fi
 elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
   # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
   # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`

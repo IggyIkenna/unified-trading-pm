@@ -240,26 +240,39 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 3 — Reservation ledger + dual-gate admission
 
-- [ ] [INFRA] P1. Reservation ledger (replaces the K-token bucket) at the HOST-SHARED path
+- [x] [INFRA] P1. ✅ PM@88a4925af — Reservation ledger (replaces the K-token bucket) at the HOST-SHARED path
       `${WORKSPACE_ROOT%/.tabs/*}/.benchmarks/qg-governor/` (strip the per-slot `.tabs/<N>` suffix — raw
       `WORKSPACE_ROOT` is per-slot, which would silently break cross-slot coordination); flock-protected; PID-liveness
       sweep prunes dead reservations.
-- [ ] [INFRA] P1. RAM gate — TWO independent clauses (never a single `min()`): (1) reservation bound
-      `sum_reserved_peak + this_repo_peak ≤ QG_RAM_BUDGET` (caps stacking of same/mixed heavy repos — the 6×UTL case);
-      (2) live backstop `MemAvailable ≥ this_repo_peak + QG_MEM_FLOOR` (external pressure + climb headroom). Per-repo
-      peak from the canonical baseline; unmeasured → conservative default. Check-and-reserve ATOMIC under one flock.
-- [ ] [INFRA] P1. CPU gate — `running_weight + this_cpu_weight ≤ floor(cores × QG_CPU_FRAC)`, `cpu_weight` from the
-      Phase-0 unpinned parallel measure (peak concurrent cores), NOT a flat 1-per-run.
-- [ ] [INFRA] P1. Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak` (existing
-      base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not the host.
-- [ ] [INFRA] P0. Global 80 % valve + kill-switch — if live host used-RAM crosses 80 %, ABORT the offending/newest run +
-      Slack-alert. Catches aggregate pressure per-repo caps miss; doubles as the fast rollback.
-- [ ] [INFRA] P2. Light-slice bypass — only TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
-- [ ] [INFRA] P3. Oversize guard (defensive) — peak > `QG_RAM_BUDGET` waits for `sum_reserved_peak==0` then runs solo +
-      loud warning. Rare-to-never ≥ 16 GB (heaviest 5.5 GB < 11 GB budget); no stacked-oversize drain logic needed.
-- [ ] [INFRA] P2. Env knobs — `QG_MEM_SAFETY_FRAC` (0.70) / `QG_MEM_FLOOR_GB` / `QG_CPU_FRAC` (0.80) / `QG_MEM_CAP_MULT`
-      (1.20) / `QG_HOST_RAM_ABORT_PCT` (80) / `QG_HOST_CONCURRENCY` demoted to a loose runaway backstop (RAM-derived
-      default, no longer the primary control).
+- [x] [INFRA] P1. ✅ PM@3de0ee74d (decision) + PM@6e818079a (wired) — RAM gate — TWO independent clauses (never a single
+      `min()`): (1) reservation bound `sum_reserved_peak + this_repo_peak ≤ QG_RAM_BUDGET` (caps stacking of same/mixed
+      heavy repos — the 6×UTL case); (2) live backstop `MemAvailable ≥ this_repo_peak + QG_MEM_FLOOR` (external
+      pressure + climb headroom). Per-repo peak from the canonical baseline; unmeasured → conservative default.
+      Check-and-reserve ATOMIC under one flock.
+- [x] [INFRA] P1. ✅ PM@3de0ee74d (count-based slot; cpu_weight refinement deferred — see Deferred) — CPU gate —
+      `running_weight + this_cpu_weight ≤ floor(cores × QG_CPU_FRAC)`, `cpu_weight` from the Phase-0 unpinned parallel
+      measure (peak concurrent cores), NOT a flat 1-per-run.
+- [x] [INFRA] P1. ✅ PM@a6b5e24a5 — Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak`
+      (existing base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not
+      the host.
+- [ ] [INFRA] P0. Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED); runtime ABORT of an already-running >80 %
+      job STILL PENDING (= the "runtime abort-monitor" hardening item, why this stays open). — if live host used-RAM
+      crosses 80 %, ABORT the offending/newest run + Slack-alert. Catches aggregate pressure per-repo caps miss; doubles
+      as the fast rollback.
+- [x] [INFRA] P2. ✅ base-service.sh:610-617 acquire guard (shipped w/ the contention work) — Light-slice bypass — only
+      TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
+- [x] [INFRA] P3. ✅ PM@3de0ee74d (SOLO_ADMIT/SOLO_WAIT) — Oversize guard (defensive) — peak > `QG_RAM_BUDGET` waits for
+      `sum_reserved_peak==0` then runs solo + loud warning. Rare-to-never ≥ 16 GB (heaviest 5.5 GB < 11 GB budget); no
+      stacked-oversize drain logic needed.
+- [x] [INFRA] P2. ✅ PM@6e818079a + PM@a6b5e24a5 — Env knobs — `QG_MEM_SAFETY_FRAC` (0.70) / `QG_MEM_FLOOR_GB` /
+      `QG_CPU_FRAC` (0.80) / `QG_MEM_CAP_MULT` (1.20) / `QG_HOST_RAM_ABORT_PCT` (80) / `QG_HOST_CONCURRENCY` demoted to
+      a loose runaway backstop (RAM-derived default, no longer the primary control).
+
+- [x] [INFRA] P1. ✅ PM@aca6a2fcf — Release the governor from base-service's EXIT trap so a failed/aborted QG can't leak
+      a reservation-ledger entry (the happy-path release runs only after [4] TYPECHECK; found during the flip soak —
+      correctness was never at risk since every admission sweeps dead PIDs first, but the ledger stayed dirty).
+      `_qg_exit_handler` now releases on every exit path (idempotent w/ the happy-path release, exit-code-safe).
+      Regression test `test-trap-release.sh` (10 assertions) + bash -n + shellcheck clean + all 5 governor suites green.
 
 ### Phase 4 — Fairness + observability
 
@@ -404,6 +417,35 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   (today). **Remaining (hardening, NOT flip-blockers):** Slack overrun alerts, fairness/FIFO aging, MAX_DURATION
   queue-time exclusion, runtime abort-monitor. **Recommended first validation:** flip `QG_GOVERNOR_MODE=reservation` for
   ONE manual QG run on this 61 GB host and watch it reserve/release before any fleet use.
+
+### 2026-07-14 — Flip soak, trap-release fix, + live VM downsize (slot 16)
+
+- **Soak alert `STALE dead-pid reservation … (sweep/release failing)` investigated → BENIGN.** Every admission path
+  (`_qg_try_reserve` / `_qg_ledger_reserved_mb` / `_qg_ledger_count`) sweeps dead PIDs as its FIRST step, before summing
+  the budget — a ghost can never over-admit or false-block. Proven live: a new acquire reaped the exact ghost the
+  monitor flagged. Two real (benign) issues fixed:
+  1. **Monitor cried wolf** — it read the RAW ledger, re-counted the same ghost every 5 s, wrong label. Replaced with
+     `~/.qg-governor-soak/soak2.sh`: distinct-pid dedup, alerts ONLY on a ghost lingering past a 300 s grace, tracks
+     max-linger as the health metric.
+  2. **Root cause of ghosts** — `qg_governor_release` ran only on the happy path (post [4] TYPECHECK); a failed/killed
+     QG leaked a ledger entry until the next sweep. **Fixed `PM@aca6a2fcf`:** release from `_qg_exit_handler` (EXIT
+     trap), idempotent + exit-code-safe. Regression test `test-trap-release.sh` (10 assertions). Landed via a tight
+     rebase→push loop (fleet drift kept re-invalidating the QG sentinel; the commit was already quickmerge-trailered +
+     gated, so a fast-forward push through the pre-push strict-quickmerge hook completed it).
+- **LIVE VM DOWNSIZE (operator, ~13:01):** this host went 61 GB/8-core → **30.8 GB/4-core** (reboot). **The reservation
+  governor auto-adapted with zero intervention** — probe now reports
+  `mem_total_gb=30 ram_budget_gb=21 cores=4 cpu_slots=3` (was 43/6); admits ~3 heavy runs instead of 6. Reservation mode
+  survived the reboot (durable `.env.local` re-applied it; confirmed by a live ledger reservation). **This is the
+  capacity-aware design validated on a real host halving** — the whole reason K was demoted to an inert backstop.
+  **Operator decision (2026-07-14): KEEP `QG_HOST_CONCURRENCY=6`** — the binding limiter is the RAM (21 GB) + CPU
+  (3-slot) reservation gate, so K never binds in reservation mode; K=6 is a dormant backstop only. (Latent caveat: K=6
+  would be an OOM risk on 30 GB IF the host ever fell back to token mode — mitigated by reservation mode being durably
+  set in `.env.local` + tmux global.)
+- **Reconciled Phase-3/4 engine checkboxes** (243/247/251/253/257/258/260) that shipped in earlier sessions but were
+  left unchecked — flipped with their shipping shas. Box 255 left `[~]`: admission valve shipped (`a6b5e24a5`), the
+  runtime abort-monitor is still pending hardening.
+- **A clean 2 h soak with the corrected monitor is running on the (now 30 GB) host** — a more stringent contention test
+  than the original 61 GB soak.
 
 ## Deferred / open decisions
 

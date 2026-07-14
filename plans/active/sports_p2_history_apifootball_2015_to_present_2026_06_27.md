@@ -1308,3 +1308,34 @@ behind a prerequisite condition (e.g. `gw-enrichment-landed`, seeded false) so t
 until the fleet self-deletes + the Todo-9 GW gate goes green — per `RULES.md` §4 "Adding new conditions mid-cycle" (a
 main/operator backlog-tuning action, not a worker one; not doing it unilaterally here). Until then every dispatch of
 this cluster is a guaranteed no-op. `/skip-current-task` so this Opus slot serves genuinely-actionable queued work.
+
+### 2026-07-14T13:11Z — session 29 (data_engineering slot-8): cheap re-check, real progress confirmed, still gated, decline
+
+Dispatched to the final "ML-readiness re-verify" todo (this one) — same transitive blocker as sessions 20-28 (gated
+behind features-recompute ← full-history-enrichment ← the GW gate on this same fleet). Fresh-pulled all 24 slot repos
+clean. `gcloud compute instances list --filter='name~af-backfill'` (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`
+— snap gcloud/gsutil broken on this slot too, same `cap_dac_override` error noted by sessions 22/24/25) shows 2 of the
+original 5 VMs completed (`111307` FIXTURE_EVENTS, `111518` INJURIES — per sessions 22/25); the remaining 3 (`111346`
+LINEUPS, `111414` STATS, `111447` PLAYER_STATS) are all `RUNNING`, same creation timestamps as every prior session.
+`run.log` tails show active fetches at 13:10-13:12Z on all 3, zero Tracebacks/ERRORs, all three now at date=2025-11-09
+(day ~70/91, up from day 35/91 at session 25's 12:19Z check — real forward progress, ~0.67 days/min pace over the last
+~52 min → rough ETA ~30 min to window completion). Still transitively gated on the GW gate (Todo 9) going green —
+nothing to launch, fix, or verify here yet; ML-readiness verification needs the features recompute, which needs
+full-history enrichment, which needs this same GW fleet to finish. Not re-running the manifest-rescan/GW gate query
+(would reproduce the same not-green result). Declining — no action taken, no code touched, matching sessions 20-28's
+reasoning. `/skip-current-task`.
+
+### 2026-07-14T13:15Z — session 30 (data_engineering slot-12): cheap re-check, unchanged (~4min since session 29), decline
+
+Dispatched to THIS todo — "Full-history enrichment phase (after the GW gate above is GREEN)" — same transitive blocker
+as sessions 20-29 (this todo IS the direct downstream consumer of the GW gate on Todo 9, which is still `[ ]`).
+Fresh-pulled all 24 slot repos clean. `gcloud compute instances list --filter='name~af-backfill'` (non-snap
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`) shows the same 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447`
+PLAYER_STATS) still `RUNNING`, same creation timestamps as every prior session. Only ~4 min elapsed since session 29's
+13:11Z check — not re-tailing run.logs or re-running the GW-gate query (would reproduce the same not-green result;
+re-polling a check moments earlier confirmed is the anti-pattern per sessions 27/28). This todo's own gate text is
+explicit: "after the GW gate above is GREEN" — Todo 9 is unflipped, so launching the full-history fleet now would be
+premature (risks contending with the still-running GW fleet for the same shared api_football key budget, violating the
+plan's Tardis/rate-budget discipline). Declining — no action taken, no code touched, matching sessions 20-29's
+reasoning + session 28's recommendation (still unactioned) to wire a `gw-enrichment-landed` prerequisite condition so
+this cluster stops auto-dispatching until the fleet actually finishes. `/skip-current-task`.

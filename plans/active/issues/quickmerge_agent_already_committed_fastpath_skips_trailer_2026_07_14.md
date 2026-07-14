@@ -113,11 +113,12 @@ its own reviewed change rather than be folded into an unrelated task's diff.
 
 ## Todos
 
-- [ ] [INFRA] P2. In `scripts/quickmerge.sh`'s `_QM_ALREADY_COMMITTED=1` branch (~line 1498), amend the existing HEAD
+- [x] ✅ [INFRA] P2. In `scripts/quickmerge.sh`'s `_QM_ALREADY_COMMITTED=1` branch (~line 1498), amend the existing HEAD
       commit to add the `Quickmerge: <human|agent>` trailer (via `_QM_TRAILER_KIND`, already computed above that branch)
       if the commit message doesn't already carry one, before the `git push`. Verify against a real `--agent`
       single-repo ship (commit → quality-gates.sh Pass 1 → quickmerge --agent) that the resulting push no longer trips
-      `check_strict_quickmerge.py`/`pre-push-strict-quickmerge.sh`. (repo: unified-trading-pm)
+      `check_strict_quickmerge.py`/`pre-push-strict-quickmerge.sh`. (repo: unified-trading-pm) —
+      unified-trading-pm@431fda545
 - [ ] [INFRA] P3. Sweep recent `live-defi-rollout` history across repos for other trailer-less
       already-committed-fast-path pushes that may have landed via `--no-verify` or a hook-less clone (this doc's audit
       only checked `unified-api-contracts`'s last ~20 commits) — confirm whether this is a widespread,
@@ -131,3 +132,27 @@ traced root cause in `scripts/quickmerge.sh`; worked around via non-agent quickm
 commit) rather than patching the shared script or using `--no-verify`. Filed this doc per findings-closure discipline;
 did not implement the fix (out of data-craft scope, and too high-blast-radius for an inline hotfix on a shared,
 concurrently-used script).
+
+**2026-07-14, slot 4 (infra)**: implemented the recommended fix exactly as specced. In the `_QM_ALREADY_COMMITTED=1`
+branch, check `git log -1 --format=%B | grep -q '^Quickmerge:'`; if absent, write the existing HEAD message + a fresh
+`Quickmerge: ${_QM_TRAILER_KIND}` trailer to a temp file (`mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX"`, matching the
+script's existing tempfile convention) and `git commit --amend -F <file>` before the push. Verified in two stages: (1)
+scratch-repo repro — built a disposable bare-origin + clone, committed a source-file change with no trailer, confirmed
+`check_strict_quickmerge.py --block` flags it (`❌ ... bypassed quickmerge`), applied the fix's exact amend logic,
+re-ran the checker — passed clean; also confirmed idempotency (no re-amend / SHA unchanged when a trailer is already
+present). (2) Live production verification — shipped this very fix through PM's own `--agent` two-pass flow; PM is
+extremely high-churn (commits landing every 5-260s from concurrent slots), so quickmerge's Stage 0.4 rebase kept
+invalidating the Pass-1 sentinel (a rebase mints a new SHA even for a content-identical replay, so the content-scoped
+sentinel fallback — which requires ancestor-not-rebase — never applies here); looped rebase→QG→`quickmerge --agent` and
+succeeded on the 3rd attempt. The live log confirmed the exact new code path firing:
+`"changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: agent'. Proceeding to push."`
+followed by `✅ strict-quickmerge: no bypassed code commits` — the hook that used to reject this exact scenario now
+passes. Landed as `unified-trading-pm@431fda545` (PR #1014, auto-merge). Todo 1 done; todo 2 (sweep for other
+trailer-less already-committed pushes) left for a follow-up task — out of scope for this fix.
+
+Side-finding (not fixed here, noted for awareness): running quickmerge WITHOUT `--agent` on `unified-trading-pm` itself
+triggers Phase-1's tree-wide lint-fix (ruff+Prettier over the whole repo, ~1900 files), which in turn breaks
+`workspace-manifest.json`'s canonical-format gate (`STAGE 6` `manifest-canonical` check) — the non-agent fallback the
+prior session used successfully on `unified-api-contracts` does NOT work on PM itself. Discarded the resulting unstaged
+tree-wide diff via `git restore .` (verified it was pure auto-fix churn from this session, not foreign WIP) and shipped
+via `--agent` instead.

@@ -166,3 +166,78 @@ unique-date count **2,525** (up from 2,519 ~8 min earlier, +6) — steady forwar
 affected-range boundary for this todo's gap-fill isn't stable until Todo 1's full-history compute completes, so starting
 the identify/gap-fill work now would be premature. Declining — no action taken, no code touched, checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-14T13:09 UTC — data_engineering slot-16 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as the three prior re-checks above. Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]` (this same slot's own 12:28 UTC
+entry there already found the fleet healthy at 2,502/4,210). Cheap re-check this dispatch (non-snap `gcloud`/`gsutil`,
+`central-element-323112`): same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same
+creation timestamps; features bucket unique-date count **2,538** (up from 2,525 ~14 min earlier per slot-15's check,
++13) — steady forward progress, ~60.3% of ~4,210-day history, no stall, no crash. The affected-range boundary for this
+todo's gap-fill still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code
+touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:12 UTC — data_engineering slot-9 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as every prior re-check above, this one only 3
+minutes after slot-16's. Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 confirmed still `[ ]`
+(grepped the plan directly). Cheap non-GCS-walk re-check (`gcloud compute instances list`, `central-element-323112`):
+same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps — no
+crash, no stall. Skipping a redundant full-corpus GCS date-count walk given slot-16 ran one 3 minutes ago (single-walk
+discipline — no value in a 5th identical scan within 20 minutes). The affected-range boundary for this todo's gap-fill
+still isn't stable until Todo 1's full-history compute completes. Declining — no action taken, no code touched, checkbox
+NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T13:2x UTC — data_engineering slot-13 (Todo 2 re-dispatch — still BLOCKED-PREREQ, cheap re-check only)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as every prior re-check above (this is the 7th
+consecutive dispatch of this exact todo). Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` (grepped the plan's checkbox list directly). Cheap non-GCS-walk
+re-check (`gcloud compute instances list`, `central-element-323112`, non-snap binary): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps as every prior check
+— no crash, no stall. Skipped a redundant full-corpus GCS date-count walk (single-walk discipline — slot-9 ran one ~10
+min earlier; no value in an 8th identical scan). The affected-range boundary for this todo's gap-fill still isn't stable
+until Todo 1's full-history compute completes. Note for main/operator: this backlog task has now round-tripped through 7
+slots without a structural prereq gate (its dependency on Todo 1 is prose-only, inside its own todo text, not a
+`prereqs.completed_tasks` binding) — consider parking it (RULES.md § "Park a task") against Todo 1's completion to stop
+the redispatch churn. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T14:0x UTC — data_engineering slot-14 (Todo 2 re-dispatch — still BLOCKED-PREREQ, 8th consecutive check; filed parking escalation)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Same structural gate as all 7 prior re-checks. Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+(grepped the plan's checkbox list directly). Cheap non-GCS-walk re-check (`gcloud compute instances list`,
+`central-element-323112`, non-snap binary): same 3 VMs (`features-sports-sports-20260714-085642/-085703/-085726`) all
+`RUNNING`, no crash. Skipped the redundant full-corpus GCS date-count walk (single-walk discipline — 8 identical scans
+in under 2h has no marginal value). **This is now the 8th slot burned on the same structural gap** — rather than add a
+9th "consider parking it" note, I located the concrete blocker: the live orchestrator's `data/config/backlog.yaml` that
+`park a task` (RULES.md §4) needs to edit lives in the **root PM/agent-orchestrator clone**
+(`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/config/backlog.yaml`), which is READ-ONLY for a
+worker slot per RULES.md's root-clone hard rule — I cannot make this edit myself from `.tabs/14`. Filed `/blocked`
+(`BLK-` — see slot heartbeat) asking main/operator to apply the exact recipe: set `priority: 999` +
+`priority_override: true` + `prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` (condition created `false`
+via `POST /api/prerequisites/...`, flipped `true` once Todo 1's checkbox lands) on this task's entry, then
+`POST /api/backlog/reload`. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T14:2x UTC — data_engineering slot-15 (Todo 2 re-dispatch — 9th consecutive check; found the parking recipe was only HALF-applied)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep. Cheap non-GCS-walk re-check
+(`gcloud compute instances list`, `central-element-323112`, non-snap binary): same 3 VMs
+(`features-sports-sports-20260714-085642/-085703/-085726`) all `RUNNING`, same creation timestamps — no crash, no stall.
+Skipped a 9th redundant full-corpus GCS date-count walk (single-walk discipline).
+
+**New finding**: queried the live backlog via `curl $SERVER_URL/api/backlog` — this task's entry now shows
+`"priority": 999` (main/operator DID act on slot-14's `/blocked` — the priority half of the recipe landed) but there is
+NO `prereqs.prerequisites` field on the entry, and `target_slot`/`affinity` are still `none`/default. So the structural
+condition gate (`sports-p2-todo1-2015-present-complete`) from slot-14's recipe was never created/attached — that's WHY
+this keeps getting redispatched: `priority: 999` only deprioritizes, it doesn't structurally block, so whenever no other
+task is eligible the dispatcher still calls this "highest-rank queued task with prereqs met" (confirmed: that's the
+literal `dispatch_reason` on my own `/boot` this dispatch). Verified the live file lives at
+`agent-orchestrator/data/config/backlog.yaml` in the **root** clone (confirmed via `ps aux` — the running uvicorn
+server's cwd is the root `agent-orchestrator` clone, not any `.tabs/<N>` slot), so this is genuinely outside a worker's
+write scope, not a availability gap I'm missing.
+
+Not re-filing a duplicate `/blocked` (slot-14's is presumably still open/unanswered — no message received on this boot).
+Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.

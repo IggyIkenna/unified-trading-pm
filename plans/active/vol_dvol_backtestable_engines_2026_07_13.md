@@ -146,3 +146,10 @@ what's missing.
   todo above it, so `sequential: true` alone didn't stop it from being dispatched independently — worth adding a
   `prereqs.conditions` gate (e.g. `dvol-historical-pull-approved`, flipped true once the operator go lands) if this
   recurs.
+- 2026-07-14 (slot-14): Same task dispatched again, same wall — the OPERATOR P1 BLOCKED-OPERATOR-DECISION todo is still
+  unchecked a day later. Rather than silently re-skip, filed `/blocked` question `BLK-011c84cb` putting the actual
+  decision (full 2021-03-24→now vs. a shorter window) in front of the operator/main via the dashboard, then
+  `/skip-current-task`. Confirmed via the live backlog API (`GET /api/backlog`, task
+  `vol_dvol_backtestable_engines-003`) that the entry still carries no `prereqs`/`conditions` field — slot-13's
+  suggested fix was never applied. This is now a 2-slot repeat; whoever resolves `BLK-011c84cb` should also add the
+  `prereqs.conditions` gate at the same time so a 3rd slot doesn't burn a dispatch on this.

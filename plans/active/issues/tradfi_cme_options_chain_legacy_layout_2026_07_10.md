@@ -215,3 +215,68 @@ zero unclassified, zero exceptions. Not yet run with `--apply` against real data
 then a scoped real `--apply` run (small real day first, then VM-scale `--all-days`), per the workspace's runtime-
 verification hard rule (a migration is "done" only once it has actually run against real data with verified output, not
 once the dry-run is green).
+
+## 🟢 2026-07-14 (later same day) — real `--apply` run verified end-to-end against live prod; two more real bugs found + fixed
+
+Shipped the script (`market-tick-data-service@6566c943f`) after a clean `quality-gates.sh` pass. Ran a real `--apply`
+against the smallest validated day (`2024-03-25`, 2 bundles / 4,267 rows) to verify the write path before committing to
+VM scale. Found + fixed two more REAL production issues the dry-run couldn't have caught (dry-run never touches the live
+manifest write path):
+
+1. **Manifest column type mismatch (`ArrowTypeError` on the very first real `--apply`)**: the live
+   `_index/availability_index.parquet` stores `schema_version`/`available`/`expected`/`row_count` as **strings** (`"9"`,
+   `"true"`/`"false"`, `"1609"`), not the native bool/int this script's manifest-row dict was writing — the same class
+   of VARCHAR-typing gotcha `tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md` documented for
+   `row_count` alone, confirmed here to also apply to 3 more columns. Fixed by writing string-typed values for all four,
+   AND added a general `_align_new_rows_dtypes()` safety net that stringifies any new-row column whose existing values
+   are uniformly `str` in the live manifest — so a 5th surprise column at VM scale fails safe instead of crashing a
+   long-running job late.
+2. **A `timeout 200` wrapper around the apply command killed the process mid-CAS-write, leaving the
+   `uts-prod-manifest-consolidator-market-data-tradfi-cron` Cloud Scheduler job stuck `PAUSED`** (the `finally: resume`
+   never ran because the process received `SIGTERM` from the shell timeout, not a Python exception) — caught within ~1
+   minute via `gcloud scheduler jobs describe`, manually resumed, and verified the manifest itself was untouched (the
+   process died during in-memory `to_parquet()` serialization, before the actual CAS-write call). Retried without a
+   tight timeout wrapper (backgrounded instead) and it completed cleanly. **Operational note for the eventual VM run**:
+   the real GCS-bundling phase for ALL days completes BEFORE the ONE end-of-run manifest CAS-write/cron-pause (see
+   `run()`/`main()` ordering) — so the cron-pause window stays short and bounded regardless of how many days are
+   processed, but anything that force-kills the process during that final window (not just a shell timeout — a VM
+   preemption too) risks the same stuck-`PAUSED` state and needs the same manual-resume recovery if the VM's own
+   shutdown handling doesn't run the `finally` block.
+
+**Real verified output** (`day=2024-03-25`): `CME:FUTURE:AUD@LIN-20240416` (1,609 rows) and
+`ICE:FUTURE:COCOA@LIN-20240716` (2,658 rows) — correct canonical instrument-key shape, correctly venue-routed GCS paths
+(`venue=CME` vs `venue=ICE`), correct manifest rows (`capture_status=captured`, `available="true"`, `expected="true"`,
+`schema_version="9"`, `row_count` as string). Manifest CAS-write: `5,090,813 → 5,090,815` rows, single attempt, no retry
+needed. Cron correctly resumed via the `finally` block on the second (successful) run.
+
+**Next**: validate multi-day manifest accumulation locally (a handful of real days via `--all-days --limit-days N`)
+before scoping the full VM-based `--all-days` run across all 291 real days (~380M rows) — matching the prior single-leg
+migration's VM-based execution pattern (`canonical-migration-tradfi-20260709-160919`, ~2h).
+
+## 🟢 2026-07-14 (later same day) — multi-day batch verified for real, found + fixed a real idempotency gap
+
+Ran `--all-days --limit-days 3 --apply` against 3 more real days (`2023-05-01/02/03`, none previously touched). This
+exercised the CAS-write retry path FOR REAL (not simulated): attempt 1 hit a genuine concurrent-writer generation
+conflict (something else wrote to the manifest in the ~45s pause→backup window), attempt 2 re-downloaded, re-merged, and
+succeeded cleanly (`5,090,815 → 5,090,821` rows, +6). Confirms the retry loop works under real production write
+pressure, not just in theory.
+
+**Found + fixed a real idempotency gap while validating restart-safety**: re-ran the already-applied `2024-03-25` day to
+check what happens on a re-run (the realistic failure mode for the eventual VM run — a SPOT preemption mid-`--all-days`
+would require relaunching from day 1, since there's no day-level checkpoint). Before the fix, this would have appended a
+SECOND, duplicate pair of manifest rows for the same (date, venue, instrument_type, data_type, underlying) — silently
+double-counting `row_count` in any downstream aggregate. Added `_dedupe_against_existing()`: filters `new_rows` against
+already-`captured` rows (by that 5-column key) on every CAS-write attempt, before the merge. Verified for real:
+re-running `2024-03-25` now logs `Skipping 2 already-captured row(s)` and correctly writes ZERO new manifest rows
+(`existing_rows=5090821, new_rows=0, merged_rows=5090821`) — the GCS bundle re-write itself is still a harmless
+deterministic no-op, only the manifest step needed the guard. This makes a VM-restart-after-preemption scenario safe:
+re-processing all 291 days from scratch will re-upload already-done GCS bundles (wasteful but harmless) and correctly
+skip already-captured manifest rows (not wasteful, not harmful).
+
+**Real days applied so far**: `2024-03-25`, `2023-05-01`, `2023-05-02`, `2023-05-03` (4 of 291) — 8 real manifest rows,
+8 real canonical GCS bundle files, zero duplicates, zero dtype errors, cron correctly resumed every time (2 real
+`PAUSED`-stuck incidents during earlier iteration were both self-caught and manually recovered within ~1 minute — see
+above — neither has recurred since the dtype/idempotency fixes landed).
+
+**Status**: script is now validated against real production data across single-day, multi-day, and re-run/idempotency
+scenarios. Next: ship this fix, then scope + launch the real VM execution for the remaining 287 real days.
