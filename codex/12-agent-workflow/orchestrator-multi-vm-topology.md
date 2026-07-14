@@ -93,7 +93,7 @@ code_refs:
 │     the VPC, mints a fresh 5-min ES256 internal JWT (private key; HS256 retired  │
 │     2026-06-01) for the upstream Authorization header — workers validate it      │
 │     against the fleet-distributed ES256 public key (see § ES256 model below)     │
-│   - Orchestrator roles: review · CI-escalation · plan-health · AutoSpawn         │
+│   - Orchestrator roles: review · CI-escalation · plan_health · AutoSpawn         │
 └──────────────────────────────────────────┬──────────────────────────────────────┘
                                            │ HTTP private VPC (vpc-6ee70e08)
                                            │ Bearer <internal-service-token>
@@ -171,7 +171,7 @@ the dashboard talks to (nginx :443 → app :8765) plus the orchestrator roles �
 - Serves fleet-wide endpoints directly: `/api/fleet/summary`, `/api/auth/login`, `/api/backends`, `/api/accounts`, etc.
 - Proxies per-VM endpoints (`/api/vms/<id>/<path>`) over the private VPC, minting a fresh internal service token for the
   upstream Authorization header so the operator JWT never reaches an epic VM
-- Owns CI-escalation (`/api/escalate`), plan-health (`/api/plan-health/dispatch`), review, and **AutoSpawn for workers**
+- Owns CI-escalation (`/api/escalate`), plan_health (`/api/plan_health/dispatch`), review, and **AutoSpawn for workers**
 
 **Human Planning VM (id `human-planning`, `i-0dd9812a96cdda5dc`, `35.76.120.160`, m7i.2xlarge,
 `ssh human-planning-vm`):** the two interactive slots, separate box, self-registers with the central VM (owns no
@@ -437,7 +437,7 @@ No VM restart. No operator manual intervention beyond the plan edit.
 
 | VM                 | Owns epics                                                                                                                 | Primary account              |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `planning`         | (central / orchestrator — review · CI-escalation · plan-health · AutoSpawn; SPLIT 2026-06-12, NO humans)                   | ikennaigboaka@gmail.com      |
+| `planning`         | (central / orchestrator — review · CI-escalation · plan_health · AutoSpawn; SPLIT 2026-06-12, NO humans)                   | ikennaigboaka@gmail.com      |
 | `human-planning`   | (none — Ikenna/Harsh interactive; SPLIT 2026-06-12)                                                                        | ikennaigboaka@gmail.com      |
 | `vm-defi`          | `defi_master` + `manifest_master`                                                                                          | ikenna@odum-research.com     |
 | `vm-cefi`          | `cefi_master` + `instruments_master`                                                                                       | iggy2london@gmail.com        |

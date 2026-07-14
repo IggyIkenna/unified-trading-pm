@@ -39,7 +39,7 @@ locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---

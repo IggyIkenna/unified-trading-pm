@@ -43,7 +43,7 @@ source:
     "2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image,
     GCP/AWS dual build paths, tarball-vs-image distinction)",
   ]
-assigned_role: infra-engineer
+assigned_role: infra
 drift_direction: advance-code
 ---
 

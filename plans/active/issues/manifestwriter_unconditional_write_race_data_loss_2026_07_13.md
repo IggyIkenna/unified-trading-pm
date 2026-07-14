@@ -37,7 +37,7 @@ assigned_vm: planning
 resolved_by: "slot-10, post-fix honest-coverage re-run confirms no recurrence"
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: high
 drift_direction: advance-code
@@ -123,7 +123,7 @@ workspace's "SSOT contradiction / cross-repo" big-finding NOTIFY OPERATOR rule.
 - [x] ✅ [BACKEND] P1. Decide + implement a fix for `ManifestWriter._write_unconditional`'s missing generation-check
       (one of: bounded retry-with-reread, escalating backoff instead of unconditional-fallback, or per-writer manifest
       sharding — see options above) so concurrent writers cannot silently drop each other's rows. (repo:
-      unified-trading-library, file: unified_trading_library/manifest_writer/_writer_io.py) —
+      unified-trading-library, file: unified_trading_library/manifest_writer/\_writer_io.py) —
       unified-trading-library@2c7f37eb
 - [x] ✅ [SCRIPT] P2. Once fixed, audit whether OTHER asset_groups/venues show the same symptom (a manifest write logged
       as successful but the row absent on direct query) by cross-referencing recent

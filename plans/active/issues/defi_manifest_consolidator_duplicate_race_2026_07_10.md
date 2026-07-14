@@ -45,7 +45,7 @@ last_updated: 2026-07-10
 supersedes:
 superseded_by:
 depends_on:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
 locked_since:

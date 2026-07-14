@@ -34,7 +34,7 @@ supersedes:
 superseded_by:
 source:
   [operator request 2026-07-09 — AO dispatch-starvation investigation (7 slots dirty-quarantined, queue not draining)]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

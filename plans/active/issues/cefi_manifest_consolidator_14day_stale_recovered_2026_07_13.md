@@ -54,7 +54,7 @@ execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 ---
@@ -217,7 +217,6 @@ Flagging both possibilities rather than picking one without evidence.
 - **2026-07-13 (RESOLVED — root cause settled with arithmetic + code-read evidence; durable fix shipped).** The
   `(a) regression / (b) genuinely-idle-bucket` question this doc originally posed has a third answer the later
   correction already pointed at, now confirmed: **(c) test-bucket conflation — PROD was never frozen at all.**
-
   1. **The staleness arithmetic pins the original readings to a `-test-` bucket, not PROD.** The correction entry's
      reading (`10:49:39Z, age 1220803.7s`) computes to a frozen mtime of **2026-06-29T07:42:55.3Z — an EXACT match** to
      the `-test-` bucket blob (`Update time: Mon, 29 Jun 2026 07:42:55 GMT`). The doc's original three lockstep readings

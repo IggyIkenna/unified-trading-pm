@@ -92,14 +92,14 @@ Concretely, each tick:
 - ALSO inspect against the worker's CRAFT north-star (its plan's `assigned_role`). Each craft role optimizes for a
   specific thing — a diff can pass QG AND meet done_definition yet still violate its craft, and that violation IS a real
   finding:
-  - backend-engineer → scalability + the right tool (throughput, bounded fan-out, no N+1, reuse a UAC/UTL primitive vs
+  - backend_engineer → scalability + the right tool (throughput, bounded fan-out, no N+1, reuse a UAC/UTL primitive vs
     hand-rolling one)
   - data_engineering → efficiency + correctness (single-walk / no new whole-corpus scan, incremental, no silent
     placeholder, record_failed ≠ empty)
-  - quant-dev → determinism (paper==batch ε=0; no wall-clock / unordered-set / unseeded randomness on the determinism
+  - quant_dev → determinism (paper==batch ε=0; no wall-clock / unordered-set / unseeded randomness on the determinism
     path; HWM never raw equity)
   - infra → never-launch-blind (observable + reversible; no fire-and-forget)
-  - ui-developer → a cited pw:L2 regression spec + faithful API contract The north-star lives in each
+  - ui_developer → a cited pw:L2 regression spec + faithful API contract The north-star lives in each
     `unified-trading-pm/agents/<role>.md` role file. A backend change that won't scale, or a data walk that re-scans the
     corpus, is worth a chat to main even when the gate is green.
 - If something looks wrong, PING THE WORKER BACK DIRECTLY so they re-open + fix it in the same context (the

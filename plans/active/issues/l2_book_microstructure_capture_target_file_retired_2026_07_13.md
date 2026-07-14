@@ -27,7 +27,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.4
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by: "slot-10, plan frontmatter fix -- see Resolution section"
 locked_by:

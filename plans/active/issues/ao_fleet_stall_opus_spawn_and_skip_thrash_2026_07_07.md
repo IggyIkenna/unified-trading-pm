@@ -44,7 +44,7 @@ estimate_calibrated_ai_days: 1.2
 supersedes:
 superseded_by:
 depends_on:
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

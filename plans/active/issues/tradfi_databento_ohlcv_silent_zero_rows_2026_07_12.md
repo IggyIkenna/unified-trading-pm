@@ -52,7 +52,7 @@ execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.7
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 ---

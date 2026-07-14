@@ -71,7 +71,7 @@ local run actually proves.
 | `overnight-agent-orchestrator.yml`    | ⚙️ N/A         | Scheduled cron — runs nightly only                                                 |
 | `overnight-dead-man-switch.yml`       | ⚙️ N/A         | Scheduled cron                                                                     |
 | `persist-cicd-event.yml`              | 🔴 REMOTE-ONLY | Writes to BigQuery                                                                 |
-| `plan-health-agent.yml`               | 🔴 REMOTE-ONLY | Claude API + cross-repo                                                            |
+| `plan_health-agent.yml`               | 🔴 REMOTE-ONLY | Claude API + cross-repo                                                            |
 | `plan-notification.yml`               | 🔴 REMOTE-ONLY | Slack/Telegram fan-out                                                             |
 | `publish-package.yml`                 | 🔴 REMOTE-ONLY | Pushes to Artifact Registry                                                        |
 | `python-quality-gates.yml`            | ✅ FULL        | Repo-local pytest + ruff + basedpyright (assuming `.venv` resolvable in container) |

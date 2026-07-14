@@ -39,7 +39,7 @@ source:
     operator decision 2026-06-18 (CI/CD drift audit D16 follow-up),
     plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16,
   ]
-assigned_role: infra-engineer
+assigned_role: infra
 drift_direction: correct-codex
 ---
 

@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Role registry schema + message-broker MVP (the role-based-agent spine)
-summary: Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
+summary:
+  Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a
+  tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
 status: active
 nature: design
 asset_group: [meta]
@@ -9,7 +11,13 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role-registry, message-broker, routing, dispatch]
-related: [../epics/agent_operating_framework_master.md, pm_role_charter_formalization_2026_06_25.md, data_eng_role_vertical_pilot_2026_06_25.md, ../epics/escalation_and_disaster_recovery_master.md]
+related:
+  [
+    ../epics/agent_operating_framework_master.md,
+    pm_role_charter_formalization_2026_06_25.md,
+    data_eng_role_vertical_pilot_2026_06_25.md,
+    ../epics/escalation_and_disaster_recovery_master.md,
+  ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -25,7 +33,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

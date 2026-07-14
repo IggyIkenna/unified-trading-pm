@@ -67,7 +67,7 @@ execution_scope: local-only
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 ---

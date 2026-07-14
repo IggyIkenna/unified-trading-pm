@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Collateral-aware sizing + opportunity-checker + wizard full-parameterization
-summary: Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only venues, and full wizard parameterization for all supported archetypes.
+summary:
+  Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
+  venues, and full wizard parameterization for all supported archetypes.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -25,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
@@ -67,11 +69,11 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 
 - [x] [SCRIPT] P2. **Enumerate the full production-param surface per archetype** (engine `__init__`/config-model/
       `strategy_config_loader` schema) — name/type/default/range/units for every param, ALL archetypes (start with the
-      live DeFi + the new VOL__/MM). Confirm the e2e/catalog params functionally match the engine defaults (the
+      live DeFi + the new VOL**/MM). Confirm the e2e/catalog params functionally match the engine defaults (the
       prod-vs-testing alignment ask). OUTPUT: a structured per-archetype param schema (the input Phase C emits into the
       manifest). Repo: strategy-service (read) → schema artifact. — ✅ PM@0c6f5f0ab:
       `codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md` — 29 archetypes catalogued
-      (10 live DeFi + 19 new VOL__/MM), ~170 params, each name/type/default/range/units/required cited to engine
+      (10 live DeFi + 19 new VOL**/MM), ~170 params, each name/type/default/range/units/required cited to engine
       `file:line`. Prod-vs-testing: CSB + basis-perp **defaults align**; APD has ONE functional divergence —
       engine+catalog default `dispersion_bps`/`cost_bps` = 30/10 but e2e smoke uses 20/5 → wizard pre-fill must source
       the engine default (30/10), tracked as F4 in the doc. Side-findings F1–F3 (dead catalog params `max_loops`/LP

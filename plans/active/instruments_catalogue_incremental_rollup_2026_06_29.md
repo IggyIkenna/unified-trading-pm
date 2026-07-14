@@ -42,7 +42,7 @@ source:
     "Ops: #data-pipeline-alerts DP_CATALOG_NOT_RUNNING (tradfi catalogue 38h stale, 2026-06-29)",
     "Ikenna design intent (Slack 2026-06-28): prev catalogue + latest day, never full re-aggregation",
   ]
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

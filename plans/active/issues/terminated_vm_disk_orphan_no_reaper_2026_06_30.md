@@ -31,7 +31,7 @@ assigned_vm: NA
 resolved_by: deployment-service@b5f8dec + deployment-service@738637c
 locked_by:
 execution_scope: human
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 last_updated: 2026-06-30
 resolved_at: 2026-06-30
@@ -43,10 +43,12 @@ depends_on: []
 ## Symptom (operator-reported 2026-06-30)
 
 A GCP cost review found **133 VM instances** in `central-element-323112` with only **6–7 RUNNING** and **127
-TERMINATED**. Stopped VMs incur **$0 compute**, but every TERMINATED instance kept its boot disk (`autoDelete=True` but
+TERMINATED**. Stopped VMs incur
+**$0 compute**, but every TERMINATED instance kept its boot disk (`autoDelete=True` but
 the disk only frees on instance _deletion_, not stop) — **134 disks / 6,590 GB**, of which ~127 × 50GB pd-standard
-belonged to the stopped fleet, ≈ **$330/mo** billed for zero value. (Also found + released one idle reserved static IP
-`harsh-static-ip`, ~$7/mo — never attached to anything in its ~5-month life.)
+belonged to the stopped fleet, ≈ **$330/mo**
+billed for zero value. (Also found + released one idle reserved static IP `harsh-static-ip`, ~$7/mo — never attached to
+anything in its ~5-month life.)
 
 Critically, the orphans were **not ancient** — every one had stopped within the prior 32 days (most within a week). This
 is a steady-state leak, not a one-time historical mess.

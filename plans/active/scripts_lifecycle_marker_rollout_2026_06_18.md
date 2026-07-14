@@ -45,7 +45,7 @@ source:
     convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker",
     fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]
-assigned_role: infra-engineer
+assigned_role: infra
 drift_direction: correct-codex
 ---
 

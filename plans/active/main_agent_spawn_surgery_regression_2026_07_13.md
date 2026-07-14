@@ -22,7 +22,7 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on:
 locked_by:

@@ -32,7 +32,7 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

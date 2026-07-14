@@ -32,7 +32,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: ui-developer
+assigned_role: ui_developer
 drift_direction: advance-code
 ---
 

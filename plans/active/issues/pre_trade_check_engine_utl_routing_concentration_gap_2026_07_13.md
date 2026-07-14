@@ -21,7 +21,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by: "main ruling via BLK-fa2173d1 (option A) — no code change"
 locked_by:

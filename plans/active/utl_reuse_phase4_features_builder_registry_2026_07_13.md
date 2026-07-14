@@ -32,7 +32,7 @@ superseded_by:
 depends_on: [utl_reuse_phase0_guardrails_2026_07_13]
 gate_on_depends: true
 source: [split from utl_uac_reuse_consolidation_remediation_2026_06_10 tracker, operator-approved 2026-07-13]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

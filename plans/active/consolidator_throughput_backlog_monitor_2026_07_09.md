@@ -34,7 +34,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: ui-developer
+assigned_role: ui_developer
 drift_direction: advance-code
 ---
 
@@ -90,30 +90,30 @@ drift_direction: advance-code
 ## WS-1 — v1: backlog field + live session throughput (BUILD NOW)
 
 - [x] 1. ✅ [BACKEND] P1. **UTL backlog helper** — `per_vm_shard_backlog(client, bucket, index_last_modified)` next to
-     `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE `_index/per_vm/*.parquet` list, returns
-     `(pending, total)` where pending = non-legacy shards with `last_modified` STRICTLY AFTER the index's; missing/None
-     mtime → not pending (honest under-count). Exported via facade + top-level `__init__`/`__all__`. —
-     `unified-trading-library@da31ef2` + 5 unit tests (`test_per_vm_shard_backlog.py`), UTL QG green.
+      `_per_vm_shards_exist` (manifest_writer `_state.py`): ONE `_index/per_vm/*.parquet` list, returns
+      `(pending, total)` where pending = non-legacy shards with `last_modified` STRICTLY AFTER the index's; missing/None
+      mtime → not pending (honest under-count). Exported via facade + top-level `__init__`/`__all__`. —
+      `unified-trading-library@da31ef2` + 5 unit tests (`test_per_vm_shard_backlog.py`), UTL QG green.
 - [x] 2. ✅ [BACKEND] P1. **Endpoint field** — `pending_shard_count` + `total_shard_count` on `ConsolidatorAgHealth`;
-     `_ag_health(..., include_backlog=True)` computes them via ONE `per_vm_shard_backlog` list (also yields shard
-     existence, so no double-list); gated opt-in so the `/freshness` reuse (`consolidator_posture`) pays no extra list.
-     `_mock_response` carries reps (cefi 2/6, defi 47/48). — `deployment-api@575810d` + 2 unit tests. (3 pre-existing
-     unrelated QG failures in `test_data_status_drilldown.py` — DeFi uniswap pool schema, another agent's code.)
+      `_ag_health(..., include_backlog=True)` computes them via ONE `per_vm_shard_backlog` list (also yields shard
+      existence, so no double-list); gated opt-in so the `/freshness` reuse (`consolidator_posture`) pays no extra list.
+      `_mock_response` carries reps (cefi 2/6, defi 47/48). — `deployment-api@575810d` + 2 unit tests. (3 pre-existing
+      unrelated QG failures in `test_data_status_drilldown.py` — DeFi uniswap pool schema, another agent's code.)
 - [x] 3. ✅ [UI] P1. **Backlog display** — `pending_shard_count`/`total_shard_count` on `ConsolidatorAssetGroup`
-     (health.ts) + "backlog (pending shards) N / total" per AG card (prominent when > 0). — `deployment-ui@8eb4001`.
-     `pw:L2 ✓` cockpit.spec.ts O5 (cefi 47/48).
+      (health.ts) + "backlog (pending shards) N / total" per AG card (prominent when > 0). — `deployment-ui@8eb4001`.
+      `pw:L2 ✓` cockpit.spec.ts O5 (cefi 47/48).
 - [x] 4. ✅ [UI] P1. **Live throughput sparkline** — session rolling window (~40 samples ≈ 10 min) accumulated from the
-     polls; per-AG recharts Area sparkline (`chart-theme` tones); "−N absorbed" derived from backlog drops; honest
-     caption ("this session · inferred from backlog deltas"). — `deployment-ui@8eb4001`. `dataviz` skill loaded
-     (single-series, no legend, 2px line). `pw:L2 ✓` O5 (sparkline accumulates across polls).
+      polls; per-AG recharts Area sparkline (`chart-theme` tones); "−N absorbed" derived from backlog drops; honest
+      caption ("this session · inferred from backlog deltas"). — `deployment-ui@8eb4001`. `dataviz` skill loaded
+      (single-series, no legend, 2px line). `pw:L2 ✓` O5 (sparkline accumulates across polls).
 - [x] 5. ✅ [BACKEND] P1. **FINDING — cefi false-degraded fix (per-AG staleness budget).** Root cause (verified vs live
-     GCS + Cloud Run): cefi market-tick is a DAILY batch, its consolidator effectively runs ~every 5 min (executions 5
-     min apart; index age climbed 174→228s), but the endpoint judged every AG against a uniform 120s budget → cefi
-     `degraded` ~60% of the time. Fix: `_AG_STALENESS_BUDGET_SEC`/`_budget_for` — cefi = 86400s (its launchers'
-     `MANIFEST_CONSOLIDATED_STALENESS_SEC`), others keep 120s default. — `deployment-api@90ace9f` + unit test; live cefi
-     now `age=120s status=ok`.
+      GCS + Cloud Run): cefi market-tick is a DAILY batch, its consolidator effectively runs ~every 5 min (executions 5
+      min apart; index age climbed 174→228s), but the endpoint judged every AG against a uniform 120s budget → cefi
+      `degraded` ~60% of the time. Fix: `_AG_STALENESS_BUDGET_SEC`/`_budget_for` — cefi = 86400s (its launchers'
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC`), others keep 120s default. — `deployment-api@90ace9f` + unit test; live
+      cefi now `age=120s status=ok`.
 - [x] 6. ✅ [UI] P2. **Poll cadence 15s→30s** — consolidation changes every 1–5 min, so 15s over-polled. —
-     `deployment-ui@b00454b` (O5 test waits the new 30s 2nd-poll).
+      `deployment-ui@b00454b` (O5 test waits the new 30s 2nd-poll).
 - [ ] [REVIEW] P1. **Local verify now; Cloud Build deploy DEFERRED (operator 2026-07-10 — local-dev-only until all
       cockpit plans complete; operator is the sole viewer, local iteration is faster).** QG both repos green; run
       deployment-api locally against live GCS + the UI against it, and verify the endpoint returns `pending_shard_count`
@@ -290,8 +290,9 @@ drift_direction: advance-code
       `_write_phantom_audit_latest()` writes a stable `_index/phantom_audit_latest.json` (schema v1: phantom*count +
       generated_at + triage-JSONL link) to the AG's manifest bucket on every canonical AG audit (incl. phantom_count=0,
       honest all-clear), re-published with the real triage link on the dry-run path; leans on the existing
-      `gs://central-element-323112-phantom-triage/triage*{ag}\_{ts}.jsonl`(zero new detection logic). deployment-api    `\_audit_fields()`reads it per market-data/instruments entry (gated; absent = None). —`instruments-service@5d06c2d1`    +`deployment-api@92442b13` +
-      unit tests.
+      `gs://central-element-323112-phantom-triage/triage*{ag}\_{ts}.jsonl`(zero new detection logic). deployment-api
+      `\_audit_fields()`reads it per market-data/instruments entry (gated; absent = None).
+      —`instruments-service@5d06c2d1` +`deployment-api@92442b13` + unit tests.
 - [x] [BACKEND] P2. ✅ **Persist a per-AG summary + read endpoint (reprobe) — SHIPPED 2026-07-13.**
       `_write_reprobe_audit_latest()` writes a per-AG `_index/reprobe_audit_latest.json` (new_empties / disagreements /
       ambiguous / proven / reclassified + day + generated_at) to the AG's market-data bucket every run (dry-run OR

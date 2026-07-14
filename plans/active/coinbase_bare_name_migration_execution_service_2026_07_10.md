@@ -28,7 +28,7 @@ supersedes:
 superseded_by:
 depends_on: [coinbase_bare_name_migration_2026_07_06]
 source: [coinbase_bare_name_migration_2026_07_06.md#2d, coinbase_bare_name_migration_2026_07_06.md#S7]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

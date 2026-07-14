@@ -37,7 +37,7 @@ assigned_vm: planning
 resolved_by: "slot-10, unified-trading-pm@74a098887"
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 thinking_tier: medium
 drift_direction: advance-code

@@ -27,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
@@ -357,6 +357,7 @@ named operator credential ask. These are the engines' true predecessors.
       market-tick-data-service@4d32528 + greeks-service@0299b03 + features-service@73daa7fd.
 
       (a) UAC: register `greeks_snapshot` + `implied_vol_surface` + live-capable crypto `options_chain` `data_types` in `data_type_capability.py`. (b) instruments-service: Deribit public options-chain adapter (enumerate strikes/expiries → `CanonicalOptionsChain`) + a connectivity test proving a live pull. (c) MTDS: live options-chain + mark-IV handler (Deribit public); Tardis historical adapter SCAFFOLD = BLOCKED-CREDENTIALS (ping: `ikenna_orchestrator/pings/slot_1.md`); Massive for TradFi-options history. (d) greeks-service: in-house delta/gamma/vega/theta + IV-surface computation, wired + tested on a mock chain. (e) features-service: expose vol-surface/greeks features to the engine feature dict. Unblocks all 17 `VOL_*`. Repos: unified-api-contracts + instruments-service + market-tick-data-service + greeks-service + features-service.
+
   - ✅ **part (b) — instruments-service Deribit public options-chain adapter** — instruments-service@99a320d.
     `DeribitOptionsReferenceDataAdapter` (`reference_data/adapters/cefi/deribit_options_adapter.py`, <100 lines logic)
     enumerates option instruments (strikes/expiries) for BTC/ETH/SOL/BNB/XRP via Deribit public

@@ -167,7 +167,7 @@ path to `main`** until the next quickmerge opens a new one.
   plans, preserves both sides); MUST run on the Max-plan setup-token worker via `escalate-to-orchestrator`, not API
   credits. (2) **SEMANTIC** (two individually-valid plans whose _work_ conflicts, no textual overlap) → per-VM
   `review.md` + the scripted cross-plan **target-surface** overlap detector → owning epic-VM orchestrator reconciles or
-  operator-blocks. (3) **HYGIENE** → `plan-health-agent` (scripted + Haiku, report-only).
+  operator-blocks. (3) **HYGIENE** → `plan_health-agent` (scripted + Haiku, report-only).
 - **Every alerting event ALSO pings the orchestrator** (not Slack-only): the operator does not continuously watch
   `#ci-failures`, so each alert (CI-fail, stuck PR, backmerge conflict) escalates to the orchestrator, which delegates
   to the owning slot / review-agent / epic-VM. (Backmerge-conflict + all-failure-class escalation tracked in
@@ -667,7 +667,7 @@ half is to **commit + push the per-repo change to each repo's `live-defi-rollout
 working-tree churn is the #1 cause of stale clones**: the `*/5` `slot-cron-ff-pull` cron skips any clone with a dirty
 tree (`[skip:dirty]` — it preserves WIP, never overwrites), so a clone with rolled-out-but-uncommitted workflow files
 **falls behind LDR indefinitely**. On a worker VM that strands the executor PM clone → the orchestrator's
-`PlanRegenLoop`/plan-health read stale plans → the backlog starves. **Incident 2026-06-10**: a committed
+`PlanRegenLoop`/plan_health read stale plans → the backlog starves. **Incident 2026-06-10**: a committed
 `main-backmerge-to-ldr.yml` template change (GH_PAT conflict-PR fix) was never rolled-out-and-committed →
 `detect_template_drift --workflows` flagged ~19 repos drifted, AND the rollout's working-tree output had been left dirty
 fleet-wide → vm-planning + all 28 main clones stranded 13–545 commits behind → empty backlog, idle review agent.
@@ -709,13 +709,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -933,8 +933,8 @@ problem to a human/worker:
 `:ballot_box_with_check: N promotion PR(s) RESOLVED (merged/closed)` at INFO severity (the watcher's notify still fires
 on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr list --json merged` is an INVALID field
 (404s the whole query → the bookend silently never fired) — use **`mergedAt`** (non-null ⟺ merged). Companion:
-`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag
-(oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
+`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag (oldest
+un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
 
 ### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
 

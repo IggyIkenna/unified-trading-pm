@@ -21,7 +21,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 last_updated: 2026-07-13
 locked_by:

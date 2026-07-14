@@ -1,7 +1,11 @@
 ---
 doc_type: plan
-title: Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright strictness restore
-summary: Land deferred colocated feature pipeline I/O efficiency items (in-memory DAG handoff, parquet consolidation, column pruning) and restore features-service basedpyright strictness.
+title:
+  Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright strictness
+  restore
+summary:
+  Land deferred colocated feature pipeline I/O efficiency items (in-memory DAG handoff, parquet consolidation, column
+  pruning) and restore features-service basedpyright strictness.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -10,7 +14,7 @@ repos: [features-service]
 scope: [engineer, admin]
 tags: [features, pipeline, in-memory, parquet, basedpyright, efficiency, colocated]
 related: [../epics/features_and_ml_master.md, ../archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md]
-created: '2026-06-21'
+created: "2026-06-21"
 parent_epic: features_and_ml_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -25,7 +29,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

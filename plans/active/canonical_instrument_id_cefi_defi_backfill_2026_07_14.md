@@ -39,7 +39,7 @@ source:
   "Operator, 2026-07-14: 'Populate canonical_instrument_id for CeFi/DeFi going forward + backfill historical' + 'also
   needs a migration of gcs data if not already done right'. Design decisions made interactively — see Progress Log for
   the exact operator rulings on CeFi semantics and the glued_pair_id prefix direction."
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

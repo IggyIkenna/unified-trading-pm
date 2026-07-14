@@ -52,7 +52,7 @@ last_updated:
 supersedes:
 superseded_by:
 depends_on:
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 locked_since:
 ---

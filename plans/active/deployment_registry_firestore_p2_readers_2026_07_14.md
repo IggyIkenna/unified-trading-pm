@@ -27,7 +27,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: opus-required
 drift_direction: advance-code
 depends_on:

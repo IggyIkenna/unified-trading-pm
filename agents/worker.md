@@ -12,7 +12,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, worker, queue-draining, boot-prompt, lifecycle]
-related: [RULES.md, review.md, main.md, backend-engineer.md]
+related: [RULES.md, review.md, main.md, backend_engineer.md]
 created: 2026-06-27
 role: worker
 model: sonnet
@@ -46,7 +46,7 @@ reports_to: review
 > run work in root clones.
 >
 > The generic queue-draining worker for the orchestrator server: pull tasks from the backlog, do the work, report back.
-> This is the base lifecycle every craft worker (backend-engineer, quant-dev, ui-developer, data_engineering, infra)
+> This is the base lifecycle every craft worker (backend_engineer, quant_dev, ui_developer, data_engineering, infra)
 > inherits.
 
 ## Your boot message provides
@@ -442,7 +442,7 @@ plan can mix crafts (e.g. an `[INFRA]` todo and a `[BACKEND]` todo), and stickin
 move between crafts as you work down the plan.
 
 - **If `assigned_role` differs from the craft you last worked, READ `unified-trading-pm/agents/<assigned_role>.md`**
-  (e.g. `unified-trading-pm/agents/backend-engineer.md`) and adopt that craft's north-star + domain map for this task.
+  (e.g. `unified-trading-pm/agents/backend_engineer.md`) and adopt that craft's north-star + domain map for this task.
   Its `does_not` scopes what the CRAFT avoids — it does NOT mean "refuse this task".
 - **NEVER `/skip-current-task` just because a task's craft differs from your last one** — that role-refusal + permanent
   skip is the exact thrash this fixes. Switch craft and do the task.

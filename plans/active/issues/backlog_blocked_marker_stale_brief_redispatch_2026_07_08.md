@@ -48,7 +48,7 @@ execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 locked_since:
 depends_on:
@@ -73,7 +73,7 @@ keying, and `plan_regen_interval_seconds` default 1800 in `server/config.py:554`
 
 - Direct cost: every dispatch burns a slot's boot → fresh-pull → read-plan → discover-marker → skip cycle (observed
   ~2-10 min each) for zero forward progress — 4+ wasted cycles on this one task in one evening, and the pattern will
-  recur on ANY future todo that gets a BLOCKED-* marker added post-hoc while already `queued` (not just this footystats
+  recur on ANY future todo that gets a BLOCKED-\* marker added post-hoc while already `queued` (not just this footystats
   task).
 - The taxonomy comment in the code (`regen_backlog_from_plan.py:812-819`) explicitly documents the prune-based
   auto-clear as the mechanism that's supposed to make this safe — it is not reliable under the fleet's actual dispatch
@@ -97,7 +97,7 @@ A backend-engineer-craft worker (agent-orchestrator repo, Python service code) s
 2. Lower `plan_regen_interval_seconds` (server/config.py:554, default 1800) substantially (e.g. 120-300s) as a blunter
    mitigation — reduces the race window but does not eliminate it, and adds regen load fleet-wide.
 3. Fix the reconcile match in `regen()` (regen_backlog_from_plan.py ~line 1020-1075) to key on `(plan_ref, plan_order)`
-   instead of exact `brief` string equality, so an in-place text edit (like adding a BLOCKED-* marker) updates the
+   instead of exact `brief` string equality, so an in-place text edit (like adding a BLOCKED-\* marker) updates the
    EXISTING row's `brief` in place on the very next regen tick — then a cheap `_NON_DISPATCHABLE_RE` check added to
    `pick_next_task` (dispatch.py, alongside the existing `_DEFERRED_PREFIXES` check at line 98-104) would catch it
    immediately without any file re-read at dispatch time. Larger change (touches the general reconcile-matching
@@ -120,8 +120,8 @@ A backend-engineer-craft worker (agent-orchestrator repo, Python service code) s
 - **2026-07-08** — Implemented option 1 (skip-time re-check) by slot-2 (backend-engineer craft):
   `task_still_dispatchable()` added to `regen_backlog_from_plan.py` (re-reads only the one task's own plan file, no
   corpus walk) and wired into `skip_current_task()` (`server/routes/slots_ops.py`) — when the todo is no longer
-  dispatchable (BLOCKED-*/stretch marker added, checked off, or removed) the `TaskRow` is deleted immediately instead of
-  being requeued, closing the race independent of the 1800s prune tick. Regression tests added
+  dispatchable (BLOCKED-\*/stretch marker added, checked off, or removed) the `TaskRow` is deleted immediately instead
+  of being requeued, closing the race independent of the 1800s prune tick. Regression tests added
   (`tests/test_skip_stale_marker_orphan.py`): unit coverage for `task_still_dispatchable` (unchanged / marker-added /
   checked-off / missing-file / issues-subdir) plus an end-to-end test asserting a stale-marker task is orphaned on skip
   and `pick_next_task` never hands it back out. Full `quality-gates.sh` green; shipped via

@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: UI build warm-cache — keep the UI QG build cache warm so only changed code rebuilds
-summary: Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app.
+summary:
+  Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -24,8 +25,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17), slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms]
-assigned_role: ui-developer
+source:
+  [
+    MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17),
+    slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms,
+  ]
+assigned_role: ui_developer
 drift_direction: advance-code
 ---
 

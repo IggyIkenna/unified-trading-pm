@@ -21,7 +21,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 4.0
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by:
@@ -62,7 +62,7 @@ sequential: false
 
 - [x] ✅ [SCRIPT] P2. Design the per-strike IV-by-moneyness grid feature shape — a denser strike ladder than the 3
       canonical buckets (`iv_atm`/`iv_25d_call`/`iv_25d_put`), keyed by strike/moneyness x expiry/tenor, sourced from
-      `CanonicalImpliedVolSurface.points` (already carries per-point moneyness/tenor/implied_vol — this is exposing more
+      `CanonicalImpliedVolSurface.points` (already carries per-point moneyness/tenor/implied*vol — this is exposing more
       of an already-fetched surface, not fetching new data). Repo: features-service. — DESIGNED (2026-07-13, slot-6), no
       code shipped (design-only; item 2 implements it). Read `CanonicalIVSurfacePoint`/`CanonicalImpliedVolSurface` and
       the full existing `vol_surface_feature_extractor.py` + its tests first — the decision below extends that file's
@@ -72,28 +72,28 @@ sequential: false
       `[0.85, 0.98)`) and add a 10-delta wing immediately outside them — 10d call `(1.15, 1.40]`, 10d put `[0.60, 0.85)`
       (first-cut heuristic like the existing 25d bands, not real option deltas — MUST be validated/tuned against real
       Deribit strike spacing in item 2). Tenors: reuse the 4 existing `_TENOR_BUCKETS` exactly (`1w`/`1m`/`3m`/`6m`) —
-      the ask is a denser STRIKE axis, not a denser tenor axis. ATM row is NOT duplicated (`iv_term_{tenor}` already
+      the ask is a denser STRIKE axis, not a denser tenor axis. ATM row is NOT duplicated (`iv_term*{tenor}` already
       covers ATM-across-tenor), so the grid only adds the 4 non-ATM wing pillars
-      (`10d_put`/`25d_put`/`25d_call`/`10d_call`) × 4 tenors. New key names (16 total, zero collisions with
-      `iv_atm`/`iv_25d_call`/`iv_25d_put`/`iv_term_*`/`iv_skew_25d`/`iv_slope_1m_3m`): `iv_10d_put_{tenor}`,
-      `iv_25d_put_{tenor}`, `iv_25d_call_{tenor}`, `iv_10d_call_{tenor}` for `tenor` in `{1w, 1m, 3m, 6m}` — mirrors
-      this SAME module's own `iv_25d_call`/`iv_term_1w` prefix-then-suffix style, deliberately NOT the sibling
-      `volatility/calculators/vol_surface_term_structure.py` calculator's `{side}_{pillar}d_iv_{tenor}d` day-count
-      convention, since this grid extends `vol_surface_feature_extractor.py` directly and must stay internally
-      consistent with its own existing keys, not a different pipeline's convention. Noted for awareness (not this task's
-      scope): `vol_surface_term_structure.py` already computes a similar but asymmetric grid (ATM × 5 tenors, wings only
-      × 30d) for a DIFFERENT consumer path — it's a batch `resolve_build_order` calculator, not the on-tick
-      `extract_vol_greeks_feature_dict` path the listed strategy-service consumers actually read via
-      `GroupBRunner.on_tick` — two parallel vol-grid implementations now exist by design, a future dedup opportunity but
+      (`10d*put`/`25d_put`/`25d_call`/`10d_call`) × 4 tenors. New key names (16 total, zero collisions with
+      `iv_atm`/`iv_25d_call`/`iv_25d_put`/`iv_term*\*`/`iv*skew_25d`/`iv_slope_1m_3m`): `iv_10d_put*{tenor}`,
+      `iv*25d_put*{tenor}`, `iv*25d_call*{tenor}`, `iv*10d_call*{tenor}`for`tenor`in`{1w,     1m, 3m,     6m}`— mirrors
+      this SAME module's own`iv*25d_call`/`iv_term_1w`prefix-then-suffix style, deliberately NOT the sibling
+      `volatility/calculators/vol_surface_term_structure.py`calculator's`{side}*{pillar}d*iv*{tenor}d`day-count
+      convention, since this grid extends`vol*surface_feature_extractor.py`directly and must stay internally consistent
+      with its own existing keys, not a different pipeline's convention. Noted for awareness (not this task's
+      scope):`vol_surface_term_structure.py`already computes a similar but asymmetric grid (ATM × 5 tenors, wings only ×
+      30d) for a DIFFERENT consumer path — it's a batch`resolve_build_order`calculator, not the on-tick
+      `extract_vol_greeks_feature_dict`path the listed strategy-service consumers actually read via
+      `GroupBRunner.on_tick`— two parallel vol-grid implementations now exist by design, a future dedup opportunity but
       out of scope here. Selection + honest absence: identical rule to today — within a (tenor-bucket ∩ pillar-band)
-      intersection, pick the point closest to the band's canonical anchor (mirrors `_pick_otm_iv`'s nearest-within-band
+      intersection, pick the point closest to the band's canonical anchor (mirrors`\_pick_otm_iv`'s nearest-within-band
       tie-break); no matching point → omit the key entirely (never `None`/`NaN`/interpolated), exactly the existing
-      `assert "<key>" not in result` test style. Derived composites for item 2 to add (mirrors
+      `assert     "<key>" not in     result`test style. Derived composites for item 2 to add (mirrors
       `iv_skew_25d`/`iv_slope_1m_3m`, only when both inputs present):
-      `iv_skew_25d_{tenor} = iv_25d_put_{tenor} - iv_25d_call_{tenor}`,
-      `iv_skew_10d_{tenor} = iv_10d_put_{tenor} - iv_10d_call_{tenor}` (8 more derived keys). `formula_version`: mirror
-      this module's own simple `FORMULA_VERSION: int = 1` constant, NOT the `delta_one` `FeatureSpec`
-      registry/GCS-partition mechanism in `codex/02-data/feature-formula-versioning.md` — confirmed that mechanism isn't
+      `iv_skew_25d*{tenor}     = iv*25d_put*{tenor} - iv*25d_call*{tenor}`,
+      `iv*skew_10d*{tenor} = iv*10d_put*{tenor} -     iv*10d_call*{tenor}`(8 more derived keys).`formula_version`:
+      mirror this module's own simple `FORMULA_VERSION:     int =     1`constant, NOT the`delta_one` `FeatureSpec`
+      registry/GCS-partition mechanism in`codex/02-data/feature-formula-versioning.md` — confirmed that mechanism isn't
       used anywhere in the volatility family; matching the direct sibling code being extended is the
       internally-consistent choice (a known pre-existing two-convention split in the repo, not something to reconcile
       here).
@@ -128,7 +128,7 @@ sequential: false
       pass (65 pre-existing + 8 new, zero regressions), `ruff`/`basedpyright` clean, `check-import-patterns.py` 0
       violations, full `quality-gates.sh` green (92s).
 - [x] ✅ [SCRIPT] P2. Design the multi-underlying vol-surface feature vector — index + per-component surfaces (for
-      VOL_DISPERSION) and an explicit asset-pair shape (`iv_atm_asset_a`/`iv_atm_asset_b` etc., for
+      VOL*DISPERSION) and an explicit asset-pair shape (`iv_atm_asset_a`/`iv_atm_asset_b` etc., for
       VOL_CROSS_ASSET_SPREAD) built from multiple `CanonicalImpliedVolSurface` inputs (one per underlying — the Deribit
       adapter already enumerates BTC/ETH/SOL/BNB/XRP, so multi-asset fetch is not new work, only the feature-vector
       shape is). Repo: features-service. — DESIGNED (2026-07-13, slot-5), no code shipped (design-only; item 5
@@ -160,11 +160,11 @@ sequential: false
       — if that need appears later, reuse this SAME `_asset_a`/`_asset_b` suffix convention, don't invent a second one.
       **Verified NON-existing convention**: grepped all of features-service for any prior multi-underlying/asset-pair
       flat-dict pattern — none exists (the closest analog, `multi_timeframe`'s multi-timeframe-into-one-dict compose, is
-      the same shape on a different axis, not asset-suffixed). This makes `_asset_a`/`_asset_b`/`index_`/`component_`
+      the same shape on a different axis, not asset-suffixed). This makes `_asset_a`/`_asset_b`/`index*`/`component\_`
       genuinely new conventions for features-service, but they are NOT free inventions — they match the already-written
       strategy-service consumer code exactly, which is the correct SSOT to mirror (same reasoning as item 1 matching
       `vol_surface_feature_extractor.py`'s own existing key style rather than the sibling calculator's convention).
-      `formula_version`: same module-level `FORMULA_VERSION: int = 1` constant, no new versioning scheme.
+      `formula_version`: same module-level `FORMULA_VERSION:     int = 1` constant, no new versioning scheme.
 - [x] ✅ [SCRIPT] P2. Implement + unit-test the multi-underlying extractor, honest-absence on any missing underlying (no
       degraded single-surface synthesis beyond the existing `degraded_single_surface` attestation already in
       VOL_DISPERSION). `formula_version=1`. Repo: features-service. — SHIPPED `features-service@f09f6388`. Implemented

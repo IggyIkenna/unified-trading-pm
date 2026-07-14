@@ -45,7 +45,7 @@ source:
     "live Cloud Run + Cloud Logging + Cloud Monitoring evidence 2026-07-13 (slot-1 session)",
     "sub-agent cache-island inventory 2026-07-13 (B1–B18, file:line verified)",
   ]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

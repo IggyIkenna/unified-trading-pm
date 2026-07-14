@@ -21,7 +21,14 @@ related:
   ]
 created: 2026-05-21
 authoritative_for: [agent-orchestrator historical multi-VM epic-fleet topology]
-referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-api-host.md, codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/agent-orchestrator-dns-cutover.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/05-infrastructure/agent-orchestrator-api-host.md,
+    codex/05-infrastructure/agent-orchestrator-deploy.md,
+    codex/05-infrastructure/agent-orchestrator-dns-cutover.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner: ikenna
 last_reviewed: 2026-05-28
 code_refs:
@@ -49,7 +56,7 @@ canonical there. Do not duplicate the list here — read the registry.
 
 | Role             | Count | Slots each | Purpose                                                                                           |
 | ---------------- | ----- | ---------- | ------------------------------------------------------------------------------------------------- |
-| `planning`       | 1     | n/a        | Central / orchestrator VM — review + CI-escalation + plan-health + AutoSpawn; NO human daily work |
+| `planning`       | 1     | n/a        | Central / orchestrator VM — review + CI-escalation + plan_health + AutoSpawn; NO human daily work |
 | `human-planning` | 1     | 2          | Interactive Ikenna (slot1) + Harsh (slot2) sessions; cross-cutting governance                     |
 | `epic`           | 10    | 8          | Dispatched worker agents; each VM owns a set of epics                                             |
 
@@ -65,10 +72,10 @@ canonical there. Do not duplicate the list here — read the registry.
 > mis-branded `vm-0`, historically `planning-vm` in the registry, renamed to `planning` 2026-06-05) =
 > `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1, **Elastic IP**). It is **THE single
 > central API + CI-responder** — `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765`
-> behind nginx :443. It owns CI-escalation (`/api/escalate`), plan-health (`/api/plan-health/dispatch`), review, and
+> behind nginx :443. It owns CI-escalation (`/api/escalate`), plan_health (`/api/plan_health/dispatch`), review, and
 > **AutoSpawn for agent workers**. It does **NO human daily work**. **This is the only VM whose health/alerts matter.**
-> **Slots = `tab/planning/N`** (orchestrator/AutoSpawn slots — review · CI-escalation · plan-health; CI-escalation +
-> plan-health are **ping-driven** via CI `POST /api/escalate`, not backlog auto-assignment). **Verified 2026-06-10:
+> **Slots = `tab/planning/N`** (orchestrator/AutoSpawn slots — review · CI-escalation · plan_health; CI-escalation +
+> plan_health are **ping-driven** via CI `POST /api/escalate`, not backlog auto-assignment). **Verified 2026-06-10:
 > SSM-Online and running the CURRENT escalation code (`plan_health` + `ldr_qg_failure` wall types accepted by the live
 > process)** — any older "vm-planning to restore / not SSM-reachable" framing is stale.
 >

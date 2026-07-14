@@ -51,7 +51,7 @@ supersedes:
 superseded_by:
 source:
   [operator request 2026-07-10 — worker-lifecycle exploration (drift / sloppy work in spawn→boot→liveness→teardown)]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 

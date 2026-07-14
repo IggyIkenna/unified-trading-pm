@@ -21,7 +21,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by:
@@ -36,7 +36,7 @@ sequential: true
 # DVOL-Backtestable VOL Engines
 
 > **Split out 2026-07-13** from [`v2_engine_venue_buildout_2026_06_15.md`](v2_engine_venue_buildout_2026_06_15.md) Phase
-> E2. Of the 17 VOL_* engines, 15 are `BLOCKED-CREDENTIALS` on Tardis (stays in the parent plan, do not touch here).
+> E2. Of the 17 VOL\_\* engines, 15 are `BLOCKED-CREDENTIALS` on Tardis (stays in the parent plan, do not touch here).
 > VOL_CARRY (`engine/strategies/v2/vol_trading/carry.py`) and VOL_ARB_RV_IV (`vol_trading/arb_rv_iv.py`) are the
 > exception — both trade `iv_atm - rv`, which needs only the DVOL implied-vol index + the underlying's realised-vol
 > close series, NOT a per-strike surface. Deribit's public `/public/get_volatility_index_data` gives BTC DVOL OHLC back

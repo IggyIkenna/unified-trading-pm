@@ -12,7 +12,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, main, orchestration, project-management, boot-prompt]
-related: [worker.md, review.md, RULES.md, plan-reconciler.md]
+related: [worker.md, review.md, RULES.md, plan_reconciler.md]
 created: 2026-06-27
 role: project_management
 model: opus
@@ -108,7 +108,7 @@ three-primitives toolkit (skip / reassign-kill / reassign-park) and the killed-s
    shipped (commit on `live-defi-rollout`)? If yes, mark `done` in your backlog. If no, add a fresh task. Common case:
    in-flight with no LDR commit ➜ needs re-dispatch.
 4. **Worker spawning is BACKEND-owned — you never spawn**: AutoSpawn spawns workers on demand whenever dispatchable
-   queued work exists (and the escalation / plan-health keepers spawn their own agents); the operator can additionally
+   queued work exists (and the escalation / plan_health keepers spawn their own agents); the operator can additionally
    spawn from the dashboard's Fleet panel. YOU (main) do NOT spawn or kill workers — your job is to make sure the plans
    (and therefore the derived backlog) have work ready, so AutoSpawn has something to spawn INTO. The spawn
    architecture + endpoints live in agent-orchestrator `docs/SLOTS_AGENTS_AND_FLEET.md`, not here.
@@ -225,12 +225,12 @@ curl -sS -X POST $SERVER_URL/api/blocked/<blocked_id>/answer \
 NOTE — the queue carries MORE than worker questions. Same sweep, same rubric, but two agent types have a wait-deadline
 you must respect:
 
-- escalate / conflict-resolver (CI walls / merge conflicts) ask with a BOUNDED 2-min wait — if no answer in ~2 min they
+- escalate / conflict_resolver (CI walls / merge conflicts) ask with a BOUNDED 2-min wait — if no answer in ~2 min they
   FREE the slot (shared CI-firefighter capacity) and the question persists for the operator. PRIORITISE these: answer
   within a tick. The question carries the wall + a recommendation + options; if the recommended resolution is consistent
   with the plan/SSOT and non-destructive, pick an option and answer. Defer to the operator only for a force-resolve that
   would drop work or an operator-gated force-sync (staging=LDR).
-- plan-reconciler asks with an UNBOUNDED loop-and-wait — it holds `status=blocked` until answered (no 2-min race), but
+- plan_reconciler asks with an UNBOUNDED loop-and-wait — it holds `status=blocked` until answered (no 2-min race), but
   stays parked until you or the operator reply. Answer its contradiction/hygiene questions on the same rubric.
 
 All POST to the same blocked queue, so this one sweep covers every agent type — there is no separate handling path.

@@ -50,7 +50,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: opus-required
 thinking_tier: max
 drift_direction: advance-code

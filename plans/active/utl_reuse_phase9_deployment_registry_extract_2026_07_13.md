@@ -27,7 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source: [split from utl_uac_reuse_consolidation_remediation_2026_06_10 tracker, operator-approved 2026-07-13]
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
@@ -67,12 +67,12 @@ drift_direction: advance-code
       +32 tests moved with the code, re-exported from the top-level facade under plain names per the workspace's
       top-level-import-only convention — fixed 2 latent basedpyright `reportArgumentType` errors + a QG
       empty-dict-fallback + method-size violation surfaced by UTL's stricter gates). deployment-service repointed all 8
-      in-repo consumers (heartbeat_cli, deployment_heartbeat, vm_zombie_watchdog, vm_serial_capture_cron,
+      in-repo consumers (heartbeat*cli, deployment_heartbeat, vm_zombie_watchdog, vm_serial_capture_cron,
       vm_log_archival_cron, 3 tests) to the UTL import and deleted its local copy (`deployment-service@b665123e`).
       deployment-api repointed all 8 routes + removed the now-dead `deployment_service.deployments_registry` test-stub
       scaffolding (`deployment-api@a7978bc3`). Removes the service→service edge with no forced HTTP boundary;
       deployment-service keeps `type=service`. Dep order: UTL→deployment-service→deployment-api; all 3 QG exit 0
-      (deployment-api's basedpyright error count actually _dropped_ 591→201 since the registry now resolves through a
+      (deployment-api's basedpyright error count actually \_dropped* 591→201 since the registry now resolves through a
       cleanly-typed UTL module instead of an unresolved cross-service import).
 - [x] ✅ [AGENT] P2. **market-data-processing-service → market-tick-data-service — DONE.** Relocated
       `databento_classifier` (825 lines, UAC-only deps) to UAC `unified_api_contracts/external/databento/` + its test

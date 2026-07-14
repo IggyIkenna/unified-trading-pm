@@ -26,7 +26,7 @@ assigned_vm: planning
 resolved_by: "agent-orchestrator@826a496 — see Fix section below"
 locked_by:
 execution_scope: orchestrator-agent
-assigned_role: backend-engineer
+assigned_role: backend_engineer
 model_tier: opus-required
 thinking_tier: high
 drift_direction: advance-code

@@ -61,7 +61,7 @@ source:
     correct them; build against demo"),
     is-daily-enum-prediction daily-failure investigation 2026-07-06,
   ]
-assigned_role: data-pipeline-engineer
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

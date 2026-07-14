@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Work Philosophy — codex-as-target, plan-as-unit, role-per-plan
-summary: The operating method for how work flows — codex is the target state, the codebase is the current state, an epic is the bidirectional gap, and a plan is one small role-homogeneous step a single cheap agent completes start-to-finish; the durable SSOT behind plan sizing, role dispatch, and where the expensive judgment lives.
+summary:
+  The operating method for how work flows — codex is the target state, the codebase is the current state, an epic is the
+  bidirectional gap, and a plan is one small role-homogeneous step a single cheap agent completes start-to-finish; the
+  durable SSOT behind plan sizing, role dispatch, and where the expensive judgment lives.
 status: current
 nature: process
 asset_group: [meta]
@@ -9,10 +12,27 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [work-philosophy, plan-sizing, role-based-dispatch, drift-closing, codex-target, model-tier, boot-prompts]
-related: [canonical-plan-flow.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md, ../06-coding-standards/model-tier-selection.md]
+related:
+  [
+    canonical-plan-flow.md,
+    ../../plans/epics/README.md,
+    ../../plans/PLAN_FORMAT.md,
+    ../06-coding-standards/model-tier-selection.md,
+  ]
 created: 2026-06-26
-authoritative_for: [work-philosophy, codex-as-target-state, bidirectional-drift, plan-as-unit-of-work, plan-sizing, role-per-plan-dispatch, durable-role-boot-prompts, judgment-at-authoring]
-referenced_by: [../../plans/epics/agent_operating_framework_master.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md]
+authoritative_for:
+  [
+    work-philosophy,
+    codex-as-target-state,
+    bidirectional-drift,
+    plan-as-unit-of-work,
+    plan-sizing,
+    role-per-plan-dispatch,
+    durable-role-boot-prompts,
+    judgment-at-authoring,
+  ]
+referenced_by:
+  [../../plans/epics/agent_operating_framework_master.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md]
 owner: ikenna
 last_reviewed: 2026-06-26
 code_refs: []
@@ -127,7 +147,7 @@ Read the relevant entry before authoring or executing.
   sink and must not sit on the critical path.
 
 - **L11 — Codex taken at face value now; corrected later, emergently (per L2).** Fix the method first; codex content
-  corrections accrue continuously (L7) plus a periodic plan-health/reconciler consolidation. **Why:** a
+  corrections accrue continuously (L7) plus a periodic plan_health/reconciler consolidation. **Why:** a
   codex-rewrite-first is exactly the ambition being cut.
 
 ## The three context layers
@@ -145,11 +165,11 @@ the durable boot prompt + that role's model, and hands it the one plan.
 
 ## Role taxonomy — craft, not domain
 
-Roles are **durable craft/function personas, NOT domain × craft.** A `defi-backend-engineer` per-domain role would be a
+Roles are **durable craft/function personas, NOT domain × craft.** A `defi-backend_engineer` per-domain role would be a
 combinatorial explosion (domains × crafts) that re-bakes domain context into every persona — recreating the 60 kB
 problem. Instead:
 
-- The **durable role** = the craft persona (backend-engineer, data_engineering, UI-developer, quant-dev, infra/devops,
+- The **durable role** = the craft persona (backend_engineer, data_engineering, UI-developer, quant_dev, infra/devops,
   - the operational roles main & review). Grown organically, kept small (≤~10–15).
 - **Domain specificity is per-plan**, supplied by the plan + the codex docs it references through frontmatter (this is
   what grep-native retrieval is for). The boot prompt carries craft + a _pointer-map_ to domain docs; the plan +

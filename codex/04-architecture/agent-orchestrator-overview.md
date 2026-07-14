@@ -781,8 +781,8 @@ worker boot + default tier (no regression). The operational roles `main.md`/`rev
 
 The dashboard shows running work in two surfaces backed by two tables: the **Fleet** (`SlotRow`s — worker slots) and the
 **AGENT TYPES** panel (`AgentRow`s — typed agents, grouped by `agent_kind`). A plain task worker has a `SlotRow` and NO
-`AgentRow` (Fleet only); a typed agent (main/review/cicd/plan-health/…) registers an `AgentRow` and may also BORROW a
-worker slot while it runs (`escalation`/`plan_health` pick the lowest free slot — there is no dedicated cicd/plan-health
+`AgentRow` (Fleet only); a typed agent (main/review/cicd/plan_health/…) registers an `AgentRow` and may also BORROW a
+worker slot while it runs (`escalation`/`plan_health` pick the lowest free slot — there is no dedicated cicd/plan_health
 slot). `SlotView.kind` (`main` = slot 0, `review` = `review_slot_ids()`, else `worker`) lets the dashboard show
 **workers only** in the Fleet — main/review live in AGENT TYPES (fail-safe: an unknown kind stays visible). Each keeper
 tick reconciles the rows against tmux reality:
@@ -805,7 +805,7 @@ the alternate screen keeps no scrollback). Repo-local detail: AO `docs/SLOTS_AGE
 ### Dashboard monitoring (Plan B)
 
 - **Agent retention**: a terminal agent is RETAINED (soft-delete to status `finished` + `finished_at`/`exit_reason`, or
-  archived by the reaper which stamps the same) so the dashboard shows past escalate/plan-health runs;
+  archived by the reaper which stamps the same) so the dashboard shows past escalate/plan_health runs;
   `DELETE /api/agents/{id}` soft-deletes; `prune_finished_agents` (keep last N per kind, 7d) runs each keeper tick.
 - **Filterable `GET /api/agents`**: `status`/`kind`/`lifecycle`/`include_finished`/`limit` (SQL `WHERE`/`LIMIT`);
   default excludes terminal records so the live roster stays clean.
