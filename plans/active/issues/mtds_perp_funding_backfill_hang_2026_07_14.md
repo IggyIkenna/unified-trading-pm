@@ -241,7 +241,7 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       `cli/handlers/_defi_manifest.py:698`, and `market_interface/adapters/prediction/polymarket_adapter.py:510` all
       default unclassified errors to `retry_safe = False` (fail fast, don't blindly retry unknowns) — this is the
       correct/safe convention and should become the standard, not the ~60-site `else True` default.
-- [ ] [BACKEND] P1. **Fix the 2 confirmed live-loop instances** from the grep above: in
+- [x] [BACKEND] P1. **Fix the 2 confirmed live-loop instances** from the grep above: in
       `market_interface/adapters/onchain/glassnode.py::_get` and
       `market_interface/adapters/onchain/helius_solana.py::_rpc_call`, do not treat an unregistered venue in
       `VENUE_ERROR_MAP` as `retry_safe=True` by default — either register `GLASSNODE`/`HELIUS` in
@@ -250,7 +250,13 @@ thousands) that short-circuits to an honest failure/log instead of silently proc
       otherwise) before ever consulting `classify_venue_error`. Also fix `helius_solana.py::get_enhanced_transactions`'s
       retry loop (line 325) to add the same status check even though it has no current callers (latent bug, cheap to fix
       now). Add regression tests pinning the fixed behavior (mirror `test_non_retryable_status_fails_fast` from the
-      Kalshi fix, `market-tick-data-service@5a163d02`). Repo: `market-tick-data-service`.
+      Kalshi fix, `market-tick-data-service@5a163d02`). Repo: `market-tick-data-service`. — ✅
+      market-tick-data-service@b8218f8a (2026-07-14, slot-4): both `_get` and `_rpc_call` (plus
+      `get_enhanced_transactions`, which had no status check at all) now branch on `exc.status` via a shared
+      `_handle_response_error` helper in each module — retry only on 429/5xx, fail fast on everything else — before ever
+      consulting `classify_venue_error`. Two regression tests added per adapter (`test_non_retryable_status_fails_fast`,
+      mirroring the Kalshi fix). Full `quality-gates.sh` green (611s, host under heavy multi-slot contention; extended
+      `PYRIGHT_TIMEOUT=400` used to ride out a transient basedpyright timeout — no code-side issue).
 - [ ] [BACKEND] P3. **Audit-scope**: individually verify each of the ~60
       `classification.retry_safe if     classification is not None else True` call sites found by
       `grep -rn "classification.retry_safe if classification is not None else True" market_tick_data_service/` —
