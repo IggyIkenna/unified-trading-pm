@@ -69,6 +69,11 @@ on:
       # callers can pass it too.
       SLACK_CI_WEBHOOK_URL:
         required: false
+      # Service-account key for the alert-ledger read/write (dedup). Reaches this reusable
+      # workflow via `secrets: inherit` at every caller level; declared here so it is documented
+      # and actionlint can resolve it. Without it the dedup gate fail-opens (posts every time).
+      GCP_SA_KEY:
+        required: false
 
 permissions: {}
 
@@ -94,6 +99,19 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # CRITICAL (incident 2026-07-14): the ledger read/write below use `gsutil`, but
+      # `auth@v3` only exports ADC (GOOGLE_APPLICATION_CREDENTIALS) — gsutil IGNORES that and
+      # runs ANONYMOUS, so the read 401'd ("Anonymous caller does not have storage.objects.list
+      # access to unified-trading-cicd-events"), the dedup gate saw an empty ledger → decided
+      # "key not seen → post", and EVERY push to a still-red PR re-paged (PR#1008 fired 67× in
+      # ~3h despite the stable `qg-fail:<repo>:<branch>` key). setup-gcloud activates the SA for
+      # gsutil so the read (dedup) AND write (persist) actually authenticate → dedup works.
+      # Best-effort: a failure here degrades to fail-open (post), never swallows a real alert.
+      - name: Set up gcloud (authenticate gsutil — auth@v3 alone leaves it anonymous)
+        if: ${{ vars.CLOUD_PROVIDER == 'gcp' && steps.gcp_auth.outcome == 'success' }}
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v2
 
       # The structural root-cause fix (alert_quality_audit_2026_06_18): the carrier used to
       # post UNCONDITIONALLY and the ledger was WRITE-ONLY. Here we READ it back: if `dedup_key`

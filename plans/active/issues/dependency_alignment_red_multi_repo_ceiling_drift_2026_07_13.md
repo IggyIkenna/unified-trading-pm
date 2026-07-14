@@ -168,5 +168,16 @@ in one commit under a gate I can't currently ship through anyway.
       `client-reporting-api/pyproject.toml:52` = `pillow>=12.3.0,<13.0.0`; `features-service` click already `>=8.3.3`).
       Fresh `check-dependency-alignment.py --json` confirms **0 issues fleet-wide** — STAGE 1.5 fully green. (repo:
       unified-trading-pm, execution-service)
-- [ ] [INFRA] P2. Evaluate a lighter-weight per-repo-exception process (YAML + justification) so this doesn't require a
-      hand-edited Python dict entry every time a repo patches a CVE ahead of canonical. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P2. Evaluate a lighter-weight per-repo-exception process (YAML + justification) so this doesn't require
+      a hand-edited Python dict entry every time a repo patches a CVE ahead of canonical. (repo: unified-trading-pm) —
+      **IMPLEMENTED, slot 11, 2026-07-14**: `unified-trading-pm@6ae2cb449`. Migrated `PER_REPO_EXTERNAL_EXCEPTIONS` from
+      the hand-edited Python dict literal in `check-dependency-alignment.py` to
+      `scripts/manifest/dependency-exceptions.yaml` — a YAML list, one entry per `(repo, package)` exception, with
+      mandatory `justification` + `ssot` + `added` fields (same reviewed-decision bar as before, lower edit friction: a
+      new exception is now a data change, not a Python-syntax change). `check-dependency-alignment.py` loads +
+      schema-validates it at import time via a new `_load_per_repo_exceptions()` — fails LOUD (`SystemExit`) on a
+      missing required field, a duplicate `(repo, package)` pair, or a malformed shape, never silently drops coverage.
+      Behavior verified byte-identical to the prior hand-edited dict: same 9 entries, same lookup semantics,
+      `check-dependency-alignment.py --json` still reports 0 issues fleet-wide. 6 new tests
+      (`tests/unit/test_check_dependency_alignment_exceptions.py`) cover the real fixture file + every schema-validation
+      failure path. Full `quality-gates.sh` green.

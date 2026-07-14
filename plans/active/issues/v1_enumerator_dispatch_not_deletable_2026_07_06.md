@@ -148,12 +148,26 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       tests pass.
 - [x] ✅ [CODE] P2. **Extend cefi/defi/prediction v2 enumerators to emit venue-grain `EXPECTED_PRE_VENUE_LAUNCH`
       sentinel rows** when the catalog is empty for a `(venue, day)` in the pre-launch window; single sentinel row per
-      (venue, data*type, day) matching v1's grain; add regression test using an empty catalog (repo:
+      (venue, `data_type`, day) matching v1's grain; add regression test using an empty catalog (repo:
       instruments-service). — 2026-07-07 slot-6: instruments-service@980f329. Added
-      `\_yield_v2*{cefi,defi,prediction}_pre_venue_launch_rows(date_axis, data_types)`helpers wired     via`yield
-      from`at the top of the respective v2 enumerators. cefi/prediction mirror     v1`\_enumerate_{cefi,prediction}`(walk `VENUES*BY_ASSET_GROUP[<ag>]`×`{CEFI,PREDICTION}\_VENUE_LAUNCH_DATES`× date     × data_types, emit `EXPECTED_PRE_VENUE_LAUNCH`at instrument_type="" / instrument_id=""). defi mirrors     v1`\_enumerate_defi`+ `\_enumerate_defi_gas_fees`(chain-level`gas_fees`pre-genesis at venue=ALCHEMY + per-(chain,     protocol) pre-launch with`EXPECTED_PRE_GENESIS_CHAIN`/`EXPECTED_INSTRUMENT_NOT_LISTED`; chain-level data_types     excluded from the per-protocol pass to avoid the ~142k `venue=<PROTOCOL>`phantom class). Renamed     `\_drop_v2_tradfi_venue_grain(rows)`→ generic`\_drop_v2_venue_grain(rows)`in the unit test file and applied it to     ~30 per-instrument cefi/defi tests so their per-instrument row-count assertions stay focused (venue-grain rows     have blank instrument_type/id — filter matches the existing tradfi convention). Regression tests added in     `tests/integration/test_enumerate_v2_superset_property.py::test*{cefi,defi,prediction}\_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`     — assert v2 covers every v1 venue-grain pre-launch cell with`catalog=[]`. Fixed pre-existing filter bug in     `test_defi_v2_covers_v1_pre_genesis_chain_cells`(v1 emits`venue=<PROTOCOL>`bare per the 2026-05 canonical naming     SSOT, NOT`<PROTOCOL>-<CHAIN>`— filter now matches). Full`bash
-      scripts/quality-gates.sh` green (110s); 126 v2 unit tests + 92 catalogue/wiring tests + 8 superset property tests
-      pass.
+      `_yield_v2_{cefi,defi,prediction}_pre_venue_launch_rows(date_axis, data_types)` helpers wired via `yield from` at
+      the top of the respective v2 enumerators. cefi/prediction mirror v1 `_enumerate_{cefi,prediction}` (walk
+      `VENUES_BY_ASSET_GROUP[<ag>]` × `{CEFI,PREDICTION}_VENUE_LAUNCH_DATES` × date × `data_types`, emit
+      `EXPECTED_PRE_VENUE_LAUNCH` at `instrument_type`="" / `instrument_id`=""). defi mirrors v1 `_enumerate_defi` +
+      `_enumerate_defi_gas_fees` (chain-level `gas_fees` pre-genesis at venue=ALCHEMY + per-(chain, protocol) pre-launch
+      with `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_INSTRUMENT_NOT_LISTED`; chain-level `data_types` excluded from the
+      per-protocol pass to avoid the ~142k `venue=<PROTOCOL>` phantom class).
+
+      Renamed `_drop_v2_tradfi_venue_grain(rows)` → generic `_drop_v2_venue_grain(rows)` in the unit test file and
+      applied it to ~30 per-instrument cefi/defi tests so their per-instrument row-count assertions stay focused
+      (venue-grain rows have blank `instrument_type`/id — filter matches the existing tradfi convention). Regression
+      tests added in
+      `tests/integration/test_enumerate_v2_superset_property.py::test_{cefi,defi,prediction}_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`
+      — assert v2 covers every v1 venue-grain pre-launch cell with `catalog=[]`. Fixed pre-existing filter bug in
+      `test_defi_v2_covers_v1_pre_genesis_chain_cells` (v1 emits `venue=<PROTOCOL>` bare per the 2026-05 canonical
+      naming SSOT, NOT `<PROTOCOL>-<CHAIN>` — filter now matches). Full `bash scripts/quality-gates.sh` green (110s);
+      126 v2 unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
+
 - [x] ✅ [INFRA] P2. **Retire deployment-service v1 launcher path** — remove
       `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry from
       `launcher_registry.py` + `vm_zombie_watchdog.py`; verify no live scheduler still references the prefix (repo:

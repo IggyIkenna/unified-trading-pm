@@ -65,13 +65,14 @@ source:
 
 ## Codex SSOTs
 
-| Doc                                                                             | Owns                                                                              |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `codex/02-data/data-pipeline-correctness-hard-rule.md`                          | Data-correctness heartbeat rule — governs whether folded scope can be deferred    |
-| `codex/02-data/honest-coverage-model.md`                                        | Two-layer/two-view coverage model M-1's backfill scope must stay consistent with  |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md`                         | Manifest-consolidator ownership — relevant to several canonicalisation candidates |
-| `codex/11-project-management/doc-frontmatter-schema.md`, `plans/PLAN_FORMAT.md` | Archival ritual (5-step) + frontmatter this plan's execution must follow          |
-| `plans/active/task_template.md`                                                 | Plan-authoring rules this plan + its spawned edits must conform to                |
+| Doc                                                                             | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex/02-data/data-pipeline-correctness-hard-rule.md`                          | Data-correctness heartbeat rule — governs whether folded scope can be deferred                                                                                                                                                                                                                                                                                                                                                                 |
+| `codex/02-data/honest-coverage-model.md`                                        | Two-layer/two-view coverage model M-1's backfill scope must stay consistent with                                                                                                                                                                                                                                                                                                                                                               |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`                         | Manifest-consolidator ownership — relevant to several canonicalisation candidates                                                                                                                                                                                                                                                                                                                                                              |
+| `codex/11-project-management/doc-frontmatter-schema.md`, `plans/PLAN_FORMAT.md` | Frontmatter schema + Archive Criteria gate table / Plan Locking mechanics this plan's execution must follow (was: "Archival ritual (5-step)" — corrected 2026-07-14, verify-rerun-2 finding 223: verified via grep neither file contains the 5-step ritual sequence; it is stated only in `cursor-configs/CLAUDE.md` § Plans authoring discipline, per the same-day correction in `mvp_reconciliation_closeout_v10_2026_06_27.md` finding 383) |
+| `cursor-configs/CLAUDE.md` § Plans authoring discipline                         | Archival ritual (5-step): migrate DEFERRED → banner → codex-alignment check → update CLAUDE.md/codex → clear lock                                                                                                                                                                                                                                                                                                                              |
+| `plans/active/task_template.md`                                                 | Plan-authoring rules this plan + its spawned edits must conform to                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Pre-audit manifest — candidates found via `rg -l '^parent_epic: mtds_mdps_master' plans/active/*.md`
 
@@ -251,7 +252,16 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
       `pipeline_mode_source_batch_live_replay_standardisation` standalone + `sports_manifest_canonicalisation`
       delegated + `mdps_features_reduced_artifact_tracker` cross-epic tracker). The `related`/`related_plans`
       frontmatter arrays did not list the 9 folded + 5 archived plans to begin with (checked — they were never in that
-      array), so no frontmatter array edit was needed. — unified-trading-pm@8eb5293b3.
+      array), so no frontmatter array edit was needed. — unified-trading-pm@8eb5293b3. > **[2026-07-14 correction,
+      doc-reconciliation finding 170]**: the "now actually true (no orphaned > `parent_epic: mtds_mdps_master` plans
+      left outside M-1/M-2/the operator-kept exception)" reconfirmation above > (was: presented as a durable
+      reconfirmation) held only at write-time (09:29:58 UTC) — two brand-new same-day > plans
+      (`aster_cefi_data_defi_bucket_migration_2026_07_13`, `bybit_futures_chain_write_shape_migration_2026_07_13`, >
+      both filed hours later, both `parent_epic: mtds_mdps_master`, both outside the named roster), plus the >
+      pre-existing `plans/active/issues/*.md` scope gap in this plan's own candidate-enumeration grep (it never >
+      scanned that directory), show the claim needs a recurring re-derivation, not a one-time reconfirmation. See the >
+      parallel 2026-07-14 correction on `plans/epics/mtds_mdps_master.md`'s roster banner (findings 168/176/177) for >
+      the current re-derivation command.
 - [x] [DOCS] P1. **Post-phase codex-alignment check** — grep `codex/` for stale references to any folded/archived plan
       name from this mapping; update or SUPERSEDED-banner as needed. — **DONE.** Grepped `codex/` for all 14
       folded/archived plan slugs; found 10 codex docs with `plans/active/<slug>.md` path references that would 404

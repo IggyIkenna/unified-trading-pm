@@ -185,6 +185,21 @@ with a real P0→P1 dependency chain, either mark `sequential: true` or add expl
 `prereqs.completed_tasks` between the todos, not just `target_slot` affinity (which only prefers a slot, it does not
 gate dispatch on a prerequisite).
 
+## Process finding — dispatch-scope norm (2026-07-14, finding 187)
+
+This plan patches `spawn_agent_endpoint`, `main_agent_keeper._spawn()`, and boot-stub composition — the exact class of
+code that three sibling `orchestrator_master` plans (`ao_dispatch_correctness_regen_reconcile_2026_07_07`,
+`ao_worker_lifecycle_audit_and_corrections_2026_07_10`,
+`ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09`) set `execution_scope: local-only` for, with the
+explicit rationale "it modifies the very dispatcher that would execute it — a bad change would brick the fleet." This
+plan instead shipped as `assigned_vm: planning` / `execution_scope: orchestrator-agent` (fleet-dispatched) — an
+inconsistent application of that norm — and the fleet-dispatch races documented above under "Process finding (slot 7,
+2026-07-13)" (slots 3/4/5/7/8/9 concurrently picking up the same sequential todos) are a concrete instance of the
+exposure the norm exists to prevent, though no harm resulted here since the surgery landed correctly and the plan is now
+complete. Left as historical record — the plan has already shipped, so retroactively changing
+`assigned_vm`/`execution_scope` now would have no operational effect; future spawn/dispatch-path patches should default
+to `execution_scope: local-only` per the sibling-plan norm unless there is a specific reason to fleet-dispatch.
+
 ## Codex SSOTs
 
 - `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (main-agent-keeper always-on contract)

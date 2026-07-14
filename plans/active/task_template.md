@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
 related: [ao_dispatch_correctness_regen_reconcile_2026_07_07.md, PLAN_FORMAT.md]
 created: "2026-02-25"
-last_updated: 2026-07-07
+last_updated: 2026-07-14 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation vr2#13: body already carried 2026-07-12 inline correction annotations (status-enum fix, sequential:true SHIPPED note) never reflected in frontmatter
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -155,12 +155,16 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 
 ## 5. Safely editing a plan whose tasks are already assigned to AO
 
-_[This whole section is ROLLING OUT — the reconcile behavior is tracked in
-`ao_dispatch_correctness_regen_reconcile_2026_07_07.md`. Until it ships, the backend only APPENDS new todos; edits to
-existing todos do NOT propagate, and a removed-but-dispatched task keeps running. So today: prefer editing plans whose
-tasks are still queued, and avoid rewording or removing a todo whose task is already dispatched.]_
+_[SHIPPED 2026-07-07 (was: "ROLLING OUT ... edits to existing todos do NOT propagate" — corrected 2026-07-14,
+doc-reconciliation vr2#10): `ao_dispatch_correctness_regen_reconcile_2026_07_07.md` Phases 2-5 all landed
+(`ao@ff6100ad`+`c6a31ed6`+`f976b6e4`+`07035aba`), "ALL 3 ROOT CAUSES FIXED (RC-1/RC-2/RC-3)" per that plan's 2026-07-07
+Progress Log — the table below is now the LIVE behavior, not a future target. **Caveat (known bug, see
+`issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md` Defect B)**: `_reconcile_task_fields()` re-derives
+`priority` from the plan's current `P<n>` tag on every regen tick with no "was this hand-overridden" check, so a
+manually-set `priority` override on an already-derived task reverts on the next tick as long as the todo line is still
+open — do NOT rely on a hand-tuned field surviving regen; edit the plan's `P<n>` tag itself instead.]_
 
-Target behavior when it ships — what the backend does to a task by its state:
+Current behavior (SHIPPED 2026-07-07) — what the backend does to a task by its state:
 
 | You change…              | `queued` / `blocked`   | `dispatched` (in-flight)                                  | `done` |
 | ------------------------ | ---------------------- | --------------------------------------------------------- | ------ |

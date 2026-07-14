@@ -229,14 +229,21 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
       operator-coordinated maintenance window per the sports Finding 1 cron-collision precedent) then audits + gates
       defi behind an explicit operator go/no-go given the sports CF-8 regression precedent. No production writes made by
       this touch — scoping only, execution is the plan's own todos.
-- [ ] [DATA] P3. Fix `StrategyManifestRecorder.record_captured()`
+- [x] ✅ [DATA] P3. Fix `StrategyManifestRecorder.record_captured()`
       (`strategy-service/strategy_service/engine/core/strategy_manifest.py:107-129`) and
       `ExecutionManifestRecorder.record_captured()`
       (`execution-service/execution_service/strategy_instructions/manifest.py:106-129`) — neither passes `available_at=`
       to the underlying `ManifestWriter.add()` call, so every `strategy_instructions` manifest row will land with
       `available_at=""` the moment production data starts flowing (the bucket is currently empty, so this hasn't
       surfaced yet). Separate, not-yet-fixed bug — `9c9cdc50` only touched `_writer_captured.py`. (repo:
-      strategy-service, execution-service)
+      strategy-service, execution-service) — **FIXED, slot 3, 2026-07-14**: both recorders now pass
+      `available_at=datetime.now(UTC).isoformat()` into `writer.add()` — `strategy_instructions` has no upstream tick
+      timestamp to derive from (the strategy engine IS the source), so the honest value is the write-time timestamp, not
+      a synthetic/estimated fill. Unit-tested (asserts a non-empty, parseable, tz-aware ISO string reaches
+      `writer.add()`, and that `row_count<=0` still routes to `record_empty` without touching `add()`).
+      `strategy-service@6514fe87`, `execution-service@05289cb4`. Both repos' `strategy_instructions` buckets are
+      currently empty (per this doc's own audit) so no production backfill was needed — this closes the gap before the
+      bucket ever receives its first row.
 - [ ] [INFRA] P3. Investigate the stale/down manifest consolidator for
       `market-data-tick-cefi-prd-central-element-323112` (consolidated blob age observed 267s→390s and rising against
       the 120s staleness threshold during this audit, 2026-07-13 ~23:29 UTC) — this bucket could not be read via

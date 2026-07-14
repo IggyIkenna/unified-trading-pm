@@ -6,8 +6,8 @@ summary:
   (per-VM shards written since the last consolidated-index run, i.e. not yet absorbed) and a live throughput view of
   shards absorbed per tick. v1 is cheap + no consolidator change (backend backlog field from a single shard-prefix list
   + a client-accumulated session sparkline that INFERS merged/tick from backlog deltas). v2 (the truthful
-  merged-per-tick histogram) was DESCOPED 2026-07-13 — it rides WS-H's structured-progress spine in
-  `deployment_observability_expansion_2026_07_08.md`, not a separate build here. WS-3 (2026-07-10) folds in the
+  merged-per-tick histogram) was DESCOPED 2026-07-13 — it rides WS-H's structured-progress spine (WS-H's current home is
+  unsettled — see the 2026-07-13 Progress Log entry below), not a separate build here. WS-3 (2026-07-10) folds in the
   deployments-page split — this page owns the DATA-CORRECTNESS lens, the per-run "did the run PRODUCE its expected data"
   verdict (fired-but-empty + stale-output) + a job-identity-keyed lookup seam the deployments detail popover cross-links
   to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this slot.
@@ -69,8 +69,9 @@ drift_direction: advance-code
 - **v2 (DESCOPED 2026-07-13 — no longer a workstream here) = the truthful merged-per-tick histogram.** Instrument the
   consolidator job to record `{ts, asset_group, shards_merged, backlog_after, rows_added, duration_ms}` per run; the
   endpoint returns the last N runs → an exact histogram. This is now a downstream consumer of **WS-H's
-  structured-progress event-facade spine** in `deployment_observability_expansion_2026_07_08.md` (see the Progress Log
-  descope note), NOT a separate build in this plan. The v1 inferred sparkline stays as the shipped view.
+  structured-progress event-facade spine** (see the Progress Log descope note — WS-H's home is unsettled, no longer
+  `deployment_observability_expansion_2026_07_08.md`, see finding 183), NOT a separate build in this plan. The v1
+  inferred sparkline stays as the shipped view.
 
 ## Codex SSOTs (READ before touching each area)
 
@@ -79,7 +80,9 @@ drift_direction: advance-code
 - Availability manifest / per-VM shard layout + single-walk: `codex/02-data/availability-manifest-and-data-status.md`.
 - Consolidator health endpoint: `deployment-api/deployment_api/routes/health_consolidator.py` (`ConsolidatorAgHealth`,
   `_ag_health`); per-VM shard helpers `unified_trading_library.manifest_writer._state` (`_per_vm_shards_exist`,
-  `_consolidated_blob_age_sec`).
+  `_consolidated_blob_age_sec`). (Cross-ref: this endpoint was shipped by `unified_deployment_health_cockpit_2026_06_23`
+  [complete], which is the same surface `monitoring_control_plane_master_2026_06_10.md`'s G3 item still lists as
+  "homeless"/"IN PROGRESS — slot 3"; see that doc's G3 note for the reconciliation. [finding 182, synced 2026-07-14])
 - UI testing gate (playwright L2): `codex/06-coding-standards/ui-testing-layers.md`.
 
 ---
@@ -359,10 +362,11 @@ drift_direction: advance-code
 - 2026-07-13 — **WS-2 (merged-per-tick histogram) DESCOPED from this plan (operator 2026-07-13).** Its 3 P3 todos
   (store-decision / instrument-the-job / history-endpoint) kept surfacing as "remaining" on a workstream that was always
   🟡 nice-to-have AND contingent on another plan. Design is NOT lost: WS-2 must **ride WS-H's structured-progress
-  event-facade spine** in `deployment_observability_expansion_2026_07_08.md` (a
-  `report_progress({ts, shards_merged, rows_added, duration_ms})` typed event), NOT build a parallel GCS/Firestore store
-  — so the histogram is a downstream consumer of WS-H, tracked there if/when WS-H ships. The v1 inferred session-only
-  sparkline stays as-is.
+  event-facade spine** (a `report_progress({ts, shards_merged, rows_added, duration_ms})` typed event), NOT build a
+  parallel GCS/Firestore store — so the histogram is a downstream consumer of WS-H. (Was: "tracked [in
+  `deployment_observability_expansion_2026_07_08.md`] if/when WS-H ships" — that doc's WS-H section was **EXTRACTED OUT
+  2026-07-13** [operator], "needs its own dedicated plan (operator will create when it's staffed)"; no plan currently
+  tracks WS-H. [finding 183, synced 2026-07-14]) The v1 inferred session-only sparkline stays as-is.
 - 2026-07-13 — **UI polish: content-sized consolidator metric columns.** The card's metric row was a fixed
   `grid-cols-5`, forcing every metric to a rigid 1/5 share → the widest one (`index age`, e.g. `41s / 24.0h`) truncated
   to `24.…` while `rows`/`fed by` wasted their column. Replaced with a content-sized `flex flex-wrap` row (`Stat` + the

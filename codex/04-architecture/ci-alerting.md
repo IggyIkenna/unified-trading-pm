@@ -56,6 +56,14 @@ Carrier inputs that govern noise:
 A missing/failed GCP auth, or the AWS/other path, **posts anyway** — dedup must never swallow a real alert on an infra
 error. The gate suppresses only when it can PROVE the key is within its cooldown window.
 
+> **Gotcha — the ledger access must be AUTHENTICATED gsutil (incident 2026-07-14).** The read/write use `gsutil`, but
+> `google-github-actions/auth@v3` only exports ADC — `gsutil` **ignores ADC and runs anonymous** unless
+> `google-github-actions/setup-gcloud@v2` runs after `auth`. Without it the read 401s ("Anonymous caller … does not have
+> storage.objects.list access"), the gate sees an empty ledger → "key not seen → post", and **every** `dedup_key` alert
+> fires on every run (PR#1008: 67 QG-failed pages in ~3h despite the correct stable `qg-fail:<repo>:<branch>` key; the
+> promotion-lag re-remind over-fired the same way). The carrier now runs `setup-gcloud` after `auth`. When touching the
+> carrier, keep that step — `auth@v3` alone silently breaks the whole channel's dedup.
+
 ## The reporters — who calls the carrier (as-shipped)
 
 | Reporter (workflow · job)                        | Fires on                                                      | `dedup_key`                 | `cooldown_min` | Notes                                                                                                                                                                             |

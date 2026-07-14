@@ -5,7 +5,7 @@ summary:
   Generalize the worker /blocked loop into a role-agnostic escalation record with open/in-progress/resolved state and a
   scoped Slack link — closing the three gaps between today's blocked loop and the
   one-alert/one-link/pre-researched-options vision.
-status: active
+status: paused
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,7 +21,7 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
-last_updated: 2026-06-25
+last_updated: 2026-07-14
 locked_by:
 locked_since:
 supersedes:
@@ -35,10 +35,12 @@ drift_direction: advance-code
 
 > **⏸️ PAUSED per operator decision 2026-06-26** — the parent epic `escalation_and_disaster_recovery_master` carries a
 > pause banner deferring this whole workstream (together with W7/W8/W9 message-broker dependency) to next quarter per
-> `agent_operating_framework_master.md:62-66` re-scope. This child plan's own frontmatter `status: active` was never
-> cascaded from that ruling — treat it as paused, not dispatchable, until un-paused. Todos remain valid. Corrected
-> 2026-07-12 — doc-reconciliation autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
-> reclassified" blanket ruling (same finding 338 sync as the epic banner).
+> `agent_operating_framework_master.md:62-66` re-scope. Todos remain valid. Corrected 2026-07-12 — doc-reconciliation
+> autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling (same
+> finding 338 sync as the epic banner). **CORRECTED 2026-07-14 (doc-reconciliation verify-rerun-2, finding 59)**: the
+> frontmatter `status:` field itself was STILL `active` (never cascaded from the 2026-06-26 ruling, despite this banner
+> saying so since 2026-07-12) — flipped frontmatter `status: active` → `paused` and bumped `last_updated` to match
+> (finding 62). (was: frontmatter `status: active` / `last_updated: 2026-06-25`.)
 
 > **E1** of `escalation_and_disaster_recovery_master` — the first child plan. Generalizes the existing worker `/blocked`
 > loop (built end-to-end) into a **role-agnostic, stateful, scoped-link** escalation pipeline that every role uses

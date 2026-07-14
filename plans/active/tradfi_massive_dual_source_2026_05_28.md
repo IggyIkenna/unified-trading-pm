@@ -41,11 +41,11 @@ repo_gates:
 ## Overview
 
 Adds Massive (formerly Polygon.io, rebranded 2025-10-30) as a second TradFi data source alongside Databento. Both
-vendors cover any (symbol, data*type) in the TradFi cell of the MVP coverage matrix; they co-mingle on the existing hive
-prefix `day=…/asset_group=tradfi/venue=…/` and disambiguate via a new `source` column written into every TradFi
-parquet + recorded in the manifest. Lands the deferred
-`multi_source_priority_merge_2026*\*`work that the`SOURCE_PRIORITY` module docstring already names as the prerequisite
-for any TradFi cell to legitimately list two sources.
+vendors cover any (symbol, `data_type`) in the TradFi cell of the MVP coverage matrix; they co-mingle on the existing
+hive prefix `day=…/asset_group=tradfi/venue=…/` and disambiguate via a new `source` column written into every TradFi
+parquet + recorded in the manifest. Lands the deferred `multi_source_priority_merge_2026_*<TBD>.md` work that the
+`SOURCE_PRIORITY` module docstring already names as the prerequisite for any TradFi cell to legitimately list two
+sources.
 
 **Operator decisions captured (2026-05-28 chat)**:
 
@@ -228,7 +228,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
     exports. 35 total in test_source_priority_pipeline_mode.py. UAC@28fc083c
 - [x] ✅ [UAC] P1. Remove the "deferred to a follow-up plan" line from `source_priority.py` docstring; replace with link
       to THIS plan's archive path.
-  - Replaced "deferred to follow-up plan" with reference to Phase 2 helpers; multi*source_priority_merge_2026*\*
+  - Replaced "deferred to follow-up plan" with reference to Phase 2 helpers; `multi_source_priority_merge_2026_*`
     placeholder resolved. UAC@193074a0
 
 ### Phase 3 — Schema: source column on TradFi parquets (1 day)
@@ -422,11 +422,11 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       VX futures gap still resolved via Yahoo/Barchart). Added explicit Massive exclusion note. — PM@cb5b14dd
 - [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE. **AUDIT RESULT (2026-05-30
       slot-2)**: 5-step check complete. VERDICT: **NOT YET ARCHIVABLE** — Phase 4 + Phase 5 items blocked on
-      MASSIVE*API_KEY (BLK-b00254d7). Steps: 1. DEFERRED scan: "Live/WebSocket Massive connector" deferred in
-      Out-of-scope section; named successor `tradfi_massive_live_ws*<YYYY_MM_DD>.md` not yet filed (filed when live
-      becomes priority per operator). Phase 4 connector work blocked on MASSIVE_API_KEY — not a voluntary deferral. No
+      `MASSIVE_API_KEY` (BLK-b00254d7). Steps: 1. DEFERRED scan: "Live/WebSocket Massive connector" deferred in
+      Out-of-scope section; named successor `tradfi_massive_live_ws_<YYYY_MM_DD>.md` not yet filed (filed when live
+      becomes priority per operator). Phase 4 connector work blocked on `MASSIVE_API_KEY` — not a voluntary deferral. No
       partition migration involved. 2. BLOCKED items: 3 still open — [OPERATOR] pre-migration drain, [VERIFY] task -030,
-      [VERIFY] task -031. All gated on MASSIVE_API_KEY being added to SM. Pre-audit notes appended to -030/-031. 3.
+      [VERIFY] task -031. All gated on `MASSIVE_API_KEY` being added to SM. Pre-audit notes appended to -030/-031. 3.
       Codex alignment: all 3 codex docs updated — contracts-scope-and-layout@8b616c40 ✅, availability-manifest@2dc2cf5e
       ✅, honest-absence@d4f48363 ✅. 4. CLAUDE.md: VIX 15m entry updated with Massive exclusion note at PM@cb5b14dd
       ✅. 5. locked_by: not present in frontmatter — no unlock needed. **Re-run (2026-05-30 slot-6)**: UAC QG item

@@ -146,8 +146,12 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
 
 ## Decisions
 
-- **D1 — Spawn-FAILED (#5, 93) → RESOLVED: KEEP.** Operator (2026-07-13): "if it fails then only alert us." It is the
-  failure signal, already state-deduped + re-armed on clean spawn. Its total also appears in the digest. No suppression.
+- **D1 — Spawn-FAILED (#5, 93) → RESOLVED: KEEP** (was: KEEP/no-suppression as recorded here; **superseded same-day by
+  todo 13** — a later 2026-07-13 operator decision reversed this to summary-only/no-direct-page, downgrading
+  `notify_spawn_failed` to `logger.info`; this Decisions entry was never updated to match at the time — corrected
+  2026-07-14, finding 185). Operator (2026-07-13): "if it fails then only alert us." It is the failure signal, already
+  state-deduped + re-armed on clean spawn. Its total also appears in the digest. See todo 13 for current behavior (no
+  direct page; rolls into the daily digest instead).
 - **D2 — git-health re-remind interval → RESOLVED: 1 h.** Operator (2026-07-13): a genuine issue should be fixable
   within the hour; if still unresolved, re-remind hourly. Drops the guard from every-15-min (96/day) to ≤24/day while
   unresolved (1 on break + 1 on fix + hourly nudge).

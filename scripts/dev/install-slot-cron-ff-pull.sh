@@ -91,9 +91,15 @@ fi
 # (kills the chicken-and-egg that froze the top-level PM clone 195 commits behind). The self-pull
 # lives in the crontab line (the immutable anchor) — NOT inside the scripts it updates. It is:
 #   - surgical: overwrites ONLY the tracked cron scripts; every other dirty PM file is untouched.
-#   - offline-safe: `|| true` → a failed fetch/checkout just runs the last-good local copy.
-#   - correct: `git checkout origin/LDR -- <file>` lands at the real path so the script's
-#     BASH_SOURCE-relative sibling (cron-branch-overrides.txt) + --help still resolve (NOT show|bash).
+#   - cmp-guarded (2026-07-14): writes ONLY when the working copy differs from origin/LDR — an
+#     unconditional every-tick write left the file dirty-vs-HEAD on a behind clone, which made the
+#     FF-pull's own [skip:dirty] starve the clone of the very FF that would heal it (root-PM
+#     incident 2026-07-14: 1138 commits behind). ff_one()'s managed-file heal covers hosts still
+#     on an older unguarded crontab line. See cron-self-pull-lib.sh for the full contract.
+#   - offline-safe: `|| true` → a failed fetch/show just runs the last-good local copy.
+#   - correct: files land at their real paths (script via mv, data via cmp-guarded show+mv — NOT
+#     `git checkout`, which also stages the write) so the script's BASH_SOURCE-relative sibling
+#     (cron-branch-overrides.txt) + --help still resolve.
 # Treat these cron scripts as LDR-authoritative + QG-gated: local edits to them are overwritten each
 # tick by design, so changes ship via PR→QG→LDR, never local. GHA workflows are exempt (fresh checkout).
 PM_DIR="${WORKSPACE_ROOT}/unified-trading-pm"

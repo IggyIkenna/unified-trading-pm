@@ -9,8 +9,13 @@ summary:
   fix was deployed (~06:44-06:47 UTC) until caught + fixed (~07:4x UTC, unified-trading-library@bb17638e). defi and
   sports were unaffected (numeric row_count column). Found by slot-8 while investigating why a manual restore smoke-test
   write for the row-loss regression didn't merge into the live index.
-status: open
+status: resolved
 resolved_by:
+  "slot-8 (2026-07-12 08:16 UTC) — unified-trading-library@bb17638e (TRY_CAST fix) + market-tick-data-service@886fb0c6
+  (deploy, Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf SUCCESS), all 3 affected asset groups confirmed
+  recovered via gcloud logging read; P2 restore-shard follow-up closed 2026-07-12 by slot-10. Flipped open→resolved
+  2026-07-14 per verify-rerun-2 finding 149 (was: status: open, resolved_by: empty despite the body's own 🟢 RESOLVED
+  banner + all 4 todos already [x] with cited evidence)."
 nature: issue
 asset_group: [tradfi, cefi, prediction]
 stage: [data]
@@ -179,6 +184,11 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-14** — Doc-reconciliation fixer (verify-rerun-2, finding 149). Frontmatter `status` was `open` /
+  `resolved_by:` blank, contradicting this doc's own body 🟢 RESOLVED banner and all 4 `## Todos` items already `[x]`
+  with cited evidence (root-cause, `TRY_CAST` fix, deploy `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf`
+  SUCCESS, all-3-AGs-recovered verification, and the P2 restore-shard re-verification closed by slot-10). Independently
+  re-verified before flipping — no genuinely-open todo found. Flipped `status: open` → `resolved`, filled `resolved_by`.
 - **2026-07-12 08:16 UTC** — slot-8 (sonnet/high, data_engineering). **P0 fully resolved.** Deployed
   `market-tick-data-service@886fb0c6` (Dockerfile digest bump,
   `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf`) and confirmed all 3 affected asset groups

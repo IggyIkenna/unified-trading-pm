@@ -109,7 +109,13 @@ venue is exactly the class of gap the plan's "Definition of 100%" section calls 
       window 2023-01-01→2026-07-12) via the Python `compute_v1` client — `gcloud` CLI is unavailable in this agent-slot
       sandbox (snap-confine/`cap_dac_override`, same failure as the G1.6 precedent), so the instance-create call was
       issued directly against the Compute API mirroring the launcher's `--dry-run` output. Verified post-launch:
-      `status=RUNNING`, `machine_type=e2-standard-4`, `provisioning_model=SPOT`.
+      `status=RUNNING`, `machine_type=e2-standard-4`, `provisioning_model=SPOT`. **Annotation 2026-07-14 (verify-rerun-2
+      finding 42):** the launcher-wiring code (`deployment-service@93c0c07`) genuinely shipped, but this specific VM
+      (`mtds-lending-indices-20260712-104450`) never actually delivered a Morpho-scoped run — the doc's own subsequent
+      entries below (launch/publish race → stale 4-day-old code tarball → malformed `MorphoAdapter` GraphQL query) show
+      it and its first replacement both produced zero real Morpho rows. Checkbox left `[x]` (the wiring deliverable
+      itself is real and done) but a reader should follow the "UPDATE 2026-07-12 (slot-12)" and "CORRECTION" sections
+      below rather than treat "Verified post-launch: status=RUNNING" as proof of a working Morpho-scoped backfill.
 - [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
       after the backfill completes. (repo: `instruments-service`)
 - [x] ✅ [INFRA] P2. Close the VM-launch/GCS-publish race found 2026-07-12 (slot-12) — a VM can boot and pull

@@ -122,10 +122,17 @@ drift_direction: advance-code
       `test_golden_fixture_phase0_resolve_build_order.py` fresh against `features-service@d784c79f` — all 4 families
       (`multi_timeframe`, `volatility`, `onchain`, `sports`) reproduce their pinned golden build order identically. Full
       `quality-gates.sh` green, sentinel verified. **Scope note**: this confirms no regression from the sports
-      resolver-only migration (item 2, done) — it does NOT mean mt/volatility/onchain are on UTL yet; item 1 (drop-in
+      resolver-only migration (item 2, done) — ~~it does NOT mean mt/volatility/onchain are on UTL yet; item 1 (drop-in
       migrate mt/volatility/onchain) is still open, and their golden values are pinned against their still-local
-      implementations, unchanged from before this plan started. No code changes needed here (pure verification) — no
-      quickmerge required.
+      implementations, unchanged from before this plan started.~~ **[2026-07-14 correction, verify-rerun-2 finding
+      102]**: this VERIFY step ran against `features-service@d784c79f`, which — per repo history — chronologically
+      PRECEDES `features-service@4d9a1656` (item 1's actual migration commit, same day, later). So "item 1 is still
+      open" was accurate AT THE TIME this VERIFY step ran, but item 1 subsequently shipped (see todo 1 above) and is
+      confirmed live at current HEAD: `features_service/multi_timeframe/schemas/feature_builder_registry.py` imports
+      `BuilderEntry`/`resolve_build_order` from `unified_trading_library` (verified by direct file read, 2026-07-14).
+      mt/volatility/onchain ARE on UTL as of `4d9a1656`; the golden values stayed byte-identical (the point of a drop-in
+      migration), which is consistent with — not contradicted by — todo 1's SHIPPED claim. No code changes needed here
+      (pure verification) — no quickmerge required.
 
 ## Success criteria
 

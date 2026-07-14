@@ -22,7 +22,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:
@@ -53,14 +53,15 @@ drift_direction: advance-code
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
-> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
-> settled contract lives in codex
-> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`;
-> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC;
-> sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3**
-> (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT
-> coarse`batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (`pipeline_mode` source-aware `{mode}_{source}[_{transport}]`
+> model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** —
+> the settled contract lives in codex `02-data/pipeline-mode-partition.md` +
+> `02-data/pipeline-mode-and-batch-live-reconciliation.md` + `04-architecture/sports-batch-live.md`; this plan
+> REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC; sports
+> `instruments-store-sports` 2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3**
+> (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware `pipeline_mode`
+> (NOT coarse `batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (`pipeline_mode`
+> source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -415,19 +416,22 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`asset_group=`); instruments `sports_reference` vs `sports_reference_v2` vs `_v1_archive`; prd vs legacy-no-env —
       sample-compare parquet SCHEMAS + row counts per shard; if the "winner" has fewer cols/rows, switch dedup to
       keep-larger / column-union (CROSS-AG LESSON #5/#8). Capture the per-tree schema diff before the walk picks a
-      winner. — market-tick-data-service@50a43aa7 | \_sample*schema() downloads+inspects parquet for \_SCHEMA_SAMPLE_N
+      winner. — market-tick-data-service@50a43aa7 | `_sample_schema()` downloads+inspects parquet for `_SCHEMA_SAMPLE_N`
       overlap shards per tree; logs per-shard verdict (PRD_LOSES_COLS_OR_ROWS / PRD_RICHER / schemas_match + row
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
+
       **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
-      `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
-      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af*_\_id`, score breakdowns
-      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
-      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of
-      (`v2     fixtures`∪`v2     fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.
-      team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,
-      `away_team`→`_\_name`, `league`→`league_name`). **VERDICT: v1_archive is COLUMN-superseded by the current split
-      (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY →
-      keep all. No column-level data loss from treating v1_archive as superseded.**
+          `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
+          league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af_*_id`, score breakdowns
+          extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
+          (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of (`v2 fixtures` ∪ `v2 fixture_stats` (xG +
+          shots/corners/possession) ∪ current `understat_xg` (58 cols incl. team-detail + xG)); only 3 differ and they are
+          naming variants (`home_team`→`home_team_name`, `away_team`→`*_name`, `league`→`league_name`).
+
+          **VERDICT: v1_archive is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats);
+          v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating
+          v1_archive as superseded.**
+
 - [x] ✅ [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
       row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
       the current split's rows (the v1_archive date-range/leagues are all present in
@@ -714,8 +718,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `SERVICE_TO_KIND` + cloud-providers.yaml). `data_status_hierarchical.py:364` calls the same `build_bucket_name`.
       The `data_status_mock.py` SPORTS entry (`features-sports-service`) is a service→AG map, NOT a bucket → no
       dead-bucket exposure. **No fix needed in deployment-api.** ONE UI mirror —
-      `unified-trading-system-ui/context/api-contracts/canonical-schemas/     domain/sports/mapping_resolver.py:40`
-      ("Resolve the instruments-store-sports bucket name") — mirrors the UAC gcs_paths facade → **rides the cross-AG UAC
+      `unified-trading-system-ui/context/api-contracts/canonical-schemas/domain/sports/mapping_resolver.py:40` ("Resolve
+      the instruments-store-sports bucket name") — mirrors the UAC gcs_paths facade → **rides the cross-AG UAC
       `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not a unilateral sports-lane change). UI
       data-status views read the (canonical) deployment-api → no separate UI fix.
 - [x] ✅ [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)** — VERIFIED ALREADY SATISFIED 2026-06-03.
@@ -728,20 +732,23 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 - [x] ✅ [DATA] P0. **League rewrite table — ENUMERATED ON REAL DATA (sports-slot 2026-06-02; no dry-run needed — read
       the prod `_index` + UAC registry directly)**. The "278k suffixed rows" is **mostly LEGIT tier leagues**
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
-      form resolves → correct, leave). Of 52 suffixed unique league*ids, the actual rewrite need is TINY: - **SAFE
-      (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows). Rule =
-      strip trailing `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →
-      **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -
-      **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF
-      id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
-      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -
-      **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
-      `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids` OR
-      leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
-      SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier disambiguation remain (both doable pre-migration;
-      LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
-      SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
-      (already canonical at step 2); 13 tests green.
+      form resolves → correct, leave). Of 52 suffixed unique league_ids, the actual rewrite need is TINY:
+
+  - **SAFE (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows).
+    Rule = strip trailing `_<digits>` iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier).
+    → **extend `canonicalize_league_id` with this rule** (safe; handles all 3-digit-suffix registered leagues).
+  - **AMBIGUOUS — operator/registry decision**: `LA_LIGA_2` (3,465 rows) is likely **Segunda División** (real tier-2, AF
+    id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
+    `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key.
+  - **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
+    `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP_*` …) — negligible volume; add to UAC `provider_league_ids` OR
+    leave (47 rows). Not a migration blocker.
+
+  Net: CF-7 league-canon is essentially DONE; only the SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier
+  disambiguation remain (both doable pre-migration; LA_LIGA_2 needs the canonical-Segunda-key confirmation). —
+  uac@dc76f1a6 | SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1
+  unchanged (already canonical at step 2); 13 tests green.
+
 - [x] ✅ [DATA] P1. **LA_LIGA_2 → SEGUNDA_DIVISION RESOLVED (registry investigation 2026-06-02)**: `LA_LIGA_2` (3,465
       rows) IS Segunda División; the **canonical registered key is `SEGUNDA_DIVISION`** (has the `LeagueDefinition` in
       `league_data.py` + provider maps understat `f5e5596b0efdef8e` / footystats `ES2` / season `15066` + team-count
@@ -807,7 +814,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (1800/2451/2794). Operator: do it NOW workspace-wide, **no lingering deprecated alias** — the shipped end-state
       has NO `category` kwarg in any ManifestWriter signature; a missed caller must FAIL LOUD (TypeError), never
       silently forward. Approach = ONE coordinated sweep: (1) UTL adds `asset_group=` + transiently accepts both; (2)
-      update EVERY caller across ALL repos (instruments-service ~18 sites + sports*fixtures_daily_repoll, MTDS,
+      update EVERY caller across ALL repos (instruments-service ~18 sites + `sports_fixtures_daily_repoll`, MTDS,
       features, strategy, execution, alerting, deployment-api, e2e, migration scripts) `category=`→`asset_group=`; (3)
       UTL commit that REMOVES `category` — lands in the SAME sweep so zero alias ships. NEW QG ratchet fails on any
       `category=` at a ManifestWriter call site. Leave unrelated `ErrorCategory`/`market_category`/`BookmakerCategory`.
@@ -819,7 +826,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       callsites per workspace-wide AST audit — no change needed (the repo list was speculative). QG ratchet **STEP
       5.92** `check_no_category_kwarg_at_manifest_write.py` (PM@60a27debe) bans any regression; the existing
       tradfi-source ratchet was updated to read `asset_group=` (else the rename would silently disable it).
-      Event-payload observability dict keys kept as `category` for dashboard stability (write \_param* only).
+      Event-payload observability dict keys kept as `category` for dashboard stability (write \_param\* only).
 - [ ] [CODE] P1. **BLOCKED-PREREQUISITES · features-service: ban `category=defi` in on-disk GCS path reads**: **GATED ON
       DEFI MIGRATION — VERIFIED STILL-REQUIRED 2026-06-04 (slot-4)**, NOT sports. Corrected file paths (files live in
       the `onchain/` subtree, not `delta_one/app/*`): `features_service/onchain/adapters/mtds_canonical_reader.py`
@@ -835,9 +842,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (slot-11) — STILL GATED, dispatcher priority-only logic keeps ignoring this marker (same known class as the tradfi
       plan's task-10 dispatcher-mismatch, `tradfi_v9_stage1_finish_2026_07_06.md`).** Checked
       `defi_manifest_canonicalisation_2026_06_01.md` line 1299 directly: C0
-      (`path + bucket canonicalisation... RUN ON     A VM`) is still `- [ ]` unchecked (23 open todos total in that plan
-      as of this check). Making this code change now would remove the legacy `category=defi/` twin while un-migrated
-      defi data still lives ONLY at that legacy path on disk — a real regression, not a false gate. Did NOT touch
+      (`path + bucket canonicalisation... RUN ON A VM`) is still `- [ ]` unchecked (23 open todos total in that plan as
+      of this check). Making this code change now would remove the legacy `category=defi/` twin while un-migrated defi
+      data still lives ONLY at that legacy path on disk — a real regression, not a false gate. Did NOT touch
       `features-service` code this dispatch. Skipping back to the dispatcher rather than forcing the change.
       **RE-VERIFIED 2026-07-12 (slot-10) — STILL GATED**, same dispatcher-mismatch class as slot-11 flagged.
       `defi_manifest_canonicalisation_2026_06_01.md:1299` C0 (`path + bucket canonicalisation... RUN ON A VM`) is still
@@ -1063,9 +1070,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       reads").** (MDPS `orchestration_scanner._list_instrument_files` is OK — it
       `list_blobs(prefix="raw_tick_data/by_date/day={D}/")`, which is `pipeline_mode`-agnostic, so it finds migrated
       data.) **Fix**: route the features sports readers through
-      `candidate_parquet_paths(data_type, day, league_id,     pipeline_mode=…)` (it already returns the migration's path
-      as Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add
-      a read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
+      `candidate_parquet_paths(data_type, day, league_id, pipeline_mode=…)` (it already returns the migration's path as
+      Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add a
+      read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
       with the P0 writer fixes — writes + reads MUST use the identical migration path.**
 - [x] ✅ [CODE] P0. **DONE instruments-service@4459799d — IS sports_reference object path now carries `pipeline_mode=`
       (source-derived, == manifest) + `source=` on captured rows; reads probe canonical-first + legacy fallback;
@@ -1174,8 +1181,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`EXPECTED_NO_FIXTURE` / `EXPECTED_PAUSED_LEAGUE` / coverage/transfer-window/genesis) — the write-path twin of the
       migration's CF-5 classifier.
 - [x] ✅ [CODE] P1. **DONE strategy-service@c2793217 — (8a)
-      `check_allocation_manifest(date, features_bucket,     asset_group="sports")` wired into the sports batch
-      allocation loop (`batch_handler._run_handle_prechecks`): skip on `empty_confirmed`/`attempted_failed` (batch), log
+      `check_allocation_manifest(date, features_bucket, asset_group="sports")` wired into the sports batch allocation
+      loop (`batch_handler._run_handle_prechecks`): skip on `empty_confirmed`/`attempted_failed` (batch), log
       `UPSTREAM_FEATURES_FAILED` on attempted_failed (live). (8b) `SportsFeatureSubscriber` now gates on honest-empty
       (`_is_honest_empty_vector` — returns early, no signal/publish). QG exit 0; 5+9 tests.** ⚠️ **Contract gap (8b)**:
       the FSS Pub/Sub event does NOT carry `capture_status` (it lives in the GCS manifest) — the subscriber uses an
@@ -1347,7 +1354,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`uts-prod-sports-scheduler-cron` + 4 `uts-prod-sports-fixtures-*-t1-schedule` + `is-daily-enum-sports` +
       `expected-universe-v2-sports-daily` + `lifecycle-catalogue-regen-sports-daily`); drain-check DRAINED (both
       surfaces stable over 120s); snapshots written `_index/snapshots/pre_migration_v9_2026-07-12_*.parquet` (10 MDPS +
-      20 IS objects) at both `market-data-tick-sports-prd-…` and `instruments-store-sports-prd-…`.
+      20 IS objects) at both `market-data-tick-sports-prd-…` and `instruments-store-sports-prd-…`. **Reconciliation note
+      (2026-07-14, verify-rerun-2 finding 161)**: this 2026-07-12 drain deliberately left the 2 manifest consolidators
+      running; the "Schedule + execute E3 fleet drain + E4 VM apply" todo further down (DONE 2026-07-13 sub-bullet) is a
+      SEPARATE, later re-drain that paused all 10 schedulers (incl. those 2 consolidators) and wrote a second, distinct
+      `pre_migration_v9_2026-07-13_*.parquet` snapshot set — verified via live `gcloud storage ls` that BOTH the
+      `-07-12` and `-07-13` snapshot object sets exist in GCS, i.e. two real, distinct executions, not a single event
+      recorded twice with drifting details.
 - [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget). LAUNCHER SHIPPED:
       `launch-sports-v9-migration-vm.sh` — year-sharded SPOT VM launcher; one VM per (surface, year); Phase 1
       migrate_sports_canonical_v9 + Phase 2 rebuild_sports_manifest_v9 (sequential); MANIFEST_PER_VM_SHARDS=true. VM
@@ -1397,10 +1410,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     actual relabel runs at the gated VM `--apply` (operational).
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
       SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
-      GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**. **GATED** on condition
-      `sports-e3-e4-fleet-drain-complete` (main, 2026-07-13) — this checkbox bounced 16+ dispatches confirming the same
-      RED precondition (no E3/E4 VM ever launched) with zero new information each time; do not re-dispatch until the
-      todo below flips the condition GREEN.
+      GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
+      `sports-e3-e4-fleet-drain-complete` condition (2026-07-13) is now GREEN (see the DONE todo below) — that gate is
+      CLOSED, do not cite it. **Current blocker (as of the 2026-07-14 re-audit above): CF-8 only, on both surfaces** —
+      the aggregate `available_at` backfill succeeded (85-88% fill) but `capture_status='captured'` rows specifically
+      are still only ~40-50% filled; see the new P0 todo in `sports_cf8_available_at_backfill_regression_2026_07_13.md`
+      for the precise gap + root-cause candidates. **Do not re-dispatch this checkbox until that todo is resolved** (a
+      repeat audit will reproduce the identical CAPTURED-row gap with zero new information, same as the old E3/E4-gate
+      churn this note used to warn about).
 - [x] ✅ [INFRA] P0. **Schedule + execute E3 fleet drain + E4 VM apply** for the sports v9 migration (main decision
       2026-07-13 per `BLK-f2bb67c2`, option A — drift has been compounding since the last verify run on 2026-06-29; E8
       verify above cannot produce a trustworthy result until this lands). E3 = stop every sports-writing VM/process both
@@ -1413,8 +1430,10 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       E8-verify checkbox above. Separately (not blocking this todo): the IS write-path gap that makes E8 verify regress
       again immediately after a walk (blank `pipeline_mode`/`source`/`available_at` on some new rows) is already its own
       todo — see `sports_manifest_canonicalisation-002` below (dispatched to slot-5).
-  - **DONE 2026-07-13 (slot-3, task sports_manifest_canonicalisation-003).** AWS (both regions checked) had no
-    sports-writing process; GCP had 10 ENABLED Cloud Scheduler jobs writing into
+  - **DONE 2026-07-13 (slot-3, task sports_manifest_canonicalisation-003).** A separate, later re-drain than the
+    2026-07-12 E3 execution above (see the 2026-07-14 reconciliation note there — both snapshot sets verified present in
+    GCS; this is not a duplicate/conflicting record of the same event). AWS (both regions checked) had no sports-writing
+    process; GCP had 10 ENABLED Cloud Scheduler jobs writing into
     `market-data-tick-sports-prd`/`instruments-store-sports-prd`: `uts-prod-sports-scheduler-cron` (main writer, the
     "sports-scheduler" the E3 script targets), both manifest consolidators
     (`uts-prod-manifest-consolidator-{market-data,instruments}-sports-cron`), 4 fixture-trigger crons
@@ -1592,7 +1611,7 @@ CF-by-CF (sampled vs walked stated per row):
 - **CF-1 v9** ✅ projection — instruments-store v9 dry-run = 2,681,044 rows → 100% v9 (full-corpus walk).
 - **CF-2 `asset_group=`** ✅ — migrator path `category`→`asset_group=sports` (2-day sample) + IS v9 column (walk).
 - **CF-3 `pipeline_mode=` partition** ✅ — migrator inserts `pipeline_mode=batch_<source>/` in path (sample).
-- **CF-4 `source` column** ✅ — IS v9 stamps `source` (api*football/footystats/…); MTDS migrator `batch*<source>`
+- **CF-4 `source` column** ✅ — IS v9 stamps `source` (`api_football`/footystats/…); MTDS migrator `batch_<source>`
   (walk/sample).
 - **CF-5 typed empty reasons** ◑ — typed reasons wired (E6/keystone), BUT the **6,869 blank `capture_status` IS rows**
   (P1 below) are an open CF-5 gap; mdps rebuild reason-relabel proven by slot-6 (today's read returned 0 — consolidation
@@ -1622,7 +1641,7 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
 
 - [x] ✅ [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
       violation) — surfaced by the G1-V8 dry-run
-      (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
+      (`capture_status: {empty_confirmed 1,909,553, captured 586,597, attempted_failed 178,025, '' 6,869}`). The
       `migrate_instruments_store_v9` migrator PRESERVES the blank → it would ride into v9 unless relabelled. **Diagnosed
       (slot-4 2026-06-07)**: all 6,869 blanks are `service_name=instruments-service` with **blank `data_type`** + NaN
       `feature_group` (schema_version 8) — i.e. instrument-definition / reference rows, NOT market-data capture cells.
@@ -1707,20 +1726,20 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
 >   in the Progress Log (M-COORD-7 was already resolved; the ship used the sanctioned basedpyright-on-touched +
 >   tab-branch path since the green-sentinel quickmerge is structurally unattainable for mtds fleet-wide).**
 
-| #   | Check                                              | Verdict          | Evidence (sampled-vs-walked + real-prod probe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| --- | -------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ①   | Migrator dry-run source-aware                      | 🟢               | `migrate_sports_canonical_v9 --surface mdps` on real `market-data-tick-sports-prd` (2-day SAMPLE, 2026-06-08): raw `category=sports/data_source=ODDS_API/…` → `pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2/3/7/13 ✓); processed → `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…`; planned=939 copied=0 (dry). **Also re-stamps a mis-stamped legacy `batch_api_football` row (whose `data_source=ODDS_API`) → `batch_odds_api`** — the migrator enforces source-consistency from `data_source`, not the stale path key.                        |
-| ②   | Manifest-rebuild dry-run                           | 🟢 (fix SHIPPED) | `rebuild_sports_manifest_v9 --surface mdps --dry-run` on real prod (re-run slot-4 2026-06-08 **with the shipped fix mtds@351fa32a**): exits 0, `RUN_STARTED → RUN_COMPLETED` (233.7s); loads 17,288 per-VM rows + builds FIXTURES truth set (127,389 league-date pairs from 1,812,693 IS rows), 100% league_id resolution, 17,288 captured re-emit v9, CF-11 oracle ran; the two `READER_BACKFILLED_V8_COLUMNS_AS_NULL` emits log cleanly. **Was 🔴 (crash on stale-index `log_event` w/o `setup_events`) → FIXED + SHIPPED** (P0 below).                                                                                                 |
-| ③   | 4-state pre-flight                                 | 🟢               | UTL `CaptureStatus.EXPECTED_UNATTEMPTED` (manifest_writer.py:224); denominator = `captured/(captured+empty+attempted_failed+expected_unattempted)` (:240) materialised by writer, READ by consumers; deployment-api `coverage_drift.py` reads `capture_status` + expected denominator (WALKED code).                                                                                                                                                                                                                                                                                                                                      |
-| ④   | Empty/partial honest typed reasons                 | 🟢               | `rebuild_sports_manifest_v9` 8-step oracle: every branch returns a TYPED reason validated against UAC `EMPTY_CONFIRMED_REASONS` (`_validate_reason`); `EXPECTED_NO_FIXTURE`/`EXPECTED_*` season/known-gap; **CF-11 match-day-guaranteed-type → `record_failed`/`attempted_failed`** (sentinel `("", "mark_attempted_failed")`), never silent placeholder (WALKED code).                                                                                                                                                                                                                                                                   |
-| ⑤   | Read/write prefix-match (no coarse `batch/`)       | 🟢               | `rg 'pipeline_mode=(batch\|live)([/"'\`]\|$)'`over mtds/mdps/features/strategy/execution/deployment-api → only 2 hits, BOTH comments/docstrings describing the retired coarse form; readers key on`data*type=`segment, prefix-match`batch*\_`/`live\_\_` (WALKED grep).                                                                                                                                                                                                                                                                                                                                                                   |
-| ⑥   | IS+UAC validity matrix + grain                     | 🟢               | `valid_data_types_for_instrument_type("sports","league")` (market_data_categories.py:833-845) DERIVES `frozenset(SPORTS_DATA_TYPE_TO_SOURCE)` (the `uac@aff80339` fix) — ODDS + 16 reference data_types kept, no silent drop; grain = league; impossible cells rejected (WALKED code + uac@aff80339 +3 regression tests).                                                                                                                                                                                                                                                                                                                 |
-| ⑦   | Deployment-api numerator+denominator = could-exist | 🟢               | denominator = 4-state UNION (captured+empty+failed+`expected_unattempted`), the could-exist seed; never raw-rows. G3 cross-(pipeline_mode×source) UNION view is slot-7-owned (operational, deployment-api@4dd2575).                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ⑧   | IS-catalogue completeness (CF-14) + scheduler      | 🟢               | catalogue 606 ⊇ manifest 606 (0 over-seed, prior real-prod dry-run is@cbcf55e8); daily scheduler AG-complete — sports in `lifecycle_catalogue_scheduler.tf` for_each (line 52) with `--by-date-prefix sports_reference/by_date`. `terraform apply` = gated infra step.                                                                                                                                                                                                                                                                                                                                                                    |
-| ⑨   | pipeline_mode source-aware (CF-13)                 | 🟢               | `source_string_for(batch_odds_api)==odds_api` round-trips for ALL sports sources (pipeline_mode.py:273-359, closed-set `pipeline_mode_for_source`); IS v9 migrator stamps `transport` via `default_transport_for_source` → `rest` (migrate_instruments_store_v9.py:225); migrator's ① re-stamp proves `source_string_for(pm)==source`.                                                                                                                                                                                                                                                                                                    |
-| ⑩   | Era-B on-disk                                      | 🟢 N/A           | sports instrument_types = {odds, league, fixture, markets, outcomes, settlements, trades} — NO `options_chain`/`futures_chain` (market_data_categories.py:178-191); Era-B relabel is cefi/tradfi-only. Confirmed N/A for sports.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ⑪   | ★ BATCH=LIVE symmetry                              | 🟢               | shared `engine/orchestrator.py` write path (Batch=Live, same code): inserts `pipeline_mode={pm}/` via the SAME `derive_pipeline_mode_for_row` the v9 migrators + E5 rebuilds use (orchestrator.py:999-1005 — "object-path pipeline*mode == E5-rebuilt manifest pipeline_mode"); MDPS `data_sink.py` inserts source-aware `pipeline_mode={pm}/` for both modes; `available_at` per-row write-time (no read-time/lookahead, orchestrator.py:1071-1252); `candidate_parquet_paths()` pipeline_mode/source-aware; NO sports live-only data_types. Live writes the IDENTICAL v9 form (mode prefix `live*<source>` is the only intended delta). |
-| ⑫   | Rollback ready                                     | 🟢               | `_index/snapshots/pre_migration_2026_06_08.parquet` EXISTS on BOTH `market-data-tick-sports-prd` + `instruments-store-sports-prd` (gcloud-probed). Sports phantom-audit uses the dedicated `_audit_sports` + UAC `candidate_parquet_paths()` SSOT (v9-aware, source-aware, legacy-fallback) — NOT the generic `prefix_tpls=[""]` — so no false-positive captured→attempted_failed flip on the v9 shape.                                                                                                                                                                                                                                   |
+| #   | Check                                              | Verdict          | Evidence (sampled-vs-walked + real-prod probe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | -------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ①   | Migrator dry-run source-aware                      | 🟢               | `migrate_sports_canonical_v9 --surface mdps` on real `market-data-tick-sports-prd` (2-day SAMPLE, 2026-06-08): raw `category=sports/data_source=ODDS_API/…` → `pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2/3/7/13 ✓); processed → `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…`; planned=939 copied=0 (dry). **Also re-stamps a mis-stamped legacy `batch_api_football` row (whose `data_source=ODDS_API`) → `batch_odds_api`** — the migrator enforces source-consistency from `data_source`, not the stale path key.                                |
+| ②   | Manifest-rebuild dry-run                           | 🟢 (fix SHIPPED) | `rebuild_sports_manifest_v9 --surface mdps --dry-run` on real prod (re-run slot-4 2026-06-08 **with the shipped fix mtds@351fa32a**): exits 0, `RUN_STARTED → RUN_COMPLETED` (233.7s); loads 17,288 per-VM rows + builds FIXTURES truth set (127,389 league-date pairs from 1,812,693 IS rows), 100% league_id resolution, 17,288 captured re-emit v9, CF-11 oracle ran; the two `READER_BACKFILLED_V8_COLUMNS_AS_NULL` emits log cleanly. **Was 🔴 (crash on stale-index `log_event` w/o `setup_events`) → FIXED + SHIPPED** (P0 below).                                                                                                         |
+| ③   | 4-state pre-flight                                 | 🟢               | UTL `CaptureStatus.EXPECTED_UNATTEMPTED` (manifest_writer.py:224); denominator = `captured/(captured+empty+attempted_failed+expected_unattempted)` (:240) materialised by writer, READ by consumers; deployment-api `coverage_drift.py` reads `capture_status` + expected denominator (WALKED code).                                                                                                                                                                                                                                                                                                                                              |
+| ④   | Empty/partial honest typed reasons                 | 🟢               | `rebuild_sports_manifest_v9` 8-step oracle: every branch returns a TYPED reason validated against UAC `EMPTY_CONFIRMED_REASONS` (`_validate_reason`); `EXPECTED_NO_FIXTURE`/`EXPECTED_*` season/known-gap; **CF-11 match-day-guaranteed-type → `record_failed`/`attempted_failed`** (sentinel `("", "mark_attempted_failed")`), never silent placeholder (WALKED code).                                                                                                                                                                                                                                                                           |
+| ⑤   | Read/write prefix-match (no coarse `batch/`)       | 🟢               | ``rg 'pipeline_mode=(batch\|live)([/"'`]\|$)'`` over mtds/mdps/features/strategy/execution/deployment-api → only 2 hits, BOTH comments/docstrings describing the retired coarse form; readers key on `data_type=` segment, prefix-match `batch_`/`live_` (WALKED grep).                                                                                                                                                                                                                                                                                                                                                                           |
+| ⑥   | IS+UAC validity matrix + grain                     | 🟢               | `valid_data_types_for_instrument_type("sports","league")` (market_data_categories.py:833-845) DERIVES `frozenset(SPORTS_DATA_TYPE_TO_SOURCE)` (the `uac@aff80339` fix) — ODDS + 16 reference data_types kept, no silent drop; grain = league; impossible cells rejected (WALKED code + uac@aff80339 +3 regression tests).                                                                                                                                                                                                                                                                                                                         |
+| ⑦   | Deployment-api numerator+denominator = could-exist | 🟢               | denominator = 4-state UNION (captured+empty+failed+`expected_unattempted`), the could-exist seed; never raw-rows. G3 cross-(pipeline_mode×source) UNION view is slot-7-owned (operational, deployment-api@4dd2575).                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ⑧   | IS-catalogue completeness (CF-14) + scheduler      | 🟢               | catalogue 606 ⊇ manifest 606 (0 over-seed, prior real-prod dry-run is@cbcf55e8); daily scheduler AG-complete — sports in `lifecycle_catalogue_scheduler.tf` for_each (line 52) with `--by-date-prefix sports_reference/by_date`. `terraform apply` = gated infra step.                                                                                                                                                                                                                                                                                                                                                                            |
+| ⑨   | pipeline_mode source-aware (CF-13)                 | 🟢               | `source_string_for(batch_odds_api)==odds_api` round-trips for ALL sports sources (pipeline_mode.py:273-359, closed-set `pipeline_mode_for_source`); IS v9 migrator stamps `transport` via `default_transport_for_source` → `rest` (migrate_instruments_store_v9.py:225); migrator's ① re-stamp proves `source_string_for(pm)==source`.                                                                                                                                                                                                                                                                                                            |
+| ⑩   | Era-B on-disk                                      | 🟢 N/A           | sports instrument_types = {odds, league, fixture, markets, outcomes, settlements, trades} — NO `options_chain`/`futures_chain` (market_data_categories.py:178-191); Era-B relabel is cefi/tradfi-only. Confirmed N/A for sports.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ⑪   | ★ BATCH=LIVE symmetry                              | 🟢               | shared `engine/orchestrator.py` write path (Batch=Live, same code): inserts `pipeline_mode={pm}/` via the SAME `derive_pipeline_mode_for_row` the v9 migrators + E5 rebuilds use (orchestrator.py:999-1005 — "object-path `pipeline_mode` == E5-rebuilt manifest `pipeline_mode`"); MDPS `data_sink.py` inserts source-aware `pipeline_mode={pm}/` for both modes; `available_at` per-row write-time (no read-time/lookahead, orchestrator.py:1071-1252); `candidate_parquet_paths()` `pipeline_mode`/source-aware; NO sports live-only `data_types`. Live writes the IDENTICAL v9 form (mode prefix `live_<source>` is the only intended delta). |
+| ⑫   | Rollback ready                                     | 🟢               | `_index/snapshots/pre_migration_2026_06_08.parquet` EXISTS on BOTH `market-data-tick-sports-prd` + `instruments-store-sports-prd` (gcloud-probed). Sports phantom-audit uses the dedicated `_audit_sports` + UAC `candidate_parquet_paths()` SSOT (v9-aware, source-aware, legacy-fallback) — NOT the generic `prefix_tpls=[""]` — so no false-positive captured→attempted_failed flip on the v9 shape.                                                                                                                                                                                                                                           |
 
 **Sampled-vs-WALKED**: ① migrator = 2-day SAMPLE (object-path moves; row-content v9 = the IS `_index` migrator ②,
 full-corpus 2.68M WALKED in WAVE-2); ② rebuild = real-prod per-VM read (17,288 rows, not the 786K consolidated — see P1
@@ -1838,12 +1857,13 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       add `**/scripts/**` to the mtds file-size + function-size EXCLUDE globs (the coordinator already CLAIMS scripts/
       is excluded — it is NOT); (c) add `**/scripts/**` to STEP 5.85's grep exclude (`"/pipeline_mode=" in rel`
       substring checks are false positives, not enum-bypassing literals); (d) blast-radius-verify per
-      AUTONOMOUS*AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
+      AUTONOMOUS_AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
-      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
-      already excludes `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment regex
-      (`[A-Za-z0-9*{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this
-      session (sentinel at mtds@01d70902).
+      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08.
+
+      — **RESOLVED**: (b) `base-service.sh:1173` already excludes `./scripts/*` from `_SIZE_FILES`; (c) STEP 5.85
+          (L3117) already narrowed to value-assignment regex (`[A-Za-z0-9_{]` after quote) so path-substring checks no
+          longer false-positive. mtds QG passed at 215s in this session (sentinel at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
@@ -2731,7 +2751,7 @@ project `central-element-323112`. No writes, no VM launches, no checkbox/gate-st
 > all exit_code=0, SELF-DELETED on completion — an instances-list check hours later cannot see them; the EXIT_STATUS
 > blobs in GCS are the durable evidence); (2) the operator DID rule ("Execute now", 2026-07-12, chat Q&A) — evidenced by
 > real merged commits from that ruling: `deployment-service@bfa33ca` ("fix(vm): dispatch VM_TASK=sports-v9-migration to
-> VM_MIGRATION_CMD") and `market-tick-data-service@e555d7c5` ("fix(sports): _build_row_key omits blank chain/underlying
+> VM_MIGRATION_CMD") and `market-tick-data-service@e555d7c5` ("fix(sports): \_build_row_key omits blank chain/underlying
 > instead of ''"), both dated 2026-07-12 and confirmed real/merged (the prior citation to
 > `plan_reconciliation_operator_decisions_2026_07_11.md §A2 finding 254/E3E4` was WRONG — finding 254 in that doc is
 > "Sports-scheduler: VERIFY live write-target first", unrelated to E3/E4 execution; corrected 2026-07-13) — the AO
@@ -3117,7 +3137,7 @@ todos below lands or CF-8's schema change ships.
       (mirror `migrate_sports_canonical_v9.py`'s per-cell copy path, scoped to just this cell list — not another
       whole-corpus walk), verify 0 legacy-only cells remain, re-run E8. — **MTDS 140-cell class RESOLVED as
       accepted-phantom, not a data-loss gap (2026-07-13)**: full live re-run of
-      `cf_manifest_audit_2026_06_01.py market-data-tick-sports-prd-central-element-323112 --legacy     market-data-tick-sports-central-element-323112`
+      `cf_manifest_audit_2026_06_01.py market-data-tick-sports-prd-central-element-323112 --legacy market-data-tick-sports-central-element-323112`
       reproduced the identical 140 legacy-only cells (fresh `_index` pull, same run this touch). Enumerated the complete
       set (not just the tool's top-8 print) directly from the two pulled index parquets: 136 are
       `(2020..2026-03, 'ODDS_API', 'ODDS')`, plus 4 previously-uncounted
@@ -3175,53 +3195,53 @@ todos below lands or CF-8's schema change ships.
       `rebuild_sports_manifest_v9._write_captured_rows` helper.
 
       **Gotcha #1 — incremental-vs-force consolidator inconsistency**: the first plain incremental `manifest_consolidator`
-                                      cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
-                                      pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
-                                      Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
-                                      COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
-                                      every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
-                                      recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
-                                      brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
-                                      batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
-                                      `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
-                                      `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
-                                      consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
-                                      `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
-                                      (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
-                                      Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
-                                      that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
+                                                                  cycle merged + pruned the new shard but the captured rows did NOT survive (`rows_out` stayed at the exact
+                                                                  pre-write count; a direct re-read showed the sample cell still `empty_confirmed` with its OLD `written_at`).
+                                                                  Root-cause isolated via a controlled single-row test later in this touch: when a captured row's dedup key
+                                                                  COLLIDES with a pre-existing `empty_confirmed` row (the common case — the enumerator seeds a placeholder for
+                                                                  every league up-front), the plain incremental anti-join cycle does not reliably apply the captured-outranks-
+                                                                  recency tie-break that the full-rebuild path has (`unified_trading_library/manifest_consolidator.py`); a
+                                                                  brand-new dedup key (no pre-existing row to contest) merges fine either way. Recovered for the first 1,772-cell
+                                                                  batch by re-writing the shard and force-consolidating: confirmed `RUNNING=0` via
+                                                                  `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports`, paused
+                                                                  `uts-prod-manifest-consolidator-instruments-sports-cron` (Cloud Scheduler, `*/1 * * * *`), waited out the
+                                                                  consolidator's documented 300s lock TTL from the cron's last (pre-pause) execution, ran
+                                                                  `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
+                                                                  (`shards=2 rows_in=4,869,738 rows_out=4,863,840 dedup_dropped=5,898 success=True`), then resumed the cron.
+                                                                  Verified via `cf_manifest_audit_2026_06_01.py`: legacy-only cells dropped **1,926 → 154**; cross-checked directly
+                                                                  that **0 of the 1,772 target cells remained legacy-only**. Evidence: `market-tick-data-service@f3ab7655`.
 
-                                      **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
-                                      build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
-                                      taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
-                                      rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
-                                      `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
-                                      mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
-                                      (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
-                                      not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
-                                      (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
-                                      the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
-                                      cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
-                                      canonical; legacy-only dropped **154 → 140**.
+                                                                  **Gotcha #2 — a second, self-inflicted bug found + fixed before closing this todo**: the analysis script used to
+                                                                  build the 1,772-cell target list did `cap_legacy.drop_duplicates(subset=["date","venue","data_type"])` BEFORE
+                                                                  taking the per-cell `instrument_count`, i.e. it kept an ARBITRARY one of potentially several per-league captured
+                                                                  rows sharing the same coarse cell key instead of the max — so a cell with e.g. one real
+                                                                  `(league=RFPL, instrument_count=3)` row and several `(instrument_count=0)` rows from other leagues could be
+                                                                  mis-scored as "phantom" if the 0-count row happened to sort first. Re-derived the 74-cell residual properly
+                                                                  (groupby-max instead of first-match) and found **14 of the 74 were mis-classified this way** — genuinely real,
+                                                                  not phantom (3 XG cells + 11 FIXTURE_EVENTS/FIXTURE_STATS cells, all 2021/2025 dates). Migrated these 14 for real
+                                                                  (11 new objects copied — most were already E4-copied — + 39 legacy captured rows re-emitted), this time pausing
+                                                                  the cron BEFORE writing the shard and force-consolidating immediately after (no window for a live incremental
+                                                                  cycle to race the write) — the correct ordering learned from Gotcha #1. Verified: all 14 now show captured in
+                                                                  canonical; legacy-only dropped **154 → 140**.
 
-                                      **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
-                                      gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
-                                      captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
-                                      re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
-                                      (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
-                                      error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
-                                      canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
-                                      genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
-                                      `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
-                                      its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
-                                      phantom disposition.
+                                                                  **REMAINING 60-cell residual (44 INJURIES + 16 WEATHER) is a DIFFERENT, genuine anomaly — NOT resolved by either
+                                                                  gotcha fix, flagged as its own new todo below**: even after the groupby-max correction, these 60 cells' legacy
+                                                                  captured row(s) genuinely read `instrument_count=0` — BUT GCS-verified (3 samples: XG max-corrected away, so
+                                                                  re-sampled `INJURIES`/`WEATHER` specifically) that at least one of them
+                                                                  (`(2021-08-26, INJURIES)`, legacy row `capture_status=captured, instrument_count=0.0,
+                                                                  error_reason=reconciled_from_existing_per_league_parquet`) has a REAL 14-row backing parquet in BOTH legacy and
+                                                                  canonical (byte-identical, already copied by the E4 fleet). This is NOT the drop_duplicates artifact (max is
+                                                                  genuinely 0 for this key) and NOT the MTDS-140 pattern (GCS-confirmed empty) — it is the manifest's own
+                                                                  `instrument_count` field disagreeing with the real row count in the parquet it's supposed to describe. Filed as
+                                                                  its own todo (see below) rather than silently accepted, since 1/1 sampled cells this touch contradicts a blanket
+                                                                  phantom disposition.
 
-                                      **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
-                                      finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
-                                      RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
-                                      todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
-                                      `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
-                                      from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
+                                                                  **FINAL for this todo**: the real, uncharacterized data-loss gap this todo existed to close (originally ~1,730,
+                                                                  finally verified at **1,786 cells** — 1,772 + 14 corrected) is CLOSED — 0 remain legacy-only. 140 cells remain
+                                                                  RED on L6-legacy-only: 80 FIXTURES (separate class, code fix shipped, needs its own live rebuild pass — not this
+                                                                  todo) + 60 genuinely-anomalous `instrument_count=0` cells (new todo below, NOT accepted as phantom). Evidence:
+                                                                  `market-tick-data-service@f3ab7655` (initial 1,772-cell migration + both scripts); the 14-cell correction ran
+                                                                  from the same two scripts, no new commit needed (scripts already handle an arbitrary `--cells-csv`).
 
 - [x] ✅ [DATA] P2. **IS 60-cell `instrument_count=0`-but-real-data anomaly** (repo: instruments-service +
       market-tick-data-service, discovered 2026-07-13 during the L6-legacy-only targeted re-migration above) —
@@ -3408,9 +3428,9 @@ blocked E4 from ever completing, root-caused with evidence, fixed, QG-green, shi
    relaunch. `market-tick-data-service@e555d7c5` was later confirmed backmerged into `main` (ancestor of `1b5d23ca8fb4`)
    with no drift.
 
-**Verification (mdps-2019 re-smoke-test, fix live)**: exit*code=0, 0 `MalformedRowKeyError`, 0 any-`failed` warnings —
+**Verification (mdps-2019 re-smoke-test, fix live)**: `exit_code=0`, 0 `MalformedRowKeyError`, 0 any-`failed` warnings —
 `DONE: written_empty=203648 written_captured=575672 reemit_attempted_failed(v9)=112582 skipped=1066259` (100% of the
-non-skipped rows written; skipped rows are the intentional `force=False` skip-if-already-EXPECTED*\*-typed branch, not
+non-skipped rows written; skipped rows are the intentional `force=False` skip-if-already-`EXPECTED_*`-typed branch, not
 failures). This run **is** the production mdps/2019 shard (real `--apply`, not a dry-run) — not relaunched separately.
 
 **Full fleet**: launched the remaining 15 VMs (mdps 2020–2026 + instruments 2019–2026, `--apply`, SPOT, all 4 code
@@ -3452,18 +3472,21 @@ seventh-run patch).
 **Instruments-store** (`instruments-store-sports-prd-…`, 5,598,410 rows):
 `RED — ['CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8', 'L6-legacy-only']` — **identical RED-check set AND
 identical blank/gap counts to the pre-E4 baseline** (CF-3 blank=19,274 both before+after; CF-4 blank=796,523 both
-before+after; CF-8 non-null=3,508,551 both before+after; L6-legacy-only=1,855 both before+after). **No regression, but
-also no improvement on CF-3/CF-4/CF-8** — root-caused via the mdps-2019/instruments-2019 run logs:
+before+after; CF-8 non-null=3,508,551 both before+after; L6-legacy-only=1,855 both before+after).
+
+**No regression, but also no improvement on CF-3/CF-4/CF-8** — root-caused via the mdps-2019/instruments-2019 run logs:
 `rebuild_sports_manifest_v9.py`'s `_write_empty_rows` skips re-emission entirely for any row whose EXISTING reason
 already starts with `EXPECTED_` (`force=False`, the launcher's default) — `skipped=1,066,259` (MDPS) /
-`skipped=3,418,792` (instruments-2019 alone) rows never touched. Since the blank pipeline*mode/source/available_at rows
-on IS already carry a valid typed `EXPECTED*\*`reason from an earlier relabel pass, the skip-branch bypasses them and
-their blank columns are never backfilled — this is the concrete mechanism behind the "IS CF-3/CF-4 write-path gap"
-finding named (but not root-caused) across all ~10 prior E8 runs. **Not fixed here** (a`--force` full re-run would
-reprocess 3.4M+ already-correctly-typed rows at significant cost, or the skip condition needs a narrower fix — e.g. skip
-the reason-relabel but still backfill blank pipeline_mode/source/available_at — either is a real, scoped follow-up, not
-a quick E4 rerun). **Tracked as a follow-up, not attempted under this dispatch** (out-of-time-budget + design-uncertain
-fix, matches the dispatch's own "if it's a separate tracked item, leave it tracked and say so").
+`skipped=3,418,792` (instruments-2019 alone) rows never touched.
+
+Since the blank `pipeline_mode`/source/`available_at` rows on IS already carry a valid typed `EXPECTED_*` reason from an
+earlier relabel pass, the skip-branch bypasses them and their blank columns are never backfilled — this is the concrete
+mechanism behind the "IS CF-3/CF-4 write-path gap" finding named (but not root-caused) across all ~10 prior E8 runs.
+**Not fixed here** (a `--force` full re-run would reprocess 3.4M+ already-correctly-typed rows at significant cost, or
+the skip condition needs a narrower fix — e.g. skip the reason-relabel but still backfill blank
+`pipeline_mode`/source/`available_at` — either is a real, scoped follow-up, not a quick E4 rerun). **Tracked as a
+follow-up, not attempted under this dispatch** (out-of-time-budget + design-uncertain fix, matches the dispatch's own
+"if it's a separate tracked item, leave it tracked and say so").
 
 **Verdict**: nothing WORSE than before on either surface (identical RED sets/counts) — E3+E4 completed successfully for
 the first time; **schedulers resumed** (all 8 re-enabled + verified `ENABLED`). E8 checkbox NOT flipped (L6 +
@@ -3779,14 +3802,14 @@ No genuine operator-decision blocker was hit this session (the 60-cell anomaly r
 not an ambiguous judgment call) — the CF-8 backfill pass is a scoped, concrete follow-up (not ambiguous), captured as
 the clear next todo below rather than a `/blocked` question.
 
-- [ ] [DATA] P1. **CF-8 `available_at` live backfill pass** (both sports surfaces, repo: market-tick-data-service): the
-      24th touch's writer-plumbing fix (`unified-trading-library@84a9638b` + `market-tick-data-service@79351cb1`) only
-      affects rows written after it landed — ~1.85M pre-existing IS rows (34.6% of 5,354,074) and effectively all MTDS
-      rows still have no `available_at`. Needs a real `--apply` rebuild pass over the full corpus (the "whole- surface
-      walk" `rebuild_sports_manifest_v9.py` this touch deliberately avoided for the narrower FIXTURES fix is the RIGHT
-      tool for THIS job, since it genuinely needs to touch every row) — dry-run first, verify the projected histogram,
-      then apply with the same pause-cron/force-consolidate recipe at full-corpus scale. This is the last concrete
-      blocker before an honest E8 delete-authorization ask on the IS surface (MTDS needs the same pass too).
+- [x] ✅ [DATA] P1. **CF-8 `available_at` live backfill pass** (both sports surfaces, repo: market-tick-data-service):
+      the 24th touch's writer-plumbing fix (`unified-trading-library@84a9638b` + `market-tick-data-service@79351cb1`)
+      only affects rows written after it landed — ~1.85M pre-existing IS rows (34.6% of 5,354,074) and effectively all
+      MTDS rows still have no `available_at`. Needs a real `--apply` rebuild pass over the full corpus (the "whole-
+      surface walk" `rebuild_sports_manifest_v9.py` this touch deliberately avoided for the narrower FIXTURES fix is the
+      RIGHT tool for THIS job, since it genuinely needs to touch every row) — dry-run first, verify the projected
+      histogram, then apply with the same pause-cron/force-consolidate recipe at full-corpus scale. This is the last
+      concrete blocker before an honest E8 delete-authorization ask on the IS surface (MTDS needs the same pass too).
       **ATTEMPTED, 2026-07-13 (slot 3, task sports_manifest_canonicalisation-004) — REGRESSED, ROLLED BACK, still
       OPEN.** Executed the full recipe (dry-run → pause-cron/snapshot → `--no-dry-run --force` apply → force-
       consolidate) on both surfaces. IS surface fill rate REGRESSED from a 62.9% baseline to 15.7% post-consolidate
@@ -3799,6 +3822,18 @@ the clear next todo below rather than a `/blocked` question.
       before this touch. Full writeup + root-cause investigation trail + todos:
       `plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md`. **Do NOT re-attempt this backfill
       until that issue doc's root-cause todo is resolved** — a repeat run would silently repeat the same regression.
+      **RE-ATTEMPTED + SUCCEEDED, slot 11, 2026-07-14** (task `sports_manifest_canonicalisation-004`,
+      operator-coordinated maintenance window): both root-cause bugs (`unified-trading-library@f5f15e3a`, `@9c9cdc50`)
+      and the column-fill guardrail (`@2e132bb2`) were fixed first; a THIRD consolidator bug (`canon_read`'s bare
+      `SELECT *` crashing on MDPS's schema, which had never carried `available_at`) was found + fixed live during this
+      run (`unified-trading-library@0f55cc2b`). Result, verified via direct GCS reads pre/post (not log trust): IS
+      `available_at` fill 62.9% → **87.8%** (5,051,105/5,751,180); MDPS 0% (column absent) → **85.3%**
+      (1,670,401/1,958,499). Zero row-count regression on either surface. Both crons confirmed `ENABLED` (resumed) after
+      verification. Full writeup: `sports_cf8_available_at_backfill_regression_2026_07_13.md` todo 2. **Independently
+      re-verified this touch (slot 6, same dispatched task, concurrent with slot 11 — deferred to their in-flight apply
+      per Finding-1 collision-avoidance rather than duplicate, per their own writeup)**: fresh direct GCS reads confirm
+      the SAME final state (IS 87.8%, MDPS 85.3%, both crons ENABLED, no lock/orphaned shard) — no drift since slot 11's
+      commit. Checkbox flip is this touch's own action, closing the loop the backlog task kept re-dispatching on.
 
 ## E8 Verify — twenty-seventh touch 2026-07-13 (data_engineering slot 6, task sports_manifest_canonicalisation-001): found slot 3 mid-apply on the CF-8 IS backfill (touch 26's own next-step), deferred to avoid duplication, ran MDPS dry-run instead, and caught a real silent-under-delivery bug in slot 3's run
 
@@ -3905,3 +3940,189 @@ maintenance-window coordination Finding 1 calls for. Sports is therefore **not y
 separate, explicitly operator-gated step from any bucket deletion). Checkbox NOT flipped — this touch closes no RED
 check by itself. This plan-doc edit + the issue-doc edit ship via the `docs(plans):` carve-out; the code fix ships via
 `quickmerge.sh --agent`.
+
+## E8 Verify — re-audit 2026-07-14 (data_engineering slot-2, task sports_manifest_canonicalisation-001): fresh audit post-slot-11-backfill — CF-8 residual isolated to CAPTURED rows specifically, not the aggregate
+
+Fresh-pulled to `unified-trading-pm@e2bf7a47a` (already includes slot 11's completed CF-8 backfill + slot 6's
+independent re-verification flip, both landed before this dispatch). `gcloud` CLI is broken on this host (snap-confine
+sandboxing — same issue the regression doc's Finding 1 hit), so re-ran `cf_manifest_audit_2026_06_01.py`'s `audit()`
+in-process with `_cp`/`_ls_shallow` monkeypatched to the `google-cloud-storage` SDK instead of shelling to
+`gcloud storage` — same read/check logic, different transport, no edit to the checked-in script.
+
+| Surface                              | Verdict                                                          | Notes                                                                                                                                                                                                                                                      |
+| ------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MDPS (`market-data-tick-sports-prd`) | `RED — ['CF-8', 'L6-legacy-only']`                               | `available_at` non-null=1,670,401/1,958,499 (85.3%, matches slot 11's reported figure exactly). 140 legacy-only cells, unchanged (previously-accepted phantom-capture).                                                                                    |
+| IS (`instruments-store-sports-prd`)  | `RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']` | `available_at` non-null=5,090,721/5,751,217 (88.5%, up slightly from 87.8% via ordinary incremental writes). CF-2-paths/CF-3/CF-4/L6-legacy-only byte-identical to the 26th/27th-touch residuals (28 legacy-only INJURIES cells, matches history exactly). |
+
+**New finding — CF-8's remaining gap is concentrated in `captured` rows, not spread evenly**: grouped the downloaded
+index by `capture_status` and checked `available_at.notna()` per group instead of trusting the aggregate percentage.
+`empty_confirmed`/`attempted_failed`/`expected_unattempted` are ALL ~99.8-100% filled on both surfaces (the backfill
+worked correctly there) — but `capture_status='captured'` rows (the actual data, not placeholders) are only **39.8%
+filled on IS** (651,845/1,638,158 missing) and **49.8% filled on MDPS** (286,839/575,671 missing). This confirms and
+quantifies, for the first time, the regression issue doc's own unresolved candidate-(a) hypothesis ("captured rows may
+go through a different path") — filed as a new P0 todo in
+`plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md` (full breakdown + root-cause candidates
+there); did not attempt a captured-row-scoped backfill myself — same operator-coordinated maintenance-window class of
+write as the empty-row backfill, out of scope for a verify dispatch, and Finding 1's repeated cron-collision history
+argues against an uncoordinated attempt.
+
+**E8 verdict: still NOT GREEN on either surface — checkbox NOT flipped.** CF-8 is the sole live blocker on MDPS and one
+of five on IS (the other four are pre-existing, already-triaged non-blocking residuals). Genuinely closer than any prior
+touch (aggregate fill went from single/low-double digits to high-80s), but the captured-row-specific gap this touch
+isolated means CF-8 is not yet done — it needs one more, now-precisely-scoped backfill pass. This plan-doc edit
+
+- the issue-doc edit ship via the `docs(plans):` carve-out.
+
+## E8 Verify — independent re-verification 2026-07-14 (data_engineering slot-3, laptop): root-cause CONFIRMED closed, backfill CONFIRMED successful (by a concurrent agent), captured-row residual INDEPENDENTLY CORROBORATED — still RED, checkbox NOT flipped
+
+Dispatched (operator-authorized, post-incident) to (1) verify the CF-8 root-cause fix is real and complete — not just
+trust the commit messages — and (2) coordinate + run the backfill carefully with the guardrail active. Read this plan +
+`plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md` in full first, per the operator's own
+instruction. A prior touch this same session/slot (the "CF-8 scoping + guardrail touch" entry above) had already shipped
+`2e132bb2` and left an uncommitted, structurally-broken end-to-end repro test (`_cf8_canonical_row` referenced but never
+defined — a `NameError`, not yet run) — inherited and fixed it rather than redoing the work.
+
+**Part 1 (root-cause verification) — CONFIRMED real and complete, no gap found:**
+
+- Read `f5f15e3a` + `9c9cdc50` in full (`git show`). Traced the mechanism logically: `_records_to_dataframe()` (the one
+  serializer every write path funnels through) omitted `available_at` from its per-row dict — `f5f15e3a` adds it back;
+  `record_captured`/`record_captured_from_counts` validated but never persisted `available_at` onto the
+  `AvailabilityRecord` — `9c9cdc50` fixes that separately. Both logically address the exact traced symptom (fresh
+  `attempted_at` on the winning row, `available_at` still `None`) — no remaining gap in either fix's own scope.
+- Fixed the inherited broken repro test (`_cf8_canonical_row` → the already-defined-but-unused `_cf8_writer_df` helper,
+  which was clearly built for exactly this purpose per its own docstring). Verified end to end: reverted `f5f15e3a`
+  (simulated by dropping the shard's `available_at` column) → test fails with the fill rate collapsing to 0%, exactly
+  the traced incident shape; restored the fix → test passes, `available_at` survives the merge. Confirmed the guardrail
+  (`2e132bb2`) fires `MANIFEST_COLUMN_FILL_REGRESSION` on this exact reverted-code repro (not just its own unit math in
+  isolation) — this is the concrete confirmation that it would genuinely have caught the real 62.9%→15.7% drop
+  (47.2pp >> the 1pp alert threshold). Shipped: `unified-trading-library@dbc5447f`.
+- **Found a second, LIVE bug while checking cron/production health for the maintenance window** (not speculative — an
+  actual crash-loop in progress): `market-data-tick-sports-prd`'s consolidator was crash-looping every `*/1` cycle
+  (confirmed via `gcloud run jobs executions list`, 2026-07-13T23:54Z–2026-07-14T00:17Z, ~24 consecutive failures,
+  `duckdb.BinderException: Set operations can only apply to expressions with the same number of result columns`).
+  Root-caused independently: `_duckdb_merge_payload`'s `canon_read` was a bare `SELECT *` (native column count only)
+  while `shard_proj` is explicitly padded to the full `union_cols` superset — the moment a shard introduces a column
+  (`available_at`) the canonical has NEVER carried (MDPS's real 0%-baseline shape), the two sides' column counts diverge
+  and the `UNION ALL` fails at bind time. Fixed it (canon-side DESCRIBE-then-NULL-pad, mirroring the shard side) + wrote
+  a reproducible test (confirmed via mtime-patched `consolidate()` calls that the unpatched code genuinely crashes with
+  the exact production error message, and the fix resolves it cleanly) — then found, via `git pull`, that a concurrent
+  agent (slot-11) had independently root-caused and fixed the IDENTICAL bug (`unified-trading-library@0f55cc2b`, plus
+  the analogous gap in `_check_column_fill_regression`'s own before/after query) while re-running the real backfill on
+  production. Reconciled: discarded my duplicate source-level fix and redundant tests, kept only the still-needed CF-8
+  repro-test fix (`dbc5447f` above, rebased cleanly onto `0f55cc2b`). Confirmed via live
+  `gcloud run jobs executions list` re-check: both consolidators have been green (`True`) on every cycle since ~00:22Z —
+  no recurrence.
+
+**Part 2/3 (maintenance window + staged/full backfill) — already executed successfully by a concurrent agent (slot-11)
+before I reached this step; independently re-verified rather than re-run (re-running would itself have repeated Finding
+1's collision risk on top of an already-successful pass):**
+
+- Per this plan's own P1 todo + the issue doc: slot-11 coordinated the maintenance window (paused both crons, confirmed
+  0 in-flight executions, snapshotted both canonicals) and ran the full-corpus backfill with the guardrail active. My
+  own independent read of the LIVE `_index/availability_index.parquet` for both surfaces (direct
+  `google-cloud-storage` + `pyarrow`, not `gcloud storage cp` this time, not trusting any prior agent's summary):
+  **MDPS** `available_at` non-null = 1,670,401/1,958,499 (**85.3%** — matches slot-11's reported figure exactly). **IS**
+  `available_at` non-null = 5,090,828/5,751,595 (**88.5%**, up marginally from slot-11's reported 87.8% via ordinary
+  incremental writes since — NOT a re-attempt by me). Both numbers independently corroborate the prior touches' figures
+  to within normal incremental drift.
+- Confirmed both sports consolidator crons `ENABLED` (resumed) via a live `gcloud scheduler jobs list` check just now.
+
+**Part 4 (resume + fresh audit) — ran the FULL `cf_manifest_audit_2026_06_01.py` myself on both surfaces (this host's
+`gcloud` CLI works fine, no monkeypatch needed):**
+
+| Surface                              | Verdict                                                          | Notes                                                                                                                                                                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MDPS (`market-data-tick-sports-prd`) | `RED — ['CF-8', 'L6-legacy-only']`                               | `available_at` non-null=1,670,401/1,958,499 (85.3%). 140 legacy-only cells, unchanged (previously-accepted phantom-capture).                                                                                                                       |
+| IS (`instruments-store-sports-prd`)  | `RED — ['CF-2-paths', 'CF-3', 'CF-4', 'CF-8', 'L6-legacy-only']` | `available_at` non-null=5,090,888/5,751,655 (88.5%). CF-2-paths/CF-3(99.8%)/CF-4(0.2% blank)/L6-legacy-only(28 INJURIES cells) byte-identical in shape to the 26th/27th/E8-re-audit-touch residuals — pre-existing, already-triaged, non-blocking. |
+
+- **Independently corroborated the captured-row-specific CF-8 residual** (grouped by `capture_status`, checked
+  `available_at.notna()` per group, same method the prior touch used): `empty_confirmed`/`attempted_failed`/
+  `expected_unattempted` are 99.9-100% filled on both surfaces — but `capture_status='captured'` rows are only **60.2%
+  filled on IS** (986,420/1,638,411 — 651,991 missing, matching the prior touch's 651,845 to within ~150 rows of
+  ordinary incremental drift) and **50.2% filled on MDPS** (288,832/575,671 — 286,839 missing, an exact match). This is
+  the SAME gap the prior touch filed as a P0 todo in the issue doc (candidates: the rebuild script's
+  `_write_captured_rows`/`add()` path not deriving `available_at` for pre-existing captured rows the same way, or these
+  being captured rows written before `9c9cdc50` landed and never re-emitted). Traced `_write_captured_rows` +
+  `ManifestWriter.add()` myself this touch: both DO correctly thread `available_at` through to the `AvailabilityRecord`
+  on current code (confirmed by reading `_writer_ingest.py`'s `AvailabilityRecord(...)` construction) — so the residual
+  is NOT an unfixed code path in the current write chain; it is consistent with candidate (b) (pre-existing captured
+  rows from before the fix, not yet re-emitted by any backfill pass scoped to them) or a live-ingestion-image-pinning
+  lag (ongoing real-time captures via a not-yet-redeployed container still landing without the fix). Did not go further
+  to disambiguate which — that is precisely the next P0's own scope, already filed, not duplicated here.
+
+**Honest final verdict: NEITHER surface is genuinely GREEN — do not round up the near-miss.** The ORIGINAL destructive
+regression's root cause is fully fixed and doubly verified (by 3 independent agents' fixes + repro tests, mine
+included); the coordinated full-corpus backfill ran successfully and safely (zero row-count regression, real,
+GCS-verified fill-rate gains); a second, unrelated crash-class bug this maintenance-window check surfaced live is also
+now fixed and verified. But CF-8 itself remains RED on both surfaces because of the captured-row-specific gap — already
+filed as its own precisely-scoped P0 (not re-filed here) — which needs a further, SEPARATELY-coordinated backfill pass
+before either surface is ready for an E8 legacy-bucket-deletion ask. Deliberately did NOT attempt that captured-row
+backfill in this same touch: it needs its own maintenance window per Finding 1's now 3-times-recurred cron-collision
+history, and my dispatch's own remit was to verify root-cause + run/confirm THE coordinated backfill and report
+honestly, not to chase every last residual to zero in one pass. **Nothing shipped this touch changes any checkbox** —
+CF-8's P0 stays open, correctly, pointing at the same already-filed captured-row-gap todo. Code shipped:
+`unified-trading-library@dbc5447f` (CF-8 repro-test fix only — the schema-align fix itself landed via the concurrent
+agent's `0f55cc2b`, not duplicated). This plan-doc edit + the issue-doc edit ship via the `docs(plans):` carve-out.
+
+## Progress Log — slot-3 2026-07-14 (dispatched to finish CF-8 completely: identify + backfill the captured-row residual)
+
+Full evidence lives in `plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md` (not duplicated
+here per the plan-references-codex/issue-doc convention). Summary:
+
+- **instruments-service deployment-freshness (the P1 todo that todo left open)**: confirmed STALE — the deployed
+  `instruments-service:latest` image's Dockerfile pinned a UTL base-image digest built 5.5h BEFORE
+  `f5f15e3a`/`9c9cdc50`/`2e132bb2`/`0f55cc2b` landed, explaining why the 2026-07-14 TEAMS/STANDINGS gap was actively
+  GROWING (439→790 rows) across the entire `record_captured()` surface, not a residual code bug. Fixed
+  (`instruments-service@ca3902bb`, digest bump to the image built from UTL HEAD `c7126116`) via the dirty-deps
+  direct-push carve-out; a second agent (data_engineering slot-2) independently converged on the identical fix and stood
+  down on seeing mine. Pending LDR→main promotion (standing fleet automation, not blocking).
+- **Targeted captured-row backfill**: attempted a 500-row MDPS small-scale test (snapshot + paused crons +
+  guardrail-active, per protocol) — **fill rate did NOT improve** (byte-identical before/after). Root-caused a NEW, more
+  fundamental blocker than the previously-understood "point-in-time snapshot" gap: the manifest consolidator's dedup key
+  includes `service_name`, and the current backfill write path stamps one fixed service_name per surface regardless of
+  the target row's true original owner — so no rewrite using the existing convention can ever dedupe-supersede the
+  actual missing rows; it only adds non-collapsible duplicates. Per the dispatch's absolute safety floor (genuine
+  data-correctness ambiguity → stop, roll back, report) — independently reaching the same conclusion as the operator's
+  separately-recorded `BLK-d9137d48` STOP-pending-scheduled-window answer — rolled back the test write (byte-verified
+  restore), resumed both crons (confirmed healthy), and did not scale to IS or to full volume.
+- **Fresh full `cf_manifest_audit_2026_06_01.py` re-run, both surfaces, post-rollback**: **MDPS**
+  `RED — ['CF-8', 'L6-legacy-only']` (`available_at` non-null=1,670,401/1,958,499, 85.3%, unchanged). **IS**
+  `RED — [...'CF-8'...]` (see this same touch's live number in the issue doc / final report — unchanged from the
+  pre-session baseline to within ordinary incremental drift). **Neither surface is closer to GREEN than before this
+  session** — CF-8's true blocker is now understood one level deeper (needs a per-original-service_name write redesign,
+  reviewed, BEFORE any further attempt — not just a scheduled maintenance window). Not ready for an E8
+  legacy-bucket-deletion ask on either surface. No checkbox flipped on the captured-row-backfill todo (scope genuinely
+  incomplete); the existing P1 todo in the issue doc carries the full finding + caveat rather than a duplicate new todo.
+  Code shipped: `market-tick-data-service@41b3c8fa` (targeted-backfill + snapshot scripts, both carrying a prominent "DO
+  NOT RUN AT SCALE" warning), `instruments-service@ca3902bb` (digest fix). This plan-doc edit
+  - the issue-doc edit ship via the `docs(plans):` carve-out.
+
+## E8 Verify — thirtieth-ish touch 2026-07-14 (data_engineering slot-7): confirmed no state change since last audit, engineering half already closed by slot-12 — flagged the redispatch-churn problem via /blocked rather than repeating the audit for zero new information
+
+Read this plan (checkbox note at the P0 todo itself already says "do not re-dispatch until the captured-row todo is
+resolved — a repeat audit will reproduce the identical gap with zero new information") + the issue doc in full.
+Fresh-pulled every slot repo (clean). `git log --since="6 hours ago"` across `market-tick-data-service`,
+`unified-trading-library`, `instruments-service`, `unified-trading-pm` shows only code/docs commits since slot-3's
+same-day post-rollback audit — none are production writes (slot-12's `market-tick-data-service@af627b5b`
+per-service_name write-grouping fix is explicitly unit-tested only, "did NOT run this against production" per its own
+issue-doc entry). Given (a) the last audit ran hours ago same-day with zero intervening writes, and (b)
+`_index/availability_index.parquet` reads pull real GCS objects (not free), re-running would reproduce byte-identical
+RED evidence for no new information — the exact pattern the plan's own checkbox note already warns against. Did not
+re-run.
+
+**Current true state (unchanged from the 2026-07-14 slot-3 audit, cited not re-verified)**: both surfaces RED on CF-8
+only (MDPS: `available_at` 85.3%, IS: 88.5%, both dragged down by the `capture_status='captured'`-row-specific gap).
+**Engineering work is fully closed**: root cause traced, guardrail shipped, aggregate backfill run safely, and the
+per-original-service_name write-grouping fix (the actual remaining code gap) is built + unit-tested
+(`market-tick-data-service@af627b5b`). **Nothing left for data_engineering craft work on this task** — the only
+remaining step is an operator-scheduled, operator-authorized production maintenance-window run, which `BLK-d9137d48`
+already answered as STOP-pending-schedule.
+
+**The real problem this touch surfaces**: this checkbox has now been re-dispatched ~30 times across many slots since
+2026-06-27, and the plan-text warning added earlier didn't stop the churn because nothing machine-enforces it — the
+dispatcher has no other eligible work to offer idle slots, so this operator-gated, code-complete task keeps getting
+handed to whoever is idle. Filed `/blocked` (see dashboard) recommending the main agent/operator attach a
+`prereqs.conditions` gate (e.g. `sports-cf8-maintenance-window-scheduled`, seeded `false`) to this task's `backlog.yaml`
+entry per `RULES.md` § 4 "Park a task" — that section scopes backlog-edit hygiene to main agent/operator, not workers,
+so routing rather than self-editing. No code shipped this touch (nothing to ship); this plan-doc edit ships via the
+`docs(plans):` carve-out.

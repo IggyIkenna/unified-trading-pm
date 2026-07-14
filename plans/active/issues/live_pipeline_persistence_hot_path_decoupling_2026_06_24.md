@@ -2,15 +2,14 @@
 doc_type: issue
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
 summary:
-  "The live pipeline flushes each closed window's ticks to a GCS path keyed by day+instrument with
-  NO window key, so window N+1 overwrites N in-place (a live CORRECTNESS RACE if MDPS lags, plus
-  the raw bucket is not a replayable archive — breaks paper(W)==batch-rerun(W)); and MDPS reads the
-  just-flushed tick parquet back FROM GCS on the production hot path. Decided direction (operator
-  2026-06-25): Option 2 log-spine — HOT Pub/Sub-with-retention + COLD batched hive GCS parquet +
-  BigQuery analytics, off ONE windowing via a UAC envelope + UTL transport facade. Hot-path
-  decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked
-  because the durable warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built —
-  tracked in mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
+  "The live pipeline flushes each closed window's ticks to a GCS path keyed by day+instrument with NO window key, so
+  window N+1 overwrites N in-place (a live CORRECTNESS RACE if MDPS lags, plus the raw bucket is not a replayable
+  archive — breaks paper(W)==batch-rerun(W)); and MDPS reads the just-flushed tick parquet back FROM GCS on the
+  production hot path. Decided direction (operator 2026-06-25): Option 2 log-spine — HOT Pub/Sub-with-retention + COLD
+  batched hive GCS parquet + BigQuery analytics, off ONE windowing via a UAC envelope + UTL transport facade. Hot-path
+  decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked because the durable
+  warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built — tracked in
+  mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
 status: blocked
 nature: notes
 asset_group: [cross-cutting]
@@ -22,9 +21,15 @@ related: [mtds_plan_reconciliation_2026_06_29]
 created: 2026-06-24
 parent_epic: batch_live_symmetry_master
 priority: P2
-source: [operator review 2026-06-24 (prediction arb detector depth-history question), market-tick-data-service/market_tick_data_service/live/websocket_runner.py, market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py, unified-api-contracts/unified_api_contracts/events/streaming.py]
+source:
+  [
+    operator review 2026-06-24 (prediction arb detector depth-history question),
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py,
+    unified-api-contracts/unified_api_contracts/events/streaming.py,
+  ]
 assigned_vm: NA
-resolved_by: live_data_persistence_central_event_log_2026_06_25.md
+resolved_by: live_data_persistence_central_event_log_2026_06_25.md # ANNOTATION 2026-07-14 (verify-rerun-2 finding 21): doc-frontmatter-schema.md requires resolved_by only when status=resolved, but status here is `blocked` per the 2026-06-30 body banner (hot-path decoupling shipped; durable warm-tier still not built) — left populated as a forward-pointer to the plan that partially resolved this issue rather than cleared, because this doc is locked_by: live-defi-rollout (annotate-not-flip per HARD GATE, not a status/archival edit); re-evaluate resolved_by when unlocking for archival
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 execution_scope: orchestrator-agent

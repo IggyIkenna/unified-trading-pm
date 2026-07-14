@@ -194,6 +194,33 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       209,526→200,165 (all now `data_type=odds_horizon_bucket` lowercase, 0 uppercase remaining), 9,361 stale
       disjoint-cell rows dropped (atoms already genuinely `captured`), 0 remaining stale overlap, 0 duplicate dedup-key
       rows, stable across 10+ live manifest-consolidator cycles (~9 min) post-apply.
+- [ ] [DATA] P1. **mdps_odds_horizon_bucket: close the 200,259-row historical backlog (NEW 2026-07-14).** — 4-VM sharded
+      `reprocess_sports_odds.py --force` backfill LAUNCHED and verified genuinely progressing (2020-06-06→ 2026-07-14,
+      see Progress Log "2026-07-14 ... launch bounded historical backfill" entry for full detail, VM names, and how to
+      check later) — **not yet closed to 0**, this is a multi-hour bounded job left running by design. Re-check later:
+      live-manifest re-read (`source=mdps_odds_horizon_bucket`, expect `expected_unattempted` trending down from 200,259
+      / `captured` up from 137,972 once each VM's end-of-run flush lands) or
+      `gcloud compute instances list --filter="name~mdps-sports-bucket-20260714-05"` for liveness (VMs self-delete on
+      completion). Small expected residual: the 2025-01-01→2026-07-14 shard crosses the already-documented 2026-06-21+
+      meta-snapshot raw-shape boundary — expect ~2,256 rows to land `attempted_failed` (`RAW_ODDS_SHAPE_UNRECOGNIZED`),
+      tracked as its own pre-existing gap, not a new defect.
+- [x] [DATA] P0. **reprocess_sports_odds.py: fix uncaught UnprovenHonestAbsenceError crash on every empty day (NEW
+      2026-07-14, found live while launching the historical backfill above).** — DONE, code fix +
+      production-scale-verified: `market-data-processing-service@7c5c74d`. 2 of the first 4 launched backfill VMs
+      crashed within ~10 minutes of launch (`mdps-sports-bucket-20260714-041833`/`-041913`) — `main()` called
+      `ManifestWriter.record_empty(reason=SOURCE_RETURNED_ZERO)` with no `FetchEvidence`, hard-raising
+      `UnprovenHonestAbsenceError` the moment it hit its FIRST genuinely-empty date (every real historical range has at
+      least one), silently losing every date's already-computed work since the single end-of-run `writer.write()` flush
+      never got reached. Root cause: this script was never updated when UTL's 2026-06-22
+      `data_pipeline_hardening_self_monitoring_2026_06_22` honest-absence-hardening keystone landed, requiring
+      `FetchEvidence` for that reason code. Fix: `reprocess_date()` now returns a 3rd `empty_kind` discriminator
+      distinguishing the one genuinely-clean, provable absence (`"no_raw_data"`, eligible for a synthetic
+      `FetchEvidence`) from two anomalous non-absence cases (`"missing_column"`/`"adapter_empty"`, raw bytes DO exist —
+      now correctly route to `record_failed` instead of being silently folded into `empty_confirmed`). Unit tests
+      updated + 2 new tests added; `quality-gates.sh --no-fix` green (incl. the pre-existing STEP 5.99 gate that would
+      have caught this). **Production-scale re-verified, not just unit-tested**: relaunched all 4 backfill VMs with the
+      fix — all 4 have now each hit multiple genuine `"no_raw_data"` empty-day events (the exact prior crash trigger)
+      with zero tracebacks, all still running. Full detail + evidence in the Progress Log entry below.
 - [x] [DATA] P1. **reprocess_sports_odds.py raw-input prefix-template refresh (NEW 2026-07-13).** — DONE, code fix +
       tests + live-verified: `market-data-processing-service@e8f6709` (also carried a pre-existing uncommitted,
       inherited-dead-WIP `_resolve_bucket()` project_id fix found sitting in the working tree at session start — see
@@ -243,6 +270,32 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       already-running bounded process. See the "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below for the
       full table, per-category verdicts, and the precise remaining-work list (each item is an existing `- [ ]` todo in
       §1, none newly discovered, none `BLOCKED-OPERATOR`).
+- [ ] [VERIFY] P1. **Live-execute the new `uts-prod-sports-enrichment-transfermarkt` daily job once** (NEW 2026-07-14,
+      scheduled-capture audit). footystats + soccer_football_info enrichment jobs were live-verified end-to-end this
+      session (see "SCHEDULED/DAILY CAPTURE AUDIT" Progress Log entry); transfermarkt shares the identical
+      `_sports_provider_short_circuit` code path but was not independently executed to avoid piling a 3rd concurrent
+      execution onto an already heavily-contended manifest mid-audit.
+      `gcloud run jobs execute     uts-prod-sports-enrichment-transfermarkt --region=asia-northeast1 --project=central-element-323112`,
+      then confirm a real `PLAYER_VALUES` write lands in the canonical `instruments-store-sports-prd` manifest.
+- [ ] [VERIFY] P1. **Re-verify Tier-3/4 fixture-proximate triggers actually fire post-fix** (NEW 2026-07-14).
+      `deployment-service@5da4b620` fixed `sports_trigger_state.py`'s fixture-calendar path/field-mapping bug (root
+      cause of the ENTIRE pre-match/post-match trigger tier being silently dead ≥14 days — 0 fixtures ever found by
+      `get_upcoming_fixtures()`). Not yet re-verified live post-fix. Check over the next few hours:
+      `gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="uts-prod-instruments-service-sports-fixtures" AND textPayload:"Sports entity filter from CLI"'`
+      for any value beyond FIXTURES/STANDINGS (e.g. WEATHER, XG, LINEUPS, PREDICTIONS, FIXTURE_STATS) — their presence
+      confirms the fix restored the whole Tier-3/4 mechanism (also feeds `features-sports-service-job`'s pre/post-match
+      compute triggers, a bigger blast radius than just this plan's 8 sources).
+- [ ] [DATA] P1. **`uts-prod-market-data-processing-t1-schedule` — daily NOT_FOUND, target Cloud Run Job deleted** (NEW
+      2026-07-14, scheduled-capture audit). Confirmed via `gcloud logging read     resource.type="cloud_scheduler_job"`
+      that this 01:00 UTC daily cron has failed `NOT_FOUND` every day for at least 07-12 through 07-14 (2 attempts/day,
+      both ERROR) — its target `uts-prod-market-data-processing-service-t1-recon` does not exist in
+      `gcloud run jobs list` at all. This is market-data-processing-service's generic T+1 candle-aggregation job (out of
+      this plan's `deployment-service`- scoped fix authority — needs a market-data-processing-service repo
+      investigation: was the job intentionally retired, or genuinely orphaned?). Separately, and more relevant to this
+      plan's `mdps_odds_horizon_bucket` scope: confirm whether that data_type's actual production path
+      (`deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` → `reprocess_sports_odds.py`) has ANY recurring
+      scheduled trigger at all, or is genuinely VM-launch-only (manual) — if the latter, design + ship a real daily
+      driver (same "sustained ≥99% going forward" bar as todo items above), not just another one-off launch.
 
 # 2. Definition of DONE
 
@@ -2421,3 +2474,367 @@ it's new adapter work, not a data-audit residual).
   footystats/soccer_football_info/open_meteo) was pruned during the incident window without its content ever reaching
   canonical — a dedicated recovery-and-reconcile dispatch is in flight (see the next Progress Log entry once it
   reports).
+
+- 2026-07-14 (slot-3, interactive session): **lost-shard recovery completed + a THIRD pause-without-resume incident + a
+  much bigger pre-existing footystats/ODDS gap surfaced.** The dedicated recovery agent (dispatched to reconcile the
+  lost 10,059-row shard from real GCS files rather than a wasteful re-fetch) hit a hard session-limit API error mid-task
+  ("Agent terminated early... resets 2:20am Europe/London") right as it finished writing
+  `instruments-service/scripts/reconcile_sports_lost_per_vm_shard_2026_07_13.py` — its last message was "Clean — only my
+  new file is untracked. Let's ship it," with the ship step never executed. Picked up directly:
+  - **Third pause-without-resume**: found both sports consolidator schedulers PAUSED again (`userUpdateTime` `23:59:40`
+    UTC, matching the dead agent's own `consolidator.lock` timestamp — it almost certainly paused them for its own
+    reconciliation work and got killed before resuming). Resumed both again. This is now **3-for-3** this session — the
+    `with_consolidator_paused()` wrapper hardening candidate flagged in the previous entry is no longer hypothetical,
+    it's now the clear highest-value follow-up to prevent a 4th recurrence.
+  - **Reconciliation dry-run, then real run**: verified the recovery agent's script logic directly (read in full — sound
+    design: scans real blobs under each entity's canonical `pipeline_mode=`-qualified path for every currently
+    `attempted_failed` date, cross-references against live manifest, backfills only genuinely-missing cells via a safe
+    per-VM-shard write, fail-honest on unreadable files). Dry-run then real run against production:
+    **footystats/PREDICTIONS**: 89 attempted_failed dates probed, 0 reconciled (0 real files found for the specific
+    still-failing cells — genuine residual, not lost bookkeeping). **footystats/ODDS**: 2,460 attempted_failed dates
+    probed, **961 rows genuinely reconciled** (real files existed, manifest bookkeeping was missing — overwhelmingly
+    `LA_LIGA_2`/`BRASILEIRAO`/`K_LEAGUE_1`, spanning 2019→2026) — verified landed in canonical post-consolidation
+    (spot-checked `2019-01-04/LA_LIGA_2` → `captured`). **soccer_football_info/SFI_PROGRESSIVE_STATS**: 0 reconciled
+    (110 already-captured, 0 no-real-file — the specific failing cells have no file). **open_meteo/WEATHER**: 0
+    reconciled (63 already-captured, 33 no-real-file). Shipped as `instruments-service@b70b8731` — via a **direct push**
+    (not quickmerge), because quickmerge's dirty-dependency pre-flight audit correctly refused (`unified-api-contracts`
+    had uncommitted changes from an unrelated concurrent agent's DeFi work) — this is the documented "dirty-deps"
+    direct-push carve-out, not a rule bypass.
+  - **New, much bigger, pre-existing finding — NOT part of this session's incident**: post-reconciliation,
+    `footystats/ODDS` still shows **13,449** `attempted_failed` rows — an order of magnitude larger than the ~175 this
+    plan originally tracked for footystats overall (§0's baseline audit undercounted ODDS specifically). The
+    `LA_LIGA_2`/`BRASILEIRAO`/`K_LEAGUE_1` concentration and multi-year date range (2019→2026) suggest a genuine,
+    long-standing capture gap for these leagues' ODDS predates today's consolidator incident entirely — **out of scope
+    for a quick round-4 residual-closer re-attempt**, filed here as a new P1 follow-up needing its own dedicated
+    investigation (why do these specific leagues fail so consistently for footystats ODDS — a real per-league adapter
+    issue, a rate-limit/backoff gap, or a genuine data-availability gap at the source — before sizing any re-fetch).
+  - **Multi-agent collision note**: shipping this file required temporarily working around TWO separate blocks of
+    unrelated concurrent WIP in the shared `instruments-service` clone (12 modified CeFi adapter files, 40+ modified
+    DeFi adapter files) plus the dirty `unified-api-contracts` dependency above — none touched or disturbed (verified
+    via `git stash push -- <exact paths>` / `git stash pop` round-trip when transiently shelving the CeFi files to test
+    QG in isolation, then abandoned that approach once the DeFi WIP appeared too, in favor of the sanctioned dirty-deps
+    direct-push carve-out).
+  - **Remaining after this dispatch**: footystats/PREDICTIONS (89), soccer_football_info/SFI_PROGRESSIVE_STATS (54),
+    open_meteo/WEATHER (51) still need an actual re-fetch (bounded residual-closer round 4) — reconciliation confirmed
+    these are genuine gaps, not lost bookkeeping. footystats/ODDS's 13,449 residual is the new P1 above, not a round-4
+    candidate.
+
+- 2026-07-14 (slot-3, dispatch — footystats/ODDS P1 root-cause RE-VERIFIED + round-4 confirmed genuinely closing it, not
+  a code bug): picked up the footystats/ODDS 13,449 P1 filed in the previous entry. The operator's own investigation
+  (relayed at dispatch, re-verified independently below rather than taken on faith) attributes 99%+ of it to
+  `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` — a conservative placeholder the v9 manifest-canonicalisation rebuild stamped
+  for `(league,date)` cells where it could not tell a genuine match-day-empty from a masked historical failure,
+  deliberately erring toward `attempted_failed` per the operator's 2026-06-02 CF-11 directive
+  (`plans/active/sports_manifest_canonicalisation_2026_06_01.md:441`) rather than risk silently swallowing a real gap —
+  **not a live fetch bug**, and the write-path bug that could originally cause such masking is already fixed
+  (`instruments-service@ceab7720` "CF-11", 2026-06-02 — verified real via `git log`/`git show`). Remediation is a live
+  re-attempt through the now-correct write path, which is exactly what
+  `sports_attempted_failed_residual_closer_2026_07_13.py` round 4 (PID 95616, launched ~02:31, `--max-rounds 8`,
+  `--vm-name sports-attempted-failed-residual-closer-round4`) already does for footystats broadly.
+  - **Re-verified live** (not trusted from the dispatch prompt): direct query of the canonical availability index
+    confirmed footystats/ODDS `attempted_failed` = 11,009 at first read (down from the 13,449 baseline — round 4 was
+    already chipping at it), breakdown `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE`=10,923 / `TimeoutError`=85 /
+    `ArrowTypeError`=1 — matches the operator's relayed figures almost exactly (99.2% CF-11 either way).
+    footystats/MATCHES already at 0 `attempted_failed`; PREDICTIONS steady at 89 (its residual dates haven't been
+    reached yet in round 4's chronological pass).
+  - **Round 4 confirmed genuinely progressing, not stalled/duplicated**: `ps aux` confirmed PID 95616 alive throughout
+    (a pre-existing zsh watcher, PID 4392, is already tailing its log to `/tmp/residual_closer_round4.log` on exit —
+    left untouched). Three live re-reads of the manifest ~7 minutes apart: 11,009 → 10,791 → 10,638 `attempted_failed`
+    (footystats/ODDS) — a real, monotonic drop of 371 rows in ~14 minutes, 0 `RAISED footystats` errors in the log, low
+    CPU (2-11%, confirming I/O-bound on the footystats API / GCS, not compute-bound). Per the dispatch's own instruction
+    ("if round 4 is still running... verify it's genuinely progressing rather than duplicating it"), this is the correct
+    call: **did NOT launch a round 5 or a VM** — round 4 is alive, healthy, and the single footystats API key means
+    added local/VM concurrency would mostly just risk hitting the SAME provider-side rate limit sooner, not speed up the
+    wall-clock. At the observed ~26 rows/min average (13,449→10,638 over ~105 min since round 4 started), full closure
+    is a multi-hour tail — consistent with the dispatch's own expectation, not a stall. Current state: **10,638
+    remaining** (footystats/ODDS), round 4 still running, no ETA promised beyond "hours, trending down."
+  - **ArrowTypeError row (1 of 11,009→10,638) investigated individually**: confirmed via `git show a4dfa6bd` that the
+    real historical bug (pyarrow rejecting a `pd.Timestamp` in the NaN-fill `kickoff_utc` string column) was fixed
+    2026-06-29, before this row's `written_at` (2026-07-13T23:50, almost certainly a re-stamp from the v9 rebuild's
+    blanket re-emission of pre-existing `attempted_failed` rows, preserving the original `error_reason` — not a fresh
+    failure). Directly re-invoked `_fetch_footystats_odds(date="2023-05-30", force=True)` live against prod: **succeeded
+    cleanly** — 12 real per-league odds rows fetched and captured, confirming the underlying fetch/parse has no live
+    bug. **However the specific manifest row does NOT self-clear**: the stale sentinel's `row_key` is the OUTER
+    catch-all `{date, data_type=ODDS}` with no `league_id` (from `footystats.py`'s top-level exception handler,
+    `_row_key` at line 880), while the current write path for a per-league date (confirmed: this date has genuine
+    per-league odds) always writes to the FINER `{date, data_type, league_id}` key — a coarse-vs-fine granularity
+    mismatch, not a parse bug. Re-read the manifest post-probe: the coarse sentinel is still `attempted_failed`
+    (expected — nothing writes to that exact coarse key once a date resolves per-league). Also checked whether
+    `reconcile_sports_lost_per_vm_shard_2026_07_13.py` (the sibling reconciliation tool) would clear it — no: its own
+    `_discover_real_cells` only matches league-partitioned blobs (`_LEAGUE_RE`) and explicitly documents bare-key files
+    as "not the observed shape for these 4 entities," so it never touches this row either. **Did NOT force a
+    `record_captured` at the coarse key** — no real parquet exists at that non-league-partitioned canonical path, and
+    writing one would manufacture a `phantom_captured_no_parquet_at_canonical_path` row, the exact class of bug this
+    plan exists to eliminate. **Verdict: one-off, already-explainable bookkeeping artifact, safe to leave** — real fix
+    (adding an explicit supersession write, e.g. a `record_empty`/similar at the coarse key once a date's per-league
+    loop completes with zero `_odds_failed_leagues`) is a genuine small code change but touches
+    `instruments_service/engine/orchestrator/footystats.py`'s shared write path; deferred as its own precise follow-up
+    rather than rushed in this dispatch (1 row out of >10,000, non-blocking). **Follow-up todo**: `footystats.py`
+    per-league ODDS success branch should also supersede any pre-existing coarse `{date, data_type=ODDS}`
+    `attempted_failed` sentinel once all expected leagues for that date resolve captured/empty, so this class of
+    residual can't recur or outlive its accuracy.
+  - **Consolidator safety**: no pause needed (only did per-VM-shard live reads + one exploratory per-VM-shard write for
+    the ArrowTypeError probe under a throwaway `VM_NAME`, both always-safe per the mandatory rules) — confirmed both
+    `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` schedulers `ENABLED` via a read-only
+    `gcloud scheduler jobs describe` (no 4th pause-without-resume incident this dispatch).
+  - **api_football's own separate residual closer** (PID 10471,
+    `--vm-name api-football-attempted-failed-residual-closer`, unrelated to footystats/ODDS, its own P1 from an earlier
+    entry) was seen alive in `ps aux` and left completely untouched — out of this dispatch's scope.
+  - **Net**: footystats/ODDS root cause re-confirmed as NOT a live code bug (write-path fix already shipped 2026-06-02);
+    round 4 is the correct, already-in-flight mechanism and is measurably closing the gap (13,449 → 10,638 so far); no
+    new process launched (would duplicate, and wouldn't clearly speed up an API-rate-limited workload); the 1
+    ArrowTypeError row is fully explained, confirmed non-bug, and documented with a precise (not-yet-shipped) follow-up.
+    **Not yet closed to 0** — this is expected and acceptable per the dispatch's own framing; round 4 should be left
+    running and re-checked later (`ps -p 95616`, then re-read `footystats/ODDS attempted_failed` off the canonical
+    index) rather than duplicated.
+
+- **2026-07-14 (slot-3, sub-agent dispatch — SCHEDULED/DAILY CAPTURE AUDIT for all 8 in-scope sports sources, "sustained
+  ≥99% going forward" ask, not one-time backfills).** Full audit + fixes, `deployment-service` scope. **Two real,
+  previously-undetected bugs found and fixed; one PAUSED-job pair confirmed intentionally deprecated; one adjacent
+  broken scheduler found and documented (not fixed — different repo/pattern, filed as a follow-up).**
+
+  **(1) ROOT CAUSE — footystats (MATCHES/ODDS/PREDICTIONS), transfermarkt (PLAYER_VALUES), soccer_football_info
+  (SFI_PROGRESSIVE_STATS) had ZERO scheduled driver, ever.** Traced the full dispatch graph by READING the code (not
+  inferring from job names): the 4x-daily `uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1- schedule` crons all hit
+  the SAME Cloud Run Job (`uts-prod-instruments-service-sports-fixtures`) with baked default args
+  `--sports-provider=API_FOOTBALL` — `process_preflight.py:_apply_sports_provider_filter` NARROWS `active_venues` to
+  API_FOOTBALL only for that invocation, so `process_enrichment.py`'s footystats/transfermarkt/SFI blocks never run
+  (their `"X" in active_venues_set` guards are False). The 5-min `uts-prod-sports-scheduler-cron`
+  (`sports_trigger_scheduler` + `configs/sports-trigger-tiers.yaml`) never names MATCHES / ODDS(footystats) /
+  PLAYER_VALUES / SFI_PROGRESSIVE_STATS as a `--sports-entity` in ANY tier (grepped the live YAML — zero occurrences).
+  **Empirically confirmed via `gcloud logging read` over the preceding 14 days**: zero
+  `Sports provider filter from CLI: FOOTYSTATS|TRANSFERMARKT|SOCCER_FOOTBALL_INFO` invocations of the Cloud Run Job, and
+  zero non-FIXTURES/STANDINGS `Sports entity filter from CLI` values either — every "fresh" capture visible in the
+  manifest for these 3 sources (tens of thousands of rows, `written_at` clustered on 2026-07-13/14) was from THIS SAME
+  plan's own manual one-off backfill/residual-closer scripts run by concurrent agents today, not sustained automation —
+  confirming the exact risk the dispatch brief named ("not just today's one-time backfills"). **Fix shipped**: new
+  terraform `terraform/gcp/sports_enrichment_provider_scheduler.tf` — 3 new daily Cloud Scheduler jobs
+  (00:35/00:40/00:45 UTC) each triggering a NEW dedicated Cloud Run Job
+  (`uts-prod-sports-enrichment-{footystats,transfermarkt,soccer-football-info}`) with baked
+  `--sports-provider={FOOTYSTATS,TRANSFERMARKT,SOCCER_FOOTBALL_INFO}` args. No new image/IAM needed — reuses the EXACT
+  `instruments-service:latest` image + `unified-trading-sa` runtime service account the existing (working)
+  sports-fixtures job already uses (confirmed via `gcloud run jobs describe` that SA already resolves all 5 sports API
+  keys), and the scheduler invoker identity reuses `local.t1_service_account_email` (`t1_batch`), which already carries
+  a project-wide `roles/run.invoker` binding — zero new IAM resources. `terraform plan -target=...` confirmed a clean "6
+  to add, 0 to change, 0 to destroy" before applying (real prod state, `terraform/state/prod`, 519 pre-existing
+  resources — verified pointed at the right state before touching anything). **Live-verified end to end, not just
+  planned**: manually executed the FOOTYSTATS path first via `gcloud run jobs execute ... --args=...` (execution
+  `uts-prod-instruments-service-sports-fixtures-lx6sw`, explicit `--start-date/--end-date=2026-07-14`) — confirmed real
+  captures (`FootyStats predictions: 1 rows written`,
+  `ManifestWriter: updated availability index ... in instruments-store-sports-prd-central-element-323112` — the
+  canonical bucket) and a legitimate `0` for MATCHES that day (no bug, footystats' own coverage). Then applied the
+  terraform + directly executed the NEW `uts-prod-sports-enrichment-soccer-football-info` job — **first attempt OOM'd**
+  (`signal 9`, "configured memory limit was reached" at my initial 2cpu/8Gi sizing, matched to the sibling
+  `understat-eu-typing-sweep` job which does a much narrower typing pass) — resized to 8cpu/32Gi (matching the
+  PROVEN-safe sports-fixtures job, which reads the identical ~5-6M-row manifest successfully today), re-applied (clean
+  3-resource in-place update plan, applied), and **re-executed successfully past the prior OOM point** (progressed
+  through `SFI league mapping cache hit`, `SFI progressive stats: no completed matches for date=2026-07-14` — honest
+  zero, not a bug — then into the normal generation-conflict retry/fallback cycle every other live write hit today).
+  TRANSFERMARKT not independently live-executed in this pass (identical `_sports_provider_short_circuit` code path per
+  `process_preflight.py`, code-symmetric confidence, chose not to add a 3rd concurrent execution against an already
+  heavily-contended manifest mid-audit). **Commits**: `deployment-service@5da4b620` (scheduler+job terraform, initial
+  2cpu/8Gi) + `deployment-service@0f862b6e` (resize fix to 8cpu/32Gi after the live OOM) — both via quickmerge, both
+  QG-green. Re-read the canonical manifest post-write: `footystats` ODDS/PREDICTIONS `max_written_at` advanced to
+  `2026-07-14T03:53` (today, post-fix, consolidated into the canonical index) — confirms the writes landed for real, not
+  just per-VM-shard.
+
+  **(2) ROOT CAUSE — the ENTIRE Tier-3/4 fixture-proximate trigger system (pre-match odds/predictions/lineups/ weather,
+  post-match stats/xg/features) has been silently dead for ≥14 days — a genuine code bug, now fixed.** Investigating why
+  zero non-FIXTURES/STANDINGS entities ever dispatch via the 5-min scheduler led to
+  `deployment_service/sports_trigger_state.py:get_upcoming_fixtures()`: live-called it directly
+  (`GCP_PROJECT_ID=central-element-323112 .venv/bin/python -c "..."`) and got **0 fixtures found (scanned 3 parquets)**
+  despite football matches genuinely happening today. Root-caused via direct GCS listing: the function's two hardcoded
+  `_fixture_path_patterns` (`sports_reference/fixtures/day={date}/` legacy, and
+  `sports_reference/by_date/day={date}/entity=fixtures/` "new") **neither matches the CURRENT instruments-service writer
+  shape**, which is
+  `sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/ entity=fixtures_schedule/league={league}/fixtures_schedule.parquet`
+  (confirmed via direct `list_blobs` — e.g.
+  `.../day=2026-07-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/league=UCL/fixtures_schedule.parquet`
+  exists and is fresh, written by TODAY's own re-triggered fixtures run). **Compounding second bug**: even the
+  matching-path parquet's actual columns (`timestamp`, `af_fixture_id`, `af_league_id`, `af_home_name`, `af_away_name`)
+  don't match the field names the reader expected (`kickoff_utc`, `fixture_id`, `league_id`, `home_team`, `away_team`) —
+  a `prefix_tpls`-drift-class bug (per CLAUDE.md's own named failure class) compounded by a stale field-mapping,
+  together fully explaining why `evaluate_pre_match_triggers`/`evaluate_post_match_triggers` never had anything to
+  evaluate (empty fixture list every single poll, silently, no error — `run_once()`'s own "No upcoming fixtures —
+  periodic-only cycle" INFO log, never surfaced as a failure). This directly explains the designed-but-dead drivers for
+  WEATHER (`odds_t1h` trigger) and understat XG (`stats_delayed` trigger) named in this plan's scope, plus
+  LINEUPS/PREDICTIONS(api_football pre-match)/FIXTURE_STATS/features-sports-service's own pre/post-match compute
+  triggers (bigger blast radius than just this plan's 8 sources, flagging for visibility). **Fix shipped** (same
+  `deployment-service@5da4b620` commit): added the correct current-shape path pattern to `_fixture_path_patterns`, and
+  made the row-parse fall back to the new field names
+  (`timestamp`/`af_fixture_id`/`af_league_id`-or-path-parsed/`af_home_name`/`af_away_name`) when the legacy names are
+  absent — fully backward-compatible (verified the 4 existing `tests/unit/test_sports_tier3_fixture_diagnostic.py`
+  mock-based tests still construct/assert against the OLD field names and still pass, since
+  `MagicMock().name.split ("/")` safely returns `[]` for the mocked blobs, and the `or`-chain prefers the old names when
+  present). Full `quality-gates.sh` run (not `--quick`, fresh non-cached run) passed clean, incl. this file's unit tests
+  (confirmed the gate's `[3/6] TESTS` stage genuinely executes `tests/unit/` under `PYTEST_UNIT_DIR` — the visible "6
+  passed" is a SEPARATE always-run PM cross-repo integration sanity check, not this repo's own suite, which streams to a
+  temp log and only ever prints on failure — did not mistake the wrong stage for "0 real tests ran"). **Not yet
+  independently re-verified live post-fix** (WEATHER/XG/LINEUPS/PREDICTIONS actually firing on the next 5-min poll
+  against a real upcoming/recent fixture) — time-budget cutoff for this dispatch; flagging as an explicit follow-up
+  verification (`ps`/logging-read `Sports entity filter from CLI` for anything beyond FIXTURES/STANDINGS over the next
+  few hours) rather than claiming false-certain completion.
+
+  **(3) The 2 PAUSED jobs (`uts-prod-features-sports-t1-schedule`, `features-sports-service-daily-trigger`) — CONFIRMED
+  intentional deprecation, NOT a forgot-to-resume oversight. Left paused, no action.** Both `userUpdateTime` within 2
+  minutes of each other (`2026-06-08T04:14:53Z` / `04:16:20Z`) — a deliberate coordinated pause, not an accident.
+  `uts-prod-features-sports-t1-schedule` targets `uts-prod-features-sports-service-t1-recon`, a Cloud Run Job that **no
+  longer exists** (`gcloud run jobs list` — zero match) — the target itself was retired, not just the schedule.
+  `features-sports-service-daily-trigger` targets a GCP Workflows execution (`features-sports-service- daily`, still
+  exists, just not auto-triggered). Both are superseded by the fixture-proximate `features-sports- service-job`
+  (confirmed live in `gcloud run jobs list`) wired into `sports-trigger-tiers.yaml`'s `features_pre_match` (T-1h) /
+  `features_post_match` (T+25h) triggers, dispatched by the (now-fixed, see (2) above) 5-min scheduler — matches this
+  codebase's own stated architecture ("sports 'live' = batch, fixture-proximate, not fixed daily cron"). No terraform
+  change made (leaving the dangling dead-target scheduler entries in place, paused, is safe; a future hygiene pass could
+  delete them outright — not done here, out of this audit's scope).
+
+  **(4) Adjacent finding, NOT fixed in this pass (different repo/pattern, flagging clearly per the "big finding" triage
+  rule) — `uts-prod-market-data-processing-t1-schedule` (01:00 UTC daily, ENABLED) has been failing `NOT_FOUND` every
+  single day for at least the last several days** (confirmed via
+  `gcloud logging read resource.type="cloud_scheduler_job"` — 2 ERROR/NOT_FOUND entries per day, 07-12 through 07-14).
+  Its target, `uts-prod-market-data-processing-service-t1-recon`, **does not exist** in `gcloud run jobs list` at all.
+  This is market-data-processing-service's GENERIC T+1 candle-aggregation job (not sports-specific), so it's a broader
+  pre-existing infra bug, not one of this plan's 8 named sources directly — but it's the closest thing to a "daily
+  driver" context for `mdps_odds_horizon_bucket`, whose actual production mechanism (per this plan's own 2026-07-13
+  entry) is a DEDICATED VM launcher (`deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` →
+  `reprocess_sports_odds.py`), run manually/ one-off, not a recurring cron — meaning `mdps_odds_horizon_bucket` likely
+  has the SAME "no sustained daily driver" exposure as (1) above, just via a different (VM-launch, cross-repo) pattern
+  that needs its own dedicated design pass rather than a rushed patch here. **Not fixed in this dispatch** — flagging as
+  a new P1 follow-up todo (below) rather than either silently leaving it or rushing an under-scoped fix to a different
+  repo's VM-launch pattern under time pressure.
+
+  **(5) Per-source scheduled-capture summary table** (source → scheduler mechanism → last verified healthy →
+  same-bucket-as-batch confirmed):
+
+  | source                   | scheduler / mechanism                                                                                                                                                                                         | last verified healthy                                                                                                                                                                                                                          | same bucket as batch                                                                                                        |
+  | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+  | api_football             | 4x-daily `uts-prod-sports-fixtures-*` (API_FOOTBALL-scoped) + 5-min `uts-prod-sports-scheduler-cron` Tier1/2                                                                                                  | noon/6pm/midnight (07-12,07-13) succeeded; TODAY's 00:00 run failed transiently (`ManifestConsolidatorStaleError`, self-healed consolidator state) — manually re-triggered, **succeeded** (22m31s, 374+ new rows for 2026-07-14, consolidated) | YES (log-confirmed `instruments-store-sports-prd-central-element-323112`)                                                   |
+  | footystats               | **NEW** `uts-prod-sports-enrichment-footystats-daily` (00:35 UTC)                                                                                                                                             | **live-verified today** (execution `lx6sw`: PREDICTIONS/ODDS real rows written, consolidated)                                                                                                                                                  | YES (log-confirmed)                                                                                                         |
+  | soccer_football_info     | **NEW** `uts-prod-sports-enrichment-soccer-football-info-daily` (00:45 UTC)                                                                                                                                   | **live-verified today** post-resize (execution `86cvl`: reached honest-zero SFI progressive result, no crash)                                                                                                                                  | YES (same code path)                                                                                                        |
+  | transfermarkt            | **NEW** `uts-prod-sports-enrichment-transfermarkt-daily` (00:40 UTC)                                                                                                                                          | not independently live-executed (code-symmetric w/ footystats) — **follow-up: execute once to confirm**                                                                                                                                        | YES (same code path, by symmetry)                                                                                           |
+  | open_meteo (WEATHER)     | 5-min scheduler Tier3 `odds_t1h` (fixture-proximate) — was DEAD (fixture-calendar bug), **fixed this session**                                                                                                | not yet re-verified live post-fix — **follow-up: confirm within next few hours**                                                                                                                                                               | YES (same manifest writer)                                                                                                  |
+  | understat (XG/XG_SHOTS)  | 5-min scheduler Tier4 `stats_delayed` (fixture-proximate) — was DEAD (same bug), **fixed this session**; separately `understat-eu-typing-sweep-daily` (03:00 UTC, typing-only, unaffected, confirmed healthy) | not yet re-verified live post-fix — same follow-up as WEATHER                                                                                                                                                                                  | YES                                                                                                                         |
+  | odds_api (MTDS raw)      | MTDS T+1 `market-tick-data-fast` (00:30 UTC)                                                                                                                                                                  | **healthy** — succeeded every day 07-09 through 07-14 without exception (6/6 checked)                                                                                                                                                          | YES (362,631-row migration confirmed holding 07-13, re-confirmed today: 561,048 captured `trades` rows in canonical bucket) |
+  | mdps_odds_horizon_bucket | VM launcher (`launch-mdps-sports-bucket-vm.sh`), one-off/manual, NOT a recurring cron                                                                                                                         | last run 07-13 (per this plan's own prior entry); the ADJACENT generic MDPS t1-recon cron is broken, see (4)                                                                                                                                   | YES (bucket-routing split-brain fixed 07-13, still holding: 137,972 captured rows, fresh `written_at`)                      |
+
+  **New follow-up todos filed in §1** (not silently deferred): (a) live-execute the new TRANSFERMARKT enrichment job
+  once to close the one source not independently proven this pass; (b) re-verify Tier-3/4 fixture-proximate triggers
+  actually fire post-fix (WEATHER/XG/LINEUPS/PREDICTIONS/features-sports-service) over the next few hours; (c)
+  investigate + fix the broken `uts-prod-market-data-processing-t1-schedule` → non-existent target Cloud Run Job
+  (market-data-processing-service repo, out of this dispatch's scope) and design a genuine recurring driver for
+  `mdps_odds_horizon_bucket` (currently VM-launch-only). **No consolidator schedulers were paused in this dispatch**
+  (read-only `describe` checks only) — both `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron`
+  confirmed `ENABLED` throughout, healthy executions every ~1 min start to finish of this session.
+
+- 2026-07-14 (sub-agent, dispatch: launch bounded `mdps_odds_horizon_bucket` historical backfill now that the root-cause
+  grain-realignment fix was already shipped/verified). **Backlog confirmed + closed a NEW P0 production-blocking bug
+  discovered live; backfill now genuinely running.**
+  - **Backlog re-confirmed via live manifest read** (`instruments-store-sports-prd-central-element-323112`,
+    `read_availability_index` + `resolve_bucket_name(kind="instruments-store", asset_group="sports")`):
+    `source=mdps_odds_horizon_bucket` — captured **137,972**, attempted_failed **0**, expected_unattempted **200,259** —
+    matches the dispatch brief exactly. 2,230 distinct backlog dates, 2020-06-06→2026-07-14, ~90 rows/date (median 92,
+    max 94) — confirmed this is NOT a sparse recent-days-only gap: EVERY one of the 2,230 backlog dates already has SOME
+    captured rows too (1,813 of 2,230 dates overlap 100% with the captured-date set), meaning the backlog is cells
+    scattered THROUGHOUT already-partially-processed history, not just the daily-job's trailing edge. This directly
+    determined the launch mode: `reprocess_sports_odds.py`'s pre-flight skip key is COARSE (`{date, venue, data_type}`,
+    no `league_id`/`timeframe`) — a plain (non-`--force`) run would skip nearly every backlog date outright (since
+    almost all already have a coarse `captured` row from a prior partial pass), permanently missing the true per-shard
+    gap. **`--force` across the FULL date range is therefore required**, not optional — documented in the launcher's own
+    docstring now (see code-fix below).
+  - **Decision: VM-sharded, not local/direct.** 2,230 dates × real per-league/per-bookmaker GCS reads is squarely
+    outside "small enough to run directly on this host" — confirmed by the launcher's OWN docstring precedent (built for
+    exactly this kind of full-history sweep, target <1hr via 4-VM sharding). Reused
+    `deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` unmodified in its core logic (found via the
+    documented grep-the-registry-first pattern — this launcher already existed, registered in
+    `vm_prefix_registry.py`/`launcher_registry.py`, dispatched by `setup-data-pipeline-vm.sh`'s
+    `VM_TASK= mdps-sports-bucket` branch). Sharded the 2020-06-06→2026-07-14 range across 4 VMs, `--workers 16`, `force`
+    mode, mirroring the launcher's own documented example slicing (extended past its original 2026-04-14 end date to
+    today): `2020-06-06→2021-12-31` / `2022-01-01→2023-06-30` / `2023-07-01→2024-12-31` / `2025-01-01→2026-07-14`.
+  - **Pre-launch fix #1 — launcher had NO SPOT provisioning at all (bug, not just missing polish).** Read the launcher
+    end-to-end before using it (per the mandatory grep-then-READ rule) and found it called
+    `gcloud compute instances create` with zero `--provisioning-model` flag — silently defaulting every VM to on-demand,
+    a direct violation of `codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Fixed:
+    `deployment-service@0e7d771` adds
+    `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure` by default with a
+    `--on-demand`/`ON_DEMAND=true` opt-out, mirroring `launch-mdps-backfill-vm.sh`'s existing convention exactly.
+    Shipped via direct push (dirty-deps carve-out — `scripts/vm/setup-data-pipeline-vm.sh` had unrelated foreign
+    uncommitted WIP from another concurrent agent in this shared clone throughout this entire dispatch, confirmed
+    untouched via `git status`/`git diff --cached --stat` before every commit).
+  - **Pre-launch fix #2 — 2 of 5 code tarballs stale** (`unified-trading-library`, `deployment-service`) vs local HEAD,
+    per `lc_verify_tarball_freshness`'s own live check. Republished via `create-code-tarballs.sh`; hit the SAME
+    dirty-foreign-file blocker (script `set -euo pipefail`s on ANY dirty CORE repo, aborting before it even reaches the
+    upload step) — worked around with a `git worktree add --detach HEAD` clean checkout + a `WORKSPACE_ROOT`-overridden
+    symlink tree pointing the tarball builder at the clean worktree instead of the dirty real clone, leaving the foreign
+    agent's uncommitted WIP completely untouched throughout. Confirmed all 5 repo tarballs byte-exact-SHA-matched local
+    HEAD before the first launch.
+  - **FIRST launch (4 VMs, 04:18-04:20 UTC) — 2 of 4 CRASHED within ~10 minutes, a NEW P0 bug, not a launch-config
+    issue.** `mdps-sports-bucket-20260714-041833` (2020-06-06→2021-12-31, reached 542/574) and `-041913`
+    (2022-01-01→2023-06-30, reached 513/546) both terminated with an uncaught
+    `unified_api_contracts.canonical.crosscutting.honest_coverage.UnprovenHonestAbsenceError` the moment `main()`'s
+    per-day consumption loop processed its FIRST `empty_confirmed`-status date
+    (`writer.record_empty(reason= SOURCE_RETURNED_ZERO)` called with NO `FetchEvidence`). Root cause:
+    `reprocess_sports_odds.py` was never updated when UTL's 2026-06-22
+    `data_pipeline_hardening_self_monitoring_2026_06_22` honest-absence-hardening keystone started HARD-requiring a
+    `FetchEvidence` proving a clean 200+empty result for that reason code — every meaningful-length historical date
+    range contains at least one genuinely-empty day, so this was a 100%-reproducible crash for ANY non-trivial run,
+    silently losing every date's already-computed captured/bucketed work in that run (the single end-of-run
+    `writer.write()` flush never got reached). Confirmed via live VM tracebacks (`row_key={'date': '2022-01-04', ...}`
+    etc) — both crashed VMs self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`; the other 2 (`-041954`, `-042032`, still
+    healthy, not yet hit an empty day) were manually deleted rather than left to run toward the same guaranteed fate.
+  - **Fix shipped**: `market-data-processing-service@7c5c74d`. `reprocess_date()` now returns a 3rd `empty_kind`
+    discriminator distinguishing the ONE genuinely-clean, provable absence (`"no_raw_data"` — both canonical GCS
+    prefixes + the legacy fallback listed successfully, zero blobs found anywhere; eligible for a synthetic
+    `FetchEvidence` mirroring the existing correct pattern in
+    `market-tick-data-service/scripts/_rebuild_sports_write.py`'s historical-rebuild evidence construction) from two
+    anomalous, NOT-honest-absence cases (`"missing_column"` / `"adapter_empty"` — raw bytes DO exist but are malformed
+    or filtered to zero by the adapter) which now correctly route to `record_failed` with new
+    `_MISSING_REQUIRED_COLUMN_ERROR_CODE`/`_ADAPTER_EMPTY_OUTPUT_ERROR_CODE` instead of being silently folded into
+    `empty_confirmed`. Threaded through `_process_one_date`'s and `main()`'s tuple signatures; updated the existing unit
+    test file for the new 3-tuple return + added 2 new tests covering the missing_column/adapter_empty → record_failed
+    paths. `quality-gates.sh --no-fix` green, including STEP 5.99 ("every except-reachable SOURCE_RETURNED_ZERO write
+    carries fetch_evidence") passing clean for this file — this QG rule already existed and would have caught this exact
+    defect class had it been re-run against this script since 2026-06-22.
+  - **Direct reproduction against the actual crash-triggering date** (`2022-01-04`, local one-off `--force` run, single
+    date, pre-relaunch): confirmed the fix works — `"No raw odds data for 2022-01-04 — skipping"` →
+    `"Writing manifest (0 captured + 1 empty_confirmed + 0 attempted_failed + 0 shard entries)..."` with NO traceback
+    (pre-fix this exact date crashed the whole process). The run then hit several
+    `ManifestWriter: generation conflict (attempt N/15), retrying...` cycles against the LIVE per-minute consolidator —
+    a separate, already-documented, self-resolving CAS-contention pattern (same class as this plan's earlier
+    `reconcile_mdps_odds_horizon_bucket_eu_grain` entry), NOT a bug; killed after ~7 min mid-retry (CAS is
+    all-or-nothing, no partial-write risk) once the relaunched VMs had already independently confirmed the real fix
+    end-to-end at production scale (see below) — not worth blocking further on a slow local single-date diagnostic.
+  - **RELAUNCHED all 4 VMs (05:02-05:04 UTC) with the fixed code, same 4 date shards, all 5 tarballs re-verified fresh**
+    (`market-data-processing-service@7c5c74d`, `deployment-service@0f862b6` — one more unrelated commit had landed on
+    deployment-service meanwhile; `market-tick-data-service` also had unrelated foreign dirty files this time, same
+    clean-worktree-symlink workaround applied). **Definitive fix confirmation, live-verified ~5-6 minutes into the
+    relaunch**: all 4 VMs have now each hit MULTIPLE genuine `"no_raw_data"` empty-day events — the EXACT condition that
+    crashed 2 of 4 VMs on the first launch — with **zero tracebacks, zero crashes, all 4 still RUNNING**:
+    `mdps-sports-bucket-20260714-050241` 12 empty-days hit, at [183/574]; `-050324` 4 empty-days hit, at [201/546];
+    `-050402` 15 empty-days hit, at [131/550]; `-050444` 1 empty-day hit, at [55/560]. This is conclusive,
+    production-scale proof the crash is fixed, not just a unit-test assertion.
+  - **Current state as of this entry (do not re-poll faster than ~hourly — this is a multi-hour bounded job)**: all 4
+    VMs RUNNING, SPOT-provisioned, genuinely progressing (confirmed via both live idx counters AND real bucketed parquet
+    files landing in GCS, e.g.
+    `gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/ day=2022-08-08/pipeline_mode=batch_mdps_odds_horizon_bucket/.../league_id={9 leagues}/`),
+    each `VM_SHUTDOWN_ON_ COMPLETION=true` (self-terminates on completion or failure — check
+    `gcloud compute instances list --project= central-element-323112 --filter="name~mdps-sports-bucket-20260714-05"` for
+    liveness). **How to check on it later**:
+    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/run.log | tail -50` per VM name below,
+    or re-read the live manifest (`source=mdps_odds_horizon_bucket`, `expected_unattempted` should trend down from
+    200,259 and `captured` up from 137,972 once each VM's single end-of-run `writer.write()` flush lands — expect that
+    flush itself to take several minutes per VM due to the same CAS-generation-conflict-retry pattern documented above,
+    this is normal, not a stall). VM names: `mdps-sports-bucket-20260714-050241` (2020-06-06→ 2021-12-31),
+    `mdps-sports-bucket-20260714-050324` (2022-01-01→2023-06-30), `mdps-sports-bucket-20260714-050402`
+    (2023-07-01→2024-12-31), `mdps-sports-bucket-20260714-050444` (2025-01-01→2026-07-14). **Known, expected,
+    non-blocking residual**: `-050444`'s range crosses the already-documented 2026-06-21+ "meta-snapshot" raw-odds shape
+    boundary (`RawOddsShapeUnrecognizedError`, existing 2026-07-13 fix scope) — expect a small (~24-day × ~94-rows/day ≈
+    2,256-row) `attempted_failed` residual for that VM specifically, tracked separately, NOT a regression from this
+    dispatch's work. **Consolidator safety**: no pause needed or performed — this dispatch used only VM per-shard
+    writes + one local single-date CAS-safe write (killed mid-retry, all-or-nothing, no partial state) — confirmed both
+    `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` schedulers `ENABLED` and untouched throughout
+    via read-only `describe` checks.
+  - **No todo left open for the mdps_odds_horizon_bucket historical-backlog closure task itself** — the backfill is
+    genuinely, verifiably running at production scale with the correct fix; final full-closure verification (all 4 VMs
+    reach 100%, manifest `expected_unattempted` for this source trending to ~0 or a documented residual) is correctly
+    left for a LATER check per this dispatch's own "don't need to wait for full completion, verify genuine progress"
+    mandate — not a gap, an intentional multi-hour-job handoff.

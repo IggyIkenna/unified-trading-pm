@@ -26,7 +26,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-last_updated: 2026-06-27
+last_updated: 2026-07-14 # (was: 2026-06-27 — bumped with the BITGET-FUTURES wave failure correction entry)
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
@@ -231,8 +231,12 @@ BLOCKED.
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
       (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
       (Layer-1) `layer_1.by_asset_group.cefi.denominator_complete == True` (100%, `missing_tuples == []`) in the same
-      coverage.json — Layer-1 currently 79.55% with 9 real holes + the denominator-gap work in
-      `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, so G4 cannot close before that lands. Verdict to Progress
+      coverage.json — **[Corrected 2026-07-14, finding 26]** (was: a baked-in "Layer-1 currently 79.55% with 9 real
+      holes" baseline that never matched any logged run in this doc, incl. the 07-03 runs closest to it at 61.4%/17 and
+      73.61%/19 tuples) — Layer-1 last measured 91.78% (6 missing tuples) at the 2026-07-13T23:22Z→2026-07-14T00:05Z
+      session close (see Progress Log "G4 Session Close-out"); re-run `measure_honest_coverage.py` fresh before relying
+      on any number here, this line is a point-in-time snapshot, not the gate's live source of truth. G4 cannot close
+      before the denominator-gap work in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` lands. Verdict to Progress
       Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
 - [x] ✅ [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a
       pre-purge `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12,
@@ -2077,3 +2081,530 @@ root-caused, and fixed; the session's own mistakes — wrong root-cause diagnosi
 caught, corrected, and documented rather than papered over) but the gate is large enough that full closure spans
 multiple sessions, consistent with every prior "G4 Re-Verification Run #N" entry in this plan's history. Handing off
 cleanly here.
+
+---
+
+### CORRECTION — BITGET-FUTURES 6-VM wave FAILED on Tardis concurrent-IP lockout — 2026-07-14T02:00Z (doc-reconciliation close-out check)
+
+The 23:00-23:22Z entry above left the 6 BITGET-FUTURES shards as "actively fetching — continuing to monitor". **Actual
+outcome: all 6 failed and self-deleted.** Run-log evidence
+(`gs://deployment-scripts-central-element-323112/vm-logs/cefi-bitget-futures-{2024,2025,2026}-{heavy,light}-20260713-231539/run.log`):
+
+- 3 shards (2024-heavy, 2025-light, 2026-light) show explicit terminal
+  `DEPLOYMENT_FAILED cause=stall reason=WORKER_STALLED mode=no-progress-marker stalled_for=1800` with `exit_code=137`
+  (deployment archive ids `3367691e`, `39dbb6f3`, `73d73b87`), followed by `VM_SHUTDOWN_ON_COMPLETION` self-delete.
+- The other 3 (2025-heavy, 2026-heavy, 2024-light) have log tails mid-churn on the SAME failure signature and the VMs
+  are gone from `gcloud compute instances list` (not even TERMINATED) — same stall→self-delete path, final log lines
+  just not uploaded.
+- Failure mode on every shard: `Tardis HTTP 403 code=274 concurrent-IP-lock` on effectively every streaming request —
+  **6 parallel VMs = 6 concurrent IPs against the single-concurrent-IP academic key**, the exact class documented in
+  `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` and the reason `TardisConcurrencyLease` exists and
+  the operator ruled "lease-only, slow burn" (single-VM / serialized shape). Some early requests before mutual lockout
+  may have landed rows; coverage delta unmeasured this check (next `measure_honest_coverage.py` run will show it).
+
+**Directive for the relaunch (do NOT repeat the parallel shape):** ONE VM at a time (or lease-serialized) for all
+Tardis-sourced venues — a single large VM gets one IP and can still parallelize intra-VM across symbol/day streams
+without tripping the per-IP lock. Relaunch decision deliberately left to the operator/owning lane rather than fired
+autonomously here, because the 23:22Z entry also records backfill launches as gated on the P0 migration collision.
+Operator has been notified via the doc-reconciliation session report.
+
+---
+
+### G4 Re-Verification Run #6 — 2026-07-14T03:45-04:12Z (data_engineering slot-2): 2 real bugs found + fixed, live-verified
+
+Fresh `measure_honest_coverage.py --asset-group cefi` re-run (03:47Z): **Layer-1 improved to 94.5%** (69/73 matched, 4
+missing — down from 91.78%/6-missing at last session's close). `COINBASE-CDE/future/trades` and
+`COINBASE-FUTURES/spot_pair/trades` (the two "pending consolidator"/"measurement anomaly" gaps from the prior close-out)
+are both now **CONFIRMED CLOSED**. Layer-2: captured=2,255,463 / af=1,878 / eu=213,672 / coverage=91.28%.
+
+**Remaining 4 Layer-1 missing tuples:** `(BITGET-FUTURES, future, book_snapshot_5)`,
+`(BITGET-FUTURES, future, derivative_ticker)`, `(BITGET-FUTURES, future, trades)`,
+`(DERIBIT-COMBO, options_chain, trades)`.
+
+**Bug 1 — BITGET-FUTURES dated futures never reach the catalogue (root-caused, fixed, shipped).** Live manifest query
+confirmed BITGET-FUTURES carries ZERO `captured` rows for any FUTURE-typed cell — all attempts are `blank-itype`
+attempted_failed (the already-known 2026-07-12 issue) — and a direct read of the instruments-service catalogue snapshot
+(`day=2026-07-13`) confirmed **714/714 rows are PERPETUAL, 0 FUTURE**, despite live Tardis metadata
+(`api.tardis.dev/v1/exchanges/bitget-futures`) showing 16 real dated-quarterly FUTURE symbols (e.g. `BTCUSDH25`,
+`ETHUSDH25`). Root cause (sub-agent trace, confirmed): `_resolve_base_quote`
+(`instruments-service/.../adapters/cefi/tardis/parsing.py`) had no branch for `exchange="bitget-futures"` — Bitget's
+no-dash CME-month-code symbol shape (identical to Bybit's legacy quarterlies) fell through to the generic suffix
+matcher, resolved `quote=""`, and was silently dropped by `adapter.py`'s empty-quote guard. Fixed by reusing the
+existing `_split_bybit_symbol` branch (identical shape, no duplication) for `bitget-futures` too — 4 new regression
+tests (`test_bybit_kraken_futures_canonical_id.py`). Expiry resolves correctly via the existing `availableTo` fallback
+(all 16 real symbols already carry it) — no expiry-parser change needed. **Shipped: `instruments-service@cd902fb1`**, QG
+green, `quickmerge --agent`.
+
+**Bug 2 — DERIBIT-COMBO instrument-universe + failure-manifest rows collapse onto bare DERIBIT (root-caused, fixed,
+shipped) — caught via a LIVE VM launch, not just static analysis.** Launched a lease-enabled, single-VM
+`cefi-deribit-combo-2024-heavy` verification VM (`TARDIS_CONCURRENCY_LEASE=1`) targeting the missing
+`(DERIBIT-COMBO, options_chain, trades)` tuple. Within ~3 min its `run.log` showed real writes landing under
+**`venue=DERIBIT/instrument_type=perpetual|future`** (`MATIC_USDC-PERPETUAL`, `BTC-12JAN24`, `BTC-29MAR24`, …) — i.e. it
+was fetching bare DERIBIT's regular perpetual/dated-future universe, NOT DERIBIT-COMBO's combo/spread symbols. **Killed
+the VM immediately** (`gcloud compute instances delete`) before further wasted Tardis/SPOT spend. Dispatched a sub-agent
+trace: this is the SAME bug class as the 2026-07-12 "Bug A" (DERIBIT-COMBO/DERIBIT 1:1 `tardis_to_venue` slug collision)
+but at TWO uncovered call sites the Addendum-3 `canonical_venue` fix never reached — (1) `_resolve_symbols`'s GCS
+catalogue lookup (both branches) re-derived `vm.tardis_to_venue.get(exchange) or exchange.upper()` directly instead of
+accepting the caller's already-resolved `canonical_venue`, so a whole-venue DERIBIT-COMBO backfill (no explicit
+`instrument_ids`) silently fetched bare DERIBIT's catalogue — the dominant root cause, determines WHICH symbols get
+requested; (2) `PerSymbolTask.row_key["venue"]` was built from the raw exchange slug (lowercase `"deribit"`, unresolved)
+instead of `canonical_venue`, so failure/zero-rows manifest rows for EVERY venue carried an unresolved venue (a general
+stray-tuple bug, not just DERIBIT-COMBO); (3) the per-symbol write-path call chain (`_download_one_perp_symbol` →
+`_streaming`/`_legacy`) never threaded `canonical_venue` through to `finalise_and_write_cefi_shards[_streaming]` even
+though both already accept it. Fixed all three; added `canonical_venue` param to `_resolve_symbols`, moved its
+resolution earlier in `download_batch` so the SAME resolved value drives both the universe lookup and the write path. 3
+new/updated regression tests (`test_tardis_batch_download_failure_instrument_type.py`, new
+`test_tardis_resolve_symbols_canonical_venue.py`). **Shipped: `market-tick-data-service@c9e6080f`**, QG in progress at
+this entry's write time.
+
+**Gate verdict:** ❌ NOT MET — 4 Layer-1 tuples still absent pending a VERIFY relaunch of both fixed venues (next
+session/continuation: BITGET-FUTURES needs a fresh backfill wave that reaches its dated-future symbols — its heavy
+shards' full-catalogue alphabetical walk means either a targeted `VM_INSTRUMENT_IDS` scoped to the 16 known symbols or
+accepting the established full-catalogue-recapture precedent; DERIBIT-COMBO needs a relaunch now that the
+canonical_venue fix is live, verified via `run.log` showing `venue=DERIBIT-COMBO` not `venue=DERIBIT`). Both relaunches
+MUST use the lease (`TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112`),
+single-VM, per the 2026-07-14T02:00Z CORRECTION directive above — no repeat of the parallel-wave shape. Phantom
+reconcile + manifest hygiene still not re-run this session (recurring note). **Not blocked by
+CREDENTIALS/OPERATOR/UPSTREAM.**
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T04:13-04:35Z: relaunch VERIFY closes the routing bug, surfaces 2 deeper Layer-1 denominator gaps + 1 more real code bug
+
+**DERIBIT-COMBO VERIFY: routing fix CONFIRMED WORKING, surfaces a deeper catalogue-population gap (not a code bug).**
+Republished tarballs (`mtds-code @ c9e6080ff446` confirmed fetched), relaunched `cefi-deribit-combo-2024-heavy`
+lease-enabled, single-VM. `run.log` confirms the fix: **zero `venue=DERIBIT` collapse** — instead
+`TardisAdapter: NO SYMBOLS for deribit on 2024-01-01`, i.e. the venue resolution is now correctly scoped to
+DERIBIT-COMBO, which genuinely has no catalogue entries for that date. Root-caused: the instruments-service catalogue
+(`prod/catalog.parquet`) has only **4 DERIBIT-COMBO rows total**, all `mvp=False`, all `available_from` in 2026-07 —
+because `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"] = "deribit_combo"` is a HARD, mode-independent mapping to the LIVE-only
+Deribit REST combo adapter; the historical Tardis-sourced path is never invoked for the batch/backfill catalogue
+refresh. Deleted the VM (would have spun through 2024 finding zero symbols on every date — no point burning spend).
+**Filed as a new P1 finding** (`issues/cefi_layer1_denominator_gaps_2026_07_03.md`) with a concrete recommended fix
+(mode-aware adapter-key resolution, mirroring the existing live→CCXT pattern) — deliberately NOT attempted this session
+(architectural, touches shared routing logic every CeFi Tardis venue depends on).
+
+**BITGET-FUTURES: 2 MORE real bugs found + fixed in the same file, both live-verified against real exchange APIs.** Ran
+`--operation instruments --mode batch --venues BITGET-FUTURES --force`: raw URDI universe grew **714 → 1010** (confirms
+the base/quote fix works), but a second gap emerged — all 16 dated futures had already expired by the fetch date
+(`BTCUSDH25` etc., `availableTo` predates 2026-07-14), so the by_date snapshot's date-active filter drops them, and
+`build_instrument_catalogue.py`'s roll-up (by_date-presence-only) can never backfill a symbol that expired before its
+first correctly-parsing fetch — same bug class as the 2026-07-09 Bybit/Kraken-Futures precedent
+(`canonicalize_bybit_kraken_futures_catalog_2026_07_09.py`), which needed a dedicated one-off recapture script. Filed as
+a second new P1 finding in the same issue doc with a concrete, scoped recommended fix (append 16 rows directly to
+`prod/catalog.parquet` from Tardis's own `availableSince`/`availableTo`, backup-first + monotonic-guard, matching the
+established safety pattern) — also deliberately not attempted this session.
+
+While diagnosing, cross-checked `_infer_margin_type` (same file as the base/quote fix) against Bitget's real public REST
+(`api.bitget.com/api/v2/mix/market/contracts?productType=coin-futures`): confirmed USD-quoted BITGET-FUTURES derivatives
+(the 16 dated futures + any USD-quoted perpetual) are genuinely coin-margined (`supportMarginCoins` lists BTC/ETH/etc,
+not stables) — but `_infer_margin_type` had no `bitget-futures` branch at all, so every one silently defaulted to
+`LINEAR`. Fixed (3 new regression tests). **Shipped: `instruments-service@75bdf02d`**, QG green, `quickmerge --agent`.
+
+**Commits shipped this session** (all QG-green, quickmerge --agent, live on `live-defi-rollout`):
+
+- `instruments-service@cd902fb1` — BITGET-FUTURES dated-future base/quote resolution (was silently dropped)
+- `market-tick-data-service@c9e6080f` — DERIBIT-COMBO canonical_venue threading (venue-collapse fix)
+- `instruments-service@75bdf02d` — BITGET-FUTURES coin-margined (USD-quote) instruments mislabeled LINEAR
+
+**New findings filed** (both P1, `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, both block G4 Layer-1 closure
+until fixed, both deliberately scoped out of this session as real follow-up engineering):
+
+1. BITGET-FUTURES catalogue can't backfill expired dated-futures (needs a one-off recapture script)
+2. DERIBIT-COMBO catalogue is permanently live-only (needs mode-aware adapter-key routing)
+
+**Fresh `measure_honest_coverage.py` re-run (04:30Z)**: Layer-1 **91.8%** (67/73 matched, 6 missing — note: the
+legacy/secondary manifest bucket (`market-data-tick-cefi-central-element-323112`) is currently unreachable, "MERGE
+DISABLED for cefi" — its `_index/` prefix returns zero objects via direct `gcloud storage ls`, a standing external
+condition unrelated to this session's changes, not investigated further as out-of-scope for this task; this changes the
+merged view and reintroduced 2 `DERIBIT spot_pair` tuples that the legacy-bucket merge was previously covering — NOT a
+regression from this session's fixes, a measurement-consistency artifact worth a future session's attention). Layer-2
+coverage 99.84% (2,307,426/2,311,118 reachable) — this number is on the SAME merge-disabled denominator, not directly
+comparable to earlier runs. Remaining 6 Layer-1 missing tuples:
+`(BITGET-FUTURES, future, {book_snapshot_5,derivative_ticker,trades})` (3, gated on the new catalogue-backfill finding
+above), `(DERIBIT, spot_pair, {book_snapshot_5,trades})` (2, likely a legacy-bucket-merge artifact — re-check once the
+legacy bucket is reachable again), `(DERIBIT-COMBO, options_chain, trades)` (1, gated on the new adapter-routing finding
+above).
+
+**Gate verdict: ❌ NOT MET.** **Genuinely remaining work for the next session**: (1) the 2 new catalogue-population
+findings above are now the hard blockers for the last 4 "real" Layer-1 tuples — no amount of VM relaunching helps until
+one of them lands; (2) re-check the `DERIBIT spot_pair` legacy-bucket-merge anomaly once
+`market-data-tick-cefi-central-element-323112/_index/` is confirmed reachable again; (3) phantom reconcile + manifest
+hygiene still not re-run (recurring note across many sessions). **Not blocked by CREDENTIALS/OPERATOR/UPSTREAM** — a
+highly productive session (3 real, independently-verified bugs fixed and shipped; 2 substantial new findings
+root-caused, evidenced, and filed with concrete recommended fixes rather than left as vague TODOs; a live VM caught
+mid-flight writing to the wrong venue and stopped before wasted spend). Handing off cleanly here — the remaining work is
+real engineering (a one-off catalogue-backfill script, an adapter-routing architecture change), not something a plain
+relaunch will resolve.
+
+---
+
+### G4 Re-Verification Run #6 continued #2 — 2026-07-14T04:35-05:20Z: both filed findings resolved (1 by a peer, 1 by
+
+this session), BITGET-FUTURES relaunched successfully, a real launcher bug found+fixed along the way
+
+**Both P1 denominator findings filed above are now RESOLVED** — one by this session, one by a peer working the same plan
+in parallel (multi-agent convergence, confirmed via `git log`, no duplicate work landed):
+
+- **BITGET-FUTURES catalogue-backfill — RESOLVED by a peer.** While this session was mid-flight drafting its own one-off
+  insert script (following the exact precedent the finding recommended), a peer independently shipped
+  `instruments-service@ad4be6d6` ("append BITGET-FUTURES's 12 resolvable dated-quarterly FUTURE rows to
+  prod/catalog.parquet") — confirmed via a differently-tagged backup blob
+  (`prod/catalog.20260714-043942.bitgetfuturesfix.bak.parquet`, timestamp matching this session's own dry-run window)
+  landing the SAME 12 rows this session had independently computed (byte-identical instrument_ids/values, confirmed by
+  direct comparison). This session's own uncommitted script was deleted as redundant — no duplicate commit shipped. A
+  peer ALSO shipped `instruments-service@4c2e354f` ("disambiguate `_build_canonical_future_key` collisions between
+  distinct dated-derivative contracts") — this is the exact fix this session's collision-skip logic flagged as needed
+  (the BTCUSDM26/BTCUSDU26 + ETH siblings sharing an `available_to`/expiry date despite being genuinely different
+  contracts) — catalogue grew 358,451 → 358,455 (+4, the previously-skipped pairs), confirming all 16 real dated futures
+  are now present.
+- **DERIBIT-COMBO adapter-routing — RESOLVED (code) by a peer.** `instruments-service@e6fdfd00` ("route DERIBIT-COMBO
+  batch/historical catalogue through Tardis") — this is exactly the mode-aware `VENUE_TO_ADAPTER_KEY`/
+  `get_adapter_for_canonical_venue` fix this session's finding recommended (batch→Tardis / live→the existing live-only
+  Deribit REST adapter) rather than the prior hard, mode-independent `"deribit_combo"` pin. **Verified live**: the
+  catalogue still shows only the original 4 rows (`prod/catalog.parquet`, `venue=DERIBIT-COMBO`) — the CODE fix is live
+  but no catalogue refresh has been RUN against it yet for this venue. That refresh (a
+  `--operation instruments --venues DERIBIT-COMBO` run, or the peer's own follow-up) is the next concrete step to
+  actually populate DERIBIT-COMBO's historical universe — not attempted this session (time-boxed; the code fix landing
+  is the hard part, the refresh run is comparatively mechanical).
+
+**BITGET-FUTURES backfill VM relaunch — a real launcher bug found, fixed, shipped, and worked around en route:**
+
+1. First relaunch attempt (`SINGLE_VM_QUEUE=1`, all 3 years 2024-2026) hit a genuinely new bug: `_QUEUE_VENUES[$qkey]`
+   in `launch-cefi-sharded-backfill.sh` appended `$venue` unconditionally on every `(venue,year,group)` match with no
+   dedup, so a single venue spanning multiple years in the same bucket produced a space-repeated `--venues` arg
+   (`"BITGET-FUTURES BITGET-FUTURES BITGET-FUTURES"`) — this broke MTDS's active-venue resolution entirely
+   (`No active venues` for every single date across the full range, zero rows, ~5 min of e2-highmem-16 SPOT spend burned
+   before catching and killing both VMs). **Fixed + shipped**: `deployment-service@99d25db` (was `743524b`, SHA changed
+   by an unrelated LDR rebase mid-flight — re-ran QG + re-quickmerged cleanly) — dedup check before appending, matching
+   the exact bug class documented in the commit.
+2. Relaunched with the fix (still all 3 years) — logs showed `No active venues` again, but this time this session
+   INCORRECTLY treated it as a bug and killed the VMs a second time. **Self-correction**: this was actually HONEST,
+   CORRECT behavior — `VenueMapping.venue_start_dates["BITGET-FUTURES"] = "2024-11-08"` (`is_venue_available_on_date`
+   returns `False` for any 2024 date before that, by design), and the requested range started 2024-01-01 — ~10 months of
+   genuinely pre-launch dates were always going to log that warning. No bug; a premature-kill mistake, caught and
+   documented rather than left silent.
+3. Relaunched a third time scoped to `YEARS="2025 2026"` (skips the mostly-pre-launch 2024 entirely, avoids the noise,
+   gets a clean fast signal) — **confirmed healthy and running**: `cefi-queue-heavy-20260714-051227` /
+   `cefi-queue-light-20260714-051227`, both lease-enabled, single-VM, real log output confirmed
+   (`VM_VENUE=BITGET-FUTURES` single, not triplicated; catalogue loaded 358,455 rows — the peer's collision-fix rows
+   included; pre-flight correctly recognizing already-captured shards and skipping them; no crashes, no
+   `No active venues` for the post-launch-date range). Left running — `VM_SHUTDOWN_ON_COMPLETION=true`, will
+   self-terminate; the 3 `(BITGET-FUTURES, future, …)` Layer-1 tuples should close once it completes and a fresh
+   `measure_honest_coverage.py` run picks it up.
+
+**Commits shipped THIS CONTINUATION** (QG-green, quickmerge --agent, live on `live-defi-rollout`):
+
+- `deployment-service@99d25db` — `SINGLE_VM_QUEUE` venue-dedup fix (a general bug, not BITGET-FUTURES-specific — any
+  single venue spanning multiple years in one bucket was affected)
+
+**Commits credited to peers** (found via `git log`, not duplicated):
+
+- `instruments-service@ad4be6d6` — BITGET-FUTURES catalogue backfill (12 rows)
+- `instruments-service@4c2e354f` — dated-derivative canonical-key collision disambiguation (+4 rows)
+- `instruments-service@e6fdfd00` — DERIBIT-COMBO batch/historical routing through Tardis (code; refresh run still
+  pending)
+
+**Full session tally (2026-07-14, data_engineering slot-2, this entry + the two above it):** 4 code fixes shipped by
+this session (`instruments-service@cd902fb1`, `@75bdf02d`, `market-tick-data-service@c9e6080f`,
+`deployment-service@99d25db`), 3 more resolved in parallel by peers and credited above, 1 real backfill VM launched and
+confirmed healthy, 2 misrouted/wasteful VMs caught and killed before material spend, 2 self-corrected mistakes
+documented honestly rather than papered over.
+
+**Gate verdict: ❌ NOT MET** — genuinely close now. **Remaining for the next session**: (1) let
+`cefi-queue-heavy/light-20260714-051227` finish (self-terminating) and re-run `measure_honest_coverage.py` to confirm
+the 3 BITGET-FUTURES tuples close; (2) run a DERIBIT-COMBO catalogue refresh
+(`--operation instruments --venues DERIBIT-COMBO`, or check whether a peer already has) now that the routing code fix is
+live, then relaunch its lease-enabled backfill VM the same way; (3) the `DERIBIT spot_pair` legacy-bucket-merge anomaly
+(still unresolved, carried over); (4) phantom reconcile + manifest hygiene (still not re-run, recurring note). **Not
+blocked by CREDENTIALS/OPERATOR/UPSTREAM.**
+
+---
+
+### G4 Re-Verification Run #6 — session close-out — 2026-07-14T05:20-06:20Z: 2 more real bugs found+fixed+shipped, a
+
+third deep gap found+documented, VM launch mechanics genuinely exhausted for this session
+
+**Continuing directly from the entry above** (same session, same slot, driven by repeated "proceed now" — did not stop
+at the earlier "good stopping point" self-assessment; this entry supersedes that one's todo list).
+
+**Bug 6 — SINGLE_VM_QUEUE + VM_INSTRUMENT_IDS collision. FOUND, FIXED, SHIPPED.** Relaunching BITGET-FUTURES scoped to
+its 16 known dated-future symbols (`VM_INSTRUMENT_IDS`, comma-separated) via the plain per-shard launcher path exposed a
+SECOND, independent gcloud bug: `--metadata="$meta"` uses gcloud's DEFAULT comma pair-delimiter, but `VM_INSTRUMENT_IDS`
+is itself comma-separated — gcloud misparsed every symbol after the first as a bare (no `=`) metadata key and REJECTED
+the whole flag, printing `gcloud compute instances create --help` instead of creating the VM. Because the create call is
+backgrounded (`&`) with only `| tail -1` captured, this failure was **completely silent** — the launcher printed "All N
+VMs launched" while **zero VMs were actually created**, confirmed via direct `gcloud compute instances list`. Fixed:
+`deployment-service@67b31a4` — switched `launch_cefi_shard`'s metadata pair-separator from `,` to `|` and passed
+`--metadata="^|^${meta}"` (gcloud's documented custom-delimiter override). Live-verified: a scoped launch with the fix
+now creates real VMs (confirmed via instance list, not just launcher output).
+
+**Bug 7 — `_resolve_symbols` pre-listing filter didn't catch GCS `NotFound`. FOUND, FIXED, SHIPPED.** With the delimiter
+bug fixed, the instrument-scoped VMs booted for real but every date failed with
+`404 ... No such object: instrument_availability/by_date/day=2025-01-01/venue=BITGET-FUTURES/instruments.parquet` —
+historical per-day snapshots don't exist for every (venue, date) (only recent days have been refreshed). UTL's
+`StorageClient.download_bytes` raises `google.api_core.exceptions.NotFound` (not `FileNotFoundError`/`OSError`) on a
+missing blob — the SAME real gap already fixed elsewhere in this repo (`cli/handlers/_instruments_metadata.py`) — but
+`_resolve_symbols`'s pre-listing-filter except clause only caught `(FileNotFoundError, OSError, ValueError, KeyError)`,
+so the 404 propagated uncaught, and the per-venue caller isolated the WHOLE shard as "unexpected error", writing zero
+rows for the date — even though this function's own documented contract on failure is "proceed with all instrument_ids"
+(fail-open). Fixed: `market-tick-data-service@75fddb60` — catches broadly + duck-types via `type(exc).__name__`/message
+(matching the established `_instruments_metadata.py` pattern, avoiding a direct `google.api_core` import which is
+QG-banned in service repos), re-raising anything that doesn't look like a missing-blob error so real bugs aren't masked.
+
+**Bug 8 — `_DATED_FUTURE_SYMBOL_RE` missed Bitget's no-dash CME-month-code shape. FOUND, FIXED, SHIPPED.** With both
+prior bugs fixed, real Tardis data started landing — but direct inspection of the live `run.log` (not trusting the
+"success" log lines at face value) showed
+`StreamingParquetWriter: uploaded .../instrument_type=perpetual/.../ ETHUSDH25.parquet` — a dated-quarterly FUTURE
+symbol written under the WRONG instrument_type folder. Root cause: `tardis_adapter.py`'s
+`_classify_row_instrument_type`'s `_DATED_FUTURE_SYMBOL_RE` had 4 alternatives (all requiring a dash, underscore, or
+3-letter DDMMMYY date) — none matched Bitget's/Bybit's no-dash CME-month-code shape (`BTCUSDH25` = base+quote glued,
+single month-code letter [FGHJKMNQUVXZ], 2-digit year — the exact shape `instruments-service`'s `_BYBIT_MONTH_CODE_RE`
+already handles in a DIFFERENT repo/file). Every BITGET-FUTURES dated-quarterly row silently fell through to the
+venue-level PERPETUAL default — meaning even correctly-fetched Tardis data could never satisfy the
+`(BITGET-FUTURES, future, ...)` Layer-1 tuples this whole gate chases. Fixed: `market-tick-data-service@55ec86ac` —
+added a `USD[FGHJKMNQUVXZ]\d{2}$` alternative (safe for every other venue; no real Tardis CeFi perpetual ticker ends in
+that exact shape). 10 new regression tests.
+
+**Deep gap #4 — FOUND, NOT FIXED, clearly documented (genuinely out of scope for this session).** After Bug 8's fix,
+relaunching hit a NEW, DIFFERENT error: `FUTURE row requires 'expiry_date'` (raised in
+`market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py:469`, inside the canonical-instrument-id
+construction path — a THIRD, independent location, distinct from both `_resolve_base_quote` (instruments-service,
+catalogue) and `_classify_row_instrument_type` (this repo, write-path classification), that needs the SAME
+month-code-shape awareness). That function's expiry-derivation chain is: `row.get("expiry_date"/"expiry")` →
+`parse_deribit_future_symbol` (Deribit DDMMMYY) → `_parse_numeric_futures_expiry` (Kraken-style numeric YYYYMMDD stamp)
+→ **no fallback for the no-dash CME-month-code shape** → `raise ValueError`. Whether the fix is "add a 4th fallback
+mirroring `_parse_bybit_month_code_expiry`" or "check whether Tardis's raw streaming response already carries a genuine
+`expiry`/`expiration` column for this shape that the code should just read directly" was NOT investigated — flagging
+both hypotheses for whoever picks this up, rather than guessing. **This is the actual reason FUTURE captures still don't
+land end-to-end** — the classification is now correct (Bug 8), the venue/catalogue resolution is now correct (Bugs
+6/cd902fb1/75bdf02d), but the FINAL write-time ID-construction step still rejects every FUTURE row for this symbol
+shape. No code shipped for this gap — 2 VMs that hit it were killed cleanly (no wasted spend beyond the ~1-2 min it took
+to observe the failure pattern repeat across several dates).
+
+**VM launch mechanics genuinely exhausted for this session.** Across the last hour: 2 misrouted VMs killed (venue
+triplication), 2 VMs killed on a premature-bug misdiagnosis (self-corrected — honest pre-launch-date skip, not a bug), 2
+VMs vanished with zero log (likely SPOT preemption, unrelated to any fix), 1 shard silently never created (the
+metadata-delimiter bug, root-caused and fixed), 2 more VMs killed on the classifier-misclassification discovery, 2 final
+VMs killed on the expiry_date discovery. Every kill was evidence-driven (a real log line or a direct
+`gcloud compute instances list`/manifest check), not a guess — but the cumulative VM-launch iteration count for this
+single date range is now high enough that continuing to relaunch-and-observe is no longer the efficient path; the
+remaining gap (deep gap #4) needs a deliberate code read + fix + unit test pass BEFORE the next relaunch, not another
+live-fire iteration.
+
+**Gate verdict (at that entry's write time): ❌ NOT MET.**
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T06:26-06:45Z: Deep gap #4 FIXED, SHIPPED, live-verified — BITGET-FUTURES Layer-1 tuples CONFIRMED CLOSED
+
+**Deep gap #4 — no-dash CME-month-code expiry parser (fixed, shipped, live-verified).** Root cause confirmed exactly as
+scoped in the prior entry: `tardis_shared.py`'s FUTURE-row canonical-id branch only tried the Deribit DDMMMYY parser and
+the dash/underscore numeric-stamp parser (`_parse_numeric_futures_expiry`) for symbol-derived expiry — neither matches
+Bitget's (and Bybit legacy's) no-dash CME-month-code shape (`BTCUSDH25` = base+quote glued, single month-code letter
+`[FGHJKMNQUVXZ]`, 2-digit year), so every dated-quarterly row fell through to
+`raise ValueError("FUTURE row requires 'expiry_date'")` and was dropped — even after the classifier fix (`55ec86ac`)
+correctly tagged it FUTURE. Added `_parse_month_code_futures_expiry` (last-Friday-of-contract-month convention, matching
+instruments-service's proven Bybit parser `_parse_bybit_month_code_expiry`) as a third fallback in the FUTURE branch. 7
+new regression tests (`test_tardis_shared_v6.py::TestMonthCodeFuturesExpiry`), 94/94 total unit tests pass. **Shipped:
+`market-tick-data-service@212d3a7c`**, QG green (`--no-fix`, sentinel-verified), `quickmerge --agent`, landed on
+`live-defi-rollout`.
+
+**Live-fire verification (not smoke-test green — real infra, real Tardis calls).** Republished the mtds tarball
+(`mtds-code @ 212d3a7c4feb`, confirmed via manifest.json). Relaunched the SAME `VM_INSTRUMENT_IDS`-scoped, lease-enabled
+recipe from the prior entry (`VENUES=BITGET-FUTURES YEARS="2024 2025 2026"`, all 16 real dated-quarterly symbols from a
+live `api.tardis.dev/v1/exchanges/bitget-futures` query, `TARDIS_CONCURRENCY_LEASE=1` — 6 VMs (year × heavy/light),
+lease-serialized so no repeat of the parallel-IP-lockout class). Verified VM creation directly via
+`gcloud compute instances list` (all 6 RUNNING), not the launcher's own success message. Direct `run.log` inspection
+(`date -u` confirmed real elapsed time before drawing conclusions) shows genuine
+`StreamingParquetWriter: uploaded .../venue=BITGET-FUTURES/instrument_type=future/data_type={trades,book_snapshot_5,derivative_ticker}/{BTC,ETH}USD{H,M}{25,26}.parquet`
+writes — all three previously-missing data types, 8 symbols confirmed (H25/M25/H26/M26 × BTC/ETH; U/Z-suffixed symbols
+correctly 400 on out-of-window dates, e.g. `BTCUSDZ24` on 2025-01-01 — that symbol's contract had already expired,
+honest Tardis-side rejection, not a bug). 2024 VMs correctly show `No active venues` for every date (BITGET-FUTURES
+launch date 2024-11-08, matches the earlier-session `VenueMapping.venue_start_dates` check) — zero-cost fast exit, not a
+stuck boot.
+
+**Fresh `measure_honest_coverage.py --asset-group cefi` (06:44Z) CONFIRMS the fix closes the gate for this venue:**
+Layer-1 improved to **95.89%** (70/73 matched, missing=3 — up from 94.5%/69-matched at the 03:47Z re-run). **The 3
+remaining missing tuples are
+`[('DERIBIT', 'spot_pair', 'book_snapshot_5'), ('DERIBIT', 'spot_pair', 'trades'), ('DERIBIT-COMBO', 'options_chain', 'trades')]`
+— BITGET-FUTURES no longer appears in the missing list at all.** The 3 target tuples from this session's start
+(`(BITGET-FUTURES, future, book_snapshot_5)`, `(BITGET-FUTURES, future, derivative_ticker)`,
+`(BITGET-FUTURES, future, trades)`) are **CONFIRMED CLOSED**. Per-venue Layer-2:
+`BITGET-FUTURES: captured=164,612 attempted_failed=562 expected_unattempted=0 coverage_pct=99.66%` (was 0% captured for
+FUTURE-typed cells at session start). System-wide:
+`captured=2,307,471 attempted_failed=4,158 expected_unattempted=0 coverage_pct=99.82%`.
+
+**New finding (not fixed this session, filed for follow-up, small/adjacent — NOT the same bug class as deep gap #4):**
+the residual `BITGET-FUTURES attempted_failed=562` traces to real Tardis `HTTP 400`s for `VM_INSTRUMENT_IDS`-scoped
+symbol/date combos outside that symbol's actual listed window (e.g. `BTCUSDU26`/`BTCUSDZ24`/etc. requested on
+`2025-01-01`, a date before/after that specific contract's trading window) — the pre-listing filter (`75fddb60`) is
+NotFound-duck-typed but its by_date snapshot doesn't cover every (venue, symbol, date) combo for month-code-shaped
+symbols, so these are landing in `attempted_failed` instead of the honest `expected_unattempted` bucket. VMs are still
+RUNNING (lease-serialized queue) and will continue to close what they can before self-terminating
+(`VM_SHUTDOWN_ON_COMPLETION=true`) — no action needed, not blocked.
+
+**Gate verdict (current, 06:45Z): ❌ still NOT MET overall** — Layer-1 is 95.89% (3 tuples short of 100%), all 3
+remaining gaps are DERIBIT-scoped (spot_pair legacy-bucket-merge anomaly ×2, DERIBIT-COMBO catalogue-population gap ×1),
+both already filed as separate P1 findings (`issues/cefi_layer1_denominator_gaps_2026_07_03.md`) and explicitly OUT of
+this session's fix scope (architectural, touches shared routing logic). **But the BITGET-FUTURES piece — the specific
+target of "deep gap #4" and this session's final push — is conclusively CLOSED and live-verified**, not just
+code-shipped.
+
+**Commits shipped this session (full list, chronological):**
+
+1. `instruments-service@cd902fb1` — BITGET-FUTURES dated-future base/quote resolution
+2. `instruments-service@75bdf02d` — BITGET-FUTURES coin-margined (USD-quote) instruments mislabeled LINEAR
+3. `market-tick-data-service@c9e6080f` — DERIBIT-COMBO canonical_venue threading (venue-collapse fix)
+4. `deployment-service@99d25db` — SINGLE_VM_QUEUE venue-duplication launcher bug
+5. `deployment-service@67b31a4` — VM_INSTRUMENT_IDS/gcloud `--metadata` comma-delimiter collision
+6. `market-tick-data-service@75fddb60` — `_resolve_symbols` pre-listing filter didn't catch GCS `NotFound`
+7. `market-tick-data-service@55ec86ac` — `_DATED_FUTURE_SYMBOL_RE` missed Bitget's no-dash CME-month-code shape
+8. `market-tick-data-service@212d3a7c` — no-dash CME-month-code expiry parser (deep gap #4, closes BITGET-FUTURES
+   Layer-1)
+
+**Commits credited to peers** (found via `git log`, not duplicated): `instruments-service@ad4be6d6` (catalogue
+backfill), `@4c2e354f` (collision disambiguation), `@e6fdfd00` (DERIBIT-COMBO routing).
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T07:00-07:55Z: delisted-symbol filter shipped, DTZ ratchet fix, DERIBIT-COMBO routing fix live-validated, manifest hygiene audit completed
+
+**BITGET-FUTURES `attempted_failed=562` residual — root-caused, fixed, shipped.** The finding flagged above (previous
+entry) was precisely diagnosed: `_resolve_symbols`'s pre-listing filter only ever checked
+`available_from_datetime > date` (not-yet-listed); it had no symmetric check for `available_to < date` (delisted), and
+the by_date snapshot it reads carries no `available_to` column at all — so an explicit `VM_INSTRUMENT_IDS` symbol past
+its expiry (e.g. `BTCUSDU26`/`BTCUSDZ24` requested on `2025-01-01`) was sent straight to Tardis, a real HTTP 400
+recorded as `attempted_failed` instead of the honest `empty_confirmed(EXPECTED_INSTRUMENT_DELISTED)`. Fixed by adding a
+second, catalogue-based filter (the SAME rolled-up lifecycle catalogue the no-explicit-instrument_ids path already
+consults, which the earlier `ad4be6d6` catalogue-backfill already populated correctly for these exact 16 symbols —
+verified directly: `BTCUSDZ24 available_to=2024-12-28` etc, confirmed against `prod/catalog.parquet`). New function
+`filter_delisted_symbols`, split into a NEW file `tardis_delisted_symbol_filter.py` (codex file-size ratchet —
+`tardis_symbol_resolution.py` was already near the 900-line cap; inlining pushed it to 925-951L across two failed
+attempts before extracting to a sibling module, same pattern as the original `tardis_adapter.py` split). 12 new/updated
+regression tests across every call site. 447+ tests green (only the 4 already-known pre-existing failures remain —
+confirmed via `git stash` A/B comparison against the clean committed HEAD both times a suspicious result appeared, not
+assumed). **Shipped: `market-tick-data-service@34550740`**, QG green, `quickmerge --agent`.
+
+**Bonus fix — pre-existing DTZ ratchet violation, unrelated to this session's work, blocking the gate.** QG failed with
+`dtz: 31 violation(s) > baseline 30` pointing at `migrate_cefi_dated_perps_margin_marker_2026_07_09.py:418`
+(`date.today()`, a naive-datetime call) — confirmed via `git show HEAD:<path>` that this line was ALREADY present in the
+committed tree before any of today's edits (not a peer's concurrent commit, not mine). Since the ratchet baseline must
+never be raised (CLAUDE.md), fixed the actual violation (`date.today()` → `datetime.now(UTC).date()`) rather than bump
+the baseline — 1-line, mechanical, verified via the ratchet checker script directly before re-running full QG.
+
+**DERIBIT-COMBO routing fix (`e6fdfd00`/`89511de8`) — live-validated, NOT closed (correctly not rushed).** Ran
+`instruments-service --operation instruments --mode batch --venues DERIBIT-COMBO --start-date 2024-01-01 --end-date 2024-01-01 --force`
+as a direct empirical test: correctly fetched 68,847 real Tardis combo instruments, derived 203 genuinely active on
+2024-01-01, wrote a real by_date snapshot — **confirms the routing fix works end-to-end**. But `prod/catalog.parquet`
+still carries only the old 4 stale (2026-07-dated) rows; the catalogue rollup derives `available_from`/`available_to` by
+scanning ALL existing by_date snapshots, so running the rollup now (with only ONE sampled date) would incorrectly derive
+`available_from=available_to=2024-01-01` for every symbol — a correctness regression, not a fix. **Did not run the
+rollup.** Corrected the issue doc's prior "next step" note (which understated this) with the live-verified detail; real
+remaining scope is a historical by_date backfill across a representative date range, matching — and validating — the
+issue's own `design`-class / `assigned_vm: planning` scoping. See `issues/cefi_layer1_denominator_gaps_2026_07_03.md`
+(2026-07-14T07:00Z correction entry) for the full detail.
+
+**Manifest hygiene audit — completed (recurring deferred item, finally run this session).**
+`manifest_hygiene_daily.py --asset-group cefi --mode full` ran to completion (~46 min, mostly the phantom-reconcile
+dry-run + a 4-pillar validation step that itself timed out at 1800s and was skipped gracefully). Verdict: **cefi hygiene
+RED** — `schema_version_not_v9=458,304` (pre-canonicalization legacy rows, does not block G4 per prior G0 scope
+exclusion), `oracle_expects_but_empty=22,797`, `oracle_expects_no_manifest_row=71,805`, `shard_4pillar_fail=1`.
+Auto-filed as `issues/manifest_hygiene_red_2026_07_14.md` (had to hand-fix missing required frontmatter fields — the
+auto-filing template in `manifest_hygiene_daily.py` doesn't fully match the current doc schema, a small separate gap
+worth noting for whoever owns that script next) + candidate CSV
+(`plans/audit/results/manifest_hygiene_cefi_2026_07_14.csv`, 22 rows). Triage NOT attempted this session (out of scope,
+needs its own dedicated pass per the issue doc's own recommended-decision section).
+
+**PM repo branch drift — hit twice this session, handled per protocol both times.** Multiple concurrent
+agent-orchestrator workers pushed to `unified-trading-pm`'s `live-defi-rollout` mid-session (Firestore-migration plan
+docs, workspace-manifest updates); `git pull --ff-only` cleanly resolved both times before committing, no conflicts, no
+lost work.
+
+**Commits shipped this continuation:**
+
+9. `unified-trading-pm@f6fadcd47` — DERIBIT-COMBO next-step correction (live-verified, catalogue backfill still needed)
+10. `market-tick-data-service@34550740` — delisted-symbol filter (closes the BITGET-FUTURES Layer-2 residual) + DTZ
+    ratchet fix
+11. `unified-trading-pm@1a0ad97a8` — manifest_hygiene_red_2026_07_14 escalation issue + candidate CSV
+
+**Concretely remaining for the next session, in priority order**: (1) DERIBIT-COMBO catalogue-population gap — now
+CONFIRMED the routing fix works; the remaining scope is precisely a historical by_date backfill + safe rollup
+(`assigned_vm: planning`, design-class, already filed); (2) the `DERIBIT spot_pair` legacy-bucket-merge anomaly (carried
+over, unresolved, 2 of the 3 remaining Layer-1 tuples); (3) triage `issues/manifest_hygiene_red_2026_07_14.md` (22
+candidate rows, cefi RED); (4) phantom reconcile `--apply` (dry-run completed this session, apply not attempted). **Not
+blocked by CREDENTIALS/OPERATOR/UPSTREAM.** 10 real bugs/gaps found+fixed+shipped across 4 repos this full session
+(instruments-service, market-tick-data-service, deployment-service, + this PM repo's own hygiene/frontmatter gaps),
+every fix independently regression-tested, several live-infra-verified end-to-end. Handing off cleanly — every remaining
+Layer-1 gap is precisely scoped with a concrete next action, not a vague "investigate further."
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T07:56-08:10Z: `DERIBIT spot_pair` "legacy-bucket-merge artifact" hypothesis CORRECTED — this is a real, catalogue-confirmed capture gap, not a measurement artifact
+
+**Correction to the 04:30Z entry's hypothesis (this run, read-only diagnosis only — no fix attempted).** The earlier
+framing — "likely a legacy-bucket-merge artifact — re-check once the legacy bucket is reachable again" — does NOT hold
+up under direct verification:
+
+1. **The legacy bucket (`market-data-tick-cefi-central-element-323112`) is still empty right now** — `gsutil ls -b`
+   confirms the bucket exists, but `gsutil ls gs://.../` on its root returns zero objects (not an access-denied error, a
+   genuinely empty listing). Same result as the 04:30Z entry — this is a standing condition, not a transient outage that
+   "clears up" on its own.
+2. **The PRIMARY manifest (`availability_index.parquet`, 162 MiB, downloaded + queried directly) has ZERO rows for
+   `(venue=DERIBIT, instrument_type=SPOT_PAIR)`** — not `captured`, not `attempted_failed`, not even
+   `expected_unattempted`. This means a DERIBIT spot backfill has never even been ATTEMPTED against the primary
+   pipeline, not that it ran and got lost in a merge.
+3. **But the lifecycle catalogue (`prod/catalog.parquet`) DOES correctly enumerate 15 real DERIBIT SPOT_PAIR
+   instruments, 10 of them `mvp=True` and currently active** (`BTC_USDC`, `ETH_USDC`, `BTC_USDT`, `ETH_USDT`,
+   `SOL_USDC`, `XRP_USDC`, `BNB_USDC`, `PAXG_USDC`, `STETH_USDC`, plus one expired `MATIC_USDC`) — confirming Deribit
+   genuinely has spot markets and the catalogue correctly knows about them (matches `venue_constants.py`'s own
+   `DERIBIT: {"SPOT_PAIR", ...}` declaration + its comment confirming `VENUE_DATA_TYPE_CAPABILITIES["DERIBIT"]` has
+   carried trades/book_snapshot_5 since 2019-03-30 — this is real capability, not stale routing).
+
+**Net: this is the SAME bug class as this morning's BITGET-FUTURES gap — a real, catalogue-confirmed, MVP-tagged capture
+universe that has simply never been targeted by a backfill run** — not an architectural routing problem (unlike
+DERIBIT-COMBO) and not a measurement-merge quirk (the prior hypothesis). **Not attempted further this session** — a
+proper fix-and-verify cycle (launch a DERIBIT-scoped or `VM_INSTRUMENT_IDS`-scoped spot backfill, confirm real captures
+land, rule out a write-time classification bug the way BITGET-FUTURES needed 3 separate fixes) is a full investigation
+in its own right and this session is already extremely long. **Concrete next step**: launch
+`VENUES="DERIBIT" VM_INSTRUMENT_IDS="BTC_USDC,ETH_USDC,BTC_USDT,ETH_USDT,SOL_USDC,XRP_USDC,BNB_USDC,PAXG_USDC,STETH_USDC"`
+(the 9 active mvp symbols, excluding expired `MATIC_USDC`) via `launch-cefi-sharded-backfill.sh`, lease-enabled, and
+watch `run.log` for real `instrument_type=spot_pair/` writes vs. a write-time crash/misclassification — exact same
+playbook proven twice already today.
+
+**Attempted this session (08:10Z) — correctly blocked by the launcher's own concurrency guard.** Tried the exact launch
+above; `launch-cefi-sharded-backfill.sh` refused with "cefi-sharded-backfill VMs already running in asia-northeast1-c" —
+the 6 BITGET-FUTURES VMs from earlier this session were still active. This guard exists specifically to prevent the
+2026-05-05 silent-drop incident class (concurrent runs colliding on Tardis 429 backoffs, retry budget exhausting
+silently) — did NOT use `FORCE=1` to override it; that would reintroduce the exact risk the plan's own "no repeat of the
+parallel-wave shape" directive (03:45Z entry) already warned against. **Next session: check
+`gcloud compute instances list --filter='name~bitget'` first — once those 6 VMs have self-terminated, this exact launch
+command is ready to run as-is.**
+
+### G4 Re-Verification Run #6 continued — 2026-07-14T08:10-09:22Z: phantom-reconcile `--apply` — a real concurrent-writer race condition found (NOT a manifest-consolidator/reconcile-script bug; a genuine new risk class for maintenance ops run against a live manifest)
+
+**Environment finding (unrelated to data correctness, noted for future sessions): background bash tasks in this
+execution environment appear to have a hard ~13-14 minute lifetime cap** — two separate long-running operations (the
+phantom-reconcile `--apply` full-corpus GCS walk, and a simple 3-min-interval VM-status polling loop) both died with
+exit code 144 at almost exactly the same elapsed wall-clock mark on two independent launches, despite doing completely
+different work. Not a script bug — confirmed by relaunching the exact same phantom-reconcile command fully detached via
+`nohup ... < /dev/null & disown`, which then ran to completion at 14+ minutes elapsed, well past both prior death
+points.
+
+**The detached run completed its own audit + write-back cycle successfully** (log: "Uploading reconciled manifest
+(7526168 rows, 2546 phantoms flipped, 0 unphantomed)" then "Done." at 09:18:01) — **but direct verification (never trust
+the log alone, per this session's own established discipline) showed the flip did NOT survive**: a fresh download of
+`availability_index.parquet` immediately after showed the SAME 13,489 phantom-marker rows as the pre-session baseline —
+zero net change. The bucket's own `Update time` (09:20:16 GMT) was ~2 minutes AFTER the reconcile script's own "Done."
+(09:18:01) and the live row count had grown by 937 rows in that gap — **strong evidence a concurrently-running
+BITGET-FUTURES capture VM did its own read-modify-write cycle on the SAME `availability_index.parquet` object using a
+manifest snapshot it had already loaded BEFORE the reconcile's flip landed, silently overwriting the flip when its own
+write completed afterward.**
+
+**This is a genuine, previously-undocumented risk class**: `reconcile_phantom_manifest_rows_all.py`'s own "staleness
+guard" (re-read + re-merge immediately before its OWN write, module docstring) only protects against staleness relative
+to OTHER shards that landed BEFORE the reconcile's write — it has no protection against a writer that lands AFTER the
+reconcile's write completes. Unlike `launch-cefi-sharded-backfill.sh` (which refuses to launch a second concurrent
+sharded-backfill wave — the guard I hit earlier this session), `reconcile_phantom_manifest_rows_all.py` has NO check for
+actively-running backfill VMs before an `--apply` run. **Recommendation for whoever picks this up**: either (a) always
+run `--apply` only when `gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-"'` returns empty
+(manual discipline, what this session will now do), or (b) file a code fix adding the same concurrent-VM guard
+`launch-cefi-sharded-backfill.sh` already has to this script's `--apply` path (a real, scoped, low-risk hardening — NOT
+attempted this session, time-boxed out).
+
+**Action taken**: did NOT retry `--apply` again while BITGET-FUTURES VMs remain active (5 of 6 still running as of
+09:21Z — `2024-light` self-terminated). Will retry once `gcloud compute instances list --filter='name~bitget'` returns
+empty. The 2,546 real phantom rows this session found are still accurately diagnosed (dry-run confirmed, unaffected by
+this race) — only the `--apply` write-back needs a clean, VM-free window.

@@ -18,7 +18,7 @@ summary:
   ONE manifest row of ANY capture_status to count as "present" — a tuple this handler NEVER writes ANY row for can never
   satisfy Layer-1, meaning cefi Layer-1 100%/denominator_complete=True is UNREACHABLE as currently coded, for as long as
   these tuples remain in the UAC EXPECTED denominator.'
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -51,6 +51,10 @@ priority: P1
 source: mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12 session (via sub-agent code trace)
 assigned_vm: planning
 resolved_by:
+  "operator ruled (b) via /blocked 2026-07-13; implemented market-tick-data-service@3dd28d5e (slot-2); re-measured
+  2026-07-13 (slot-6) — cefi Layer-1 completeness rose 90.4%→93.2%, none of the 6 live-only tuples remain missing. All 3
+  todos [x]. Flipped open→resolved 2026-07-14 per verify-rerun-2 finding 35 (was: status: open, resolved_by: empty
+  despite the Progress Log's own 'All 3 todos in this issue doc are now done.')."
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
@@ -231,6 +235,11 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
 
 ## Progress Log
 
+- **2026-07-14** — Doc-reconciliation fixer (verify-rerun-2, finding 35). Frontmatter `status` was `open` /
+  `resolved_by:` blank, contradicting this doc's own 2026-07-13 Progress Log entry below ("All 3 todos in this issue doc
+  are now done.") and all 3 `## Todos` items genuinely `[x]` with cited evidence (operator decision via `/blocked`,
+  `market-tick-data-service@3dd28d5e`, re-measured coverage 90.4%→93.2%). Independently re-verified before flipping — no
+  genuinely-open todo found. Flipped `status: open` → `resolved`, filled `resolved_by`.
 - **2026-07-12 (slot-14 sonnet/high)** — Dispatched to the P3 todo; it's structurally gated on the P1 operator-decision
   todo above, which was still unresolved and undispatchable-but-unmarked (neither todo's first physical line carried a
   `BLOCKED-*` taxonomy token, so both were normal dispatch candidates despite being genuinely non-actionable by a worker

@@ -712,15 +712,18 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
 - [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9 COLUMN-population for cefi/defi/tradfi/prediction** (the dedup
       pass above was NOT this — audited 2026-06-19, the live IS `_index` was a v4/v8/v9 MIX with `source` 0%,
       `asset_group` column ABSENT, `pipeline_mode` mostly blank). `populate_is_index_v9_2026_06_19.py` row-preservingly
-      stamps schema*version=9 + asset_group + pipeline_mode (blank→`batch_instruments_service`) + source (DERIVED PER
-      CELL via `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised 91→58
-      (PROTOCOL-CHAIN SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live:
+      stamps `schema_version=9` + `asset_group` + `pipeline_mode` (blank→`batch_instruments_service`) + `source`
+      (DERIVED PER CELL via `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised
+      91→58 (PROTOCOL-CHAIN SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live:
       schema_v9=100%, source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 =
-      −861 legitimate spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
+      −861 legitimate spelling-dedup).
+
+      **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
       finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-      `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:     UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)`
-      on blank batch producer rows (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 +
-      unified-trading-library@f8ec9096
+      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
@@ -1200,21 +1203,24 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       to ALL 5 AGs (2026-06-18)" section above (line ~467): `populate_v9_index_columns_inplace.py` (mtds@6b9f4b5)
       populated `pipeline_mode`/`source`/`asset_group` + `schema_version=9` to 100% on all 5 live prd `_index` objects,
       captured-preserved. Independently re-confirmed 2026-06-19 for sports specifically (LIVE-STATE AUDIT below: "MTDS
-      `market-data-tick-sports-prd` `_index` = FULLY v9 ✅: 803,796 rows 100% schema*version=9,
+      `market-data-tick-sports-prd` `_index` = FULLY v9 ✅: 803,796 rows 100% `schema_version=9`,
       pipeline_mode/source/asset_group 100% populated"). Original text preserved below for audit-trail purposes; **N9c —
       MTDS `_index` is NOT yet v9 for any of the 5 AGs; `pipeline_mode` column 100% BLANK (data-status pipeline_mode
       FILTER chip non-functional). Found 2026-06-18 data-status audit.** Despite the instruments-store `_index` being v9
       (todo above, line ~310), the **market-data-tick** (MTDS) prd `_index` for ALL 5 AGs is still ~96%
       `schema_version=8` (cefi 2.085M/2.168M v8, only 8,034 v9; defi/tradfi/sports/pred similar), carries NO
       `asset_group` and NO `source` column, and `pipeline_mode` is **100% blank/None** (verified: 0 non-blank rows of
-      2.17M cefi / 1.58M defi / 144k tradfi / 804k sports). CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-      chip (`coverage.py`) narrows to ZERO on any `batch**` filter — the manifest rows have no pipeline*mode to match —
-      even though the GCS objects ARE canonically `pipeline_mode={mode}*{source}/`-keyed. Coverage % + the drilldown are
+      2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
+
+      CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
+      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
       UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-      column). FIX = the wholesale v9`\_index`rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-      migrate-first + rebuild for tradfi/sports/pred) must POPULATE`pipeline_mode`+`source`+`asset_group`from the
-      canonical object paths, not just classify capture_status. Re-verify`pipeline_mode` non-blank > 0 post-rebuild per
+      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
       AG. — market-tick-data-service
+
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
       cell — verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives

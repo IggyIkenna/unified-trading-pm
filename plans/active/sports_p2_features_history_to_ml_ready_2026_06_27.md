@@ -117,6 +117,459 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 — slot 7 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-11's check ~3 min earlier
+  found (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death,
+  no preemption.
+- Features bucket unique-date count: **2,362** (up from slot-11's 2,359) — steady forward progress, no stall.
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:46:50Z — all
+  wall-clock-fresh (within ~2 min of check time). `-085642` mid `goal_timing`/`referee`/`team_derived` calculator writes
+  with the known, already-documented all-zero honest-absence pattern; `-085703` mid reference-data reads on 2018-02-25
+  (honest-absence warnings for 8/17 missing entity types, not errors); `-085726` mid GCS reference-data reads
+  (fixture_stats/fixture_events/fixture_lineups/player_stats/etc.), no crash signature. No OOM/crash signature on any of
+  the 3.
+- Re-checked `features-service` git log for `shot_quality_calculator.py`/`derived_new_calculators.py`: still `b05f48ad`
+  (already known-sufficient per slot-3's 2026-07-14 finding) — no new commits. Re-confirmed
+  [`issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  has only 1 unchecked todo remaining (`[INFRA] P3` alerting/monitoring, unrelated to compute correctness) — matches
+  slot-3's closure finding, still closed.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~56% covered (2,362/4,210 ≈ 56.1%). Did not flip Todo 1 — compute is still genuinely
+multi-day and in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,362).
+Fleet is healthy — no gap-fill relaunch needed this cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-14 — slot 11 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-3's earlier check found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,359** (up from slot-3's 2,353) — steady forward progress, no stall. History is
+  ~4,210 days total; coverage now ~56.0% (2,359/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:44:02Z — all
+  wall-clock-fresh (within ~2 min of check time). `-085642` and `-085726` both mid `multisource_xg`/`team_derived`
+  calculator writes with the known, already-documented all-NaN/all-zero honest-absence pattern (cross-provider xg data
+  not fetched in `--skip-fetch` mode, typed `UPSTREAM_MISSING`); `-085703` mid reference-data reads on 2018-02-24
+  (honest-absence warnings for 9/17 missing entity types, not errors). No OOM/crash signature on any of the 3.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~56% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,359).
+Fleet is healthy — no gap-fill relaunch needed this cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-14 — slot 3 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, the previously-tracked `compute_shot_quality_batch` OOM blocker is now fully resolved per the issue doc, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,353** (up from this same slot's earlier 2,347 check ~9 min prior) — steady
+  forward progress, no stall. History is ~4,210 days total; coverage now ~55.9% (2,353/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:38:23Z — all
+  wall-clock-fresh (within ~1 min of check time). `-085642` mid reference-data reads on 2025-12-22 (honest-absence
+  warnings for 5/17 missing entity types, not errors), `-085703` mid `halftime`/`team_derived` calculator writes
+  (all-NaN/all-zero columns are the known, already-documented honest-absence pattern), `-085726` mid
+  `multisource_xg`/`team_derived` writes (same pattern, cross-provider xg data not fetched in `--skip-fetch` mode, typed
+  `UPSTREAM_MISSING`). No OOM/crash signature on any of the 3.
+- **Checked the previously-open `compute_shot_quality_batch` OOM blocker** (this plan's Progress Log had repeatedly
+  logged it as "still open/unowned" across ~10 prior dispatches) — re-read
+  [`issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  fresh rather than trusting the stale summary text: **every `[DATA] P0` item in that doc is now checked** — the 3-date
+  real-VM `--force` relaunch (slot 9, 2026-07-13) confirmed all 3 poison dates (2018-01-06, 2019-08-17, 2025-08-10)
+  complete cleanly with no OOM on the real fleet, and the root cause was a DIFFERENT, already-fixed bug (venue_id
+  collapsing to empty string, `features-service@a9684e27`/`c3e3ebfe`). Only a `[INFRA] P3` alerting/monitoring todo
+  remains unchecked in that doc — unrelated to compute correctness, not this craft's blocker. This is a **stale-summary
+  correction**, not a new finding: the underlying issue doc closure already happened via other slots' work; this
+  dispatch is the first to notice the plan's own Progress Log text hadn't caught up.
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~56% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress, unchanged by the stale-summary correction above (the OOM blocker being resolved doesn't accelerate the
+remaining ~44% of unattempted history, it only means no code fix is still owed).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,353).
+Fleet is healthy — no gap-fill relaunch needed this cycle. The `compute_shot_quality_batch` OOM blocker this plan's log
+had tracked for ~10 dispatches is CLOSED (see above) — future dispatches can stop re-checking it and drop that line from
+their re-verify checklist. Once the bucket approaches the full ~4,210-day span, re-run `check_pipeline_completeness.py`
+(Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding beyond the stale-summary correction). No repo code
+commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 — slot 3 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-5's check ~9min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-5's entry above
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING` (creation timestamps confirm same instances,
+  no relaunch since slot-5's check).
+- Features bucket unique-date count: **2,347** (up from slot-5's 2,339, +8 in ~9 min) — steady forward progress, no
+  stall.
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T09:29:55Z — all
+  wall-clock-fresh (within ~2 min of check time). `-085642` and `-085703` are both mid `multisource_xg`/`team_derived`
+  calculator writes with the KNOWN, already-documented (2026-06-29, sibling plan
+  `sports_p1_golden_window_features_2026_06_27.md`) `SCHEMA VIOLATION: … all-NaN columns` log lines for `multisource_xg`
+  — this is the pre-existing, accepted honest-absence gap (cross-provider xg data not fetched in `--skip-fetch` mode,
+  typed `UPSTREAM_MISSING`), NOT a new finding; not re-flagging it. `-085726` is mid reference-data assembly on
+  2019-10-13 (honest-absence warnings for missing entities, not errors). No OOM/crash signature on any of the 3.
+- History is ~4,210 days total; bucket coverage now ~55.75% (2,347/4,210) — same structural gate every prior dispatch on
+  this todo has found: cannot honestly evaluate manifest-cleanliness while ~44% of history is unattempted. Not
+  re-running `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real compute
+  cost, and slot-5's check ~9 min earlier already confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (none dead). Did not attempt the
+`compute_shot_quality_batch` P0 profiling todo (unrelated, unowned, needs a dedicated Docker-memory-capped session per
+every prior dispatch's same conclusion). Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,347).
+Fleet is healthy as of this check — no gap-fill relaunch needed this cycle. Once the bucket approaches the full
+~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 — slot 5 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-10's relaunch ~5min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-10's entry above
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, no new dead shards.
+- Features bucket unique-date count: **2,339** (up from slot-10's 2,334, +5 in ~5 min) — steady forward progress, no
+  stall.
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s
+  (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`) at `date -u` = 2026-07-14T09:20:15Z — all
+  wall-clock-fresh (within ~1 min of check time): `-085642` mid reference-data assembly on 2025-12-17 (honest-absence
+  warnings for missing entities, not errors), `-085703` mid reference-data assembly on 2018-02-18 (same honest-absence
+  pattern), `-085726` mid odds/reference reads on 2019-10-10 (recording confirmed-empty odds honestly). No OOM/crash
+  signature on any of the 3; fresh `PIPELINE_HEARTBEAT` on -085642 at 09:19:55Z and -085703 at 09:20:14Z.
+- History is ~4,210 days total; bucket coverage now ~55.6% (2,339/4,210) — same structural gate every prior dispatch on
+  this todo has found: cannot honestly evaluate manifest-cleanliness while ~44% of history is unattempted. Not
+  re-running `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real compute
+  cost, and slot-10's check ~5 min earlier already confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (none dead). Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,339).
+Fleet is healthy as of this check — no gap-fill relaunch needed this cycle. Once the bucket approaches the full
+~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 — slot 10 (Todo 3 re-dispatch — fast re-verify, fleet still healthy following slot-4's relaunch, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-4/slot-9's entries above
+  relaunched (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, no new dead shards.
+- Features bucket unique-date count: **2,334** (up from slot-9's 2,332, +2 in ~3 min) — steady forward progress, no
+  stall.
+- History is ~4,210 days total; bucket coverage now ~55.4% — same structural gate every prior dispatch on this todo has
+  found: cannot honestly evaluate manifest-cleanliness while ~45% of history is unattempted. Not re-running
+  `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, and
+  slot-9's check ~3 min earlier already confirmed fleet health, so no gap-fill SSH dive needed this cycle.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (none dead). Did not attempt the
+`compute_shot_quality_batch` P0 profiling todo (unrelated, unowned, needs a dedicated Docker-memory-capped session per
+every prior dispatch's same conclusion). Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,334).
+Fleet is healthy as of this check — no gap-fill relaunch needed this cycle. Once the bucket approaches the full
+~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 — slot 9 (Todo 3 re-dispatch — fast re-verify, fleet healthy following slot-4's relaunch ~13min earlier, steady progress, still BLOCKED-PREREQ, no new action)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.**
+
+Fast re-verify via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-4's entry above relaunched
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`.
+- Features bucket unique-date count: **2,332** (up from slot-4's 2,329, +3 in ~13 min) — steady forward progress, no
+  stall.
+- **Went past `RUNNING` status**: tailed all 3 `run.log`s (`date -u` = 2026-07-14T09:10:44Z) — all wall-clock-fresh
+  (within ~2 min of check time), no crash signature: `-085642` mid fixture-data reads on 2025-10-05, `-085703` emitted a
+  fresh `PIPELINE_HEARTBEAT` at 09:10:14Z, `-085726` mid reference-data assembly on 2019-10-07 (honest-absence warnings
+  for missing entities, not errors). No OOM/crash signature on any of the 3.
+- History is ~4,210 days total; bucket coverage now ~55.4% (2,332/4,210) — same structural gate every prior dispatch on
+  this todo has found: cannot honestly evaluate manifest-cleanliness while ~45% of history is unattempted. Not
+  re-running `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real compute
+  cost.
+
+**What I did NOT do**: did not touch any of the 3 healthy shards (no relaunch needed — none dead, unlike slot-4's prior
+dispatch). Did not attempt the `compute_shot_quality_batch` P0 profiling todo (unrelated, unowned, needs a dedicated
+Docker-memory-capped session per every prior dispatch's same conclusion). Did not flip Todo 1 or Todo 3.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,332).
+Fleet is healthy as of this check — no gap-fill relaunch needed this cycle. Once the bucket approaches the full
+~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (Todo 3 remains structurally blocked; Todo 1 compute genuinely in progress, fleet healthy). No repo
+code commit this entry (read-only verification only); this plan-doc edit ships via the `docs(plans):` carve-out.
+`/skip-current-task` taken so this slot moves to other dispatchable work.
+
+### 2026-07-14 — slot 4 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; found the fleet had been fully dead for ~6.5h after a transient dual-consolidator staleness trip, both consolidators now healthy, relaunched all 3 gap-fill shards)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped.** History is ~4,210 days; bucket unique-date count now **2,329** (~55%) — cannot honestly evaluate
+manifest-cleanliness while ~45% of history is unattempted, same structural gate every prior dispatch on this todo has
+found. Not re-running `check_pipeline_completeness.py` — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost.
+
+**New finding + concrete action taken (Todo 1-adjacent, in the same session)**: fast re-verify via non-snap
+`gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`, `central-element-323112`) found
+**ZERO** `fss`/`features` VMs running — a project-wide instance list confirmed none exist anywhere, not just outside the
+filter. The 3 shards slot-12's 2026-07-14T00:47Z check found running
+(`features-sports-sports-20260714-002915/-002934/-002956`) were gone. Bucket count had still climbed from slot-12's
+2,271 to 2,329 (+58) before dying, so real progress was made first.
+
+Checked each dead VM's final `run.log`: all 3 died within ~90s of each other around 2026-07-14T02:02-02:04Z on the
+**same fail-fast gate** as the earlier consolidator incident — `ManifestConsolidatorStaleError` — but this time hitting
+BOTH sports consolidator buckets simultaneously: `-002915` on `instruments-store-sports-prd` (236s stale, >120s budget),
+`-002934`/`-002956` on `market-data-tick-sports-prd` (179-216s stale). This is the SAME bucket whose DuckDB
+`BinderException` crash-loop was fixed in `unified-trading-library@0f55cc2b` per this doc's own 2026-07-14 slot-2 entry
+below — so this looked like it could be a recurrence of that bug class.
+
+**Verified it was NOT a recurrence** before taking any action: checked both consolidators' CURRENT state (not just the
+6.5h-old crash) — `instruments-store-sports-prd` and `market-data-tick-sports-prd` `_index/availability_index.parquet`
+both had `Update time` ~40s before check (well within the 120s budget). Cross-checked Cloud Run execution history for
+both jobs (`uts-prod-manifest-consolidator-instruments-sports`, `uts-prod-manifest-consolidator-market-data-sports`):
+both succeeding every ~60s cycle over the trailing 8 executions, zero failures. Conclusion: a genuine transient
+dual-bucket staleness blip (self-healed, same class as the 2026-07-13 incident this doc already documents), NOT a new
+crash-loop — but the fleet had sat fully dead for ~6.5h afterward with nobody relaunching despite the blocker clearing
+almost immediately.
+
+**Relaunched all 3 gap-fill shards** (same exact 3 ranges as every prior dispatch) via the collision-free
+`launch-features-vm.sh` after fixing two blockers: (1) PATH resolved to the broken snap `gcloud` (`cap_dac_override`
+error, consistent with every prior dispatch's own note) — prefixed `/home/ubuntu/google-cloud-sdk/bin` onto PATH; (2)
+first attempt reported all 5 code tarball manifests missing/stale — re-checked directly via `gsutil stat` and found 4/5
+already fresh (created by other fleet activity in the last few hours) and the 5th (`mtds-code.manifest.json`) present
+too once re-checked; the launcher's own freshness gate passed clean on retry (no republish needed):
+
+- `features-sports-sports-20260714-085642` — 2025-08-11→2026-07-13 (vm-1's range)
+- `features-sports-sports-20260714-085703` — 2018-01-07→2018-06-16 (vm-2's range)
+- `features-sports-sports-20260714-085726` — 2019-08-18→2020-10-05 (vm-3's range)
+
+**No-fire-and-forget verification (HARD RULE)**: `run.log` hadn't propagated yet (known tee-upload lag) so verified via
+direct SSH on all 3 — real `features_service` processes alive (PIDs 7839/7874/7880, 42-107% CPU, 500-684MB RSS, all
+nowhere near the 15-32GB OOM ceiling), all started cleanly at 08:58-08:59Z with the correct date ranges in their command
+line. **Confirmed the manifest-based idempotency (`_should_skip_attempted` in `batch_handler.py:407`) runs regardless of
+whether `--skip-existing` is passed** — the generic `launch-features-vm.sh` launcher does NOT append `--skip-existing`
+to its CMD (checked the actual invoked command line in a dead VM's `run.log`), but the always-on manifest capture_status
+check makes relaunching over the full range safe/idempotent anyway — not a new efficiency defect, just confirming the
+existing safety net covers the gap.
+
+**What I did NOT do**: did not touch `compute_shot_quality_batch` (separate, still-open P0 profiling todo, unrelated to
+this dual-consolidator-staleness finding). Did not modify the launcher script. Did not flip Todo 1 or Todo 3 — compute
+is still genuinely multi-day and in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,329
+once these 3 shards' progress lands — note the bucket's actual GCS path differs slightly from the `features-sports-prd-`
+prefix used in earlier handoffs; use `features-sports-prd-central-element-323112` as this session confirmed it). Watch
+for the SAME `ManifestConsolidatorStaleError` dual-bucket signature recurring — if it does soon after this relaunch,
+that would suggest an actual recurring crash-loop rather than a one-off transient, which would be a genuinely new
+finding worth escalating. Otherwise this matches the established transient-staleness pattern and just needs routine
+gap-fill relaunches when the fleet goes idle.
+
+Checkbox NOT flipped (Todo 3 still blocked; Todo 1 compute genuinely in progress). No repo code commit this entry (VM
+operations only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work — Todo 3 remains structurally blocked until Todo 1 approaches completion.
+
+### 2026-07-14 — slot 12 (Todo 1 re-dispatch — fast re-verify, fleet healthy, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs slot-2's earlier 2026-07-14
+  dispatch relaunched (`features-sports-sports-20260714-002915/-002934/-002956`), all `RUNNING`.
+- Features bucket unique-date count: **2,271** (up from slot-2's 2,267) — steady forward progress, no stall.
+- **Went past `RUNNING` status**: `-002934` and `-002956` have wall-clock-fresh `run.log` lines (within ~2 min of check
+  time, `date -u` = 2026-07-14T00:47:16Z) — no crash signature, actively computing (`-002956` mid `derived_features`
+  writes, hit a transient "consolidated blob age 830.3s > 120s" manifest-staleness warning but correctly fell back per
+  its own honest-refusal logic, not a crash). `-002915`'s `run.log` GCS object doesn't exist yet (tee upload lag, not a
+  bug) — confirmed genuinely alive via direct SSH instead: real `features_service` process (PID 7609, 25.5% CPU, 691MB
+  RSS, 4:09 accumulated CPU-time) on its assigned range (2025-08-11→2026-07-13), nowhere near the 15-32GB OOM ceiling.
+- Checked `features-service` git log (`origin/live-defi-rollout`) for any new commit touching
+  `compute_shot_quality_batch`/`derived_new_calculators.py` since the last check: **none** — `b05f48ad` (already
+  known-insufficient per the reopened issue doc) is still the latest touch on `shot_quality_calculator.py`. The P0
+  root-cause profiling todo in
+  [`features_sports_unbounded_memory_early_history_dates_2026_07_13.md`](issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md)
+  remains open/unowned.
+- No new OOM/crash signature, no new zombie shard, no new poison date discovered.
+
+**What I did NOT do**: did not attempt the `compute_shot_quality_batch` profiling — same reasoning as every prior
+dispatch (needs a dedicated Docker-memory-capped investigation against real data, not a quick check between other
+tasks). Did not relaunch or touch any of the 3 healthy shards. Did not re-run `check_pipeline_completeness.py` (Todo
+2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real compute cost, history is still only ~54% covered.
+Did not flip Todo 1.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,271).
+Unchanged from every prior handoff — still waiting on the `compute_shot_quality_batch` P0 profiling todo, which needs a
+dedicated session (Docker memory cap, memray/tracemalloc against real GCS data for one of the known poison dates:
+2018-01-06 / 2019-08-17 / 2025-08-10) rather than another fast re-verify cycle.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
+### 2026-07-14 — slot 2 (Todo 3 dispatch — still BLOCKED-PREREQ, immediately following this session's own Todo 1 fast-reverify)
+
+**Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
+flipped. No new action beyond the Todo 1 work already done this session.**
+
+Immediately following my own Todo 1 dispatch above (P0 manifest-consolidator crash-loop found + fixed + relaunched):
+features bucket unique-date count **2,267** (up from 2,266) — the 3 relaunched shards confirmed still `RUNNING` and
+making real forward progress. Full history is ~4,210 days; ~54% complete. "Features manifest clean over FULL history"
+cannot be honestly evaluated while >45% of history is unattempted — same structural gate every prior dispatch on this
+todo has found. Not re-running `check_pipeline_completeness.py` (would just reconfirm the same BLOCKED-PREREQ verdict
+slot-15's 2026-07-13 entry above already established, at real compute cost for no new information).
+
+Checkbox NOT flipped. No repo code commit this entry. `/skip-current-task` taken — this session already did the
+substantive work available on this plan (the P0 consolidator fix + relaunch, see the entry immediately below/above);
+re-running the same blocked-gate check back-to-back adds nothing.
+
+### 2026-07-14 — slot 2 (Todo 1 re-dispatch — found + root-caused a P0 production consolidator crash-loop that had silently stalled the fleet for ~3h; independently fixed, converged with a peer's identical fix, relaunched)
+
+**Todo 1 (compute features 2015→present) — took concrete action (found a real P0, relaunched 3 dead shards). Checkbox
+NOT flipped (multi-day operation, not yet complete).**
+
+Fast re-verify first (per this plan's established precedent):
+`gcloud compute instances list --filter="name~fss OR name~features"` returned **ZERO** VMs (the 3 shards slot-6/slot-9's
+last checks found — `features-sports-sports-20260713-200043/-200456/-200525` — were entirely gone). Features bucket
+unique-date count: **2,266** (barely up from slot-6's 2,262, a +4 movement over ~3 hours — a real stall, not steady
+progress).
+
+**Root-caused the silent stall**: all 3 shards' `run.log`s showed `DEPLOYMENT_FAILED exit_code=1` within ~90 seconds of
+each other (~21:09-21:10 UTC 2026-07-13) — a fleet-wide simultaneous death, not 3 independent failures. Cause: a
+`ManifestConsolidatorStaleError` fail-fast gate (`instruments-store-sports-prd` heartbeat 144s old, budget 120s).
+Confirmed the consolidator had self-healed for THAT bucket (33s fresh at check time) and relaunched the exact 3 original
+ranges (`features-sports-sports-20260714-000856` [2025-08-11→2026-07-13], `-000924` [2018-01-07→2018-06-16], `-000944`
+[2019-08-18→2020-10-05]) via the collision-safe `launch-features-vm.sh --launch-mode full` (per slot-14's own documented
+precedent above — the parallel launcher's delete-before-create naming collision footgun).
+
+**All 3 relaunches died again within ~1 minute — a DIFFERENT, more severe consolidator failure this time.** Not the same
+bucket: `market-data-tick-sports-prd-central-element-323112`'s consolidator heartbeat was **1108-1109s stale** (18+
+minutes, not 144s). Checked the actual Cloud Run job (`uts-prod-manifest-consolidator-market-data-sports`) directly — it
+WAS running (every ~1min per its Scheduler cadence) but **crash-looping continuously since at least 00:02:34 UTC** with
+`_duckdb.BinderException: Binder Error: Set operations can only apply to expressions with the same number of result columns`
+in `_duckdb_consolidate_and_write`. This is a genuine, currently-active P0 (data-pipeline-correctness HARD RULE)
+blocking the ENTIRE sports feature pipeline, not just this plan's 3 shards.
+
+**Root-caused fully** (schema comparison of the canonical index vs. per-VM shards): the canonical
+`availability_index.parquet` had 40 columns; two recently-written per-VM shards had 41 (extra column: `available_at`, a
+real, actively-used schema field per `unified_trading_library/availability_stamping.py`/`_writer_io.py` — NOT stale
+debris, a genuine in-progress schema migration). Traced to `unified_trading_library/manifest_consolidator.py`:
+`shard_proj` (the shard-side merge projection) is explicitly padded to the full `union_cols` list, but `canon_read` (the
+canonical-side projection) was a bare `SELECT *` — narrower than `union_cols` whenever canon predates a new column, so
+UNIONing the two raises DuckDB's BinderException at bind time (data-independent, fires on every cycle). Found a SECOND
+instance of the identical bug in `_check_column_fill_regression` (a column-fill-rate observability check) doing
+`count("available_at")` directly against canon without checking it exists there.
+
+**Fixed both sites** (pad `canon_read` to `union_cols` the same way `shard_proj` already is; skip/zero-count columns
+`_check_column_fill_regression` can't find in canon), added a regression test proven to fail pre-fix (reproduces the
+EXACT production `BinderException`) and pass post-fix, full `test_manifest_consolidator.py` suite green (66→67 tests).
+**While shipping, discovered a peer (slot-11) had independently found + fixed the IDENTICAL bug** (same 2 sites, same
+root cause, same fix shape) — verified: the resulting `manifest_consolidator.py` content was **byte-identical** between
+my fix and theirs (`unified-trading-library@0f55cc2b`). Their fix additionally verified against REAL production data
+during a coordinated maintenance window (cross-referenced their commit: IS `available_at` fill 62.9%→87.8%, MDPS
+0%→85.3%, zero row-count regression) — more thorough than my synthetic-fixture verification alone. Discarded my
+duplicate (`git reset --hard origin/live-defi-rollout`) and kept the landed commit, matching this session's own
+established precedent for concurrent convergence (see the CeFi plan's Progress Log the same day for 2 prior instances of
+this exact reconciliation pattern).
+
+**Confirmed the production incident had genuinely cleared by the time of relaunch** (not just "should be fixed now" —
+verified live): the consolidator's most recent Cloud Run execution succeeded (`succeededCount=1`), the
+`market-data-tick-sports-prd` index was updating fresh again, and zero new BinderException log lines in the trailing 5
+minutes. **Relaunched the 3 gap-fill shards a second time** (`features-sports-sports-20260714-002915/-002934/-002956`,
+same exact 3 ranges) and verified via `run.log` — `-002934` (2018-01-07→2018-06-16 range) is confirmed genuinely
+computing: `sports batch startup gate: market-data consolidator healthy for sports` (the EXACT gate that was
+crash-looping) now passes, real reference-data reads (leagues, 1228 rows) and `--skip-existing` correctly resuming from
+prior progress. The other 2 shards were still RUNNING with no crash signature but hadn't hit their first log-upload
+cycle at last check — not treated as a separate finding, consistent with normal startup latency.
+
+**What I did NOT do**: did not attempt to determine WHY the production incident self-cleared between my two relaunch
+attempts (likely the offending shard aged out of the consolidator's mtime-based incremental-changed-shard window before
+my fix even landed) — not necessary for closing this finding, and speculative root-causing of an already-resolved
+transient window isn't actionable. Did not touch any OTHER bucket's consolidator even though this exact bug class could
+recur on any bucket whose canon predates a future new schema column — the shipped fix is general (keyed off `union_cols`
+vs. each file's own DESCRIBE, not sports-specific), so no further per-bucket action is needed. Did not flip Todo 1 —
+full-history compute is still genuinely multi-day and in progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/ by_date/ | wc -l` (should climb from 2,266,
+now with the 3 new relaunches' contributions); watch for the SAME `ManifestConsolidatorStaleError`/`BinderException`
+signature recurring (would indicate the fix didn't fully hold, or a DIFFERENT bucket hit the same schema-migration
+window) — if it does, that's a genuinely new finding, not a repeat of this one (this exact class is now fixed at the
+source). Once the bucket approaches the full ~4,210-day span, re-run `check_pipeline_completeness.py` (Todo 2) and
+reassess Todo 1 + Todo 3 for real. `compute_shot_quality_batch`'s P0 profiling todo (a SEPARATE, still-open finding from
+2026-07-13) remains unowned — this session's finding is unrelated to it (a different bucket's consolidator infra bug,
+not a features-service compute-path OOM).
+
+Checkbox NOT flipped (compute genuinely in progress). Repo code commits this entry: none of my own landed
+(`unified-trading-library@0f55cc2b` — peer's, credited above; my byte-identical duplicate was discarded); VM operations
+
+- this plan-doc entry ship via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot moves to other
+  dispatchable work.
+
 ### 2026-07-13 — slot 6 (Todo 1 re-dispatch — fast re-verify, fleet still healthy, steady progress, no new action)
 
 **Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**

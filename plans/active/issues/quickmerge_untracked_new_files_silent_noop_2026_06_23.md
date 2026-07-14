@@ -86,3 +86,8 @@ behaviour, so it wants a deliberate test, not a hot-patch under time pressure.
 > bug is therefore untracked by any live plan; not reassigned here (picking a new owner is an operator/triage call, out
 > of this chunk's file scope) — flagging so the next triage pass routes it (candidate:
 > `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`, since it claims exclusive current SSOT status for this exact contract).
+
+> **[2026-07-14 correction, findings 107/201]**: routed per the candidate above — this bug is now recorded as an open P1
+> todo in `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` Phase 2 (its pipeline/quickmerge health-work section), so it is
+> no longer untracked by any live plan. Fix itself is still NOT implemented — this only closes the tracking/ownership
+> gap, not the underlying bug.

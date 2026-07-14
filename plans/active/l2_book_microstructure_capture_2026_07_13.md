@@ -124,13 +124,39 @@ sequential: true
       SHA). Shipped via `quickmerge --agent --files` after two mid-flight rebases onto concurrent peer pushes (this is a
       hot file under sustained multi-slot traffic) — each rebase re-verified via a fresh full QG run before the final
       push, never skipped.
-- [ ] [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
+- [x] ✅ [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
       batch/replay path is also built) in `data_type_capability.py`, scoped ONLY to the venues that actually ship
-      deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts.
+      deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts. — **DONE (partial,
+      by design), slot-13, `unified-api-contracts@a7a14187`.** Split the two data_types instead of flipping both
+      identically: `depth_of_book_10` is raw-captured directly by a per-venue WS connector (todo 2,
+      `market-tick-data-service@15f5657b`) — flipped `live_capable=True` for the 5 genuinely capable venues
+      (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES, OKX-SWAP), stayed honest-absent for the other 4. `queue_position`
+      is COMPUTED — `compute_book_microstructure` exists (todo 3) but **no handler dispatches it against a live feed and
+      writes the result** (the pre-retirement handler was deleted in `a4fb3d13` and was never rebuilt — not covered by
+      any todo in this plan). Flipping `queue_position` to `live_capable=True` right now would have been a false claim
+      (a "hollow capability", the same failure mode the HARD CONTRACT above warns against for engine registration) —
+      left it `live_capable=False` for every venue and added the todo below to close the gap. No `batch_capable` flip
+      for either (todo 2 was live-only, no batch/replay path built). Along the way, fixed an unrelated pre-existing
+      QG-red in this repo (`test_ws_cassette_coexistence.py` — 4 new WS connectors from
+      `l2_book_depth10_missing_l5_prerequisite_venues_2026_07_13.md` were never added to `_CONNECTOR_TO_VENUE`, verified
+      pre-existing via clean-tree `git stash` before fixing; adjacent, small, fixed in the same shipment rather than
+      blocking on a repo-blocker). Full `quality-gates.sh` green.
+- [ ] [SCRIPT] P2. **NEW (discovered 2026-07-13, slot-13):** Build the handler + CLI wiring to dispatch
+      `compute_book_microstructure` (market-tick-data-service, recreated todo 3) against the live `depth_of_book_10`
+      feed (todo 2, 5 capable venues) and write the resulting `queue_position_bid/ask` + `depth_levels_bid/ask` rows —
+      mirrors the deleted `book_microstructure_handler.py` pattern
+      (`git show a4fb3d13^:market_tick_data_service/cli/handlers/book_microstructure_handler.py` for the shape to
+      preserve: shard-isolated per-venue derivation, `record_captured(source="mtds_microstructure")`,
+      `resolve_bucket_name(...)`, no raw `gs://`). This is the gap between todo 3 (pure compute function, done) and todo
+      5 below (features-service extraction, which has nothing to read until this lands) — todo 5 is effectively blocked
+      on this. Only after this lands should `queue_position`'s `data_type_capability.py` rows flip to
+      `live_capable=True` for the 5 capable venues. Repo: market-tick-data-service.
 - [ ] [SCRIPT] P2. Extend `features-service/.../book_microstructure_feature_extractor.py`
       (`extract_book_microstructure_feature_dict`) to surface `queue_position_bid`/`queue_position_ask`/
       `book_depth_levels` when present — the honest-absence behavior for capped venues must be preserved exactly as
-      today. `formula_version=1` on any new derived keys. Repo: features-service.
+      today. `formula_version=1` on any new derived keys. Repo: features-service. **Blocked on the new handler-wiring
+      todo above** — until it lands, `queue_position`/`depth_levels_*` are honest-absent from every captured row, so
+      there is nothing new for this extractor to surface yet.
 - [ ] [SCRIPT] P2. Connectivity-test the new deeper-book path with a small bounded live pull per capable venue (mirrors
       the existing `book_microstructure_connectivity_check.py` pattern) — proves the pipeline, is NOT a backfill. Repo:
       market-tick-data-service.

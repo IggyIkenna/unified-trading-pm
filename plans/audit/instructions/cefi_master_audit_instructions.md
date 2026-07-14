@@ -149,9 +149,9 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       `available_at` · env-split bucket · no phantom captured · batch=live. GREEN = all data-state.
 - [ ] (CF-5 cefi reasons) every empty cefi cell typed: `EXPECTED_KNOWN_SOURCE_GAP` (documented outage) / genuine
       `SOURCE_RETURNED_ZERO`; 0 blank/mislabeled.
-- [ ] (CF-7 cefi names) underscore data*type
-      (`book_snapshot_5`/`trades`/`derivative_ticker`/`liquidations`/`ohlcv*\*`) +     flat venue (`BINANCE-SPOT`/`UPBIT`/`COINBASE-SPOT`/…)
-      canonical.
+- [ ] (CF-7 cefi names) underscore `data_type`
+      (`book_snapshot_5`/`trades`/`derivative_ticker`/`liquidations`/`ohlcv_*`) + flat venue
+      (`BINANCE-SPOT`/`UPBIT`/`COINBASE-SPOT`/…) canonical.
 
 ## CeFi-specific standing checks (added 2026-06-08) — Era-B chains + venue source model
 

@@ -526,18 +526,18 @@ ready to run.
       every deployment-service quickmerge (botched-TID251 F821 `storage` annotation + ambiguous unicode). — e9f7092.
 - [x] ✅ [OPS] P0. **Detector VM LAUNCHED + RUNNING the live loop (verified on-VM 2026-06-24).** VM
       `prediction-arb-detector-20260624-134310` (e2-standard-4, asia-northeast1-c) —
-      `arb-detect: live loop START     interval=600s scan_days=3 max_duration=0s` then `ARB_DETECT_TICK` firing every
-      tick. **REAL NUMBERS (live + the batch smoke):** matcher = **8,932 Kalshi↔Polymarket cross-venue mappings**
+      `arb-detect: live loop START interval=600s scan_days=3 max_duration=0s` then `ARB_DETECT_TICK` firing every tick.
+      **REAL NUMBERS (live + the batch smoke):** matcher = **8,932 Kalshi↔Polymarket cross-venue mappings**
       (day=2026-06-23); **two_way_on_both = 0, PURE_ARB = 0 (raw+net), QUOTABLE_ARB = 0, executable = 0,
       mid_dispersion_max = 0.0000, GCS arb-store rows = 0** — a TRUTHFUL honest-zero: the binding gate is the
       thin/one-sided Polymarket-crypto book liquidity (no two-sided liquid OVERLAP with Kalshi's rich crypto books) +
       IS-catalogue staleness for the current UTC day (the detector survives it via the `--scan-days 3` trailing window;
       the trades producers don't — see the IS-catalogue P0). The pipeline streams correctly + the store is the
       opportunity tape (writes nothing on 0 crossings, honest absence); it will flag + persist the instant a two-sided
-      liquid overlap exists. Monitoring per the strict rules (run.log log-mtime + ARB*DETECT_TICK counter + exit_code;
+      liquid overlap exists. Monitoring per the strict rules (run.log log-mtime + ARB_DETECT_TICK counter + exit_code;
       the launch took 5 attempts — each crash caught by no-fire-and-forget T+10 + fixed: wrong-module → committed
       dispatch; missing events topic → created; events-topic IAM → UTL best-effort lifecycle (5011dbc9); handler
-      VALIDATION*\* PubSub publish → removed; tarball-overwrite race → committed so fleet rebuilds converge).
+      VALIDATION\*\* PubSub publish → removed; tarball-overwrite race → committed so fleet rebuilds converge).
       Provenance: on-VM verify 2026-06-24.
 - [x] ✅ [OPS] P1. **Promoted to long-lived** — it launched AS the permanent service: `LONG_LIVED_LIVE` lifecycle
       (`launch-prediction-arb-detector.sh`, `VM_SHUTDOWN_ON_COMPLETION=false`, `max_duration=0` = runs indefinitely),
@@ -560,8 +560,8 @@ ready to run.
       `internal/reference/fee_schedule.py` carries only per-client/execution fees, no public per-venue prediction
       trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo:
       unified-api-contracts + features-service. Provenance: detector build 2026-06-24. ✅ UAC@4601e242 +
-      features@909368a4 — `venue_fee_model.py` added to UAC canonical predictions domain (KALSHI*FEE_COEFF=0.07,
-      POLYMARKET_FEE_FRACTION=0.0, PREDICTION_VENUE_FEE_MODEL_VERSION, kalshi_fee/polymarket_fee/net_edge_sell*\*).
+      features@909368a4 — `venue_fee_model.py` added to UAC canonical predictions domain
+      (`KALSHI_FEE_COEFF=0.07, POLYMARKET_FEE_FRACTION=0.0, PREDICTION_VENUE_FEE_MODEL_VERSION, kalshi_fee/polymarket_fee/net_edge_sell_*`).
       Exported from `unified_api_contracts.predictions`. `prediction_arb_fee_model.py` deleted;
       `cross_venue_arb_detector.py` imports from UAC directly. `FEE_MODEL_VERSION` kept as an alias constant (same
       value) via PREDICTION_VENUE_FEE_MODEL_VERSION. QG green both repos. 2026-06-26.
@@ -798,9 +798,9 @@ Operator (2026-06-24) directed a **two-axis** cross-venue canonical scheme so ov
 underlying level (CRUDE_OIL is shared once PRICE_LEVEL-vs-UP_DOWN bet-type is stripped — 22 Kalshi / 18 Polymarket / 12
 shared underlyings). SHIPPED `unified_api_contracts/canonical/domain/predictions/two_axis.py`:
 
-- **Axis-1 = `PredictionUnderlying`** (57 categories: crypto coins, SPX/NDX/RUT/DJIA, CRUDE*OIL/NATGAS/GOLD/SILVER/EUR,
-  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*\_, SPORTS\_\_ leagues, OTHER) —
-  the semantic SUBJECT.
+- **Axis-1 = `PredictionUnderlying`** (57 categories:
+  `crypto coins, SPX/NDX/RUT/DJIA, CRUDE_OIL/NATGAS/GOLD/SILVER/EUR, CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO_*, SPORTS_*`
+  leagues, OTHER) — the semantic SUBJECT.
 - **Axis-2 = `PredictionBetType`**
   (UP_DOWN/PRICE_RANGE/PRICE_LEVEL/MATCH/SPREAD/TOTAL/NRFI/PER_MONTH/APPROVAL_RATING/…).
 - `CANONICAL_GROUP_TO_UNDERLYING` + `CANONICAL_GROUP_TO_BET_TYPE` — **comprehensive 97/97** cqg values mapped on each
@@ -1041,8 +1041,8 @@ the open P0 sub-todos below (item-43a..43d).
 - [x] ✅ [SCRIPT] P0. **43b — emission bounding ALREADY DONE in the enumerator + a latent tardis bug FIXED
       (market-tick-data-service@6003f512)**: ground-truth read (Grep-Then-Read) found the IS
       `enumerate_expected_universe.py` **v2 enumerators ALREADY bound emission by `available_from`/`available_to`
-      inline** — `d_ts < af_ts →     EXPECTED_INSTRUMENT_NOT_LISTED`, `d_ts > at_ts → EXPECTED_INSTRUMENT_DELISTED`,
-      else alive → `expected_unattempted` (across cefi/defi/tradfi/sports/prediction; the prediction enumerator at
+      inline** — `d_ts < af_ts → EXPECTED_INSTRUMENT_NOT_LISTED`, `d_ts > at_ts → EXPECTED_INSTRUMENT_DELISTED`, else
+      alive → `expected_unattempted` (across cefi/defi/tradfi/sports/prediction; the prediction enumerator at
       L1625-1692). They reimplement the bounds check directly (not via `was_instrument_alive`), so emission is correctly
       life-bounded. The only real gap was a **latent TypeError**: mtds `tardis_batch_download.py` called
       `was_instrument_alive(venue=/instrument_id=/day=)` — the WRONG kwargs vs the UAC
@@ -1091,7 +1091,7 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   canonical fixture registry**: parts (1)+(2)+(4-guard) **✅ SHIPPED — UAC@3effe2fc** (parts (3) registry-resolution +
   mapping-population + the arb-layer wiring REMAIN; split to the focused residual sub-todo below). (1) ✅ Kalshi —
   `parse_kalshi_sports_fixture(event_ticker, title)` in UAC `canonical/domain/predictions/fixture_parsing.py` →
-  `SportsFixtureKey(league, away, home, fixture_date,     start_time)`. **Key design correction (verified vs REAL live
+  `SportsFixtureKey(league, away, home, fixture_date, start_time)`. **Key design correction (verified vs REAL live
   tickers 2026-06-23):** the per-league team-code split is UNRELIABLE — MLB is 3+3 with an HHMM time
   (`KXMLBGAME-26JUN261910SEACLE`), but **NFL has NO time + VARIABLE 2-3-char codes** (`KXNFLGAME-26SEP14DENKC`=DEN+KC,
   `WASPHI`=WAS+PHI) → a fixed-offset split breaks NFL. So teams are derived from the human `title` "Away vs Home"
@@ -1106,14 +1106,17 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   per-instrument-pairing todo with the concrete fixture-encoding evidence.)
   - [ ] [DESIGN] P1. **Fixture-pairing RESIDUAL — registry-resolution + mapping-population + arb wiring** (parser
         shipped UAC@3effe2fc): (3a) resolve each `SportsFixtureKey` to a canonical sport fixture via the existing
-        **sports domain** registry (api-football fixture*id / odds-api event_id — reuse the
+        **sports domain** registry (api-football `fixture_id` / odds-api `event_id` — reuse the
         `ApiFootballAdapter.get_fixtures` cross-ref already in `polymarket/parsing.py::_cross_reference_fixture`) keyed
         on `(league, away, home, date)`; (3b) populate `CanonicalPredictionMarket.mapped_sport_event_id` (IS enum, on
         the sports-prediction instrument record) + `PredictionMarketCrossVenueMapping` (the
-        `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row); (3c) the arb-layer consumer
-        (features/strategy) groups the two venues' instruments by `SportsFixtureKey.pairing_key()` WITHIN the shared
-        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs a cross-venue team-name canonicaliser (Kalshi     "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the existing`get_canonical_team_for_polymarket`
-        maps with Kalshi city/abbrev aliases, validated vs REAL paired samples (no false pairs — operator). Repos:
+        `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
+
+        (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
+        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+        REAL paired samples (no false pairs — operator). Repos:
         unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
         enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
         (residual after parser UAC@3effe2fc).
@@ -1277,9 +1280,9 @@ already on LDR.
       group at axis-1. 73 tests pass. Politics P2 gap remains (its own open todo). 2026-06-26.
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
-      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔
-      Polymarket condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in
-      the strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
+      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
+      condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in the
+      strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
       features-service. Provenance: operator 2026-06-23 — "so we can easily pair them up properly".
 
 ### 2026-06-23 (autonomous, continuous-flow) — fleet uv.lock unblock + P1 Kalshi-grouping ROOT CAUSE = enumeration KXMVE-flood (NOT the mapper)
@@ -1358,12 +1361,12 @@ Findings + fixes:
   trades/market_lifecycle/prediction_canonical_question_group, `available_from` 2025-03-13 → 2026-06-23.**
 - **Honest 4-state denominator VERIFIED** — re-ran the v2 enumerator off the fresh catalog (Cloud Run
   `expected-universe-v2-prediction-ggmbt`, Succeeded). The prediction `_index` 4-state: captured 33,150 /
-  empty*confirmed 160,491 / expected_unattempted 476 / attempted_failed 50. Fed through the canonical UAC SSOT
+  empty_confirmed 160,491 / expected_unattempted 476 / attempted_failed 50. Fed through the canonical UAC SSOT
   `compute_honest_coverage` (numerator=captured+empty_confirmed+eu_known_empty;
   denominator+=attempted_failed+eu_pending_fetch) → **0.9973**. Denominator is the IS-listed could-exist universe, NOT
   re-derived per consumer (the UAC `_honest_coverage_logic.py` SSOT all consumers call). `empty_confirmed` (genuine
   no-trade-that-day, SOURCE_RETURNED_ZERO) counts as honestly-answered; API-failure → attempted_failed (gap);
-  EXPECTED*\* lifecycle → known_empty (numerator).
+  EXPECTED\*\* lifecycle → known_empty (numerator).
 - **MTDS pre-flight gated to IS universe — CONFIRMED**: live runner
   `_read_prediction_is_universe_sync`/`_filter_prediction_is_blobs` (only resolves IS-listed instruments, honest-skip on
   none) + batch adapters' `_load_market_lifecycle_for_date` (primary `market_lifecycle/by_canonical_group/` +
@@ -1446,10 +1449,12 @@ unaffected (mocks `.get` URL-agnostically).
 ### 2026-06-21 (PM-3) — LIVE prediction: infra PROVEN end-to-end; capture = design-gap tail (documented)
 
 **Live pipeline is fully wired + proven** (7 sequential never-run-before bugs found+fixed): connector case-insensitive
-resolve, bucket kind (market-data-tick-prediction flat key), recorder source-derive, row*key day->date, Gamma query
-`condition_ids` (was clob_token_ids -> 422), launcher
-`*`->`-`VM-name sanitization, CandleBoundaryCrossedEvent data_type enum (book_snapshot -> book_snapshot_5). The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no 422), manifest writes per-VM shards with correct`pipeline_mode=live_polymarket_clob`,
-candle boundary flushes without error.
+resolve, bucket kind (market-data-tick-prediction flat key), recorder source-derive, `row_key` day->date, Gamma query
+`condition_ids` (was `clob_token_ids` -> 422), launcher `_`->`-` VM-name sanitization, CandleBoundaryCrossedEvent
+data_type enum (book_snapshot -> book_snapshot_5).
+
+The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no 422), manifest writes per-VM shards with
+correct `pipeline_mode=live_polymarket_clob`, candle boundary flushes without error.
 
 **Remaining: capture is `empty_confirmed` (row_count=0) — a DESIGN GAP, not a bug.** The Polymarket Gamma poller yields
 a TOP-OF-BOOK quote (yes_price/no_price/best_bid/best_ask/last_trade_price), but no existing capturable data_type
@@ -1643,16 +1648,15 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 
 - [x] ✅ [SCRIPT] P1. **`rebuild_prediction_manifest --venue POLYMARKET` filter + v4→v9 re-walk DONE** (re-walk VM
       mtds-prediction-polyrewalk-20260621-204658, 5244s, terminal): re-walked POLYMARKET cqg 2025-03-14→2026-06-21 →
-      **7196 captured cqg bundles at v9**, reemit*empty 22257, failed*\* 0, source_returned_zero_preserved 1175. The
+      **7196 captured cqg bundles at v9**, `reemit_empty` 22257, `failed_*` 0, source_returned_zero_preserved 1175. The
       `--venue POLYMARKET` filter kept it off the coexisting batch_kalshi seed parquets; the CF-11 phantom fix (skip
       blank-instrument_id, `reemit_skipped_blank_iid: 2331`) let it complete (the prior v1 crashed at the CF-11
       re-emit). v9-schema polish — the 1454 were already captured. — 2026-06-21
 - [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture
-      (verified 2026-06-21): `manifest_finalize.py` prediction cqg writer now resolves a _batch_ pipeline*mode even on
+      (verified 2026-06-21): `manifest_finalize.py` prediction cqg writer now resolves a _batch_ `pipeline_mode` even on
       the LIVE ingest path (the prior code hardcoded `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it
-      should stamp
-      `live*<source>`not`batch\_<source>`. Make the finalize mode-aware (thread the run mode →     `live_pipeline_mode_for_venue`
-      for live). Repo: market-tick-data-service.
+      should stamp `live_<source>` not `batch_<source>`. Make the finalize mode-aware (thread the run mode →
+      `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` covers `batch_kalshi`** —
       covered-by-derivation (verified 2026-06-21): before any
       `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
@@ -1917,11 +1921,10 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   `_canonical_pipeline_mode_prefixes("prediction")` HAS batch_kalshi=True.
 - **Live finalize NOT batch-mode-stamped** (line 153 — STALE PREMISE): `manifest_finalize.py` is the BATCH
   orchestrator's finalize (`_DateRunState` carries only `mvp_mode`, no live flag); the LIVE websocket path uses
-  `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` pipeline*mode per call resolved by the runner via
-  `live_pipeline_mode_for_venue`. Verified `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
-  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps
-  `batch*`, live recorder correctly stamps `live\_` — no mode-awareness bug; the line-153 "finalize on the live path"
-  assumption was incorrect.
+  `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` `pipeline_mode` per call resolved by the runner
+  via `live_pipeline_mode_for_venue`. Verified `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi`
+  and `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch_`, live recorder
+  correctly stamps `live_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
 
 ### 2026-06-21 20:52 — P1 perp-venue test items GREEN
 
@@ -1955,12 +1958,14 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   `polymarket_perp_ws.py` (scaffold, `_ENDPOINT_LIVE=False`, BLOCKED-UPSTREAM); 65 unit tests; QG green.
 - **Caught at flip-verify**: `live_pipeline_mode_for_venue("cefi","KALSHI-PERP","book_snapshot")` raised
   `ValueError: No PipelineMode for source 'tardis' in mode 'live'` — the perp venue (hyphen) fell through to the cefi
-  book*snapshot SOURCE_PRIORITY primary `tardis` (batch-only flat-file, no LIVE* mode). The live runner would crash at
-  pipeline_mode resolution. FIX (UAC@a6444476, committed via orphan-wip inherit + pushed): added
-  `_CEFI_PERP_LIVE_SOURCE_FOR_VENUE` override in `live_source_for_venue` (KALSHI-PERP→kalshi_perp,
-  POLYMARKET-PERP→polymarket_perp) checked before CEFI_LIVE_VENUES; verified KALSHI-PERP/POLYMARKET-PERP →
-  live_kalshi_perp/live_polymarket_perp, binance unregressed; regression test
+  `book_snapshot` `SOURCE_PRIORITY` primary `tardis` (batch-only flat-file, no `LIVE_` mode). The live runner would
+  crash at `pipeline_mode` resolution.
+
+  FIX (UAC@a6444476, committed via orphan-wip inherit + pushed): added `_CEFI_PERP_LIVE_SOURCE_FOR_VENUE` override in
+  `live_source_for_venue` (KALSHI-PERP→kalshi_perp, POLYMARKET-PERP→polymarket_perp) checked before `CEFI_LIVE_VENUES`;
+  verified KALSHI-PERP/POLYMARKET-PERP → live_kalshi_perp/live_polymarket_perp, binance unregressed; regression test
   `test_live_source_for_cefi_crypto_perp_venue_is_its_own_ws_feed`.
+
 - Also corrected 2 stale TradFi assertions (NASDAQ/NYSE `ohlcv_1m`→`ohlcv_1m,ohlcv_1s`) — foreign-lane registry change
   (DBEQ.BASIC serves both per Databento SSOT) that had left the asserts stale on LDR HEAD.
 
@@ -1977,7 +1982,7 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
 ### 2026-06-21 23:50 — Polymarket v9 re-walk COMPLETE + book_snapshot naming diagnosed
 
 - **Re-walk v2 DONE** (VM 204658, terminal): 7196 POLYMARKET cqg bundles re-walked to v9 (2025-03-14→2026-06-21), CF-11
-  phantom fix confirmed working (reemit*skipped_blank_iid 2331, failed*\* 0). The v1 crash (MalformedRowKeyError) is
+  phantom fix confirmed working (`reemit_skipped_blank_iid` 2331, `failed_*` 0). The v1 crash (MalformedRowKeyError) is
   resolved.
 - **book_snapshot naming (item 75)**: diagnosed canonical=`book_snapshot_5`; bare `book_snapshot` is the stale mismatch
   BUT reconciliation is entangled with item 69 (prediction = top-of-book, not 5-level) + carries cross-AG cefi blast
@@ -2011,8 +2016,8 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
       Sports/Politics+guard-fix) + re-enum verified. Partition-completeness follow-ons (below). ~~ORIG: CROSS-VENUE
       BLOCKER — Kalshi markets are NOT canonically grouped (all → `canonical_question_group=OTHER`), so no
       Polymarket↔Kalshi category matching is possible (DISCOVERED 2026-06-23)\*\*: the catalogue cqg taxonomy is
-      Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `*\_UP_DOWN_DAILY`+`*\_PRICE_RANGE_DAILY`, SPX/DJIA/RUT,
-      CRUDE*OIL, SPORTS_MLB\*\*/TENNIS, TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but
+      Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `*_UP_DOWN_DAILY`+`\*\_PRICE_RANGE_DAILY`, SPX/DJIA/RUT,
+      CRUDE_OIL, SPORTS_MLB_\*/TENNIS, TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but
       Kalshi-EMPTY (every Kalshi row falls to OTHER). Root cause: `PredictionMarketMapper` has Polymarket-slug→cqg rules
       but NO Kalshi-ticker→shared-cqg rules. **Impact**: the only cqg shared by both venues is OTHER → cross-venue
       dispersion/arb category-matching is impossible until Kalshi tickers (KXBTCD/KXETH/KXCPI/KXFED/…) map into the SAME
@@ -2043,13 +2048,13 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   KALSHI SOURCE_RETURNED_ZERO** as empty_confirmed with "no parseable bounds / out-of-window" — these Kalshi markets
   lack `available_from/to` (the SAME P0 lifecycle gap), so they can't be lifecycle-reclassified until KALSHI bounds
   populate (P0 43d). Repo: market-tick-data-service. **ORIG BLOCKER (now fixed):** `rebuild_prediction_manifest.py` was
-  POLYMARKET-ONLY (DISCOVERED via dry-run 2026-06-24, before any write). A `--venue KALSHI     --dry-run` over
+  POLYMARKET-ONLY (DISCOVERED via dry-run 2026-06-24, before any write). A `--venue KALSHI --dry-run` over
   2025-05-01..2026-06-24 (read-only, safe) found the re-walk classifies EVERY Kalshi market with
   `classify_polymarket_to_canonical_group` (line 365; the line-498 comment literally says "polymarket-cqg specific") →
   Kalshi tickers mis-bucket to OTHER (probed: the script logs `KXCPI-25MAY-T0.2` → OTHER, but the FIXED
   `classify_kalshi_to_canonical_group(ticker="KXCPI-25MAY-T0.2")` correctly returns `CPI_PRINT_PER_MONTH`; same for
   `KXMLBGAME→SPORTS_MLB_MATCH`, `KXBTCD→BTC_UP_DOWN_DAILY`, `KXFED→FED_RATE_DECISION_PER_FOMC`). **So a
-  `--apply     --venue KALSHI` would WRITE all-OTHER cqg bundles → CORRUPT the manifest (regression vs the catalogue cqg
+  `--apply --venue KALSHI` would WRITE all-OTHER cqg bundles → CORRUPT the manifest (regression vs the catalogue cqg
   fix). Do NOT run `--apply` until the script is venue-aware.** **FIX (in scope, mtds):** thread `venue` into
   `compute_object_atom` + route the classify call — `classify_kalshi_to_canonical_group(ticker=cid)` for KALSHI vs
   `classify_polymarket_to_canonical_group(...)` for POLYMARKET (the Kalshi classifier keys on the TICKER, which IS the

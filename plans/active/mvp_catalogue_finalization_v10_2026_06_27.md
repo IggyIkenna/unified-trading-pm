@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: MVP Phase 0 — finalize all 5 catalogues on canonical MVP scope v10 (the gating checkpoint)
-summary: Regenerate all 5 instrument catalogues on canonical mvp_scope v10, populate CME OPTION definitions, and verify each AG catalogue is MVP-correct + honest-coverage clean before any MVP backfill begins.
+summary:
+  Regenerate all 5 instrument catalogues on canonical mvp_scope v10, populate CME OPTION definitions, and verify each AG
+  catalogue is MVP-correct + honest-coverage clean before any MVP backfill begins.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,15 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts, deployment-service]
 scope: [engineer, admin]
 tags: [mvp, catalogue, v10, instruments, cme-options, honest-coverage, gating-checkpoint, spot-vm]
-related: [plans/active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md, plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md, plans/active/mvp_reconciliation_closeout_v10_2026_06_27.md, plans/active/instruments_foundation_completeness_2026_06_24.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
+related:
+  [
+    plans/active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
+    plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    plans/active/mvp_reconciliation_closeout_v10_2026_06_27.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+    plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
+  ]
 created: 2026-06-27
 parent_epic: instruments_master
 assigned_vm: planning
@@ -37,12 +47,19 @@ drift_direction: advance-code
 > **Canonical MVP SSOT (the ONLY definition of "what MVP is"):**
 > `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` (`MVP_SCOPE`, `is_mvp`, `is_in_mvp_capture_universe`).
 > **[v12 NOTE 2026-06-30]** This Phase-0 regen RAN against `MVP_SCOPE_CONFIG_VERSION == 10` (the live version on
-> 2026-06-27); the **live authority is now v12** (`mvp_scope.py:761`, bumped by `instrument_universe_registry_consolidation`
-> @`unified-api-contracts@6bcff215`). The v10→v12 delta is **DeFi-only** (ROCKETPOOL-ETHEREUM re-phased pipeline +
-> `VENUES_BY_ASSET_GROUP[defi]` narrowed to the 55 live/producible venues) — it does NOT change the cefi/tradfi/sports/
-> prediction catalogue results recorded below. **For any re-run or downstream cite, v12 is the SSOT, not v10.** Per the
-> workspace HARD RULE the SSOT is the codex doc / code, NEVER a plan — this plan REFERENCES the live version, it does
-> not redefine it.
+> 2026-06-27); the **live authority is now v12** (`mvp_scope.py:761`, bumped by
+> `instrument_universe_registry_consolidation` @`unified-api-contracts@6bcff215`). The v10→v12 delta is **DeFi-only**
+> (ROCKETPOOL-ETHEREUM re-phased pipeline + `VENUES_BY_ASSET_GROUP[defi]` narrowed to the 55 live/producible venues) —
+> it does NOT change the cefi/tradfi/sports/ prediction catalogue results recorded below. **For any re-run or downstream
+> cite, v12 is the SSOT, not v10.** Per the workspace HARD RULE the SSOT is the codex doc / code, NEVER a plan — this
+> plan REFERENCES the live version, it does not redefine it.
+
+> **Archive recommendation pending (annotated 2026-07-14, finding 130, not applied here)**:
+> `active/issues/instruments_service_plan_reconciliation_2026_06_29.md`'s F.1 table (2026-06-30) assessed this plan as
+> 0/9 open — all 9 todos done, confirmed still true — and recommended ⚖️ **ARCHIVE**, pending operator sign-off. This
+> plan remains `status: active` (no archive/superseded banner) because `locked_by: live-defi-rollout` — per workspace
+> rule, locked-plan archival is never-autonomous and needs an explicit `[unlock-plan]` + operator decision, not applied
+> by this doc-sync pass.
 
 ## Codex SSOTs (READ before executing — plan↔codex drift is review-blocking)
 
@@ -137,15 +154,15 @@ todo (real GCS state + a verification command).
       `instruments-service`. **Gate:** `python scripts/audit_instrument_definition_completeness.py --asset-group tradfi`
       shows OPTION cells captured; a GCS probe / parquet read of the tradfi by_date layer returns
       `instrument_type=OPTION` rows for ES.OPT/NQ.OPT/OG.OPT. SPOT N/A (verification). SEQUENTIAL after the producer VMs
-      stop. — **Verified 2026-06-28T01:02Z**: _index updated 00:58:41Z (post-VM stop); CME captured 2002 cells
+      stop. — **Verified 2026-06-28T01:02Z**: \_index updated 00:58:41Z (post-VM stop); CME captured 2002 cells
       2020-01-01→2026-06-26; instrument_count jumped from 17,071 (2026-06-18) to 77,201 (2026-06-19) = OPTION shards
       merged. by_date/day=2020-01-02: 34,572 OPTION rows; by_date/day=2026-06-25: 75,962 OPTION rows. ES.OPT (SP500
       root) 8,864 rows / NQ.OPT (NASDAQ100) 1,828 rows / OG.OPT (GOLD) 17,508 rows. Gate ✓.
 
 ### G2 — regenerate all 5 catalogues on v10
 
-- [x] ✅ [SCRIPT] P0. Regenerate the 5 catalogues on v10 via the roll-up `build_instrument_catalogue.py`, one AG at a time,
-      dry-run then live. Repo: `instruments-service`. **Run per AG** (cefi/defi/tradfi/sports/prediction):
+- [x] ✅ [SCRIPT] P0. Regenerate the 5 catalogues on v10 via the roll-up `build_instrument_catalogue.py`, one AG at a
+      time, dry-run then live. Repo: `instruments-service`. **Run per AG** (cefi/defi/tradfi/sports/prediction):
       `python scripts/build_instrument_catalogue.py --asset-group <ag> --dry-run` (inspect the
       `MVP-tagged catalogue: M / N rows in MVP scope` log + the diff), then
       `python scripts/build_instrument_catalogue.py --asset-group <ag>` (monotonic-guard temp-write→assert→promote to
@@ -175,47 +192,47 @@ todo (real GCS state + a verification command).
       checks); (d) **mvp counts** — the per-AG mvp count from G2's log is sane vs the v10 expectation in
       `mvp-scope-canonical.md` (cefi perp-gated; defi all-MVP; tradfi CME futures+options; sports 94 football leagues
       mvp=true; prediction POLYMARKET+KALSHI mvp=true). **Gate:** all four checks green per AG; record the verdict
-      table. SPOT N/A (read-only). — **Verified 2026-06-28T01:50Z all 5 AGs GREEN**: (a) false-delist: tradfi
-      top-date 2026-06-25=7022 rows (no collapse ✓); cefi top-date 2026-06-26=907 (✓); defi 6721/7222 active (✓);
-      sports all 1609 active (✓); prediction resolved daily (normal ✓). (b) dual-key ghosts: defi 0 duplicate
-      instrument_keys; 4 "dup" pool_addrs are cross-chain ETHEREUM+POLYGON same-contract deployments (✓). (c) blank-
-      status: 0 blank capture_status in IS _index for all 5 AGs (✓). Note: manifest_hygiene_daily RED for cefi is
-      MTDS manifest (not IS catalogue), pre-existing OKX-SWAP/UPBIT gaps, auto-filed in
-      issues/manifest_hygiene_red_2026_06_28.md. (d) mvp counts: defi 7222/7222 ✓; sports 94 football leagues ✓;
-      prediction 2486092/2486092 ✓; cefi 274888/349516 perp-gated ✓; tradfi 643116/1038235 (642126 OPTION) ✓. Gate ✓.
+      table. SPOT N/A (read-only). — **Verified 2026-06-28T01:50Z all 5 AGs GREEN**: (a) false-delist: tradfi top-date
+      2026-06-25=7022 rows (no collapse ✓); cefi top-date 2026-06-26=907 (✓); defi 6721/7222 active (✓); sports all 1609
+      active (✓); prediction resolved daily (normal ✓). (b) dual-key ghosts: defi 0 duplicate instrument_keys; 4 "dup"
+      pool_addrs are cross-chain ETHEREUM+POLYGON same-contract deployments (✓). (c) blank- status: 0 blank
+      capture_status in IS \_index for all 5 AGs (✓). Note: manifest_hygiene_daily RED for cefi is MTDS manifest (not IS
+      catalogue), pre-existing OKX-SWAP/UPBIT gaps, auto-filed in issues/manifest_hygiene_red_2026_06_28.md. (d) mvp
+      counts: defi 7222/7222 ✓; sports 94 football leagues ✓; prediction 2486092/2486092 ✓; cefi 274888/349516
+      perp-gated ✓; tradfi 643116/1038235 (642126 OPTION) ✓. Gate ✓.
 - [x] ✅ [SCRIPT] P0. Run the phantom-manifest audit dry-run per AG to confirm 0 captured-no-parquet ghosts before the
       backfills start measuring against this catalogue. Repo: `instruments-service`. **Run:**
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` per AG; a non-zero phantom
       count is a finding (apply only with `MANIFEST_PER_VM_SHARDS=true VM_NAME=...` per the consolidator-SSOT, and only
       after `prefix_tpls` cover the shape). **Gate:** phantom count recorded per AG; any non-zero triaged (in-plan if
       catalogue-shape, else issue doc). SPOT N/A. — **Verified 2026-06-28T02:11Z (4/5 AGs complete; defi in-progress)**:
-      tradfi=1,789 (ohlcv_15m=664, blank=1083; CBOE=953, ICE=171 pre-lockdown; issue doc
+      tradfi=1,789 (ohlcv*15m=664, blank=1083; CBOE=953, ICE=171 pre-lockdown; issue doc
       `phantom_captures_tradfi_2026_06_28.md`); cefi=13,404 (blank=9757, trades=2522; all major venues; issue doc
       `phantom_captures_cefi_2026_06_28.md`); sports=27,593 (ODDS=26220 dominant; IS sports manifest; issue doc
       `phantom_captures_sports_2026_06_28.md`); prediction=19,482 (book_snapshot_5=9305, trades=5143; MTDS; issue doc
-      `phantom_captures_prediction_2026_06_28.md`); defi=219,529 (swaps_ohlcv_* ×7 ~25,400 each; UNISWAP_V4=69,573;
-      systematic writer failure; issue doc `phantom_captures_defi_2026_06_28.md` — apply reconcile BEFORE defi
-      backfill G0; triage JSONL: `gs://central-element-323112-phantom-triage/triage_defi_20260628_023523.jsonl`).
-      All 5 AGs counted; all non-zero NOT catalogue-shape (MTDS/IS data records) → issue docs filed. Gate ✓ ✅.
-- [x] ✅ [SCRIPT] P0. Phase-0 SIGN-OFF — write the per-AG verdict (mvp count, false-delist=0, ghosts=0, blank=0, CME OPTION
-      present) into this plan's Progress Log and flip the 3 backfill plans' gate. **Gate:** Progress Log table complete
-      for all 5 AGs; this is the green-light that the `mvp_backfill_*` plans' G0 preconditions reference. SPOT N/A.
-      — **Signed off 2026-06-28T02:35Z**: Progress Log updated (phantom column added; all 5 AG G3 verdicts GREEN;
+      `phantom_captures_prediction_2026_06_28.md`); defi=219,529 (swaps_ohlcv*\* ×7 ~25,400 each; UNISWAP_V4=69,573;
+      systematic writer failure; issue doc `phantom_captures_defi_2026_06_28.md` — apply reconcile BEFORE defi backfill
+      G0; triage JSONL: `gs://central-element-323112-phantom-triage/triage_defi_20260628_023523.jsonl`). All 5 AGs
+      counted; all non-zero NOT catalogue-shape (MTDS/IS data records) → issue docs filed. Gate ✓ ✅.
+- [x] ✅ [SCRIPT] P0. Phase-0 SIGN-OFF — write the per-AG verdict (mvp count, false-delist=0, ghosts=0, blank=0, CME
+      OPTION present) into this plan's Progress Log and flip the 3 backfill plans' gate. **Gate:** Progress Log table
+      complete for all 5 AGs; this is the green-light that the `mvp_backfill_*` plans' G0 preconditions reference. SPOT
+      N/A. — **Signed off 2026-06-28T02:35Z**: Progress Log updated (phantom column added; all 5 AG G3 verdicts GREEN;
       all 5 phantom counts now recorded). Backfill banners flipped 🟡→🟢 in `mvp_backfill_tradfi_ohlcv1m`,
-      `mvp_backfill_cefi_tick`, `mvp_backfill_defi_onchain`. 5 phantom issue docs filed (all are MTDS/IS data,
-      not catalogue-shape). Gate ✓ COMPLETE.
+      `mvp_backfill_cefi_tick`, `mvp_backfill_defi_onchain`. 5 phantom issue docs filed (all are MTDS/IS data, not
+      catalogue-shape). Gate ✓ COMPLETE.
 
 ---
 
 ## Progress Log
 
-| AG         | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts | blank-status | phantom captures (G3-008)                                                     | verdict      |
-| ---------- | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ----------------------------------------------------------------------------- | ------------ |
-| tradfi     | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | 1,789 (ohlcv_15m=664, blank=1083; CBOE=953, ICE=171; issue doc filed)        | **GREEN ✅** |
-| cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | 0 (top 2026-06-26: 907 rows ✓)                         | N/A             | 0 ✅          | 13,404 (blank=9757, trades=2522; all venues; issue doc filed)                 | **GREEN ✅** |
-| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | 0 (6721/7222 active ✓)                                 | 0 (4 ETHEREUM+POLYGON cross-chain contracts ✓) | 0 ✅ | 219,529 (swaps_ohlcv_*×7 ~25,400 each; UNISWAP_V4=69,573; writer failure; issue doc filed) | **GREEN ✅** |
-| sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                 | 0 (all 1609 active ✓)                                  | N/A             | 0 ✅          | 27,593 (ODDS=26220 dominant; IS sports manifest; issue doc filed)             | **GREEN ✅** |
-| prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                            | 0 (resolved daily, normal ✓)                           | N/A             | 0 ✅          | 19,482 (book_snapshot_5=9305, trades=5143; MTDS pred manifest; issue doc filed) | **GREEN ✅** |
+| AG         | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts                                | blank-status | phantom captures (G3-008)                                                                   | verdict      |
+| ---------- | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------- | ------------ |
+| tradfi     | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A                                            | 0            | 1,789 (ohlcv_15m=664, blank=1083; CBOE=953, ICE=171; issue doc filed)                       | **GREEN ✅** |
+| cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | 0 (top 2026-06-26: 907 rows ✓)                         | N/A                                            | 0 ✅         | 13,404 (blank=9757, trades=2522; all venues; issue doc filed)                               | **GREEN ✅** |
+| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                    | 0 (6721/7222 active ✓)                                 | 0 (4 ETHEREUM+POLYGON cross-chain contracts ✓) | 0 ✅         | 219,529 (swaps*ohlcv*\*×7 ~25,400 each; UNISWAP_V4=69,573; writer failure; issue doc filed) | **GREEN ✅** |
+| sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                | 0 (all 1609 active ✓)                                  | N/A                                            | 0 ✅         | 27,593 (ODDS=26220 dominant; IS sports manifest; issue doc filed)                           | **GREEN ✅** |
+| prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                           | 0 (resolved daily, normal ✓)                           | N/A                                            | 0 ✅         | 19,482 (book_snapshot_5=9305, trades=5143; MTDS pred manifest; issue doc filed)             | **GREEN ✅** |
 
 Fix shipped: UAC `c0f313c9` (export `TRADFI_ROOTS`), IS `c9efb2a` (`_tradfi_contract_code_to_root()` in
 `_add_mvp_column` resolves CME OPTION `underlying` contract codes e.g. `ESZ5` → `ES` root before `is_mvp()` check).

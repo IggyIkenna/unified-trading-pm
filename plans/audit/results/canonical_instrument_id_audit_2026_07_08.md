@@ -185,7 +185,7 @@ out it's where the `@LIN`/`@INV` convention already lives).
   `name.toUpperCase() === "POLYMARKET"` string comparison in `DataStatusTab.tsx`, low-risk (a follow-up server call
   corrects it).
 - Manifest layer: `instruments-store`'s `_index/availability_index.parquet` (CeFi/DeFi/TradFi) never carries a populated
-  `instrument_id` at all (100% blank across 86,904/214,733/16,981 rows) — it's a date×venue×data*type rollup,
+  `instrument_id` at all (100% blank across 86,904/214,733/16,981 rows) — it's a date×venue×`data_type` rollup,
   structurally unaffected by the catalog's key-vs-field drift. The real per-instrument grain lives in the MTDS manifest,
   which independently reproduces and amplifies every catalog-level finding at far larger scale (millions of rows), plus
   new defects: systemic instrument_type casing drift (lowercase vs uppercase for the identical concept, sometimes on the

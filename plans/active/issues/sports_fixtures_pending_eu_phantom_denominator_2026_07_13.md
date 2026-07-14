@@ -37,7 +37,7 @@ related:
     codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 parent_epic: sports_master
 priority: P1
 source: |
@@ -213,3 +213,58 @@ Follow-ups (post-remediation):
   attributed a benign 21-atom captured→empty_confirmed oscillation in SEGUNDA_DIVISION/BRASILEIRAO to a generic
   16:24:30Z full-index dedup rewrite (pre-existing behavior, objects verified on disk), NOT the purge. Remaining open
   here: the P3 fetch_needed re-check (~2026-07-20) below.
+- 2026-07-14 (day-closeout of 2026-07-13): the 68 intentionally-deferred 2026-07-13 cells RESOLVED now the day is final.
+  Pre-write snapshot `_index/snapshots/availability_index_20260714T000752Z.parquet` (80,290,383 bytes, crc32c `Vr7oSQ==`
+  verified). Enumeration on the downloaded canonical: exactly 68 deduped pending FIXTURES EU cells, ALL dated 2026-07-13
+  (one per league; 0 pre-window residue; 0 dated later). Fresh season-complete truthset
+  `_audits/fixtures_truthset_20260714-001053.parquet` (94 leagues × seasons 2025-2026, 188/188 pairs, 0 failures; built
+  00:10-00:12Z 07-14 — postdates the day's end; NOTE the audit script's default bucket lacks the `-prd-` segment,
+  artifact server-side copied into the prd `_audits/`, size+crc verified). Classification: **68/68 proven zero-fixture
+  on 07-13** (66 by day-absence within truthset-evidenced seasons; COPA_MX + GREEK_SUPER_LEAGUE_2 by season-empty query
+  evidence — fixtures=0 for BOTH 2025+2026) → all 68 flipped `empty_confirmed`
+  `error_reason=EXPECTED_NO_FIXTURE__truthset_20260714-001053` (shard `closeout-0713-flip-20260714-001955`, dry-run
+  first). Side-finding fixed in-scope: ALLSVENSKAN + BRASILEIRAO_SERIE_B 2026-07-13 were stamped
+  `empty_confirmed/EXPECTED_NO_FIXTURE` at 00:02Z 07-14 (daily run, calendar built from the now-stale 07-13T17:25
+  truthset) but the FRESH truthset proves 3 fixtures existed — both re-fetched live from api_football (1+2 rows),
+  canonical parquets written, record_captured + explicit .write() (shard `closeout-0713-fetch`). Script's flip window
+  parametrized (`--flip-cutoff-date`/`--backlog-lo-date`, defaults preserve the original window) — shipped
+  instruments-service@a771e3e2 via the dirty-deps carve-out (QG blocked solely by UAC@7354de78 ICE-index golden drift in
+  `test_expected_universe_golden[tradfi]`; regen belongs to that tradfi plan — annotated, not fixed, collision risk; all
+  other gates green, 4334 passed). Cron-only consolidation (per-minute Cloud Run job; both shards absorbed ≤2 cycles, no
+  manual executions). Content verification on the re-downloaded canonical: 68/68 flipped with the fresh reason; 2/2
+  captured (row_count 1 and 2); **residual deduped pending FIXTURES EU for dates ≤ 2026-07-13 = 0**; zero captured-count
+  decreases in any data_type (atom-level: 2 blank-asset_group ARGENTINA_PRIMERA_NACIONAL 07-04/07-05 atoms were re-keyed
+  to `asset_group=sports` with identical row_counts by a concurrent 23:49Z re-assertion sweep — not a loss; FIXTURES
+  captured atoms 58,649 → 93,877 incl. that sweep's +35k). Pairs/cells provenance:
+  `_audits/closeout_0713_flip_pairs_20260714.parquet` + `_audits/closeout_0713_fetch_cells_20260714.csv`. The
+  post-cutoff trickle class in this issue is now fully closed through 2026-07-13; remaining open here: the P3
+  fetch_needed re-check (~2026-07-20).
+- 2026-07-14 02:00Z: **CALENDAR GATE LIVE AND VERIFIED IN PRODUCTION.** The 01:30Z scheduled run OOM'd at the old
+  8Gi/2cpu (first run with the heavier new-image profile — captured-set suspect, tracked in the enum issue doc); job
+  bumped to 16Gi/4cpu and re-executed: expected-universe-v2-sports-v97dj GREEN 01:57:24Z. Run log evidence: calendar
+  gate ON (4 truthset artifacts unioned incl. tonight's 20260714-001053, 60,213 fixture-days, 94 leagues),
+  `EXPECTED_NO_FIXTURE: 38` seeded as empty_confirmed (phantom minting dead), oscillation guard dropped 35
+  empty_confirmed rows whose atoms are captured ("a seeder never overrides capture evidence" — 35 saves on first night),
+  45,267 candidates written, run_id enum-universe-sports-20260714-015652. The full remediation chain — evidenced flips,
+  de-registration, calendar gate, oscillation guard, day-closeout — is now operating end-to-end.
+- 2026-07-14 (fixes): **The fixture day-boundary staleness class flagged in the 07-14 closeout is now FIXED in code**
+  (operator-approved 3-fix set, shipped instruments-service@bd6b797a + @c78c7a0e via the dirty-deps direct-push
+  carve-out — quickmerge pre-flight blocked solely by live foreign UTL WIP; full `quality-gates.sh --no-fix` GREEN on
+  the shipped tree, sentinel at 0782f9af; the a771e3e2-era tradfi golden drift is gone, fixed upstream by bdb2dc69).
+  **FIX 1 — T+1 closing re-poll** (@c78c7a0e): `sports_fixtures_daily_repoll` window extended to `[today-1, today+8]`
+  (`_DEFAULT_LOOKBACK_DAYS=1`, parameterized `lookback_days=`) so the day just ended gets one final post-day-end upsert
+  — finished-overnight FT results land (the status=1H mid-game capture class) and late reschedules stamp the closed day;
+  docstring Window contract + behavior tests updated, dedicated T+1 test added. **FIX 2 — evidence-freshness rule in the
+  enumerator calendar gate** (@bd6b797a): `_AfFixtureCalendar` carries a per-(league, season) evidence clock parsed from
+  the truthset artifact NAME (producer run*ts — immutable under server-side copies, unlike GCS `timeCreated`, which the
+  closeout's own copy would have reset; rationale in `_af_truthset_built_at`); `is_no_fixture_day` requires
+  `evidence_built_at > end of the stamped day (UTC)`, bridged inter-season-gap days need BOTH adjacent season queries
+  fresh; stale-covered days keep the pending `expected_unattempted` seed — a stale absence stamp is now structurally
+  impossible. Unit tests include the exact ALLSVENSKAN 2026-07-13 scenario (stale 20260713-172514 calendar covering
+  07-13 → pending, NOT EXPECTED_NO_FIXTURE; fresh 20260714-001053 → stampable). **FIX 3 — audit script prd bucket
+  default** (@bd6b797a): `audit_fixtures_via_api_football.py` default bucket now resolves via
+  `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (runtime-verified ==
+  `instruments-store-sports-prd-central-element-323112`, write blob under the gate's
+  `\_audits/fixtures_truthset*`union prefix — no more server-side copies);`--bucket` stays as the explicit override. **Rollout**: tonight's 16Gi re-execution ran the PREVIOUS image — the nightly enum (`expected-universe-v2-sports-daily`, 01:30Z) picks up FIX 2 only after the next LDR→main promote rebuilds `instruments-service:latest`; until then the 00:0xZ daily-run ordering can still stamp same-day absences off a stale calendar, and the day-closeout sweep remains the backstop. Same-commit inherit: 5 stranded empty-string-fallback `#
+  noqa`annotations in`reconcile_lending_indices_phantom.py` (dead autostash WIP; ratchet restored to exactly the 366
+  baseline).

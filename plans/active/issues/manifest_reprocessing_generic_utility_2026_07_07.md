@@ -123,8 +123,10 @@ CLI subcommand"), as a permanent instruments-service CLI subcommand — e.g.
       existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks).
 - [ ] [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
       `script-homes.md`'s production-verb rule.
-- [ ] [SCRIPT] P3. Retire the 11 one-off scripts above once the generic tool covers their use cases (or leave the
-      already-run ones as historical record — they don't need deletion if inert, just no new ones going forward).
+- [ ] [SCRIPT] P3. Retire the 13 one-off scripts above (was: 11 — verify-rerun-2 finding 151, 2026-07-14: title/summary
+      were corrected 2026-07-12 to 13, but this todo's count was never updated) once the generic tool covers their use
+      cases (or leave the already-run ones as historical record — they don't need deletion if inert, just no new ones
+      going forward).
 
 ## Progress Log
 

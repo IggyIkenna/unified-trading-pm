@@ -1,18 +1,21 @@
 ---
 doc_type: audit-result
-title: AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
+title:
+  AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute
+  completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
 summary: >-
   "Migrate once, never need a v10" verification-harness audit: maps the operator's 12 asks against the mature ①–⑫
-  pre-apply audit and identifies the 5 uncovered verification concerns → new points ⑬–⑰ + a G4.5 cleanup gate.
-  Core gaps: no GCS→manifest orphan sweep (class-E = real data with no manifest row = the v10 trigger), no
-  schema-ATTRIBUTE completeness freeze (only cell completeness gated), no v9-projected beta-manifest preview, no
-  byte-sizing rollup, no consolidated possible-manifest registry. Plus MVP-tag reconciliation + config-versioning
-  (config_version distinct from code semver). ⑬–⑱ ALL HARD-BLOCK G4 --apply.
+  pre-apply audit and identifies the 5 uncovered verification concerns → new points ⑬–⑰ + a G4.5 cleanup gate. Core
+  gaps: no GCS→manifest orphan sweep (class-E = real data with no manifest row = the v10 trigger), no schema-ATTRIBUTE
+  completeness freeze (only cell completeness gated), no v9-projected beta-manifest preview, no byte-sizing rollup, no
+  consolidated possible-manifest registry. Plus MVP-tag reconciliation + config-versioning (config_version distinct from
+  code semver). ⑬–⑱ ALL HARD-BLOCK G4 --apply.
 status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-trading-library]
+repos:
+  [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [audit, migration, manifest, canonicalisation, mvp, single-walk, data-correctness, verification]
 related:
@@ -20,8 +23,10 @@ related:
   - plans/active/mvp_scope_catalogue_tagging_2026_06_08.md
   - plans/audit/instructions/canonical_form_cross_service_audit_checklist.md
 created: 2026-06-10
-audited_scope: migration orphan-safety + beta-manifest goalpost preview + verified-delete gate + data-sizing + schema-attribute completeness + MVP-tag/config-versioning reconciliation (the "migrate once, no v10" verification harness)
-date: '2026-06-10'
+audited_scope:
+  migration orphan-safety + beta-manifest goalpost preview + verified-delete gate + data-sizing + schema-attribute
+  completeness + MVP-tag/config-versioning reconciliation (the "migrate once, no v10" verification harness)
+date: "2026-06-10"
 auditor: ikennaigboaka [slot-3·laptop]
 parent_epic: infrastructure_master
 severity: P0
@@ -31,7 +36,16 @@ doc_versions_checked:
 type: analysis
 epic: manifest_master
 parent_plan: active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-source: [operator 2026-06-10 ("worried about GCS orphans after migration; want to check everything moved; dry-run dumped to a different place = a v9-beta manifest we can hook data-status/deployment-api/UI to in dev to see the goalposts; delete only paths that are in the manifest; re-audit read/write paths; know data size for download planning; migrate once — no v10 because we missed an attribute"), 'operator 2026-06-10 ("MVP tag to the catalogues (instrument/strategy/features/models/execution config); data-status MVP tick; instrument config like the sports-leagues / prediction-markets filter, everything-or-nothing at the family grain; config versioning as distinct from code versioning")']
+source:
+  [
+    operator 2026-06-10 ("worried about GCS orphans after migration; want to check everything moved; dry-run dumped to a
+    different place = a v9-beta manifest we can hook data-status/deployment-api/UI to in dev to see the goalposts;
+    delete only paths that are in the manifest; re-audit read/write paths; know data size for download planning; migrate
+    once — no v10 because we missed an attribute"),
+    'operator 2026-06-10 ("MVP tag to the catalogues (instrument/strategy/features/models/execution config); data-status
+    MVP tick; instrument config like the sports-leagues / prediction-markets filter, everything-or-nothing at the family
+    grain; config versioning as distinct from code versioning")',
+  ]
 priority: P0
 ---
 
@@ -157,8 +171,8 @@ roll up **bytes + object-count per (asset_group, data_type, venue, pipeline_mode
 
 ### ⑰ Possible-manifest registry (consolidated shard-dynamics SSOT + generator) — _operator add 2026-06-10_
 
-> **Operator ask**: "a registry of all available shard dynamics per AG (venue, data*type, instrument_type, …) —
-> effectively a consolidation of the \_possible* manifest."
+> **Operator ask**: "a registry of all available shard dynamics per AG (venue, `data_type`, instrument_type, …) —
+> effectively a consolidation of the possible manifest."
 
 This is **foundational — logically UPSTREAM of ⑬/⑮/⑦** even though numbered later. A manifest is only auditable against
 a _defined key-space_: ⑬ can only call a GCS object an "orphan" if its hive-key is outside the valid space; ⑮ needs the
@@ -208,8 +222,8 @@ already documents for itself) — it consolidates the _consumption surface_, it 
 exactly this: it enumerates the could-exist universe and writes `expected_unattempted` (via
 `record_expected_empty(reason=EXPECTED_*)`) for every `(shard_key, day)` with no manifest row — driven by the IS
 catalogue, **independent of whether MTDS fetched anything**. The 4-state denominator then reads as
-`captured + empty + failed + expected_unattempted`, so a venue/data*type we've never attempted shows as a
-fully-enumerated \_honest* denominator, not as silently absent.
+`captured + empty + failed + expected_unattempted`, so a venue/`data_type` we've never attempted shows as a
+fully-enumerated honest denominator, not as silently absent.
 
 **The gap is coverage, and it lands squarely on slot-3 (CeFi):**
 
@@ -346,10 +360,10 @@ granularity honest; the execution pre-flight consumes it.)
 ### B2. "Code that understands we want ALL features" — already the design
 
 The operator's "we'd have to write code so it understands we want all features… everything or nothing for that
-data*type/venue/instrument_type" is **exactly** the family-grain `is_mvp()` + the catalogue enumerator: the config
-declares the \_family* (e.g. cefi×BINANCE×PERPETUAL×funding*rate is MVP), and `enumerate_expected_universe.py` populates
-the \_leaves* (every live expiry/strike for that family, from the per-date catalogue rollup — never hardcoded). Nothing
-new to invent; it's Phase-2 wiring.
+`data_type`/venue/instrument_type" is **exactly** the family-grain `is_mvp()` + the catalogue enumerator: the config
+declares the family (e.g. cefi×BINANCE×PERPETUAL×`funding_rate` is MVP), and `enumerate_expected_universe.py` populates
+the leaves (every live expiry/strike for that family, from the per-date catalogue rollup — never hardcoded). Nothing new
+to invent; it's Phase-2 wiring.
 
 ### B3. Config versioning — the one genuinely net-new (and small) concept
 

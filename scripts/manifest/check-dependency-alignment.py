@@ -26,6 +26,8 @@ import sys
 from pathlib import Path
 from typing import cast
 
+import yaml
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = PM_ROOT.parent
@@ -53,46 +55,60 @@ DISK_ABSENT_OK_PREFIXES: tuple[str, ...] = (
 )
 
 # Per-repo external-dependency exceptions: (repo, normalized_pkg) -> the exact spec string
-# that repo is INTENTIONALLY allowed to declare instead of the fleet canonical. Keep this
-# empty by default — an entry here means "this repo's pyproject.toml deliberately diverges
-# from workspace-constraints.toml, and that divergence is a reviewed, permanent decision",
-# not a place to silence a misalignment you haven't investigated.
+# that repo is INTENTIONALLY allowed to declare instead of the fleet canonical. An entry
+# means "this repo's pyproject.toml deliberately diverges from workspace-constraints.toml,
+# and that divergence is a reviewed, permanent decision", not a place to silence a
+# misalignment you haven't investigated.
 #
-# ml-service/fastapi: the canonical starlette ceiling (<1.3.0) exists because fastapi==0.137.x
-# wraps `include_router()` results as `_IncludedRouter` (no `.path` attribute) -> AttributeError
-# in any `[r.path for r in app.routes]`-style route introspection (verified still reproducing
-# 2026-07-13 against fastapi==0.137.2 + starlette==1.3.1 in an isolated venv). ml-service raised
-# its OWN ceiling to <0.138.0 + force-pinned starlette>=1.3.1 via `[tool.uv] override-dependencies`
-# to clear 9 pip-audit CVEs (ml-service@4d16341) — its actual locked resolution stays on
-# fastapi==0.136.3 (below the 0.137.x break threshold) purely because that's what uv's resolver
-# picked, not because anything pins it there deliberately. This is safe for ml-service TODAY but
-# is NOT a general fix — do not raise the canonical fastapi/starlette ceiling fleet-wide off the
-# back of this exception; any other repo whose resolver lands on fastapi==0.137.x will hit the
-# same AttributeError. SSOT: plans/active/issues/canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md,
-# plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
-#
-# unified-trading-library / alerting-service / greeks-service / market-tick-data-service /
-# deployment-api / agent-orchestrator / features-service: same shape as ml-service above — each
-# independently raised its fastapi ceiling to <0.138.0, hard-red-gating STAGE 1.5 for every PM
-# push. Verified 2026-07-13 via each repo's own uv.lock: actual locked fastapi is 0.135.1 /
-# 0.135.1 / 0.136.3 / 0.135.1 / 0.136.3 / 0.136.1 / 0.136.1 respectively — every one below the
-# confirmed-broken 0.137.x threshold, same "incidental, not guaranteed" safety as ml-service.
-# Re-verify each repo's lock on any future `uv lock --upgrade` in that repo (a resolver bump onto
-# 0.137.x would silently break routing).
-# SSOT: plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md.
-PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = {
-    ("ml-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("unified-trading-library", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("alerting-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("greeks-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("market-tick-data-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("deployment-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("agent-orchestrator", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("features-service", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-    ("unified-trading-api", "fastapi"): "fastapi>=0.115.0,<0.138.0",
-}
+# SSOT for entries: dependency-exceptions.yaml (sibling file, same directory) — a
+# YAML list + mandatory `justification`/`ssot` fields, not a hand-edited Python dict
+# literal. Migrated 2026-07-14 (dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md
+# todo 3): the fastapi<0.138.0 exception recurred across 7 repos in one day, and a
+# dict-literal entry per repo doesn't scale — a YAML row is a data change, not a
+# Python-syntax change, and is easier to diff/scan/review. Loaded + schema-validated at
+# import time (a malformed entry fails LOUD via _load_per_repo_exceptions, never
+# silently ignored).
+EXCEPTIONS_YAML_PATH = SCRIPT_DIR / "dependency-exceptions.yaml"
 
 JsonDict = dict[str, object]
+
+
+def _load_per_repo_exceptions(path: Path) -> dict[tuple[str, str], str]:
+    """Load + schema-validate ``dependency-exceptions.yaml`` into the lookup dict
+    ``check_alignment`` consumes: ``(repo, package) -> exact allowed spec string``.
+
+    Raises ``SystemExit`` with a clear message on any schema violation (missing
+    required field, wrong type, duplicate (repo, package) pair) — a malformed
+    exceptions file must fail the gate loudly, never silently drop coverage.
+    """
+    if not path.is_file():
+        # No exceptions file is a valid (if unusual) state — an empty exception set.
+        return {}
+    with path.open("r", encoding="utf-8") as fh:
+        parsed = yaml.safe_load(fh)
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("exceptions"), list):
+        print(f"ERROR: {path} must be a mapping with a top-level 'exceptions' list.", file=sys.stderr)
+        raise SystemExit(2)
+    required_fields = ("repo", "package", "spec", "justification", "ssot", "added")
+    result: dict[tuple[str, str], str] = {}
+    for i, entry in enumerate(cast(list[object], parsed["exceptions"])):
+        if not isinstance(entry, dict):
+            print(f"ERROR: {path} exceptions[{i}] is not a mapping.", file=sys.stderr)
+            raise SystemExit(2)
+        entry_d = cast(JsonDict, entry)
+        missing = [f for f in required_fields if not entry_d.get(f)]
+        if missing:
+            print(f"ERROR: {path} exceptions[{i}] missing required field(s): {missing}.", file=sys.stderr)
+            raise SystemExit(2)
+        key = (str(entry_d["repo"]), str(entry_d["package"]))
+        if key in result:
+            print(f"ERROR: {path} has a duplicate exception entry for {key}.", file=sys.stderr)
+            raise SystemExit(2)
+        result[key] = str(entry_d["spec"])
+    return result
+
+
+PER_REPO_EXTERNAL_EXCEPTIONS: dict[tuple[str, str], str] = _load_per_repo_exceptions(EXCEPTIONS_YAML_PATH)
 
 
 def _jdict(val: object) -> JsonDict | None:

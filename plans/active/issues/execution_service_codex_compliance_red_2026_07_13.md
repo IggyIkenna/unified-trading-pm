@@ -5,7 +5,7 @@ summary:
   execution-service's CODEX_MAX_VIOLATIONS ceiling (3, set 2026-06-12) is being breached by 4 pre-existing violations
   (function/method size, pip-audit CVEs, backward-compat comment, hardcoded project ID) — blocks all shipping to the
   repo.
-status: open
+status: resolved # corrected 2026-07-14, was: open (body's own "Duplicate discovery note" cross-refs this as the same red as execution_service_codex_compliance_ratchet_breach_2026_07_13.md [status: resolved]; every todo here is [x] incl. a VERIFY step confirming full quality-gates.sh green — verify-rerun-2 finding 103)
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,6 +21,8 @@ created: "2026-07-13"
 parent_epic: infrastructure_master
 assigned_vm: planning
 resolved_by:
+  plans/active/issues/execution_service_codex_compliance_ratchet_breach_2026_07_13.md (same underlying red; fix commits
+  86f166a9/348385ad/0832049c/fed242e4/8987a365)
 locked_by:
 execution_scope: orchestrator-agent
 priority: P1

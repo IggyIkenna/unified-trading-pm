@@ -18,7 +18,7 @@ related:
     canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
-created: '2026-05-22'
+created: "2026-05-22"
 tier: L4
 parent_epic: batch_live_symmetry_master
 cadence: weekly (minimum)
@@ -34,9 +34,12 @@ last_updated: 2026-06-03
 
 > **🔄 ALIGNED 2026-06-08 — batch=live symmetry is now ⑪, the no-regression KEYSTONE of the per-AG pre-apply audit.**
 > Each AG must PROVE the LIVE writer and the MIGRATED batch data emit the IDENTICAL canonical v9 form: schema ·
-> data*types · fields · source-aware
-> `pipeline_mode={mode}*{source}[_{transport}]` · **Era-B** (`options_chain`/`futures_chain`= instrument_type+`data_type=trades`) · `available_at`top-source live==batch — NO split, NO live-only data_types, NO read-time`available_at`. SSOT: the **①–⑫ pre-apply readiness audit** in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`+ **CF-1…CF-14** in`canonical_form_cross_service_audit_checklist.md`
-> (CF-12 = batch=live, CF-13 = source-aware). Guidance below predating the source-aware/Era-B model is STALE.
+> `data_types` · fields · source-aware `pipeline_mode={mode}_{source}[_{transport}]` · **Era-B**
+> (`options_chain`/`futures_chain` = `instrument_type` + `data_type=trades`) · `available_at` top-source live==batch —
+> NO split, NO live-only data_types, NO read-time `available_at`. SSOT: the **①–⑫ pre-apply readiness audit** in
+> `master_data_canonicalisation_migration_catalogue_2026_06_07.md` + **CF-1…CF-14** in
+> `canonical_form_cross_service_audit_checklist.md` (CF-12 = batch=live, CF-13 = source-aware). Guidance below predating
+> the source-aware/Era-B model is STALE.
 
 ## Epic Scope
 

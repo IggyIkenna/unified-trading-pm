@@ -142,7 +142,12 @@ the entire date's capture (schema mismatch, uncaught).
 
 - **[DERIBIT]** 273 real rows tagged `venue=DERIBIT` (not `DERIBIT-COMBO`) with `instrument_type=COMBO` in the same-day
   production parquet — possible regression/duplicate-source, root cause NOT traced (needs a follow-up investigation,
-  flagged not fixed).
+  flagged not fixed). **Cross-reference (added 2026-07-14, doc-reconciliation finding 134):** the sibling same-day doc
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md:221-226` independently examined this exact fact
+  and confirmed `_split_by_instrument_type` reproduces it as part of a clean 5-way split (OPTION=2,586/COMBO=273/
+  FUTURE=71/PERPETUAL=21/SPOT_PAIR=14, summing to the real 2,965-row snapshot) — that verifies the writer's split logic
+  is faithful to the source snapshot, but does not itself root-cause why these 273 rows carry `instrument_type=COMBO`
+  under bare `DERIBIT`; this doc's root-cause todo (P1, below) stays open.
 - **[DERIBIT-COMBO]** no live WS connector registered for this venue at all — combo trades/book cannot be captured live,
   only via batch.
 - **[OKX]** `market-tick-data-service/.../live/connectors/okx_ws.py` — OKX-SWAP trades registered under the wrong venue
@@ -422,9 +427,9 @@ the todos already promised.
   this finding flagged, added the real previously-missing `SPOT_PAIR` noted at line 162 below — 46 real `{BASE}-USDC`
   INTX products, confirmed live). Also confirmed live (2026-07-10 production manifest read,
   `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): the pre-fix
-  `coinbase_futures_ws.py` connector recorded ZERO real rows under any live pipeline*mode from ship (`mtds@fd436aea`,
+  `coinbase_futures_ws.py` connector recorded ZERO real rows under any live `pipeline_mode` from ship (`mtds@fd436aea`,
   2026-07-06) through the fix — a genuine, confirmed silent capture-gap (all 16,819 real COINBASE-FUTURES manifest rows
-  are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live*\*` CeFi pipeline_modes that DO exist
+  are `batch_tardis`; contrast `live_binance` 4,080 real rows + 5 other real `live_*` CeFi pipeline_modes that DO exist
   in production).
 - **2026-07-10 (separate dispatch, "master record" fresh-context follow-up)** — Re-verified this whole doc against
   current code before touching anything (per-SHA verification: all previously-claimed commits confirmed real and

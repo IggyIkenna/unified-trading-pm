@@ -14,7 +14,10 @@ summary: |
   production sports pipeline today — confirmed 0 Betfair rows in the real `prod/catalog.parquet`), but WOULD create a
   new 3-way format inconsistency with two sibling repos this session could not touch, risking a real future breakage
   of strategy-service's fill-event instrument_id parser. Left unfixed pending a coordinated, cross-repo decision.
-status: open
+status:
+  resolved # was: open — corrected 2026-07-14, doc-reconciliation finding 195: CLOSED BY-DESIGN 2026-07-12
+  # (operator ruling, plan-reconciliation finding 341) per `active/canonical_id_builder_retrofit_checklist_2026_07_08.md`'s
+  # P2 item, never synced back to this doc
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -39,7 +42,7 @@ related:
     plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-14
 parent_epic: sports_master
 priority: P2
 source:
@@ -52,6 +55,9 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  operator ruling 2026-07-12 (plan-reconciliation finding 341, docs-only — Option 1 below, "Formalize `/` as Betfair's
+  own per-provider convention" — see `active/canonical_id_builder_retrofit_checklist_2026_07_08.md`'s P2 item for the
+  CLOSED BY-DESIGN record)
 audited_scope: cross-repo-consistency
 ---
 
@@ -134,9 +140,16 @@ Given the task's own standard ("confirm your fix is corrective, not breaking"), 
 corrective without touching two out-of-scope repos, I left the code as-is and am filing this issue instead of shipping a
 change I could not verify was safe.
 
-## Recommended decision (needs an operator/cross-repo call, not a unilateral code change)
+## Recommended decision — **DECIDED, CLOSED BY-DESIGN 2026-07-12** (was: "needs an operator/cross-repo call, not a
 
-Two real options, either is legitimate — this needs a decision, not more investigation:
+unilateral code change" / open 2-option question — corrected 2026-07-14, doc-reconciliation finding 195: the operator
+ruled 2026-07-12 (plan-reconciliation finding 341, recorded in
+`active/canonical_id_builder_retrofit_checklist_2026_07_08.md`'s P2 item) in favor of **Option 1 below**: `/` is
+Betfair's documented native id convention; canonical ids for Betfair KEEP the `/` delimiter and downstream consumers
+must treat it as venue-native, not normalise. Option 2 ("Coordinated migration to `:`") was NOT chosen. This doc's
+frontmatter/body had never been synced back to reflect that ruling until this pass.)
+
+Two real options were on the table, either legitimate — kept below for the record of what was actually decided between:
 
 1. **Formalize `/` as Betfair's own per-provider convention** (cheap, docs-only): analogous to the operator's existing
    sports-wide decision that `LEAGUE:MATCHUP:DATE` is a legitimate alternative to `VENUE:TYPE:SYMBOL`

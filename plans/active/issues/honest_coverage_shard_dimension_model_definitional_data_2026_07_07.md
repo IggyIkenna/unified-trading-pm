@@ -131,12 +131,14 @@ definitional data exists and already covers all five asset groups uniformly:**
 ## Update 2026-07-07 (later same day): the sibling UI bug is fixed, and the writer-side bug generalizes to DeFi
 
 **1. A distinct-but-related UI bug is now fixed in code (implemented + tested, not yet committed).** Separately from the
-instrument*type-generalization question above, the operator found live (via screenshot, then confirmed in a real
+`instrument_type`-generalization question above, the operator found live (via screenshot, then confirmed in a real
 browser) that `deployment-ui/src/components/DataStatusTab.tsx`'s "Asset group breakdown" card had
-`{!(catData.chains && ...) && <Venues section>}` — any category with \_any* `chains` breakdown suppressed its **entire**
-venue list. Fine for DeFi (~every venue has a chain); wrong for CEFI, where only 2 of 24 venues (PACIFICA, LIGHTER) are
-on-chain — the other 22 (ASTER, BINANCE-FUTURES, DERIBIT, everything) were silently dropped from the card. Fixed by
-extracting `getUncoveredVenueNames(catData)` and gating/filtering on that instead of on chains-presence alone. Verified:
+`{!(catData.chains && ...) && <Venues section>}` — any category with any `chains` breakdown suppressed its **entire**
+venue list.
+
+Fine for DeFi (~every venue has a chain); wrong for CEFI, where only 2 of 24 venues (PACIFICA, LIGHTER) are on-chain —
+the other 22 (ASTER, BINANCE-FUTURES, DERIBIT, everything) were silently dropped from the card. Fixed by extracting
+`getUncoveredVenueNames(catData)` and gating/filtering on that instead of on chains-presence alone. Verified:
 `tsc`/`eslint` clean, 3 new unit tests + all 40 pre-existing DataStatusTab tests pass, and live-rendered against real
 production data in a local dev server (had to route around a Cloud Run↔Node-proxy "socket hang up" issue by serving a
 real fetched payload locally) — confirmed the CEFI card now shows both Chains and all 22 other Venues, no duplicates.
@@ -224,6 +226,14 @@ actual per-instrument dataframe shape `_write_venue` processes at write time) an
 directly against it. It correctly split into **5** groups (not 4 as earlier assumed — `SPOT_PAIR` is also real on
 DERIBIT): OPTION=2,586, COMBO=273, FUTURE=71, PERPETUAL=21, SPOT_PAIR=14, summing exactly to 2,965. Quality gates
 (`bash scripts/quality-gates.sh --no-fix`) passed clean (153s).
+
+**Cross-reference (added 2026-07-14, doc-reconciliation finding 134):** the sibling same-day doc
+`mtds_is_full_adapter_smoketest_findings_2026_07_07.md:143-145` independently flags this exact 273-row
+`venue=DERIBIT`/`instrument_type=COMBO` fact as a "possible regression/duplicate-source, root cause NOT traced" open P1.
+Neither doc had cross-referenced the other before this pass. This confirmation only establishes that
+`_split_by_instrument_type` faithfully reproduces the real per-instrument snapshot's shape (273+2,586+71+21+14 = 2,965,
+no rows lost or invented); it does NOT itself root-cause why 273 real production rows carry `instrument_type=COMBO`
+under bare `DERIBIT` rather than under `DERIBIT-COMBO` — that question stays open in the sibling doc, not resolved here.
 
 **Not yet done**: raw-parquet spot-check of the 5 flagged additional CeFi venues; a live backfill/re-run to populate
 historical dates with the corrected per-type rows (today's fix only affects NEW writes going forward); DERIBIT-COMBO

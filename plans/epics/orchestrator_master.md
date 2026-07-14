@@ -92,7 +92,14 @@ below.
 > enforced by `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` (WS-G). The epic-delegation path
 > (`_resolve_plan_vms` reading `parent_epic`) has been DROPPED; strict backend-id == plan.assigned_vm is the only
 > matching mode. See WS-G for the live design decisions. This note is a pointer — NOT a wholesale supersede of this
-> epic's other scope.
+> epic's other scope. **(Stale-path note, corrected 2026-07-14, finding 203):** the WS-G target
+> (`orchestrator_consolidated_remaining_2026_06_25.md`) has itself since been archived (`status: superseded`, now at
+> `archive/orchestrator_consolidated_remaining_2026_06_25.plan.md`) with its open items further migrated onward; a
+> sibling epic (`agent_operating_framework_master.md` W1) separately still points at a DIFFERENT, also-archived owner
+> (`dispatch_strict_vm_matching_2026_06_24.md`, `status: superseded`) for this same D1–D6 scope. In practice this is
+> moot: per the very next notice below, the whole multi-VM `assigned_vm==backend` matching premise this scope existed
+> for was itself superseded by the 2026-06-27 single-VM pivot (dispatch is now role/skill-based, not per-VM matching),
+> so neither archived owner needs reviving.
 
 > **Fleet-description supersede notice (2026-07-11):** The multi-VM / 9-epic-VM fleet description used throughout this
 > epic — including the **Owns** section above and the `assigned_vm: vm-orchestrator` frontmatter — is SUPERSEDED by the
@@ -205,7 +212,12 @@ Implementation work is owned by the assigned active plans below. Status as of 20
 _Regenerated 2026-07-12 per operator ruling, plan-reconciliation findings 216/323 (see
 [`plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
 §A2). (was: "All originally-assigned sub-plans are now archived... zero active children" — that claim was stale; 8
-active `parent_epic: orchestrator_master` children exist as of this regeneration.)_
+active `parent_epic: orchestrator_master` children exist as of this regeneration.) (was: 8 active children as of the
+2026-07-12 regen; corrected 2026-07-14, finding 188 — 2 more `status: active` children were created 2026-07-13, after
+this regen, and were missing from the census below: `agent_orchestrator_alert_channel_cleanup_2026_07_13` and
+`main_agent_spawn_surgery_regression_2026_07_13`; two other same-day `parent_epic: orchestrator_master` issue docs
+[`ao_blocked_queue_operator_ruling_sync_gap_2026_07_13`, `ao_ar_image_non_surface_2026_07_13`] are `status: resolved`
+and correctly excluded. 10 active children exist as of this correction.)_
 
 _The named populator `scripts/plans/populate_epic_bodies_2026_05_21.py` exists but is non-functional in the current
 workspace layout — it hardcodes `WORKSPACE = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1")` (a
@@ -237,6 +249,13 @@ computed manually via `rg -l '^parent_epic: orchestrator_master' plans/active/ p
 - **P2 · open (issue)** —
   [`autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29`](../active/issues/autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29.md)
   — AutoSpawn — `_should_spawn` does not revive a live-idle slot pinned to a higher-tier (opus) task
+- **P1 · active** (added 2026-07-14, finding 188 — created 2026-07-13, after the 2026-07-12 regen) —
+  [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
+  — Agent-Orchestrator Alert Channel Cleanup — remove lifecycle churn, daily digest, dedup git-health, richer BLOCKED
+  schema
+- **P0 · active** (added 2026-07-14, finding 188 — created 2026-07-13, after the 2026-07-12 regen) —
+  [`main_agent_spawn_surgery_regression_2026_07_13`](../active/main_agent_spawn_surgery_regression_2026_07_13.md) — Fix
+  broken main/review agent_id-injection surgery in spawn paths + add regression tests
 
 Orchestrator work also lives in the Phase 6/9/11 rows of the table above.
 
@@ -430,10 +449,10 @@ correctness the freeze protects.
       `ao-self-pull cron installed=1`, AO HEAD=589b711 on both). Closes the deploy-currency gap (vm-2 had been 14 behind
       running stale server code). NB: a `verify_fleet_autonomy_health.sh` gate citing the AO main-checkout behind-count
       is a nice incremental add (the existing script already reports per-VM behind-count vs LDR HEAD).
-- [x] ✅ [INFRA] P1. ✅ DONE 2026-07-13 (slot·harsh_pc). **New rot class — corrupt commit-graph CACHE, not object
+- [x] ✅ [INFRA] P1. ✅ DONE 2026-07-13 (slot·harsh*pc). **New rot class — corrupt commit-graph CACHE, not object
       corruption** (the 2026-07-09→13 flood: 369 fires, the #1 alert @ 23% of all volume, on `agent-orchestrator-vm-1` =
-      central planning VM `i-0c9b283b31d6b5ca7`, private IP `172.31.5.118`). The guard's _"genuine missing/broken
-      objects"_ wording was misleading: objects were intact (`fsck` passes with `-c core.commitGraph=false`; the two
+      central planning VM `i-0c9b283b31d6b5ca7`, private IP `172.31.5.118`). The guard's *"genuine missing/broken
+      objects"\_ wording was misleading: objects were intact (`fsck` passes with `-c core.commitGraph=false`; the two
       flagged merge commits really have 1 and 2 parents). A corrupt commit-graph in the **base** `instruments-service`
       object store (written Jul 9 09:30 = alert start) was mis-decoded ONLY by slot-5, which reads it via
       `objects/info/alternates`: git 2.43.0 mis-reads the octopus extra-edges chunk across the alternate boundary →

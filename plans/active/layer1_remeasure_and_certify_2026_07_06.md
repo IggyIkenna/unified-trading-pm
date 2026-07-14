@@ -117,7 +117,17 @@ source:
       UTC on `is@681f50a` (post-D1 seeding); primary manifest
       `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` blob.updated
       2026-07-06T15:11:42Z (13,515,019 rows), merged 10,828,935 rows. Evidence artefact (local):
-      `/home/ubuntu/coverage_defi_20260706T151304Z.json`.
+      `/home/ubuntu/coverage_defi_20260706T151304Z.json`. **CAVEAT ADDED 2026-07-14 (doc-reconciliation verify-rerun-2,
+      finding 137)**: "fresh, honest" describes the direction of THIS measurement (denominator correctly grew/shrank per
+      the D2a/lending-rollup catalogue fixes) — it does NOT mean the underlying method is non-circular. The sibling plan
+      `foundation_gates_and_capture_to_100_2026_07_06.md` (same day, same epic) and the codex SSOT
+      `codex/02-data/defi-completeness-oracle.md` both document that DeFi's `EXPECTED` source is today
+      `EXPECTED =     ENUMERATED` (catalogue vs. catalogue) — a structurally circular measurement — and commission a
+      chain-truth completeness ORACLE specifically to replace it. As of 2026-07-14 that oracle is still design-only
+      (codex `status:     current`, no implementation plan filed, no `CompletenessProbe` code found in-repo) — so 94.81%
+      remains the best available DeFi Layer-1 number, but it is a catalogue-vs-catalogue figure, not an independent
+      chain-truth proof. Treat "honest" here as "correctly computed under the current (circular) method," not
+      "structurally validated."
 - [ ] 🚧 **BLOCKED-PLAN2** [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue
       (Plan 2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now
       canonical-and-measured. **STATUS 2026-07-06 15:20 UTC — BLOCKED-PLAN2** (main-agent answer to `BLK-ab86f4e9`, task

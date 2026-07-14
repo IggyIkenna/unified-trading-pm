@@ -37,7 +37,7 @@ related_plans:
     ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md,
   ]
-last_updated: 2026-07-08
+last_updated: 2026-07-12 # was: 2026-07-08 -- corrected 2026-07-14, verify-rerun-2 finding 14: body carries a dated "Count corrected 2026-07-12" entry (finding id 311, §A2 B-queue ruling) that postdated the recorded last_updated
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

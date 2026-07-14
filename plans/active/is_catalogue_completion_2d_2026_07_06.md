@@ -143,7 +143,14 @@ source:
       1m57s (all well under the 3600s daily-job timeout — Phase-3 incremental made the tradfi walk ~90s per the
       1800→3600 tf comment; observed 4m confirms). Weekly
       `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}-weekly` self-heal (Sat 03/04/05/06:00 UTC, no sports) ran
-      2026-07-04 successfully — cefi 1h50m · defi 42m · tradfi 2h33m · prediction 18m (all under the 6h
+      2026-07-04 — defi 41m40s GREEN first-try · tradfi 2h33m GREEN first-try; **cefi and prediction did NOT run cleanly
+      first-try** (corrected 2026-07-14, was: "ran 2026-07-04 successfully — cefi 1h50m · defi 42m · tradfi 2h33m ·
+      prediction 18m" — per the owning doc's operational log,
+      `instruments_catalogue_incremental_rollup_2026_06_29.md:406-424`: cefi's first attempt FAILED exit-1
+      `CATALOGUE_SHRINK_BLOCKED` on a real ghost-duplicate merge-key defect, fixed via `instruments-service@dc378b62c`,
+      then a corrective `--allow-catalogue-shrink` run went GREEN in 50m (artifact 07:16:20Z, not 1h50m); prediction's
+      first attempt OOM'd, fixed via new per-job Cloud Run resource maps (deployment-service@LDR), then a re-run went
+      GREEN in 10m22s (artifact 06:46:51Z, not 18m) — verify-rerun-2 finding 136) (all under the 6h
       `timeout_seconds=21600` ceiling). All 5 `prod/catalog.parquet` FRESH today 2026-07-06: cefi 4.42MiB (11:37Z —
       cascade regen), defi 992kiB (01:01Z daily), tradfi 10.07MiB (15:48Z — Plan-2-task-8 CME EC\* rollup on top of
       daily), sports 11.74kiB (01:01Z daily), prediction 103.24MiB (01:02Z daily). Sample content check on defi

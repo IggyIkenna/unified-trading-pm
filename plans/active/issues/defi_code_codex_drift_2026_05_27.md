@@ -37,7 +37,9 @@ master:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated:
+  '2026-07-10 (was: 2026-06-27 — verify-rerun-2 finding 50, corrected 2026-07-14 — body''s D10 todo documents "RESOLVED
+  2026-07-10 (operator decision #9...)"; frontmatter never bumped)'
 ---
 
 # DeFi pipeline — code ↔ codex drift (audit 2026-05-27)

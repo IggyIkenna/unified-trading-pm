@@ -580,3 +580,44 @@ acquisition observed, no lock 403s) via a REAL production wave rather than a syn
 `[DATA] P1` G4 re-measurement once real waves have run long enough to accumulate a post-fix af census — the lock
 mechanism itself is now production-verified. Pilots 1/2's all-skip failures were the (now-RESOLVED) instrument-
 resolution P0, not the lease.
+
+---
+
+## RECURRENCE — 2026-07-14T02:00Z: BITGET-FUTURES 6-VM wave launched WITHOUT the lease, all 6 failed
+
+The 2026-07-13T23:15Z BITGET-FUTURES relaunch (`cefi-bitget-futures-{2024,2025,2026}-{heavy,light}-20260713-231539`, G4
+Re-Verification Run #5 in `mvp_backfill_cefi_tick_v10_2026_06_27.md`) ran 6 parallel VMs with the lease NOT enabled
+(default-OFF) — every shard churned `Tardis HTTP 403 code=274 concurrent-IP-lock`, hit the 1800s no-progress stall
+watchdog, exited `DEPLOYMENT_FAILED exit_code=137`, and self-deleted. Full evidence in that plan's 2026-07-14T02:00Z
+CORRECTION entry. This is a process regression (parallel multi-VM launch without the lease), NOT a lease-mechanism
+failure — the lease remains production-verified per the entry above. Follow-up hardening candidate: the launcher should
+refuse (or force-serialize) >1 concurrent VM for Tardis-sourced venues unless the lease env is explicitly enabled, so
+this shape can't be launched by accident a third time. — doc-reconciliation close-out check, 2026-07-14
+
+---
+
+## 2026-07-14T02:50Z — first lease-enabled multi-venue re-run wave: 403-lock class ELIMINATED under serialization (G4 evidence)
+
+The todo-27 Tardis-locked CEFI cluster re-ran on real VMs (test-run force legs, day=2026-07-09) with
+`TARDIS_CONCURRENCY_LEASE=1` via the new launcher passthrough (`deployment-service@a460f18`). Ground truth from per-VM
+shards + the consolidated test index:
+
+| Venue            | Result (real captures)                                                                                                                                                                                           |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BINANCE-DELIVERY | book_snapshot_5 21 instruments (75k–1.36M rows ea), derivative_ticker 21, liquidations 7, trades 4 (late-landed past the 900s checker budget)                                                                    |
+| BYBIT-SPOT       | trades 523 instruments captured, 5,935,885 rows                                                                                                                                                                  |
+| BITFINEX-SPOT    | trades passed (honest-empty day)                                                                                                                                                                                 |
+| COINBASE-FUTURES | derivative_ticker 145 instruments captured, 13,254,508 rows; liquidations honest-zero (event data, SOURCE_RETURNED_ZERO)                                                                                         |
+| KRAKEN-FUTURES   | derivative_ticker 307 captured (17,713,536 rows), trades 298 (480,148 rows), liquidations 6 (34 rows)                                                                                                            |
+| OKX (bare)       | liquidations re-classed OUT of this cluster: fails `404 POST` (dataset-not-found) — the bare-OKX venue→adapter routing half of `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md` Bug C, NOT the IP lock |
+
+**Zero `Tardis HTTP 403 code=274` rows in every serialized lease-enabled run.** The single 403 burst observed
+(BINANCE-DELIVERY trades, 01:32:56Z, 25 rows one-timestamp) coincided exactly with the RECURRENCE entry above — the
+no-lease BITGET-FUTURES 6-VM wave churning until its stall-watchdog kill (~02:00Z); the lease-enabled VM's re-attempt
+captured real trades at 01:53Z once that wave died. This closes "G4 re-measurement to the extent now unblocked": the
+frozen pre-fix baseline census (2026-07-14T00:35Z, cefi-prd: 7,507,673 rows; attempted_failed 1,724,463 of which
+1,291,037 = 74.87% carry `403`; 25 carry `code=274`) is recorded in `data_pipeline_e2e_check_2026_07_10.md`'s 2026-07-14
+Progress Log entry; the full post-fix af-census delta re-measures after PROD-scale lease-enabled backfill waves re-run
+the affected shards (owned by `mvp_backfill_cefi_tick_v10_2026_06_27.md` G4). Operational lesson recorded: driver-level
+concurrency still contends at the vendor even with the lease (two lease-enabled drivers + one no-lease foreign wave) —
+run Tardis re-run waves strictly serialized; the launcher-refusal hardening candidate above stands.

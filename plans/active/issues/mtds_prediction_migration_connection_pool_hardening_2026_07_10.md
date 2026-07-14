@@ -7,7 +7,7 @@ summary:
   CPU-starved by the 5 live migration shards it was fixing contention for, and was killed after ~7 minutes rather than
   block further. Not urgent — the migration already self-recovered from the specific issue this fixes, and all 5 shards
   (including the 2 later moved to VMs) completed successfully without it. Ship on a future pass.
-status: open
+status: resolved
 nature: notes
 asset_group: [prediction]
 stage: [data]
@@ -19,6 +19,8 @@ created: 2026-07-10
 parent_epic: instruments_master
 assigned_vm:
 resolved_by:
+  "slot-3, 2026-07-14 — re-verified: the documented 3-client fix is already committed at 1f28c472; the separate
+  'further' fix's exact diff is unrecoverable and out of scope to fabricate"
 source:
   "Real finding from the Prediction migrate-stage agent (wf_118d8268-18c, 2026-07-09) — also independently confirmed
   still uncommitted via a direct git status check 2026-07-10."
@@ -58,3 +60,22 @@ of rows each). This is a real robustness improvement sitting ready to ship, not 
 Ship it on a normal pass:
 `cd market-tick-data-service && bash scripts/quality-gates.sh --no-fix && bash scripts/quickmerge.sh "fix(prediction): further connection-pool hardening for the instrument-id-wrap migration script" --agent --files 'market_tick_data_service/scripts/migrate_prediction_instrument_id_wrap_2026_07_09.py'`
 — no urgency, just needs a quiet window to run its own quality gates without CPU contention from other live migrations.
+
+## Resolution (2026-07-14)
+
+Re-checked: `git status` on this file is clean (no uncommitted changes in this clone) and `git log` shows exactly one
+commit for it (`1f28c472`, 2026-07-09). That single committed version already mounts the boosted `HTTPAdapter` onto
+**all 3** client instances this doc's "What I found" section names as the root cause: the main `get_storage_client()`
+singleton (`_boost_connection_pool()` — main + oauth-token-refresh sessions, lines ~86-131) AND the separate listing
+client `main()` constructs directly (lines ~484-490, comment: "applied here to the separate listing client"). So the fix
+this doc calls "the first fix" — the one that made all 5 shards self-recover — is fully present and committed.
+
+The SEPARATE "further hardening fix… for a related, narrower connection-pool issue" this doc describes was never
+precisely specified beyond that phrase, and its diff was never captured anywhere recoverable (not stashed, not
+committed, not in any other doc) — the working tree that held it is gone. Re-deriving and shipping a fix without knowing
+its actual intended content would mean fabricating code rather than restoring lost work, which isn't safe to do blind.
+Given (a) the migration has already completed successfully across all 5 shards with 0-8 errors out of tens of millions
+of rows each, (b) there is no currently-open incident this blocks, and (c) the exact narrower issue is unspecified, this
+issue is resolved as: current code already contains the documented fix; the undocumented "further" refinement is not
+recoverable and not worth guessing at. If a real narrow connection-pool bottleneck resurfaces on a future large
+Prediction/MTDS backfill, profile it fresh rather than trying to reconstruct this one.

@@ -558,15 +558,18 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
 
 ### Ratification todos (the dispatch — owners per slot map)
 
-- [x] ✅ [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→record_captured backfill** — **E==0 +
-      unknown_prefixes==0 GREEN on all four hive AGs 2026-06-11 ~14:32Z** (defi/cefi/prediction/tradfi; sports = R8).
+- [x] ✅ [DATA] P0. **R1-backfill — per-AG class-E characterize→canonicalise→`record_captured` backfill** — **E==0 +
+      `unknown_prefixes`==0 GREEN on all four hive AGs 2026-06-11 ~14:32Z** (defi/cefi/prediction/tradfi; sports = R8).
       Tool `backfill_orphan_class_e.py` (is@0a2e542 + c49d957 + row-key/parser/footer fixes through is@f73abe4+):
-      characterize→convert-to-v9→record*captured with per-cell sample-verify; headline: most E was matcher
+      characterize→convert-to-v9→`record_captured` with per-cell sample-verify; headline: most E was matcher
       false-positive (venue-spelling/grain — defi 254,984 ALL covered); real backfills = tradfi 15,694 converted,
-      prediction 7,462 converted, cefi 74,392 record-only; tbbo spec carries (uac@715e2ed lineage + ts_init/bid_size/
-      ask_size); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere — no loss). Full
-      narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
-      `\_index/audit/orphan_sweep*<ag>.parquet`+`orphan*backfill*<ag>.parquet`.
+      prediction 7,462 converted, cefi 74,392 record-only; tbbo spec carries (uac@715e2ed lineage +
+      `ts_init`/`bid_size`/ `ask_size`); one-shot consolidations merged backfill shards (index ≥ snapshot everywhere —
+      no loss).
+
+      Full narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
+      `_index/audit/orphan_sweep_<ag>.parquet` + `orphan_backfill_<ag>.parquet`.
+
 - [x] ✅ [UAC] P0. **R2-schema — carry ALL dropped columns into v9** — **unified-api-contracts@715e2ed**: v9
       `SchemaSpec` registry extended so CF-18 is GREEN per AG — all 11 polymarket trades columns carried (amount, asset,
       conditionId→`condition_id`, outcomeIndex→`outcome_index`, transactionHash→`transaction_hash`,
@@ -581,7 +584,7 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       run)** — verdict packs in `plans/audit/results/r3_verdict_packs_2026_06_17/` (per-AG projected-v9 render + status
       distribution + `manifest_diff` report + verdict line; `manifest_diff_<ag>.json` + `analyze_diff.py` attached). All
       regenerated on HEAD vs the live 06-14 `_index`. **4/5 GREEN outright + prediction GREEN after a stale-projection
-      correction:** defi GREEN (cap 348K→440K, removed=39,867 = legacy `dex_swaps`→`swaps_ohlcv_<tf>` data*type
+      correction:** defi GREEN (cap 348K→440K, removed=39,867 = legacy `dex_swaps`→`swaps_ohlcv_<tf>` `data_type`
       supersession, 105 phantom downgrades; projection REGENERATED — defi rebuild changed mtds@89807b4) · cefi GREEN
       (cap 1.33M→2.49M CF-11 honest re-emit; removed=733 garbage venues 0-objects; 375 phantom) · tradfi GREEN (cap
       100K→902K legacy pre-hive parser; 2,902 phantom closed-market-day downgrades **spot-verified on HEAD**: CME
@@ -593,7 +596,7 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       M-COORD-7 corroborated GREEN (STEP 5.85 + AST = 0). **Operator clear to V6-eyeball + G4 --apply on ALL FIVE AGs.**
       Original "dev restart-deployment-stack render" is the operator's own live eyeball (recipe in the pack README;
       beta-blob projections live in GCS); the verdict packs embed the textual coverage render. mtds@df69ada · is/uac
-      HEAD · reports `\_index/audit/projected_index*_<ag>_.parquet`.
+      HEAD · reports `\_index/audit/projected_index\**<ag>\_.parquet`.
 - [x] ✅ [DATA] P0. **R4-IS-freeze — diagnose + resume IS definition collection + backfill 2026-05-21→now gap BEFORE any
       could-exist seed**; then re-run `build_instrument_catalogue` + `enumerate_expected_universe v2` per AG. (Note:
       collection is reference-data — independent of the drained market-data writers; resuming does NOT violate the
@@ -800,10 +803,11 @@ deployment-service owner. (4) **validity-matrix orphans resolved** (uac@fec77f5d
 universe EXPANDED: slot-2 must re-run enumerate before G4** (B0-PRE todo in the defi plan; additive ⇒ NON-BLOCK,
 coverage % drops honestly).
 
-> **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`**: a
-> CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS **processed
-> candle store is right-edge CORRECT** (so this does NOT block the raw/manifest `--apply` — slots 2–6 G4 proceed), but
-> the **FEATURE LAYER is gated** — the two features-service resamplers (the only realized bugs) are fixed
+> **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`** (now
+> archived → `plans/archive/2026_07/bar_edge_left_vs_right_remediation_2026_06_08.md`, folded→M-1 2026-07-13, finding
+> 197): a CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS
+> **processed candle store is right-edge CORRECT** (so this does NOT block the raw/manifest `--apply` — slots 2–6 G4
+> proceed), but the **FEATURE LAYER is gated** — the two features-service resamplers (the only realized bugs) are fixed
 > (features-service@7a4fafd9) yet (a) the gate still can't catch edge errors and (b) the pre-fix left-edge `features-*`
 > corpus must be recomputed. **No feature-layer trust / no G5 feature backfill until Phase 0 (gate-close) + Phase 2
 > (corpus purge) land.** Latent pre-agg ingestion sites fixed for correctness-in-depth. SSOT: the wrapper plan +
@@ -859,19 +863,19 @@ coverage % drops honestly).
 
 **C-PATH inventory (categorized; ✓ = already source-aware, ✗ = coarse conflict):**
 
-| Class              | Site                                                                                                                                                                                                                                   | State  | Fix / owner                                                                                                                                                                                             |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WRITE migrator     | `migrate_tradfi_to_v9_canonical.py` (`_pipeline_mode`→`batch_databento`)                                                                                                                                                               | ✓      | reference impl — copy this pattern                                                                                                                                                                      |
-| WRITE rebuild      | `rebuild_{cefi,tradfi,sports,prediction}_manifest*` (`derive_pipeline_mode_for_row`)                                                                                                                                                   | ✓      | reference impl                                                                                                                                                                                          |
-| **WRITE migrator** | **`migrate_defi_full_v9_canonical.py:70/700/714`** `DEFAULT_PIPELINE_MODE="batch"` → coarse path+col                                                                                                                                   | **✅** | **DONE mtds@f80c50f1** — `batch_<source>` per shard via `derive_pipeline_mode_for_row`; source+transport in path+column; coarse retired                                                                 |
-| **WRITE rebuild**  | **`rebuild_defi_manifest.py:88/206/230/250`** `_DEFAULT_PIPELINE_MODE="batch"` (+ `:302` blank — C-#1)                                                                                                                                 | **✅** | **DONE mtds@f80c50f1** — `derive_pipeline_mode_for_row` source-aware (path+col), `pipeline_mode=` day-probe, per-shard isolation; C-#1 `:302` fixed                                                     |
-| READ (defi)        | features `mtds_canonical_reader.py` — was exact `pipeline_mode=batch/`+`live/` probe                                                                                                                                                   | ✅     | **DONE features@c487e04b** — day-level mode-agnostic listing, prefix-match `batch_*/live_*/replay_*` + bare + legacy `category=`, canonical-over-legacy ranked                                          |
-| READ               | mdps `orchestration_scanner.py` — day-listing already mode-agnostic; FIXED source-aware leak bug                                                                                                                                       | ✅     | **DONE mdps@d59749c (PR#103→staging)** — gated `batch_onchain_rpc` legacy-venue branch on absence of `data_type=` (canonical `dex_pool_state` no longer leaks into `dex_swaps`); +source-aware fixtures |
-| TEST               | mtds `test_migrate_defi_full_v9_canonical.py:53-54` · `test_rebuild_defi_manifest.py:17/72` · mdps `test_orchestration_scanner.py:182-230` · features `test_mtds_canonical_reader.py:63-132`                                           | ◑      | **mtds DONE mtds@f80c50f1** (both defi test files assert `batch_<source>` + source/transport, 25/25 green); mdps/features test updates ride their READ change (features@c487e04b / mdps@d59749c)        |
-| LIVE (all AGs)     | UTL `pipeline_mode_resolver.py:123` live → `LIVE_WEBSOCKET` (not `live_<source>`)                                                                                                                                                      | ~      | the M1 `live_<source>` OBJECT migration = **gated next tranche** (C-#5) — NOT part of the batch migration                                                                                               |
-| DOC ✓              | CLAUDE.md:568 · SUB_AGENT_MANDATORY_RULES:276 · most AG plans · deployment-api/data_status                                                                                                                                             | ✓      | already `batch_*/`                                                                                                                                                                                      |
-| DOC ✗              | `defi_manifest_canonicalisation_2026_06_01.md` (many coarse `pipeline_mode=batch/`) · codex `pipeline-mode-partition.md` (mixed) · audit `defi_object_path_canonicalisation_2026_06_01.py:87` · `pipeline_mode_partition_migration:63` | ✗      | reconcile to `batch_<source>` (rides M-COORD-1)                                                                                                                                                         |
-| BY-DESIGN          | codex `batch-live-architecture.md:466` + `instruments-live-architecture.md:30` — instruments reference data has **NO `pipeline_mode=live` partition** (live writes the identical batch path)                                           | ✓      | keep — a real exception, not a conflict                                                                                                                                                                 |
+| Class              | Site                                                                                                                                                                                                                                                                                                                                                        | State  | Fix / owner                                                                                                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WRITE migrator     | `migrate_tradfi_to_v9_canonical.py` (`_pipeline_mode`→`batch_databento`)                                                                                                                                                                                                                                                                                    | ✓      | reference impl — copy this pattern                                                                                                                                                                      |
+| WRITE rebuild      | `rebuild_{cefi,tradfi,sports,prediction}_manifest*` (`derive_pipeline_mode_for_row`)                                                                                                                                                                                                                                                                        | ✓      | reference impl                                                                                                                                                                                          |
+| **WRITE migrator** | **`migrate_defi_full_v9_canonical.py:70/700/714`** `DEFAULT_PIPELINE_MODE="batch"` → coarse path+col                                                                                                                                                                                                                                                        | **✅** | **DONE mtds@f80c50f1** — `batch_<source>` per shard via `derive_pipeline_mode_for_row`; source+transport in path+column; coarse retired                                                                 |
+| **WRITE rebuild**  | **`rebuild_defi_manifest.py:88/206/230/250`** `_DEFAULT_PIPELINE_MODE="batch"` (+ `:302` blank — C-#1)                                                                                                                                                                                                                                                      | **✅** | **DONE mtds@f80c50f1** — `derive_pipeline_mode_for_row` source-aware (path+col), `pipeline_mode=` day-probe, per-shard isolation; C-#1 `:302` fixed                                                     |
+| READ (defi)        | features `mtds_canonical_reader.py` — was exact `pipeline_mode=batch/`+`live/` probe                                                                                                                                                                                                                                                                        | ✅     | **DONE features@c487e04b** — day-level mode-agnostic listing, prefix-match `batch_*/live_*/replay_*` + bare + legacy `category=`, canonical-over-legacy ranked                                          |
+| READ               | mdps `orchestration_scanner.py` — day-listing already mode-agnostic; FIXED source-aware leak bug                                                                                                                                                                                                                                                            | ✅     | **DONE mdps@d59749c (PR#103→staging)** — gated `batch_onchain_rpc` legacy-venue branch on absence of `data_type=` (canonical `dex_pool_state` no longer leaks into `dex_swaps`); +source-aware fixtures |
+| TEST               | mtds `test_migrate_defi_full_v9_canonical.py:53-54` · `test_rebuild_defi_manifest.py:17/72` · mdps `test_orchestration_scanner.py:182-230` · features `test_mtds_canonical_reader.py:63-132`                                                                                                                                                                | ◑      | **mtds DONE mtds@f80c50f1** (both defi test files assert `batch_<source>` + source/transport, 25/25 green); mdps/features test updates ride their READ change (features@c487e04b / mdps@d59749c)        |
+| LIVE (all AGs)     | UTL `pipeline_mode_resolver.py:123` live → `LIVE_WEBSOCKET` (not `live_<source>`)                                                                                                                                                                                                                                                                           | ~      | the M1 `live_<source>` OBJECT migration = **gated next tranche** (C-#5) — NOT part of the batch migration                                                                                               |
+| DOC ✓              | CLAUDE.md:568 · SUB_AGENT_MANDATORY_RULES:276 · most AG plans · deployment-api/data_status                                                                                                                                                                                                                                                                  | ✓      | already `batch_*/`                                                                                                                                                                                      |
+| DOC ✗              | `defi_manifest_canonicalisation_2026_06_01.md` (archived → `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md`, folded→M-1 2026-07-13, finding 197; many coarse `pipeline_mode=batch/`) · codex `pipeline-mode-partition.md` (mixed) · audit `defi_object_path_canonicalisation_2026_06_01.py:87` · `pipeline_mode_partition_migration:63` | ✗      | reconcile to `batch_<source>` (rides M-COORD-1)                                                                                                                                                         |
+| BY-DESIGN          | codex `batch-live-architecture.md:466` + `instruments-live-architecture.md:30` — instruments reference data has **NO `pipeline_mode=live` partition** (live writes the identical batch path)                                                                                                                                                                | ✓      | keep — a real exception, not a conflict                                                                                                                                                                 |
 
 **RESOLUTION (HARD, single-walk)**: bring the DeFi migrator + rebuild to the cefi/tradfi pattern
 (`derive_pipeline_mode_for_row` → `batch_<source>` in path + column, same C0 walk — a coarse apply + later re-walk = the
@@ -922,24 +926,36 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 ## Sub-plan registry (every data-layer plan, its gate, owner, blocked-until)
 
 > Status is coarse (`see plan` for detail). The value here is the GATE + the BLOCKED-UNTIL edge. Owner = `assigned_vm`.
+>
+> **🔴 DOC-RECON FIX 2026-07-14 (finding 197)**: `defi_manifest_canonicalisation_2026_06_01` /
+> `cefi_manifest_canonicalisation_2026_06_01` / `tradfi_manifest_canonicalisation_2026_06_01` — plus sibling rows below
+> pointing at the same 2026-07-13 fold batch (`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`,
+> `data_source_provenance_all_asset_groups_2026_06_01`, `prediction_manifest_canonicalisation_2026_06_01`,
+> `downstream_services_manifest_canonicalisation_2026_06_01`, `solana_defi_legacy_migration_2026_05_27`) — were
+> FOLDED→M-1 (`data_completion_to_100_all_ag_2026_06_21`) + archived to `plans/archive/2026_07/` 2026-07-13 (operator
+> ruling "Approve all + unlock", `mtds_consolidation_foldin_mapping_2026_07_12.md`). Rows below updated: Owner → M-1
+> (folded scope) where folded; Plan/issue link → the archive path for history; original owner/link kept as `(was: …)`.
+> `solana_defi_legacy_migration` was independently COMPLETE (not folded content) but is likewise archived.
+> `sports_manifest_canonicalisation_2026_06_01` (row below) is UNCHANGED — operator-ruled KEEP-WITH-JUSTIFICATION, not
+> folded/archived.
 
 | Gate     | Plan / issue                                                                                                                                                                                                | Role                                                                                                                                                                                                                                                                                                                                                                                                                                               | Owner                                                                                               | Blocked-until (upstream)                            |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | **G0**   | `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`                                                                                                                                         | **THE model + apply-gate** (batch/live/replay × source × transport; M2/M3 registries; M4 precedence; cont. contract; 0.8 doc reconcile)                                                                                                                                                                                                                                                                                                            | vm-cross-cutting                                                                                    | — (root; Phase-0 code must go GREEN)                |
-| G0       | `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`                                                                                                                                                 | canonical bucket SSOT (env-tier readers/writers) + L6 decommission                                                                                                                                                                                                                                                                                                                                                                                 | vm-cross-cutting                                                                                    | partly done; L6 ⟶ G4                                |
-| G0       | `data_source_provenance_all_asset_groups_2026_06_01`                                                                                                                                                        | `source` column — RIDES each AG's single-walk                                                                                                                                                                                                                                                                                                                                                                                                      | per-AG                                                                                              | G0 model (source-aware) ratified ✓                  |
+| G0       | `plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (was: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)     | canonical bucket SSOT (env-tier readers/writers) + L6 decommission                                                                                                                                                                                                                                                                                                                                                                                 | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-cross-cutting)                | partly done; L6 ⟶ G4                                |
+| G0       | `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md` (was: `data_source_provenance_all_asset_groups_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)                   | `source` column — RIDES each AG's single-walk                                                                                                                                                                                                                                                                                                                                                                                                      | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: per-AG)                          | G0 model (source-aware) ratified ✓                  |
 | G0       | `pipeline_mode_partition_migration_2026_06_01`                                                                                                                                                              | on-disk `pipeline_mode=` partition — RIDES each AG walk                                                                                                                                                                                                                                                                                                                                                                                            | per-AG                                                                                              | G0 model form (M1) locked                           |
 | G0       | `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`                                                                                                                                                    | reader fail-fast default + consolidator liveness (no legacy fallback)                                                                                                                                                                                                                                                                                                                                                                              | vm-cross-cutting                                                                                    | parallel-safe                                       |
 | **G1**   | `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`                                                                                                                                                   | **could-exist-universe SSOT** — `build_instrument_catalogue` roll-up + daily scheduler + v2-enumerator recurring run                                                                                                                                                                                                                                                                                                                               | vm-cross-cutting                                                                                    | `instruments_manifest_canon` (IS indices canonical) |
 | G1       | `instruments_manifest_canonicalisation_2026_06_01`                                                                                                                                                          | IS reference/instrument `_index` canonical (all AG)                                                                                                                                                                                                                                                                                                                                                                                                | per-AG slice                                                                                        | G0                                                  |
 | G1       | `instruments_backfill_phase3_2026_05_22`                                                                                                                                                                    | IS reference backfill                                                                                                                                                                                                                                                                                                                                                                                                                              | vm-cross-cutting                                                                                    | G1 catalogue GREEN ⟶ G5                             |
-| **G2**   | `defi_manifest_canonicalisation_2026_06_01`                                                                                                                                                                 | DeFi MTDS single-walk + §A–H executor                                                                                                                                                                                                                                                                                                                                                                                                              | vm-defi (slot-2)                                                                                    | G0 + G1                                             |
-| G2       | `cefi_manifest_canonicalisation_2026_06_01`                                                                                                                                                                 | CeFi single-walk                                                                                                                                                                                                                                                                                                                                                                                                                                   | vm-cefi (slot-3)                                                                                    | G0 + G1                                             |
+| **G2**   | `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md` (was: `defi_manifest_canonicalisation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)                                     | DeFi MTDS single-walk + §A–H executor                                                                                                                                                                                                                                                                                                                                                                                                              | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-defi (slot-2))                | G0 + G1                                             |
+| G2       | `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` (was: `cefi_manifest_canonicalisation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)                                     | CeFi single-walk                                                                                                                                                                                                                                                                                                                                                                                                                                   | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-cefi (slot-3))                | G0 + G1                                             |
 | G2       | `sports_manifest_canonicalisation_2026_06_01`                                                                                                                                                               | Sports single-walk (+ fixtures/transfer-window reasons)                                                                                                                                                                                                                                                                                                                                                                                            | vm-sports (slot-4)                                                                                  | G0 + G1                                             |
-| G2       | `prediction_manifest_canonicalisation_2026_06_01`                                                                                                                                                           | Prediction single-walk                                                                                                                                                                                                                                                                                                                                                                                                                             | vm-prediction (slot-5)                                                                              | G0 + G1                                             |
-| G2       | `tradfi_manifest_canonicalisation_2026_06_01`                                                                                                                                                               | TradFi single-walk (v9 + partition + source re-consol)                                                                                                                                                                                                                                                                                                                                                                                             | vm-tradfi (slot-6)                                                                                  | G0 + G1                                             |
-| G2       | `downstream_services_manifest_canonicalisation_2026_06_01`                                                                                                                                                  | MDPS/features/strategy/execution `_index` canonical                                                                                                                                                                                                                                                                                                                                                                                                | vm-ml                                                                                               | G0 + G1 + the AG MTDS walks                         |
-| G2       | `solana_defi_legacy_migration_2026_05_27`                                                                                                                                                                   | DeFi Solana legacy→canonical (serialise with defi §C)                                                                                                                                                                                                                                                                                                                                                                                              | vm-defi                                                                                             | defi G2 single-walk                                 |
+| G2       | `plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md` (was: `prediction_manifest_canonicalisation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)                         | Prediction single-walk                                                                                                                                                                                                                                                                                                                                                                                                                             | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-prediction (slot-5))          | G0 + G1                                             |
+| G2       | `plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md` (was: `tradfi_manifest_canonicalisation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)                                 | TradFi single-walk (v9 + partition + source re-consol)                                                                                                                                                                                                                                                                                                                                                                                             | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-tradfi (slot-6))              | G0 + G1                                             |
+| G2       | `plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md` (was: `downstream_services_manifest_canonicalisation_2026_06_01`) — FOLDED→M-1, archived 2026-07-13 (finding 197)       | MDPS/features/strategy/execution `_index` canonical                                                                                                                                                                                                                                                                                                                                                                                                | data_completion_to_100_all_ag_2026_06_21 (M-1, folded scope) (was: vm-ml)                           | G0 + G1 + the AG MTDS walks                         |
+| G2       | `plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md` (was: `solana_defi_legacy_migration_2026_05_27`) — COMPLETE (0/32 open), archived 2026-07-13 (finding 197)                               | DeFi Solana legacy→canonical (serialise with defi §C)                                                                                                                                                                                                                                                                                                                                                                                              | n/a — shipped complete, no live owner (was: vm-defi)                                                | defi G2 single-walk                                 |
 | G2       | `features_input_manifest_migration_2026_05_25`                                                                                                                                                              | features input `_index` migration                                                                                                                                                                                                                                                                                                                                                                                                                  | vm-ml                                                                                               | G0 + downstream                                     |
 | G2       | issue `defi_code_codex_drift_2026_05_27`                                                                                                                                                                    | DeFi code↔codex drift (wrapped by defi plan §A/§F)                                                                                                                                                                                                                                                                                                                                                                                                 | vm-defi                                                                                             | wrapped → defi G2                                   |
 | G2       | issue `features_service_defi_data_loading_blockers_2026_05_29`                                                                                                                                              | features DeFi e2e data-layer (wrapped by defi §C0/§D)                                                                                                                                                                                                                                                                                                                                                                                              | vm-defi/vm-ml                                                                                       | defi G2 + downstream                                |
@@ -999,7 +1015,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > `data_type=options_chain` rows.
 
 > **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
-> `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
+> `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL `data_types` over
 > EVERY instrument with **no `(instrument_type × data_type)` validity filter and no bundle-grain handling**. cefi
 > ground-truth: options/futures are captured as per-underlying `options_chain`/`futures_chain` BUNDLES (~0 per-OPTION /
 > per-COMBO rows), yet the catalog has 72,156 OPTION + 17,472 COMBO → `OPTION/COMBO × 7 data_types` never match the
@@ -1007,21 +1023,21 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > `expected_unattempted` rows → distort the exact denominator G1 exists to make honest.** The dry-run caught it
 > pre-write. **This is the SAME root as slot-4's sports finding** (generic producer is fixture-grain, sports atom is
 > league-grain; prediction already solved it with a per-cqg granularity-aware producer). **Cross-AG**: the
-> `for dt in data_types` no-filter pattern is in EVERY
-> `\_enumerate_v2*\*`. **FIX (owner: slot-7 G1-foundation in instruments-service)**: the generic producer becomes instrument-shape-aware — `(instrument_type
-> ×
-> data_type)`validity filter + bundle-grain (mirror the prediction per-cqg producer); **each AG owner (slots 2-6) verifies their slice** before any G1.run apply-write. **Gates every AG's`--apply-write`seed** (a G1 prerequisite). Tracked: P0 in cefi plan + must land in`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
-> (central fix) + a verify-slice todo in each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be
-> AG-shape-aware, NOT one-size fan-out.
+> `for dt in data_types` no-filter pattern is in EVERY `_enumerate_v2_*`. **FIX (owner: slot-7 G1-foundation in
+> instruments-service)**: the generic producer becomes instrument-shape-aware — `(instrument_type × data_type)` validity
+> filter + bundle-grain (mirror the prediction per-cqg producer); **each AG owner (slots 2-6) verifies their slice**
+> before any G1.run apply-write. **Gates every AG's `--apply-write` seed** (a G1 prerequisite). Tracked: P0 in cefi
+> plan + must land in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (central fix) + a verify-slice todo in
+> each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be AG-shape-aware, NOT one-size fan-out.
 >
 > **✅ G1-V8 (P0, cross-AG, the SECOND G1 long pole): the instruments-store v9 MIGRATOR IS BUILT 2026-06-07
 > (`is@febb899e`) + dry-run-green for all 5 AGs — see "Two G1 long poles" item 2 below. The `--apply` RUN stays G4-gated
 > per-AG. Historical context (now RESOLVED):** Confirmed v8 across **cefi (100% v8), sports (v8), tradfi (0.8% v9 /
 > 20,218 rows v8)** — and slot-6 found the fix is "a gated G4-class single-walk `--apply` with **no migrator built yet**
-> (instruments*manifest **E2**, vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to
+> (instruments_manifest **E2**, vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to
 > fix it hasn't been written**. This gates EVERY AG's G1.run apply-write alongside G1-ENUM. **Owner: vm-cross-cutting
 > must BUILD the `instruments_manifest` E2 v9 single-walk migrator**
-> (asset_group=/pipeline_mode=batch*<source>/source/transport/ available_at/typed data_type) for the instruments-store
+> (asset_group=/pipeline_mode=batch\*<source>/source/transport/ available_at/typed data_type) for the instruments-store
 > buckets — the analogue of the per-AG MTDS migrators, which don't exist for the IS reference surface. Until it lands,
 > no AG's instruments-store goes v9 → no honest G1 seed. Tracked: `instruments_manifest_canonicalisation_2026_06_01`
 > (must spawn the E2 migrator) + each AG plan's §H.
@@ -1081,19 +1097,20 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   per-contract FUTURE candidates (700 DERIBIT/OKX = false over-seed) — over-seeds only the **G1.run futures seed**, fix
   = slot-7 venue-aware `build_instrument_catalogue` rollup. **Remaining gates are OPERATIONAL only**: instruments-store
   v9 walk RUN · IS backfill · Era-B legacy relabel (rides G4, operator `slot-7 edca81b57`) · pre-migration drain · F2
-  (slot-7). Full verdict in `cefi_manifest_canonicalisation_2026_06_01.md` § "cefi APPLY-READY". 🟢 G3 ✓ · G0 ✓. **🔁
-  12-POINT PRE-APPLY RE-VERIFICATION (slot-3, 2026-06-08, real-prod data-state):** ①–⑫ re-run on real GCS (migrate/
-  rebuild/enumerate dry-runs + `_index` byte-probes; MTDS cefi `_index`=2.64M rows 100% v8 pre-migration confirmed).
-  **G4 data/manifest migration = APPLY-READY, REGRESSION RISK NONE** (⑪ batch=live byte-identical; ②/① no
-  double-count/no loss — copy-not-move safe via rebuild dedup + migrate-before-rebuild; ⑤/⑨/⑩/⑫ 🟢). **TWO
-  honest-coverage gates surfaced (NOT G4 blockers): ⑧ 🟡 IS cefi reference universe lists only 12 venues —
-  KRAKEN-SPOT/FUTURES (107K captured rows, on-disk-real) + BITFINEX-SPOT + PACIFICA + LIGHTER absent ⇒ catalogue ⊉
-  present-set ⇒ falsely-high coverage. **ROOT CAUSE = IS Tardis adapter `_DEFAULT_EXCHANGES` stale 8-id subset drifted
-  below SSOT `VenueMapping.all_tardis_exchanges`; 🟢 CODE FIX SHIPPED `is@a6bc4d48` (derives from SSOT + regression
-  tests).** Remaining = operational IS reference backfill re-run + CLOB venues (PACIFICA/LIGHTER) — owner
-  `instruments_backfill_phase3`; **⑦(a) 🟡 deployment-api cefi coverage denominator re-derives genesis/launch instead of
-  READING `expected_unattempted`\*\* (correct pre-seed; switch post enumerate `--apply-write` — owner:
-  deployment-api/downstream). Both tracked as todos in the cefi plan § "PRE-APPLY 12-POINT AUDIT VERDICT".
+  (slot-7). Full verdict in (archived) `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` § "cefi
+  APPLY-READY" (folded→M-1, archived 2026-07-13, finding 197). 🟢 G3 ✓ · G0 ✓. **🔁 12-POINT PRE-APPLY RE-VERIFICATION
+  (slot-3, 2026-06-08, real-prod data-state):** ①–⑫ re-run on real GCS (migrate/ rebuild/enumerate dry-runs + `_index`
+  byte-probes; MTDS cefi `_index`=2.64M rows 100% v8 pre-migration confirmed). **G4 data/manifest migration =
+  APPLY-READY, REGRESSION RISK NONE** (⑪ batch=live byte-identical; ②/① no double-count/no loss — copy-not-move safe via
+  rebuild dedup + migrate-before-rebuild; ⑤/⑨/⑩/⑫ 🟢). **TWO honest-coverage gates surfaced (NOT G4 blockers): ⑧ 🟡 IS
+  cefi reference universe lists only 12 venues — KRAKEN-SPOT/FUTURES (107K captured rows, on-disk-real) +
+  BITFINEX-SPOT + PACIFICA + LIGHTER absent ⇒ catalogue ⊉ present-set ⇒ falsely-high coverage. **ROOT CAUSE = IS Tardis
+  adapter `_DEFAULT_EXCHANGES` stale 8-id subset drifted below SSOT `VenueMapping.all_tardis_exchanges`; 🟢 CODE FIX
+  SHIPPED `is@a6bc4d48` (derives from SSOT + regression tests).** Remaining = operational IS reference backfill re-run +
+  CLOB venues (PACIFICA/LIGHTER) — owner `instruments_backfill_phase3`; **⑦(a) 🟡 deployment-api cefi coverage
+  denominator re-derives genesis/launch instead of READING `expected_unattempted`\*\* (correct pre-seed; switch post
+  enumerate `--apply-write` — owner: deployment-api/downstream). Both tracked as todos in the cefi plan § "PRE-APPLY
+  12-POINT AUDIT VERDICT".
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
@@ -1113,7 +1130,8 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   per-contract FUTURE candidates (700 DERIBIT/OKX = false over-seed) — over-seeds only the **G1.run futures seed**, fix
   = slot-7 venue-aware `build_instrument_catalogue` rollup. **Remaining gates are OPERATIONAL only**: instruments-store
   v9 walk RUN · IS backfill · Era-B legacy relabel (rides G4, operator `slot-7 edca81b57`) · pre-migration drain · F2
-  (slot-7). Full verdict in `cefi_manifest_canonicalisation_2026_06_01.md` § "cefi APPLY-READY". 🟢 G3 ✓ · G0 ✓.
+  (slot-7). Full verdict in (archived) `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` § "cefi
+  APPLY-READY" (folded→M-1, archived 2026-07-13, finding 197). 🟢 G3 ✓ · G0 ✓.
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
@@ -1164,10 +1182,11 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       `instrument_availability/by_date/` is `market=`-grain, no `canonical_question_group=`). enumerate rides the
       catalogue (same gate). cf_manifest_audit(instruments-store-pred): 493 rows 100% v8, CF-1/3/4/8 RED (§H v9 walk
       gated). G1.schedule WIRED (prediction in both catalogue schedulers). Full finding in
-      `prediction_manifest_canonicalisation_2026_06_01.md` § ⑦ G1-2026-06-07.** **tradfi DRY-RUN DONE (slot-6,
-      2026-06-07): `build_instrument_catalogue --asset-group tradfi` rolls up 11,579 `by_date` parquets (full local run
-      = VM job, timed out ~10min; producer already proven — slot-7 applied `prod/catalog.parquet` = 684,372 instruments,
-      95% delisted = capture-freeze signature). `enumerate_expected_universe v2 --catalog-path <prod/catalog.parquet>`
+      `plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md` § ⑦ G1-2026-06-07 (folded→M-1, archived
+      2026-07-13, finding 197).** **tradfi DRY-RUN DONE (slot-6, 2026-06-07):
+      `build_instrument_catalogue --asset-group tradfi` rolls up 11,579 `by_date` parquets (full local run = VM job,
+      timed out ~10min; producer already proven — slot-7 applied `prod/catalog.parquet` = 684,372 instruments, 95%
+      delisted = capture-freeze signature). `enumerate_expected_universe v2 --catalog-path <prod/catalog.parquet>`
       scan-only (2026-06-04..05) exit 0 → **588,798 candidate `expected_unattempted`** (= 32,711 alive × 9 data_types ×
       2 days; present-set 73,352/144,062), sample-inspected (e.g. `CBOE:INDEX:VIX × {trades,ohlcv_1m,…}`). **RE-RAN on
       the G1-ENUM shape-aware producer (@6ea46565) 2026-06-07 → 587,990 (barely dropped, −808). 🔴 gate-(a) RED —
@@ -1181,7 +1200,8 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       → dry-run only; gate-b remediation Massive IS adapter SHIPPED + **STAGING-GREEN** (UAC@12974b11 PR#91 MERGED +
       IS@c0f2f39c PR#407 MERGED, both quality-gates-v2 PASS). **G1.schedule: tradfi MISSING from both catalogue
       schedulers' instruments-store `for_each` → gated todo filed.** Full finding in
-      `tradfi_manifest_canonicalisation_2026_06_01.md` § G1.**
+      `plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md` § G1 (folded→M-1, archived 2026-07-13,
+      finding 197).**
 - [ ] [DATA] P0. **G1.run — per-AG `--apply-write` of the could-exist seed against the AG's canonical `_index`** (VM;
       `MANIFEST_PER_VM_SHARDS=true`). **GATED on**: (a) **IS instrument BACKFILL complete** for that AG
       (`instruments_backfill_phase3_2026_05_22` — the catalogue can only roll up instruments IS actually fetched); (b)
@@ -1207,7 +1227,11 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       (was 0 fleet-wide). Captured PRESERVED post-merge (defi 367,567 / cefi 1,311,984 / tradfi 102,936 / sports
       659,693). cefi/tradfi needed a manual `consolidate(force=True)` (idle-bucket trap). Ran existing
       `enumerate_expected_universe.py` v2 — no code change. Concurrent-safe with the live tradfi instruments-backfill
-      VMs (different per-VM shards).
+      VMs (different per-VM shards). **Correctness caveat (added 2026-07-14, verify-rerun-2 finding 153)**: this same
+      run is the seed the still-open "G1-ENUM present-set asymmetry" coordination todo below (found 2026-06-08, tradfi
+      pre-apply audit) flags as carrying PHANTOM `(options_chain|futures_chain, trades)` `expected_unattempted` cells
+      for cefi + tradfi specifically — so the cefi/tradfi `eu` counts above are known-inflated until that todo ships a
+      fix; DONE means "seed materialised", not "seed correctness verified" for those 2 of the 4 AGs.
 - [ ] [DATA] P1. **G1.run-prediction — BLOCKED-OPERATOR-DECISION (grain): the prediction catalogue is per-conditionId
       (870,987 markets) but the MTDS manifest is ~19,639 rows at the cqg/market grain** → a per-conditionId v2 seed
       emits >50M rows that NEVER match the present-set (every cell a false `expected_unattempted`). Prediction
@@ -1339,10 +1363,11 @@ CORRECT).**
       **`market-tick-data-service/tests/market_interface/adapters/cefi/test_tardis_canonical_output.py::test_adapter_resolves_test_bucket_when_is_test_run`
       is STALE — it asserts the legacy `is_test_run`→`market-data-tick-test-cefi-{project}` f-string shape, but
       `engine.orchestrator.get_tick_data_bucket` was canonicalised to the bucket-name SSOT (`resolve_bucket_name`,
-      remediated 2026-06-01 per `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`): it `del config` +
-      self-sources env from `DEPLOYMENT_ENV_SHORT` (test→`...-cefi-test-...`, not a config flag).** The CODE is right;
-      the test asserts the retired knob → locally returns `market-data-tick-cefi-prd-test-account` (ambient env).
-      Pre-existing on LDR (tab==LDR, 0 ahead — not introduced by the canonicalisation work). **NOT a
+      remediated 2026-06-01 per `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (folded→M-1, archived
+      `plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` 2026-07-13, finding 197): it
+      `del config` + self-sources env from `DEPLOYMENT_ENV_SHORT` (test→`...-cefi-test-...`, not a config flag).** The
+      CODE is right; the test asserts the retired knob → locally returns `market-data-tick-cefi-prd-test-account`
+      (ambient env). Pre-existing on LDR (tab==LDR, 0 ahead — not introduced by the canonicalisation work). **NOT a
       pipeline_mode/Era-B/migration `--apply` regression** (the migrators call `resolve_bucket_name` with an explicit
       `env`, not `get_tick_data_bucket`). **Fix = rewrite the test to set `DEPLOYMENT_ENV_SHORT=test` and assert the
       canonical `market-data-tick-cefi-test-{project}` env-tier shape (or delete the obsolete `is_test_run`
@@ -1382,9 +1407,8 @@ does not require a second whole-corpus walk.
 
 - [ ] [DATA] P1. **G1.run-defi seed — BLOCKED on GATE C**: do NOT `--apply-write` the defi could-exist seed until (c)
       the `instruments-store-defi` `_index` is v9-canonical (currently 0% v9) AND the defi
-      `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
-      empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
-      manifest_master.
+      `instrument_availability/by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is empty).
+      Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic: manifest_master.
 - [ ] [UAC] [MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
       `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`** 🟢
       **SAFETY GUARD SHIPPED (uac@93961df3, slot-7 2026-06-08)**: `assert_era_b_purge_safe()`
@@ -1399,7 +1423,7 @@ does not require a second whole-corpus walk.
       AFTER, inside the same migrator walk.** Full surface to drop atomically once an AG's rows are relabeled (all
       cascade-coupled — a partial purge breaks the closed-set round-trips): - UAC: `SOURCE_PRIORITY` +
       `AVAILABILITY_AT_SEMANTICS` (4 entries each — bidirectional round-trip) + `expected_coverage` venue lists
-      (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/       futures_chain]` +
+      (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/futures_chain]` +
       `DATA_TYPES_BY_ASSET_GROUP["cefi"]` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` +
       `BASE_GRANULARITY_BY_DATA_TYPE` + the `DataType` enum `OPTIONS_CHAIN`/`FUTURES_CHAIN` + the snapshot
       `SchemaContract`s `(ag, options_chain, options_chain)`/`(ag, futures_chain, futures_chain)` +
@@ -1480,8 +1504,8 @@ does not require a second whole-corpus walk.
       **`bash scripts/quality-gates.sh --no-fix` now exits 0 and WRITES `.qg_last_passed_sha`** (verified slot-7: "All
       checks passed!", sentinel==HEAD) — the ~16 `❌` list was STALE (the >900 files were already split + the rest gated
       behind the uv.lock abort). The e2e-testing prediction basedpyright errors are a PERIPHERAL-consumer warning,
-      non-blocking. MTDS QG is GREEN. Repo: market-tick-data-service. parent*epic: mtds_mdps_master. *(Original finding
-      retained below for provenance.)\_ ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
+      non-blocking. MTDS QG is GREEN. Repo: market-tick-data-service. `parent_epic`: `mtds_mdps_master`. _(Original
+      finding retained below for provenance.)_ ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
       `migrate_sports_canonical_v9`/`rebuild_sports_manifest_v9`/`rebuild_prediction_manifest`/`solana_lst_archival`/
       `websocket_runner`), deep-UAC-imports / asyncio.run-in-loop / raw-response.json / empty-fallbacks in untouched
       handlers, STEP 5.85 inline-`pipeline_mode=` literals across the migration scripts, + macOS-environmental
@@ -1714,7 +1738,7 @@ unified-api-contracts.
       (BLOCKED-OPERATOR-DECISION).** `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend
       lending via **Solana RPC / Helius / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` /
       `(defi,lending_indices)` resolve to `onchain_subgraph` for ALL chains →
-      `derive_pipeline_mode_for_row(ORCA,defi,     dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
+      `derive_pipeline_mode_for_row(ORCA,defi,dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
       migrator AND a derive-based live handler would stamp `source=onchain_subgraph` on genuinely Solana-RPC/DeFiLlama
       data — a coarse provenance mislabel (the DATA is correct; only the `source` label is wrong). NOT introduced by the
       migration (pre-existing model coarseness it bakes). Proper fix needs per-chain (or per-venue) source resolution in
@@ -1942,9 +1966,9 @@ P1 redirect todo below.)
       enum members** to UAC `pipeline_mode.py` (+ `source_string_for` `defillama` + `default_transport_for_source`
       `defillama→rest` + the closed-set symmetry tests). Then drop the handler hardcodes so
       `derive_pipeline_mode_for_row` is the single SSOT. Repos: unified-trading-library + unified-api-contracts +
-      market-tick-data-service. Owner: vm-defi. parent*epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
+      market-tick-data-service. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
       **EXTENDED 2026-06-08 — multi-VENUE perp has the same coarseness**:
-      `SOURCE_PRIORITY(defi, perp_funding)=     [hyperliquid]` (single) so `derive_pipeline_mode_for_row` returns
+      `SOURCE_PRIORITY(defi, perp_funding)=[hyperliquid]` (single) so `derive_pipeline_mode_for_row` returns
       `batch_hyperliquid` for ALL defi perp venues — ASTER, GMX, PACIFICA, **Solana DRIFT** all resolve to
       `batch_hyperliquid`/`source=hyperliquid` (only LIGHTER has an override → `batch_tardis`). This is CONSISTENT
       (object==manifest==migrator all derive the same, so the M-COORD-7 fix + the migration are correct) but the source
@@ -2178,18 +2202,18 @@ speed-note (both deferred optimisations, non-blocking).
       but the could-exist SEED + any matrix-driven consumer must ADMIT these chain data_types, not just `trades`. slot-3
       (cefi) verify: probe `market-data-tick-cefi-prd` chain shards for `data_type=derivative_ticker` under
       `instrument_type=options_chain/futures_chain` and widen
-      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("cefi",     options_chain/futures_chain)]` accordingly. tradfi
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("cefi", options_chain/futures_chain)]` accordingly. tradfi
       (Databento) chains carry only `{trades, ohlcv_1m}` (no IV) — so the IV slice is cefi-specific.** **SCOPE: the
       gated G1.run `--apply-write` SEED only — NOT the G4 data/manifest `--apply`** (that walk is content-preserving;
       tradfi/cefi v9 DATA migration has ZERO regression from this; cefi's low candidate count (3,454) means its phantom
       is small because cefi captures `options_chain` bundles that DO cancel — tradfi's combo-dominant present-set is the
       exposed case). **Quantify first**: re-run `enumerate --asset-group {tradfi,cefi} --dry-run` with an
-      instrument*type breakdown to count the phantom `(options_chain|futures_chain, trades)` cells. **Fix options (owner
-      decides)**: (a) apply the SAME `_rollup_bundle_grain` normalization to the present-set before the set-difference
-      (symmetric); (b) writer/rebuild relabel `combo`→`options_chain` to match the seed; (c) admit
-      `ohlcv*\*`/`tbbo` for     chain instrument_types in the validity matrix. Owner: vm-cross-cutting / slot-7 (the central enumerate producer).     Repos: instruments-service (`scripts/enumerate_expected_universe.py`) +
-      unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
-      2026-06-08.
+      `instrument_type` breakdown to count the phantom `(options_chain|futures_chain, trades)` cells. **Fix options
+      (owner decides)**: (a) apply the SAME `_rollup_bundle_grain` normalization to the present-set before the
+      set-difference (symmetric); (b) writer/rebuild relabel `combo`→`options_chain` to match the seed; (c) admit
+      `ohlcv_*`/`tbbo` for chain instrument_types in the validity matrix. Owner: vm-cross-cutting / slot-7 (the central
+      enumerate producer). Repos: instruments-service (`scripts/enumerate_expected_universe.py`) + unified-api-contracts
+      (validity matrix). `parent_epic`: manifest_master. Provenance: tradfi pre-apply audit, slot-6 2026-06-08.
 
 - [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@a28cbd4d7 +
       pm@51863c157 + pm@05456c343)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
@@ -2215,7 +2239,7 @@ speed-note (both deferred optimisations, non-blocking).
       coordinator's registry (not duplicated). Residual: cite CF-13/14 in each `*_master_audit_instructions.md`
       ownership matrix on next touch. parent_epic: manifest_master.
 - [x] ✅ [CHORE] P1. **M-COORD-4 — gate-state board WIRED** (pm@docs 2026-06-16): added the
-      `## 🟦 Gate-State Board     (G0–G5 × asset_group)` block at the top of this coordinator (above §Dispatch waves) —
+      `## 🟦 Gate-State Board (G0–G5 × asset_group)` block at the top of this coordinator (above §Dispatch waves) —
       🟢/🟡/🔴 per AG, sourced from the WAVE checkboxes + the A–H cross-cutting verdict + the per-AG `G4 --apply` ticks,
       with a per-cell basis + a refresh note (re-read at each gate promotion, or `regenerate_active_plan_inventory.py`).
       Current state: G0🟢 G1🟢(dry) G2🟡 G3🟢 G4🟡(operator-gated) G5🔴 across all 5 AGs. parent_epic: manifest_master.
@@ -2223,42 +2247,50 @@ speed-note (both deferred optimisations, non-blocking).
       `writer.add(...)` now passes `asset_group=defi` + the source-aware `pipeline_mode` + `source` + `transport` (no
       more blank `pipeline_mode`/`source` — standardisation finding #1 resolved); migrator likewise stamps source-aware
       in path+column. Tests green 25/25. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: rebuild*tradfi (direct read :316) + rebuild_prediction (via
-      reemit_honest_absence_rows) + rebuild_defi (defensive — unguarded log_event via ManifestWriter.add validation);
-      cefi/sports pre-existing; the 5 migrate*_\*v9 movers + IS migrate_instruments_store_v9 VERIFIED no-manifest-read →
-      not needed) \*\*M-COORD-6 — every AG `rebuild***manifest\*`/`migrate**\_v9`script must`setup_events()` before
-      reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship gated
-      on M-COORD-7).** ROOT CAUSE:`read_availability_index()`→`\_backfill()`emits
-      `READER_BACKFILLED_V8_COLUMNS_AS_NULL`via`log_event`whenever the per-VM fallback shards carry pre-v9 columns — the
-      **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards). Without
-      an events init,`log_event`raises`RuntimeError:     Event logging not     initialized`and **crashes the rebuild
-      `--no-dry-run`apply**. The v8-era migration scripts ALL call`setup_events(mode="local",     sink=None)`in`main()`
+- [x] ✅ [CROSS-CUTTING] P1. (mtds@7455ffb 2026-06-11: `rebuild_tradfi` (direct read :316) + `rebuild_prediction` (via
+      `reemit_honest_absence_rows`) + `rebuild_defi` (defensive — unguarded `log_event` via `ManifestWriter.add`
+      validation); cefi/sports pre-existing; the 5 `migrate_*_v9` movers + IS `migrate_instruments_store_v9` VERIFIED
+      no-manifest-read → not needed) **M-COORD-6 — every AG `rebuild_*_manifest*` / `migrate_*_v9` script must
+      `setup_events()` before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit
+      2026-06-08; sports ship gated on M-COORD-7).** ROOT CAUSE: `read_availability_index()` → `_backfill()` emits
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event` whenever the per-VM fallback shards carry pre-v9 columns —
+      the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).
+      Without an events init, `log_event` raises `RuntimeError: Event logging not initialized` and **crashes the rebuild
+      `--no-dry-run` apply**. The v8-era migration scripts ALL call `setup_events(mode="local", sink=None)` in `main()`
       (`migrate_sports_canonical`/`migrate_defi_canonical`/`migrate_tradfi_canonical`/
-      `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it\*\*. Confirmed
-      MISSING in: `rebuild_defi_manifest.py`,
-      `rebuild_cefi_manifest_`, `rebuild_tradfi_manifest\*`,     `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS     `migrate_instruments_store_v9.py`(the ones that call`read_availability_index`). **Fix per AG-slot**: add     `setup_events(service_name="...",
-      mode="local",
-      sink=None)`at the top of`main()`(mirror the sports fix;     migrators that do pure object-path moves and never read the manifest — e.g.`migrate_sports_canonical_v9`
-      — do NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
-      instruments-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+      `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**.
+
+      Confirmed MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest*`, `rebuild_tradfi_manifest*`,
+      `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and
+      IS `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
+      `setup_events(service_name="...", mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
+      migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do
+      NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
+      instruments-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+
 - [x] ✅ [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
-      WRITE path** were NOT swept: ~29 `cli/handlers/*` (perp*funding/position_data/lst_rates/gas_fee/liquidations/
-      flash_loan_events/native_staking/eigenlayer_rewards/bridge_events/jupiter_quote/oracle_prices/orca_whirlpool/
-      phoenix_orderbook/raydium_classic_amm/solana_defi/staking_yields/token_transfers/vault_share_price/
-      websocket_streaming/mev_events/governance*_/lending_indices/aggregator_route/protocol_outage_detector/…), the 5
-      `engine/__catalog_reader.py`, + tradfi `massive_tradfi_rest_connector`/`tardis_adapter` + clients
-      (`alchemy_\*`/`extended*base`/`tardis_base`/`thegraph_base`). Each is commented "Coarse ingestion mode → canonical     pipeline_mode= path segment (Live=Batch)". **TWO consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi     live-written data lands at `pipeline_mode=batch/`(coarse) while migrated DeFi batch data lands at     `pipeline_mode=batch*<source>/` (source-aware mtds@f80c50f1) → the migration CREATES a split the audit's ⑪     keystone forbids; (2) **STEP 5.85 (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28)     hard-fails → mtds `quality-gates.sh`exits non-zero → NO`.qg_last_passed_sha`written →`quickmerge
-      --agent`     refuses → NO mtds code (any AG) can ship** (it currently blocks slot-4's verified sports`setup_events`fix). **FIX     (slot-2 DeFi + cross-cutting)**: each handler/reader must pass the SOURCE-AWARE`PipelineMode.<BATCH_SOURCE>`     (or`derive_pipeline_mode_for_row(venue,
-      ag,
-      data_type)`/`resolve_pipeline_mode()`), the SAME value the v9     migrator + the shared `engine/orchestrator.py`
-      write path use, so DeFi live == DeFi migrated-batch. Per-handler source derivation is DeFi-domain (the handler
-      knows its venue/source) — slot-4 did NOT edit (collision + correctness risk across 41 DeFi sites). Repo:
-      market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08
-      (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY verdict above, which covered
-      migrator/rebuild but not the live handlers).
+      WRITE path** were NOT swept: ~29 `cli/handlers/*`
+      (`perp_funding/position_data/lst_rates/gas_fee/liquidations/flash_loan_events/native_staking/eigenlayer_rewards/bridge_events/jupiter_quote/oracle_prices/orca_whirlpool/phoenix_orderbook/raydium_classic_amm/solana_defi/staking_yields/token_transfers/vault_share_price/websocket_streaming/mev_events/governance_*/lending_indices/aggregator_route/protocol_outage_detector`/…),
+      the 5 `engine/__catalog_reader.py`, + tradfi `massive_tradfi_rest_connector`/`tardis_adapter` + clients
+      (`alchemy_*`/`extended_base`/`tardis_base`/`thegraph_base`).
+
+      Each is commented "Coarse ingestion mode → canonical pipeline_mode= path segment (Live=Batch)". **TWO
+      consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi live-written data lands at `pipeline_mode=batch/`
+      (coarse) while migrated DeFi batch data lands at `pipeline_mode=batch_<source>/` (source-aware mtds@f80c50f1) →
+      the migration CREATES a split the audit's ⑪ keystone forbids; (2) **STEP 5.85
+      (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28) hard-fails → mtds
+      `quality-gates.sh` exits non-zero → NO `.qg_last_passed_sha` written → `quickmerge --agent` refuses → NO mtds
+      code (any AG) can ship** (it currently blocks slot-4's verified sports `setup_events` fix). **FIX (slot-2 DeFi +
+      cross-cutting)**: each handler/reader must pass the SOURCE-AWARE `PipelineMode.<BATCH_SOURCE>` (or
+      `derive_pipeline_mode_for_row(venue, ag, data_type)`/`resolve_pipeline_mode()`), the SAME value the v9 migrator +
+      the shared `engine/orchestrator.py` write path use, so DeFi live == DeFi migrated-batch. Per-handler source
+      derivation is DeFi-domain (the handler knows its venue/source) — slot-4 did NOT edit (collision + correctness
+      risk across 41 DeFi sites). Repo: market-tick-data-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4
+      sports pre-apply audit 2026-06-08 (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY
+      verdict above, which covered migrator/rebuild but not the live handlers).
 
       **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
                       the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
@@ -2277,11 +2309,11 @@ speed-note (both deferred optimisations, non-blocking).
                       `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
                       the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
-- [x] ✅ [DEFI] P2. **dex\*pools_handler honest-absence `record_failed`/`record*\*` calls hardcode mode** — they passed
+- [x] ✅ [DEFI] P2. **`dex_pools_handler` honest-absence `record_failed`/`record_*` calls hardcode mode** — they passed
       `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at
-      `dex_pools_handler.py:410/467/     475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence
-      rows mislabel the mode (batch vs live). **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for
-      defi" so this IS live-reachable.** Added `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME
+      `dex_pools_handler.py:410/467/475/486`. On a live `dex_pools` run these `attempted_failed`/honest-absence rows
+      mislabel the mode (batch vs live). **DONE 2026-06-17 (mtds@d5cf763) — operator confirmed "we have live for defi"
+      so this IS live-reachable.** Added `_record_pipeline_mode_for(venue, run_tag)` helper applying the SAME
       source-aware upgrade as the data chokepoint (`canonical_write.py` mtds@c4c5f15): live →
       `resolve_pipeline_mode(..., "live")` = `live_onchain_subgraph`, batch → `derive_pipeline_mode_for_row` =
       `batch_onchain_subgraph` (no batch regression). All 4 `record_*` calls now use it; +regression test. Repo:
@@ -2289,8 +2321,10 @@ speed-note (both deferred optimisations, non-blocking).
 
 ## Demotion + linkage record
 
-- `defi_manifest_canonicalisation_2026_06_01.md` `## MASTER` section → demoted to **DeFi executor**; a banner points UP
-  to this coordinator (its cross-plan registry is superseded by the table above).
+- `defi_manifest_canonicalisation_2026_06_01.md` (folded→M-1, archived
+  `plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md` 2026-07-13, finding 197) `## MASTER` section →
+  demoted to **DeFi executor**; a banner points UP to this coordinator (its cross-plan registry is superseded by the
+  table above).
 - `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` → registered as **G0** (keeps its Phase-0
   apply-gate; this master references it, does not duplicate it).
 - `master_to_live_defi_2026_05_23.md` → **downstream consumer** (G5 → live promotion); cross-linked, not subsumed.

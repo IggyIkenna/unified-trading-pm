@@ -227,3 +227,15 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
   SIT-failed cases, `success` only on the genuine sit-passed green path. Now the SIT-failed alert renders `:x:` CRITICAL
   result FAILED. The `persist` job keeps `unlock-staging.result` (the ledger records the JOB outcome). actionlint clean,
   all 3 branches verified. — **unified-trading-pm@86e335607**.
+- **2026-07-14 (WS-6: the dedup was silently BROKEN — anonymous gsutil)** — Operator: "non-stop duplicate QG-failed
+  alerts for the same PR, I thought we deduped." Pulled the channel: PR#1008 fired **67** QG-failed pages in ~3h, one
+  per commit. WS-3's key was CORRECT + stable (`gh` run log: `dedup_key: qg-fail:unified-trading-pm:1008/merge`), but
+  the dedup gate logged `should_post=true (key not seen)` + a
+  **`ServiceException: 401 Anonymous caller … storage.objects .list denied on unified-trading-cicd-events`**. Root
+  cause: `notify-slack.yml` reads/writes the ledger with `gsutil`, but `auth@v3` only exports ADC — **gsutil ran
+  anonymous**, so the read 401'd, the ledger looked empty, and the gate fail-opened on EVERY run. This silently broke
+  dedup for **every** `dedup_key` alert (promotion-lag over-fired the same way — explains the 92 branch-health
+  alerts/3d). Fix: added `setup-gcloud@v2` after `auth@v3` so gsutil authenticates (read + write); declared `GCP_SA_KEY`
+  in the reusable `secrets:` block. — **unified-trading-pm@91ce0524c** (actionlint clean). codex `ci-alerting.md` gains
+  the gotcha. **Verify:** next QG-failed run after this promotes should log `should_post=false (suppressed)` and the
+  channel should collapse to one page per red-period per branch.

@@ -61,12 +61,15 @@ drift_direction: correct-codex
    carve only affects **provenance** (the `Quickmerge:` trailer + dep-gate pre-flight), NOT content-gating — `scripts/`
    is QG-unchecked either way. Decide after the audit shows what service-repo `scripts/` actually contain.
 5. **Every script declares a lifecycle marker (operator 2026-06-18)** — a 3-line greppable comment header (works for
-   `.sh` + `.py`): `Epic:` (owning epic), `Lifecycle:` (`permanent | campaign | oneoff`), `Delete-when:` (completion
-   condition, required for `campaign`/`oneoff`). Not every script is throwaway — `setup.sh` is permanent lifecycle
-   infra; a GCS-migration script is a weeks-long **campaign**. The marker lets the audit distinguish them mechanically
-   instead of re-deriving each time, and makes "delete after use" self-enforcing. **`Epic:` (not a single plan)**
-   because a script spans multiple plans (the GCS cutover touches MTDS / instruments / deployment plans at once); epics
-   are stable
+   `.sh` + `.py`): `Epic:` (owning epic), `Lifecycle:` (`permanent | campaign | oneoff`), `Delete-when:` (required +
+   present on ALL scripts, `NA` for `permanent` — was: "completion condition, required for `campaign`/`oneoff`",
+   implying `permanent` scripts omit the field; corrected 2026-07-14, verify-rerun-2 finding 97: the operator correction
+   2026-06-22 (see Phase 0 below) made `Delete-when` mandatory-and-present on every script so the fleet stays greppable
+   via `grep -rL '^# Delete-when:'` — Decision 5 here was never updated to match). Not every script is throwaway —
+   `setup.sh` is permanent lifecycle infra; a GCS-migration script is a weeks-long **campaign**. The marker lets the
+   audit distinguish them mechanically instead of re-deriving each time, and makes "delete after use" self-enforcing.
+   **`Epic:` (not a single plan)** because a script spans multiple plans (the GCS cutover touches MTDS / instruments /
+   deployment plans at once); epics are stable
    - multi-plan + validate-able vs the registry like `assigned_vm`. **Epics are EVERLASTING**, so `Epic:` is OWNERSHIP,
      not the delete trigger — `Delete-when:` carries the actual completion signal. **NO runtime last-run tracking
      (operator 2026-06-18): no `log_script_run`, no run-ledger, no auto-updated header field** — an auto usage timestamp

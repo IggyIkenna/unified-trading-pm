@@ -165,7 +165,13 @@ Net: one dedicated, read-only, minimal token is the safe and clean choice.
       commits deployment-api@29a18c0 + @c4549da verified in-repo.
 - [x] [UI] P2. Remove the "Dummy data" panel note + "pending PAT" source-footer once real data flows. — DONE per
       cost_obs_ui_unified_breakdown_2026_07_08.md:165-169 (GitHub billing number-check verified correct, real data
-      rendering).
+      rendering). **[Evidence correction 2026-07-14, finding 56]**: the cited line range is a `[BACKEND]` billing
+      number-check entry, not `pw:L2`/`regression:` evidence for this UI change — no playwright/regression citation for
+      this specific item was found in that doc or in `deployment-ui` test specs. Functionally the code renders the panel
+      note/footer conditionally on `is_placeholder` (now `false` once the real provider is wired, per the `[BACKEND]`
+      item above), so the behavior is very likely satisfied, but the `pw:`/`regression:` evidence this epic's HARD RULE
+      requires is genuinely missing and mislocated — not fabricated here. Not un-ticked (closed, resolved issue; no
+      destructive edit without operator direction) — flagged for operator awareness.
 
 **Close-out (2026-07-11 reconciliation)**: this issue was completed 2026-07-10 but the doc was never flipped — classic
 unflipped-checkbox drift. Closed per the plans-corpus contradiction audit,

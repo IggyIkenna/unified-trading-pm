@@ -206,3 +206,19 @@ being wired into the write path or persisted on the catalog. This plan is the mi
     changes (all consumed via existing public `unified_api_contracts.predictions` / `unified_api_contracts.sports`
     facade exports).
   - Deferred (todos 6-8): not started this session — carried forward as-is.
+- **2026-07-14** — Investigated a "0.1% canonical_instrument_id population anomaly" flagged from earlier session
+  tracking (framed as "smoke-test writes rejected by a shrink guard"). **Finding: not a bug, and not caused by the
+  shrink guard.** Live measurement against prod
+  (`gs://instruments-store-pred-prd-central-element-323112/prod/catalog.parquet`, 2,530,212 rows as of today — up from
+  the 07-08 snapshot's 2,486,092/20,909 blobs to 21,116 blobs, confirming the pipeline has kept running):
+  `canonical_instrument_id` populated (non-blank) on 2,570 rows = **0.10157%** (KALSHI 2,270/58,383 = 3.89%; POLYMARKET
+  300/2,471,829 = 0.0121%). This is the correct, expected arithmetic consequence of todo 3's own documented scope —
+  `canonical_instrument_id` only fires for (a) matched Kalshi↔Polymarket same-market pairs and (b) Polymarket sports
+  fixtures — combined with Polymarket outnumbering Kalshi ~42:1 in row count. The overwhelming majority of Polymarket
+  rows are single-venue markets with no Kalshi counterpart, so they correctly get no id (honest absence, not a
+  dropped/rejected write). The actual `CATALOGUE_SHRINK_BLOCKED` events on record (200-blob/2000-blob smoke-test
+  samples, todo 2 evidence above) are a SEPARATE, unrelated, expected event (a truncated sample is always smaller than
+  the full catalogue — "the monotonic guard worked exactly as designed"), not a rejection of canonical_instrument_id
+  writes specifically. No fix needed here; closing this as investigated/resolved. Also noted in passing: the
+  `canonical_instrument_id_audit_2026_07_08.md` doc's reference to an `instruments-store-prediction` bucket (as a live
+  naming-split partner) is now stale — that bucket 404s; only `instruments-store-pred-prd-*` exists.

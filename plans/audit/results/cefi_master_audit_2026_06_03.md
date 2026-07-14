@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: CeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
 summary:
-  Code-verified CeFi acquisition-mechanics + batch/live wiring + downstream
-  propagation audit — IS instrument acquisition GREEN, MTDS tick AMBER (non-HL
-  live is trades-only, book/derivative_ticker live is Hyperliquid-only), MDPS
-  candles GREEN, features-delta-one AMBER/RED (funding_oi placeholder), strategy
-  perp archetypes RED (funding-feature name/unit mismatch — carry_basis_perp
-  expects funding_rate_annualised_bps but FundingOI emits funding_rate_annualized
+  Code-verified CeFi acquisition-mechanics + batch/live wiring + downstream propagation audit — IS instrument
+  acquisition GREEN, MTDS tick AMBER (non-HL live is trades-only, book/derivative_ticker live is Hyperliquid-only), MDPS
+  candles GREEN, features-delta-one AMBER/RED (funding_oi placeholder), strategy perp archetypes RED (funding-feature
+  name/unit mismatch — carry_basis_perp expects funding_rate_annualised_bps but FundingOI emits funding_rate_annualized
   fraction). Data-state corpus coverage NOT covered.
 status: partial
 nature: record
@@ -24,9 +22,8 @@ related:
   ]
 created: 2026-06-03
 audited_scope:
-  acquisition-mechanics + batch/live wiring + downstream propagation
-  (CODE-VERIFIED) across IS → MTDS-tick → MDPS-candles → features-delta-one →
-  perp archetypes. NOT covered — data-state corpus coverage (CF-1…12 data-state,
+  acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED) across IS → MTDS-tick →
+  MDPS-candles → features-delta-one → perp archetypes. NOT covered — data-state corpus coverage (CF-1…12 data-state,
   per-venue captured%).
 date: 2026-06-03
 auditor: harsh + claude (opus-4-8, 1M)
@@ -38,7 +35,14 @@ doc_versions_checked:
 type: audit-result
 epic: cefi_master
 instructions_ref: plans/audit/instructions/cefi_master_audit_instructions.md
-also_covers: [plans/audit/instructions/instruments_master_audit_instructions.md, plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new), plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new), plans/audit/instructions/features_and_ml_master_audit_instructions.md, plans/audit/instructions/strategy_master_audit_instructions.md]
+also_covers:
+  [
+    plans/audit/instructions/instruments_master_audit_instructions.md,
+    plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new),
+    plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new),
+    plans/audit/instructions/features_and_ml_master_audit_instructions.md,
+    plans/audit/instructions/strategy_master_audit_instructions.md,
+  ]
 dimension: acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED)
 not_covered: data-state corpus coverage (CF-1…12 data-state, per-venue captured%) — requires prod GCS/manifest reads
 ---
@@ -138,10 +142,10 @@ acts only on survivors:
 ## Aligned / positive (no action)
 
 Tardis batch acquisition solid (sem=16, retry/backoff, SM auth, aiohttp); CCXT live instrument discovery
-(`load_markets()`); base/quote/instrument*type populated; `classify_venue_error` + `ADAPTER_FETCH_FAILED` on Tardis
+(`load_markets()`); base/quote/`instrument_type` populated; `classify_venue_error` + `ADAPTER_FETCH_FAILED` on Tardis
 paths; MDPS 6 cefi candle adapters with LOCF/no-NaN + honest-absence + `derivative_ticker` funding/mark/index preserved;
 features-delta-one + strategy **batch=live parity intact** (same `OrchestrationService`, no `if mode=="live"` in signal
-logic); `realized_vol*\*` registered+produced+consumed; Aster live WS is real (not a stub).
+logic); `realized_vol_*` registered+produced+consumed; Aster live WS is real (not a stub).
 
 ## What was NOT covered
 

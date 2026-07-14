@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)
-summary: 'Ship the live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live strategy to live execution.'
+summary:
+  "Ship the live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference
+  to live strategy to live execution."
 status: active
 nature: process
 asset_group: [cefi, defi]
@@ -9,8 +11,13 @@ stage: [meta]
 repos: [alerting-service, execution-service, features-service, ml-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [cefi, ml, directional, live-trading, okx, binance, bybit, execution]
-related: [../epics/cefi_master.md, ../active/master_to_live_defi_2026_05_23.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/cefi_master.md,
+    ../active/master_to_live_defi_2026_05_23.md,
+    ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
+created: "2026-06-12"
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -66,7 +73,7 @@ drift_direction: advance-code
       on operator provisioning SM secrets first (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a). —
       unified-api-contracts@6d3d900c (credentials_per_archetype.yaml: ML_DIRECTIONAL_CONTINUOUS added with
       Bybit+Binance+OKX credential set) execution-service@b46f43e8 (bybit_secret_name + okx_secret_name fields added to
-      service_config.py; _create_orchestrator_for_venue() now loads api_key/api_secret from SM via
+      service_config.py; \_create_orchestrator_for_venue() now loads api_key/api_secret from SM via
       load_credentials_from_secret_manager per venue map; no-credentials ValueError eliminated). QG green on both repos.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
@@ -78,7 +85,7 @@ drift_direction: advance-code
   > slot_6.md CREDENTIAL APPROVAL REQUEST for exact SM secret names needed.
 - [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade
       `model_version` traceability; model-drift alerting. — Hot-reload: ModelPromotionSubscriber already wired
-      (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through
+      (ml-service@live). Per-trade model*version: PredictionEventDict.swing*{high,low}\_model_version flows through
       InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to
       ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from
       timeframe_specific_models on live start). InferenceConfig:
@@ -98,12 +105,15 @@ drift_direction: advance-code
       KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
 - [x] ✅ [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade. —
       strategy-service@7995e4e4 | ArchetypeModeStore extracted to engine/strategies/v2/mode_store.py;
-      V2EngineOrchestrator._tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions
+      V2EngineOrchestrator.\_tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions
       when operator explicitly sets mode=MANUAL via POST /api/archetypes/{id}/operational-mode); override+replicate via
       existing execution-service /manual/submit + DART UI ManualTradingPanel. 5 new tests (manual suppress, live/paper
       forward, cross-archetype isolation, unregistered pass-through). QG green.
-- [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
-      Group F item 18) — batch = live, same code path, no standalone backtest engine.
+- [ ] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
+      Group F item 18) — batch = live, same code path, no standalone backtest engine. **CORRECTED 2026-07-14
+      (doc-reconciliation verify-rerun-2, finding 36): flipped `[x]`→`[ ]` — the nested detail immediately below and the
+      Success criteria section (further down this doc) both admit the 2-year config-grid run has NOT been executed; only
+      the architecture-verification half of this gate is actually done.** (was: `- [x]`)
   > **Partial PASS — architecture verified; grid run pending operator scheduling (2026-06-12, slot-6)**:
   >
   > - ✅ **batch=live, same code path, no standalone engine**: `ML_DIRECTIONAL_CONTINUOUS` is wired in

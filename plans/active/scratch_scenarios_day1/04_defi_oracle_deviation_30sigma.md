@@ -57,7 +57,7 @@ readers can attribute the perturbation.
   **FOLLOW-UP**: grep workspace for `OracleStaleError` / `OracleDeviationError` exception classes — if not present in
   UTL `unified_trading_library/errors/` or features-onchain, add to honest-coverage taxonomy under writegate plan Phase
   2.A four-category mapping (currently the canonical names per CLAUDE.md "Reason taxonomy" closed set are
-  `EXPECTED*\*`for empty-confirmed, not`OracleStale`— staleness past heartbeat = unexpected upstream gap →`record_failed`, not `record_empty`).
+  `EXPECTED\_*`for empty-confirmed, not`OracleStale`— staleness past heartbeat = unexpected upstream gap →`record_failed`, not `record_empty`).
 - **features-onchain manifest** — for `wild_print` variant: features that depend on the wild oracle (LST yield,
   peg-deviation, perp-basis-ref) emit `record_failed(error=OracleDeviationError)` for the affected feature-window;
   `available_at` reflects real heartbeat time, not synthetic.

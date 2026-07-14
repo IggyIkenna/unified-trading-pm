@@ -41,7 +41,7 @@ repos:
   ibkr-gateway-infra:
     count: 0
   instruments-service:
-    count: 368
+    count: 366
   market-data-processing-service:
     count: 66
   market-tick-data-service:

@@ -147,6 +147,71 @@ Main agent is re-applying the gating edit reactively each time a duplicate `/blo
 one to the operator. `skip-current-task` per-slot-per-dispatch remains available as a secondary, DB-backed (not
 yaml-based) mitigation that is NOT subject to this bug, since `slot_skips` is a separate table from `backlog.yaml`.
 
+> **Recovered fork note (2026-07-14)**: the three subsections below were written by the main-agent session in a local
+> copy of this doc on the root PM clone and never committed (the clone was starved behind LDR by the cron self-pull
+> dirty-artifact bug, fixed 2026-07-14 in `scripts/dev/slot-cron-ff-pull.sh` / `scripts/dev/cron-self-pull-lib.sh`).
+> They ran in parallel with the slot-5/slot-10 investigation below, which explains their observations:
+> `prereqs.conditions` being stripped despite `priority_override: true` is Defect A (the field structurally cannot
+> round-trip), and `priority_override` surviving is todo 3's Defect-B fix landing.
+
+### 2026-07-12 update — `priority_override: true` partially mitigates
+
+A new field, `priority_override` (bool, default `false`), has appeared on every task entry as of this date — apparently
+added by whatever regen path also introduced the reshuffle behavior noted above. Main agent tested setting
+`priority_override: true` alongside the hand-tuned `priority: 999` on `mvp_backfill_defi_onchain_v10-001`: `priority`
+AND `priority_override` itself both survived 3+ consecutive poll cycles (~5 min) intact, whereas without the flag they
+were stripped within ~2 min every time. **However, `prereqs.conditions` is NOT covered by this flag** — on one observed
+cycle with `priority_override: true` set, `priority` held at 999 but the `conditions:` block was still silently dropped
+in the same pass, requiring a separate re-add. Current best-known interim recipe: set BOTH `priority: 999` and
+`priority_override: true` (durable), and continue re-checking `prereqs.conditions` specifically each tick, re-adding it
+if stripped (not yet durable). Rolled this recipe out to the other three currently-gated tasks:
+`sports_manifest_canonicalisation-001`, `tradfi_v9_stage1_finish-003`, `defi_morpho_lending_indices_never_wired-001`.
+Separately, `cefi_live_only_data_types_vs_layer1_denominator_contradiction-001` has disappeared entirely from the
+current derivation (not just un-gated — the task id no longer exists in `backlog.yaml`), consistent with the
+task-id-reshuffle symptom described above; nothing to re-gate there until/unless it reappears under some id. Suggests
+`priority`/`priority_override` are preserved-on-merge fields but `prereqs.conditions` is unconditionally re-derived (to
+empty) every cycle regardless of the flag — worth checking specifically in `server/regen_backlog_from_plan.py`'s merge
+logic per the P0 todo above.
+
+### 2026-07-12 later update — `tradfi_v9_stage1_finish-003` vanished; new task thrashes on the same bug
+
+`tradfi_v9_stage1_finish-003` disappeared entirely from a later derivation cycle (task count 19→17), same
+task-id-reshuffle symptom as the cefi Layer-1 task above — nothing to re-gate until/unless it reappears. Separately, a
+newly-derived task (`cefi_batch_manifest_blank_instrument_type_on_failure-003`, gated on sibling
+`tardis-concurrent-ip-lock-fix-landed`) hit the `prereqs.conditions`-stripped-despite-`priority_override:true` bug 3
+times in ~10 minutes (`BLK-82c8edc3`, `BLK-e047b522`, `BLK-adcf07fa`), each time re-dispatched to a different idle
+worker (slot-6, slot-8, slot-9) who independently re-verified the unmet gate and correctly declined to proceed —
+confirming the interim mitigation (spot-check + re-add `conditions` each tick) works but does not fully eliminate thrash
+between checks, since the strip can happen and get re-dispatched before the next main-agent tick catches it. The task
+went on to thrash 6 total times (`BLK-c8842409`, `BLK-d6a8795a`, `BLK-1ed7c791` in addition to the 3 above) before the
+underlying sibling decision resolved (see below), consuming worker-slot cycles across slots 6/7/8/9 in under 30 minutes
+purely on this bug.
+
+### 2026-07-12 resolution — Tardis lockout decision landed, condition flipped
+
+The operator ruled directly on a sibling `/blocked` question (`BLK-58aea31d`, "proceed-now" = option A: GCS-lease TTL
+mutex stopgap) rather than via agent chat — worth noting as a channel main agent should watch (`GET /api/blocked/<id>`
+404ing on a previously-open id is a signal the operator answered it directly outside chat). Slot-7 shipped the mutex (11
+unit tests, opt-in launcher flag, QG green on both repos, plan flipped; on-VM smoke-test honestly deferred as a tracked
+P2 follow-up since `gcloud` is unavailable in-slot). However, the `tardis-concurrent-ip-lock-fix-landed` condition
+itself remained `false` after the fix shipped — landing a fix does NOT automatically flip its gating condition; main
+agent had to do that manually (`POST /api/prerequisites/tardis-concurrent-ip-lock-fix-landed {"value": true}`) after
+noticing 5 slots (7/8/9/10/11) idling on `worker_polling_dead` events referencing the still-false condition. Also closed
+out the original `BLK-f1417674` decision thread (still unanswered in the queue) once the actual resolution was
+confirmed. Worth codifying as a pattern: shipping a fix and flipping its gating condition are two separate steps, and
+the condition flip is easy to miss since nothing automatically ties a landed PR/commit to a prerequisite value.
+
+Also: flipping `tardis-concurrent-ip-lock-fix-landed` true was premature by itself — the sibling task
+(`cefi_batch_manifest_blank_instrument_type_on_failure-003`) had TWO nested gates (fix landed AND the actual re-capture
+sweep completing), and only one was wired. Slot-2 caught this correctly (`BLK-ad0376ed`) rather than letting the task
+dispatch on a half-satisfied gate. **Notable distinct-field finding**: this task's entry uses `prereqs.prerequisites` (a
+list of condition names), which the regen appears to natively derive/preserve, NOT `prereqs.conditions` (the hand-tuned
+field this issue doc is about, which the regen does NOT yet derive and repeatedly strips). Added a second name
+(`cefi-recapture-sweep-complete`, false) to that `prerequisites` list — worth testing whether `prereqs.prerequisites`
+survives regen cycles more reliably than `prereqs.conditions`, which would suggest routing future hand-tuned gates
+through `prerequisites` instead where the task already has that field derived, though `conditions` remains the only
+mechanism for tasks that don't.
+
 ## Investigation results (2026-07-12, slot 5, task `backlog_regen_drops_handtuned_prereqs-001`)
 
 **Root cause is fully confirmed and precisely isolated — two independent defects, not one.** Method: static read of

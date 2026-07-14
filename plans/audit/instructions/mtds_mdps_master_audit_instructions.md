@@ -10,11 +10,22 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [audit, mtds, mdps, manifest, batch-live, performance, canonicalisation]
-related: [active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md, active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md]
-created: '2026-05-22'
+related:
+  [
+    active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md,
+    active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md,
+  ]
+created: "2026-05-22"
 tier: L1
 parent_epic: mtds_mdps_master
 cadence: weekly (minimum)
@@ -24,15 +35,29 @@ type: audit-instructions
 epic: mtds_mdps_master
 assigned_vm: vm-ml
 last_updated: 2026-06-03
-codex_ssots_to_check_drift_against: [codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/02-data/availability-manifest-and-data-status.md, codex/05-infrastructure/gcs-object-operations.md, codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/cli-convention.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/read-time-filter-pushdown.md]
+codex_ssots_to_check_drift_against:
+  [
+    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/05-infrastructure/gcs-object-operations.md,
+    codex/06-coding-standards/service-orchestration-patterns.md,
+    codex/06-coding-standards/cli-convention.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    codex/06-coding-standards/data-engine-selection.md,
+    codex/06-coding-standards/read-time-filter-pushdown.md,
+  ]
 ---
 
 # MTDS / MDPS Master — Audit Instructions
 
 > **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).** The
-> MTDS migrators, rebuilds, readers, and the MDPS scanner are now source-aware: the pipeline*mode is the
-> `{mode}*{source}[_{transport}]`form in both the path key and the column (not coarse batch), with populated source and transport columns, Era-B chains (options_chain/futures_chain as instrument_type, with data_type=trades), and readers that prefix-match the source-aware partition. The concrete recurring checks are in the "Source-aware pipeline_mode + Era-B" section below. SSOT =`canonical_form_cross_service_audit_checklist.md`(CF-1 through CF-14) + the ①–⑫ pre-apply readiness audit in`master_data_canonicalisation_migration_catalogue_2026_06_07.md`.
-> Any guidance below assuming coarse batch, options_chain-as-data_type, or exact-coarse reader probes is STALE.
+> MTDS migrators, rebuilds, readers, and the MDPS scanner are now source-aware: the `pipeline_mode` is the
+> `{mode}_{source}[_{transport}]` form in both the path key and the column (not coarse batch), with populated source and
+> transport columns, Era-B chains (options_chain/futures_chain as instrument_type, with data_type=trades), and readers
+> that prefix-match the source-aware partition. The concrete recurring checks are in the "Source-aware pipeline_mode +
+> Era-B" section below. SSOT = `canonical_form_cross_service_audit_checklist.md` (CF-1 through CF-14) + the ①–⑫
+> pre-apply readiness audit in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`. Any guidance below
+> assuming coarse batch, options_chain-as-data_type, or exact-coarse reader probes is STALE.
 
 The single canonical audit doc for everything in the MTDS + MDPS surface. Two audit modes share this doc:
 

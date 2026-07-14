@@ -17,26 +17,31 @@ doc-reconciliation finding 3, §A2 B-queue ruling: several bullets below are inl
 bullets as live "read first" material):
 
 - [live_pipeline_mtds_mdps_features_2026_05_08.md](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md) —
-  **Live (websocket-streaming) pipeline activation** for MTDS / MDPS / consolidated features-service across all 5
-  asset_groups ahead of the 2026-05-23 DeFi cutover. Topology: MTDS standalone cluster (websocket-pool concerns
-  isolated), MDPS+features-asset-scoped colocated per asset_group, features-cross-cutting standalone flavor of same
-  image. Cascade: MTDS → MDPS → features-service via Redis Streams (CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED →
-  FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a `GROUP BY pipeline_mode`
-  over the same manifest. Live gap semantics extend the 4-category empty-output tree with stale-not-missing wiring via
-  ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap windows with smooth handoff to
-  live at the next aligned boundary. Health-API extension + alerting-service tier-up + circuit breakers wired to
-  strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a new dedicated stream). 15
-  phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 + gcs_migration_bundle Phase 9.
+  **(ARCHIVED)** (was: untagged despite linking into `archive/2026_05/` like its tagged siblings — corrected 2026-07-14,
+  doc-reconciliation finding 3) **Live (websocket-streaming) pipeline activation** for MTDS / MDPS / consolidated
+  features-service across all 5 asset_groups ahead of the 2026-05-23 DeFi cutover. Topology: MTDS standalone cluster
+  (websocket-pool concerns isolated), MDPS+features-asset-scoped colocated per asset_group, features-cross-cutting
+  standalone flavor of same image. Cascade: MTDS → MDPS → features-service via Redis Streams (CANDLE_BOUNDARY_CROSSED →
+  CANDLE_COMPUTED → FEATURES_COMPUTED) with UTC midnight alignment end-to-end so batch ↔ live reconciliation is a
+  `GROUP BY pipeline_mode` over the same manifest. Live gap semantics extend the 4-category empty-output tree with
+  stale-not-missing wiring via ServiceEmissionPolicy.PUBLISHED_DEGRADED. Replay subsystem covers intraday- restart gap
+  windows with smooth handoff to live at the next aligned boundary. Health-API extension + alerting-service tier-up +
+  circuit breakers wired to strategy-service. Instrument-cache-delta hot-reload pattern (mirrors ApiKeyReloader; NOT a
+  new dedicated stream). 15 phases, ~10d wall-clock. Pre-reqs: features_repo_consolidation Phase 7 +
+  gcs_migration_bundle Phase 9.
 
-- [features_repo_consolidation_2026_05_08.md](features_repo_consolidation_2026_05_08.md) — **Pre-requisite for
-  live-pipeline.** Merge 8 separate `features-*-service` repos (calendar / commodity / cross-instrument / delta-one /
-  multi-timeframe / onchain / sports / volatility) into a single `features-service` repo with sub-packages per family,
-  ONE Docker image parameterised by `--feature-family` CLI flag, ONE flat `pyproject.toml`, ONE Health-API. NEW UAC
-  `feature_family` schema column (additive sibling-or-prefix of `feature_group` in v5 manifest). Lift 4 cross-family
-  helpers (watermark+grace fan-in, available_at stamping, LookaheadBiasError gate, NaN write-gate) to UTL — currently
-  duplicated across 5-6 repos. Pattern matches UMI→MTDS and UCI→UTL precedents. Naming explicitly disambiguated from
-  ml_and_features_master Phase 2's feature-DATA consolidation (this is REPO consolidation). 10 phases, ~5d wall-clock
-  with parallelism.
+- [features_repo_consolidation_2026_05_08.md](../archive/features_repo_consolidation_2026_05_08.plan.md) —
+  **(ARCHIVED)** (was: plain link + "Pre-requisite for live-pipeline" framed as an open dependency gate — corrected
+  2026-07-14, doc-reconciliation finding 5: file was archived to
+  `plans/archive/features_repo_consolidation_2026_05_08.plan.md`, `status: archived`, large majority of phases/todos
+  done/completed). **Pre-requisite for live-pipeline.** Merge 8 separate `features-*-service` repos (calendar /
+  commodity / cross-instrument / delta-one / multi-timeframe / onchain / sports / volatility) into a single
+  `features-service` repo with sub-packages per family, ONE Docker image parameterised by `--feature-family` CLI flag,
+  ONE flat `pyproject.toml`, ONE Health-API. NEW UAC `feature_family` schema column (additive sibling-or-prefix of
+  `feature_group` in v5 manifest). Lift 4 cross-family helpers (watermark+grace fan-in, available_at stamping,
+  LookaheadBiasError gate, NaN write-gate) to UTL — currently duplicated across 5-6 repos. Pattern matches UMI→MTDS and
+  UCI→UTL precedents. Naming explicitly disambiguated from ml_and_features_master Phase 2's feature-DATA consolidation
+  (this is REPO consolidation). 10 phases, ~5d wall-clock with parallelism.
 
 - [gcs_migration_bundle_pipeline_mode_2026_05_08.md](../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
   — **Bundled (ARCHIVED)** overnight GCS migration\*\* that walks every parquet ONCE (millions across asset_groups) and
@@ -49,13 +54,16 @@ bullets as live "read first" material):
   Coordinates with manifest_migration_SUPERSEDED_2026_05_21 Stage 1+2+3 (must complete first) + Stage 4 (folds in here).
   9 phases including operator-gated VM fleet execution.
 
-- [instrument_catalogue_availability_matrix_2026_04_29.md](instrument_catalogue_availability_matrix_2026_04_29.md) —
-  Joins **static shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff →
-  live/batch capability per `(asset_group × data_type × venue × instrument_type)`) with **live availability-manifest
-  aggregation** (capture_status → coverage %). Publishes `instrument-catalogue.{json,md}` + `shard-dynamics.json`
-  nightly to `gs://strategy-store-cefi-{pid}/catalogue/instrument/`. New UI matrix widget cross-links existing
-  data-status drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC
-  (sports already SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
+- [instrument_catalogue_availability_matrix_2026_04_29.md](../archive/instrument_catalogue_availability_matrix_2026_04_29.plan.md)
+  — **(ARCHIVED, status: complete)** (was: plain link to a nonexistent `active/` path — corrected 2026-07-14,
+  doc-reconciliation finding 4: file was archived to
+  `plans/archive/instrument_catalogue_availability_matrix_2026_04_29.plan.md`, work complete). Joins **static
+  shard-dynamics SSOT** (bucket → partition layout → schema → coverage-start → retention/cutoff → live/batch capability
+  per `(asset_group × data_type × venue × instrument_type)`) with **live availability-manifest aggregation**
+  (capture_status → coverage %). Publishes `instrument-catalogue.{json,md}` + `shard-dynamics.json` nightly to
+  `gs://strategy-store-cefi-{pid}/catalogue/instrument/`. New UI matrix widget cross-links existing data-status
+  drilldown. Pulls bucket-naming + partition-layout + coverage-start + capability registries into UAC (sports already
+  SSOT, others scattered). Depends on shard-dimension naming + venue-axis vocabulary plans.
 
 - [deployment_ui_lifecycle_tabs_2026_05_08.md](../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md) —
   **Cross-cutting 6-tab (ARCHIVED)** restructure\*\* of deployment-UI organised around four orthogonal axes: lifecycle
@@ -89,13 +97,16 @@ bullets as live "read first" material):
   futures-expiry ships (avoids mass-fail-during-transit). Migrated from archived issue
   `hard_schema_enforcement_at_write_boundary_2026_05_08.md`.
 
-- [cme_polymarket_arb_2026_05_08.md](cme_polymarket_arb_2026_05_08.md) — **CME × Polymarket cross-venue event-arb**
-  (post-May-23 critical path). 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG / EC6E /
-  ECNQ) are semantically identical to Polymarket binary outcomes; cross-venue basis is exploitable but invisible today.
-  Operator decision 2026-05-08 Option (a) split: Phase 0 catalog backfill in `tradfi_master`; Phases 1-5 here
-  (InstrumentType.EVENT_CONTRACT enum; linked_canonical_question_group cross-link blocked on predictions_master Phase 5
-  canonical-groups backfill; MTDS binary-outcome shard atom; per-cluster expiry; cme_polymarket_event_arb strategy
-  archetype + cross-venue execution routing). Migrated from archived 26KB RFC
+- [cme_polymarket_arb_2026_05_08.md](../archive/2026_05/cme_polymarket_arb_2026_05_08.md) — **(ARCHIVED, status:
+  complete)** (was: plain link + "Phases 1-5 here" framed as open work, no ARCHIVED tag despite sitting in this
+  ARCHIVED-tagged-bullets section — corrected 2026-07-14, doc-reconciliation finding 2: file archived to
+  `plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md`, all 5 phases checked done). **CME × Polymarket cross-venue
+  event-arb** (post-May-23 critical path). 9 CME event-contract roots (ECES / ECBTC / ECRTY / ECYM / ECGC / ECCL / ECNG
+  / EC6E / ECNQ) are semantically identical to Polymarket binary outcomes; cross-venue basis is exploitable but
+  invisible today. Operator decision 2026-05-08 Option (a) split: Phase 0 catalog backfill in `tradfi_master`; Phases
+  1-5 here (InstrumentType.EVENT_CONTRACT enum; linked_canonical_question_group cross-link blocked on predictions_master
+  Phase 5 canonical-groups backfill; MTDS binary-outcome shard atom; per-cluster expiry; cme_polymarket_event_arb
+  strategy archetype + cross-venue execution routing). Migrated from archived 26KB RFC
   `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`.
 
 - [instruments_master.md](../epics/instruments_master.md) — **Activation surface for instruments-live across all 5
@@ -131,17 +142,26 @@ reference + examples for testing any DeFi strategy
 
 ## Currently Active Plans
 
+**⚠️ STALE ENTRIES (flagged 2026-07-14, verify-rerun-2 finding 221 — violates this doc's own
+`INDEX.md must be updated whenever a plan is added or archived` rule, `PLAN_FORMAT.md:619`):** the 8 plans below are
+tagged **(ARCHIVED — was: listed as active, no tag)** — verified present only in `plans/archive/` as `<slug>.plan.md`,
+absent from `plans/active/`: `agent1_shell_navigation_2026_03_22.md`, `agent2_trading_service_2026_03_22.md`,
+`agent5_api_service_layer_2026_03_22.md`, `agent6_mock_data_quality_2026_03_22.md`,
+`agent8_e2e_tests_quality_2026_03_22.md`, `defi_phase3_infrastructure_2026_03_30.md`,
+`defi_strategies_phase2_2026_03_29.md`, `instruments_service_reorganisation_2026_03_27.md`. Do not dispatch or treat as
+current work.
+
 ### Infrastructure & Setup
 
-- agent1_shell_navigation_2026_03_22.md — Shell navigation framework
-- agent2_trading_service_2026_03_22.md — Trading service setup
-- agent5_api_service_layer_2026_03_22.md — API service layer
+- agent1_shell_navigation_2026_03_22.md — **(ARCHIVED)** Shell navigation framework
+- agent2_trading_service_2026_03_22.md — **(ARCHIVED)** Trading service setup
+- agent5_api_service_layer_2026_03_22.md — **(ARCHIVED)** API service layer
 
 ### DeFi Strategy Rollout
 
 - defi_ui_component_audit_2026_03_31.md — UI component audit
-- defi_phase3_infrastructure_2026_03_30.md — Infrastructure completion
-- defi_strategies_phase2_2026_03_29.md — Phase 2 strategies
+- defi_phase3_infrastructure_2026_03_30.md — **(ARCHIVED)** Infrastructure completion
+- defi_strategies_phase2_2026_03_29.md — **(ARCHIVED)** Phase 2 strategies
 
 ### Sports
 
@@ -177,8 +197,8 @@ reference + examples for testing any DeFi strategy
   Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild (cheap) vs
   backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
   `launch-mtds-prediction-backfill-vm.sh`, MTDS DeFi data-type launchers. Depends on instruments plan above.
-- agent6_mock_data_quality_2026_03_22.md — Mock data quality
-- agent8_e2e_tests_quality_2026_03_22.md — E2E testing
+- agent6_mock_data_quality_2026_03_22.md — **(ARCHIVED)** Mock data quality
+- agent8_e2e_tests_quality_2026_03_22.md — **(ARCHIVED)** E2E testing
 - ui_full_site_link_crawler_e2e_2026_04_22.md — Full-site Playwright link crawler in `unified-trading-system-ui`
   (bounded BFS, shadow-DOM link harvest, nav flyouts, tier0 registry fill, optional external HEAD/GET probes); harden
   `webServer` for Tier 0 (`PLAYWRIGHT_SKIP_API_WEBSERVER`, `/login` readiness); document wall-clock presets + optional
@@ -187,7 +207,7 @@ reference + examples for testing any DeFi strategy
 ### Service Remediation
 
 - citadel_per_service_remediation_2026_03_24.md — Per-service fixes
-- instruments_service_reorganisation_2026_03_27.md — Instruments service
+- instruments_service_reorganisation_2026_03_27.md — **(ARCHIVED)** Instruments service
 - prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
   capture-path dtype hardening (UTL Int64/bool/float coercion shipped; residuals split out, see below) + (B)
   KALSHI/POLYMARKET-PERP adapter correction (wrong Kalshi host → fake PERPETUAL contamination of cefi — guard + purge
@@ -229,15 +249,20 @@ reference + examples for testing any DeFi strategy
 
 ### Deployment Topology & Client Isolation
 
-- deployment_topology_and_client_isolation_2026_04_17.md — Per-service isolation policy (shared vs isolated), SLA tiers
-  (basic/standard/premium) with cost passthrough, runtime profiles (backtest/paper/mock-live/staging/prod) collapsing 5
-  mode env vars, chaos + kill-switch primitives. runtime-topology.yaml v6→v7, UAC schemas, UTL readers,
-  deployment-service/api/ui materialisation, downstream service wiring. 13 repos. **Progress as of 2026-04-17
-  live-defi-rollout:** Phases 1 (SSOT), 2a/2b (deployment-service/api), 3a/3b/3c (UTL ChaosController + KillSwitchBus +
-  ServiceBootstrap wiring + strategy/exec/risk subscribers), 4a (deployment-api runtime_profile env var fanout), 5 (18
-  archetype topology_requirements frontmatter + strategy-service enforcement module), 6 (PBM/R&E/PnL/execution isolation
-  policy modules), 7 (8 e2e chaos scenarios), 4b (deployment-ui /client-subscriptions, /chaos pages, runtime_profile
-  dropdown on DeployForm + 6 vitest cases) all committed locally. Phase 8 workspace QG sweep pending.
+- [deployment_topology_and_client_isolation_2026_04_17.md](../archive/deployment_topology_and_client_isolation_2026_04_17.plan.md)
+  — **(ARCHIVED, status: complete)** (was: bare unlinked filename presented as an in-flight active-directory entry with
+  a detailed "Phase 8 pending" progress claim — corrected 2026-07-14, doc-reconciliation finding 6: file was archived
+  months ago to `plans/archive/deployment_topology_and_client_isolation_2026_04_17.plan.md`; frontmatter
+  `status: complete`, though that archived file's own Phase 8a/8b todos remain `status: todo` internally). Per-service
+  isolation policy (shared vs isolated), SLA tiers (basic/standard/premium) with cost passthrough, runtime profiles
+  (backtest/paper/mock-live/staging/prod) collapsing 5 mode env vars, chaos + kill-switch primitives.
+  runtime-topology.yaml v6→v7, UAC schemas, UTL readers, deployment-service/api/ui materialisation, downstream service
+  wiring. 13 repos. **Progress as of 2026-04-17 live-defi-rollout:** Phases 1 (SSOT), 2a/2b (deployment-service/api),
+  3a/3b/3c (UTL ChaosController + KillSwitchBus + ServiceBootstrap wiring + strategy/exec/risk subscribers), 4a
+  (deployment-api runtime_profile env var fanout), 5 (18 archetype topology_requirements frontmatter + strategy-service
+  enforcement module), 6 (PBM/R&E/PnL/execution isolation policy modules), 7 (8 e2e chaos scenarios), 4b (deployment-ui
+  /client-subscriptions, /chaos pages, runtime_profile dropdown on DeployForm + 6 vitest cases) all committed locally.
+  Phase 8 workspace QG sweep pending.
 
 ---
 

@@ -21,7 +21,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [ikenna, harsh]
 codex_ssots: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/agent-orchestrator-overview.md]
 related_plans: [../active/escalation_pipeline_mvp_2026_06_25.md]
-last_updated: 2026-06-25
+last_updated: 2026-07-12 # (was: 2026-06-25; corrected 2026-07-14 per verify-rerun-2 finding 61 — body banner (lines 29-32) + git log show the last substantive edit was 2026-07-12, not 2026-06-25)
 locked_by: NA
 locked_since: NA
 ---

@@ -24,7 +24,10 @@ related:
     ../../codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-07
+last_updated: 2026-06-27
+  2026-06-27 2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
+  # carries a dated 2026-07-12 correction (finding id 114, §A2 B-queue ruling) on the ASTER-connector task that was
+  # never reflected in this frontmatter timestamp
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -152,14 +155,67 @@ source:
       second source [ack-pending]. Gate: quota decision documented; scaffold for the second source.
 - [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — rate-limit probe VM.** Needs a disposable-IP VM (operator-gated). Gate:
       probe design ready; awaits the operator's disposable-IP sanction.
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter / Pacifica /
-      Extended): are these cefi or a distinct on-chain-CLOB group? Operator classification call. Gate: classification
-      decided; the enumerator + data-status read it consistently.
+- [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
+      "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
+      cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
+      verify-rerun-2 finding 139: this framing is stale.
+      `active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` (§3, 2026-07-07) records the
+      operator already ruled these are **hybrid on-chain-CLOB venues** — CEFI holds the instrument definitions, DEFI
+      holds the chain-level classification/context — the same pattern later extended to HYPERLIQUID/ASTER.
+      `active/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` (§Todos) also independently
+      confirms `git log` commit `2f7d4548` ("reclassify EXTENDED/PACIFICA/LIGHTER on-chain perp CLOBs defi->cefi")
+      already migrated these 3 venues onto their new canonical keys around 2026-06-25/26, before this BLOCKED item was
+      even filed. The open work is NOT "cefi vs distinct group" — that question is answered (hybrid) — it is widening
+      the enumerator + data-status to read HYPERLIQUID/ASTER consistently with the same pattern.) Gate: enumerator +
+      data-status read the hybrid classification consistently across all 5 venues (LIGHTER-ZKSYNC / PACIFICA-SOLANA /
+      EXTENDED-STARKNET / HYPERLIQUID / ASTER). — **DONE 2026-07-14 (slot-9 data_engineering,
+      market-tick-data-service@1fff193b)**. Gate SATISFIED: the real mechanism was neither instruments-service's venue
+      enumeration (already fully symmetric across all 5 venues post-`2f7d4548`, confirmed via
+      `venue_core._CEFI_VENUES` + the `tests/unit/scripts/goldens/expected_universe/cefi.json` golden) nor a
+      deployment-api code gap (`_build_chain_breakdown`/`_build_v4_sub_dimensions` already generically reads any
+      populated `chain` column, regardless of category — no repo-side change needed there) — it was MTDS's
+      `umi_tick_provider.py` per-row **chain annotation**. `_route_pacifica`/`_route_extended`/`_route_lighter` already
+      wrap their `writer` in `_ChainAnnotatingWriter(writer, <ChainKind>)` (stamping `chain=` on every captured row so
+      deployment-api's per-category `chains` sub-dimension breakdown — the exact "PACIFICA, LIGHTER are the only 2 of 24
+      CEFI venues showing chain data" state the honest-coverage issue doc observed live 2026-07-07 — picks them up);
+      `_fetch_hyperliquid_s3` and `_fetch_aster_rest` did NOT — HYPERLIQUID/ASTER rows were written with no `chain`
+      column at all, so they could never show up in that breakdown despite being the same hybrid on-chain-CLOB venue
+      class. Fix: added `_route_hyperliquid`/`_route_aster` wrapper functions mirroring the existing three exactly
+      (`_ChainAnnotatingWriter(writer, ChainKind.HYPERLIQUID_L1)` / `ChainKind.BSC` — Aster's underlying chain per UAC
+      `chain_env.py PROTOCOL_LAUNCH_DATES[("BSC","ASTER")]`), registered `"ASTER"` in the (previously HYPERLIQUID-only,
+      ASTER-missing) `ONCHAIN_PERP_VENUE_CHAIN` dict, and split
+      `_fetch_aster_rest`/`_fetch_aster_coin`/`_fetch_aster_agg_trades` + `_fetch_hyperliquid_s3` out into new sibling
+      modules `_umi_aster.py`/`_umi_hyperliquid.py` (mirroring the existing `_umi_pacifica.py`/
+      `_umi_extended.py`/`_umi_lighter.py` split) to stay under the 900-line file cap, adding both to
+      `IMPORT_INSIDE_EXCLUDE_GLOBS` in `scripts/quality-gates.sh` alongside their siblings (same sanctioned
+      deferred-import adapter pattern). New/updated tests assert `"chain" in result.columns` for HYPERLIQUID (value
+      `hyperliquid_l1`) and ASTER (value `bsc`) on non-empty results, and no `chain` column on empty results — mirroring
+      the pre-existing Pacifica/Extended assertions. 181 unit tests green (`test_umi_tick_provider_coverage.py` +
+      `_routes.py` + `test_hyperliquid_s3.py` + adapter/candle suites), full `bash scripts/quality-gates.sh --no-fix`
+      green (sentinel `58b0b538b968cb11873ea4f6384c1eb2c0b537e3` = pre-commit HEAD, verified via Pass-2 sentinel match
+      at quickmerge). Shipped via `bash scripts/quickmerge.sh --agent --files '<5 paths>'` → landed on LDR as
+      `market-tick-data-service@1fff193b88d3331471ed01519e02e79071e74b81`.
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-14** — **Hybrid-venue enumerator/data-status consistency task FLIPPED ✅** (slot-9 data_engineering,
+  `market-tick-data-service@1fff193b`). Investigated instruments-service (confirmed already symmetric across all 5
+  hybrid venues post-`2f7d4548` — not the gap) and deployment-api (confirmed `_build_chain_breakdown` already reads any
+  populated `chain` column generically, regardless of category — not the gap) before finding the real mechanism in MTDS
+  `umi_tick_provider.py`: `_route_pacifica`/`_route_extended`/`_route_lighter` already wrap their writer in
+  `_ChainAnnotatingWriter` to stamp a per-row `chain=` column (the "DeFi holds the chain-level context" half of the
+  operator's hybrid-venue ruling), but `_fetch_hyperliquid_s3`/`_fetch_aster_rest` never did — so HYPERLIQUID/ASTER rows
+  carried no `chain` column at all, meaning they could never appear in deployment-api's per-category `chains`
+  sub-dimension breakdown (the exact "only 2 of 24 CEFI venues show chain data" state the honest-coverage issue doc
+  observed live 2026-07-07 for PACIFICA/LIGHTER). Added `_route_hyperliquid`/`_route_aster` wrappers mirroring the other
+  3 exactly (`ChainKind.HYPERLIQUID_L1` / `ChainKind.BSC` — Aster's chain per UAC
+  `chain_env.py PROTOCOL_LAUNCH_DATES[("BSC","ASTER")]`), registered ASTER in `ONCHAIN_PERP_VENUE_CHAIN`, and split the
+  moved fetch functions into new `_umi_aster.py`/`_umi_hyperliquid.py` sibling modules (mirroring the existing
+  `_umi_pacifica.py`/`_umi_extended.py`/`_umi_lighter.py` split) to stay under the 900-line file cap. 181 unit tests
+  green, full `quality-gates.sh --no-fix` green, shipped via quickmerge to LDR. Full detail on the same-task checkbox
+  above.
 - **2026-07-07** — **Task 006 Test-fleet image builds — summary checkbox FLIPPED ✅** (slot-12 data*engineering,
   unified-trading-pm@`3aafae3`, this commit). Gate #2 ("canonical build invocation documented") satisfied by capturing
   the canonical local + GCP + AWS build-invocation snippets in a new § "Canonical build invocation" section of

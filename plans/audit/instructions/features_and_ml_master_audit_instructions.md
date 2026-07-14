@@ -2,19 +2,27 @@
 doc_type: audit-instruction
 title: features_and_ml_master_audit_instructions
 summary:
-  Weekly audit of features-service (8 feature families), ml-service (inference + training), the IS→features contract, and
-  greeks-service as a data-pipeline derivation peer (NOT ml) — enforcing all feature schemas live in UAC (no local
-  defs), calculator math-drift, registry SSOT, feature_writer stamp/versioning, and feature-formula-versioning
-  doc↔code alignment.
+  Weekly audit of features-service (8 feature families), ml-service (inference + training), the IS→features contract,
+  and greeks-service as a data-pipeline derivation peer (NOT ml) — enforcing all feature schemas live in UAC (no local
+  defs), calculator math-drift, registry SSOT, feature_writer stamp/versioning, and feature-formula-versioning doc↔code
+  alignment.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, features-service, greeks-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-service,
+    features-service,
+    greeks-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, features, ml, uac, manifest, data-correctness, verification]
 related: []
-created: '2026-05-22'
+created: "2026-05-22"
 tier: L1
 parent_epic: features_and_ml_master
 cadence: weekly (minimum)
@@ -72,9 +80,9 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
       → model → signal) with mock data. Find: `rg "inference|predict" ml-service/tests/ --include="*.py" -l` (or merged
       ml-service path post-consolidation)
 
-- [ ] (d) **Training pipeline manifest compliance**: training outputs emit manifest rows with correct schema*version,
+- [ ] (d) **Training pipeline manifest compliance**: training outputs emit manifest rows with correct `schema_version`,
       `asset_group`, and `available_at` (write-time, not read-time derivation). Read: training pipeline output path —
-      verify `record_captured()` called with cluster*\* kwargs
+      verify `record_captured()` called with `cluster_*` kwargs
 
 - [ ] (e) **Feature schemas in UAC**: no local feature schema definitions in features-service or ml-service. Grep:
       `rg "class.*Schema|dataclass" features-service/ --include="*.py"` — every schema must import from UAC

@@ -33,7 +33,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
-last_updated: 2026-06-27
+last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
 supersedes:
@@ -72,6 +72,18 @@ The paper↔batch reconciliation is a **determinism PROOF** (ε=0, any diff is a
 venue/instrument/share_class), P&L, PnL attribution, venues + instruments breakdown — held in four ledgers
 (`InstructionLedger` historical tape + `PositionLedger` as-if-filled state + `PassiveLedger` accruals + `PricingLedger`
 marks), eyeball-able + Slack-summarised.
+
+> **[2026-07-14 note, verify-rerun-2 finding 208]**: this "four ledgers" list names `PositionLedger` as one of the four
+> — but the OWNING epic for the canonical ledger architecture,
+> [`plans/epics/global_ledger_pnl_attribution_master.md`](../epics/global_ledger_pnl_attribution_master.md), defines the
+> canonical **"Four SSOT ledgers"** as **Instruction / Passive / Treasury / Pricing**, explicitly classifying Position
+> as a _derived materialised view_ (computed FROM the SSOT ledgers), not one of the four SSOT ledgers itself —
+> consistent with this very plan's own P3.3 description of `PositionLedger` as a "materialiser (avg-cost P&L)" that
+> derives from `InstructionLedger` fills. This plan also already ships Treasury/TransferLedger emission (P2, "PRODUCER
+> DONE — Real cross-venue transfers / money-movements: emit Treasury/TransferLedger…", line ~493), so the epic's
+> Instruction/Passive/Treasury/Pricing framing is not in tension with anything actually built here — only with this
+> informal summary's word choice. Treat the epic's naming as authoritative for "the four SSOT ledgers"; `Position` here
+> is correctly one of the plan's deliverables, just not an SSOT ledger in the epic's taxonomy.
 
 ## The five gaps (design targets — see SSOT §3)
 
@@ -424,8 +436,10 @@ are identified (2) and the ledger exists (3).
       clones currently mis-roots its TESTS phase to unified-trading-pm (`rootdir: …/unified-trading-pm`, runs PM's 6
       tests) — a fleet-wide QG-harness defect, NOT this code; the authoritative server `quality-gates-v2` runs
       test-in-image with correct rootdir. Repo: strategy-service. Provenance: paper/batch spine fix session 2026-06-20.
-- [ ] [SCRIPT] P3.2. **DEFERRED (pre-existing, NOT this work) — UAC version drift blocks strategy-service QG
-      preflight.** `quality-gates.sh` version-alignment gate: local `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
+- [ ] [SCRIPT] P9.2 (was: mislabeled P3.2 — collided with Phase 3's real P3.2 "PassiveLedger synthesiser" item above;
+      renumbered per verify-rerun-2 finding 17, 2026-07-14). **DEFERRED (pre-existing, NOT this work) — UAC version
+      drift blocks strategy-service QG preflight.** `quality-gates.sh` version-alignment gate: local
+      `unified-api-contracts=0.26.0` vs main `0.27.0`. Run
       `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix` (after `git pull origin main` in
       PM). Repo: strategy-service (dep alignment). Provenance: paper/batch spine fix session 2026-06-20.
 - [x] ✅ [SCRIPT] P3.3. **SWAP leg `size_units` now denominated in the OUT asset (ETH), not the USDC-in notional** —

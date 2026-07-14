@@ -189,6 +189,31 @@ pattern or MORPHO's gap; each needs the same real-catalogue read before conclusi
 
 ## Progress Log
 
+- **2026-07-14 (🟡 durability gap discovered — Stage 4 is NOT reproducible from a `--mode full` rebuild)** — Ran
+  `build_instrument_catalogue.py --asset-group defi --mode full` for an unrelated reason (backfilling
+  `canonical_instrument_id`, see `canonical_instrument_id_cefi_defi_backfill_2026_07_14.md`). It correctly rebuilt from
+  `instrument_availability/by_date/` and produced **9,456 rows vs the live catalogue's 10,372** — the monotonic-shrink
+  guard correctly REJECTED the promote (`CATALOGUE_SHRINK_BLOCKED`, nothing written, live catalogue untouched and still
+  correct). Root-caused (real GCS reads + re-running the migration script locally against a real backup, exact match
+  confirmed: `9456 + 904 = 10360`, +12 organic growth = `10372`): **Stage 4's migration
+  (`canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py`) reads/writes `prod/catalog.parquet` directly and
+  never touches the underlying `by_date` source parquets** — those still hold the pre-fix `LENDING`/`:SUPPLY:`/
+  `:BORROW:`/`:LENDING_MARKET:`-shaped rows for the DELISTED history. Stage 3's aging-out (live rows correctly migrating
+  to the new writer's shape) reproduces fine on a full rebuild since it's a real reflection of `by_date` history: **only
+  Stage 4's relabel/split of already-DELISTED rows is a catalog-only patch**, so any future `--mode full` DeFi rebuild
+  will silently re-derive those specific historical rows in their pre-Stage-4 shape (relabeling them back to
+  `LENDING`/invalid-enum types and re-collapsing the 904 MORPHO/FLUID A_TOKEN/DEBT_TOKEN pairs into 452 flat
+  `LENDING_MARKET` rows) — exactly what almost happened here, caught only because the guard fires on aggregate row
+  count, not because anything currently checks for this specific regression. **Current live state is NOT affected** —
+  this run's output was never promoted, `prod/catalog.parquet` is still the correct, fully-canonicalized 10,372-row
+  catalogue. **Not reopening as unresolved** (the live/current claim in Stage 4 still holds), but flagging for whoever
+  next needs a DeFi `--mode full` rebuild: **either re-run
+  `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py --apply` immediately after any full rebuild, or
+  (real fix, not yet scoped) bake the relabel/split logic into `build_instrument_catalogue.py`'s own row-construction so
+  it's reproduced from `by_date` directly** — do not treat `--mode full` as a safe, side-effect-free operation for DeFi
+  until one of those lands. The canonical_instrument_id backfill that surfaced this is being redirected to a targeted
+  in-place catalog patch instead of `--mode full`, specifically to avoid this landmine.
+
 - **2026-07-13 (RESOLVED — canonicalized workspace-wide, code + real data + historical catalogue, all 9 protocols)** —
   Operator: "still should fix it migrating to the canonical A_TOKEN/DEBT_TOKEN across everything and update the allowed
   enums to avoid confusion" then "Trigger live re-fetch... Migrate/delete stale catalog rows... Check

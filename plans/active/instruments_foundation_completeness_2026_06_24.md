@@ -50,7 +50,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 32
 estimate_calibrated_ai_days: 19
-last_updated: 2026-06-27
+last_updated: 2026-07-13 # was: 2026-06-27 — corrected 2026-07-14, doc-reconciliation vr2#118: body carries dated entries through 2026-07-13 (G4 SIGN-OFF CONTESTED annotation) + 2026-07-06 (G2-G5 SIGNED-OFF entries) that were never reflected in frontmatter
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -104,7 +104,12 @@ phantom-reconcile pipeline_mode fix (IS@c01bb1c), #2 understat per-league 404 2-
 wrong-source odds wipe (1.4M rows + 231,532 objects; MTDS `trades` now 100%/0-failed), #4 `DP_HIGH_ATTEMPTED_FAILED`
 alert (deployment-service@cb330f7). **Sports does NOT start its G1→G5 until cefi is DONE** — these are the audit + the
 pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` +
-`sports_fixture_completeness_oracle_2026_06_24.md`.
+`sports_fixture_completeness_oracle_2026_06_24.md`. **[⚠️ TENSION flagged 2026-07-14, doc-reconciliation vr2#116: the
+2026-06-27 RE-HOMED banner immediately below hands ALL sports G1→G5 dispatch to a `status: active` coordinator plan that
+carries no reference to this cefi-completion gate, and cefi is still NOT DONE per this same doc (GATE G4 OPEN pending
+D2, GATE G5 only SUB-SIGNED) — yet coordinator-child G1 work (league-noise wipe) already executed 2026-06-28. Unclear
+whether the 2026-06-27 re-homing was also an implicit operator override of this cefi-block rule; flagging for an
+operator ruling rather than asserting either reading.]**
 
 > **🔱 SPORTS G1→G5 RE-HOMED (2026-06-27) — the sports G-gate todos above are flipped `[x]` here; they run via the
 > golden-window-first sports plan set (`assigned_vm: NA`, role-based dispatch).** The work (G1 league-noise wipe · G2
@@ -165,8 +170,8 @@ Coverage is the verification lens — every number flows through `compute_honest
       forever.
 - [ ] [INFRA] P1. **Disable/update the dead-CLI legacy daily Workflow.** `services/instruments-service/gcp/main.tf`
       `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
-      `--CEFI/--TRADFI/     --DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still
-      scheduled it silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
+      `--CEFI/--TRADFI/--DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still scheduled it
+      silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
 - [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
       The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
       ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
@@ -274,7 +279,7 @@ Coverage is the verification lens — every number flows through `compute_honest
       NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness)
       GATES Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
       (`denominator_complete==True`); no flat "100% coverage" without the gate. The "day + depth" axes map to v2's
-      `by_day` (time view) + `by_venue_     instrument_type[_data_type]` (shard/entity view);
+      `by_day` (time view) + `by_venue_instrument_type[_data_type]` (shard/entity view);
       `instrument_gates_download`/`denominator_complete`/ `layer1_completeness_pct` on each AG cell. Expected-universe
       is materialised by the SINGLE producer `build_expected(asset_group)` (folded into
       `honest_coverage_v2_instrument_denominator` Phase 1, blocked on registry-consolidation Ph 1-2). Surface BOTH
@@ -320,16 +325,30 @@ Coverage is the verification lens — every number flows through `compute_honest
       §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
       unfetched". DoD: reason class exists + the denominator accounts for it.
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
-      2026-06-24).** Any GCS data in a non-canonical **schema** (schema*version < v9 / drifted fields), **path**
-      (missing
-      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or     **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi     `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi · tradfi     · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):     `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
-      migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
-      distribution == v9 (measured, not the constant) · a path-prober finds **0** legacy-shape objects · asset_group/
-      venue/chain/instrument_id canonical · 0 dual-SoT sibling trees · manifest↔index↔data-status↔UI ε=0 (§2.3 guard
-      green). **Runs per-AG inside G1→G3** (the manifest must be canonical + aligned BEFORE its coverage number means
-      anything) — this is foundation-correctness, not cleanup.
+      2026-06-24).** Any GCS data in a non-canonical **schema** (`schema_version` < v9 / drifted fields), **path**
+      (missing `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or
+      **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}` lowercase · venue/chain not canonical — defi
+      `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a
+      dual-write / legacy tree left beside the canonical one. The **manifest (`_index/availability_index`) must line up
+      with the coverage SSOT ↔ `/data-status` ↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).
+      **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is
+      review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical `_index` reconcile +
+      legacy `dex_pools/`/`lending_indices/` sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·
+      tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):
+      `pipeline_mode_partition_migration` · `*_manifest_canonicalisation_2026_06_01` ·
+      `master_data_canonicalisation_migration_catalogue_2026_06_07` · `migration_verification_orphan_safety_2026_06_10`.
+      DoD per AG: schema_version distribution == v9 (measured, not the constant) · a path-prober finds **0**
+      legacy-shape objects · asset_group/ venue/chain/instrument_id canonical · 0 dual-SoT sibling trees ·
+      manifest↔index↔data-status↔UI ε=0 (§2.3 guard green). **Runs per-AG inside G1→G3** (the manifest must be
+      canonical + aligned BEFORE its coverage number means anything) — this is foundation-correctness, not cleanup.
 
-🚦 **GATE 0 — operator sign-off on Phase 0 before any backfill launches.**
+🚦 **GATE 0 — NOT RECORDED SIGNED OFF** (operator sign-off on Phase 0 before any backfill launches; all ten Phase 0
+items above remain `- [ ]` and no "GATE 0 SIGNED OFF" line exists anywhere in this doc — only recurring "Awaiting GATE 0
+sign-off"). **(was: unannotated — corrected 2026-07-14, doc-reconciliation vr2#119: the Progress Log nonetheless records
+the freeze-gap backfill VMs launched under the narrower operator 2026-06-26 near-term-target directive, plus the much
+larger G2-G4 backfills below reconciled as SIGNED OFF 2026-07-06 — i.e. downstream gates crossed while this prerequisite
+gate was never recorded satisfied. Flagging the sequencing gap for an operator ruling rather than asserting a GATE 0
+sign-off that isn't evidenced.)**
 
 ---
 
@@ -400,7 +419,7 @@ Coverage is the verification lens — every number flows through `compute_honest
         schema_version=9.** `source` carries only valid sources (the 320 had source=instruments_service; blank-source on
         producer rows is correct per the C-#6 contract). **FOLLOW-UP FINDING (filed below):** the on-chain-cefi-perp
         venue FORM differs across surfaces (by_date PATH=glued `LIGHTER-ZKSYNC`; `_index`+catalogue=split
-        `venue=LIGHTER     chain=ZKSYNC`); kept `_index` SPLIT to stay aligned with the catalogue (§2.3 ε=0); the
+        `venue=LIGHTER chain=ZKSYNC`); kept `_index` SPLIT to stay aligned with the catalogue (§2.3 ε=0); the
         glued-vs-split canonicalization is a separate alignment item.
   - [x] ✅ [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — DONE, PROD-VERIFIED 2026-06-27** (capture guard
         instruments-service@326589c + 9-CJK by_date purge applied [709 files / 1,430 rows, backup
@@ -427,7 +446,13 @@ Coverage is the verification lens — every number flows through `compute_honest
         these 3 venues. Repo: instruments-service (`build_instrument_catalogue.py` + a `_index` re-glue). Provenance:
         G1.3 re-stamp diagnosis 2026-06-27.
 
-- 🚦 **GATE G1 — sign-off.**
+- 🚦 **GATE G1 — NOT RECORDED SIGNED OFF** (was: bare "sign-off." placeholder — corrected 2026-07-14, doc-reconciliation
+  vr2#115/vr2#214: no entry anywhere in this doc records an operator G1 sign-off — the 2026-06-27 GATE-BOUNDARY HOLD
+  below (§ "a coordinator relayed an operator greenlight") explicitly requested it and got none, and later text (lines
+  ~1086/~1208) still reads "Awaiting G1 sign-off"/"request GATE-G1 sign-off." G2/G3/G4 immediately below are nonetheless
+  marked SIGNED OFF 2026-07-06 as RECONCILE-class "already-run, not a redo" entries — an open G1→G2 sequencing gap
+  against this plan's own "no gate crossed without sign-off" rule (§ "Operator gates" below). Flagging for an operator
+  ruling rather than asserting a G1 sign-off that isn't evidenced.)
 - [x] ✅ [INFRA] P0. **G2 — backfill cefi all venues × all days × all years — SIGNED OFF 2026-07-06** (RECONCILE:
       already-run, not a redo). Evidence: (1) day-axis GAP-FREE — cefi by_date 2,646/2,646 days genesis→2026-06-26, 0
       missing (2026-06-27 audit); 20,580 `empty_confirmed` materialised in the IS instruments manifest, was 0
@@ -489,18 +514,20 @@ Coverage is the verification lens — every number flows through `compute_honest
       own operator-tracked SIGNED gates: G1 complete 2026-06-28T03:20Z (7 SPOT VMs opt-deribit self-completed); G2+G3
       wave-1 launched 2026-06-28T03:47Z (24 SPOT VMs); G4-gate reclass 2026-07-03. — market-tick-data-service@fccb1961 +
       @dda5040d (analogue for tradfi) + BUG #4 fix (`sentinels.py` catalog_list_instruments).
-- 🚦 **GATE G4 — SIGNED OFF 2026-07-06** (mechanism functional, spot-check DoD met via MVP-backfill G4-gate reclass);
-  **[⚠️ SIGN-OFF CONTESTED 2026-07-13, verify-rerun finding 105: the standing operator ruling C4(a) (2026-07-03,
-  instruments_completion_tracker_2026_07_06.md:137, never reversed) states G4 enforces Layer-1 AND Layer-2 and CANNOT
-  close until D2 (cefi_layer1_denominator_gaps) lands; cefi Layer-1 measured INCOMPLETE (72.60-73.61%) on/after the
-  sign-off date, and the MVP-backfill's own G4 checkbox remains [ ]. This sign-off is PREMATURE under that ruling —
-  treat G4 as OPEN pending D2 unless the operator re-rules.]** cefi MTDS backfill IS OPERATIONALLY RESUMED under
+- 🚦 **GATE G4 — OPEN, pending D2** (was: primary banner read "SIGNED OFF 2026-07-06" — corrected 2026-07-14,
+  doc-reconciliation vr2#114: that framing let a "GATE G4" grep land on a stale-crossed reading even though the very
+  next clause already contested it. **[SIGN-OFF CONTESTED 2026-07-13, verify-rerun finding 105: the standing operator
+  ruling C4(a) (2026-07-03, instruments_completion_tracker_2026_07_06.md:137, never reversed) states G4 enforces Layer-1
+  AND Layer-2 and CANNOT close until D2 (cefi_layer1_denominator_gaps) lands; cefi Layer-1 measured INCOMPLETE
+  (72.60-73.61%) on/after the sign-off date, and the MVP-backfill's own G4 checkbox remains [ ]. Treat G4 as OPEN
+  pending D2 unless the operator re-rules.]** Mechanism is functional and spot-check DoD was met via MVP-backfill
+  G4-gate reclass, but that does NOT constitute a crossed gate. cefi MTDS backfill IS OPERATIONALLY RESUMED under
   `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
 - [~] [SCRIPT] P0. **G5 — verify cefi MTDS coverage rises** (day+depth via SSOT) day-by-day; residual gaps each have a
   typed understood reason. DoD: coverage trends up; no new unexplained honest-absence/failed. **PARTIAL 2026-07-06** —
   G5 SUB-SIGNED (mechanism + typed-reason discipline) but full "coverage climbs day-by-day to steady state" evidence
   still accruing under the MVP backfill; NOT SIGNED HERE. Live status: (a) Layered coverage SSOT SHIPPED `UAC@755c40515`
-  (Unit-1, `LayeredCoverage` NamedTuple + `compute_layered_coverage(day_counts,     depth_counts)` via the single
+  (Unit-1, `LayeredCoverage` NamedTuple + `compute_layered_coverage(day_counts, depth_counts)` via the single
   `compute_honest_coverage` — day/depth cannot diverge). (b) MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`)
   is IN FLIGHT — coverage 2026-06-28 cefi=11.68% (716,159/6,133,155); 4 wave-1 VMs COMPLETED at T+2h40min; wave-2 gated
   on wave-1 completion + phantom reconcile. (c) Typed-reason discipline wired at the writer via
@@ -630,9 +657,11 @@ This plan is the gated umbrella standard. The per-AG execution detail — where 
 
 - **defi** — `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` (the G4 catalogue-as-filter
   exemplar + the live skip-cap/cursor + per-pool capture work).
-- **sports** — `plans/active/sports_fixture_completeness_oracle_2026_06_24.md` (the §2.1 Tier-B fixture-completeness
-  oracle) + `plans/active/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (the failed/phantom
-  remediation).
+- **sports** — `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (was: pointing to
+  `sports_fixture_completeness_oracle_2026_06_24.md` + `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
+  — corrected 2026-07-14, doc-reconciliation vr2#117: both moved (the former to `archive/2026_06/`, the latter to
+  `active/issues/`) when the 2026-06-27 RE-HOMED banner above handed ALL sports G1→G5 dispatch to the coordinator plan;
+  this section had not been updated to match).
 - **cefi / tradfi** — detail is inline above (no separate active plan).
 
 Per-AG plans MUST stay consistent with this umbrella's gates (G0→G5) + §0–§9 of the standard; this plan is the SSOT for
@@ -1268,7 +1297,7 @@ the _process_, those for the _AG-specific execution_.
       (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
       verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.)
 - [ ] [INFRA] P1. **Make the cloud lifecycle-catalogue-regen job log, then fix the real error** — add
-      `print(...,     flush=True)` bisection markers per `run_rollup` phase (or bootstrap stdout logging), localize the
+      `print(..., flush=True)` bisection markers per `run_rollup` phase (or bootstrap stdout logging), localize the
       job-only failure (suspect grpc/pyarrow/GCS native init or a job-env gap), fix it. Until fixed the catalogue
       refreshes via the local-run path. Repo: instruments-service + deployment-service (job env). (MIGRATED FROM: same —
       supersedes the earlier "diagnose fast-fail" bullet.)

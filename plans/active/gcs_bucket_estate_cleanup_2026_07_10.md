@@ -7,16 +7,16 @@ summary:
   bucket_config.yaml/cloud-providers.yaml entries, and fix real data-pipeline correctness bugs surfaced along the way
   (gas-fees manifest scanning an empty bucket, lst-rates reader/writer bucket mismatch, cf-manifest-audit / qg-snapshot
   crons that were silently failing for weeks).
-status: complete
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, meta]
-repos: [deployment-service, unified-trading-library, market-tick-data-service, strategy-service]
+repos: [deployment-service, unified-trading-library, market-tick-data-service, strategy-service, ml-service]
 scope: [engineer, admin]
 tags: [gcs, buckets, cleanup, terraform, data-correctness, autonomous]
 related: []
 created: "2026-07-10"
-last_updated: "2026-07-10"
+last_updated: "2026-07-14"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -745,6 +745,43 @@ Flipped `defi_manifest_canonicalisation_2026_06_01.md`'s `C0f` todo to `[x]` (se
 (`VM_SHUTDOWN_ON_COMPLETION=true`; check for its absence from `gcloud compute instances list` as the completion signal),
 confirm its actual write target (expected: shared bucket via `kind="tick-data"`, not either legacy `lending-indices`
 bucket), then delete those 2 if still safe.
+
+## 5j. Doc-reconciliation corrections (2026-07-14, verify-rerun-2 findings 78/80/81)
+
+- **Finding 78 — frontmatter `status: complete` contradicted §5i's own "one open item" (lending-indices +
+  lending-indices-prd, gated on `mtds-lending-indices-20260712-112557`)**: re-checked live GCP state
+  (`gcloud compute instances list --project=central-element-323112`, 2026-07-14) — the VM is **gone** (matches its own
+  stated completion signal, `VM_SHUTDOWN_ON_COMPLETION=true`), so the gate that was blocking §5i's revisit has cleared.
+  However, §5i's remaining action ("confirm its actual write target, then delete those 2 buckets if still safe") has
+  **not** been executed by this doc-reconciliation pass — that's a live GCS delete, out of scope for a doc-fix and not
+  something to do without re-running the target-confirmation step §5i specifies. Flipped frontmatter `status: complete`
+  → `active` (was: `complete`) — the plan has one genuinely open, now-unblocked residual action, not zero.
+- **Finding 80 — frontmatter `last_updated: "2026-07-10"` predated §5c–§5i's real 2026-07-12 edits.** Bumped to
+  `"2026-07-14"` (was: `"2026-07-10"`) to reflect this pass's own edit plus the pre-existing 07-12 drift.
+- **Finding 81 — frontmatter `repos:` omitted `ml-service` despite §5h shipping `ml-service@7a90b84a`.** Added
+  `ml-service` to the `repos:` list (was:
+  `[deployment-service, unified-trading-library, market-tick-data-service, strategy-service]`).
+
+## 5j. CORRECTION — `features-onchain-defi-prd` was NOT already migrated (2026-07-14)
+
+**§5f/§6 wrongly called `features-onchain-defi-prd-central-element-323112` "ALREADY MIGRATED"** on the strength of "date
+range falls inside the canonical sibling's range" alone. A dispatched read-only audit (from
+`data_completion_to_100_all_ag_2026_06_21.md`) re-checked this specific bucket against the actual `feature_group`
+content, not just the date range, and found a real, live-verified gap: the entire `lst_yields` feature_group (15 real
+`by_date/day=.../feature_group=lst_yields/features.parquet` files, 2026-04-03..2026-04-19) existed **only** in this
+legacy bucket — zero `lst_yields` objects anywhere in canonical's full 118-day history, not just the legacy bucket's
+15-day window. `lst_yields` is a currently-registered DeFi feature handler (not retired), so this was real data loss
+risk, not a false alarm. Date-range containment does not imply feature_group content parity — noted here as the lesson
+(parallel to §5f's own "grep for an existing migration tool before concluding needs-migration" lesson, the inverse
+mistake this time: concluding already-migrated too early).
+
+**Corrected and closed out same-day**: migrated the 15 files server-side (`gcs_copy_object`, idempotent,
+`e2e-testing/scripts/defi/copy_lst_yields_prd_to_canonical_2026_07_14.py`), independently re-verified via per-object
+size+crc32c match AND a fresh full recursive listing, re-confirmed zero live terraform/Scheduler/Cloud-Run/VM/BigQuery
+references to the legacy bucket, then deleted it (versioning was `Suspended` on both buckets, so a live-object `rm -r` +
+`buckets delete` was sufficient — no noncurrent-version sweep needed). Full account + evidence in
+`data_completion_to_100_all_ag_2026_06_21.md`'s 2026-07-14 entry. `features-onchain-defi-prd-central-element-323112` is
+now correctly gone (404 confirmed), not just correctly classified.
 
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 

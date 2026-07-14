@@ -66,7 +66,15 @@ drift_direction: advance-code
 > 15:14 UTC via `canonical-migration-tradfi-20260706-145606` (planned=332825 moved=122703, exit_code=0, fatal=0). **All
 > 5 AGs now canonical (5/5).** Post-apply cleanup (E5 manifest rebuild + orphan sweep re-run + enumerate-seed +
 > straggler re-run) tracked in `tradfi_v9_stage1_finish_2026_07_06.md`. Tracker:
-> `instruments_completion_tracker_2026_07_06.md`.
+> `instruments_completion_tracker_2026_07_06.md`. **SCOPE CLARIFIED 2026-07-14 (doc-reconciliation verify-rerun-2,
+> finding 155)**: "canonical (5/5)" here means the **G4 physical `--apply`** (path/schema migration) is done for all 5
+> AGs — it does NOT mean every AG's manifest-content is CF-1…CF-21 clean. The fresher (2026-07-11) sibling doc
+> `plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md` explicitly flags **cefi as "NOT
+> ADJUDICATED"** on real CF-content RED items (CF-1 string-schema, CF-4 source 54% blank/3.9M rows, CF-5 189,665
+> untyped, Era-B 521,513 chain-rows) as of its own 2026-07-14 re-adjudication pass (sports/tradfi/defi were confirmed
+> stale-and-fixed there; cefi was not, for lack of a fresh CF-audit re-run). Read "5/5 canonical" as G4-apply-complete,
+> not as "all content-correctness gaps closed" — cefi's data-content gaps remain genuinely open pending its own fresh
+> CF-audit.
 
 > **Role**: this is the **G3.5 pre-apply verification gate** of
 > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` — it sits between **G3** (UNION view) and **G4**
@@ -220,9 +228,9 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 ## V5 — Projected-manifest preview + data-status render (CF-20, ⑭) — slot-3 harness, both render
 
 - [x] ✅ [SCRIPT] P1. `beta_manifest_writer.py` — `write_projected_index(df, --beta-manifest-out gs://<dev>/…)` writes
-      the projected v9 `_index` (schema*version stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
-      prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. *(The per-AG dev
-      render + operator goalpost eyeball remains — next item.)\_
+      the projected v9 `_index` (`schema_version` stays 9 = "v9 projected"); **dev-target HARD-guard** (refuses any
+      prod/staging `_index`); no objects moved. Migrator dry-runs call it. 4 tests. — is@da74c72c. _(The per-AG dev
+      render + operator goalpost eyeball remains — next item.)_
 - [x] ✅ [VERIFY] P1. Per-AG dev render — **DONE via the superseding `DATA_STATUS_BETA_MANIFEST_BLOB` mechanism**
       (deployment-api `services/manifest_source.py`, landed 2026-06-11: the env var redirects EVERY data-status surface
       to `_index/audit/projected_index_{asset_group}.parquet` in the SAME prd bucket — read-only, no dev-bucket copy,
@@ -726,9 +734,20 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       concurrency / larger VM" — stale.) Corrected per operator ruling 2026-07-12, plan-reconciliation finding 128
       (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2).
 - [ ] [DATA] P1. **RESUME runbook (48 paused GCP schedulers + 26 AWS rules) un-pause** — runs ONLY after TradFi G4 also
-      verified; that precondition is now MET (2026-07-12). Owning todo tracked in
-      `tradfi_v9_stage1_finish_2026_07_06.md` (added this edit, plan-reconciliation finding 128). Fleet drained +
-      `pre_migration` snapshot in place; AG-by-AG, operator OK between each.
+      verified; that precondition is now MET (2026-07-12). **CORRECTED 2026-07-14 (doc-reconciliation verify-rerun-2,
+      finding 154): the runbook's own precondition text
+      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"RESUME runbook") requires TWO conditions, not
+      one — "every AG `--apply` complete + verified" AND "the new manifests are consolidated". Only the FIRST is met (G4
+      verified all 5 AGs); the SECOND is NOT met for tradfi** (a 13,971-row / 0.27% v4 schema/`pipeline_mode`/`source`
+      tail from an actively-running backfill fleet — see `tradfi_v9_stage1_finish_2026_07_06.md`'s own RESUME-runbook
+      todo, which stays `BLOCKED-PREREQUISITES` for exactly this reason, sequenced after the fleet-drain + re-stamp
+      task). (was: "that precondition is now MET (2026-07-12)" without qualification — accurate for the G4-verified
+      precondition alone, but read in isolation it overstates overall runbook readiness.) **Do not run the RESUME
+      runbook until tradfi's fleet-drain + re-stamp closes** — cefi/defi/sports/pred are not separately confirmed clean
+      on the "consolidated" precondition either (no fresh audit found either way beyond tradfi's), so treat fleet-wide
+      readiness as unconfirmed, not just tradfi-gated. Owning todo tracked in `tradfi_v9_stage1_finish_2026_07_06.md`
+      (added this edit, plan-reconciliation finding 128). Fleet drained + `pre_migration` snapshot in place; AG-by-AG,
+      operator OK between each.
 - [x] ✅ [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness — DONE (data-grounded).** — uac@f8fb613 (QG-green
       212s, 69 tests). Enumerated ALL declared-but-uncapabilitied defi venues: 19 of 124 `ALL_DEFI_VENUES` lacked a
       capability entry; cross-referenced `DEFI_VENUE_PHASE` + the prod `projected_index_defi.parquet` (1.58M rows) for

@@ -72,3 +72,37 @@ rest of TradFi now has. It represents a meaningful fraction of the total TradFi 
    target.
 3. Given the real scale (~187.5M rows), this is a strong candidate for VM-based execution from the start (per the
    operator's standing durability preference), not a laptop-session migration.
+
+## 🔴 2026-07-14 — re-verification could NOT confirm this population exists at the described location
+
+Investigated step 1 of the recommended next step above (real investigation of the flat layout's semantics) as a
+precondition to actually building + running the migration (operator asked to do the full migration, not just scope it).
+Found:
+
+- **The current TradFi writer structurally cannot produce this shape.**
+  `market-tick-data-service/market_tick_data_service/ engine/orchestrator/partitioned_writer.py::_resolve_writer_file_name`
+  (lines 135-162) has exactly two branches — `underlying={U}/ticks.parquet` for any derivative type (which
+  `options_chain` always is, per `symbol_rules.py:258`), or a flat `{symbol}.parquet` for non-derivatives only. There is
+  no code path that emits a flat filename for a `data_type=options_chain` row. So whatever wrote this layout predates
+  the current writer — consistent with the doc's own hypothesis, not new.
+- **Could not find the population itself.** The consolidated manifest (`_index/availability_index.parquet` in
+  `market-data-tick-tradfi-central-element-323112`) is **17 days stale** (`gsutil stat` update time 2026-06-27,
+  predating this doc's own 2026-07-10 creation) and shows only 291 CME `options_chain` rows today, all with blank
+  `instrument_type`/`underlying` and `row_count=null` — nothing resembling 120,946 rows / 187.5M row_count sum. A
+  **real, bounded GCS scan** (not a whole-corpus walk — scoped exactly to `venue=CME/instrument_type=options_chain/...`,
+  across all 1,996 real day-partitions currently in the bucket, tried 4 plausible path-shape variants) found **zero
+  matching objects on any variant, on any day**. Cross-checked the AWS S3 mirror (empty — GCP is the sole real store)
+  and git history 2026-07-09→2026-07-14 for any intervening cleanup/migration (found only an unrelated, much smaller fix
+  — `042ccc36`, 6 CME options_chain objects, three orders of magnitude short of 120,946).
+- **This directly contradicts the finding this doc is built on.** Either (a) the 120,946/187.5M population was itself
+  fully migrated or deleted by an untracked process sometime between 2026-07-10 and now with no commit evidence, (b) the
+  original finding read a transient or incorrect manifest/index state, or (c) the real data lives somewhere this
+  re-verification didn't check (a different bucket/region/path shape not among the 4 tried).
+
+**Per the workspace's data-pipeline-correctness hard rule** (a data-correctness finding that contradicts a prior finding
+needs operator notification, not a silent migration attempt against an unconfirmed target) — **status is NOT changed to
+resolved**. No migration was designed or run against this population; doing so against an unconfirmed target risks
+either a silent no-op or, worse, writing to the wrong location. Needs an operator decision on how to reconcile: re-run
+the manifest consolidator (currently 17 days behind) and re-check, or track down exactly which manifest snapshot the
+original 2026-07-09 finding-agent (`wf_118d8268-18c`) used to get the 120,946-row figure, since it doesn't match what's
+queryable today.

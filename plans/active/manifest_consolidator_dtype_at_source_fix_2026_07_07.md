@@ -46,10 +46,19 @@ source:
 
 # Manifest consolidator — fix dtype-at-source
 
-> **Not urgent — the UTL write-side coercion (`_merge_dataframes`, unified-trading-library@6c090bb/@1651340) already
-> crash-proofs every reader against this, so nothing is on fire.** This is a correctness/honesty fix: the CANONICAL
-> index should carry typed columns, not utf8. Background + the incident this caused:
-> `issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
+> **⚠️ CORRECTED 2026-07-14 (doc-reconciliation verify-rerun-2, finding 147)** — this banner's "nothing is on fire"
+> framing is now stale/false: a 2026-07-12 production incident
+> (`issues/tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md`) crash-looped the tradfi/cefi/prediction
+> manifest-consolidator Cloud Run jobs for ~85-90 minutes on the same VARCHAR row_count/instrument_count defect class in
+> the same `manifest_consolidator.py` module — a different code path (the `cf2e196b` window-`ORDER BY` `COALESCE`, fixed
+> via `TRY_CAST` in `bb17638e`) than the `_merge_dataframes` write-side coercion this banner cites, proving that
+> coercion does NOT "crash-proof every reader" against this defect class as claimed. This dtype-at-source fix is still
+> unshipped (`status: draft`, all todos below unchecked) and remains the correct root-cause fix; treat this as more
+> urgent than "nothing is on fire" implies. (was: "Not urgent — the UTL write-side coercion (`_merge_dataframes`,
+> unified-trading-library@6c090bb/@1651340) already crash-proofs every reader against this, so nothing is on fire.")
+>
+> This is a correctness/honesty fix: the CANONICAL index should carry typed columns, not utf8. Background + the incident
+> this caused: `issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
 
 ## What's already known (verified — don't re-derive)
 

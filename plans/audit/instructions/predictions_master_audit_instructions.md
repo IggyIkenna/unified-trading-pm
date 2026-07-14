@@ -135,8 +135,8 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
       `available_at` · env-split bucket · batch=live.
 - [ ] (CF-5 prediction reasons) every empty prediction cell typed: genuine `SOURCE_RETURNED_ZERO` /
       `EXPECTED_KNOWN_SOURCE_GAP`; 0 blank.
-- [ ] (CF-7 prediction names) underscore data*type
-      (`prediction_canonical_question_group`/`ohlcv*\*`) + canonical venue     (`POLYMARKET`/`KALSHI`).
+- [ ] (CF-7 prediction names) underscore `data_type` (`prediction_canonical_question_group`/`ohlcv_*`) + canonical venue
+      (`POLYMARKET`/`KALSHI`).
 
 ## Prediction-specific standing checks (added 2026-06-08) — per-cqg grain + polymarket source model
 

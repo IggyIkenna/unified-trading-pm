@@ -5,8 +5,8 @@ summary: >-
   SSOT for the Honest Coverage v2 model — two layers (Layer-1 instrument-denominator audit GATES Layer-2 download
   coverage), two views (day-by-day + venue×instrument_type×data_type), the reachable-vs-all-shards coverage formula
   (empty_confirmed excluded from the reachable denominator), the additive coverage.json v2 schema, the
-  empty-denominator-fails-CLOSED guard, and the UAC-vs-writer vocabulary/grain alignment rule; CK3-certified
-  2026-06-29 (instruments-service@051e5a8).
+  empty-denominator-fails-CLOSED guard, and the UAC-vs-writer vocabulary/grain alignment rule; CK3-certified 2026-06-29
+  (instruments-service@051e5a8).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +14,32 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, manifest, data-correctness, data-status, uac, instruments, verification]
-related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, honest_coverage_baseline_2026_05.md, pipeline-mode-partition.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md]
+related:
+  [
+    availability-manifest-and-data-status.md,
+    honest-absence-downstream-handling.md,
+    honest_coverage_baseline_2026_05.md,
+    pipeline-mode-partition.md,
+    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+  ]
 created: 2026-06-28
-authoritative_for: [Honest Coverage v2 model (two-layer / two-view / instrument-gates-download), coverage.json v2 schema, Layer-1 enumeration-completeness matrix]
-referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/02-data/shard-coverage-classification.md, codex/03-deployment/data-status-ui-surface.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/06-coding-standards/data-status-endpoint-contract.md, plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md, plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md]
+authoritative_for:
+  [
+    Honest Coverage v2 model (two-layer / two-view / instrument-gates-download),
+    coverage.json v2 schema,
+    Layer-1 enumeration-completeness matrix,
+  ]
+referenced_by:
+  [
+    codex/02-data/honest-absence-downstream-handling.md,
+    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    codex/02-data/shard-coverage-classification.md,
+    codex/03-deployment/data-status-ui-surface.md,
+    codex/04-architecture/instrument-universe-registry-consolidation.md,
+    codex/06-coding-standards/data-status-endpoint-contract.md,
+    plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
+  ]
 owner:
 last_reviewed: 2026-06-29
 code_refs:
@@ -189,6 +211,16 @@ all_shards_coverage = captured / (captured + attempted_failed + expected_unattem
 reachable denominator** — they represent cells the system knowingly does not expect data for. Including them would
 deflate coverage for venues with known non-trading days, pre-launch windows, etc. `all_shards_coverage_pct` (which
 includes them) is preserved for the completeness view only.
+
+**Delivery-lag ruling (2026-07-14, closes `data_pipeline_e2e_check_2026_07_10` todo 29):**
+`EXPECTED_SOURCE_DELIVERY_LAG` (e.g. HYPERLIQUID l2Book's rolling ~2-week vendor publish lag) stays classified
+`empty_confirmed` + typed reason, **within the day window — no out-of-window denominator mechanism**. Rationale: (1) the
+reachable-coverage formula above already excludes it, so the lag band does not depress reachable coverage — the honest
+trailing dip appears only in the all-shards completeness view, which is exactly that view's job; (2) moving the band
+out-of-window would make a genuinely-stuck capture inside the lag window invisible (a silent-failure mode), whereas the
+typed reason lets any consumer exclude the band explicitly without losing the signal; (3) the dip self-heals — the
+idempotent backfill re-attempts after the lag elapses and flips rows to `captured`, so the band rolls forward as an
+interpretable steady-state. Same precedent as TradFi T+1 vendor lags (NASDAQ/NYSE), which also stay within-window.
 
 > Compare to v1 formula: `coverage = (captured + empty_confirmed) / expected_universe` — this mixed legitimate-absence
 > into the numerator, masking real holes.

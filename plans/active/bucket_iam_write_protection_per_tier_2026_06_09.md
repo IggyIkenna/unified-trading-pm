@@ -131,7 +131,14 @@ Two independent gates because Group A and Group B are at different stages:
   > packs), R8-prediction `[ ]` (dry-run regen pending), 5 R5 smoke-test bugs (cefi tardis datetime64 P0, tradfi FX
   > yahoo writer P1, footystats ODDS source label P1, kalshi IS 400 P1, manifest consolidator restore P1). G4 applies
   > are operator-fired (HARD-STOP); no whole-corpus walk has completed and several are still scheduled. P0.1 checkbox
-  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete.
+  > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete. **[2026-07-14
+  > update, verify-rerun-2 finding 205]**: the G4-whole-corpus-walk blocking premise above is now STALE —
+  > `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s own status grid confirms **"G4 🟢 all 5 AGs
+  > (updated 2026-07-12)"**: defi/cefi/sports/prediction `--apply` complete 2026-06-29, and TradFi `--apply` DONE
+  > 2020-2026 span (7 VMs, exit_code=0 fatal=0, completed 2026-07-06, GCS re-verified 2026-07-12) — the last of the 5
+  > AGs. **P0.1 checkbox left OPEN, not flipped**: the G4-walk sub-condition is now met, but this gate-check's OTHER
+  > cited blocking pre-conditions (R8-prediction dry-run regen, the 5 R5 smoke-test bugs) were not re-verified in this
+  > pass — re-check those specifically before flipping P0.1 to done.
 - [x] ✅ [DESIGN] P0.2. Resolved in P0 above: option (a) per-tier SAs. Final SA list: `uts-dev-sa`, `uts-stg-sa`,
       `uts-prd-sa`, `uts-migration-sa` (cross-tier exception). — unified-trading-pm@HEAD 2026-06-12
 

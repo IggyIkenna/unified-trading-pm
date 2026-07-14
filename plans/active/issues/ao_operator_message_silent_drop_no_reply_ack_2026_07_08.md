@@ -46,7 +46,9 @@ thinking_tier: medium
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-08
+last_updated:
+  "2026-07-13 (was: 2026-07-08 — verify-rerun-2 finding 191, corrected 2026-07-14 — Progress Log carries a 2026-07-13
+  entry cross-referencing ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md; frontmatter never bumped)"
 supersedes:
 superseded_by:
 depends_on:
