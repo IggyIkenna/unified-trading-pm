@@ -1380,35 +1380,35 @@ inline here to keep this session's change small, tested, and immediately shippab
       was passing a filter down to pyarrow at all.
 
       **Fix shipped**: `unified-trading-library@a5b07ff7e` — threaded an optional `filters:
-          list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
-          `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
-          `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
-          filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
-          would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
-          `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
-          belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
-          min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
-          out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
-          separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
-          blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
-          `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
+              list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
+              `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
+              `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
+              filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
+              would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
+              `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
+              belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
+              min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
+              out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
+              separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
+              blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
+              `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
 
-          **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
-          same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
-          self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
-          16 GiB.)
+              **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
+              same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
+              self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
+              16 GiB.)
 
-          **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
-          a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
-          killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
-          **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
-          ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
-          exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
-          initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
-          _2026_07_14` has needed since it was filed.
+              **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
+              a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
+              killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
+              **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
+              ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
+              exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
+              initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
+              _2026_07_14` has needed since it was filed.
 
-          Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
-          only, no code change).
+              Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
+              only, no code change).
 
 **Status: this specific OOM mechanism (unscoped `ManifestFreshnessCache` reads) is RESOLVED and production-verified.**
 The other 2 open threads on this doc (the `uts-prod-manifest-consolidator-market-data-defi` DuckDB consolidator crash
@@ -1426,7 +1426,58 @@ re-verified or touched by this entry.
 - `mtds-dex-pools-backfill` POST-FIX `run.log` (`unified-trading-library@a5b07ff7e`, real production run):
   `DEX pools handler initialized` → real collection proceeds → `DEX pools collection complete: 17 total records` →
   `exit_code=0` → `DEPLOYMENT_COMPLETED`. The definitive before/after pair for this issue.
+- `mtds-lending-indices-20260715-002613` POST-FIX `run.log` (same `a5b07ff7e` + full fix chain, a SECOND, independent
+  handler — `lending_indices_handler.py`, not `dex_pools_handler.py`): `Lending indices handler initialized`
+  23:29:00.959Z → `RESOURCE_SAMPLE`s healthy (rss=693MiB→896MiB, mem=10.7%→11.8%) → real per-day Morpho collection
+  proceeds well past the old ~20-90s kill window → `Lending indices collection complete: 554/479/340 total records` for
+  days 2026-03-27/28/29 respectively, real parquet objects confirmed landing in
+  `market-data-tick-defi-prd-central-element-323112`. See "P0 residual live-verify — lending_indices_handler.py / Morpho
+  backfill" below for the full session.
 - `gcloud compute operations list --filter="targetLink~mtds-{perp-funding,dex-swaps,dex-pools}-backfill"`: only
   `insert`/`delete` ops, no `preempted` — rules out SPOT preemption.
 - `f8cab3f0` (2026-07-12, `market-tick-data-service`) — the most recent change to `_register_all_catalog_readers()`,
   confirms it loads a combined ~1.6M-row cross-asset-group catalogue once per process.
+
+## P0 residual live-verify — lending_indices_handler.py / Morpho backfill (2026-07-14/15, autonomous dispatch)
+
+Dispatched independently to relaunch the long-pending Morpho `lending_indices` backfill
+(`bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 — a real, ground-truth-confirmed 108-day gap,
+`2026-03-27`→`2026-07-12`, in `market-data-tick-defi-prd-central-element-323112` for `venue=MORPHO`). This is a SECOND,
+independent real-VM confirmation of the fix chain (the "Status: RESOLVED and production-verified" section above verified
+`dex_pools_handler.py` only) — extends coverage to a different handler, a different data path (Morpho via TheGraph
+subgraph, `lending_indices` data_type), and a much longer (108-day, ~3.5-4hr) real backfill window rather than a 3-day
+smoke window.
+
+**Pre-launch verification, by content not just SHA-math**: confirmed via `git log` that the full fix chain (items 1-4:
+`market-tick-data-service@d6846f1c`, `unified-trading-library@0aa284e8`, `unified-trading-library@391f8196`,
+`market-tick-data-service@e3bbb2a3`) plus the `a5b07ff7` row-group-pushdown fix documented above were all already merged
+to `live-defi-rollout`. Downloaded + unpacked the actual `mtds-code.tar.gz` / `unified-trading-library-code.tar.gz` from
+`gs://deployment-scripts-central-element-323112/code/` and grepped the extracted `.py` files directly (not just each
+tarball's `.manifest.json` `commit_sha`) — confirmed `_date_range_filters()`
+
+- `filters=` pushdown present in `manifest_freshness.py`, and all 9 handlers (incl. `lending_indices_handler.py:341`)
+  pass `date_range=(target_day, target_day)`. All 4 relevant tarball manifests (`mtds-code`,
+  `unified-api-contracts-code`, `unified-trading-library-code`, `deployment-service-code`) matched local `HEAD` exactly
+  (built ~4min before launch by the same concurrent session that shipped `a5b07ff7`) — no rebuild needed.
+
+**Launch**:
+`bash deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh --lending-protocols morpho 2026-03-27 2026-07-12`.
+VM `mtds-lending-indices-20260715-002613` created 23:26:33Z, `RUNNING` 23:26:43Z (~32s). The launcher's own
+`lc_verify_tarball_freshness` gate independently confirmed all 4 tarballs current.
+
+**Result so far (interim — backfill still running at time of writing)**: `DEPLOYMENT_STARTED` 23:29:00.400Z, handler
+initialized 23:29:00.959Z, two healthy `RESOURCE_SAMPLE`s (rss=693MiB/mem=10.7% at 23:29:01Z, rss=896MiB/mem=11.8% at
+23:29:31Z) — sailed past the old ~20-90s kill window with zero crash signature. Days 2026-03-27 (554 records),
+2026-03-28 (479 records), 2026-03-29 (340 records) each completed cleanly; day 4 (2026-03-30) in progress as of 23:37Z.
+Independently ground-truth-verified (not just trusting the log) that day 1's real parquet object exists at
+`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-03-27/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=MORPHO/chain=ETHEREUM/instrument_type=lending/data_type=lending_indices/morpho_ETHEREUM_20260714_232900.parquet`.
+Pace ~2min/day ⇒ 108 days ≈ 3.5-4hr total.
+
+**Not yet a full close for this handler** — the backfill was still running at the time this entry was written; see
+`bucket_estate_consolidation_to_sub100_2026_07_13.md` item 13 / its Progress Log for the plan-side tracking and any
+later update on full completion (or a crash, if one occurs later in the 108-day window — if it crashes with the SAME
+rc=137 signature despite the confirmed-fresh, content-verified tarballs, that would mean the fix chain is insufficient
+for this handler specifically and needs a fresh finding appended here, not a duplicate doc). Combined with the
+`dex_pools_handler.py` production verification above, this is the second of 9 DeFi handlers to get a real-VM
+confirmation; the other 7 remain verified only via the shared-mechanism code fix + unit tests, not per-handler live
+runs.
