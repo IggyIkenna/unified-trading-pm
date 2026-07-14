@@ -48,10 +48,14 @@ drift_direction: advance-code
 
 # Sports P2a — API-Football history 2015→present
 
-> **🟢 2026-07-14: golden-window enrichment SPOT fleet RUNNING** — 5 `af-backfill-20260714-111*` VMs
-> (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES, window 2025-09-01..2025-11-30, asia-northeast1-c). Operator
-> un-park ruling 2026-07-14 (reverses BLK-b37df00d Option A); see Todo 9 + Progress Log session 20. Do not launch
-> another `af-*` VM without `--fleet-vms` re-allocation — the 5 VMs consume the shared api_football key budget.
+> **🔴 2026-07-14 ~14:10Z: GW fleet COMPLETE (all 5 exit_code=0) but content verification RED — DO NOT flip Todo 9, DO
+> NOT launch the 2020+ fleet or the features recompute on the current instruments-service enrichment write path.** 3,720
+> FALSE-EMPTY manifest cells (`EXPECTED_NO_FIXTURE` stamped by the fleet over cells whose enrichment parquets EXIST —
+> top/prediction-tier leagues), 225,854 fetched rows dropped ("could not be mapped to a league"), INJURIES writer loops
+> only the 33 prediction-tier leagues. Evidence + fix order:
+> `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`; Progress Log
+> session 31. The operator-ruled chain (GW verify → 2020+ fleet + GW recompute) resumes only after the P0 fix + the
+> post-fix GW re-run re-verifies green at parquet level.
 
 ## Scope + coverage clips (the "zero expected-missing" definition)
 
@@ -174,6 +178,22 @@ drift_direction: advance-code
       pending-fetch + 0 blank-reason, presence gap (fixture-days lacking a captured enrichment row: EVENTS 1,356 /
       LINEUPS 1,377 / STATS 1,699 / PLAYER_STATS 1,582 of 1,848 captured-fixture shards) closed to
       captured-or-typed-`EXPECTED_*`; INJURIES window EU 30→0. Full-history verify gate moves to the follow-on todo.
+- [ ] [CODE] P0. **Fix the enrichment manifest write path (3 legs) — instruments-service** (discovered 2026-07-14
+      session 31, GW content verification RED; evidence
+      `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`): (1)
+      skip-as-already-present cells must resolve to `record_captured` (parquet-derived counts) — a no-op run must never
+      demote a present cell to `empty_confirmed`; never stamp `EXPECTED_NO_FIXTURE` where captured-FIXTURES count ≥1
+      (`sports_reference_core.py::emit_empty_gaps_for_entity`); (2) fix
+      `sports_fixtures.py::_build_fixture_league_map_from_gcs` (94-league mapping not `get_prediction_leagues()`;
+      `max_results=100` truncation; fixture-id column drift) and convert the bare-path row DROP into `record_failed`;
+      (3) INJURIES per-date loop → `get_expected_leagues_for_source("api_football")` (33→94 leagues; closes the 30
+      A_LEAGUE blank-EU cells).
+- [ ] [DATA] P0. **Post-fix GW re-run + parquet-level re-verify** — re-run the SAME 5-entity GW fleet (idempotent;
+      presence-skip makes it cheap — only the 225,854 dropped rows re-fetch), then re-run the parquet-presence cross
+      (NOT the naive gate query alone: the current index reads 0-pending/0-blank/0-missing while 3,720 cells are
+      false-empty), then flip Todo 9 with per-entity evidence and resume the operator chain (2020+ fleet → GW features
+      recompute → ML re-verify). Manifest-row correction for the false-empty cells coordinates with
+      `sports_data_sources_canonical_completion_2026_07_13.md` (dedup-key semantics owner).
 - [ ] [DATA] P2. **Full-history enrichment phase (after the GW gate above is GREEN)** — extend the same entity-sharded
       SPOT `af-backfill-*` fleet across the full coverage windows (per-fixture types 2020-06-06→present; INJURIES
       2021-01-01→; STANDINGS 2018-01-01→; TEAMS after the `sports_data_sources_canonical_completion_2026_07_13.md`
@@ -1339,3 +1359,39 @@ premature (risks contending with the still-running GW fleet for the same shared 
 plan's Tardis/rate-budget discipline). Declining — no action taken, no code touched, matching sessions 20-29's
 reasoning + session 28's recommendation (still unactioned) to wire a `gw-enrichment-landed` prerequisite condition so
 this cluster stops auto-dispatching until the fleet actually finishes. `/skip-current-task`.
+
+### 2026-07-14T14:15Z — session 31 (gw-verify agent): fleet COMPLETE, content verification RED — Todo 9 NOT flipped, 2020+ fleet + GW recompute HELD
+
+**Fleet completion (verified by content, not assumed)**: all 3 remaining VMs (`111346` LINEUPS, `111414` STATS, `111447`
+PLAYER_STATS) self-deleted by 13:38Z; all five run.logs end `DEPLOYMENT_COMPLETED (exit_code=0)` (INJURIES 11:45:39Z,
+EVENTS 12:15:06Z, LINEUPS 13:37:06Z, STATS 13:37:36Z, PLAYER_STATS 13:37:31Z), `EXIT_STATUS=0`, no `PREEMPTED` blobs.
+Per-VM manifest shards swept by the consolidator; canonical index rewritten 13:39:02Z (after the last VM write
+13:37:36Z) — gate run against that snapshot (5,759,709 rows; downloaded once).
+
+**GW gate query (Todo 9 criterion) — naive readout is GREEN, content is RED.** On the 1,848 deduped captured-FIXTURES
+(date,league) cells (86 leagues / 91 days / 4,787 fixtures — session-20 scoping reproduced exactly): all 4 per-fixture
+entities read 0 pending-fetch EU, 0 blank-reason, 0 missing cells. BUT the 91-day × 4-entity GCS parquet-presence cross
+proves the typed reasons false at scale: **FALSE-EMPTY cells (parquet data EXISTS, manifest says `empty_confirmed`) =
+EVENTS 943 / LINEUPS 975 / STATS 986 / PLAYER_STATS 816** (3,720 total; 0 phantom-captured anywhere). Captured-cell
+counts moved only 492→537 / 471→475(≈) / …→153 / …→269 while parquet presence is 1,480/1,450/1,139/1,085 of 1,848.
+Sample content proof: (2025-11-08, LA_LIGA, FIXTURE_EVENTS) manifest=`empty_confirmed/EXPECTED_NO_FIXTURE` (written by
+the fleet) vs its per-league parquet holding 65 event rows / 4 fixtures. INJURIES: 30 EU cells remain (A_LEAGUE
+2025-09-01..30, blank reason) — gate "30→0" NOT met; the INJURIES VM logs "wrote empty_confirmed markers for 33 leagues"
+(prediction-tier only, not the 94). Fleet also DROPPED 225,854 fetched rows ("could not be mapped to a league"; fallback
+fired 91/91 dates on EVENTS/LINEUPS, 83/91 on STATS/PLAYER_STATS) while writing ~739k rows / 2,951 new parquets — real
+data landed, quota partially wasted, absences mislabeled. Full mechanism (3 legs: skip-as-present → false-ENF stamp;
+prediction-tier/truncated league map → row drops; INJURIES 33-league loop) + fix order:
+`plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`.
+
+**Decisions (operator chain interrupted at its own verification gate)**: Todo 9 NOT flipped (gate criterion "presence
+gap closed to captured-or-typed-EXPECTED\_\*" fails on 3,720 cells — the typed reasons are false). **2020+ fleet NOT
+launched** (same binary ⇒ same false-ENF + ~25-50% row-drop waste at ~400k-call scale across 2020→present; live /status
+at hold time: 48,729/300,000 used, 251,271 remaining — note live `limit_day=300k`, the 450k registry note above is
+stale). **GW features recompute NOT launched** (enrichment inputs still materially incomplete — the dropped rows span
+the window; recomputing now guarantees a second recompute post-fix). Two new P0 todos added above (write-path fix;
+post-fix GW re-run + parquet-level re-verify). NOTIFY-OPERATOR issued via the issue doc + session report. Nothing in the
+index was hand-edited; no manifest rows written; consolidator cron-absorb only.
+
+**is-daily-enum-sports 13:30Z verdict (32Gi verification, issue
+`is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`)**: execution `is-daily-enum-sports-5vchf` created
+13:30:03Z — verdict recorded in that issue doc once terminal (in flight at this entry's write).

@@ -46,6 +46,18 @@ drift_direction: advance-code
 
 # Sports P2c — derived features history to ML-ready
 
+> **🔴 2026-07-14 ~14:15Z: GW enrichment features recompute (`derived_features`+`fixture_features` --force,
+> 2025-09-01..2025-11-30) is HELD** — the GW enrichment fleet completed but content verification came back RED (3,720
+> false-empty manifest cells + 225,854 enrichment rows fetched-then-dropped by the instruments-service write path, so
+> the parquet inputs the recompute would read are still materially incomplete). Recomputing now guarantees a full second
+> recompute after the fix. Resume trigger: P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`) Todo 9
+> flips green after the post-fix GW re-run; evidence
+> `plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md`. The working invocation
+> for when it resumes:
+> `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2025-09-01 --end 2025-11-30 --tables derived_features,fixture_features --force --vms 3 --env prod`
+> (SPOT; `--force` maps to `--no-skip-existing`; `odds_features` deliberately excluded — odds inputs unchanged by
+> enrichment). ML-readiness re-verify follows its completion.
+
 ## Scope
 
 Compute the three feature groups over 2015→present where upstream exists; pre-source-coverage cells inherit honest
