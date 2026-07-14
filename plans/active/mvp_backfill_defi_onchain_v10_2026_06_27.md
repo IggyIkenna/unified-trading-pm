@@ -2172,3 +2172,18 @@ it myself (a real code change + tests + QG, out of scope for this task's craft-s
 writes, no code changes, no VM actions this touch — plan/issue-doc corrections only (`unified-trading-pm` commits,
 pushed directly per the PM-plan carve-out). Calling `/skip-current-task` for `-002` itself since its actual blocker
 (`BLK-5b8c2938`) is unchanged.
+
+### 2026-07-14 (data_engineering slot-9) — 11th dispatch since run #6: unchanged blocker, cheap re-check only
+
+Picked up `mvp_backfill_defi_onchain_v10-002` on `/boot`. Fresh-pulled all 25 slot repos to `origin/live-defi-rollout`
+(all clean FF). `GET /api/state` confirms `BLK-5b8c2938` (relaunch-vs-accept-partial for the two operator-stopped G1
+VMs, `mtds-dex-swaps-backfill` / `mtds-perp-funding-backfill`) is still `answered_at: null` — unchanged since run #6.
+Checked `deployment-service` and `market-tick-data-service` `git log` on `origin/live-defi-rollout` — no commits
+touching the dex-swaps/perp-funding launchers, VM relaunch, or the DRIFT 429-fix todo filed by slot-14 last run;
+`gcloud` remains broken in this sandbox (same `snap-confine`/`cap_dac_override` failure every prior slot hit), so VM
+state wasn't independently re-confirmed via the API but nothing in git history indicates either stopped VM was
+relaunched. No new operator/main messages on this slot's boot/progress calls. Not re-running
+`measure_honest_coverage.py`/hygiene/phantom-reconcile — same reasoning as every prior run since #6: the gate already
+fails on real numbers; a relaunch decision, not a re-scan, is what would move it. Not filing a duplicate `/blocked` —
+`BLK-5b8c2938` is already open with recommendation A (relaunch), awaiting operator/main sign-off. Calling
+`/skip-current-task`.
