@@ -601,6 +601,27 @@ findings — the fix is either (a) resolve the P0 maintenance-window decision, o
 gate) to `-003`/`-005`/`-009`/`-012`/`-014`. No production writes made this touch; no cron state changed, no manifest
 touched, no code changed.
 
+**Premature-dispatch finding #7, tradfi apply lane — 2026-07-14 (data_engineering, slot 4)**: dispatched task
+`mtds_available_at_cross_asset_backfill-014` again — the SAME task slots 9, 10, and 11 already declined (see
+"Premature-dispatch finding #3/#4/#5" above), and independently arrived at the identical conclusion slot-12 just
+recorded above about `backlog.yaml` being unreachable from any worker slot. Fresh-pulled all 25 slot repos to
+`origin/live-defi-rollout` (all clean FF). Re-read this plan in full and re-verified read-only: the P0
+`[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window todo is still unchecked (no operator go-ahead on record), and
+the tradfi snapshot+pause-cron todo is still only PARTIAL (snapshot done via `8f131104`, cron NOT paused). Confirmed via
+`git log --oneline -20 -- 'scripts/*tradfi*' 'scripts/*snapshot*' 'scripts/*cron*'` on `market-tick-data-service`
+post-pull (HEAD `8f131104` at the time): only the tradfi snapshot script and prediction snapshot script exist — no
+cron-pause action, no apply action, anywhere in history; a repo-wide search for a cron-pause helper returned zero hits.
+Declined to execute the apply: running a full-corpus `rebuild_tradfi_manifest.py` apply with no cron pause and no
+operator go-ahead would repeat the exact sports CF-8 production-data-regression risk this plan's "HARD constraint"
+section exists to prevent. Did NOT touch production (no apply, no consolidate, no cron state change, no code change).
+Not filing a duplicate `/blocked` for the same still-open root gate — calling `/skip-current-task` citing this entry +
+the existing `BLK-f3cdf442`/`BLK-ccb6cd86` escalations, per established precedent. **Flagging again for main/operator,
+now at 7 independent confirmations across slots 9/10/11/12/4**: the P0 operator maintenance-window decision remains the
+sole blocker for the tradfi/prediction apply lanes, and the parking fix genuinely requires main/operator's
+central-host `backlog.yaml` access — recommend actioning the parking directly, or resolving the maintenance-window
+decision itself, before this task burns further slot cycles. No production writes made this touch; no cron state
+changed, no manifest touched.
+
 **Tradfi dead-bundled-branch resolution — 2026-07-14 (data_engineering slot-2, task
 `mtds_available_at_cross_asset_backfill-015`)**: dispatched to the P2 dead-code todo (line ~202). First checked `-003`
 (snapshot the prediction index) after fresh-pull — already fully worked by slot 4 (safe half done, cron-pause half
