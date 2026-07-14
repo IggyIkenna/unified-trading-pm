@@ -121,6 +121,43 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-14 12:28 UTC — data_engineering slot-16 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-12's check ~23min earlier, steady progress, no new action)
+
+**Todo 1 (compute features 2015→present) — fast re-verify only, no new finding. Checkbox NOT flipped.**
+
+Re-verified via non-snap `gcloud`/`gsutil` (`/home/ubuntu/google-cloud-sdk/bin/`, `ikenna@odum-research.com`,
+`central-element-323112`):
+
+- `gcloud compute instances list --filter="name~fss OR name~features"`: same **3** VMs every recent dispatch has found
+  (`features-sports-sports-20260714-085642/-085703/-085726`), all `RUNNING`, same `creationTimestamp` — no death, no
+  preemption.
+- Features bucket unique-date count: **2,502** (up from slot-12's 2,471 ~23 min earlier, +31) — steady forward progress,
+  no stall. History is ~4,210 days total; coverage now ~59.4% (2,502/4,210).
+- **Went past `RUNNING` status**: tailed all 3 GCS-hosted `run.log`s at `date -u` = 2026-07-14T12:28Z — all
+  wall-clock-fresh (heartbeats/log lines within ~1 min of check time), no crash signature. `-085642` mid
+  `season_context`/`halftime`/`multisource_xg`/`team_derived` calculator writes with the known, already-documented
+  all-NaN/all-zero honest-absence pattern (SCHEMA VIOLATION log lines are the expected recovery=skip path, not errors);
+  `-085703` mid reference-data reads on 2018-04-08 (honest-absence warnings for 9/17 missing entity types, not errors),
+  fresh `PIPELINE_HEARTBEAT` at 12:26:15Z; `-085726` mid fixture_features writes + reference-data reads on 2019-12-07,
+  no crash signature. No OOM/crash signature on any of the 3.
+- Checked for new issue docs filed today: `sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md` (slot-12's own
+  fix, already known) and `sports_phantom_audits_reference_not_marketdata_2026_07_14.md` (unrelated — phantom-audit
+  bucket-routing doc, operator-decided "leave code as-is, document only", not a Todo 1 blocker).
+
+**What I did NOT do**: did not relaunch or touch any of the 3 healthy shards (none dead, steady progress). Did not
+re-run `check_pipeline_completeness.py` (Todo 2/gate) — would just reconfirm the same BLOCKED-PREREQ verdict at real
+compute cost; history is still only ~59% covered. Did not flip Todo 1 — compute is still genuinely multi-day and in
+progress.
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (should climb from 2,502).
+Fleet is healthy — no gap-fill relaunch needed this cycle. Once the bucket approaches the full ~4,210-day span, re-run
+`check_pipeline_completeness.py` (Todo 2) and reassess Todo 1 + Todo 3 for real.
+
+Checkbox NOT flipped (compute genuinely in progress, no new finding). No repo code commit this entry (read-only
+verification only); this plan-doc edit ships via the `docs(plans):` carve-out. `/skip-current-task` taken so this slot
+moves to other dispatchable work.
+
 ### 2026-07-14 11:52-12:05 UTC — data_engineering slot-12 (Todo 3 re-dispatch — still BLOCKED-PREREQ per established pattern; found + fixed a new silent-NaN correctness bug in travel_calculator, filed follow-up issue doc, checkbox NOT flipped)
 
 **Todo 3 (features manifest clean over history) — still BLOCKED-PREREQ (gate needs full Todo 1 completion). Checkbox NOT
