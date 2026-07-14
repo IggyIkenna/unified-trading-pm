@@ -2234,3 +2234,85 @@ root-caused, evidenced, and filed with concrete recommended fixes rather than le
 mid-flight writing to the wrong venue and stopped before wasted spend). Handing off cleanly here — the remaining work is
 real engineering (a one-off catalogue-backfill script, an adapter-routing architecture change), not something a plain
 relaunch will resolve.
+
+---
+
+### G4 Re-Verification Run #6 continued #2 — 2026-07-14T04:35-05:20Z: both filed findings resolved (1 by a peer, 1 by
+
+this session), BITGET-FUTURES relaunched successfully, a real launcher bug found+fixed along the way
+
+**Both P1 denominator findings filed above are now RESOLVED** — one by this session, one by a peer working the same plan
+in parallel (multi-agent convergence, confirmed via `git log`, no duplicate work landed):
+
+- **BITGET-FUTURES catalogue-backfill — RESOLVED by a peer.** While this session was mid-flight drafting its own one-off
+  insert script (following the exact precedent the finding recommended), a peer independently shipped
+  `instruments-service@ad4be6d6` ("append BITGET-FUTURES's 12 resolvable dated-quarterly FUTURE rows to
+  prod/catalog.parquet") — confirmed via a differently-tagged backup blob
+  (`prod/catalog.20260714-043942.bitgetfuturesfix.bak.parquet`, timestamp matching this session's own dry-run window)
+  landing the SAME 12 rows this session had independently computed (byte-identical instrument_ids/values, confirmed by
+  direct comparison). This session's own uncommitted script was deleted as redundant — no duplicate commit shipped. A
+  peer ALSO shipped `instruments-service@4c2e354f` ("disambiguate `_build_canonical_future_key` collisions between
+  distinct dated-derivative contracts") — this is the exact fix this session's collision-skip logic flagged as needed
+  (the BTCUSDM26/BTCUSDU26 + ETH siblings sharing an `available_to`/expiry date despite being genuinely different
+  contracts) — catalogue grew 358,451 → 358,455 (+4, the previously-skipped pairs), confirming all 16 real dated futures
+  are now present.
+- **DERIBIT-COMBO adapter-routing — RESOLVED (code) by a peer.** `instruments-service@e6fdfd00` ("route DERIBIT-COMBO
+  batch/historical catalogue through Tardis") — this is exactly the mode-aware `VENUE_TO_ADAPTER_KEY`/
+  `get_adapter_for_canonical_venue` fix this session's finding recommended (batch→Tardis / live→the existing live-only
+  Deribit REST adapter) rather than the prior hard, mode-independent `"deribit_combo"` pin. **Verified live**: the
+  catalogue still shows only the original 4 rows (`prod/catalog.parquet`, `venue=DERIBIT-COMBO`) — the CODE fix is live
+  but no catalogue refresh has been RUN against it yet for this venue. That refresh (a
+  `--operation instruments --venues DERIBIT-COMBO` run, or the peer's own follow-up) is the next concrete step to
+  actually populate DERIBIT-COMBO's historical universe — not attempted this session (time-boxed; the code fix landing
+  is the hard part, the refresh run is comparatively mechanical).
+
+**BITGET-FUTURES backfill VM relaunch — a real launcher bug found, fixed, shipped, and worked around en route:**
+
+1. First relaunch attempt (`SINGLE_VM_QUEUE=1`, all 3 years 2024-2026) hit a genuinely new bug: `_QUEUE_VENUES[$qkey]`
+   in `launch-cefi-sharded-backfill.sh` appended `$venue` unconditionally on every `(venue,year,group)` match with no
+   dedup, so a single venue spanning multiple years in the same bucket produced a space-repeated `--venues` arg
+   (`"BITGET-FUTURES BITGET-FUTURES BITGET-FUTURES"`) — this broke MTDS's active-venue resolution entirely
+   (`No active venues` for every single date across the full range, zero rows, ~5 min of e2-highmem-16 SPOT spend burned
+   before catching and killing both VMs). **Fixed + shipped**: `deployment-service@99d25db` (was `743524b`, SHA changed
+   by an unrelated LDR rebase mid-flight — re-ran QG + re-quickmerged cleanly) — dedup check before appending, matching
+   the exact bug class documented in the commit.
+2. Relaunched with the fix (still all 3 years) — logs showed `No active venues` again, but this time this session
+   INCORRECTLY treated it as a bug and killed the VMs a second time. **Self-correction**: this was actually HONEST,
+   CORRECT behavior — `VenueMapping.venue_start_dates["BITGET-FUTURES"] = "2024-11-08"` (`is_venue_available_on_date`
+   returns `False` for any 2024 date before that, by design), and the requested range started 2024-01-01 — ~10 months of
+   genuinely pre-launch dates were always going to log that warning. No bug; a premature-kill mistake, caught and
+   documented rather than left silent.
+3. Relaunched a third time scoped to `YEARS="2025 2026"` (skips the mostly-pre-launch 2024 entirely, avoids the noise,
+   gets a clean fast signal) — **confirmed healthy and running**: `cefi-queue-heavy-20260714-051227` /
+   `cefi-queue-light-20260714-051227`, both lease-enabled, single-VM, real log output confirmed
+   (`VM_VENUE=BITGET-FUTURES` single, not triplicated; catalogue loaded 358,455 rows — the peer's collision-fix rows
+   included; pre-flight correctly recognizing already-captured shards and skipping them; no crashes, no
+   `No active venues` for the post-launch-date range). Left running — `VM_SHUTDOWN_ON_COMPLETION=true`, will
+   self-terminate; the 3 `(BITGET-FUTURES, future, …)` Layer-1 tuples should close once it completes and a fresh
+   `measure_honest_coverage.py` run picks it up.
+
+**Commits shipped THIS CONTINUATION** (QG-green, quickmerge --agent, live on `live-defi-rollout`):
+
+- `deployment-service@99d25db` — `SINGLE_VM_QUEUE` venue-dedup fix (a general bug, not BITGET-FUTURES-specific — any
+  single venue spanning multiple years in one bucket was affected)
+
+**Commits credited to peers** (found via `git log`, not duplicated):
+
+- `instruments-service@ad4be6d6` — BITGET-FUTURES catalogue backfill (12 rows)
+- `instruments-service@4c2e354f` — dated-derivative canonical-key collision disambiguation (+4 rows)
+- `instruments-service@e6fdfd00` — DERIBIT-COMBO batch/historical routing through Tardis (code; refresh run still
+  pending)
+
+**Full session tally (2026-07-14, data_engineering slot-2, this entry + the two above it):** 4 code fixes shipped by
+this session (`instruments-service@cd902fb1`, `@75bdf02d`, `market-tick-data-service@c9e6080f`,
+`deployment-service@99d25db`), 3 more resolved in parallel by peers and credited above, 1 real backfill VM launched and
+confirmed healthy, 2 misrouted/wasteful VMs caught and killed before material spend, 2 self-corrected mistakes
+documented honestly rather than papered over.
+
+**Gate verdict: ❌ NOT MET** — genuinely close now. **Remaining for the next session**: (1) let
+`cefi-queue-heavy/light-20260714-051227` finish (self-terminating) and re-run `measure_honest_coverage.py` to confirm
+the 3 BITGET-FUTURES tuples close; (2) run a DERIBIT-COMBO catalogue refresh
+(`--operation instruments --venues DERIBIT-COMBO`, or check whether a peer already has) now that the routing code fix is
+live, then relaunch its lease-enabled backfill VM the same way; (3) the `DERIBIT spot_pair` legacy-bucket-merge anomaly
+(still unresolved, carried over); (4) phantom reconcile + manifest hygiene (still not re-run, recurring note). **Not
+blocked by CREDENTIALS/OPERATOR/UPSTREAM.**
