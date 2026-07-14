@@ -2847,3 +2847,16 @@ spot_pair deaths (tiny 10-instrument scope → few uploads). Fix shipped (deploy
 `STALL_PROGRESS_REGEX` env override in the cefi launcher. Retry launched: `cefi-queue-heavy-20260714-180440` (RUNNING,
 lease-ON, regex `uploaded|sentinel fan-out` — scan advancement counts as progress, 403-retry churn still does not).
 Guard passed 2+1=3.
+
+### /autonomous loop armed — coverage checkpoint 2026-07-14T18:17Z (doc-reconciliation session)
+
+Operator invoked /autonomous: drive the cefi Tardis waves to completion (this lane: majors mop-up + futures tail + final
+re-measure; Run-#7 lane keeps bitget + DERIBIT spot_pair). Checkpoint vs the 11:08Z census (`measure_honest_coverage`,
+fresh run): reachable coverage 99.33% (captured 2,312,384, af 15,712, eu still 0-and- untrustworthy — legacy-bucket
+merge still disabled); Layer-1 98.63% (up from 97.26% — DERIBIT spot_pair tuples now have rows from the Run-#7
+attempts). Deltas: bitget af UP (~+1.4k across 3 dts) with captured creeping (+~350) — 403-rotation churn records
+failures as af while grinding; majors-scope af UNCHANGED (598/471/471/471/139 — the majors VM is ~5.7h in, still
+scanning early-2020 OKX-SPOT; full-range skip-scans are slow by design). Fleet at cap: bitget-2025-heavy (Run-#7),
+majors queue VM, futures-tail retry (18:04, new stall regex, healthy). Loop: event watcher on fleet <3 + hourly fallback
+wake; termination = both my queue VMs terminal + af for my scopes closed or honestly explained + final verdict in this
+log.
