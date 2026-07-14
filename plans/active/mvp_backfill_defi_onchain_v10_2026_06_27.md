@@ -185,7 +185,7 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
         (2026-07-14): this todo re-dispatched 20+ times because every worker cited a `prereqs.conditions` field that
         **does not exist** in the backlog schema (the real field is `prereqs.prerequisites` —
         `agent-orchestrator/server/backlog.py` `TaskPrereqs`; already diagnosed as "Defect A" in
-        `agent-orchestrator/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, RULES.md §4
+        `unified-trading-pm/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, RULES.md §4
         already corrected `unified-trading-pm@f1585fb59`) — so the condition a slot created via
         `POST /api/prerequisites/` was silently never attached to this task and the dispatcher kept offering it
         (`_prereqs_met()` is vacuously `True` on an empty `prerequisites` list regardless of the condition's value). The
@@ -2038,23 +2038,30 @@ the WRONG field: `prereqs.conditions`. The actual backlog task schema (`agent-or
 `TaskPrereqs`) only has `prerequisites: list[str]` — `conditions` is silently dropped (pydantic default `ignore`), so
 every attempted fix in the chat/blocked-question queue was proposing an edit that would have done nothing even if
 actioned. This is already tracked as "Defect A" in
-`agent-orchestrator/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, and RULES.md §4 was
+`unified-trading-pm/plans/active/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md`, and RULES.md §4 was
 already corrected (`unified-trading-pm@f1585fb59`) — the 20 dispatches simply predate/never re-read the corrected
-RULES.md. Confirmed via code read (`dispatch.py` `_prereqs_met()`):
-`all(prerequisites.get(cond, False) for cond in task.prereqs.prerequisites)` is vacuously `True` on an EMPTY list — the
-task was always going to keep dispatching regardless of the condition's value, so even a corrected field-name edit to
-`backlog.yaml` wouldn't have been the minimal fix. **Also confirmed**: `regen_backlog_from_plan.py` has NO plan-markdown
-syntax for named boolean conditions at all (only `depends_on:`/`gate_on_depends:` frontmatter for task-ID gating, or
-`sequential: true`) — so there was never a way to express "gate on an operator ruling" via a condition object from
-plan-markdown, only via the `BLOCKED-<TOKEN>` marker convention (`_NON_DISPATCHABLE_RE`), which every prior dispatch
-overlooked as an option. **Fix applied**: added `**BLOCKED-OPERATOR-DECISION**` to the G1.5 sub-todo's FIRST LINE (the
-regex match is per-physical-line via `_UNCHECKED_RE`, so the marker must be on the `- [ ]` line itself, not a wrapped
-continuation — confirmed by reading the regex). This is a pure plan-markdown change, fully within worker/this-session
-scope — no `backlog.yaml` edit, no `POST /api/backlog/reload` call. Once this commit reaches the branch the backlog
-regenerates from and the next skip-time re-check (`task_still_dispatchable()`) runs against any slot holding the task,
-the brief will no longer appear among the plan's dispatchable todos and the TaskRow will be auto-scrubbed — no
-main/operator action required to stop the thrash. (Genuinely main/operator-only, left undone: actually ruling on the
-Helius throughput a/b/c decision — that's a real cost/infra call, not a plan-mechanics problem.)
+RULES.md. **That same issue doc also found (2026-07-12, all 4 todos closed) that even the CORRECTLY-named field would
+not have durably fixed this**: hand-edited `backlog.yaml` fields are unconditionally re-derived from the plan on every
+regen tick UNLESS explicitly preserved, and only `priority`/`priority_override` (fixed via `agent-orchestrator@8dd5763`)
+made that preserved-set — `prereqs.prerequisites` itself is NOT preserved across a regen tick, so a hand-edited
+condition attachment would have been silently wiped again within minutes regardless of field-name correctness. This
+means the plan-markdown `BLOCKED-<TOKEN>` marker (read fresh from the plan every regen cycle, never "hand-tuned" onto a
+derived row) was the only durable fix available — not just the most convenient one. Confirmed via code read
+(`dispatch.py` `_prereqs_met()`): `all(prerequisites.get(cond, False) for cond in task.prereqs.prerequisites)` is
+vacuously `True` on an EMPTY list — the task was always going to keep dispatching regardless of the condition's value,
+so even a corrected field-name edit to `backlog.yaml` wouldn't have been the minimal fix. **Also confirmed**:
+`regen_backlog_from_plan.py` has NO plan-markdown syntax for named boolean conditions at all (only
+`depends_on:`/`gate_on_depends:` frontmatter for task-ID gating, or `sequential: true`) — so there was never a way to
+express "gate on an operator ruling" via a condition object from plan-markdown, only via the `BLOCKED-<TOKEN>` marker
+convention (`_NON_DISPATCHABLE_RE`), which every prior dispatch overlooked as an option. **Fix applied**: added
+`**BLOCKED-OPERATOR-DECISION**` to the G1.5 sub-todo's FIRST LINE (the regex match is per-physical-line via
+`_UNCHECKED_RE`, so the marker must be on the `- [ ]` line itself, not a wrapped continuation — confirmed by reading the
+regex). This is a pure plan-markdown change, fully within worker/this-session scope — no `backlog.yaml` edit, no
+`POST /api/backlog/reload` call. Once this commit reaches the branch the backlog regenerates from and the next skip-time
+re-check (`task_still_dispatchable()`) runs against any slot holding the task, the brief will no longer appear among the
+plan's dispatchable todos and the TaskRow will be auto-scrubbed — no main/operator action required to stop the thrash.
+(Genuinely main/operator-only, left undone: actually ruling on the Helius throughput a/b/c decision — that's a real
+cost/infra call, not a plan-mechanics problem.)
 
 **2. 429-burst root cause: a real code defect, not purely a Helius plan ceiling.** Read
 `market_tick_data_service/cli/handlers/solana_defi_drift.py::_resolve_helius_rows` (the Drift V2 Helius batch-resolve
