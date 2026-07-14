@@ -251,7 +251,16 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
       `pipeline_mode_source_batch_live_replay_standardisation` standalone + `sports_manifest_canonicalisation`
       delegated + `mdps_features_reduced_artifact_tracker` cross-epic tracker). The `related`/`related_plans`
       frontmatter arrays did not list the 9 folded + 5 archived plans to begin with (checked — they were never in that
-      array), so no frontmatter array edit was needed. — unified-trading-pm@8eb5293b3.
+      array), so no frontmatter array edit was needed. — unified-trading-pm@8eb5293b3. > **[2026-07-14 correction,
+      doc-reconciliation finding 170]**: the "now actually true (no orphaned > `parent_epic: mtds_mdps_master` plans
+      left outside M-1/M-2/the operator-kept exception)" reconfirmation above > (was: presented as a durable
+      reconfirmation) held only at write-time (09:29:58 UTC) — two brand-new same-day > plans
+      (`aster_cefi_data_defi_bucket_migration_2026_07_13`, `bybit_futures_chain_write_shape_migration_2026_07_13`, >
+      both filed hours later, both `parent_epic: mtds_mdps_master`, both outside the named roster), plus the >
+      pre-existing `plans/active/issues/*.md` scope gap in this plan's own candidate-enumeration grep (it never >
+      scanned that directory), show the claim needs a recurring re-derivation, not a one-time reconfirmation. See the >
+      parallel 2026-07-14 correction on `plans/epics/mtds_mdps_master.md`'s roster banner (findings 168/176/177) for >
+      the current re-derivation command.
 - [x] [DOCS] P1. **Post-phase codex-alignment check** — grep `codex/` for stale references to any folded/archived plan
       name from this mapping; update or SUPERSEDED-banner as needed. — **DONE.** Grepped `codex/` for all 14
       folded/archived plan slugs; found 10 codex docs with `plans/active/<slug>.md` path references that would 404

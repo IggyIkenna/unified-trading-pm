@@ -123,7 +123,9 @@ related_plans:
     ../../codex/11-project-management/foundation-completion-gate-discipline.md,
     ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
-last_updated: 2026-06-26
+last_updated:
+  2026-07-14 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
+  # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped)
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 ---
@@ -145,7 +147,12 @@ locked_since: 2026-05-20
 >   "MTDS/MDPS tech-debt & coverage") — **⏸️ DEFERRED 2026-06-26 (operator, non-essential)**: file-size splits + polars
 >   adapter seam + coverage/QG residuals (absorbed `mdps_adapter_protocol_pandas_to_polars`,
 >   `mtds_coverage_75_and_codex_zero`, `mdps_coverage_85pct`). Parked tech-debt; does not block data correctness or
->   backfill. The live MTDS-ship blocker is the separate issue `issues/fleet_mtds_qg_red_…`, NOT this.
+>   backfill. The live MTDS-ship blocker is the separate issue `issues/fleet_mtds_qg_red_…`, NOT this **(was: presented
+>   as a current/live blocker — corrected 2026-07-14, doc-reconciliation finding 172: that issue was RESOLVED
+>   2026-06-30, QG green + Cloud Build SUCCESS, archived at
+>   `plans/archive/issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`, confirmed by a subsequent
+>   green-QG MTDS ship 2026-07-06 (`market-tick-data-service@f4dab8f9`); see `mtds_file_size_refactor_2026_06_08.md`'s
+>   2026-07-12 correction, finding 186 — no live MTDS-ship blocker remains from that issue)**.
 >
 > Also archived: `mtds_backfill_phase3` + `mdps_backfill_phase3` (DONE/SUPERSEDED). Live blocker issues stay as issue
 > docs: `issues/features_delta_one_tradfi_mdps_dependency_gap`, `issues/fleet_mtds_qg_red_…`,
@@ -192,6 +199,18 @@ locked_since: 2026-05-20
 > `mdps_features_reduced_artifact_tracker_2026_06_28` (cross-epic tracker) — no orphaned `parent_epic: mtds_mdps_master`
 > plans remain outside this set. See `plans/active/mtds_consolidation_foldin_mapping_2026_07_12.md` for the full
 > mapping + execution shas.
+>
+> **[2026-07-14 correction]**: the "no orphaned `parent_epic: mtds_mdps_master` plans remain outside this set" claim
+> above (was: presented as exhaustive) was already stale within hours of being written and has no recurring
+> re-verification mechanism. Two same-day plans — `aster_cefi_data_defi_bucket_migration_2026_07_13` and
+> `bybit_futures_chain_write_shape_migration_2026_07_13` (both `status: active`, both `parent_epic: mtds_mdps_master`,
+> filed the same day, hours after this banner) — sit outside the named roster (doc-reconciliation findings 176/177).
+> Separately, the roster's candidate-enumeration only ever scanned `plans/active/*.md` non-recursively and never
+> `plans/active/issues/*.md`, so issue docs carrying `parent_epic: mtds_mdps_master` (e.g.
+> `issues/cefi_universe_capture_rule_2026_06_23.md`, `status: open`, unfinished P0 IS-layer todos) were silently
+> excluded from the roster too (doc-reconciliation finding 168). Read the roster above as "themed-consolidation
+> survivors as of 2026-07-13", not as an exhaustive enumeration of live `parent_epic: mtds_mdps_master` work — re-derive
+> the current live set via `rg -l '^parent_epic: mtds_mdps_master' plans/active/*.md plans/active/issues/*.md`.
 
 > **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing contained within PM active plans which
 > can reference issues and audits, but I should be able to go to an orchestrator with the problem and use ALL the PM

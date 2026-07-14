@@ -770,7 +770,11 @@ script + its launch-date floor handling.
 carries the canonical RESOLVED block. Code commits:
 
 - `instruments-service@1a90185` — Bug 3: `get_protocol_floor_date()` consults UAC `PROTOCOL_LAUNCH_DATES` SSOT first;
-  AAVE V3 ETHEREUM floor corrected from 2023-01-27 (legacy) to 2022-03-14 (UAC mainnet deploy).
+  AAVE V3 ETHEREUM floor corrected from 2022-03-14 (legacy, mis-aligned with the L2 cohort) to 2023-01-27 (UAC-verified:
+  AAVE V3 ETH subgraph earliest `reserveParamsHistoryItems` event is 2023-01-27 08:00:11 UTC; live
+  `unified-api-contracts/registry/chain_env.py:175-189`). (was: "corrected from 2023-01-27 (legacy) to 2022-03-14" —
+  direction was backwards; this line disagreed with this epic's own L1278 "AAVE_V3 ETHEREUM date was 49 days wrong
+  (corrected 2023-01-27)" and with the live UAC SSOT. [SYNCED 2026-07-14, findings 39+44])
 - `market-tick-data-service@d2f365e` — Bugs 1+2: `_query_and_parse` cascade extended to AAVE V3 (native → Messari
   fallback); new `SubgraphSchemaError` distinguishes schema-drift from transient errors so cascade re-raises through
   `record_failed` (writegate Phase 2.A) instead of swallowing as `record_empty`.
@@ -1712,12 +1716,15 @@ children):** [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manife
 
 ## P0 — must complete before next foundation gate
 
-### [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md)
+### [`defi_governance_params_refresh_2026_06_20`](../archive/2026_06/defi_governance_params_refresh_2026_06_20.md) — ✅ COMPLETE (was: framed here as active P0 foundation-gate item)
 
-**status**: active · **estimate**: 9 cal AI-days (class: brand-new). Aave/Compound/Morpho governance-param event
-listener → time-versioned `governance_params` parquet → features-onchain APR-calc + strategy-sizing asof-read
-migration + new UAC `GOVERNANCE_PARAMS_CHANGED` event. GATES the Cat-B fallback removal in
-`defi_onchain_derivable_values_and_date_drift`.
+**status**: complete · nature: record (moved to `archive/2026_06/`; all 6 P0/P1 phases shipped — mtds / features-service
+/ strategy-service / unified-api-contracts, QG green each repo). Aave/Compound/Morpho governance-param event listener →
+time-versioned `governance_params` parquet → features-onchain APR-calc + strategy-sizing asof-read migration + new UAC
+`GOVERNANCE_PARAMS_CHANGED` event. The Cat-B fallback removal gate in `defi_onchain_derivable_values_and_date_drift` is
+now UNBLOCKED (Phase 3 shipped, features-service@live-defi-rollout). Do NOT dispatch from here. [SYNCED 2026-07-14,
+finding 45 — other `../active/defi_governance_params_refresh_2026_06_20.md` links elsewhere in this epic (frontmatter
+`related`/`related_plans` lists, historical EXTRACTED banners) are non-dispatch pointers, left as-is.]
 
 ### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 
@@ -1850,21 +1857,21 @@ plan (DO NOT move without operator ack)
 
 Active sub-plans owned by or closely coordinated with this epic:
 
-| Plan                                                                                                                                   | Role                                                                                                                | Status      |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active      |
-| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                            | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | Active      |
-| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active      |
-| [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active      |
-| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)            | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active      |
-| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active      |
-| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active      |
-| [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active      |
-| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)            | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | ✅ Archived |
-| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active      |
-| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active      |
-| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | Active      |
-| [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active      |
+| Plan                                                                                                                                   | Role                                                                                                                | Status                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [`defi_catalogue_chain_primitives_2026_05_10.md`](./defi_catalogue_chain_primitives_2026_05_10.md)                                     | Chain primitive registry + UAC capability declarations per-chain — feeds lending-indices and oracle prices coverage | Active                                                                                            |
+| [`defi_simulation_realism_2026_05_10.md`](../archive/defi_simulation_realism_2026_05_10.md)                                            | Gas cost modelling + slippage + on-chain execution realism for DeFi backtests                                       | ✅ Archived (was: Active — file frontmatter is `status: complete`; SYNCED 2026-07-14, finding 47) |
+| [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](./defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md) | Archetype naming canonicalisation + full venue × archetype matrix — Stream A/B naming and config-grid               | Active                                                                                            |
+| [`defi_recursive_borrow_archetypes_2026_05_10.md`](./defi_recursive_borrow_archetypes_2026_05_10.md)                                   | CARRY_RECURSIVE_BORROW family (lending-only + perp-hedged) — backtested, code-complete by May-23                    | Active                                                                                            |
+| [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)            | ARBITRAGE_PRICE_DISPERSION archetype finalisation — cross-venue funding spread config + execution wiring            | Active                                                                                            |
+| [`wallet_treasury_client_flow_2026_05_10.md`](../archive/wallet_treasury_client_flow_2026_05_10.md)                                    | Wallet / treasury client capital-flow wiring for DeFi — on-chain balance tracking + capital-allocation matrix       | Active                                                                                            |
+| [`wallet_treasury_post_cutover_custody_signing_2026_06_01.md`](../archive/wallet_treasury_post_cutover_custody_signing_2026_06_01.md)  | Post-cutover Copper + CEFFU custody signing migration (June-1 scope, deferred from May-23)                          | Active                                                                                            |
+| [`hedge_ratio_snapshot_persistence_2026_05_13.md`](./hedge_ratio_snapshot_persistence_2026_05_13.md)                                   | Hedge-ratio snapshot persistence for DeFi perp shorts — feeds carry_staked_basis live position sizing               | Active                                                                                            |
+| [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)            | API keys + wallet accounts readiness gate — pre-live credential wiring across all DeFi venues                       | ✅ Archived                                                                                       |
+| [`solana_amm_coverage_expansion_2026_05_13.md`](../archive/solana_amm_coverage_expansion_2026_05_13.md)                                | Solana AMM coverage expansion — Raydium / Orca / Meteora OHLCV + pool depth for carry_staked_basis                  | Active                                                                                            |
+| [`solana_perp_dex_adapters_2026_05_13.md`](../archive/solana_perp_dex_adapters_2026_05_13.md)                                          | Solana perp DEX adapters — Drift + Zeta OHLCV + funding rates for DeFi hedge legs                                   | Active                                                                                            |
+| [`solana_restaking_rewards_coverage_2026_05_13.md`](../archive/solana_restaking_rewards_coverage_2026_05_13.md)                        | Solana restaking rewards coverage — JitoSOL / mSOL / bSOL restaking yield MTDS data                                 | ✅ Archived (was: Active — file frontmatter is `status: complete`; SYNCED 2026-07-14, finding 48) |
+| [`dex_perp_and_venue_data_expansion_2026_05_12.md`](./dex_perp_and_venue_data_expansion_2026_05_12.md)                                 | DEX perp and venue data expansion — Lighter / Pacifica / Extended forward-poll + historical replay completion       | Active                                                                                            |
 
 ## Archived plans
 
