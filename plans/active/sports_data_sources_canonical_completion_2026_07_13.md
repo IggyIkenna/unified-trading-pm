@@ -184,7 +184,16 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `AUTONOMOUS_AGENT_RULES.md` rule 11 (prove the fix against a representative sample from ≥2 other asset_groups, not
       just sports, before considering it done). Until fixed, `expected_unattempted` counts will not reflect real
       backfilled coverage for any source/data_type where a captured row is written with different NULL/`""` conventions
-      than its original enumerator seed.
+      than its original enumerator seed. **🔴 BLOCKED-OPERATOR-DECISION 2026-07-14 (slot-5): this diagnosis is
+      DISPROVEN. The NULL/`""` normalization already exists + is complete (`manifest_consolidator._dedup_key_sql`,
+      applied to every `PARTITION BY` incl. the `--force` full-rebuild, landed unified-trading-library@f5ec2291
+      2026-07-06 — a week BEFORE the 2026-07-13 observation). REPRODUCED real cause: the split is on `service_name` (a
+      BASE dedup key) — the backfill wrote `service_name=backfill-teams-61-leagues` vs the enumerator seed's
+      `instruments-service`, so the twins never share a dedup group. The plan's own aggregate (165,148 keys with >1
+      status on a key EXCLUDING `service_name`) is the exact fingerprint. Fix = a fleet-wide dedup-key semantics ruling
+      (service_name = identity or provenance, like `source` which is already excluded). Full evidence + options A/B/C/D:
+      `plans/active/issues/manifest_consolidator_service_name_dedup_split_2026_07_14.md`; operator /blocked posted from
+      slot-5 (BLK-9fc56b5c). Do NOT re-dispatch as a NULL/`""` fix — it is a no-op for this symptom.**
 - [ ] [DATA] P3. **api_football TEAMS: 8 cup/one-off-competition leagues return 0 teams from `/teams` (NEW 2026-07-13,
       found during the 61-league backfill).** `COPA_LIGA_PROFESIONAL`, `COPA_MX`, `EMPEROR_CUP`, `GREEK_SUPER_LEAGUE_2`,
       `J2_LEAGUE`, `SCOTTISH_LEAGUE_CUP`, `SUPERCOPA_ESPANA`, `SUPERCOPPA_ITALIANA` — confirmed live via the backfill's
