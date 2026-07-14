@@ -11,7 +11,7 @@ summary: >
   /api/data-status/instrument-availability) is broken for ASTER, and for any venue outside a hardcoded 12-venue
   substring list, because it derives asset_group from a hardcoded per-venue lookup instead of the canonical
   VENUE_TO_ASSET_GROUP registry, and probes a flat non-canonical GCS path instead of reading the availability manifest.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi, tradfi]
 stage: [data]
@@ -31,7 +31,7 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-13
 locked_by:
-resolved_by:
+resolved_by: slot-13 (2026-07-14), deployment-api@d3a64da
 ---
 
 # deployment-api legacy `/instrument-availability` endpoint has a hardcoded venue→asset_group gap
@@ -91,7 +91,16 @@ delegating to the same manifest-backed path the `/drilldown` endpoint already us
       replace the hardcoded 12-venue substring list with a lookup against the canonical UAC `VENUE_TO_ASSET_GROUP`
       registry (same source `instruments-service` and MTDS already use) so newly-onboarded venues (ASTER included)
       resolve correctly. — deployment-api@38213b6
-- [ ] [BACKEND] P3. `deployment-api/deployment_api/services/data_query_service.py:684-705`
+- [x] ✅ [BACKEND] P3. `deployment-api/deployment_api/services/data_query_service.py:684-705`
       `_check_daily_availability()`: fix the flat path-shape probe (or delegate to the manifest-backed
       `read_availability_index()` path the `/drilldown` endpoint uses) so this endpoint reflects real data instead of
-      being stale/broken for effectively every instrument. (repo: deployment-api)
+      being stale/broken for effectively every instrument. (repo: deployment-api) — **DONE, slot-13,
+      `deployment-api@d3a64da`.** Delegated to `read_availability_index`
+      (`deployment_api.services.manifest_source.     read_manifest_index`) — the exact manifest-backed path
+      `/drilldown/{service}/{asset_group}` already uses — filtered by
+      `venue`/`instrument_id`/`instrument_type`/`date`/`data_type`, with `capture_status == "captured"` as the
+      availability signal (pre-v5 rows without `capture_status` default to captured, matching the legacy convention used
+      elsewhere in the data-status stack, e.g. `_aggregate_counts` in `data_status_hierarchical.py`). Updated the 9
+      existing tests to mock `read_availability_index` with a manifest-shaped DataFrame instead of `object_exists` (now
+      unused, removed from imports); added 2 new tests (manifest-backed lookup for a non-hardcoded venue,
+      `capture_status` filtering). Full `quality-gates.sh` green. Both todos in this issue doc are now done.
