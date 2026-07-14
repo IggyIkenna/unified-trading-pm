@@ -215,9 +215,13 @@ on being shipped).
 - **ODDS = MTDS for RAW bookmaker tick odds (odds-api).** EXCEPTION (operator 2026-06-27): footystats' own _predictive_
   odds + `PREDICTIONS` stay in IS (least-code, predictive reference — not raw market ticks). P0 KEEPS footystats `ODDS`
   (the earlier #6 removal is reversed).
-- **Do NOT run forward phantom `--apply` on sports until P0 #5 ships** (`candidate_parquet_paths` must emit every real
-  on-disk shape or the forward pass false-flags ~145k captured rows → `attempted_failed`). The reverse
-  `--unphantom-only --apply` heal IS safe pre-#5.
+- **Forward phantom `--apply` on sports is UNBLOCKED — P0 #5 shipped** (was: "Do NOT run forward phantom `--apply` on
+  sports until P0 #5 ships" — corrected 2026-07-14, doc-reconciliation vr2#216: `candidate_parquet_paths` now emits all
+  3 real on-disk shapes, `unified-api-contracts@c7494a2a` + `instruments-service@860daca`, per the ✅ complete P0 row
+  above; forward dry-run reads ≈0 phantom for the affected shapes, e.g. ODDS 0 phantom 2026-06-29). A residual 1,212
+  true phantoms (STANDINGS/TEAMS/PLAYER_VALUES) remain — tracked as a separate issue in
+  `sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md`, not a path-shape gap. The reverse
+  `--unphantom-only --apply` heal was always safe and remains so.
 - **Snapshot-first for every wipe/relabel** (`_index/snapshots/…` before delete) — reversible; consolidator paused
   during, resumed after.
 - **Drop live sports trading while fixing** (operator): data-pipeline daily-forward is fine + wanted; live _trading_
@@ -227,6 +231,11 @@ on being shipped).
   prepare dry-run-green + STOP at these (structured `/blocked` with options).
 - **Data-pipeline correctness is the heartbeat**: no asset-group/data-type skipped, no deadline descopes; the only
   legitimate deferral is operator-gated `BLOCKED-CREDENTIALS` / `-OPERATOR-DECISION` / `-UPSTREAM-OUTAGE`.
+- **[⚠️ TENSION flagged 2026-07-14, doc-reconciliation vr2#116]** `instruments_foundation_completeness_2026_06_24.md`
+  carries its own rule "Sports does NOT start its G1→G5 until cefi is DONE," and cefi is still NOT done there (GATE G4
+  OPEN pending D2, GATE G5 only SUB-SIGNED) — but this coordinator (`status: active`) carries no reference to that gate
+  and its G1 league-noise-wipe work already executed 2026-06-28. Unclear whether the 2026-06-27 re-homing was also an
+  implicit operator override of the cefi-block rule; flagging for an operator ruling, not asserting either reading here.
 
 ## Model / agent tier (answering "complexity → which agent")
 
