@@ -280,3 +280,28 @@ above — neither has recurred since the dtype/idempotency fixes landed).
 
 **Status**: script is now validated against real production data across single-day, multi-day, and re-run/idempotency
 scenarios. Next: ship this fix, then scope + launch the real VM execution for the remaining 287 real days.
+
+## 🟢 2026-07-14 (later same day) — VM launched for the full remaining run (287 real days)
+
+Extended `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` with a new `tradfi-cme-options` category
+(`deployment-service@11ed8f7fe`) rather than forking a new launcher — its VM name
+(`canonical-migration-tradfi-cme-options-<ts>`) deliberately stays under the already-registered
+`canonical-migration-tradfi-` `VM_PREFIX_TO_BUCKET` prefix (longest-prefix match), so no new registry entry was needed.
+Rebuilt + republished the code tarballs (`create-code-tarballs.sh`, all 4 core repos clean, mtds SHA `e4c04c64`
+confirmed to include the dedup/dtype fix) before launching.
+
+**Near-miss during testing**: a "smoke test" invocation with `DRY_RUN=true` was NOT actually a no-op in this launcher —
+that env var only gates the tarball-freshness check, not the real `gcloud compute instances create` call — so a real VM
+launched with `--apply` against production on an UNVERIFIED (pre-tarball-rebuild) code state. Caught within ~1 minute
+(VM was still in early boot/cloud-init, had not reached the Python script or the manifest-write phase — confirmed via
+serial console + scheduler state unchanged), deleted before any real writes could happen. No production impact. Lesson
+for next time: this launcher has no safe preview mode: **only invoke it when ready to launch for real.**
+
+**Real launch**: `canonical-migration-tradfi-cme-options-20260714-150207`, `e2-standard-16` (per the TradFi migration's
+own documented OOM precedent), SPOT, zone `asia-northeast1-c`, `--stamp 20260714T140207Z`. The tarball-freshness check
+flagged mtds + UAC as "MISSING" manifest — a false alarm (a local `mktemp` collision in the freshness-check tooling, not
+an actual missing/stale tarball; independently re-verified both manifests exist, are fresh (`created_at` minutes before
+launch), and match local HEAD exactly). VM reached `RUNNING` within seconds; serial console confirmed genuine, active
+progress (real package installation output, not a hang) as of the last check. Monitoring to terminal state — full
+progress/completion update to follow in this doc once the run finishes (or fails, per the workspace's no-fire-and-forget
+VM rule).
