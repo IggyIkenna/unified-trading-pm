@@ -161,6 +161,16 @@ flat is absent — `market-tick-data-service@80f80f66f`. Confirmed safe for CeFi
 migration actually completed (flat renamed to `*.bak.parquet`, no longer a live candidate at all), so this preference
 only ever activates for a stalled migration like DeFi's, never a completed one. Quality-gates green, shipped.
 
+**Correction to the "finish the v9 migration" recommendation two entries below**: checked
+`instruments_mtds_subset_consistency_remediation_2026_06_17.md` for a targeted "complete the DeFi
+`instrument_availability` hive migration" todo — there isn't one; the hive tree isn't tracked as a standalone item
+there, it's folded into a much larger, not-yet-started C0 single-walk covering every asset group's instruments-store
+canonical form. Given (a) the reader-preference fix above already removes the correctness risk regardless of whether
+hive ever finishes migrating, and (b) the divergence finding above turned out to be mostly a comparison artifact, hive
+is now just harmless, non-urgent dead storage — not something blocking on that larger plan. The real remaining work here
+is the SAFE-TO-DELETE audit this doc always recommended (once a corrected, null-aware FULL reconciliation confirms the
+70-pair sample's finding holds at the original 2,911-pair scale), not "finish an active migration."
+
 ## 🔵 2026-07-14 — "dex-pool second-writer-path" is this SAME population, not a separate issue; root cause identified
 
 A separate scoping pass (started to size a suspected distinct ~100K-400K-object "second-writer-path" migration) found
