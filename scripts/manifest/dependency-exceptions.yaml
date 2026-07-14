@@ -1,0 +1,117 @@
+# Per-repo external-dependency exceptions — SSOT for check-dependency-alignment.py's
+# PER_REPO_EXTERNAL_EXCEPTIONS. An entry here means "this repo's pyproject.toml
+# deliberately diverges from workspace-constraints.toml, and that divergence is a
+# reviewed, permanent decision" — not a place to silence a misalignment you haven't
+# investigated.
+#
+# plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md
+# todo 3: replaces the hand-edited Python dict that used to live inline in
+# check-dependency-alignment.py — this fastapi<0.138.0 class recurred across 7 repos
+# in one day (canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md fixed
+# ml-service alone first; the recurrence needed the same fix repeated 6 more times as
+# a hand-edited dict literal). A YAML list + a mandatory `justification` field is the
+# same reviewed-decision bar, lower edit friction — a new exception is a data change,
+# not a Python-syntax change, and the ONE line per repo is easier to diff/scan than a
+# dict-literal entry buried in a code file.
+#
+# Schema (validated by check-dependency-alignment.py at load time — a malformed entry
+# fails LOUD, never silently ignored):
+#   repo:          exact repo directory name (matches workspace-manifest.json)
+#   package:       normalized package name (matches canonical-dependency-manifest.json's key)
+#   spec:          the FULL exact spec string this repo is allowed to declare instead of
+#                  the fleet canonical (e.g. "fastapi>=0.115.0,<0.138.0") — must match the
+#                  repo's pyproject.toml spec byte-for-byte or the exception doesn't apply
+#                  and the misalignment still fires.
+#   justification: WHY this repo diverges — cite the actual investigation (a CVE fix, a
+#                  confirmed-safe locked-resolution check), not just "needed to unblock".
+#   ssot:          issue-doc path(s) with the full investigation. Required.
+#   added:         ISO date this exception was added.
+
+exceptions:
+  - repo: ml-service
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      pip-audit CVE fix (9 CVEs cleared) via ml-service's own ceiling raise + forced starlette>=1.3.1 override.
+      fastapi==0.137.x wraps include_router() results as _IncludedRouter (no .path attribute) -> AttributeError in any
+      [r.path for r in app.routes]-style route introspection (verified reproducing 2026-07-13 against fastapi==0.137.2 +
+      starlette==1.3.1 in an isolated venv). ml-service's actual locked resolution stays on fastapi==0.136.3 (below the
+      0.137.x break threshold) purely because that is what uv's resolver picked, not because anything pins it there
+      deliberately — safe TODAY, re-verify on any future `uv lock --upgrade` in this repo.
+    ssot:
+      - plans/active/issues/canonical_fastapi_ceiling_stale_vs_ml_service_2026_07_13.md
+      - plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+    added: "2026-07-13"
+
+  - repo: unified-trading-library
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above — independently raised its fastapi ceiling to <0.138.0. Verified 2026-07-13 via
+      this repo's own uv.lock: actual locked fastapi is 0.135.1, below the confirmed-broken 0.137.x threshold — same
+      "incidental, not guaranteed" safety as ml-service.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: alerting-service
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.135.1,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: greeks-service
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.136.3,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: market-tick-data-service
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.135.1,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: deployment-api
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.136.3,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: agent-orchestrator
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.136.1,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: features-service
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above. Verified 2026-07-13 via this repo's own uv.lock: actual locked fastapi is 0.136.1,
+      below the confirmed-broken 0.137.x threshold.
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
+
+  - repo: unified-trading-api
+    package: fastapi
+    spec: "fastapi>=0.115.0,<0.138.0"
+    justification: >
+      Same shape as ml-service above — carried over from the prior hand-edited dict entry (pre-dates this YAML
+      migration; original investigation not separately re-cited here, see the SSOT below for the class of issue).
+    ssot: [plans/active/issues/dependency_alignment_red_multi_repo_ceiling_drift_2026_07_13.md]
+    added: "2026-07-13"
