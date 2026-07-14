@@ -389,7 +389,7 @@ Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`
       its current `2026-07-14T12:56:34Z` freeze (`gsutil stat` / `_index/latest.json`). Repo: `deployment-service`
       (Cloud Run job trigger/redeploy) + `unified-trading-library` (if a further code change is needed after (3)).
 
-- [ ] [BACKEND] P0. **`mtds-dex-swaps-backfill` VM still OOMs (kernel-confirmed, anon-rss≈14.67GiB on a 16GB
+- [x] ✅ [BACKEND] P0. **`mtds-dex-swaps-backfill` VM still OOMs (kernel-confirmed, anon-rss≈14.67GiB on a 16GB
       `e2-standard-4`) inside `ManifestFreshnessCache.bulk_load()`'s "fixed" slim-read path** (`_refresh_locked()` →
       `read_availability_index(columns=[...])`), despite the isolated local repro of the same slim path measuring only
       5.30 GiB peak on the same real 27.4M-row index. Two concrete leads to check first (both in
@@ -402,7 +402,10 @@ Filed as new `[BACKEND]` P0 todo below — this is a `unified-trading-library`/`
       `_read_availability_index_slim()` and was NOT exercised by the isolated `bulk_load()`-only repro in "P0 confirm —
       dex_swaps NEW FINDING closed" below — this merge/dedup step is the most likely unmeasured contributor to the
       5.3→14.7 GiB gap. Repo: `unified-trading-library`. See "P0 infra diagnostics — dex_swaps VM crash pinpointed via
-      live RSS_PROBE + kernel dmesg" above for the full RSS_PROBE + dmesg transcript.
+      live RSS_PROBE + kernel dmesg" above for the full RSS_PROBE + dmesg transcript. — ✅ INVESTIGATED + REAL FIX
+      SHIPPED 2026-07-14 (slot-16, backend_engineer), **NOT a full close** — see "P0 — root cause pinpointed inside
+      `manifest_freshness.py` itself; real fix shipped, ~3.56 GiB confirmed saved, still above the 16GB VM ceiling"
+      below.
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
@@ -716,6 +719,73 @@ diagnostic sessions on this doc tested a date-scoped read specifically).
 measured earlier the same day) — every fresh repro on this bucket will report a bigger number than the last purely from
 organic growth, independent of any code change. Worth pinning a snapshot of the index for reproducible before/after
 comparison once a fix is actually implemented, rather than re-measuring against the live (growing) bucket each time.
+
+## P0 — root cause pinpointed inside `manifest_freshness.py` itself; real fix shipped, ~3.56 GiB confirmed saved, still above the 16GB VM ceiling (2026-07-14, slot-16, backend_engineer)
+
+Picked up the last open `[BACKEND] P0` todo (the two `_read_index.py` leads: column-pruning verification and the
+self-shard-merge hypothesis). Read `manifest_freshness.py` end-to-end rather than `_read_index.py` first, since
+`_refresh_locked()` is the caller and its own code — not just the reader it calls — was worth checking directly.
+
+**Found the actual root cause, one level up from both hypothesized leads**: `_refresh_locked()` calls
+`_index_to_tuples(index, capture_status_filter="captured")` AND `_index_to_skip_worthy_tuples(index)` as two COMPLETELY
+INDEPENDENT full passes over the same slim-read DataFrame. `captured` is always a **strict subset** of `skip_worthy`
+(`captured | empty_confirmed | expected_unattempted[EXPECTED_* reason]`), so every row that ends up `captured` had its
+row-key tuple built and hashed into a Python `set` **twice** — once by each function, each with its own
+`dict[str, list[str]]` intermediate and its own `for i in range(n_rows): out.add(tuple(...))` loop. On the real
+27.4M-row DeFi index, `skip_worthy` alone is **15,174,538 rows** (slot-3's prior repro measured 3,010,913 `captured`
+rows in isolation but never measured `skip_worthy`'s true size) — building ~15.2M + ~3.0M Python tuple-of-7-strings
+objects into two separate sets is exactly the kind of Python-level materialization slot-3's "P0 —full `bulk_load()` path
+repro" section (above) flagged as the most likely actual gap-closer, just not yet isolated to this specific doubled-pass
+shape.
+
+**Fix shipped**: `unified-trading-library@0aa284e8` — replaced the two functions with `_build_membership_sets(index)`,
+which does ONE pass over ONLY the skip-worthy-filtered rows (masked once via pandas vectorised boolean ops, not iterated
+twice), building each row-key tuple exactly once and tagging capture-membership inline via a boolean array — `captured`
+is derived as a filtered subset of the SAME tuples `skip_worthy` already built, never recomputed. 26 pre-existing tests
+pass unchanged (public behavior of `bulk_load`/`is_now_captured`/ `is_now_skip_worthy`/`captured_count` is
+byte-identical); added 1 new regression test (`test_captured_is_always_subset_of_skip_worthy_at_scale`) pinning the
+subset invariant at 400 synthetic rows across all 4 `capture_status` values. `quality-gates.sh` full green.
+
+**Quantified against the REAL live 27.4M-row DeFi index** (same bucket, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` to
+force the same fast direct-consolidated-read branch slot-3's 24.3 GiB baseline used — confirms the self-shard-merge
+hypothesis is NOT exercised in either measurement, so lead (2) from this todo is REFUTED as the dominant driver for this
+branch, consistent with slot-3's own observation that their 24.3 GiB peak was also on the fast path):
+
+| Run                                                                                              | Peak (ru_maxrss) |
+| ------------------------------------------------------------------------------------------------ | ---------------- |
+| BEFORE (slot-3's full `bulk_load()`-equivalent repro, same fast-path branch, `tracemalloc peak`) | 24.29 GiB        |
+| **AFTER (this fix, `resource.getrusage().ru_maxrss`, same bucket/branch)**                       | **20.74 GiB**    |
+
+**~3.56 GiB saved (≈14.6% reduction) — a real, confirmed, measured win.** `captured=3,010,913` /
+`skip_worthy=15,174,538` rows, elapsed 103.1s (mostly GCS download + pandas parse, not the tuple-building itself).
+
+**This does NOT close the issue.** 20.74 GiB still exceeds a 16GB `e2-standard-4`'s (~15Gi usable) capacity — the
+kernel-confirmed real-VM OOM was at 14.67 GiB, so even the fixed code would still OOM-kill on that VM shape today. The
+corpus has grown to the point where materialising ~15M Python tuples into an in-process `set` at all — regardless of how
+many redundant passes do it — is no longer viable on a 16GB VM. Lead (1) from this todo (verify
+`_read_parquet_columns_safe` pushes `columns=` into a true pyarrow-level pruned decode) was NOT independently
+re-verified this session — worth checking, but the ~20.74 GiB post-fix figure with 7 already-pruned columns suggests the
+Python-object overhead of ~15M tuples-in-a-set (not decode-time bytes) is now the dominant remaining cost, matching
+slot-3's own directional estimate ("tuple + hash-set overhead in CPython routinely runs 3-5x raw data size").
+
+**Filed as a new `[BACKEND]` P0 todo below**: the genuinely durable fix is almost certainly the design change slot-3
+already proposed — an optional `date_range`/row-key-scoping filter on `ManifestFreshnessCache.__init__` so a single-date
+(or narrow-window) backfill job never has to materialise the WHOLE corpus's skip-worthy set into a Python `set` at all,
+only the rows relevant to its own job. None of the 9 DeFi handlers using this class today pass such a filter. This is a
+genuine API-shape change across those call sites, not a one-file patch — scoped as its own todo rather than attempted
+inline here to keep this session's change small, tested, and immediately shippable.
+
+- [ ] [BACKEND] P0. **Scope `ManifestFreshnessCache` reads to the caller's actual date range/row-key set** instead of
+      materialising the WHOLE corpus's `captured`/`skip_worthy` Python sets on every `bulk_load()` — the confirmed
+      remaining ~20.74 GiB peak (post `_build_membership_sets` single-pass fix, see above) is dominated by ~15.2M Python
+      tuple-in-a-set objects, not the parquet read itself (already column-pruned to 7 slim columns). Add an optional
+      `date_range: tuple[str, str] | None` (or similar) param to `ManifestFreshnessCache.__init__` that, when set,
+      filters `index` to that window BEFORE calling `_build_membership_sets` — a single-date DeFi backfill job only ever
+      needs freshness answers for its OWN date, not all 3.5 years of history. Audit + update the 9 DeFi handlers that
+      instantiate this class (grep `ManifestFreshnessCache(` across `market-tick-data-service`) to pass their actual
+      date/window once the param exists; keep the no-filter (whole-corpus) behavior as the default for back-compat with
+      any caller that genuinely needs it. Repo: `unified-trading-library` (API) + `market-tick-data-service` (call-site
+      updates).
 
 ## Evidence
 
