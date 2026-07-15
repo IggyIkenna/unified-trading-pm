@@ -300,3 +300,45 @@ now honestly `open` with full methodology),
 items above remain genuinely open, each requiring either further live-production investigation time or an explicit
 operator decision this session correctly did not make unilaterally. This is an honest non-100% outcome, documented with
 evidence per the plan's own stated exception for exactly this case.
+
+## Operator decisions (2026-07-15, interactive reconciliation)
+
+Presented all 5 open items to the operator with recommendations; decisions below. New todos follow.
+
+1. **Cefi orphan rows**: **BOTH** — harden the phantom-audit tool's blank-`data_type` blind spot AND delete the 9,757
+   stale orphan rows. (Operator picked the most-thorough option over my "delete only" recommendation.)
+2. **Tradfi ohlcv_15m/24h**: operator confirmed the per-venue-routing read is correct (Databento-uncovered venues — e.g.
+   FX spot, Korean equities — need whatever granularity their real source provides, which may only be daily;
+   Databento-covered venues should get finer bars within billing limits, not be capped) BUT corrected my framing: **this
+   is very likely NOT greenfield design work** — the operator believes UAC/instruments-service/MTDS already has
+   infrastructure for per-venue source-capability constraints and this "might need completion" rather than a new design.
+   **Action: AUDIT existing UAC/IS/MTDS per-venue capability routing FIRST** to find what's already there vs. genuinely
+   missing, before writing any new code.
+3. **Tradfi corporate_action_confirmed/earnings_result**: **CONFIRMED** — stop instruments-service seeding these as
+   expected cells in the MTDS tick manifest (matches my recommendation).
+4. **Tradfi mbp_10 UAC registry**: **Leave the MVP-scope restriction in place** (operator did NOT take my recommendation
+   to restore it now) — this is a deliberate, still-intentional scope decision, not a bug. Action: correct the issue doc
+   so `mbp_10`'s live-capture gap reads as "expected per scope decision," not "open gap needing a fix," and ensure the
+   alert reflects that (mute/expected classification) rather than staying flagged as an active problem.
+5. **Sports lock-race**: **Parked** — no further investigation this session; leave the issue doc exactly as the
+   exhausted-investigation entry documents it, revisit later (possibly with better production-tracing tooling).
+
+### New todos (this reconciliation)
+
+- [ ] [DATA] P1. Cefi: hardening `reconcile_phantom_manifest_rows_all.py`'s (or wherever the blank-`data_type`
+      phantom-matching logic actually lives — grep first) blind spot so a blank-`data_type` row is no longer
+      unconditionally flagged phantom regardless of whether real data exists; then delete the confirmed 9,757 stale
+      orphan rows (per `phantom_captures_cefi_2026_06_28.md`'s 2026-07-15 investigation section for the exact
+      predicate/evidence). Repo: likely e2e-testing or unified-trading-library — locate via grep.
+- [ ] [DATA] P1. Tradfi ohlcv_15m/ohlcv_24h: AUDIT existing UAC (`unified_api_contracts`), instruments-service, and MTDS
+      code for per-venue source-capability/granularity routing that may already largely cover this (operator's strong
+      prior) before designing anything new. Report what exists, what's genuinely missing, and complete the gap — do not
+      build a parallel/duplicate mechanism.
+- [ ] [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
+      `instruments-service/scripts/enumerate_expected_universe.py` (or wherever the actual seeding happens — confirm via
+      the issue doc's citations) from seeding these as expected cells in the MTDS tick manifest bucket.
+- [ ] [DOCS] P2. Tradfi mbp_10: correct
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
+      registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
+      the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected
+      rather than continuing to page as if it's an active problem.
