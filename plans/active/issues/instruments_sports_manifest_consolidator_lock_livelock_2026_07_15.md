@@ -54,7 +54,11 @@ tags:
     instruments-service,
     features-sports,
   ]
-related: [plans/active/features_sports_service_consolidation_deploy_2026_07_15.md]
+related:
+  [
+    plans/active/features_sports_service_consolidation_deploy_2026_07_15.md,
+    plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md,
+  ]
 created: "2026-07-15"
 parent_epic: infrastructure_master
 priority: P1
@@ -198,3 +202,171 @@ task.
   `.../consolidator_stall_state.json` + `.../latest.json` — lock/latest.json rewritten every cycle with
   `error_reason: "locked"`; `availability_index.parquet` last genuine write `2026-07-15T12:39:43Z`, stale again (234s
   old) by `2026-07-15T12:43:37Z`.
+
+---
+
+## UPDATE 2026-07-15 (~13:45Z) — fleet-wide 25-job audit + a major correction: this is a DUPLICATE of an already-tracked, already-code-fixed issue, not a fleet-wide livelock
+
+Dispatched as a read-only fleet-wide audit: all 25 other `uts-prod-manifest-consolidator-*` Cloud Run jobs (the fleet
+total is confirmed **26**, not the original "~29" estimate above —
+`gcloud run jobs list --filter="metadata.name:uts-prod-manifest-consolidator"` returns exactly 26 names) were
+individually inspected for the same signature (execution cadence, `gcloud logging read` for
+`skipping cycle`/`error=locked`, direct GCS lock-object inspection, `latest.json`/ `availability_index.parquet`
+freshness). Read-only throughout — no lock file, GCS object, Cloud Run Job, Scheduler, or Terraform config was touched
+by this audit.
+
+### Summary table (25 audited jobs; `instruments-sports` itself is the pre-confirmed baseline, not re-audited)
+
+| Job (`uts-prod-manifest-consolidator-` prefix omitted) | Verdict                                                           | One-line evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| execution-cefi                                         | HEALTHY                                                           | Lock absent at rest every cycle; bucket has 0 shards (idle, unrelated to locking); genuine acquire/release every ~9s cycle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| execution-defi                                         | HEALTHY                                                           | Same pattern; 0 "skipping cycle"/"error=locked" hits in a 30-min window; lock 404 at rest.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| execution-tradfi                                       | HEALTHY                                                           | Same pattern; lock 404 at rest; latest.json error_reason always empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| features-calendar                                      | HEALTHY                                                           | 2 transient genuine-race skips in 6h (self-healed next tick, unrelated failure mode) vs sports' sustained pattern; otherwise clean.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| features-delta-one-cefi                                | HEALTHY                                                           | Lock 404 at rest; index refreshes every ~60s tick; 0 skip-signature hits in an 80-min/~80-execution window.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| features-delta-one-defi                                | HEALTHY                                                           | Lock 404 at rest; 49/49 cycles in a 48-min window genuinely acquired; heartbeat-touch mechanism working as designed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| features-delta-one-tradfi                              | HEALTHY                                                           | Lock 404 at rest; index refresh concurrent with cycle completion; 0 skip hits in 45 min.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| features-onchain-cefi                                  | HEALTHY                                                           | Lock 404 at rest; only 1 benign "lost lock race" skip in 24h (different, harmless branch, not the sports signature).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| features-onchain-defi                                  | HEALTHY                                                           | Lock 404 at rest; heartbeat mtime refreshes every cycle even though bucket is content-idle (~12d no new rows, correctly distinguished from a stall).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| features-sports                                        | HEALTHY                                                           | Lock 404 at rest; genuine content changes observed (row count advancing between checks, GCS generation bumped) — actively consolidating.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| features-volatility-cefi                               | HEALTHY                                                           | Lock 404 at rest; 11 sampled cycles across 2 separate windows all genuine acquire+release, 0 skip hits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| features-volatility-tradfi                             | HEALTHY                                                           | Lock 404 at rest; 32/32 cycles in a 31-min window genuine, 0 skip hits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| instruments-cefi                                       | HEALTHY                                                           | Lock 404 at rest; index/latest.json advance together every ~60-70s cycle (not once per ~30min like sports).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| instruments-defi                                       | HEALTHY                                                           | Lock 404 at rest; **runs the byte-identical resolved image digest as instruments-sports** (`sha256:3b2df4d9a6bd...`, confirmed via `gcloud run jobs executions describe`) — proves the shared code itself is not the differentiator.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| instruments-prediction                                 | HEALTHY                                                           | Lock 404 at rest; 0 skip hits in the sampled window; index refreshes every cycle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| instruments-tradfi                                     | HEALTHY                                                           | Lock 404 at rest; 0 skip hits across the full ~14-min/14-execution history sampled.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| instruments-tradfi-legacy                              | DORMANT                                                           | Cloud Scheduler trigger PAUSED since 2026-06-08; target bucket (no `-prd` suffix) returns 404 — retired duplicate, cannot exhibit or refute the livelock signature because it never fires.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| market-data-cefi                                       | **NEW FINDING — same root-cause CLASS, not the sports signature** | Real merges run 7.2-8.5min (432-510s) against the **300s default TTL with NO per-bucket override** — directly observed TWO overlapping genuine `phase=lock_acquired` acquisitions (`l77bf` held 13:12:48-13:20:53; `msp85` acquired 13:17:41, 4m53s into `l77bf`'s still-fresh — but past-TTL — hold). Manifest genuinely refreshes (not stuck), so this is NOT the sports "never ages out" pattern — it is the identical **TTL-shorter-than-real-merge-duration stale-reclaim race** that `market-data-defi` and `instruments-sports` already hit and were already fixed for (see below). `market-data-cefi` is the one bucket of the 25 that still needs the same fix. |
+| market-data-defi                                       | HEALTHY                                                           | Has the `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` terraform override (applied for this exact failure class); lock's `started_at` observed UNCHANGED across two skip-cycle reads 2 min apart, confirming skips do not touch it; 3 genuine writes in 6h at the expected ~25-30min real-merge cadence.                                                                                                                                                                                                                                                                                                                                                                           |
+| market-data-prediction                                 | HEALTHY                                                           | Lock 404 at rest; genuine cycle every ~1min; 0 skip hits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| market-data-sports                                     | HEALTHY                                                           | Lock 404 at rest (acquired+released within each 7-45s run); index mtime advancing essentially every cycle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| market-data-tradfi                                     | HEALTHY                                                           | Lock 404 at rest between genuine cycles; the few observed `error=locked` skips are each bracketed by a real, terminating long-merge holder (never an indefinite streak).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| market-data-tradfi-legacy                              | DORMANT                                                           | Scheduler PAUSED since 2026-06-08 (retired alongside instruments-tradfi-legacy); target bucket (no `-prd` suffix) 404.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ml-training-artifacts                                  | HEALTHY                                                           | Lock 404 at rest; bucket has 0 per-VM shards (idle, unrelated to locking); genuine acquire/release every cycle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| strategy                                               | HEALTHY                                                           | Lock 404 at rest; `last_run_at` matches cycle completion every time across a multi-day sample; 0 skip-signature hits.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+### Tally
+
+- **LIVELOCKED (sports-signature: sustained/indefinite skip, lock never ages out)**: **0** of the 25 audited jobs.
+  (`instruments-sports` itself, the pre-confirmed baseline, is addressed separately below — it is also **not** a true
+  indefinite livelock on closer, later re-inspection; see the correction.)
+- **HEALTHY**: **23** of 25.
+- **DORMANT (scheduler paused, cannot exhibit or refute the signature — excluded from the Healthy/Livelocked count, not
+  "inconclusive")**: **2** (`instruments-tradfi-legacy`, `market-data-tradfi-legacy`).
+- **NEW FINDING, same root-CLASS but different manifestation (concurrent-merge race, not a stuck lock)**: **1**
+  (`market-data-cefi`).
+- **INCONCLUSIVE**: **0**.
+
+### Is it structural/universal in the shared code, or conditional? — CONDITIONAL, and already root-caused for the two buckets it currently affects
+
+Read `unified_trading_library/manifest_consolidator.py`'s lock logic in full (`_is_lock_fresh`, `_acquire_lock`,
+`_release_lock`, `consolidate()`). Both skip branches (fresh-lock skip at line ~647, lost-acquisition-race skip at line
+~666) `return` **before** any call to `_acquire_lock` — they structurally cannot write the lock blob's `started_at`.
+Only a winning `_acquire_lock()` call writes it, and `_release_lock()` runs unconditionally in `consolidate()`'s
+`finally` whenever the lock was actually held. **This is confirmed by live evidence, not just code-reading**: 23 of the
+25 audited jobs show the lock blob **absent (404) at rest** between cycles — clean acquire→work→release every time,
+exactly as the source describes. The lock/TTL primitive is not universally broken.
+
+**The two buckets that DO show lock contention (`market-data-cefi`, and — as detailed below — `instruments-sports`
+itself) share one specific, already-identified condition: a genuine real merge takes longer than the 300s default
+`CONSOLIDATOR_LOCK_TTL_SECONDS`.** When that happens, the NEXT cron tick's `_is_lock_fresh()` sees an "aged" lock,
+clears it as stale, and starts a SECOND concurrent real merge — the exact mechanism already diagnosed and fixed (via a
+per-bucket `CONSOLIDATOR_LOCK_TTL_SECONDS` terraform override, set comfortably above the bucket's own real merge
+duration) for `market-data-defi` (4200s, UTL commit `9358fb0b`) and `instruments-sports` (2400s,
+`deployment-service@69136c2c`, 2026-07-14). **`market-data-cefi` has NOT yet received this override** and is the one
+bucket confirmed in this audit still exposed to it — recommended as a P1 follow-up terraform change (add
+`CONSOLIDATOR_LOCK_TTL_SECONDS` ≈ 900-1200s for `market-data-cefi` in
+`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`, mirroring the existing per-bucket-override
+pattern) — **not actioned here** (this is a docs-only audit).
+
+### MAJOR CORRECTION: `instruments-sports` is NOT a true indefinite/self-perpetuating livelock — this issue doc is largely a DUPLICATE of an already-deep, already-fixed-in-code (pending deploy) sibling issue
+
+This audit's original evidence (gathered 12:14-12:43Z, above) characterized the lock as being "rewritten fresh on every
+single cycle (skip or not)" — i.e. never able to age out. **Two things surfaced during this fleet-wide touch correct
+that framing:**
+
+1. **A pre-existing, far more thorough issue doc already covers this exact bucket and symptom**:
+   `plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` (filed 2026-07-14,
+   5 rounds of investigation, most recent update ~12:40Z 2026-07-15 — i.e. **already in progress at the same time this
+   doc was being filed independently on the same dispatch**). It already root-caused: (a) `instruments-sports`' genuine
+   real merges take **7-8 minutes** (a large, growing 5.4M+-row canonical, 159 date-range chunks spanning 2014-2026) —
+   legitimately longer than the 300s default TTL; (b) this was ALREADY fixed via the
+   `CONSOLIDATOR_LOCK_TTL_SECONDS=2400` override (`deployment-service@69136c2c`, 2026-07-14), confirmed holding via a
+   **6-hour clean window (06:51-12:32Z) of 48 acquisitions, every gap 361-486s, zero overlaps** — perfect serialization,
+   not a livelock; (c) the ACTUAL user-visible failure (the same
+   `Manifest consolidator appears DOWN ... heartbeat is Ns old (> 120s budget)` error this doc's `kk4dv` execution hit)
+   is a **separate** bug: `assert_consolidator_healthy`/`ConsolidatorLivenessMonitor`'s naive
+   "heartbeat-mtime-older-than-max_age_sec" check has no way to know a legitimate 7-8min merge is actively in flight
+   (the mtime only advances at merge COMPLETION), so it false-positives on essentially every cycle of a slow bucket —
+   confirmed live at **564 `CONSOLIDATOR_DOWN` events fleet-wide in a 4-hour window**, all false positives, the
+   consolidator provably healthy throughout.
+2. **Direct live re-verification this touch (13:32-13:39Z UTC, ~1h after the original evidence) of `instruments-sports`
+   itself, watched in real time**: a genuine `phase=lock_acquired` at `13:32:43.726Z` → `phase=duckdb_merge_start` (159
+   chunks, `date_range=2014-01-01..2026-12-06`) at `13:32:45.818Z` → **every intervening cron tick through 13:39:39Z
+   correctly logged the skip** (`fresh lock present`, `error=locked`) while the lock's `started_at` stayed **UNCHANGED
+   at `13:32:43.659076+00:00`** the entire time (confirmed via 3 separate `gcloud storage cat` reads across the window)
+   — i.e. skip cycles do **NOT** touch the lock, contradicting the original "rewritten every cycle" characterization →
+   `phase=duckdb_merge_done rows_out=5432765` at `13:39:45.624Z` →
+   `wrote consolidated index (5432765 rows, 117326903 bytes)` at `13:39:49.490Z` (latency_ms=434745.9, i.e. **7m14.7s**,
+   matching the sibling doc's "~7-8min" characterization exactly) → lock confirmed **released (404)** within 5s of the
+   write. This is a textbook-correct acquire→hold→release cycle for a genuinely long merge, not an indefinite livelock.
+   Terraform (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` line ~204) confirms
+   `CONSOLIDATOR_LOCK_TTL_SECONDS = "2400"` for `instruments-sports` is live, with an explicit comment citing the
+   `manifest_consolidator_instruments_sports_intermittent_slow_run` doc as the reason.
+3. **The actual, still-live blocker for `features-service-sports-job` (this doc's original impact) has a code fix
+   ALREADY SHIPPED, just not yet deployed anywhere**: `unified-trading-library@c47273c1` ("fix(manifest): lock-aware
+   consolidator liveness — a fresh held lock is proof-of-life, not DOWN"), committed **2026-07-15T13:03:17+01:00 —
+   roughly 40 minutes after this doc's original `kk4dv` failure evidence, and it is UTL's current HEAD**. It adds
+   `consolidator_cycle_in_flight()` (a read-only, side-effect-free check keyed off a fresh held lock) and wires it into
+   BOTH `assert_consolidator_healthy` (the exact function `features_service/sports/cli/ handlers/_manifest_preflight.py`
+   calls, confirmed via `grep`) and `ConsolidatorLivenessMonitor` — a fresh held lock now short-circuits the
+   stale-heartbeat check as OK instead of raising/alerting. **Not yet live**: this needs an MTDS image rebuild (the
+   consolidator watchdog bundles UTL via `market-tick-data-service:latest`) AND a `features-service` image
+   rebuild+redeploy (its own `assert_consolidator_healthy` call is baked into whatever image digest
+   `features-service-sports-job` runs, built 2026-07-14 — predating this fix) before the gate that failed `kk4dv` will
+   pass.
+
+### Corrected recommendation (supersedes "recommended next steps" 1 and 5 above)
+
+1. **Do NOT open/duplicate a new fleet-wide lock-logic investigation** — the primitive itself is empirically sound
+   (25/25 non-dormant audited jobs behave correctly; the CAS-based `_acquire_lock`/`_release_lock` mechanism was
+   independently stress-tested with 25 threads + 15 separate processes in the sibling doc, zero double-acquire).
+2. **The correct unblock path for `features_sports_service_consolidation_deploy_2026_07_15.md` todo 5** is: (a) get
+   `unified-trading-library@c47273c1` into a rebuilt `market-tick-data-service` image and redeploy the
+   consolidator-liveness-watchdog; (b) rebuild + redeploy `features-service`'s image so `features-service-sports-job`
+   picks up the fixed `assert_consolidator_healthy`; (c) only then re-attempt the manual verification execution. This is
+   a concrete, scoped deployment action, not an open-ended "wait for a livelock root-cause."
+3. **Add the missing `CONSOLIDATOR_LOCK_TTL_SECONDS` override for `market-data-cefi`** (the one genuinely-new finding
+   from this audit) — separate, small, low-risk terraform change mirroring the existing per-bucket-override pattern.
+4. **Cross-link, don't merge**: this doc and
+   `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` cover the same bucket and largely the
+   same root cause from two different entry points (a deploy-blocker vs. a VM-launch-cost investigation); both are left
+   open (this one until the deploy in (2) is verified; the sibling doc until that same deploy is verified to stop the
+   live `CONSOLIDATOR_DOWN` stream) rather than deleted/collapsed, per this workspace's issue-doc-lifecycle convention —
+   but any future reader should treat the sibling doc as the root-cause/fix SSOT for the underlying mechanism, and this
+   doc as the specific `features-service-sports-job` deploy-blocker tracker.
+5. **Status stays `open`** (genuinely still blocking todo 5 of the deploy plan) but the framing changes from "unknown,
+   possibly-fleet-wide livelock" to "known, root-cause-fixed-in-code, pending deployment" — a materially different (and
+   much less alarming) risk picture than this doc's original P1 framing implied.
+
+### Evidence (this update)
+
+- `gcloud run jobs list --project=central-element-323112 --region=asia-northeast1 --filter="metadata.name:uts-prod-manifest-consolidator" --format='value(metadata.name)'`
+  → exactly 26 jobs fleet-wide.
+- Per-job `gcloud run jobs executions list` / `gcloud logging read` / `gcloud storage objects describe`/`cat` for all 25
+  non-baseline jobs (full per-job evidence retained by the dispatching orchestrator; summarized in the table above).
+- `gcloud run jobs executions describe` on the most recent `instruments-sports` and `instruments-defi` executions →
+  identical resolved image digest `sha256:3b2df4d9a6bd2e51de98df8ddda752df74a7a62c03ca78fa3cc2c2da7e611742`.
+- Live `gcloud logging read` +
+  `gcloud storage cat gs://instruments-store-sports-prd-central-element-323112/_index/consolidator.lock` at 13:32,
+  13:37, 13:38, 13:39, 13:39:34(+5s) UTC — full acquire→merge→write→release cycle observed in real time, lock absent
+  (404) immediately after release.
+- `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (lines ~101, ~179-182, ~204) — confirms the
+  `CONSOLIDATOR_LOCK_TTL_SECONDS=2400` override for `instruments-sports` and its citing comment.
+- `unified-trading-library` git log: `c47273c1a3f4248804cf6110713cb5e051777a08` (2026-07-15T13:03:17+01:00, current
+  HEAD) diff against `unified_trading_library/manifest_writer/_state.py` — confirms `consolidator_cycle_in_flight()`
+  wired into `assert_consolidator_healthy`.
+- `grep -rn "assert_consolidator_healthy" features-service/features_service/sports/cli/handlers/_manifest_preflight.py`
+  — confirms `features-service`'s gate calls the exact function the fix touches.
+- Full re-read of `plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`
+  (all 5 update rounds) — cross-referenced above.
