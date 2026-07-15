@@ -416,7 +416,18 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       tests. Data remediation (re-collecting the 2,958 affected shards) deliberately NOT executed — a live, multi-year,
       production-API-quota-consuming re-collect is out of scope for a rushed mid-investigation action; scoped as a
       follow-up with exact commands. Full writeup, evidence, and follow-up todos:
-      `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Repo: market-tick-data-service.
+      `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Repo: market-tick-data-service. **🔴
+      REOPENED + RE-INVESTIGATED 2026-07-15 ~17:25Z (adversarial verification):** the "temporal race, not a live
+      regression" read was WRONG for the recurrence — 627 NEW `attempted_failed` rows (551 dex_pool_state + 76
+      lst_rates) landed today at 12:15-12:22Z, ALL for shard dates 2020-01-01..01-19. Root cause is a THIRD category
+      (not the `mode=` gap, not "catalogue behind"): a data-correctness CLASSIFICATION bug — the IS DeFi catalogue's
+      earliest snapshot is `day=2020-01-20`, so those 19 dates are PRE-GENESIS (before the DeFi universe existed), and
+      all 11 DeFi handlers stamped the permanent absence as retryable `UPSTREAM_INSTRUMENTS_CATALOG_STALE` instead of
+      honest `empty_confirmed`. Writers identified as two RUNNING backfill VMs on the pre-fix image. Fixed at root
+      cause: `market-tick-data-service@420221b4` (new `record_catalog_unavailable` splits pre-genesis→empty vs
+      behind→stale via the UAC `max(chain_genesis, protocol_launch)` SSOT; QG GREEN). Fix is forward-only → issue doc
+      adds [DEPLOY] P1 (redeploy backfill image) + [DATA] P1 (re-collect 2020-01-01..19 with the fixed image to rewrite
+      the 627 rows).
 - [x] ✅ [DATA] P1. `sports/trades` (112277/522276 attempted_failed, 21.5%) — INVESTIGATED. **NOT a live/recurring venue
       outage** — all 112,277 rows (both the 94,127 `VENUE_FETCH_FAILED` rows and the 18,150-row
       `EmptyFromLiveInstrumentError`-guard slice) share one 8-second `attempted_at` window (2026-07-13T23:56:41-48Z),
