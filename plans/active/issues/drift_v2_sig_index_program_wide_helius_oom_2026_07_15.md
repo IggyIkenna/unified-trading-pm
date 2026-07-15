@@ -238,7 +238,39 @@ fix below lands.
       at the observed volume) — the codex doc's "zero gap" claim is from 2026-06-01 and hasn't been re-validated against
       this specific incident's dates. If (a): reconcile the DRIFT `perp_funding` manifest cells currently
       `attempted_failed`/`expected_unattempted` under the old path once the new path starts capturing them. (repos:
-      market-tick-data-service, deployment-service, instruments-service for manifest reconciliation)
+      market-tick-data-service, deployment-service, instruments-service for manifest reconciliation) — **PRE-RULING
+      VERIFICATION DONE 2026-07-15 (data_engineering slot-2), decision still pending operator/main.** Live-probed
+      `https://data.api.drift.trade` (no code changes, read-only curl + pandas parse, no ruling executed) against the
+      actual backfill's real date range, not just the doc's original 2026-06-01 probe dates: 1. **Funding
+      (`/market/SOL-PERP/fundingRates/{Y}/{M}/{D}`)** — exactly 24 rows/day, `meta.totalPages=1`, across 6 spot-checked
+      dates spanning the whole incident: 2025-01-09 (the OOM-crash date), 2025-01-15 (gap lower bound per this plan's
+      G1.5), 2025-12-23 (gap upper bound / the walker's single busiest day, see #2), 2024-08-05, 2025-02-03, 2025-11-21.
+      All 200s, all 24 records. Matches the codex doc + handler docstring exactly. 2. **Trades volume is the strongest
+      evidence for (a).** `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` line 1085 logs the Helius
+      sig-walker's **actual observed cost** for 2025-12-23: **1,720,013 program-wide sigs, 17,207 batches, 200 minutes
+      of wall-clock** on that one day alone. Paginating the SAME date's Velocity API trades endpoint
+      (`/market/SOL-PERP/trades/2025/12/23?format=csv`, 5 pages) returns **20,290 actual SOL-PERP trades — an ~85x
+      reduction**, confirming the vast majority of the program-wide sig volume the walker choked on is genuinely
+      unrelated-market/instruction-type noise, not SOL-PERP activity the Velocity path would miss. 2025-01-09 (the crash
+      date) similarly resolved to 17,219 trades (4 pages) via Velocity vs. the 1,209,478 program-wide sigs that
+      OOM-killed the VM. Both day volumes are trivially in-memory-tractable (no chunking needed at this scale, unlike
+      the Helius path's chunked-resolution fix). 3. **CSV parses cleanly at observed volume**: `pandas.read_csv` on a
+      5,000-row page — 34 columns, 0 nulls in `ts`, all 34 CSV columns present that day are covered 1:1 by
+      `DriftV2HistoricalIngester._TRADES_RAW_TO_CANONICAL` (no silent column drops at this row count/shape). 4. **No
+      rate-limiting observed**: 10 concurrent funding-endpoint requests all returned `200` (no `429`s) — the codex doc's
+      "rate limit: unknown/unprobed" note can be updated to "not observed under light burst load; production backfill
+      should still add 429 backoff defensively since sustained high-QPS wasn't tested." 5. **Coverage boundary
+      re-confirmed, with a caveat**: 2026-03-25 still returns 24 funding rows; 2026-06-01 returns `totalRecords=0`.
+      Consistent with the doc's "~2026-04-01 → present: lags ~2 months" — but today is 2026-07-15, so the live lag
+      window is now wider than it was at the doc's 2026-06-01 writing; the live-mode endpoints
+      (`/market/{symbol}/fundingRates` / `/trades` with no date suffix) would need to cover whatever the current gap is,
+      not just the historical window — worth confirming at execution time, not re-verified further here (out of this
+      todo's "historical day volume" scope). **Net**: verification did not surface any reason to prefer (b) — Velocity
+      API coverage, format, and rate-limit behavior all hold at the actual incident's dates/volumes, and the trade-count
+      comparison on the walker's own logged busiest day is a strong quantitative case for (a). The actual (a)/(b) call —
+      which means stopping/not-relaunching a live multi-VM SPOT fleet — is unchanged as an explicit operator/main
+      decision, not executed by this verification pass. Posted `/blocked` from slot-2 with this evidence + a
+      recommendation for (a).
 - [ ] [INFRA] P2. The zombie-VM blind spot (RUNNING instance, dead worker process, ~4h44m undetected) suggests the VM
       roster + run.log-tail monitoring convention used across this plan's many "-003" check-ins should add a
       log-staleness check (e.g. flag a VM whose `run.log` hasn't advanced in >30 min while still `RUNNING`) rather than
