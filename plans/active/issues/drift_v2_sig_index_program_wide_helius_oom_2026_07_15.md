@@ -138,11 +138,23 @@ fix below lands.
 - [x] ✅ [DATA] P1. Refactor `_resolve_helius_rows` to stream/chunk: process the day's `target_sigs` in bounded
       sub-chunks (e.g. 5,000-10,000 sigs), writing/flushing each chunk's resolved rows before starting the next, instead
       of materialising the whole day in one `asyncio.gather` + one final write. This is the real fix that lets
-      high-volume days actually get captured (not just fail cleanly). (repo: market-tick-data-service) —
-      market-tick-data-service@1df45ce3
-      (`perf(defi): stream Drift Helius day-resolution in bounded chunks to prevent     OOM`; sequential
-      50-batch/5,000-sig chunks, discards each chunk's raw JSON before the next, aborts between chunks on first batch
-      failure).
+      high-volume days actually get captured (not just fail cleanly). (repo: market-tick-data-service) — **DONE
+      `market-tick-data-service@1df45ce3`** (data_engineering slot-7, 2026-07-15T23:00-23:10Z): `_resolve_helius_rows`
+      now processes batches in sequential chunks of `_HELIUS_RESOLVE_CHUNK_BATCHES=50` (5,000 sigs/chunk), parsing +
+      discarding each chunk's raw Helius JSON before starting the next (peak memory holds one chunk's raw responses, not
+      the whole day's), and short-circuits between chunks on first batch failure. **Scope note (partial vs. the todo's
+      "writing/flushing" wording)**: this fixes the resolution-side OOM mechanism (the
+      `asyncio.gather`-over-the-whole-day memory blowup) WITHOUT changing the write side — `_write_drift_helius_shard`
+      still writes ONE parquet shard per (market, day) at the end, deliberately preserving the existing
+      shard-atom-identity contract rather than risking a multi-file-per-day write (the workspace's
+      manifest/shard-atom-identity rule flags that as needing its own careful review, not a drive-by change).
+      `_MAX_HELIUS_DAY_SIGS=50_000` is UNCHANGED — this fix bounds peak memory within any day the ceiling already allows
+      through (chunking + estimated per-row size puts even a full 50K-sig day at ~500MB-1GB peak, well under 16GB); it
+      does NOT by itself unblock days that exceed the ceiling — that would need the write-side chunking too, left as a
+      future follow-up if a day is ever observed hitting the ceiling with legitimate volume. 2 new regression tests
+      (`test_helius_multi_chunk_resolves_across_chunks_and_concatenates_rows`,
+      `test_helius_chunk_failure_aborts_before_next_chunk_starts`), full `quality-gates.sh` green (sentinel `229af3a2`),
+      `--files`-scoped quickmerge.
 - [ ] [DATA] P2. Investigate whether the DRIFT V2 sig index should be built/queryable per-market (or
       per-instruction-type) instead of program-wide, so a single-market backfill run doesn't resolve + mislabel the
       whole program's daily activity. Confirm with whoever owns the `data_quality="helius_v2_signatures_only"` decision
