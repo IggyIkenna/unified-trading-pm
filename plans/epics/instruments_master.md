@@ -47,7 +47,7 @@ related_plans:
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     ../active/instruments_service_docs_consolidation_2026_07_08.md,
     ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
     ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
     ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
@@ -492,7 +492,7 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
   — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
 - ✅
-  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
+  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
   — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed. Caveat
   (2026-07-14, finding 150): DONE covers the ticker-collision remediation only (125/125 files, verified); the plan's own
   frontmatter is `status: active` and still carries an unresolved `- [ ] [DATA] P2` todo (was: presented above as a flat

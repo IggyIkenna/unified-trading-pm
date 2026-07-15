@@ -356,9 +356,10 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    shows D6 "⏳ OPEN" with no operator-call date recorded — that file is outside this pair's scope, flagged not fixed
    here).
 
-3. **Layer-1 re-measure + certify (Stage 3), AO Plan 4** `plans/active/layer1_remeasure_and_certify_2026_07_06.md` 1 of
-   8 open: tradfi `BLOCKED-PLAN2` pending `tradfi_v9_stage1_finish` tasks 2–11 (cannot certify against a stale pre-v9
-   catalogue). cefi/defi/prediction/sports freshly certified with real evidence.
+3. **Layer-1 re-measure + certify (Stage 3), AO Plan 4**
+   `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` 1 of 8 open: tradfi `BLOCKED-PLAN2` pending
+   `tradfi_v9_stage1_finish` tasks 2–11 (cannot certify against a stale pre-v9 catalogue). cefi/defi/prediction/sports
+   freshly certified with real evidence.
 
 4. **CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi**
    `plans/active/cefi_manifest_canonicalisation_2026_06_01.md` 1,980 lines, 26 unchecked / 56 checked: v9 apply-time
@@ -552,9 +553,9 @@ its own checklist.
    bucket-template rename DECISION, a stale MDPS test-assertion fix.
 
 5. **Fix Kraken-Futures dated-future symbol collision**
-   `plans/active/canonical_id_p0_kraken_futures_collision_2026_07_08.md` 6 of 7 shipped/verified (125 files, 37.5M rows
-   corrected). 1 new P2 todo: a discovered `FI_`-vs-`FF_` same-(ticker,expiry) instrument_id collision — needs an
-   operator decision on a contract-subtype marker. Distinct finding from the big effort, directly related.
+   `plans/archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md` 6 of 7 shipped/verified (125 files,
+   37.5M rows corrected). 1 new P2 todo: a discovered `FI_`-vs-`FF_` same-(ticker,expiry) instrument_id collision —
+   needs an operator decision on a contract-subtype marker. Distinct finding from the big effort, directly related.
 
 ---
 
@@ -618,8 +619,8 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
    ratchet baseline, still blocking quickmerge pushes.
 
 6. **predictions_lookahead_and_reader_migration** — 1 of 5 unchecked
-   `plans/active/predictions_lookahead_and_reader_migration_2026_06_20.md` Register predictions `feature_groups` into
-   UAC `FEATURE_REQUIRED_INPUTS` per canonical_question_group + binary-outcome — not started.
+   `plans/archive/2026_07/predictions_lookahead_and_reader_migration_2026_06_20.md` Register predictions
+   `feature_groups` into UAC `FEATURE_REQUIRED_INPUTS` per canonical_question_group + binary-outcome — not started.
 
 7. **features-service DeFi end-to-end test blocked on multiple data layer issues**
    `plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md` Narrative-only; doc's own final note

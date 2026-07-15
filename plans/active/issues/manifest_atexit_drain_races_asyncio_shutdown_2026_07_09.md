@@ -257,7 +257,7 @@ callers only (4 hits: the already-fixed `understat_eu_residual_closer_2026_07_08
 
 - `scripts/backfill/understat_bulk_backfill.py` — async `main()` had no explicit drain before its final log line; added
   `_mw.flush_all_pending_buckets()` right before `=== ... COMPLETE ===`, matching the sibling closer script's pattern
-  exactly. Actively gates `plans/active/understat_local_backfill_completion_2026_07_06.md` (status: active).
+  exactly. Actively gates `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (status: active).
 - `scripts/backfill_understat_xg_epl_2025_2026_06_29.py` — different shape: sync `main()` calls
   `asyncio.run(_run_backfill(...))`, so the drain has to run **inside** the `_run_backfill` coroutine (before it
   returns), not after `asyncio.run()` in the outer sync `main()` — the loop (and any executors it owns) is already torn

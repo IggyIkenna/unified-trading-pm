@@ -12,11 +12,11 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [g4-gate, deribit, options_chain]
-related: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md]
+related: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 created: 2026-07-03
 parent_epic: cefi_master
 priority: P0
-source: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md]
+source: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 assigned_vm: NA
 execution_scope: human
 drift_direction: advance-code

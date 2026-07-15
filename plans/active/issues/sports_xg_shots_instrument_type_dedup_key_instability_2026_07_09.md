@@ -121,7 +121,7 @@ deduping against the newly-tagged rows.
   happening. This is also plausibly the SAME standing, never-root-caused gap flagged in
   `sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` ("Update 2026-07-08": the deployed consolidator's
   incremental cycles were not reliably applying the NULL/`''` dedup fix in production). **Next steps** (tracked as a
-  todo in `plans/active/understat_local_backfill_completion_2026_07_06.md`, 2026-07-13 entry): (1) re-run
+  todo in `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`, 2026-07-13 entry): (1) re-run
   `fix_xg_shots_instrument_type_dedup_2026_07_09.py --apply` + `manifest_consolidator --force` to collapse the current
   residual; (2) list `_index/per_vm/` on the sports bucket for stale/uncleaned corrective shards and check whether the
   consolidator retires a per-VM shard after merging it or leaves it to be re-applied indefinitely; (3) do not re-close

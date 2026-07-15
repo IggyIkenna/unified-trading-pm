@@ -15,11 +15,11 @@ stage: [data]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [infra, spot-vm, zombie-vm, no-fire-and-forget, g4-gate, cefi]
-related: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md]
+related: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md]
 created: 2026-07-12
 parent_epic: cefi_master
 priority: P1
-source: [plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md G4 verification, slot-2 2026-07-12]
+source: [plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md G4 verification, slot-2 2026-07-12]
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra

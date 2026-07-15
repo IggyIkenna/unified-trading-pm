@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [cefi, backfill, manifest, mtds, deribit, binance, ml, tradfi]
 related:
   [
-    ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
     ../active/cefi_ml_directional_continuous_live_2026_06_20.md,
     ../active/cefi_manifest_canonicalisation_2026_06_01.md,
@@ -33,7 +33,7 @@ co_operators:
 codex_ssots:
 related_plans:
   [
-    ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
     ../active/cefi_ml_directional_continuous_live_2026_06_20.md,
     ../active/cefi_manifest_canonicalisation_2026_06_01.md,
@@ -657,7 +657,7 @@ genuine gaps; per-cluster triage of the 2,223 phantom residual.
 `ML_DIRECTIONAL_CONTINUOUS` continuous prediction signal on real capital across OKX + Binance + Bybit ≥7 days, full live
 loop + model lifecycle + alerting + kill-switches + DART override + backtest fidelity.
 
-### [`mvp_backfill_cefi_tick_v10_2026_06_27`](../active/mvp_backfill_cefi_tick_v10_2026_06_27.md)
+### [`mvp_backfill_cefi_tick_v10_2026_06_27`](../archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md)
 
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra). Backfill CeFi `trades` + `book_snapshot_5` for the
 v10 perp-gated MVP universe and Deribit BTC/ETH options as `options_chain` ONLY (the big cost saver), on SPOT VMs,

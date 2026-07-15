@@ -25,7 +25,7 @@ tags:
   ]
 related:
   [
-    plans/active/understat_local_backfill_completion_2026_07_06.md,
+    plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md,
     plans/active/issues/understat_bulk_download_backfill_2026_06_29.md,
     codex/02-data/availability-manifest-and-data-status.md,
     codex/02-data/honest-absence-downstream-handling.md,
@@ -51,9 +51,9 @@ locked_since: 2026-05-21
 
 While running the understat XG/XG_SHOTS backfill driver
 (`instruments-service/scripts/backfill/understat_bulk_backfill.py`) to completion for task -001 of
-`plans/active/understat_local_backfill_completion_2026_07_06.md`, the driver's self-healing retry loop converged from 20
-→ 4 remaining `attempted_failed` big-5 XG_SHOTS dates and then got permanently stuck at 4 (`2020-06-24`, `2020-07-02`,
-`2020-07-03`, `2020-07-24`), hitting `MAX ROUNDS reached` on every run.
+`plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`, the driver's self-healing retry loop
+converged from 20 → 4 remaining `attempted_failed` big-5 XG_SHOTS dates and then got permanently stuck at 4
+(`2020-06-24`, `2020-07-02`, `2020-07-03`, `2020-07-24`), hitting `MAX ROUNDS reached` on every run.
 
 The log showed the SAME 4 dates being correctly re-classified as "all expected leagues off-season" on **every** retry
 round (6 rounds observed), yet the manifest never updated — `attempted_at` stayed pinned at the stale `2026-06-23`

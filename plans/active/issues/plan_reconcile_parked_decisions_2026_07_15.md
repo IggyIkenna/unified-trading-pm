@@ -88,7 +88,7 @@ judgment, however strong the evidence. This one needs your word.
 ## §3 — P1 dispatch-affecting: `deployment_registry_firestore_p1_dualwrite` stuck at `status: draft`
 
 **Docs:** `plans/active/deployment_registry_firestore_migration_2026_07_14.md` ↔
-`plans/active/deployment_registry_firestore_p1_dualwrite_2026_07_14.md:9`
+`plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md:9`
 
 P1's frontmatter is still `status: draft` (never flipped to `active`) although 6/7 of its todos have shipped; the P0
 plan's own draft-gating todo (to flip P1 active) was never executed. `draft` = NOT ingested by the orchestrator, so the

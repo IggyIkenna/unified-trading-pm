@@ -268,9 +268,9 @@ root-caused; the mechanism is NOT what this section assumed. See B-ROOT-CAUSE be
 - `plans/archive/2026_07/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md:232` SAW them and scoped
   them OUT: _"a naive query without `source=` filtering showed a false 84,768 'eu' here — those rows are
   `source=api_football`, not footystats, and outside this plan's 6-source scope"_.
-- `plans/active/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md:178` counts them as a **real gap awaiting
-  a fetch**: _"api_football 542,912 (dominated by TEAMS eu=194,331 + **ODDS eu=89,073** … — awaiting P2a enrichment
-  coordinator)"_. That task is `[PARKED]`, priority 999.
+- `plans/archive/2026_07/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md:178` counts them as a **real gap
+  awaiting a fetch**: _"api_football 542,912 (dominated by TEAMS eu=194,331 + **ODDS eu=89,073** … — awaiting P2a
+  enrichment coordinator)"_. That task is `[PARKED]`, priority 999.
 
 Risk: the live `af-backfill-*` enrichment fleet is the P2a enrichment coordinator's fleet. A blank-reason
 `expected_unattempted` is the "pending_fetch" class; 82,509 of them are pointed at a source with no odds endpoint. This

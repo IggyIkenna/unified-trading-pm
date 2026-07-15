@@ -20,7 +20,7 @@ related:
     ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
     ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    ../active/sports_fixtures_schema_split_completion_2026_06_20.md,
+    ../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md,
     ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md,
     ../active/sports_features_readiness_for_predictions_2026_06_20.md,
     ../active/sports_manifest_canonicalisation_2026_06_01.md,
@@ -47,7 +47,7 @@ related_plans:
     ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
     ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    ../active/sports_fixtures_schema_split_completion_2026_06_20.md,
+    ../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md,
     ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md,
     ../active/sports_features_readiness_for_predictions_2026_06_20.md,
     ../active/sports_manifest_canonicalisation_2026_06_01.md,
@@ -383,7 +383,7 @@ SUPERSEDED in their headers — do NOT pick work from them directly.
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Canonical league/cup/team/player/fixture registry in UAC + per-source league eligibility (understat ~6 / footystats ~50 / odds-API ~20 + bookmaker-league / SFI subset / weather=venue) + annual-id-change handling + season/transfer-window canonical + API-Football reference-universe expansion to curated ~300 (burn 6M calls) keeping 94 as trading universe + HYBRID drop of residual out-of-universe rows + honest-coverage bakes the caps. Diagnosis: out-of-universe over-capture (1.68M/4.6M = 36% outside the 94-league universe).** | **EXTRACTED (net-new) — the canonical-everything + reference-expansion workstream; operator verbatim spec preserved in the plan** | [`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24`](../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md) (diagnosis doc: [`issues/sports_league_id_out_of_universe_overcapture_2026_06_24`](../active/issues/sports_league_id_out_of_universe_overcapture_2026_06_24.md)) |
 | EXPECTED_BOOKMAKER_MARKET_SETS empirical audit + orchestrator post-FIXTURES_SCHEDULE NaN-fill enumeration + ODDS cluster-validation kwargs                                                                                                                                                                                                                                                                                                                                                                                                        | **EXTRACTED (net-new)**                                                                                                           | [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)                                                                                                                                                                                                        |
-| FIXTURES → SCHEDULE+OUTCOMES per-league announcement-floor audit + cross-source `announced_at` backfill + `migrate_fixtures_split.py` + writegate same-day coordination + HT/ET/PEN + score-distinction write-path + pre-features extractor follow-up                                                                                                                                                                                                                                                                                             | **EXTRACTED (net-new)**                                                                                                           | [`sports_fixtures_schema_split_completion_2026_06_20`](../active/sports_fixtures_schema_split_completion_2026_06_20.md)                                                                                                                                                                                                              |
+| FIXTURES → SCHEDULE+OUTCOMES per-league announcement-floor audit + cross-source `announced_at` backfill + `migrate_fixtures_split.py` + writegate same-day coordination + HT/ET/PEN + score-distinction write-path + pre-features extractor follow-up                                                                                                                                                                                                                                                                                             | **EXTRACTED (net-new)**                                                                                                           | [`sports_fixtures_schema_split_completion_2026_06_20`](../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md)                                                                                                                                                                                                     |
 | SFI_STANDINGS 100%-failed diagnosis + open-meteo silence + footystats-scoped recon + drain-wait + api-football/understat coverage-window reconciliation                                                                                                                                                                                                                                                                                                                                                                                           | **EXTRACTED (net-new)**                                                                                                           | [`sports_phantom_recon_and_coverage_windows_2026_06_20`](../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md)                                                                                                                                                                                                          |
 | Run FSS on bucketed odds dataset + verify ML-ready feature matrix (sports half of the predictions e2e gate)                                                                                                                                                                                                                                                                                                                                                                                                                                       | **EXTRACTED (net-new)**                                                                                                           | [`sports_features_readiness_for_predictions_2026_06_20`](../active/sports_features_readiness_for_predictions_2026_06_20.md)                                                                                                                                                                                                          |
 | odds-cell / bookmaker-coverage FORM canonicalisation + honest-absence relabel + source-stamp (the 25,652 `MISSING_EXPECTED` re-classification)                                                                                                                                                                                                                                                                                                                                                                                                    | **OWNED ELSEWHERE — do not duplicate**                                                                                            | [`sports_manifest_canonicalisation_2026_06_01`](../active/sports_manifest_canonicalisation_2026_06_01.md) (delegates the _coverage backfill_ enumeration back to the net-new plan above; owns the FORM/relabel)                                                                                                                      |
@@ -767,10 +767,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-          disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-          (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-          (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-          use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+                  disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                  (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                  (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                  use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -895,18 +895,18 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-      going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-      if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-      (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+              going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+              if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+              (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-      (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-      `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-      CanonicalFixture fields)
+              (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+              `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+              CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
 > **SUPERSEDED 2026-06-20** → open remainder EXTRACTED to
-> [`sports_fixtures_schema_split_completion_2026_06_20`](../active/sports_fixtures_schema_split_completion_2026_06_20.md).
+> [`sports_fixtures_schema_split_completion_2026_06_20`](../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md).
 > Shipped items (UAC schema + UTL join helper) retained below as history; do NOT dispatch from here.
 
 Source issue archived to `plans/archive/issues/`. Critical lookahead-bias fix: today, post-match scores ride the same
@@ -1001,7 +1001,7 @@ cancellations.
 
 > **SUPERSEDED 2026-06-20** → open remainder (write-path population + pre-features-extractor follow-up + UI verify)
 > EXTRACTED to
-> [`sports_fixtures_schema_split_completion_2026_06_20`](../active/sports_fixtures_schema_split_completion_2026_06_20.md).
+> [`sports_fixtures_schema_split_completion_2026_06_20`](../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md).
 > Shipped UAC/UTL halves retained below as history; do NOT dispatch from here.
 
 Source issue archived. Q1+Q2 (futures + options expiry) are migrated to `tradfi_master` (Batch D); Q4 is already covered
@@ -1244,10 +1244,10 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       removed \_MANIFOLD/\_SHARPAPI). Bidirectional capability⇄adapter drift-guard test added.]** ~~17 caps declared vs
       15 execution classes present. Reconcile.~~
 - [x] ✅ [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. **[DONE — execution-service@dbab41a0e 2026-06-05:
-      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own try/except
-      + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting the batch.
-      Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but per-adapter
-      not enforced. Tighten.~~
+      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own
+      try/except + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting
+      the batch. Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but
+      per-adapter not enforced. Tighten.~~
 
 Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace note
 (cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates
@@ -1330,14 +1330,14 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-      `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-      dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-      `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-      clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-      coverage shows 0% until then, correctly).
+              `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+              dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+              `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+              clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+              coverage shows 0% until then, correctly).
 
-      `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-      trigger-date≪daily-calendar invariant. QG exit 0.
+              `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+              trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
@@ -1371,7 +1371,7 @@ confirmed: delegated visibility row, not a direct `parent_epic` child) ·
 audit (UAC) + orchestrator post-FIXTURES_SCHEDULE NaN-fill of missing `(fixture × bookmaker × market)` triples + ODDS
 cluster-validation kwargs at `record_captured`.
 
-### [`sports_fixtures_schema_split_completion_2026_06_20`](../active/sports_fixtures_schema_split_completion_2026_06_20.md)
+### [`sports_fixtures_schema_split_completion_2026_06_20`](../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md)
 
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra). Open remainder of the FIXTURES → SCHEDULE+OUTCOMES
 lookahead-bias split (UAC schema + UTL join already shipped): per-league announcement-floor audit, cross-source
