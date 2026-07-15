@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: CeFi Capture Universe — Two-Layer Architecture
 summary:
   Two-layer CeFi capture model — instruments-service enumerates the FULL catalogue while MTDS downloads only the
-  ~540-base CEFI_BASE_ASSET_UNIVERSE gated by the per-day venue perp-gate (spot captured only if the venue lists
-  a perp), with staking-spot/TradFi-perp exceptions and inverse/linear margin rules; one
-  is_in_mvp_capture_universe predicate is the honest-coverage denominator.
+  ~540-base CEFI_BASE_ASSET_UNIVERSE gated by the per-day venue perp-gate (spot captured only if the venue lists a
+  perp), with staking-spot/TradFi-perp exceptions and inverse/linear margin rules; one is_in_mvp_capture_universe
+  predicate is the honest-coverage denominator.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [cefi, instruments, mtds, honest-coverage, mvp, uac, backfill]
-related: [availability-manifest-and-data-status.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md]
+related:
+  [
+    availability-manifest-and-data-status.md,
+    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
+  ]
 created: 2026-06-24
 authoritative_for: [CeFi capture universe two-layer model + perp-gate]
 referenced_by: [codex/02-data/carry-venue-live-integration-reference.md, codex/02-data/mvp-scope-canonical.md]
@@ -69,6 +74,16 @@ Implemented as `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_
 | **DATED FUTURE** | Base in universe + venue-listed (NOT perp-gated — futures complex)       |
 | **OPTION**       | `venue == DERIBIT` AND `base ∈ {BTC, ETH}` only (for now)                |
 | **EQUITY_PERP**  | Base in `CEFI_EQUITY_PERP_BASE_UNIVERSE` + venue ∈ {Binance, OKX, Bybit} |
+
+**data_type cut per instrument-type** (the MVP data_type set is per-`(venue, instrument_type)` — SSOT `CeFiMvpRule` /
+`get_mvp_data_types_for_cefi_venue_itype`; full table in `codex/02-data/mvp-scope-canonical.md` § CeFi):
+SPOT/PERP/DATED-FUTURE/EQUITY-PERP = **trades + book_snapshot_5 + funding** (derivative_ticker/funding_rate);
+**PERPETUAL ALSO carries `liquidations` (v15, 2026-07-15, WS-E)** — a PERPETUAL-leg-ONLY data_type, venue-gated by
+`VENUE_DATA_TYPE_CAPABILITIES` to the **6 real-feed venues** (BINANCE-FUTURES, OKX-SWAP, BYBIT, KRAKEN-FUTURES,
+BITFINEX-FUTURES, BITGET-FUTURES — 732,751 captured PERPETUAL rows, 99.95% of captured cefi liquidations). NOT on SPOT /
+DATED-FUTURE / EQUITY-PERP (dated-futures liq negligible), and NOT on ASTER (live-only, 0 batch) / DERIBIT (noise) /
+HYPERLIQUID (no feed) / COINBASE-FUTURES (trades-only override). OPTION = `options_chain` only; COINBASE-SPOT/-FUTURES =
+`trades` only.
 
 ## Exception — staking/LST/LRT spot (spot-without-perp allow-list)
 
