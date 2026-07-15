@@ -413,3 +413,17 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
   shipped CBOE fix + 2 new scoped follow-up todos are in
   `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
   ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
+- 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a
+  new todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4
+  existing routing layers cited) before discovering the above agent's work had already landed. Added value rather than
+  duplicating: a live re-query of the tradfi tick manifest that corrects the existing write-up's "YAHOO_FINANCE is the
+  dominant contributor" claim for `ohlcv_15m` (it's actually zero — NYSE/CBOE dominate) and traces the concrete reason
+  the alert keeps firing despite the routing gap being closed: `deployment-service`'s DP-FETCH-009 detector
+  (`_read_attempted_failed_cells`) counts `attempted_failed` over the WHOLE manifest with no date-recency window, so the
+  ~6,400 combined stale (8+ day old, non-regenerating) `ohlcv_15m`/`ohlcv_24h` rows alone permanently exceed its
+  500-row absolute threshold. Filed as a "Verification addendum" section in the issue doc (§ "Verification addendum —
+  live manifest re-query + alert-persistence root cause") rather than a rewrite. No code shipped (nothing left to
+  build for this finding) and the plan checkbox above was correctly already `[x]` — left as-is. Recommends this
+  alert-persistence mechanism (whole-history count, no recency window) be looked at as ONE unified follow-up alongside
+  the mbp_10 and corporate_action_confirmed/earnings_result stale-row questions already flagged elsewhere in this doc,
+  rather than three separate piecemeal decisions.

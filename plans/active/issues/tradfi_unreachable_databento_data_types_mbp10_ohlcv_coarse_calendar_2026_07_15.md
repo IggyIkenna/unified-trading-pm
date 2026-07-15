@@ -363,6 +363,51 @@ but because (B) is a real, never-built multi-service aggregation writer (despite
 has an already-flagged "manifest churn" risk that deserves the same explicit operator decision its twin
 (`corporate_action_confirmed`/`earnings_result`) already got.
 
+## Verification addendum — live manifest re-query + alert-persistence root cause (2026-07-15, independent audit pass)
+
+A second agent independently re-audited this same finding (2) in parallel (dispatched from the same plan todo before
+either agent saw the other's result) and ran a live manifest query the prior pass above did not — worth folding in
+rather than discarding, since it corrects one claim and adds the mechanism for why the alert keeps firing after the
+code fix. Pulled `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` directly
+(5,564,746 rows) and grouped by `(venue, capture_status)` for `ohlcv_15m`/`ohlcv_24h`.
+
+**Correction to finding (C) above**: `"YAHOO_FINANCE"` is **not** the dominant contributor to `ohlcv_15m`'s
+`attempted_failed` count — its live rows show `empty_confirmed: 996` / `attempted_failed: 0` for `ohlcv_15m`. The real
+per-venue breakdown of the 3,589 `ohlcv_15m` `attempted_failed` rows is: `NYSE` 1,397, `CBOE` 1,242 (the mechanism (A)
+above just closed going forward), `KRX` 743, `NASDAQ` 207 (sums to 3,589, matching the alert exactly). For `ohlcv_24h`
+(2,852 `attempted_failed` total): `NYSE` 1,016, `YAHOO_FINANCE` 831, `KRX` 742, `NASDAQ` 206, `FX` 57 — YAHOO_FINANCE is
+a real, meaningful contributor here (~29%) but not dominant; NYSE is larger. (C)'s underlying diagnosis — YAHOO_FINANCE
+is a phantom `NO_ADAPTER_YET` venue declared expected for these two data_types — still stands and is still worth fixing;
+only the "dominant contributor" sizing claim needed correcting.
+
+**All of it is stale, not active**: every `ohlcv_15m`/`ohlcv_24h` `attempted_failed` row in the current manifest has
+`attempted_at` between 2026-04-30 and 2026-07-07T07:29:16Z — none newer, i.e. unchanged for 8+ days as of this query
+(2026-07-15) and predating BOTH narrowing fixes (instruments-service's tradfi MVP data_type-narrowing gate,
+`instruments-service@31c15d88`, 2026-07-14 20:18 UTC, which independently closes the *seeding* side for MVP-scoped
+tradfi cells; and this doc's CBOE `unified-api-contracts@78b9e899` narrowing above). Same "fixed historical count, not
+actively growing" shape already established for `mbp_10`'s 1186/1186 rows in the mbp_10 resolution section above — none
+of these three cells (`mbp_10`, `ohlcv_15m`, `ohlcv_24h`) are currently being re-attempted and re-failing; the manifest
+rows are dead residue from a 2026-07-07 batch run.
+
+**Why the alert keeps firing anyway (new finding, ties the mbp_10/(C) open questions together)**:
+`deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py::_read_attempted_failed_cells` (feeding
+DP-FETCH-009 / `DP_RUN_MOSTLY_EMPTY`) reads `columns=["capture_status", "data_type"]` only from the WHOLE consolidated
+manifest `_index` — no `attempted_at`/date column, no recency window of any kind — and `check_high_attempted_failed`
+compares the resulting whole-history count against a flat `ATTEMPTED_FAILED_ABS_THRESHOLD = 500` (or 10% ratio at
+≥50 count; same file, lines 217-219). A dead cell's stale count alone (3,589 and 2,852, both »500) is sufficient to
+keep it `high=True` and paging indefinitely, completely independent of whether anything is currently broken. This is
+the concrete mechanism behind the open question already flagged in the mbp_10 Progress Log entry above ("whether the
+manifest/alerting layer has a clean mechanism to mark an operator-scope-deferred cell as `expected_unattempted`-with-
+reason... so it stops presenting as an active failure") — and it applies identically to this doc's `ohlcv_15m`/
+`ohlcv_24h` residue and to finding (3)'s deferred `corporate_action_confirmed`/`earnings_result` historical rows. **Not
+fixed here** (touches DP-FETCH-009's alert-classification semantics, a cross-finding change, explicitly out of this
+narrow audit's scope) — flagging as a single unified follow-up candidate rather than 3 separate piecemeal asks: either
+(a) purge/reclassify the stale rows across all 3 cells in one pass, (b) add a date-recency window or an
+"excluded-from-current-expected-coverage" exclusion to `_read_attempted_failed_cells`, or (c) both. Recommend whoever
+picks this up read all 3 open "stale row" threads in this remediation wave together (this doc's mbp_10/ohlcv_15m/
+ohlcv_24h, finding (3)'s corporate_action_confirmed/earnings_result, and the separate cefi blank-`data_type` orphan-rows
+todo in `data_pipeline_alerts_batch_remediation_2026_07_15.md`) rather than resolving them one at a time.
+
 ## Resolution — corporate_action_confirmed / earnings_result (2026-07-15)
 
 Fixed exactly as scoped in the dispatch: `instruments-service/scripts/enumerate_expected_universe.py` is confirmed
@@ -473,3 +518,24 @@ follow-up flagged to `macro_micro_econ_data_capture_audit_2026_06_05.md`'s owner
   data mutation, deserves its own scoped pass), not forced into this commit. This doc's finding (3) is now closed;
   findings (2)'s sub-items (B) downstream aggregation writer and (C) phantom `YAHOO_FINANCE` venue remain open per their
   own todos above.
+- 2026-07-15 (independent second audit pass on finding (2), dispatched from the same
+  `data_pipeline_alerts_batch_remediation_2026_07_15.md` todo before this doc's existing "Resolution —
+  ohlcv_15m/ohlcv_24h audit" section was visible): re-confirmed the operator's per-venue-routing prior independently
+  (same conclusion, four layers found: `VENUE_DATA_TYPE_CAPABILITIES`, `expected_coverage.py`, UAC
+  `MVP_SCOPE`/`TradFiMvpRule` consumed by instruments-service's `_tradfi_mvp_data_types`, and MTDS's
+  `_DATABENTO_SUPPORTED_DATA_TYPES` fetch-layer allowlist — all already narrowing CME/CBOE/NASDAQ/NYSE away from
+  `ohlcv_15m`/`ohlcv_24h`). Found the CBOE fix + this doc's own audit write-up already shipped/landed moments earlier by
+  a concurrent agent — did not duplicate; instead ran a live re-query of the actual manifest
+  (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`) that the existing write-up
+  had not done, which (a) corrects the "YAHOO_FINANCE is the dominant contributor" claim for `ohlcv_15m` (it contributes
+  zero `attempted_failed` rows there; NYSE and CBOE are the real dominant contributors) and (b) proves every
+  `attempted_failed` row for both cells is stale (`attempted_at` ≤ 2026-07-07, unchanged 8+ days, predating both
+  narrowing fixes) and (c) traced the concrete reason the alert keeps re-firing despite the routing gap being closed:
+  `deployment-service`'s `_read_attempted_failed_cells` (DP-FETCH-009) counts `attempted_failed` over the WHOLE
+  manifest with no date-recency window at all, so stale rows alone permanently exceed the 500-row absolute threshold.
+  Filed as a "Verification addendum" section above (not a rewrite of the existing audit — a corroborating +
+  correcting layer on top of it) and flagged the alert-persistence mechanism as a candidate unified follow-up spanning
+  `mbp_10`, `ohlcv_15m`/`ohlcv_24h`, and finding (3)'s deferred historical rows, rather than resolving it here (touches
+  alert-classification semantics broadly — out of this narrow audit's scope per the dispatching plan's own STOP
+  criterion). No code shipped by this pass (nothing left to build — the routing gap was already closed by others); the
+  plan's todo checkbox was already correctly flipped by the concurrent agent and is left as-is.
