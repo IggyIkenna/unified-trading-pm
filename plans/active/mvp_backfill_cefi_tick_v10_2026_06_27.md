@@ -3092,3 +3092,35 @@ cleanup with zero effect on any measured number.
 (per the operator's "sweep wider" ask) — findings will land in
 `issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md`'s Progress Log once it returns;
 does not block this entry.
+
+### ✅ Impossible-combos ruling IMPLEMENTED + MEASURED — eu −196,120, coverage 50.49% → 52.18% — 2026-07-15T18:30Z
+
+Operator ruling (2026-07-15, verbatim): _"empty confirmed being in denominator is fine BUT its the literally impossible
+combinations i dont even need in empty confirmed like a data type that literally short of magic cannot physically be
+retrieved for a venue"_. This NARROWED the 2026-07-13 ruling on the same cells (which chose option (b) — keep in
+denominator + write typed `empty_confirmed`); the operator now wants impossible-for-batch tuples simply NOT ENUMERATED.
+Shipped across 3 repos:
+
+- `unified-api-contracts@7754661a` — NEW `VENUE_DATA_TYPE_NO_BATCH_SOURCE`: the batch-vs-live capability axis (SSOT home
+  for the knowledge that previously lived only in MTDS's `_LIVE_ONLY_DATA_TYPES` dict).
+- `instruments-service@1aeb5e3c` — enumerator excludes no-batch-source tuples from the BATCH expected/reachable universe
+  (they are never seeded, so they appear as neither `expected_unattempted` NOR `empty_confirmed`).
+- `market-tick-data-service@0f0cc598` — stops writing the now-superseded typed empty rows.
+- The tuples remain intact for LIVE mode (WS streams still expected) — deletion from UAC wholesale was deliberately NOT
+  done; it would have broken live and silently narrowed MVP scope (the exact tradeoff the 07-13 analysis flagged when it
+  rejected option (a)).
+
+**MEASURED before → after** (`measure_honest_coverage --asset-group cefi`, real runs, not predictions):
+`expected_unattempted` 2,969,412 → **2,773,292** (**−196,120**); `coverage_pct` 50.49 → **52.18**;
+`layer1_completeness_pct` 100.0 → 100.0; `denominator_complete` True → True (the fix did NOT re-break Layer-1). The
+−196,120 vs the predicted −196,570 is a **correct** 450-cell difference: COINBASE-CDE/trades was rightly NOT excluded —
+it gained a real native-REST batch adapter on 2026-07-13 (`coinbase_cde_batch.py`), so it is fetchable, not impossible.
+
+**Wider impossible-combo sweep (operator asked for the whole class): NO further HIGH-confidence candidates.** Four
+suspects were ruled OUT against LIVE Tardis metadata rather than assumed: OKX-FUTURES/PERPETUAL (118,196 captured rows —
+real, legacy pre-split tagging), LIGHTER-ZKSYNC/derivative_ticker (real ticker channel since 2026-04-17 — an
+un-backfilled gap, not an impossibility), BITGET-FUTURES/FUTURE (live-confirmed 1,081 symbols), CBOE/ohlcv_24h (real
+Yahoo path). Only `BARCHART: ohlcv_15m` is stale-dead — but it is already unreachable by both Layer-1 and Layer-2 (zero
+instruments carry venue=BARCHART since the 2026-06-24 removal), so it contributes 0 eu; hygiene-delete on next touch of
+that file, not a denominator bug. Sports odds-type declarations flagged as needing their own coverage snapshot before
+any deletion call (out of cefi scope).
