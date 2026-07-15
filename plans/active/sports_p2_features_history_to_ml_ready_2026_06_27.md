@@ -138,6 +138,43 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 08:0xZ — data_engineering slot-6 (Todo 1 re-dispatch — real fix shipped: cross-repo fixtures-split reader gap found + fixed at the leading edge; 2 gap-fill VMs still healthy mid-history, checkbox NOT flipped)
+
+**Fresh-pulled all 24 slot repos clean.** Verified the 2 gap-fill VMs from slot-2's 00:53Z relaunch
+(`features-sports-sports-20260715-004933` covering 2018-07-09→2019-08-11, `-004954` covering 2020-03-07→2020-10-05) are
+still `RUNNING`, `run.log` fresh, real per-date compute continuing — features bucket unique-date count now **3,023** (up
+from 2,897 at slot-12's 01:12Z check).
+
+**New finding — the 3rd VM (`-005012`, range 2025-08-11→2026-07-14) completed but exited `rc=1` on its LAST date**:
+`DependencyError: Required upstream blob missing within coverage: entity=fixtures date=2026-07-14`. GCS inspection
+confirmed instruments-service's FIXTURES writer
+(`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py`) cut over to the
+`fixtures_schedule`/`fixtures_outcomes` entity-folder split (per
+`sports_fixtures_schema_split_completion_2026_06_20.md`) with **no legacy dual-write** — `entity=fixtures` is completely
+absent for every date on/after the cutover (first observed 2026-07-14). The plan's own "Already shipped" note that a UTL
+reader helper (`read_fixtures_joined`) "hides the split from consumers" is misleading: that helper is itself a stale,
+gated no-op (still reads only the legacy path, confirmed zero production callers) — the reader-side half of this
+coordinated migration never actually landed. This affects ANY fixtures read for ANY date on/after the cutover, not just
+this backfill (flagged as possibly live-pipeline-affecting).
+
+**Fixed** (scoped to features-service, this plan's own repo): added `_read_split_fixtures_fallback()` to `gcs_reader.py`
+— reads + left-joins the `fixtures_schedule`/`fixtures_outcomes` per-league shards on `af_fixture_id` (both split
+entities keep the writer's original raw column names, so no column-mapping needed) when the legacy singleton/per-league
+fixtures reads both miss. 3 new regression tests (`TestReadReferenceEntitySplitFixturesFallback`). QG green, shipped
+**features-service@18be5d84**. Filed + shipped a NOTIFY-OPERATOR issue doc with the full cross-repo finding + a P0
+"check live pipeline" todo + a P1 UTL fix todo (out of this task's repo scope) — **unified-trading-pm PR#1039**
+(merged), `plans/active/issues/features_sports_fixtures_split_reader_gap_2026_07_15.md`.
+
+**What this does NOT fix yet**: the 2 in-flight gap-fill VMs are both mid-history (well before the cutover) and
+unaffected by this bug — no relaunch needed for them. The trailing-edge date (2026-07-14 onward) still needs a fresh
+compute pass now that the reader fix is live; not launched this dispatch (out of scope — the 2 known historical gaps
+take priority per the single-walk/efficiency craft north-star, and a trailing-edge catch-up is cheap/fast once the
+historical gaps close). **Handoff for the next dispatch**: once `-004933`/`-004954` complete, launch a small
+trailing-edge pass (e.g. `--start-date 2026-07-14 --end-date <today>`) to confirm the split-fixtures fix actually closes
+that gap end-to-end against real GCS, then continue the manifest-based gap scan before declaring Todo 1 complete.
+Checkbox NOT flipped (Gate: `by_date/day=*/...` for every in-coverage day — the known gaps are still open).
+`/skip-current-task` per this task's established convention.
+
 ### 2026-07-15 01:12 UTC — data_engineering slot-12 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-2's 00:53Z relaunch, steady genuine progress, no new action)
 
 Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-2's 00:53Z entry (same 3 gap-fill VMs, ~19 min
@@ -3378,7 +3415,7 @@ information. Checkbox NOT flipped. Skipping this task for slot 12 (per skip-curr
 eligible) so this session moves to different available work instead of re-running the same multi-hour verification.
 
 - 2026-07-14 19:4xZ (autonomous tick 1): GW recompute fleet (fss-1/2/3) finished + self-deleted, BUT wrote a DIVERGENT
-  partition shape — day=<D>/league=<NUMERIC_AF_ID>/feature_group={derived,fixture}_features/ (observed 17:27Z→18:31Z
+  partition shape — day=<D>/league=<NUMERIC_AF_ID>/feature_group={derived,fixture}\_features/ (observed 17:27Z→18:31Z
   across the window) instead of the day-level canonical atom the gates/readers use; raw numeric af-ids as league keys
   additionally suspect. ML-readiness re-verify HELD pending shape diagnosis (agent dispatched: writer-vs-reader shape
   evidence, canonical ruling, redo cost). Enrichment fleet healthy (4/5 VMs writing, INJURIES VM completed); pre-2025
@@ -3389,7 +3426,7 @@ eligible) so this session moves to different available work instead of re-runnin
   strict, avg 95.3%, 0 missing — IDENTICAL state to the P1d-accepted bar (2026-07-12 precedent: aggregate
   > =95% PASS), so the GW recompute + re-verify criteria are met on precedent; the strict-gate shortfall is an ODDS-side
   > artifact untouched by this recompute. NEW TODO captured below. Cross-repo P1 dispatched: ml-service loader cannot
-  > read the per-league layout (issue doc sports_derived_features_per_league_layout_unread_by_ml_loader _2026_07_14.md)
+  > read the per-league layout (issue doc sports_derived_features_per_league_layout_unread_by_ml_loader \_2026_07_14.md)
   > — fix agent running (loader layout-awareness + failure-atom alignment + 27 stale-row cleanup).
 - [x] ✅ [DATA] P2. Diagnose the 9-day exact-68.6% ML-readiness cluster (2025-09-02/03/04/09/10, 10-07/14/23, 11-11/13
       at T-24h/T-1h) + the other 8 sub-95% days — odds-side signature (identical pct = identical missing column block;
@@ -3407,8 +3444,8 @@ eligible) so this session moves to different available work instead of re-runnin
   confirmed 74/91 pass, 17 fail (9 exact-68.6131%, 8 in the 70.1-94.9% range), avg 95.3% — matches the prior autonomous
   tick 2 finding, no drift. Downloaded + column-analyzed all 9 cluster-date `odds_features/features.parquet` files at
   T-24h/T-1h (`features_service.sports.calculators.odds_columns.ODDS_COLUMNS`, 137 cols): the SAME 43 columns
-  (velocity__/acceleration__/steam__/clv__/delta_prob_6h,1h__/exchange_price__/move_direction,sign__/
-  market_reversal,chop__/velocity_prob__,acceleration_prob__) are 100% NaN on every one of the 9 dates regardless of row
+  (velocity**/acceleration**/steam**/clv**/delta_prob_6h,1h**/exchange_price**/move_direction,sign**/
+  market_reversal,chop**/velocity_prob**,acceleration_prob**) are 100% NaN on every one of the 9 dates regardless of row
   count (1 fixture on 8/9, 3 on 2025-10-23) — 94/137=68.6131% is a fixed column-block ratio, not a row-count
   coincidence. Traced into MDPS's bucketed odds
   (`market-data-tick-sports-prd-central-element-323112/processed/by_date/ day=<D>/pipeline_mode=batch_mdps_odds_horizon_bucket/.../data_type=odds_horizon_bucket/`):
