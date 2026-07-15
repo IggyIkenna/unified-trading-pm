@@ -539,3 +539,24 @@ follow-up flagged to `macro_micro_econ_data_capture_audit_2026_06_05.md`'s owner
   alert-classification semantics broadly — out of this narrow audit's scope per the dispatching plan's own STOP
   criterion). No code shipped by this pass (nothing left to build — the routing gap was already closed by others); the
   plan's todo checkbox was already correctly flipped by the concurrent agent and is left as-is.
+- 2026-07-15 (independent second audit pass on finding (3) `corporate_action_confirmed`/`earnings_result`, dispatched
+  from the same `data_pipeline_alerts_batch_remediation_2026_07_15.md` todo): found the fix already shipped by a
+  concurrent agent (`instruments-service@03f71c81`) and the resolution write-up above already landed
+  (`unified-trading-pm@24ee65c3a`) before this pass reached the shipping step. Independently re-verified rather than
+  duplicating: re-confirmed via fresh grep that `enumerate_expected_universe.py` is the sole non-test/non-restamp-script
+  seeding site across instruments-service + market-tick-data-service + UAC; re-read the shipped diff line-by-line and
+  confirmed the exclusion is scoped correctly (both `enumerate_v2()` and `main()`'s CLI-default resolution branches
+  patched; UAC's `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` registry itself untouched, per the shipped
+  `test_uac_data_types_by_asset_group_registry_itself_is_untouched` regression test); confirmed features-service's
+  calendar module has zero dependency on `DATA_TYPES_BY_ASSET_GROUP` (grep, zero hits) so the legitimate seeding path
+  is provably unaffected. No discrepancies found — the shipped fix matches this doc's own recommendation exactly. Only
+  gap closed by this pass: the plan's own `data_pipeline_alerts_batch_remediation_2026_07_15.md` "New todos" checkbox
+  for this item was still unflipped despite the underlying work being complete — flipped it with full evidence
+  (`unified-trading-pm` commit to follow this entry). **Cross-referencing the "independent second audit pass on finding
+  (2)" entry directly above**: its DP-FETCH-009 finding (deployment-service's `_read_attempted_failed_cells` counts
+  `attempted_failed` over the WHOLE manifest, no date-recency window) applies equally to finding (3)'s deferred
+  807/799 historical rows — i.e. leaving those rows in place is NOT expected to self-resolve the `DP_RUN_MOSTLY_EMPTY`
+  alert for this cell even though future seeding has stopped; the alert will keep re-firing off the stale historical
+  rows alone until either the rows are explicitly cleaned up or the alert-counting mechanism gains a recency window.
+  Flagging this explicitly so the "forward-only, historical rows deferred" decision above is not mistaken for "the
+  alert is now fixed" — it is not, by itself.

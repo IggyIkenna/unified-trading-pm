@@ -341,9 +341,26 @@ Presented all 5 open items to the operator with recommendations; decisions below
       below). Full writeup + 2 new scoped todos:
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
       ohlcv_15m/ohlcv_24h audit (2026-07-15)".
-- [ ] [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
-      `instruments-service/scripts/enumerate_expected_universe.py` (or wherever the actual seeding happens — confirm via
-      the issue doc's citations) from seeding these as expected cells in the MTDS tick manifest bucket.
+- [x] ✅ [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
+      `instruments-service/scripts/enumerate_expected_universe.py` from seeding these as expected cells in the MTDS
+      tick manifest bucket. Confirmed as the sole seeding site (grep-verified across instruments-service +
+      market-tick-data-service + UAC — no other non-test consumer of either data_type; features-service's calendar
+      module, which owns the real capture code, has zero dependency on `DATA_TYPES_BY_ASSET_GROUP` and is unaffected).
+      `instruments-service@03f71c81` adds a tradfi-only `_tradfi_mtds_tick_manifest_data_types()` exclusion helper
+      wired into both `enumerate_v2()` and `main()`'s `data_types`-resolution sites; UAC's
+      `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` registry itself is deliberately left untouched (other UAC consumers —
+      validity matrices, UI reference-data generation, `mvp_scope` — still need both types declared legitimate). 4 new
+      regression tests (`TestTradfiMtdsTickManifestDataTypeExclusion`), full suite + `quality-gates.sh` green.
+      **Historical row cleanup: deferred, not done in this pass** — the 807 `corporate_action_confirmed` + 799
+      `earnings_result` already-seeded `attempted_failed` rows in the live TICK manifest are untouched (forward-only
+      fix: stops future seeding, does not retroactively clean existing rows) — flagged as a follow-up in the issue doc
+      rather than silently dropped; it's a production-data-mutation decision (delete vs. reclassify) that deserves its
+      own scoped pass, same reasoning as the parallel cefi-orphan-rows and mbp_10 items in this remediation wave. Full
+      resolution write-up + operator decision record: `unified-trading-pm@24ee65c3a`
+      (`tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+      corporate_action_confirmed / earnings_result"). Independently re-verified (seeding-site confirmation, blast
+      radius, scope precision vs. UAC, test coverage, historical-row decision) against the already-shipped commit
+      before this checkbox flip — no discrepancies found.
 - [ ] [DOCS] P2. Tradfi mbp_10: correct
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
       registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
