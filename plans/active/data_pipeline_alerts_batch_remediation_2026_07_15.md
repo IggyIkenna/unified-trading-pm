@@ -342,12 +342,12 @@ Presented all 5 open items to the operator with recommendations; decisions below
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
       ohlcv_15m/ohlcv_24h audit (2026-07-15)".
 - [x] ✅ [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
-      `instruments-service/scripts/enumerate_expected_universe.py` from seeding these as expected cells in the MTDS
-      tick manifest bucket. Confirmed as the sole seeding site (grep-verified across instruments-service +
+      `instruments-service/scripts/enumerate_expected_universe.py` from seeding these as expected cells in the MTDS tick
+      manifest bucket. Confirmed as the sole seeding site (grep-verified across instruments-service +
       market-tick-data-service + UAC — no other non-test consumer of either data_type; features-service's calendar
       module, which owns the real capture code, has zero dependency on `DATA_TYPES_BY_ASSET_GROUP` and is unaffected).
-      `instruments-service@03f71c81` adds a tradfi-only `_tradfi_mtds_tick_manifest_data_types()` exclusion helper
-      wired into both `enumerate_v2()` and `main()`'s `data_types`-resolution sites; UAC's
+      `instruments-service@03f71c81` adds a tradfi-only `_tradfi_mtds_tick_manifest_data_types()` exclusion helper wired
+      into both `enumerate_v2()` and `main()`'s `data_types`-resolution sites; UAC's
       `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` registry itself is deliberately left untouched (other UAC consumers —
       validity matrices, UI reference-data generation, `mvp_scope` — still need both types declared legitimate). 4 new
       regression tests (`TestTradfiMtdsTickManifestDataTypeExclusion`), full suite + `quality-gates.sh` green.
@@ -359,8 +359,8 @@ Presented all 5 open items to the operator with recommendations; decisions below
       resolution write-up + operator decision record: `unified-trading-pm@24ee65c3a`
       (`tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
       corporate_action_confirmed / earnings_result"). Independently re-verified (seeding-site confirmation, blast
-      radius, scope precision vs. UAC, test coverage, historical-row decision) against the already-shipped commit
-      before this checkbox flip — no discrepancies found.
+      radius, scope precision vs. UAC, test coverage, historical-row decision) against the already-shipped commit before
+      this checkbox flip — no discrepancies found.
 - [ ] [DOCS] P2. Tradfi mbp_10: correct
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
       registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
@@ -430,17 +430,56 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
   shipped CBOE fix + 2 new scoped follow-up todos are in
   `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
   ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
-- 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a
-  new todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4
-  existing routing layers cited) before discovering the above agent's work had already landed. Added value rather than
+- 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a new
+  todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4 existing
+  routing layers cited) before discovering the above agent's work had already landed. Added value rather than
   duplicating: a live re-query of the tradfi tick manifest that corrects the existing write-up's "YAHOO_FINANCE is the
   dominant contributor" claim for `ohlcv_15m` (it's actually zero — NYSE/CBOE dominate) and traces the concrete reason
   the alert keeps firing despite the routing gap being closed: `deployment-service`'s DP-FETCH-009 detector
   (`_read_attempted_failed_cells`) counts `attempted_failed` over the WHOLE manifest with no date-recency window, so the
-  ~6,400 combined stale (8+ day old, non-regenerating) `ohlcv_15m`/`ohlcv_24h` rows alone permanently exceed its
-  500-row absolute threshold. Filed as a "Verification addendum" section in the issue doc (§ "Verification addendum —
-  live manifest re-query + alert-persistence root cause") rather than a rewrite. No code shipped (nothing left to
-  build for this finding) and the plan checkbox above was correctly already `[x]` — left as-is. Recommends this
-  alert-persistence mechanism (whole-history count, no recency window) be looked at as ONE unified follow-up alongside
-  the mbp_10 and corporate_action_confirmed/earnings_result stale-row questions already flagged elsewhere in this doc,
-  rather than three separate piecemeal decisions.
+  ~6,400 combined stale (8+ day old, non-regenerating) `ohlcv_15m`/`ohlcv_24h` rows alone permanently exceed its 500-row
+  absolute threshold. Filed as a "Verification addendum" section in the issue doc (§ "Verification addendum — live
+  manifest re-query + alert-persistence root cause") rather than a rewrite. No code shipped (nothing left to build for
+  this finding) and the plan checkbox above was correctly already `[x]` — left as-is. Recommends this alert-persistence
+  mechanism (whole-history count, no recency window) be looked at as ONE unified follow-up alongside the mbp_10 and
+  corporate_action_confirmed/earnings_result stale-row questions already flagged elsewhere in this doc, rather than
+  three separate piecemeal decisions.
+
+## Reconciliation round — closing report (2026-07-15)
+
+All 3 dispatched follow-up fixes from the operator-decision round are complete:
+
+1. **Cefi orphan rows (BOTH, as decided)**: tool hardening shipped `instruments-service@dd6b4e826` (generalized the
+   blank-`data_type` blind-spot fix beyond the schema_version==4 special case it was previously limited to). The
+   9,757-row deletion executed with real production-data rigor: re-verified the exact predicate and the 99.0%
+   cross-reference live before touching anything, discovered mid-task that the originally-planned deletion mechanism was
+   unsafe (a frozen legacy snapshot would have let the rows silently resurrect), routed around it with a direct
+   atomic-CAS canonical rewrite, and verified before/after row counts match exactly (11,238,191 → 11,228,434, `-9757`,
+   `captured` count unchanged). Filed the resurrection-risk discovery as its own issue
+   (`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) rather than attempting a fix under time pressure —
+   it's a broader latent risk potentially affecting other buckets too, and genuinely needs its own investigation.
+2. **Tradfi ohlcv_15m/24h (audit-first, as decided)**: operator's prior confirmed correct — the per-venue
+   source-capability infrastructure substantially already exists in UAC (`VENUE_DATA_TYPE_CAPABILITIES`,
+   `data_source_continuity.py`). Found and fixed one genuinely stale entry (`unified-api-contracts@78b9e899` — a
+   leftover CBOE `ohlcv_15m` registry entry from a Yahoo-VIX feed retired 2026-06-25/26). Honestly flagged two real gaps
+   instead of forcing fixes: no downstream OHLCV-aggregation writer exists despite 3 places in the codebase claiming one
+   does (feeds `vix_features`), and a phantom `YAHOO_FINANCE` venue with no adapter is likely the dominant remaining
+   failure-count contributor (same misclassification shape as the corp-actions fix, flagged not deleted per an existing
+   "manifest churn" warning).
+3. **Corp-actions (as decided)**: `instruments-service@03f71c81a` stops seeding `corporate_action_confirmed`/
+   `earnings_result` into the MTDS tick manifest, scoped precisely to that seeding path only (UAC's shared registry left
+   untouched, confirmed via regression test). Correctly detected a real cross-agent dependency (needed finding-2's CBOE
+   fix to land first for its golden-fixture test to pass) and waited rather than forcing a red gate through. Historical
+   already-seeded rows left as a documented follow-up, matching the mbp_10 precedent.
+
+**New items surfaced this round** (not yet acted on, correctly not rushed): the legacy-seed resurrection risk (cefi,
+likely also defi/tradfi), the missing OHLCV-aggregation writer, and the phantom `YAHOO_FINANCE` venue — all
+filed/documented, none blind-fixed.
+
+**Total for the full session**: 10 code fixes shipped and independently verified across 6 repos (`alerting-service`,
+`deployment-service`×2, `features-service`, `market-tick-data-service`×2, `unified-trading-library`,
+`unified-api-contracts`, `instruments-service`×2), all via `quickmerge` with passing tests and green quality gates; 1
+fix corrected after adversarial verification caught an overstatement; 3 genuine new issues filed rather than papered
+over; 1 item deliberately parked per operator decision; 1 item deliberately left at its existing scope per operator
+decision. This plan's original ask is now substantively addressed — remaining open items are either freshly-discovered
+follow-up work (expected outcome of a real audit) or explicit operator-parked decisions, not gaps in effort.
