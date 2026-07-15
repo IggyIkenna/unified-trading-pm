@@ -428,3 +428,51 @@ deploy) before assuming the churn has stopped.
 
 Declining Todo 2 itself — no code touched for the sports/features fix, checkbox NOT flipped (still genuinely
 BLOCKED-PREREQ). `/skip-current-task`.
+
+### 2026-07-15T13:0xZ — data_engineering slot-5 (19th consecutive dispatch — confirmed the shipped `2d6365f` fix still hasn't taken effect on the LIVE process; filed a fresh, specific `/blocked` asking for a restart/redeploy)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+after fresh-pull to LDR HEAD. No action on the sports/features gap-fill itself — the affected-range boundary still isn't
+stable until Todo 1 completes.
+
+**Confirmed the churn is still live, ~30 min after slot-12's `2d6365f` fix landed.** Queried the live backlog directly
+(`GET /api/backlog`) for this exact task's record: no `prereqs`/`depends_on` field present at all on the dispatched
+record (`status: dispatched`, `dispatched_to: 5`, `queued_at: 2026-07-15T12:41:47Z`) — i.e. this dispatch was queued
+~12:41Z, well after `2d6365f` landed (~12:3xZ), so this is not just stale in-flight state from before the fix; the live
+regen has run since and STILL isn't wiring `gate_on_depends` for this task. Filed a fresh, narrowly-scoped `/blocked`
+question (`BLK-da828631`) distinct from the prior general "why does this keep dispatching" asks — this one specifically
+names the already-shipped commit and asks main/operator to confirm+trigger a pull+restart of the LIVE orchestrator
+process (root clone), since that action is outside a worker slot's write scope (read-only against root clones) and is
+the one concrete thing left standing between the shipped fix and it actually taking effect. Declining this dispatch — no
+code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-15T13:2xZ UTC — data_engineering slot-9 (21st consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+via direct grep after fresh-pull to LDR HEAD (all 24 slot repos clean FF-pull, no conflicts). Cheap non-GCS-walk fleet
+check (`gcloud compute instances list`, `central-element-323112`, non-snap binary):
+`features-sports-sports-20260715-004933` still `RUNNING` — same VM slot-6 observed ~10 min earlier, no crash, no stall.
+Skipped the redundant full-corpus GCS date-count walk (single-walk discipline — slot-6 covered fleet state minutes ago).
+
+Re-checked whether the operator-owned `systemctl restart orchestrator.service` (routed by main in response to slot-5's
+`BLK-da828631`, per slot-6's note) has landed: `GET /api/backlog` for this task's live dispatched record still shows no
+`prereqs.completed_tasks`/`prereqs.prerequisites` field — restart still pending, `gate_on_depends`
+(agent-orchestrator@2d6365f) not yet in effect on the live process. Main already answered this exact question and
+explicitly said "keep declining cheaply each dispatch ... Tracked — do not re-file" — not filing a duplicate `/blocked`.
+Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-15T13:1xZ UTC — data_engineering slot-6 (20th consecutive dispatch — main answered BLK-da828631, restart routed to operator, no re-file needed)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+after fresh-pull to LDR HEAD (`094756d64`, 2026-07-15 10:11:59Z). Main answered slot-5's `BLK-da828631` at 13:13:25Z (2
+min before this check, per live activity feed id 151444): fix `agent-orchestrator@2d6365f` is correct, the remaining
+action is a `systemctl restart orchestrator.service` on the planning VM to reload already-pulled code —
+operator/backend-owned, main is routing the trigger, and explicitly said "keep declining cheaply each dispatch ...
+Tracked — do not re-file." So: not filing a new `/blocked` (would duplicate a just-answered, still-open action item).
+Skipped the redundant GCS/fleet re-check — slot-5 checked ~2 min prior with no reason to expect drift (single-walk
+discipline); one `features-sports-sports-20260715-004933` VM confirmed `RUNNING` via a cheap non-GCS-walk
+`gcloud compute instances list`. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.

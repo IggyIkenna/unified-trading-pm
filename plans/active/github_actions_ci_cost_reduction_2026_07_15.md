@@ -194,3 +194,8 @@ proposal keeps heavy test jobs on GitHub-hosted and only moves the glue.
 - 2026-07-15 — Plan drafted from the live billing investigation (this session). Evidence: Enhanced-Billing ledger
   Jun/Jul 2026 + PM 1000-run/13.5h Actions run-mix sample. Status draft, human-only, suggestions-not-final. Awaiting
   operator ruling on § "Decisions needed".
+- 2026-07-15 — **Superset options analysis added**:
+  [`github_actions_cost_reduction_options_analysis_2026_07_15.md`](github_actions_cost_reduction_options_analysis_2026_07_15.md)
+  (4 parallel investigations). This plan is the execution vehicle for the **self-host** path; the companion doc is the
+  wider decision menu (self-host vs fold-into-deployment-api vs RunsOn; the no-infra GitHub-native fixes incl. two
+  latent bugs; and why Cloud Build / monorepo / merge-queue were rejected). Baseline rate corrected to **$0.006/min**.

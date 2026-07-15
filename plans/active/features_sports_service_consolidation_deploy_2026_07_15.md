@@ -236,3 +236,36 @@ repo. This plan tracks that work.
   features-service-sports deploy work itself, which is now proven correct up to that boundary). **Terraform/job/workflow
   resources deliberately left in place** (scheduler stays paused) — no rollback needed, they are correct; re-attempt
   manual verification once the linked issue is resolved, THEN proceed to todos 6-8.
+- 2026-07-15 (DriftFixRetireReenable phase, todos 6-8 — STOPPED per gating condition, real evidence, not inference):
+  Task handoff explicitly gated todos 6-8 on `manualExecutionSucceeded`; independently re-verified (not just trusted the
+  flag) rather than proceeding: `gcloud run jobs executions describe features-service-sports-job-kk4dv` still shows
+  `Completed=False / NonZeroExitCode`; `gcloud scheduler jobs describe features-service-sports-daily-trigger` still
+  `PAUSED`; the linked blocker (`instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`) is confirmed
+  STILL ACTIVE — `uts-prod-manifest-consolidator-instruments-sports` executions are still firing on a tight ~1min
+  cadence at 2026-07-15T12:47-12:49Z (same livelock signature as the earlier observation window). Per the task's
+  explicit instruction, did NOT proceed to todo 6 (Workflow YAML `--category`→`--asset-group` drift fix), todo 7 (retire
+  the legacy job), or todo 8 (re-enable scheduling) — all three remain `[ ]`. No terraform/config changes made, nothing
+  shipped this touch. Next unblock step: resolve the manifest-consolidator livelock issue, then re-attempt a manual
+  `features-service-sports-job` execution to a genuine `SUCCEEDED` terminal state (todo 5) before revisiting 6-8.
+- 2026-07-15 (FinishBucketAndDocs phase, todos 9-10 — STOPPED per this touch's explicit gating condition, real evidence,
+  not inference): Task instruction was "if `schedulingReenabled` is false or `realScheduledFireVerified` is false, STOP
+  and report why — do not delete the bucket on an unhealthy service." Independently re-verified live rather than
+  trusting the prior touch's handoff flags:
+  `gcloud scheduler jobs describe features-service-sports-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  → still `state: PAUSED`; `gcloud run jobs executions list --job=features-service-sports-job` → both prior executions
+  (`kk4dv`, `fs8sj`) still show `Completed=False` (no successful execution exists at all, manual or scheduled);
+  `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` → `status: open`;
+  `gcloud run jobs executions list --job=uts-prod-manifest-consolidator-instruments-sports` → still firing on the same
+  tight ~1min livelock cadence (executions at 12:48-12:52 UTC, i.e. still reproducing ~10min after the prior touch's
+  last observation). **Gate condition holds** (`schedulingReenabled=false`, `realScheduledFireVerified=false`) — did NOT
+  touch the `features-sports` bare bucket, did NOT edit `deployment-service/terraform/gcp/main.tf`'s
+  `google_storage_bucket.features_sports` resource, did NOT close the linked issue doc
+  (`features_sports_service_cloud_run_job_broken_image_2026_07_15.md` stays as-is), and did NOT append to
+  `bucket_estate_consolidation_to_sub100_2026_07_13.md` since there is nothing new to report there — the bucket delete
+  remains blocked on the SAME unresolved external livelock as the prior touch. Todos 6-10 remain `[ ]`. No
+  terraform/config/code changes made in any repo this touch; the only change is this documentation-only append. Next
+  unblock step unchanged from the prior touch: resolve
+  `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` first, then re-attempt
+  `features-service-sports-job` to a genuine `SUCCEEDED`, then re-enable scheduling + verify one real scheduled fire —
+  only then is it safe to revisit todos 6-10 (Workflow YAML drift, legacy job retirement, scheduling re-enable, bucket
+  delete, issue-doc closure).

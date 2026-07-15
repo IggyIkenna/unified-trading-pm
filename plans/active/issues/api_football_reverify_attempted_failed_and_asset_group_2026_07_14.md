@@ -102,14 +102,39 @@ that should never happen. None are blocked on credentials.
       clean 2xx `FetchEvidence` → relabel `empty_confirmed(SOURCE_RETURNED_ZERO)`; the rest must capture. Investigate
       the 461 blank-data_type failures first (a blank data_type is itself suspect — likely a writer/enumerator bug).
       (repo: instruments-service)
-- [ ] [DATA] P1. **Extend the consolidator asset_group heal to the instruments-store-sports bucket** so blank/pre-v9
+- [x] [DATA] P1. **Extend the consolidator asset_group heal to the instruments-store-sports bucket** so blank/pre-v9
       sports rows are stamped `asset_group=sports` at consolidation (mirror `_asset_group_for_market_data_bucket` for
       the `instruments-store-{ag}` bucket family, OR a one-off repair pass over the 22,668 blank rows). Fixes the sports
-      coverage-rollup undercount. (repo: unified-trading-library)
+      coverage-rollup undercount. (repo: unified-trading-library) — **CODE FIX DONE + durable:
+      `unified-trading-library@86f3da96`** (`_asset_group_for_instruments_store_bucket` + combined
+      `_asset_group_for_per_ag_bucket` resolver; blast-radius verified zero regression on `market-data-tick-*`, new heal
+      confirmed on `instruments-store-*`; tests added; QG green; shipped). **One-off repair pass DONE but NOT yet
+      durable**: `instruments-service@e1f36eed` (`scripts/backfill_asset_group_blank_repair_2026_07_15.py`) applied
+      twice against `instruments-store-sports-prd` (969,066 then 973,459 rows repaired, CAS-safe, row count unchanged
+      both times) — but each repair was reverted within ~1-10 minutes because the LIVE `market-tick-data-service` Cloud
+      Run consolidator image (last built `2026-07-15T12:41:20Z`, ~2 min BEFORE the code fix landed) is still running the
+      PRE-FIX consolidator code, which keeps re-blanking rows via its ~60s merge cycle (root-caused precisely, not
+      guessed — see the sports plan's Progress Log 2026-07-15 entry for the full evidence chain). **New follow-up todo
+      below** covers closing this out. Not marking this todo fully resolved until the repair is confirmed to hold
+      post-redeploy.
+- [ ] [DATA] P1. **Redeploy `market-tick-data-service`'s Cloud Run Job image against
+      `unified-trading-library>=86f3da96`, then re-run
+      `instruments-service/scripts/backfill_asset_group_blank_repair_2026_07_15.py --apply` once more.** The manifest
+      consolidator Cloud Run Jobs (all 10 per-AG `market-data-tick`/`instruments-store` crons, not just sports) reuse
+      this one image — a rebuild picks up the code fix above for every asset group at once, not just sports. Until this
+      happens, `instruments-store-sports-prd`'s blank-`asset_group` count will keep climbing back via the live
+      consolidator's own merge cycles (confirmed: reverted 969,066→971k→973k→975k+ across 4 re-reads over ~16 minutes,
+      immune to re-applying the repair script). Verify success the same way this session did: dry-run count → 0, holds
+      stable across 2-3 re-reads several minutes apart. (repo: market-tick-data-service / deployment-service, deploy
+      action — needs an operator decision on WHEN to redeploy shared consolidator infra, not an autonomous action)
 - [ ] [DATA] P2. **Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under
       source=api_football** (date=2026-06-26). Trace the writer that emitted a UNISWAP_V3-BASE row with
       source=api_football into the sports bucket; delete the phantom row (CAS-safe) and fix the mis-route at source if
-      reproducible. (repo: market-tick-data-service / instruments-service)
+      reproducible. (repo: market-tick-data-service / instruments-service) — **bonus finding 2026-07-15**: a SECOND,
+      previously-undocumented mislabeled row was found in the same live probe:
+      `source=instruments_service asset_group=cefi capture_status=captured` (no venue/data_type distinguishing detail
+      captured in the probe) sitting in the sports manifest — same bug class (wrong non-blank value, not blank), not
+      fixed, folded into this todo's scope rather than filed separately.
 
 ## Update 2026-07-15 — Finding A closed; Finding B grown (37x), Finding C unchanged, still root-caused
 
@@ -143,3 +168,27 @@ final whole-plan re-verify:
   each is the same `instrument_id` captured twice with identical `row_count` at two different `written_at` timestamps (a
   benign double-write-event, not obviously corrupted underlying data) — small enough (2 groups, one date) not to warrant
   its own todo, noting here for completeness.
+
+## Update 2026-07-15 (later) — Finding B: code fix shipped + durable; one-off repair applied but NOT yet durable (redeploy-gated)
+
+- **Finding B — code fix landed**: `unified-trading-library@86f3da96` extends the consolidator's v9 asset_group
+  self-heal to `instruments-store-{ag}` buckets (previously `market-data-tick-{ag}` only). Blast-radius verified zero
+  regression on every `market-data-tick-*` bucket; every `instruments-store-*` bucket now correctly resolves its AG.
+  Tests added, QG green, shipped.
+- **Finding B — one-off repair applied twice, reverted both times, root cause confirmed (not guessed)**:
+  `instruments-service@e1f36eed` (`scripts/backfill_asset_group_blank_repair_2026_07_15.py`) repaired 969,066 then
+  973,459 blank-`asset_group` rows in `instruments-store-sports-prd` via a CAS-safe direct canonical rewrite (row count
+  unchanged both times — a pure column mutation, same established pattern as
+  `reconcile_mdps_odds_horizon_bucket_venue_grain_2026_07_14.py`). Both repairs were reverted within 1-10 minutes. Root
+  cause, confirmed via `gcloud artifacts docker images list`: the live `market-tick-data-service:latest` Cloud Run image
+  (shared by ALL 10 per-AG consolidator cron jobs) was last built `2026-07-15T12:41:20Z`, ~2 minutes BEFORE the code fix
+  landed (`12:43:32Z`) — so the deployed consolidator is still running pre-fix code, and its ~60s merge cycles keep
+  re-picking a freshly-reseeded blank-`asset_group` enumerator shard over the repaired canonical row (recency tie-break;
+  `asset_group` is not a dedup key). Full evidence chain (generations, timestamps, exact counts per re-read) in the
+  sports plan's Progress Log, 2026-07-15 entry. **Deliberately did not** attempt a 3rd apply (confirmed-losing race) or
+  trigger a Cloud Run image redeploy myself (shared production infra beyond this task's scope — new todo added above for
+  an operator-timed redeploy + one final repair re-run, which should hold permanently once the live image includes the
+  fix).
+- **Finding C**: one additional MISLABELED (non-blank wrong-value, not blank) row found —
+  `source=instruments_service asset_group=cefi capture_status=captured` — folded into the existing Finding C todo's
+  scope above, not fixed in this pass.
