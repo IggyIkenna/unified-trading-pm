@@ -3153,3 +3153,46 @@ chars, inside GCE's 63 limit). `cefi-queue-` remains the leading prefix so `VM_P
 3 Tardis VMs = exactly at cap. Remaining uncovered non-Tardis derivative_ticker eu (HYPERLIQUID 70,168 + LIGHTER-ZKSYNC
 70,181 + EXTENDED-STARKNET 28,190 + PACIFICA-SOLANA 4,220 ≈ 172,759) rides `launch-cefi-hl-aster-historical-backfill.sh`
 and does NOT consume Tardis slots — next launch when the ASTER VM frees, or in parallel if capacity allows.
+
+### 🔴🔴 ROOT CAUSE OF THE 2.77M GAP — the writer records RAW exchange symbols; the denominator expects CANONICAL ids. The fleet CANNOT close eu. — 2026-07-15T18:50Z
+
+Chasing the operator's non-canonical-naming question to the manifest itself. Read the live prd
+`_index/availability_index.parquet` for KRAKEN-FUTURES/book_snapshot_5 (207MB index, filtered read):
+
+```
+capture_status        rows     sample instrument_id
+captured             25,282    XBT, PI_ETHUSD, ETH, BCH              <- RAW exchange symbols
+expected_unattempted 40,223    KRAKEN-FUTURES:PERPETUAL:PIXEL-USD@LIN <- CANONICAL instrument_key
+```
+
+**Two disjoint id namespaces in one manifest.** A `captured` row keyed `PI_ETHUSD` can never satisfy an
+`expected_unattempted` row keyed `KRAKEN-FUTURES:PERPETUAL:ETH-USD@LIN` — nothing joins them. Cross-tab by month proves
+it is total, not partial: **every `captured` row across the ENTIRE corpus (2023-02 → 2026-03) is `canon=False`; ZERO
+canonical-id rows have ever reached `captured`.** From 2026-02 the canonical cells simply sit at `expected_unattempted`
+(2,508 / 8,717 / 8,284 / 8,478 / 8,189 / 4,047 by month) — which IS the "gap".
+
+**The live fleet is actively making it worse, verified in real time**: `cefi-queue-heavy-174106`'s own run.log shows it
+writing `…/day=2026-01-11/…/venue=KRAKEN-FUTURES/instrument_type=perpetual/data_type=book_snapshot_5/PF_IOTAUSD.parquet`
+— raw symbol — right now; and GCS shows `BTCUSDH26.parquet` (raw) written 2026-07-14T10:25Z by the previous wave.
+
+**Measured proof the fetching closes nothing**: between the 17:18Z and 18:30Z coverage runs, `expected_unattempted`
+moved 2,969,412 → 2,773,292 — a delta of **exactly −196,120, i.e. 100% attributable to the UAC no-batch-source code
+fix**. The three Tardis VMs fetching throughout that window closed **ZERO** eu cells. `captured` rose +1,018 — into the
+raw namespace, where it does not reduce eu.
+
+**Consequence**: the ~2.77M "gap" is NOT (only) missing data — it is substantially a **namespace mismatch**. Every
+VM-hour currently spent writes real data under ids the denominator cannot credit, i.e. we are accruing relabel debt at
+fleet speed instead of closing the gate. The earlier 93,791-cell "legacy filename" finding was the same defect seen
+through a keyhole (it only counted cells where a raw capture could be string-normalised onto a canonical eu cell) — the
+true scope is the whole write path.
+
+**This is NOT the plan `canonical_instrument_id_cefi_defi_backfill_2026_07_14.md`** — that one (correctly) fixed
+`InstrumentRecord.canonical_instrument_id` in the CATALOGUE. This defect is in MTDS's manifest WRITE path, which still
+stamps the vendor's raw symbol as `instrument_id`. Related but distinct:
+`issues/instrument_id_format_canonicalization_2026_07_08.md`.
+
+**Recommendation (operator decision — fleet left RUNNING pending it, since the fetched bytes are real and reusable
+either way):** (1) fix the MTDS writer to stamp the canonical `instrument_key` (the catalogue now carries it as of
+`instruments-service@f90d0e0`); (2) relaunch the waves so captures land in the credited namespace; (3) run ONE
+relabel/reconcile pass over the existing raw-id captures rather than re-fetching them. Doing (2) before (1) burns Tardis
+quota into a namespace the gate ignores.
