@@ -761,8 +761,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 7,
-        "large_file_count": 6,
-        "coverage_pct": 91.12
+        "coverage_pct": 91.13,
+        "large_file_count": 6
       }
     },
     "market-data-processing-service": {
