@@ -199,9 +199,24 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   lands at 925/900 post-change — consumes the repo's existing `CODEX_MAX_VIOLATIONS=1` tolerance rather than adding a
   NEW one; QG reports it non-blocking. Worth a follow-up extraction pass but not blocking this fix). Both dedup-issue
   layers (alerting-service + deployment-service) now shipped — issue doc fully resolved.
-- 2026-07-15: **Big finding — needs operator chat notification** (queued for the next progress report, per the HARD
-  RULE, rather than blind-fixed): (1) cefi blank-data_type 9,757-row stale "RESOLVED" claim (confirmed real-but-static
-  via live re-query, see above), (2) tradfi cross-service data_type misclassification
-  (corporate_action_confirmed/earnings_result expected in the MTDS tick manifest but only ever captured by
-  features-service's calendar module — a bucket that structurally can never be satisfied). Both are architecture/policy
-  items needing a real decision, not blind-fixed.
+- 2026-07-15: **Big finding — operator notified in chat** (per the HARD RULE, not blind-fixed): (1) cefi blank-data_type
+  9,757-row stale "RESOLVED" claim (confirmed real-but-static via live re-query, see above), (2) tradfi cross-service
+  data_type misclassification (corporate_action_confirmed/earnings_result expected in the MTDS tick manifest but only
+  ever captured by features-service's calendar module — a bucket that structurally can never be satisfied). Both are
+  architecture/policy items needing a real decision, not blind-fixed.
+- 2026-07-15 (agent 5 DONE — tradfi mbp_10): shipped `market-tick-data-service@e2018167` — added `"mbp_10"` to
+  `_DATABENTO_SUPPORTED_DATA_TYPES` (was silently excluding it despite a live schema mapping + an explicit
+  `configs/venue_data_types.yaml` declaration, same registry-declares/allowlist-excludes shape as the already-fixed
+  KRX/ICE precedents). Verified end-to-end fetch-path (not just the allowlist line) — genuinely complete on the MTDS
+  side. Regression test added (registry-declared ⊆ adapter-supported invariant). 115 tests pass, QG green. **Important
+  caveat surfaced, not glossed over**: a SEPARATE UAC registry (`VENUE_DATA_TYPE_CAPABILITIES["CME"]`) only declares
+  `{ohlcv_1s, ohlcv_1m}` for CME per a 2026-05-15 operator MVP-scope decision, and intersects every fetch request
+  against it BEFORE this allowlist is ever reached — so **this fix alone does not yet cause live mbp_10 capture to
+  start**; that needs a separate, already-tracked, operator-gated UAC registry restoration (referenced:
+  `plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`, whose registry-restoration phases were
+  apparently never actually re-applied despite being marked complete — worth a follow-up look). Issue doc updated:
+  `unified-trading-pm@ee328b8c0`.
+- 2026-07-15: **All 5 dispatched fix agents complete.** Shipped commits: `alerting-service@fe76ded34a4`,
+  `deployment-service@{0aaab1a22,69136c2c}`, `features-service@5e1ffd2e`, `market-tick-data-service@e2018167`. Launched
+  an independent adversarial-verification Workflow (5 skeptics, one per fix, no context from the implementing agents)
+  before declaring any of this genuinely done — result to follow.
