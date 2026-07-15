@@ -311,9 +311,18 @@ depends_on: []
       present (schedule-only), neither split entity present (still returns the standard empty frame), the GCS list/probe
       logic itself (canonical-prefix hit, canonical+legacy-both-empty), and the Q6 naming assertions on
       `OUTCOME_COLUMNS`. Full `quality-gates.sh` green (148s).
-- [ ] [CODE] P2. Once the UTL helper is fixed, switch `features-service/features_service/sports/data/gcs_reader.py`'s
+- [x] ✅ [CODE] P2. Once the UTL helper is fixed, switch `features-service/features_service/sports/data/gcs_reader.py`'s
       `_read_split_fixtures_fallback` to delegate to `read_fixtures_joined()` instead of duplicating the join locally.
-      (repo: features-service)
+      (repo: features-service) — unified-trading-library@428ef1b5 + features-service@c084023d: extended
+      `read_fixtures_joined(day, league_id=None)` with an all-leagues mode (needed since
+      `read_reference_entity(date, "fixtures")` has no per-league scoping), then rewrote `_read_split_fixtures_fallback`
+      to call it directly instead of duplicating the per-league shard read + left-join locally. 2 new UTL regression
+      tests (`TestReadFixturesJoinedAllLeagues` in `test_joined_reader_split_entities.py`); the 3 existing
+      features-service fallback tests updated to mock `read_fixtures_joined` instead of the retired local
+      per-league-read plumbing. Note: this todo collided with P1 above — unified-trading-library@46fc3395 (slot-12)
+      landed the P1 fix concurrently with an equivalent implementation; reconciled by taking their (more robust,
+      legacy-singleton-first) version as base and layering the `league_id=None` extension on top, discarding my
+      duplicate P1 rewrite. Full `quality-gates.sh` green both repos.
 - [x] ✅ [SCRIPT] P3. Grep the workspace for any other direct `entity=fixtures` GCS reader outside features-service/UTL
       that could be silently affected by the same writer cutover. (repo: cross-repo) — unified-trading-pm (this doc,
       "What I found" #8): found 5 more affected readers, the most severe being instruments-service's own
