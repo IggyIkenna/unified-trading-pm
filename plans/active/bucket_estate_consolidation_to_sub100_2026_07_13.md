@@ -1879,3 +1879,34 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
     image) — **the `features-sports` bare bucket is still NOT delete-eligible**: blocker (b) from the entry above is now
     narrower (mount fixed) but a NEW blocker (broken image + workflow-arg drift, tracked in the issue doc above) must
     clear before a genuine Verify+Delete re-attempt. No destructive action taken on the bare bucket itself this touch.
+
+- **2026-07-15, `features-sports-service-job` root-cause + Verify/Re-enable phases — root cause CONFIRMED, deploy STILL
+  BLOCKED on an operator A/B decision; scheduler correctly left PAUSED.** Two follow-on touches on the same broken-image
+  finding above. **Root-cause (fix) phase**: fully confirmed the mechanism (not just the symptom) —
+  `unified_trading_library`'s `entitlements.py` has required `unified_api_contracts.internal` since UAC commit
+  `6bb892bc` (2026-04-02), but UTL's own `pyproject.toml` constraint on `unified-api-contracts` stayed loose
+  (`>=0.1.0,<1.0.0`) through at least 2026-04-22, so any UTL base image built in that window resolved the highest
+  _compatible_ wheel, `0.2.38` (published 2026-03-12 — this predates the 2026-03-26 commit that added the `internal/`
+  namespace at all) instead of one that actually contains it; `features-sports-service`'s Dockerfile installs itself
+  `--no-deps`, so it purely inherited the broken `0.2.38` baked into the UTL base image at its own 2026-04-22 build. Not
+  applied: the fix requires first deciding the deployment source of truth, since the two candidate paths differ
+  materially — (A) un-archive the GitHub-archived (2026-05-08) `features-sports-service` repo and patch/rebuild there
+  (fast, minimal blast radius, but re-diverges an already- consolidated-away repo), vs (B) finish the abandoned
+  2026-05-08 `features-service` consolidation by standing up a real Cloud Run job for
+  `features-service/features_service/sports/*` (correct long-term state, larger scope — no live job exists there yet).
+  That phase correctly stopped and escalated to the operator rather than guessing; no code/image/ deploy changes made.
+  **Verify+Re-enable phase**: dispatched to deploy the rebuilt image and, only on a genuinely clean end-to-end
+  execution, un-pause the scheduler — found `readyToDeploy: false` from the prior phase (the A/B decision above is still
+  unresolved) and, per its own explicit instruction ("if `readyToDeploy` is false, STOP and report why"), took **no
+  deploy action** (no `gcloud run jobs update`, no image rebuild, no terraform apply) and **no scheduler action** —
+  `features-sports-service-daily-trigger` remains `PAUSED` exactly as it was (re-verified:
+  `gcloud scheduler jobs describe features-sports-service-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  unchanged from the prior entry). Updated the issue doc
+  (`plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md`) with a "Root cause CONFIRMED"
+  section carrying the full mechanism + the A/B options verbatim — **status remains `open`**, NOT closed, since no fix
+  was deployed. **This blocks nothing else in this plan beyond what the entry above already flagged**: the
+  `features-sports` bare bucket remains NOT delete-eligible pending the operator's A/B call, then a rebuild/redeploy,
+  then a genuinely clean manual execution, THEN (and only then) the scheduler un-pause and bucket Verify+Delete
+  re-attempt. **Operator decision still needed** (repeated here for visibility since it gates this plan's
+  `features-sports` closure): choose Path A (fast, re-diverges the archived repo) or Path B [RECOMMENDED — matches the
+  completed code consolidation, avoids re-legitimizing an archived repo] or specify a hybrid/staged approach.

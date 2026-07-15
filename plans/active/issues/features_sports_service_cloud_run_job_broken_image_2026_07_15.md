@@ -119,6 +119,43 @@ needs its own investigation (find/confirm the actual source repo or build trigge
 5. Only after (1)-(4) are confirmed green does the `features-sports` bare-bucket Verify+Delete step in
    `bucket_estate_consolidation_to_sub100_2026_07_13.md` have a truly "healthy" live consumer to check against.
 
+## Root cause CONFIRMED (fix-phase investigation, 2026-07-15) — deployment path still BLOCKED on an operator decision
+
+A follow-on fix-phase touch fully confirmed the root cause (not just the symptom above): `unified_trading_library`'s
+`entitlements.py` has required `unified_api_contracts.internal` since UAC commit `6bb892bc` (2026-04-02), but UTL's own
+`pyproject.toml` constraint on `unified-api-contracts` stayed loose (`>=0.1.0,<1.0.0`) through at least 2026-04-22. Any
+`unified-trading-library:latest` base image built in that window therefore resolved the _highest compatible_ wheel,
+`0.2.38` (published 2026-03-12 — this **predates** the 2026-03-26 commit that added the `internal/` namespace at all),
+instead of a version that actually contains it. `features-sports-service`'s Dockerfile installs itself with `--no-deps`,
+so it purely inherited whatever `unified-api-contracts` the UTL base image had baked in at its own 2026-04-22 build —
+the broken `0.2.38`. This is fully root-caused; it is **not** simple image staleness (the `internal` namespace already
+existed a month before the image was built) — it's a loose-constraint dependency-resolution bug.
+
+**No fix was applied in that touch** — it stopped short of remediation because the mechanical part (tighten the
+`unified-api-contracts`/`unified-trading-library` version pins, rebuild) is well understood, but rebuilding+redeploying
+requires first deciding which repo is the deployment source of truth going forward, since the two candidate paths carry
+materially different blast radii and one re-legitimizes an already-retired repo:
+
+- **Path A** — Un-archive the old, GitHub-**archived** (2026-05-08) `features-sports-service` repo (still the only repo
+  that actually builds+deploys the live `features-sports-service-job`), patch its now-tightened UTL/UAC pins, cut a
+  fresh commit, let its existing `cloudbuild.yaml` rebuild+republish, redeploy to the existing job. Fast, minimal blast
+  radius, but re-diverges a repo the org already consolidated away on the same date.
+- **Path B [RECOMMENDED]** — Finish the abandoned 2026-05-08 `features-service` consolidation: stand up a
+  Dockerfile/cloudbuild.yaml/terraform Cloud Run job + Workflow definitions for `features-service`'s
+  `features_service/sports/*` sub-package (already cloned in this workspace at `features-service`, with its own
+  `cloudbuild.yaml`, `_SERVICE_NAME: features-service`, but **no live Cloud Run job at all yet**), point the existing
+  GCS-FUSE mount/bucket wiring at it, retire `features-sports-service-job`, then un-pause scheduling against the new
+  job. Correct long-term state, matches the already-completed code consolidation, but larger scope (new Cloud Run job +
+  Workflow terraform resources + CLI-flag mapping + SIT-equivalent verification).
+
+**This decision has NOT yet been made by the operator.** A subsequent Verify+Re-enable-phase touch (also 2026-07-15)
+confirmed `readyToDeploy: false` for exactly this reason and correctly took no deploy/scheduler action — see the plan's
+Progress Log entry of the same date for the full status. **Status remains `open`, blocked on the operator A/B decision
+above** — do not attempt a rebuild/redeploy of either candidate repo until that decision is made. Separately noted, not
+blocking this decision: the `--category`→`--asset-group` Workflow-YAML terraform drift (recommended step 3 above) is
+confirmed real but independent of this import crash; apply it only after the deploy path is chosen, in its own reviewed
+touch.
+
 ## Evidence
 
 - `gcloud scheduler jobs describe features-sports-service-daily-trigger --location=asia-northeast1 --project=central-element-323112`:
