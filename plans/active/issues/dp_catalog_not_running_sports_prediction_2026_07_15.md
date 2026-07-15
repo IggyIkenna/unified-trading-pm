@@ -39,7 +39,7 @@ parent_epic: instruments_master
 priority: P1
 source: ["operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47"]
 assigned_vm:
-resolved_by: ["instruments-service@24f84e86 (sports)"]
+resolved_by: ["instruments-service@24f84e86 (sports)", "deployment-service@6bfa284 (prediction)"]
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -194,10 +194,24 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       league-de-registration and NOT upstream flakiness — a real enumerator bug (rolling `SPORTS_FTP_WINDOW_DAYS=400`
       window with no frozen tail). Fixed directly + regression-tested + shipped via quickmerge (see "2026-07-15 — 6-row
       diagnosis + fix" below). Repo: instruments-service.
-- [ ] [INFRA] P1. Prediction — raise `lifecycle-catalogue-regen-prediction`'s Cloud Run Job memory limit above 4Gi (or
-      profile/slim the monotonic-guard + promote-write step's peak memory for a 2.67M-row catalogue) so the job stops
-      SIGKILLing at the promote stage; re-run once fixed and verify `prod/catalog.parquet` advances past
-      2026-07-14T00:58:37Z. Repo: deployment-service (Cloud Run Job config) + instruments-service (memory profiling).
+- [x] [INFRA] P1. Prediction — raise `lifecycle-catalogue-regen-prediction`'s Cloud Run Job memory limit above 4Gi —
+      deployment-service@6bfa284: Terraform `lifecycle_catalogue_scheduler.tf` bumped memory 4Gi→16Gi, cpu 2→4 (Cloud
+      Run couples the two; 16Gi needs cpu>=4). Sizing informed by live Cloud Monitoring
+      `run.googleapis.com/container/memory/utilizations` (highest sampled point 63% of 4Gi ≈2.5Gi in the last full
+      minute before each SIGKILL — necessarily an UNDERSTATE of true peak since the container dies ~4s into the
+      [BISECT-E] stage, before the next sample) plus the strongest same-AG reference point: prediction's own sibling
+      weekly `--mode full` job already runs at 16Gi/cpu4 after OOMing at this SAME 4Gi on 2026-07-04 for a
+      comparably-sized "2.5M-row multi-grain aggregate" — the daily incremental job holds the identical 2,673,230-row
+      full-catalogue frozen-tail in memory for the guard+promote step, so it needs the same headroom. Live-applied
+      immediately via `gcloud run jobs update lifecycle-catalogue-regen-prediction --memory=16Gi --cpu=4` (config
+      verified: `cpu: '4', memory: 16Gi`), `terraform fmt`/`tofu validate` clean, deployment-service quality gates green
+      (106s), shipped via quickmerge to `live-defi-rollout`. Re-run confirmed the fix: fresh
+      `gcloud run jobs execute --wait` → execution `lifecycle-catalogue-regen-prediction-sdzdc` completed successfully
+      (exit_code=0, `succeededCount: 1`, no SIGKILL) — for the first time in 3 days it cleared [BISECT-E]:
+      `Monotonic guard: new=2673230 current=2673230 decision=ACCEPT (monotonic_ok)` → `CATALOGUE_PROMOTED` event →
+      `prod/catalog.parquet` mtime advanced from the frozen 2026-07-14T00:58:37Z to 2026-07-15T10:10:05Z (row count
+      unchanged at 2,673,230 since the by_date window itself had 0 new rows that day — the promote-write succeeding, not
+      a row-count change, is what fixes the staleness alert). Repo: deployment-service.
 - [ ] [INFRA] P3. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
       `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket) so
       `CATALOGUE_SHRINK_BLOCKED`/similar structured events stop silently 403ing out of the event-log sink. Repo:
@@ -218,3 +232,16 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
   shipped via quickmerge to `live-defi-rollout`. Did NOT run `--allow-catalogue-shrink` (out of scope per operator
   instruction — that remains a human/operator-facing override action, moot now that the underlying bug is fixed). Left
   one P2 follow-up todo to verify the next scheduled run actually promotes clean.
+- 2026-07-15 (prediction OOM fix): Dispatched per the pre-existing precedent this session (manifest-consolidator memory
+  bumps via Terraform + live-apply) to fix the prediction half of this issue. Found the Terraform resource
+  (`deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf`, `lifecycle_catalogue_asset_groups` local),
+  pulled live Cloud Monitoring memory-utilization samples (inconclusive on true peak — container dies too fast after the
+  last sample) and cross-checked prediction's own weekly full-rebuild job (already 16Gi/cpu4 after an OOM on a
+  comparably-sized aggregate), bumped the daily job to match (4Gi/cpu2 → 16Gi/cpu4), live-applied via
+  `gcloud run jobs update`, and shipped the Terraform change: deployment-service@6bfa284 (quickmerge, quality gates
+  green 106s; hit one branch-drift retry mid-ship — `git pull --rebase --autostash`, re-verified content-scoped
+  sentinel, re-ran quickmerge clean). Confirmed the fix with a fresh `gcloud run jobs execute --wait`: the job cleared
+  the monotonic-guard/promote-write stage for the first time in 3 days (exit_code=0, `CATALOGUE_PROMOTED`,
+  `prod/catalog.parquet` mtime advanced past the frozen 2026-07-14T00:58:37Z). Flipped the P1 prediction todo to done
+  with full evidence. Both root-caused alerts (sports shrink-block, prediction OOM) now have shipped fixes; only the P2
+  sports-verification and P3 IAM-403 todos remain open.
