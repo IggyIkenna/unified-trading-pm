@@ -434,3 +434,17 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 - ROLE: the co-manager is actively driving the VM fleet. My unique remaining jobs = (a) cap-safety backstop (kill only
   if >3), (b) the WS-H apply once the tail+sweep land, (c) F + C + rule-9 report. Backing off to a ~1h monitor cadence
   (nothing to do between data-landing milestones; frequent checks are noise). No code/data changes this tick.
+
+### 2026-07-15T21:08Z — tick 13: co-manager owns the VM fleet now; my role = cap-backstop + WS-H finalize
+
+- The co-manager relaunched a NEW wave ~20:20 with its OWN venue-based naming (cefi-queue-heavy-binancefutu-x15,
+  cefi-queue-light-binancefutu-x2, cefi-queue-light-bybit-x4) — a different launcher than my timestamped ones. My old
+  VMs (174106/174110/183058) died (SPOT). Fleet now = 1 RUNNING (the heavy; the 2 light wrote per_vm 20:49-20:52 then
+  SPOT-preempted). Cap-safe (1 ≤ 3), no action.
+- CLEAR HANDOFF: VM launching/management is now the co-manager's; my manual launches only race it. My remaining UNIQUE
+  jobs = (a) cap-safety backstop (delete dupes only if >3), (b) WS-H apply once the tail+sweep data lands, (c) F, C,
+  rule-9 report. I will NOT launch VMs (co-manager churns them through SPOT).
+- ETA HONESTY: recent-tail (June-July) fill is SLOWER than the earlier 1.5-2d — the SPOT-preempt + relaunch-from-Jan +
+  chronological grind + N≤3 lease is choppy; grind still in 2026-01 after ~5h. Realistic tail-landed: several days. Full
+  af=0 history: ~2-3wk (cap-3 ceiling). Unchanged: all Phase-1 code shipped + landed.
+- Backing off to a pure 1h cap-backstop; will act only on (tail reaches June → WS-H) / (cap breach) / (completion).
