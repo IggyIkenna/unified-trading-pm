@@ -152,3 +152,72 @@ risky to guess-fix under time pressure without reproducing the resource-pressure
 - `features-service/cloudbuild.yaml` line 406: `machineType: "E2_HIGHCPU_8"`.
 - `gcloud artifacts docker images list ...features-service --include-tags` (checked before this dispatch's triggers):
   most recent successfully-pushed image is still 2026-07-14, `sha256:c204c49d...`, tags `0.66.0,7a60a31,latest`.
+
+## Progress Log
+
+- 2026-07-15 (~16:20-16:44Z, FixBuildHang phase — real evidence, not inference; root cause STILL NOT confirmed):
+  Root-caused what the "suspected root cause" section above got wrong, applied one concrete, well-evidenced fix, and
+  re-triggered a build to test it. **Result: the hang reproduces even with the fix applied** — the real root cause
+  remains open.
+  1. **Falsified the xdist-worker-memory-pressure theory with source-level evidence** (not a guess): read
+     `features-service/scripts/quality-gates.sh:21` (`PYTEST_WORKERS=${PYTEST_WORKERS:-0}`, set BEFORE sourcing
+     `base-service.sh`) against `unified-trading-pm/scripts/quality-gates-base/base-service.sh:687-693`'s local/CI
+     branching
+     (`if [ -n "${PYTEST_WORKERS:-}" ]; then _PYTEST_N="${PYTEST_WORKERS}"; elif [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${CI:-}" ]; then _PYTEST_N="auto"; else _PYTEST_N="1"; fi`).
+     Because features-service's own script already sets `PYTEST_WORKERS=0` (a non-empty string), the FIRST branch always
+     wins — `-n 0` (single-process, no xdist forking) is used identically in local AND Cloud Build runs. The CI-only
+     `_PYTEST_N="auto"` path this issue's "suspected root cause" blamed is **never reached for this repo**, regardless
+     of `GITHUB_ACTIONS`/`CI` env vars. This directly falsifies "8 parallel xdist workers spike memory" as the mechanism
+     — do NOT apply the `E2_HIGHCPU_32` or `-n 4` fixes this doc's "Recommended next steps" suggested; they would not
+     change anything (parallelism is already off in both environments).
+  2. **Confirmed Cloud Build resource telemetry is genuinely unavailable, not merely unpulled**:
+     `gcloud builds describe 0b5cec2d... --format='yaml(options,status,timeout)'` → `pool: {}` (default managed pool,
+     not a Private Pool). Default-pool Cloud Build workers are not exposed as a queryable Compute Engine instance in the
+     project, so there is no `docker stats`/Cloud Monitoring CPU/memory series obtainable for these builds after the
+     fact — a structural gap, confirmed rather than assumed.
+  3. **Corrected a framing point**: `base-service.sh` (lines ~710-732) redirects ALL pytest stdout/stderr to a temp file
+     (`_pytest_log`) and only prints it (on failure) or a one-line `Tests PASSED` (on success) — this is true LOCALLY
+     too. So "zero log growth during the TESTS phase" is the EXPECTED signature of a HEALTHY run as well (the local 93s
+     pass also produces zero pytest-level output until it finishes); the real anomaly is purely DURATION vs the 93s
+     local baseline, not the silence itself. Also confirmed pytest-timeout's default `signal` method (`--timeout=60`, no
+     `--timeout-method` override anywhere) only wraps each test item's setup+call+teardown once execution begins — a
+     hang during collection or a session-scoped fixture's first invocation is invisible to it.
+  4. **Found and fixed a real local<->CI parity bug** (a plausible, evidence-backed candidate, not a guess): both
+     `tests/cross_instrument/conftest.py` and `tests/multi_timeframe/conftest.py` define a session-scoped
+     `gcp_auth_info` fixture that calls the REAL `google.auth.default()` or (in the source before this touch's fix)
+     silently swallowed real-credential-discovery failures in the same way and only fell back to the mock branch after
+     ambient credential discovery failed. In `tests/multi_timeframe/conftest.py` this fixture is pulled in by an
+     `autouse=True` guard (`_skip_integration_without_creds`) that fires for EVERY test collected under
+     `tests/multi_timeframe/` — including the `unit/` subtree that `PYTEST_UNIT_DIR` actually collects (confirmed via
+     `rg`, not assumed). A Cloud Build worker IS a genuine GCE VM (its metadata server at `169.254.169.254` is real and
+     reachable), so `google.auth.default()` can resolve REAL ambient Compute-Engine credentials there while it fails
+     through to the mock branch on any non-GCE host — a concrete violation of the `Local↔CI env parity` invariant
+     `base-service.sh` itself states in a comment (`CLOUD_MOCK_MODE=true` is exported unconditionally for every
+     `quality-gates.sh` run, local or CI). Shipped a fix gating both fixtures on `CLOUD_MOCK_MODE=true` (short-circuits
+     to the mock branch before ever calling `default()`) — `features-service@78fd05d1`
+     (`bash scripts/quality-gates.sh --no-fix` full run passed locally in 6:02, sentinel `.qg_last_passed_sha` matches
+     HEAD; landed via
+     `quickmerge.sh --agent --files 'tests/cross_instrument/conftest.py tests/multi_timeframe/conftest.py'`).
+  5. **Re-triggered the build against the fix**
+     (`gcloud builds triggers run features-service-build --branch=live-defi-rollout`) → build
+     `cc976c01-794a-4437-a745-4e1c8ccf722f` (commit `78fd05d17a135b29c7bd6db243675130b18129bd`). **The hang reproduced
+     at the identical checkpoint**: same `[3/6] TESTS` → `✓ Coverage floor: MIN_COVERAGE=70 >= system floor 70` line,
+     then flat at 1005 log lines from ~16:34:40Z onward with zero growth. Watched live (not left unattended) for ~10
+     minutes of confirmed flatness (vs. the local 93s `--quick` baseline) before cancelling deliberately at 16:44:04Z
+     (`gcloud builds cancel cc976c01-794a-4437-a745-4e1c8ccf722f`) rather than waiting out a third full 1800s — the
+     evidence was already conclusive and further waiting added no new diagnostic signal (Cloud Build gives no visibility
+     into WHERE inside the redirected pytest run it is stuck, per finding 3 above).
+  6. **Conclusion: the `gcp_auth_info` local<->CI parity fix is a genuine, worthwhile correctness improvement (now
+     shipped) but is NOT the cause of this hang** — the real root cause is still unconfirmed. Did NOT apply the
+     machine-type bump or xdist-worker-cap "recommended next steps" from this doc's original write-up, since finding 1
+     above falsifies the mechanism they were meant to address, and applying either now would be a guess unsupported by
+     evidence, not a targeted fix. Not yet tried (flagged for the next touch, in priority order): (a) get a build to
+     stream pytest output LIVE instead of silently redirecting it (a `tee` in the `quality-gates` docker-run instead of
+     the `>>"$_pytest_log"` capture used by `base-service.sh` — would require a change to the shared base script,
+     cross-repo blast radius, needs its own review) so the NEXT hang shows exactly which test/module is stuck instead of
+     another blind stall; (b) a controlled bisection by temporarily deselecting test subtrees
+     (`--ignore=tests/<family>/unit`) one family at a time via a throwaway manual Cloud Build trigger, to localize which
+     of the 8 consolidated feature families' unit tests is actually the hang site, before proposing any
+     resource/parallelism change. features-service:latest in Artifact Registry is UNCHANGED (still the stale 2026-07-14
+     `sha256:c204c49d...` image) — the UTL `c47273c1` fix has still not reached a pushed image. `status` stays `open`;
+     not resolved this touch.

@@ -350,3 +350,24 @@ repo. This plan tracks that work.
   new digest carries the fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, un-pause + verify one
   real scheduled fire — only then revisit todos 6-10 (Workflow-YAML drift, legacy-job retirement, scheduling re-enable,
   bucket delete, issue-doc closure) in a future touch.
+- 2026-07-15 (~16:45Z, FixBuildHang phase re-dispatch — real evidence, not inference; hang still NOT resolved):
+  Dispatched specifically to root-cause and fix the `features_service_cloud_build_quality_gates_hang_2026_07_15.md`
+  blocker. Falsified the issue doc's "suspected root cause" (xdist parallel-worker memory pressure) with source-level
+  evidence — `features-service/scripts/quality-gates.sh` forces `PYTEST_WORKERS=0` unconditionally, so pytest already
+  runs single-process (`-n 0`) in BOTH local and Cloud Build environments; the CI-only `-n auto` path never fires for
+  this repo. Found and fixed a real, separate local<->CI parity bug instead (`gcp_auth_info` test fixtures in
+  `tests/cross_instrument/conftest.py` + `tests/multi_timeframe/conftest.py` could resolve REAL ambient GCE metadata
+  credentials on an actual Cloud Build worker while always falling back to mocks off-GCE) — `features-service@78fd05d1`,
+  local `quality-gates.sh --no-fix` full run green (6:02, sentinel matches HEAD), shipped via quickmerge. Re-triggered
+  `features-service-build` against this commit
+  (`gcloud builds triggers run features-service-build --branch=live-defi-rollout`) → build
+  `cc976c01-794a-4437-a745-4e1c8ccf722f`. **The hang reproduced at the identical checkpoint** (`[3/6] TESTS` →
+  `Coverage floor` line, then flat) — watched live for ~10 confirmed-flat minutes before deliberately cancelling (not
+  another blind full 1800s) since the evidence was already conclusive. Full findings + evidence in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`'s new Progress Log entry. **Root
+  cause still unconfirmed; `features-service:latest` is STILL the stale 2026-07-14 `sha256:c204c49d...` image** — todo 5
+  stays `[ ]`, unchanged from before this touch. Did NOT apply a machine-type bump or xdist-worker-cap (the issue doc's
+  other suggested fixes) since the mechanism they target is now falsified — applying either would be an unevidenced
+  guess. Next step (per the issue doc's updated "not yet tried" list): get live/streamed pytest output out of a Cloud
+  Build run (currently fully silent until pass/fail) so the NEXT attempt can localize exactly which test is stuck, or
+  bisect by feature-family via a throwaway trigger, before proposing any resource/parallelism change.
