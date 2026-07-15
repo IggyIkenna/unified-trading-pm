@@ -1830,3 +1830,52 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   after the source delete. No data loss, no unauthorized deletes, live sleeve state fully intact and reachable only from
   the new location now. Item (3) is CLOSED — issue doc status flipped to resolved (see issue doc for the closing note).
   Estate count this touch: **-1**.
+
+- **2026-07-15, Cutover phase — `features-sports` 2 of 3 live-reference surfaces repointed to canonical `-prd-` bucket;
+  the 3rd surface's "healthy" verification surfaced a pre-existing, unrelated production outage (STOP, operator notified
+  via issue doc)**. Continuing item (2)'s blocker (b) from the entries above (ship-phase already landed the
+  migrate-script + confirmed the 2 ephemeral objects): **(a) terraform data-source check** — re-grepped all of
+  `terraform/gcp/**` + `configs/cloud-providers.yaml` for the bare `features-sports-${project_id}` literal: the only
+  hits are the `google_storage_bucket.features_sports` resource itself + its `_imports_reconcile.tf:51-52` import block
+  (both correctly left untouched — deleting the terraform resource is the NEXT phase's job, after the bucket delete) and
+  `terraform/services/features-sports-service/gcp/main.tf`'s `gcs_volumes` FUSE-mount entry (item (b) below); nothing
+  else references the bare name as a data source. **(b) Cloud Run job FUSE mount** — repointed
+  `module.daily_job.gcs_volumes` from the bare bucket to `features-sports-prd-${project_id}` (added a small
+  `bucket_env_short_map` local since this per-service terraform root had no existing env-short convention);
+  `terraform plan` confirmed an in-place update only (no destroy/recreate) — applied via `terraform apply -target`
+  scoped to just this one resource (deliberately NOT sweeping in two unrelated already-drifted
+  `google_workflows_workflow` resources in the same plan, see below). Verified live via `gcloud run jobs describe`: the
+  job spec now mounts `features-sports-prd-central-element-323112` at
+  `/mnt/gcs/features-sports-prd-central-element-323112`. Manually triggered a real execution
+  (`features-sports-service-job-n4l5z`, current CLI contract `--asset-group SPORTS ...`) to verify health rather than
+  assume it — logs confirm GCSFuse mounted the new canonical bucket cleanly, but the job then crashed at pure Python
+  import time (`ModuleNotFoundError: No module named 'unified_api_contracts.internal'`,
+  `unified_trading_library/config_interface/auth/entitlements.py:15`), independent of and unrelated to the bucket mount
+  (the failure fires before any GCS access, so the OLD bare-bucket mount would have failed identically). Corroborating
+  evidence this is a pre-existing, weeks-old outage, not something this touch caused: the
+  `features-sports-service-daily-trigger` Cloud Scheduler job is `PAUSED` (`userUpdateTime: 2026-06-08`), and the last
+  `SUCCEEDED` `features-sports-service-daily` workflow execution on record is `2026-06-07` — the daily/backfill
+  production sports-features pipeline has most likely been down since 2026-06-08. Also found (not applied, separate from
+  the image bug): the checked-in `daily_workflow`/`backfill_workflow` Workflow-YAML sources already use `--asset-group`,
+  but a full (un-targeted) `terraform plan` shows the LIVE deployed workflows still pass the retired `--category` flag —
+  a second independent reason those workflows would fail even once the image is fixed. Filed
+  `plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md` (operator-notified per the
+  big-finding HARD RULE — data-pipeline correctness, live production outage) with the full evidence + recommended next
+  steps (locate/rebuild the actual `features-sports-service` image source — a separate repo not cloned in this workspace
+  slot — then apply the `--category`→`--asset-group` workflow drift, then re-verify, then un-pause). **(c) VM launcher
+  `GCS_BUCKET` defaults** — confirmed via grep that both launchers only ever use `GCS_BUCKET` to derive the ephemeral
+  `_vm_staging/fss_backfill/` scratch prefix (tarball/runner-script/logs), never the actual feature-data destination
+  (resolved separately at runtime via `resolve_bucket(kind="features-sports", ...)` against `cloud-providers.yaml`'s
+  canonical entry) — updated both defaults from bare to `features-sports-prd-${project_id}`:
+  `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` and
+  `features-service/scripts/sports/launch_parallel_backfill.sh`. `quality-gates.sh --no-fix` green on both repos
+  (sentinels written == HEAD); shipped as two separate quickmerges —
+  `deployment-service@d008754fba643db087164068c9b6952b48875d91` ("feat(sports): cutover features-sports Cloud Run FUSE
+  mount + backfill launcher to canonical -prd- bucket") and `features-service@6be22334e36fc3846429e660fb5a34a6666eb34b`
+  ("feat(sports): cutover VM-fanout backfill launcher GCS_BUCKET default to canonical -prd- bucket") — both landed on
+  `live-defi-rollout`, working trees clean after. **Verdict**: 2 of 3 live-reference surfaces (a, c) fully repointed +
+  verified; surface (b)'s mount repoint is applied
+  - infra-verified correct, but the job it serves is NOT end-to-end healthy for a pre-existing, unrelated reason (broken
+    image) — **the `features-sports` bare bucket is still NOT delete-eligible**: blocker (b) from the entry above is now
+    narrower (mount fixed) but a NEW blocker (broken image + workflow-arg drift, tracked in the issue doc above) must
+    clear before a genuine Verify+Delete re-attempt. No destructive action taken on the bare bucket itself this touch.
