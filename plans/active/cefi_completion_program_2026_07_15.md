@@ -283,3 +283,21 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 **Current Phase-1 status**: D-code-MTDS ✅ mtds@57e26c0f · G-code ✅ · D-code ✅ is@559c6920 · E ⏳ (UAC agent) · I ⏳
 (queued UAC edit after E). Backfill A/B ⏳ (queue VMs). Then F, G-tick, C, H.
+
+### 2026-07-15T14:25Z — A/B backfill monitoring: climbing, tail still empty; tail-VM decision deferred (not abandoned)
+
+- Queue VMs CLIMBING (stall-safety OK): `cefi-queue-heavy-20260714` per_vm 70k→87k bytes (mtime 13:42Z);
+  `cefi-queue-heavy-20260715` now writing 37k (mtime 13:49Z). Both alive + progressing.
+- Recent tail STILL empty under batch_tardis (2026-06-05/15/25 = 0 venues; 05-30/07-05 = 1) — the VMs are grinding
+  historical 403-gaps first. Tail-fill is inherently slow under the operator's cap-3 (2026-07-14) rule.
+- Launcher interface learned (`launch-cefi-sharded-backfill.sh`): `SINGLE_VM_QUEUE=1` = combined ≤cap VM;
+  `TARDIS_CONCURRENCY_LEASE=1`; SPOT default; NO `VM_INSTRUMENT_IDS` → MTDS resolves the full catalogue-MVP universe;
+  `ONLY="venue:year:group"` scopes shards. Idempotent skip-if-fresh per shard.
+- **DECISION**: do NOT launch a 3rd (2026-scoped) Tardis VM YET — the 2 queue VMs ALREADY cover 2026 (END 07-13/14), so
+  a duplicate 2026 VM risks double-processing the same tail shards + lease contention at the 3/3 cap edge. This is NOT
+  abandonment: the correct full-universe mechanism is already running + climbing.
+- **NEXT-TICK ACTION (specific, not vague)**: download + inspect `_index/per_vm/cefi-queue-heavy-*.parquet` CONTENTS to
+  read which (venue, date) shards each VM has already covered → determine whether they are approaching the tail. If they
+  are chronological-historical-first and won't reach 2026-06+ soon, launch ONE `ONLY=<the-exact-empty-tail-shards>`
+  SINGLE_VM_QUEUE LEASE=1 SPOT VM scoped to the non-overlapping tail range (DRY_RUN first, guard confirms ≤3). That
+  closes the operator's headline recent-tail gap without duplicating the queue VMs' in-flight work.
