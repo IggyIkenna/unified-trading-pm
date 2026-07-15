@@ -201,12 +201,15 @@ these 5 cells.
       anywhere despite 3 docs/comments claiming one does; `"YAHOO_FINANCE"` is a phantom no-adapter venue inflating the
       failure counts) still need their own decisions — see "Resolution — ohlcv_15m/ohlcv_24h audit (2026-07-15)" below
       for the full writeup + 2 new scoped follow-up todos.
-- [ ] [DESIGN] P2. Operator/architecture decision for `corporate_action_confirmed`/`earnings_result`'s MTDS-tick-bucket
-      expected coverage vs. features-service's actual ownership of this domain. Raise as a structured options question,
-      do not guess. If descoped from MTDS, also flag to whoever owns
-      `macro_micro_econ_data_capture_audit_     2026_06_05.md` that features-calendar-service's OWN manifest/rollup
-      (separately already flagged as "0 shards, 0% completion") is the bucket that should actually be measured for this
-      data going forward.
+- [x] ✅ [DESIGN] P2. Operator/architecture decision for `corporate_action_confirmed`/`earnings_result`'s
+      MTDS-tick-bucket expected coverage vs. features-service's actual ownership of this domain — **operator decided
+      (interactive session, 2026-07-15): option (a), stop instruments-service from seeding these as expected cells in
+      the MTDS tick manifest** (see this doc's summary + `## Resolution` below for the full reasoning). Shipped
+      `instruments-service@03f71c81`. features-calendar-service's own manifest/rollup gap (separately flagged "0 shards,
+      0% completion" in `macro_micro_econ_data_capture_audit_2026_06_05.md`) remains OUT OF SCOPE for this fix — flagged
+      to whoever owns that doc as the correct place to measure this data going forward. See "Resolution —
+      corporate_action_confirmed / earnings_result (2026-07-15)" below for what shipped and the historical-rows
+      decision.
 - [ ] [VERIFY] P3. Trace the orchestrator/sentinel classification layer to confirm exactly how a
       requested-but-`_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets recorded (`attempted_failed` vs.
       `empty_confirmed`) — not traced to the manifest-write layer in this pass; needed to fully close out mechanism
@@ -360,6 +363,64 @@ but because (B) is a real, never-built multi-service aggregation writer (despite
 has an already-flagged "manifest churn" risk that deserves the same explicit operator decision its twin
 (`corporate_action_confirmed`/`earnings_result`) already got.
 
+## Resolution — corporate_action_confirmed / earnings_result (2026-07-15)
+
+Fixed exactly as scoped in the dispatch: `instruments-service/scripts/enumerate_expected_universe.py` is confirmed
+(re-verified fresh, not just trusted from the original diagnosis) to be the ONLY seeding site — its `enumerate_v2()`
+default-resolution branch and `main()`'s CLI-default branch both resolved TRADFI's `data_types` list from UAC
+`DATA_TYPES_BY_ASSET_GROUP["tradfi"]` unfiltered, which is what fed both the per-instrument lifecycle pass
+(`_enumerate_v2_tradfi`) and the venue-grain non-trading-day pass (`_yield_v2_tradfi_non_trading_day_rows`) — i.e. every
+row class this enumerator seeds into the MTDS tick manifest for tradfi.
+
+**Scope precision (the exact risk the dispatch flagged):** `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` itself is a UAC
+cross-cutting registry consumed by several OTHER modules unrelated to MTDS (`market_data_categories.py` validity
+matrices, `expected_coverage.py`, `mvp_scope.py`, `scripts/generate_ui_reference_data.py`, …) — editing it directly
+would have de-registered `corporate_action_confirmed`/`earnings_result` as valid tradfi data_types system-wide,
+including for whatever features-service's own manifest tracking eventually wants to do with that same "what data_types
+are expected" knowledge. **Did not touch UAC.** Instead added a new tradfi-only helper,
+`_tradfi_mtds_tick_manifest_data_types()` (+ `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` frozenset), and wired it
+into the two `data_types` resolution sites in place of the raw `DATA_TYPES_BY_ASSET_GROUP.get("tradfi", [])` call — a
+narrow, two-item exclusion scoped to this ONE enumerator's MTDS-tick-manifest seeding path only. UAC's registry is
+regression-tested to remain untouched (`test_uac_data_types_by_asset_group_registry_itself_is_untouched`).
+
+**Regression tests** (`tests/unit/scripts/test_enumerate_expected_universe_v2.py`, new
+`TestTradfiMtdsTickManifestDataTypeExclusion` class, 4 tests): both types are confirmed present in UAC's registry
+(fixture sanity-check, so the test isn't trivially-passing for the wrong reason); the new helper excludes exactly these
+two and nothing else; `enumerate_v2(asset_group="tradfi")`'s default-resolution path (no explicit `--data-types`
+override — the production default, mirroring `main()`'s CLI default) never emits either data_type across an
+EQUITY@NASDAQ fixture (deliberately chosen because the G1-ENUM validity matrix already considers both VALID for that
+shape, so the test actually exercises the exclusion rather than passing for an unrelated reason); UAC's own registry
+constant is unchanged. Full suite: 165 tests passed in the touched test file, 14/14 golden-fixture tests passed,
+`quality-gates.sh --no-fix` ALL PASSED (177s). Shipped `instruments-service@03f71c81`.
+
+**Unrelated blocker hit + resolved while shipping**: the local `quality-gates.sh` run was red on
+`test_expected_universe_golden.py::test_expected_matches_golden[tradfi]` for a reason wholly unrelated to this fix
+(verified via a stash-isolated re-run: byte-identical failure with my diff stashed out) — a concurrent agent's
+in-flight, uncommitted UAC edit (`unified-api-contracts@78b9e899`, the CBOE `ohlcv_15m` narrowing = this same doc's
+finding (2), see the resolution section above) was live via the editable path-dependency, and once it landed as a commit
+the checked-in `tradfi.json` golden fixture needed a resync. Waited for UAC to go clean, then regenerated ONLY the
+tradfi golden via the sanctioned `scripts/regenerate_expected_universe_golden.py` (refuses while UAC/UTL are dirty — ran
+only after confirming both clean) and reverted the script's unwanted cefi/defi/sports/prediction.json touches (pure
+`json.dumps` formatting noise vs. the checked-in prettier-compacted style, zero content delta — those 4 asset_groups
+were already passing) back to HEAD; prettier-formatted the tradfi fixture to match the checked-in convention so the
+shipped diff is the true minimal 3-line delta (`captured_at`, `tuple_count` 41→40, removed
+`["CBOE", "index", "ohlcv_15m"]`). Included in the same `instruments-service@03f71c81` commit since it was required to
+get MY tradfi-scoped test green — did not touch any other finding's logic.
+
+**Historical already-seeded rows — decision: defer, do not touch in this pass.** The alert batch's own numbers (807/807
+`corporate_action_confirmed`, 799/799 `earnings_result`, both against `market-data-tick-tradfi-prd`) are the only counts
+available; not independently re-verified against a live manifest query in this pass. Considered cleaning these up now
+(mirroring the cefi-orphan-rows precedent elsewhere in this remediation wave) but chose to leave them as a documented
+follow-up rather than force it, for the same reason the `mbp_10` resolution above did: this is PRODUCTION DATA MUTATION
+(deleting/reclassifying live manifest rows) that deserves its own carefully-scoped pass — precisely identifying the
+predicate, picking the sanctioned rewrite mechanism (this repo has several `reconcile_*`/`purge_*`/
+`delete_phantom_rows_from_shards.py`-style precedents for exactly this shape of cleanup), a scan-only dry run, and
+review — not something to bolt onto a code-scoping fix under the same commit. Stopping the seed going forward is the
+higher-value, lower-risk half of this fix (it is what prevents the cell from growing further and re-triggering
+`DP_RUN_MOSTLY_EMPTY`); the historical rows will age out of the manifest's rolling window naturally, or can be cleaned
+up explicitly in a dedicated follow-up pass whenever someone picks up the `corporate_action_confirmed`/`earnings_result`
+follow-up flagged to `macro_micro_econ_data_capture_audit_2026_06_05.md`'s owner above.
+
 ## Progress Log
 
 - 2026-07-15: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
@@ -398,3 +459,17 @@ has an already-flagged "manifest churn" risk that deserves the same explicit ope
   the reported failure counts, same misclassification class as this doc's `corporate_action_confirmed`/`earnings_result`
   finding. Both routed to new scoped todos above rather than rushed, per each finding's own risk profile (B = real
   multi-service build; C = an already-flagged "manifest churn" risk needing an explicit operator decision).
+- 2026-07-15 (later same day, dispatched agent — finding (3) `corporate_action_confirmed`/`earnings_result`): operator
+  decided option (a) (stop seeding both as MTDS-tick-manifest expected cells) in an interactive session. Re-verified
+  `instruments-service/scripts/enumerate_expected_universe.py` as the sole seeding site, added a tradfi-scoped exclusion
+  helper (`_tradfi_mtds_tick_manifest_data_types()`) wired into both `data_types`-resolution call sites, confirmed UAC's
+  own `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` registry is untouched (regression-tested), added 4 new regression tests,
+  full suite + `quality-gates.sh --no-fix` green. Shipped `instruments-service@03f71c81`. Also resynced the
+  `tradfi.json` golden fixture (3-line delta) to a since-committed, unrelated finding-(2) UAC change
+  (`unified-api-contracts@78b9e899`, CBOE `ohlcv_15m` narrowing) that was blocking the local quality gate — see
+  "Resolution — corporate_action_confirmed / earnings_result" above for the full trace, including why the other 4
+  asset_groups' golden fixtures were deliberately reverted (pure formatting noise, no content delta). Historical
+  807/807 + 799/799 already-seeded manifest rows deliberately left untouched — documented as a follow-up (production
+  data mutation, deserves its own scoped pass), not forced into this commit. This doc's finding (3) is now closed;
+  findings (2)'s sub-items (B) downstream aggregation writer and (C) phantom `YAHOO_FINANCE` venue remain open per their
+  own todos above.
