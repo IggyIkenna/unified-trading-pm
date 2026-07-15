@@ -392,6 +392,18 @@ re-verification): did not re-attempt the manual `features-service-sports-job` ex
 gated on the Cloud Build above reaching `SUCCESS` first. `readyToReverify` should be assessed against that build's
 terminal status, not assumed here.
 
+**UPDATE (~15:37Z): item 3's Cloud Build did NOT reach `SUCCESS`** — build `0b5cec2d-2f6a-4416-b870-44e3db644e1f` hung
+inside the quality-gates test step and hit its 1800s timeout; a manual retry (`c4262919-003a-468c-9b9d-169b64a2adc8`)
+reproduced the IDENTICAL stall point (same log-line count) and was cancelled after ~7 minutes flat rather than waiting
+out a second full timeout. The local `quality-gates.sh --no-fix` run on the same commit completes in 93s, so this is a
+Cloud-Build-environment-specific hang, not a code regression from the Dockerfile bump. Filed as its own issue:
+`plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md` (suspected root cause:
+`E2_HIGHCPU_8` machine type — 8 vCPU/~8GB RAM — under memory pressure from the consolidated 8-family test suite's
+pytest-xdist parallelism; not confirmed). **`features-service:latest` in Artifact Registry is STILL the pre-fix
+2026-07-14 image (`sha256:c204c49d...`)** — re-verified live via `gcloud artifacts docker images list` after the
+cancelled retry. `readyToReverify=false` — the manual `features-service-sports-job` re-verification execution should NOT
+be attempted yet; it will still hit the same false-DOWN error against the stale image.
+
 ### Evidence (this update)
 
 - `gcloud run jobs list --project=central-element-323112 --region=asia-northeast1 --filter="metadata.name:uts-prod-manifest-consolidator" --format='value(metadata.name)'`
@@ -413,3 +425,30 @@ terminal status, not assumed here.
   — confirms `features-service`'s gate calls the exact function the fix touches.
 - Full re-read of `plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`
   (all 5 update rounds) — cross-referenced above.
+
+## OPEN — real boundary-condition residual found by adversarial verification (2026-07-15 ~15:30Z)
+
+A follow-up session shipped `unified-trading-library@c47273c1` (the lock-aware liveness fix referenced above,
+`consolidator_cycle_in_flight()` wired into `ConsolidatorLivenessMonitor.check` + `assert_consolidator_healthy`, a fixed
+**1800s (30min)** in-flight horizon) and deployed it (MTDS digest bump `459d1b7e` → build `c9c18263` → watchdog
+redeployed to `sha256:1e974ccd`), plus separately fixed the watchdog's `--buckets` arg list (was still watching
+decommissioned legacy no-`-prd-` buckets). Both of THOSE fixes are independently confirmed correct and live.
+
+**But the claim that this "eliminated" the false-`CONSOLIDATOR_DOWN` stream is overstated.** Adversarial verification
+(dispatched by the operator asking "check" on the continuation session's close-out) found live logs **after** the
+deployment showing TWO reproducible genuine `CONSOLIDATOR_DOWN` events for `market-data-tick-defi-prd` specifically
+(14:16:46Z, 14:48:44Z) — each landing ~1864s (31m04s) after the preceding `phase=lock_acquired`, i.e. **~64 seconds past
+the fixed 1800s horizon**, both times by nearly the identical margin. This is systematic, not noise: real defi
+consolidator merges are apparently running slightly LONGER (~31-32min) than the "24-30min" the 1800s horizon assumed
+when it was picked. A later cycle (~15:20Z) showed no DOWN event, consistent with variable merge duration around that
+boundary — this reinforces it's a genuine boundary-condition bug, not a fluke.
+
+**Recommended next step for whoever picks this up**: widen the horizon with REAL headroom this time (the 1800s number
+was itself picked to match an assumed "24-30min" ceiling with almost no margin — don't repeat that mistake; either use a
+generously wide fixed value, e.g. 2700-3600s, or make the horizon asset_group-aware / read from the same per-bucket
+cadence config the consolidator's own `MANIFEST_CONSOLIDATED_STALENESS_SEC` overrides already use, since defi is already
+known to run long merges — see `codex/05-infrastructure/manifest-consolidator-ssot.md`'s per-AG cadence table). Verify
+the fix by observing live logs across several real defi merge cycles (each ~30min) — not a single point-in-time "0 DOWN"
+snapshot, which is exactly what produced the overstated claim being corrected here.
+
+Status intentionally left `open` — this issue is not resolved, only partially mitigated.

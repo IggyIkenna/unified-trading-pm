@@ -250,3 +250,30 @@ already handles honestly).
   Data remediation (re-collecting 2,958 affected shards) deliberately NOT executed — flagged as a properly-scoped
   follow-up with exact commands, per this task's own instruction not to force a rushed large-scope live-API operation.
   Issue filed per the workspace's findings-triage HARD RULE (data-correctness, big finding).
+
+## REOPENED — this is NOT a purely historical/static issue; actively recurring post-fix (2026-07-15 ~15:30Z)
+
+The `927acf01` fix + the "temporal race, not a broken gate" root cause above were characterized elsewhere (the main
+remediation plan's continuation-session close-out) as meaning these cells were "static historical... not a live
+regression." **That characterization is wrong, and was caught by adversarial verification the operator explicitly asked
+for.** A fresh live re-query of `market-data-tick-defi-prd` (refreshed today) found **627 NEW `attempted_failed` rows
+(551 `dex_pool_state`, 76 `lst_rates`) timestamped 2026-07-15T12:16-12:22Z — TODAY, over an hour AFTER the `927acf01`
+fix landed at 11:12Z** — same `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE` as the original finding.
+
+This means one of two things, not yet determined: (a) the `927acf01` fix (threading `mode=` through
+`lst_rates_handler.py`) was necessary but not sufficient — some OTHER code path (a different handler, a different
+trigger) is still hitting the same stale-catalogue race live, right now; or (b) a genuinely NEW backfill/attempt run
+happened today that re-triggered the same historical temporal-race pattern against dates the IS catalogue still hasn't
+caught up on, meaning the underlying race condition (IS catalogue backfill completion vs. MTDS attempt timing) is not
+just a one-off historical artifact but a recurring structural gap that will keep producing new failed rows every time a
+similar backfill/attempt runs.
+
+**Needs real investigation, not another bookkeeping pass**: identify what actually ran/wrote these 627 rows at
+12:16-12:22Z today (check recent VM launches, manual `gcloud run jobs execute` invocations, or scheduled backfill jobs
+active in that window), confirm whether it went through the now-fixed `lst_rates_handler.py` path or a different one,
+and determine whether this is (a) a residual gap in the `927acf01` fix's scope, or (b) evidence the [DESIGN] P3 todo
+below (an IS-catalogue-backfill completion signal MTDS could subscribe to, currently marked out-of-scope) needs to be
+promoted to an actual fix rather than left as a "nice to have."
+
+Status intentionally left `open` — reclosing/reconciling this as "stale bookkeeping" without addressing the live
+127-hour recurrence would repeat the exact overclaiming pattern this correction exists to fix.
