@@ -239,11 +239,22 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       "OPERATOR DECISION" framing and the precedent set by `BLK-cbee81bc` for the comparably-large legacy-bucket purge).
 - [x] ✅ [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
-      and start reducing `expected_unattempted`. (repo: instruments-service) — **RESULT: NEGATIVE.** Ran the decisive
-      re-measurement at the armed T+86min window (20:22Z baseline → 21:48Z): `expected_unattempted` FLAT at 2,773,292
-      (zero delta) despite the confirmed-deployed, confirmed-correct writer fix running continuously. Confirms the
-      writer fix is necessary but NOT sufficient — todo below (enumerator re-materialization) is the actual remaining
-      blocker. See `mvp_backfill_cefi_tick_v10_2026_06_27.md` Progress Log "DECISIVE TEST RESULT" entry for full detail.
+      and start reducing `expected_unattempted`. (repo: instruments-service) — **RESULT: NEGATIVE, but
+      CORRECTION/RETRACTION (2026-07-15T~22:30Z, cross-referenced from `cefi_completion_program_2026_07_15.md`, the
+      successor to the now-archived `mvp_backfill_cefi_tick_v10_2026_06_27.md`): the causal conclusion below was
+      methodologically INVALID, not just negative.** Ran the decisive re-measurement at the armed T+86min window (20:22Z
+      baseline → 21:48Z): `expected_unattempted` FLAT at 2,773,292 (zero delta). At the time this was read as "writer
+      fix insufficient, enumerator atom-inconsistency is the blocker" — that fix (below) is real and DID land
+      (`instruments-service@a2468dd9`, confirmed via independent direct data cross-tab, not via this test), but the TEST
+      ITSELF proves nothing: the fleet's `YEARS=2026` scoping still derived `start_date=2026-01-01`, and the actual gap
+      is `2026-02+` — the fleet spent the entire 86-minute window inside the already-resolved January zone, where zero
+      eu-cell closure was possible regardless of writer correctness. Three separate eu re-measurements across this
+      thread (this one, and two more before the fleet was correctly re-aimed at `START_DATE=2026-02-01`) were all
+      invalid for the same reason. A valid writer-fix test requires a wave whose scan cursor is inside 2026-02+ AND
+      survives long enough to write (a THIRD, independent defect — SPOT preemption deletes waves with no relaunch
+      mechanism, also found and tracked in the successor plan — made this hard to arrange). See
+      `cefi_completion_program_2026_07_15.md` Progress Log "Three structural blockers" entry for the full corrected
+      picture.
 - [x] ✅ [BACKEND] P0. **NEW, confirmed blocker (the actual G4 gate-closer): re-materialize the cefi expected-universe
       enumerator so every `expected_unattempted` row carries ONE canonical atom shape.** Live-verified the
       `expected_unattempted` side is currently a MIX: some rows canonical (`VENUE:PERPETUAL:BASE-QUOTE@MARKER`, matching
