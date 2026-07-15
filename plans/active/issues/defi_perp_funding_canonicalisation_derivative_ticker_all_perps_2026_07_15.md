@@ -143,11 +143,43 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       divergence-removal + reader-tolerance disposition; new §4a derivative_ticker entry),
       `data-lineage-MTDS-features-ml.md` (new Layer-1 defi-axis derivative_ticker row + bypass-types table row).
 
+- [ ] [DESIGN] P1 [GATED on todo 4's parity results]. **Decide: demote `perp_funding` from a captured raw type to a
+      DERIVED interval view.** Rationale (operator discussion 2026-07-15): with derivative_ticker now the canonical raw
+      funding home for ALL perps, `perp_funding` is derivable everywhere — for interval-native sources (Hyperliquid
+      REST, GMX events) the two are literally the same rows written twice (the GMX dual-write in todo 2 proves it: same
+      rows, zero extra API calls); for event-native sources (Drift) perp_funding is an aggregate of the settlements. No
+      perp venue class structurally requires a separate funding capture (no defi perp venue is an AMM in the Uniswap
+      sense — Drift/Hyperliquid are CLOBs; GMX is pool-as-counterparty but still emits funding as EVENTS). If todo 4's
+      parity holds within ε, the dual-capture is pure redundancy + a permanent parity-policing burden. **Scope of the
+      decision** (do NOT execute before the parity evidence exists): (a) migrate features-onchain's `perp_funding`
+      BYPASS read (`data-lineage-MTDS-features-ml.md`) to the derived view or to derivative_ticker directly; (b) re-home
+      the `mvp_backfill_defi_onchain_v10` MVP gate accounting — perp_funding is one of its 6 gate data_types with months
+      of manifest history, so the shard atom + coverage denominator implications must be worked through, not hand-waved
+      (honest-coverage model: a retired data_type's historical rows stay, they don't vanish); (c) stop capturing
+      perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes as "keep both — parity report explains why".
+      Repos: market-tick-data-service, features-service, unified-api-contracts.
+- [ ] [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data adapters +
+      factory registration + tests exist; zero MTDS capture; not in the venues list / `VENUES_BY_ASSET_GROUP`). Decide:
+      (A) complete onboarding (add to the venues list + build MTDS capture incl. derivative_ticker per the 2026-07-15
+      ruling), or (B) delete the whole vertical slice (3 IS adapters + their tests + factory registrations +
+      `venue_adapter_keys.py:224-226`) per the no-shims/delete-deprecated-code rule. Do NOT delete the keys alone — that
+      breaks `reference_data/factory.py`. Repos: instruments-service, unified-api-contracts.
+
 ## Progress log
 
 - 2026-07-15: Filed from the operator's ruling in the main session, following the funding dual-capture investigation
   (perp_funding vs derivative_ticker). Parity check deliberately gated on the DRIFT backfill grind finishing so it
   compares complete data.
+- 2026-07-15 (main session, operator Q): "Why does perp_funding need to exist whilst derivative_ticker exists?" —
+  answered + captured as the new parity-gated [DESIGN] P1 todo above (demote-to-derived-view decision). Also asked why
+  MANGO/ZETA/FLASH-SOLANA appeared in the coverage table when they are not in the venues list: they surfaced because the
+  todo-1 sweep was scoped to "any perpetual venue in the registry" and those three have `venue_adapter_keys.py` entries.
+  **Correction to a claim the coordinator made in chat**: those keys are NOT dead/orphan pointers — a blast-radius audit
+  found REAL instruments-service reference-data adapters behind them
+  (`reference_data/adapters/defi/{mango,zeta,flash_trade}.py`, ~8-9 KB each, registered in `reference_data/factory.py`
+  :137/150/182, with unit tests). The true state is a **half-onboarded vertical**: IS reference-data (instrument
+  universe) exists; MTDS market-data capture and venues-list membership do not. Deleting only the adapter keys would
+  break the IS factory. Operator decision pending (see the `[OPERATOR-DECISION] P2` todo above) — nothing deleted.
 - 2026-07-15: Todos 1/2/3/5 completed (todo 4 stays gated per its own condition — the DRIFT backfill grind). Coverage
   table (todo 1) pinned scope before any code was written. Shas:
   unified-api-contracts@2170b388d8901a22f17cc2b59245a4b9894671e4,
