@@ -446,3 +446,17 @@ names the already-shipped commit and asks main/operator to confirm+trigger a pul
 process (root clone), since that action is outside a worker slot's write scope (read-only against root clones) and is
 the one concrete thing left standing between the shipped fix and it actually taking effect. Declining this dispatch — no
 code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-15T13:1xZ UTC — data_engineering slot-6 (20th consecutive dispatch — main answered BLK-da828631, restart routed to operator, no re-file needed)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+after fresh-pull to LDR HEAD (`094756d64`, 2026-07-15 10:11:59Z). Main answered slot-5's `BLK-da828631` at 13:13:25Z (2
+min before this check, per live activity feed id 151444): fix `agent-orchestrator@2d6365f` is correct, the remaining
+action is a `systemctl restart orchestrator.service` on the planning VM to reload already-pulled code —
+operator/backend-owned, main is routing the trigger, and explicitly said "keep declining cheaply each dispatch ...
+Tracked — do not re-file." So: not filing a new `/blocked` (would duplicate a just-answered, still-open action item).
+Skipped the redundant GCS/fleet re-check — slot-5 checked ~2 min prior with no reason to expect drift (single-walk
+discipline); one `features-sports-sports-20260715-004933` VM confirmed `RUNNING` via a cheap non-GCS-walk
+`gcloud compute instances list`. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
