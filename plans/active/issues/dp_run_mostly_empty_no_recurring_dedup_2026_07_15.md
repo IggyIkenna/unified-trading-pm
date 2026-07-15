@@ -125,8 +125,9 @@ finding.
       manifest-scan-derived CRITICAL alert) per fix #1 above; +regression test asserting two identical
       `DP_RUN_MOSTLY_EMPTY` fires 900s apart collapse to one delivered alert. —
       `alerting-service@fe76ded34a46f0cfa880c563fe462c155d50809f`
-- [ ] [CODE] P2. `deployment-service`: add a persisted re-nag interval to `check_high_attempted_failed` per fix #2
-      (defense-in-depth, source-side fix independent of the alerting-service cooldown table).
+- [x] [CODE] P2. `deployment-service`: add a persisted re-nag interval to `check_high_attempted_failed` per fix #2
+      (defense-in-depth, source-side fix independent of the alerting-service cooldown table). —
+      `deployment-service@0aaab1a2254ba7ba7f680a94a399f1e7b2285768`
 - [x] [DOCS] P2. Correct/update the incident-gateway wiring claim in `codex/05-infrastructure/data-pipeline-alerts.md`
       per fix #3. — unified-trading-pm (this commit): added a wiring caveat to the emit→route→escalate diagram
       documenting that DP_\* CRITICAL events bypass the incident gateway entirely (only reachable via
@@ -154,3 +155,29 @@ finding.
   `quality-gates.sh --no-fix` green (tests + basedpyright + codex compliance); shipped via quickmerge --agent scoped to
   the 3 touched files. Did not touch todo 2 (deployment-service) — being handled by a parallel agent per this doc's
   Progress Log above.
+- 2026-07-15: Fix #2 shipped — `deployment-service@0aaab1a2254ba7ba7f680a94a399f1e7b2285768`. Added a new `RenagTracker`
+  (`deployment_service/data_pipeline_monitors/renag_tracker.py`, a new sibling module — `meta_watchers.py` was already
+  at its 900-line QG cap per its own docstring, mirroring the prior `consolidator_scheduler_watcher.py` extraction) that
+  persists a per-`(asset_group, data_type)` `last_alerted_at` UTC epoch-seconds timestamp to
+  `vm-census/dp-renag-timestamps.json` (same GCS-backed load/persist pattern as the existing `MissTracker`). Wired into
+  `check_high_attempted_failed` (`meta_watchers.py`) via a new `renag_tracker`/`renag_cooldown_seconds` kwarg pair
+  (default `DEFAULT_RENAG_COOLDOWN_SECONDS = 1800.0`, matching the alerting-service-side fix for consistency): a cell
+  already past the `MissTracker` onset gate now only calls `_emit()` again once the cooldown has elapsed since its LAST
+  ACTUAL alert (or on its first-ever emission); a cooldown-suppressed sweep still marks the cell ACTIVE in
+  `_EMITTED_THIS_SWEEP` (via the new `renag_tracker.apply_cooldown()` helper) so `reconcile_resolved()` does not mistake
+  "still HIGH but cooldown-suppressed" for a genuine clear and post a false RESOLVED bookend. `reconcile_resolved()`
+  gained a `renag_tracker` kwarg that clears a cell's re-nag state the moment it's genuinely resolved, so a LATER fresh
+  onset on the same cell pages immediately rather than staying rate-limited by stale state from the prior incident.
+  `cli.py`'s meta sweep now loads/passes/persists the tracker alongside the existing `miss_tracker` (persisted AFTER
+  `reconcile_resolved()`, not before, so an in-sweep `clear()` is actually saved). Added 5 new unit tests
+  (`tests/unit/test_data_pipeline_monitors.py`) covering: first emission after onset fires immediately; a same-cooldown
+  re-sweep is suppressed while still marked ACTIVE; a sweep after the cooldown elapses re-emits; `reconcile_resolved`
+  clearing a cell allows an immediate fresh onset; and the `RenagTracker` load/should_emit/record/clear/persist contract
+  directly. All 166 tests in the file pass; full `quality-gates.sh --no-fix` green (zero new basedpyright errors, same
+  1293/1293 baseline ceiling as pre-change) — `meta_watchers.py` lands at 925 lines (over the 900-line soft cap even
+  after the extraction), consuming the repo's pre-existing `CODEX_MAX_VIOLATIONS=1` tolerance (the file was already at
+  897/900 before this change); gate exits green either way. Shipped via `quickmerge --agent` scoped to the 4 touched
+  deployment-service files (did not touch the concurrently-live `terraform/gcp/manifest_consolidator_scheduler.tf` seen
+  mid-session — unrelated parallel-agent work, correctly excluded per the multi-agent foreign-file rule). Both
+  source-side (this) and downstream (alerting-service, fix #1) layers of the defense-in-depth fix are now shipped; only
+  todo 3 (docs) remains, already marked done above.

@@ -20,7 +20,17 @@ asset_group: [sports]
 stage: [data]
 repos: [deployment-service, features-service, unified-trading-library]
 scope: [engineer, admin]
-tags: [manifest-consolidator, cloud-run, sports, instruments-store, startup-gate, intermittent, spot-vm-waste]
+tags:
+  [
+    manifest-consolidator,
+    cloud-run,
+    sports,
+    instruments-store,
+    startup-gate,
+    intermittent,
+    spot-vm-waste,
+    concurrent-lock-acquisition,
+  ]
 related: [plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md]
 created: 2026-07-14
 assigned_vm: planning
@@ -106,3 +116,95 @@ it is currently blocking ALL features-sports gap-fill compute for this bucket. R
 retry-with-backoff inside the compute VM itself, since it's the only mechanism positioned to re-check freshness right
 before doing real work, closest to the actual check-then-act window) as the most promising near-term fix, pending option
 1's root-cause investigation.
+
+## Update 2026-07-15 00:10Z — Option 1 root-caused + fixed (same lock-livelock class as defi); Option 2 (bounded retry) shipped as defense-in-depth; status → resolved
+
+**Step 1 — root cause CONFIRMED live, same failure class as the already-fixed `market-data-defi` chunked-merge livelock
+(UTL commit `9358fb0b`), just triggered by ordinary per-VM-shard-backlog growth instead of date-range chunking:**
+
+- Live-checked `gcloud run jobs executions list/describe` for `uts-prod-manifest-consolidator-instruments-sports` at
+  investigation time (2026-07-14 23:30-23:49Z, i.e. "now" at dispatch): the bimodal pattern was NOT just still
+  happening, it was actively WORSE than the original 1-in-5-to-1-in-8 characterization — an unbroken run of 8
+  consecutive slow executions (9tkmn 8m21s, 9xpxf 6m15s, phq5l 8m21s, tjcjn 7m55s, fqwtx 8m39s, dksnm 8m42s, 98gpr
+  8m54s, 29zjz 8m28s), each independently completing "successfully" per Cloud Run (not a crash/OOM).
+- Confirmed the mechanism via Cloud Logging: at 23:30:45Z, `instructions-sports` logged the EXACT signature the defi-fix
+  code comment (`unified_trading_library/manifest_consolidator.py` `_LOCK_TTL_SECONDS`) describes —
+  `"clearing stale lock for instruments-store-sports-prd-central-element-323112 (age=303.6s > TTL=300.0s)"` — i.e. a
+  legitimately still-running cycle's lock aged past the 300s code-default TTL, so the next `*/1` cron tick reclaimed it
+  and started a COMPETING concurrent merge. The same signature recurred at 22:18:38Z (age=355.4s), 22:58:39Z
+  (age=304.4s), and 23:22:39Z (age=302.7s) — a recurring, not one-off, pattern.
+- Ruled IN as the same class (not a separate cause): `instruments-sports` has NO `CONSOLIDATOR_LOCK_TTL_SECONDS`
+  Terraform override (still running the 300s code default) — only `market-data-defi` got the 2026-07-14 fix (4200s).
+  Spot-checked `market-data-sports` (same 1800s task-timeout tier) for comparison: 15 consecutive executions all fast
+  (~40-45s), confirming this is specific to `instruments-sports`'s larger/growing row count, not a sports-wide issue.
+- **Fix shipped**: added a per-bucket `CONSOLIDATOR_LOCK_TTL_SECONDS=2400` override for `instruments-sports` in
+  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`, mirroring the exact defi pattern (TTL set
+  comfortably — 600s headroom, same absolute buffer as defi's 3600s→4200s — above the bucket's own 1800s
+  `timeout_seconds`, so a "fresh" lock can only ever belong to a still-legitimately-running execution). Live-applied
+  immediately via
+  `gcloud run jobs update uts-prod-manifest-consolidator-instruments-sports --update-env-vars CONSOLIDATOR_LOCK_TTL_SECONDS=2400`
+  (verified via `gcloud run jobs describe`) AND codified in Terraform in the same commit, matching the defi precedent's
+  "live-bump now, codify same session" pattern. Evidence: `deployment-service@69136c2c`.
+- **Post-fix live confirmation (partial but strong)**: re-checked execution history ~20min after the live env-var
+  update. Two more individually-slow cycles occurred (`568tw` 23:54:04→00:00:30 = 6m26s; `c7fc9` 23:57:04→00:03:28 =
+  6m24s) — both well past the OLD 300s TTL, which would have guaranteed a reclaim under the pre-fix config — but
+  **zero** `"clearing stale lock"` events logged in that window (checked 2026-07-15T00:00-00:08Z), and every intervening
+  cron tick correctly logged a fast no-op skip instead of piling on a competing merge (no more runs of 4-5 consecutive
+  overlapping slow executions). This is direct evidence the fix is holding. **Residual verification gap** (why this is
+  marked resolved rather than left open pending further proof): I did not observe a full 8-9min cycle recur post-fix
+  (worst seen post-fix was 6m26s, comfortably inside the new 2400s budget either way), and did not relaunch an actual
+  features-sports gap-fill VM to confirm the startup gate passes end-to-end during a slow window. If the "clearing stale
+  lock" signature reappears for `instruments-sports` in future Cloud Logging, re-open this issue — the fix would need a
+  larger TTL or a deeper look at why a legitimate cycle is exceeding 2400s.
+
+**Step 2 — bounded retry-with-backoff shipped as defense-in-depth (independent of Step 1's server-side root cause):**
+
+Added `_assert_consolidator_healthy_with_retry()` to
+`features-service/features_service/sports/cli/handlers/_manifest_preflight.py` (the shared SSOT gate used by both the
+sports live runner and batch handler). On `ManifestConsolidatorStaleError`, retries the SAME
+`assert_consolidator_healthy()` freshness check up to 2 more times (3 total attempts) with a 75s delay between attempts
+(150s total added wait, under the ~3min bound), before re-raising the original error unchanged if still stale. Fail-fast
+design intent preserved unmodified: `MANIFEST_ALLOW_STALE_FALLBACK` stays opt-in only, no per-VM recovery-merge fallback
+added; this only re-checks the same authoritative signal a bounded number of times. Added
+`features-service/tests/sports/unit/test_manifest_preflight.py` covering: immediate success (no retry, no sleep),
+success on the final allowed retry within the bound, still-stale-after-all-retries raising the same error type after
+exactly the bounded number of attempts, non-staleness errors propagating unretried, and both sports buckets retrying
+independently. `bash scripts/quality-gates.sh --no-fix` green (288s, all steps passed). Evidence:
+`features-service@5e1ffd2e`.
+
+**Status (as first written)**: flipped `open` → `resolved`. Both the server-side root cause (Option 1) and the
+client-side defense-in-depth (Option 2) are shipped and live; Option 3 (pre-flight `gsutil stat` check before VM
+provisioning) was not pursued — Option 2 supersedes its intent (a re-check from inside the VM at the actual
+check-then-act window is strictly more reliable than an outside-the-VM point-in-time check, per the 3rd-wave finding
+above that already ruled out point-in-time pre-checks as unreliable).
+
+## CORRECTION 2026-07-15 (independent adversarial verification) — reopening: `resolved` was overstated
+
+An independent verification pass (a fresh agent with no context from the fix above, tasked specifically with trying to
+refute the claim) found the `resolved` status is **not supported by current live data**. Findings:
+
+- The Terraform lock-TTL override (`deployment-service@69136c2c`) IS genuinely live
+  (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400` confirmed via `gcloud run jobs describe`) and the mechanical diff is correct.
+- **But fresh Cloud Logging output from 2026-07-15T00:09-00:20Z — well AFTER the live fix — shows THREE distinct
+  executions (`vx6zs`, `cr4bp`, `s6pkx`) independently logging `phase=lock_acquired` and running full ~7-minute
+  concurrent DuckDB merges while overlapping in time**: `vx6zs` held the lock 00:09:44–00:16:56; `cr4bp` acquired at
+  00:10:45 — only 61s into `vx6zs`'s still-fresh, 2400s-TTL lock; `s6pkx` acquired at 00:12:38 while BOTH were still
+  active. **None of these show a "clearing stale lock" log line** — this is happening through a DIFFERENT mechanism than
+  the diagnosed TTL-reclaim livelock. `_acquire_lock`'s `if_generation_match=0` GCS conditional-write-if-absent CAS is
+  somehow letting multiple holders through concurrently (a genuine race, not a TTL-expiry reclaim).
+- This is exactly the "overlapping-competing-merge" pathology this doc's fix claimed to have "structurally eliminated."
+  That claim was wrong — the TTL bump closed the STALE-RECLAIM trigger path but not the underlying
+  concurrent-acquisition bug, which persists post-fix.
+- **Practical impact currently muted** (the canonical file's mtime was fresh, ~64s old, at verification time — so this
+  is not currently causing user-visible failures the way the original TTL livelock did), but the "fix is holding"
+  conclusion was overstated and needed correcting before it misled a future reader into treating this as closed.
+- **Cross-cutting concern**: `_acquire_lock` (`unified_trading_library/manifest_consolidator.py`) is shared code across
+  the ENTIRE consolidator fleet (~26 Cloud Run jobs, including the just-separately-fixed defi job). If this is a genuine
+  CAS race rather sports-specific, defi and every other bucket could be latently exposed to the same
+  concurrent-acquisition pattern even after their own TTL fixes — worth checking fleet-wide, not just sports.
+
+**Status: reopened to `open`.** `resolved_by` cleared. Follow-up investigation into the actual `_acquire_lock` CAS race
+dispatched separately (unified-trading-library, fleet-wide scope) — see
+`plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md` Progress Log for tracking. The two fixes already
+shipped here (Terraform TTL override + features-service retry) are NOT being reverted — they're real, tested, harmless,
+and did close one genuine trigger path — but they are not sufficient to claim this issue resolved.

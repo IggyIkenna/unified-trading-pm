@@ -95,26 +95,36 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — `alerting-service@fe76ded34a4`
-      (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) + `deployment-service` source-side re-nag (in flight, see
-      Progress Log). Issue doc: `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
-- [ ] [CODE] P1. Implement bounded retry-with-backoff in the features-service compute VM startup gate (Option 2 from
-      `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) so a transient consolidator-stale
-      reading doesn't burn a full SPOT VM launch. Ship + update that issue doc with the fix commit.
-- [ ] [INFRA] P1. Investigate root cause of `uts-prod-manifest-consolidator-instruments-sports`'s occasional 8-9min
-      executions (Option 1 in the same issue doc) — check for concurrent-execution lock contention given the every-1min
-      trigger cadence. Fix if tractable; document if not.
-- [ ] [INFRA] P1. Ship the consolidator entrypoint stdout-logging-bootstrap fix (unified-trading-library) so a killed
-      defi consolidator execution's actual in-container failure point becomes visible in Cloud Logging, per
-      `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s own next-step. Re-observe kill pattern after
-      deploy and update that issue doc with whatever the logs reveal.
-- [ ] [DATA] P1. For every (asset_group, data_type) pair named in the operator's pasted alert batch, verify: already
-      covered by an open/tracked issue doc (annotate with this incident's timestamp as corroborating evidence) vs
-      genuinely new (file a fresh `plans/active/issues/<slug>_2026_07_15.md`). Cover: sports (odds_horizon_bucket_\*,
-      trades), cefi (trades, derivative_ticker, book_snapshot_5, options_chain, futures_chain, liquidations, blank
-      data_type), defi (swaps_ohlcv_\*, dex_pool_state, dex_pool_swaps, gas_fees, oracle_prices, lending_indices,
-      lst_rates, risk_params, rewards, blank data_type), tradfi (ohlcv_\*, trades, mbp_10, tbbo,
-      corporate_action_confirmed, earnings_result).
+- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — BOTH layers shipped:
+      `alerting-service@fe76ded34a4` (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) +
+      `deployment-service@0aaab1a22` (source-side `RenagTracker`, defense-in-depth). 166 unit tests pass,
+      `quality-gates.sh` green both repos. Issue doc fully resolved (all 3 todos done):
+      `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
+- [x] [CODE] P1. Bounded retry-with-backoff shipped — `features-service@5e1ffd2e`
+      (`_assert_consolidator_healthy_with_retry`, 3 attempts/75s/150s total, fail-fast intent preserved).
+- [x] [INFRA] P1 — REOPENED 2026-07-15 by adversarial verification (see below). `deployment-service@69136c2c` (Terraform
+      lock-TTL override) IS live and DID close the stale-lock-reclaim trigger path, but an independent verifier found
+      fresh post-fix Cloud Logging evidence of 3 executions still running full concurrent merges simultaneously via a
+      DIFFERENT mechanism (a genuine CAS race in `_acquire_lock`'s `if_generation_match=0`, not TTL-expiry). The
+      "resolved" claim was overstated and has been corrected — issue doc reopened to `open`, `resolved_by` cleared:
+      `unified-trading-pm@140579a41`. Follow-up investigation of the real concurrent-acquisition bug dispatched
+      separately (fleet-wide scope — shared UTL code, not sports-only).
+- [x] [INFRA] P1 — SUPERSEDED, not needed. The stdout-logging-bootstrap plan for defi turned out unnecessary: the actual
+      root cause (lock-TTL livelock, not an unobservable in-container crash) was found and fixed via Terraform alone
+      (see Ground Truth — defi fix already verified live-working before this todo was ever picked up). Leaving unstruck
+      rather than deleted, per plan-hygiene (documents why the originally-planned approach wasn't taken).
+- [x] [DATA] P1. Swept every (asset_group, data_type) pair from the alert batch. cefi/tradfi partial-ratio cells:
+      already tracked under existing per-venue docs. New:
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (3 root causes; mbp_10
+      mechanical fix dispatched separately). Big finding: cefi blank-data_type 9,757-row "RESOLVED" claim was incomplete
+      — live re-query confirms real-but-static orphan rows (not actively growing), annotated
+      `phantom_captures_cefi_2026_06_28.md`. Commits: `unified-trading-pm@{0378027e6,fe674d7a3}`.
+- [ ] [INFRA] P0. NEW (from adversarial verification): investigate + fix the real `_acquire_lock` concurrent-acquisition
+      race in `unified_trading_library/manifest_consolidator.py` — `if_generation_match=0` GCS conditional-write is
+      letting multiple Cloud Run executions acquire the lock simultaneously (NOT a TTL-expiry reclaim; confirmed via
+      live logs showing 3 overlapping full-length merges with no "clearing stale lock" line between them). Shared code
+      across the WHOLE consolidator fleet (~26 jobs) — check whether defi and others are latently exposed too, not just
+      sports. Repo: unified-trading-library.
 - [ ] [INFRA] P2. Re-run the manifest-consolidator-ssot.md verification recipe across the full fleet (all ~26 Cloud Run
       jobs) after the above fixes land; confirm no job is stuck on a stale/failing image or lock; note any PAUSED legacy
       job that's still being polled by the liveness watchdog (false-positive class already flagged in the defi sigkill
@@ -158,3 +168,71 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   data_pipeline_rules), `quality-gates.sh --no-fix` green. Issue doc todo 1 flipped (`unified-trading-pm@0b7654658`).
   Todos 2 (deployment-service) and 3 (docs) left untouched as instructed — todo 3 was already done by the parallel docs
   commit; agent correctly preserved it rather than overwriting.
+- 2026-07-15 (agent 4 DONE — cefi/tradfi sweep): classified every remaining alert-batch (asset_group, data_type) pair.
+  Most cefi/tradfi partial-ratio cells were already tracked under existing per-venue capture-gap docs. Two genuinely
+  new/uncovered findings surfaced and require operator visibility (both flagged, see below) + one new issue doc filed:
+  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (3 distinct root causes for tradfi
+  mbp_10/ohlcv_15m/ohlcv_24h/corporate_action_confirmed/earnings_result stuck ~100% failed — one mechanical
+  allowlist-gap fix dispatched separately below, two are architecture/policy decisions left for operator review).
+  Commit: `unified-trading-pm@0378027e6`.
+- 2026-07-15 (agent 6 DONE — cefi phantom re-query, dispatched after the sweep flagged it as a possible "big finding"):
+  **CONFIRMED real, but NOT actively growing.** The 9,757 blank-`data_type` `attempted_failed` cefi rows the alert
+  reports are BYTE-IDENTICAL to a 2026-06-28 issue this doc's sibling (`phantom_captures_cefi_2026_06_28.md`) claimed
+  fully RESOLVED — live re-query proves that claim was incomplete, not false: all 9,757 rows share one `attempted_at`
+  timestamp (2026-06-28T03:12:34Z, an undocumented `reconcile_phantom_manifest_rows_all.py --apply` run), no NEW
+  blank-data_type rows have appeared since (rules out an active writer regression), and 99.0% of them have a separate,
+  correctly-typed `captured` row for the same (date, venue) — i.e. these are stale orphan manifest rows from a past
+  cleanup pass, not missing/at-risk data, and the phantom-audit tool has a real blind spot (any blank-`data_type` row is
+  unconditionally flagged phantom). No code fix shipped — remediation needs design (delete orphans vs. harden the audit
+  tool) so it was captured as 3 follow-up todos rather than rushed. Issue doc annotated (not overwritten):
+  `unified-trading-pm@fe674d7a3`.
+- 2026-07-15: dispatched 2 more follow-up agents in parallel: (5) mechanical fix for the tradfi mbp_10 allowlist gap
+  (market-tick-data-service, same pattern as the already-fixed KRX/ICE precedents) — in flight; (agent 3 continued)
+  resumed the sports/features-service+UTL agent twice after it stalled in a background-wait pattern that doesn't
+  actually wake a sub-agent (corrected with explicit foreground-execution instructions) — in flight.
+- 2026-07-15 (agent 3 DONE — sports consolidator, after 2 stalls + correction): confirmed the sports 8-9min slow-run
+  issue shares the EXACT SAME lock-contention livelock class already fixed for defi. Fixed `deployment-service@69136c2c`
+  (Terraform lock-TTL override, live-applied) + defense-in-depth `features-service@5e1ffd2e` (bounded retry). Post-fix
+  live-verified: zero stale-lock reclaims across 2+ six-minute cycles (previously guaranteed under the old 300s TTL).
+  Issue doc flipped to resolved. Note: this agent's commit (`05942b2f0`) landed interleaved with my own in-flight edit
+  to THIS plan file (shared working directory across concurrent agents) — content was NOT lost, both sets of changes are
+  present, just under one commit instead of two; noting for the record, not re-litigating (rewriting shared history is
+  banned).
+- 2026-07-15 (agent 2 DONE — deployment-service re-nag): shipped `deployment-service@0aaab1a22`, a new `RenagTracker`
+  module (GCS-persisted `last_alerted_at` per cell, mirrors the existing `MissTracker` pattern) wired into
+  `check_high_attempted_failed` + `reconcile_resolved`. 5 new tests, 166 total unit tests pass,
+  `quality-gates.sh --no-fix` green (file-size ratchet: `meta_watchers.py` was already at 897/900 lines pre-change,
+  lands at 925/900 post-change — consumes the repo's existing `CODEX_MAX_VIOLATIONS=1` tolerance rather than adding a
+  NEW one; QG reports it non-blocking. Worth a follow-up extraction pass but not blocking this fix). Both dedup-issue
+  layers (alerting-service + deployment-service) now shipped — issue doc fully resolved.
+- 2026-07-15: **Big finding — operator notified in chat** (per the HARD RULE, not blind-fixed): (1) cefi blank-data_type
+  9,757-row stale "RESOLVED" claim (confirmed real-but-static via live re-query, see above), (2) tradfi cross-service
+  data_type misclassification (corporate_action_confirmed/earnings_result expected in the MTDS tick manifest but only
+  ever captured by features-service's calendar module — a bucket that structurally can never be satisfied). Both are
+  architecture/policy items needing a real decision, not blind-fixed.
+- 2026-07-15 (agent 5 DONE — tradfi mbp_10): shipped `market-tick-data-service@e2018167` — added `"mbp_10"` to
+  `_DATABENTO_SUPPORTED_DATA_TYPES` (was silently excluding it despite a live schema mapping + an explicit
+  `configs/venue_data_types.yaml` declaration, same registry-declares/allowlist-excludes shape as the already-fixed
+  KRX/ICE precedents). Verified end-to-end fetch-path (not just the allowlist line) — genuinely complete on the MTDS
+  side. Regression test added (registry-declared ⊆ adapter-supported invariant). 115 tests pass, QG green. **Important
+  caveat surfaced, not glossed over**: a SEPARATE UAC registry (`VENUE_DATA_TYPE_CAPABILITIES["CME"]`) only declares
+  `{ohlcv_1s, ohlcv_1m}` for CME per a 2026-05-15 operator MVP-scope decision, and intersects every fetch request
+  against it BEFORE this allowlist is ever reached — so **this fix alone does not yet cause live mbp_10 capture to
+  start**; that needs a separate, already-tracked, operator-gated UAC registry restoration (referenced:
+  `plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`, whose registry-restoration phases were
+  apparently never actually re-applied despite being marked complete — worth a follow-up look). Issue doc updated:
+  `unified-trading-pm@ee328b8c0`.
+- 2026-07-15: **All 5 dispatched fix agents complete.** Shipped commits: `alerting-service@fe76ded34a4`,
+  `deployment-service@{0aaab1a22,69136c2c}`, `features-service@5e1ffd2e`, `market-tick-data-service@e2018167`. Launched
+  an independent adversarial-verification Workflow (5 skeptics, one per fix, no context from the implementing agents)
+  before declaring any of this genuinely done — result to follow.
+- 2026-07-15: **Adversarial verification pass complete — 4/5 CONFIRMED, 1/5 DISPUTED.** Verdicts:
+  `alerting-service-dedup` CONFIRMED (mechanism, cooldown boundary math, and test-would-actually-catch-a-regression all
+  independently re-derived, not just read). `deployment-service-renag` CONFIRMED (wiring order, key-identity match with
+  the existing MissTracker, and the file-size-ratchet-is-pre-existing-not-new claim all independently re-verified by
+  re-running the gate). `features-service-retry` CONFIRMED (traced that `MANIFEST_ALLOW_STALE_FALLBACK` is untouched —
+  the claimed "no weakening" is real, not asserted). `mtds-mbp10-allowlist` CONFIRMED-WITH-CAVEAT (the caveat is the one
+  already disclosed — UAC registry gate — not a new hidden gap). **`deployment-service-sports-ttl` DISPUTED** — see the
+  corrective entry + reopened issue doc above. This is adversarial verification doing exactly its job: catching an
+  overstated "resolved" claim before it became a stale false-green in the tracker. New P0 todo added for the real fix
+  (the `_acquire_lock` CAS race).
