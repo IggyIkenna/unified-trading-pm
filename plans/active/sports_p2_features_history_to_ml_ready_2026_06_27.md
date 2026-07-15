@@ -138,6 +138,97 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 01:12 UTC — data_engineering slot-12 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-2's 00:53Z relaunch, steady genuine progress, no new action)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-2's 00:53Z entry (same 3 gap-fill VMs, ~19 min
+elapsed). Verified via `gcloud compute instances list` (non-snap `google-cloud-sdk` binary — the snap `gcloud`/`gsutil`
+in this sandbox is broken, `snap-confine`/`cap_dac_override` error; use `/home/ubuntu/google-cloud-sdk/bin` on `PATH`
+instead) that all 3 tracked VMs (`features-sports-sports-20260715-004933` covering 2018-07-09→2019-08-11, `-004954`
+covering 2020-03-07→2020-10-05, `-005012` covering 2025-08-11→2026-07-14) are still `RUNNING`. Tailed each VM's
+`run.log` at the canonical path `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` (not the features
+bucket — no per-VM log there): all 3 show fresh timestamps (01:07-01:09Z) with genuine per-date compute (real GCS
+reference-data reads, honest-absence WARNING lines for genuinely-missing entities, `PIPELINE_HEARTBEAT` lines from the
+vm-life-emitter) — no repeat of the prior "Manifest consolidator appears DOWN" failure, no stall. Features bucket
+unique-date count is now **2,897** (up from 2,888 at slot-2's 00:53Z entry, growing steadily). Given all 3 ranges are
+multi-hundred-day and only ~19 min into the run, none are near completion — did not attempt a 4th gap-fill launch
+(premature manifest-based gap-hunting while the known 3 gaps are still actively closing would be wasted GCS-list cost
+per the single-walk/efficiency craft north-star). No new BLK — same well-documented compute-not-done wait as every prior
+dispatch on this todo. Checkbox NOT flipped (Gate: `by_date/day=*/...` for every in-coverage day — not yet met while the
+3 known gaps remain open).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,897) and the 3
+VMs' `run.log` freshness at the `deployment-scripts-central-element-323112` path above. If all 3 have completed (VM list
+no longer shows them — `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes on exit 0), re-run `check_pipeline_completeness.py`
+over each closed range to confirm, then do a manifest-based (not GCS-listing-diff) scan for the next genuine gap before
+declaring Todo 1 complete. Releasing via `/skip-current-task` per this task's established convention (done_definition
+"checkbox flipped in plan + code shipped" isn't met this dispatch).
+
+### 2026-07-15 01:00 UTC — data_engineering slot-2 (Todo 3 dispatch, same session — BLOCKED-PREREQ as established, fast re-verify only, no new investigation needed)
+
+Dispatched immediately after this same slot's own Todo 1 re-dispatch above (same session). Gate remains structurally
+unreachable — Todo 3 ("features manifest clean over history") cannot pass while Todo 1 (full-history compute) is still
+mid-run, per the well-established pattern this todo has hit 27+ times. Fast re-verify: features bucket unique-date count
+is now **2,890** (up from 2,888 at the Todo 1 entry ~7 min ago), and all 3 gap-fill VMs launched this session
+(`-004933`/`-004954`/`-005012`) remain `RUNNING` — steady forward progress, no stall. Not filing a new BLK (no operator
+decision needed, same well-documented compute-not-done wait). Checkbox NOT flipped. Releasing via `/skip-current-task`.
+
+### 2026-07-15 00:53 UTC — data_engineering slot-2 (Todo 1 re-dispatch — consolidator fix CONFIRMED HOLDING under real gap-fill load; relaunched all 3 previously-failed ranges, all 3 passed the startup gate this time and are doing genuine compute; checkbox NOT flipped)
+
+**Fresh-pulled all 24 slot repos clean.** Picked up where the 23:18Z entry (slot-10) left off: that entry stopped
+relaunching after 9/9 consecutive VM failures against
+`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`'s then-open root cause. Checked
+the issue doc first — between 23:18Z and now, two fixes landed: the Terraform lock-TTL override
+(`deployment-service@69136c2c`) and a bounded retry-with-backoff in the compute VM's own startup gate
+(`features-service@5e1ffd2e`). The doc was briefly marked `resolved` then **reopened** by an independent adversarial
+verification pass that found a distinct concurrent-lock-acquisition race still active post-fix (practical impact
+"currently muted" at last check, mtime fresh) — so the fix is real but not proven sufficient on its own account.
+
+**This dispatch is the first real-world test against actual gap-fill VMs since those fixes landed.** Confirmed via
+`gsutil stat` the consolidated manifest was fresh (16s old) at dispatch start. Checked the 3 VMs from the 22:54Z wave
+(`-225249`/`-225333`/`-225354`) — all gone; their GCS `run.log`s confirm all 3 failed identically at the SAME
+`"Manifest consolidator appears DOWN... heartbeat is 151-203s old"` error at 22:55-56Z, i.e. **before** either fix
+shipped (00:10Z+) — so their assigned ranges (2018-07-09→2019-08-11, 2020-03-07→2020-10-05, 2025-08-11→2026-07-13) never
+got any real compute and are still open gaps. MANIFEST-verified the third range's tail is still a genuine gap:
+`check_pipeline_completeness.py --start-date 2026-06-01 --end-date 2026-07-14` → 22/44 dates present (50%), confirming
+the full 2026-07-02→2026-07-14 (13-day) block plus scattered June dates are still zero manifest rows, unchanged from the
+21:52Z entry's finding (that VM died before writing anything).
+
+**Action taken**: relaunched all 3 ranges (extended the third range's end-date from 2026-07-13→2026-07-14 to also cover
+the newest day):
+`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date <X> --end-date <Y> --mode batch --operation compute --launch-mode full`
+×3 → **`features-sports-sports-20260715-004933`** (2018-07-09→2019-08-11), **`-004954`** (2020-03-07→2020-10-05),
+**`-005012`** (2025-08-11→2026-07-14). All 5 code tarballs reported fresh on every launch (features-service@5e1ffd2e,
+i.e. the retry-with-backoff fix, confirmed baked into the deployed code). No-fire-and-forget check passed: all 3
+confirmed RUNNING via `gcloud compute instances list` immediately after launch.
+
+**Verified past the critical failure point (~3-4 min post-launch, where all 3 prior waves died)**: tailed each VM's GCS
+`run.log` — **all 3 now log `"sports batch startup gate: instruments-store consolidator healthy for sports"` and proceed
+into genuine compute** (real `GCS read leagues/teams/standings/fixtures` lines, real writes, real manifest-driven
+`SKIP ... prior captured/empty` lines for already-attempted dates) — none repeated the prior
+`"Manifest consolidator appears DOWN"` failure. **This is the first direct evidence the consolidator fix holds under
+actual gap-fill load**, not just the issue doc's own synthetic verification window. One caught-and-handled exception
+noted in `-004954`'s log (`AvailableAtStampingError` on 2020-03-18/19 fixture_events/fixture_lineups — COVID-pause-era
+matches with unparseable kickoff timestamps): correctly raised rather than defaulting to midnight UTC, recorded as
+`attempted_failed` per the honest-absence contract, run continues to the next entity/date — not a regression, no fix
+needed.
+
+**What I did NOT do**: did not re-verify the scattered small May-June-2026 slivers noted in the 21:52Z entry (lower
+priority, likely honest-absence, `-005012`'s range covers them anyway via `--skip-existing`). Did not flip Todo 1
+(compute still genuinely in progress — 3 VMs freshly launched, minutes into multi-hundred-day ranges).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,888) and
+verify `-004933`/`-004954`/`-005012` keep making real progress (non-SKIP writes) through to completion rather than
+stalling. If the consolidator-down error recurs on any of the 3, that would be the concurrent-lock-acquisition race the
+issue doc flagged as still-open — re-open/escalate that doc rather than treating it as a fresh finding. Once these 3
+complete, re-run `check_pipeline_completeness.py` on the 2026-06-01→2026-07-14 tail to confirm the 13-day block closed,
+then scan for the next genuine gap (manifest-based, not GCS-listing-diff) before declaring Todo 1 complete.
+
+No repo code commit this entry (VM launch + read-only manifest/GCS-log verification only, no code changed); this
+plan-doc edit ships via the `docs(plans):` carve-out. This dispatch's `done_definition` ("checkbox flipped in plan +
+code shipped") isn't met — `/skip-current-task` follows per this task's established convention.
+
 ### 2026-07-14 23:18 UTC — data_engineering slot-10 (same session, cycle 3 — CONFIRMED BLOCKING: 3rd relaunch wave ALSO failed identically; manual freshness-timing is not a reliable workaround; issue doc escalated to P1; stopping blind relaunches, checkbox NOT flipped)
 
 **Same slot-10 session, cycle 3.** The 22:54Z 3rd relaunch wave (timed against a confirmed-fresh manifest read, 108s-old

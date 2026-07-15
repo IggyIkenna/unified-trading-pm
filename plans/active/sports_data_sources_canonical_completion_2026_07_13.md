@@ -3559,3 +3559,158 @@ it's new adapter work, not a data-audit residual).
     exception handler + a `sfi.py`-scoped reconcile script) would close it, but `sfi.py` was not touched in this
     dispatch (out of the named Part A/B scope). Filing as informational for whoever picks up the remaining `[DATA] P2`
     todos below, rather than a new standalone todo (the existing todos already name these sources).
+
+- **2026-07-15 (sub-agent, `/autonomous`)** — closed the broader api_football follow-up flagged above: **Part A**
+  (INJURIES + PLAYER_STATS/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS blank-`league_id` orphans) and **Part B**
+  (FIXTURES stuck at exactly 612 rows across ~12h of active re-attempts).
+  - **Part A root cause (same class as the 2026-07-14 footystats fix, confirmed live)**: `_fetch_injuries`'s top-level
+    `except Exception` in `sports_reference_core.py` called `hooks.note_failed("INJURIES", exc)` with NO `league_id` (an
+    ACTIVE bug — `get_injuries(date)` is one date-wide call; any top-level exception, chiefly genuine
+    `ApiFootballResponseError` quota/plan errors, wrote a blank-`league_id` date-aggregate row that no per-league
+    success path can ever supersede). `_write_per_fixture_entities` in `sports_reference_fixtures.py` had the IDENTICAL
+    pattern for PLAYER_STATS/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS in its "entity produced zero rows AND at least
+    one fixture call raised" (CF-11) branch. Live-verified before any fix: 1,923 blank-`league_id` INJURIES rows (100%
+    blank, frozen exactly across the whole 12h `api-football-attempted-failed-residual-closer- round2` run) + 15 blank
+    rows across the 4 per-fixture entities.
+  - **Fix shipped (code)**: `instruments-service@493393c8` — (1) `sports_reference_core.py`'s INJURIES except-handler
+    now loops `get_expected_leagues_for_source("api_football")` and calls `hooks.note_failed(..., league_id=...)` per
+    league (mirrors the footystats fix exactly); (2) `sports_reference_fixtures.py`'s CF-11 zero-rows+failure branch now
+    derives the affected-leagues set from `af_fid_to_league` (every league with a completed fixture that date) and
+    writes per-league `record_failed`, falling back to the old blank-key row only in the (unreachable-in-practice) case
+    where `af_fid_to_league` is itself empty; (3) **found + fixed a SECOND, independent bug while verifying (1)/(2)
+    live** — `process_write.py`'s `_write_sports_fixture_venue` silently `continue`d (wrote NEITHER captured nor empty)
+    for an off-season league (`get_league_fixture_calendar` returns `[]`), and neither its captured nor its honest-empty
+    branch ever populated `counts["FIXTURES/{league}"]`, so `process_completeness.py`'s `_fold_written_venues` could
+    never fold that composite key onto `API_FOOTBALL` — `process_completeness.py`'s completeness check misclassified the
+    whole venue as `SOURCE_RETURNED_ZERO` and stamped a REDUNDANT blanket `{date, venue}` row that live-verified (via a
+    monkey-patch instrumented trace of the REAL `process_instruments()` call, not a guess) to collide with and DROP the
+    correct per-league row in the same per-VM manifest-shard flush. Fixed both: `_write_sports_fixture_venue` now writes
+    a terminal `record_empty(EXPECTED_PAUSED_LEAGUE)` for off-season leagues instead of a silent skip, and stamps
+    `counts["FIXTURES/{league}"] = 0` for every league it handles (captured OR empty); `_fold_written_venues` now folds
+    `FIXTURES/*` → `API_FOOTBALL` when that venue is expected. 2 new unit tests added
+    (`test_injuries_fetch_error_records_per_league_failed`,
+    `test_partial_failure_with_league_map_produces_per_league_record_failed`) + 1 pre-existing test
+    (`test_sports_fixtures_composite_keys_are_untouched`) updated to assert the new fold behavior (renamed
+    `..._fold_to_api_football`) + 1 new test for the not-expected case. `quality-gates.sh --no-fix` green both times;
+    shipped via `quickmerge --agent --files`.
+  - **Reconciliation (closes the existing orphaned rows)**: new
+    `scripts/backfill/api_football_blank_league_orphan_reconcile_2026_07_15.py` (`instruments-service@21591e54`) —
+    mirrors `sports_blank_league_orphan_reconcile_2026_07_14.py`'s
+    `record_expected_empty(reason=EXPECTED_REFDATA_CADENCE_CHANGE)` pattern, but ADDS a conditional guard per this
+    dispatch's instruction: only retires a blank-`league_id` orphan when a REAL per-league (`captured` or
+    `empty_confirmed`) row already exists for the same `(source, data_type, date)` cell — dates with no real per-league
+    coverage yet are left untouched (still genuinely open, not force-closed). Dry-run then applied for real: found 1,962
+    orphans (INJURIES 1,923 + FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS 39), **100% had real per-league coverage
+    already** (the residual-closer's concurrent re-attempts had already captured the real data — only the dead blank-key
+    row was stuck), wrote 1,962 reconciliation rows.
+    - **Did NOT hold on the first read** (same class of issue as the 2026-07-14 odds_api entry above) — a fresh
+      independent read moments later showed the full 1,923 INJURIES blank rows BACK. Root-caused (not re-applied
+      blindly): the sports manifest consolidator (`uts-prod-manifest-consolidator-instruments-sports`) was running a
+      cycle that had ALREADY read the pre-reconcile canonical index (`canon_rows=5758047`) before my write landed, and
+      its ~477s duckdb-merge cycle finished afterward and overwrote it. Waited (bounded polling, not a blind re-apply)
+      for the SAME per-VM-shard-merge mechanics to catch up naturally this time — **held stably across 11 independent
+      re-reads over ~9 minutes** (00:54:50–00:59:28 UTC): INJURIES `attempted_failed` 1,923→**0** blank (**0 total**).
+      Full breakdown after holding: PLAYER_STATS 48→30 (0 blank; the remaining 30 are a SEPARATE, un-targeted
+      `phantom_captured_no_parquet_at_canonical_path` per-league class, real `league_id`s, not this dispatch's scope),
+      FIXTURE_STATS 366→341 (0 blank), FIXTURE_EVENTS 351→334 (0 blank), FIXTURE_LINEUPS 353→336 (0 blank).
+  - **Part B root cause (live-tested exhaustively, NOT a guess)**: the 612 stuck FIXTURES rows (2017-02-25..2017-09-09,
+    all real per-league keys, `error_reason=FIXTURES_FETCH_FAILED`) are ENTIRELY inside the documented pre-2018
+    `api_football` subscription-floor dead zone (`SOURCE_COVERAGE_START["api_football"] = 2018-01-01`, UAC
+    `unified_api_contracts/canonical/domain/sports/league_data.py` — "live probes confirmed the subscription returns
+    empty for seasons 2015-2017... not a backfill bug"). Proved via a live direct call to
+    `process_instruments(date="2017-03-04", league_filter=["MLS"], sports_entity_filter="FIXTURES", ...)` (the EXACT
+    call shape the residual-closer uses): the API genuinely returns real data (495 fixtures fetched, 442 survive the
+    junk-symbol guard — the fetch is NOT failing), but `ManifestWriter._record_status`
+    (`unified_trading_library/manifest_writer/_writer_record.py`) has an EXISTING `is_pre_launch_date()` guard that
+    SILENTLY drops (returns before `self._records.append`) any `record_captured`/`record_empty`/`record_failed` call for
+    a pre-launch `(data_type, date)` — confirmed via a `close()`-level monkey-patch trace showing the `record_empty`
+    call's `self._records` count going from 1→0 with ZERO GCS write logged. This guard is CORRECT and intentional (stops
+    the pipeline from ever again treating 2015-2017 as fetchable) but means the 612 PRE-EXISTING stale rows (written
+    before the guard existed) can NEVER be organically cleared by re-fetching — every subsequent write attempt, success
+    or failure, is a silent no-op. Confirmed a SECOND, cosmetic issue along the way (the same
+    `_write_sports_fixture_venue`/`_fold_written_venues` bug fixed in Part A also fires here) but it's moot for these
+    612 rows specifically since the pre-launch guard blocks the write regardless.
+  - **Fix — the correct sanctioned tool already existed** but was itself broken:
+    `scripts/purge_pre_launch_manifest_ rows.py` deletes pre-launch rows via a direct canonical-index rewrite (bypassing
+    `ManifestWriter`'s guard entirely, the only way to clear them). Live-verified its hardcoded
+    `ASSET_GROUP_BUCKETS["sports"]` pointed at `instruments-store-sports-central-element-323112` (no `-prd-` segment) —
+    a STALE bucket last written 2026-06-27 (2.59M rows) vs the real prod bucket's 5.7M+ and growing. Fixed
+    (`instruments-service@9b4f7655`) to resolve the bucket via the SSOT `resolve_bucket_name(...)` instead (CLAUDE.md
+    "Writing STORAGE code" HARD RULE) — this bug meant the script could never have worked against production even if
+    invoked correctly, a pre-existing latent breakage unrelated to anything in this dispatch's named scope but required
+    to actually close Part B.
+  - **Applied against production — required an infra intervention to make it hold.** Dry-run against the CORRECT bucket
+    found 328,357 pre-launch rows (not just the 612 FIXTURES ones — INJURIES 87,686, FIXTURE_STATS 58,177, FIXTURES
+    36,639, STANDINGS 33,814, FIXTURE_EVENTS 33,343, FIXTURE_LINEUPS 33,120, PLAYER_STATS 18,617, PLAYER_VALUES 11,030,
+    WEATHER 4,943, ODDS 3,598, PREDICTIONS 3,514, MATCHES 3,098, TEAMS 608, SFI_PROGRESSIVE_STATS 170, date range
+    2014-01-01..2020-06-05) + 305 superseded top-level rows. **Decided to run the FULL purge, not a FIXTURES-only
+    carve-out** (the script isn't built for partial-type scoping and 328K illegitimate pre-launch rows sitting in
+    production, now that a working tool exists to clear them, is squarely "data pipeline correctness is the heartbeat" —
+    documenting this as a deliberate broader-than-named-scope decision per the autonomous decide-and-document rule, not
+    silently). First two apply attempts each reported success but did NOT hold — root-caused via
+    `gcloud run jobs executions list` (not assumed): the sports consolidator's Cloud Scheduler cron fires every 60s
+    while a full duckdb-merge cycle takes ~477s, and MULTIPLE overlapping executions were genuinely running the full
+    merge CONCURRENTLY (confirmed several executions' start/completion windows overlapping by minutes — the "fresh lock
+    present, skipping" guard is evidently not fully race-proof under this load), so any purge landing mid-window got
+    clobbered by whichever concurrent merge (reading a pre-purge snapshot) finished last. **Resolution**: paused
+    `uts-prod-manifest-consolidator-instruments-sports-cron` (`gcloud scheduler jobs pause`), polled
+    `gcloud run jobs executions list` until every in-flight execution showed a `completionTime` (had to wait out several
+    straggler ~8-minute merges that had started before the pause), re-applied the purge into the now-quiescent bucket
+    (succeeded, `Keep rows: 5,429,755`), verified directly via blob download (not the cached reader) before resuming,
+    then `gcloud scheduler jobs resume` and polled **10 consecutive re-reads over ~10 minutes post-resume** confirming
+    FIXTURES `attempted_failed` stayed at **0** while the total manifest row count grew normally (legitimate ongoing
+    backfill activity from 4 unrelated `af-backfill-*` GCE VMs + the local residual-closer, confirmed via
+    `gcloud compute instances describe` to be scoped to post-2020-06-06 dates only — ruled out as a reintroduction
+    source, not just assumed).
+  - **Final independent verification (fresh read spanning both parts, single session)**: total api_football
+    `attempted_failed` 4,138→**1,490** (−64%). INJURIES 1,923→**0**. FIXTURES 612→**0**. PLAYER_STATS 48→22 (0 blank).
+    FIXTURE_STATS/EVENTS/LINEUPS blank counts →0/0/2 (2 residual `LEAGUE_MAP_INCOMPLETE` rows — genuinely unmappable,
+    out of this dispatch's fix scope, left for a future pass). TEAMS 24→22 (incidental, ongoing residual-closer
+    activity, not targeted).
+  - **Disposition — both parts FULLY CLOSED with real, held, production-verified state**: no blank-`league_id` orphan
+    remains for INJURIES/PLAYER_STATS/the 3 FIXTURE_* per-fixture entities; the 612 FIXTURES pre-launch rows are gone
+    (correctly — not relabeled, genuinely removed as illegitimate pre-coverage claims) along with 328K other pre-launch
+    rows across the whole sports manifest as a deliberate bonus scope decision. Left open, documented, NOT force-closed:
+    (a) ~22-30 `phantom_captured_no_parquet_at_canonical_path` PLAYER_STATS/FIXTURE_* rows (real per-league keys, a
+    different root cause, actively being worked by the concurrent residual-closer — not this dispatch's named scope),
+    (b) ~1-2 `LEAGUE_MAP_INCOMPLETE` blank rows (genuinely unmappable, no league to attribute), (c) the
+    `api_football_attempted_failed_residual_closer_2026_07_13.py --vm-name …-round2` process (PID 54681 on this host) is
+    STILL RUNNING (started 2026-07-14 11:17am, now 14+ hours, `--max-rounds 4`) — it does not block on this dispatch's
+    completion and was left running untouched per the identity constraint; check status later with
+    `ps aux | grep 54681 && tail -40 /private/tmp/claude-501/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/48787d6e-1b7a-45c4-a444-ab6e21a32bb5/scratchpad/api_football_round2.log`.
+
+- **2026-07-15 (independent verification of the above sub-agent dispatch)** — re-checked every claim against live
+  production rather than trusting the report: all 3 commits (`instruments-service@493393c8/21591e54/9b4f7655`) and the
+  plan-journal commit (`unified-trading-pm@4af83a118`) confirmed real via `git show`; both sports consolidator cron jobs
+  (`uts-prod-manifest-consolidator-instruments-sports-cron` / `…-market-data-sports-cron`) confirmed `ENABLED` (properly
+  resumed this time — unlike 3 earlier pause-without-resume incidents this session); live read of
+  `instruments-store-sports-prd`'s `_index/availability_index.parquet` confirms INJURIES and FIXTURES both genuinely at
+  0 attempted_failed, and total api_football attempted_failed at 1,469 (claimed 1,490 — small delta explained by the
+  still-running round2 residual-closer continuing to resolve rows between the report and this check). All core claims
+  **verified holding**.
+  - **461 blank-`data_type` rows (this is the "blank-dt 461" already counted in finding A of
+    `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`, cited at line ~234 above
+    — NOT a new count, but not previously root-caused).** All 461 have blank `data_type` + blank `league_id` but a
+    POPULATED `venue` field carrying a _different_ T1 source's name (`FOOTYSTATS`/`OPEN_METEO`/
+    `SOCCER_FOOTBALL_INFO`/`TRANSFERMARKT`/`UNDERSTAT` — exactly 5 per date × 92 distinct dates = 460, plus 1 stray
+    `UNISWAP_V3-BASE` row, already separately tracked as finding C in the same issue doc), all
+    `error_reason=UNCLASSIFIED_ADAPTER_ERROR`, `attempted_at` clustered in a single ~36-hour window (2026-06-25 to
+    2026-06-26) — a one-time historical incident, not an ongoing/live bug. Pattern is consistent with a batch run over
+    those 92 specific `date` values each hitting api-football's fail-loud `DependencyError` pre-flight gate (per
+    `codex/02-data/sports-adapter-dependency-order.md` — T1 adapters depend on T0 api-football's fixtures parquet
+    existing for that date), with a shared exception handler writing one synthetic failure row per blocked T1 adapter
+    but mislabeling `source=api_football` (the blocking dependency) instead of the actual T1 adapter attempting the
+    fetch — a hypothesis, not yet confirmed against the exact code location.
+    - **Corrects a stale claim in this same plan** (the `[DATA] P2` CF11 todo above, "NB: a re-run of that closer also
+      re-drives the ~3,116 undocumented non-CF11 api_football attempted_failed ... same operation closes both"): live
+      count confirms this is FALSE for the blank-dt-461 sub-class — the residual-closer round2 has now run for 14+ hours
+      across multiple rounds and this count is UNCHANGED at 461. This makes sense in hindsight: the closer's
+      `_live_read()` re-fetch path keys off `data_type` to know what to re-fetch, and these rows have no `data_type` to
+      key against, so they were silently un-actionable by that mechanism from the start. INJURIES (this dispatch, Part
+      A) and FIXTURES (this dispatch, Part B) — the OTHER two components of finding A's "~3,116 undocumented" figure —
+      are now confirmed 0, so the closer/dispatch combination closed those; the blank-dt-461 sub-class remains the one
+      genuinely open piece of finding A, needing its own dedicated fix (not a re-fetch — a reconciliation script in the
+      same style as the blank-league_id orphan closers, IF real per-source T1 coverage already exists for those 92
+      dates; otherwise a real backfill). Not fixed in this pass; the existing issue doc already tracks it as open, so no
+      new todo filed — this entry adds the root-cause hypothesis and corrects the stale "same operation closes both"
+      expectation for whoever picks up finding A next.
