@@ -88,20 +88,59 @@ repo. This plan tracks that work.
 
 ## Todos
 
-- [ ] [INFRA] P0. Confirm a build against current dependency versions genuinely resolves a wheel containing
+- [x] [INFRA] P0. Confirm a build against current dependency versions genuinely resolves a wheel containing
       `unified_api_contracts.internal` — verify with a real
       `docker run --rm --entrypoint python <image> -c "import unified_api_contracts.internal.schemas.rbac"`, not just an
-      inference from version constraints, before wiring up any new deployment.
-- [ ] [INFRA] P0. Stand up a real Cloud Run job (+ any Workflow terraform resources mirroring the old
+      inference from version constraints, before wiring up any new deployment. — ✅ 2026-07-15, evidence:
+      `docker pull     asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/features-service:latest`
+      (digest `sha256:c204c49dbdc57200806c0b89e6f3ca2caa7f1226de062de09d05c2e942cdcdc9`, tags `0.66.0,7a60a31,latest`,
+      built 2026-07-14) →
+      `docker run --rm --entrypoint python <image> -c "import     unified_api_contracts.internal.schemas.rbac; ..."`
+      exit 0, `IMPORT OK`; a second run additionally imported `unified_trading_library` + `log_event` (the exact failing
+      chain from the issue doc) end-to-end, exit 0. The fleet-wide UTL/UAC version-skew bug does NOT reproduce against
+      the current features-service image.
+- [x] [INFRA] P0. Stand up a real Cloud Run job (+ any Workflow terraform resources mirroring the old
       `daily_workflow`/`backfill_workflow` definitions) for `features-service`'s `features_service/sports/*` sub-package
       — new terraform in `deployment-service/terraform/**`, reusing the existing `features-service` `cloudbuild.yaml`
-      image.
-- [ ] [SCRIPT] P0. Map CLI flags/entrypoint: confirm `features_service/sports/*`'s CLI surface matches what the old
+      image. — ✅ 2026-07-15, `deployment-service@8b1c561f6d18fd7532b223ea462277131b03ebf8` (quickmerge, landed on
+      `live-defi-rollout`, quality-gates.sh green): new
+      `terraform/services/features-service-sports/gcp/{main,variables,terraform.tfvars,outputs,backend}.tf` — a
+      distinctly-named job (`features-service-sports-job`) + daily/backfill Workflow set that COEXISTS with the legacy
+      `features-sports-service-job` until it's retired (later todo). `terraform validate` clean; `terraform init` (real
+      GCS backend, new state prefix `services/features-service-sports`) + `terraform plan` → "4 to add, 0 to change, 0
+      to destroy" against real GCP APIs (project/SA verified live) — NOT applied (deploy is a later todo). Verified
+      post-plan no resources exist yet (`gcloud run jobs list` / `gcloud workflows list` — neither
+      `features-service-sports-job` nor its workflow present).
+- [x] [SCRIPT] P0. Map CLI flags/entrypoint: confirm `features_service/sports/*`'s CLI surface matches what the old
       job's Cloud Run args/schedule expected (per this workspace's `--operation`/`--mode`/`--asset-group` CLI
-      convention); adjust the new job's args if the consolidated CLI shape differs.
-- [ ] [INFRA] P1. Repoint the existing GCS-FUSE mount / bucket wiring (canonical
+      convention); adjust the new job's args if the consolidated CLI shape differs. — ✅ 2026-07-15:
+      `--operation     compute --mode batch --asset-group SPORTS --tables fixture_features --start-date/--end-date` are
+      UNCHANGED (read `features_service/sports/cli/{parser,main}.py`) — but the consolidated image is multi-family, so
+      every invocation needs a NEW top-level dispatcher prefix `--feature-family sports` before those flags (read
+      `features_service/cli/main.py` — `parse_known_args()` forwards everything after `--feature-family <x>` verbatim to
+      `features_service.sports.cli.main.main()`); baked into both Workflow YAMLs above. **Second, more material
+      finding**: the consolidated `features_service/sports/cli/_providers.py` + `_fetch_runner.py` docstrings state "All
+      data fetching is done by instruments-service which writes to GCS. FSS reads from GCS only — no direct adapter
+      instantiation" — confirmed by reading `batch_handler.py`'s `_run_batch()`, which now calls
+      `run_fetch_providers(...)` → a pure GCS reader (`read_all_reference_data`), not an external API call. The old
+      job's 4 `secret_environment_variables` (`BETFAIR_APP_KEY`/`ODDS_API_KEY`/`ODDSJAM_API_KEY`/`OPTICODDS_API_KEY`)
+      are vestigial for the new architecture — grepped, zero references anywhere in `features_service/sports/*` — so the
+      new terraform intentionally ships `secret_environment_variables = {}` (mirrors the `features-calendar-service`
+      precedent) instead of carrying them over. **Separate, load-bearing terraform-only finding**: `features-service`'s
+      Dockerfile `CMD` is `["uvicorn", "features_service.api.main:app", ...]` (the API-server default for the shared
+      multi-family image) — unlike the legacy per-family image, a bare Cloud Run Job execution without an explicit
+      `command` override would boot the API server instead of running the CLI to a terminal exit code. The new
+      terraform's `daily_job` module now pins `command = ["python", "-m", "features_service"]` (verified in the
+      `terraform plan` output) — this is NOT present in the legacy job's terraform and would have been a silent miss if
+      copied verbatim.
+- [x] [INFRA] P1. Repoint the existing GCS-FUSE mount / bucket wiring (canonical
       `features-sports-prd-central-element-323112`, already correct per the 2026-07-15 bucket-flattening sweep) to the
-      new job.
+      new job. — ✅ 2026-07-15: new terraform's `gcs_volumes` reuses the SAME canonical bucket
+      (`features-sports-${bucket_env_short}-${project_id}` → `features-sports-prd-central-element-323112`, confirmed
+      against `unified-api-contracts/unified_api_contracts/config/cloud-providers.yaml`'s `features-sports:` key) —
+      verified in the `terraform plan` output
+      (`volume_mounts.mount_path =     /mnt/gcs/features-sports-prd-central-element-323112`,
+      `gcs.bucket = features-sports-prd-central-element-323112`).
 - [ ] [INFRA] P1. Deploy the new Cloud Run job; manually trigger a real execution and watch it reach a genuine
       `SUCCEEDED` terminal state (not just "past the import line") before trusting it.
 - [ ] [INFRA] P1. Apply the separately-found `--category`→`--asset-group` Workflow-YAML terraform drift (confirmed real,
@@ -128,3 +167,23 @@ repo. This plan tracks that work.
 - 2026-07-15: Plan created. Root cause fully confirmed (see "What I found"); operator chose Path B (finish the
   consolidation) over Path A (patch the archived repo) in the same session. No execution yet — this plan is the tracking
   vehicle for the work about to start.
+- 2026-07-15 (BuildDeployment phase, todos 1-4): Confirmed with real evidence (not inference) that the current
+  `features-service:latest` image resolves `unified_api_contracts.internal` cleanly (docker run exit 0, full
+  `unified_trading_library` import chain including the exact `entitlements.py` line that crashed the old job). Wrote +
+  shipped `deployment-service@8b1c561f6d18fd7532b223ea462277131b03ebf8` — new
+  `terraform/services/features-service-sports/gcp/**` (Cloud Run Job `features-service-sports-job` + daily/backfill
+  Workflow, distinctly named so it can coexist with the legacy job until retirement). `terraform validate` clean;
+  `terraform plan` against real GCP APIs (new state prefix, not applied) shows a clean "4 to add" with correct
+  image/SA/bucket/env wiring. Two real findings surfaced during CLI-mapping due-diligence and are now baked into the
+  terraform (see todo 3's evidence): (1) the consolidated dispatcher needs a `--feature-family sports` prefix on every
+  invocation; (2) the consolidated `features_service/sports/*` no longer performs direct provider fetches (that moved to
+  instruments-service) so the legacy job's 4 provider-API secrets are dead code for the new job and were intentionally
+  dropped; (3) `features-service`'s Dockerfile CMD is `uvicorn ...` (API server) so the new job's terraform explicitly
+  pins `command = ["python", "-m", "features_service"]` — omitting this would have silently booted the wrong process on
+  every execution. NOT deployed/applied this touch (todos 5-8 — execute, verify SUCCEEDED, retire the old job, re-enable
+  scheduling — are separate, later steps; see this session's structured handoff for the readyToDeploy assessment).
+  Adjacent finding, NOT actioned (outside this touch's scope): a second scheduler,
+  `uts-prod-features-sports-t1-schedule`, is also PAUSED and likely also points at the same broken legacy
+  `features-sports-service-job` (via `terraform/gcp/t1_batch_scheduler.tf`'s `features-sports-service-t1-recon` entry) —
+  the later "retire old job / re-enable scheduling" todos should check whether this t1-recon path also needs repointing
+  to the new job before it's safe to un-pause.
