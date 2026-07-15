@@ -2979,3 +2979,53 @@ one-time `collect-onchain-perp-batch` historical-day script per the 2026-07-13 r
 `issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` (that issue's own P3 says "left for
 whoever picks up"); (2) G4's gate baseline is void — it was cut against the pre-Layer-1-100% lower-bound readings and
 must be re-cut against the now-complete denominator.
+
+### Operator-directed legacy-naming audit — 6.6% of the fleet's target ALREADY EXISTS (legacy instrument-id filenames) — 2026-07-15T18:05Z
+
+Operator asked (verbatim): "check flat buckets and within buckets to ensure the 1m+ you are setting up vms for
+definitely dont have those instrument and data types under alternative naming patterns non canonical". Answer,
+evidence-backed (read-only audit, single-walk discipline — targeted prefix probes + bounded index reads, no corpus
+walk):
+
+1. **Flat/legacy bucket: nothing hidden.** `market-data-tick-cefi-central-element-323112` (the "MERGE DISABLED" twin)
+   **no longer exists** — `ls`/`describe`/`gsutil ls -b` all return 404 (vs a _distinct_ 403 for the prd bucket this SA
+   can't `buckets describe` — the 404-vs-403 asymmetry is the proof, cross-checked against a fabricated-name negative
+   control). Corroborated independently by this plan's own 2026-07-14T07:56Z entry, which found it **existed but was
+   already completely empty**. It was deleted in the last ~24-36h (empty-bucket cleanup per
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6). "MERGE DISABLED for cefi" fires from
+   `measure_honest_coverage.py:474-480` purely because the candidate bucket is unreadable — it is NOT masking data.
+2. **Venue-spelling aliases: dead residue, zero recoverable data.** Queried the prd `_index/availability_index` (207MB)
+   for BINANCE / BITGET / OKEX / OKEX-SWAP / OKEX-FUTURES / CRYPTOFACILITIES → **zero `captured` rows in any** (e.g.
+   CRYPTOFACILITIES: 122,845 rows, 0 captured). Already scoped for verify→migrate→delete by
+   `cefi_completion_program_2026_07_15.md` workstream C. Closed question.
+3. **🔴 REAL FINDING — legacy INSTRUMENT-ID filenames inside the fully-canonical path.** Files are written under two
+   parallel iid conventions: legacy bare exchange symbol (`AAVEUSDT.parquet`) vs canonical `VENUE:TYPE:BASE-QUOTE`.
+   Orchestrator VERIFIED directly:
+   `…/day=2026-03-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=BITGET-FUTURES/instrument_type=perpetual/data_type=trades/`
+   lists `0GUSDT.parquet`, `1INCHUSDT.parquet`, `2ZUSDT.parquet`, `AAPLUSDT.parquet`, `AAVEUSDT.parquet` — real captured
+   data the canonical MVP view still counts as `expected_unattempted`. Overlap quantified against the 4 running VMs'
+   ~1,426,669-cell target:
+
+   | VM                  | scope                               | eu target | overlap            | verdict            |
+   | ------------------- | ----------------------------------- | --------- | ------------------ | ------------------ |
+   | `…-173940`          | BINANCE-FUT+BITGET-FUT trades+book5 | 536,408   | 10,305 (1.9%)      | fetch is correct   |
+   | `…-174110`          | same venues, derivative_ticker      | 268,204   | **50,951 (19.0%)** | mixed — real slice |
+   | `…-174244`          | OKX-SPOT+BINANCE-SPOT trades+book5  | 335,094   | 32,535 (9.7%)      | mixed              |
+   | `cefi-aster-2026-…` | ASTER trades+derivative_ticker      | 286,963   | 0                  | fetch is correct   |
+
+   **Total 93,791 cells (~6.6%) are relabel-not-refetch; ~93.4% is confirmed genuinely absent** (sampled across 6 dates
+   2026-02-20→2026-07-10; later dates return literal no-objects).
+
+**Decision (this lane): fleet KEEPS RUNNING** — killing it to save 6.6% would forfeit the 93.4% that genuinely needs
+fetching. **But the relabel is required regardless**, and this is already OPERATOR-RULED in
+`issues/instrument_id_format_canonicalization_2026_07_08.md`: "rewrite/relabel already-downloaded data in place… never
+leave a legacy-format historical range unfixed" — explicitly NOT a re-download. Its GCS/filename migration stage simply
+hasn't executed. **New consequence to flag**: letting the VMs re-fetch these 93,791 cells will write canonical-named
+files ALONGSIDE the surviving legacy-named ones → a DUAL-SoT pair per cell in the same path, which the canonical-form
+HARD RULE bans. So the legacy files must be relabelled or deleted whether or not the fetch happens. Owning plan:
+`canonical_instrument_id_cefi_defi_backfill_2026_07_14.md` (status: active, 1 open todo) — this quantified per-venue
+overlap is handed to it below.
+
+**UNKNOWN, not glossed**: Tardis billing granularity (per-symbol-day vs per-exchange-day) was not traced, so the dollar
+cost of the 6.6% duplicate fetch is unquantified; the academic key looks concurrency-limited rather than
+per-request-billed, in which case the cost is VM time (~6.6%), not money.
