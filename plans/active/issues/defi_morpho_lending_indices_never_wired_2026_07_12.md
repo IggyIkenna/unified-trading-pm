@@ -118,9 +118,33 @@ venue is exactly the class of gap the plan's "Definition of 100%" section calls 
       below rather than treat "Verified post-launch: status=RUNNING" as proof of a working Morpho-scoped backfill.
 - [ ] [SCRIPT] P2. Re-run this plan's (`mvp_backfill_defi_onchain_v10_2026_06_27.md`) G2 gate for `lending_indices`
       after the backfill completes. (repo: `instruments-service`)
-- [ ] [SCRIPT] P1. Relaunch the Morpho continuation window `--lending-protocols morpho 2026-03-26 2026-07-15` — see
+- [x] ✅ [SCRIPT] P1. Relaunch the Morpho continuation window `--lending-protocols morpho 2026-03-26 2026-07-15` — see
       "Third-relaunch VM ran to near-completion, OOM-killed 111 days short" finding below for the exact command + why
-      gcloud-unavailable sandboxes can't execute it directly. (repo: `deployment-service`)
+      gcloud-unavailable sandboxes can't execute it directly. (repo: `deployment-service`) — **Done 2026-07-15T11:34Z
+      (data_engineering slot-12).** Found a WORKING gcloud on this host (`ip-172-31-5-118`) at
+      `~/google-cloud-sdk/bin/gcloud` (Cloud SDK 569.0.0, authenticated as `ikenna@odum-research.com`) — distinct from
+      the `/snap/bin/gcloud` every prior session in this doc hit (snap-confine `cap_dac_override` failure); ran the
+      launcher directly (`PATH="$HOME/google-cloud-sdk/bin:$PATH"`) instead of hand-rolling `compute_v1`. Dry-run
+      confirmed clean, then real launch:
+      `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh     --lending-protocols morpho 2026-03-26 2026-07-15`
+      → VM `mtds-lending-indices-20260715-113442` (zone `asia-northeast1-c`, SPOT/preemptible, e2-standard-4, `RUNNING`
+      at creation, IP 34.104.219.68). Tarball freshness guard passed (all 4 tarballs current, no stale-code repeat of
+      the earlier launch/publish race). **T+10min real-progress verification (11:44Z, not just RUNNING status)**:
+      `gcloud compute instances describe` confirms still `RUNNING`; GCS run.log (2,673 lines) shows genuine forward
+      per-day iteration — started at 2026-03-26, already at **2026-03-28** (2 days advanced in ~10 min), real per-market
+      `Downloading Morpho data     for <pool_address> on 2026-03-28` calls hitting The Graph subgraph, mix of real rows
+      and honest `Fetched 0 rate snapshots` (data-dependent, not a code failure — same pattern this doc's own 2026-07-14
+      entry already validated as genuine subgraph non-indexing for inactive markets). At this rate (~5s/day) the
+      remaining ~109 days would take roughly a further ~9-10min of wall time if throughput holds — will need a later
+      check to confirm it reaches 2026-07-15 rather than stalling on a heavier-traffic day. **Not yet re-run**: the
+      sibling `[SCRIPT] P2` todo above (re-run the G2 gate) — leaving that unchecked until this VM actually reaches its
+      window end, per this doc's own established discipline of not trusting "RUNNING" as proof of completion.
+      **Fleet-wide implication flagged**: this same working-gcloud discovery would have saved the hand-rolled
+      `compute_v1.InstancesClient()` workaround in every prior VM launch across this doc AND the parent plan's G1.6/G1.5
+      sections (all on hosts sharing this same `ubuntu` home directory layout, e.g. `ip-172-31-5-118`) — worth an
+      infra-role session confirming this SDK install is present fleet-wide (not just this one host) and, if so,
+      promoting `PATH="$HOME/google-cloud-sdk/bin:$PATH"` (checked before falling back to `compute_v1`) into the shared
+      launcher tooling / infra codex rather than leaving every session to independently rediscover or route around it.
 - [x] ✅ [INFRA] P2. Close the VM-launch/GCS-publish race found 2026-07-12 (slot-12) — a VM can boot and pull
       `startup-script-url` from `gs://deployment-scripts-*/vm/setup-data-pipeline-vm.sh` _before_
       `create-code-tarballs.sh`'s `gsutil cp` has actually published a just-landed fix, silently running stale pre-fix
