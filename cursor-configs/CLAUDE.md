@@ -288,8 +288,10 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   total ≲60 streams (bundle shards per VM, not more VMs). SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` (§
   Tardis cap), `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
-  IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do
-  NOT reference; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
+  IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
+  reference (**Polygon.io is NOT removed** — it rebranded to **Massive** and is a live secondary TradFi source:
+  `SOURCE_PRIORITY`/`possible_manifest` carry `massive` → `codex/02-data/tradfi-databento-sourcing-ssot.md`; the
+  `polygon` you see in DeFi code is the CHAIN, not the vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
   `codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
