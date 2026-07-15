@@ -264,3 +264,30 @@ risky to guess-fix under time pressure without reproducing the resource-pressure
      WHERE (which module/fixture/syscall) it is stuck, converting the blind stall into an actionable stack. `status`
      stays `open`; features-service:latest in Artifact Registry is still the stale `sha256:c204c49d...` until a build
      reaches SUCCESS + pushes.
+
+## Root cause CONFIRMED + fixed (2026-07-15, ~19:1x UTC)
+
+- **The diagnostics worked.** Build `136fce13` FAILED FAST (~91% of the sports unit suite) with a captured
+  pytest-timeout **thread-method stack dump** (the `timeout_method = thread` change fired where the default `signal`
+  method could not). Exact hang:
+  - `tests/sports/unit/test_gcs_paths_and_reader_deps.py:138`
+    `test_missing_fixtures_within_coverage_raises_dependency_error`
+  - → `features_service/sports/data/gcs_reader.py:307` `read_reference_entity` → `:266` `_read_split_fixtures_fallback`
+  - → UTL `unified_trading_library/fixtures/joined_reader.py:248` `read_fixtures_joined` → `:178`
+    `_load_fixtures_for_day`
+  - → `pd.read_parquet(gs://…)` → pyarrow `ParquetDataset.__init__` → `filesystem.get_file_info(path)` **← hangs**.
+- **Why CI-only:** pyarrow's GCS filesystem does NATIVE C++ network I/O that pytest-socket's `--allow-hosts` cannot
+  block. On a Cloud Build GCE worker the metadata server (169.254.169.254) is reachable → ambient ADC resolves → pyarrow
+  attempts a real GCS stat and hangs on retry. Locally (no ambient creds) it fails fast → the code swallows it → the
+  test passed, masking the gap. A unit-test **hermeticity** bug (unit test making a real cloud call), same class as the
+  earlier gcp_auth_info fix (features-service@78fd05d1).
+- **Fix:** `features-service@bd0db4d7` — mock `_read_split_fixtures_fallback` → `None` in the two fixtures tests in
+  `test_gcs_paths_and_reader_deps.py` (verifies "all read strategies exhausted → DependencyError" without touching real
+  GCS). Sweep confirmed the only unit-level offender: `test_pre_match_standings.py` +
+  `test_fixture_features_pipeline.py` fully monkeypatch `read_reference_entity` (never reach the real read);
+  `test_sports_integration.py` is integration (not run in the CI `--quick` unit build). Full local
+  `quality-gates.sh --no-fix` green (278s). Rebuild triggered: build `fd73ca17-8d5a-435c-8ec6-9af11eb377fc` against
+  `bd0db4d7`.
+- **Kept as permanent hardening:** the `timeout_method = thread` (pyproject) + faulthandler watchdog (tests/conftest.py,
+  CLOUD_BUILD-gated 420s exit=True) + base-service.sh `tee`-streaming (`unified-trading-pm@0148b6f34`) all stay — they
+  turn any FUTURE CI hang into a fast fail with a stack dump instead of a silent 1800s timeout.

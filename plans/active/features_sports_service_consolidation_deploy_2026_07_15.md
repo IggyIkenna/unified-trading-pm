@@ -459,3 +459,13 @@ repo. This plan tracks that work.
   follow-on phase watches the build to SUCCESS-or-diagnosed-fast-fail. Todos 6-10 remain `[ ]`; no
   terraform/config/product-code changes this touch. See the matching entry in
   `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`.
+
+- 2026-07-15 (~19:1x UTC): **CI hang ROOT-CAUSED + fixed.** Instrumented build `136fce13` failed fast with a
+  thread-method stack dump pinpointing `tests/sports/unit/test_gcs_paths_and_reader_deps.py:138` →
+  `_read_split_fixtures_fallback` → UTL `read_fixtures_joined` → `pd.read_parquet(gs://…)` → pyarrow `get_file_info`
+  hang (native C++ GCS I/O pytest-socket can't block; hangs on a GCE worker with ambient ADC, fails fast locally — a
+  unit-test hermeticity bug). Fix shipped `features-service@bd0db4d7` (mock the fixtures split-fallback so no unit test
+  makes a real gs:// read; sweep-confirmed the only unit-level offender). Full QG green (278s). Rebuild triggered: build
+  `fd73ca17-8d5a-435c-8ec6-9af11eb377fc` against `bd0db4d7` — being watched to SUCCESS. Once green + image push verified
+  to carry UTL `c47273c1`, todo 5 (sports-job re-verify) unblocks; todos 6-10 follow. Full detail in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`.
