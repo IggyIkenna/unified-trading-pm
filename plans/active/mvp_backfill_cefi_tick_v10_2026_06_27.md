@@ -2873,3 +2873,11 @@ stall-safety, NO third blind tail relaunch: the tail (~86 af cells, minutes of r
 (majors VM terminal or fleet ≤1), then launches with STALL_TIMEOUT_SEC=3900. **Run-#7 lane**: same prescription for
 DERIBIT spot_pair attempt 3 — quiet window + raised threshold, not another launch into a busy fleet. Watcher v7 armed on
 (majors terminal OR fleet ≤1).
+
+### Quiet window: bitget-2025 COMPLETED + tail attempt 3 launched — 2026-07-15T10:52Z (autonomous tick)
+
+Run-#7 lane's `cefi-bitget-futures-2025-heavy` finished clean (DEPLOYMENT_COMPLETED exit_code=0, ~23.3h) — the last big
+bitget shard. Fleet quieted to 1 (majors VM, 22h in, healthy: cpu ~117%, heartbeat current, still uploading). Tail
+attempt 3 launched into the quiet window: `cefi-queue-heavy-20260715-105207` (lease-ON, STALL_TIMEOUT_SEC=3900 metadata
+VERIFIED on the instance, sentinel-fan-out progress regex; guard 1+1=2). With only one lease co-holder and the raised
+threshold, the cold-start kill window (lease-wait 1800s == old stall 1800s) is closed both ways.
