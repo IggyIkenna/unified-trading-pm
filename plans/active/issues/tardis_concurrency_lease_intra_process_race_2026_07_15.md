@@ -158,11 +158,22 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
       `lease.acquire()` call fires while the rest block until it resolves (extend the existing
       `tardis_concurrent_ip_lockout_2026_07_12.md` Harness A/B pattern — real GCS CAS, no mocks). (repo:
       market-tick-data-service)
-- [ ] [SCRIPT] P2. Once fixed + verified, re-audit the `attempted_failed` rows the 3 relaunched cefi-queue-\* VMs wrote
-      during this session's race window (`cefi-queue-light-binancefutu-x2-20260715-202013`, date=2026-01-02 primarily) —
-      distinguish genuine no-data shards from this-bug-caused false failures (e.g. via `error_reason` containing
-      `code=274`) so a targeted re-fetch (not a blind full re-run) closes just the affected shards. (repo:
-      instruments-service or market-tick-data-service, whichever owns the manifest reconcile tooling)
+- [x] ✅ [SCRIPT] P2. Once fixed + verified, re-audit the `attempted_failed` rows the 3 relaunched cefi-queue-\* VMs
+      wrote during this session's race window (`cefi-queue-light-binancefutu-x2-20260715-202013`, date=2026-01-02
+      primarily) — distinguish genuine no-data shards from this-bug-caused false failures (e.g. via `error_reason`
+      containing `code=274`) so a targeted re-fetch (not a blind full re-run) closes just the affected shards. (repo:
+      instruments-service or market-tick-data-service, whichever owns the manifest reconcile tooling) —
+      instruments-service@d68f3d59. Audit-only (per BLK-8a051482 resolution: -001 the actual lease fix had NOT shipped
+      when this ran, so the flip-to-`expected_unattempted` mutation is NOT applied yet — only identification). See
+      Progress Log + todo (3) below for the corpus-wide scope this audit surfaced.
+- [ ] [SCRIPT] P1. **NEW — bigger than originally scoped.** Once `tardis_concurrency_lease_intra_process_race-001` (the
+      lease fix) has shipped + its regression test passed, run
+      `instruments-service/scripts/audit_tardis_concurrency_lease_race_false_failures_2026_07_15.py --apply     --confirm-lease-fix-shipped`
+      (with `MANIFEST_PER_VM_SHARDS=true VM_NAME=<unique>`) to flip the CORPUS-WIDE 21,982 race-caused
+      `attempted_failed` rows (not just the 3-VM session subset — see Progress Log) to `expected_unattempted` so the
+      next backfill wave re-attempts them. Re-verify post-flip that `captured` row count is unchanged (script's own
+      safety gate) and spot-check a sample of flipped rows re-attempt cleanly (no repeat code=274) before considering
+      this closed. (repo: instruments-service)
 
 ## Progress Log
 
@@ -172,3 +183,35 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
   were left running — they are still making real, useful progress overall (the heavy VM and light-bybit VM show zero
   403s; light-binancefutu is the one affected VM and will eventually clear date=2026-01-02 and continue, just with some
   wasted/false-failed shards in the interim).
+- **2026-07-15T21:4xZ (data_engineering, slot-6, task `tardis_concurrency_lease_intra_process_race-002`)**: Worked todo
+  (2) — the re-audit. **Sequencing gap found**: todo (2)'s title says "once fixed + verified" (referring to todo (1) /
+  backlog task `-001`), but `-001` was still `status: queued` (unclaimed) with no `prereqs.completed_tasks` wiring
+  gating `-002` on it — the dispatcher handed out `-002` anyway. Filed `BLK-8a051482` flagging this and proceeded with
+  the audit-ONLY portion (identification, no mutation), since that's valid regardless of whether `-001` has shipped —
+  only the actual re-fetch trigger needs to wait.
+  - Shipped `instruments-service/scripts/audit_tardis_concurrency_lease_race_false_failures_2026_07_15.py`
+    (instruments-service@d68f3d59) — identifies `attempted_failed` rows with the exact, stable
+    `error_reason == "Tardis HTTP 403 code=274 concurrent-IP-lock"` string (confirmed at
+    `market_tick_data_service/market_interface/clients/tardis_base_client.py:175`), dry-run only (no `--apply` this
+    session — see `--confirm-lease-fix-shipped` gate in the script).
+  - **Session-scoped finding** (matches todo (2)'s literal ask, `attempted_at` 2026-07-15T20:20-20:39Z): **411 rows**,
+    ALL `venue=BITGET-FUTURES`, ALL `date=2026-01-02`, ALL `data_type=liquidations` — precisely the single stalled shard
+    the issue doc's live evidence described for `cefi-queue-light-binancefutu-x2-20260715-202013`.
+  - **BIGGER FINDING — corpus-wide, NOT scoped to this session's 3 VMs**: querying the full cefi PRD merged manifest
+    (`_index/availability_index.parquet`, 11,369,553 rows) for the SAME exact error_reason returns **21,982 rows** with
+    `attempted_at` spanning **2026-07-13T09:01:48Z through 2026-07-15T20:49:23Z** — i.e. this race has been silently
+    corrupting the manifest for ~2.5 days across MANY cefi backfill VM launches, not just this session's 3 relaunched
+    VMs. Venue breakdown: `BITGET-FUTURES` (12,014), `OKX-SPOT` (5,353), `OKX-FUTURES` (2,010), `LIGHTER-ZKSYNC`
+    (1,556), `KRAKEN-FUTURES` (672), `COINBASE-SPOT` (366), `DERIBIT-COMBO`/`DERIBIT` (10) — most of these venues were
+    NEVER touched by the 3 session VMs (which only fetched BINANCE-FUTURES/BITGET-FUTURES/BYBIT), confirming this is a
+    systemic, ongoing issue across the whole cefi backfill fleet, not an artifact of this one relaunch. By day: 10,223
+    rows on 2026-07-14 alone (a day BEFORE this session even started), 11,758 on 2026-07-15. Also 2 of the 3 relaunched
+    VMs' per-VM manifest shards (`_index/per_vm/{vm}.parquet`) had already been consolidated into the merged index by
+    the time this audit ran (only `cefi-queue-heavy-binancefutu-x15-...`'s shard was still live, with 0 race rows —
+    consistent with the issue doc's claim it saw zero 403s).
+  - **This is a big data-correctness finding** per the CLAUDE.md findings-triage HARD RULE (corpus-wide manifest
+    corruption, cross-repo, silently degrading the honest-coverage gate) — flagged via `/progress` to the dashboard +
+    tracked as new todo (3) above (gated on `-001` shipping, same as this todo's flip would have been). NOT flipping
+    anything to `expected_unattempted` this session (dry-run only) — every launcher since 2026-07-13 that hit a
+    cold-process concurrent fan-out on a non-free date is a plausible source, so a blind flip-and-refetch before `-001`
+    ships would just reproduce all 21,982 failures again.
