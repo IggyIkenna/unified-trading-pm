@@ -2881,3 +2881,42 @@ bitget shard. Fleet quieted to 1 (majors VM, 22h in, healthy: cpu ~117%, heartbe
 attempt 3 launched into the quiet window: `cefi-queue-heavy-20260715-105207` (lease-ON, STALL_TIMEOUT_SEC=3900 metadata
 VERIFIED on the instance, sentinel-fan-out progress regex; guard 1+1=2). With only one lease co-holder and the raised
 threshold, the cold-start kill window (lease-wait 1800s == old stall 1800s) is closed both ways.
+
+### 🔴 BIG FINDING — Layer-1 hit 100%, and the FIRST trustworthy Layer-2 number is 50.49% (not 99.33%) — 2026-07-15T17:18Z
+
+`measure_honest_coverage --asset-group cefi` (fresh run) vs the 2026-07-14T18:16Z run:
+
+| field                     | 07-14 18:16 | 07-15 17:18   |
+| ------------------------- | ----------- | ------------- |
+| layer1_completeness_pct   | 98.63       | **100.0**     |
+| denominator_complete      | False       | **True**      |
+| instrument_gates_download | True        | **False**     |
+| expected_unattempted      | 0           | **2,969,412** |
+| captured                  | 2,312,384   | 3,056,663     |
+| attempted_failed          | 15,712      | 28,019        |
+| total (reachable+empty)   | 2,927,024   | 7,281,833     |
+| coverage_pct              | 99.33       | **50.49**     |
+
+**This is not a regression — it is the honest-coverage v2 model working exactly as designed.** Verified in code
+(`scripts/measure_honest_coverage.py:656`): `instrument_gates_download = not l1_result.denominator_complete`, and the
+tool logs `Layer-1 INCOMPLETE — Layer-2 coverage is a LOWER BOUND` whenever it is True. So every prior cefi number,
+including the 99.33% and this plan's long history of ~91-99% G4 readings, was an explicitly-labelled LOWER BOUND
+measured against an incomplete denominator with eu not yet materialised. Codex SSOT
+(`codex/02-data/honest-coverage-model.md`, echoed in CLAUDE.md): "a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
+(`denominator_complete==True`); no flat '100% coverage' without the gate."
+
+Layer-1 reaching 100% (the DERIBIT spot_pair tuples finally landing rows + the all-venues sweep) flipped the gate: the
+WRITER materialised the true expected universe, and **2,969,412 genuinely-unattempted cells appeared**. eu is spread as
+clean (instrument x date) grids per venue/data_type (e.g. BINANCE-FUTURES eu=141,139 identical across its 3 data_types;
+BITGET-FUTURES 127,065 x3; ASTER/trades 160,020 with captured=181).
+
+**Consequence for this plan's G4 gate**: the remaining cefi backfill is ~2.97M cells — roughly equal to everything
+captured to date — NOT the ~15k af this lane and Run-#7 have been chasing. The af work (my scopes: 13,432 cells) is
+~0.4% of the real gap. G4 cannot be certified on the old readings; the gate's baseline needs re-cutting against the
+now-complete denominator, and the wave strategy needs an operator-level decision (a 3-VM lease-serialised Tardis fleet
+at ~50-70% request efficiency will not close 3M cells quickly).
+
+**Open verification for the next tick** (do NOT assume): what fraction of the 2.97M eu is genuinely Tardis-fetchable vs
+cells that will resolve to `empty_confirmed` once attempted (pre-listing dates, venue-launch windows)? ASTER
+(self-archiving, not Tardis) alone holds ~287k of it. Re-cut the priority census against eu, not af, before the next
+wave. Operator NOTIFIED (findings-triage HARD RULE: data-correctness + gate-status finding).
