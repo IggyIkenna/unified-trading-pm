@@ -236,3 +236,14 @@ repo. This plan tracks that work.
   features-service-sports deploy work itself, which is now proven correct up to that boundary). **Terraform/job/workflow
   resources deliberately left in place** (scheduler stays paused) — no rollback needed, they are correct; re-attempt
   manual verification once the linked issue is resolved, THEN proceed to todos 6-8.
+- 2026-07-15 (DriftFixRetireReenable phase, todos 6-8 — STOPPED per gating condition, real evidence, not inference):
+  Task handoff explicitly gated todos 6-8 on `manualExecutionSucceeded`; independently re-verified (not just trusted the
+  flag) rather than proceeding: `gcloud run jobs executions describe features-service-sports-job-kk4dv` still shows
+  `Completed=False / NonZeroExitCode`; `gcloud scheduler jobs describe features-service-sports-daily-trigger` still
+  `PAUSED`; the linked blocker (`instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`) is confirmed
+  STILL ACTIVE — `uts-prod-manifest-consolidator-instruments-sports` executions are still firing on a tight ~1min
+  cadence at 2026-07-15T12:47-12:49Z (same livelock signature as the earlier observation window). Per the task's
+  explicit instruction, did NOT proceed to todo 6 (Workflow YAML `--category`→`--asset-group` drift fix), todo 7 (retire
+  the legacy job), or todo 8 (re-enable scheduling) — all three remain `[ ]`. No terraform/config changes made, nothing
+  shipped this touch. Next unblock step: resolve the manifest-consolidator livelock issue, then re-attempt a manual
+  `features-service-sports-job` execution to a genuine `SUCCEEDED` terminal state (todo 5) before revisiting 6-8.
