@@ -87,9 +87,15 @@ deployment-ui (LDR):
 deployment-api (LDR — `002c479`):
 
 - **`_deploy_turbo.py`** — drilldown route now runs the heavy sync build **off the event loop** (`asyncio.to_thread`,
-  keeps `/api/health` responsive) behind a **concurrency + in-flight guard** (`_DRILLDOWN_BUILD_SLOTS=2`,
-  `_DRILLDOWN_MAX_INFLIGHT=6`): a burst degrades to a graceful per-request **503 + Retry-After** instead of a
-  container-wide OOM. Defense-in-depth backstop for the UI fix.
+  keeps `/api/health` responsive) behind a **concurrency + in-flight guard**: a burst degrades to a graceful per-request
+  **503 + Retry-After** instead of a container-wide OOM. Defense-in-depth backstop for the UI fix.
+  - **Per-worker-guard correction (2026-07-15, live-caught):** the guard counters are module-level in ONE process, but
+    `uts-shared-deployment-api` runs `WORKERS=2` uvicorn processes, so the original `_DRILLDOWN_BUILD_SLOTS=2` meant 2×2
+    = **4** concurrent full-index builds container-wide — an 8-way prod burst still OOM'd (`Memory limit … 4249 MiB`).
+    Fixed two ways: (1) **`_DRILLDOWN_BUILD_SLOTS=1`** (durable, ships via pipeline) → 1×WORKERS(2) = 2 container-wide
+    builds; (2) immediate infra mitigation on prod: `--memory 8Gi` (persists across deploys — the deploy step sets
+    `--update-env-vars WORKERS=…` but NOT `--memory`) + `WORKERS=1` (transient — the deploy resets it to 2, so the
+    `SLOTS=1` code is the durable half). Re-tested 8-way burst → **6×200 / 2×503 / no OOM**.
 - **`_live_coverage.py`** — `get_honest-coverage`: an un-dated request **walks back up to 14 days** to serve the most
   recent measured coverage (its real `date` travels in the payload); an explicit `?date=` stays exact (404 on miss).
 - **`data_status_hierarchical.py`** — drilldown `completion_pct` = **(captured + empty_confirmed) / (captured +
@@ -112,6 +118,31 @@ deployment-api (LDR — `002c479`):
   LDR. Prod deploy = deployment-api Cloud Build (`deployment-api-main-deploy`) rebundles the UI (SPA is bundled into the
   deployment-api image) → `uts-shared-deployment-api`; triggering LDR→main promote + watching the build, then verifying
   prod with Playwright (prod SPA loads without an auth wall).
+
+## Prod deployment + verification (2026-07-15)
+
+- deployment-api PR #288 (backend `002c479`) + deployment-ui PR #368 (`0d8b9d0`+`22ad900`) both auto-merged to `main`
+  (v2 + SIT gated); deployment-api Cloud Build `deployment-api-main-deploy` rebundled the UI → Cloud Run revision
+  `uts-shared-deployment-api-00172`.
+- **Prod verified (Playwright + curl + logs):** data-status page loads with **0 drilldown calls on load** (lazy-mount);
+  honest-coverage **200**; API **Connected**; no OOM/503 in normal use.
+- **Burst-guard correction (see above):** an 8-way concurrent-drilldown burst still OOM'd (per-worker guard × WORKERS=2
+  = 4 builds). Applied `--memory 8Gi` (persists across deploys) + `WORKERS=1` on prod (rev `00173`) → re-burst **6×200 /
+  2×503 / no OOM**. Durable half `_DRILLDOWN_BUILD_SLOTS=1` shipped so the fix survives the next deploy (which resets
+  `WORKERS=2`).
+- **Reconciled a pre-existing RED gate** (autonomous rule 4): `TestTradFiMultiSourceUnion` (4 tests) was red on LDR —
+  stale fixture (`CBOE/ohlcv_15m`, retired from UAC capabilities by `unified-api-contracts@78b9e899`). Realigned the
+  fixture to a currently-declared venue-level TRADFI pair (`ICE/ohlcv_24h`); no assertions weakened. File now 156 passed
+  / 2 skipped.
+
+## Follow-ups (not blocking; captured for a later pass)
+
+- [ ] [INFRA] P2. Bake `--memory 8Gi` into the deploy config (currently persisted via gcloud on rev `00173`; the
+      `deployment-api-main-deploy` deploy step does NOT set `--memory`, so it survives — but it should be explicit in
+      the cloudbuild deploy template rather than relying on revision inheritance).
+- [ ] [PERF] P2. Proper root fix — memory-efficient drilldown read: `read_availability_index` loads the ENTIRE
+      multi-year index then window-filters in memory; a date-window predicate pushdown (read only the requested window's
+      rows) would make each build small enough that concurrency + memory tuning become moot. Likely a UTL-level change.
 
 ## Data observation (not a defect of this fix)
 

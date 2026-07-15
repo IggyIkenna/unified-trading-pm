@@ -17,7 +17,7 @@ summary:
   Run job's SCHEDULER-triggered executions were SIGKILLing roughly every ~2 minutes with zero application logs before
   the kill; manual `gcloud run jobs execute --wait` runs of the identical job/image/config succeeded cleanly every time;
   3 memory mitigations (container 16Gi→32Gi, DuckDB budget 8GB→24GB→14GB) did not stop it."
-status: open
+status: resolved
 nature: record
 asset_group: [defi]
 stage: [data]
@@ -44,7 +44,7 @@ depends_on: []
 last_updated: 2026-07-12
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: [unified-trading-library@9358fb0b, deployment-service@fe67a53]
 ---
 
 # Scheduler-triggered defi consolidator executions still fail after the scaling-regression fix
@@ -314,3 +314,30 @@ landing concurrently from another session; no manual `-prd-` executions — prun
   DuckDB merge, the SSOT's Batch-Fargate alternative home (real disk, no 32Gi ceiling) is the durable escape hatch for
   the defi bucket specifically — operator-gated. (3) The 32Gi/8cpu bump is left in place (harmless, marginally longer
   survival per attempt). (repo: infra-only — gcloud run jobs update; no code changed)
+
+## RESOLVED 2026-07-14/15 — root-caused and fixed; doc was stale, correcting now
+
+A different session (slot-5) root-caused this on 2026-07-14: the actual mechanism was a **lock-stealing livelock**, not
+a resource ceiling or an unobservable in-container crash — the consolidator's soft-lock TTL (300s, later found
+env-tunable) was far shorter than real cycle durations once a date-range-chunked incremental merge (a separate fix for a
+DeFi OOM issue) started taking 24-30+ min in production. Every `*/1` cron tick past 300s during a still-running
+legitimate cycle found the lock "stale" and started a COMPETING concurrent merge — 3+ simultaneous executions observed
+live, each re-downloading the full canonical, which is what produced the repeating SIGKILL pattern this doc documents.
+
+**Fix**: `unified-trading-library@9358fb0b` (made `_LOCK_TTL_SECONDS` env-tunable via `CONSOLIDATOR_LOCK_TTL_SECONDS`)
+
+- `deployment-service@fe67a53` (Terraform override `CONSOLIDATOR_LOCK_TTL_SECONDS=4200`, `timeoutSeconds=3600` for the
+  defi bucket specifically, live-applied). **Verified live** (independently, by a separate session on 2026-07-15):
+  `gcloud run jobs describe` confirms the override is deployed; execution history shows a 24m28s execution completing
+  **successfully** (no SIGKILL) immediately followed by normal fast (~30-40s) executions; canonical manifest fresh. Zero
+  SIGKILLs observed since the fix landed, across multiple independent live checks hours apart.
+
+**Why this doc was left stale**: the fix landed via a different, unrelated task (chasing a DeFi backfill OOM issue,
+`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`) that didn't know this doc existed / didn't cross-reference it.
+**Lesson for future fleet-wide fixes**: when a fix incidentally resolves a DIFFERENT tracked issue, grep
+`plans/active/issues/` for the symptom before declaring only the originally-targeted issue closed — this doc sat `open`
+for a full day after its actual root cause shipped, which could have caused duplicate investigation effort (and nearly
+did, in the session that found this while compiling a list of "still open" decisions).
+
+Next-steps 1-3 above are all now moot (fix is a Terraform TTL override + an env-tunable default, not the log-shipping
+work item 1 anticipated) — leaving them unstruck for the historical record rather than deleting.

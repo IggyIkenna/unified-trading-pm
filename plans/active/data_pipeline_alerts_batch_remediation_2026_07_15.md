@@ -31,6 +31,7 @@ related:
     plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md,
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
     plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-15
@@ -430,6 +431,20 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
   shipped CBOE fix + 2 new scoped follow-up todos are in
   `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
   ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
+- 2026-07-15 (dispatched sub-agent — tradfi mbp_10 investigation escalated into a much bigger cross-cutting finding):
+  while investigating the narrow tradfi mbp_10 `DP_RUN_MOSTLY_EMPTY` cell, found the live tradfi manifest
+  (`market-data-tick-tradfi-prd-central-element-323112`) had 34,260 rows (not the ~7,700 in the initial narrow grep)
+  where `error_reason` carried an `EXPECTED_*`-prefixed honest-absence value but `capture_status="attempted_failed"`
+  instead of `empty_confirmed` — a real, cross-cutting data-correctness bug per the workspace's findings-triage HARD
+  RULE (big finding, data-correctness). Fixed both halves: **data fix**
+  `market-tick-data-service@92d4fb18b826c7b43aa3597d5b1eeb135e26d829` (one-off reclassification script,
+  dry-run+`--apply`+snapshot+before/after-verified: `attempted_failed` -34260, `empty_confirmed` +34260, total rows
+  unchanged) and **code fix** `unified-trading-library@c08a8d61b96d6d1570389f9396068bed51001816`
+  (`ManifestWriter.record_failed()` now hard-rejects an `EXPECTED_*`-prefixed `error` string — mirror-image guard to
+  `record_empty()`'s existing `EmptyFromLiveInstrumentError` check — preventing recurrence). Root-cause writer
+  provenance NOT established (flagged honestly, not guessed — the 2026-07-07 06:39-07:29 UTC writer is not visible in
+  currently-committed source). Full writeup, counts, taxonomy-gap flag, and follow-ups:
+  `plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`.
 - 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a new
   todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4 existing
   routing layers cited) before discovering the above agent's work had already landed. Added value rather than
@@ -449,15 +464,24 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
 
 All 3 dispatched follow-up fixes from the operator-decision round are complete:
 
-1. **Cefi orphan rows (BOTH, as decided)**: tool hardening shipped `instruments-service@dd6b4e826` (generalized the
-   blank-`data_type` blind-spot fix beyond the schema_version==4 special case it was previously limited to). The
-   9,757-row deletion executed with real production-data rigor: re-verified the exact predicate and the 99.0%
-   cross-reference live before touching anything, discovered mid-task that the originally-planned deletion mechanism was
-   unsafe (a frozen legacy snapshot would have let the rows silently resurrect), routed around it with a direct
-   atomic-CAS canonical rewrite, and verified before/after row counts match exactly (11,238,191 → 11,228,434, `-9757`,
-   `captured` count unchanged). Filed the resurrection-risk discovery as its own issue
-   (`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) rather than attempting a fix under time pressure —
-   it's a broader latent risk potentially affecting other buckets too, and genuinely needs its own investigation.
+1. **Cefi orphan rows (BOTH, as decided)** — 🔴 **CODE fix landed, DATA fix did NOT durably stick — see correction
+   below.** Tool hardening shipped `instruments-service@dd6b4e826` (generalized the blank-`data_type` blind-spot fix
+   beyond the schema_version==4 special case it was previously limited to) — this part holds. The 9,757-row deletion was
+   executed with real production-data rigor: re-verified the exact predicate and the 99.0% cross-reference live before
+   touching anything, discovered mid-task that the originally-planned deletion mechanism was unsafe (a frozen legacy
+   snapshot would have let the rows silently resurrect), routed around it with a direct atomic-CAS canonical rewrite,
+   and verified before/after row counts matched exactly (11,238,191 → 11,228,434, `-9757`, `captured` count unchanged) —
+   through one full production consolidator cycle. Filed the resurrection-risk discovery as its own issue
+   (`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`, flagged as "the main open question: not yet
+   observed in production") rather than attempting a fix under time pressure. **🔴 Independent re-verification ~1h later
+   (different session) found the 9,757 rows ARE BACK** — same original `attempted_at`/`written_at` timestamps, canonical
+   blob `Update time` only ~2 minutes before the check. The predicted resurrection risk is now CONFIRMED LIVE, not
+   theoretical — a later consolidator cycle reverted the fix. The delete itself should NOT be re-attempted until
+   `legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`'s P1 fix (special-case the frozen
+   `_legacy_seed.parquet` out of the captured-outranks tie-break, or refresh it periodically) lands — re-running the
+   same delete now would very likely just revert again on the next cycle. Escalated that issue doc's priority to P0.
+   This todo is NOT closeable until the underlying tie-break bug is fixed and the delete is confirmed to hold across
+   multiple consolidator cycles, not just one.
 2. **Tradfi ohlcv_15m/24h (audit-first, as decided)**: operator's prior confirmed correct — the per-venue
    source-capability infrastructure substantially already exists in UAC (`VENUE_DATA_TYPE_CAPABILITIES`,
    `data_source_continuity.py`). Found and fixed one genuinely stale entry (`unified-api-contracts@78b9e899` — a
@@ -483,3 +507,50 @@ fix corrected after adversarial verification caught an overstatement; 3 genuine 
 over; 1 item deliberately parked per operator decision; 1 item deliberately left at its existing scope per operator
 decision. This plan's original ask is now substantively addressed — remaining open items are either freshly-discovered
 follow-up work (expected outcome of a real audit) or explicit operator-parked decisions, not gaps in effort.
+
+## 🔴 2026-07-15 (later) — independent re-verification pass; 1 more overstatement caught + 4 more real fixes landed
+
+A different session picked up this plan's own "New todos (this reconciliation)" section (4 items, all still `- [ ]` at
+that point) plus the operator's freshly re-pasted alert batch, dispatched 4 parallel sub-agents against them (per this
+plan's own "sub-agents, looping" charter), and independently re-verified every result against real evidence (git log +
+CI + direct live-manifest re-queries) rather than trusting self-reports — catching one more overstated "done" claim in
+the process, matching this doc's own established pattern (the `_acquire_lock` reopening earlier in this doc):
+
+- **Tradfi ohlcv_15m/24h audit** (already closed above): independently re-derived the same conclusion, corrected a wrong
+  claim (`YAHOO_FINANCE` is NOT the dominant `ohlcv_15m` failure contributor — NYSE/CBOE are), and traced WHY the alert
+  keeps firing even after both fixes: the `DP_RUN_MOSTLY_EMPTY` detector (`meta_watchers.py`'s
+  `_read_attempted_failed_cells`) has **no date-recency window** — it counts `attempted_failed` over the WHOLE manifest
+  history, so stale 8+-day-old rows alone permanently exceed its threshold regardless of whether anything is currently
+  broken. This is now a confirmed cross-cutting root cause (also explains why mbp_10 and
+  corporate_action_confirmed/earnings_result kept alerting after their fixes landed) — flagged as a unified follow-up
+  candidate, not yet fixed.
+- **Corp-actions seeding fix** (already closed above): independently re-verified end-to-end (regression tests +
+  scope-correctness check that UAC's shared registry and features-service's legitimate seeding path are both unaffected)
+  — confirmed correct as shipped.
+- **🔴 Cefi orphan rows — CORRECTION, see the inline correction on that todo above.** The delete was executed safely and
+  correctly at the time, held through one consolidator cycle, but reverted on a LATER cycle — confirmed via a direct
+  live re-query (~1h after the original fix) showing the same 9,757 rows back with their original timestamps, and the
+  canonical blob's own `Update time` only ~2 minutes before the check. The agent's own filed
+  `legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md` had flagged this exact mechanism as a real,
+  structurally-present risk but "not yet observed in production" — it has now been observed, live, confirmed. Escalated
+  that issue's priority P1→P0. **Do not re-run the cefi delete until that issue's tie-break/seed-freshness fix lands.**
+- **NEW cross-cutting finding, fixed same session**: rows with an `EXPECTED_*`-prefixed `error_reason` were being stored
+  under `capture_status="attempted_failed"` instead of `expected_unattempted`/`empty_confirmed` — a real classification
+  bug distinct from anything this plan had found before. Broad live re-query found the true scope was **34,260 rows**
+  (bigger than the ~7,700 initially estimated), split `EXPECTED_CHAIN_META_ROW_NOT_DOWNLOADABLE` (18,878, CME) and
+  `EXPECTED_SOURCE_NOT_AVAILABLE` (15,382, NYSE/KRX/NASDAQ — notably NOT CME, so does not overlap the mbp_10 finding
+  despite the same reason string). Data fix (`market-tick-data-service@92d4fb18b`, reclassified all 34,260,
+  independently re-verified live: 0 remaining misclassified rows, total row count unchanged) + code fix
+  (`unified-trading-library@c08a8d61b`, `ManifestWriter.record_failed()` now rejects `EXPECTED_*`-prefixed reasons,
+  mirroring `record_empty()`'s existing guard the other direction) + new issue doc
+  (`tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`). Both CI green, both independently
+  re-verified against the live manifest, not just self-reported.
+- **4 genuinely new, still-uncovered `DP_RUN_MOSTLY_EMPTY` cells logged** (not yet fixed — see the todos added above
+  this section): the cross-cutting `EXPECTED_*` misclassification bug (now fixed, see above), `defi/dex_pool_state`
+  - `defi/lst_rates` (`UPSTREAM_INSTRUMENTS_CATALOG_STALE`, historical, June), `sports/trades` (`VENUE_FETCH_FAILED`,
+    freshest of the whole batch — through 2026-07-13), `sports/odds_horizon_bucket_15m` (`MalformedTickFieldError`).
+
+**Revised total**: of this plan's original + re-derived work, 2 items now carry an honest "reverted, needs a real fix
+first" status (the `_acquire_lock` race — already open — and the cefi orphan-row resurrection — newly caught) out of
+what was otherwise reported as fully closed. This is exactly the pattern this doc's own adversarial-verification
+practice is meant to catch — noted, not hidden.
