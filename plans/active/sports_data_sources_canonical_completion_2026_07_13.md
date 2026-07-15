@@ -3678,3 +3678,39 @@ it's new adapter work, not a data-audit residual).
     STILL RUNNING (started 2026-07-14 11:17am, now 14+ hours, `--max-rounds 4`) — it does not block on this dispatch's
     completion and was left running untouched per the identity constraint; check status later with
     `ps aux | grep 54681 && tail -40 /private/tmp/claude-501/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/48787d6e-1b7a-45c4-a444-ab6e21a32bb5/scratchpad/api_football_round2.log`.
+
+- **2026-07-15 (independent verification of the above sub-agent dispatch)** — re-checked every claim against live
+  production rather than trusting the report: all 3 commits (`instruments-service@493393c8/21591e54/9b4f7655`) and the
+  plan-journal commit (`unified-trading-pm@4af83a118`) confirmed real via `git show`; both sports consolidator cron jobs
+  (`uts-prod-manifest-consolidator-instruments-sports-cron` / `…-market-data-sports-cron`) confirmed `ENABLED` (properly
+  resumed this time — unlike 3 earlier pause-without-resume incidents this session); live read of
+  `instruments-store-sports-prd`'s `_index/availability_index.parquet` confirms INJURIES and FIXTURES both genuinely at
+  0 attempted_failed, and total api_football attempted_failed at 1,469 (claimed 1,490 — small delta explained by the
+  still-running round2 residual-closer continuing to resolve rows between the report and this check). All core claims
+  **verified holding**.
+  - **461 blank-`data_type` rows (this is the "blank-dt 461" already counted in finding A of
+    `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`, cited at line ~234 above
+    — NOT a new count, but not previously root-caused).** All 461 have blank `data_type` + blank `league_id` but a
+    POPULATED `venue` field carrying a _different_ T1 source's name (`FOOTYSTATS`/`OPEN_METEO`/
+    `SOCCER_FOOTBALL_INFO`/`TRANSFERMARKT`/`UNDERSTAT` — exactly 5 per date × 92 distinct dates = 460, plus 1 stray
+    `UNISWAP_V3-BASE` row, already separately tracked as finding C in the same issue doc), all
+    `error_reason=UNCLASSIFIED_ADAPTER_ERROR`, `attempted_at` clustered in a single ~36-hour window (2026-06-25 to
+    2026-06-26) — a one-time historical incident, not an ongoing/live bug. Pattern is consistent with a batch run over
+    those 92 specific `date` values each hitting api-football's fail-loud `DependencyError` pre-flight gate (per
+    `codex/02-data/sports-adapter-dependency-order.md` — T1 adapters depend on T0 api-football's fixtures parquet
+    existing for that date), with a shared exception handler writing one synthetic failure row per blocked T1 adapter
+    but mislabeling `source=api_football` (the blocking dependency) instead of the actual T1 adapter attempting the
+    fetch — a hypothesis, not yet confirmed against the exact code location.
+    - **Corrects a stale claim in this same plan** (the `[DATA] P2` CF11 todo above, "NB: a re-run of that closer also
+      re-drives the ~3,116 undocumented non-CF11 api_football attempted_failed ... same operation closes both"): live
+      count confirms this is FALSE for the blank-dt-461 sub-class — the residual-closer round2 has now run for 14+ hours
+      across multiple rounds and this count is UNCHANGED at 461. This makes sense in hindsight: the closer's
+      `_live_read()` re-fetch path keys off `data_type` to know what to re-fetch, and these rows have no `data_type` to
+      key against, so they were silently un-actionable by that mechanism from the start. INJURIES (this dispatch, Part
+      A) and FIXTURES (this dispatch, Part B) — the OTHER two components of finding A's "~3,116 undocumented" figure —
+      are now confirmed 0, so the closer/dispatch combination closed those; the blank-dt-461 sub-class remains the one
+      genuinely open piece of finding A, needing its own dedicated fix (not a re-fetch — a reconciliation script in the
+      same style as the blank-league_id orphan closers, IF real per-source T1 coverage already exists for those 92
+      dates; otherwise a real backfill). Not fixed in this pass; the existing issue doc already tracks it as open, so no
+      new todo filed — this entry adds the root-cause hypothesis and corrects the stale "same operation closes both"
+      expectation for whoever picks up finding A next.
