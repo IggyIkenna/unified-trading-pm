@@ -244,6 +244,13 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
   execution launched at a random time has ~25-30% chance of passing the 120s preflight gate (`maxRetries=0`, so a stale
   fire fails safe with no retry). This pre-dates the incident and is bounded to a SAFE degraded-freshness failure (never
   a clobber, post-fix); tracked as the generic consolidator-throughput concern, not a re-enable blocker.
+  - ✅ **CORRECTION (measured 17:54Z, after the af fleet fully drained): the concern above is RESOLVED, not standing.**
+    The ~7.5-min cycles were af-backfill-load-induced, not structural. With the fleet drained the consolidator runs
+    every ~60s at **~9s latency** (`success=True shards=1 rows_in=0 rows_out=0 error=-` — `shards=1` is just the
+    permanent `_legacy_seed.parquet`; no-op cycles legitimately don't log "wrote consolidated index", which is why a "no
+    write in 45m" reading is NOT a stall). The canonical blob is refreshed every cycle (`update_time` 17:53:43Z, 18s old
+    at check), so it sits comfortably inside the 120s staleness gate → the re-enabled schedulers will pass preflight
+    normally. Recorded so a future reader doesn't chase a phantom throughput problem.
 
 ### STEP 2 — 4 t1 schedulers RE-ENABLED (containment lifted; clobber vector closed)
 
