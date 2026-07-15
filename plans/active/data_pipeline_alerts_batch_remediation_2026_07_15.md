@@ -720,3 +720,43 @@ it.
 **Item 1 from round 3 is now closed.** Full evidence chain (execution names, Cloud Build IDs, generation numbers,
 before/after row counts) in `plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`'s own
 closing section — not duplicated here. That issue doc's `status` is now `resolved`.
+
+## Session close-out (2026-07-15)
+
+The operator asked one more sharp question mid-round-4 that materially changed the outcome: _"did you check any manifest
+scripts, rollups, consolidators or otherwise that could reseed the bad stuff?"_ — i.e., had the fix search been broad
+enough, or just narrow confirmation of the one mechanism already found? Dispatched a dedicated skeptical sweep in
+parallel with the re-delete monitoring, specifically instructed to look for what a narrower investigation would miss. It
+found the real gap: **Part 1** of the legacy-seed fix (`unified-trading-library@f14b13ae`) only guarded a state-FLIP
+tie-break — worthless against a straight DELETION, since a deleted row leaves no competitor for any tie-break to apply
+to; a `--force` full-rebuild simply re-absorbs the frozen seed's row untouched. This gap was independently found and
+closed the same way — a concurrent session's own `--force` stress-test reverted the re-attempted delete a second time,
+which is what led directly to **Part 2** (`unified-trading-library@8e783d70`, excludes the frozen seed from
+full-rebuild/canonical-merge entirely, not just demotes its tie-break rank). Both this session's dedicated sweep and the
+concurrent session's direct stress-testing converged on the same finding independently — a genuine second-opinion
+confirmation, not one agent copying another's conclusion.
+
+**Final verification, not a single lucky pass**: the delete was re-run a third time and held across 3 independent real
+production cycles — 2 _deliberate_ `--force` full-rebuilds (the exact mechanism that caused both prior reversions) run
+~20 minutes apart, plus 1 genuine cron-triggered incremental cycle — all 3 confirmed 0 resurrected rows. The root-cause
+asymmetry ("why did it survive the first hour but not the first `--force`") is now fully understood and documented:
+routine `*/1` cron cycles structurally can never touch the frozen seed at all (its mtime never enters the incremental
+cutoff window); only a manual/scripted `--force` full rebuild ever re-absorbs it. This means the ORIGINAL delete's
+~1-hour-later reversion was itself very likely someone/something running a `--force` rebuild during that window, not a
+routine cycle — consistent with everything observed since.
+
+**What this session actually delivered**, end to end: the literal alert-repeat/spam pattern that started this (fixed,
+independently verified); the sports and defi consolidator livelocks (found to share one root cause, fixed, one further
+residual gap honestly left open after exhaustive testing); a genuine production data-correctness bug caught mid-fix by
+adversarial verification (the cefi delete's resurrection) and carried through to a fully verified, durable resolution —
+including a second, deeper bug the first fix missed, caught specifically because the operator asked whether the search
+had been thorough enough rather than accepting the first "fixed." That question was the single highest-value
+contribution to this session's correctness — worth noting plainly rather than folding into the general summary.
+
+**Genuinely still open** (not actioned this session, not blind-fixed): the `_acquire_lock` concurrent-acquisition race
+(sports consolidator, exhausted investigation, needs live production tracing tooling this session didn't have); 4
+newly-logged `DP_RUN_MOSTLY_EMPTY` cells (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
+`sports/odds_horizon_bucket_15m`); the `YAHOO_FINANCE` registry cleanup (deferred — a naive fix would trip an
+undocumented fallback footgun); UAC's `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` gate (the treasury-yields routing fix is
+shipped and tested but needs this separate registry entry before it carries live traffic, same precedent as mbp_10). All
+are documented with enough evidence for a future pass to pick up cold.
