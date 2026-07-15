@@ -1910,3 +1910,25 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   re-attempt. **Operator decision still needed** (repeated here for visibility since it gates this plan's
   `features-sports` closure): choose Path A (fast, re-diverges the archived repo) or Path B [RECOMMENDED — matches the
   completed code consolidation, avoids re-legitimizing an archived repo] or specify a hybrid/staged approach.
+
+- **2026-07-15, `features-sports` bare-bucket Verify+Delete re-attempt — STOPPED, gate condition re-confirmed still
+  unmet, bucket left untouched.** Dispatched to finish this deferred item (terraform-resource removal +
+  `_imports_reconcile.tf` cleanup + physical bucket delete) contingent on `manualExecutionSucceeded: true`; the
+  handed-in Verify-phase result already reported `manualExecutionSucceeded: false`, and this touch independently
+  re-verified that condition with fresh evidence rather than trusting the prior report:
+  `gcloud scheduler jobs describe features-sports-service-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  still shows `PAUSED` / `userUpdateTime: 2026-06-08T04:16:20Z` (unchanged), and
+  `gcloud run jobs executions list --job=features-sports-service-job --region=asia-northeast1 --limit=5` shows the 5
+  most recent executions (`…-n4l5z` 2026-07-15T11:10, `…-vjlmz`/`…-xgw29`/`…-cmp9h` 2026-07-14T18:10, `…-6jrgw`
+  2026-07-14T18:05) all with `failedCount=1` and no `succeededCount` — i.e. the job is still crashing on every
+  execution, consistent with the still-open `unified_api_contracts.internal` import-time `ModuleNotFoundError`
+  documented in the issue doc and the prior two Progress Log entries. Per this task's own explicit stop condition ("If
+  `manualExecutionSucceeded` is false, STOP -- do not delete"), took **zero destructive or infra action**: did not touch
+  `deployment-service/terraform/gcp/main.tf`'s `google_storage_bucket.features_sports` resource, did not touch
+  `_imports_reconcile.tf`, did not run `terraform state rm`, did not run
+  `gcloud storage rm`/`gcloud storage buckets delete` against `gs://features-sports-central-element-323112`, and did not
+  touch `bucket_config.yaml` or scheduler configs. The bare bucket, its 1 real migrated object + 2 confirmed-ephemeral
+  VM-staging objects, and the terraform resource all remain exactly as they were. **This item stays open, gated on the
+  same unresolved operator A/B decision** (rebuild source-of-truth choice) called out in the entry above — no new
+  blocker introduced, no progress lost, nothing to re-verify differently on the next attempt beyond re-checking
+  `manualExecutionSucceeded` once a rebuilt image is actually deployed and a clean execution is observed.
