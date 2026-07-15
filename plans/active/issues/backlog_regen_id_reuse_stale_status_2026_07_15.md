@@ -87,11 +87,19 @@ state.
    (or plan_ref + first N chars of the checkbox body) so a given checkbox's identity survives file edits without
    colliding with unrelated checkboxes' freed slots.
 
-- [ ] [SCRIPT] P2. Locate the id-derivation logic behind `POST /api/backlog/regen` in the agent-orchestrator repo
-      (likely `server/regen_backlog_from_plan.py` per RULES.md references) and confirm whether it is positional or
-      content-hash-based; add a regression test reproducing this doc's exact repro (complete checkbox N, add a new
-      checkbox that lands in the same derived slot, regen, assert the new row's `status`/`dispatched_to`/`done_sha` are
-      fresh, not inherited). (repo: agent-orchestrator)
+- [x] [SCRIPT] P2. ✅ — agent-orchestrator@45446d8. Located: `_make_task_id`/`next_index` in
+      `server/regen_backlog_from_plan.py` (`regen()`'s per-plan-slug loop) — POSITIONAL, derived from
+      `max(existing YAML id suffix for this slug) + 1`, recomputed fresh from `backlog.yaml` at the top of every
+      separate `regen()` call; never content-hash-based, never consults `state.db`. `_prune_stale` removes a task's YAML
+      row the instant its brief drops out of open todos, REGARDLESS of terminal status, while deliberately leaving
+      `done`/`dispatched` `state.db` rows untouched (only queued/blocked+undispatched rows are DB-deleted) — so a later
+      regen tick can reissue the freed id to an unrelated new checkbox, and `sync_backlog_to_db` (called right after
+      `regen()` in the `POST /api/backlog/regen` handler) only inserts a `TaskRow` when none exists for that id,
+      silently preserving the old row's `status`/`dispatched_to`/`done_sha`. Added
+      `test_regen_id_slot_reuse_inherits_stale_terminal_status` in `tests/test_regen_backlog_from_plan.py` reproducing
+      the exact repro end-to-end (complete + prune a checkbox in one tick, append an unrelated new checkbox in a later
+      tick, `regen()` + `sync_backlog_to_db()` as the endpoint does) — currently `xfail(strict=True)` pending todo 2's
+      fix; verified it fails at the intended assertion via `--runxfail`. (repo: agent-orchestrator)
 - [ ] [SCRIPT] P2. Fix the reuse path to reset terminal fields (`status`, `dispatched_to`, `done_sha`, `queued_at`)
       whenever a regen assigns an existing id to different checkbox content (compare stored title/brief hash, not just
       id string equality). (repo: agent-orchestrator)
