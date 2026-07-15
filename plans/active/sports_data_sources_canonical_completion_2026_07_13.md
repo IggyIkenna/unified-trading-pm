@@ -3916,3 +3916,29 @@ it's new adapter work, not a data-audit residual).
   carry a comparable blank-`asset_group` backlog: cefi has 2 (negligible), defi/tradfi/prediction have 0 — confirms
   sports is overwhelmingly the dominant case, consistent with the issue doc's original framing; no other asset_group
   needs a comparable repair pass.
+
+- **2026-07-15 (asset_group-healing — FULLY RESOLVED, no manual redeploy needed after all).** Operator chose to expedite
+  the redeploy this dispatching agent flagged as a follow-up. Before triggering anything, checked whether the normal
+  CI/CD pipeline had already caught up: **it had.** A DIFFERENT concurrent agent's unrelated fix
+  (`unified-trading-library@c47273c1`, "lock-aware consolidator liveness") landed on `live-defi-rollout` after
+  `86f3da96` in the same linear history (confirmed via `git merge-base --is-ancestor 86f3da96 c47273c1` — yes), and
+  `market-tick-data-service`'s Dockerfile digest pin was independently bumped to that commit's image at
+  `instruments-service@459d1b7e`-equivalent timing (14:22:36+0100) by whoever was fixing that unrelated issue — since
+  it's a digest-pinned base image (`FROM ...@sha256:...`, not a versioned PyPI wheel), this bump happened to carry the
+  asset_group fix along for free. Confirmed via `gcloud builds list` that `market-tick-data-service` had 2 successful
+  builds after that pin update (13:49:53 and 13:49:40 UTC) — meaning the deployed `:latest` image (which the
+  `uts-prod-manifest-consolidator-*` Cloud Run Jobs re-pull fresh every execution) already carried the fix by the time
+  of this check, with zero manual redeploy action needed.
+  - Re-ran `backfill_asset_group_blank_repair_2026_07_15.py` (dry-run, no `--apply`): **0 blank-`asset_group` rows
+    remain** — the consolidator's normal merge cycle had ALREADY retroactively healed all ~969K historical rows on its
+    own (the heal logic runs on every REPLACE-coalesce merge for all rows, not just new writes, so once the fixed image
+    was live, the very next full merge cycle healed the whole backlog without needing another manual `--apply`).
+  - **Independently verified via direct gcsfs read**: `instruments-store-sports-prd`'s full 5,432,772-row canonical
+    index shows `asset_group` value_counts of `sports: 5,432,770 / cefi: 1 / defi: 1` — the 2 non-sports rows are the
+    already-known, separately-tracked cross-asset-group contamination rows (Finding C + its bonus addendum above), not a
+    new gap. Held stable across a follow-up re-check ~90s later.
+  - **This closes the asset_group-healing gap completely**: code fix shipped + blast-radius-proven
+    (`unified-trading-library@86f3da96`), retroactive repair proven safe and now confirmed durable (0 blank, holding),
+    zero manual Cloud Build/redeploy action was actually needed once verified. Todo B in
+    `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` and its follow-up
+    redeploy todo are both DONE.
