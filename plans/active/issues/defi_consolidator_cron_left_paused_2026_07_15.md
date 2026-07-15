@@ -199,7 +199,7 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       `google-cloud-scheduler>=2.20.0,<3.0.0` to unified-trading-library's `pyproject.toml` (this todo's own fix now
       actually functions), but deployment-service needs the same dependency added or its
       DP-WATCHER-003/`check_cron_fired` KEY #2 pause-awareness remains dead code in production.
-- [ ] [BACKEND] P2. `alerting-service/subscribers/alert_subscriber.py`'s `_route_one` (~lines 400-431) wraps
+- [x] [BACKEND] P2. ✅ `alerting-service/subscribers/alert_subscriber.py`'s `_route_one` (~lines 400-431) wraps
       `dispatch_event()` in a broad `except Exception` that only `logger.warning`s ("skipping ...") on failure — a
       downstream fault (missing PagerDuty/Telegram secret, a misconfigured rule, an unhandled payload shape) silently
       drops a page with no escalation of that failure itself, the same "who watches the watcher" gap this issue's P1
@@ -208,7 +208,14 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       `codex/04-architecture/agent-orchestrator-alerting.md`) so a broken alert route is itself loud. Found while
       investigating why the 2026-07-15 consolidator-liveness-watchdog exit(1) failures never paged — could not verify
       live whether THIS specific incident's page was actually delivered or silently eaten by this exact code path (no
-      live Cloud Logging/PagerDuty access from a repo-only investigation). (repo: alerting-service)
+      live Cloud Logging/PagerDuty access from a repo-only investigation). — alerting-service@24c4777. Added
+      `_page_own_dispatch_failure()`: on a `dispatch_event()` failure, `_route_one` now (in addition to the existing
+      `logger.warning`) posts directly to the `#uts-live-alerts` webhook — bypassing `dispatch_event`/`route_event` (the
+      path that just failed) so it needs no routing rules, dedup state, or typed-handler success — and
+      `logger.exception`s if even that paging call fails itself (defence-in-depth, never raises into the subscriber
+      loop). 3 new unit tests cover: the failure path pages instead of silently skipping, the direct-webhook path fires
+      when configured, and the helper never raises (no webhook configured / config lookup itself throws). Full QG green
+      (873 pre-existing tests + 3 new, coverage 79.67%). (repo: alerting-service)
 - [ ] [INFRA] P1. `google-cloud-scheduler` is not an installed dependency anywhere in deployment-service (not in
       `pyproject.toml`, not in `uv.lock`, confirmed via a direct `import google.cloud.scheduler_v1` failure against the
       repo's own root `.venv`) — so `_make_scheduler_state_reader()` /`_make_consolidator_scheduler_lister()`
