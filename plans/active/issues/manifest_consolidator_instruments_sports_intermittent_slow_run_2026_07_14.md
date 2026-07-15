@@ -14,20 +14,30 @@ summary:
   consolidator appears DOWN... do NOT fall back to the per-VM merge'). Two consecutive waves of 3 features-sports
   gap-fill VMs each (launched ~22:09Z and ~22:26Z) failed identically at startup for this exact reason, wasting ~6 SPOT
   VM-launches with zero compute progress before a 3rd wave succeeded by timing the launch to a freshly-updated window."
-status: resolved
+status: open
 nature: record
 asset_group: [sports]
 stage: [data]
 repos: [deployment-service, features-service, unified-trading-library]
 scope: [engineer, admin]
-tags: [manifest-consolidator, cloud-run, sports, instruments-store, startup-gate, intermittent, spot-vm-waste]
+tags:
+  [
+    manifest-consolidator,
+    cloud-run,
+    sports,
+    instruments-store,
+    startup-gate,
+    intermittent,
+    spot-vm-waste,
+    concurrent-lock-acquisition,
+  ]
 related: [plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md]
 created: 2026-07-14
 assigned_vm: planning
 source: [sports_p2_features_history_to_ml_ready-001]
 parent_epic: sports_master
 priority: P1
-resolved_by: [deployment-service@69136c2c, features-service@5e1ffd2e]
+resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -162,8 +172,39 @@ exactly the bounded number of attempts, non-staleness errors propagating unretri
 independently. `bash scripts/quality-gates.sh --no-fix` green (288s, all steps passed). Evidence:
 `features-service@5e1ffd2e`.
 
-**Status**: flipped `open` → `resolved`. Both the server-side root cause (Option 1) and the client-side defense-in-depth
-(Option 2) are shipped and live; Option 3 (pre-flight `gsutil stat` check before VM provisioning) was not pursued —
-Option 2 supersedes its intent (a re-check from inside the VM at the actual check-then-act window is strictly more
-reliable than an outside-the-VM point-in-time check, per the 3rd-wave finding above that already ruled out point-in-time
-pre-checks as unreliable).
+**Status (as first written)**: flipped `open` → `resolved`. Both the server-side root cause (Option 1) and the
+client-side defense-in-depth (Option 2) are shipped and live; Option 3 (pre-flight `gsutil stat` check before VM
+provisioning) was not pursued — Option 2 supersedes its intent (a re-check from inside the VM at the actual
+check-then-act window is strictly more reliable than an outside-the-VM point-in-time check, per the 3rd-wave finding
+above that already ruled out point-in-time pre-checks as unreliable).
+
+## CORRECTION 2026-07-15 (independent adversarial verification) — reopening: `resolved` was overstated
+
+An independent verification pass (a fresh agent with no context from the fix above, tasked specifically with trying to
+refute the claim) found the `resolved` status is **not supported by current live data**. Findings:
+
+- The Terraform lock-TTL override (`deployment-service@69136c2c`) IS genuinely live
+  (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400` confirmed via `gcloud run jobs describe`) and the mechanical diff is correct.
+- **But fresh Cloud Logging output from 2026-07-15T00:09-00:20Z — well AFTER the live fix — shows THREE distinct
+  executions (`vx6zs`, `cr4bp`, `s6pkx`) independently logging `phase=lock_acquired` and running full ~7-minute
+  concurrent DuckDB merges while overlapping in time**: `vx6zs` held the lock 00:09:44–00:16:56; `cr4bp` acquired at
+  00:10:45 — only 61s into `vx6zs`'s still-fresh, 2400s-TTL lock; `s6pkx` acquired at 00:12:38 while BOTH were still
+  active. **None of these show a "clearing stale lock" log line** — this is happening through a DIFFERENT mechanism than
+  the diagnosed TTL-reclaim livelock. `_acquire_lock`'s `if_generation_match=0` GCS conditional-write-if-absent CAS is
+  somehow letting multiple holders through concurrently (a genuine race, not a TTL-expiry reclaim).
+- This is exactly the "overlapping-competing-merge" pathology this doc's fix claimed to have "structurally eliminated."
+  That claim was wrong — the TTL bump closed the STALE-RECLAIM trigger path but not the underlying
+  concurrent-acquisition bug, which persists post-fix.
+- **Practical impact currently muted** (the canonical file's mtime was fresh, ~64s old, at verification time — so this
+  is not currently causing user-visible failures the way the original TTL livelock did), but the "fix is holding"
+  conclusion was overstated and needed correcting before it misled a future reader into treating this as closed.
+- **Cross-cutting concern**: `_acquire_lock` (`unified_trading_library/manifest_consolidator.py`) is shared code across
+  the ENTIRE consolidator fleet (~26 Cloud Run jobs, including the just-separately-fixed defi job). If this is a genuine
+  CAS race rather sports-specific, defi and every other bucket could be latently exposed to the same
+  concurrent-acquisition pattern even after their own TTL fixes — worth checking fleet-wide, not just sports.
+
+**Status: reopened to `open`.** `resolved_by` cleared. Follow-up investigation into the actual `_acquire_lock` CAS race
+dispatched separately (unified-trading-library, fleet-wide scope) — see
+`plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md` Progress Log for tracking. The two fixes already
+shipped here (Terraform TTL override + features-service retry) are NOT being reverted — they're real, tested, harmless,
+and did close one genuine trigger path — but they are not sufficient to claim this issue resolved.
