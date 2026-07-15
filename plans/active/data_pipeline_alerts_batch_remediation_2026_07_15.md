@@ -300,3 +300,186 @@ now honestly `open` with full methodology),
 items above remain genuinely open, each requiring either further live-production investigation time or an explicit
 operator decision this session correctly did not make unilaterally. This is an honest non-100% outcome, documented with
 evidence per the plan's own stated exception for exactly this case.
+
+## Operator decisions (2026-07-15, interactive reconciliation)
+
+Presented all 5 open items to the operator with recommendations; decisions below. New todos follow.
+
+1. **Cefi orphan rows**: **BOTH** — harden the phantom-audit tool's blank-`data_type` blind spot AND delete the 9,757
+   stale orphan rows. (Operator picked the most-thorough option over my "delete only" recommendation.)
+2. **Tradfi ohlcv_15m/24h**: operator confirmed the per-venue-routing read is correct (Databento-uncovered venues — e.g.
+   FX spot, Korean equities — need whatever granularity their real source provides, which may only be daily;
+   Databento-covered venues should get finer bars within billing limits, not be capped) BUT corrected my framing: **this
+   is very likely NOT greenfield design work** — the operator believes UAC/instruments-service/MTDS already has
+   infrastructure for per-venue source-capability constraints and this "might need completion" rather than a new design.
+   **Action: AUDIT existing UAC/IS/MTDS per-venue capability routing FIRST** to find what's already there vs. genuinely
+   missing, before writing any new code.
+3. **Tradfi corporate_action_confirmed/earnings_result**: **CONFIRMED** — stop instruments-service seeding these as
+   expected cells in the MTDS tick manifest (matches my recommendation).
+4. **Tradfi mbp_10 UAC registry**: **Leave the MVP-scope restriction in place** (operator did NOT take my recommendation
+   to restore it now) — this is a deliberate, still-intentional scope decision, not a bug. Action: correct the issue doc
+   so `mbp_10`'s live-capture gap reads as "expected per scope decision," not "open gap needing a fix," and ensure the
+   alert reflects that (mute/expected classification) rather than staying flagged as an active problem.
+5. **Sports lock-race**: **Parked** — no further investigation this session; leave the issue doc exactly as the
+   exhausted-investigation entry documents it, revisit later (possibly with better production-tracing tooling).
+
+### New todos (this reconciliation)
+
+- [ ] [DATA] P1. Cefi: hardening `reconcile_phantom_manifest_rows_all.py`'s (or wherever the blank-`data_type`
+      phantom-matching logic actually lives — grep first) blind spot so a blank-`data_type` row is no longer
+      unconditionally flagged phantom regardless of whether real data exists; then delete the confirmed 9,757 stale
+      orphan rows (per `phantom_captures_cefi_2026_06_28.md`'s 2026-07-15 investigation section for the exact
+      predicate/evidence). Repo: likely e2e-testing or unified-trading-library — locate via grep.
+- [x] ✅ [DATA] P1. Tradfi ohlcv_15m/ohlcv_24h: AUDITED — operator's prior CONFIRMED (per-venue source-capability
+      infrastructure already exists in `unified_api_contracts/registry/expected_coverage.py` +
+      `market_data_categories.py::VENUE_DATA_TYPE_CAPABILITIES` + `data_source_continuity.py::_SOURCE_RESOLVERS`, and is
+      mostly already correct — CME/NASDAQ/NYSE correctly excluded from ohlcv_15m/24h, ICE/KRX/FX correctly capped at
+      ohlcv_24h). Shipped one completion fix (CBOE's stale ohlcv_15m entry, `unified-api-contracts@78b9e899`, same
+      narrowing pattern as KRX/ICE, QG green) and found + documented 2 further genuine gaps rather than rushing them (no
+      downstream aggregation writer exists anywhere despite 3 places claiming one does; `"YAHOO_FINANCE"` is a phantom
+      no-adapter venue inflating the failure counts, same class as the corporate_action_confirmed/ earnings_result fix
+      below). Full writeup + 2 new scoped todos:
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+      ohlcv_15m/ohlcv_24h audit (2026-07-15)".
+- [x] ✅ [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
+      `instruments-service/scripts/enumerate_expected_universe.py` from seeding these as expected cells in the MTDS tick
+      manifest bucket. Confirmed as the sole seeding site (grep-verified across instruments-service +
+      market-tick-data-service + UAC — no other non-test consumer of either data_type; features-service's calendar
+      module, which owns the real capture code, has zero dependency on `DATA_TYPES_BY_ASSET_GROUP` and is unaffected).
+      `instruments-service@03f71c81` adds a tradfi-only `_tradfi_mtds_tick_manifest_data_types()` exclusion helper wired
+      into both `enumerate_v2()` and `main()`'s `data_types`-resolution sites; UAC's
+      `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` registry itself is deliberately left untouched (other UAC consumers —
+      validity matrices, UI reference-data generation, `mvp_scope` — still need both types declared legitimate). 4 new
+      regression tests (`TestTradfiMtdsTickManifestDataTypeExclusion`), full suite + `quality-gates.sh` green.
+      **Historical row cleanup: deferred, not done in this pass** — the 807 `corporate_action_confirmed` + 799
+      `earnings_result` already-seeded `attempted_failed` rows in the live TICK manifest are untouched (forward-only
+      fix: stops future seeding, does not retroactively clean existing rows) — flagged as a follow-up in the issue doc
+      rather than silently dropped; it's a production-data-mutation decision (delete vs. reclassify) that deserves its
+      own scoped pass, same reasoning as the parallel cefi-orphan-rows and mbp_10 items in this remediation wave. Full
+      resolution write-up + operator decision record: `unified-trading-pm@24ee65c3a`
+      (`tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+      corporate_action_confirmed / earnings_result"). Independently re-verified (seeding-site confirmation, blast
+      radius, scope precision vs. UAC, test coverage, historical-row decision) against the already-shipped commit before
+      this checkbox flip — no discrepancies found.
+- [ ] [DOCS] P2. Tradfi mbp_10: correct
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
+      registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
+      the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected
+      rather than continuing to page as if it's an active problem.
+
+### 2026-07-15 (later same day) — re-pasted alert batch, picked up by a different session; 5 new findings
+
+Operator re-pasted the SAME `DP_RUN_MOSTLY_EMPTY` alert batch into a different session. Cross-checked against this
+plan's own state first (git log showed the reconciliation above landed ~12 min earlier) rather than duplicating —
+dispatched 4 parallel sub-agents (per this plan's own "sub-agents, looping" charter) against the 4 approved todos above,
+in isolated worktrees. While investigating item 4 (mbp_10) directly, found the "1186/1186" figure the doc analyzed does
+NOT match the CURRENT real failing population: **CME currently has ZERO `attempted_failed` mbp_10 rows** — the real 1186
+rows are `KRX=742, NYSE=292, NASDAQ=152`, venues the operator's CME-specific decision never covered. Investigating those
+revealed a bigger, cross-cutting bug (see new todo below) — NOT applying the CME reclassification logic to these 3
+different venues, since that would be guessing past what was actually decided.
+
+Also found 3 more `DP_RUN_MOSTLY_EMPTY` cells from the SAME alert batch that this plan's earlier "swept every
+(asset_group, data_type) pair" pass (todo above, `unified-trading-pm@{0378027e6,fe674d7a3}`) did not cover — that sweep
+says "cefi/tradfi partial-ratio cells: already tracked", but did not explicitly re-verify SPORTS or all of DEFI's cells
+against existing docs. Logging what's confirmed genuinely new/untracked here rather than assuming covered:
+
+- [ ] [DATA] P0 **NEW FINDING**: real cross-cutting classification bug — rows with an `EXPECTED_*`-prefixed
+      `error_reason` (e.g. `EXPECTED_SOURCE_NOT_AVAILABLE`) are being stored with `capture_status="attempted_failed"`
+      instead of `expected_unattempted`/`empty_confirmed` (an `EXPECTED_*` reason should NEVER pair with
+      `attempted_failed` per this workspace's honest-absence convention). Confirmed real, live counts (may drift by the
+      time this is picked up): tradfi/ohlcv_15m (~2347 rows), tradfi/trades (~2343), tradfi/ohlcv_1m (~1832),
+      tradfi/mbp_10 (~1186, spanning KRX/NYSE/NASDAQ — NOT CME) — ~7,700+ rows total, clustered around a single ~90s
+      batch window (`attempted_at≈2026-07-07T07:28-07:29Z`). Root-cause research (before dispatching the fix agent)
+      found: the 2 known committed call sites that use this exact reason string
+      (`reclass_krx_eu_source_not_available.py`, `reclass_oos_equity_eu_not_in_dataset.py`) both correctly pair it with
+      `empty_confirmed` and don't match this bug's footprint (wrong data_type scope, wrong row count) — the actual
+      writer that produced the mismatched rows is NOT visible in current committed source (likely an uncommitted/ad-hoc
+      pass). Also confirmed a systemic gap: `ManifestWriter.record_failed()` has NO validation preventing an
+      `EXPECTED_*`-prefixed reason from being passed to it (unlike `record_empty()`'s closed-set enum check), so this
+      can recur silently. Dispatched to a sub-agent (data-fix: reclassify the ~7,700 rows + regression tests; code-fix:
+      guard `record_failed()` against `EXPECTED_*`-prefixed reasons; new issue doc) — see that issue doc for the
+      resolution once shipped. Repos: `market-tick-data-service` (data fix), `unified-trading-library` (writer guard).
+- [ ] [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050 attempted_failed,
+      0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100% `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE`,
+      `attempted_at` spanning 2026-06-21 to 06-30 (historical, not fresh). NOT found tracked in any existing
+      `plans/active/` doc as of this pass (closest precedent,
+      `master_data_canonicalisation_migration_catalogue_     2026_06_07.md`'s R5-fix-7 defi catalog-freshness gate, is
+      dated 2026-06-08 — predates this window and appears already resolved/re-promoted, so this looks like a RECURRING
+      instance of a resolved-once issue, not the same still-open instance). Needs its own investigation: is
+      `assert_defi_catalog_fresh`'s freshness gate itself stale/broken again, or is this a different trigger. File as a
+      new issue doc if picked up.
+- [ ] [DATA] P1 **NOT YET COVERED**: `sports/trades` (112277/522276 attempted_failed, 21.5%) —
+      `error_reason=VENUE_FETCH_FAILED` dominates (94127 of the 112277), `attempted_at` up to 2026-07-13T23:56Z
+      (freshest of all the alert-batch cells — worth checking if this is still actively recurring). `VENUE_FETCH_FAILED`
+      is heavily tracked for CeFi/Tardis (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`) but NOT found tracked for
+      sports specifically. A smaller slice (several hundred rows) shows a DIFFERENT, more interesting pattern: a
+      `record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on     <VENUE>/<DATE>. Use record_failed(EmptyFromLiveInstrumentError(...)) instead`
+      guard message (BETFAIR, MATCHBOOK, PINNACLE, and others, many 2022-era dates) — this exact pattern + fix design IS
+      tracked (`data_completion_to_100_all_ag_2026_06_21.md:461-489`, marked `[x]` done for bookmaker venues via a
+      `BOOKMAKER_NO_COVERAGE` reclassify), but these alert-batch instances run through 2026-07-13 — AFTER that fix
+      landed — worth verifying whether the fix's venue/date coverage is actually complete or these are a residual gap.
+- [ ] [DATA] P2 **NOT YET COVERED**: `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%) —
+      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z (same batch as the sports/trades failures
+      above — likely same root run). NOT found tracked anywhere in `plans/active/` (only hit is an unrelated chaos-test
+      scenario file). Small absolute count (66) but 100% ratio triggered the alert; needs its own investigation into
+      what's malformed and why.
+
+### Post-reconciliation progress
+
+- 2026-07-15 (background research agent): completed the ohlcv_15m/ohlcv_24h audit todo above. Full findings + the
+  shipped CBOE fix + 2 new scoped follow-up todos are in
+  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+  ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
+- 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a new
+  todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4 existing
+  routing layers cited) before discovering the above agent's work had already landed. Added value rather than
+  duplicating: a live re-query of the tradfi tick manifest that corrects the existing write-up's "YAHOO_FINANCE is the
+  dominant contributor" claim for `ohlcv_15m` (it's actually zero — NYSE/CBOE dominate) and traces the concrete reason
+  the alert keeps firing despite the routing gap being closed: `deployment-service`'s DP-FETCH-009 detector
+  (`_read_attempted_failed_cells`) counts `attempted_failed` over the WHOLE manifest with no date-recency window, so the
+  ~6,400 combined stale (8+ day old, non-regenerating) `ohlcv_15m`/`ohlcv_24h` rows alone permanently exceed its 500-row
+  absolute threshold. Filed as a "Verification addendum" section in the issue doc (§ "Verification addendum — live
+  manifest re-query + alert-persistence root cause") rather than a rewrite. No code shipped (nothing left to build for
+  this finding) and the plan checkbox above was correctly already `[x]` — left as-is. Recommends this alert-persistence
+  mechanism (whole-history count, no recency window) be looked at as ONE unified follow-up alongside the mbp_10 and
+  corporate_action_confirmed/earnings_result stale-row questions already flagged elsewhere in this doc, rather than
+  three separate piecemeal decisions.
+
+## Reconciliation round — closing report (2026-07-15)
+
+All 3 dispatched follow-up fixes from the operator-decision round are complete:
+
+1. **Cefi orphan rows (BOTH, as decided)**: tool hardening shipped `instruments-service@dd6b4e826` (generalized the
+   blank-`data_type` blind-spot fix beyond the schema_version==4 special case it was previously limited to). The
+   9,757-row deletion executed with real production-data rigor: re-verified the exact predicate and the 99.0%
+   cross-reference live before touching anything, discovered mid-task that the originally-planned deletion mechanism was
+   unsafe (a frozen legacy snapshot would have let the rows silently resurrect), routed around it with a direct
+   atomic-CAS canonical rewrite, and verified before/after row counts match exactly (11,238,191 → 11,228,434, `-9757`,
+   `captured` count unchanged). Filed the resurrection-risk discovery as its own issue
+   (`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) rather than attempting a fix under time pressure —
+   it's a broader latent risk potentially affecting other buckets too, and genuinely needs its own investigation.
+2. **Tradfi ohlcv_15m/24h (audit-first, as decided)**: operator's prior confirmed correct — the per-venue
+   source-capability infrastructure substantially already exists in UAC (`VENUE_DATA_TYPE_CAPABILITIES`,
+   `data_source_continuity.py`). Found and fixed one genuinely stale entry (`unified-api-contracts@78b9e899` — a
+   leftover CBOE `ohlcv_15m` registry entry from a Yahoo-VIX feed retired 2026-06-25/26). Honestly flagged two real gaps
+   instead of forcing fixes: no downstream OHLCV-aggregation writer exists despite 3 places in the codebase claiming one
+   does (feeds `vix_features`), and a phantom `YAHOO_FINANCE` venue with no adapter is likely the dominant remaining
+   failure-count contributor (same misclassification shape as the corp-actions fix, flagged not deleted per an existing
+   "manifest churn" warning).
+3. **Corp-actions (as decided)**: `instruments-service@03f71c81a` stops seeding `corporate_action_confirmed`/
+   `earnings_result` into the MTDS tick manifest, scoped precisely to that seeding path only (UAC's shared registry left
+   untouched, confirmed via regression test). Correctly detected a real cross-agent dependency (needed finding-2's CBOE
+   fix to land first for its golden-fixture test to pass) and waited rather than forcing a red gate through. Historical
+   already-seeded rows left as a documented follow-up, matching the mbp_10 precedent.
+
+**New items surfaced this round** (not yet acted on, correctly not rushed): the legacy-seed resurrection risk (cefi,
+likely also defi/tradfi), the missing OHLCV-aggregation writer, and the phantom `YAHOO_FINANCE` venue — all
+filed/documented, none blind-fixed.
+
+**Total for the full session**: 10 code fixes shipped and independently verified across 6 repos (`alerting-service`,
+`deployment-service`×2, `features-service`, `market-tick-data-service`×2, `unified-trading-library`,
+`unified-api-contracts`, `instruments-service`×2), all via `quickmerge` with passing tests and green quality gates; 1
+fix corrected after adversarial verification caught an overstatement; 3 genuine new issues filed rather than papered
+over; 1 item deliberately parked per operator decision; 1 item deliberately left at its existing scope per operator
+decision. This plan's original ask is now substantively addressed — remaining open items are either freshly-discovered
+follow-up work (expected outcome of a real audit) or explicit operator-parked decisions, not gaps in effort.
