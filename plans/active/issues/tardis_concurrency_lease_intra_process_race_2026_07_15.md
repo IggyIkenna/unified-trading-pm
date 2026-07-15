@@ -150,14 +150,22 @@ not mutually exclusive:
 Recommend (1) as the minimal, surgical fix — it directly targets the singleton race without changing the
 already-verified CAS/GCS lease mechanics or the (unrelated, working) download concurrency model.
 
-- [ ] [BACKEND] P1. Fix `ensure_process_lease_acquired()`
+- [x] ✅ [BACKEND] P1. Fix `ensure_process_lease_acquired()`
       (`market_tick_data_service/market_interface/clients/tardis_concurrency_lease.py:262`) so concurrent callers
       actually await the in-flight acquisition instead of skipping past a synchronously-set boolean flag (see option (1)
       above — an `asyncio.Event`/shared `Future` the first caller resolves once `lease.acquire()` returns). Add a
       regression test that spawns N concurrent callers before the first `acquire()` resolves and asserts only ONE real
       `lease.acquire()` call fires while the rest block until it resolves (extend the existing
       `tardis_concurrent_ip_lockout_2026_07_12.md` Harness A/B pattern — real GCS CAS, no mocks). (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@53431680. Replaced the boolean `_process_lease_attempted`
+      fast-path with a `threading.Event` (`_process_lease_ready`) set only after the winning caller's `lease.acquire()`
+      resolves (success or fail-open, via `try/finally` so an exception can't deadlock the waiters); every other
+      concurrent caller now blocks on that event instead of returning immediately. Added
+      `test_concurrent_callers_wait_for_inflight_acquire_not_skip_past` (16 threads racing a slowed `acquire()`,
+      asserting zero callers return before it resolves + exactly one real `TardisConcurrencyLease` is constructed) to
+      `tests/market_interface/unit/test_tardis_concurrency_lease.py`, extending the existing real-CAS
+      (`_FakeStorage`-backed, generation-aware, no naive mocks) harness pattern from this file / the 2026-07-12
+      enablement smoke-test. Full `quality-gates.sh` green on the committed HEAD.
 - [x] ✅ [SCRIPT] P2. Once fixed + verified, re-audit the `attempted_failed` rows the 3 relaunched cefi-queue-\* VMs
       wrote during this session's race window (`cefi-queue-light-binancefutu-x2-20260715-202013`, date=2026-01-02
       primarily) — distinguish genuine no-data shards from this-bug-caused false failures (e.g. via `error_reason`
@@ -215,3 +223,22 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
     anything to `expected_unattempted` this session (dry-run only) — every launcher since 2026-07-13 that hit a
     cold-process concurrent fan-out on a non-free date is a plausible source, so a blind flip-and-refetch before `-001`
     ships would just reproduce all 21,982 failures again.
+- **2026-07-15T22:1xZ (backend_engineer, slot-7, task `tardis_concurrency_lease_intra_process_race-001`)**: Shipped todo
+  (1) — the lease fix. `market-tick-data-service@53431680`. Root cause confirmed at `tardis_csv_transport.py:51`'s
+  `_ensure_tardis_concurrency_lease()`: it dispatches the sync `ensure_process_lease_acquired()` to a thread-pool
+  executor once per concurrently-gathered coroutine (up to `tardis_max_concurrent_downloads=16`), so the module
+  singleton races across real OS threads, not just asyncio tasks. Applied option (1) from the recommendation: replaced
+  the `_process_lease_attempted` boolean fast-path with a `threading.Event` (`_process_lease_ready`) that is set only
+  after the winning caller's `lease.acquire()` resolves (wrapped in `try/finally` — an unhandled exception in
+  `acquire()` must still release the waiters, or the fix would trade the skip-past race for a new deadlock); every
+  concurrent caller — whether it hits the flag pre-set or loses the lock race — now blocks on that event instead of
+  returning immediately. Full `bash scripts/quality-gates.sh` run green **twice**: once against the working tree before
+  commit (caught nothing to fix), then re-run after commit so the `.qg_last_passed_sha` sentinel matched the shipped
+  HEAD before `quickmerge --agent` (the correct order is commit-then-QG, not QG-then-commit — noted here in case this
+  sequencing gap trips up a future session). Added `test_concurrent_callers_wait_for_inflight_acquire_not_skip_past` —
+  races 16 threads against a slowed `acquire()` and asserts (a) zero callers return before it resolves and (b) exactly
+  one `TardisConcurrencyLease` is ever constructed — using the same real-CAS `_FakeStorage` harness the rest of
+  `test_tardis_concurrency_lease.py` already uses (generation-aware, no naive return-value mocking), per the todo's ask
+  to extend the 2026-07-12 Harness A/B pattern. Todo (3) (the corpus-wide `--apply --confirm-lease-fix-shipped` re-flip
+  of the 21,982 race-caused `attempted_failed` rows) is now unblocked — its prerequisite (this fix shipped) is
+  satisfied.
