@@ -403,3 +403,23 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   preemption). Deferred (launcher is a shared macOS-untestable script; only worth it if the plain relaunch keeps failing
   to progress). Full af=0 all-history stays ~2-3 weeks (cap-3 ceiling) regardless.
 - Phase-1 code remains DONE + landed; this is purely backfill throughput under the operator's cap-3 + SPOT constraints.
+
+### 2026-07-15T18:15Z — tick 10: CAP VIOLATION found (4 VMs) → protectively reduced to a clean heavy+light pair
+
+- Found **4 Tardis VMs RUNNING > cap 3** — a launch RACE: 3 identical heavy VMs (cefi-queue-heavy-173940/174106/174244,
+  all 2026-01-01..07-14 trades;book5 SPOT) + 1 light (cefi-queue-light-174110, deriv_ticker;liquidations;futures_chain).
+  Only 174106 was mine (my 17:41 relaunch); **another process launched the other heavies + the light** ~17:39-17:44 →
+  guard raced (each saw <3 before creating). The original historical queue VMs (20260714/20260715-105207) had died
+  (SPOT) — so the fleet is now all-2026.
+- **PROTECTIVE ACTION** (cap-3 hard rule, N>3 collapse risk = protective-kill autonomy): deleted the 2 redundant
+  duplicate heavies (173940, 174244). Fleet now = **cefi-queue-heavy-174106 (trades+book5) + cefi-queue-light-174110
+  (deriv_ticker+liquidations+futures_chain)** = COMPLETE 2026-tail coverage (all data types), N=2 (higher efficiency,
+  under cap).
+- **KEY REALIZATION**: a SEPARATE process (orchestrator or another agent) is ALSO managing the CeFi tail backfill (it
+  launched the light + 2 heavies). My manual SSM launching RACES with it → over-cap. → **Shift to MONITOR-primarily**:
+  verify fleet ≤3 + tail filling; only relaunch if the fleet drops to 0-1 tail VMs AND stays down a full tick (don't
+  aggressively relaunch — let the other manager act first); ALWAYS re-verify ≤3 after any launch and kill duplicates.
+  Historical 2020→2026 sweep is currently NOT running (queue VMs died) — the other manager may relaunch it; if not,
+  that's the ~2-3wk af=0 work, lower priority than the tail.
+- Both tail slices (heavy+light) now cover the empty 2026-06+ tail (still chronological-from-Jan, SPOT-preemptible). Net
+  state is HEALTHY at N=2.

@@ -158,14 +158,41 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       (honest-coverage model: a retired data_type's historical rows stay, they don't vanish); (c) stop capturing
       perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes as "keep both — parity report explains why".
       Repos: market-tick-data-service, features-service, unified-api-contracts.
-- [ ] [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data adapters +
-      factory registration + tests exist; zero MTDS capture; not in the venues list / `VENUES_BY_ASSET_GROUP`). Decide:
-      (A) complete onboarding (add to the venues list + build MTDS capture incl. derivative_ticker per the 2026-07-15
-      ruling), or (B) delete the whole vertical slice (3 IS adapters + their tests + factory registrations +
-      `venue_adapter_keys.py:224-226`) per the no-shims/delete-deprecated-code rule. Do NOT delete the keys alone — that
-      breaks `reference_data/factory.py`. Repos: instruments-service, unified-api-contracts.
+- [x] ✅ [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data
+      adapters + factory registration + tests exist; zero MTDS capture; not in the venues list /
+      `VENUES_BY_ASSET_GROUP`). Decide: (A) complete onboarding, or (B) delete the whole vertical slice. — **RULED (B)
+      DELETE, operator 2026-07-15**: _"OK so let's kill them all — clear them from everything, delete any data from them
+      and catalogue/MVP/manifest entries. They are useless. Without exception."_ EXECUTED + VERIFIED:
+      **`instruments-service@9f7ffb27`** (3 adapters + factory imports/registrations + 3 metadata test files deleted;
+      cases pruned from the 3 shared test files; docs updated; QG green) · **`unified-api-contracts@70e7a697`**
+      (`venue_adapter_keys.py` 3 venue keys + `_defi_chain_data.py` 3 `SOLANA_DEFI_PROTOCOLS` entries removed, with
+      tombstone comments carrying the ruling + evidence so they cannot be silently re-added; QG green 310s, sentinel ==
+      HEAD `7754661a`) · **codex `unified-trading-pm@fbe7d7941`** (5 docs) · **data side
+      `unified-trading-pm@dba7a5545`** (VERIFIED-ZERO: catalogue 10,387 rows / manifest 27,955,143 rows / bounded raw
+      tick scan / BigQuery — nothing existed to purge; no purge script needed). **Verification** (coordinator,
+      2026-07-15 18:3x): live-code blast-radius grep across all 6 code repos = **ZERO hits** (only the intended
+      tombstone COMMENTS remain); the 3 adapter files confirmed absent from disk;
+      `from instruments_service.reference_data.factory import *` → `factory imports OK` (no dangling imports).
+      **Token-vs-venue guard HELD**: `ZETA` still present in `cefi_instrument_universe.py` and the data agent confirmed
+      14 legitimate MNGO/ZETA **token** rows across 9 CeFi venues (BINANCE-FUTURES/BYBIT/HYPERLIQUID/KRAKEN/ OKX/…)
+      untouched — every query scoped to the `venue` column, never a symbol substring. `FLASHBOTS` (distinct MEV relay)
+      and a coincidental base58 address containing "Zeta" also correctly preserved.
 
 ## Progress log
+
+- 2026-07-15 (coordinator, autonomous close-out) — **CI-verified fleet-green; one real ordering defect found + fixed.**
+  The consumer-first ship order I dispatched (instruments-service BEFORE unified-api-contracts) INVERTED the cross-repo
+  invariant `UAC VENUE_TO_ADAPTER_KEY ⊆ IS factory._ADAPTERS`: is@9f7ffb27 removed the adapter classes at 17:48 while
+  UAC still declared the 3 venue keys, so instruments-service CI run 29440517050 (sha 1aeb5e3c, 18:26Z) went RED on
+  `test_adapter_routing_uac_invariant::test_every_uac_adapter_key_resolves_to_a_class` +
+  `test_factory_comprehensive::test_adapter_data_sources_covers_all_adapters` for a ~50-minute window. Root cause was
+  the ORDER, not the deletion: for a "provider declares, consumer implements" invariant the PROVIDER (UAC) must shed the
+  declaration FIRST, or both repos must land inside one promotion. Closed by uac@70e7a697 (18:40Z); verified directly
+  (`VENUE_TO_ADAPTER_KEY` ∩ {MANGO,ZETA,FLASH} = ∅; only the pre-existing `__no_adapter_yet__` sentinels remain, which
+  the tests allowlist via known_gaps), then the SAME failing run's workflow was manually re-dispatched (rule 10) → run
+  29441021802 sha 1aeb5e3c **conclusion=success**. unified-api-contracts CI green both runs. **Lesson for the next venue
+  removal** (worth honouring, this class recurs): ship the UAC registry deletion FIRST, then the IS adapter deletion —
+  or accept a red consumer window and say so up front.
 
 - 2026-07-15: Filed from the operator's ruling in the main session, following the funding dual-capture investigation
   (perp_funding vs derivative_ticker). Parity check deliberately gated on the DRIFT backfill grind finishing so it

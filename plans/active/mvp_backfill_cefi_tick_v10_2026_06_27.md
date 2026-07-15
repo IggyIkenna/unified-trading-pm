@@ -2979,3 +2979,177 @@ one-time `collect-onchain-perp-batch` historical-day script per the 2026-07-13 r
 `issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` (that issue's own P3 says "left for
 whoever picks up"); (2) G4's gate baseline is void — it was cut against the pre-Layer-1-100% lower-bound readings and
 must be re-cut against the now-complete denominator.
+
+### Operator-directed legacy-naming audit — 6.6% of the fleet's target ALREADY EXISTS (legacy instrument-id filenames) — 2026-07-15T18:05Z
+
+Operator asked (verbatim): "check flat buckets and within buckets to ensure the 1m+ you are setting up vms for
+definitely dont have those instrument and data types under alternative naming patterns non canonical". Answer,
+evidence-backed (read-only audit, single-walk discipline — targeted prefix probes + bounded index reads, no corpus
+walk):
+
+1. **Flat/legacy bucket: nothing hidden.** `market-data-tick-cefi-central-element-323112` (the "MERGE DISABLED" twin)
+   **no longer exists** — `ls`/`describe`/`gsutil ls -b` all return 404 (vs a _distinct_ 403 for the prd bucket this SA
+   can't `buckets describe` — the 404-vs-403 asymmetry is the proof, cross-checked against a fabricated-name negative
+   control). Corroborated independently by this plan's own 2026-07-14T07:56Z entry, which found it **existed but was
+   already completely empty**. It was deleted in the last ~24-36h (empty-bucket cleanup per
+   `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6). "MERGE DISABLED for cefi" fires from
+   `measure_honest_coverage.py:474-480` purely because the candidate bucket is unreadable — it is NOT masking data.
+2. **Venue-spelling aliases: dead residue, zero recoverable data.** Queried the prd `_index/availability_index` (207MB)
+   for BINANCE / BITGET / OKEX / OKEX-SWAP / OKEX-FUTURES / CRYPTOFACILITIES → **zero `captured` rows in any** (e.g.
+   CRYPTOFACILITIES: 122,845 rows, 0 captured). Already scoped for verify→migrate→delete by
+   `cefi_completion_program_2026_07_15.md` workstream C. Closed question.
+3. **🔴 REAL FINDING — legacy INSTRUMENT-ID filenames inside the fully-canonical path.** Files are written under two
+   parallel iid conventions: legacy bare exchange symbol (`AAVEUSDT.parquet`) vs canonical `VENUE:TYPE:BASE-QUOTE`.
+   Orchestrator VERIFIED directly:
+   `…/day=2026-03-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=BITGET-FUTURES/instrument_type=perpetual/data_type=trades/`
+   lists `0GUSDT.parquet`, `1INCHUSDT.parquet`, `2ZUSDT.parquet`, `AAPLUSDT.parquet`, `AAVEUSDT.parquet` — real captured
+   data the canonical MVP view still counts as `expected_unattempted`. Overlap quantified against the 4 running VMs'
+   ~1,426,669-cell target:
+
+   | VM                  | scope                               | eu target | overlap            | verdict            |
+   | ------------------- | ----------------------------------- | --------- | ------------------ | ------------------ |
+   | `…-173940`          | BINANCE-FUT+BITGET-FUT trades+book5 | 536,408   | 10,305 (1.9%)      | fetch is correct   |
+   | `…-174110`          | same venues, derivative_ticker      | 268,204   | **50,951 (19.0%)** | mixed — real slice |
+   | `…-174244`          | OKX-SPOT+BINANCE-SPOT trades+book5  | 335,094   | 32,535 (9.7%)      | mixed              |
+   | `cefi-aster-2026-…` | ASTER trades+derivative_ticker      | 286,963   | 0                  | fetch is correct   |
+
+   **Total 93,791 cells (~6.6%) are relabel-not-refetch; ~93.4% is confirmed genuinely absent** (sampled across 6 dates
+   2026-02-20→2026-07-10; later dates return literal no-objects).
+
+**Decision (this lane): fleet KEEPS RUNNING** — killing it to save 6.6% would forfeit the 93.4% that genuinely needs
+fetching. **But the relabel is required regardless**, and this is already OPERATOR-RULED in
+`issues/instrument_id_format_canonicalization_2026_07_08.md`: "rewrite/relabel already-downloaded data in place… never
+leave a legacy-format historical range unfixed" — explicitly NOT a re-download. Its GCS/filename migration stage simply
+hasn't executed. **New consequence to flag**: letting the VMs re-fetch these 93,791 cells will write canonical-named
+files ALONGSIDE the surviving legacy-named ones → a DUAL-SoT pair per cell in the same path, which the canonical-form
+HARD RULE bans. So the legacy files must be relabelled or deleted whether or not the fetch happens. Owning plan:
+`canonical_instrument_id_cefi_defi_backfill_2026_07_14.md` (status: active, 1 open todo) — this quantified per-venue
+overlap is handed to it below.
+
+**UNKNOWN, not glossed**: Tardis billing granularity (per-symbol-day vs per-exchange-day) was not traced, so the dollar
+cost of the 6.6% duplicate fetch is unquantified; the academic key looks concurrency-limited rather than
+per-request-billed, in which case the cost is VM time (~6.6%), not money.
+
+### Live-only 5-tuple no-batch-source fix lands — denominator drops 196,120 cells, coverage 50.49%→52.18% — 2026-07-15T18:23Z
+
+Operator ruling (verbatim, refining the 2026-07-13 BLK-afc672cf decision this plan's
+`issues/ cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` previously closed): "no i mean
+empty confirmed being in denominator is fine BUT its the literally impossible combinations i dont even need in empty
+confirmed like a data type that literally short of magic cannot physically be retrieved for a venue that's what i mean."
+The prior fix (typed `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` rows for the 6 live-only tuples) is
+superseded, not supplemented — the operator doesn't want a row AT ALL for a batch-impossible cell, not even an empty
+one.
+
+**Implemented option (c)**: a new batch-vs-live capability axis, `VENUE_DATA_TYPE_NO_BATCH_SOURCE`, added to UAC
+(`unified-api-contracts@7754661a`) for the 5 tuples that ARE declared live capabilities but have ZERO batch/historical
+source (LIGHTER-ZKSYNC trades+book_snapshot_5, ASTER book_snapshot_5, EXTENDED-STARKNET book_snapshot_5, PACIFICA-SOLANA
+book_snapshot_5). **COINBASE-CDE/trades excluded from this set** — verified it gained a REAL native-REST batch adapter
+(`market-tick-data-service@28ad6b38`, `adapters/coinbase_cde_batch.py`) on 2026-07-13, with its `venue_mapping.py`
+start_date already updated to 2025-12-12 (2026-07-14) — it is no longer a live-only-no-batch-source case, so its 450 eu
+cells are a genuine, fetchable backfill gap, left untouched. Wired the new UAC axis into instruments-service's
+`expected_universe.py` (Carve-out 1b, gates Layer-1 EXPECTED + the Layer-2 MVP read-time filter) and
+`enumerate_expected_universe.py`'s `_row_data_types` (the per-instrument-day WRITER, so no NEW eu rows seed for these
+cells going forward either) — `instruments-service@1aeb5e3c`. Removed the now-unnecessary typed-empty-row write in
+MTDS's `OnchainPerpBatchHandler` (`_onchain_perp_batch_live_only.py` — deleted `record_live_only_empty_rows` +
+`LIVE_ONLY_DATA_TYPES`, now imports UAC's `venue_data_type_has_batch_source` directly) — shipped
+`market-tick-data-service@0f0cc598`. All 3 repos' `quality-gates.sh` green (fresh runs, sentinel-verified, not cached);
+golden fixture `tests/unit/scripts/goldens/expected_universe/cefi.json` regenerated (79→74 tuples) and 3 pre-existing
+tests that asserted the OLD "ASTER book_snapshot_5 must be seeded" behavior flipped to the new exclusion.
+
+**Skipped the originally-scoped Part 1** (a VM-based historical backfill writing MORE typed-empty rows for
+2026-02→2026-07-14): once the enumerator/expected-universe fix lands, these 5 tuples vanish from the denominator
+entirely (no eu, no empty_confirmed needed), making that backfill redundant work the operator explicitly ruled out —
+"don't burn a VM on typed-empty-row writes you're about to make unnecessary." No VM launched; no Tardis-cap contention
+added to the 3-VM fleet already running (`cefi-queue-heavy-*`/`cefi-queue-light-*`/`cefi-aster-2026-*` from the
+17:39-17:45Z re-cut wave above, untouched by this work).
+
+**Real measured before/after** (`measure_honest_coverage.py --asset-group cefi`, fresh runs against the live
+pinned-primary manifest, both this session):
+
+| field                   | pre-fix (17:18Z, `cov_1718.json`) | post-fix (18:23Z, `cov_after_fix.json`)      |
+| ----------------------- | --------------------------------- | -------------------------------------------- |
+| expected_unattempted    | 2,969,412                         | **2,773,292** (−196,120, exact)              |
+| empty_confirmed         | 1,227,739                         | 1,059,752                                    |
+| captured                | 3,056,663                         | 3,057,681 (fleet still capturing, unrelated) |
+| coverage_pct            | 50.49%                            | **52.18%**                                   |
+| layer1_completeness_pct | 100.0                             | 100.0 (unchanged — still green)              |
+| denominator_complete    | True                              | True (unchanged)                             |
+
+All 5 target tuples return `None` from `by_venue_data_type.cefi[VENUE][DT]` post-fix — confirmed absent from the Layer-2
+view entirely via direct JSON query (not eyeballing). `COINBASE-CDE/trades` unchanged (450 eu preserved, as intended).
+Layer-1's raw EXPECTED set dropped 79→74 tuples; the 5 removed tuples now show as Layer-1 STRAY
+(writer-emits-a-row-UAC-doesn't-sanction — the historical rows already written for these cells before the fix are
+harmless leftovers, not re-derived or deleted), never MISSING — no Layer-1 regression.
+
+**Deliberately left in place**: the historical typed-empty rows written 2026-07-11 + the eu skeleton materialised for
+these 5 tuples since (~196,120 rows across 2026-02→2026-07-14) are NOT bulk-deleted from the manifest — they are inert
+stray rows, invisible to every reported view via the Carve-out 1b filter, and a bulk-delete migration on the live,
+heavily-contended cefi manifest (4 VMs writing concurrently right now) was judged not worth the risk for a cosmetic
+cleanup with zero effect on any measured number.
+
+**Also dispatched** (2026-07-15, read-only, background): a wider-sweep research sub-agent auditing UAC's
+`VENUE_DATA_TYPE_CAPABILITIES`/`INSTRUMENT_TYPES_BY_VENUE` for OTHER "short of magic" impossible combos beyond these 5
+(per the operator's "sweep wider" ask) — findings will land in
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md`'s Progress Log once it returns;
+does not block this entry.
+
+### ✅ Impossible-combos ruling IMPLEMENTED + MEASURED — eu −196,120, coverage 50.49% → 52.18% — 2026-07-15T18:30Z
+
+Operator ruling (2026-07-15, verbatim): _"empty confirmed being in denominator is fine BUT its the literally impossible
+combinations i dont even need in empty confirmed like a data type that literally short of magic cannot physically be
+retrieved for a venue"_. This NARROWED the 2026-07-13 ruling on the same cells (which chose option (b) — keep in
+denominator + write typed `empty_confirmed`); the operator now wants impossible-for-batch tuples simply NOT ENUMERATED.
+Shipped across 3 repos:
+
+- `unified-api-contracts@7754661a` — NEW `VENUE_DATA_TYPE_NO_BATCH_SOURCE`: the batch-vs-live capability axis (SSOT home
+  for the knowledge that previously lived only in MTDS's `_LIVE_ONLY_DATA_TYPES` dict).
+- `instruments-service@1aeb5e3c` — enumerator excludes no-batch-source tuples from the BATCH expected/reachable universe
+  (they are never seeded, so they appear as neither `expected_unattempted` NOR `empty_confirmed`).
+- `market-tick-data-service@0f0cc598` — stops writing the now-superseded typed empty rows.
+- The tuples remain intact for LIVE mode (WS streams still expected) — deletion from UAC wholesale was deliberately NOT
+  done; it would have broken live and silently narrowed MVP scope (the exact tradeoff the 07-13 analysis flagged when it
+  rejected option (a)).
+
+**MEASURED before → after** (`measure_honest_coverage --asset-group cefi`, real runs, not predictions):
+`expected_unattempted` 2,969,412 → **2,773,292** (**−196,120**); `coverage_pct` 50.49 → **52.18**;
+`layer1_completeness_pct` 100.0 → 100.0; `denominator_complete` True → True (the fix did NOT re-break Layer-1). The
+−196,120 vs the predicted −196,570 is a **correct** 450-cell difference: COINBASE-CDE/trades was rightly NOT excluded —
+it gained a real native-REST batch adapter on 2026-07-13 (`coinbase_cde_batch.py`), so it is fetchable, not impossible.
+
+**Wider impossible-combo sweep (operator asked for the whole class): NO further HIGH-confidence candidates.** Four
+suspects were ruled OUT against LIVE Tardis metadata rather than assumed: OKX-FUTURES/PERPETUAL (118,196 captured rows —
+real, legacy pre-split tagging), LIGHTER-ZKSYNC/derivative_ticker (real ticker channel since 2026-04-17 — an
+un-backfilled gap, not an impossibility), BITGET-FUTURES/FUTURE (live-confirmed 1,081 symbols), CBOE/ohlcv_24h (real
+Yahoo path). Only `BARCHART: ohlcv_15m` is stale-dead — but it is already unreachable by both Layer-1 and Layer-2 (zero
+instruments carry venue=BARCHART since the 2026-06-24 removal), so it contributes 0 eu; hygiene-delete on next touch of
+that file, not a denominator bug. Sports odds-type declarations flagged as needing their own coverage snapshot before
+any deletion call (out of cefi scope).
+
+### Fleet reconciled with the peer manager + queue-VM names now encode scope — 2026-07-15T18:35Z
+
+**Coordination incident, resolved, no work lost.** slot-3's tick-10 (PM@7669ee744) found 4 Tardis VMs > cap and
+protectively deleted `cefi-queue-heavy-173940` + `-174244` as "3 identical heavy VMs … duplicates". They were NOT
+duplicates — they carried DIFFERENT venue scopes (173940 = BINANCE-FUTURES+BITGET-FUTURES; 174244 =
+OKX-SPOT+BINANCE-SPOT). Root cause is a real naming defect, not a judgement error: `cefi-queue-{group}-{ts}` encodes
+NOTHING about scope, so distinct work is indistinguishable in `gcloud compute instances list`. Their protective instinct
+was right (cap-3 is a hard rule); the names lied to them. **Net effect: nothing lost** — their surviving
+`cefi-queue-heavy-174106` covers ALL 15 venues heavy, a strict superset of both killed VMs; only parallelism was traded
+away (and with the lease serialising, 3 VMs ≈ 1.5-2 VM-equivalents, so the loss is modest).
+
+**Root-cause fixed** (deployment-service, quickmerged, QG-green): queue VM names now encode scope —
+`cefi-queue-{group}-{firstvenue-short}[-x{N}]-{ts}`, e.g. `cefi-queue-heavy-binancefutu-x2-20260715-183058` (47-48
+chars, inside GCE's 63 limit). `cefi-queue-` remains the leading prefix so `VM_PREFIX_TO_BUCKET` longest-prefix matching
+(`deployment_service/vm_prefix_registry.py:123`) still resolves — verified before shipping, not assumed.
+
+**Fleet now (at cap, ZERO overlap):**
+
+| VM                                 | scope                                                     | cap?                                     |
+| ---------------------------------- | --------------------------------------------------------- | ---------------------------------------- |
+| `cefi-queue-heavy-174106` (slot-3) | all 15 venues, trades+book5, 2026-01-01+                  | ✅ Tardis                                |
+| `cefi-queue-light-174110` (mine)   | BINANCE-FUTURES+BITGET-FUTURES derivative_ticker          | ✅ Tardis                                |
+| `cefi-queue-light-183058` (mine)   | BYBIT+OKX-SWAP+KRAKEN-FUTURES+BITFINEX-FUTURES deriv_tick | ✅ Tardis                                |
+| `cefi-aster-2026-174321` (mine)    | ASTER trades+derivative_ticker (native REST)              | ❌ non-Tardis, correctly outside the cap |
+
+3 Tardis VMs = exactly at cap. Remaining uncovered non-Tardis derivative_ticker eu (HYPERLIQUID 70,168 + LIGHTER-ZKSYNC
+70,181 + EXTENDED-STARKNET 28,190 + PACIFICA-SOLANA 4,220 ≈ 172,759) rides `launch-cefi-hl-aster-historical-backfill.sh`
+and does NOT consume Tardis slots — next launch when the ASTER VM frees, or in parallel if capacity allows.
