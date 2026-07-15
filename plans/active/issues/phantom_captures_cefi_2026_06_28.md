@@ -2,7 +2,7 @@
 doc_type: issue
 title: Phantom captures — cefi manifest (2026-06-28)
 summary: "Manifest: `gcp://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`"
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,12 +15,17 @@ parent_epic: observability_master
 priority: P2
 source: [reconcile_phantom_manifest_rows_all.py, mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)]
 assigned_vm: NA
-resolved_by:
+resolved_by: |
+  instruments-service@dd6b4e826 (tool hardening + delete), unified-trading-library@f14b13ae (Part 1 tie-break
+  demotion), unified-trading-library@8e783d70 (Part 2 legacy-seed exclusion, closed the deletion-resurrection gap).
+  Delete re-confirmed held live across ~29 min / 10+ consolidator cycles incl. a mode=full rebuild — see the
+  2026-07-15 re-verification section below. Cross-referenced:
+  plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md.
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-15 (multi-cycle live hold confirmed)
 locked_since: 2026-05-21
 ---
 
@@ -313,3 +318,75 @@ session (ad hoc diagnostic + the committed one-off delete script; single-read di
 walk). Code fix + test: `instruments-service@dd6b4e82650a0fa54111eb6268cf274cea510407` ("fix(instruments-service):
 harden phantom-audit blank-data_type filter + delete 9,757 confirmed-stale cefi orphan rows"), landed on
 `live-defi-rollout` via quickmerge, full `quality-gates.sh --no-fix` green (117s, sentinel-verified) before ship.
+
+## 🟢 2026-07-15 (re-verification session) — delete RE-CONFIRMED, held across ~29 min / 10+ consolidator cycles incl. a full rebuild — status flipped RESOLVED
+
+Operator-dispatched re-verification session, following the earlier same-day resurrection (documented in
+`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) and its Part-1 tie-break fix
+(`unified-trading-library@f14b13ae`). Task: re-verify current state, re-execute the delete if needed, and hold-monitor
+across multiple real consolidator cycles before declaring success.
+
+**Pre-verification found a second, undocumented resurrection had already occurred and already been fixed by a concurrent
+session before this one started acting** — this doc and the linked issue doc had not yet been updated to reflect it, so
+it is recorded here for the first time:
+
+- **Part 1 alone was insufficient.** `unified-trading-library@f14b13ae`'s captured-outranks tie-break demotion only
+  protects a STATE-FLIP correction (a newer non-captured row beating the frozen seed's stale `captured` claim for the
+  SAME key). It does **not** protect a DELETION correction — when a row is removed from the canonical outright (this
+  doc's own delete), there is no competing row left for any tie-break to apply to, so the frozen `_legacy_seed.parquet`
+  row survives trivially on the next **full rebuild**. This gap was confirmed live: the sanctioned delete reverted again
+  on a real production `--force`/full-rebuild cycle even with Part 1 deployed.
+- **Part 2 shipped to close it**: `unified-trading-library@8e783d7015a5c93fd54c5579605631c50dd7f0b6` ("fix(manifest):
+  exclude legacy seed from full-rebuild/canonical-merge entirely to close deletion-resurrection gap (Part 2)") —
+  excludes the legacy-seed shard from the full-rebuild merge path entirely (`manifest_consolidator.py`) and from
+  `_read_and_merge_per_vm_shards`/`merge_canonical_with_outstanding_shards`/`rebuild_manifest_from_canonical_paths`
+  (`_read_index.py`, `_maintenance.py`) whenever an independent current-truth source (a canonical, or a fresh GCS walk)
+  already exists — the seed can then only ever re-contribute rows the current truth has since proven deleted/corrected.
+  3 new regression tests. Deployed to the actual running consolidator: `market-tick-data-service@48857be4` (Dockerfile
+  `BASE_IMAGE_DIGEST` bump to `sha256:7b9a94ea90ce2b5594000520758005bfc37e2c77785e571c043947ff4a77c9ae`), Cloud Build
+  `559fc09b` SUCCESS 2026-07-15T10:51:39Z, pushed to `market-tick-data-service:latest` — the exact image the
+  `uts-prod-manifest-consolidator-market-data-cefi` Cloud Run Job runs (confirmed by execution-level digest match, not
+  just "build succeeded," below).
+- A concurrent session re-ran this doc's own delete script
+  (`instruments-service/scripts/delete_cefi_blank_data_type_orphan_rows_2026_07_15.py --apply`) against the Part-2-fixed
+  canonical shortly before this re-verification session began acting: backup
+  `gs://market-data-tick-cefi-prd-central-element-323112/_migration_backup/delete_cefi_blank_data_type_orphan_rows_2026_07_15/availability_index_pre_delete_20260715-110204.parquet`
+  (taken 2026-07-15T11:02:22Z), canonical write landed 2026-07-15T11:03:32Z. This session found that state already in
+  place on its first live query — the historical predicate
+  (`capture_status=='attempted_failed' & data_type=='' & error_reason=='phantom_captured_no_parquet_at_canonical_path' & attempted_at=='2026-06-28T03:12:34.851168+00:00'`)
+  matched **0 rows**, and the BROADER predicate this session's own instructions specified
+  (`capture_status='attempted_failed' AND (data_type=='' OR data_type IS NULL)`, and separately ANY `capture_status`
+  with blank `data_type`) also matched **0 rows** — confirmed via a fresh raw canonical-only read (single-read
+  discipline, no whole-corpus walk).
+
+**Multi-cycle live hold verification (this session, real wall-clock, no backgrounding)**: found the
+`uts-prod-manifest-consolidator-market-data-cefi-cron` Cloud Scheduler job PAUSED (consistent with the concurrent
+session's own in-flight recovery procedure — SSOT recipe: pause cron → snapshot → force-rebuild → bump+rebuild image →
+re-enable cron). Monitored real `gcloud run jobs executions list` activity and re-checked the live blank-`data_type`
+population after each observed completion, spanning **2026-07-15T11:03:32Z (delete write) through 2026-07-15T11:32:43Z
+(final check) — ~29 minutes, 10+ distinct consolidator executions**, including:
+
+| Execution                                                                                                      | Mode                                                         | Completed            | Notable                                                                         | blank-`data_type` after       |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | -------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
+| `...-cefi-57ggf`                                                                                               | **`mode=full`** (the exact class that caused the Part-2 gap) | 2026-07-15T11:05:56Z | `pruned_shards=1`, `dedup_dropped=19208`, `legacy_seeded=False`, `success=True` | **0**                         |
+| `...-cefi-cp7qb` (this session, manual trigger)                                                                | locked (no-op, concurrent exec held the lock)                | 2026-07-15T11:10:46Z | `success=True`                                                                  | **0**                         |
+| `...-cefi-qg42d`/`7zw46`/`776cb`/`7sfsm` (cron, resumed briefly then re-paused by the concurrent session)      | locked (no-op)                                               | 11:11–11:14Z         | `success=True`                                                                  | —                             |
+| `...-cefi-gj7zz`                                                                                               | `mode=incremental`, `legacy_seed_in_cycle=False`             | 2026-07-15T11:22:08Z | 89 date-range chunks, `dedup_dropped=4341`, `success=True`                      | **0**                         |
+| `...-cefi-5vlcf`/`cf9c9`/`gmwfh`/`l6h4h` (normal `*/1` cron, after this session re-enabled the cron at 11:23Z) | —                                                            | 11:27–11:30Z         | `success=True`                                                                  | **0** (final check 11:32:43Z) |
+
+`captured` row count (3,136,382) was byte-identical across **every** check in this window — no collateral data loss.
+Re-enabled the cron (`gcloud scheduler jobs resume`) after confirming the fix holds, since leaving core consolidator
+infra paused indefinitely is itself a production risk; it has resumed normal `*/1` cadence cleanly.
+
+**Verdict: the delete HELD.** The specific `mode=full` rebuild cycle (`57ggf`) is direct, live confirmation that Part 2
+closes the exact gap it targeted — this is the first live resurrection→fix→hold confirmation cycle for cefi. Per
+`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`, **defi and tradfi still only have the code-level
+protection** (the fix is shared/bucket-parametrized code so it protects them too, but neither has had its own live
+resurrection-then-delete-then-hold cycle exercised) — do not overclaim beyond cefi. Flipping this doc's `status` to
+`resolved`; the still-open "identify the April-2026 writer" follow-up todo above remains a non-blocking loose end.
+
+Evidence: this session, 2026-07-15, `gcloud run jobs executions list`/`executions describe`/`logging read` against
+`uts-prod-manifest-consolidator-market-data-cefi` (asia-northeast1, project `central-element-323112`),
+`gcloud scheduler jobs list`/`resume`, `gcloud builds list`/`describe`, live raw canonical-only reads against
+`market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (read-only diagnostic script, not
+committed — single-read discipline, no whole-corpus walk).

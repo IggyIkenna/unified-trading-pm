@@ -437,3 +437,31 @@ Evidence: direct `gcloud run jobs execute`/`executions describe`/`logging read` 
 `gsutil stat` on the canonical + lock blob before/after each step; `gcloud builds describe` for
 `6566c90b`/`c9bf70d9`/`0304d22a`/`559fc09b` (all SUCCESS); direct `--dry-run` reads via
 `instruments-service/scripts/delete_cefi_blank_data_type_orphan_rows_2026_07_15.py` after every cycle.
+
+## 🟢 2026-07-15 — independent corroboration (separate re-verification session, dispatched to confirm hold)
+
+A third, independently-dispatched session (operator ask: re-verify the delete's current state and monitor real
+consolidator cycles before declaring success, given the doc's own earlier "confirmed live" resurrection). Arrived after
+the "closing" session above had already shipped Part 2 and re-run the delete, so this session's own live queries found
+the fix already in place rather than needing to re-execute it — recorded here as independent cross-validation, not a
+duplicate remediation:
+
+- Confirmed the same facts independently: `market-tick-data-service`'s HEAD Dockerfile (`origin/live-defi-rollout`)
+  still pins `BASE_IMAGE_DIGEST=sha256:7b9a94ea90...` (Part 2); the `uts-prod-manifest-consolidator-market-data-cefi`
+  Cloud Run Job's most recent manual execution (`57ggf`, `mode=full`, `legacy_seeded=False`, completed
+  2026-07-15T11:05:56Z) used image digest `sha256:5bf7a426...`, traced via `gcloud builds describe` to Cloud Build
+  `b6e279af` (commit `5f659c12`, a confirmed descendant of the Part-2 digest-bump commit `48857be4`).
+- Independently re-ran the broad blank-`data_type` query
+  (`capture_status='attempted_failed' AND (data_type=='' OR data_type IS NULL)`, and separately ANY `capture_status`)
+  against a fresh raw canonical-only read: **0 rows**, confirmed repeatedly across a ~29-minute window
+  (2026-07-15T11:03:32Z delete write through 11:32:43Z), spanning executions `57ggf` (`mode=full`), `gj7zz`
+  (`mode=incremental`, ~9 min, 89 date-chunks), and ~6 more cron-fired executions after this session found the cron
+  paused and resumed it (`gcloud scheduler jobs resume`) once the fix was independently confirmed holding — full
+  detail + evidence table filed in `phantom_captures_cefi_2026_06_28.md`'s own matching 2026-07-15 re-verification
+  section (this session's primary write-up) to avoid duplicating the closing session's already-thorough evidence chain
+  here.
+- No discrepancy found between this session's independent observations and the closing session's account above —
+  cross-validates the verdict: **durably fixed for cefi.** Concur with the closing session's own scoping: defi/tradfi
+  carry the same fix (shared, bucket-parametrized code) but have NOT had their own live
+  resurrection-then-delete-then-hold cycle exercised — the P2 DeFi-delete-passes audit item above remains open and
+  unaffected.
