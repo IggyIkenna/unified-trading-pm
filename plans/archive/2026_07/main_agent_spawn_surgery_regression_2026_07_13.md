@@ -5,7 +5,7 @@ summary:
   The 2026-07-10 boot-stub refactor (prompts.py) silently broke the agent_id-injection string surgery in both POST
   /api/agents/spawn and main_agent_keeper._spawn() for slot-less roles (main/review/monitor) — this is why main went
   dark and the keeper never revived it. Fix the surgery + add the missing end-to-end regression coverage.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [orchestrator, spawn, regression, main-agent, boot-stub]
 related: [orchestrator_master.md]
 created: "2026-07-13"
-last_updated: "2026-07-13"
+last_updated: "2026-07-15"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
