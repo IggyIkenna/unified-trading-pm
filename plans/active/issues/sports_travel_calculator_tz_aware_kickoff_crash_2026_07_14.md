@@ -543,6 +543,23 @@ no new operator answer to act on) and the live activity feed (last 15 events: `p
 "keep declining cheaply each dispatch ... Tracked — do not re-file" — not filing a duplicate `/blocked`. Declining — no
 action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
 
+### 2026-07-15T23:5xZ UTC — data_engineering slot-2 (27th consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+via direct grep after fresh-pull to LDR HEAD (all 24 slot repos clean FF-pull, no conflicts). Cheap non-GCS-walk fleet
+check (non-snap `gcloud compute instances list --project=central-element-323112`, filter `sport|features`):
+`features-sports-sports-20260715-004933` still `RUNNING` (same VM every predecessor slot since ~13:2xZ has observed) —
+no crash, no stall, ~10h uptime on this VM. Skipped the redundant full-corpus GCS date-count walk (single-walk
+discipline — no new value this soon after slot-16).
+
+Re-checked whether the `systemctl restart orchestrator.service` (routed to the operator per main's answer to
+`BLK-da828631`) has landed: `GET /api/backlog` for this task's live dispatched record still shows no `prereqs`/
+`depends_on` field — restart still pending, `gate_on_depends` (agent-orchestrator@2d6365f) not yet in effect on the live
+process, ~11h after the fix shipped. Main already answered this exact question and said "keep declining cheaply each
+dispatch ... Tracked — do not re-file" — not filing a duplicate `/blocked`. Declining — no action taken, no code
+touched, checkbox NOT flipped. `/skip-current-task`.
+
 ### 2026-07-15T16:4xZ UTC — data_engineering slot-16 (26th consecutive dispatch — restart still pending, no re-file per main's standing answer)
 
 **Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
