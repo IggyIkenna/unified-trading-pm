@@ -265,3 +265,14 @@ against a live manifest query in this pass (would require the P3 VERIFY trace be
   start; see "Resolution — mbp_10" above for the full trace and the already-existing (but stalled) successor plan that
   owns closing that gap. Findings (2) and (3) untouched — still open, still need the operator/architecture calls the
   recommendation section above describes.
+- 2026-07-15 (operator decision, interactive reconciliation): presented the UAC-registry-restoration option ("restore
+  `mbp_10` to `VENUE_DATA_TYPE_CAPABILITIES["CME"]` now, since the adapter-layer fix is shipped and tested") vs. leaving
+  the 2026-05-15 MVP-scope restriction in place. **Operator chose to leave the restriction in place** — the scope
+  narrowing is still deliberate, not stale. Reclassifying: the 1186/1186 historical `attempted_failed` `mbp_10` rows and
+  the ongoing `DP_RUN_MOSTLY_EMPTY` alert for this cell should be treated as **expected-per-scope-decision**, not an
+  open gap — this issue's finding (1) is closed at the adapter layer (correct, necessary, done) but the live-capture
+  activation is explicitly NOT happening right now by operator choice, not by oversight. **Follow-up not yet done**:
+  whether the manifest/alerting layer has a clean mechanism to mark an operator-scope-deferred cell as
+  `expected_unattempted`-with-reason (vs. `attempted_failed`) so it stops presenting as an active failure in
+  `DP_RUN_MOSTLY_EMPTY`'s ratio math — worth a small follow-up if this cell keeps contributing to future alert noise;
+  not pursued in this pass to avoid scope creep into the alert-classification system beyond what was asked.
