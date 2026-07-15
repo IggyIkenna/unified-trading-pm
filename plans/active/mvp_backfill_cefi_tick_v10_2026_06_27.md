@@ -3506,3 +3506,27 @@ ignored for other years) — deployment-service, QG-green, quickmerged. Verified
 evidence about a wave once the wave's date cursor is INSIDE the range where eu>0. Re-arm eu tests against scan-position,
 not wall-clock. The writer fix (`mtds@5d44a197`) therefore remains **UNTESTED in production**, not disproven — the
 honest status.
+
+### Fleet re-aimed at the gap: first wave in this programme that can actually close a cell — 2026-07-15T21:56Z
+
+Killed the 3 January-bound Tardis VMs (launched 20:20Z; measured at 2026-01-01/01-03/01-12 after 91 min, i.e. inside the
+eu=0 zone where zero progress was POSSIBLE). Not a peer-scope loss: same venue scopes relaunched immediately with
+`START_DATE=2026-02-01`, so the work is re-aimed, not dropped. The 4 non-Tardis VMs
+(hyperliquid/lighter/extended/pacifica, 19:00Z) were left untouched — different code path, outside the Tardis cap, and
+their eu lives in the same 2026-02..07 window their own launcher already targets.
+
+Relaunched (guard sequenced 0+1, then 1+1 …, cap honoured): `cefi-queue-heavy-binancefutu-x15-20260715-215549` — all 15
+venues, trades+book_snapshot_5, **2026-02-01..2026-07-14**
+
+- light waves for the derivative_ticker scopes at the same START_DATE.
+
+**This is the first wave in the entire cefi backfill programme pointed at a date range where eu > 0.** Every prior wave
+— 2020-chronological (killed 17:40Z) and 2026-01-chronological (killed 21:55Z) — was structurally incapable of closing a
+cell before it aged out or was killed, which is why ~30 VM-hours across two lanes moved eu by exactly 0.
+
+**Next tick's test (keyed on scan-position, not wall-clock, per the method note above)**: once the heavy VM's date
+cursor is confirmed ≥ 2026-02-01 AND it has written for a venue with eu>0, re-measure eu vs the 20:22Z baseline of
+2,773,292. THAT is the first valid production test of `mtds@5d44a197` (the manifest-id canonicalization). Outcomes: eu
+drops → writer fix confirmed, fleet productive, let it grind; eu still flat with the cursor inside the gap → the stale
+per-venue eu atom (BINANCE-FUTURES eu rows carrying `instrument_type=''` + lowercase-raw `hotusdt`) is confirmed as the
+blocker and the expected universe must be re-materialised before any further fetching.
