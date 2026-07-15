@@ -91,10 +91,14 @@ ideal.
 
 ## Todos
 
-- [ ] [DATA] P2. Replace `storage.download_bytes` + `pq.read_metadata(io.BytesIO(...))` in `_load_drift_v2_sig_index`'s
-      cache-building loop with a footer-only byte-range read (or `pyarrow.fs.GcsFileSystem` +
-      `ParquetFile(pre_buffer=False)`) so non-overlapping parts are never fully downloaded (repo:
-      market-tick-data-service, `market_tick_data_service/cli/handlers/solana_defi_drift.py`).
+- [x] ✅ [DATA] P2. Replace `storage.download_bytes` + `pq.read_metadata(io.BytesIO(...))` in
+      `_load_drift_v2_sig_index`'s cache-building loop with a footer-only byte-range read (or
+      `pyarrow.fs.GcsFileSystem` + `ParquetFile(pre_buffer=False)`) so non-overlapping parts are never fully downloaded
+      (repo: market-tick-data-service, `market_tick_data_service/cli/handlers/solana_defi_drift.py`) —
+      `market-tick-data-service@4d7e45b4`. Validated against 6 real GCS parts (identical min/max blockTime vs full
+      download, ~99% fewer bytes, single 64KB range read each) before shipping. 3 new regression tests (non-overlapping
+      never fully downloaded / overlapping still gets full row data / missing-size fallback correct); 15/15 related +
+      75/75 full-file tests green; QG exit 0, sentinel `546ddce2` == shipped HEAD.
 - [ ] [DATA] P3. Persist the built `_drift_v2_parts_meta_cache` to GCS as a small manifest (part name → min/max
       blockTime) so a fresh process warm-loads it instead of rescanning all parts on every restart (repo:
       market-tick-data-service).
@@ -105,3 +109,8 @@ ideal.
   (`market-tick-data-service@16756a19`, see `mvp_backfill_defi_onchain_v10_2026_06_27.md` Progress Log). Not fixed in
   this session — separate, larger change; filed for a dedicated future pass. `assigned_vm: planning` so the orchestrator
   can pick this up as a standalone backlog item.
+- 2026-07-15 (same session, data_engineering slot-14): the P2 todo above got auto-ingested into the backlog and
+  immediately re-dispatched back to this slot. Implemented + shipped `market-tick-data-service@4d7e45b4` (footer-only
+  range-reads via a small `_LazyRangeReadFile` shim over `download_bytes_range` + `_read_parquet_footer_metadata`).
+  Validated correctness against 6 real production parts before touching test/production code (byte-identical min/max
+  blockTime, ~99% fewer bytes). P3 (persist cache to GCS) remains open — not attempted this session.
