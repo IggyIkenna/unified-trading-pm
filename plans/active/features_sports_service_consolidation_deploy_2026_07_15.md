@@ -142,7 +142,24 @@ repo. This plan tracks that work.
       (`volume_mounts.mount_path =     /mnt/gcs/features-sports-prd-central-element-323112`,
       `gcs.bucket = features-sports-prd-central-element-323112`).
 - [ ] [INFRA] P1. Deploy the new Cloud Run job; manually trigger a real execution and watch it reach a genuine
-      `SUCCEEDED` terminal state (not just "past the import line") before trusting it.
+      `SUCCEEDED` terminal state (not just "past the import line") before trusting it. — 🟡 2026-07-15 DeployAndVerify
+      phase: terraform applied clean (see Progress Log), scheduler paused, but BOTH manual executions attempted this
+      touch terminated `NonZeroExitCode` — first on a real, separate terraform bug (default job `args` omit
+      `--start-date`/`--end-date`, see new todo below), second (with correct date overrides) on an external,
+      pre-existing blocker: `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`
+      (the `instruments-store-sports` manifest consolidator is livelocked on its own GCS lock, never refreshing
+      `availability_index.parquet` past the 120s freshness budget `features-service.compute_features` requires,
+      `recovery=fail_fast`). Import chain + CLI contract + GCS mount all confirmed WORKING on this attempt — the blocker
+      is downstream, in a different system. Per this touch's explicit instruction, did NOT proceed to retire the legacy
+      job. Still `[ ]` — retry once the linked issue is resolved.
+- [ ] [INFRA] P2. Fix `terraform/services/features-service-sports/gcp/main.tf`'s `module.daily_job.args` default
+      (currently `--feature-family sports --operation compute --mode batch --asset-group SPORTS`, no dates) — a bare
+      `gcloud run jobs execute` with no overrides fails CLI validation
+      (`Batch mode requires --date or both     --start-date and --end-date`); every real Workflow invocation already
+      overrides args via `containerOverrides` so this only bites a manual bare execute, but should still carry a sane
+      default. Found + evidenced 2026-07-15 during the DeployAndVerify phase (see
+      `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` evidence section, execution
+      `features-service-sports-job-fs8sj`).
 - [ ] [INFRA] P1. Apply the separately-found `--category`→`--asset-group` Workflow-YAML terraform drift (confirmed real,
       independent of the import crash, found via `terraform plan` on the old job's Workflow resources) — carry the fix
       into the new job's Workflow definitions; required before scheduling can safely resume.
@@ -187,3 +204,35 @@ repo. This plan tracks that work.
   `features-sports-service-job` (via `terraform/gcp/t1_batch_scheduler.tf`'s `features-sports-service-t1-recon` entry) —
   the later "retire old job / re-enable scheduling" todos should check whether this t1-recon path also needs repointing
   to the new job before it's safe to un-pause.
+- 2026-07-15 (DeployAndVerify phase, todo 5 — real evidence, not inference): Independently re-verified the prior
+  BuildDeployment-phase terraform (`deployment-service@8b1c561f6d18fd7532b223ea462277131b03ebf8`) against live GCP —
+  commit present on `origin/live-defi-rollout`, `terraform init` + fresh `terraform plan` reproduced the same "4 to add,
+  0 to change, 0 to destroy", SA + Artifact Registry image both confirmed to exist live. Applied with `-target` scoped
+  to exactly the 4 new resources (`module.daily_job.google_cloud_run_v2_job.job`,
+  `module.daily_workflow.google_workflows_workflow.workflow`,
+  `module.daily_workflow.google_cloud_scheduler_job.trigger`,
+  `module.backfill_workflow.google_workflows_workflow.workflow`) —
+  `Apply complete! Resources: 4 added, 0 changed, 0 destroyed`; post-apply `terraform plan` shows zero infra drift (only
+  a benign output-value diff). Immediately `gcloud scheduler jobs pause features-service-sports-daily-trigger` →
+  confirmed `PAUSED`, per the terraform's own double-fire-avoidance note. **Manual verification did NOT reach SUCCEEDED
+  — todo 5 stays open, legacy job NOT retired, per this touch's explicit instruction to stop on any execution failure.**
+  Two real executions run: (1) bare `gcloud run jobs execute` (no overrides) → `features-service-sports-job-fs8sj`,
+  `NonZeroExitCode`, failed CLI validation (`Batch mode requires --date or both --start-date and --end-date` — the job's
+  default `args` genuinely omit dates, new follow-up todo added above); (2) retried with `--args` overrides matching the
+  Workflow's real contract
+  (`--feature-family sports --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date 2026-07-14 --end-date 2026-07-15`)
+  → `features-service-sports-job-kk4dv`, got PAST CLI validation + the full Python import chain (re-confirms the
+  fleet-wide UTL/UAC skew bug does not reproduce) + GCS-FUSE mount, then failed `NonZeroExitCode` on
+  `Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112': ... heartbeat is 208s old (> 120s budget) ... recovery=fail_fast`.
+  Root-caused (not guessed): the `uts-prod-manifest-consolidator-instruments-sports` Cloud Run Job (single Scheduler
+  cron, `*/1 * * * *`, no duplicate trigger) is livelocked — every ~1min cycle logs
+  `skipping cycle ... fresh lock present (sibling cron still running)` + `error=locked` (8/8 sampled executions between
+  12:14-12:41 UTC), yet no genuine sibling overlaps (each run completes in 7-9s). `_index/consolidator.lock` is
+  rewritten fresh on every cycle including skip-only cycles, consistent with a lock-TTL bug that never lets the lock age
+  out. `availability_index.parquet` got exactly one genuine write in the ~30min observed window (12:39:43 UTC) then went
+  stale again immediately. Filed as
+  `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` (new issue, P1,
+  cross-repo/data-correctness — this is an EXTERNAL blocker in a different system, not a defect in the
+  features-service-sports deploy work itself, which is now proven correct up to that boundary). **Terraform/job/workflow
+  resources deliberately left in place** (scheduler stays paused) — no rollback needed, they are correct; re-attempt
+  manual verification once the linked issue is resolved, THEN proceed to todos 6-8.
