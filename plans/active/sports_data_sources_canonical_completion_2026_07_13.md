@@ -3837,3 +3837,82 @@ it's new adapter work, not a data-audit residual).
   stable across 4 consolidator cycles + 3 independent re-reads over ~7 minutes**: 74 remaining, unchanged. This closes
   the blank-dt-461 finding from finding A of
   `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` completely.
+
+- **2026-07-15 (todo B — asset_group blank-heal: CODE FIX shipped + verified durable; one-off REPAIR applied but found
+  NON-durable pending a market-tick-data-service image redeploy — root-caused, NOT guessed around).** Closes the code
+  side of todo B in `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` ("Extend
+  the consolidator asset_group heal to the instruments-store-sports bucket"); the retroactive-repair side is
+  demonstrated working but not yet durable — see below.
+
+  **Code fix (`unified-trading-library@86f3da96`, "fix(manifest): extend consolidator asset_group heal to
+  instruments-store buckets")**: `manifest_consolidator._asset_group_for_market_data_bucket`'s v9 self-heal (a
+  REPLACE-coalesce that stamps `asset_group=<ag>` onto blank/pre-v9 rows at merge time) only recognised
+  `market-data-tick-{ag}` bucket names — it returned `None` (no-op) for `instruments-store-{ag}` buckets, so blank rows
+  there were never healed by any consolidation cycle. Added `_asset_group_for_instruments_store_bucket` (mirrors the
+  market-data resolver over the same `instruments-store-{ag}-{env}-{pid}` naming convention already used by
+  `cf_manifest_audit.py`'s `AG_BUCKET_TOKENS`/`_bucket()`) + a combined `_asset_group_for_per_ag_bucket` resolver now
+  wired into the merge call site. **Blast-radius verification** (live real bucket names spanning cefi/defi/tradfi/
+  sports/prediction, both `market-data-tick-*` and `instruments-store-*` families + 2 legacy no-env-tier buckets +
+  non-per-AG controls): every `market-data-tick-*` bucket's resolved AG is BYTE-IDENTICAL before/after (zero
+  regression); every `instruments-store-*` bucket now correctly resolves its AG (previously `None`). Added
+  `test_consolidate_backfills_blank_asset_group_from_per_ag_instruments_store_bucket` +
+  `test_asset_group_for_instruments_store_bucket` to `tests/unit/test_manifest_consolidator.py` (both pass, plus the 3
+  pre-existing asset_group tests). `quality-gates.sh --no-fix` PASSED. Shipped via quickmerge, landed
+  `live-defi-rollout`.
+
+  **One-off repair (`instruments-service@e1f36eed`, `scripts/backfill_asset_group_blank_repair_2026_07_15.py`)**: a
+  direct CAS-safe canonical rewrite (`download_bytes_with_generation`/`conditional_upload_bytes` bounded retry, mirrors
+  `reconcile_mdps_odds_horizon_bucket_venue_grain_2026_07_14.py`'s established pattern exactly) rather than 966K+
+  individual `ManifestWriter` calls — a pure in-memory `asset_group` column mutation for matching rows, row count
+  unchanged in vs out, so it never risks `unified-trading-library`'s `ManifestIndexShrinkRefusedError` guard and never
+  touches `ManifestWriter`'s ingest-path `PipelineModeSourceMismatchError` coherence check at all (bypasses that
+  codepath entirely). Live dry-run against `instruments-store-sports-prd-central-element-323112` (5,432,721 rows) found
+  **969,066** blank-`asset_group` rows: api_football 867,787 / footystats 99,048 / open_meteo 1,804 /
+  soccer_football_info 360 / transfermarkt 45 / understat 16 / instruments_service 6 — the last 2 sources are a small
+  residual not named in the issue doc's original 5-source list, included because the bucket is single-AG by construction
+  (any row physically in it is structurally `sports` regardless of `source`), same reasoning the code fix itself relies
+  on. **Applied** (generation `1784119675010986` → `1784119918938090`): repaired all 969,066, row count unchanged
+  (5,432,721 in = 5,432,721 out). Immediate re-read: 0 blank, confirming the write landed correctly.
+
+  **Stability verification found the repair does NOT durably hold — root-caused, not left as a mystery.** Re-reads at
+  t+~5min and t+~10min showed blank count climbing back to 971,434 then 973,459 — nearly the ENTIRE repaired backlog —
+  while `total_rows` stayed flat between the two re-reads (5,432,740 both times), proving this is EXISTING repaired rows
+  flipping back to blank, not new writes landing blank. A second `--apply` (generation `1784120558750095` →
+  `1784120869164187`, repaired=973,459) was reverted within under a minute — an immediate re-read right after showed a
+  THIRD, already-different generation with blank count already back up to 975,640. **Root cause, confirmed via direct
+  evidence, not inference**: `gcloud artifacts docker images list` on `market-tick-data-service:latest` shows it was
+  last built/pushed `2026-07-15T12:41:20Z` — **~2 minutes BEFORE** `unified-trading-library@86f3da96` landed
+  (`2026-07-15T12:43:32Z`) — so the LIVE Cloud Run consolidator job
+  (`uts-prod-manifest-consolidator-instruments-sports`, confirmed firing reliably every ~60s via its own execution
+  history) is still running the PRE-FIX image. Since `asset_group` is not a dedup key, every ~60s merge cycle re-picks a
+  "winner" row per dedup-key group by recency; a freshly-reseeded enumerator `expected_unattempted`/`empty_confirmed`
+  placeholder shard (blank `asset_group`, fresh `written_at`) routinely outranks my repaired canonical row (whose
+  `written_at` my script deliberately left untouched — only `asset_group` was mutated), and the OLD (pre-fix) merge code
+  applies no heal to whichever row wins — reverting the stamp. This is the EXACT failure mode the code fix's own block
+  comment predicts for a "corrective re-stamp of the canonical alone" (`manifest_consolidator.py`'s v9 self-heal comment
+  block) — now independently reproduced live at ~970K-row scale, confirming why the durable fix has to be the
+  every-cycle heal, not a one-shot patch.
+
+  **Deliberately did NOT**: attempt a 3rd `--apply` (would revert again within ~1 minute, confirmed pattern across 2
+  independent attempts — a guaranteed-losing race against a 60s-cadence cron); or trigger a `market-tick-data-service`
+  Cloud Run Job image rebuild/redeploy myself (that image is SHARED across all 10 per-AG consolidator cron jobs, not
+  just sports — an unplanned redeploy of shared production infra is outside this task's scope and needs an explicit
+  operator decision, not an autonomous action on a service I wasn't asked to touch). Confirmed both
+  `uts-prod-manifest-consolidator-{instruments,market-data}-sports-cron` scheduler jobs stayed `ENABLED` throughout
+  (never paused).
+
+  **Net state as of this entry**: the durable code fix is shipped, tested, and correct — it will heal every future blank
+  row automatically the moment the live consolidator image is rebuilt against `unified-trading-library>=86f3da96`. The
+  one-off repair script is proven correct and safe (2 successful CAS-safe applies, zero row-count change, zero
+  collateral damage) but its effect is transient until that redeploy happens. **New follow-up todo** (added to the issue
+  doc): redeploy/rebuild `market-tick-data-service`'s Cloud Run Job image against the new UTL pin, then re-run
+  `backfill_asset_group_blank_repair_2026_07_15.py --apply` once more — it should hold permanently once the live image
+  includes the fix (the SAME script is safely re-runnable; it no-ops once the bucket is clean).
+
+  **Bonus finding (not fixed, flagged only)**: a second small MISLABELED (non-blank, WRONG-value — a different bug class
+  from the blank-heal above) row was found alongside the already-documented Finding C row in the same issue doc:
+  `source=instruments_service asset_group=cefi capture_status=captured` sitting in the sports manifest. Added as an
+  addendum to Finding C, not fixed here. Also checked (read-only) whether other asset_groups' instruments-store buckets
+  carry a comparable blank-`asset_group` backlog: cefi has 2 (negligible), defi/tradfi/prediction have 0 — confirms
+  sports is overwhelmingly the dominant case, consistent with the issue doc's original framing; no other asset_group
+  needs a comparable repair pass.
