@@ -83,7 +83,7 @@ estimate_calibrated_ai_days: 0.7
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 ---
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths
@@ -277,16 +277,37 @@ these 5 cells.
       in. That OKX change is preserved, coherent, and QG-green on the branch; it was NOT reverted (reverting would
       delete workstream-E's work; splitting needs a banned force-push). Workstream-E should be told its OKX bare-venue
       liquidations correction already landed in `fec3f110`.
-- [ ] [DATA] P3. **Forward-only-fix leftover from `unified-api-contracts@fec3f110`** (the YAHOO_FINANCE venue removal
-      above): the ~11,676 EXISTING live-manifest rows already written under `venue=YAHOO_FINANCE` (10,845
-      `empty_confirmed` + 831 `attempted_failed`, bucket `market-data-tick-tradfi-prd-central-element-323112`) are now
-      orphaned relative to the registry — `YAHOO_FINANCE` no longer resolves to an asset_group, so those historical rows
-      reference a venue the code no longer knows. Needs a **separate cleanup/reclassify pass on real infra** (NOT a UAC
-      change, NOT executed by the registry-removal task — no data mutation was performed): either delete the phantom
-      rows or re-stamp the genuinely Yahoo-sourced ones under their REAL venue (DXY→ICE, KRW/USD→FX, treasuries→CBOE)
-      with `source=yahoo`. Same forward-only-fix historical-row pattern as the mbp_10 /
-      `corporate_action`/`earnings_result` leftovers elsewhere in this doc. Owner: a manifest cleanup/backfill pass (do
-      not conflate with the code fix — that is already shipped).
+- [x] ✅ [DATA] P3. **DONE 2026-07-16 — deploy-first then clean, verified to HOLD.** Operationalized the
+      `unified-api-contracts@fec3f110` YAHOO_FINANCE venue removal (stopped the nightly re-seeding) AND deleted the
+      orphaned rows so they stay gone. **(1) Stopped the seeder**: the nightly seeder is Cloud Run job
+      `expected-universe-v2-tradfi` (Cloud Scheduler `expected-universe-v2-tradfi-daily`, `30 1 * * *` = the 01:31:30Z
+      `attempted_at` in the manifest), running `enumerate_expected_universe.py`'s
+      `_yield_v2_tradfi_non_trading_day_rows` over `VENUES_BY_ASSET_GROUP["tradfi"]`. (`is-daily-enum-tradfi` runs
+      `-m instruments_service --operation     instruments --mode batch` = the instrument catalogue, NOT tick-manifest
+      seeding — not a YAHOO seeder.) **BLOCKER FOUND + FIXED (big finding)**: the IS Dockerfile base bump
+      `instruments-service@6d33b9d5` pinned UTL base `sha256:b7c57243` (cut 2026-07-15 17:54:46Z), which had YAHOO
+      removed but PREDATED `unified-api-contracts@7754661a` (18:14:29Z, "add `venue_data_type_has_batch_source`") that
+      the current enumerator imports — so a run on that image crashed at import with
+      `ImportError: cannot import name 'venue_data_type_has_batch_source'`. Re-bumped the IS base to the newer UTL
+      `0.55.0/latest` `sha256:be51b33f` (cut 23:27:01Z, bundles all of {YAHOO removed, CBOE ohlcv_24h, the new symbol} —
+      verified in-image `Evidence: cloudbuild=70dbc75f-c8db-4245-b3bb-fd175829f6b3` SUCCESS):
+      `instruments-service@3e5b1039` (QG-green). Built it `Evidence: cloudbuild=d00de7ec-8272-49d5-ab9d-f0ded059b0e6`
+      SUCCESS → IS image digest `sha256:d569a6548d4dde511a994c5e35f0dd043aa6f1b67c9375d1f51f3793bddee98d`; pinned
+      `expected-universe-v2-tradfi` to it. **(2) Verified seeding stops**: executed the job on the new image (exec
+      `expected-universe-v2-tradfi-lwsqs`, SUCCEEDED) → its fresh per-VM shard `enum-universe-v2-tradfi.parquet` carried
+      **5,709 rows, YAHOO=0**, real venues still seeded (CME 2244 / NYSE 1122 / NASDAQ 871 / ICE·CBOE·KRX·FX 368 each);
+      post-consolidation the canonical had **0** YAHOO rows with `attempted_at` after the run (max stayed
+      2026-07-15T01:31:30Z). **(3) Cleaned at the source**: resurrection vector = only the canonical (per-VM
+      `_legacy_seed.parquet` carried 0 YAHOO). Drained + paused the `market-data-tradfi` consolidator, snapshotted, and
+      deleted `venue==YAHOO_FINANCE` from `_index/availability_index.parquet` (**11,676→0**, 5,564,746→5,553,070 rows)
+      AND `_index/expected_universe_ranges.parquet` (the honest-coverage full-history denominator, which the
+      `--start-date` enum run does NOT regenerate: **5,080→0**, 63,514→58,434 rows). Snapshots (rollback):
+      `_index/snapshots/pre_yahoo_phantom_venue_delete_20260715T231453Z_{availability_index,expected_universe_ranges}.parquet`.
+      **(4) HOLD proven**: resumed the consolidator + forced a merge, then watched ≥5 real merge cycles (canonical
+      rewritten 23:17→23:22Z) — canonical, ranges, and `_legacy_seed` all stayed **YAHOO=0**; no resurrection. Cleanup
+      predicate/pattern mirrors `market-tick-data-service/scripts/delete_tradfi_aggregate_phantom_markers_2026_07_07.py`
+      (download → STOP-ON-SURPRISE [0 `captured` rows] → snapshot → filter → write → verify gate). See "Resolution —
+      YAHOO_FINANCE phantom-venue seeding stopped + orphan rows cleaned (2026-07-16)" below.
 - [x] ✅ [CODE] P2. `market-tick-data-service`: US Treasury-yield tenors (`CBOE:INDEX:US3M/US2Y/US5Y/US10Y/US30Y-USD`,
       already declared in UAC's `YAHOO_INDICES` registry, `tradfi_instrument_universe.py:521-525`) have NO working fetch
       path anywhere — genuinely missing, not a modeling error, contrary to part of the operator's claim.
@@ -694,6 +715,72 @@ fall-through-to-ALL-10-datatypes footgun on an EMPTY capability dict (CBOE's dic
 addition should be safe, but it needs its own careful UAC-repo pass + QG run, not a bolt-on here). Filed as a new
 `[DATA] P3` todo above (`unified-api-contracts`: add `ohlcv_24h` to CBOE's capability + expected-coverage entries).
 
+## Resolution — YAHOO_FINANCE phantom-venue seeding stopped + orphan rows cleaned (2026-07-16)
+
+Operationalized the `unified-api-contracts@fec3f110` YAHOO_FINANCE venue removal on real infra: **stop the nightly
+re-seeding first, then clean the orphaned rows so they HOLD** (the ordering matters — a clean-first would have been
+resurrected by the next nightly enum). All steps were live prod actions on GCP `central-element-323112`.
+
+**The seeder (identified, not assumed).** `enumerate_expected_universe.py`'s `_yield_v2_tradfi_non_trading_day_rows`
+walks `VENUES_BY_ASSET_GROUP["tradfi"]` and seeds `empty_confirmed` `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` rows into the
+MTDS tradfi tick manifest (`resolve_bucket_name(kind="market-data", asset_group="tradfi")` → `_index/…`). The nightly
+runner is Cloud Run job **`expected-universe-v2-tradfi`**
+(`MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-universe-v2-tradfi`, `--apply-write`), Cloud Scheduler
+**`expected-universe-v2-tradfi-daily` = `30 1 * * *`** — matching the manifest's max `attempted_at` of
+`2026-07-15T01:31:30Z`. `is-daily-enum-tradfi` (`30 13 * * *`) runs
+`-m instruments_service --operation instruments --mode batch` (instrument-catalogue enumeration, a different bucket) and
+does NOT seed the tick manifest — so it is NOT a YAHOO seeder. The catalogue jobs (`lifecycle-catalogue-*-tradfi`,
+`build_instrument_catalogue.py`) write instruments-store, not the tick manifest.
+
+**Big finding — the base bump `instruments-service@6d33b9d5` was premature.** It pinned UTL base `sha256:b7c57243`
+(built `2026-07-15 17:54:46Z`), which had YAHOO removed but predated `unified-api-contracts@7754661a` (`18:14:29Z`, adds
+`venue_data_type_has_batch_source`) that the current enumerator imports at module load — so an enum run on that image
+died at `ImportError: cannot import name 'venue_data_type_has_batch_source' from 'unified_api_contracts'` (exec
+`expected-universe-v2-tradfi-959bv` failed). Corrected by re-bumping the IS Dockerfile base to the newer UTL
+`0.55.0/latest` `sha256:be51b33f` (built `23:27:01Z`), verified in-image to bundle all of {YAHOO removed, CBOE
+`ohlcv_24h` declared, `venue_data_type_has_batch_source` present} via
+`Evidence: cloudbuild=70dbc75f-c8db-4245-b3bb-fd175829f6b3` (SUCCESS). Shipped `instruments-service@3e5b1039` (QG-green,
+quickmerge); built it `Evidence: cloudbuild=d00de7ec-8272-49d5-ab9d-f0ded059b0e6` (SUCCESS) → IS image digest
+`sha256:d569a6548d4dde511a994c5e35f0dd043aa6f1b67c9375d1f51f3793bddee98d`; re-pinned `expected-universe-v2-tradfi` to
+that digest (`gcloud run jobs update … --image <digest>`). (The `d00de7ec` build also restored a working `:latest`,
+which an interim `b7c57243`-based build had transiently overwritten.)
+
+**Seeding-stopped verification (deploy-first proof).** Executed `expected-universe-v2-tradfi` on the fixed image (exec
+`expected-universe-v2-tradfi-lwsqs`, SUCCEEDED). Its fresh per-VM shard `_index/per_vm/enum-universe-v2-tradfi.parquet`
+(written `23:09:34Z`) carried **5,709 rows, YAHOO_FINANCE = 0**, and still seeded the real tradfi venues (CME 2244 /
+NYSE 1122 / NASDAQ 871 / ICE 368 / CBOE 368 / KRX 368 / FX 368). Post-consolidation the canonical index had **zero**
+YAHOO rows with `attempted_at` after the run (max stayed `2026-07-15T01:31:30Z`).
+
+**Cleanup (source-addressed).** Resurrection-surface audit: `_index/per_vm/_legacy_seed.parquet` (the permanent seed the
+consolidator always merges) carried **0** YAHOO rows, so the only live YAHOO population was the canonical itself
+(inherited from the pre-fix enum shard, since consumed+pruned). To avoid a write race with the every-minute consolidator
+(`uts-prod-manifest-consolidator-market-data-tradfi`, DuckDB UNION-ALL merge of canonical + per-VM shards), the cleanup:
+(a) paused scheduler `uts-prod-manifest-consolidator-market-data-tradfi-cron` and drained the in-flight run; (b)
+snapshotted then deleted `venue==YAHOO_FINANCE` from **`_index/availability_index.parquet`** (11,676 → 0; 5,564,746 →
+5,553,070 rows; breakdown 10,108 `EXPECTED_WEEKEND` + 737 `EXPECTED_HOLIDAY` `empty_confirmed` + 831
+`attempted_failed`/`LegacyBlankErrorReasonError`) and **`_index/expected_universe_ranges.parquet`** (the honest-coverage
+full-history denominator, which a `--start-date` enum run does NOT regenerate: 5,080 → 0; 63,514 → 58,434); (c) resumed
+the scheduler. STOP-ON-SURPRISE guarded against deleting any `capture_status=="captured"` row (there were none — all
+pure enumeration artifacts, consistent with "no live fetch writes venue=YAHOO_FINANCE"). Snapshots for rollback:
+`_index/snapshots/pre_yahoo_phantom_venue_delete_20260715T231453Z_{availability_index,expected_universe_ranges}.parquet`.
+Predicate/pattern mirrors `market-tick-data-service/scripts/delete_tradfi_aggregate_phantom_markers_2026_07_07.py`
+(download → STOP-ON-SURPRISE → snapshot → filter → write-back → verify gate). The deletion was run as a scoped
+operational one-off (fully reproducible from the snapshots + this predicate); it was not committed to `scripts/` to
+avoid entangling with two pre-existing, unrelated MTDS adapter-contract-baseline regressions
+(`_onchain_perp_batch_live_only.py`, `solana_defi_drift.py`) that are outside this task.
+
+**HOLD proven (not a point-in-time check).** After resume, forced one consolidator merge (exec
+`…-market-data-tradfi-8txgh`, SUCCEEDED) then watched **≥5 real merge cycles** (canonical rewritten `23:17:55` →
+`23:19:39` → `23:20:44` → `23:21:39` → `23:22:41Z`). Final state across every resurrection surface: canonical
+`availability_index.parquet` YAHOO=0 (5,553,070 rows), `expected_universe_ranges.parquet` YAHOO=0 (58,434 rows),
+`_legacy_seed.parquet` YAHOO=0 (18,149 rows). The rows are gone and stayed gone — no resurrection. Consolidator
+scheduler confirmed `ENABLED` (not left paused); enum job confirmed pinned to the working digest.
+
+**CBOE note (task sanity check).** UAC now declares CBOE `ohlcv_24h`: `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` contains
+`ohlcv_24h` → `True` (confirmed both in the workspace UAC and inside the deployed base image), and `YAHOO_FINANCE` is no
+longer a `VENUE_DATA_TYPE_CAPABILITIES` key (`False`). CBOE `ohlcv_24h` capture rides the MTDS image (already on the new
+UAC) — no separate deploy needed here.
+
 ## Progress Log
 
 - 2026-07-15: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
@@ -831,3 +918,18 @@ addition should be safe, but it needs its own careful UAC-repo pass + QG run, no
   dispatch warned about (CBOE's capability dict is non-empty, so that specific footgun does not apply to this follow-up
   — re-verify at UAC-shipping time regardless). See "Resolution — CBOE US Treasury-yield tenors routing (2026-07-15)"
   above for the full discriminator writeup.
+- 2026-07-16 (operational — dispatched agent, LIVE deploy + LIVE prod data mutation): operationalized the
+  `unified-api-contracts@fec3f110` YAHOO_FINANCE phantom-venue removal (the P3 `[DATA]` todo above). **Deploy-first,
+  then clean.** Identified the sole nightly seeder into the tradfi tick manifest as Cloud Run job
+  `expected-universe-v2-tradfi` (scheduler `30 1 * * *`, matching the `01:31:30Z` `attempted_at`). **Found + fixed a
+  premature-base-bump blocker**: `instruments-service@6d33b9d5`'s UTL base `b7c57243` (17:54Z) predated
+  `unified-api-contracts@7754661a` (18:14Z, `venue_data_type_has_batch_source`), so the enum crashed at runtime import;
+  re-bumped IS to UTL base `be51b33f` (`instruments-service@3e5b1039`, QG-green; base verified `cloudbuild=70dbc75f`),
+  built `cloudbuild=d00de7ec` → digest `d569a654`, re-pinned the job. Verified seeding stops (enum exec `…-lwsqs`
+  SUCCESS, fresh shard 5,709 rows / YAHOO=0, real venues seeded; canonical gained 0 new YAHOO rows). Cleaned at the
+  source: drained+paused the tradfi consolidator, snapshotted, deleted `venue==YAHOO_FINANCE` from the canonical index
+  (11,676→0) and the ranges denominator (5,080→0), resumed. Proved HOLD across ≥5 consolidator merge cycles (all
+  surfaces YAHOO=0; `_legacy_seed` never had any). Confirmed CBOE `ohlcv_24h`=True in UAC. Full evidence + before/after
+  counts + snapshot paths in "Resolution — YAHOO_FINANCE phantom-venue seeding stopped + orphan rows cleaned
+  (2026-07-16)" above. No leftover: the seeding is stopped for good (durable Dockerfile fix on LDR) and the rows are
+  cleaned and verified to stay gone.
