@@ -297,11 +297,20 @@ depends_on: []
       VM has ever been launched (0 hits in 30-day GCE-insert audit log); the sports live engine
       (`process_sports_record`) never calls `read_reference_entity` at all, so the signature cannot fire on that path
       even once live mode is launched. No live production incident, past or present.
-- [ ] [CODE] P1. Implement the two-entity `fixtures_schedule`/`fixtures_outcomes` join in
+- [x] ✅ [CODE] P1. Implement the two-entity `fixtures_schedule`/`fixtures_outcomes` join in
       `unified_trading_library/fixtures/joined_reader.py._load_fixtures_for_day` (the TODO already left in that file) +
       update `OUTCOME_COLUMNS`/`_derive_outcomes_available_at` to the current Q6 raw column names
       (`home_score_regulation` etc., not the stale `home_score_fulltime` etc.). Add regression tests. (repo:
-      unified-trading-library)
+      unified-trading-library) — unified-trading-library@46fc3395: `_load_fixtures_for_day` now falls back to
+      `_read_split_fixtures_for_day` (lists + left-joins the per-league `fixtures_schedule`/`fixtures_outcomes` shards
+      on `af_fixture_id` via `_read_split_entity_shards`) when the legacy singleton `entity=fixtures` parquet is
+      missing; `OUTCOME_COLUMNS` updated to the current Q6 raw names (`home_score_regulation` etc.), retired
+      `home_score_fulltime`/`_extratime`/`_penalty`/`af_winner_id`/bare `home_score`/`away_score` names dropped. 7
+      regression tests added in `tests/unit/test_joined_reader_split_entities.py` covering: both split entities present
+      (joined, unplayed fixtures get NaN outcome columns + NaT `outcomes_available_at`), only `fixtures_schedule`
+      present (schedule-only), neither split entity present (still returns the standard empty frame), the GCS list/probe
+      logic itself (canonical-prefix hit, canonical+legacy-both-empty), and the Q6 naming assertions on
+      `OUTCOME_COLUMNS`. Full `quality-gates.sh` green (148s).
 - [ ] [CODE] P2. Once the UTL helper is fixed, switch `features-service/features_service/sports/data/gcs_reader.py`'s
       `_read_split_fixtures_fallback` to delegate to `read_fixtures_joined()` instead of duplicating the join locally.
       (repo: features-service)
