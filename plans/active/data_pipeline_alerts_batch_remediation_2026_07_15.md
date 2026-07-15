@@ -469,15 +469,21 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       attempted_failed — the identical vector that reverted the cefi orphan delete). Issue doc `open`, `resolved_by`
       cleared, full reconciliation + safe recipe:
       `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md` § "RECONCILED".
-- [ ] [DATA] P2. `sports/odds_horizon_bucket_*` historical-row cleanup (305 `MalformedTickFieldError` `attempted_failed`
-      rows across `_15m/_1h/_4h/_1d` in `market-data-tick-sports`, all `venue=FOOTBALL`, 17 shard-dates
-      2025-08…2025-12). Stale pre-fix rows; `market-data-processing-service@7ff43d7` prevents recurrence but did not
-      clean them. **Do NOT delete** — 36 sit in `_index/per_vm/_legacy_seed.parquet` as attempted_failed and would
-      resurrect on the next consolidator cycle (same vector that reverted the cefi orphan delete in this plan). Safe
-      path: deploy `7ff43d7`, re-process the 17 shards so the WRITER records the correct status, then verify the rows
-      stay gone across ≥2 consolidator cycles. Full recipe in the issue doc's "Safe cleanup recipe" section.
-      Controlled-window production-data pass, same class as the deferred sports/trades / mbp_10 / corp-actions
-      historical-row cleanups.
+- [x] ✅ [DATA] P2. `sports/odds_horizon_bucket_*` historical-row cleanup — **DONE 2026-07-15**. 305
+      `MalformedTickFieldError` `attempted_failed` rows (`_15m=66/_1h=63/_4h=89/_1d=87`, all `venue=FOOTBALL`, 22
+      shard-dates 2025-07-31…2025-12-31) reclassified to `empty_confirmed[SOURCE_RETURNED_ZERO]` in the live
+      `market-data-tick-sports` canonical (before→after: attempted_failed 112,582→112,277; captured unchanged; suffixed
+      empty_confirmed 1,032→1,337). **Classification PROVEN honest-absence** (not schema drift): the fixed adapter
+      (`market-data-processing-service@7ff43d7`) run on the real raw ODDS_API ticks returned EMPTY 66/66 across all 22
+      dates + all 10 bookmakers at every grain — the odds are well-formed but sit outside the T-24h..T-0 horizon window.
+      Reclass via `market-tick-data-service@545ce50b`
+      (`scripts/reclass_sports_odds_horizon_malformed_tick_field_2026_07_15.py --apply`; snapshot + CAS, generation
+      …944569578→…070991313). **HELD across 2 real `--force` full rebuilds** (execs `…wqsgs`/`…lvrbd`, both `mode=full`,
+      `legacy_seed_in_cycle=False` — the 164 seed rows excluded by Part 2 `unified-trading-library@8e783d70`) **+ 5
+      natural cron cycles** → 0 resurrected each time. Seed NOT rewritten (Part 2 makes it inert; a rewrite would bump
+      its frozen mtime into incremental merges). No UTL code gap — Part 2 already covers attempted_failed seed rows.
+      Evidence chain: issue doc `sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md` "CLEANED UP" section
+      (status → resolved).
 
 ### Post-reconciliation progress
 

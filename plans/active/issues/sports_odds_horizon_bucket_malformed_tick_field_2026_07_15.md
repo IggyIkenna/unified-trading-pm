@@ -24,7 +24,7 @@ summary:
   (the identical vector that reverted the cefi orphan delete in this same remediation); a durable fix must re-process
   the 17 shards with 7ff43d7 deployed and verify the reclass holds across >=2 consolidator cycles, not a blind manifest
   edit. status stays open; resolved_by cleared."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -38,16 +38,21 @@ related:
     codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-15 (RECONCILED — wrong-predicate discrepancy resolved; 66 rows are real; cleanup deferred)
+last_updated:
+  2026-07-15 (CLEANED UP — 305 rows reclassified to empty_confirmed; classification proven honest-absence; HELD across 2
+  --force full rebuilds + 5 natural cron cycles; status -> resolved)
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
 source: [operator-dispatched sub-agent, data_pipeline_alerts_batch_remediation_2026_07_15.md "New todos" section]
-resolved_by:
-  # CLEARED 2026-07-15: market-data-processing-service@7ff43d7 is a real, correct FORWARD-ONLY fix (on LDR) but it did
-  # NOT resolve this issue — the 66 attempted_failed rows still exist live. Do not re-set resolved_by until the
-  # historical-row cleanup follow-up lands and is verified to hold. See "RECONCILED" section.
+resolved_by: |
+  market-data-processing-service@7ff43d7 (forward fix — prevents recurrence) + market-tick-data-service@545ce50b
+  (reclass_sports_odds_horizon_malformed_tick_field_2026_07_15.py --apply: 305 attempted_failed/MalformedTickFieldError
+  -> empty_confirmed/SOURCE_RETURNED_ZERO in the live market-data-tick-sports canonical; classification proven
+  honest-absence via the fixed adapter on real raw ticks; HELD across 2 --force full rebuilds + 5 natural cron cycles;
+  legacy seed excluded by unified-trading-library@8e783d70 Part 2). See "CLEANED UP (2026-07-15)" section for the full
+  evidence chain.
 locked_by:
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
@@ -364,3 +369,72 @@ unproven-correct. `status` stays `open`; `resolved_by` cleared. Follow-up todo a
    snapshot + `--apply` with before/after counts, target ONLY `data_type LIKE 'odds_horizon_bucket_%'`
    `AND capture_status='attempted_failed' AND error_reason='MalformedTickFieldError' AND venue='FOOTBALL'`, bump
    `written_at` to now so the canonical row out-recencies the seed, and be verified to hold across ≥2 cycles.
+
+## ✅ CLEANED UP (2026-07-15) — 305 rows reclassified to empty_confirmed; HELD across a real `--force` full rebuild + natural cycles
+
+The deferred historical-row cleanup is DONE. The 305 `MalformedTickFieldError` `attempted_failed` rows
+(`_15m=66, _1h=63, _4h=89, _1d=87`, all `venue=FOOTBALL`, 22 shard-dates 2025-07-31 … 2025-12-31) are now
+`empty_confirmed` / `error_reason=SOURCE_RETURNED_ZERO` in the live `market-data-tick-sports` canonical, joining the
+1,032 already-correct suffixed empty_confirmed siblings (→ 1,337 total). `status` → `resolved`.
+
+### Classification PROVEN honest-absence (not schema drift) — re-derived from raw ticks with the fixed adapter
+
+The reclass was NOT a blind status flip. For a 66-instrument sample spanning **all 22 shard-dates and all 10
+bookmakers** (betmgm/betway/bovada/coral/fanduel/paddypower/pinnacle/skybet/unibet_uk/williamhill), the FIXED MDPS
+adapter (`market-data-processing-service@7ff43d7`, run against the actual raw ODDS_API ticks that produced these rows)
+returned **EMPTY (honest absence) 66/66 at every grain** (single-instrument, fixture, whole-file) — 0 raised
+`MalformedTickFieldError`, 0 produced candles. Every raw tick is well-formed (`bm_minutes_to_kickoff` present, h2h
+`market_key`/`price` present) but the odds sit far outside the T-24h..T-0 horizon staleness window (early pre-match
+snapshots, `bm_minutes_to_kickoff` thousands of minutes before kickoff), so there is genuinely no horizon-bucket output.
+A `MalformedTickFieldError` manifest row is only ever written on Path C (missing `bm_minutes_to_kickoff` / failed h2h
+pivot); none of these atoms hit Path C under the fixed code. `empty_confirmed[SOURCE_RETURNED_ZERO]` is exactly what the
+fixed writer (`record_empty_for_shard`) would record on re-process, so the reclass == re-processing outcome without
+running the heavier general candle path over 22 historical dates.
+
+### The legacy-seed resurrection vector is CLOSED by deployed code (Part 2) — the odds-doc's earlier premise was stale
+
+The earlier disposition assumed `unified-trading-library@f14b13ae`/`8e783d70` only demote **captured** seed rows, so a
+canonical fix would resurrect from the 164 attempted_failed seed rows. Reading the actual Part-2 code (`8e783d70`)
+disproves this: Part 2 excludes `_index/per_vm/_legacy_seed.parquet` **ENTIRELY** from the full-rebuild/canonical merge
+whenever a canonical exists (`merge_paths` filter + `exclude_legacy_seed` in `_read_and_merge_per_vm_shards` /
+`merge_canonical_with_outstanding_shards` / `rebuild_manifest_from_canonical_paths`) — regardless of `capture_status`.
+It is deployed on the sports consolidator (`market-tick-data-service:latest`, verified live below). The routine
+per-minute cron runs the incremental path, which structurally never includes the frozen-mtime seed. So the seed rows are
+inert; **no code gap remains** and no UTL change was needed.
+
+The seed file was deliberately **NOT** rewritten: any write bumps its frozen mtime, which would re-introduce all ~1.76M
+seed rows into the incremental merge (which does NOT apply Part-2's exclusion) — strictly riskier than leaving the inert
+seed alone. Belt-and-suspenders instead: the reclass bumps `written_at` to now on the 305 canonical rows, so even in the
+hypothetical event Part 2 were reverted, the corrected rows out-recency the seed's 2026-05-24 rows in the consolidator's
+`attempted_at DESC, written_at DESC` non-captured tie-break.
+
+### Method + HOLD-across-a-cycle evidence
+
+- **Tool**: `market-tick-data-service/scripts/reclass_sports_odds_horizon_malformed_tick_field_2026_07_15.py --apply`
+  (raw canonical read + generation → verified pre-flip snapshot → invariant guards {captured unchanged, attempted_failed
+  −305, row_count unchanged} → atomic CAS `conditional_upload_bytes(if_generation_match=...)`). CAS correctly REFUSED
+  the first attempt when the per-minute cron bumped the generation mid-snapshot; the sports consolidator cron
+  (`uts-prod-manifest-consolidator-market-data-sports-cron`) was paused for a clean CAS window and resumed immediately
+  after (22:35→22:41Z).
+- **Apply**: matched exactly 305 (66/87/63/89), CAS write generation `1784154944569578 → 1784155070991313`,
+  attempted_failed `112582 → 112277`, captured `575671` unchanged. Snapshot:
+  `_index/snapshots/pre_odds_horizon_malformed_reclass_20260715-223708.parquet`.
+- **Immediate re-read**: 0 attempted_failed/MalformedTickFieldError `odds_horizon_bucket_*`; 1,337 suffixed
+  `empty_confirmed[SOURCE_RETURNED_ZERO]`.
+- **HELD across a REAL `--force` full rebuild** (exec `uts-prod-manifest-consolidator-market-data-sports-wqsgs`,
+  `phase=duckdb_merge_start mode=full`, `legacy_seed_in_cycle=False`, `shards_downloaded shards=0` of
+  `shards_listed shards=1` — the seed was listed but EXCLUDED by Part 2; `rows_in=1958499 rows_out=1958498`): post-force
+  re-read = **0** resurrected, 1,337 empty_confirmed preserved. This is the exact vector (`--force` full rebuild that
+  re-includes the seed) that reverted the sibling cefi delete pre-Part-2 — it held.
+- **HELD across 5 natural incremental cron cycles** (22:43–22:47Z, cron resumed): re-read = 0 resurrected, 1,337
+  preserved.
+- **HELD across a SECOND deliberate `--force`** (exec `...-lvrbd`, `mode=full`, `legacy_seed_in_cycle=False`,
+  `shards_downloaded shards=0` of `shards_listed shards=1`, `rows_in=rows_out=1958498`): re-read = 0 resurrected, 1,337
+  preserved. Multi-cycle proof: apply→0, force#1→0, 5 incremental→0, force#2→0. Matches the cefi
+  "one-cycle-isn't-enough" discipline — the seed vector was exercised twice and both times excluded by Part 2.
+  Consolidator cron re-enabled after verification.
+
+Tool committed at `market-tick-data-service@545ce50b` (QG-green, quickmerge). Snapshot restore point:
+`_index/snapshots/pre_odds_horizon_malformed_reclass_20260715-223708.parquet`. No `unified-trading-library` change was
+needed — Part 2 (`8e783d70`) already closes the legacy-seed resurrection gap for attempted_failed rows (the earlier
+"code gap" framing was based on Part 1 alone).
