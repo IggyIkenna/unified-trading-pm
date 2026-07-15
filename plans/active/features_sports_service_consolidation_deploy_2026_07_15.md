@@ -322,3 +322,31 @@ repo. This plan tracks that work.
   memory pressure, not confirmed). Todo 5 stays `[ ]` and should NOT be re-attempted yet — it would still hit the same
   false-DOWN error against the un-updated image. This is now the blocking item, ahead of the consolidator livelock doc
   (which is otherwise resolved pending this deploy).
+- 2026-07-15 (~16:55Z, FinishBucketAndDocs phase re-dispatch, todos 9-10 — STOPPED again per the same gating condition,
+  real evidence, not inference): Re-dispatched with the identical gate: "if `schedulingReenabled` is false or
+  `realScheduledFireVerified` is false, STOP and report why — do not delete the bucket on an unhealthy/unverified
+  service." Independently re-verified live rather than trusting either the task's flags or the prior 13:53Z STOP entry
+  (`d737b09fd`):
+  `gcloud scheduler jobs describe features-service-sports-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  → still `state: PAUSED`. `gcloud run jobs executions list --job=features-service-sports-job` → still only the same two
+  executions from earlier today, both `Completed=False` (`kk4dv` @ 12:37:32Z, `fs8sj` @ 12:33:56Z) — no execution of any
+  kind (manual or scheduled) has ever reached `SUCCEEDED`.
+  `gcloud artifacts docker images list …/features-service --include-tags --sort-by=~CREATE_TIME` → `:latest` is still
+  digest `sha256:c204c49d…`, built 2026-07-14T00:58:45 — unchanged, still predates the UTL `c47273c1`
+  lock-aware-consolidator-liveness fix. `gcloud builds list` (unfiltered, newest-first) confirms no new features-service
+  build attempt exists beyond the two already-filed failures against commit `7c2e4ef1` (`0b5cec2d` TIMEOUT, `c4262919`
+  CANCELLED) — the most recent builds in the whole project (15:15Z onward: two `unified-api-contracts` builds, a
+  `deployment-service` build) are unrelated to features-service. **Gate condition still holds**
+  (`schedulingReenabled=false`, `realScheduledFireVerified=false`) — consistent with, not superseding, the 13:53Z STOP.
+  Per the explicit instruction: did NOT touch the `features-sports` bare bucket
+  (`gs://features-sports-central-element-323112`), did NOT edit `deployment-service/terraform/gcp/main.tf`'s
+  `google_storage_bucket.features_sports` resource or its `_imports_reconcile.tf` import block, did NOT close
+  `plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md`, did NOT touch
+  `bucket_estate_consolidation_to_sub100_2026_07_13.md` (no new state to report there — same blocker), and did NOT flip
+  todos 6-10 (all remain `[ ]`). No terraform/config/code changes made in any repo this touch; this Progress Log append
+  is the only change. Next unblock step unchanged: get a features-service Cloud Build to genuinely reach `SUCCESS`
+  against the UTL `c47273c1`-based commit (root-causing/fixing the quality-gates hang in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md` is the prerequisite), verify the
+  new digest carries the fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, un-pause + verify one
+  real scheduled fire — only then revisit todos 6-10 (Workflow-YAML drift, legacy-job retirement, scheduling re-enable,
+  bucket delete, issue-doc closure) in a future touch.
