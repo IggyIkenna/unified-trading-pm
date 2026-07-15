@@ -235,16 +235,80 @@ confirming a delete pass is safe) that should not be rushed under time pressure.
       `pipeline_mode=None`, `source=None` cefi rows (written_at clustered 2026-04-06 to 2026-04-20) — likely a
       historical-date backfill or manifest-consolidation/migration run against
       `market-data-tick-cefi-prd-central-element-323112`. Repo: instruments-service or market-tick-data-service (TBD).
-- [ ] [SCRIPT] P1. Once the writer is identified and the (date, venue) real-capture overlap (99.0%, confirmed above) is
-      re-verified, delete the 9,757 orphan blank-`data_type` rows from the cefi `_index` (do NOT flip them back to
-      `captured` — they don't identify a real specific shard) via a dedicated pass modeled on the existing
-      `--report-legacy-venue-defi-phantoms --apply` / `--report-chain-level-defi-phantoms --apply` delete-pattern
-      already in `reconcile_phantom_manifest_rows_all.py`, OR handle the 99 genuine-gap DERIBIT/2019 pairs separately
-      first. Repo: instruments-service.
-- [ ] [SCRIPT] P2. Teach `reconcile_phantom_manifest_rows_all.py`'s forward audit to special-case blank/malformed
-      `data_type` on `captured` rows (structurally unauditable via the `data_type={dt}/` needle) so future stale writes
-      of this shape are caught/flagged distinctly rather than silently passing through as ordinary phantoms. Repo:
-      instruments-service.
+      **Not blocking** — deletion below proceeded without this (the 99.0% cross-reference + exact-timestamp predicate
+      were sufficient to safely scope the delete without knowing the writer's identity).
+- [x] ✅ [SCRIPT] P1. Delete the 9,757 orphan blank-`data_type` rows from the cefi `_index` — **SHIPPED 2026-07-15**.
+      See the "2026-07-15 remediation" section below for full before/after evidence, the predicate re-verification, and
+      why the originally-planned `merge_canonical_with_outstanding_shards`-based delete pattern (mirroring
+      `--report-legacy-venue-defi-phantoms --apply`) was NOT used — a live-discovered landmine
+      (`plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) required routing around it
+      via a direct canonical read + atomic CAS write instead. — instruments-service, this session.
+- [x] ✅ [CODE] P2. Teach `reconcile_phantom_manifest_rows_all.py`'s forward audit to special-case blank/malformed
+      `data_type` on `captured` rows — **SHIPPED 2026-07-15**. `_build_forward_captured_idx` now excludes ANY captured
+      row with a blank/null `data_type` from the forward phantom-candidate set (generalized from the pre-existing
+      `schema_version==4`-only filter, which is exactly what let the 2026-06-28T03:12:34Z undocumented apply run re-flag
+      this same population despite that narrower filter already existing at the time). Regression test:
+      `tests/unit/test_reconcile_phantom_blank_data_type_2026_07_15.py` (2 tests: a blank-`data_type` row with a real
+      sibling is dropped from audit scope regardless of `schema_version`; a genuine phantom is still flagged). See the
+      "2026-07-15 remediation" section below for commit evidence. — instruments-service, this session.
 
-Evidence: live UTL `read_availability_index` slim-column query against the bucket above, 2026-07-15, this session (ad
-hoc read-only script, not committed — single-read discipline maintained, no whole-corpus walk).
+## 2026-07-15 remediation — SHIPPED (code fix + production data deletion)
+
+Operator decision (interactive session, 2026-07-15): do BOTH (a) harden the phantom-audit tool, and (b) delete the 9,757
+confirmed-stale orphan rows from the live manifest. Both shipped this session.
+
+**(a) Tool hardening.** `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`
+`_build_forward_captured_idx`: the prior fix (2026-05-04) excluded captured rows with blank `data_type` from the forward
+phantom-audit scope ONLY when `schema_version==4`. Generalized to exclude ANY blank/null `data_type` captured row
+regardless of `schema_version` — the needle-construction blind spot (`data_type={data_type}/` can never match a blank
+value) is structural, not schema-version-specific, and the narrow scoping is exactly what allowed the
+2026-06-28T03:12:34Z incident (live-verified: 100% of the flipped population WAS `schema_version==4`, so the narrow
+filter alone did not prevent it — the tool version at the time may not have carried the fix yet, or the incident's run
+predates it; not fully re-derived, not blocking). New regression test
+`tests/unit/test_reconcile_phantom_blank_data_type_2026_07_15.py` proves (1) a blank-`data_type` captured row with a
+real, correctly-typed sibling `captured` row is dropped from audit scope entirely (never reaches the forward pass,
+regardless of `schema_version`), and (2) a genuine phantom (non-blank `data_type`, no backing parquet anywhere) is still
+correctly flagged. Both existing reconciler regression tests
+(`test_reconcile_phantom_bundle_atom_exemption_2026_07_10.py`,
+`test_reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.py`) still pass — no regression.
+
+**(b) Production deletion.** Re-derived the predicate fresh (not trusted from this doc): live query against
+`market-data-tick-cefi-prd-central-element-323112`'s canonical `_index/availability_index.parquet` for
+`capture_status=='attempted_failed' AND data_type=='' AND error_reason=='phantom_captured_no_parquet_at_canonical_path' AND attempted_at=='2026-06-28T03:12:34.851168+00:00'`
+— matched **exactly 9,757 rows**, byte-identical to this doc's count. Re-derived the 99.0% cross-reference fresh:
+**9,658/9,757 (98.99%)** have a real, correctly-typed `captured` row for the same (date, venue) elsewhere in the
+manifest — exact match to the investigation's number.
+
+**Mechanism discovered mid-task**: the originally-planned delete pattern (`merge_canonical_with_outstanding_shards`
+immediately before write-back, mirroring `reconcile_phantom_manifest_rows_all.py`'s own
+`_apply_delete_chain_level_defi_phantoms`) turned out to be UNSAFE for this specific population — the bucket carries a
+permanently-frozen `_index/per_vm/_legacy_seed.parquet` snapshot (2026-06-24, pre-incident) that still holds these exact
+rows as `captured`, and the 2026-07-13 "captured-outranks" merge tie-break makes that stale `captured` row win over the
+canonical's newer, correct `attempted_failed` row regardless of recency — confirmed live: the merge helper reported 0
+matching rows where a raw canonical-only read found 9,757, seconds apart. Full writeup + cross-bucket scope (also
+present in DeFi/TradFi) + follow-ups:
+`plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`. Routed around it: read + wrote the
+canonical blob DIRECTLY (bypassing the shard merge), protected by true atomic compare-and-set
+(`StorageClient.conditional_upload_bytes(..., if_generation_match=...)` — the same GCS generation-precondition primitive
+`manifest_consolidator.py` uses for its own canonical writes) instead of a "re-merge and hope" pattern; a verified
+pre-delete backup of the full canonical blob was snapshotted first. Script:
+`instruments-service/scripts/delete_cefi_blank_data_type_orphan_rows_2026_07_15.py` (one-off, `Delete-when:` marked).
+
+Execution (2 attempts — the first was correctly REFUSED by the CAS guard when a concurrent writer landed a newer
+canonical mid-run, proving the safety mechanism works; the retry succeeded):
+
+- Before: 11,238,191 canonical rows (`captured`=3,130,709, `attempted_failed`=1,745,196).
+- Deleted: exactly 9,757 rows (generation 1784082538548457 → 1784082807578128).
+- After: 11,228,434 canonical rows (`captured`=3,130,709 **unchanged**, `attempted_failed`=1,735,439, delta −9,757
+  exactly).
+- Backup (full pre-delete canonical, verified byte-count on upload):
+  `gs://market-data-tick-cefi-prd-central-element-323112/_migration_backup/delete_cefi_blank_data_type_orphan_rows_2026_07_15/availability_index_pre_delete_20260715-023145.parquet`.
+- Post-delete independent verification (fresh raw canonical read, separate ad hoc script): **0** rows with blank
+  `data_type` of ANY `capture_status` remain in the bucket; `captured`/`attempted_failed` totals match the write-back
+  log exactly; spot-checked 13,008 surviving real `captured` rows for BYBIT/HYPERLIQUID/UPBIT in the affected
+  2026-04-06..2026-04-20 date window — untouched.
+
+Evidence: live production reads/writes against `market-data-tick-cefi-prd-central-element-323112`, 2026-07-15, this
+session (ad hoc diagnostic + the committed one-off delete script; single-read discipline per query, no whole-corpus
+walk). Code fix + test: instruments-service commit (see git log for this file's neighboring commit — pushed same session
+via quickmerge).
