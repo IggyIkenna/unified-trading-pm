@@ -6,9 +6,12 @@ description:
   adversarially verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
   evidence, supersession banners, status/frontmatter drift, dangling refs) and route judgment calls to the operator as
   an interactive Q&A with options + a marked recommendation; in autonomous/AO mode raise those as AO operator
-  alerts/escalations and park them as BLOCKED-OPERATOR-DECISION instead of asking. Plan↔codex drift is in scope and
+  alerts/escalations and park them as BLOCKED-OPERATOR-DECISION instead of asking. Also runs a lifecycle + hygiene pass:
+  archive fully-done plans (verified, unlocked), flag near-complete plans (<=1 open todo) for consolidation, and leave
+  the corpus canonical (prettier + run_hygiene_sweep.sh-green, within line-caps). Plan↔codex drift is in scope and
   plans→codex SSOT updates are applied ONLY after an explicit operator ruling. Trigger on /plan-reconcile, "reconcile
-  the plans", "plan contradiction audit", "check the plans for contradictions", "flip done-but-unchecked plan items".
+  the plans", "plan contradiction audit", "check the plans for contradictions", "flip done-but-unchecked plan items",
+  "archive done plans", "consolidate near-empty plans".
 ---
 
 # /plan-reconcile — plans corpus contradiction audit + reconciliation
@@ -17,7 +20,9 @@ Finds and fixes the two failure classes that rot the plans corpus: (1) **contrad
 claims about the same decision/status/number/owner/SSOT, epics disagreeing with their child plans, frontmatter
 disagreeing with body banners; (2) **false-unchecked** — `- [ ]` todos whose work actually shipped but never got the
 same-turn checkbox flip (the #1 false-progress source per CLAUDE.md). Every finding survives adversarial verification
-before anyone acts on it.
+before anyone acts on it. It also runs a **lifecycle + hygiene pass**: archive fully-done plans (all todos verified
+`[x]`, unlocked), flag near-complete plans (≤1 open todo) for consolidation into a sibling/epic, and leave the corpus in
+canonical format — prettier-clean, `run_hygiene_sweep.sh`-green, within the line-caps.
 
 Runs against `unified-trading-pm/plans/{active,active/issues,epics}` + normative refs. Codex and archive are out of
 audit scope but ARE valid evidence when adjudicating (a codex SSOT outranks any plan; `plans/archive/` explains dangling
@@ -41,9 +46,15 @@ Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse
 - per-doc: path, size, `status`, `assigned_vm`, `parent_epic`, `depends_on`, `supersedes`, `superseded_by`, `related`,
   `locked_by`, `title`;
 - mechanical flags: dangling `depends_on`/`related`/`supersedes` refs; `superseded_by` set while `status: active`;
-  terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; `assigned_vm` outside
-  `{planning, NA}` (`human-planning` = legacy alias for `planning`, accepted); `parent_epic` naming a non-existent epic;
-  duplicate titles; missing required frontmatter per `plans/PLAN_FORMAT.md`.
+  terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]` while
+  `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
+  candidate); **body over the line-cap** — normal plans 500 soft / 1000 hard (per `run_hygiene_sweep.sh`), but
+  **long-lived master plans + epics (`plans/epics/*.md`, `*_master*`, living-inventory/hub plans) are EXEMPT from the
+  500/1000 caps** (they are intentionally long), with a **strict 5000-line ABSOLUTE ceiling on ANY file regardless of
+  type** (over 5000 = split finding, no exemption); `assigned_vm` outside `{planning, NA}` (`human-planning` = legacy
+  alias for `planning`, accepted); `parent_epic` naming a non-existent epic; duplicate titles; missing required
+  frontmatter per `plans/PLAN_FORMAT.md`. Emit per-doc **open/done checkbox counts** so the fully-done + near-complete
+  candidates are computed deterministically (they are candidates, still verified in Phase 2/3 before any archival).
 
 Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans/archive/` or codex (parser artifact).
 Also run the existing hygiene tooling and fold its output in: `run_hygiene_sweep.sh`,
@@ -116,26 +127,40 @@ the same way: the refuter attacks the evidence chain (sha actually reachable? ar
 
 **Auto-fix (no ruling needed — apply in Phase 5):**
 
-| Class                                                   | Fix                                                                                                                         |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Done-but-unchecked with HARD evidence                   | Flip checkbox with `<repo>@<sha> + evidence`                                                                                |
-| Terminal-status doc parked in `plans/active/`           | Run the 5-step archival ritual — but `locked_by:` blocks archival without `[unlock-plan]` (ASK; in autonomous mode park it) |
-| Superseded content with no banner                       | Add the `> **SUPERSEDED by <doc> (<date>)**` banner; point to the successor                                                 |
-| Frontmatter status contradicting body completion banner | Align frontmatter to reality (verify reality first, both directions possible)                                               |
-| Dangling ref where the target moved to archive/codex    | Repoint the ref                                                                                                             |
-| Duplicate/stale index rows (INDEX.md / ACTIVE_INDEX.md) | Regenerate via the inventory tooling, never hand-sync                                                                       |
+| Class                                                          | Fix                                                                                                                                                                                                              |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Done-but-unchecked with HARD evidence                          | Flip checkbox with `<repo>@<sha> + evidence`                                                                                                                                                                     |
+| Terminal-status doc parked in `plans/active/`                  | Run the 5-step archival ritual — but `locked_by:` blocks archival without `[unlock-plan]` (ASK; in autonomous mode park it)                                                                                      |
+| Fully-done plan (every todo `[x]`, `status: active`, UNLOCKED) | Verify each todo genuinely done via Phase-2 HARD evidence (a plan can be false-checked), then run the 5-step archival ritual. Any todo only soft-supported, or `locked_by:` set → park, never autonomous-archive |
+| Superseded content with no banner                              | Add the `> **SUPERSEDED by <doc> (<date>)**` banner; point to the successor                                                                                                                                      |
+| Frontmatter status contradicting body completion banner        | Align frontmatter to reality (verify reality first, both directions possible)                                                                                                                                    |
+| Dangling ref where the target moved to archive/codex           | Repoint the ref                                                                                                                                                                                                  |
+| Duplicate/stale index rows (INDEX.md / ACTIVE_INDEX.md)        | Regenerate via the inventory tooling, never hand-sync                                                                                                                                                            |
+
+**Completion + consolidation lifecycle (verify-then-archive; destination is operator-gated):**
+
+- **Fully-done plan** (every todo `[x]`) — confirm each is genuinely done via the Phase-2 HARD-evidence bar (soft-only =
+  contradiction finding, not an archive), then: UNLOCKED → archive via the 5-step ritual (auto-fix above); `locked_by:`
+  set or any todo soft-only → park as `BLOCKED-OPERATOR-DECISION`. Never autonomous-archive a locked plan.
+- **Near-complete plan** (≤1 open todo, or a remnant too small to justify a standalone plan) — the remnant should be
+  **folded into a sibling plan under the same `parent_epic`** (or the epic hub) and the shell archived. But WHERE live
+  work lives is a planning decision: interactive → ask with a recommended fold-target; autonomous/AO → **park with the
+  specific recommended target named**, never auto-fold (moving live todos between plans without a ruling is
+  review-blocking). Once the remnant is folded by ruling, the emptied shell archives as a fully-done plan.
 
 **Operator ruling required (Q&A in interactive mode; park + alert in autonomous mode):** SSOT-ownership disputes; two
 ACTIVE docs giving opposing directives; epic vs plan disagreeing about scope or sequencing; conflicting numbers where
 neither side has hard evidence; **ANY resolution that edits a codex SSOT doc** (plans→codex updates are in scope for
-this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT); anything touching a
-`locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive format — batched questions
-ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question with per-item exceptions;
-every question carries: the two quotes + locations, why they conflict, which doc looks authoritative and why, and
-options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES escalation format). In
-autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations** (orchestrator
-dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds with
-everything else and applies the ruled items on the next pass.
+this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT); **near-complete-plan
+consolidation** (which sibling/epic the remnant folds into); **archiving a `locked_by:` plan** (even fully-done);
+splitting a plan over its line-cap (a normal plan >1000, or ANY file — master/epic included — over the absolute 5000
+ceiling); anything touching a `locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive
+format — batched questions ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question
+with per-item exceptions; every question carries: the two quotes + locations, why they conflict, which doc looks
+authoritative and why, and options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES
+escalation format). In autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations**
+(orchestrator dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds
+with everything else and applies the ruled items on the next pass.
 
 ## Phase 5 — apply + commit
 
@@ -150,6 +175,14 @@ everything else and applies the ruled items on the next pass.
   post-phase codex-audit ritual) and condense the matching CLAUDE.md one-liner if it carries the stale claim. HARD GATE:
   a codex/SSOT edit is only ever applied AFTER an explicit operator ruling on that specific finding (chat answer or AO
   escalation response) — never from the agent's own judgment, however confident the evidence.
+- **Leave the corpus hygiene-canonical (green-gate — HARD).** After applying fixes: prettier every touched `.md`;
+  regenerate the inventory (`regenerate_active_plan_inventory.py`); then re-run `run_hygiene_sweep.sh --ci` and confirm
+  **0 hard failures** before finishing (frontmatter / todo-format / todo-regression / runbook-fields all green). A plan
+  you touched must never be left non-prettier, hygiene-red, or with malformed todos. Line-caps (tiered): a **normal
+  plan** over 1000 (hard) is a split finding (operator-gated — splitting a plan is a planning decision), over 500 (soft)
+  is a Phase-6 report note; **long-lived master plans + epics are exempt from the 500/1000 caps** (living hubs are meant
+  to be long); but the **5000-line ABSOLUTE ceiling is universal** — ANY file over 5000 lines (master/epic included) is
+  a split finding, no exemption. Canonical format is the contract, same as a `quality-gates.sh`-green tree for code.
 - NEVER write agent memory; NEVER create `*_SUMMARY.md` — the final report is chat text.
 
 ## Phase 6 — report

@@ -400,30 +400,60 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       can recur silently. Dispatched to a sub-agent (data-fix: reclassify the ~7,700 rows + regression tests; code-fix:
       guard `record_failed()` against `EXPECTED_*`-prefixed reasons; new issue doc) — see that issue doc for the
       resolution once shipped. Repos: `market-tick-data-service` (data fix), `unified-trading-library` (writer guard).
-- [ ] [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050 attempted_failed,
-      0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100% `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE`,
-      `attempted_at` spanning 2026-06-21 to 06-30 (historical, not fresh). NOT found tracked in any existing
-      `plans/active/` doc as of this pass (closest precedent,
-      `master_data_canonicalisation_migration_catalogue_     2026_06_07.md`'s R5-fix-7 defi catalog-freshness gate, is
-      dated 2026-06-08 — predates this window and appears already resolved/re-promoted, so this looks like a RECURRING
-      instance of a resolved-once issue, not the same still-open instance). Needs its own investigation: is
-      `assert_defi_catalog_fresh`'s freshness gate itself stale/broken again, or is this a different trigger. File as a
-      new issue doc if picked up.
-- [ ] [DATA] P1 **NOT YET COVERED**: `sports/trades` (112277/522276 attempted_failed, 21.5%) —
-      `error_reason=VENUE_FETCH_FAILED` dominates (94127 of the 112277), `attempted_at` up to 2026-07-13T23:56Z
-      (freshest of all the alert-batch cells — worth checking if this is still actively recurring). `VENUE_FETCH_FAILED`
-      is heavily tracked for CeFi/Tardis (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`) but NOT found tracked for
-      sports specifically. A smaller slice (several hundred rows) shows a DIFFERENT, more interesting pattern: a
-      `record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on     <VENUE>/<DATE>. Use record_failed(EmptyFromLiveInstrumentError(...)) instead`
-      guard message (BETFAIR, MATCHBOOK, PINNACLE, and others, many 2022-era dates) — this exact pattern + fix design IS
-      tracked (`data_completion_to_100_all_ag_2026_06_21.md:461-489`, marked `[x]` done for bookmaker venues via a
-      `BOOKMAKER_NO_COVERAGE` reclassify), but these alert-batch instances run through 2026-07-13 — AFTER that fix
-      landed — worth verifying whether the fix's venue/date coverage is actually complete or these are a residual gap.
-- [ ] [DATA] P2 **NOT YET COVERED**: `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%) —
-      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z (same batch as the sports/trades failures
-      above — likely same root run). NOT found tracked anywhere in `plans/active/` (only hit is an unrelated chaos-test
-      scenario file). Small absolute count (66) but 100% ratio triggered the alert; needs its own investigation into
-      what's malformed and why.
+- [x] ✅ [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050
+      attempted_failed, 0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100%
+      `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE` — INVESTIGATED 2026-07-15: live-requeried counts confirmed
+      (dex_pool_state 2107/2109, lst_rates 851/851, `attempted_at` 2026-06-21..06-25 / ..06-30 respectively). Root cause
+      is a **temporal race, not a broken/regressed gate**: every affected row is a historical backfill shard (shard
+      `date` years before `attempted_at`, 0% same-day) whose `assert_defi_catalog_fresh` coverage-check genuinely found
+      no IS DeFi catalogue snapshot for that historical date AT THE TIME — proven via `gcs_describe_object()` timestamps
+      showing the catalogue snapshots that now cover those dates were written 2026-06-29, AFTER every affected attempt.
+      R5-fix-7 (2026-06-08) referenced an earlier, smaller re-promote (R4, defi 6,853 rows) — the full historical
+      per-date catalogue backfill these rows needed didn't finish until 2026-06-29, three weeks later. Also found +
+      fixed a real, adjacent code gap while tracing this: `lst_rates_handler.py` was 1 of 9 DeFi handlers never
+      threading `mode=` into `assert_defi_catalog_fresh` (only `dex_pools_handler.py` + `risk_params_handler.py` did) —
+      didn't cause these specific rows but is a genuine near-term-batch-run latent bug, fixed with 3 new regression
+      tests. Data remediation (re-collecting the 2,958 affected shards) deliberately NOT executed — a live, multi-year,
+      production-API-quota-consuming re-collect is out of scope for a rushed mid-investigation action; scoped as a
+      follow-up with exact commands. Full writeup, evidence, and follow-up todos:
+      `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P1. `sports/trades` (112277/522276 attempted_failed, 21.5%) — INVESTIGATED. **NOT a live/recurring venue
+      outage** — all 112,277 rows (both the 94,127 `VENUE_FETCH_FAILED` rows and the 18,150-row
+      `EmptyFromLiveInstrumentError`-guard slice) share one 8-second `attempted_at` window (2026-07-13T23:56:41-48Z),
+      blank `fixture_id`, `pipeline_mode=batch_api_football` — fingerprints of a bulk RE-EMIT, not live fetch attempts.
+      `git log -S "VENUE_FETCH_FAILED" --all` proves the literal error string was REMOVED from live code 2026-06-28
+      (`market-tick-data-service@b989284c` decomposed the opaque fallback into `UNCLASSIFIED:{code}`) — these rows carry
+      dead pre-2026-06-28 vocabulary, re-emitted by `rebuild_sports_manifest_v9.py`'s confirmed 2026-07-13 E4
+      apply-pass. Root cause: `_write_attempted_failed_rows`/ `_write_empty_rows`'s CF-11 branch
+      (`_rebuild_sports_write.py`) re-emit pre-existing rows via `record_failed()`/`record_empty()` WITHOUT
+      `attempted_at=`, so UTL defaults it to `datetime.now(UTC)` — silently stamping the REBUILD's own runtime onto
+      years-old (2020-2026) dead rows, making them look like the freshest failure in the whole alert batch. **The
+      `BOOKMAKER_NO_COVERAGE` fix's scope is CONFIRMED complete, not a residual gap**: re-derived
+      `is_bookmaker_league_covered()` against all 112,277 rows directly — 100% are genuinely-covered (bookmaker, league)
+      pairs (0 uncovered); the guard-rejection slice is `record_zero_rows(was_expected=True)` working exactly as
+      documented/sanctioned, not a bug. Code fix shipped
+      `market-tick-data-service@6fad6565fe66ef34ea245172dc1e606c0a2dd183` (`_attempted_at_from_row()` mirrors the
+      existing `_available_at_from_row()` honest-proxy convention, wired into all 3 re-emit call sites; 6 new regression
+      tests, QG green) — prevents recurrence; does NOT retroactively restore the 112,277 already-corrupted live rows'
+      `attempted_at` (pre-rebuild GCS generation IS recoverable via soft-delete, exact generation number + safe-restore
+      recipe documented, but the swap needs a controlled window on this live, actively-written bucket — correctly not
+      forced under time pressure; soft-delete expires ~2026-07-20). Full writeup:
+      `plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md`.
+- [x] ✅ [DATA] P2. `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%,
+      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z) — INVESTIGATED + FIXED. Live re-query
+      found the count has already drifted to 0 in both plausible sports manifests (a one-off manual-run artifact, not
+      ongoing scheduled traffic). Root cause was a real, standing classification bug (not upstream-only):
+      `SportsBucketAssignmentAdapter.process_to_candles()` raised `MalformedTickFieldError` whenever every tick row
+      failed the `bm_time <= fetch_utc` causality check, even though `bm_minutes_to_kickoff` + h2h columns were
+      genuinely present — mislabeling honest absence (vendor clock-skew/stale snapshot) as a malformed field, the same
+      false-failure class the adapter's own existing "no h2h rows" Path A½ fix already corrected for a sibling
+      condition. Fixed `market-data-processing-service@7ff43d7197a50cfe52d9ad8fe514cd6a2ca09558` (now records
+      `empty_confirmed` for the 100%-causality-drop case; genuine schema drift still raises as before), 3 new regression
+      tests (coverage.xml-verified both branches hit), `quality-gates.sh --no-fix` green. Checked for correlation with
+      the sibling `sports/trades` `VENUE_FETCH_FAILED` investigation (same `attempted_at` batch window) — no issue doc
+      filed for it yet as of this writing; based on this investigation's own evidence the two are NOT the same root
+      cause (different services/manifests/code paths), noted for the next investigator rather than asserted without
+      evidence. Full writeup: `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md`.
 
 ### Post-reconciliation progress
 
@@ -602,3 +632,50 @@ the operator's corrected framing, instructed to reach an honest verdict rather t
 (3) investigation of the sports catalogue's specific 6 missing rows (legitimate shrink vs. bug vs. transient),
 diagnosis-only — not authorized to force an `--allow-catalogue-shrink` override itself. Prediction catalogue OOM (memory
 bump) and a re-run of the cefi delete (once gated fix confirms holding) remain as pending follow-ups after this round.
+
+## Third round — all 4 dispatched agents complete + 1 more dispatched
+
+1. **Legacy-seed tie-break — SHIPPED (P0).** `unified-trading-library@f14b13ae` — both the DuckDB SQL merge and the
+   Python `_merge_shard_frames` path now exclude the frozen `_legacy_seed.parquet` shard from ever winning the "captured
+   outranks" tie-break, via a narrow shard-identity exclusion (not a general recency reordering, per the operator's
+   chosen approach). 3 new regression tests directly reproduce the live resurrection scenario and prove it no longer
+   occurs — including one reproducing the issue doc's own diagnostic exactly. Confirmed cross-cutting: protects
+   cefi/defi/tradfi uniformly (shared, bucket-parametrized code; each asset_group carries its own frozen legacy seed).
+   **Gate before re-running the cefi delete**: confirm this fix has propagated to the deployed consolidator image (a UTL
+   library change needs the dependent service image rebuilt) AND holds across ≥2 real consolidator cycles before
+   re-attempting — a synchronous image-content check timed out (large image pull); this needs one more real cycle to
+   observe, not something to force. **Do not re-run the cefi delete yet.**
+2. **Yahoo Finance source-vs-venue — RESOLVED (partial validation).** Operator was right about DXY (venue=ICE) and
+   KRW/USD (venue=FX) — both genuinely already working via a real, tested `YahooFinanceAdapter`. Operator was wrong
+   about US Treasuries — a genuine, never-wired gap (`route_yahoo_tradfi()` never included `"CBOE"` in its venue
+   dispatch, despite treasury-yield tenors being fully declared in 3 different registries). No fix forced at diagnosis
+   time — real regression risks were found in both naive fixes (venue-blanket CBOE flip would've silently broken live
+   VX-futures/Databento capture; naive YAHOO_FINANCE registry deletion would've tripped an undocumented ALL-10-datatypes
+   fallback footgun) — both filed as precise follow-up todos instead.
+3. **CBOE treasury yields — SHIPPED.** `market-tick-data-service@764e7170` — added a `data_type`-level discriminator
+   (`ohlcv_24h` → Yahoo; anything else, incl. `data_types=None` the production default → unchanged Databento path) so
+   treasury tenors route to Yahoo Finance WITHOUT touching VX-futures/Databento traffic at all. 4 regression tests prove
+   both halves independently. **Not yet live-traffic-carrying**: a separate UAC registry gate
+   (`VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` doesn't declare `ohlcv_24h`) still blocks it — same precedent pattern as the
+   mbp_10/CME gap, filed as its own P3 follow-up rather than scope-creeping into UAC.
+4. **Sports catalogue 6-row shrink — SHIPPED, real bug found.** Not a legitimate de-registration and not flakiness (both
+   07-15 attempts were byte-identical) — the exact accounting was 9 fixture/team/player rows aging off a 400-day rolling
+   window minus 3 new same-day fixtures gained, net −6. Root cause: unlike every OTHER asset_group, sports catalogue
+   building had no incremental "frozen tail" merge, so an aged-off instrument's whole row vanished instead of just
+   closing. Fixed by reusing the existing generic `_merge_incremental` engine for the sports grain:
+   `instruments-service@24f84e86`, 2 new regression tests, QG green. Did not force `--allow-catalogue-shrink` (correctly
+   out of scope, and moot once the root bug was fixed).
+5. **Prediction catalogue OOM — dispatched, in flight.** Terraform-codified memory bump (following this session's
+   established "codify + live-apply in the same pass" pattern) for `lifecycle-catalogue-regen-prediction` (currently 4Gi
+   against a 2.67M-row catalogue), plus a fresh triggered run to confirm the fix actually works.
+
+**Process note, 3rd time this session**: 3 of these 4 agents independently hit the exact same broken pattern —
+backgrounding a task then ending their turn expecting an automatic wake, which doesn't happen for sub-agents — and had
+to be resumed with an explicit correction before making further progress. Worth fixing at the dispatch-prompt level for
+future sessions (state the constraint more prominently up front) rather than catching it reactively every time.
+
+**Remaining after this round**: confirm legacy-seed fix propagation + multi-cycle hold, then re-run the cefi delete;
+fold in the prediction-catalogue agent's result once it lands; the 4 newly-logged uncovered `DP_RUN_MOSTLY_EMPTY` cells
+from the parallel session's pass (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
+`sports/odds_horizon_bucket_15m`) remain unactioned — not picked up this round, flagged for a future pass given the
+sheer volume already covered today.
