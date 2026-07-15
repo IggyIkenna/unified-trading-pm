@@ -237,9 +237,25 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       across the entire cefi Tardis corpus + dropping the eu duplicates is a large, hard-to-reverse-in-spirit production
       mutation; snapshot-first makes it recoverable, but sign-off requested before executing, per this issue's own
       "OPERATOR DECISION" framing and the precedent set by `BLK-cbee81bc` for the comparably-large legacy-bucket purge).
-- [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
+- [x] ✅ [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
-      and start reducing `expected_unattempted`. (repo: instruments-service)
+      and start reducing `expected_unattempted`. (repo: instruments-service) — **RESULT: NEGATIVE.** Ran the decisive
+      re-measurement at the armed T+86min window (20:22Z baseline → 21:48Z): `expected_unattempted` FLAT at 2,773,292
+      (zero delta) despite the confirmed-deployed, confirmed-correct writer fix running continuously. Confirms the
+      writer fix is necessary but NOT sufficient — todo below (enumerator re-materialization) is the actual remaining
+      blocker. See `mvp_backfill_cefi_tick_v10_2026_06_27.md` Progress Log "DECISIVE TEST RESULT" entry for full detail.
+- [ ] [BACKEND] P0. **NEW, confirmed blocker (the actual G4 gate-closer): re-materialize the cefi expected-universe
+      enumerator so every `expected_unattempted` row carries ONE canonical atom shape.** Live-verified the
+      `expected_unattempted` side is currently a MIX: some rows canonical (`VENUE:PERPETUAL:BASE-QUOTE@MARKER`, matching
+      the now-fixed writer's output), some rows stale (`instrument_type=''` + lowercase-raw id, e.g.
+      BINANCE-FUTURES/trades `hotusdt`) — a direct violation of the workspace HARD RULE "shard atom identical across
+      writer/manifest/status/gate/UI" (CLAUDE.md § DATA). Even a perfectly-canonicalizing writer cannot close a
+      `(itype='', id='hotusdt')` eu cell. Fix: identify + correct whatever wrote the stale-shape eu rows (an older
+      enumerator version, most likely — `enumerate_expected_universe.py` or its per-instrument-day writer), then
+      re-materialize so ALL eu rows for cefi share the current canonical atom. AFTER this lands, re-run the relabel
+      script (todo 2, still operator-gated for `--apply`) and re-measure — do NOT relaunch/widen the Tardis fleet
+      further until this lands (per operator ruling `BLK-b319db38`, disposition B: existing 3-VM fleet keeps running
+      since its captures are canonical/reusable pre-fetch, but no widening). (repo: instruments-service)
 - [x] ✅ [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
       SHA) — check `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@<sha>*` — then
       relaunch the 3 `cefi-queue-*` Tardis VMs against it (respect the hard 3-VM Tardis cap: kill-then-relaunch, never
