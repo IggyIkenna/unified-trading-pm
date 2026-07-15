@@ -49,7 +49,7 @@ related:
     ../issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 parent_epic: sports_master
 priority: P1
 source:
@@ -247,6 +247,23 @@ not lost, but they belong to their own triage, not this audit's remediation:
    paused/un-run for ~37 days for a **different, still-unexplained reason**, and the 06-08 execution logs are past Cloud
    Logging's 30-day retention. Recommend a dedicated triage: un-pause one collector, capture the real failure, decide
    backfill.
+
+   > **DISAMBIGUATED 2026-07-16 (dedicated read-only follow-up) — the "still-unexplained reason" IS the deliberate
+   > 2026-06-08 pre-migration drain, NOT a code bug, and these jobs are NOT retired cruft.** Full write-up:
+   > [`defi_scheduled_collection_outage_paused_crons_2026_07_16.md`](./defi_scheduled_collection_outage_paused_crons_2026_07_16.md).
+   > Verdict: **REAL-OUTAGE (deliberate-drain / incomplete-resume), `safeToCleanup=false`.** The 11 collectors are the
+   > intended steady-state mechanism, still declared in live terraform
+   > (`deployment-service/terraform/gcp/defi_collection_scheduler.tf`), and the master migration catalogue's RESUME
+   > runbook enumerates all 11 crons for un-pause (owned by `tradfi_v9_stage1_finish_2026_07_06.md` task -003,
+   > BLOCKED-PREREQUISITES on the TradFi fleet-drain gate). The pause = the 48-scheduler/26-AWS-rule pre-migration
+   > drain; the bucket consolidation changed STORAGE LAYOUT only and POST-DATES the pause. **This item's earlier
+   > "un-pause one collector to capture the real failure" recommendation is now MOOT** — there is no unexplained live
+   > failure (the 06-08 failure was the drain pause itself; the images are docker-proved IMPORT_OK and self-heal on
+   > un-pause), and un-pausing now would race the not-yet-consolidated TradFi manifest. Correct action = resume via the
+   > tracked, gated RESUME runbook once the TradFi close-out clears; NO cleanup, NO un-pause performed. Only fresh DeFi
+   > data today is lumpy subset coverage from the `mvp_backfill_defi_onchain_v10_2026_06_27` backfill fleet. **Escalated
+   > to operator for resume-sequencing direction.**
+
 2. **Group-C jobs failing TODAY on FRESH post-06-09 images.** A set of jobs (e.g. `instrument-catalogue-regen`,
    `lifecycle-catalogue-full-*`, `dp-manifest-hygiene-*`, various `t1-recon`, `paper-*`, `blrs-daily-determinism`, etc.)
    fail on today's rebuilt images — so their failures are data/config/other, definitively NOT the import skew. Worth a
