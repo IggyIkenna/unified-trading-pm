@@ -383,15 +383,29 @@ B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherw
       ~$1,000/mo →
       ~$250–400/mo**, structurally flat as activity grows.
 
-## Decisions needed (operator)
+## Decisions — MADE (operator, 2026-07-15)
 
-1. Approve the direction? (Set A + one Set B path)
-2. **Set B: B1 self-host / B2 deployment-api service / B3 RunsOn?** (rec: B1 now → B2 for ci-status-update later)
-3. A2: fix the content-gate cache properly (Firestore tree-fingerprint dedup), or just delete the dead job now?
-4. ✅ A6 + A7 staging-in-flight — **VERIFIED SAFE 2026-07-15** (23 `ldr_main`, 2 unset, zero staging activity).
-   Remaining sub-question: confirm the 2 `promotion_model`-unset repos are not intended to route through staging.
-5. Confirm **no hard spending cap** (soft alerts only), given the 2026-06-22 outage?
-6. Sequencing: OK to ship the **unconditional Set A** items now and hold A3/A4 until the Set B decision? (rec: yes)
+All decisions are now closed. Execution follows in the sibling plan.
+
+1. ✅ **Direction approved** — Set A + Set B = B1.
+2. ✅ **Set B = B1** (self-hosted glue runners on the planning-VM; 8 ephemeral runners, CPU/RAM-capped). B2 (serverless
+   ci-status-update) remains the natural later step; B3/RunsOn parked.
+3. ✅ **A2 = FIX PROPERLY NOW** — rebuild the content-gate dedup on the Firestore tree-fingerprints, **fleet-wide** (it
+   lives in the shared reusable `python-quality-gates-v2.yml`, called by 44 workflows across ~25 repos). **Correctness
+   guard:** skip ONLY when that exact tree previously passed GREEN (never dedup off a failed/unknown run); relies on QG
+   determinism (same tree → same result). Does NOT touch SIT (cross-repo integration) and never skips a changed tree.
+4. ✅ **A6 + A7 = disable the staging crons** — staging-in-flight verified zero; the 2 unset repos are
+   `unified-trading-pm` (Option-B main-direct, own PM-only bot) + `system-integration-tests` (test harness) — **neither
+   routes through staging**. (Now a VM-load tidy-up, since these go self-hosted at $0.)
+5. ✅ **Spending cap = LEAVE AS-IS** — a hard cap already exists; operator: do not touch it. (No soft-alert change
+   made.)
+6. ✅ **Migration pace = canary → phased groups** — flip one low-risk workflow, verify green on `[self-hosted, glue]`,
+   then roll the 52 MOVE set out in small batches, not all at once.
+7. ✅ **A5 = measure per-repo, then collapse** the QG fan-out.
+8. ✅ **A1 = do it** (docs-only fast-path, fleet QG). **A8 = do it** (template timeout cap). **A3/A4 = deprioritized**
+   ($0 once self-hosted; VM-load micro-optimisation for later).
+9. ✅ **Promote bots = keep both** — `ldr-to-main-promote` (PM-only) and `-fleet` (the 23 `ldr_main` repos) are
+   complementary, NOT duplicates. Earlier "retire the duplicate" framing withdrawn.
 
 ---
 
@@ -558,3 +572,7 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   ~10 GB) already land on this VM, so **memory is a managed watch-item** and the 8 GB glue `MemoryMax` is sized so
   glue+QG+orchestrator ≈ ~23 GB of 32 GB. Added the ADR to Codex SSOTs. Work now continues from **slot 1** (root left to
   the AO worker).
+- 2026-07-15 — **All decisions closed** (operator): B1/planning-VM; A1 do; A2 **fix properly** (fleet-wide Firestore
+  tree-fingerprint dedup, green-only guard — it lives in the shared reusable QG, 44 callers); A5 measure-then-collapse;
+  A6/A7 disable staging crons; A8 do; A3/A4 deprioritized; spend cap left as-is; migration = canary→phased groups;
+  promote bots kept (not duplicates). Recorded in §"Decisions — MADE". Next: execute the changes.
