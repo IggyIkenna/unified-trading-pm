@@ -1743,3 +1743,40 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   re-verified HELD); Group-B's 10 buckets/families explicitly reconfirmed out of scope; no regressions, no data loss, no
   unauthorized deletes. Estate count this sweep: **-1** (241 baseline tracking unaffected beyond the single
   `features-calendar` delete already reflected in the entry above).
+
+- **2026-07-15, operator ruling executed (Ship phase) — `features-sports` migrate-script shipped + 2 ephemeral objects
+  confirmed disposable, blocker (a) cleared**. Operator ruled 2026-07-15: finish the `features-sports` bare-bucket
+  retirement now. This touch dispatched only the "Ship phase" scope from item (2)'s two blockers above (blocker (b) —
+  the 3 live-reference-surface cutover + eventual delete — is a separate follow-up touch, not done here, to avoid
+  collision with any parallel dispatch on the same plan). **(a) migrate-script shipped**: re-verified
+  `features-service/features_service/sports/scripts/ migrate_features_sports_flat_bucket_gap_2026_07_15.py` was still
+  untracked (`git status` — confirmed `??`), then re-verified the destructive step it already performed (per the prior
+  workflow's report) is still correctly reflected rather than re-running it: `gsutil stat` on
+  `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2020-01-01/feature_group=sfi_progressive/sfi_progressive.parquet`
+  confirms the object is present (created 2026-07-15T10:05:37Z, 25,989 bytes); downloaded + read the consolidated
+  `gs://features-sports-prd-central-element-323112/_index/availability_index.parquet` (161,226 rows) and confirmed
+  exactly 1 matching row —
+  `date=2020-01-01, feature_group=sfi_progressive, feature_family=sports, data_type=SFI_PROGRESSIVE_FEATURES, row_count=43, capture_status=captured`
+  — i.e. the manifest consolidator has already merged the migration script's per-VM shard into the canonical index (the
+  source flat-bucket object is correctly still present too — `gcs_copy_object` doesn't delete the source). No
+  destructive step was re-run. Ran `quality-gates.sh --no-fix` on the features-service tree (sentinel
+  `.qg_last_passed_sha` written == HEAD, confirming a genuine pass; pre-existing unrelated warnings surfaced in
+  sibling-repo scans — `e2e-testing/scripts/sports/sharpapi_live_feed.py` ruff/complexity + a `market-tick-data-service`
+  adapter contract-call baseline regression on `solana_defi_drift.py` — both out of this plan's scope, not touched).
+  Shipped solo via `quickmerge --agent --files` (only this one file staged):
+  `features-service@5e8b33337192a72b0cb20e6a12636e0f218c88be` ("feat(sports): ship features-sports flat-bucket gap
+  migration script"), landed on `live-defi-rollout`, working tree clean after. **(2 ephemeral objects) confirmed
+  genuinely disposable**: the flat bucket's other 2 live objects —
+  `_vm_staging/fss_backfill/fss_backfill_codebase.tar.gz` + `_vm_staging/fss_backfill/vm_fss_features.sh` — traced to
+  `features-service/scripts/sports/launch_parallel_backfill.sh` (mirrored by
+  `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`): both scripts `tar czf` a fresh local
+  staging dir and re-upload to this exact `_vm_staging/fss_backfill/` prefix on every VM-fanout backfill launch — build
+  scratch re-created from scratch each launch, no canonical counterpart by design, confirmed NOT migration-worthy. With
+  the migrate-script now shipped + these 2 objects confirmed disposable, the flat bucket has reached zero-unique-content
+  (its remaining 3 live objects are: the now-canonically-duplicated sfi_progressive parquet + the 2 confirmed-ephemeral
+  VM-staging objects) — **but is NOT yet delete-eligible**: blocker (b) from the entry above (3 still-live reference
+  surfaces — `deployment-service/terraform/gcp/main.tf:474` `google_storage_bucket.features_sports` + its
+  `_imports_reconcile.tf:51-52` import block; the live features-sports-service Cloud Run job's GCS-FUSE mount; and the
+  two VM-fanout launchers' `GCS_BUCKET` default) is unchanged and still requires a separate cutover touch before any
+  Verify+Delete re-attempt. Next follow-up: repoint the 3 live-reference surfaces to the canonical `-prd-` bucket,
+  re-verify `readyForDelete`, then delete.
