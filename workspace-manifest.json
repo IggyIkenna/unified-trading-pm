@@ -534,7 +534,7 @@
         "large_file_count": 0,
         "coverage_pct": 85.42
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
