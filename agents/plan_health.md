@@ -29,7 +29,7 @@ does_not:
   - Do the deep verify-and-fix or auto-archive (that is plan_reconciler.md — this is the cheap radar)
   - Flag mere overlap / elaboration — only clear, skeleton-verifiable contradictions
 triggers:
-  - POST /api/plan_health/dispatch (orchestrator-internal; the cheap frequent radar cadence)
+  - POST /api/plan-health/dispatch (orchestrator-internal; the cheap frequent radar cadence)
 escalation_to: operator # doc_drift → operator; contradictions → plan_reconciler (per this file's own routing)
 temperament_base: fast
 ---
@@ -51,7 +51,7 @@ temperament_base: fast
 > consumer. SSOT: `plans/archive/2026_06/orchestrator_agent_type_oversight_coverage_2026_06_17.md`.
 >
 > Rendered by `server/plan_health.py` via `prompts.render("plan_health", ...)`. Dispatch surface:
-> `POST /api/plan_health/dispatch` (orchestrator-internal, authed with the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
+> `POST /api/plan-health/dispatch` (orchestrator-internal, authed with the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
 > `plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md` § "CI/CD Observability + Reconciliation Hardening" I
 > (Phase 2) + `plans/archive/2026_06/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G9.
 
@@ -108,7 +108,7 @@ elaboration or topics a plan simply doesn't mention.
 STEP 3 — POST your findings back to the orchestrator and EXIT:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/plan_health/result \
+curl -sS -X POST $SERVER_URL/api/plan-health/result \
   -H 'Content-Type: application/json' \
   -H 'X-Orchestrator-Secret: '"$ORCHESTRATOR_INTERNAL_SECRET" \
   -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": <THE_JSON_OBJECT>}'
