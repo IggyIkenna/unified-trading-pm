@@ -144,3 +144,8 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
   audit tool's own downloaded `canon_index.parquet`/`legacy_index.parquet` (fresh `_index` pulls, both surfaces).
 - MDPS control: `market-data-tick-sports-prd` index rows 1,958,499 (unchanged since 2026-07-14); legacy-only 140,
   byte-identical to the ACCEPTED phantom class (all `instrument_count=0`, canonical `empty_confirmed` for all 140).
+- 2026-07-15 10:29Z (loop, protective action): ALL FOUR uts-prod-sports-fixtures-*-t1-schedule schedulers PAUSED
+  (midnight/6am/noon/6pm — verified PAUSED) before the next fire could clobber again; fixture T1 freshness halted until
+  the fix deploys. Fix chain dispatched: per-VM-shard conversion for the job's manifest writes + row-count regression
+  guard on direct canonical writes (defense-in-depth) → promote → image → re-enable schedulers with a watched first
+  execution → re-emit the 3,288 vanished cells → L6 gate re-check.
