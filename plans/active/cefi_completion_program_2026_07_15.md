@@ -192,3 +192,23 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (queue/combined-VM mode).
 - Next ticks: (1) collect code-agent reports → ship/flip E, G, D; (2) monitor queue VMs; (3) then F (DERIBIT-COMBO
   hist), G-tick (equity-perp download), C (alias kill), H (final census).
+
+### 2026-07-15T13:55Z — tick 2: E (liquidations) — Option 1 authorized (regression averted)
+
+- UAC agent correctly STOPPED before shipping: the prescribed `instrument_type_data_types["PERPETUAL"]` mechanism would
+  REGRESS COINBASE-FUTURES — the IS enumerator (`enumerate_expected_universe.py:723-729`) SKIPS its MVP-cut for any
+  itype in `instrument_type_data_types`, bypassing the `venue_data_types={trades}` override → COINBASE PERP would
+  inflate to book5+deriv_ticker+liquidations phantom cells, and ASTER/DERIBIT would leak liquidations (proven via
+  `_row_data_types` probe). Also: the real enumerator gate is `VENUE_DATA_TYPE_CAPABILITIES` in
+  `market_data_categories.py` (NOT `data_type_capability.py`); it ALREADY declares liquidations for the 6 +
+  DERIBIT/OKX-bare/ASTER/COINBASE-FUTURES.
+- DECISION (autonomous, root-cause per rule 1): **Option 1 — cross-repo (UAC + IS)**. Enumerator MVP-cut becomes
+  instrument_type-AWARE (skip only for bundle-relabeled options_chain/futures_chain/combo; new helper
+  `get_mvp_data_types_for_cefi_venue_itype` for leaf itypes). liquidations on the PERPETUAL leg, gated to exactly the 6.
+- **ASTER RULING (mine): live-only feeds must NOT seed the BATCH denominator** (ASTER liq batch=0 is honest-absent). →
+  remove liquidations from ASTER/DERIBIT/OKX-bare capability; keep the 6; COINBASE-FUTURES no cap edit (venue override).
+  Same principle applies to the ASTER/EXTENDED book5 question (workstream I) for consistency.
+- Sent Option-1 authorization to agent adb3a7cb (IS-coordination: touch only enumerate_expected_universe.py; land UAC
+  then IS back-to-back before any recompute). Awaiting SHAs.
+- Lesson: my original E spec was a mis-diagnosis; adversarial verification caught a real T0 regression pre-ship. Verify
+  denominator changes against actual enumerator behavior, not the rule shape.
