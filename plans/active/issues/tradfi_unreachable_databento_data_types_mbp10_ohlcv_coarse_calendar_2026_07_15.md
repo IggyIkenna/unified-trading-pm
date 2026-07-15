@@ -222,7 +222,7 @@ these 5 cells.
       `features-service`'s `vix_calculator.py`). If no: `vix_features`' required-input declaration should be corrected
       to `ohlcv_1m` only (which IS real and flowing). See "Resolution" below — this is a real multi-service gap, not a
       registry-narrowing fix like the CBOE item above.
-- [ ] [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,
+- [x] ✅ [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,
       `unified_api_contracts/registry/market_data_categories.py:329`) with `NO_ADAPTER_YET`
       (`registry/venue_adapter_keys.py:137`) and is expected for `["ohlcv_15m","ohlcv_24h"]`
       (`registry/expected_coverage.py:185`) — every cell is structurally unfulfillable, same misclassification shape as
@@ -244,7 +244,39 @@ these 5 cells.
       WORSE 10-datatype one. The correct fix is an exclusion at the manifest-SEEDING site (mirroring the
       `_tradfi_mtds_tick_manifest_data_types()` pattern already shipped for
       `corporate_action_confirmed`/`earnings_result` above), not a raw registry-entry deletion — genuinely needs its own
-      careful pass, not rushed here.
+      careful pass, not rushed here. **SHIPPED 2026-07-15 — `unified-api-contracts@fec3f110`** (evidence:
+      `bash scripts/quality-gates.sh --no-fix` GREEN 157s on the committed tree; python verify-check `ALL CHECKS PASS`;
+      201 affected-test-file tests pass). Removed `YAHOO_FINANCE` from ALL 5 venue-shaped registries — the tradfi
+      `VENUES_BY_ASSET_GROUP` list + its `VENUE_DATA_TYPE_CAPABILITIES` block (`market_data_categories.py`),
+      `expected_coverage.py`, `venue_adapter_keys.py`, `data_availability.py` — and KEPT the SOURCE modeling
+      (`data_source_continuity.py` / `capability_declarations/_tradfi.py` / `external/yahoo_finance/`). The
+      empty-caps→ALL-10-datatypes footgun is neutralized **by the de-enumeration itself**: removing it from
+      `VENUES_BY_ASSET_GROUP` makes `get_valid_data_types_for_venue("YAHOO_FINANCE") == []` (no asset_group), so
+      `get_expected_data_types_for_venue("YAHOO_FINANCE") == []` — **no code guard added** (a blanket
+      `NO_ADAPTER_YET→[]` guard would break the 5 legit sports odds venues BETFAIR_*/DRAFTKINGS/FANDUEL that genuinely
+      rely on the fallback; verified they still return their 10 fallback types). Added a defensive doc-comment on
+      `get_expected_data_types_for_venue` documenting the footgun (docs-only) + a regression test class
+      (`TestYahooFinancePhantomVenueRemoved`) locking in `==[]` for YAHOO_FINANCE AND the sports-venue fallback
+      survival. Blast-radius fixes in the same commit: dropped `YAHOO_FINANCE` from `EXPECTED_SENTINEL_VENUES`
+      (`test_venue_adapter_keys.py`), emptied the now-stale `_KNOWN_SOURCE_AS_VENUE` allowlist
+      (`test_venue_source_adapter_parity.py`), and the KRX-gap docstring. **NOTE (multi-agent collision — needs
+      coordinator awareness):** commit `fec3f110` also inadvertently absorbed a live
+      `cefi_completion_program workstream     E` change to the SAME file (re-adding `"liquidations"` to bare `OKX` in
+      `VENUE_DATA_TYPE_CAPABILITIES`, a "CORRECTION to the initial removal") — the workstream-E agent edited
+      `market_data_categories.py` during this task's edit window and quickmerge's whole-file staging swept the OKX hunk
+      in. That OKX change is preserved, coherent, and QG-green on the branch; it was NOT reverted (reverting would
+      delete workstream-E's work; splitting needs a banned force-push). Workstream-E should be told its OKX bare-venue
+      liquidations correction already landed in `fec3f110`.
+- [ ] [DATA] P3. **Forward-only-fix leftover from `unified-api-contracts@fec3f110`** (the YAHOO_FINANCE venue removal
+      above): the ~11,676 EXISTING live-manifest rows already written under `venue=YAHOO_FINANCE` (10,845
+      `empty_confirmed` + 831 `attempted_failed`, bucket `market-data-tick-tradfi-prd-central-element-323112`) are now
+      orphaned relative to the registry — `YAHOO_FINANCE` no longer resolves to an asset_group, so those historical rows
+      reference a venue the code no longer knows. Needs a **separate cleanup/reclassify pass on real infra** (NOT a UAC
+      change, NOT executed by the registry-removal task — no data mutation was performed): either delete the phantom
+      rows or re-stamp the genuinely Yahoo-sourced ones under their REAL venue (DXY→ICE, KRW/USD→FX, treasuries→CBOE)
+      with `source=yahoo`. Same forward-only-fix historical-row pattern as the mbp_10 /
+      `corporate_action`/`earnings_result` leftovers elsewhere in this doc. Owner: a manifest cleanup/backfill pass (do
+      not conflate with the code fix — that is already shipped).
 - [x] ✅ [CODE] P2. `market-tick-data-service`: US Treasury-yield tenors (`CBOE:INDEX:US3M/US2Y/US5Y/US10Y/US30Y-USD`,
       already declared in UAC's `YAHOO_INDICES` registry, `tradfi_instrument_universe.py:521-525`) have NO working fetch
       path anywhere — genuinely missing, not a modeling error, contrary to part of the operator's claim.
