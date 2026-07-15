@@ -220,9 +220,29 @@ throughput + tolerable latency, **not** zero-queue at peak.
   which Set A further trims); fleet ~$1,000 → ~$550–650, before Set A's docs-skip lands across the
   other repos.
 
-**Net: the planning-VM absorbs the entire CI-glue load with room to spare — the only thing to actively manage is disk +
-a CPU cap to protect the orchestrator.** If ci-status-update's burst latency ever matters, that single workflow is the
-natural first candidate for the B2 serverless move (already in the plan as the "B2 next" step).
+**Net: the planning-VM absorbs the entire CI-glue load with room to spare — the things to actively manage are memory
+(the QG interaction below) and disk; a CPU cap protects the orchestrator.** If ci-status-update's burst latency ever
+matters, that single workflow is the natural first candidate for the B2 serverless move (already in the plan as the "B2
+next" step).
+
+### Reconciliation with the QG-offload ADR (2026-06-02) — complementary, not contradictory
+
+`codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` (accepted, Option A) **rejected a central
+self-hosted runner pool — but for the _heavy QG gate_**, because moving the authoritative pass/fail off the worker
+breaks the local feedback loop (which SHA is tested; async failure-routing back to the agent). It kept heavy
+`quality-gates.sh` **local on the worker VMs**, governed by `qg-host-governor.sh` (K = `floor(vCPU/4)` concurrent).
+
+B1 here does **not** re-open that decision:
+
+- **We move GLUE, not QG.** ci-status-update / routers / promotion bots are fire-and-forget automation — no agent blocks
+  on their pass/fail, so the feedback-loop objection does not apply. `quality-gates-v2` **stays off** the self-hosted
+  runners (label `glue`, distinct from the ADR's rejected `qg` pool).
+- **Security patterns match the ADR:** ephemeral + single-job (JIT), private-repo-only, never on fork PRs.
+- **Memory interaction (the ADR's real concern) — accounted for:** the orchestrator VM's slots ARE workers, so local QG
+  bursts already land here (governor K = `floor(8/4)` = **2** concurrent × ~5.3 GB ≈ ~10 GB). Budget: ~5 GB base + ~10
+  GB QG burst + the glue slice's **8 GB `MemoryMax`** ≈ **~23 GB of 32 GB** (~9 GB headroom). The 8 GB glue cap is sized
+  precisely so glue + local-QG + orchestrator never exceeds RAM — this is why memory is a managed watch-item, and why
+  the heavy CPU/RAM QG must NOT be added to the glue pool.
 
 ---
 
@@ -495,6 +515,9 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
 ## Codex SSOTs (read before executing any item)
 
 - `codex/08-workflows/ci-cd-flow.md` — pipeline / promotion / branch protection
+- `codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` — the QG-offload ADR (Option A: heavy QG
+  stays LOCAL, rejected central `qg` pool). B1 here is complementary (moves GLUE, keeps QG off self-hosted) — see
+  §"Reconciliation with the QG-offload ADR" above; **do not** add QG to the `glue` pool.
 - `codex/04-architecture/tier-and-import-architecture.md` — the no-service-deps rule (why monorepo is rejected)
 - `codex/04-architecture/runtime-deployment-topology.md` +
   `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — why deployment-api (public Cloud Run) is the
@@ -529,3 +552,9 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   job-execs/day, ~1.7 cores avg, peak ~26 concurrent runs, ~5 GB disk). Verdict: **fits comfortably**; size 6–8
   ephemeral runners with a systemd CPU cap to protect the orchestrator; keep `quality-gates-v2` on GitHub-hosted; disk
   is the only watch-item. Everything LOCAL/uncommitted per operator ("no push").
+- 2026-07-15 — Runner infra files pushed (PM@a8696bb48). **Reconciled with the QG-offload ADR (2026-06-02)**: found via
+  grep-then-READ; it rejected a central self-hosted pool for the _heavy QG_ (feedback-loop), kept QG local. B1 here is
+  complementary (moves GLUE not QG; QG stays off `glue`). Refined the capacity note — local QG bursts (governor K=2 ≈
+  ~10 GB) already land on this VM, so **memory is a managed watch-item** and the 8 GB glue `MemoryMax` is sized so
+  glue+QG+orchestrator ≈ ~23 GB of 32 GB. Added the ADR to Codex SSOTs. Work now continues from **slot 1** (root left to
+  the AO worker).
