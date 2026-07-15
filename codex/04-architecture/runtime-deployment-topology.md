@@ -46,7 +46,6 @@ referenced_by:
     codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
     codex/04-architecture/commercial-service-families.md,
     codex/04-architecture/execution-modes-and-chain-resolution.md,
-    codex/04-architecture/role-registry.md,
   ]
 owner:
 last_reviewed: 2026-07-12

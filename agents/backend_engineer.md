@@ -12,6 +12,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, backend_engineer, craft-role, boot-prompt]
+related: []
 created: 2026-06-26
 role: backend_engineer
 model: sonnet

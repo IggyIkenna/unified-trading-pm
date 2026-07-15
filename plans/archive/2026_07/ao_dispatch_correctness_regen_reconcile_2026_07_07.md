@@ -13,7 +13,7 @@ summary:
   phase," now stale — corrected 2026-07-14, finding 186 — Phase 7 shipped fable-as-a-spawnable-model, the haiku-effort
   gate, and the full effort-ladder [ao@f52d3cc4, ao@4d93a751]; only the narrow per-account Fable capability-gating
   sub-item remains DEFERRED.) Records the incident in issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -42,7 +42,7 @@ related:
     ../../codex/04-architecture/agent-orchestrator-autospawn.md,
   ]
 created: 2026-07-07
-last_updated: 2026-07-07
+last_updated: 2026-07-15
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -63,12 +63,11 @@ source:
   fleet-idle investigation 2026-07-07 + operator design decisions (regen reconcile, multi-role plans, capability chain)
 ---
 
-> **🟡 In-flight AO dispatcher refactor (2026-07-07).** This plan changes `regen_backlog_from_plan.py`, `dispatch.py`,
-> `autospawn.py`, the worker routes, and the ORM. It is **human-driven** (`assigned_vm: NA`,
-> `execution_scope: local-only`) — the operator + main agent do it HERE and push to agent-orchestrator via quickmerge
-> only after each phase is done + verified. It is deliberately NOT dispatched to the AO fleet (it modifies the very
-> dispatcher that would execute it — a bad change would brick the fleet). Incident record:
-> `issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md`.
+> **✅ COMPLETE — archived 2026-07-15.** (Was: 🟡 in-flight AO dispatcher refactor, 2026-07-07.) This plan changed
+> `regen_backlog_from_plan.py`, `dispatch.py`, `autospawn.py`, the worker routes, and the ORM. It was **human-driven**
+> (`assigned_vm: NA`, `execution_scope: local-only`) — the operator + main agent did it HERE and pushed to
+> agent-orchestrator via quickmerge after each phase. Deliberately NOT dispatched to the AO fleet (it modifies the very
+> dispatcher that would execute it). Incident record: `issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md`.
 
 ## Goal
 
@@ -328,8 +327,10 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       heartbeat detects TaskRow status=cancelled → `dispatch_reason: cancelled`; worker.md instructs scoped
       `git restore` of own in-flight files only, /skip-current-task, never whole-branch. NOTE: interrupting a mid-task
       worker via a /progress message is a follow-up — today the worker sees it at its next /heartbeat/boot boundary).
-- [ ] [UI] P1. Surface the cancelled count in the fleet/backlog UI (`unified-trading-system-ui` / deployment-ui as
-      applicable). — 🟡 DEFERRED (UI repo; the `cancelled` status is now emitted, so a count is a small UI add).
+- [x] [UI] P1. Surface the cancelled count in the fleet/backlog UI (`unified-trading-system-ui` / deployment-ui as
+      applicable). — ✅ DONE (already implemented; verified 2026-07-15 audit): the AO dashboard renders a `cancelled`
+      filter chip with its live count (`agent-orchestrator/dashboard/src/App.tsx:2040-2047`), fed by the backend count
+      (`server/routes/state.py:322`).
 - [x] [BACKEND] P0. Execution order — add `plan_order` (the todo's file position) to BacklogTask; regen sets + refreshes
       it from plan-file order every reconcile tick; extend the dispatch sort key to `(tier, priority, plan_order)`.
       Fixes mid-file inserts sorting to the end (A4). Cross-plan tiebreak stays deterministic (`plan_ref`). — ✅ DONE
@@ -377,7 +378,10 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       `queued_at` spill window for the idle-slot upgrade path. Non-sticky routing is the existing affinity dispatch.)
 - [ ] [BACKEND] P1. Role-only change within the SAME session tier → soft signal (heartbeat message) to read
       `agents/<role>.md` + re-read the plan item, continue — NO respawn (adapt-in-place; the model-chain rule takes over
-      only if the role also raises the tier).
+      only if the role also raises the tier). — 🟡 DEFERRED (operator 2026-07-15): NOT built (verified 2026-07-15 audit
+      — the heartbeat carries only operator `pending` messages; no mid-flight role signal exists). Descoped as
+      low-value: a same-tier mid-flight role reconcile is rare, and the worker adopts the new craft on its next dispatch
+      (Phase 4). Plan ARCHIVED with this one accepted deferral; re-file as an issue if a real need appears.
 - [x] [BACKEND] P0. Tests — `_needs_respawn` matrix (model any-change / effort ±1 tolerated / effort `>1` respawn /
       thinking flip / fable rank); mid-task upgrade respawns; mid-task downgrade does NOT; boundary sticky-down
       respawns; non-sticky routes away (no respawn); text-edit remove+add + no writeback. Spawn mocked (parity with the
@@ -423,11 +427,12 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       (test_slot_skips_hygiene.py, 4 tests: TTL excludes expired / 0-disables, unskip idempotent, clear-for-task spans
       slots, clear-all-for-slot; full `quality-gates.sh` green).
 
-### Phase 6 — codex SSOT + plan-activate (after the code phases; plan↔codex drift is review-blocking)
+### Phase 6 — codex SSOT (after the code phases; plan↔codex drift is review-blocking)
 
-- [ ] [BACKEND] P2. (optional) Plan-activate affordance — `POST /api/plans/{slug}/activate` or a
-      `[PLAN-ACTIVATE: <slug>]` final-todo marker so a phase reliably + auditably flips the next plan `draft`→`active`,
-      instead of a raw frontmatter edit. Nice-to-have; the raw edit + `docs(plans):` commit already works.
+> Plan-activate affordance (`POST /api/plans/{slug}/activate` / a `[PLAN-ACTIVATE:]` marker) — REMOVED 2026-07-15
+> (operator): the raw frontmatter-edit + `docs(plans):` commit is the accepted mechanism, so the affordance is
+> unnecessary.
+
 - [x] [DOCS] P1. Codex SSOT update — reconcile semantics (A1–A4), dynamic-role model (B), capability chain (C), skip
       hygiene (D), plan grouping + draft-gating (E), single-agent stickiness (F); banner-invalidate anything the change
       supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.) — ✅ DONE pm@20dce55f3:
@@ -465,12 +470,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       the model default. — ✅ DONE ao@4d93a751 (plan `effort:` frontmatter — any ladder level, validated vs
       `model_tier.EFFORT_LADDER`, overrides the thinking_tier-/role-derived effort as the plan default; 3 tests. Roles
       already express max/high via `thinking:`; a full-ladder role override is a small follow if ever needed.)
-- [ ] [BACKEND] P1. Fable account support: which accounts may spawn fable (org allowlist; NOT under
+- [x] [BACKEND] P1. Fable account support: which accounts may spawn fable (org allowlist; NOT under
       zero-data-retention); a fable spawn on a non-fable account → automatic model fallback (`--fallback-model`) or
-      route to a fable-capable account. — 🟡 DEFERRED (operator-config; not built). Scout: accounts have NO per-model
-      gating today (all spawn any model); a fable spawn on a non-fable account hard-errors (dead pane). Since fable is
-      OPERATOR-REQUEST-ONLY + mostly interactive (rare via fleet), per-account gating + `--fallback-model` is net-new
-      speculative infra — add ONLY if a real fleet account lacks Fable. `AccountDef.models` is the hook.
+      route to a fable-capable account. — ✅ WON'T-DO / N-A (operator 2026-07-15): no fleet account supports fable AND
+      AO workers are not permitted to spawn as fable, so per-account gating + `--fallback-model` is unnecessary — no
+      work required. `AccountDef.models` remains the hook if that policy ever changes.
 - [x] [BACKEND] P2. Docs/semantics reconcile: document that effort is the primary reasoning control on current-gen
       models (`--max-thinking-tokens` inert there, retained for Haiku on/off); align `role_registry.effort` /
       `thinking_flag` + `_parse_frontmatter_thinking_tier` with the ladder; update the `codex` role-registry doc. — ✅
@@ -491,10 +495,11 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       `SlotRow.last_role` migration on restart — no manual disable/stop/pull/enable/start interruption needed; verified
       on the VM (crontab + logs). (was: this todo bundled the code-pull/restart/migration half with the claude-binary
       update + UI redeploy below — now split; the code/restart/migration half is DONE.)
-- [ ] [INFRA] P1. **DEPLOY — remaining manual steps (narrowed 2026-07-12, split from the todo above)**: **update the
+- [x] [INFRA] P1. **DEPLOY — remaining manual steps (narrowed 2026-07-12, split from the todo above)**: **update the
       `claude` binary to ≥ 2.1.170** (fable + effort — a separate binary upgrade, NOT covered by ao-self-pull.sh's
       git-pull + restart) → redeploy the UI (Firebase/Firestore dashboard) per the § Deployment runbook below. Verify
-      each step.
+      each step. — ✅ DONE (operator 2026-07-15): `claude` binary updated to ≥ 2.1.170 on the planning VM + UI
+      redeployed; the ao-self-pull cron keeps the backend code current.
 
 ---
 
@@ -651,13 +656,14 @@ independent flags, so `--resume <id> --model opus` continues on a higher model).
 - Tests: `test_regen_reconcile.py`, `test_dispatch_plan_order.py`, `test_slot_skips_hygiene.py`, `test_plan_claiming.py`
   (updated to medium + last_role).
 
-### Still-open todos (design locked, safe to pick up in any order)
+### Final disposition at archival (2026-07-15)
 
-- **Phase 3** — capability chain (above). Highest care: live worker stop/resume.
-- **Phase 6** — `[BACKEND] P2` plan-activate affordance (`POST /api/plans/{slug}/activate` or `[PLAN-ACTIVATE:]`
-  marker). Optional — raw frontmatter edit + `docs(plans):` already works.
-- **Phase 7** — Fable + new effort levels (operator-deferred).
-- **UI** — cancelled-count surface (`[UI] P1`, deferred) — the `cancelled` status is emitted; it's a small UI add.
+All three root causes (RC-1/RC-2/RC-3) fixed, tested, and deployed. The 2026-07-15 audit verified every code todo
+against the code + 44 tests green. Remaining opens were closed as: UI cancelled-count = already implemented (dashboard
+chip, `dashboard/src/App.tsx:2040-2047`); Fable account support = WON'T-DO (no account supports fable, AO workers never
+spawn fable); deploy = DONE (binary ≥ 2.1.170 + UI redeployed); plan-activate affordance = REMOVED (raw frontmatter edit
+suffices). One accepted deferral: the Phase 3 role-only same-tier soft-signal (low-value — the worker adopts craft on
+its next dispatch). Plan ARCHIVED.
 
 ---
 

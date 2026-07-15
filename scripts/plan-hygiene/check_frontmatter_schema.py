@@ -38,6 +38,7 @@ DOC_TREES: tuple[str, ...] = (
     "plans/audit/results/**/*.md",
     "plans/audit/instructions/**/*.md",
     "codex/**/*.md",
+    "agents/*.md",
     "**/*.mdc",
 )
 _ARCHIVE_PREFIX = "plans/archive/"

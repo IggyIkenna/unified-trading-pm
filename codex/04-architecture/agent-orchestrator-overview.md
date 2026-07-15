@@ -29,7 +29,6 @@ referenced_by:
     codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
     codex/04-architecture/agent-orchestrator-host-offline-failover.md,
     codex/04-architecture/agent-orchestrator-worker-liveness.md,
-    codex/04-architecture/role-registry.md,
     codex/05-infrastructure/agent-orchestrator-api-host.md,
     codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]

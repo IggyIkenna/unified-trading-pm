@@ -30,7 +30,6 @@ tags:
 related:
   [
     ../04-architecture/agent-orchestrator-overview.md,
-    ../04-architecture/role-registry.md,
     orchestrator-multi-vm-topology.md,
     ../11-project-management/doc-frontmatter-schema.md,
     ../../plans/epics/agent_operating_framework_master.md,
@@ -72,8 +71,8 @@ not stand up a new epic VM** or treat the old fleet as current. The separate `hu
 ## Dispatch: role-based, not VM-based
 
 Work routes by **skill** via a plan's `assigned_role` frontmatter field, matched against the role registry
-(`agent-orchestrator/agents/<role>.md`; schema SSOT [`role-registry.md`](../04-architecture/role-registry.md)), not by
-"which epic VM owns this plan":
+(`unified-trading-pm/agents/<role>.md`; `agent-role` frontmatter schema enforced by
+`unified-trading-pm/scripts/docs/docspec.py` `PER_TYPE['agent-role']`), not by "which epic VM owns this plan":
 
 - `server/autospawn.py::_top_queued_task_params` reads the top queued task's `model`/`effort`/`thinking`/
   `assigned_role` and spawns the worker at those settings BEFORE dispatch picks its task.
@@ -81,6 +80,16 @@ Work routes by **skill** via a plan's `assigned_role` frontmatter field, matched
   unknown/absent role → generic worker stub, never a hard failure).
 - `server/dispatch.py` / `server/orm.py` prefer a queued task whose `assigned_role` matches the slot's configured role
   (or is unset/generic), closing the gap where a role-specific worker idled on a mismatched task.
+
+**Dispatch-correctness contract** (reconcile / per-task `[TAG]` roles / session-tier realign / `cancelled` / skip
+hygiene) — since `ao_dispatch_correctness_regen_reconcile` (2026-07-07): regen is a RECONCILE, not append-only (it
+updates a matched task's `model`/`effort`/`thinking`/`assigned_role`/`priority`/`plan_order` in place; dispatch sorts
+`(tier, priority, plan_order, plan_ref)`; a removed-while-dispatched task becomes terminal `cancelled`). Tasks carry a
+per-task `[TAG]`-derived role (mapping SSOT `agent-orchestrator/server/regen_backlog_from_plan.py::_TAG_TO_ROLE`), a
+live worker re-spawns `--resume` to each task's model/effort/thinking tier via `server/model_tier.py` (capability chain
+`haiku<sonnet<opus<fable`), and slot-skips expire on a TTL. **Full contract + code map:**
+[`agent-orchestrator-backlog-state-alignment.md`](../04-architecture/agent-orchestrator-backlog-state-alignment.md) §
+"Dispatch-correctness update (2026-07-07)".
 
 ## `assigned_vm` — closed 2-value domain
 
@@ -160,7 +169,7 @@ this gap as closed until that todo ships.
 ## Related
 
 [`agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) (full service architecture) ·
-[`role-registry.md`](../04-architecture/role-registry.md) (role charter schema) ·
-[`orchestrator-multi-vm-topology.md`](orchestrator-multi-vm-topology.md) (RETIRED — historical only) ·
-`plans/PLAN_FORMAT.md` + [`doc-frontmatter-schema.md`](../11-project-management/doc-frontmatter-schema.md)
-(`assigned_vm` enum authority).
+`unified-trading-pm/agents/<role>.md` (role charters; `agent-role` frontmatter schema enforced by
+`scripts/docs/docspec.py`) · [`orchestrator-multi-vm-topology.md`](orchestrator-multi-vm-topology.md) (RETIRED —
+historical only) · `plans/PLAN_FORMAT.md` +
+[`doc-frontmatter-schema.md`](../11-project-management/doc-frontmatter-schema.md) (`assigned_vm` enum authority).

@@ -54,6 +54,12 @@ SEVERITY_P = PRIORITY  # audit-result severity is a P0..P3
 # archetype implementation-maturity axis (codex/09-strategy/architecture-v2/**) — restored per operator
 # decision 2026-07-06 after enum normalization flattened it out of `status:`; elective, archetype docs only
 IMPLEMENTATION_STATUS = frozenset({"design", "code-shipped", "stub", "active", "theoretical-only", "live", "complete"})
+# agent-role spawn config — schema SSOT is THIS file (the codex mirror was removed 2026-07-15; live per-role data is
+# the dashboard Registry tab / GET /api/roles). Enums mirror the AO runtime (models/_types.ModelTier +
+# role_registry._VALID_LIFECYCLES): validated here at PM authoring time, consumed there at spawn time.
+AGENT_MODEL = frozenset({"opus", "sonnet", "haiku", "fable"})
+AGENT_THINKING = frozenset({"max", "high", "medium", "off", "none", "mechanical"})
+AGENT_LIFECYCLE = frozenset({"persistent", "one_shot", "scheduled"})
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
@@ -177,11 +183,16 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
     ],
     "agent-role": [
         FieldSpec("role", Req.R, "scalar"),
+        FieldSpec("model", Req.R, "enum", AGENT_MODEL),
+        FieldSpec("thinking", Req.E, "enum", AGENT_THINKING),
+        FieldSpec("lifecycle", Req.R, "enum", AGENT_LIFECYCLE),
         FieldSpec("does", Req.R, "free_list"),
         FieldSpec("does_not", Req.R, "free_list"),
         FieldSpec("triggers", Req.R, "free_list"),
-        FieldSpec("scope_tools", Req.O, "free_list"),
-        FieldSpec("reports_to", Req.O, "scalar"),
+        FieldSpec("escalation_to", Req.E, "scalar"),
+        FieldSpec("temperament_base", Req.E, "scalar"),
+        FieldSpec("scope_tools", Req.E, "free_list"),
+        FieldSpec("reports_to", Req.E, "scalar"),
     ],
     "cursor-rule": [],  # special-cased in validate_frontmatter
 }
@@ -281,7 +292,7 @@ def doc_type_for_path(path: str) -> str | None:
         return "audit-result"
     if "/plans/audit/instructions/" in p:
         return "audit-instruction"
-    if "agent-orchestrator/agents/" in p:
+    if "unified-trading-pm/agents/" in p:
         return "agent-role"
     if p.endswith(".mdc") or "/.cursor/rules/" in p:
         return "cursor-rule"

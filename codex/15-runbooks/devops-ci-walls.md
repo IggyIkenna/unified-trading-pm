@@ -14,8 +14,7 @@ tags: [runbook, devops, cicd, escalation, walls, quality-gates-v2, promotion]
 related:
   [
     codex/08-workflows/ci-cd-flow.md,
-    codex/04-architecture/role-registry.md,
-    agent-orchestrator/agents/cicd.md,
+    unified-trading-pm/agents/cicd.md,
     agent-orchestrator/server/ci_status.py,
     agent-orchestrator/server/escalation.py,
   ]
@@ -43,7 +42,7 @@ execution:
 
 # DevOps CI walls — recovery recipes (cicd role)
 
-The **DevOps role = the `cicd` one-shot worker** (`agent-orchestrator/agents/cicd.md`): dispatched per wall via
+The **DevOps role = the `cicd` one-shot worker** (`unified-trading-pm/agents/cicd.md`): dispatched per wall via
 `POST /api/escalate`, fixes the wall on the integration branch, exits. Wall routing: `merge_conflict` +
 `stuck_promotion_pr` → the **conflict_resolver** prompt; `data_pipeline_failure` → its own prompt; everything else
 (`ldr_qg_failure`, `sit_failure`, `main_ci_red`, `label_mismatch`) → the generic **cicd** prompt (`server/escalation.py`

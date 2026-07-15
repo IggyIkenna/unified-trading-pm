@@ -13,6 +13,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, quant_dev, craft-role, boot-prompt]
+related: []
 created: 2026-06-26
 role: quant_dev
 model: sonnet

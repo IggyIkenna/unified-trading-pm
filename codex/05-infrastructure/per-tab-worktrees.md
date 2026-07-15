@@ -27,9 +27,9 @@ referenced_by:
     codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
-last_reviewed: 2026-06-25
+last_reviewed: 2026-07-15
 code_refs:
-last_updated: 2026-06-18
+last_updated: 2026-07-09
 related_codex: [codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
