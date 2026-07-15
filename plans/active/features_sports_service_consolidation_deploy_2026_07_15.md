@@ -332,9 +332,22 @@ repo. This plan tracks that work.
       fixed by UTL `c47273c1`, now deployed + proven). Appended the closing Progress Log entry below + a closing entry
       to `bucket_estate_consolidation_to_sub100_2026_07_13.md`, and annotated
       `plans/archive/features_repo_consolidation_2026_05_08.plan.md` that the deploy-side gap is now closed.
-- [ ] [REVIEW] P3. _(stretch, optional)_ Scope (do not fix here) whether other services built in the 2026-04-02 →
+- [x] [REVIEW] P3. _(stretch, optional)_ Scope (do not fix here) whether other services built in the 2026-04-02 →
       mid-2026 window touch `config_interface/auth/entitlements.py` and could have the same silent breakage — file a
-      separate audit plan if the scope looks non-trivial.
+      separate audit plan if the scope looks non-trivial. — ✅ 2026-07-15, DONE WITH FINDINGS (read-only fleet audit,
+      NOT descoped): enumerated all 149 UTL/UAC-bearing Cloud Run deployments (24 services + 125 jobs, 7 regions; VMs
+      out of scope — tarball deploys resolve deps fresh), flagged 17 in-window suspects, and docker-tested each by
+      pulling its EXACT deployed digest and running
+      `import     unified_trading_library.config_interface.auth.entitlements`. **RESULT: ZERO other broken deployments —
+      features-sports-service was the ONLY casualty.** 16/17 suspects printed IMPORT_OK exit 0; the 17th
+      (`market-data-tradfi` consolidator) is HEALTHY-by-parity (identical fresh `:latest` digest + entrypoint family as
+      2 clean-tested siblings running `*/1` successfully). Root reason the in-window heuristic over-flags: MTDS-family
+      images vendor UAC from SOURCE at `/app/.deps/`, which already contains `internal/`, so the broken-published-wheel
+      failure mode structurally cannot reproduce for them; Cloud Run jobs also re-resolve `:latest` per execution and
+      self-heal on the fresh post-fix image. Full per-deployment table, verdicts, generic per-broken remediation recipe
+      (mirrors this session's features-sports fix, incl. the archived-repo caveat), and two SEPARATE non-bug operational
+      findings (~37-day paused-DeFi-collector data gap; Group-C jobs failing today on fresh images) filed at
+      [`plans/active/issues/utl_uac_skew_fleet_audit_2026_07_15.md`](issues/utl_uac_skew_fleet_audit_2026_07_15.md).
 
 ## Progress Log
 
@@ -875,3 +888,24 @@ repo. This plan tracks that work.
   `main.tf` backend-block default itself (fail-loud, or correct to prod) — deferred because main.tf was contested by
   foreign WIP at fix time and the wrapper removes the trap for the normal path; recorded in the codex runbook's
   Footgun-1 follow-up note. Docs-only via the PM `docs(...)` carve-out.
+- 2026-07-15 (ReportAndFile phase — P3 fleet-skew audit CLOSED, read-only, DOCS-ONLY): Flipped todo P3 to
+  done-with-findings. Audited the whole fleet for the same UTL/UAC `unified_api_contracts.internal` import-skew that
+  killed features-sports-service: 149 UTL/UAC-bearing Cloud Run deployments (24 services + 125 jobs, 7 regions; VMs out
+  of scope). 17 in-window suspects flagged (11 `uts-prod-mtds-collect-*` DeFi/onchain collectors + 6
+  `uts-prod-manifest-consolidator-*`); each docker-tested against its EXACT deployed digest via
+  `docker run --entrypoint python <img@digest> -c "import unified_trading_library.config_interface.auth.entitlements"`.
+  **RESULT: ZERO other broken deployments — features-sports-service was the ONLY casualty.** 16/17 printed IMPORT_OK
+  exit 0; the 17th (`market-data-tradfi` consolidator) is HEALTHY-by-parity (identical fresh `:latest` digest
+  `6b3dbf5e` + entrypoint family as 2 clean-tested siblings running `*/1` successfully). Decisive structural reason the
+  in-window heuristic over-flagged: MTDS-family images vendor UAC from SOURCE at `/app/.deps/unified-api-contracts/`,
+  which already contains the `internal/` package, so the broken-published-wheel failure mode structurally cannot
+  reproduce for them (the version-label `0.1.20` is the source checkout's label, not the internal-less PyPI wheel);
+  additionally Cloud Run jobs re-resolve `:latest` per execution and self-heal on the fresh post-fix image. Two SEPARATE
+  non-bug operational findings surfaced and were recorded for their own triage: (a) ~37-day paused DeFi/onchain
+  data-collection gap across the 11 mtds-collect crons (their ~06-08 failures have a different, unrelated cause — logs
+  past 30-day retention); (b) Group-C jobs failing TODAY on FRESH post-06-09 images (data/config, not the import skew).
+  Full per-deployment table, per-suspect verdicts, and the generic per-broken remediation recipe
+  (rebuild-via-Cloud-Build-trigger + runtime import verify + redeploy/re-pin, incl. the archived-repo caveat that
+  features-sports hit) filed at
+  [`plans/active/issues/utl_uac_skew_fleet_audit_2026_07_15.md`](issues/utl_uac_skew_fleet_audit_2026_07_15.md).
+  READ-ONLY throughout — no service/job/image/scheduler modified.

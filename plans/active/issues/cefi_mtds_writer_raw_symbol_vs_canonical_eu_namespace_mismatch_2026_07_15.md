@@ -310,7 +310,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       — the defect (if any) is upstream, in `build_instrument_catalogue.py`'s catalogue-build step, not in this
       enumerator. Diagnosing both sides (ambiguous → don't blind-edit, per the standing triage rule) was out of this
       todo's scope; flagged as its own follow-up rather than fixed blind.
-- [ ] [BACKEND] P1. **NEW FINDING — BINANCE-FUTURES dated-futures catalogue `instrument_id` carries a raw/wire-form
+- [x] ✅ [BACKEND] P1. **NEW FINDING — BINANCE-FUTURES dated-futures catalogue `instrument_id` carries a raw/wire-form
       middle segment instead of the dash-canonical shape every other dated-futures venue uses.** Found while diagnosing
       the P0 above: live cefi manifest has 1,776 `expected_unattempted` rows (all tagged with the current
       `enum-universe-cefi-20260715-013053` run) shaped `BINANCE-FUTURES:FUTURE:ETHUSDT_260626` /
@@ -323,15 +323,50 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       future is the dash form — so `ETHUSDT_260626` cannot be what a correct writer would ever stamp for this cell. This
       is a LEAF row (not `futures_chain`/`options_chain` bundle-grain), so `_enumerate_v2_cefi` correctly passes through
       whatever `instrument_id` the instruments-service catalogue supplies for it — meaning the raw-shape `instrument_id`
-      is coming FROM the catalogue (`build_instrument_catalogue.py`'s roll-up), not from this enumerator. **Not fixed
-      here** — deliberately out of this todo's authorized scope (a catalogue-build-step defect, not an
-      `enumerate_expected_universe.py` defect; "ambiguous → diagnose both sides, don't blind-edit" per the standing
-      triage rule) and low relative priority (1,776 rows vs the 49,720-row P0 above — 3.6% of the non-canonical total).
-      Recommend: read `build_instrument_catalogue.py`'s BINANCE-FUTURES dated-future `instrument_id`/`instrument_key`
-      derivation (likely reads the adapter's raw `instrument_key` verbatim rather than re-deriving the canonical dash
-      form the way `_cefi_perp_lineage_key`/`_canonical_instrument_id` do for other id-convention chains) and either fix
-      at catalogue-build time or confirm this is an intentional per-venue convention divergence that the
-      enumerator/writer should instead special-case. (repo: instruments-service)
+      is coming FROM the catalogue (`build_instrument_catalogue.py`'s roll-up), not from this enumerator. Recommend:
+      read `build_instrument_catalogue.py`'s BINANCE-FUTURES dated-future `instrument_id`/`instrument_key` derivation
+      (likely reads the adapter's raw `instrument_key` verbatim rather than re-deriving the canonical dash form the way
+      `_cefi_perp_lineage_key`/`_canonical_instrument_id` do for other id-convention chains) and either fix at
+      catalogue-build time or confirm this is an intentional per-venue convention divergence that the enumerator/writer
+      should instead special-case. (repo: instruments-service) — `instruments-service@79d4dbcb`. **Confirmed the
+      diagnosis exactly**: the Tardis reference-data adapter
+      (`instruments_service/reference_data/adapters/cefi/tardis/adapter.py:895-899`) already builds the canonical dash
+      form for a FRESH capture via the shared UAC `build_instrument_id()` (same builder `_cefi_perp_lineage_key`'s
+      PERPETUAL-family precedent relies on) — the defect is scoped exactly to `build_instrument_catalogue.py`'s roll-up,
+      which for a non-pool row (`_defi_pool_dual_form`'s fallthrough branch) passed the by_date snapshot's raw
+      `instrument_key`/`instrument_id` straight through with NO re-derivation, unlike the
+      PERPETUAL-family/DeFi-ghost-venue collapses the file already does. Root cause: legacy by_date snapshot rows
+      captured BEFORE the adapter's 2026-07-09 fix still carry the pre-fix raw wire-form id on disk; a catalogue rebuild
+      rolls those historical rows up UNCHANGED every time, regardless of how new the adapter code is. Fixed at
+      catalogue-build time (per the doc's own first recommended option), not by declaring a venue special-case: added
+      `_canonicalize_cefi_future_id()`, mirroring the exact `_cefi_perp_lineage_key`/`_canonical_instrument_id` pattern
+      — rebuilds via the SAME shared UAC `build_instrument_id()` the adapter itself uses
+      (`build_instrument_id(venue, InstrumentType.FUTURE, f"{base}-{quote}", expiry_date=expiry, margin_marker=marker)`)
+      whenever a CeFi FUTURE row's id lacks the `@` marker and all 4 required fields
+      (`base_asset`/`quote_asset`/`margin_type`/`expiry`, all already carried in the by_date snapshot's own columns per
+      `_extract_meta`) are present; degrades to the raw id unchanged otherwise (already-canonical Kraken/Bybit/Deribit
+      rows, non-FUTURE rows, or a row missing a required field — never guesses). Wired into
+      `build_catalogue_dataframe`'s row-construction step, right after `_defi_pool_dual_form`. Live-repro-tested against
+      the EXACT reported example before shipping:
+      `_canonicalize_cefi_future_id("BINANCE-FUTURES:FUTURE:ETHUSDT_260626", {instrument_type: FUTURE, venue:     BINANCE-FUTURES, base_asset: ETH, quote_asset: USDT, margin_type: linear, expiry: 2026-06-26})`
+      → `"BINANCE-FUTURES:FUTURE:ETH-USDT@LIN-20260626"` (matches the doc's own stated target exactly); also verified
+      the BINANCE-DELIVERY inverse side (`@INV`), that an already-canonical KRAKEN-FUTURES row is an idempotent no-op,
+      that a non-FUTURE (PERPETUAL) row is untouched, and that a row missing a required field (e.g. blank `quote_asset`)
+      degrades to the raw id rather than guessing. Added 5 new unit tests
+      (`tests/unit/scripts/test_build_instrument_catalogue.py`, end-to-end through `build_catalogue_dataframe`, not just
+      the helper in isolation) covering all of the above. Full `quality-gates.sh` green (both before commit and
+      re-verified after a rebase pull-in — 2 peer-slot commits landed mid-session); the only warning present
+      (`check_adapter_contract_regression`) is a PRE-EXISTING MTDS-repo warning unrelated to this instruments-service
+      change, already tracked in `lint_sweep_774602ea8_regression_audit_2026_05_20.md` per this same doc's earlier
+      entries. **Not yet re-measured against the live prd manifest** — this fix only affects a FRESH catalogue rebuild
+      (`prod/catalog.parquet` regeneration); it does not retroactively touch the 1,776 rows already on disk in the
+      current `expected_unattempted` denominator (same "code fix ≠ retroactive data fix" pattern the P0 items above
+      already hit twice). A follow-up re-run of the catalogue-build pipeline + `enumerate_expected_universe.py` (or a
+      targeted relabel of the 1,776 existing rows, mirroring todo (2)'s relabel-script pattern) is needed before this
+      count actually drops in the live denominator — out of this todo's own scope (this todo was specifically about the
+      catalogue-build CODE defect, not the operator-gated corpus mutation), not filed as a new todo since it is a
+      routine consequence of every code-only fix in this doc (P0 items 1/4 above hit the identical "code fix landed,
+      re-measure still pending relaunch/relabel" gap and did not spin up a separate todo for it either).
 - [x] ✅ [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
       SHA) — check `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@<sha>*` — then
       relaunch the 3 `cefi-queue-*` Tardis VMs against it (respect the hard 3-VM Tardis cap: kill-then-relaunch, never
@@ -569,3 +604,18 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   venue in the same run correctly produces — new P1 todo above. Did not touch todo 2's `--apply` gate, VM
   launch/relaunch, or widen the Tardis fleet (out of scope; also blocked by `BLK-b319db38` disposition B until this
   todo's purge fully lands and is re-measured).
+
+- **2026-07-15 (backend_engineer, slot-3)**: Picked up the final remaining P1 todo (BINANCE-FUTURES dated-futures
+  catalogue `instrument_id` raw-wire-form finding). Confirmed the diagnosis exactly via code read: the Tardis adapter
+  already stamps the canonical dash form for a fresh capture (`adapter.py:895-899`, shared UAC `build_instrument_id()`)
+  — the defect was isolated to `build_instrument_catalogue.py`'s roll-up, whose non-pool fallthrough branch
+  (`_defi_pool_dual_form`) passed a legacy by_date snapshot row's raw `instrument_key` straight through with no
+  re-derivation, unlike the PERPETUAL-family/DeFi-ghost-venue collapses the same file already performs. Fixed at
+  catalogue-build time per the doc's own first recommended option: added `_canonicalize_cefi_future_id()`, mirroring the
+  `_cefi_perp_lineage_key`/`_canonical_instrument_id` precedent, reusing the same shared UAC builder the adapter itself
+  calls. `instruments-service@79d4dbcb` — see todo's own entry above for full detail (live-repro-tested against the
+  exact reported example, 5 new end-to-end unit tests, full `quality-gates.sh` green). Every todo in this doc is now
+  checked, but the doc itself is NOT being marked resolved by this session — todos (2)'s relabel `--apply` and (4)'s
+  purge `--apply` are still operator-gated sign-offs per this doc's own "OPERATOR DECISION" framing, and this fix does
+  not retroactively touch the 1,776 already-on-disk non-canonical rows (only a fresh catalogue rebuild benefits). Left
+  `status: open` for the operator to close once the outstanding `--apply` sign-offs are actioned.
