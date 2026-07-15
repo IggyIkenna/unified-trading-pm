@@ -2920,3 +2920,38 @@ at ~50-70% request efficiency will not close 3M cells quickly).
 cells that will resolve to `empty_confirmed` once attempted (pre-listing dates, venue-launch windows)? ASTER
 (self-archiving, not Tardis) alone holds ~287k of it. Re-cut the priority census against eu, not af, before the next
 wave. Operator NOTIFIED (findings-triage HARD RULE: data-correctness + gate-status finding).
+
+### 🔴 THE GAP IS THE LAST 6 MONTHS — every chronological-from-2020 wave was futile — 2026-07-15T17:40Z
+
+Independent by_day cross-tab of `cov_1718.json` (this lane, verifying a sub-agent census — both agree):
+
+| months                         | eu            | verdict                                      |
+| ------------------------------ | ------------- | -------------------------------------------- |
+| 2019-03 .. 2026-01 (82 months) | **0**         | history FULLY RESOLVED — nothing to backfill |
+| 2026-02 .. 2026-07 (6 months)  | **2,969,412** | the entire gap                               |
+
+Monthly captured collapses across the gap: Jan 274,949 → Feb 178,478 → Mar 122,641 → Apr 95,340 → May 86,600 → **Jun
+4,618 → Jul 1,110** (vs ~663k/~290k expected). The pre-listing/phantom-denominator hypothesis is EMPIRICALLY FALSE for
+the historical corpus — the enumerator's per-(venue,data_type) `start_date` gate + per-instrument
+`available_from/available_to` clipping (`enumerate_expected_universe.py:1043-1130`, `instruments-service@4a8cff7`)
+already resolve those to typed `empty_confirmed`, never eu. Sub-agent forensic split of the 2.97M: ~85.6% REAL
+Tardis/native-fetchable, ~11% phantom-in-waiting (the operator-ruled live-only-no-historical-source tuples from
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` — 196,570 cells no Tardis VM will
+ever fill; needs the one-time `collect-onchain-perp-batch` script, not a VM), ~3.3% urgent/time-decaying (ASTER `trades`
+REST holds only ~30 days of depth — that data is being LOST daily).
+
+**Why every wave to date achieved ~nothing on the gap**: all of them (mine and Run-#7's) ran `2020-01-01 → yesterday`
+and scan chronologically. Live proof at kill time: majors VM **29h in, reached 2020-06-21**; futures-tail **6h in, at
+2020-01-28**. At ~6 months-of-dates per 29h they needed ~1 YEAR of wall-clock to even arrive at 2026-02. They were
+burning 2/3 of the 3-VM Tardis cap re-walking an already-complete corpus. **Both killed** (mine;
+`gcloud compute instances delete`, no peer VM touched). Run-#7's all-venues VM had independently arrived at the same
+conclusion (scoped 2026-01-01+, reached 2026-01-11) but **died at 17:0xZ on the SAME lease-wait/stall bug**
+(`stalled_for=1801`) — it launched at 16:05Z, before the `STALL_TIMEOUT_SEC` passthrough landed.
+
+**Fleet was empty → re-cut waves launched (2026-scoped, stall-fixed, lease-ON, verified on-instance):**
+`cefi-queue-heavy-20260715-173940` (BINANCE-FUTURES + BITGET-FUTURES heavy: trades+book5, ~536k eu, VM_START_DATE
+2026-01-01 VERIFIED, STALL_TIMEOUT_SEC=3900 VERIFIED, RUNNING) + a light-group VM (derivative_ticker, ~268k eu) + an
+OKX-SPOT/BINANCE-SPOT heavy VM to follow, filling the 3-VM cap.
+
+**For Run-#7 lane**: do NOT relaunch chronological-from-2020 waves; scope YEARS="2026" and set `STALL_TIMEOUT_SEC=3900`
+(deployment-service launcher supports both now).
