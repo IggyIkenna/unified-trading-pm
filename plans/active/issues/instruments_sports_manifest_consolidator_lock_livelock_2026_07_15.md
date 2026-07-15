@@ -474,3 +474,32 @@ warning against point-in-time snapshots):** the fix reaches the live watchdog on
 Build `e7f72dc4`, in flight) → MTDS Dockerfile digest bump → MTDS rebuild → watchdog redeploy (same chain as c47273c1).
 After deploy I will watch live `CONSOLIDATOR_DOWN` for `market-data-tick-defi-prd` across **several real defi merge
 cycles (~30min each)** and confirm zero DOWN events past the new 4200s horizon before this closes. Status stays `open`.
+
+## VERIFIED (2026-07-15 ~18:40Z) — per-AG horizon fix live-confirmed across 2 defi cycles by an independent adversarial verifier
+
+The `unified-trading-library@2d1f77a8` per-AG horizon fix was deployed (UTL img `e7f72dc4` → MTDS build `6facfb38` →
+watchdog `sha256:b39a7a53`, deploy audit-logged 2026-07-15T17:01:08Z) and then verified by an INDEPENDENT adversarial
+verifier (fresh context, tasked to REFUTE), which returned **CONFIRMED** with a dispositive A/B test across the deploy
+line:
+
+- **Same bucket, same lock-age band, OPPOSITE verdict across the 17:01:08Z deploy** — for `market-data-tick-defi-prd`,
+  the OLD image (`1e974ccd`) emitted `CONSOLIDATOR_DOWN` / watchdog `-> down` at lock ages **1863-2104s** (the boundary
+  bug); the NEW image (`b39a7a53`) reported `-> ok` at lock ages **1866-2097s** across two post-deploy merge cycles
+  (cycle 3: 1866/1984/2097s; cycle 4: 1919/2039s). This is the boundary bug firing under old code and fixed under new
+  code, observed live — causal, not correlation.
+- **Counts:** 36 `CONSOLIDATOR_DOWN` (all buckets) in the 6h window — **36 pre-deploy, 0 post-deploy**; 7 watchdog
+  `-> down` verdicts, all pre-deploy, all defi-prd. Zero across ~1.5h + 2 full defi merge cycles that each held the lock
+  2010-2150s (genuinely exercising the 1800-2150s differential window).
+- **Not a silent break:** watchdog runs every 2min, exits 0, checks all 26 buckets each run (execution `zfhbm`
+  confirmed).
+- **Fix traced:** deployed digest matches; `2d1f77a8` is an ancestor of origin; the diff adds
+  `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC={"defi":4200,"sports":2400}` (default 3600) + wires
+  `consolidator_inflight_horizon_for_bucket()` into `consolidator_cycle_in_flight()`.
+- Verifier's honest caveats: did not byte-grep the image (traced via digest+ancestry+behavioral proof, which is
+  dispositive that the live horizon is >2097s ≫ old 1800s); could not probe the exact 4200s boundary (no merge ran that
+  long — expected, since 4200s was chosen with deliberate margin over the observed ~35-36min/~2150s merges).
+
+**The boundary-condition residual is RESOLVED and independently verified.** (The consolidator `_acquire_lock` primitive
+itself remains untouched + empirically sound per the earlier investigation; this doc's subject — the false
+`CONSOLIDATOR_DOWN` stream on slow-merge buckets — is now eliminated fleet-wide, with the per-AG horizon covering defi's
+real merge duration with margin.)
