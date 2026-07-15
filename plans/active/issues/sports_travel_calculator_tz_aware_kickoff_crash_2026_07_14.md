@@ -383,3 +383,48 @@ tick window slot-4 already flagged (wait-until ~00:20Z). Skipped the redundant G
 slot-11 all checked within the last few minutes with no reason to expect drift (single-walk discipline). No new
 information to add beyond slot-4's entry immediately above. Declining — no action taken, no code touched, checkbox NOT
 flipped. `/skip-current-task`.
+
+### 2026-07-15T12:3x UTC — data_engineering slot-12 (18th consecutive dispatch — root-caused + fixed why `gate_on_depends` never wired, shipped hotfix)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+after fresh-pull to LDR HEAD — Todo 1's own Progress Log shows it still in-progress as of 10:10Z today. Not attempting
+the gap-fill identify/re-run yet — the affected-range boundary genuinely isn't stable until Todo 1 completes.
+
+**But the churn itself was diagnosable, not just re-checkable — root-caused it.** This is dispatch #18 of this exact
+task, ~12.5h past slot-10's `bab7a2250` `depends_on`/`gate_on_depends` fix (well past every `PlanRegenLoop` lag window
+slot-4/slot-7/slot-11 flagged as "give it 30 min"). Read `agent-orchestrator/server/regen_backlog_from_plan.py` directly
+instead of re-polling: `_parse_frontmatter_depends_on()` returns `depends_on` list entries **verbatim**, including a
+literal `.md` suffix when written as `depends_on: [upstream_2026_06_27.md]` (exactly the form both this doc's own
+frontmatter AND main's cited "confirmed working example" `deployment_registry_firestore_p4_dynamodb_2026_07_14.md` use).
+But `_wire_gate_on_depends_prereqs()` matches those entries against `file_to_ids` keys built via `_stem()`, which
+**strips** `.md` from every `plan_ref` basename. So `file_to_ids.get(dep, [])` always misses (`"upstream_2026_06_27.md"`
+never equals `"upstream_2026_06_27"`), `upstream_ids` stays empty, and the whole wiring pass silently no-ops —
+`if not upstream_ids: continue`. Same bug class also affects `_scrub_completed_upstream_prereqs()`'s `_id_slug()`
+date-stripping regex (anchored on end-of-string, so a trailing `.md` blocks the date match too). Confirmed empirically,
+not just by code-reading: `agent-orchestrator/data/config/backlog.yaml` (root clone, read-only) still reads
+`prereqs.completed_tasks: []` for this exact task on a live regen tick that landed mid-investigation — reproduced the
+no-op live, in production, not just in theory. The existing test suite (`tests/test_regen_backlog_from_plan.py`) never
+caught this because its `_fp_gate()` helper writes `depends_on` WITHOUT the `.md` extension — the bare-stem form that
+happens to work; nobody had a test for the `.md`-suffixed form real authors (including main, per slot-10's citation)
+actually use.
+
+**Fixed**: `agent-orchestrator@2d6365f` — added `_strip_md_suffix()`, applied at all three return paths in
+`_parse_frontmatter_depends_on()` so entries always resolve to bare stems regardless of which form the author wrote.
+Added a regression test (`test_regen_gate_on_depends_wires_with_md_suffix`) covering the `.md`-suffixed case. QG green
+(1280 passed, ruff/basedpyright clean), shipped via
+`quickmerge --agent --files 'server/regen_backlog_from_plan.py tests/test_regen_backlog_from_plan.py'` → landed on
+`live-defi-rollout`. This is a hotfix/regression-rescue inline with this task's dispatch (worker.md exception #1) — it
+doesn't touch sports/features-service code and doesn't unblock Todo 2 itself (Todo 1 still incomplete), but it fixes the
+mechanism so `gate_on_depends` actually gates future dispatches fleet-wide, not just this one task — main directed this
+exact mechanism (slot-10's 2026-07-14T23:5xZ entry) as the durable fix for backlog-parking churn generally.
+
+**Not yet verified**: whether the LIVE orchestrator server process (root clone, uvicorn on the `planning` VM) picks up
+this fix automatically via its own deploy path, or needs an explicit pull+restart — that's outside a worker's write
+scope (root-clone read-only) and outside this task's remit to action. Until the live process runs post-`2d6365f` code,
+`Todo 2` (and any other `gate_on_depends`-gated task using the `.md`-suffixed form) will keep dispatching on every regen
+tick despite unmet prereqs — recommend main/operator confirm the live process has picked up `2d6365f` (or trigger its
+deploy) before assuming the churn has stopped.
+
+Declining Todo 2 itself — no code touched for the sports/features fix, checkbox NOT flipped (still genuinely
+BLOCKED-PREREQ). `/skip-current-task`.

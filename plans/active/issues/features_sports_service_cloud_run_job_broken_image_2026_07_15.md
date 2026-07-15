@@ -170,3 +170,14 @@ touch.
   `unified_trading_library/config_interface/auth/entitlements.py:15`.
 - `terraform plan` in `terraform/services/features-sports-service/gcp/` (full, un-targeted) shows the
   `--category`→`--asset-group` drift on both `daily_workflow` and `backfill_workflow` resources.
+
+## Update 2026-07-15 (Path B in progress — status stays `open`, NOT resolved by this update)
+
+Tracking moved to `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md` (created same day). That
+plan's BuildDeployment phase (todos 1-4) confirmed with real `docker run` evidence that the current
+`features-service:latest` image genuinely resolves `unified_api_contracts.internal` (the fleet-wide skew bug does NOT
+reproduce against it) and shipped new Cloud Run Job + Workflow terraform
+(`deployment-service@8b1c561f6d18fd7532b223ea462277131b03ebf8`, `terraform/services/features-service-sports/gcp/**`) —
+NOT yet applied/deployed. This issue stays `open` until the plan's later todos (deploy, verify SUCCEEDED, retire the
+legacy job, re-enable scheduling, close this issue) complete — see that plan's Progress Log for full detail; do not
+duplicate it here.
