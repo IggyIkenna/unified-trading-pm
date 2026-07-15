@@ -271,11 +271,19 @@ fix below lands.
       which means stopping/not-relaunching a live multi-VM SPOT fleet — is unchanged as an explicit operator/main
       decision, not executed by this verification pass. Posted `/blocked` from slot-2 with this evidence + a
       recommendation for (a).
-- [ ] [INFRA] P2. The zombie-VM blind spot (RUNNING instance, dead worker process, ~4h44m undetected) suggests the VM
+- [x] ✅ [INFRA] P2. The zombie-VM blind spot (RUNNING instance, dead worker process, ~4h44m undetected) suggests the VM
       roster + run.log-tail monitoring convention used across this plan's many "-003" check-ins should add a
       log-staleness check (e.g. flag a VM whose `run.log` hasn't advanced in >30 min while still `RUNNING`) rather than
       relying on an agent noticing a `TERMINATED` status change on the next dispatch. (repo: deployment-service or
-      wherever the VM-launcher/observability runbook lives — codex/05-infrastructure/deployment-observability.md)
+      wherever the VM-launcher/observability runbook lives — codex/05-infrastructure/deployment-observability.md) —
+      deployment-service@c56463b. Added
+      `python -m deployment_service.data_pipeline_monitors.check_vm_cli --vm-name     <VM>` (DP-VM-006): an ad-hoc,
+      self-contained, on-demand CLI that reuses the SAME tested `heartbeat_stall_watcher.classify_vm_liveness` the
+      periodic Cloud Run fleet sweep uses (via `check_vm.py`), so a manual check-in gets a measured ALIVE/STALL verdict
+      (sidecar-heartbeat + run.log-frozen signals, exit code 1 on STALL/EVENT_LOOP_STARVED) instead of an agent
+      eyeballing raw timestamps. Never alerts or auto-kills (dry_run always True). Unit tests: `test_check_vm.py` (pure
+      verdict logic incl. the OOM-zombie shape — frozen run.log, no sidecar/shard-mtime) + `test_check_vm_cli.py` (CLI
+      wiring). Full `quality-gates.sh` green (2684 passed).
 - [ ] [DATA] P3. Once the streaming fix lands, relaunch `mtds-solana-drift-backfill` (same launcher args, `--resume`
       semantics) to continue past 2025-01-09 — do NOT relaunch with today's unfixed code, since the identical crash will
       very likely recur on the same day. (repo: deployment-service launcher + market-tick-data-service) — **⚠️
