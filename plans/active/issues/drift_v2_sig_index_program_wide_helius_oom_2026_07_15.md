@@ -49,6 +49,19 @@ locked_since:
 
 # Drift V2 Helius day-backfill OOM on a program-wide sig-index day (2026-07-15)
 
+> **🔴 2026-07-15 (data_engineering slot-10): the P2 investigation below found something bigger than the todo asked.**
+> The whole Helius sig-index/day-backfill path this doc is about (`mtds-solana-drift-backfill` +
+> `mtds-drift-sig-walker-*` fleet) was declared **OBSOLETE** and **NOT on any critical path** by
+> `codex/04-architecture/drift-v2-data-sources.md` on **2026-06-01** — a full month before the
+> `mvp_backfill_defi_onchain_v10` DRIFT-perp-funding saga (2026-06-29 → present) even started. A fully-built, tested,
+> per-market replacement (`DriftV2HistoricalIngester` / `backfill_drift_v2_historical.py`, shipped
+> `market-tick-data-service@0f70f376` 2026-06-01) already exists in the repo but was **never wired into any VM
+> launcher** — the launcher actually in use (`launch-mtds-solana-drift-backfill-vm.sh`) still routes through the legacy
+> `solana_defi_handler.py` Helius path. See "Investigation: should the sig index be per-market?" below. **NOTIFIED main
+> via `POST /api/agents/by-role/main/message` this session** — this is a data-correctness/cost/SSOT-contradiction
+> finding per CLAUDE.md governance rules, not something a single P2 investigation task should resolve unilaterally (it
+> implies killing/not-relaunching a multi-VM SPOT fleet that's been running for ~a month of sessions).
+
 ## What I found
 
 Dispatched to `mvp_backfill_defi_onchain_v10-003` ("Verify the DRIFT fleet drains") at 2026-07-15T22:26Z, ~5.5h after
@@ -155,11 +168,77 @@ fix below lands.
       (`test_helius_multi_chunk_resolves_across_chunks_and_concatenates_rows`,
       `test_helius_chunk_failure_aborts_before_next_chunk_starts`), full `quality-gates.sh` green (sentinel `229af3a2`),
       `--files`-scoped quickmerge.
-- [ ] [DATA] P2. Investigate whether the DRIFT V2 sig index should be built/queryable per-market (or
+- [x] ✅ [DATA] P2. Investigate whether the DRIFT V2 sig index should be built/queryable per-market (or
       per-instruction-type) instead of program-wide, so a single-market backfill run doesn't resolve + mislabel the
       whole program's daily activity. Confirm with whoever owns the `data_quality="helius_v2_signatures_only"` decision
       whether cross-market mislabeling is an already-accepted limitation or a fresh defect worth flagging separately.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — **INVESTIGATED 2026-07-15 (data_engineering slot-10). Answer: no, it should not
+      be rebuilt per-market — the whole sig-index/Helius approach should very likely be RETIRED, not repaired.**
+      Findings: 1. **The Drift V2 program has no per-market signature-scoping mechanism to build the index against in
+      the first place.** `getSignaturesForAddress` (used by `build_drift_v2_sig_index.py`) only accepts ONE address —
+      the program's — and Drift V2 markets are distinguished by instruction-level account args, not separate program
+      addresses/PDAs walkable the same way. A genuinely per-market Helius-RPC-walked index isn't a small tweak; it would
+      need full instruction decoding (a Drift V2 IDL decoder, which `_parse_helius_batch`'s own
+      `data_quality="helius_v2_signatures_only"` flag already documents as NOT being available on this path). 2. **That
+      decoder/per-market gap is moot — a per-market replacement already exists and is already shipped.**
+      `codex/04-architecture/drift-v2-data-sources.md` (`status: current`, created 2026-06-01) is the codex SSOT for
+      Drift V2 ingestion and states plainly: the Helius sig-walking path is **"OBSOLETE for Drift V2 historical needs"**
+      and **"REMAINS in the MTDS repo as cold infrastructure ... but is NOT on any critical path"**. The replacement —
+      Drift's own Velocity Data API (`data.api.drift.trade`) — exposes genuinely **per-market** endpoints
+      (`/market/{symbol}/fundingRates/{Y}/{M}/{D}`, `/market/{symbol}/trades/{Y}/{M}/{D}`) with **full historical
+      coverage confirmed back to 2024-06-01, "zero gap"** at the free tier — including the exact crashed date,
+      2025-01-09 (doc's own coverage table: "2025-01-08 → ~2026-04-01: Velocity API per-day endpoints (free tier covers
+      this fully)"). This is inherently per-market by construction — no program-wide resolution, no mislabeling, no OOM
+      risk, no Helius spend at all. 3. **The replacement is fully implemented, tested, and already in the repo — just
+      never wired into the actual backfill VM.** `market_tick_data_service/cli/handlers/drift_v2_historical_handler.py`
+      (`DriftV2HistoricalIngester`) + `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (CLI, supports
+      `--markets`/`--start`/`--end`/`--data-types funding,trades` + `--live --continuous` for the live=batch hard rule)
+      shipped `market-tick-data-service@0f70f376` (2026-06-01,
+      `feat(mtds): DriftV2HistoricalIngester via        data.api.drift.trade Velocity Data API — replaces Helius sig-index path for funding + trades`),
+      with 12 unit tests (`tests/unit/test_drift_v2_historical_handler.py`). Its own docstring documents the intended
+      VM-routing mechanism: generic `VM_TASK=mdps-backfill` + `VM_BACKFILL_CMD` metadata (already a real, working route
+      in `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` line ~1243, used by other backfills). **But no
+      `launch-*.sh` script actually invokes it for Drift.** The VM that's been crashing (`mtds-solana-drift-backfill`,
+      launched by `launch-mtds-solana-drift-backfill-vm.sh`) sets `VM_TASK=solana-drift-backfill`, which
+      `setup-data-pipeline-vm.sh` line ~1410 explicitly routes to `solana_defi_handler.py`'s legacy
+      `_backfill_drift_s3_date`/`_backfill_drift_helius_date` — the same OBSOLETE path the codex doc names — via a
+      comment citing a DIFFERENT, older ruling ("Bug-D-prime fix 2026-05-31 … PerpFundingHandler has no _collect_drift
+      dispatch") that predates and is superseded by the 2026-06-01 Velocity API doc, but was never updated to reflect
+      it. 4. **Cross-market mislabeling verdict**: not really an "accepted limitation" in the sense of a deliberate
+      data-quality tradeoff someone signed off on — `data_quality="helius_v2_signatures_only"` is a self-documenting
+      degraded-mode flag on what the codex doc already calls cold/non-critical-path infrastructure. The real defect
+      isn't the mislabeling itself; it's that production has been running (and OOM-crashing on) deprecated
+      infrastructure for six weeks while a correct, already-shipped, per-market replacement sat unused. 5. **Scale of
+      the current-path cost**: per the v10 plan's 2026-07-14 G1.5 entry, closing the sig-index's ~11-month unindexed gap
+      (2025-01-15 → 2025-12-23) via 2 parallel Helius sig-walker SPOT VMs is estimated at **1.7-9 days** of wall-clock
+      on a Helius API key **already observed hard-throttling** (persistent 429s on manual single-RPC probes) — before
+      the actual per-day Helius batch-resolve backfill (this doc's OOM incident) even runs. All of that cost may be
+      unnecessary if DRIFT perp_funding is instead backfilled via the Velocity API path, which needs no sig index, no
+      Helius key, and no per-day resolution step at all. **This is filed as a finding, not fixed here** — my assigned
+      task was investigation-only (P2, 1h estimate); the actual fix (stop/don't-relaunch the Helius sig-walker fleet,
+      point `mtds-solana-drift-backfill` — or a new launcher — at `backfill_drift_v2_historical.py` instead, verify
+      Velocity API coverage/rate limits at production scale, and reconcile the manifest's
+      `attempted_failed`/`expected_unattempted` DRIFT perp_funding cells against whichever path is authoritative) is
+      real, multi-repo (`market-tick-data-service` + `deployment-service` + manifest state) work that touches a live
+      multi-VM SPOT fleet an operator already made a throughput-economics call about on 2026-07-14 — it needs an
+      explicit operator/main ruling, not a unilateral P2-task fix. See the new P0 todo below + the banner at the top of
+      this doc. NOTIFIED main via `POST /api/agents/by-role/main/message` this session.
+
+- [ ] [DATA] P0. **NEW 2026-07-15 (data_engineering slot-10), operator/main ruling needed**: decide whether to (a)
+      abandon the Helius sig-index/day-backfill path for DRIFT `perp_funding` entirely and switch to
+      `backfill_drift_v2_historical.py` (Velocity Data API, per-market, already shipped `mtds@0f70f376`, zero Helius
+      spend, documented "zero gap" coverage back to 2024-06-01 per `codex/04-architecture/drift-v2-data-sources.md`),
+      stopping/not-relaunching the `mtds-drift-sig-walker-*` fleet and re-routing `mtds-solana-drift-backfill` (or a new
+      launcher) to the Velocity path; or (b) there's a reason (rate limits, data-shape mismatch, a gap the codex doc
+      doesn't know about) the team already implicitly rejected the Velocity path for this specific backfill and kept
+      building the Helius sig-walker fleet instead, in which case that reason should be written down (codex doc updated
+      / this doc closed as "already considered and rejected, here's why") so the next 15 sessions don't re-discover the
+      same question. Before ruling, verify Velocity API coverage holds at the actual backfill's date range/volume
+      (spot-check a few historically-busy days, confirm rate limits, confirm the `perp_trades` CSV format parses cleanly
+      at the observed volume) — the codex doc's "zero gap" claim is from 2026-06-01 and hasn't been re-validated against
+      this specific incident's dates. If (a): reconcile the DRIFT `perp_funding` manifest cells currently
+      `attempted_failed`/`expected_unattempted` under the old path once the new path starts capturing them. (repos:
+      market-tick-data-service, deployment-service, instruments-service for manifest reconciliation)
 - [ ] [INFRA] P2. The zombie-VM blind spot (RUNNING instance, dead worker process, ~4h44m undetected) suggests the VM
       roster + run.log-tail monitoring convention used across this plan's many "-003" check-ins should add a
       log-staleness check (e.g. flag a VM whose `run.log` hasn't advanced in >30 min while still `RUNNING`) rather than
@@ -167,4 +246,34 @@ fix below lands.
       wherever the VM-launcher/observability runbook lives — codex/05-infrastructure/deployment-observability.md)
 - [ ] [DATA] P3. Once the streaming fix lands, relaunch `mtds-solana-drift-backfill` (same launcher args, `--resume`
       semantics) to continue past 2025-01-09 — do NOT relaunch with today's unfixed code, since the identical crash will
-      very likely recur on the same day. (repo: deployment-service launcher + market-tick-data-service)
+      very likely recur on the same day. (repo: deployment-service launcher + market-tick-data-service) — **⚠️
+      2026-07-15 (data_engineering slot-10): this todo is now GATED by the new P0 todo above.** The
+      streaming/chunked-resolution fix already landed (see `solana_defi_drift_helius.py` module docstring
+      "Chunked-resolution OOM fix"), so the OOM itself is mitigated — but relaunching this VM at all means continuing to
+      invest in the path the new P0 finding says may be obsolete. Do not relaunch until the P0 ruling lands.
+
+## Progress Log
+
+### 2026-07-15 — data_engineering slot-10: P2 investigation surfaces a bigger SSOT contradiction
+
+Picked up the assigned P2 todo ("should the sig index be per-market?"). Read `build_drift_v2_sig_index.py` (confirmed:
+walks `getSignaturesForAddress` on the Drift V2 PROGRAM address only, no per-market scoping mechanism available at the
+RPC level) and `solana_defi_drift_helius.py`/`solana_defi_drift.py` (confirmed: `_parse_helius_batch` unconditionally
+labels every resolved row with the CLI-supplied `market`, and the OOM streaming fix from todo P1 above has already
+landed independently of this task). While tracing "whoever owns the `data_quality=helius_v2_signatures_only` decision"
+per the todo's second half, found `codex/04-architecture/drift-v2-data-sources.md` — a `status: current` codex SSOT
+dated 2026-06-01 declaring the entire Helius sig-index path OBSOLETE and NOT on any critical path, superseded by Drift's
+Velocity Data API (per-market, free, "zero gap" back to 2024-06-01). Confirmed the replacement
+(`DriftV2HistoricalIngester`/`backfill_drift_v2_historical.py`) is fully implemented + tested
+(`market-tick-data-service@0f70f376`, 12 unit tests) but never wired into any VM launcher —
+`launch-mtds-solana-drift-backfill-vm.sh` still routes through the legacy Helius path via a stale 2026-05-31 comment
+that predates and doesn't reference the 2026-06-01 replacement. Cross-checked against
+`defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` (the MVP-scope ruling history for this exact backfill) and the
+v10 plan's 2026-07-14 G1.5 entries (the 2-VM parallel sig-walker fleet launch, 1.7-9 day drain estimate on an
+already-throttled Helius key) — neither mentions the Velocity API alternative at all. Flipped the assigned P2 todo with
+full findings, added a new `[DATA] P0` todo asking for an explicit operator/main ruling on whether to abandon the Helius
+sig-walker fleet in favor of the Velocity path, gated the existing P3 relaunch todo on that ruling, and notified main
+via `POST /api/agents/by-role/main/message` (data-correctness + cross-repo + SSOT-contradiction = a "big finding" per
+CLAUDE.md governance rules, not something a single P2 task should resolve unilaterally given it implies
+stopping/redirecting a live multi-VM SPOT fleet). No code changes this session — investigation + issue-doc closure only,
+per the task's own scope (P2, 1h estimate, "Investigate whether...").
