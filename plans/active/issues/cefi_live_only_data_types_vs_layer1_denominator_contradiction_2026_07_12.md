@@ -285,15 +285,41 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       (writer-emits-but-UAC-doesn't-sanction), not MISSING; harmless. Evidence:
       `/tmp/claude-1000/.../scratchpad/cov_after_fix.json` (this session) vs the pre-fix
       `/tmp/claude-1000/.../scratchpad/cov_1718.json` baseline (same session, 2026-07-15T17:18Z).
-- [ ] [SCRIPT] P3. Wider sweep: audit UAC's `VENUE_DATA_TYPE_CAPABILITIES`/`INSTRUMENT_TYPES_BY_VENUE` for OTHER "short
-      of magic cannot physically be retrieved in ANY mode" combos beyond this issue's 5 (e.g.
+- [x] ✅ [SCRIPT] P3. Wider sweep: audit UAC's `VENUE_DATA_TYPE_CAPABILITIES`/`INSTRUMENT_TYPES_BY_VENUE` for OTHER
+      "short of magic cannot physically be retrieved in ANY mode" combos beyond this issue's 5 (e.g.
       options_chain/futures_chain declared for a venue with no such products, a data_type a venue has never offered on
       any transport) and, for any HIGH-confidence finding, remove it from UAC outright (option (a) — no live mode to
-      preserve, unlike this issue's 5). (repo: unified-api-contracts) — dispatched to a research sub-agent 2026-07-15
-      (read-only investigation); see this doc's Progress Log for the findings once returned.
+      preserve, unlike this issue's 5). (repo: unified-api-contracts) — **DONE 2026-07-15 (slot-3)**: dispatched a
+      research sub-agent to check 5 angles (options_chain/futures_chain-vs-real-products, BITGET-FUTURES dated futures,
+      DERIBIT-COMBO/trades, the BARCHART capability entry, general pattern-matching). **No HIGH-confidence "impossible
+      on both batch AND live" tuples found** beyond this issue's already-fixed 5 — the registry turned out to be
+      unusually well self-audited already (BITGET-FUTURES dated futures confirmed real via a live-verified 2026-07-14
+      Bitget symbol-parsing fix; DERIBIT-COMBO/trades confirmed to have both real batch (Tardis, 68,847 combo symbols)
+      and live sources; COINBASE-CDE/trades already correctly excluded from `VENUE_DATA_TYPE_NO_BATCH_SOURCE` since it
+      gained a real batch adapter 2026-07-13). One actionable but lower-severity finding:
+      `VENUE_DATA_TYPE_CAPABILITIES     ["BARCHART"]` (market_data_categories.py, `{"ohlcv_15m": "2020-01-02"}`) was
+      orphaned DEAD CODE — BARCHART was removed from `VENUES_BY_ASSET_GROUP["tradfi"]` on 2026-06-24 (VIX 15m now
+      aggregates from VX futures via Databento), and expected-universe producers iterate `VENUES_BY_ASSET_GROUP`, never
+      this dict's keys directly, so the entry could never seed an EXPECTED cell — verified via grep across
+      unified-api-contracts + market-tick-data-service + instruments-service (no live code path references
+      `VENUE_DATA_TYPE_CAPABILITIES["BARCHART"]`; the few remaining `"BARCHART"` string hits are unrelated
+      symbol-map/present-set test fixtures). Removed the dead block. Full `quality-gates.sh` green. Shipped
+      `unified-api-contracts@bf17231d`. One MEDIUM/LOW-confidence item noted for a future follow-up (not actionable now,
+      no current denominator impact): CME's `INSTRUMENT_TYPES_BY_VENUE` includes `EVENT_CONTRACT` but CME's
+      `VENUE_DATA_TYPE_CAPABILITIES` entry is presently ohlcv-only MVP-scoped (no `event_contract` data_type declared),
+      so it generates zero EXPECTED cells today — worth a live-metadata check before MVP scope ever widens to include
+      it.
 
 ## Progress Log
 
+- **2026-07-15 (slot-3, data_engineering, sonnet/high)** — Closed the final P3 wider-sweep todo. Dispatched a research
+  sub-agent (read-only) to check 5 specific angles for other "impossible on both batch AND live" (venue, data_type)
+  combos. Result: no new HIGH-confidence findings — the registry is well self-audited already, and every superficially
+  suspicious candidate (BITGET-FUTURES dated futures, DERIBIT-COMBO/trades, COINBASE-CDE/trades) had real, cited,
+  live-verified evidence backing its current declaration. Found + fixed one lower-severity dead-code item: the orphaned
+  `VENUE_DATA_TYPE_CAPABILITIES["BARCHART"]` entry (unreachable since BARCHART left `VENUES_BY_ASSET_GROUP["tradfi"]`
+  2026-06-24). Shipped `unified-api-contracts@bf17231d` (full QG green). All todos in this issue doc are now done,
+  consistent with its existing `status: resolved`. unified-trading-pm@(this commit).
 - **2026-07-15** — Operator narrowed the ruling (see new Todos section above): typed empty_confirmed rows are ALSO
   unwanted for genuinely batch-impossible combos, not just eu. Re-opened this doc (the (b) typed-empty-row shape from
   2026-07-13 is superseded, not merely supplemented) and re-resolved via option (c) — a new UAC batch-vs-live capability
