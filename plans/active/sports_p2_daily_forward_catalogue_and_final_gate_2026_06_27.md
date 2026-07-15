@@ -175,17 +175,35 @@ Three steady-state surfaces + the final verdict:
       availability_index (152MB parquet, mtime 2026-07-06T20:52:51Z; 5,386,738 rows). Filtered to 6 sports sources
       (api_football / footystats / odds_api / open_meteo / soccer_football_info / transfermarkt / understat). **Gate
       FAILS — 656,486 total pending_fetch shards (eu=651,185 + af=5,301) across every non-`odds_api` source.**
-      Per-source expected_unattempted totals: api_football 542,912 (dominated by TEAMS eu=194,331 + ODDS eu=89,073 +
-      fixture-enrichment types eu≈180k — awaiting P2a enrichment coordinator); footystats 51,246 (VM
-      `fs-backfill-20260706-161335` RUNNING since 16:13 UTC, ETA ~2026-07-07/08); transfermarkt 36,379; understat 14,126
-      (Understat VM PREEMPTED at 2018-04-25 on 2026-06-29 and NEVER re-launched per P2c 18th-dispatch log);
+      Per-source expected_unattempted totals: api_football 542,912 (dominated by TEAMS eu=194,331 + ODDS eu=89,073
+      [**CORRECTION 2026-07-15: the ODDS eu=89,073 slice is NOT a fetchable gap — see the note below; do NOT point a
+      fetch fleet at it**] + fixture-enrichment types eu≈180k — awaiting P2a enrichment coordinator); footystats 51,246
+      (VM `fs-backfill-20260706-161335` RUNNING since 16:13 UTC, ETA ~2026-07-07/08); transfermarkt 36,379; understat
+      14,126 (Understat VM PREEMPTED at 2018-04-25 on 2026-06-29 and NEVER re-launched per P2c 18th-dispatch log);
       soccer_football_info 3,261; open_meteo 3,261. attempted_failed 5,301 total, 0 blank-error_reason (all evidenced);
       dominant reasons: phantom_captured_no_parquet_at_canonical_path 2,094 (needs phantom-audit --apply once new
       prefix_tpls cover the shape); ApiFootballResponseError 1,639; FIXTURES_FETCH_FAILED 665;
       UNCLASSIFIED_ADAPTER_ERROR 461; HTTP_NOT_FOUND 384. Only `odds_api` derivative rows (arbitrage_opportunity /
       odds_movement / odds_snapshot) are at 0/0/0. No action taken — task is [PARKED], priority 999; prereqs
       P2a-enrichment + P2b-Understat re-launch + P2b-footystats VM completion + P2c-features compute are all
-      outstanding. /blocked filed; re-dispatch after all four prereqs land.
+      outstanding. /blocked filed; re-dispatch after all four prereqs land. — **CORRECTION 2026-07-15 (api_football ×
+      ODDS eu=89,073 is IMPOSSIBLE, not fetchable — do NOT fetch it).** The `api_football … ODDS eu=89,073` slice above
+      is counted as a real gap "awaiting P2a enrichment coordinator". It is not: **api_football has no odds path in
+      instruments-service** — the adapter's `get_odds()` is a deprecated stub that logs "use
+      `get_fixture_odds_snapshot()` instead" (`codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
+      fleet, and no credit spend can ever move these cells; ODDS is **footystats**-owned in IS (operator ruling
+      2026-06-27, #6 REVERSED). The league counts are the tell: footystats ODDS spans 46 leagues (the codex footystats
+      denominator); these rows span **94** — the api_football league universe cross-producted against a data_type
+      api_football does not serve. **Root cause (fixed 2026-07-15):** a UAC registry split-brain — `("sports","ODDS")`
+      was missing from `SOURCE_PRIORITY` (stripped by `8fb1f54f` 2026-06-25, not restored by the partial #6 revert
+      `c75101be`), so the IS enumerator's `_derive_pm_source_transport` probe missed and its CF-3 fallback resolved the
+      sports asset_group DEFAULT → `batch_api_football`, stamping `source=api_football` on every seeded ODDS row.
+      Registry restored in unified-api-contracts@57bcc7c5 → the seed now resolves
+      `('batch_footystats','footystats','rest')`, so the nightly 01:30 cron stops minting these once the fix reaches the
+      enumerator's deployed runtime. The **already-written** rows still need a purge/retype pass — tracked in
+      `plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`
+      §B, deliberately deferred until the in-flight P0 index repair settles. Until that purge lands, treat this eu
+      figure as **denominator pollution** (it depresses every ODDS coverage ratio ~4.6×), not as work.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward
       is live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert

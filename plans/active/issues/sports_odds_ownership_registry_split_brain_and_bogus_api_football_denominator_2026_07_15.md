@@ -27,6 +27,20 @@ summary:
   writes the reversed (wrong) rule into codex, contradicting sports-data-types-catalog.md:48-52."
 status: open
 priority: P1
+resolution_progress:
+  "2026-07-15 remediation pass (all three defects addressed; 2 follow-ups + 1 new finding remain OPEN). C: the stale
+  DOCS landmine is CANCELLED in place (unified-trading-pm@f70a2caf0). A: root cause was NOT a never-added entry but a
+  PARTIAL REVERT — 8fb1f54f (2026-06-25) stripped ODDS from THREE registries as decision #6's 'coherent unit' and the
+  2026-06-27 reversal c75101be restored only SPORTS_DATA_TYPE_TO_SOURCE; both stripped entries restored to their exact
+  pre-8fb1f54f values (unified-api-contracts@57bcc7c5) + a cross-registry drift guard. B: this doc MISDIAGNOSED the
+  mechanism — the v2 enumerator has NO per-source cross-product; B is a CONSEQUENCE of A (the missing SOURCE_PRIORITY
+  key made _derive_pm_source_transport's CF-3 fallback resolve the sports asset_group default -> batch_api_football,
+  stamping source=api_football on every seeded ODDS row; proven by simulation + the live index's
+  pipeline_mode=batch_api_football + footystats-derived error_reason on the same row). Fixed by A; regression-guarded in
+  instruments-service@c7d97b5d; NO enumerator change made. STILL OPEN: (1) the 127,018-row purge, deliberately deferred
+  behind the in-flight P0 index repair; (2) post-deploy verification that the nightly re-seed stopped; (3) NEW finding
+  A2 — a SECOND split-brain (PLAYER_STATS vs FIXTURE_PLAYER_STATS) caught by the new drift guard, quarantined in a
+  shrink-only baseline pending an operator naming ruling."
 nature: notes
 asset_group: [sports, meta]
 stage: [meta]
@@ -195,7 +209,10 @@ api_football does not serve.
 
 **They are actively re-seeded.** `w_max = 2026-07-15T01:31:01Z` on the 82,509 `expected_unattempted` rows — the 01:30
 UTC `expected_universe_v2_scheduler` cron (`codex/02-data/availability-manifest-and-data-status.md` § "Materialisation
-WIRED + recurring"). This is not a frozen historical artifact; it regenerates nightly.
+WIRED + recurring"). This is not a frozen historical artifact; it regenerates nightly. **[CONFIRMED 2026-07-15 — and
+root-caused; the mechanism is NOT what this section assumed. See B-ROOT-CAUSE below: the seed is minted by
+`_derive_pm_source_transport`'s CF-3 fallback resolving the sports asset_group default, because §A's registry hole made
+`has_source_priority("sports","ODDS")` miss. Fixed at the registry, not the enumerator.]**
 
 **Nobody owns them, and one plan actively misreads them as fetchable:**
 
@@ -210,15 +227,69 @@ Risk: the live `af-backfill-*` enrichment fleet is the P2a enrichment coordinato
 `expected_unattempted` is the "pending_fetch" class; 82,509 of them are pointed at a source with no odds endpoint. This
 also depresses every ODDS honest-coverage ratio by ~4.6× on the denominator.
 
-- [ ] [DATA] P1. Rule on the 127,018 api_football×ODDS rows: they should almost certainly be
-      `EXPECTED_SOURCE_DOES_NOT_PROVIDE` (or not seeded at all), never blank-reason `expected_unattempted`. Decide
-      remove-vs-retype **before** any fleet spends credits fetching them.
-- [ ] [CODE] P1. Stop the nightly re-seed at source: the v2 enumerator must not cross-product a league's `data_sources`
-      against data_types that `SPORTS_DATA_TYPE_TO_SOURCE` assigns to a different source. Gate: a post-cron read shows 0
-      blank-reason `source=api_football` `ODDS` rows. (Depends on **A** — the enumerator needs a registry that actually
-      answers "who owns ODDS".)
-- [ ] [DOCS] P2. Un-park / re-scope `sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md:178` so ODDS
-      eu=89,073 is not carried as an api_football fetch target.
+### B-ROOT-CAUSE — CORRECTED 2026-07-15: this issue doc MISDIAGNOSED the mechanism. B is a CONSEQUENCE of A.
+
+> The `[CODE] P1` below asked for the v2 enumerator to "not cross-product a league's `data_sources` against data_types
+> that `SPORTS_DATA_TYPE_TO_SOURCE` assigns to a different source". **Read the code: that cross-product does not
+> exist.** `_enumerate_v2_sports` iterates **data_types** (`_sports_data_types()` = `SPORTS_DATA_TYPE_TO_SOURCE` keys)
+> and resolves exactly ONE canonical source per data_type (`_src = dt_source.get(dt)` →
+> `is_expected_for_source(_src, …)`). It never iterates sources, and there is no per-league `data_sources` axis in the
+> loop. The enumerator was **not** the defect — it was faithfully reading a registry with a hole in it.
+>
+> **The real mechanism** (`scripts/enumerate_expected_universe.py:454` `_derive_pm_source_transport`, which stamps
+> `source`/`pipeline_mode` on every seeded row): it probes `has_source_priority(ag, dt)` for 3 casings; on a miss it
+> falls through to the CF-3 fallback `derive_pipeline_mode_for_row(...)`, which resolves the **sports asset_group
+> DEFAULT** → `batch_api_football` → `source="api_football"`. So while `("sports","ODDS")` was missing from
+> `SOURCE_PRIORITY` (§A: stripped by `8fb1f54f` 2026-06-25, not restored by the partial #6 revert `c75101be`), **every
+> seeded ODDS row was stamped api_football.** Proven by simulation (instruments-service `.venv`):
+>
+> ```
+> POST-FIX (ODDS present):  _derive_pm_source_transport("sports","ODDS") -> ('batch_footystats',  'footystats',   'rest')
+> PRE-FIX  (ODDS absent):   _derive_pm_source_transport("sports","ODDS") -> ('batch_api_football','api_football', 'rest')
+> ```
+>
+> **The live index confirms the signature.** Read 2026-07-15 (index `updated 17:58Z`), all 127,018 rows carry
+> `pipeline_mode=batch_api_football` + `service_name=instruments-service`, while their `error_reason`
+> (`EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON`) is produced by **footystats'** season rules via
+> `is_expected_for_source(SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]="footystats", …)`. One row, two registries, two different
+> answers — the split-brain's fingerprint. `w_min=2026-06-28T21:31` on the 82,509 (the first cron after the 06-25
+> removal reached the deployed runtime) and `w_max=2026-07-15T01:31` (still minting until the fix).
+>
+> **Therefore the fix for B is the §A registry restore** (unified-api-contracts@57bcc7c5) — already shipped. No
+> enumerator logic change was made or needed; forcing one onto a correct file was declined.
+
+- [x] ✅ [CODE] P1. Stop the nightly re-seed at source. — **DONE 2026-07-15 via the §A fix**
+      (unified-api-contracts@57bcc7c5) + a regression guard at the point the wrong source reached the manifest,
+      instruments-service@c7d97b5d (`test_sports_odds_seed_provenance_is_footystats_never_api_football` +
+      `test_sports_odds_seed_provenance_matches_canonical_registry` + a **generalised** guard over every sports
+      data_type; 168 passed, `quality-gates.sh --no-fix` exit 0). **The todo's premise was wrong** — see B-ROOT-CAUSE
+      above; the enumerator has no per-source cross-product, so nothing there was changed. **Gate (deployment-dependent,
+      NOT yet observed):** the 01:30 UTC cron runs a DEPLOYED UAC, so it keeps minting api_football-stamped ODDS rows
+      until 57bcc7c5 promotes to `main` and reaches the enumerator's runtime. Verify with a post-cron read once
+      promoted: 0 NEW `source=api_football` `ODDS` rows with `written_at` after the deploy.
+- [ ] [VERIFY] P1. **Confirm the re-seed actually stopped** once unified-api-contracts@57bcc7c5 is deployed to the
+      expected-universe-v2 runtime. Gate: a post-01:30-cron read of the IS sports `_index` shows **no**
+      `source=api_football` × `data_type=ODDS` row whose `written_at` postdates the deploy (existing rows persist until
+      the purge below — count them separately by `written_at`, not in aggregate).
+- [ ] [DATA] P1. **DEFERRED PURGE — do NOT run while the P0 index repair is in flight.** Purge/retype the **127,018
+      already-written** `api_football` × `ODDS` rows (82,509 blank-reason `expected_unattempted` + 22,740
+      `EXPECTED_POST_SEASON` + 21,769 `EXPECTED_PRE_SEASON`, 94 leagues). Fixing the seed (above) stops NEW ones; it
+      does **not** retract these. They remain denominator pollution (~4.6× on every ODDS coverage ratio) and a live
+      mis-fetch risk for the `af-backfill-*` fleet until purged. **Sequencing (the reason this is deferred):** a
+      separate P0 agent owns index repair as of 2026-07-15 — a concurrent purge would race it. Run only AFTER that
+      settles, and re-measure first (the counts move). **Decide remove-vs-retype:** these rows are impossible-by-
+      construction, so REMOVE is the honest option (they are not absence-with-a-reason; they are cells that should never
+      have existed); a `EXPECTED_SOURCE_DOES_NOT_PROVIDE`-style retype would keep an impossible (source, data_type) pair
+      in the corpus and still needs `source=api_football` to be a legitimate ODDS axis, which it is not. Gate: 0
+      `source=api_football` × `ODDS` rows in the IS sports `_index`; ODDS coverage ratios re-measured post-purge;
+      snapshot-first per the standard wipe ritual.
+- [x] ✅ [DOCS] P2. Un-park / re-scope `sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md` so ODDS
+      eu=89,073 is not carried as an api_football fetch target. — **DONE 2026-07-15**, unified-trading-pm@<sha-b>.
+      Annotated in place (the plan is `[PARKED]`/priority-999, so it was corrected, not un-parked — un-parking is the
+      plan owner's call and the other prereqs are still outstanding): the eu=89,073 line now carries an inline
+      **do-NOT-fetch** marker plus a full correction note (impossible-by-construction, the 46-vs-94 league tell, the
+      root cause, the fix sha, and a pointer to the deferred purge). Nobody reading it can now launch a fetch fleet at
+      those cells.
 
 ## C. Stale-decision landmine — an OPEN DOCS todo encoding the REVERSED rule
 
