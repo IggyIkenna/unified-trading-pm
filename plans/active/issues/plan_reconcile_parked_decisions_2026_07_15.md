@@ -52,9 +52,9 @@ locked_since:
 > | **§6** fold 16 near-complete | **A** — approve the table | ✅ `93cb228c5` (14 folded verbatim + 2 flipped) → `98e8fd5ba` (13 shells archived; 3 parked, codex-referenced)          |
 > | **§7** unlock 14 fully-done  | **A** — unlock + verify   | ✅ `ed58dd108` — 14/14 verified: 13 SAFE_TO_ARCHIVE, **1 KEEP_ACTIVE**; 6 archived, 7 blocked on a repoint pass         |
 >
-> **Corpus effect: 143 → 117 active plans.** Still open below: **§1** (CeFi reclass non-durable), **§3** (`p1_dualwrite`
-> draft — now moot for the fold, see note), **§4** (deployment-ui staging stage), **§8** (the 5358-line split), plus the
-> residual archival blockers recorded in §5b/§7-residual.
+> **Corpus effect: 143 → 117 active plans.** Still open below: **§1** (CeFi reclass non-durable), ~~**§3**~~
+> (`p1_dualwrite` draft — RESOLVED by the §6 ruling, option B), **§4** (deployment-ui staging stage), **§8** (the
+> 5358-line split), plus the residual archival blockers recorded in §5b/§7-residual.
 
 ## §1 — P1 DATA-CORRECTNESS: CeFi `futures_chain` reclass is NON-DURABLE (big finding)
 
@@ -109,12 +109,17 @@ plan is invisible to dispatch despite being live work.
 **Why parked:** flipping `draft → active` changes what the AO ingests and dispatches — a live-routing change, not
 bookkeeping.
 
+> **🟢 RESOLVED 2026-07-15 by the §6 ruling — option B, no separate answer needed.** The operator's §6 approval covered
+> `deployment_registry_firestore_p1_dualwrite → deployment_registry_firestore_p0_unblock_2026_07_14.md`, which IS option
+> B below. Applied: remnant folded (`93cb228c5`), shell reached zero open todos, archived to `plans/archive/2026_07/` as
+> `status: complete` (`98e8fd5ba`). The dispatch-invisibility is therefore gone — the live work is now tracked in
+> P0_unblock, which is `status: active` and ingested. Nothing further to rule here.
+
 - **A: Flip `p1_dualwrite:9` `status: draft` → `active` (truth-telling; the work already happened) and tick the P0
-  gating todo. [WORKER REC]**
-- **B:** Leave draft; fold the one open todo into `deployment_registry_firestore_p0_unblock_2026_07_14.md` and archive
-  the P1 shell (see §6 — the near-complete analyzer independently recommends this same fold target).
+  gating todo. [WORKER REC — superseded]**
+- **B: ✅ TAKEN (via §6):** fold the one open todo into `deployment_registry_firestore_p0_unblock_2026_07_14.md` and
+  archive the P1 shell.
 - **C:** Leave as-is (intentionally parked pending the fleet dual-write decision).
-- **Other:** operator free-text.
 
 ## §4 — P2 cross-repo CODE defect: deployment-ui hard-codes a `staging` promotion stage
 
