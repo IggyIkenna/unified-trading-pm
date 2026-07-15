@@ -376,20 +376,36 @@ session.
       legitimately — no bypass**: 31,301/31,301 rows accepted by the pre-launch guard (0 dropped), all 2,848 REAL cells
       now captured in canonical. Method + full evidence table: the canonicalisation plan's "L6 floors-to-reality"
       Progress Log entry. Repo: unified-api-contracts.
-- [ ] [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude
+- [x] ✅ [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude
       `instrument_count=0` cells from the legacy-only diff, so it measures GENUINE data loss instead of a permanent
-      by-design RED. Without this, E8 can never green. Repo: unified-trading-pm. **NARROWED + SHARPENED 2026-07-15 by
-      the floors amendment** (the pre-launch half of this todo is now moot — see below), and this is now the ONLY thing
-      standing between L6 and GREEN: - The **pre-launch exclusion is no longer needed**. The floors were the wrong half
-      of the model: amending them to reality made all 2,848 pre-launch REAL cells legitimately writable, and they are
-      now captured in canonical. Re-audited legacy-only residual = **468, of which REAL (ic>0) = 0 and phantom (ic=0) =
-      468**. So the gate should NOT special-case pre-launch dates — the floors now tell the truth on their own, and a
-      future pre-launch cell would be a real signal worth surfacing, not noise to suppress. - The **ic=0 exclusion IS
-      still required**, and is the entire remaining gap: 468 on IS + 140 on MDPS, all of them the operator-ACCEPTED
-      phantom class (incl. the 28 INJURIES + 2 WEATHER). These have **no backing data** — an object probe this session
-      found INJURIES objects exist for every day from 2018 but are **zero-row on every one of the first 60 days probed,
-      on both surfaces**. Fabricating `captured` rows for them is banned (`record_failed`/`record_empty`, never a fake
-      `record_captured`), so no migration can ever green them. - **Proposed criterion**:
+      by-design RED. Without this, E8 can never green. Repo: unified-trading-pm. **DONE 2026-07-15 —
+      `unified-trading-pm@10ad5d69a`** (operator RULING 1: _"Redefine to real-data-only."_). Implemented exactly the
+      proposed criterion below: `_split_backed_cells()` partitions legacy captured cells by per-cell **MAX**
+      `instrument_count` (MAX, not per-row — Gotcha-#2), the gate diffs only the ic>0 REAL set against canonical, and
+      the ic=0 phantoms are emitted on their own `L6-phantom-residual` INFO line (VISIBLE, not suppressed —
+      honest-absence discipline). Null ic is NOT treated as real-data evidence; a legacy index lacking the column falls
+      back to all-cells-real (conservative — the gate may read RED, it can never under-report data loss). 13 unit tests
+      (`tests/unit/test_cf_manifest_audit_l6_gate.py`) cover the split/MAX-semantics/null/missing-column + the
+      RED-on-stranded-real vs GREEN-on-phantom-only decision. `audit()` exceeded the codex function-size cap once the
+      block landed → extracted to `_legacy_diff()`. QG green (EXIT=0, 1267 passed, sentinel==HEAD). **Measured on BOTH
+      live surfaces (`run it, don't read it`, 2026-07-15 ~22:10Z):** | surface | L6-legacy-only BEFORE | AFTER (real
+      ic>0) | phantom residual (reported separately) | | ------- | --------------------- | ----------------- |
+      -------------------------------------- | | IS `instruments-store-sports-prd-…` | 468 [RED] | **0 [GREEN]** | 468 |
+      | MDPS `market-data-tick-sports-prd-…` | 140 [RED] | **0 [GREEN]** | 140 | `L6-legacy-only` no longer appears in
+      either surface's RED list (IS residual REDs `['CF-2-paths','CF-3','CF-4','CF-8']`, MDPS `['CF-8']` — all
+      pre-existing canonical-FORM gaps, untouched by this change and independent of legacy-data safety). **NARROWED +
+      SHARPENED 2026-07-15 by the floors amendment** (the pre-launch half of this todo is now moot — see below), and
+      this is now the ONLY thing standing between L6 and GREEN: - The **pre-launch exclusion is no longer needed**. The
+      floors were the wrong half of the model: amending them to reality made all 2,848 pre-launch REAL cells
+      legitimately writable, and they are now captured in canonical. Re-audited legacy-only residual = **468, of which
+      REAL (ic>0) = 0 and phantom (ic=0) = 468**. So the gate should NOT special-case pre-launch dates — the floors now
+      tell the truth on their own, and a future pre-launch cell would be a real signal worth surfacing, not noise to
+      suppress. - The **ic=0 exclusion IS still required**, and is the entire remaining gap: 468 on IS + 140 on MDPS,
+      all of them the operator-ACCEPTED phantom class (incl. the 28 INJURIES + 2 WEATHER). These have **no backing
+      data** — an object probe this session found INJURIES objects exist for every day from 2018 but are **zero-row on
+      every one of the first 60 days probed, on both surfaces**. Fabricating `captured` rows for them is banned
+      (`record_failed`/`record_empty`, never a fake `record_captured`), so no migration can ever green them. -
+      **Proposed criterion**:
       `L6-legacy-only := legacy captured cells with instrument_count>0 that are absent from       canonical` (i.e. drop
       the ic=0 cells from `lc` before the set-diff, and report them separately as an informational `L6-phantom-residual`
       line so the class stays VISIBLE rather than silently suppressed). On today's data-state that criterion is **GREEN
