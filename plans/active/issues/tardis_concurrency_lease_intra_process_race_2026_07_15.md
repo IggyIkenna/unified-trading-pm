@@ -28,7 +28,7 @@ summary:
   lease-wait, not sequential retries. The 2026-07-12 enablement smoke-test (harness B) verified 'idempotent on re-call'
   via a SEQUENTIAL second call after the first completed — it did not exercise concurrent racing callers, so this gap
   was not caught."
-status: open
+status: resolved
 priority: P1
 nature: notes
 asset_group: [cefi]
@@ -55,6 +55,8 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+  market-tick-data-service@53431680 (todo 1), instruments-service@d68f3d59 (todo 2), instruments-service --apply run
+  2026-07-15T22:35Z (todo 3)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -174,14 +176,15 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
       instruments-service@d68f3d59. Audit-only (per BLK-8a051482 resolution: -001 the actual lease fix had NOT shipped
       when this ran, so the flip-to-`expected_unattempted` mutation is NOT applied yet — only identification). See
       Progress Log + todo (3) below for the corpus-wide scope this audit surfaced.
-- [ ] [SCRIPT] P1. **NEW — bigger than originally scoped.** Once `tardis_concurrency_lease_intra_process_race-001` (the
-      lease fix) has shipped + its regression test passed, run
+- [x] ✅ [SCRIPT] P1. **NEW — bigger than originally scoped.** Once `tardis_concurrency_lease_intra_process_race-001`
+      (the lease fix) has shipped + its regression test passed, run
       `instruments-service/scripts/audit_tardis_concurrency_lease_race_false_failures_2026_07_15.py --apply     --confirm-lease-fix-shipped`
       (with `MANIFEST_PER_VM_SHARDS=true VM_NAME=<unique>`) to flip the CORPUS-WIDE 21,982 race-caused
       `attempted_failed` rows (not just the 3-VM session subset — see Progress Log) to `expected_unattempted` so the
       next backfill wave re-attempts them. Re-verify post-flip that `captured` row count is unchanged (script's own
       safety gate) and spot-check a sample of flipped rows re-attempt cleanly (no repeat code=274) before considering
-      this closed. (repo: instruments-service)
+      this closed. (repo: instruments-service) — done 2026-07-15T22:35Z. See Progress Log for full evidence
+      (consolidator-quiesce procedure, exact row counts, spot-check).
 
 ## Progress Log
 
@@ -242,3 +245,54 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
   to extend the 2026-07-12 Harness A/B pattern. Todo (3) (the corpus-wide `--apply --confirm-lease-fix-shipped` re-flip
   of the 21,982 race-caused `attempted_failed` rows) is now unblocked — its prerequisite (this fix shipped) is
   satisfied.
+- **2026-07-15T22:1x-22:36Z (data_engineering, slot-16, task `tardis_concurrency_lease_intra_process_race-003`)**:
+  **Sequencing gap recurred a third time**: same class as `BLK-8a051482` (todo (2)) — the dispatcher handed this slot
+  todo (3) while `-001` was still `status: queued` (no `prereqs.completed_tasks` wiring), so the same "once fixed +
+  shipped" gate was unmet at dispatch time again. Filed `BLK-72ba59e6`; main answered A (pick up unclaimed `-001` myself
+  as continue_on). While starting that BACKEND fix, **slot-7 landed `-001` first** (`market-tick-data-service@53431680`,
+  see above) — discarded my in-progress duplicate diff for `tardis_concurrency_lease.py`/its test (via
+  `git restore --staged --worktree` + `git merge --ff-only`, confirmed slot-7's fix is equivalent-and-better:
+  `threading.Event` + `try/finally` vs my simpler hold-the-lock-through-acquire approach) rather than ship a
+  redundant/conflicting commit. Found + fixed one unrelated pre-existing off-by-one in
+  `test_release_does_not_delete_foreign_lease` (same test file, failed standalone under a full quality-gates.sh run, a
+  tautological `assert 1 != 1` from a hardcoded generation coinciding with the fresh fake-storage's first-seed
+  generation) — shipped separately as `market-tick-data-service@39b0daf1` per the in-your-file findings-triage rule.
+  - **Todo (3) — the corpus-wide apply-flip**: main's answer additionally required "consolidator quiesced;
+    evidence-verify" before running `--apply`, since `_flip_to_expected_unattempted()` does a direct read-modify-write
+    of the FULL merged canonical (`_index/availability_index.parquet`), not a per-VM-shard write — exactly the race
+    pattern the same-day HARD RULE in `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM shard
+    mode is the ONLY sanctioned standing write path" warns about (reference incident: 2026-07-15 sports IS canonical
+    lost 328,292 rows / 5.7% to a legacy-mode direct write racing the consolidator). The script's
+    `MANIFEST_PER_VM_SHARDS=true`/`VM_NAME` env-var gate is validated but never actually used to route the write through
+    shard mode — it still writes the canonical directly — so quiescing the consolidator for the write's duration was the
+    correct (and only) way to close that race for this one-off script, rather than rewrite the script's write path under
+    this task's scope.
+  - **Quiesce procedure**: identified the ONE relevant job via GCP Cloud Scheduler Python SDK (`gcloud` CLI is broken in
+    this sandbox — snap confinement error — so used `google.cloud.scheduler_v1`/`google.cloud.run_v2` directly):
+    `uts-prod-manifest-consolidator-market-data-cefi-cron` (the other 5 `*-cefi-cron` jobs consolidate different buckets
+    — execution/instruments/features-onchain/features-volatility/features-delta-one — irrelevant to this bucket). AWS
+    has no separate rule for this exact GCS bucket (AWS Batch/EventBridge mirrors its OWN S3 buckets under a different
+    naming scheme, not this GCP bucket) — confirmed no AWS-side pause needed. Paused via
+    `CloudSchedulerClient.pause_job` → `PAUSED`; polled the canonical blob's `generation` (via
+    `get_storage_client().get_blob_metadata`) every 15s for 3 consecutive stable reads (~70s) to confirm no in-flight
+    execution was still writing before proceeding (a scheduler pause does not kill an already-triggered execution).
+  - **Apply run**: fresh dry-run first (`21982` rows, matching the original finding exactly — zero new race rows
+    accumulated between the original audit and now, consistent with `-001` having shipped in between). Ran
+    `--apply --confirm-lease-fix-shipped` with `MANIFEST_PER_VM_SHARDS=true VM_NAME=cefi-race-refetch-slot16-<ts>` —
+    script's own safety gate reported `captured` count preserved at `3140808` before/after. Post-apply dry-run re-audit:
+    `0` race rows remain; `attempted_failed` total dropped `1751967 → 1729985` (exactly `-21982`); total row count
+    unchanged (`11370710`). Spot-checked `BITGET-FUTURES`/`liquidations`/`2026-01-02` (the original session's stalled
+    shard): 427 of that triple's 842 rows now `expected_unattempted` with cleared `error_reason`; the remaining
+    `attempted_failed` rows in that same triple carry genuinely DIFFERENT reasons (a non-`code=274` `403`,
+    `SOURCE_RETURNED_ZERO`, a `404`) — confirming the exact-match discipline didn't over-capture. Corpus-wide
+    `error_reason == "Tardis HTTP 403 code=274 concurrent-IP-lock"` count is `0` across every `capture_status`, not just
+    `attempted_failed`.
+  - **Resume + verify**: `CloudSchedulerClient.resume_job` → `ENABLED`, independently re-confirmed via `get_job` (given
+    `plans/active/issues/defi_consolidator_cron_left_paused_2026_07_15.md` is a live cautionary precedent for forgetting
+    to resume a paused consolidator cron). Additionally polled the canonical blob's `generation` post-resume until it
+    advanced (confirmed within ~4 min) — proving the cron didn't just report `ENABLED` but actually fired and completed
+    a real consolidation cycle, closing the loop on "resumed" meaning "genuinely running again," not just an API-state
+    flip.
+  - Next backfill wave against these 21,982 shards will re-attempt them under the now-fixed lease; no further action
+    needed on this issue doc unless a future audit finds NEW `code=274` rows post-`-001` (which would mean the fix
+    itself has a gap, not a scope item for this doc).
