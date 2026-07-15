@@ -153,3 +153,42 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   latest full cefi snapshot) to scratchpad. Key numbers captured in "Findings evidence" above.
 - Operator answered: execute yourself `/autonomous`; aliases = verify + auto-delete (except DERIBIT-COMBO).
 - Plan-of-record created. Next: Phase-1 workstream E (liquidations SSOT), then arm the loop.
+
+### 2026-07-15T13:35Z — tick 1: code agents dispatched + A/B found already-in-flight
+
+**Direct-question answers (banked):**
+
+- BITGET-FUTURES: already run (174,386 captured). Residual fails ~92% Tardis-403 + blank-instrument_type accounting;
+  last fail 2026-05-22. → NO re-run; needs re-census after the 403 sweep. (workstream B)
+- funding_rate: HAVE IT — carried inside `derivative_ticker` (cols funding_rate/predicted_funding_rate/open_interest/
+  mark_price), dense on every perp venue. Separate `funding_rate`/`perp_funding` data_type is redundant/near-empty. No
+  action; `CeFiMvpRule.data_types` already lists funding_rate (maps to derivative_ticker).
+- liquidations ground truth (manifest): captured on 6 perp venues — BINANCE-FUTURES(308k), OKX-SWAP(192k), BYBIT(157k),
+  KRAKEN-FUTURES(48k), BITFINEX-FUTURES(20k), BITGET-FUTURES(6.9k); PERPETUAL leg. NOT ASTER(live-only)/HL(no feed)/
+  OKX-FUTURES(dated)/COINBASE-FUTURES/EXTENDED/PACIFICA. → that is the honest gating target for workstream E.
+
+**Code agents dispatched (Phase 1, per-repo to avoid conflicts):**
+
+- E (UAC): add liquidations to CeFi MVP PERPETUAL leg, gated via VENUE_DATA_TYPE_CAPABILITIES to those 6 venues; bump
+  MVP_SCOPE_CONFIG_VERSION 14→15; reconcile mvp-universe.yaml contradiction; codex update. [agent adb3a7cb]
+- G-code + D-code-IS (instruments-service): EQUITY_PERP type-stamp for the 70 equity perps + ASTER dating fix; HL
+  catalogue dedup (534→~358, rename-detection in `_merge_incremental`). [agent aa176bc4]
+- D-code-MTDS + I-diagnosis (market-tick-data-service): HL phantom-path reconcile (@LIN canonical); diagnose
+  EXTENDED-STARKNET book5 (adapter-gap vs live-only) — reports; does NOT edit UAC (avoid conflict with E). [agent
+  a9ee9179]
+
+**A/B (recent-tail backfill + 403 sweep) — ALREADY IN-FLIGHT, do NOT launch duplicates:**
+
+- 2 lease-serialized Tardis VMs running (2/3 cap): `cefi-queue-heavy-20260714-123340` (START 2020-01-01, END 2026-07-13,
+  LEASE=1, up ~32h) + `cefi-queue-heavy-20260715-105207` (END 2026-07-14, LEASE=1, launched today). Both = combined
+  SINGLE_VM_QUEUE backfills covering the FULL range incl. the recent tail, from the prior mvp_backfill_cefi_tick_v10
+  work.
+- Liveness: `_index/per_vm/cefi-queue-heavy-20260714-123340.parquet` mtime 2026-07-15T13:02Z (fresh, ~30 min) → alive +
+  progressing. BUT recent tail (2026-06-15 BINANCE-FUTURES) still empty → VMs grinding historical 403-gaps first.
+- Tardis cap=3 (operator 2026-07-14, `tardis-concurrency-guard.sh`); N>3 collapses. At 2/3, capacity for 1 more.
+- **PLAN for A/B**: MONITOR these to completion on a climbing metric (recent-tail venue-day coverage). If they keep
+  progressing but do NOT reach the tail within the monitoring window, launch ONE dedicated tail-only VM (START
+  2026-05-24, END 2026-07-14, all main venues, LEASE=1, SPOT, DRY_RUN first) as the 3rd slot. Launcher =
+  `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (queue/combined-VM mode).
+- Next ticks: (1) collect code-agent reports → ship/flip E, G, D; (2) monitor queue VMs; (3) then F (DERIBIT-COMBO
+  hist), G-tick (equity-perp download), C (alias kill), H (final census).
