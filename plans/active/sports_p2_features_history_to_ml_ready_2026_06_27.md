@@ -138,6 +138,15 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 01:00 UTC — data_engineering slot-2 (Todo 3 dispatch, same session — BLOCKED-PREREQ as established, fast re-verify only, no new investigation needed)
+
+Dispatched immediately after this same slot's own Todo 1 re-dispatch above (same session). Gate remains structurally
+unreachable — Todo 3 ("features manifest clean over history") cannot pass while Todo 1 (full-history compute) is still
+mid-run, per the well-established pattern this todo has hit 27+ times. Fast re-verify: features bucket unique-date count
+is now **2,890** (up from 2,888 at the Todo 1 entry ~7 min ago), and all 3 gap-fill VMs launched this session
+(`-004933`/`-004954`/`-005012`) remain `RUNNING` — steady forward progress, no stall. Not filing a new BLK (no operator
+decision needed, same well-documented compute-not-done wait). Checkbox NOT flipped. Releasing via `/skip-current-task`.
+
 ### 2026-07-15 00:53 UTC — data_engineering slot-2 (Todo 1 re-dispatch — consolidator fix CONFIRMED HOLDING under real gap-fill load; relaunched all 3 previously-failed ranges, all 3 passed the startup gate this time and are doing genuine compute; checkbox NOT flipped)
 
 **Fresh-pulled all 24 slot repos clean.** Picked up where the 23:18Z entry (slot-10) left off: that entry stopped
