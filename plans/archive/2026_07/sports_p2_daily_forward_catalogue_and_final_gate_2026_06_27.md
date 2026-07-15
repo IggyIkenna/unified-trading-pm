@@ -4,7 +4,7 @@ title: Sports P2d — daily-forward + catalogue-daily + FINAL e2e gate (100% / c
 summary:
   Enable daily-forward pipeline, catalogue daily rollup, and stamp the final e2e verdict once full history is
   zero-missing.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -25,8 +25,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

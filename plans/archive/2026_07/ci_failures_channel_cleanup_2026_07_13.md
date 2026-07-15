@@ -10,7 +10,7 @@ summary:
   reporters (python-quality-gates-v2 per-run 105, ci-status-update-transition 39, ldr-ci-monitor hourly 11) differ
   because they run at different granularities; the per-run QG alert dedups by SHA so it never suppresses across commits
   — key it by branch instead so a still-red repo pages once, not per failing push.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

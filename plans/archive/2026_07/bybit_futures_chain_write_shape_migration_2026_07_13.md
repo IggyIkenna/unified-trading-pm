@@ -7,7 +7,7 @@ summary: >-
   a regex bug fixed in code 2026-07-09 was never backfilled, and the true affected window is wider than first estimated.
   Audit the exact scope, then reshape/backfill to the single canonical underlying= form with parity verification before
   any cleanup of the non-canonical originals.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -36,8 +36,8 @@ source:
     ETH.parquet, coexisting with the glued BTCUSDT-style files on the same day; no futures_chain data found for BYBIT at
     all June-July 2026, pre- or post the 2026-07-09 code fix — needs explanation).",
   ]
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 ---

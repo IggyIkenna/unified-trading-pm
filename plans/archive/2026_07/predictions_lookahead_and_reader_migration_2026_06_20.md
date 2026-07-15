@@ -4,7 +4,7 @@ title: Predictions reader migration to canonical_question_group + per-market Loo
 summary:
   Migrate prediction reader callsites and feature compute to canonical_question_group shape and enforce per-market
   LookaheadBiasError in the feature pipeline.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -26,8 +26,8 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-20
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

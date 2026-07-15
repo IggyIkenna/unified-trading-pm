@@ -4,7 +4,7 @@ title: MVP backfill — CeFi trades+book5 (perp-gated) + Deribit options_chain O
 summary:
   Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as
   options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -27,8 +27,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
 last_updated: 2026-07-14 # (was: 2026-06-27 — bumped with the BITGET-FUTURES wave failure correction entry)
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on: [mvp_catalogue_finalization_v10_2026_06_27]

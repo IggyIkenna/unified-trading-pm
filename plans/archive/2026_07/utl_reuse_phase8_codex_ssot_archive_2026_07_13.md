@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 8 codex SSOT + archive
 summary:
   Update every codex contract this consolidation effort changed, record the verified NON-findings, remove the in-flight
   banners, and archive the tracker + all split plans once every repo reaches C5.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

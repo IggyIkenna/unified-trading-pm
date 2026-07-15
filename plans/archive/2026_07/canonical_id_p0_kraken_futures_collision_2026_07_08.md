@@ -7,7 +7,7 @@ summary: >-
   tickers). The regex falls through to grabbing the 2-letter type-prefix, so BCH/ETH/LTC/XBT/XRP quarterly futures (same
   expiry) all collapse onto the byte-identical instrument_id KRAKEN-FUTURES:FUTURE:FI-USD-inverse-20220325 — confirmed
   via 5 real GCS parquet files. Real data corruption risk, not a naming/format issue.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: notes
 asset_group: [cefi]
 stage: [data]

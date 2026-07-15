@@ -6,7 +6,7 @@ summary:
   and dual-write every register/heartbeat/complete to BOTH GCS and Firestore behind a flag (Firestore best-effort). No
   reader changes — purely additive, so we can validate that Firestore mirrors GCS on the live fleet before any cutover.
   Reuses the existing firestore_lifecycle client factory and the ci_status_store CAS-in-transaction ordering pattern.
-status: draft
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [meta]
 stage: [meta]

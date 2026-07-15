@@ -8,7 +8,7 @@ summary:
   a separate, coupled bug — DeFi's glued_pair_id venue prefix had drifted to the wrong (no-underscore) form on every
   catalog regen because the live UAC helper was never updated after the 2026-07-08/09 operator decision that the
   with-underscore form is canonical.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: design
 asset_group: [cefi, defi]
 stage: [data]

@@ -6,7 +6,7 @@ summary:
   local driver, then re-evaluate the understat-vm-xg-complete gate and unblock the parked sports tasks. All code fixes
   are already shipped; this plan is the operational finish-line. Runs LOCALLY on the orchestrator host (NOT a SPOT VM) —
   a deliberate one-off exception documented below.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -26,8 +26,8 @@ last_updated: 2026-07-13
 depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 source:

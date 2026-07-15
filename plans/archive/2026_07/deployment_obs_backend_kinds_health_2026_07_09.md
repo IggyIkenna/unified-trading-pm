@@ -9,7 +9,7 @@ summary:
   sub-taxonomy. No Cloud Monitoring / CloudWatch. Feeds the UI half (deployment_obs_ui_popover_health_2026_07_09), a
   LOCAL plan executed interactively once this plan lands the contract. Full design + open-question resolutions live in
   the LOCAL parent deployment_observability_expansion_2026_07_08.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
