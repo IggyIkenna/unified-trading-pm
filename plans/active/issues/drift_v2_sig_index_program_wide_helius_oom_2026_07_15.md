@@ -135,10 +135,14 @@ fix below lands.
 
 ## Recommended follow-up (NOT actioned here — needs its own scoped implementation pass)
 
-- [ ] [DATA] P1. Refactor `_resolve_helius_rows` to stream/chunk: process the day's `target_sigs` in bounded sub-chunks
-      (e.g. 5,000-10,000 sigs), writing/flushing each chunk's resolved rows before starting the next, instead of
-      materialising the whole day in one `asyncio.gather` + one final write. This is the real fix that lets high-volume
-      days actually get captured (not just fail cleanly). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. Refactor `_resolve_helius_rows` to stream/chunk: process the day's `target_sigs` in bounded
+      sub-chunks (e.g. 5,000-10,000 sigs), writing/flushing each chunk's resolved rows before starting the next, instead
+      of materialising the whole day in one `asyncio.gather` + one final write. This is the real fix that lets
+      high-volume days actually get captured (not just fail cleanly). (repo: market-tick-data-service) —
+      market-tick-data-service@1df45ce3
+      (`perf(defi): stream Drift Helius day-resolution in bounded chunks to prevent     OOM`; sequential
+      50-batch/5,000-sig chunks, discards each chunk's raw JSON before the next, aborts between chunks on first batch
+      failure).
 - [ ] [DATA] P2. Investigate whether the DRIFT V2 sig index should be built/queryable per-market (or
       per-instruction-type) instead of program-wide, so a single-market backfill run doesn't resolve + mislabel the
       whole program's daily activity. Confirm with whoever owns the `data_quality="helius_v2_signatures_only"` decision
