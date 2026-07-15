@@ -3398,3 +3398,43 @@ untouched) — two schemes that cannot match.
 **Fleet note**: the 3 Tardis VMs + ASTER still run PRE-FIX tarballs, so they are still writing raw manifest ids. They
 are not destructive (the parquet bytes are correct and the relabel pass can credit them), but they are not closing eu
 either. Fleet decisions deliberately left to the operator/next tick rather than killed unilaterally mid-investigation.
+
+### /autonomous tick — MEASURED PROOF: 2h of pre-fix fetching closed ZERO eu; fixed fleet now live, decisive test armed — 2026-07-15T20:25Z
+
+**Hard evidence for the namespace-mismatch root cause** (two real `measure_honest_coverage` runs, 3 Tardis VMs fetching
+continuously between them):
+
+| metric               | 18:30Z    | 20:22Z    | delta         |
+| -------------------- | --------- | --------- | ------------- |
+| expected_unattempted | 2,773,292 | 2,773,292 | **0**         |
+| captured             | 3,057,681 | 3,058,241 | +560 (raw ns) |
+| attempted_failed     | 29,107    | 34,605    | +5,498        |
+| coverage_pct         | 52.18     | 52.13     | −0.05         |
+
+Two hours, three VMs, **zero** eu cells closed — coverage went slightly BACKWARD (af grew). This is the loop's
+flat-metric stall condition; it is already diagnosed (raw-vs-canonical id namespaces), so the response is to test the
+fix rather than burn ticks re-fetching.
+
+**Fleet state (peer lanes moved while this lane investigated — reconciled, not duplicated):**
+
+- 3 Tardis VMs relaunched 20:20Z **using this lane's scope-encoding names** (`cefi-queue-heavy-binancefutu-x15`,
+  `cefi-queue-light-binancefutu-x2`, `cefi-queue-light-bybit-x4`) — the naming fix is in service and the fleet is now
+  self-documenting.
+- 4 non-Tardis VMs launched 19:00Z (`cefi-hyperliquid-2026`, `cefi-lighter-zksync-2026`, `cefi-extended-starknet-2026`,
+  `cefi-pacifica-solana-2026`) — exactly the ~173k non-Tardis derivative_ticker eu this lane scoped at 18:35Z, now being
+  worked. Cap respected (they do not consume Tardis slots).
+
+**CRITICAL timing verification — the running fleet DOES carry the working fix**: tarball `mtds-code.tar.gz` built
+20:00:46Z; `mtds@56679e78` (first cut) 19:30:28Z ✅ in; `mtds@5d44a197` (**the real fix** — corrected the
+case-sensitivity bug that made 56679e78 a silent no-op) 19:52:50Z ✅ in; `mtds@90ecde17` (unit tests + unresolved-symbol
+visibility) 20:12:26Z ❌ NOT in the tarball — but that commit is tests + logging only, no behavioural change, so the
+20:20Z fleet canonicalizes correctly.
+
+**DECISIVE TEST ARMED** (T+85min, ~21:50Z): re-measure eu against the 20:22Z baseline of 2,773,292.
+
+- eu DROPS → the writer fix is sufficient; let the fleet run and the gate finally moves.
+- eu STILL FLAT → the writer fix is NOT enough and the **stale per-venue eu atom** is the true blocker (BINANCE-FUTURES
+  eu rows carry `instrument_type=''` + lowercase-raw `hotusdt`, which no canonical capture can ever match). In that case
+  fetching must STOP until the expected universe is re-materialised to ONE canonical atom — continuing to fetch would
+  only deepen the relabel debt (peer dry-run already sizes it: 3,133,117 candidates, 82.7% resolvable, 542,888
+  unresolved; `--apply` operator-gated).
