@@ -268,7 +268,21 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
       non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
-      operation closes both.**
+      operation closes both.** **🔴 BLOCKED-UPSTREAM-BUG 2026-07-15 (slot-11): the residual is now 18 CF11 rows
+      (FIXTURE_EVENTS 8 / FIXTURE_LINEUPS 10, 11 match-days) and the standard re-drive CANNOT clear them — root-caused
+      to a UTL bug, NOT a data gap. api_football HAS the events/lineups (live probe: 9-23 events + 34-40 lineups per
+      fixture) AND the canonical per-league DATA parquets are PRESENT on disk for every cell, but
+      `ManifestWriter.record_captured()` SILENTLY NO-OPS for sports FIXTURE_EVENTS/FIXTURE_LINEUPS
+      (`MANIFEST_WRITE_SCHEMA_MISSING` → row never staged; reproduced via the orchestrator path, a force re-fetch, AND a
+      direct record_captured() call — all `flush_all_pending_buckets()=={}`, no shard, cell unchanged). So the cells are
+      a permanent manifest-vs-data drift: the prior 2026-07-13 closer AND this session's runs both leave them
+      attempted_failed for the same reason. FULL root-cause + repro + fix todos (fix record_captured's schema-missing
+      skip in unified-trading-library, THEN targeted-recovery re-drive of the 18 cells) filed in
+      `plans/active/issues/api_football_cf11_record_captured_noop_manifest_vs_data_drift_2026_07_15.md`. NOT flipping
+      this checkbox to done (no false progress). Also filed a sibling read-path finding
+      `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (sports lacks an
+      AG_STALENESS_BUDGET_SEC override → false ManifestConsolidatorStaleError on a healthy ~11-min-cadence
+      consolidator). Do NOT relabel these empty_confirmed — the CF-11 gate forbids it and the data is present.**
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
@@ -925,10 +939,33 @@ report written in this plan's Progress Log.
     `instruments-service/scripts/backfill_orphan_class_e_sports.py`'s `resolve_source_and_mode()` docstring and
     `backfill_orphan_class_e.py`'s `MissingSourceError`/ `PipelineModeSourceMismatchError` gate commentary) — i.e. these
     6 rows are the write-safety gate **correctly rejecting** an attempted odds_api write for the generic `ODDS`
-    data_type (which `SOURCE_PRIORITY` reserves for footystats), and recording that rejection honestly as
-    `attempted_failed`. This is the manifest doing exactly what it's supposed to do (per
-    `codex/02-data/availability-manifest-and-data-status.md` — "never silent placeholders," trust the actual
+    data_type (which `SOURCE_PRIORITY` reserves for footystats — see the 2026-07-15 correction immediately below), and
+    recording that rejection honestly as `attempted_failed`. This is the manifest doing exactly what it's supposed to do
+    (per `codex/02-data/availability-manifest-and-data-status.md` — "never silent placeholders," trust the actual
     distribution) — **not a defect to patch.**
+  - **CORRECTION 2026-07-15 (premise was false when written; the CONCLUSION STANDS).** The parenthetical above — _"which
+    `SOURCE_PRIORITY` reserves for footystats"_ — was **factually false on 2026-07-13**, the day it was written:
+    `SOURCE_PRIORITY` had **no** `("sports","ODDS")` key at all, so `has_source_priority("sports","ODDS")` returned
+    `False`. Commit `8fb1f54f` (2026-06-25) stripped ODDS from `SOURCE_PRIORITY` + `AVAILABILITY_AT_SEMANTICS` +
+    `SPORTS_DATA_TYPE_TO_SOURCE` as decision #6's "coherent unit"; the operator REVERSED #6 on 2026-06-27 but the revert
+    (`c75101be`) restored only `SPORTS_DATA_TYPE_TO_SOURCE`. So the registry was silently ODDS-less for the 2026-06-25 →
+    2026-07-15 window that contains this entry. Found by the 2026-07-15 ODDS-ownership audit
+    (`issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` §A); the entry
+    is **restored** (exact pre-8fb1f54f value) in unified-api-contracts@57bcc7c5, so the premise is TRUE again and the
+    sentence now reads correctly.
+  - **The 6-row decision is NOT reopened — it survives the corrected premise, on re-verification.** The rows were
+    written _before_ the 2026-06-25 removal, i.e. while `SOURCE_PRIORITY` genuinely did reserve ODDS for footystats, so
+    the gate that produced them behaved exactly as described. Re-verified at runtime post-restore
+    (`unified-api-contracts/.venv`): `get_source_priority("sports","ODDS") == ["footystats"]`,
+    `valid_manifest_sources("sports","ODDS") == ["footystats"]`,
+    `is_valid_manifest_source("sports","ODDS","odds_api") is False`. The write-safety gate does reject an odds_api ODDS
+    write, the 6 `attempted_failed` rows are that rejection recorded honestly, and **"not a defect to patch" remains the
+    correct call.** Only the stated reason was (temporarily) unsound, never the outcome.
+  - **Latent risk this exposed (now closed):** for the 20-day window the pair was unregistered,
+    `has_source_priority("sports","ODDS")` was `False` — and UTL `_writer_ingest.py` gates its write-time mis-stamp
+    guard on exactly that call. So sports ODDS writes were accepted **without source validation** during the window; a
+    write like these 6 would NOT have been rejected. This is the enabling condition behind the bogus
+    `source=api_football` × `ODDS` rows in §B of the audit issue doc.
   - **Root-caused why the investigation's suggested classifier "polish" does not apply**: read
     `market-tick-data-service/market_tick_data_service/scripts/rebuild_sports_manifest_v9.py` and its helper
     `_rebuild_sports_write.py` in full. `_classify_empty_row` (and its 9-step `_RETIRED_DATA_TYPES`/`EXPECTED_*` relabel

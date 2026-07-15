@@ -704,9 +704,21 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
         [ "$(find tests/integration -name 'test_*.py' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ] && \
         _HAS_INTEGRATION=true
 
-    # Stream pytest output to a temp file instead of capturing it into a bash
-    # variable. Large stderr (failing hypothesis traces, leaked blobs) can blow
-    # bash's allocator (xrealloc: cannot allocate … bytes) when stuffed into RAM.
+    # Stream pytest output LIVE via `tee -a` to a temp file (2026-07-15 fleet-hardening).
+    # The temp file is still needed: the downstream _TESTS_RAN / _SKIPPED greps read it.
+    # The ORIGINAL design redirected all pytest stdout/stderr into the temp file
+    # (>>"$_pytest_log" 2>&1) and only `cat` it on a NON-zero exit — this was to avoid
+    # stuffing huge stderr (failing hypothesis traces, leaked blobs) into a bash VARIABLE,
+    # which blows bash's allocator (xrealloc: cannot allocate … bytes). `tee -a file`
+    # keeps that guarantee — it streams to stdout+file and never into a bash var — while
+    # ALSO surfacing output live so a hang-to-timeout (e.g. a Cloud Build worker stuck in a
+    # blocking syscall the pytest signal-timeout can't interrupt) shows progress + any
+    # faulthandler thread-dump AS IT HAPPENS instead of a fully-silent stall to the 1800s
+    # build timeout with zero output (the trap below deletes the temp file on the kill, so
+    # the buffered redirect was never surfaced). Exit code is preserved via ${PIPESTATUS[0]}
+    # (pipefail is OFF here, so the pipeline's own status is tee's 0 and set -e does not fire
+    # on a pytest failure — we read pytest's real code explicitly and exit 1 on it).
+    # SSOT: plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md.
     _pytest_log="$(mktemp "${TMPDIR:-/tmp}/qg-pytest-out.XXXXXX")" || exit 1
     trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
 
@@ -716,8 +728,10 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     #     if ! $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} ... ; then
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix from both branches below.
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
-        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
-            cat "$_pytest_log"
+        # Stream live via `tee -a` (see rationale above); preserve pytest's real exit via PIPESTATUS[0].
+        "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
+        _pytest_rc=${PIPESTATUS[0]}
+        if [ "$_pytest_rc" -ne 0 ]; then
             exit 1
         fi
         # Remind: when RUN_INTEGRATION=true but no integration tests exist yet, nudge author.
@@ -725,8 +739,9 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
             log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
         fi
     else
-        if ! "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV >>"$_pytest_log" 2>&1; then
-            cat "$_pytest_log"
+        "${MEM_WRAP[@]}" $PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1 | tee -a "$_pytest_log"
+        _pytest_rc=${PIPESTATUS[0]}
+        if [ "$_pytest_rc" -ne 0 ]; then
             exit 1
         fi
     fi

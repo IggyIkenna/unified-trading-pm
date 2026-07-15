@@ -432,3 +432,30 @@ repo. This plan tracks that work.
   digest carries the fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, un-pause + verify one real
   scheduled fire — only then is a future touch safe to revisit todos 6-10 (Workflow-YAML drift, legacy-job retirement,
   scheduling re-enable, bucket delete, issue-doc closure).
+- 2026-07-15 (~17:53Z, ShipAndTrigger phase — implemented "not yet tried" item (a): stream pytest output live +
+  phase-agnostic hang self-localizer, then re-triggered the build). Shipped three diagnostic edits toward getting a
+  `features-service` Cloud Build to fail FAST with the stuck stack instead of stalling silently to the 1800s timeout:
+  (i) `features-service/pyproject.toml` — `timeout_method = "thread"` under `[tool.pytest.ini_options]` so the existing
+  `--timeout=60` fires a thread-based all-thread stack dump on a TEST/FIXTURE-phase hang (the default `signal` method
+  can't interrupt a C-level/syscall hang); (ii) `features-service/tests/conftest.py` — a module-level (import-time)
+  faulthandler watchdog gated on `CLOUD_BUILD == "true"`
+  (`faulthandler.dump_traceback_later(420, exit=True, file=sys.stderr)`) that is PHASE-AGNOSTIC — it catches a
+  COLLECTION/import-phase hang that pytest-timeout's per-item watchdog cannot, dumping every thread's stack and
+  hard-exiting non-zero at ~7min so base-service.sh's failure-path `cat`/tee surfaces the stack; (iii)
+  `unified-trading-pm/scripts/quality-gates-base/base-service.sh` — both pytest invocations rewritten from
+  `>>"$_pytest_log" 2>&1; cat-on-failure` to `2>&1 | tee -a "$_pytest_log"` + `_pytest_rc=${PIPESTATUS[0]}` so output
+  streams LIVE (the redirect+trap-rm design deleted the tempfile on the timeout kill → zero diagnostic). NOTE: (iii) is
+  baked into the UTL base image at `/app/unified-trading-pm/scripts/quality-gates-base/base-service.sh`, so it does NOT
+  reach THIS build — it is fleet-hardening for local + GitHub-Actions quality-gates-v2 + future UTL rebuilds; (i)+(ii)
+  ARE COPY'd into the features-service image and DO reach CI, and are the load-bearing diagnostic. Chose to gate (ii) on
+  `CLOUD_BUILD` only (not `CLOUD_BUILD or CI`) because GitHub-Actions quality-gates-v2 runs the FULL suite (not
+  `--quick`, ~273s local here) which could legitimately exceed the 420s budget and false-fail — the Cloud Build target
+  sets `CLOUD_BUILD=true` so the diagnostic goal is fully met; decide-and-document. Full
+  `bash scripts/quality-gates.sh --no-fix` green in 273s (sentinel `.qg_last_passed_sha=78fd05d1...` == pre-commit
+  HEAD). Shipped: features-service@`b4cae4eb` (`quickmerge.sh --agent --files 'pyproject.toml tests/conftest.py'`,
+  landed on LDR); unified-trading-pm@`0148b6f34` (base-service.sh, PM `scripts/**` carve-out direct push). Re-triggered
+  `gcloud builds triggers run features-service-build --branch=live-defi-rollout --region=asia-northeast1` → build
+  `136fce13-69dd-4eac-bc5b-e9fe0251c524` (QUEUED against commit `b4cae4eb`, createTime 17:53:04Z). NOT watched here — a
+  follow-on phase watches the build to SUCCESS-or-diagnosed-fast-fail. Todos 6-10 remain `[ ]`; no
+  terraform/config/product-code changes this touch. See the matching entry in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`.

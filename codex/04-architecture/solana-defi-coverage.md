@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 summary:
-  Solana DeFi reference-data adapter coverage in instruments-service — perp-DEX (Drift/Mango/Zeta/Flash),
-  spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
+  Solana DeFi reference-data adapter coverage in instruments-service — perp-DEX (Drift only; Mango/Zeta/Flash removed
+  2026-07-15), spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
   IDs + deploy-date floors (MTDS market-data wiring tracked separately).
 status: current
 nature: ssot
@@ -14,8 +14,10 @@ scope: [engineer, admin]
 tags: [defi, instruments, mtds, backfill, catalogue]
 related: [drift-v2-data-sources.md, defi-execution-overview.md, ../02-data/defi-canonical-naming-ssot.md]
 created: 2026-05-13
-authoritative_for: [Solana DeFi adapter coverage (perp-DEX/AMM/CLOB/oracle/restaking venue registry + program IDs + deploy-date floors)]
-referenced_by: [codex/04-architecture/drift-v2-data-sources.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
+authoritative_for:
+  [Solana DeFi adapter coverage (perp-DEX/AMM/CLOB/oracle/restaking venue registry + program IDs + deploy-date floors)]
+referenced_by:
+  [codex/04-architecture/drift-v2-data-sources.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
 last_reviewed: 2026-05-17
 code_refs:
@@ -32,7 +34,8 @@ type: architecture
 
 The `arbitrage_price_dispersion` DeFi archetype requires:
 
-1. **Perp DEX hedge legs** (Plan B) — 4 Solana perpetual DEX venues (DRIFT, MANGO, ZETA, FLASH).
+1. **Perp DEX hedge legs** (Plan B) — Solana perpetual DEX venue(s): DRIFT (MANGO/ZETA/FLASH removed 2026-07-15, see
+   below).
 2. **Spot AMM/CLOB venues** (Plan C) — Meteora DLMM, Phoenix CLOB, Jupiter aggregator, Lifinity PMM.
 3. **Oracle price feeds** (Plan C) — Pyth Network Hermes batch API for 10 major Solana pairs.
 
@@ -40,12 +43,19 @@ All adapters live in `instruments-service/instruments_service/reference_data/ada
 
 ## Venue Registry — Plan B: Perp DEX (InstrumentType=PERPETUAL)
 
-| Venue        | UAC Key                                | Program ID                                     | API Endpoint                     | Deploy Date     | Adapter                        |
-| ------------ | -------------------------------------- | ---------------------------------------------- | -------------------------------- | --------------- | ------------------------------ |
-| DRIFT-SOLANA | `SOLANA_DEFI_PROTOCOLS["drift"]`       | `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH`  | `https://data.api.drift.trade`   | 2022-11-04 (V2) | `adapters/defi/drift.py`       |
-| MANGO-SOLANA | `SOLANA_DEFI_PROTOCOLS["mango"]`       | `4MangoMjqJ2firMokCjjGgoK8d4MXcrgL7XJaL3w6fVg` | `https://api.mngo.cloud/data/v4` | 2023-08-01 (V4) | `adapters/defi/mango.py`       |
-| ZETA-SOLANA  | `SOLANA_DEFI_PROTOCOLS["zeta"]`        | `ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD`  | `https://dex.zeta.markets/api`   | 2022-04-01 (V1) | `adapters/defi/zeta.py`        |
-| FLASH-SOLANA | `SOLANA_DEFI_PROTOCOLS["flash_trade"]` | `FLASH6Lo6h3iasJKWDs2F8TkW2UKf3s15C8PMGuVfgBn` | `https://api.flash.trade/api/v1` | 2023-11-01      | `adapters/defi/flash_trade.py` |
+| Venue        | UAC Key                          | Program ID                                    | API Endpoint                   | Deploy Date     | Adapter                  |
+| ------------ | -------------------------------- | --------------------------------------------- | ------------------------------ | --------------- | ------------------------ |
+| DRIFT-SOLANA | `SOLANA_DEFI_PROTOCOLS["drift"]` | `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH` | `https://data.api.drift.trade` | 2022-11-04 (V2) | `adapters/defi/drift.py` |
+
+> **MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — REMOVED 2026-07-15 (operator ruling).** All 3 venues were half-onboarded
+> (an instruments-service reference-data adapter + factory registration + tests existed, but zero MTDS market-data
+> capture was ever wired and none was in `VENUES_BY_ASSET_GROUP`). Operator ruling deleted the whole vertical slice
+> rather than completing onboarding: all 3 adapters' declared API hosts are dead (`api.mngo.cloud`/`api.flash.trade`
+> NXDOMAIN, `dex.zeta.markets/api` returns HTML not JSON, verified 2026-07-15) and DeFiLlama TVL is
+> ~$0 (Mango V4 Perps $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
+> `unified-trading-pm/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
+> for the full evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an
+> actual MTDS capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
 
 ## Venue Registry — Plan C: Spot AMM/CLOB (InstrumentType=SPOT)
 
@@ -83,12 +93,12 @@ derives `tick_size = Decimal(str(bin_step)) / Decimal("10000")`. For example, `b
 
 ### Perp DEX (Plan B)
 
-| data_type            | Purpose                          | Sources                                       |
-| -------------------- | -------------------------------- | --------------------------------------------- |
-| `perp_funding`       | Hourly funding rate per market   | Drift: S3 archive; MANGO/ZETA/FLASH: REST API |
-| `perp_open_interest` | Per-market open interest         | REST APIs                                     |
-| `perp_mark_prices`   | Mark price time series           | REST APIs                                     |
-| `perp_index_prices`  | Index price (oracle) time series | REST APIs + Pyth (unbanned 2026-05-06)        |
+| data_type            | Purpose                          | Sources                                |
+| -------------------- | -------------------------------- | -------------------------------------- |
+| `perp_funding`       | Hourly funding rate per market   | Drift: S3 archive                      |
+| `perp_open_interest` | Per-market open interest         | REST APIs                              |
+| `perp_mark_prices`   | Mark price time series           | REST APIs                              |
+| `perp_index_prices`  | Index price (oracle) time series | REST APIs + Pyth (unbanned 2026-05-06) |
 
 ### Spot AMM/CLOB + Oracle (Plan C)
 
@@ -117,9 +127,7 @@ Market data capture is MTDS responsibility:
 **Plan B (perp DEX):**
 
 - DRIFT: Drift historical S3 archive for batch; DLOB WebSocket for live
-- MANGO: `https://api.mngo.cloud/data/v4/` REST for batch; Mango WebSocket for live
-- ZETA: Zeta DEX API for batch + live
-- FLASH: Flash Trade API for batch + live
+- (MANGO/ZETA/FLASH removed 2026-07-15 — see the Venue Registry note above.)
 
 **Plan C (spot AMM/CLOB + oracle):**
 
@@ -252,8 +260,11 @@ After Phase 3, only `{PROTOCOL}-SOLANA` rows will carry `capture_status=captured
 MTDS perp DEX source wiring is **NOT IN PLAN B**. Tracked in:
 `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md`
 
-Until MTDS source is wired, all 4 venues have 0% `perp_funding` capture. The instruments-service adapters only provide
-instrument discovery (reference data), not market data capture.
+Until MTDS source is wired, DRIFT-SOLANA (the one remaining Plan B venue) has 0% `perp_funding` capture via this Plan-B
+path — note `derivative_ticker` capture for DRIFT-SOLANA WAS wired 2026-07-15 via the Drift Data API through a different
+pipeline (see `codex/02-data/defi-data-types-catalog.md` §4a); this section describes the original, still-unwired Plan-B
+perp_funding path only. The instruments-service adapter only provides instrument discovery (reference data), not market
+data capture. (MANGO/ZETA/FLASH removed 2026-07-15 — no longer applicable.)
 
 ### MTDS Solana source wiring (Plan C — spot AMM/CLOB + oracle)
 

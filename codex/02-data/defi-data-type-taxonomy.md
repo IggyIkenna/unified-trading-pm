@@ -160,8 +160,11 @@ fine — a unit conversion, not aggregation) but MUST NOT carry venue-specific r
 | EXTENDED-STARKNET            | cefi | `/info/{symbol}/funding` REST                                                                                  | No                   | `_umi_extended.py`.                                                                                                                       |
 | LIGHTER-ZKSYNC               | cefi | Tardis archive, `date >= 2026-04-17` only                                                                      | Yes (Tardis)         | Native REST has zero funding code; a public current-snapshot endpoint exists but has no history — Tardis is the real source.              |
 
-MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA have URDI reference-data adapter keys but ZERO MTDS market-data capture of any
-kind (not derivative_ticker-specific — no trades/book_snapshot either) — out of scope until a full adapter is built.
+MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — DELETED 2026-07-15 (operator ruling): the whole vertical slice (URDI
+reference-data adapters, factory registrations, UAC venue-adapter-key entries) was removed rather than completing
+onboarding. All 3 declared API hosts were dead and DeFiLlama TVL was ~$0; zero MTDS market-data capture was ever wired
+for any of them (not derivative_ticker-specific — no trades/book_snapshot either). See
+`codex/04-architecture/solana-defi-coverage.md` for the full removal record.
 
 ### Native Staking — Solana (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)
 

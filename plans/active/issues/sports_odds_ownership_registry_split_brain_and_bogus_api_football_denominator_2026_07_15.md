@@ -114,12 +114,61 @@ data_type the operator ruled IS-owned — is the only odds member missing. Any g
 generic `ODDS` data_type (which `SOURCE_PRIORITY` reserves for footystats)"_ — and closes a finding on it (**"not a
 defect to patch"**). The premise is false; the decision rests on it.
 
-- [ ] [CODE] P1. Add `("sports", "ODDS"): ["footystats"]` to UAC `_source_priority_data.py` so both registries agree,
+- [x] ✅ [CODE] P1. Add `("sports", "ODDS"): ["footystats"]` to UAC `_source_priority_data.py` so both registries agree,
       **or** rule explicitly that `ODDS` is deliberately SOURCE_PRIORITY-exempt and document why at both sites. Gate:
       `has_source_priority("sports","ODDS")` is True (or a codex note explains the exemption); closed-set round-trip
-      test still passes; `quality-gates.sh` green.
-- [ ] [DOCS] P2. Correct the false premise at `sports_data_sources_canonical_completion_2026_07_13.md:928` and re-check
-      the 6-row `attempted_failed` decision that rests on it.
+      test still passes; `quality-gates.sh` green. — **DONE 2026-07-15**, unified-api-contracts@57bcc7c5. **The absence
+      was NOT deliberate — git proves it was a partial revert** (this issue doc framed it as a missing entry; the truer
+      diagnosis): `8fb1f54f` (2026-06-25) stripped ODDS from **three** registries as decision #6's "coherent unit", and
+      the 2026-06-27 reversal `c75101be` restored **only** `SPORTS_DATA_TYPE_TO_SOURCE` + its test. Restored BOTH
+      stripped entries to their exact pre-8fb1f54f values: `("sports","ODDS"): ["footystats"]` and
+      `AVAILABILITY_AT_SEMANTICS[("sports","ODDS")] = "publication_time"`. **AVAILABILITY_AT_SEMANTICS was mandatory,
+      not optional** — `test_every_source_priority_pair_has_availability_semantic` is a bidirectional closed-set, so
+      adding to SOURCE_PRIORITY alone would have failed the suite. Runtime gate:
+      `has_source_priority("sports","ODDS") is True`, `get_primary_source(...)=="footystats"`,
+      `is_valid_manifest_source("sports","ODDS","api_football") is False`. Evidence: 11,349 passed / 686 skipped, ruff +
+      basedpyright green (the one red test is foreign untracked barchart WIP — unreachable from this diff; shipped under
+      the dirty-deps carve-out, precedent instruments-service@a771e3e2).
+- [x] ✅ [DOCS] P2. Correct the false premise at `sports_data_sources_canonical_completion_2026_07_13.md:928` and
+      re-check the 6-row `attempted_failed` decision that rests on it. — **DONE 2026-07-15**,
+      unified-trading-pm@e43378c13. Line corrected + a dated CORRECTION block added. **Re-check outcome: the finding is
+      NOT reopened — the decision survives.** This issue doc claimed _"the decision rests on it"_; reading the code
+      shows only the **premise** was unsound, never the **conclusion**. The 6 rows were written BEFORE the 2026-06-25
+      removal, i.e. while `SOURCE_PRIORITY` genuinely did reserve ODDS for footystats — so the gate behaved exactly as
+      the plan described. Re-verified post-restore: `valid_manifest_sources("sports","ODDS") == ["footystats"]` and
+      `is_valid_manifest_source("sports","ODDS","odds_api") is False` → the gate does reject an odds_api ODDS write;
+      "not a defect to patch" remains correct. The premise is now true again. The real defect the line exposed is logged
+      below (A2 + the §B enabling condition).
+
+### A2 — NEW FINDING (2026-07-15): a SECOND sports registry split-brain — `PLAYER_STATS`
+
+Found by the drift guard added for A (it failed on first run — the guard earned its keep immediately). Not in the
+original audit.
+
+`SPORTS_DATA_TYPE_TO_SOURCE["PLAYER_STATS"] = "api_football"`, but `SOURCE_PRIORITY` / `AVAILABILITY_AT_SEMANTICS`
+register only a **differently-named** `FIXTURE_PLAYER_STATS`. So `has_source_priority("sports","PLAYER_STATS")` is
+**False** — the same defect class as ODDS, with the same consequence: UTL `_writer_ingest.py` gates the write-time
+mis-stamp guard on that call, so **every IS `PLAYER_STATS` row is written with source validation OFF**.
+
+Both names are live, which is why this is a ruling and not a one-liner:
+
+| Name                   | Used by                                                                                                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PLAYER_STATS`         | instruments-service (writer): UAC sports `gcs_paths.py` entity `player_stats` + `PER_DAY_PER_LEAGUE` layout; launch date `("api_football","PLAYER_STATS") = 2020-06-06`; live `fill_missing_player_stats.py` |
+| `FIXTURE_PLAYER_STATS` | `SOURCE_PRIORITY` + `AVAILABILITY_AT_SEMANTICS`; features-service (`FixturePlayerStatsRecord`, `fixture_player_stats` exports); deployment-service `SHARDING_AND_DATA_ALIGNMENT.md`                          |
+
+**Deliberately NOT fixed in the A commit** (diagnosing both sides per findings-triage): registering `PLAYER_STATS` blind
+would switch the mis-stamp guard **ON** for the live `af-backfill-*` api_football enrichment fleet mid-flight — if those
+rows are stamped with anything unexpected the writer starts raising `MissingSourceError`. Quarantined in a
+**shrink-only** baseline (`_KNOWN_SPORTS_REGISTRY_DRIFT` in `tests/unit/test_source_priority.py`, guarded by
+`test_known_sports_registry_drift_baseline_only_shrinks` so it cannot silently become permanent).
+
+- [ ] [OPERATOR-DECISION] P1. Rule on `PLAYER_STATS` vs `FIXTURE_PLAYER_STATS`: (a) same grain under two names → pick
+      the canonical one + migrate the other side; (b) genuinely distinct grains (per-day-per-league IS capture vs
+      per-fixture features record) → register `("sports","PLAYER_STATS")` in both crosscutting registries alongside
+      `FIXTURE_PLAYER_STATS`. Then delete `PLAYER_STATS` from `_KNOWN_SPORTS_REGISTRY_DRIFT`. Gate:
+      `has_source_priority("sports","PLAYER_STATS")` is True + the baseline is empty. **Do the ruling before the next
+      api_football enrichment wave** — the guard flips from OFF to ON for a live fleet.
 
 ## B. 127,018 bogus `api_football × ODDS` rows — an impossible denominator, re-seeded nightly
 
@@ -204,7 +253,7 @@ before the reversal** — 29,129 "captured" rows became phantom and 26,220 flipp
 - [x] ✅ [DOCS] P1. Cancel the `[DOCS] P3` todo at `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
       with the same `CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27` marker as its two siblings, **or** rewrite it to state
       the rule as actually ruled: RAW bookmaker tick odds = odds-api/MTDS; footystats predictive `ODDS` + `PREDICTIONS`
-      = IS reference. — **DONE 2026-07-15**, unified-trading-pm@<sha-c>. Struck in place at the (drifted) line
+      = IS reference. — **DONE 2026-07-15**, unified-trading-pm@f70a2caf0. Struck in place at the (drifted) line
       `:133-135` — the doc had moved from the audited `:143`; marker + one-line reversal citation
       (`sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md` L92-97) + the codex SSOT
       (`sports-data-types-catalog.md:48-52`) added, original text preserved in a `(was: …)` tail like its two siblings.

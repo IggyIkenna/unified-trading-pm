@@ -221,3 +221,46 @@ risky to guess-fix under time pressure without reproducing the resource-pressure
      resource/parallelism change. features-service:latest in Artifact Registry is UNCHANGED (still the stale 2026-07-14
      `sha256:c204c49d...` image) — the UTL `c47273c1` fix has still not reached a pushed image. `status` stays `open`;
      not resolved this touch.
+- 2026-07-15 (~17:53Z, ShipAndTrigger phase — implemented "not yet tried" item (a) from the prior touch + added a
+  phase-agnostic diagnostic the prior touch did not have, then re-triggered the build). The prior touch established: (1)
+  the xdist-worker-memory theory is FALSIFIED (`PYTEST_WORKERS=0` forces `-n 0` in BOTH local and CI); (3) pytest's
+  redirected-output silence is the EXPECTED healthy signature too, so the only anomaly is DURATION; and pytest-timeout's
+  default `signal` method + the redirect-to-tempfile-with-`trap rm EXIT` design together mean the 1800s timeout kill
+  deletes the tempfile → zero diagnostic. This touch ships the two-pronged fix for that blind spot:
+  1. **Live-streamed pytest output** (`unified-trading-pm@0148b6f34`) — rewrote both pytest invocations in
+     `scripts/quality-gates-base/base-service.sh` from `>>"$_pytest_log" 2>&1` (silent redirect, `cat` only on non-zero
+     exit) to `2>&1 | tee -a "$_pytest_log"` with `_pytest_rc=${PIPESTATUS[0]}` and explicit exit-on-nonzero. Keeps the
+     original xrealloc-avoidance guarantee (never stuffs stderr into a bash VAR) and the tempfile for the downstream
+     `_TESTS_RAN`/`_SKIPPED` greps, while surfacing output AS IT HAPPENS. **Caveat (verified, not assumed):
+     base-service.sh is BAKED INTO THE UTL BASE IMAGE** at
+     `/app/unified-trading-pm/scripts/quality-gates-base/ base-service.sh`, so this change does NOT reach the failing
+     build — it needs a UTL rebuild + a features-service Dockerfile `BASE_IMAGE_DIGEST` re-pin to land in CI. Shipped
+     anyway as operator-requested fleet-hardening (helps local runs, GitHub-Actions quality-gates-v2, and every future
+     UTL-based build).
+  2. **Phase-agnostic faulthandler watchdog** (`features-service@b4cae4eb`, tests/conftest.py) — the LOAD-BEARING new
+     diagnostic that DOES reach this build (the features-service repo's own `tests/conftest.py` is COPY'd into the
+     image). At module level (import time), gated on `CLOUD_BUILD == "true"`:
+     `faulthandler.dump_traceback_later(420, exit=True, file=sys.stderr)`. Unlike pytest-timeout's per-item `thread`
+     watchdog (which only arms once an item's setup/call/teardown begins, so it is BLIND to a collection/import-phase
+     stall — the leading suspect given the `gcp_auth_info`/`google.auth.default()` import-time credential-resolution
+     path the prior touch found), this is a wall-clock watchdog that fires in ALL phases: at 420s it dumps every
+     thread's stack to stderr (captured by base-service.sh's log) and `_exit(1)`s → non-zero pytest exit → the failure
+     path surfaces the stack → the build fails FAST at ~7min WITH the hung stack instead of a silent 1800s TIMEOUT. 420s
+     is huge headroom over the ~90-160s a healthy `--quick` CI run takes (full local `--no-fix` here was 273s).
+     faulthandler is stdlib — no new dep. Also paired with `timeout_method = "thread"` in
+     `features-service/pyproject.toml` (same commit) so a TEST/FIXTURE-phase hang additionally fires the `--timeout=60`
+     thread dump + fail-fast (the default `signal` method can't interrupt a C-level/syscall hang). Chose to gate the
+     watchdog on `CLOUD_BUILD` only, NOT `CLOUD_BUILD or CI`: the Cloud Build target sets `-e CLOUD_BUILD=true` (goal
+     met), whereas GitHub-Actions quality-gates-v2 runs the FULL suite (not `--quick`) which could legitimately exceed
+     420s and false-fail — decide-and-document.
+  3. **Ship + re-trigger**: features-service full `quality-gates.sh --no-fix` green in 273s (sentinel
+     `.qg_last_passed_sha=78fd05d1...` == pre-commit HEAD); the `tee` change was observed working live locally (pytest
+     output streamed instead of being buffered). Landed features-service@`b4cae4eb`
+     (`quickmerge.sh --agent --files 'pyproject.toml tests/conftest.py'`) + unified-trading-pm@`0148b6f34`
+     (base-service.sh, PM `scripts/**` carve-out). Re-triggered
+     `gcloud builds triggers run features-service-build --branch=live-defi-rollout --region=asia-northeast1` → build
+     **`136fce13-69dd-4eac-bc5b-e9fe0251c524`** (QUEUED against commit `b4cae4eb`, createTime 2026-07-15T17:53:04Z). NOT
+     watched here — a follow-on phase watches: if the hang reproduces, the faulthandler dump at ~7min now localizes
+     WHERE (which module/fixture/syscall) it is stuck, converting the blind stall into an actionable stack. `status`
+     stays `open`; features-service:latest in Artifact Registry is still the stale `sha256:c204c49d...` until a build
+     reaches SUCCESS + pushes.

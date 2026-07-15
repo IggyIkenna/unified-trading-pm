@@ -201,8 +201,9 @@ Perp DEXes typically expose their universe as an authoritative REST endpoint tha
 | `gmx`         | Subgraph `{ tokens(first: 1000) { id whitelisted } }` count  | `Vault.allWhitelistedTokens()`               |
 | `drift`       | Solana program account scan (`Market` accounts)              | Same (RPC is Tier-A; Solana has no subgraph) |
 | `jupiter`     | REST `GET /perps-markets` — length                           | Program-account scan (aggregator)            |
-| `flash_trade` | Solana `getProgramAccounts` for `MarketConfig` PDAs          | Same                                         |
-| `mango`       | REST `GET /v4/markets` (mango v4 accounts)                   | Program-account scan                         |
+
+> `flash_trade`/`mango`/`zeta` rows removed 2026-07-15 (operator ruling — venues deleted; dead API endpoints, ~$0 TVL,
+> zero MTDS capture ever wired). See `codex/04-architecture/solana-defi-coverage.md`.
 
 ### 3.4 YIELD / STAKING / RESTAKING (`protocol_class ∈ {YIELD, STAKING, RESTAKING}`)
 
