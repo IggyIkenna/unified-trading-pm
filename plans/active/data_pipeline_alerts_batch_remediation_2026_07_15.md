@@ -417,16 +417,28 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       production-API-quota-consuming re-collect is out of scope for a rushed mid-investigation action; scoped as a
       follow-up with exact commands. Full writeup, evidence, and follow-up todos:
       `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Repo: market-tick-data-service.
-- [ ] [DATA] P1 **NOT YET COVERED**: `sports/trades` (112277/522276 attempted_failed, 21.5%) —
-      `error_reason=VENUE_FETCH_FAILED` dominates (94127 of the 112277), `attempted_at` up to 2026-07-13T23:56Z
-      (freshest of all the alert-batch cells — worth checking if this is still actively recurring). `VENUE_FETCH_FAILED`
-      is heavily tracked for CeFi/Tardis (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`) but NOT found tracked for
-      sports specifically. A smaller slice (several hundred rows) shows a DIFFERENT, more interesting pattern: a
-      `record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on     <VENUE>/<DATE>. Use record_failed(EmptyFromLiveInstrumentError(...)) instead`
-      guard message (BETFAIR, MATCHBOOK, PINNACLE, and others, many 2022-era dates) — this exact pattern + fix design IS
-      tracked (`data_completion_to_100_all_ag_2026_06_21.md:461-489`, marked `[x]` done for bookmaker venues via a
-      `BOOKMAKER_NO_COVERAGE` reclassify), but these alert-batch instances run through 2026-07-13 — AFTER that fix
-      landed — worth verifying whether the fix's venue/date coverage is actually complete or these are a residual gap.
+- [x] ✅ [DATA] P1. `sports/trades` (112277/522276 attempted_failed, 21.5%) — INVESTIGATED. **NOT a live/recurring venue
+      outage** — all 112,277 rows (both the 94,127 `VENUE_FETCH_FAILED` rows and the 18,150-row
+      `EmptyFromLiveInstrumentError`-guard slice) share one 8-second `attempted_at` window (2026-07-13T23:56:41-48Z),
+      blank `fixture_id`, `pipeline_mode=batch_api_football` — fingerprints of a bulk RE-EMIT, not live fetch attempts.
+      `git log -S "VENUE_FETCH_FAILED" --all` proves the literal error string was REMOVED from live code 2026-06-28
+      (`market-tick-data-service@b989284c` decomposed the opaque fallback into `UNCLASSIFIED:{code}`) — these rows carry
+      dead pre-2026-06-28 vocabulary, re-emitted by `rebuild_sports_manifest_v9.py`'s confirmed 2026-07-13 E4
+      apply-pass. Root cause: `_write_attempted_failed_rows`/ `_write_empty_rows`'s CF-11 branch
+      (`_rebuild_sports_write.py`) re-emit pre-existing rows via `record_failed()`/`record_empty()` WITHOUT
+      `attempted_at=`, so UTL defaults it to `datetime.now(UTC)` — silently stamping the REBUILD's own runtime onto
+      years-old (2020-2026) dead rows, making them look like the freshest failure in the whole alert batch. **The
+      `BOOKMAKER_NO_COVERAGE` fix's scope is CONFIRMED complete, not a residual gap**: re-derived
+      `is_bookmaker_league_covered()` against all 112,277 rows directly — 100% are genuinely-covered (bookmaker, league)
+      pairs (0 uncovered); the guard-rejection slice is `record_zero_rows(was_expected=True)` working exactly as
+      documented/sanctioned, not a bug. Code fix shipped
+      `market-tick-data-service@6fad6565fe66ef34ea245172dc1e606c0a2dd183` (`_attempted_at_from_row()` mirrors the
+      existing `_available_at_from_row()` honest-proxy convention, wired into all 3 re-emit call sites; 6 new regression
+      tests, QG green) — prevents recurrence; does NOT retroactively restore the 112,277 already-corrupted live rows'
+      `attempted_at` (pre-rebuild GCS generation IS recoverable via soft-delete, exact generation number + safe-restore
+      recipe documented, but the swap needs a controlled window on this live, actively-written bucket — correctly not
+      forced under time pressure; soft-delete expires ~2026-07-20). Full writeup:
+      `plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md`.
 - [x] ✅ [DATA] P2. `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%,
       `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z) — INVESTIGATED + FIXED. Live re-query
       found the count has already drifted to 0 in both plausible sports manifests (a one-off manual-run artifact, not
