@@ -3124,3 +3124,32 @@ Yahoo path). Only `BARCHART: ohlcv_15m` is stale-dead — but it is already unre
 instruments carry venue=BARCHART since the 2026-06-24 removal), so it contributes 0 eu; hygiene-delete on next touch of
 that file, not a denominator bug. Sports odds-type declarations flagged as needing their own coverage snapshot before
 any deletion call (out of cefi scope).
+
+### Fleet reconciled with the peer manager + queue-VM names now encode scope — 2026-07-15T18:35Z
+
+**Coordination incident, resolved, no work lost.** slot-3's tick-10 (PM@7669ee744) found 4 Tardis VMs > cap and
+protectively deleted `cefi-queue-heavy-173940` + `-174244` as "3 identical heavy VMs … duplicates". They were NOT
+duplicates — they carried DIFFERENT venue scopes (173940 = BINANCE-FUTURES+BITGET-FUTURES; 174244 =
+OKX-SPOT+BINANCE-SPOT). Root cause is a real naming defect, not a judgement error: `cefi-queue-{group}-{ts}` encodes
+NOTHING about scope, so distinct work is indistinguishable in `gcloud compute instances list`. Their protective instinct
+was right (cap-3 is a hard rule); the names lied to them. **Net effect: nothing lost** — their surviving
+`cefi-queue-heavy-174106` covers ALL 15 venues heavy, a strict superset of both killed VMs; only parallelism was traded
+away (and with the lease serialising, 3 VMs ≈ 1.5-2 VM-equivalents, so the loss is modest).
+
+**Root-cause fixed** (deployment-service, quickmerged, QG-green): queue VM names now encode scope —
+`cefi-queue-{group}-{firstvenue-short}[-x{N}]-{ts}`, e.g. `cefi-queue-heavy-binancefutu-x2-20260715-183058` (47-48
+chars, inside GCE's 63 limit). `cefi-queue-` remains the leading prefix so `VM_PREFIX_TO_BUCKET` longest-prefix matching
+(`deployment_service/vm_prefix_registry.py:123`) still resolves — verified before shipping, not assumed.
+
+**Fleet now (at cap, ZERO overlap):**
+
+| VM                                 | scope                                                     | cap?                                     |
+| ---------------------------------- | --------------------------------------------------------- | ---------------------------------------- |
+| `cefi-queue-heavy-174106` (slot-3) | all 15 venues, trades+book5, 2026-01-01+                  | ✅ Tardis                                |
+| `cefi-queue-light-174110` (mine)   | BINANCE-FUTURES+BITGET-FUTURES derivative_ticker          | ✅ Tardis                                |
+| `cefi-queue-light-183058` (mine)   | BYBIT+OKX-SWAP+KRAKEN-FUTURES+BITFINEX-FUTURES deriv_tick | ✅ Tardis                                |
+| `cefi-aster-2026-174321` (mine)    | ASTER trades+derivative_ticker (native REST)              | ❌ non-Tardis, correctly outside the cap |
+
+3 Tardis VMs = exactly at cap. Remaining uncovered non-Tardis derivative_ticker eu (HYPERLIQUID 70,168 + LIGHTER-ZKSYNC
+70,181 + EXTENDED-STARKNET 28,190 + PACIFICA-SOLANA 4,220 ≈ 172,759) rides `launch-cefi-hl-aster-historical-backfill.sh`
+and does NOT consume Tardis slots — next launch when the ASTER VM frees, or in parallel if capacity allows.
