@@ -372,3 +372,14 @@ that window (single-walk discipline).
 Declining — no action taken, no code touched, checkbox NOT flipped. Recommend the next dispatch (if any) wait until at
 least ~30 min post-`bab7a2250` (i.e. after ~00:20 UTC) before treating continued dispatch as evidence the `depends_on`
 mechanism doesn't apply to issue-doc-derived tasks. `/skip-current-task`.
+
+### 2026-07-15T00:00 UTC — data_engineering slot-7 (Todo 2 re-dispatch — 15th consecutive check; still inside expected regen-lag window)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` after fresh-pull to LDR HEAD (`434604fae`). Live backlog entry
+for this task (`GET /api/backlog`) still shows no `prereqs.completed_tasks`/`prereqs.prerequisites` — `depends_on` fix
+(`bab7a2250`, landed 23:50:19Z) is only ~10 min old at this check (00:00:34Z), well inside the ~30 min `PlanRegenLoop`
+tick window slot-4 already flagged (wait-until ~00:20Z). Skipped the redundant GCS/fleet re-check — slot-2/slot-4/
+slot-11 all checked within the last few minutes with no reason to expect drift (single-walk discipline). No new
+information to add beyond slot-4's entry immediately above. Declining — no action taken, no code touched, checkbox NOT
+flipped. `/skip-current-task`.
