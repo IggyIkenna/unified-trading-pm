@@ -14,7 +14,7 @@ summary: |
   issue for stale PM fastapi ceiling blocking all quickmerges") was itself silently discarded by the
   slot11_silent_branch_reset_data_loss bug before it ever landed (confirmed via slot 6's own clone reflog — see
   slot11_silent_branch_reset_data_loss_2026_07_13.md UPDATE 3's per-slot table).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -48,7 +48,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 source: [slot 15, discovered while shipping slot11_silent_branch_reset_data_loss_2026_07_13.md VERIFY todo]
-resolved_by:
+resolved_by: unified-trading-pm@6ae2cb449 (slot 11, 2026-07-14)
 locked_by:
 drift_direction: unclear
 depends_on: []

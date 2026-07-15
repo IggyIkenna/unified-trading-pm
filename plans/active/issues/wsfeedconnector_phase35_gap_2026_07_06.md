@@ -27,7 +27,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-14
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

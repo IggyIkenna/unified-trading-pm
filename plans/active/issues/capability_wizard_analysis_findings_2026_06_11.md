@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
-summary: '**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m...'
+summary:
+  "**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability
+  wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m..."
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -456,13 +458,16 @@ with real execution adapters that do NOT appear in `VENUE_CATEGORY_MAP` (UAC reg
 
 ### F43 — NASDAQ/NYSE adapters exist but venues not in any leg eligible_venue_ids (TradFi equities gap)
 
-**Status**: OPEN — logged for leg-seed follow-up. nasdaq_adapter.py:24 (venue_name="NASDAQ") and nyse_adapter.py:24
-(venue_name="NYSE") exist as ibkr-routed TradFi adapters, but NASDAQ and NYSE do not appear in any archetype leg's
-`eligible_venue_ids`. This means the wizard cannot select these venues for any leg in the current manifest, even though
-execution is possible. The leg seeds were sourced from strategy-engine structs which focus on crypto/perp archetypes;
-equities/equity-ETF archetypes (RULES_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_CONTINUOUS, EVENT_DRIVEN, STAT_ARB
-variants) reference ibkr but not the downstream exchange venues. Remedy: add nasdaq/nyse to the relevant
-equity-archetype leg seeds with citation to their adapter files. Deferred to next registry iteration.
+**Status**: RESOLVED — shipped via unified-api-contracts@61ba5239 (see
+plans/archive/2026_07/uac_venue_registry_completion_2026_07_13.md) (corrected 2026-07-15, plan-reconcile: leg
+eligibility for NASDAQ/NYSE was wired and verified-reachable in the shipped commit). nasdaq_adapter.py:24
+(venue_name="NASDAQ") and nyse_adapter.py:24 (venue_name="NYSE") exist as ibkr-routed TradFi adapters, but NASDAQ and
+NYSE do not appear in any archetype leg's `eligible_venue_ids`. This means the wizard cannot select these venues for any
+leg in the current manifest, even though execution is possible. The leg seeds were sourced from strategy-engine structs
+which focus on crypto/perp archetypes; equities/equity-ETF archetypes (RULES_DIRECTIONAL_CONTINUOUS,
+ML_DIRECTIONAL_CONTINUOUS, EVENT_DRIVEN, STAT_ARB variants) reference ibkr but not the downstream exchange venues.
+Remedy: add nasdaq/nyse to the relevant equity-archetype leg seeds with citation to their adapter files. Deferred to
+next registry iteration.
 
 ### F44 — \_capability_extract.py extract_venues() had duplicate inline broker block after extract_brokers() was added
 
@@ -600,9 +605,9 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
 | Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE in no leg eligibility)                                                         | OPEN                                             | UAC registry                                                                                                                  |
-| Catalogue ↔ engine            | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
-| Catalogue ↔ engine            | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
-| Catalogue ↔ engine            | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
+| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
+| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
+| Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
 | Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
 | Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                             |
 | Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                    |
@@ -646,7 +651,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       LOGIC-FREEZE. Target: strategy-service.
 - [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
       LOGIC-FREEZE. Target: strategy-service.
-- [ ] [LOGIC] P2. **F48 — 22 VOL*\*/MARKET_MAKING*\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
+- [ ] [LOGIC] P2. _*F48 — 22 VOL*\*/MARKET_MAKING_\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
       strategy-service.
 - [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
       heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service.

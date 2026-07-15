@@ -52,7 +52,7 @@ summary:
   (not env/flag-gated), this likely already broke the LIVE daily sports pipeline's fixtures ingestion (not just this
   backfill) for every day since the cutover — worth an urgent check of live/forward sports compute logs for the same
   DependencyError signature."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [features, data]

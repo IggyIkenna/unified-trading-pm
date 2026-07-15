@@ -511,7 +511,11 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   a design decision), the daily baseline-freshness loop (214), and 220 (K-repro re-verify, operator-deferred). Genuine
   features, left scoped rather than rushed into the shared QG gate.
 - **Net:** the core governor is shipped, validated (live host resize + 93-min soak + cross-host admission test),
-  documented (codex 🟢), and rolled out; only the optional self-healing layer + the blocked repro remain.
+  documented (codex 🟢), and live on the current fleet (reservation mode durably set via `.env.local` + tmux global
+  env); the bootstrap-default flip (so future re-bootstrapped VMs come up on the governor) is validated + ready but
+  blocked on a fleet provisioning gap (slots 16/1/7 missing `agent-orchestrator/.venv`) (corrected 2026-07-15,
+  plan-reconcile: Phase-5 rollout todo at 302 is still `[ ]`/DEFERRED, not shipped); the optional self-healing
+  observability layer and the operator-blocked K-repro also remain.
 
 ## Deferred / open decisions
 

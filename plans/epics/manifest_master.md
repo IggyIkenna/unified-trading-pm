@@ -119,16 +119,17 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-07-12 against
-`plans/active/*.md` top-level frontmatter — the same scan scope as `scripts/plans/populate_epic_bodies_2026_05_21.py`;
-the script itself could not be re-run in place, it has a hardcoded macOS workspace path, so this refresh reproduces its
-scan logic by hand). Was: "7 active plans... verified 2026-06-30" with every P0-P3 entry below shown ✅ ARCHIVED —
-stale; the 6 archived-since-2026-05-21/23 entries previously listed here have been removed from the live roster (each
-plan's own file, at `plans/archive/2026_05/...` or `plans/archive/...plan.md`, remains the historical record; only
-`bucket_name_ssot_canonicalisation_2026_05_10` is additionally duplicated in the "Archived plans" section below,
-unchanged). Corrected per plan-reconciliation finding 130,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. Note: a
-broader grep for `parent_epic:.*manifest_master` also matches per-todo-item inline tags inside AG-specific
+_3 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-07-15, plan-reconcile: added
+`mtds_available_at_cross_asset_backfill_2026_07_13` — its own frontmatter declares `parent_epic: manifest_master` but it
+is not yet reflected in the P0-P3 roster below; against `plans/active/*.md` top-level frontmatter — the same scan scope
+as `scripts/plans/populate_epic_bodies_2026_05_21.py`; the script itself could not be re-run in place, it has a
+hardcoded macOS workspace path, so this refresh reproduces its scan logic by hand). Was: "7 active plans... verified
+2026-06-30" with every P0-P3 entry below shown ✅ ARCHIVED — stale; the 6 archived-since-2026-05-21/23 entries
+previously listed here have been removed from the live roster (each plan's own file, at `plans/archive/2026_05/...` or
+`plans/archive/...plan.md`, remains the historical record; only `bucket_name_ssot_canonicalisation_2026_05_10` is
+additionally duplicated in the "Archived plans" section below, unchanged). Corrected per plan-reconciliation finding
+130, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
+Note: a broader grep for `parent_epic:.*manifest_master` also matches per-todo-item inline tags inside AG-specific
 canonicalisation plans whose own document-level frontmatter `parent_epic` is `mtds_mdps_master` (e.g.
 `defi_manifest_canonicalisation_2026_06_01.md`) — those are NOT document-level manifest_master children and are
 correctly excluded here. Workers pick up in priority order (P0 first)._

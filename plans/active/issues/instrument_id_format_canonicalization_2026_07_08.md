@@ -56,7 +56,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-07-13
+last_updated: 2026-07-15
 supersedes:
 superseded_by:
 depends_on:
@@ -65,10 +65,17 @@ drift_direction: advance-code
 locked_since:
 ---
 
-> **OPERATOR DECISION 2026-07-08 — target-state only, not fixed today.** Every finding below gets a canonical target
-> format. None of the target formats exist in production yet — this doc (and the mockup entries it backs) show
-> current-real vs target-canonical side by side, same pattern already applied to the A_TOKEN/DEBT_TOKEN decision.
-> Actually migrating is staged, future work — this doc scopes it, it doesn't execute it.
+> **OPERATOR DECISION 2026-07-08 — target-state only, not fixed today** (was: still fully accurate as of authoring;
+> **PARTIALLY EXECUTED — banner corrected 2026-07-15**). Every finding below gets a canonical target format. This doc
+> (and the mockup entries it backs) originally showed current-real vs target-canonical side by side, same pattern
+> already applied to the A_TOKEN/DEBT_TOKEN decision — but per this doc's own Progress Log (2026-07-09 entries), real
+> code fixes and historical-data migrations toward these target formats have since landed on `origin/live-defi-rollout`
+> (e.g. `instruments-service@176d4610`'s `@LIN`/`@INV` builder + margin-type fixes, `@7fbc38c1`'s Deribit OPTION
+> `@LIN`/`@INV`-`YYYYMMDD`, `@0d0c3742`'s Prediction canonical_instrument_id, plus the on-chain-perp and ghost-venue
+> historical-data migrations logged below). The "none of the target formats exist in production yet" / "actually
+> migrating is staged, future work" claims below are STALE as blanket statements — treat the Progress Log as the
+> current-state record; per-finding SUPERSEDED/RESOLVED annotations below track which individual findings are actually
+> closed.
 
 ## The 8 real divergences found, and their target canonical format
 

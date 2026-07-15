@@ -25,7 +25,7 @@ related:
     ../../codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-06
+last_updated: 2026-07-10 # (was: 2026-07-06 -- corrected 2026-07-15, plan-reconcile: Progress Log records a 2026-07-10 status-flip active->complete that postdated the recorded last_updated)
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

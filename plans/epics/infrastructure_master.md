@@ -172,7 +172,13 @@ reconcilers + `mtds-s4-10` rescan complete.
       C.1 + C.11 audit findings). [AUDIT 2026-05-22 slot-11: BLOCKED-UPSTREAM — gated on (1) sports rename Stage 1
       (operator-gated, not done), (2) UAC `SchemaContract.cadence` field (not in contracts.py:92 yet), (3) new
       `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` reason codes in UAC `honest_coverage.py`.
-      Stage 4 of `manifest_master` epic (vm-defi). No slot-11 action until prerequisites clear.]
+      Stage 4 of `manifest_master` epic (vm-defi). No slot-11 action until prerequisites clear.] **(corrected
+      2026-07-15, plan-reconcile: reasons (2) and (3) CLOSED-AS-STALE** — `unified-api-contracts@e12af89` shipped the
+      `SchemaContract.cadence` field 2026-05-07 (verified present today at `contracts.py:145`) and
+      `unified-api-contracts@97dccc33` shipped `EXPECTED_DEPRECATED_DATA_TYPE` + `EXPECTED_REFDATA_CADENCE_CHANGE` the
+      same day (verified present today in `_honest_coverage_empty_reasons.py`), both reachable on
+      `origin/live-defi-rollout`. Item remains BLOCKED-UPSTREAM on reason (1) only — the operator-gated sports rename
+      Stage 1 — pending confirmation Stage 1 is still genuinely undone.)
 - [x] [AGENT] P0. **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback.
       Coordinated with writegate Phase 2.C. [AUDIT 2026-05-22 slot-11: STALE/RESOLVED — `_ensure_timestamp` is NOT in
       active code in features-service (the consolidated repo). It appears ONLY in comments: `data/writer.py:120`
@@ -484,7 +490,9 @@ sub-plan; this section is a pointer.
 > `plans/active/issues/*.md` (verified 2026-07-12) finds **15 active plans** (`bucket_env_split_rollout_2026_06`,
 > `bucket_iam_write_protection_per_tier_2026_06_09`, `cicd_mvp_ldr_to_main_pipeline_2026_06_30`,
 > `codex_violations_ratchet_to_five_2026_06_10`, `data_pipeline_e2e_check_2026_07_10`,
-> `honest_coverage_v2_instrument_denominator_2026_06_28` [P0], `gcs_bucket_estate_cleanup_2026_07_10` [complete],
+> `honest_coverage_v2_instrument_denominator_2026_06_28` [P0], `gcs_bucket_estate_cleanup_2026_07_10` [active —
+> corrected 2026-07-15, plan-reconcile: plan flipped `status: complete` → `active` 2026-07-14 (finding 78); one
+> genuinely-open residual action, the lending-indices/lending-indices-prd deletion decision, not zero],
 > `mvp_reconciliation_closeout_v10_2026_06_27`, `org_migration_to_odumresearch_2026_06_07`,
 > `repo_scripts_governance_audit_2026_06_18`, `scripts_lifecycle_marker_rollout_2026_06_18`,
 > `stash_pile_workspace_cleanup_2026_06_03`, `ui_build_warm_cache_2026_06_17`,

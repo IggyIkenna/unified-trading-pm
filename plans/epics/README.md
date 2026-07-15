@@ -205,7 +205,7 @@ priority blocks, workers cannot self-direct.
 | 19  | L4   | `client_isolation_and_governance_master`  | `vm-cross-cutting`     | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema                               |
 | 20  | L4   | `escalation_and_disaster_recovery_master` | `vm-cross-cutting`     | Escalation pipeline (blocked→Slack→human-resolve→UI) + self-healing/auto-recovery substrate                    |
 | 21  | L5   | `orchestrator_master`                     | `vm-orchestrator`      | agent-orchestrator multi-VM runtime + planning VM + dashboard + self-healing safety                            |
-| 22  | L5   | `agent_operating_framework_master`        | `harsh_pc`             | Agent dispatch (assigned_vm fail-closed matcher) + grep-native retrieval + role charters + retrieval-eval loop |
+| 22  | L5   | `agent_operating_framework_master`        | `planning`             | Agent dispatch (assigned_vm fail-closed matcher) + grep-native retrieval + role charters + retrieval-eval loop |
 | 23  | L5   | `plan_hygiene_master`                     | `planning`             | Continuous plan-corpus hygiene: check scripts + hygiene sweep + codex-alignment audit                          |
 
 Regenerated 2026-07-12 from `epics/*.md` frontmatter per operator ruling (plan-reconciliation finding 339, see

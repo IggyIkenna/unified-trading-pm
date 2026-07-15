@@ -27,7 +27,7 @@ related:
     plans/active/sports_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -225,10 +225,13 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       `manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md`); a re-apply consolidated cleanly and
       holds. See Progress Log entry below.
 - [x] ✅ [VERIFY] P1. **api_football: final re-verify** — 0 attempted_failed (or a documented, operator-equivalent
-      acceptable residual per today's understat precedent), 0 dedup-key dup groups, correct service_name/asset_group,
-      confirm any relevant scheduled jobs are running. **VERIFY DONE 2026-07-14 (slot-5) against the live sports
-      canonical (5,759,085 rows). PASS: 0 dedup-key dup groups; service_name = only the 3 sanctioned values. 🔴 RED (3
-      findings FILED, not silently frozen — see
+      acceptable residual per today's understat precedent — NOTE (corrected 2026-07-15, plan-reconcile: this precedent
+      was superseded 2026-07-13, see `plans/active/understat_local_backfill_completion_2026_07_06.md` § 4 Definition of
+      DONE — the bar is literal 0, not an acceptable residual; the actual 2026-07-14 execution below already applied the
+      strict standard, filing RED findings rather than accepting residual), 0 dedup-key dup groups, correct
+      service_name/asset_group, confirm any relevant scheduled jobs are running. **VERIFY DONE 2026-07-14 (slot-5)
+      against the live sports canonical (5,759,085 rows). PASS: 0 dedup-key dup groups; service_name = only the 3
+      sanctioned values. 🔴 RED (3 findings FILED, not silently frozen — see
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`): (A) 4,268
       attempted_failed — ~1,152 the already-tracked CF11 P2 class + ~3,116 UNDOCUMENTED (INJURIES 1,946 / FIXTURES 612 /
       blank-dt 461 / PLAYER_STATS 73 / TEAMS 24) → new P1 re-fetch-backfill todo; (B) 22,668 blank-asset_group

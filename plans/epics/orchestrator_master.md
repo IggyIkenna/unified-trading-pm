@@ -246,7 +246,8 @@ computed manually via `rg -l '^parent_epic: orchestrator_master' plans/active/ p
   [`ao_operator_message_silent_drop_no_reply_ack_2026_07_08`](../active/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md)
   — Operator→agent chat messages are silently dropped — delivery marked on POLL (drain), not on REPLY, no reply-ack, no
   redelivery
-- **P2 · open (issue)** —
+- **P2 · resolved (agent-orchestrator@826a496)** (corrected 2026-07-15, plan-reconcile: census row was stale — doc's own
+  frontmatter + Fix section already show resolved) —
   [`autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29`](../active/issues/autospawn_should_spawn_no_revive_pinned_opus_slot_2026_06_29.md)
   — AutoSpawn — `_should_spawn` does not revive a live-idle slot pinned to a higher-tier (opus) task
 - **P1 · active** (added 2026-07-14, finding 188 — created 2026-07-13, after the 2026-07-12 regen) —

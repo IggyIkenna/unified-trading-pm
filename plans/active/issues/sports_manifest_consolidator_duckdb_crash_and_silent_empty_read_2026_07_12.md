@@ -11,7 +11,7 @@ summary: >-
   currently returning an EMPTY (0-row) DataFrame with no error/warning, while a raw gcsfs read of the same blob confirms
   4,914,272 real rows exist -- a silent-placeholder violation that could cause any consumer calling this function right
   now to make wrong decisions (e.g. a backfill VM believing nothing has been captured).
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -29,6 +29,9 @@ priority: P0
 source: [slot-11, sports_p2_history_reference_and_odds_2015_to_present-002]
 assigned_vm: planning
 resolved_by:
+  "unified-trading-library@b5ab0c01 — fix(manifest-reader): raise instead of silently returning empty when per-VM shards
+  exist; all 3 todos [x] with dated evidence. Follow-up spun off to
+  read_availability_index_missing_source_column_2026_07_12.md (status flipped 2026-07-15, plan-reconcile)"
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code

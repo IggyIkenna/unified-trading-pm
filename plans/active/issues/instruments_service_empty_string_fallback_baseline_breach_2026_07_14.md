@@ -18,7 +18,7 @@ summary: >
   session (a full baseline diff/bisect needs a dedicated pass, out of scope for the dispatch that found it). This blocks
   EVERY instruments-service push via the mandatory `quickmerge.sh --agent` sentinel gate (full clean QG pass required),
   independent of any change's own correctness.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -40,7 +40,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: "instruments-service@272b0122 + unified-trading-pm@0736f7055"
 ---
 
 # instruments-service QG STEP 5.101 red at LDR HEAD — baseline breached by 2, exact sites not isolated
@@ -143,3 +143,7 @@ commits `0d2ea24f`/`5de92f78`) with `# noqa: qg-empty-fallback`. Verified via is
 vs current HEAD=366) and a direct re-run of the checker (`[OK] instruments-service: 366 (== baseline)`). No new code
 needed; flipped todo 1 only. Todo 2 (fix the checker's tail-slice over-baseline reporting, repo: unified-trading-pm)
 remains open — out of this task's scope.
+
+**2026-07-15 (plan-reconcile)**: frontmatter reconciled to the already-complete body — both todos are `[x]` with
+shipped-and-verified evidence, so flipped `status: open` → `status: resolved` and filled `resolved_by:` accordingly. No
+code change; doc hygiene only.

@@ -137,10 +137,16 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   and run it through `bash scripts/quality-gates.sh`; only write "safe to land before M" if that run is green. If it
   turns out unsafe, encode the REAL dependency as `sequential: true` or explicit `prereqs.completed_tasks` so the
   backlog dispatcher enforces it — a human-readable "🔴 BLOCKED, don't dispatch" banner is NOT a dispatch gate; a worker
-  picking up the plan cold can still claim the blocked todo before ever reading the banner. Case study:
-  `coinbase_bare_name_migration_2026_07_06.md` Step S2's "safe before S3" note was disproven by an actual QG run — see
-  `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for the failure + the `sequential: true`
-  fix.
+  picking up the plan cold can still claim the blocked todo before ever reading the banner. **Caveat (corrected
+  2026-07-15, plan-reconcile: confirmed via code read of `_parse_open_todos`/`task_still_dispatchable` in
+  `regen_backlog_from_plan.py`, see `mtds_available_at_cross_asset_backfill_2026_07_13.md` Progress Log 2026-07-14)**:
+  `sequential: true` only orders same-priority **ingested/dispatchable** todos by file position — a todo excluded from
+  ingestion via a `BLOCKED-<TOKEN>`/`[OPERATOR]`/`_(stretch, optional)_` marker (§3) does NOT count as "the
+  predecessor," so if that excluded todo is first in file order, the next todo dispatches immediately regardless of
+  whether the excluded one is actually resolved — use `prereqs.completed_tasks` instead when the gate itself may be
+  non-dispatchable. Case study: `coinbase_bare_name_migration_2026_07_06.md` Step S2's "safe before S3" note was
+  disproven by an actual QG run — see `plans/active/issues/coinbase_bare_name_migration_s2_ordering_2026_07_10.md` for
+  the failure + the `sequential: true` fix.
 - **Multi-role in one plan** — use per-task `[TAG]`s; the one owning agent reads the extra role boot prompt. _[ROLLING
   OUT: `[TAG]` per-task routing. Today role is the plan-level `assigned_role` for ALL tasks — keep one role per plan, or
   split, until it ships.]_

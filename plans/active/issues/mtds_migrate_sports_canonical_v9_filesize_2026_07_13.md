@@ -11,7 +11,7 @@ summary:
   canonicalization helpers, e.g. _canon_mdps_raw_prd/_canon_mdps_candle/
   _canon_instr_reference/_canon_instr_bare_day/_canon_instr_hyphen/_dispatch_canon_rel, into a sibling module), which is
   out of scope for a dependency-hygiene task and risks the migration script's correctness without deeper context."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,7 @@ parent_epic: infrastructure_master
 priority: P2
 source: fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13 todo 1 (cryptography floor bump)
 assigned_vm: planning
-resolved_by:
+resolved_by: "slot-3 (market-tick-data-service@e284ad63), slot-9 (ee911510)"
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: backend_engineer

@@ -184,8 +184,10 @@ CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge leg
 
 - **4 perp venues**: 4/4 instrument-coverage live; tick-data backfill in progress per `cefi_tradfi_tick_data_backfill`
   (15/24 done across CeFi+TradFi).
-- **Extended backfill venues** (Bitfinex / Bitget / Kraken): NOT yet wired into UAC + Tardis adapter
-  (cefi_venue_universe_expansion 0/20).
+- **Extended backfill venues** (Bitfinex / Bitget / Kraken): **[Corrected 2026-07-14, finding 211]** (was: "NOT yet
+  wired into UAC + Tardis adapter (cefi_venue_universe_expansion 0/20)") — CODE + LAUNCH SHIPPED; UAC registry / MTDS
+  adapter / launcher verified DONE (UAC@7cb9068/405cbf5) with 24 VMs launched; source plan
+  `cefi_venue_universe_expansion_2026_05_01` is itself `status: complete` (see § Critical path).
 - **DERIBIT options/futures bundles**: pre-2024 backfill running; 2025/2026 light-VM relaunched 2026-05-06.
 - **MTDS CeFi shards**: deployment-UI shows partial coverage; full audit pending.
 

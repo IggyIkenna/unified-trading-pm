@@ -168,8 +168,11 @@ single-walk discipline) consistently aligned. Residual items:
       successor plan not needed. - `tradfi_massive_live_ws_<TBD>` → **BLOCKED-OPERATOR-DECISION**: massive is now
       SOURCE*PRIORITY[1] (fallback, 2026-06-24 operator decision); live massive WS deprioritised until operator chooses
       to invest in it. Tracked in `tradfi_massive_dual_source_2026_05_28.md` as an out-of-scope deferred item; no
-      separate plan needed until the operator re-prioritises. -
-      `cleanup_v1_quality_gates_workflows*<TBD>`→ tracked in`cicd_consolidated_remaining_2026_06_24.md`      scope (the v1 workflow retirement is part of the broader CI/CD consolidation).     -`mdps_pure_polars_migration`→ **RESOLVED/SUPERSEDED**: active plan      `mdps_adapter_protocol_pandas_to_polars_2026_06_21.md`is the canonical successor.     -`features_registry_status_versioning`→ **RESOLVED**: archived in`plans/archive/2026_06/`.
+      separate plan needed until the operator re-prioritises. - `cleanup_v1_quality_gates_workflows*<TBD>`→ tracked
+      in`cicd_consolidated_remaining_2026_06_24.md` scope (the v1 workflow retirement is part of the broader CI/CD
+      consolidation). -`mdps_pure_polars_migration`→ **RESOLVED/SUPERSEDED**: active plan
+      `mdps_adapter_protocol_pandas_to_polars_2026_06_21.md`is the canonical
+      successor. -`features_registry_status_versioning`→ **RESOLVED**: archived in`plans/archive/2026_06/`.
 
 ## Deferred work — migrated from archived plans
 
@@ -183,7 +186,9 @@ single-walk discipline) consistently aligned. Residual items:
 
 ## Temporary states + canonical follow-up plans
 
-- Phase 1-3 + 5 P1: shipped. No temporary states.
+- Phase 1-3 + 5 (P1+P2): shipped. No temporary states.
 - Phase 4 (codex alignment agent work): open P1/P2 items remain — low-priority ongoing; no blocking successor plan
   needed.
-- Phase 5 P2 (hook documentation in codex): open P2; update `active-plan-inventory-tracker.md` on next codex sweep.
+- Phase 5 P2 (hook documentation in codex): shipped — `codex/11-project-management/active-plan-inventory-tracker.md` §
+  "Pre-push hygiene hooks" (corrected 2026-07-15, plan-reconcile: this summary was stale against the Phase 5 P2 todo
+  already checked off above).
