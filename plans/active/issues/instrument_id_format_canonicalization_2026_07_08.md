@@ -536,6 +536,17 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
   catalog-only fix reported by an agent as **provisional**, not durable, until its per-day corpus is confirmed migrated
   too.
 
+- **2026-07-15 — cross-reference, not a duplicate finding**: a related but DISTINCT defect —
+  `[[cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15]]` (`issues/`) — was found + fixed this
+  date. That doc's own framing: "NOT the same defect as this doc — that one is the CATALOGUE's
+  `InstrumentRecord.canonical_instrument_id` (fixed via `instruments-service@f90d0e0`,
+  `[[canonical_instrument_id_cefi_defi_backfill_2026_07_14]]`); this is MTDS's `TardisAdapter` manifest **write** path
+  specifically, which stamped the raw vendor wire symbol as the captured row's `instrument_id` regardless of what the
+  catalogue carries." Fixed `market-tick-data-service@56679e78`→`5d44a197` (case-sensitivity supersession)→`90ecde17`
+  (persisted tests + honest-absence follow-up). That doc is the SSOT for this specific write-path defect + its remaining
+  todos (VM relaunch, relabel `--apply` sign-off, a newly-filed Tier-3 sentinel scheme-mismatch finding) — not
+  duplicated here.
+
 ## Orchestration state, 2026-07-09 — durable record of in-flight parallel work (for context-loss recovery)
 
 Following the operator's directive to execute this doc's findings entirely including data migration, "so there is zero

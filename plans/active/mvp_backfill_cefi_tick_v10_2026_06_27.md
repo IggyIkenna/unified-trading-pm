@@ -3306,4 +3306,46 @@ progressing via SSH (LIGHTER-ZKSYNC at chunk 86/196 as of 19:43Z; others healthy
 
 **Gate verdict: ❌ NOT MET, now genuinely operator-gated** on two independent fronts: (1) the #586 backmerge resolution
 (unblocks the Tardis-lane relaunch), (2) the relabel script's `--apply` sign-off (issue doc todo 2). Both tracked;
-neither is a "just wait a bit longer" situation — both need a human with repo/production-mutation authority.
+
+### Writer fix re-verified + test/honest-absence gap closed + a NEW independent Tier-3 finding — 2026-07-15T~20:20Z (orchestrator dispatch)
+
+Dispatched independently (fresh context) to verify + fix "the writer stamps raw symbol, denominator expects canonical."
+Re-verified the finding first per the dispatch's own instructions — direct filtered read of the live prd
+`availability_index.parquet` (KRAKEN-FUTURES/book_snapshot_5): confirmed 0/25,462 `captured` rows canonical-shaped,
+matching the 18:50Z entry above exactly. Mid-investigation discovered this lane's own fix had ALREADY landed (`56679e78`
+then `5d44a197` superseding a case-sensitivity bug in the first cut — full detail in the issue doc's Progress Log) —
+this is a multi-slot workspace and the fix shipped while this dispatch was still reading code.
+
+Rather than duplicate already-shipped work, audited both landed commits directly and found two real gaps: **(a)** no
+persisted unit test for `_canonicalize_manifest_instrument_id` (both prior commits verified by ad hoc manual repro only
+— the exact class of gap that let the case-sensitivity bug through undetected in the first place); **(b)** the
+unresolved-symbol fallback logged at DEBUG only (silent), which the honest-absence/shard-level-failure-isolation
+standards this dispatch was scoped under explicitly require to be visible, not swallowed. Closed both — added
+`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py` (locks the real fixed function against the exact
+live-manifest KRAKEN-FUTURES samples that proved the bug, using the real UPPERCASE `itype` shape — would have caught
+`56679e78`'s no-op) + upgraded the fallback to WARNING + a bounded per-run/per-venue `state.cefi_manifest_id_unresolved`
+accumulator surfaced as a summary WARNING in `manifest_finalize.py`. Shipped `market-tick-data-service@90ecde17`, full
+`quality-gates.sh` green (79.95% coverage). Confirmed the live/websocket capture path is a separate, already-canonical
+code path (unaffected); confirmed the GCS filename is unchanged by design (still raw wire symbol — no new orphan/relabel
+quantification needed since nothing about file placement changed, and the existing todo-2 dry-run already covers it:
+3,133,117 candidates / 82.7% resolvable).
+
+**New, separate finding** (not this session's fixes' doing, pre-existing): while re-auditing `sentinels.py`'s Tier-3
+comparison per the issue doc's own flagged-open question, found live+code evidence that Tier-3's captured-vs-expected
+comparison uses TWO DIFFERENT id schemes for CeFi Tardis venues (`expected_instruments` = full canonical
+`instrument_key` via `CeFiCatalogReader`; `captured_instruments` = the older bare-`BASE-PERP`
+`_canonicalize_captured_instrument_id` heuristic, verified live to leave KRAKEN-FUTURES's `PI_`/`PF_`-prefixed symbols
+completely untouched) — meaning the per-run Tier-3 sentinel fan-out has likely been silently mismatching (spurious
+`record_empty`/`record_failed` rows for already-captured instruments) independent of and pre-dating this whole G4
+writer-fix thread. Filed as a new P1 todo in the issue doc with the concrete repro, NOT fixed blind (needs its own
+scoped decision, same caution this doc's own case-sensitivity near-miss argues for) — full detail there.
+
+Did not touch VM launch/relaunch (todo 4, blocked on the #586 backmerge above) or the relabel `--apply` (todo 2,
+operator-gated) — both correctly out of this dispatch's scope. Full detail + evidence:
+`issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (updated same session).
+
+**Gate verdict: unchanged, ❌ NOT MET** — this pass improved fix QUALITY/durability (tests + visibility) and surfaced
+one new adjacent finding; it does not by itself move `expected_unattempted`, which still needs the #586 backmerge
+resolution → tarball → VM relaunch (todo 4) and/or the relabel `--apply` (todo 2), both operator-gated, unchanged from
+the entry above. neither is a "just wait a bit longer" situation — both need a human with repo/production-mutation
+authority.
