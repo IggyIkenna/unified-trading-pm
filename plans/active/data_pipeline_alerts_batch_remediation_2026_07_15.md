@@ -632,3 +632,50 @@ the operator's corrected framing, instructed to reach an honest verdict rather t
 (3) investigation of the sports catalogue's specific 6 missing rows (legitimate shrink vs. bug vs. transient),
 diagnosis-only — not authorized to force an `--allow-catalogue-shrink` override itself. Prediction catalogue OOM (memory
 bump) and a re-run of the cefi delete (once gated fix confirms holding) remain as pending follow-ups after this round.
+
+## Third round — all 4 dispatched agents complete + 1 more dispatched
+
+1. **Legacy-seed tie-break — SHIPPED (P0).** `unified-trading-library@f14b13ae` — both the DuckDB SQL merge and the
+   Python `_merge_shard_frames` path now exclude the frozen `_legacy_seed.parquet` shard from ever winning the "captured
+   outranks" tie-break, via a narrow shard-identity exclusion (not a general recency reordering, per the operator's
+   chosen approach). 3 new regression tests directly reproduce the live resurrection scenario and prove it no longer
+   occurs — including one reproducing the issue doc's own diagnostic exactly. Confirmed cross-cutting: protects
+   cefi/defi/tradfi uniformly (shared, bucket-parametrized code; each asset_group carries its own frozen legacy seed).
+   **Gate before re-running the cefi delete**: confirm this fix has propagated to the deployed consolidator image (a UTL
+   library change needs the dependent service image rebuilt) AND holds across ≥2 real consolidator cycles before
+   re-attempting — a synchronous image-content check timed out (large image pull); this needs one more real cycle to
+   observe, not something to force. **Do not re-run the cefi delete yet.**
+2. **Yahoo Finance source-vs-venue — RESOLVED (partial validation).** Operator was right about DXY (venue=ICE) and
+   KRW/USD (venue=FX) — both genuinely already working via a real, tested `YahooFinanceAdapter`. Operator was wrong
+   about US Treasuries — a genuine, never-wired gap (`route_yahoo_tradfi()` never included `"CBOE"` in its venue
+   dispatch, despite treasury-yield tenors being fully declared in 3 different registries). No fix forced at diagnosis
+   time — real regression risks were found in both naive fixes (venue-blanket CBOE flip would've silently broken live
+   VX-futures/Databento capture; naive YAHOO_FINANCE registry deletion would've tripped an undocumented ALL-10-datatypes
+   fallback footgun) — both filed as precise follow-up todos instead.
+3. **CBOE treasury yields — SHIPPED.** `market-tick-data-service@764e7170` — added a `data_type`-level discriminator
+   (`ohlcv_24h` → Yahoo; anything else, incl. `data_types=None` the production default → unchanged Databento path) so
+   treasury tenors route to Yahoo Finance WITHOUT touching VX-futures/Databento traffic at all. 4 regression tests prove
+   both halves independently. **Not yet live-traffic-carrying**: a separate UAC registry gate
+   (`VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` doesn't declare `ohlcv_24h`) still blocks it — same precedent pattern as the
+   mbp_10/CME gap, filed as its own P3 follow-up rather than scope-creeping into UAC.
+4. **Sports catalogue 6-row shrink — SHIPPED, real bug found.** Not a legitimate de-registration and not flakiness (both
+   07-15 attempts were byte-identical) — the exact accounting was 9 fixture/team/player rows aging off a 400-day rolling
+   window minus 3 new same-day fixtures gained, net −6. Root cause: unlike every OTHER asset_group, sports catalogue
+   building had no incremental "frozen tail" merge, so an aged-off instrument's whole row vanished instead of just
+   closing. Fixed by reusing the existing generic `_merge_incremental` engine for the sports grain:
+   `instruments-service@24f84e86`, 2 new regression tests, QG green. Did not force `--allow-catalogue-shrink` (correctly
+   out of scope, and moot once the root bug was fixed).
+5. **Prediction catalogue OOM — dispatched, in flight.** Terraform-codified memory bump (following this session's
+   established "codify + live-apply in the same pass" pattern) for `lifecycle-catalogue-regen-prediction` (currently 4Gi
+   against a 2.67M-row catalogue), plus a fresh triggered run to confirm the fix actually works.
+
+**Process note, 3rd time this session**: 3 of these 4 agents independently hit the exact same broken pattern —
+backgrounding a task then ending their turn expecting an automatic wake, which doesn't happen for sub-agents — and had
+to be resumed with an explicit correction before making further progress. Worth fixing at the dispatch-prompt level for
+future sessions (state the constraint more prominently up front) rather than catching it reactively every time.
+
+**Remaining after this round**: confirm legacy-seed fix propagation + multi-cycle hold, then re-run the cefi delete;
+fold in the prediction-catalogue agent's result once it lands; the 4 newly-logged uncovered `DP_RUN_MOSTLY_EMPTY` cells
+from the parallel session's pass (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
+`sports/odds_horizon_bucket_15m`) remain unactioned — not picked up this round, flagged for a future pass given the
+sheer volume already covered today.
