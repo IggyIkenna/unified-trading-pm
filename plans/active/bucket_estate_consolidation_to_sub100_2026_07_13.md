@@ -1597,3 +1597,56 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   scheduled maintenance window + service_name-aware write redesign), and nothing in this touch's re-check changed that.
   Re-check this bucket once `sports_manifest_canonicalisation_2026_06_01.md`'s E1/E8 CF-8 gate clears on BOTH halves of
   the sports pair (`market-data-tick-sports` AND `instruments-store-sports`).
+
+- **2026-07-15, `features-calendar` Verify+Delete-phase dispatch — COMPLETE, flat bucket physically deleted + terraform
+  state/config cleaned up.** `deployment-service@82eadd5`. Migrate-phase result for this bucket (`readyForDelete=true`,
+  0 live+noncurrent objects, 0 soft-deleted objects) was re-verified fresh before acting: (1)
+  `gcloud storage buckets describe gs://features-calendar-central-element-323112` resolved (bucket still existed); (2)
+  `gcloud storage ls -a -r ".../**"` → `ERROR: ... matched no objects` (0 objects, includes-all-versions); (3)
+  `gcloud storage ls --soft-deleted ...` → empty, exit 0. Canonical siblings
+  `features-calendar-{prd,test}-central-element-323112` both `describe` OK; spot-checked `prd` has live data
+  (`gcloud storage du --summarize` → 333 bytes, `_index/` present — not a full-corpus walk, single-walk discipline
+  honored) confirming the canonical bucket is the one actually receiving writes, unaffected by the bare bucket's
+  removal. **Terraform**: pulled the real prod state directly from GCS
+  (`gs://uts-terraform-state-central-element-323112/terraform/state/prod/default.tfstate`) and confirmed
+  `google_storage_bucket.features_calendar` WAS live-managed (Wave-0's 2026-07-12 apply resurrection, exactly as the
+  migrate-phase note predicted) — reinit'd the working dir against the prod backend prefix
+  (`terraform init -reconfigure -backend-config=prefix=terraform/state/prod`, no state migration, matched the already-
+  cached prod config), ran `terraform state rm google_storage_bucket.features_calendar` BEFORE the physical delete
+  (matches the `instruments_defi`/`instruments_tradfi`/`market_data_cefi`/`market_data_tradfi` purge-armed-twin
+  precedent, ds@1dd2159/ds@39fa8c3), then deleted the bucket (`gcloud storage rm --recursive --continue-on-error` → 0
+  objects matched as expected, then `gcloud storage buckets delete --quiet` → success). **Evidence bucket is gone**:
+  `gcloud storage buckets describe gs://features-calendar-central-element-323112` now returns `404` / "not found".
+  Removed the now-dangling `main.tf` resource block (398-414, replaced with a REMOVED banner citing the precedent) and
+  `outputs.tf`'s `features_calendar_bucket` output (grep-confirmed zero consumers). Reverted an incidental
+  `.terraform.lock.hcl` provider-version bump the reinit produced (unrelated to this task, not shipped). **Config/
+  scheduler check**: `bucket_config.yaml` line 35 is a service-name list entry, not a bucket reference — no bare-name
+  hit; `cloud-providers.yaml` already resolves `features-calendar` to the canonical env-tiered form (both GCP + AWS
+  blocks) — no bare-name hit; `manifest_consolidator_scheduler.tf`'s `features-calendar` map entry + the live deployed
+  Cloud Run Job (`uts-prod-manifest-consolidator-features-calendar`, confirmed via `gcloud run jobs describe`) already
+  target `features-calendar-prd-central-element-323112` — no fix needed. Found + fixed one stale doc-comment in
+  `deployment-service/scripts/vm/run-features-pipeline-backfill.sh` (Phase 4f) that hardcoded the now-deleted bare path
+  in a comment — updated to the canonical env-tiered path + a decommission note (comment-only, no functional change, no
+  live caller). Shipped via
+  `quickmerge.sh --agent --files 'terraform/gcp/main.tf terraform/gcp/outputs.tf scripts/vm/run-features-pipeline-backfill.sh'`
+  (scoped by name — a sibling agent's concurrent, unrelated `lifecycle_catalogue_scheduler.tf` WIP was live in the same
+  working tree, mtime essentially real-time, and was left untouched); `quality-gates.sh --no-fix` green pre-commit;
+  landed + verified ancestor-or-equal of `origin/live-defi-rollout` (`82eadd50e977b300828842aa3fb5989721148b1f`).
+  **Deferred, NOT actioned this touch** (per findings-triage — out of this bucket's terraform-path scope / dormant /
+  cross-repo-broad, flagged for a future small follow-up rather than folded in here): (1)
+  `unified-trading-library/unified_trading_library/cloud_interface/constants.py`'s `get_features_calendar_bucket()`
+  (deep/legacy `cloud_interface.constants` module, distinct from the already-correct public
+  `unified_trading_library.get_features_calendar_bucket()` re-exported from `core/cloud_constants.py`, which already
+  delegates to `_resolve_bucket_name`) still hardcodes the old flat/no-env-suffix model via
+  `get_bucket_name ("features_calendar")` — re-grepped this touch: genuinely zero live callers workspace-wide (only its
+  own tests), confirmed dead code, but fixing it cleanly means touching the same module's shared Group-A/B
+  `BUCKET_NAMES` dict + docstring that also documents `instruments`/`market_data` (buckets outside this touch's scope) —
+  a broader legacy- cleanup pass, not a single-bucket delete. (2)
+  `deployment-service/terraform/services/features-delta-one-service/gcp/main.tf:244`'s `gcs_volumes` wiring still
+  references the bare `features-calendar-${var.project_id}` bucket — re-confirmed dormant this touch
+  (`gcloud run jobs list` shows no `*-features-delta-one-service-t1-recon` or `*-features-calendar-service-t1-recon`
+  Cloud Run Job deployed, only the `manifest-consolidator` ones), so no live break; repoint before that module is ever
+  deployed. (3) `uts-prod-features-calendar-t1-schedule` Cloud Scheduler job re-confirmed still `PAUSED` (same pattern
+  as other recon-bucket findings this plan already tracks) — unrelated to this bucket's delete, needs its own triage.
+  **Verdict for the orchestrating verify+delete-phase task**: DONE — bare bucket physically deleted, terraform state +
+  config reconciled so a future `terraform apply` cannot resurrect it, no code/data regressions, estate count -1.
