@@ -3280,3 +3280,30 @@ VMs + ASTER) unaffected by any of this, continues progressing normally.
 the operator-approved `--apply` (relabel). Not blocked by CREDENTIALS/OPERATOR/UPSTREAM in the deferral sense for the
 writer-fix side (mechanical, just needs the tarball to catch up); genuinely operator-gated for the relabel `--apply`
 side.
+
+### BLOCKED-UPSTREAM — market-tick-data-service LDR→main promotion stuck on a 3h-old backmerge conflict — 2026-07-15T19:48Z
+
+Filed `BLK-5bcfcd1e` after finding the LDR→main promote PR (#589, for the batch including this session's writer fix
+`56679e78`) sat `mergeable_state=dirty` 25+ min past the usual `*/15min` v2-gated auto-merge cadence. Main answered with
+the real root cause (not this lane's guess of "just needs another promote cycle"): `main-repo` PR #586
+(`[backmerge] main → live-defi-rollout (CONFLICT — needs resolution)`) has been open ~3h — market-tick's `main` is
+diverged from LDR by one unreconciled commit, and THAT is what makes every subsequent LDR→main promote PR (incl. #589)
+dirty. `ci-failure-watcher --auto-recover` only heals the v2-never-reported deadlock (a missing required check), NOT a
+genuine git conflict — auto-merge can never fire on a `CONFLICTING` PR, so monitoring/polling alone would stall
+indefinitely. Main is escalating #586 to the operator directly (main-repo context needed to resolve it; the operator
+personally enabled auto-merge on #589).
+
+**Disposition for this lane: HOLD the Tardis relaunch, stop polling the promotion pipeline** (per main's explicit
+instruction — don't spin-wait/burn cycles on something only the operator can unblock). The writer fix
+(`market-tick-data-service@56679e78`) is confirmed already landed on LDR — if the VM tarball-build pipeline can be made
+to source from LDR directly rather than waiting on the promoted-`main` artifact, that would be a faster unblock, but
+that is explicitly an operator call (build-source deviation), not something to self-authorize.
+
+**Non-Tardis lane unaffected and continuing**: all 4 new VMs
+(`cefi-hyperliquid/lighter-zksync/pacifica-solana/extended-starknet-2026-20260715-190049`) confirmed genuinely
+progressing via SSH (LIGHTER-ZKSYNC at chunk 86/196 as of 19:43Z; others healthy CPU + heartbeats). ASTER + the 3 Tardis
+`cefi-queue-*` VMs also still running, untouched.
+
+**Gate verdict: ❌ NOT MET, now genuinely operator-gated** on two independent fronts: (1) the #586 backmerge resolution
+(unblocks the Tardis-lane relaunch), (2) the relabel script's `--apply` sign-off (issue doc todo 2). Both tracked;
+neither is a "just wait a bit longer" situation — both need a human with repo/production-mutation authority.
