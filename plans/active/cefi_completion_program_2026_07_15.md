@@ -301,3 +301,25 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   are chronological-historical-first and won't reach 2026-06+ soon, launch ONE `ONLY=<the-exact-empty-tail-shards>`
   SINGLE_VM_QUEUE LEASE=1 SPOT VM scoped to the non-overlapping tail range (DRY_RUN first, guard confirms ≤3). That
   closes the operator's headline recent-tail gap without duplicating the queue VMs' in-flight work.
+
+### 2026-07-15T14:45Z — tick 5: E (liquidations) CORE shipped + companion/I authorized
+
+- E core SHIPPED (Option 1, root-cause, regression-safe): **uac@494fd90c** (PERPETUAL override +
+  `get_mvp_data_types_for_cefi_venue_itype` helper + ASTER/DERIBIT/OKX-bare liq gate removal + version→15) ·
+  **is@92f3ca22** (`enumerate_expected_universe.py` itype-aware MVP-cut) · **pm@68018d0f** (codex reconciliation:
+  mvp-universe.yaml / mvp-scope-canonical.md / cefi-capture-universe.md). Both repos QG green. Probe: liquidations ∈ the
+  6 PERPETUAL, ∉ COINBASE-FUTURES (stays trades-only — NO regression), ∉ FUTURE/spot/HL/ASTER/EXTENDED/etc.
+  MVP_SCOPE_CONFIG_VERSION=15.
+- **E NOT yet flipped** — a required completion gap surfaced: there are TWO expected-universe producers.
+  `enumerate_expected_universe.py` (expected-EMPTY manifest writer, FIXED) vs
+  `instruments-service/scripts/expected_universe.py::build_expected()` (THE honest-coverage MEASUREMENT denominator
+  SSOT, routed by `measure_honest_coverage.py`) — the latter still uses the venue-only helper, so **liquidations would
+  not actually count in the coverage %** until it's made itype-aware too. Same silent-denominator-drift class the file
+  warns about. Nothing runs in prod until WS-H, so no live drift yet.
+- AUTHORIZED the UAC agent (rule 1 — finish completely): (1) `build_expected` itype-aware + regenerate cefi golden
+  (verify diff = ONLY the 6-venue PERPETUAL liquidations additions); (2) workstream **I** — carve
+  EXTENDED-STARKNET/PACIFICA/LIGHTER book5 + LIGHTER trades out of the `data_type_capability.py` batch_capable=True set
+  → batch_capable=False (mirror ASTER), WITH proof it removes EXTENDED book5 from the batch denominator; (3) minor
+  mvp-scope-canonical version prose 14→15. Awaiting SHAs.
+- **Phase-1 status**: G-code ✅ · D-code ✅ (is@559c6920 + mtds@57e26c0f) · E core ✅ (flip pending build_expected) · I
+  ⏳ (in the same follow-up). Once E-companion + I land → Phase 1 DONE → Phase 2 backfill monitoring + WS-H apply-list.
