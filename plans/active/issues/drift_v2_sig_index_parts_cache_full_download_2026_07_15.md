@@ -99,9 +99,15 @@ ideal.
       download, ~99% fewer bytes, single 64KB range read each) before shipping. 3 new regression tests (non-overlapping
       never fully downloaded / overlapping still gets full row data / missing-size fallback correct); 15/15 related +
       75/75 full-file tests green; QG exit 0, sentinel `546ddce2` == shipped HEAD.
-- [ ] [DATA] P3. Persist the built `_drift_v2_parts_meta_cache` to GCS as a small manifest (part name → min/max
+- [x] ✅ [DATA] P3. Persist the built `_drift_v2_parts_meta_cache` to GCS as a small manifest (part name → min/max
       blockTime) so a fresh process warm-loads it instead of rescanning all parts on every restart (repo:
-      market-tick-data-service).
+      market-tick-data-service) — `market-tick-data-service@20f55709`. Reconciled with the concurrent P2 landing
+      (`4d7e45b4`, another slot): new parts get a footer-only range read for metadata (P2's fix); an already-known,
+      non-overlapping part warm-loaded from the persisted manifest is never touched again on a warm restart (this fix).
+      Extracted the build/warm-load/persist logic into a new `solana_defi_drift_parts_cache.py` module (mirrors the
+      existing `solana_defi_drift_helius.py` split) to stay under the 900-line file-size gate. 3 new regression tests
+      (full-scan-then-persist / warm-start skips cached non-overlapping part / new part merged + re-persisted); QG exit
+      0, sentinel `5b36d1e9` == shipped pre-quickmerge-trailer HEAD.
 
 ## Progress log
 
@@ -109,6 +115,9 @@ ideal.
   (`market-tick-data-service@16756a19`, see `mvp_backfill_defi_onchain_v10_2026_06_27.md` Progress Log). Not fixed in
   this session — separate, larger change; filed for a dedicated future pass. `assigned_vm: planning` so the orchestrator
   can pick this up as a standalone backlog item.
+- 2026-07-15: P3 shipped (`market-tick-data-service@20f55709`, slot 7). Both todos now complete — the parts-cache
+  cold-start cost is addressed from both directions (footer-only reads for new parts, GCS-persisted warm-load for known
+  parts). Issue can be closed/archived on the next hygiene sweep.
 - 2026-07-15 (same session, data_engineering slot-14): the P2 todo above got auto-ingested into the backlog and
   immediately re-dispatched back to this slot. Implemented + shipped `market-tick-data-service@4d7e45b4` (footer-only
   range-reads via a small `_LazyRangeReadFile` shim over `download_bytes_range` + `_read_parquet_footer_metadata`).
