@@ -370,3 +370,20 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   (runtime LIVE_ONLY_DATA_TYPES already excludes EXTENDED book5; cosmetic cap edit optional).
 - **PHASE 1 COMPLETE**: G ✅ · D ✅ · E ✅ · I ✅. Remaining = Phase 2 backfill (A tail VM launched + B/F/G-tick, cap-3
   bound) → WS-H apply-list (gated on backfill) → C alias-kill. The code substance is fully landed.
+
+### 2026-07-15T17:05Z — tick 8: recent-tail VM (A) confirmed running; fleet 3/3
+
+- Tail VM **cefi-queue-heavy-20260715-160552** UP + running the real backfill (serial + run.log verified):
+  `mtds --operation download --mode batch --asset-group CEFI --venues <all 15 main> --start-date 2026-01-01 --end-date 2026-07-14 --data-types trades book_snapshot_5`.
+  Heartbeat active. Fleet = 3/3 (cap).
+- Launched from human-planning Linux VM (i-0dd9812a96cdda5dc) via SSM as `sudo -iu ubuntu`, deployment-service launcher,
+  `SINGLE_VM_QUEUE=1 LAUNCH_GROUPS=heavy TARDIS_CONCURRENCY_LEASE=1 ONLY=<15 venues>:2026:heavy`. Guard OK 2+1=3.
+- REALITY CHECK: launcher is YEAR-granular (`start_date=${year}-01-01` hardcoded, no sub-year override), so the tail VM
+  processes 2026 CHRONOLOGICALLY — currently re-capturing 2026-01 failed shards (403-heavy) before it reaches the empty
+  June-July tail. It IS the only VM on 2026 (the 2 queue VMs are at mid-2020), so still the fast path. run.log shows
+  Tardis 403 code=274 (expected N=3 lease-rotation contention, ~50-70% efficiency per the cap-3 SSOT). ETA to fill the
+  empty June-July tail: ~1-3 days. Not worth a launcher code-change to skip Jan-May.
+- LIGHT slice (derivative_ticker/funding + liquidations) for the tail: blocked at 3/3 cap — launch `LAUNCH_GROUPS=light`
+  same ONLY when a slot frees (a queue VM finishes / the tail VM completes).
+- Gate A (collision) RESOLVED tick-7 (is@8b6bd8f8, IS green). Remaining = throughput-bound: A(tail heavy running) +
+  B(queue VMs, weeks) + light slice → WS-H apply → F, C.
