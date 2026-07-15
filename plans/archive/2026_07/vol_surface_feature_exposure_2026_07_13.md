@@ -5,7 +5,7 @@ summary:
   Expose a per-strike IV-by-moneyness grid and a multi-underlying (index + component) vol-surface feature vector, both
   buildable off the already-live Deribit options feed — unlocks the denser VOL_* strip/structure engines and full-mode
   VOL_DISPERSION/VOL_CROSS_ASSET_SPREAD without waiting on Tardis backfill.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile: all todos [x], evidence spot-checked, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [features]

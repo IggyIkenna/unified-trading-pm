@@ -174,8 +174,8 @@ locked_since: 2026-05-20
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 > **🟢 [2026-07-13] CONSOLIDATION EXECUTED — the "2 themed survivors" claim is now TRUE.** Per operator ruling
-> 2026-07-13 ("Approve all + unlock", `plans/active/mtds_consolidation_foldin_mapping_2026_07_12.md`), the 2026-07-12
-> correction above is resolved: **9 plans FOLDED into M-1 and archived** —
+> 2026-07-13 ("Approve all + unlock", `plans/archive/2026_07/mtds_consolidation_foldin_mapping_2026_07_12.md`), the
+> 2026-07-12 correction above is resolved: **9 plans FOLDED into M-1 and archived** —
 > `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`, `data_source_provenance_all_asset_groups_2026_06_01`,
 > `macro_econ_adapter_scaffolds_2026_06_09`, `cefi_manifest_canonicalisation_2026_06_01`,
 > `tradfi_manifest_canonicalisation_2026_06_01`, `prediction_manifest_canonicalisation_2026_06_01`,
@@ -197,8 +197,8 @@ locked_since: 2026-05-20
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` (standalone prerequisite) +
 > `sports_manifest_canonicalisation_2026_06_01` (delegated vertical) +
 > `mdps_features_reduced_artifact_tracker_2026_06_28` (cross-epic tracker) — no orphaned `parent_epic: mtds_mdps_master`
-> plans remain outside this set. See `plans/active/mtds_consolidation_foldin_mapping_2026_07_12.md` for the full
-> mapping + execution shas.
+> plans remain outside this set. See `plans/archive/2026_07/mtds_consolidation_foldin_mapping_2026_07_12.md` for the
+> full mapping + execution shas.
 >
 > **[2026-07-14 correction]**: the "no orphaned `parent_epic: mtds_mdps_master` plans remain outside this set" claim
 > above (was: presented as exhaustive) was already stale within hours of being written and has no recurring

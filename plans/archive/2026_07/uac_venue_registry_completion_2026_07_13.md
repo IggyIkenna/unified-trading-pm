@@ -5,7 +5,7 @@ summary:
   Add FX, BITFINEX, BITGET, KRAKEN to VENUE_CATEGORY_MAP + VENUE_CAPABILITIES; wire archetype-leg eligibility for
   FX/BITFINEX/NASDAQ/NYSE; fix the FX vendor-key mismatch — all confirmed real, precisely-scoped gaps, no further audit
   needed.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile: all todos [x], evidence spot-checked, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

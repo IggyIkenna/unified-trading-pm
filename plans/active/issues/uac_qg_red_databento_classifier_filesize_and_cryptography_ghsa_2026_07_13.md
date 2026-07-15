@@ -21,7 +21,7 @@ tags: [qg-red, file-size, repo-blocker, codex-compliance, dependency-hygiene, cv
 related:
   [
     plans/active/vol_dvol_backtestable_engines_2026_07_13.md,
-    plans/active/fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md,
+    plans/archive/2026_07/fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master
