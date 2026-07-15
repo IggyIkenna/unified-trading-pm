@@ -56,7 +56,16 @@ status: open
 nature: issue
 asset_group: [sports]
 stage: [features, data]
-repos: [features-service, instruments-service, unified-trading-library]
+repos:
+  [
+    features-service,
+    instruments-service,
+    unified-trading-library,
+    deployment-api,
+    deployment-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags:
   [
@@ -83,6 +92,7 @@ source:
   [
     "data_engineering slot-6, discovered while re-verifying sports_p2_features_history_to_ml_ready-001's gap-fill VM
     fleet, 2026-07-15",
+    "data_engineering slot-4, P3 workspace grep for other direct entity=fixtures readers, 2026-07-15",
   ]
 assigned_vm: planning
 resolved_by:
@@ -98,13 +108,17 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-> **🔴 NOTIFY-OPERATOR — cross-repo data-correctness gap, likely live-pipeline-affecting.** instruments-service shipped
-> the FIXTURES → fixtures_schedule/fixtures_outcomes writer cutover
-> (sports_fixtures_schema_split_completion_2026_06_20.md) with no legacy dual-write and no reader-side coordination.
-> Every current fixtures reader targets the legacy `entity=fixtures` path and hard-fails for any date on/after the
-> cutover (first observed 2026-07-14). This session fixed the features-service backfill-blocking half; the UTL
-> `read_fixtures_joined()` designated flip point (P1, unified-trading-library, currently zero production callers so
-> low-risk to fix) and a live-pipeline impact check are still open — see "What I found" + "Recommended decision" below.
+> **🔴 NOTIFY-OPERATOR — cross-repo data-correctness gap; live sports feature-compute impact RULED OUT, but a wider and
+> more urgent blast radius CONFIRMED inside instruments-service itself.** instruments-service shipped the FIXTURES →
+> fixtures_schedule/fixtures_outcomes writer cutover (sports_fixtures_schema_split_completion_2026_06_20.md) with no
+> legacy dual-write and no reader-side coordination. Every current direct `entity=fixtures` reader hard-fails or
+> silently degrades for any date on/after the cutover (first observed 2026-07-14). Confirmed status as of 2026-07-15:
+> (1) live sports feature-compute was never at risk — no live launcher has ever run for sports (finding #7); (2) the
+> features-service backfill blocker is fixed this session; (3) a **workspace-wide grep (finding #8) found
+> instruments-service's OWN `sports_dependency.py` pre-flight gate is blocking 6 downstream venue adapters
+> (footystats/understat/transfermarkt/soccer_football_info/open_meteo/betfair) for every date on/after the cutover** —
+> this is the single most urgent open item now (new P0 todo below), plus 4 more affected readers across
+> deployment-api/deployment-service/MTDS and a UAC SSOT gap (new P1 todos below).
 
 # instruments-service FIXTURES writer/reader entity-split desync
 
@@ -183,6 +197,57 @@ depends_on: []
      `read_fixtures_joined()`, or if the live engine is ever extended to read fixtures reference data directly, the same
      entity-split desync would resurface unless UTL's `joined_reader.py` is fixed first.
 
+8. **[P3 todo, slot-4, 2026-07-15] Workspace-wide grep for other direct `entity=fixtures` readers found FIVE more
+   affected production sites** — the widest is a SEVERE finding inside instruments-service itself:
+
+   - **🔴 MOST SEVERE — `instruments-service/instruments_service/reference_data/sports_dependency.py`'s
+     `check_api_football_dependency()`** is the hard pre-flight `DependencyError` gate called from
+     `reference_data/adapters/sports/factory.py:90` for EVERY api-football-dependent venue adapter: `footystats`,
+     `understat`, `transfermarkt`, `soccer_football_info`, `open_meteo` (weather), `betfair`
+     (`_API_FOOTBALL_DEPENDENT_VENUES`). It probes ONLY `_CANONICAL_FIXTURES_PREFIX_TEMPLATE`
+     (`.../pipeline_mode=batch_api_football/entity=fixtures/`), `_LEGACY_FIXTURES_PREFIX_TEMPLATE`
+     (`.../entity=fixtures/`), and two bare-blob fallbacks — none of the four probes know about
+     `entity=fixtures_schedule`. Net effect: for ANY date on/after the writer cutover (2026-07-14+), this gate raises
+     `DependencyError` and **blocks all 6 dependent venue adapters from running at all** — a materially wider blast
+     radius than the features-service backfill blocker this issue was originally filed for, and it's inside the SAME
+     repo as the writer that caused the cutover.
+   - `deployment-api/deployment_api/services/upcoming_fixtures.py::_read_one_day_frame` — reads the bare
+     `entity=fixtures/fixtures.parquet` singleton directly (no split/per-league awareness at all); `object_exists`
+     returns False for post-cutover days → silently returns `None` → the UI's "Upcoming Fixtures" panel silently shows
+     fewer/no fixtures for those days, no error surfaced.
+   - `deployment-api/deployment_api/services/data_status_drilldown/_csv_export.py::build_fixtures_csv_export` and
+     `deployment-api/deployment_api/services/data_status_drilldown/_fixtures_pools.py` — both hardcode
+     `entity=fixtures/fixtures.parquet` for the Data Status drilldown UI's fixtures CSV export / breakdown pool;
+     post-cutover days hit the `FileNotFoundError` branch → empty CSV / empty pool, read as "adapter never ran" when it
+     actually did (under the split entities).
+   - `deployment-service/deployment_service/cli/utils/data_status_sports.py::_load_fixture_counts_for_date` — CLI
+     data-status display; tries `entity=fixtures/` then a much older `sports_reference/fixtures/day=` legacy path,
+     neither split-aware → silently reports 0 fixtures for post-cutover dates (reads as genuine expected-absence, not
+     "adapter cutover", to whoever runs the CLI).
+   - `market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py::_FIXTURES_BLOB_TEMPLATE` —
+     hardcoded `entity=fixtures/league={league_id}/fixtures.parquet`, used by the MTDS manifest sentinel fan-out (Phase
+     3.D.5 v2 sports enumerator) to derive the expected `(bookmaker, league_id, fixture_id)` universe; post-cutover this
+     silently yields an empty per-day fixture universe for the sentinel.
+
+   **Root SSOT gap underneath the last two**:
+   `unified-api-contracts/unified_api_contracts/canonical/domain/sports/ gcs_paths.py`'s `SPORTS_DATA_TYPE_TO_FOLDER`
+   maps `"FIXTURES" → "fixtures"` only — there is no `"FIXTURES_SCHEDULE"`/`"FIXTURES_OUTCOMES"` data_type registered,
+   so **every** caller of `candidate_parquet_paths("FIXTURES", ...)` is affected post-cutover, not just the two
+   enumerated above. Confirmed production callers of `candidate_parquet_paths("FIXTURES"` (excluding tests/scripts):
+   `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py` (odds↔
+   fixture join-key resolver) and `instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py`
+   (production repoll trigger) — both silently get an empty candidate-path list for post-cutover dates.
+
+   **Confirmed NOT affected (already fixed)**: `deployment-service/deployment_service/sports_trigger_state.py` already
+   carries a 3rd fallback pattern for `.../pipeline_mode=batch_api_football/entity=fixtures_schedule/` (added 2026-07-14
+   per its own inline comment) — no action needed there.
+
+   **Minor, non-blocking, noted for completeness**: instruments-service's OWN writer-side idempotency-check reads
+   (`sports_fixtures.py:231,618`, `sports_reference_fixtures.py:114`, all via
+   `_read_per_league_entity_df(..., "fixtures")`) also target the legacy entity, so post-cutover they will never find
+   "already written" data and may trigger redundant re-fetches — wasteful but not a correctness bug (writes still land
+   at the correct split location). No standalone todo filed for this; fold into the P0 fix below if convenient.
+
 ## Why it matters
 
 - **Blocks `sports_p2_features_history_to_ml_ready-001`'s Todo 1** ("Compute features 2015→present") at its leading edge
@@ -211,7 +276,18 @@ depends_on: []
    instead of the local `_read_split_fixtures_fallback` added this session, per the module's own "single place to flip"
    design intent — avoids two independent implementations of the same join drifting apart again.
 4. **[P3]** Audit for any OTHER consumer reading `entity=fixtures` directly (outside features-service and UTL) that
-   might also be silently affected.
+   might also be silently affected. **DONE (this session, finding #8)** — see the new P0/P1 todos below.
+5. **[P0, urgent, instruments-service]** Fix `sports_dependency.py::check_api_football_dependency()` to also probe
+   `entity=fixtures_schedule` — this is currently blocking footystats/understat/transfermarkt/soccer_football_info/
+   open_meteo/betfair adapter fetches for every date on/after the cutover, inside the SAME repo as the writer.
+6. **[P1, unified-api-contracts]** Register `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` (or teach `"FIXTURES"` to probe
+   both) in `SPORTS_DATA_TYPE_TO_FOLDER` / `candidate_parquet_paths()` — the SSOT gap silently breaks every
+   `candidate_parquet_paths("FIXTURES", ...)` caller post-cutover (confirmed: MTDS `fixture_id_resolver.py`,
+   instruments-service `sports_fixtures_daily_repoll.py`).
+7. **[P1, deployment-api + deployment-service + market-tick-data-service]** Fix the 4 remaining hardcoded
+   `entity=fixtures` readers found in finding #8 (deployment-api's `upcoming_fixtures.py` + 2 data-status-drilldown
+   readers, deployment-service's `data_status_sports.py`, MTDS's `sports_catalog_reader.py`) to also probe the split
+   entities.
 
 ## Todos
 
@@ -229,8 +305,35 @@ depends_on: []
 - [ ] [CODE] P2. Once the UTL helper is fixed, switch `features-service/features_service/sports/data/gcs_reader.py`'s
       `_read_split_fixtures_fallback` to delegate to `read_fixtures_joined()` instead of duplicating the join locally.
       (repo: features-service)
-- [ ] [SCRIPT] P3. Grep the workspace for any other direct `entity=fixtures` GCS reader outside features-service/UTL
-      that could be silently affected by the same writer cutover. (repo: cross-repo)
+- [x] ✅ [SCRIPT] P3. Grep the workspace for any other direct `entity=fixtures` GCS reader outside features-service/UTL
+      that could be silently affected by the same writer cutover. (repo: cross-repo) — unified-trading-pm (this doc,
+      "What I found" #8): found 5 more affected readers, the most severe being instruments-service's own
+      `sports_dependency.py` pre-flight gate blocking 6 T1 adapters post-cutover. Filed as new P0/P1 todos below.
+- [ ] [CODE] P0. Fix `instruments-service/instruments_service/reference_data/sports_dependency.py`'s
+      `check_api_football_dependency()` to also probe `entity=fixtures_schedule` (canonical + legacy `pipeline_mode=`
+      prefix variants) — currently the pre-flight gate blocks footystats/understat/transfermarkt/
+      soccer_football_info/open_meteo/betfair adapter fetches for every date on/after the writer cutover. (repo:
+      instruments-service)
+- [ ] [CODE] P1. Register `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` in
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SPORTS_DATA_TYPE_TO_FOLDER`
+      (or teach `candidate_parquet_paths("FIXTURES", ...)` to probe both split entities) — the SSOT gap silently breaks
+      every caller post-cutover, confirmed affecting
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py` and
+      `instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py`. (repo: unified-api-contracts)
+- [ ] [CODE] P1. Fix `deployment-api`'s 3 hardcoded `entity=fixtures` readers
+      (`deployment_api/services/upcoming_fixtures.py::_read_one_day_frame`,
+      `deployment_api/services/data_status_drilldown/_csv_export.py::build_fixtures_csv_export`,
+      `deployment_api/services/data_status_drilldown/_fixtures_pools.py`) to also probe the split entities — currently
+      silently degrade (empty/None) for the Upcoming Fixtures panel + Data Status drilldown CSV export/pool on any date
+      on/after the cutover. (repo: deployment-api)
+- [ ] [CODE] P1. Fix
+      `deployment-service/deployment_service/cli/utils/data_status_sports.py::     _load_fixture_counts_for_date` to
+      also probe `entity=fixtures_schedule` — currently silently reports 0 fixtures (read as genuine expected-absence)
+      for post-cutover dates. (repo: deployment-service)
+- [ ] [CODE] P1. Fix `market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py`'s
+      `_FIXTURES_BLOB_TEMPLATE` (MTDS manifest sentinel fan-out / Phase 3.D.5 v2 sports enumerator) to also probe
+      `entity=fixtures_schedule/league={league_id}/` — currently silently yields an empty per-day fixture universe for
+      post-cutover dates. (repo: market-tick-data-service)
 
 ## References
 
@@ -241,3 +344,9 @@ depends_on: []
 - `unified-trading-library/unified_trading_library/fixtures/joined_reader.py` — the stale, unwired reader-side flip
   point.
 - `features-service/features_service/sports/data/gcs_reader.py` — this session's fix (`_read_split_fixtures_fallback`).
+- `instruments-service/instruments_service/reference_data/sports_dependency.py` — the pre-flight gate blocking 6
+  downstream venue adapters post-cutover (finding #8, new P0 todo).
+- `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py` — the `candidate_parquet_paths()`
+  SSOT gap (finding #8, new P1 todo).
+- `deployment-service/deployment_service/sports_trigger_state.py` — confirmed already fixed (3rd fallback pattern for
+  `entity=fixtures_schedule`, 2026-07-14), no action needed.
