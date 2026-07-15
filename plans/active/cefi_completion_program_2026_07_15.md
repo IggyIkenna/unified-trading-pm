@@ -387,3 +387,19 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   same ONLY when a slot frees (a queue VM finishes / the tail VM completes).
 - Gate A (collision) RESOLVED tick-7 (is@8b6bd8f8, IS green). Remaining = throughput-bound: A(tail heavy running) +
   B(queue VMs, weeks) + light slice → WS-H apply → F, C.
+
+### 2026-07-15T17:41Z — tick 9: tail VM preempted (SPOT) → relaunched; fleet volatile; honest ETA revision
+
+- Tail VM cefi-queue-heavy-20260715-160552 **DIED ~17:23Z** (SPOT preemption — `describe`=Could not fetch resource,
+  run.log stopped mid-2026-01-11, ~50min uptime, never wrote a per_vm shard = never reached the empty tail). A queue VM
+  also dropped (guard now counts **1 running**). SPOT preemption is churning the fleet.
+- **RELAUNCHED** the tail VM (idempotent, guard OK 1+1=2; PID 2131271 on i-0dd9812a96cdda5dc). It resumes 2026 heavy.
+- **HONEST ETA REVISION**: the recent-tail (empty June-July) fill is SLOWER than the earlier ~1-2d estimate — three
+  compounding drags: (a) SPOT preemption kills the VM ~hourly (idempotent resume, but restart overhead + it re-walks);
+  (b) the launcher is YEAR-granular so the VM grinds 2026-01+ re-captures (403-heavy) before reaching the empty tail;
+  (c) N=3 single-IP lease = ~50-70% efficiency + 403 churn. Realistic empty-tail fill: **several days**, not 1-2.
+- OPTION if the tail keeps preempting without reaching June: add a `START_DATE` override to the launcher (currently
+  hardcodes `${year}-01-01`) so a tail VM jumps straight to 2026-06-01 (small ~44-day empty slice → fills before
+  preemption). Deferred (launcher is a shared macOS-untestable script; only worth it if the plain relaunch keeps failing
+  to progress). Full af=0 all-history stays ~2-3 weeks (cap-3 ceiling) regardless.
+- Phase-1 code remains DONE + landed; this is purely backfill throughput under the operator's cap-3 + SPOT constraints.
