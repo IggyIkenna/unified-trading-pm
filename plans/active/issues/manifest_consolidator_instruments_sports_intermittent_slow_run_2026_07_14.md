@@ -31,7 +31,11 @@ tags:
     spot-vm-waste,
     concurrent-lock-acquisition,
   ]
-related: [plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md]
+related:
+  [
+    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md,
+  ]
 created: 2026-07-14
 assigned_vm: planning
 source: [sports_p2_features_history_to_ml_ready-001]
@@ -418,3 +422,19 @@ fleet-critical primitive without a live reason."
 stream + the original VM-startup-gate failures are root-cause-fixed in code (§2, `unified-trading-library@c47273c1`),
 pending the MTDS image rebuild + watchdog redeploy to carry it live. Leaving `open` until that deployment is verified to
 stop the live DOWN stream; then it closes.
+
+## Cross-reference 2026-07-15 (~13:45Z) — fleet-wide 25-job audit filed as an UPDATE to a sibling issue doc
+
+A separate dispatch (`features_sports_service_consolidation_deploy_2026_07_15.md` todo 5's `features-service-sports-job`
+manual-verification attempt, ~12:37Z) independently hit the exact same `assert_consolidator_healthy` failure this doc
+already root-caused (§2 above) and, not finding this doc at the time, filed a new one:
+`plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`. A follow-up fleet-wide audit
+of all 25 other `uts-prod-manifest-consolidator-*` jobs (dispatched to check whether the same signature is widespread)
+found **0 other jobs with a genuine indefinite livelock**, confirmed `instruments-sports` itself is NOT actually
+stuck-forever (a live re-watch of a full 7m14.7s real merge showed a clean acquire→hold→release cycle, matching §1's
+"perfectly serialised" finding above), and found ONE new instance of the same **TTL-shorter-than-real-merge-duration**
+root-cause class (not yet remediated): `market-data-cefi` (300s default TTL vs. 432-510s real merges, causing
+overlapping concurrent merges — the same failure class `market-data-defi` and `instruments-sports` were already fixed
+for). Full per-job breakdown + tally lives in the sibling doc's "UPDATE 2026-07-15 (~13:45Z)" section — this doc remains
+the primary root-cause/fix SSOT for the underlying mechanism; the sibling doc is the `features-service-sports-job`
+deploy-blocker–specific tracker. Both stay `open` pending the same UTL `c47273c1` deployment.

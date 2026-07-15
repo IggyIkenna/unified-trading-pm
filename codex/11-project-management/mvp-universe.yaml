@@ -1,3 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RECONCILIATION NOTE (2026-07-15, cefi_completion_program_2026_07_15.md WS-E):
+# This 2026-03-04 planning doc is NOT the live SSOT for MVP data-type membership.
+# The live SSOT is unified_api_contracts CeFiMvpRule (canonical/crosscutting/
+# mvp_scope.py, MVP_SCOPE_CONFIG_VERSION >= 15). This doc's "Liquidations critical
+# for CEFI" (data_types.included + .rationale + data_type_per_category.CEFI + the
+# cefi_liquidations runtime action below) is now RECONCILED WITH THE CODE, not
+# contradicted by it: `liquidations` IS a PERPETUAL-leg CeFi MVP data_type. It is
+# gated (via unified_api_contracts VENUE_DATA_TYPE_CAPABILITIES) to exactly the 6
+# perp venues that carry a real captured liquidations feed — BINANCE-FUTURES,
+# OKX-SWAP, BYBIT, KRAKEN-FUTURES, BITFINEX-FUTURES, BITGET-FUTURES (732,751
+# captured PERPETUAL manifest rows). It is a PERPETUAL-leg data_type ONLY (NOT
+# SPOT_PAIR / EQUITY_PERP / FUTURE — dated-futures liq is negligible). ASTER
+# (live-only, 0 batch) / DERIBIT (noise) / HYPERLIQUID (no feed) / COINBASE-FUTURES
+# (trades-only, no feed) do NOT seed the batch denominator. For any data-type
+# membership question, read CeFiMvpRule — never this file.
+# ─────────────────────────────────────────────────────────────────────────────
 mvp_version: "1.0"
 last_updated: "2026-03-04"
 reviewer: Ikenna

@@ -269,3 +269,27 @@ repo. This plan tracks that work.
   `features-service-sports-job` to a genuine `SUCCEEDED`, then re-enable scheduling + verify one real scheduled fire —
   only then is it safe to revisit todos 6-10 (Workflow YAML drift, legacy job retirement, scheduling re-enable, bucket
   delete, issue-doc closure).
+- 2026-07-15 (~13:45Z, fleet-wide manifest-consolidator audit — DOCS-ONLY, read-only, relevant to todo 5's blocker): A
+  separate dispatch audited all 25 other `uts-prod-manifest-consolidator-*` Cloud Run jobs to check whether the
+  `instruments-sports` livelock blocking this plan's todo 5 (per
+  `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`) is a fleet-wide defect.
+  **Result: it is not** — 0 of the 25 audited jobs show the same signature (23 HEALTHY, 2 DORMANT/paused-and-excluded, 1
+  new-but-different finding: `market-data-cefi` needs the same `CONSOLIDATOR_LOCK_TTL_SECONDS` override pattern already
+  applied to `market-data-defi`/`instruments-sports`, unrelated to this plan). **More importantly, a live re-watch of
+  `instruments-sports` itself (13:32-13:39Z) found it is NOT actually an indefinite livelock** — it is a genuine ~7-8min
+  real merge (confirmed: one watched end-to-end, 434.7s, clean acquire→merge→write→release, lock correctly absent
+  immediately after) colliding with a naive freshness-gate threshold
+  (`assert_consolidator_healthy`/`ConsolidatorLivenessMonitor`) that can't tell a legit in-flight merge from a downed
+  consolidator. **This exact mechanism was already root-caused and fixed in code** by a sibling issue doc
+  (`plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`, discovered via
+  this audit — the two issue docs were filed independently on the same underlying bug from two different entry points):
+  `unified-trading-library@c47273c1` ("lock-aware consolidator liveness — a fresh held lock is proof-of-life, not
+  DOWN"), committed 2026-07-15T13:03:17+01:00, is UTL's current HEAD. **This directly gives todo 5 a concrete, scoped
+  unblock path** (replacing the prior open-ended "wait for the livelock investigation"): (1) rebuild the
+  `market-tick-data-service` (MTDS) image + redeploy the consolidator-liveness-watchdog so it carries `c47273c1`; (2)
+  rebuild + redeploy `features-service`'s own image (its `assert_consolidator_healthy` call, confirmed via `grep` in
+  `features_service/sports/cli/handlers/_manifest_preflight.py`, is baked into the 2026-07-14 image digest that predates
+  this fix); (3) only then re-attempt the manual `features-service-sports-job` verification execution. Both issue docs
+  updated + cross-linked with the full per-job audit table and evidence; no code, terraform, or Cloud Run/Scheduler
+  config was touched (docs-only). Todo 5 stays `[ ]` — the blocker is confirmed still live (the fix is not yet deployed
+  anywhere) — but is no longer an open-ended fleet-wide unknown.

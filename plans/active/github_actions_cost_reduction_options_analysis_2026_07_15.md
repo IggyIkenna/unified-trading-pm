@@ -180,6 +180,125 @@ now, B2 for the highest-frequency `ci-status-update` later, is a sensible sequen
 4. A6 + A7: confirm no repo is mid-flight through staging before disabling staging crons?
 5. Confirm **no hard spending cap** (soft alerts only), given the 2026-06-22 outage?
 
+---
+
+# Appendix — full investigation findings (complete record, for later decisions)
+
+Everything the four parallel investigations surfaced, captured verbatim-in-substance so no detail is lost when we
+revisit this. Nothing here is approved; it is the evidence base for the § "Decisions needed" above.
+
+## Appendix 1 — Runner-infrastructure: every option compared
+
+Volume assumption: ~$1,000/mo ÷ $0.006/min ≈ **~86k–125k billed min/mo** fleet-wide (per-job 1-min-minimum inflates this
+above raw wall-clock).
+
+| Option                                             | $/min or model                                  | Est. monthly @ volume          | Setup                           | Ops burden                                        | Security fit (private trading code)                            | Autoscaling                       |
+| -------------------------------------------------- | ----------------------------------------------- | ------------------------------ | ------------------------------- | ------------------------------------------------- | -------------------------------------------------------------- | --------------------------------- |
+| Status quo (GitHub-hosted x64)                     | $0.006/min (was $0.008 pre-Jan-2026)            | ~$1,000                        | none                            | none                                              | N/A (GitHub infra)                                             | native                            |
+| ARM64 GitHub-hosted (partial)                      | $0.005/min                                      | ~$625 if fully portable (rare) | low                             | low                                               | same as above                                                  | native                            |
+| **Raw self-hosted on existing VM (B1)**            | GitHub side $0 (fee postponed)                  | **~$0–250** (VM only)          | low-med                         | med (patch/capacity, no autoscale)                | **Best** — never leaves our infra; fork-PR risk moot           | none (static pool)                |
+| ARC on Kubernetes (GKE/EKS)                        | $0 GitHub + pod compute                         | ~$100–300                      | **high**                        | **high** (own k8s)                                | Best (our infra)                                               | good; GKE node-autoscale immature |
+| terraform-aws-github-runner (community) on our AWS | $0 GitHub + EC2 spot                            | ~$50–150                       | med-high                        | med (Terraform/AMI, no vendor support)            | Best (our AWS)                                                 | good (spot fleet)                 |
+| **RunsOn (B3)**                                    | flat license (~$330–3,600/yr tiered) + our spot | **~$60–300 all-in**            | **low** (1 CFN stack + relabel) | **low** (vendor-managed orchestration, our infra) | **Best of vendor options** — compute stays in our AWS          | native, ephemeral per-job         |
+| Blacksmith                                         | $0.004/min x64, $0.0025 ARM, 3k free/mo         | ~$500 (x64) / ~$312 (ARM)      | lowest                          | lowest                                            | Good — SOC2 Type 2, Firecracker isolation — but on THEIR fleet | native                            |
+| BuildJet                                           | ~$0.004–0.048/min, 3k free/mo                   | ~$500                          | lowest                          | lowest                                            | Unverified — check SOC2/DPA                                    | native                            |
+| Depot                                              | tiered + $0.004/min overage                     | likely >$500, needs quote      | low                             | low                                               | Docker-build-focused, not ideal for general CI at this size    | native                            |
+| Cirun                                              | flat SaaS + your cloud compute                  | needs quote                    | med                             | low-med                                           | Good (your cloud) but **tier caps ~20 private repos < our 25** | native                            |
+| Namespace                                          | unlisted, needs quote                           | unknown                        | low                             | low                                               | Unverified                                                     | native                            |
+
+**Runner top-2:** (1) **RunsOn** if we want managed autoscaling with code staying in our AWS; (2) **static self-hosted
+on the existing VM** as the zero-new-vendor baseline. **Avoid:** DIY ARC-on-k8s (we run no k8s; highest ops), Cirun
+(repo-count cap below our 25), Depot (Docker-build-optimized, overage-heavy at our volume), and assuming self-hosted
+stays $0 forever (GitHub's $0.002/min self-hosted platform fee is postponed, not killed — worst case ~+$250/mo, doesn't
+change the recommendation).
+
+## Appendix 2 — B2 deployment-api fold-in: deep dive
+
+**Why deployment-api, not agent-orchestrator:** deployment-api is a public Cloud Run service by design;
+agent-orchestrator binds `127.0.0.1:8765` with no public inbound rule
+(`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:117`), so GitHub can't reach it without new
+networking. deployment-api also already holds the cloud/Firestore/GH plumbing.
+
+**Building blocks that ALREADY exist (this is why B2 is cheap here):**
+
+| Capability                                            | Where in deployment-api                                                                                                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GCP Cloud Build trigger-run, native (no `gcloud` CLI) | `_cloud_builds_trigger.py:231` `_run_trigger_operation_sync()` → `CloudBuildClient().run_build_trigger(...)`, exposed at `POST /api/cloud-builds/trigger` |
+| AWS CodeBuild start-build, keyless via GCP→AWS WIF    | `_code_builds_aws.py:326` `start_codebuild_sync()` → `boto3 start_build(...)`                                                                             |
+| Firestore `ci_status` client (read-only today)        | `_ci_status_firestore_store.py` (same collection/lazy-import as the PM store)                                                                             |
+| GitHub API + `GH_PAT` from Secret Manager             | `resolve_gh_token()`, read wrappers in `_repo_ci_github.py`                                                                                               |
+| Server-to-server auth (X-API-Key) OR Firebase bearer  | `firebase_auth.py::verify_any_auth`                                                                                                                       |
+| Public HTTPS ingress                                  | Cloud Run service `uts-shared-deployment-api` (`cloudbuild.yaml:382`)                                                                                     |
+
+**New work required:** (1) a GitHub-webhook endpoint with `X-Hub-Signature-256` HMAC verify (~50-line pattern; neither
+service has real GitHub webhook signature verification today) OR simply an API-key-guarded endpoint the caller `curl`s;
+(2) port `resolve_status`/`is_stale_write`/`set_status` from `scripts/cicd/ci_status_store.py` into the (currently
+read-only) `_ci_status_firestore_store.py` — mechanical, the source has zero GHA deps; (3) make the long build poll (30
+min) + health poll (5 min) **background tasks** with a crash-recovery story (Cloud Run can recycle mid-poll → needs
+Cloud Tasks or equivalent, not a blocking request); (4) port the bash Slack message-building to Python.
+
+**Honest risks / blockers:** single-point-of-failure vs Actions' per-run isolation (a deployment-api bug can black out
+CI-status + deploy-routing fleet-wide — needs per-repo async isolation + health checks); secrets concentration into one
+Cloud Run SA; the **`manifest.json` git-commit step stays on Actions** (deployment-api has no git-push capability
+today); **promotion/backmerge bots (`ldr-to-*-promote`, `main-backmerge-to-ldr`) are a separate, larger effort** — they
+need full checkouts + rebase/conflict handling + `gh pr create`, which neither service has — recommend leaving them on
+Actions for now; and a bootstrapping/circularity risk (the service that fixes CI ships via its own CI — keep the manual
+`gcloud builds triggers run` escape hatch, which already exists).
+
+**Effort (infra 0.8× calibrated):** ci_status write-path port + authenticated endpoint + swap 25 repos' QG-workflow
+`curl` target + HMAC/API-key hardening ≈ **3–5 days**; cloud-build-router port (reuse existing trigger fns + async poll
+design + Slack port, minus the git-manifest step) ≈ **5–8 days**. Promotion-bot migration: **not in this scope.**
+
+## Appendix 3 — GitHub-native levers: full detail + cron inventory
+
+**The two bugs, precisely:**
+
+- **A1 (docs-only fast-path CI-blind):** `scripts/quality-gates-base/base-service.sh:580-602` (mirrored in
+  `base-library.sh:305-325`, `base-ui.sh:150-165`) has an "AUTO DOCS-ONLY TIER" that skips tests+typecheck (keeps
+  lint/doc-validators) when every changed file matches `\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$` — but it reads the
+  **working-tree** diff (`git diff HEAD`), always empty on a clean CI checkout, so it never fires server-side (the code
+  comment admits it: "the server v2 … always runs the FULL gate"). `python-quality-gates-v2.yml` L170-202 / L585-607
+  already compute a **committed** diff (`git diff BEFORE HEAD`) but only for `chore(release)`/`chore(deps)` — generalize
+  that committed-diff check to the docs regex.
+- **A2 (dead rerun cache):** `content-gate` job (`python-quality-gates-v2.yml:90-137`) was built to skip byte-identical
+  reruns via `actions/cache`; probe/save were removed ~2026-06-26 ("broken for PR/dispatch in reusable-workflow
+  context") → hardcoded `cache-hit=false` (L124), `if: false` on save (L651). The whole 4×-dedup mechanism from
+  `cicd_v2_latency_reduction_2026_06_10.md` Phase 3 currently delivers zero savings.
+
+**A5 detail:** base scripts already partition by `QG_SLICE` (`tests`|`typecheck`|`lint-codex`,
+`base-service.sh:220-268`) with zero overlap; `tests` (pytest ~715s) is the long pole; `typecheck`+`lint-codex` combined
+run well inside it → matrix `[tests, typecheck+lint-codex]` drops a whole job/run.
+
+**Full PM cron inventory (reference):** `*/5` sit-debounce-trigger (GH floors ~5min) · `*/15` ldr-to-main-promote,
+ldr-to-main-promote-fleet (offset), staging-to-main, ci-health · `*/30` branch-health, cloud-build-failure-watcher
+(already relaxed from _/15), reconcile-release-tags (already relaxed), freeze-deferred-build-replay · hourly
+ldr-ci-monitor (already relaxed from _/30), ci-status-consolidator, reconcile-staging-versions,
+staging-conflict-ldr-main-fallback · 2h fix-approval-timeout, supersede-stale-dep-update-prs · 6h digest-drift-sweep,
+workspace-quickmerge-validation · daily cassette-drift-check, plan-health-agent, overnight-agent-orchestrator,
+overnight-dead-man-switch, readiness-verifier, removed-symbols-workspace-sweep · weekly ruleset-drift-alert,
+secret-health-check, cold-storage-cleanup, build-smoke-all-repos. (`ldr-to-staging-promote` schedule already commented
+out — the precedent for A6.)
+
+**Confirmed-good — do NOT touch:** `quality-gates-v2` push-cancel (`quality-gates-v2.yml:20-22`) is correct; the
+no-concurrency-group on `ci-status-update`/`version-registry-update` is deliberate (Firestore CAS); routers already
+never fire on feature branches + already freeze-guard; tool caching (`ripgrep`/`shellcheck`/`bats`/`actionlint`,
+`python-quality-gates-v2.yml:218-224`) already works; only `plan-notification.yml:12` + `rules-alignment-agent.yml:14`
+have `paths:` filters today (both correct).
+
+## Appendix 4 — Must re-verify before committing to a path
+
+_(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
+
+- ✅ Billed rate — **confirmed $0.006/min** from the ledger this session (was assumed $0.008).
+- ☐ Full **30-day** per-workflow billed-minute attribution (sibling plan Phase 0) — the 13.5h sample is directional.
+- ☐ RunsOn exact tier pricing vs our **monthly job count** (not minutes) — Starter <50k jobs/mo; Growth/Scale € figures
+  not fully public.
+- ☐ Whether any repo is mid-flight through **staging** before disabling staging crons (A6/A7).
+- ☐ BuildJet / Namespace SOC2/DPA status **if** either is ever seriously considered (not recommended).
+- ☐ GitHub self-hosted **$0.002/min platform fee** status (postponed indefinitely; re-check the changelog periodically).
+
+---
+
 ## Codex SSOTs (read before executing any item)
 
 - `codex/08-workflows/ci-cd-flow.md` — pipeline / promotion / branch protection
@@ -198,3 +317,8 @@ now, B2 for the highest-frequency `ci-status-update` later, is a sensible sequen
   building blocks to absorb the glue as a service; (3) the drastic options (Cloud Build, monorepo, merge queue) are the
   worst on savings-per-risk — Cloud Build is priced HIGHER per minute than GitHub-hosted. Baseline rate corrected to
   $0.006/min. Awaiting operator ruling on § "Decisions needed".
+- 2026-07-15 — Per operator ("write every finding in the plan, decide later"), added the **full Appendix** (runner
+  comparison matrix incl. all vendors + verify-items; B2 deployment-api fold-in deep-dive with existing building blocks
+  / new work / risks / effort; complete GitHub-native lever detail incl. the two bugs' exact file:line, full cron
+  inventory, and the do-NOT-touch list; and a re-verify checklist). Decisions deferred by the operator — no path chosen
+  yet.
