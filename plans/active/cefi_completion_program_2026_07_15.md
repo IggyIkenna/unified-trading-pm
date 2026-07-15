@@ -470,3 +470,61 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
       Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A. (FOLDED IN from
       mvp_backfill_cefi_tick_v10_2026_06_27, 2026-07-15, plan-reconcile §6 operator ruling)
 - Backing off to a pure 1h cap-backstop; will act only on (tail reaches June → WS-H) / (cap breach) / (completion).
+
+## Progress Log (append-only)
+
+### Three structural blockers that explain ~30 VM-hours of ZERO progress — recovered entries — 2026-07-15T22:25Z
+
+**Provenance note (content-loss recovery)**: these findings were journaled into
+`mvp_backfill_cefi_tick_v10_2026_06_27.md` during 2026-07-15 17:00-22:20Z, but that plan was archived at `98e8fd5ba`
+("archive 13 emptied fold shells", plan-reconcile §6) from a base predating the last three entries — the `git mv` won
+and the entries were dropped from the tracked tree (verified: commits `b671b3e10` / `4f0f84da8` / `6c864ac76` ARE
+ancestors of origin, yet `git grep` finds none of their text in any tracked file). Re-homed HERE, the live successor,
+rather than resurrecting an archived plan. Not a complaint — the fold itself was correct; only the content-survival
+check (RULE 4: "verify content survival — grep both your additions and the incoming ones — before pushing") was missed.
+
+**Why the cefi backfill has never converged.** Three INDEPENDENT defects, each individually sufficient to produce
+exactly zero measured progress. Measured: eu 2,773,292 → 2,773,292 across multiple hours and multiple fleets.
+
+1. **Waves aimed where there is nothing to close.** The gap is ONLY 2026-02..07 (a by_day cross-tab of the live manifest
+   shows all 82 months 2019-03..2026-01 at eu=0). Yet every wave ever launched derived `start_date="${year}-01-01"` from
+   `YEARS=` and scanned chronologically — the 2020-chronological waves were at 2020-06-21 after **29 hours**; their 2026
+   replacements were still at 2026-01-01/01-03/01-12 after **91 minutes**, i.e. inside the eu=0 zone where progress was
+   IMPOSSIBLE. **FIXED**: `START_DATE` override shipped (deployment-service, QG-green, quickmerged); waves now launch
+   `2026-02-01..2026-07-14`.
+2. **The writer stamped ids the denominator cannot credit.** `captured` rows carried raw vendor symbols (`PI_ETHUSD`,
+   `XBT`) while `expected_unattempted` rows are keyed canonically (`KRAKEN-FUTURES:PERPETUAL:PIXEL-USD@LIN`) — disjoint
+   namespaces, so a capture could never satisfy an expected cell. Site:
+   `engine/orchestrator/venue_fetch.py::_record_venue_shard_counts`. **FIXED** by three lanes converging within an hour
+   — `mtds@56679e78` (silent no-op: lowercase itype set vs the uppercase the write path emits), `mtds@5d44a197` (**the
+   working fix**), `mtds@90ecde17` (the missing unit tests + unresolved-symbol visibility). The parquet FILE contents
+   were always canonical — only the manifest KEY was raw, so nothing needs re-downloading.
+3. **SPOT preemption DELETES waves and NOTHING relaunches them.** GCP operations, unambiguous:
+   `compute.instances.preempted cefi-queue-heavy-binancefutu-x15-20260715-215549 15:05:38 system` — preempted ~6 min
+   into real gap work (last line a genuine mid-fetch `deribit/BTC-6FEB26 — 2339276 rows` on day=2026-02-01, then
+   silence). `launch-cefi-sharded-backfill.sh:498,702` uses
+   `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure` with **no relaunch
+   mechanism** (only `launch-transfermarkt-backfill-vm.sh` has any preemption handling). The codex SPOT rule
+   (`codex/05-infrastructure/spot-vms-for-backfill.md`) justifies SPOT because "idempotent shards **re-run on
+   preemption**" — **that premise is false for this launcher family.** **NOT FIXED IN CODE** — see the todo below.
+
+**Status of the writer fix: UNTESTED in production, NOT disproven.** Three eu tests, three INVALID results (fleet in the
+January eu=0 zone / same / preempted 6 min in). Each time the "eu flat ⇒ blocker confirmed" verdict was retracted rather
+than shipped as a finding. A valid test requires a wave whose cursor is inside 2026-02+ AND that survives long enough to
+write.
+
+**Also still open from this thread** (evidence in the archived plan): the stale per-venue eu ATOM (BINANCE-FUTURES eu
+rows carry `instrument_type=''` + lowercase-raw `hotusdt` while KRAKEN-FUTURES eu rows are canonical — the enumerator
+has emitted at least two shapes, violating the "shard atom identical across writer/manifest/status/gate/UI" HARD RULE);
+the relabel pass over historical raw-id captures (peer dry-run `instruments-service@f021cb2b`: 3,133,117 candidates,
+82.7% resolvable, 542,888 honestly unresolved, `--apply` operator-gated); and `sentinels.py` Tier-3 comparing canonical
+`expected_instruments` against heuristically-canonicalized `captured_instruments` (same class, filed not blind-fixed).
+
+- [ ] [INFRA] P0. **Close the SPOT-preemption relaunch gap for the cefi/tardis launcher family.** Today a preempted
+      backfill wave is DELETED and silently never returns, which is why long waves never finish (evidence above: 2 of 3
+      VMs preempted 6 min in, 2026-07-15T22:05Z). Either wire a preemption-aware relauncher (mirror
+      `launch-transfermarkt-backfill-vm.sh`) or move to `--instance-termination-action=STOP` + a restart watchdog —
+      architecture call. Until shipped, a session-scoped keeper loop is refilling the fleet to cap every 30 min
+      (`START_DATE=2026-02-01`, lease-ON, `STALL_TIMEOUT_SEC=3900`, always via `tardis_concurrency_guard`), which is a
+      crutch, not the fix. SSOT to correct once done: `codex/05-infrastructure/spot-vms-for-backfill.md` (its
+      "idempotent shards re-run on preemption" premise is currently false for this family).
