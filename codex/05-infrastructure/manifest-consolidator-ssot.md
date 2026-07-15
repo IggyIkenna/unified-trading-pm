@@ -398,6 +398,32 @@ Shipped `deployment-api@{022bfebc,1a505c16,14650f9}`, `deployment-ui@{c97a769e,3
 that makes `latest.json` appear in prod is DEFERRED to the end-of-cockpit-plans deploy window; until then the endpoint +
 UI degrade honestly to "not reporting". Plan: `plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md`.
 
+## Writers: per-VM shard mode is the ONLY sanctioned standing write path (2026-07-15, HARD RULE)
+
+A consolidator-managed bucket has exactly ONE writer of the canonical `_index/availability_index.parquet`: the
+consolidator. Every standing producer (VM, Cloud Run job, cron) MUST run the ManifestWriter in per-VM shard mode
+(`MANIFEST_PER_VM_SHARDS=true` + a stable `VM_NAME`) so its rows land in `_index/per_vm/{VM_NAME}.parquet` and are
+absorbed by the consolidator. A legacy-mode direct canonical read-merge-write RACES the per-minute consolidator
+(lost-update) **and** dedups the canonical at a COARSER key than the consolidator's schema-union key
+(`_merge_dataframes` value-presence-gated optional dims vs `_resolve_dedup_cols`) — it can silently collapse rows a
+finer-grained co-writer legitimately holds. Reference incident: 2026-07-15, the
+`uts-prod-instruments-service-sports-fixtures` Cloud Run job (legacy-mode env) clobbered **328,292 rows (5.7%)** of the
+sports IS canonical, reopening the L6/E8 data-loss gate
+(`plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`).
+
+- **Cloud Run jobs are writers too** — the four `uts-prod-sports-fixtures-*` dispatch paths + the 3
+  `uts-prod-sports-enrichment-*` jobs were converted in place 2026-07-15 (`VM_NAME=sports-fixtures-job` /
+  `sports-enrichment-<key>`; TF SSOT `deployment-service/terraform/gcp/sports_enrichment_provider_scheduler.tf` carries
+  the env for the TF-managed set). The fixtures job itself is NOT terraform-managed — if it is ever recreated,
+  `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` are REQUIRED env vars. Adding any NEW scheduled job that constructs a
+  `ManifestWriter` without these env vars is review-blocking.
+- **Defense-in-depth (UTL `unified-trading-library@45a43438`)**: the writer's direct canonical path now REFUSES any
+  write whose merged output is >2% smaller than the base it just read (`_INDEX_SHRINK_GUARD_PCT`,
+  `ManifestIndexShrinkRefusedError`, CRITICAL log + `MANIFEST_ROW_COUNT_REGRESSION` `action=write_refused`). Deliberate
+  one-off maintenance rewrites opt out via `ManifestWriter(allow_index_shrink=True)` — never a standing service. The
+  consolidator's own `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (0.1%, observability-only) is the sibling check on the
+  merge side.
+
 ## Composes with
 
 - CLAUDE.md § "Manifest + Honest Absence" — every row in canonical OR per_vm shard is either `captured` /
