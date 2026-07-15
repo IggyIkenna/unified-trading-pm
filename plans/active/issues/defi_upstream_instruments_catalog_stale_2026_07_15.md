@@ -265,14 +265,35 @@ already handles honestly).
       recurring `attempted_failed`. The two VMs currently running (`mtds-dex-pools-backfill`,
       `mtds-lst-rates-20260715-121257`) launched on the pre-fix image — this fix is forward-only. Repo:
       market-tick-data-service / deployment-service (VM tarball build).
-- [ ] [DATA] P1 **NEW (2026-07-15 re-investigation)**. Clean the 627 (and the older ~900 residual, all pre-2020-01-20)
-      already-written `attempted_failed[UPSTREAM_INSTRUMENTS_CATALOG_STALE]` pre-genesis rows. Cheapest correct path:
-      once `420221b4` is on the backfill image (DEPLOY P1 above), re-run `collect-dex-pools`/`collect-lst-rates` for
-      `--start-date 2020-01-01 --end-date 2020-01-19` — the fixed code rewrites them as
-      `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]` via the canonical write path (no bespoke reclassification predicate
-      needed, no risk of real data existing — these dates unambiguously predate the DeFi universe). Verify before/after
-      via this issue's live-count query. This is the same [DATA] P1 re-collect already scoped below, now UNBLOCKED and
-      CORRECT (was previously going to re-stamp `attempted_failed`). Repo: market-tick-data-service.
+- [x] [DATA] P1 ✅ **DONE (2026-07-15 ~23:37Z) — 627 pre-genesis rows cleaned live; HELD across 3 consolidator merge
+      cycles.** Cleaned the 627 pre-genesis (`2020-01-01..01-19`) `attempted_failed[UPSTREAM_INSTRUMENTS_CATALOG_STALE]`
+      rows via a controlled foreground re-collect with the FIXED code (`market-tick-data-service@42527190`, carries
+      `420221b4`), not a bespoke reclassify. **Resurrection vector found**: the 551 `dex_pool_state` rows lived in the
+      per-VM shard `_index/per_vm/mtds-dex-pools-backfill.parquet` — written by the STILL-RUNNING
+      `mtds-dex-pools-backfill` VM (created 12:19Z, pre-fix image) which re-presents `attempted_failed@12:22Z` to the
+      consolidator every ~1-min cycle; the 76 `lst_rates` rows were canonical-only (their VM
+      `mtds-lst-rates-20260715-121257` had already exited, no shard; `_legacy_seed.parquet` held none of them).
+      **HOLD-SAFE method**: writing the LIVE dex VM's own shard would race it (per-VM writes hold only a process-local
+      lock, no cross-process CAS → lost-update), so ran
+      `collect-dex-pools`/`collect-lst-rates --mode batch --asset-group DEFI --start-date 2020-01-01 --end-date 2020-01-19`
+      into a DEDICATED per-VM shard `_index/per_vm/mtds-defi-pregenesis-cleanup-20260715.parquet` (627 rows,
+      `attempted_at` 22:17–22:44Z ≫ the stale 12:15–12:22Z) so the consolidator's last-write-wins (`attempted_at DESC`)
+      makes the correct rows dominate BOTH the live dex shard and the canonical-only lst rows AT SOURCE (a real merged
+      shard, not a canonical-only edit). **Before → after** (canonical `_index/availability_index.parquet`): pre-genesis
+      `attempted_failed[UPSTREAM_INSTRUMENTS_CATALOG_STALE]` **627 → 1**; **626 →
+      `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`** (550 dex + 76 lst). The 1 remaining is `CURVE-ETHEREUM 2020-01-19`
+      (Curve's exact launch date → at/after effective-earliest → correctly a genuine 1-day catalogue-boundary
+      `attempted_failed`, i.e. the documented 626/627 split, now re-stamped `attempted_at 22:33Z` by the fixed code, not
+      the old 12:22Z). **HOLD proof (no resurrection)**: verified across 3 consecutive consolidator merges that each
+      re-read the live dex shard (still holding all 551 `attempted_failed@12:22Z`): canonical mtime **23:15:15Z**
+      (absorbed → 626 empty), **23:23:33Z** (held), **23:36:47Z** (held — with the cleanup shard now EXCLUDED behind the
+      content-write cutoff, so ONLY the canonical baseline defends → airtight). Merge-#3 report:
+      `success=True shards=3 rows_in=29,810,608 rows_out=28,441,749 error=-`. **Residual risk closed by [DEPLOY] P1**:
+      the hold holds while no OLD-image process writes a newer-`attempted_at` `attempted_failed` for these dates — the
+      running dex VM won't (forward walk, long past 2020-01), but a future backfill on the pre-fix image re-walking
+      2020-01 could, which is exactly what [DEPLOY] P1 (redeploy the fixed image) prevents. The dedicated cleanup shard
+      is LEFT in place (harmless, 627 rows; re-provides the correct classification on any future `--force` full
+      rebuild). Repo: market-tick-data-service.
 - [ ] [DESIGN] P3. IS-DeFi-catalogue-completion-signal retry-sweep — **RE-SCOPED by the 2026-07-15 re-investigation:
       this is NOT what the 627 recurring rows needed** (they are pre-genesis; no completion signal will ever fire for
       pre-2020-01-20 dates — the classification fix `420221b4` is the correct + complete remedy for that class). P3
@@ -314,6 +335,22 @@ already handles honestly).
   on the pre-fix image, so the 627 already-written rows + a NEXT-backfill re-emit both need the fixed image deployed —
   added [DEPLOY] P1 + [DATA] P1 (re-collect 2020-01-01..19 with the fixed image, which rewrites them as
   `empty_confirmed`). Full raw evidence in § "RE-INVESTIGATED 2026-07-15 ~17:25Z".
+
+- 2026-07-15 ~22:15–23:37Z ([DATA] P1 DONE — 627 pre-genesis rows cleaned + HELD). Re-confirmed the 627 live in
+  `market-data-tick-defi-prd` canonical (551 dex + 76 lst, `attempted_at` 12:15–12:22Z). **Resurrection vector**: the
+  551 dex rows are re-emitted every consolidator cycle by the STILL-RUNNING `mtds-dex-pools-backfill` VM's per-VM shard
+  `_index/per_vm/mtds-dex-pools-backfill.parquet` (pre-fix image); the 76 lst rows were canonical-only (lst VM gone, no
+  shard). **Cleanup (HOLD-SAFE)**: instead of racing the live dex shard, re-collected `2020-01-01..01-19` with the fixed
+  code into a DEDICATED shard `_index/per_vm/mtds-defi-pregenesis-cleanup-20260715.parquet` (627 rows, `attempted_at`
+  22:17–22:44Z) so last-write-wins dominates the stale 12:22Z rows at source. **Result 627 → 1**: 626 →
+  `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`, the 1 (`CURVE-ETHEREUM 2020-01-19`, Curve's launch date) correctly stays
+  `attempted_failed` (catalogue-boundary). **HELD across 3 real consolidator merges** (canonical writes 23:15:15Z
+  absorb, 23:23:33Z hold, 23:36:47Z hold-with-cleanup-shard-EXCLUDED = airtight baseline-only proof) — each re-read the
+  live dex shard's 551 stale rows and did NOT resurrect them. Op note: the defi consolidator was stuck behind
+  stale/long-merge locks on entry; cleared 2 (verified past-TTL, dead holders) to unblock merges — harmless (CAS-guarded
+  canonical write), and observed defi merges take ~10–33 min (single-threaded 104-chunk incremental) holding the lock
+  the whole time, so a <~30-min held lock here is a live merge, not a crash. Evidence:
+  `market-tick-data-service@42527190`.
 
 ## REOPENED — this is NOT a purely historical/static issue; actively recurring post-fix (2026-07-15 ~15:30Z)
 
