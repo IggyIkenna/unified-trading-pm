@@ -138,6 +138,29 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 10:10Z — data_engineering slot-11 (Todo 1 dispatch — fast re-verify only, both tracked VMs healthy + progressing, known consolidator-staleness self-recovering, no new action needed)
+
+Fresh-pulled all 24 slot repos clean. Gate remains unmet — full-history compute still mid-run on both tracked VMs, same
+well-established pattern as the prior 30+ dispatches on this todo.
+
+**Verified both tracked VMs** via `gcloud compute instances list` (`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap
+`gcloud` on PATH is broken in this environment): `features-sports-sports-20260715-004933` and `-091218` both still
+`RUNNING`. Features bucket unique-date count is **3,056** (`gsutil ls .../sports_features/by_date/ | wc -l`) — up from
+3,054 at slot-8's 10:04Z check (6 min gap), confirming genuine ongoing progress, not a stall.
+
+Tailed both VMs' `run.log` (direct GCS read, `gsutil cat .../vm-logs/<vm>/run.log`): `-004933` fresh through 10:08:47Z,
+writing `fixture_features` per-league rows for its 2018-07-09→2019-08-11 range and hitting the already-tracked,
+already-escalated P1 consolidator-staleness retry
+(`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) on the
+`instruments-store-sports` bucket — retrying per its own backoff, same self-recovering pattern as every prior
+occurrence, not filing a new issue. `-091218` fresh through 10:09:45Z, genuine per-date reference-merge + normalization
+output for 2020-09-25 (its 2020-09-09→2020-10-05 range), no errors.
+
+No new gap found; not re-running a full manifest scan (single-walk discipline — the 09:xx-10:04Z entries already
+manifest-verified no untracked gap exists outside the two active VM ranges + the closed 2015-2017 zero-writes range).
+
+Checkbox NOT flipped (gate structurally unmet — Todo 1 still running).
+
 ### 2026-07-15 10:04Z — data_engineering slot-8 (Todo 3 dispatch — still BLOCKED-PREREQ, fast re-verify only, both tracked VMs healthy + progressing, no new action needed)
 
 Fresh-pulled slot repos clean. My task is Todo 3 ("Features manifest clean over history"), which depends on Todo 1
