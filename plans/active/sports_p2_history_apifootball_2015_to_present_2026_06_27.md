@@ -1784,3 +1784,10 @@ by the time I reached this point — left as-is, no duplicate edit needed.
   killed incomplete; --apply never ran. Fresh completion agent dispatched with STRICTLY-SEQUENTIAL execution (reuses
   LINEUPS CSVs, re-scans the 4, one fresh snapshot before apply). Enrichment fleet: 4 VMs RUNNING, shards mtime-live
   23:01Z, quota within budget.
+- 2026-07-15 02:4xZ (autonomous tick 8): pre-2025 sweep scans COMPLETE for all 5 entities (sequential; the loop took the
+  last two runs over directly after repeated agent-relay deaths). Verdicts over the 37,221-cell scope: **52,591
+  restamp-captured** (EVENTS 15,312 / LINEUPS 14,981 / STATS 11,568 / PLAYER_STATS 10,730 — real parquets on disk,
+  manifest falsely empty_confirmed; INJURIES 0 restamps, 30,063 honest-empty) + adjudicated-empty 41,292 + report-only
+  ~5,5xx (missing/attempted_failed/EU classes listed, untouched). APPLY phase launched (sequential per-entity shard
+  writes, VM_NAME=hist-false-empty-repair-20260714, cron-absorb, then per-entity --verify) as a loop-owned tracked task.
+  Every restamp reduces the running 2020+ enrichment fleet's remaining work (presence-skip).
