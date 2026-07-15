@@ -229,16 +229,37 @@ already handles honestly).
 - [ ] [DATA] P1. Execute the re-collect commands above (or launch as a proper monitored backfill job/VM per this
       workspace's backfill conventions) once scoped; verify before/after counts; this is what actually clears the
       `DP_RUN_MOSTLY_EMPTY` alert for both cells. Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. Thread `mode=` **AND** the new `record_catalog_unavailable` pre-genesis split into the remaining 9
-      DeFi handlers sharing the same gate-failed branch (`token_transfers_handler.py`, `liquidations_handler.py`,
-      `flash_loan_events_handler.py`, `bridge_events_handler.py`, `native_staking_handler.py`,
-      `liquidation_events_handler.py`, `lending_indices_handler.py`, `aggregator_route_handler.py`,
-      `solana_defi_handler.py`) — same pattern as this issue's `dex_pools_handler.py` + `lst_rates_handler.py` fix
-      (`market-tick-data-service@420221b4`). Each still does a blanket
-      `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` on gate-block, so any of them backfilled over pre-genesis
-      dates would reproduce this exact recurrence. The
-      `lending_indices`/`flash_loan_events`/`liquidation_events`/`risk_params` cells in the current index (65/24/30/51
-      `UPSTREAM_INSTRUMENTS_CATALOG_STALE` rows) are the same class. Defense-in-depth. Repo: market-tick-data-service.
+- [x] [SCRIPT] P2. ✅ **DONE (2026-07-15) — `market-tick-data-service@42527190`.** The new `record_catalog_unavailable`
+      pre-genesis split is now wired into **all 10** remaining catalog-gate handlers: `aggregator_route_handler.py`,
+      `bridge_events_handler.py`, `flash_loan_events_handler.py`, `lending_indices_handler.py`,
+      `liquidation_events_handler.py`, `liquidations_handler.py`, `native_staking_handler.py`, `risk_params_handler.py`,
+      `solana_defi_handler.py`, `token_transfers_handler.py`. Each `assert_defi_catalog_fresh`→False branch that
+      previously did a blanket `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` now routes through
+      `DefiManifestRecorder.record_catalog_unavailable` (pre-genesis/pre-launch → honest empty
+      `EXPECTED_PRE_VENUE_LAUNCH`; catalogue-behind → retryable `UPSTREAM_INSTRUMENTS_CATALOG_STALE`) — same pattern as
+      this issue's `dex_pools_handler.py` + `lst_rates_handler.py` fix (`@420221b4`). (The original item named 9;
+      `risk_params_handler.py` — the 10th, called out in this item's own body as "the same class", 51 rows — was fixed
+      too, matching the full task scope. None skipped: all 10 had the blanket-`record_failed`-on-gate pattern.) Tests:
+      20 new recorder-level regression tests in `test_defi_manifest_recorder.py` (per-handler representative
+      `(venue, chain)` tuple → pre-genesis 2014-01-01 → `EXPECTED_PRE_VENUE_LAUNCH` empty, post-launch 2025-06-01 →
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE`) + 12 handler catalog-stale tests updated to assert
+      `record_catalog_unavailable` (and `record_failed.assert_not_called()`); exception-path `record_failed` tests left
+      unchanged. Also taught the PM adapter-contract ratchet about the new method (`unified-trading-pm@bf07cb6b` —
+      `check_adapter_contract_regression.py` `CONTRACT_PATTERNS` += `record_catalog_unavailable`, same precedent as the
+      2026-06-05 `record_zero_rows` addition) so the 12 swap-affected handlers stay at/above their contract-call
+      baseline. Verification: `bash scripts/quality-gates.sh --no-fix` GREEN (exit 0); mtds unit suite 439 passed (1
+      pre-existing skip); ruff + basedpyright clean on all changed files. Defense-in-depth. Repo:
+      market-tick-data-service.
+- [ ] [SCRIPT] P3. **Residual split out of the P2 above (NOT part of the pre-genesis-classification task, left
+      honest):** thread `mode=` (`"live"`/`"batch"` per run_tag) into `assert_defi_catalog_fresh(...)` for the 9
+      handlers that still omit it (`liquidations`, `native_staking`, `liquidation_events`, `token_transfers`,
+      `bridge_events`, `flash_loan_events`, `aggregator_route`, `solana_defi`, `lending_indices`;
+      `risk_params_handler.py` already threads it). `assert_defi_catalog_fresh` defaults `mode="live"`, so batch
+      backfills currently run the freshness gate with live semantics — the R5-fix-7 gap that `lst_rates_handler.py`
+      fixed for itself in `@420221b4`. This is ORTHOGONAL to the pre-genesis classification (the gate returns False for
+      pre-genesis dates regardless of `mode`, and the classification split above then records them honestly), so it was
+      deliberately not force-completed with the classification fix: it is a separate freshness-semantics concern and
+      mis-wiring the per-handler run_tag/mode plumbing risks changing gate behaviour. Repo: market-tick-data-service.
 - [ ] [DEPLOY] P1 **NEW (2026-07-15 re-investigation)**. Redeploy the DeFi backfill VM tarball/image with `420221b4` so
       the NEXT `collect-dex-pools`/`collect-lst-rates` re-walk of 2020-01 records honest `empty_confirmed` instead of
       recurring `attempted_failed`. The two VMs currently running (`mtds-dex-pools-backfill`,
