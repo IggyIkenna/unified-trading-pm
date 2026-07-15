@@ -149,3 +149,45 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
   the fix deploys. Fix chain dispatched: per-VM-shard conversion for the job's manifest writes + row-count regression
   guard on direct canonical writes (defense-in-depth) → promote → image → re-enable schedulers with a watched first
   execution → re-emit the 3,288 vanished cells → L6 gate re-check.
+
+## Fix-chain progress (2026-07-15, dispatched fix session)
+
+- **Containment gap found + closed (~11:05Z)**: pausing the four t1 schedulers did NOT contain the vector — the 5-min
+  `uts-prod-sports-scheduler-cron` (`sports_trigger_scheduler` + `configs/sports-trigger-tiers.yaml` Tier-1
+  FIXTURES/STANDINGS entries) dispatches the SAME `uts-prod-instruments-service-sports-fixtures` job; post-pause
+  executions at 10:45:48Z, and at **10:47:45Z the job direct-wrote the canonical again**
+  (`updated availability index (5432297 total entries, 94 new)`). Closed by the per-VM conversion below (job CONFIG,
+  effective for every dispatcher with the CURRENT image — no rebuild needed for this leg).
+- **Per-VM conversion applied (job config, ~11:05Z)**:
+  `gcloud run jobs update uts-prod-instruments-service-sports-fixtures --update-env-vars MANIFEST_PER_VM_SHARDS=true,VM_NAME=sports-fixtures-job`
+  → job generation 6, env verified. The job's ManifestWriter now writes `_index/per_vm/sports-fixtures-job.parquet`
+  (consolidator-mediated) and can never read-modify-write the canonical again. NOTE the job is NOT terraform-managed
+  (created ad hoc via gcloud, creator unified-trading-sa) — this env config is the deployment record; if the job is ever
+  recreated, these two env vars are REQUIRED.
+- **Same vector on the 3 enrichment-provider jobs (same canonical!)**:
+  `uts-prod-sports-enrichment-{footystats, transfermarkt,soccer-football-info}` (daily 00:35/00:40/00:45Z, TF-managed,
+  same image + same legacy-mode ManifestWriter → the TF header itself documents a live direct canonical write). All 3
+  updated in place the same way (`VM_NAME=sports-enrichment-<key>`) AND the terraform SSOT aligned so an apply can't
+  revert: `deployment-service@17320c6` (`terraform/gcp/sports_enrichment_provider_scheduler.tf`).
+- **Defense-in-depth guard shipped — `unified-trading-library@45a43438`**: `ManifestWriter` now REFUSES any direct
+  canonical write whose merged output is >2% smaller than the base it just read (`_INDEX_SHRINK_GUARD_PCT` in
+  `_writer_io.py`, both the generation-match and unconditional paths), raising `ManifestIndexShrinkRefusedError`,
+  logging CRITICAL, and emitting `MANIFEST_ROW_COUNT_REGRESSION` (`action=write_refused`) so the shrink pages instead of
+  passing. Explicit force flag = `ManifestWriter(allow_index_shrink=True)` (deliberate maintenance rewrites only). 7
+  unit tests (`tests/unit/test_manifest_writer_index_shrink_guard.py`) cover refuse/threshold/force/fresh-index/both
+  write paths/capture-loop isolation. (Config-knob variant was structurally impossible: `cloud_config.py` at 899/900 and
+  `_state.py` at 900/900 of the codex size cap — constant + constructor flag mirrors the consolidator's
+  `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` precedent.)
+- **Blocking discovery — every recent FULL fixtures run was FAILING on an unrelated IS bug**: 00:10 + 06:10 execution
+  pairs died at finalize with `InvalidCompletenessFractionError: ... got 4.0` — `catalogue.py:99` computed
+  `len(written_venues)/len(expected_venues)` where the `--sports-provider=API_FOOTBALL` filter narrows expected to 1
+  venue while the run writes 4. Fixed as intersection-over-expected (`_catalog_completeness_fraction`, always in [0,1]):
+  `instruments-service@a25cf70d` + 5 regression tests. Without this the re-enabled schedulers could never produce the
+  required green watched execution. (Secondary failure class also seen 10:46Z: transient
+  `ManifestConsolidatorStaleError` when the consolidator cycle lags >120s under the af-backfill load — self-healing, not
+  code-fixed this session.)
+- **Root-cause note (mechanism)**: the write path is confirmed (legacy-mode direct canonical read-merge-write); the 328k
+  collapse is the writer-side `_merge_dataframes` deduping the consolidator's canonical at a COARSER key (its
+  optional-dim key is value-presence-gated vs the consolidator's schema-union key `_resolve_dedup_cols`) — exactly the
+  candidate-#1 class. Both structural fixes remove the exposure regardless of which optional dim collapsed: the job no
+  longer touches the canonical, and any residual direct writer that collapses >2% is refused.

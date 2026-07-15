@@ -572,6 +572,17 @@ the process, matching this doc's own established pattern (the `_acquire_lock` re
   does NOT close the cefi-delete todo** — re-running the delete still requires confirming the fix holds across multiple
   production consolidator cycles first (live infra verification, not just shipped code), which is explicitly out of
   scope for the session that shipped the code fix. See the issue doc's own matching dated section for the full writeup.
+  **🟢 2026-07-15 (closing) — NOW CLOSED, for real this time.** The multi-cycle confirmation gate caught a REAL second
+  gap before it could repeat the original overstatement: a direct production `--force` stress-test of the Part-1-only
+  fix reverted the delete AGAIN (same 9,757 rows, same mechanism — Part 1's tie-break demotion only protects a
+  state-FLIP correction, not a DELETION, and the delete script deletes). Root-caused, designed, shipped, and deployed a
+  Part-2 fix (`unified-trading-library@8e783d70` — excludes the frozen legacy seed from a full-rebuild/canonical-merge
+  ENTIRELY whenever a current-truth source already exists, closing the gap Part 1 structurally couldn't). Re-ran the
+  delete a second time and verified it holds through **3 independent real production cycles**: 2 deliberate `--force`
+  full-rebuilds (the exact mechanism that reverted it twice before) run ~20 minutes apart, plus 1 genuine cron-triggered
+  incremental cycle — all 3 confirmed 0 resurrected rows via direct `--dry-run` reads. Full evidence chain (execution
+  names, Cloud Build IDs, generation numbers) in the issue doc's own closing section. This todo is now genuinely
+  closeable.
 - **NEW cross-cutting finding, fixed same session**: rows with an `EXPECTED_*`-prefixed `error_reason` were being stored
   under `capture_status="attempted_failed"` instead of `expected_unattempted`/`empty_confirmed` — a real classification
   bug distinct from anything this plan had found before. Broad live re-query found the true scope was **34,260 rows**
@@ -679,3 +690,73 @@ fold in the prediction-catalogue agent's result once it lands; the 4 newly-logge
 from the parallel session's pass (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
 `sports/odds_horizon_bucket_15m`) remain unactioned — not picked up this round, flagged for a future pass given the
 sheer volume already covered today.
+
+## Fourth round — legacy-seed: Part 2 fix discovered + shipped, cefi delete redone + multi-cycle-verified (closes item 1)
+
+Picked up round 3's item 1 ("do not re-run the cefi delete yet — gate on propagation + multi-cycle hold"). Deployed Part
+1 to production (MTDS image rebuild + `gcloud run jobs update` re-resolve — Cloud Run Jobs pin `:latest` at deploy time,
+a bare image push does not auto-propagate) and re-ran the delete. **A direct production `--force` stress-test then
+reverted the delete AGAIN** — proof that Part 1 alone was insufficient: its tie-break demotion only guards a state-FLIP
+correction (a newer non-captured row beating the frozen seed's stale claim), not a DELETION (the sanctioned cefi script
+deletes rows outright, leaving no competitor for any tie-break to apply to — the frozen seed's row is simply the only
+row for that key on a full rebuild and survives trivially). This is exactly the kind of gap the multi-cycle-confirmation
+gate exists to catch before a second false "done."
+
+Root-caused, designed, shipped `unified-trading-library@8e783d70` ("Part 2"): excludes `_legacy_seed.parquet` from a
+full-rebuild/canonical-merge ENTIRELY whenever a current-truth source already exists (the canonical for the
+consolidator's own full-rebuild branch; the canonical read for `merge_canonical_with_outstanding_shards`; the fresh GCS
+walk for `rebuild_manifest_from_canonical_paths`) — not just demoting its tie-break rank. 2 new regression tests
+directly reproduce the deletion-resurrection scenario. Deployed the same way (MTDS rebuild + job redeploy across all 4
+cefi/defi/tradfi/tradfi-legacy market-data consolidator jobs).
+
+Re-ran the cefi delete a THIRD time (9,757 rows, unchanged count from every prior check) and verified it holds through
+**3 independent real production cycles**: 2 deliberate `--force` full-rebuilds (the exact mechanism that reverted it
+twice) run ~20 minutes apart, plus 1 genuine cron-triggered incremental cycle — all 3 confirmed 0 resurrected rows. Also
+resolved this doc's own long-open root-cause question ("why did cycle 1 survive but cycle 2 revert") — the routine `*/1`
+cron never passes `--force` and the frozen seed's mtime never advances into the incremental cutoff, so ordinary cycles
+structurally can never touch it; only a `--force` full rebuild (always manual/scripted, never auto-triggered) re-absorbs
+it.
+
+**Item 1 from round 3 is now closed.** Full evidence chain (execution names, Cloud Build IDs, generation numbers,
+before/after row counts) in `plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`'s own
+closing section — not duplicated here. That issue doc's `status` is now `resolved`.
+
+## Session close-out (2026-07-15)
+
+The operator asked one more sharp question mid-round-4 that materially changed the outcome: _"did you check any manifest
+scripts, rollups, consolidators or otherwise that could reseed the bad stuff?"_ — i.e., had the fix search been broad
+enough, or just narrow confirmation of the one mechanism already found? Dispatched a dedicated skeptical sweep in
+parallel with the re-delete monitoring, specifically instructed to look for what a narrower investigation would miss. It
+found the real gap: **Part 1** of the legacy-seed fix (`unified-trading-library@f14b13ae`) only guarded a state-FLIP
+tie-break — worthless against a straight DELETION, since a deleted row leaves no competitor for any tie-break to apply
+to; a `--force` full-rebuild simply re-absorbs the frozen seed's row untouched. This gap was independently found and
+closed the same way — a concurrent session's own `--force` stress-test reverted the re-attempted delete a second time,
+which is what led directly to **Part 2** (`unified-trading-library@8e783d70`, excludes the frozen seed from
+full-rebuild/canonical-merge entirely, not just demotes its tie-break rank). Both this session's dedicated sweep and the
+concurrent session's direct stress-testing converged on the same finding independently — a genuine second-opinion
+confirmation, not one agent copying another's conclusion.
+
+**Final verification, not a single lucky pass**: the delete was re-run a third time and held across 3 independent real
+production cycles — 2 _deliberate_ `--force` full-rebuilds (the exact mechanism that caused both prior reversions) run
+~20 minutes apart, plus 1 genuine cron-triggered incremental cycle — all 3 confirmed 0 resurrected rows. The root-cause
+asymmetry ("why did it survive the first hour but not the first `--force`") is now fully understood and documented:
+routine `*/1` cron cycles structurally can never touch the frozen seed at all (its mtime never enters the incremental
+cutoff window); only a manual/scripted `--force` full rebuild ever re-absorbs it. This means the ORIGINAL delete's
+~1-hour-later reversion was itself very likely someone/something running a `--force` rebuild during that window, not a
+routine cycle — consistent with everything observed since.
+
+**What this session actually delivered**, end to end: the literal alert-repeat/spam pattern that started this (fixed,
+independently verified); the sports and defi consolidator livelocks (found to share one root cause, fixed, one further
+residual gap honestly left open after exhaustive testing); a genuine production data-correctness bug caught mid-fix by
+adversarial verification (the cefi delete's resurrection) and carried through to a fully verified, durable resolution —
+including a second, deeper bug the first fix missed, caught specifically because the operator asked whether the search
+had been thorough enough rather than accepting the first "fixed." That question was the single highest-value
+contribution to this session's correctness — worth noting plainly rather than folding into the general summary.
+
+**Genuinely still open** (not actioned this session, not blind-fixed): the `_acquire_lock` concurrent-acquisition race
+(sports consolidator, exhausted investigation, needs live production tracing tooling this session didn't have); 4
+newly-logged `DP_RUN_MOSTLY_EMPTY` cells (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
+`sports/odds_horizon_bucket_15m`); the `YAHOO_FINANCE` registry cleanup (deferred — a naive fix would trip an
+undocumented fallback footgun); UAC's `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` gate (the treasury-yields routing fix is
+shipped and tested but needs this separate registry entry before it carries live traffic, same precedent as mbp_10). All
+are documented with enough evidence for a future pass to pick up cold.

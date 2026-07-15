@@ -1780,3 +1780,155 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   two VM-fanout launchers' `GCS_BUCKET` default) is unchanged and still requires a separate cutover touch before any
   Verify+Delete re-attempt. Next follow-up: repoint the 3 live-reference surfaces to the canonical `-prd-` bucket,
   re-verify `readyForDelete`, then delete.
+
+- **2026-07-15, operator ruling executed (Execute phase) — `features-onchain` bare bucket relocated + deleted, item (3)
+  CLOSED.** Operator ruled Option A on
+  `plans/active/issues/features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15.md`: relocate the bare
+  `features-onchain-central-element-323112` bucket's only content (`netflow_xsec_research/`) to a new dedicated research
+  bucket, repoint the live consumer, then delete. A prior session already provisioned
+  `onchain-research-central-element-323112` (registered as kind `onchain-research` in
+  `deployment-service/configs/bucket_config.yaml`'s `infrastructure_buckets.gcp` list, shipped
+  `deployment-service@45c9924b`) and confirmed no live automated GCS writer races the bucket. This touch executed the
+  copy/repoint/verify/delete: **(1) copy** — all 16 objects (STRATEGY_STATE.md, netflow_granular_cadence.png, 8 `data/`
+  parquets, 2 `live/` files incl. the live `_dune_sleeve_ledger.csv`/`_dune_sleeve_state.json`, 4 `plots/` PNGs) copied
+  via UTL `gcs_copy_object` (server-side rewrite, no subprocess `gsutil`/`gcloud`) — every object individually verified
+  size+crc32c match post-copy (16/16 OK). **(2) verify** — `gcloud storage du -s` confirmed identical total corpus size
+  both sides (70,768,303 bytes) before and after every subsequent step; the two live sleeve files were independently
+  byte-diffed (not just crc32c) src-vs-dst twice (once immediately post-copy, once again as the final pre-delete gate) —
+  both `_dune_sleeve_ledger.csv` and `_dune_sleeve_state.json` bit-for-bit identical at the new location both times.
+  **(3) repoint** — grepped the whole workspace fresh (not trusting the prior session's list at face value): confirmed
+  exactly 2 live-consumer hits, both in `e2e-testing/scripts/onchain/` (`gcs_sync.py`'s docstring + its `BUCKET`
+  constant; `README.md`'s Data SSOT line) — `_dune_sleeve_deploy.py` re-confirmed zero `gs://`/`BUCKET`/bucket-name
+  references (reads/writes only local ROOT-relative paths). Repointed both hits to
+  `gs://onchain-research-central-element-323112/netflow_xsec_research` (kept the same `data/`+`live/`+`plots/`
+  sub-layout under the new bucket root — smaller diff, no restructuring). Proved the repointed script actually works
+  against the new bucket, not just a string-match: ran `gcs_sync.py pull` (pulled all 8 `data/` parquets, 66.6 MiB) then
+  `gcs_sync.py push` (idempotent rsync — mtime-copy only, corpus byte-total unchanged post-push) live against
+  `onchain-research-central-element-323112`. `quality-gates.sh --no-fix` green on e2e-testing (sentinel written ==
+  HEAD); shipped solo via `quickmerge --agent --files 'scripts/onchain/README.md scripts/onchain/gcs_sync.py'` —
+  `e2e-testing@a4f8bdc6` ("chore(onchain): repoint netflow research pipeline Data SSOT to dedicated onchain-research
+  bucket"), landed on `live-defi-rollout`. Re-grepped post-ship: zero remaining code hits for the bare bucket name
+  anywhere in the workspace (only historical/archived-plan mentions remain, not live code). The 3 env-file
+  `FEATURES_ONCHAIN_BUCKET=` lines (`e2e-testing/configs/defi/local-{live,batch,paper}.env`) + `execution-service`'s
+  `features_onchain_source_bucket` field + `dependency_checker.py`'s `features-onchain` bucket-template check were
+  **deliberately NOT touched this session** — the prior session's investigation confirmed these feed a genuinely DEAD
+  code path (zero real runtime consumers workspace-wide) and recommended DELETION (not repointing) as a distinct
+  follow-up, out of scope for this repoint-and-delete-the-bucket task; flagged again here as an open deferred item.
+  **(4) terraform + config check** — grepped all of `deployment-service/terraform/**` for the bare bucket name literal:
+  zero hits (only the untouched `features-onchain-cefi/defi` asset-group siblings' terraform show up, per the separate
+  Group-B rollback decision) — confirms the issue doc's own Finding that no `google_storage_bucket` resource ever
+  managed this bare bucket, so no `terraform state rm` was needed. Checked `bucket_config.yaml`/`cloud-providers.yaml`/
+  VM-launcher scripts for any bare-name reference: none found (the new `onchain-research` kind entry already carries a
+  comment documenting the migration + consumer). **(5) delete** — re-ran the full pre-delete verification one final time
+  immediately before the destructive step (corpus byte-total + both live-sleeve-file byte-diffs, all still matching),
+  then
+  `gcloud storage rm --recursive --continue-on-error gs://features-onchain-central-element-323112/ netflow_xsec_research`
+  (16/16 objects removed) followed by
+  `gcloud storage buckets delete gs://features-onchain-central-element-323112 --quiet`. Post-delete:
+  `gcloud storage buckets describe` on the bare bucket now returns `404`; the new
+  `onchain-research-central-element-323112` bucket independently re-verified still intact (70,768,303 bytes, 16 objects)
+  after the source delete. No data loss, no unauthorized deletes, live sleeve state fully intact and reachable only from
+  the new location now. Item (3) is CLOSED — issue doc status flipped to resolved (see issue doc for the closing note).
+  Estate count this touch: **-1**.
+
+- **2026-07-15, Cutover phase — `features-sports` 2 of 3 live-reference surfaces repointed to canonical `-prd-` bucket;
+  the 3rd surface's "healthy" verification surfaced a pre-existing, unrelated production outage (STOP, operator notified
+  via issue doc)**. Continuing item (2)'s blocker (b) from the entries above (ship-phase already landed the
+  migrate-script + confirmed the 2 ephemeral objects): **(a) terraform data-source check** — re-grepped all of
+  `terraform/gcp/**` + `configs/cloud-providers.yaml` for the bare `features-sports-${project_id}` literal: the only
+  hits are the `google_storage_bucket.features_sports` resource itself + its `_imports_reconcile.tf:51-52` import block
+  (both correctly left untouched — deleting the terraform resource is the NEXT phase's job, after the bucket delete) and
+  `terraform/services/features-sports-service/gcp/main.tf`'s `gcs_volumes` FUSE-mount entry (item (b) below); nothing
+  else references the bare name as a data source. **(b) Cloud Run job FUSE mount** — repointed
+  `module.daily_job.gcs_volumes` from the bare bucket to `features-sports-prd-${project_id}` (added a small
+  `bucket_env_short_map` local since this per-service terraform root had no existing env-short convention);
+  `terraform plan` confirmed an in-place update only (no destroy/recreate) — applied via `terraform apply -target`
+  scoped to just this one resource (deliberately NOT sweeping in two unrelated already-drifted
+  `google_workflows_workflow` resources in the same plan, see below). Verified live via `gcloud run jobs describe`: the
+  job spec now mounts `features-sports-prd-central-element-323112` at
+  `/mnt/gcs/features-sports-prd-central-element-323112`. Manually triggered a real execution
+  (`features-sports-service-job-n4l5z`, current CLI contract `--asset-group SPORTS ...`) to verify health rather than
+  assume it — logs confirm GCSFuse mounted the new canonical bucket cleanly, but the job then crashed at pure Python
+  import time (`ModuleNotFoundError: No module named 'unified_api_contracts.internal'`,
+  `unified_trading_library/config_interface/auth/entitlements.py:15`), independent of and unrelated to the bucket mount
+  (the failure fires before any GCS access, so the OLD bare-bucket mount would have failed identically). Corroborating
+  evidence this is a pre-existing, weeks-old outage, not something this touch caused: the
+  `features-sports-service-daily-trigger` Cloud Scheduler job is `PAUSED` (`userUpdateTime: 2026-06-08`), and the last
+  `SUCCEEDED` `features-sports-service-daily` workflow execution on record is `2026-06-07` — the daily/backfill
+  production sports-features pipeline has most likely been down since 2026-06-08. Also found (not applied, separate from
+  the image bug): the checked-in `daily_workflow`/`backfill_workflow` Workflow-YAML sources already use `--asset-group`,
+  but a full (un-targeted) `terraform plan` shows the LIVE deployed workflows still pass the retired `--category` flag —
+  a second independent reason those workflows would fail even once the image is fixed. Filed
+  `plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md` (operator-notified per the
+  big-finding HARD RULE — data-pipeline correctness, live production outage) with the full evidence + recommended next
+  steps (locate/rebuild the actual `features-sports-service` image source — a separate repo not cloned in this workspace
+  slot — then apply the `--category`→`--asset-group` workflow drift, then re-verify, then un-pause). **(c) VM launcher
+  `GCS_BUCKET` defaults** — confirmed via grep that both launchers only ever use `GCS_BUCKET` to derive the ephemeral
+  `_vm_staging/fss_backfill/` scratch prefix (tarball/runner-script/logs), never the actual feature-data destination
+  (resolved separately at runtime via `resolve_bucket(kind="features-sports", ...)` against `cloud-providers.yaml`'s
+  canonical entry) — updated both defaults from bare to `features-sports-prd-${project_id}`:
+  `deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh` and
+  `features-service/scripts/sports/launch_parallel_backfill.sh`. `quality-gates.sh --no-fix` green on both repos
+  (sentinels written == HEAD); shipped as two separate quickmerges —
+  `deployment-service@d008754fba643db087164068c9b6952b48875d91` ("feat(sports): cutover features-sports Cloud Run FUSE
+  mount + backfill launcher to canonical -prd- bucket") and `features-service@6be22334e36fc3846429e660fb5a34a6666eb34b`
+  ("feat(sports): cutover VM-fanout backfill launcher GCS_BUCKET default to canonical -prd- bucket") — both landed on
+  `live-defi-rollout`, working trees clean after. **Verdict**: 2 of 3 live-reference surfaces (a, c) fully repointed +
+  verified; surface (b)'s mount repoint is applied
+  - infra-verified correct, but the job it serves is NOT end-to-end healthy for a pre-existing, unrelated reason (broken
+    image) — **the `features-sports` bare bucket is still NOT delete-eligible**: blocker (b) from the entry above is now
+    narrower (mount fixed) but a NEW blocker (broken image + workflow-arg drift, tracked in the issue doc above) must
+    clear before a genuine Verify+Delete re-attempt. No destructive action taken on the bare bucket itself this touch.
+
+- **2026-07-15, `features-sports-service-job` root-cause + Verify/Re-enable phases — root cause CONFIRMED, deploy STILL
+  BLOCKED on an operator A/B decision; scheduler correctly left PAUSED.** Two follow-on touches on the same broken-image
+  finding above. **Root-cause (fix) phase**: fully confirmed the mechanism (not just the symptom) —
+  `unified_trading_library`'s `entitlements.py` has required `unified_api_contracts.internal` since UAC commit
+  `6bb892bc` (2026-04-02), but UTL's own `pyproject.toml` constraint on `unified-api-contracts` stayed loose
+  (`>=0.1.0,<1.0.0`) through at least 2026-04-22, so any UTL base image built in that window resolved the highest
+  _compatible_ wheel, `0.2.38` (published 2026-03-12 — this predates the 2026-03-26 commit that added the `internal/`
+  namespace at all) instead of one that actually contains it; `features-sports-service`'s Dockerfile installs itself
+  `--no-deps`, so it purely inherited the broken `0.2.38` baked into the UTL base image at its own 2026-04-22 build. Not
+  applied: the fix requires first deciding the deployment source of truth, since the two candidate paths differ
+  materially — (A) un-archive the GitHub-archived (2026-05-08) `features-sports-service` repo and patch/rebuild there
+  (fast, minimal blast radius, but re-diverges an already- consolidated-away repo), vs (B) finish the abandoned
+  2026-05-08 `features-service` consolidation by standing up a real Cloud Run job for
+  `features-service/features_service/sports/*` (correct long-term state, larger scope — no live job exists there yet).
+  That phase correctly stopped and escalated to the operator rather than guessing; no code/image/ deploy changes made.
+  **Verify+Re-enable phase**: dispatched to deploy the rebuilt image and, only on a genuinely clean end-to-end
+  execution, un-pause the scheduler — found `readyToDeploy: false` from the prior phase (the A/B decision above is still
+  unresolved) and, per its own explicit instruction ("if `readyToDeploy` is false, STOP and report why"), took **no
+  deploy action** (no `gcloud run jobs update`, no image rebuild, no terraform apply) and **no scheduler action** —
+  `features-sports-service-daily-trigger` remains `PAUSED` exactly as it was (re-verified:
+  `gcloud scheduler jobs describe features-sports-service-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  unchanged from the prior entry). Updated the issue doc
+  (`plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md`) with a "Root cause CONFIRMED"
+  section carrying the full mechanism + the A/B options verbatim — **status remains `open`**, NOT closed, since no fix
+  was deployed. **This blocks nothing else in this plan beyond what the entry above already flagged**: the
+  `features-sports` bare bucket remains NOT delete-eligible pending the operator's A/B call, then a rebuild/redeploy,
+  then a genuinely clean manual execution, THEN (and only then) the scheduler un-pause and bucket Verify+Delete
+  re-attempt. **Operator decision still needed** (repeated here for visibility since it gates this plan's
+  `features-sports` closure): choose Path A (fast, re-diverges the archived repo) or Path B [RECOMMENDED — matches the
+  completed code consolidation, avoids re-legitimizing an archived repo] or specify a hybrid/staged approach.
+
+- **2026-07-15, `features-sports` bare-bucket Verify+Delete re-attempt — STOPPED, gate condition re-confirmed still
+  unmet, bucket left untouched.** Dispatched to finish this deferred item (terraform-resource removal +
+  `_imports_reconcile.tf` cleanup + physical bucket delete) contingent on `manualExecutionSucceeded: true`; the
+  handed-in Verify-phase result already reported `manualExecutionSucceeded: false`, and this touch independently
+  re-verified that condition with fresh evidence rather than trusting the prior report:
+  `gcloud scheduler jobs describe features-sports-service-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  still shows `PAUSED` / `userUpdateTime: 2026-06-08T04:16:20Z` (unchanged), and
+  `gcloud run jobs executions list --job=features-sports-service-job --region=asia-northeast1 --limit=5` shows the 5
+  most recent executions (`…-n4l5z` 2026-07-15T11:10, `…-vjlmz`/`…-xgw29`/`…-cmp9h` 2026-07-14T18:10, `…-6jrgw`
+  2026-07-14T18:05) all with `failedCount=1` and no `succeededCount` — i.e. the job is still crashing on every
+  execution, consistent with the still-open `unified_api_contracts.internal` import-time `ModuleNotFoundError`
+  documented in the issue doc and the prior two Progress Log entries. Per this task's own explicit stop condition ("If
+  `manualExecutionSucceeded` is false, STOP -- do not delete"), took **zero destructive or infra action**: did not touch
+  `deployment-service/terraform/gcp/main.tf`'s `google_storage_bucket.features_sports` resource, did not touch
+  `_imports_reconcile.tf`, did not run `terraform state rm`, did not run
+  `gcloud storage rm`/`gcloud storage buckets delete` against `gs://features-sports-central-element-323112`, and did not
+  touch `bucket_config.yaml` or scheduler configs. The bare bucket, its 1 real migrated object + 2 confirmed-ephemeral
+  VM-staging objects, and the terraform resource all remain exactly as they were. **This item stays open, gated on the
+  same unresolved operator A/B decision** (rebuild source-of-truth choice) called out in the entry above — no new
+  blocker introduced, no progress lost, nothing to re-verify differently on the next attempt beyond re-checking
+  `manualExecutionSucceeded` once a rebuilt image is actually deployed and a clean execution is observed.

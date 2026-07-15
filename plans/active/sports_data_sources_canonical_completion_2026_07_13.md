@@ -506,15 +506,40 @@ formal retirement, mdps_odds_horizon_bucket or its formal `BLOCKED-CREDENTIALS` 
 every root cause is fixed in code (not just data patched); all findings filed in the relevant plans/issue docs; final
 report written in this plan's Progress Log.
 
-> **STATUS as of the 2026-07-13 FINAL RE-VERIFY dispatch: NOT FULLY MET.** 3/8 categories meet the bar cleanly
-> (`transfermarkt`, `odds_api`, retired data_types). `mdps_odds_horizon_bucket`'s core zero-ever-captured defect is
-> fixed (0→123,642 captured, 0 dedup) but its `expected_unattempted` (209,526) needs the already-root-caused
-> `enumerate_expected_universe.py` grain-realignment fix. `api_football` is code-complete (4 bug classes fixed,
-> confirmed holding, dedup now provably 0) but needs a backfill-VM re-attempt of 3,257 stale rows + the root-caused
-> TEAMS 61-league capture-gap fix. `footystats`/`soccer_football_info`/`open_meteo` are mid-flight on a live, bounded
-> residual-closer process (PID 3247, `--max-rounds 6`) — footystats already improved 205→175, the other two await its
-> end-of-run flush. Zero regressions found anywhere. Full detail + the precise 6-item remaining-work list: see the
-> "FINAL RE-VERIFY + CLOSE-OUT REPORT" Progress Log entry below.
+> **STATUS as of the 2026-07-15 FINAL WHOLE-PLAN RE-VERIFY: STILL NOT FULLY MET, but dramatically improved from
+> 2026-07-13's "3/8 clean."** Live re-check against the current canonical (`instruments-store-sports-prd`, 5,432,276
+> rows) across all 7 sources, per-dimension:
+>
+> | source                     | attempted_failed | expected_unattempted | dedup groups | asset_group blank |
+> | -------------------------- | ---------------- | -------------------- | ------------ | ----------------- |
+> | `api_football`             | 766 (was 4,268)  | 134,627              | 0            | 844,209           |
+> | `footystats`               | 4                | 168                  | 0            | 99,048            |
+> | `soccer_football_info`     | **0**            | 183                  | 0            | 360               |
+> | `transfermarkt`            | **0**            | 47                   | 0            | 45                |
+> | `open_meteo`               | **0**            | 282                  | 0            | 1,804             |
+> | `odds_api`                 | **0**            | **0**                | 2            | **0**             |
+> | `mdps_odds_horizon_bucket` | 4                | 199,720              | 0            | **0**             |
+>
+> **5/7 sources now show 0 or near-0 `attempted_failed`** (soccer_football_info/transfermarkt/open_meteo literally 0;
+> footystats/mdps_odds_horizon_bucket at 4). `api_football`'s 766 is code-complete + independently verified — INJURIES
+> and FIXTURES (this session's core dispatch) both confirmed 0; the residual 305 is the already-tracked CF11 backfill
+> class + 461 is the newly-root-caused blank-data_type class (neither is a re-fetch target for the general closer).
+> **`expected_unattempted` is large for 2 sources but both are ALREADY-DOCUMENTED, understood backlogs, not new
+> defects**: `mdps_odds_horizon_bucket`'s 199,720 is the known post-venue-grain-fix backlog (only 633 of 200,259 seed
+> rows had a matching real capture — flagged same-session as "the real backlog is much larger than hoped"); the other 5
+> sources' `expected_unattempted` (47-282, `api_football`'s 134,627 not yet root-caused this pass) are comparatively
+> small except api_football's, which needs its own look before this line item can be called closed. **Dedup-key groups:
+> 0 for 6/7 sources**, `odds_api` has 2 (both `date=2026-06-21`, same `instrument_id` captured twice at different
+> `written_at` — a benign double-write, not corrupted data; see the 2026-07-15 update in
+> `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`). **`asset_group` blank is
+> the single biggest remaining gap, present on 5/7 sources** (844,209 for api_football alone, down to 0 for the two
+> MTDS/MDPS-adjacent sources `odds_api`/`mdps_odds_horizon_bucket` whose writers already stamp it explicitly) — a
+> single, already-understood root cause (the consolidator's asset_group heal never covers `instruments-store-sports`),
+> NOT 5 separate bugs; the existing `[DATA] P1` todo in the referenced issue doc already covers this and should be
+> re-scoped to all sports sources, not just api_football, next time it's picked up. Also confirmed: the 1-row
+> defi/UNISWAP_V3-BASE contamination (finding C in the same issue doc) is still present, unfixed, unchanged. **Zero
+> regressions found anywhere this session.** Full detail: see the 2026-07-15 Progress Log entries below (round2-5 saga)
+> and the referenced issue doc's 2026-07-15 update section.
 
 # 3. Codex SSOTs
 
@@ -3775,3 +3800,23 @@ it's new adapter work, not a data-audit residual).
     exactly the documented purpose of this env var. Scoped to this single script invocation only — no shared library
     code touched, no change to `_LOCK_TTL_SECONDS`/`_is_lock_fresh`/`_acquire_lock` (respecting the standing rule from
     the earlier lock-orphan incident this session not to touch that logic).
+
+- **2026-07-15 (round5 completed cleanly — `MAX ROUNDS reached`, no crash).** Ran for ~1h32m end-to-end and exhausted
+  its `--max-rounds 4` naturally this time — the `MANIFEST_ALLOW_STALE_FALLBACK=true` fix held for the entire run, no
+  further `ManifestConsolidatorStaleError`. Script's own final tally: 305 non-blank-`data_type` `attempted_failed`
+  remaining (`PLAYER_STATS` 87, `FIXTURE_STATS` 80, `FIXTURE_EVENTS` 65, `FIXTURE_LINEUPS` 49, `TEAMS` 24).
+  **Independently re-verified against live production** (not just trusting the script's self-report): direct read of
+  `instruments-store-sports-prd`'s `_index/availability_index.parquet` confirms total api_football `attempted_failed` =
+  **766**, exactly matching the script's own 305 + the separately-tracked blank-dt-461 (unchanged, still needing its own
+  dedicated reconciliation per the earlier finding — confirmed still 100% blank `league_id`, not touched by this
+  closer). **Total reduction this session: 4,138 → 766 (−81.5%).**
+  - **This is a legitimate natural stopping point for this specific mechanism, not a stall** — the residual-closer
+    completed its designed work; the remaining 305 (PLAYER_STATS/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/TEAMS) is
+    the same class already tracked as the `[DATA] P2` CF11 backfill todo above, which explicitly calls for a _different_
+    mechanism (a dedicated per-fixture-entity re-fetch via `fixture_ids_override`, not another round of this general
+    closer) — further blind relaunches of THIS script are unlikely to move these further. No more residual-closer rounds
+    queued; the remaining work routes through the existing CF11 todo + the blank-dt-461 finding, both already tracked,
+    not new scope.
+  - **api_football's INJURIES/FIXTURES/general-residual thread (started this session) is now fully concluded**: 0
+    INJURIES, 0 FIXTURES, 81.5% reduction on the general residual, both remaining classes root-caused and routed to
+    their existing tracked todos. This closes out todo #16-18 of this session's working list.
