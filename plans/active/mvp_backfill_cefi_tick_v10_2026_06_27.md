@@ -2955,3 +2955,27 @@ OKX-SPOT/BINANCE-SPOT heavy VM to follow, filling the 3-VM cap.
 
 **For Run-#7 lane**: do NOT relaunch chronological-from-2020 waves; scope YEARS="2026" and set `STALL_TIMEOUT_SEC=3900`
 (deployment-service launcher supports both now).
+
+### Re-cut fleet LIVE — 4 VMs on the real gap — 2026-07-15T17:45Z
+
+All scope+stall settings VERIFIED on-instance (`gcloud describe --flatten metadata.items`):
+
+| VM                                 | scope                                       | eu target | notes                                  |
+| ---------------------------------- | ------------------------------------------- | --------- | -------------------------------------- |
+| `cefi-queue-heavy-20260715-173940` | BINANCE-FUTURES+BITGET-FUTURES trades+book5 | ~536k     | 2026-01-01, STALL=3900, lease-ON       |
+| `cefi-queue-light-20260715-174110` | same venues, derivative_ticker              | ~268k     | 2026-01-01, STALL=3900, lease-ON       |
+| `cefi-queue-heavy-20260715-174244` | OKX-SPOT+BINANCE-SPOT trades+book5          | ~335k     | 2026-01-01, STALL=3900, lease-ON       |
+| `cefi-aster-2026-20260715-174321`  | ASTER trades+derivative_ticker              | ~287k     | non-Tardis REST — does NOT use the cap |
+
+Tardis cap respected: 3 lease-ON queue VMs (guard logged 0+1, 1+1, 2+1). ASTER rides
+`launch-cefi-hl-aster-historical-backfill.sh` (VM_OPERATION=collect-onchain-perp-batch, name shape `cefi-aster-*` does
+not match the guard's Tardis pattern — correct, it never touches the Tardis key). That launcher year-shards from each
+venue's VENUE_START_DATE, so it also spawned ASTER 2024+2025 VMs — **killed both immediately** (by_day proves eu=0 for
+every month before 2026-02; they were the same futile-history shape). ASTER 2026 kept and running.
+
+**Still open, needs operator (parked, not silently dropped):** (1) the ~196,570 live-only cells (LIGHTER-ZKSYNC
+trades/book5, ASTER/EXTENDED/PACIFICA book5, COINBASE-CDE trades) can NEVER be filled by a backfill VM — they need the
+one-time `collect-onchain-perp-batch` historical-day script per the 2026-07-13 ruling in
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` (that issue's own P3 says "left for
+whoever picks up"); (2) G4's gate baseline is void — it was cut against the pre-Layer-1-100% lower-bound readings and
+must be re-cut against the now-complete denominator.
