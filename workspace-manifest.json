@@ -1263,9 +1263,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 6,
-        "qg_red_reason": null,
         "warn_file_count": 21,
-        "coverage_pct": 87.74
+        "coverage_pct": 87.73,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
