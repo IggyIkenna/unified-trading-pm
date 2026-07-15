@@ -93,28 +93,63 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       paths present or missing, source's available resolution (settlement events / tick stream / poll), whether the
       source exposes OI. Append the coverage table here. Repo: market-tick-data-service (read-only pass). — DONE
       2026-07-15, unified-trading-pm (this doc, table above); no code changed, pure enumeration.
-- [ ] [CODE] P1. Wire `derivative_ticker` capture for every perp venue missing it, at the highest resolution the source
+- [x] [CODE] P1. Wire `derivative_ticker` capture for every perp venue missing it, at the highest resolution the source
       offers — per the ruling this INCLUDES venues with no OI at the source (OI/mark/index fields nullable;
       funding_rate + ts_event mandatory). Update UAC expected-coverage/registry so the manifest expects the new (venue,
       derivative_ticker) cells; enumerator picks them up via the standing daily crons. Live=batch: same code path both
-      modes. Repo: market-tick-data-service + unified-api-contracts.
-- [ ] [CODE] P2. Remove the Drift-only `funding_rate_24h/7d/30d` aggregates from the `perp_funding` write path (keep
+      modes. Repo: market-tick-data-service + unified-api-contracts. — DONE 2026-07-15,
+      unified-api-contracts@2170b388d8901a22f17cc2b59245a4b9894671e4 +
+      market-tick-data-service@5f659c12b4eeed348aea2abe657714c2c9b226df. GMX-ARBITRUM/GMX-AVALANCHE: real new code
+      (`_perp_funding_gmx.py` dual-writes derivative_ticker from the SAME `fundingRateChangedEvents` fetch used for
+      perp_funding — zero extra API calls; per-(chain, data_type) freshness/manifest recording so one data_type being
+      fresh never masks the other) + new `DEFI_PERPETUAL_DERIVATIVE_TICKER` SchemaContract (write_defi_rows was raising
+      `SchemaContractNotFoundError` — no contract existed for defi+derivative_ticker at all) +
+      capability/expected-coverage declarations (start dates match the existing perp_funding floor — same source).
+      DRIFT-SOLANA + LIGHTER-ZKSYNC: registry-only fixes — code was ALREADY wired (drift_adapter.py's
+      `fetch_drift_data`/Tardis respectively) but the UAC capability cell was missing (Drift) or wrong (Lighter,
+      declared 2024-08-01, corrected to 2026-04-17 — the real Tardis coverage-start). Evidence:
+      `quality-gates.sh --no-fix` green on both repos (MTDS: 6110 passed, 1 pre-existing unrelated WARN filed as
+      `mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`; UAC: full PASS). New unit tests:
+      `test_perp_funding_handler.py::TestGmxCanonicalWrite::test_derivative_ticker_dual_write_row_shape` + updated
+      freshness/failure-fanout assertions in `test_perp_funding_handler_coverage.py`.
+- [x] [CODE] P2. Remove the Drift-only `funding_rate_24h/7d/30d` aggregates from the `perp_funding` write path (keep
       `funding_rate` + `annualized_rate` per the canonical schema — annualizing is explicitly fine). Aggregation windows
       belong downstream (features), not in raw capture. Decide + document disposition of already-written rows carrying
       the extra columns (reader tolerance vs restamp; prefer tolerance if readers project columns). DO NOT disrupt the
-      currently-running backfill VM — land for future runs. Repo: market-tick-data-service.
+      currently-running backfill VM — land for future runs. Repo: market-tick-data-service. — DONE 2026-07-15,
+      market-tick-data-service@5f659c12b4eeed348aea2abe657714c2c9b226df. `_collect_drift` (solana_defi_drift.py) now
+      emits `funding_rate` (= the 24h window, the finest-grained field `/stats/markets` offers) + `annualized_rate`
+      (`funding_rate * 365` — a unit conversion of ONE rate, not a window average) instead of the three window columns.
+      Verified this does NOT touch the currently-running `mtds-solana-drift-backfill` VM: that VM launches with
+      `VM_TASK=solana-drift-backfill` → `--solana-drift-backfill` → routes to `_backfill_drift_s3_date`/
+      `_backfill_drift_helius_date`, a genuinely separate function in the same file that this edit does not touch —
+      `_collect_drift` is only reached by the handler's DEFAULT (non-backfill) branch. Disposition: READER TOLERANCE —
+      `schema_validation.py`'s `perp_funding` required-columns spec already accepts `funding_rate_24h` as an alternative
+      to `funding_rate` (pre-existing, kept as-is for legacy/Helius-placeholder rows), so old + new rows both validate;
+      no historical GCS restamp. Test: `test_solana_defi_handler.py::TestCollectDrift::test_parses_drift_response`
+      updated to assert the new fields + absence of the retired ones.
 - [ ] [VERIFY] P1 (GATED on the DRIFT perp_funding backfill completing its 2025-01→2026-07 grind). Cross-source funding
       parity: per (venue, market, funding interval), `perp_funding.funding_rate` vs the `derivative_ticker` settlement
       row within ε; DRIFT-SOLANA/HYPERLIQUID/ASTER first; honest report (match %, divergence distribution, worst
       offenders) appended here; genuine divergences filed per findings-triage. Repo: market-tick-data-service (read-only
-      analysis script with lifecycle marker).
-- [ ] [DOCS] P2. Codex updates recording the ruling: `defi-data-type-taxonomy.md` + `defi-data-types-catalog.md` §4 (+
+      analysis script with lifecycle marker). — NOT STARTED, remains gated on the DRIFT backfill grind per this todo's
+      own condition.
+- [x] [DOCS] P2. Codex updates recording the ruling: `defi-data-type-taxonomy.md` + `defi-data-types-catalog.md` §4 (+
       derivative_ticker section) + `data-lineage-MTDS-features-ml.md` — derivative_ticker = canonical raw-funding home
       for ALL perps (highest resolution, OI-optional); perp_funding = the per-interval canonical view with
-      annualized_rate; no venue-specific raw-layer aggregates. Repo: unified-trading-pm.
+      annualized_rate; no venue-specific raw-layer aggregates. Repo: unified-trading-pm. — DONE 2026-07-15 (this
+      commit): `defi-data-type-taxonomy.md` (Perp family + new per-venue derivative_ticker coverage table in the "Perp
+      (DeFi-side...)" section), `defi-data-types-catalog.md` (§4 perp_funding rewritten for the retirement +
+      divergence-removal + reader-tolerance disposition; new §4a derivative_ticker entry),
+      `data-lineage-MTDS-features-ml.md` (new Layer-1 defi-axis derivative_ticker row + bypass-types table row).
 
 ## Progress log
 
 - 2026-07-15: Filed from the operator's ruling in the main session, following the funding dual-capture investigation
   (perp_funding vs derivative_ticker). Parity check deliberately gated on the DRIFT backfill grind finishing so it
   compares complete data.
+- 2026-07-15: Todos 1/2/3/5 completed (todo 4 stays gated per its own condition — the DRIFT backfill grind). Coverage
+  table (todo 1) pinned scope before any code was written. Shas:
+  unified-api-contracts@2170b388d8901a22f17cc2b59245a4b9894671e4,
+  market-tick-data-service@5f659c12b4eeed348aea2abe657714c2c9b226df. Side-finding filed (pre-existing, unrelated,
+  warn-only): `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
