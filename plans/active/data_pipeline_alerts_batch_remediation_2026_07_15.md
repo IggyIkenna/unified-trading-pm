@@ -534,6 +534,14 @@ the process, matching this doc's own established pattern (the `_acquire_lock` re
   `legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md` had flagged this exact mechanism as a real,
   structurally-present risk but "not yet observed in production" — it has now been observed, live, confirmed. Escalated
   that issue's priority P1→P0. **Do not re-run the cefi delete until that issue's tie-break/seed-freshness fix lands.**
+  **🟢 2026-07-15 (later) — the tie-break fix has now SHIPPED**
+  (`unified-trading-library@f14b13aeac298f70ea07bbf5ed30ca4f480ab8e9`, option (a) from the issue doc's recommended next
+  steps: the frozen `_legacy_seed.parquet` shard is special-cased out of the captured-outranks tie-break by
+  shard-identity, in both `manifest_consolidator.py`'s DuckDB merge SQL and `manifest_writer/_read_index.py`'s
+  `_merge_shard_frames` Python helper, with 3 new regression tests reproducing the exact resurrection scenario). **This
+  does NOT close the cefi-delete todo** — re-running the delete still requires confirming the fix holds across multiple
+  production consolidator cycles first (live infra verification, not just shipped code), which is explicitly out of
+  scope for the session that shipped the code fix. See the issue doc's own matching dated section for the full writeup.
 - **NEW cross-cutting finding, fixed same session**: rows with an `EXPECTED_*`-prefixed `error_reason` were being stored
   under `capture_status="attempted_failed"` instead of `expected_unattempted`/`empty_confirmed` — a real classification
   bug distinct from anything this plan had found before. Broad live re-query found the true scope was **34,260 rows**
