@@ -268,7 +268,21 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
       non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
-      operation closes both.**
+      operation closes both.** **🔴 BLOCKED-UPSTREAM-BUG 2026-07-15 (slot-11): the residual is now 18 CF11 rows
+      (FIXTURE_EVENTS 8 / FIXTURE_LINEUPS 10, 11 match-days) and the standard re-drive CANNOT clear them — root-caused
+      to a UTL bug, NOT a data gap. api_football HAS the events/lineups (live probe: 9-23 events + 34-40 lineups per
+      fixture) AND the canonical per-league DATA parquets are PRESENT on disk for every cell, but
+      `ManifestWriter.record_captured()` SILENTLY NO-OPS for sports FIXTURE_EVENTS/FIXTURE_LINEUPS
+      (`MANIFEST_WRITE_SCHEMA_MISSING` → row never staged; reproduced via the orchestrator path, a force re-fetch, AND a
+      direct record_captured() call — all `flush_all_pending_buckets()=={}`, no shard, cell unchanged). So the cells are
+      a permanent manifest-vs-data drift: the prior 2026-07-13 closer AND this session's runs both leave them
+      attempted_failed for the same reason. FULL root-cause + repro + fix todos (fix record_captured's schema-missing
+      skip in unified-trading-library, THEN targeted-recovery re-drive of the 18 cells) filed in
+      `plans/active/issues/api_football_cf11_record_captured_noop_manifest_vs_data_drift_2026_07_15.md`. NOT flipping
+      this checkbox to done (no false progress). Also filed a sibling read-path finding
+      `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (sports lacks an
+      AG_STALENESS_BUDGET_SEC override → false ManifestConsolidatorStaleError on a healthy ~11-min-cadence
+      consolidator). Do NOT relabel these empty_confirmed — the CF-11 gate forbids it and the data is present.**
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
