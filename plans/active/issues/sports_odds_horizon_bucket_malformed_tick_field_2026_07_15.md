@@ -18,7 +18,7 @@ summary:
   100%-causality-drop case is honest absence, structurally identical to the adapter's own existing 'no h2h rows' Path A½
   precedent two code blocks above — it should never have raised MalformedTickFieldError. Fixed in
   market-data-processing-service@7ff43d7 with 3 new regression tests (coverage.xml-verified both branches hit)."
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -200,3 +200,29 @@ green (basedpyright clean on the touched file; 0 new violations).
   data_type in either candidate manifest bucket, so there is nothing stale to reclassify.
 - If the sibling `sports/trades` `VENUE_FETCH_FAILED` investigation files its own issue doc and finds a genuinely shared
   upstream cause with this one, cross-link the two docs at that point — not asserted here without evidence.
+
+## REOPENED — the "0 rows" claim above does not hold on a fresh re-query (2026-07-15 ~15:30Z)
+
+Adversarial verification (dispatched by the operator explicitly asking to "check" a later close-out that cited this doc
+as "fully resolved, count=0") re-queried the live manifest and found the count is **66**, not 0 — timestamps unchanged
+from the original pre-fix figure (max `attempted_at` 2026-07-13T23:56:48Z, the same batch this doc's own original
+investigation examined). This directly contradicts BOTH this doc's own "Live re-query... found ZERO current
+attempted_failed rows" claim (in the frontmatter summary, from the ORIGINAL investigation) AND the later close-out's
+repetition of that claim.
+
+**Not yet determined which side is wrong, or why** — possibilities, none confirmed: (a) the original investigation's
+"both plausible sports manifests" check missed the actual bucket/path these 66 rows live in; (b) the two checks used
+different predicates (e.g. one filtered by `error_reason` starting with `Malformed` specifically, the other used a
+broader `data_type=odds_horizon_bucket_15m AND capture_status=attempted_failed` match that would also catch rows with a
+DIFFERENT error_reason that happen to share the data_type); (c) something regenerated/rewrote these 66 rows between the
+original check and the later one. The code fix (`market-data-processing-service@7ff43d7`) may well be correct for its
+own narrow claim (new causality-filtered ticks no longer misclassify going forward) — that part was not disputed — but
+it clearly did not make the specific 66 rows the alert keys on disappear, contrary to what both this doc and the
+downstream close-out asserted.
+
+**Needs for whoever picks this up**: re-run the EXACT live-manifest query this doc's original investigation used (check
+the "Investigation" section above for the precise buckets/paths/predicate), and separately re-run whatever broader
+predicate finds the 66 rows, to identify exactly where the discrepancy comes from before concluding anything further. Do
+not re-mark this `resolved` without reconciling the two numbers with a real query, not another inference.
+
+Status reverted `resolved` → `open`.
