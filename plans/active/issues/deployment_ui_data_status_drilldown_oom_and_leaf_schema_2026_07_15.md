@@ -43,6 +43,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: fullstack
 drift_direction: none
 source: operator (interactive 2026-07-15) + /autonomous
+depends_on: []
 ---
 
 # Data Status drilldown OOM + honest-coverage + drilldown leaf schema/metric (2026-07-15)
