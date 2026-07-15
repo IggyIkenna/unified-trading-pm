@@ -240,3 +240,102 @@ separate follow-up gated on confirming this fix holds across MULTIPLE production
 code) — per operator instruction, out of scope for the session that shipped this fix. Priority stays P0 and
 `status: open` until that live multi-cycle confirmation lands. See
 `plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md`'s matching update for the cross-plan link.
+
+## 🟢 2026-07-15 (independent sweep) — broad "any OTHER reseed vector" audit: clean, PLUS content-verified that the
+
+in-flight Part-2 fix is already LIVE in production
+
+Operator asked a sharp follow-up while a delete re-attempt was live-monitored in a parallel worktree in this same
+session/slot: did anyone check for a reseed mechanism OTHER than the one already found? This was a dedicated read-only
+sweep (no code/data changes) against that exact question, run concurrently with (and independently of) whatever the
+monitoring session was doing. Headline: **clean sweep — no additional reseed vector found** — plus this pass happened to
+catch that a second fix commit (`unified-trading-library@8e783d70`, "Part 2") had ALREADY landed and been deployed to
+production by the time of this check, closing a real gap Part 1 alone left open.
+
+**1. Other frozen/stale snapshot files (not just the one already found)**: `gcloud storage ls -l` on `_index/per_vm/`
+for all three buckets found EXACTLY ONE `_legacy_seed.parquet` per bucket — cefi (frozen 2026-06-24T08:44:46Z, 5.4MB),
+defi (2026-06-24T17:28:59Z, 175KB), tradfi (2026-05-12T17:07:19Z, 281KB) — matching this doc's own §6 exactly, no
+dated/regional/DR duplicates. Cefi's `per_vm/` has exactly one OTHER file (`cefi-queue-heavy-20260714-123340.parquet`,
+an ordinary live backfill-VM shard last written 2026-07-15T11:09:54Z, not a frozen seed — routine, not yet merged into
+the canonical as of the last consolidation cycle). Separately, cefi's `_index/` DOES have `backups/` (5 objects, 875MB)
+and `snapshots/` (15 objects, 2.3GB) subdirectories — real pre-migration safety-net copies
+(`pre_aster_migration_20260713`, `pre_bybit_futures_chain_manifest_20260713`, `pre_purge_deribit_option_..._20260712`,
+etc., going back to 2026-05-22). Grepped the whole workspace for any code path that READS from `_index/backups/` or
+`_index/snapshots/` as a source (as opposed to the ~30 one-off migration scripts that WRITE a pre-`--apply` safety copy
+there): found none — restore-from-backup is a manual, operator-invoked disaster-recovery procedure only
+(`codex/05-infrastructure/disaster-recovery.md`, `codex/02-data/ manifest-migration-coordination.md` — explicit steps,
+notify-operator, post-mortem doc required), never automatic, and none of the existing backup/snapshot files are tied to
+this specific blank-`data_type` incident, so nothing here is a live risk right now — documented as a category worth
+knowing about, not a finding requiring action.
+
+**2. Other entry points that write to the canonical index**: read `reconcile_phantom_manifest_rows_all.py` in full (1517
+lines) — its ONLY write-capable modes are the two already-identified DELETE passes
+(`_apply_delete_chain_level_defi_phantoms`, `_apply_delete_legacy_combined_venue_defi_phantoms`); no `--undo`/
+`--restore`/`--revert` flag exists, so the "dry-run candidate list gets accidentally applied as a re-add" scenario the
+operator asked about is not possible — the tool can only ever delete/mark-empty, never re-mark something `captured`.
+Both delete passes call `merge_canonical_with_outstanding_shards` as their staleness guard (confirmed by grep), so they
+inherit the Part-1+2 fix transitively — but that inheritance depends on `instruments-service`'s own environment/image
+having picked up the new UTL commit, which was NOT independently verified in this pass (this doc's own P2 todo above
+already tracks that as a separate, still-open, non-live-right-now audit item — not duplicating it here). Confirmed the
+`--force` full-rebuild path is the ONLY way a whole-corpus reseed happens: the routine `*/1 * * * *` Cloud Scheduler
+cron (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) never passes `--force`; every historical
+`--force` invocation found workspace-wide (~25 references across issue docs/plans) was a manual
+`gcloud run jobs execute ... --args=...,--force` during an operator/agent incident intervention — never scheduled, never
+automatic. No disaster-recovery / cross-region-sync / "restore manifest wholesale" script was found anywhere in the
+workspace beyond the manual GCS-object-versioning rollback procedure already covered in point 1.
+
+**3. Active (not frozen) writer producing blank-`data_type` rows independently, checked live, right now**: ran a direct
+single-object read of the CURRENT `market-data-tick-cefi-prd-central-element-323112` canonical (not a whole-corpus walk)
+via `unified_trading_library`'s own `StorageClient`/`resolve_bucket_name`. Result, as of 2026-07-15T12:11 UTC (canonical
+generation `1784113556416482`, `consolidator_run_at=2026-07-15T11:05:53Z`, `Update time` on the blob
+`2026-07-15T11:05:56Z`): **0 blank-`data_type` rows of ANY `capture_status`** out of 11,250,228 total rows
+(captured=3,136,382, attempted_failed=1,738,645). This is a stronger result than "still 9,757" or "resurrected again" —
+it's zero, meaning (a) the re-attempted delete this session's parallel monitoring session ran DID land and HELD through
+the most recent consolidator cycle, and (b) there is no evidence whatsoever of a live writer independently reintroducing
+blank-`data_type` rows post-fix.
+
+**4. The `--force` full-rebuild path, specifically**: this doc's Part-1 write-up already flagged this as unaudited.
+Independently confirmed it: `manifest_consolidator.py`'s full-rebuild branch (`if force or canonical_mtime is None`)
+originally used ALL per-VM-shard paths unfiltered, including the legacy seed — Part-1's tie-break demotion doesn't help
+a full rebuild when the competing row was DELETED (not flipped), because with no competing row left, the frozen seed's
+row is the ONLY row for that key and wins trivially regardless of tie-break logic. **This is exactly the gap that
+resurrected the delete in production** (per `unified-trading-library@8e783d70`'s own commit message, confirmed live
+2026-07-15: "the sanctioned CeFi blank-`data_type` orphan-row DELETE reverted on a real production `--force` rebuild
+even with the Part-1 tie-break fix deployed"). Part 2 fixes this by excluding `_legacy_seed.parquet` outright (not just
+demoting its rank) from the full-rebuild merge whenever a canonical already exists, plus the same exclusion in
+`_read_and_merge_per_vm_shards`'s new `exclude_legacy_seed` param (wired into `merge_canonical_with_outstanding_shards`
+and `rebuild_manifest_from_canonical_paths`) — all 3 call sites checked by git diff on
+`unified-trading-library@8e783d70`.
+
+**Content-verified live in production (not just git-committed)**: `market-tick-data-service`'s `Dockerfile` was bumped
+twice today (`unified-trading-library@2f60fe31` for Part 1, `@48857be4` for Part 2) to pin
+`BASE_IMAGE_DIGEST=sha256:7b9a94ea90ce2b5594000520758005bfc37e2c77785e571c043947ff4a77c9ae`. Verified via
+`gcloud builds list`/`describe` that Cloud Build `b6e279af` (SUCCESS, finished 2026-07-15T11:00:36Z) built MTDS commit
+`5f659c12`, confirmed via `git merge-base --is-ancestor` to be a descendant of BOTH digest-bump commits — i.e. the
+currently-published `market-tick-data-service:latest` already carries both fixes. Went one step further than
+ancestor-checking (per this codebase's own established "content-verified, not just ancestor-checked" precedent):
+`docker pull`+`docker run --entrypoint bash` against the EXACT pinned UTL digest and grepped the live container's
+`manifest_consolidator.py`/`_read_index.py`/`_maintenance.py` — confirmed `is_legacy_seed_row`, the
+`canonical_mtime is not None and p == _LEGACY_SEED_PATH` full-rebuild exclusion, and `exclude_legacy_seed` are all
+PRESENT in the actual deployed image content. Per this codebase's own established operational precedent (documented in
+this repo's own prior incident write-ups), the `uts-prod-manifest-consolidator-*` Cloud Run Jobs resolve
+`market-tick-data-service:latest` fresh per execution (no separate Job redeploy needed) — consistent with the
+2026-07-15T11:05:53Z consolidator run (5 min after the fixed image published) already reflecting the fix, per point 3
+above.
+
+**Verdict**: clean sweep. No additional/independent reseed mechanism found beyond the one already tracked by this doc
+(the full-rebuild deletion-resurrection gap, Part 2). That gap is not hypothetical — it is confirmed to be the actual
+mechanism, is already fixed in code, and the fix is confirmed content-live in production as of this check, with the live
+canonical currently showing 0 blank-`data_type` rows. Residual, non-urgent, already-tracked item: this doc's own P2 todo
+(audit `reconcile_phantom_manifest_rows_all.py`'s DeFi delete passes for the identical exposure class) remains genuinely
+open and is unaffected by this sweep's findings.
+
+Evidence: `gcloud storage ls -l` on `_index/per_vm/`, `_index/backups/`, `_index/snapshots/` for cefi/defi/tradfi
+(single-object listings, no corpus walk); full read of
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`; workspace-wide `rg` for
+`legacy_seed`/`_snapshot`/`_frozen`/`_backup`/`--force`/`rollback`/`restore`; `git show`/
+`git log`/`git merge-base --is-ancestor` on `unified-trading-library@{f14b13ae,8e783d70}` and
+`market-tick-data-service@{2f60fe31,48857be4,5f659c12}`; `gcloud builds list/describe` for `market-tick-data-service`
+build `b6e279af`; `docker pull`+`docker run` content-grep against UTL digest
+`sha256:7b9a94ea90ce2b5594000520758005bfc37e2c77785e571c043947ff4a77c9ae`; a single-object read of the live cefi
+canonical via `unified_trading_library.StorageClient`/`resolve_bucket_name` (ad hoc diagnostic, not committed).
