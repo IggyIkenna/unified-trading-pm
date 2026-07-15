@@ -318,11 +318,16 @@ depends_on: []
       that could be silently affected by the same writer cutover. (repo: cross-repo) — unified-trading-pm (this doc,
       "What I found" #8): found 5 more affected readers, the most severe being instruments-service's own
       `sports_dependency.py` pre-flight gate blocking 6 T1 adapters post-cutover. Filed as new P0/P1 todos below.
-- [ ] [CODE] P0. Fix `instruments-service/instruments_service/reference_data/sports_dependency.py`'s
+- [x] ✅ [CODE] P0. Fix `instruments-service/instruments_service/reference_data/sports_dependency.py`'s
       `check_api_football_dependency()` to also probe `entity=fixtures_schedule` (canonical + legacy `pipeline_mode=`
       prefix variants) — currently the pre-flight gate blocks footystats/understat/transfermarkt/
       soccer_football_info/open_meteo/betfair adapter fetches for every date on/after the writer cutover. (repo:
-      instruments-service)
+      instruments-service) — instruments-service@1415b735: added canonical
+      (`pipeline_mode=batch_api_football/entity=fixtures_schedule/`) + legacy (`entity=fixtures_schedule/`) prefix
+      probes, mirroring the existing fixtures probe pattern; 2 new regression tests in
+      `tests/unit/test_sports_dependency_bucket.py`. `fixtures_schedule` alone (not `fixtures_outcomes`) is used as the
+      equivalent "api-football ran" marker since it covers every fixture (played or not). QG green, shipped via
+      quickmerge.
 - [ ] [CODE] P1. Register `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` in
       `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SPORTS_DATA_TYPE_TO_FOLDER`
       (or teach `candidate_parquet_paths("FIXTURES", ...)` to probe both split entities) — the SSOT gap silently breaks
