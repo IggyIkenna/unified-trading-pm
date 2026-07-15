@@ -3349,3 +3349,52 @@ one new adjacent finding; it does not by itself move `expected_unattempted`, whi
 resolution → tarball → VM relaunch (todo 4) and/or the relabel `--apply` (todo 2), both operator-gated, unchanged from
 the entry above. neither is a "just wait a bit longer" situation — both need a human with repo/production-mutation
 authority.
+
+### Writer fix VERIFIED shipped (3 commits, one was a silent no-op) + the REMAINING mismatch is a STALE eu SHAPE — 2026-07-15T19:20Z
+
+**The writer fix landed** — and notably it was fixed THREE times by three independent lanes converging on the same
+defect within ~an hour: `market-tick-data-service@56679e78` (first cut), `@5d44a197` (fixed a case-sensitivity bug that
+made 56679e78 a **silent no-op** for every real Tardis venue — the write path emits uppercase `PERPETUAL` but the first
+fix's membership set was lowercase-only), and `@90ecde17` (this lane: the missing persisted unit tests — neither prior
+commit had one, which is exactly the gap that let the no-op through — plus honest-absence visibility: unresolved symbols
+now WARN + accumulate + emit a per-run summary instead of `logger.debug` silence). Bug site was
+`engine/orchestrator/venue_fetch.py::_record_venue_shard_counts` (`instrument_id_for_manifest = third_val`, the raw wire
+symbol) → `manifest_finalize.py::_write_shard_counts_to_manifest` → `record_captured`. **The parquet FILE content was
+always correct** (`tardis_shared.py::finalise_rows_and_path` → `derive_row_instrument_id`) — only the manifest KEY was
+raw. GCS filenames remain raw (unchanged, separate concern).
+
+**Orchestrator false alarm, corrected here for the record**: the shipped code reads
+`instrument_id_for_manifest = "" if is_derivative else _canonicalize_manifest_instrument_id(...)`, which looked like it
+skipped canonicalization for every derivative venue (i.e. most of the gap). It does NOT:
+`_UNDERLYING_PARTITIONED_TYPES = {"options_chain", "futures_chain", "combo"}` (`symbol_rules.py:258`) are DATA TYPES
+partitioned by underlying, not instrument types — `perpetual`/`future`/`spot` all take the canonicalizing branch. The
+variable name is misleading; the logic is right. Verified before reporting, not assumed.
+
+**The REAL remaining mismatch — the eu rows themselves carry a STALE, per-venue-inconsistent shape.** Live manifest
+reads show the expected side is not one namespace but a mix:
+
+| venue / data_type      | `expected_unattempted` shape                        | `captured` shape (pre-fix)      |
+| ---------------------- | --------------------------------------------------- | ------------------------------- |
+| KRAKEN-FUTURES/book5   | itype set, id CANONICAL `…:PERPETUAL:PIXEL-USD@LIN` | id raw `PI_ETHUSD`              |
+| BINANCE-FUTURES/trades | itype **EMPTY**, id **lowercase raw** `hotusdt`     | itype `perpetual`, id `BTCUSDT` |
+
+So some eu rows were materialised by an OLD enumerator (lowercase-raw id, empty instrument_type) and some by the current
+canonical one. Even with the writer now emitting canonical ids, a capture will NOT close a `(itype='', id='hotusdt')` eu
+cell. **This is a direct violation of the workspace HARD RULE "shard atom identical across
+writer/manifest/status/gate/UI"** (CLAUDE.md § DATA) — the atom currently differs between the enumerator's old output,
+the enumerator's new output, and the writer.
+
+**Next required step (NOT done — needs the operator's call on sequencing):** re-materialise the expected universe so
+every eu row carries the canonical atom, THEN relaunch waves on fresh tarballs so captures land matching. Until both
+sides speak one atom, coverage cannot move regardless of how much data is fetched. Related: a peer's relabel dry-run
+(`instruments-service@f021cb2b`) already quantified the historical raw-id captures — **3,133,117 candidates, 82.7%
+resolvable, 542,888 honestly unresolved** — `--apply` operator-gated, not run.
+
+**Also filed, not blind-fixed** (separate pre-existing defect, same class): `sentinels.py` Tier-3 diffs
+`expected_instruments` (canonical `instrument_key` via `CeFiCatalogReader`) against `captured_instruments` (populated by
+the older `_canonicalize_captured_instrument_id` heuristic, verified live to leave Kraken's `PI_`/`PF_` symbols
+untouched) — two schemes that cannot match.
+
+**Fleet note**: the 3 Tardis VMs + ASTER still run PRE-FIX tarballs, so they are still writing raw manifest ids. They
+are not destructive (the parquet bytes are correct and the relabel pass can credit them), but they are not closing eu
+either. Fleet decisions deliberately left to the operator/next tick rather than killed unilaterally mid-investigation.
