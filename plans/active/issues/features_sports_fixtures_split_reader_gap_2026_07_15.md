@@ -345,12 +345,27 @@ depends_on: []
       shipped via quickmerge. Note: re-checked `sports_fixtures_daily_repoll.py` — it does NOT actually call
       `candidate_parquet_paths` in code (only docstring mentions); the confirmed real caller is
       `fixture_id_resolver.py`.
-- [ ] [CODE] P1. Fix `deployment-api`'s 3 hardcoded `entity=fixtures` readers
+- [x] ✅ [CODE] P1. Fix `deployment-api`'s 3 hardcoded `entity=fixtures` readers
       (`deployment_api/services/upcoming_fixtures.py::_read_one_day_frame`,
       `deployment_api/services/data_status_drilldown/_csv_export.py::build_fixtures_csv_export`,
       `deployment_api/services/data_status_drilldown/_fixtures_pools.py`) to also probe the split entities — currently
       silently degrade (empty/None) for the Upcoming Fixtures panel + Data Status drilldown CSV export/pool on any date
-      on/after the cutover. (repo: deployment-api)
+      on/after the cutover. (repo: deployment-api) — deployment-api@4642bcf: added a shared
+      `deployment_api/services/_sports_fixtures_split.py::split_entity_league_blob_paths()` helper (probes the canonical
+      `pipeline_mode=batch_api_football/entity={E}/league=` prefix, then the legacy bare-prefix shape, mirroring the
+      pattern already shipped in instruments-service's `sports_dependency.py` + unified-trading-library's
+      `joined_reader.py`) and wired it into all 3 readers: `upcoming_fixtures.py` falls back to reading + concatenating
+      the per-league `fixtures_schedule` shards (raw af_-prefixed columns normalized to the friendly names
+      `_row_to_fixture` expects) when the legacy singleton is absent; `_csv_export.py`'s `build_fixtures_csv_export`
+      falls back to reading + left-joining `fixtures_schedule`/`fixtures_outcomes` shards on `af_fixture_id`;
+      `_fixtures_pools.py`'s `_load_fixture_meta` falls back to the split `fixtures_schedule` shards via the existing
+      `_FIXTURE_META_ALIASES` schema-adaptive resolution. `split_entity_league_blob_paths` is wired through the
+      `data_status_drilldown` package's `_dd` facade (per that package's existing test-patch-surface convention) for the
+      two drilldown readers; `upcoming_fixtures.py` imports it directly (standalone module). 7 new regression tests
+      (`tests/unit/test_upcoming_fixtures.py::TestSplitEntityFallback`,
+      `tests/unit/test_fixtures_split_entity_fallback.py`) covering: split-shard fallback success + column
+      normalization, genuine-gap (neither legacy nor split present) still returns honest-absence (empty/None/
+      "no_schedule"), and the schedule+outcomes left-join. Full `quality-gates.sh` green (137s), shipped via quickmerge.
 - [x] ✅ [CODE] P1. Fix
       `deployment-service/deployment_service/cli/utils/data_status_sports.py::     _load_fixture_counts_for_date` to
       also probe `entity=fixtures_schedule` — currently silently reports 0 fixtures (read as genuine expected-absence)
