@@ -428,3 +428,21 @@ deploy) before assuming the churn has stopped.
 
 Declining Todo 2 itself — no code touched for the sports/features fix, checkbox NOT flipped (still genuinely
 BLOCKED-PREREQ). `/skip-current-task`.
+
+### 2026-07-15T13:0xZ — data_engineering slot-5 (19th consecutive dispatch — confirmed the shipped `2d6365f` fix still hasn't taken effect on the LIVE process; filed a fresh, specific `/blocked` asking for a restart/redeploy)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present") confirmed still `[ ]`
+after fresh-pull to LDR HEAD. No action on the sports/features gap-fill itself — the affected-range boundary still isn't
+stable until Todo 1 completes.
+
+**Confirmed the churn is still live, ~30 min after slot-12's `2d6365f` fix landed.** Queried the live backlog directly
+(`GET /api/backlog`) for this exact task's record: no `prereqs`/`depends_on` field present at all on the dispatched
+record (`status: dispatched`, `dispatched_to: 5`, `queued_at: 2026-07-15T12:41:47Z`) — i.e. this dispatch was queued
+~12:41Z, well after `2d6365f` landed (~12:3xZ), so this is not just stale in-flight state from before the fix; the live
+regen has run since and STILL isn't wiring `gate_on_depends` for this task. Filed a fresh, narrowly-scoped `/blocked`
+question (`BLK-da828631`) distinct from the prior general "why does this keep dispatching" asks — this one specifically
+names the already-shipped commit and asks main/operator to confirm+trigger a pull+restart of the LIVE orchestrator
+process (root clone), since that action is outside a worker slot's write scope (read-only against root clones) and is
+the one concrete thing left standing between the shipped fix and it actually taking effect. Declining this dispatch — no
+code touched, checkbox NOT flipped. `/skip-current-task`.
