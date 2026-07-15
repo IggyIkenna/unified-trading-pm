@@ -368,7 +368,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       `instrument_id` are canonical); the orphan/relabel quantification for that is already covered by todo (2)'s
       dry-run above (3,133,117 candidates / 82.7% resolvable / 542,888 honest-unresolved) — nothing new to quantify
       since this pass changed no filenames.
-- [ ] [BACKEND] P1. **NEW FINDING — the Tier-3 sentinel's OWN captured-vs-expected comparison looks broken for CeFi
+- [x] ✅ [BACKEND] P1. **NEW FINDING — the Tier-3 sentinel's OWN captured-vs-expected comparison looks broken for CeFi
       Tardis venues, independent of and pre-dating this whole defect class.** `sentinels.py::_emit_tier3_for_dt` diffs
       `expected_instruments` (from `get_expected_instruments_for_venue`, whose `instruments_provider` resolves to
       `cefi_catalog_by_venue` — `CeFiCatalogReader`'s `instrument_id` column, confirmed via
@@ -396,7 +396,26 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       pattern as todo 1, but needs its own case-sensitivity/scope care — this exact defect class has already bitten
       TWICE in this doc, `56679e78`→`5d44a197`), or (b) normalising `expected_instruments` DOWN to the legacy bare form
       instead — a real design decision, not obviously correct either way without checking every venue, not just Kraken.
-      Recommend a dedicated fix-plan todo, same pattern as this doc's own P0 items.
+      Recommend a dedicated fix-plan todo, same pattern as this doc's own P0 items. —
+      `market-tick-data-service@bbf6649c`. Fixed in `venue_fetch.py::_record_venue_shard_counts`: for Tardis-sourced
+      venues (`_VENUE_TO_DATA_SOURCE[venue] == "tardis"`, same scope guard as todo 1's manifest-write fix), add the
+      manifest-write canonicalizer's output (`_canonicalize_manifest_instrument_id` — the SAME proven-correct derivation
+      as todo 1, not `_canonicalize_captured_instrument_id`) to `captured_per_instrument_shards` **alongside** the
+      legacy bare form, rather than replacing it. Live-tested this decision was necessary, not just simpler: a
+      pre-existing test
+      (`test_orchestrator_per_data_type_sentinel.py::     test_tier3_cefi_perp_partial_capture_fans_out_per_instrument`)
+      failed on a naive "swap the function" fix — its fixture (and the real fallback path in `sentinel_catalogs.py`,
+      which silently falls back to the v1 UAC seed tables on ANY catalog-read exception) proves `expected_instruments`
+      is sometimes the bare UAC-seed shape (`BTC-PERP`), not always the IS catalogue's full canonical `InstrumentKey`.
+      Since `captured_per_instrument_shards` is a set used purely for membership-testing, carrying both candidate shapes
+      is cheap and correct regardless of which comparison mode is active for a given date/venue — confirmed via a live
+      repro (`_canonicalize_manifest_instrument_id("KRAKEN-FUTURES", "PERPETUAL", "PF_IOTAUSD")` →
+      `"KRAKEN-FUTURES:PERPETUAL:IOTA-USD@LIN"`, matching the catalogue shape) and unit tests locking both the
+      Tardis-canonical-match case and the non-Tardis/sports untouched case
+      (`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py::TestTier3CapturedInstrumentsCanonicalization`, 6
+      new tests). Full `quality-gates.sh` green (6172 passed) both before commit and re-verified after the rebase
+      pull-in (a peer slot's `tardis_concurrency_lease.py` fix landed mid-session); the file-size ratchet forced a trim
+      of the inline comment to stay under the 900-line cap for `venue_fetch.py` (908→898 lines).
 
 ## Progress Log
 
