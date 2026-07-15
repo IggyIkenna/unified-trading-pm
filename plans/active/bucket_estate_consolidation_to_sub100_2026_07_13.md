@@ -1491,3 +1491,36 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      `lending_indices_handler.py` specifically (every prior verification in the OOM issue doc was either synthetic/
      local or a different handler/the separate consolidator Cloud Run job). **Will update this entry again on completion
      or crash** — do not treat item 13 as closed from this entry alone.
+
+- **2026-07-15, `instruments-store-sports` Migrate-phase dispatch — declined, collision with item G / HELD sports plan;
+  no objects copied, no code shipped.** A prior-touch diff phase (already recorded, structured JSON echoed back in this
+  session's dispatch) found `uniqueObjectCount=400`, `safeToDeleteWithoutMigration=false`, and two genuinely-unique
+  bare-only prefixes with no `-prd` counterpart: (1) `day=2026-03-21/venue=BETFAIR/` (2 parquet objects, single
+  generation each) and (2) `sports_reference_v1_archive/by_date/` (~398 day-partitions, 2018-01-02 through 2026-04-20,
+  uncounted at object level — a recursive listing of just this subtree timed out at 90s, single-walk discipline
+  respected, not re-attempted). The bulk of the bucket (`instrument_availability/`) is already covered by
+  `sports_manifest_canonicalisation_2026_06_01`'s manifest-cell-level diff (far more rigorous than a raw object count)
+  and was correctly NOT re-diffed.
+  - **Why this touch did NOT execute the migrate: read this row's own item G above plus the full sister plan tail
+    (`sports_manifest_canonicalisation_2026_06_01.md`, 4,145 lines) before acting.** That plan is
+    `locked_by: live-defi-rollout`, actively dispatched (`assigned_vm: planning`), and its own P0 todo carries an
+    explicit do-not-redispatch note; its last ~4 Progress Log entries (2026-07-14) record ~30 redispatch-churn touches,
+    a STOP-gated production maintenance-window blocker (`BLK-d9137d48`), and an unapplied `prereqs.conditions` parking
+    request. Item G directly above (line ~533) already states, current and unedited by me: **"Still HELD — do not
+    purge/delete either bucket."** Migrating even the two prefixes outside CF-8's stated scope still means writing new
+    objects + manifest rows into a bucket pair under an active, contested, churn-prone plan, mid a delicate
+    operator-gated backfill-redesign wait — a unilateral copy by an unrelated dispatch is exactly the "fits another plan
+    → annotate, don't fix" collision-risk case per workspace findings-triage rules, not a "small + clear ≤30 min" case.
+    Terraform/scheduler/FUSE-mount/VM-launcher/~30-script live-reference surface on this bucket (found by the diff-phase
+    touch) independently means a real cutover — not just a data copy — would be needed before deletion regardless,
+    reinforcing that this is squarely the sister plan's territory, not a bolt-on from this dispatch.
+  - **Action taken instead**: zero objects copied, zero manifest rows written, zero code shipped, zero terraform/deploy
+    touched. This Progress Log entry (a `docs(plans):` edit) is the annotation — flagging for the sister plan's next
+    real touch (once CF-8 is unblocked) that the two above prefixes are genuine, uncharacterized gaps outside its
+    `instrument_availability/`-scoped cell-diff and should be swept before any eventual E8 bucket-deletion ask. Did not
+    hand-edit the 4,145-line sister plan directly given its active-churn/lock state — a bigger edit there risks
+    colliding with whichever slot picks up its next dispatch; this pointer is the lower-risk annotation surface.
+  - **Verdict for the orchestrating migrate-phase task**: `instruments-store-sports` is NOT ready for
+    delete/migrate-then-delete this round — reported back structurally as blocked-collides-with-sports-plan, matching
+    the diff-phase touch's own recommendation (trust-and-verify confirmed, not re-derived). No regression introduced;
+    bucket estate count and item G's status are unchanged by this touch.
