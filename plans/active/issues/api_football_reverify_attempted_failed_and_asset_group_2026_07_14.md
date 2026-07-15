@@ -110,3 +110,36 @@ that should never happen. None are blocked on credentials.
       source=api_football** (date=2026-06-26). Trace the writer that emitted a UNISWAP_V3-BASE row with
       source=api_football into the sports bucket; delete the phantom row (CAS-safe) and fix the mis-route at source if
       reproducible. (repo: market-tick-data-service / instruments-service)
+
+## Update 2026-07-15 — Finding A closed; Finding B grown (37x), Finding C unchanged, still root-caused
+
+Live re-check against the current canonical (`instruments-store-sports-prd`, 5,432,276 rows) as part of this session's
+final whole-plan re-verify:
+
+- **Finding A (undocumented attempted_failed): CLOSED.** INJURIES and FIXTURES both now `0` (fixed
+  `instruments-service@493393c8` + `21591e54` + `9b4f7655`, independently verified live). Total api_football
+  `attempted_failed` is now **766** (was 4,268) — 305 is the already-tracked CF11 class (`PLAYER_STATS` 87,
+  `FIXTURE_STATS` 80, `FIXTURE_EVENTS` 65, `FIXTURE_LINEUPS` 49, `TEAMS` 24), 461 is the blank-data_type residual
+  (root-caused this session — see the sports plan's Progress Log 2026-07-15 entry — a genuinely separate class from
+  finding A, not a re-fetch target). Both remaining classes are already tracked elsewhere; no action needed on this todo
+  beyond what's already landed.
+- **Finding B (blank asset_group): NOT closed, and much bigger than recorded here.** Re-measured 2026-07-15:
+  api_football alone now has **844,209** blank-`asset_group` rows (was 22,668 on 2026-07-14 — a ~37x increase). This is
+  the SAME root cause already documented above (the consolidator's asset_group heal never covers
+  `instruments-store-sports`), not a new bug — the count grew because this session's own write volume was unusually
+  large (a 328K-row pre-launch purge, multiple multi-hundred-thousand-row reconciliations/migrations, several
+  residual-closer backfill rounds — none of these paths stamp `asset_group` explicitly, so they all landed as blank,
+  same as every pre-v9 write always has). Also newly confirmed the SAME blank-asset_group pattern exists on every other
+  sports source, not just api_football: footystats 99,048 / soccer_football_info 360 / transfermarkt 45 / open_meteo
+  1,804 (`odds_api` and `mdps_odds_horizon_bucket` show **0** blank — those writers already stamp asset_group
+  explicitly). The P1 todo above (extend the consolidator heal to `instruments-store-{ag}`) is the correct fix and
+  should be scoped to ALL sports sources, not just api_football, given this — updating title/summary would be reasonable
+  next time this doc is touched, but left as-is here to avoid rewriting another slot's filed finding without a fix in
+  hand.
+- **Finding C (defi/UNISWAP_V3-BASE contamination row): unchanged, still exactly 1 row, still open.**
+- **Bonus, smaller finding**: a proper dedup-key check (including `instrument_id`, which the original PASS verdict's key
+  did not — worth noting since it changes the "0 duplicate-dedup-key groups" PASS from 2026-07-14) finds exactly **2**
+  duplicate groups, both `odds_api`/`trades`/`instrument_id∈{soccer_epl, soccer_italy_serie_a}` on `date=2026-06-21` —
+  each is the same `instrument_id` captured twice with identical `row_count` at two different `written_at` timestamps (a
+  benign double-write-event, not obviously corrupted underlying data) — small enough (2 groups, one date) not to warrant
+  its own todo, noting here for completeness.
