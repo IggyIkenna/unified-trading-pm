@@ -39,7 +39,7 @@ parent_epic: instruments_master
 priority: P1
 source: ["operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47"]
 assigned_vm:
-resolved_by:
+resolved_by: ["instruments-service@24f84e86 (sports)"]
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -104,6 +104,83 @@ OOM kill, not an application exception (no traceback, no `CATALOGUE_ROLLUP_FAILE
 externally). `prod/catalog.parquet` for prediction is frozen at 2026-07-14T00:58:37Z / 2,673,230 rows (the last
 successful promote). Needs: bump the job's memory limit (or slim the guard/promote-write step's peak memory) and re-run.
 
+## 2026-07-15 — sports 6-row diagnosis + fix (follow-up investigation)
+
+Dispatched to identify the EXACT 6 rows behind the sports `CATALOGUE_SHRINK_BLOCKED` (27,216→27,210) per the operator's
+"investigate the 6-row diff first" decision. Reproduced the roll-up read-only against live prod GCS (downloaded the live
+`prod/catalog.parquet`, re-ran `build_sports_catalogue_from_manifest` + `build_sports_fixture_team_player_catalogue`
+directly) and cross-checked against live `gcloud logging read` for both `lifecycle-catalogue-regen-sports` executions.
+
+**The exact accounting (not a simple "6 rows removed" — a 9-removed / 3-added net of -6):**
+
+- **9 rows aged OFF** the fixture/team/player (FTP) grain's rolling window — every one of them had
+  `available_from == available_to == "2025-06-09"` in the live catalogue (their ONLY ever-observed day), which is
+  exactly `since_2026-07-14 = 2026-07-14 − 400d`. When `since` advanced to `2026-07-15 − 400d = 2025-06-10` on the next
+  run, day `2025-06-09` fell out of the walked window entirely (confirmed via `gcloud storage ls` on
+  `sports_reference/by_date/day=2025-06-09/**`: 95 ftp-entity blobs live there) and these 9 rows had no other day to
+  anchor on, so they vanished from the fresh rebuild completely:
+  - `BRASILEIRAO_SERIE_B:AMAZONAS_v_ATHLETIC_CLUB:20250609` (fixture)
+  - `BRASILEIRAO_SERIE_B:CRICIUMA_v_VILA_NOVA:20250609` (fixture)
+  - `MLS:LOS_ANGELES_FC_v_SPORTING_KANSAS_CITY:20250609` (fixture)
+  - `MLS:VANCOUVER_WHITECAPS_v_SEATTLE_SOUNDERS:20250609` (fixture)
+  - `SVENSKA_CUPEN:BALKAN_v_LUND:20250609` (fixture)
+  - `JOHNSON_T` (player, MLS — T. Johnson, Vancouver Whitecaps, confirmed present in
+    `day=2025-06-09/.../entity=injuries/league=MLS/injuries.parquet`)
+  - `MARTINEZ_D` (player, MLS — D. Martinez, LA FC)
+  - `ROSARIO_O` (player, MLS — O. De Rosario, Seattle Sounders)
+  - `VITE_P` (player, MLS — P. Vite, Vancouver Whitecaps)
+- **3 rows gained** the same run — brand-new same-day fixtures
+  (`sports_reference/by_date/day=2026-07-15/.../ entity=fixtures/league=USL_CHAMPIONSHIP/fixtures.parquet`, confirmed
+  downloaded + read): `USL_CHAMPIONSHIP:MIAMI_FC_v_INDY_ELEVEN:20260715`,
+  `USL_CHAMPIONSHIP:LEXINGTON_v_NEW_MEXICO_UNITED:20260715`,
+  `USL_CHAMPIONSHIP:SPORTING_JAX_v_PITTSBURGH_RIVERHOUNDS:20260715`.
+- **Net: −9 + 3 = −6**, exactly matching the observed `27,216 → 27,210`. league_df (94 rows, manifest-derived, unrelated
+  to the by_date window) was independently confirmed unchanged both days — the entire shrink lives in the FTP grain.
+
+**Verdict: BUG, not a legitimate shrink and not transient/flaky upstream data.**
+
+- Not legitimate: none of the 9 rows involve a de-registered league (`_sports_league_registered`/`LEAGUE_REGISTRY` gate)
+  — MLS, BRASILEIRAO_SERIE_B, SVENSKA_CUPEN are all live, currently-registered leagues. Nothing was de-listed upstream;
+  these fixtures/players are still real, they just aged out of an arbitrary trailing window.
+- Not transient/flaky: both 07-15 job attempts (task0 `catalogue-rollup-sports-20260715T010059Z` and its automatic retry
+  `…20260715T010648Z`) found the IDENTICAL 49,916 by_date blobs and produced the IDENTICAL 27,210-row result — a
+  rate-limit/partial-response flake would not reproduce byte-identically twice.
+- Root cause: `build_sports_fixture_team_player_catalogue`'s trailing `SPORTS_FTP_WINDOW_DAYS=400` window is recomputed
+  fresh (`since = today − 400d`) on every run, and — unlike cefi/defi/tradfi/prediction, which all get
+  `_merge_incremental`'s "frozen tail" (a prior-catalogue row absent from the fresh window is carried through unchanged,
+  never dropped) — sports is unconditionally forced to `mode=full` with NO merge onto the previous catalogue at all
+  (`"mode=incremental is a no-op for sports"` — true when that comment was written pre-2026-07-09, false since the FTP
+  grain started walking by_date). An instrument whose last-observed day ages past the window's leading edge doesn't just
+  get its `available_to` closed — the WHOLE ROW disappears, contradicting the module's own documented contract ("a
+  cumulative, all-instruments-ever lifecycle catalogue, NOT a current snapshot" — module docstring). This is not a
+  one-off: it recurs by construction every day some number of rows age out, so the monotonic guard would keep tripping
+  intermittently forever until fixed.
+
+**Fix shipped** (instruments-service@24f84e86, quickmerge-landed on `live-defi-rollout`, quality gates green 198s):
+added `_merge_sports_ftp_with_frozen_tail()` to `build_instrument_catalogue.py`, which loads the previous catalogue's
+FTP-grain rows (`instrument_type in {fixture, team, player}`) and merges them onto the fresh window rebuild via the SAME
+generic `_merge_incremental()` engine the other asset groups already use — its default (non-prediction, non-DeFi-pool)
+merge key is the bare `instrument_id`, which already IS the fixture_id/team_id/ player_id identity these rows carry, so
+no sports-specific key branch was needed; its venue-presence-gated close is a natural no-op here (sports FTP rows carry
+`venue=""` by design), so an aged-off row is carried through frozen (unchanged `available_from`/`available_to`) rather
+than dropped. `run_rollup`'s sports branch now loads `_load_previous_catalogue(...)` and routes the FTP grain through
+this helper before concatenating with the unchanged manifest-derived `league_df`. Added 2 regression tests
+(`test_sports_ftp_frozen_tail_keeps_row_that_aged_off_the_window`,
+`test_sports_ftp_frozen_tail_no_prev_catalogue_returns_window_only`) proving an aged-off row survives frozen and a cold
+start (no previous catalogue) still works. Full `instruments-service` quality-gates.sh passed (198s, pre-existing
+unrelated warnings only: `market-tick-data-service` adapter-contract baseline, basedpyright error count,
+sports_reference orchestrator function-size — none touched by this change).
+
+**Next scheduled `lifecycle-catalogue-regen-sports` run (`0 1 * * *` UTC)** should now produce a monotonically-growing
+catalogue (frozen tail preserves all 9 aged-off rows + the FTP window's fresh recompute + league_df), clearing
+DP-CATALOG-001/`CATALOGUE_SHRINK_BLOCKED` for sports without any `--allow-catalogue-shrink` override. Not verified live
+post-fix in this session (the fix landed at 10:50 local, ahead of the next 01:00 UTC scheduled run) — flagged as a
+follow-up verification, not left as an open todo requiring further code work.
+
+- [ ] [OPS] P2. Verify the next scheduled `lifecycle-catalogue-regen-sports` run (next `0 1 * * *` UTC after
+      instruments-service@24f84e86 lands on the deployed image) promotes successfully (no `CATALOGUE_SHRINK_BLOCKED`)
+      and `prod/catalog.parquet` row count is `>= 27,216`. Repo: instruments-service.
+
 ## Not previously tracked
 
 Grepped `plans/active/issues/` for `DP_CATALOG_NOT_RUNNING`, `DP-CATALOG-001/002`, `CATALOGUE_SHRINK_BLOCKED`, and
@@ -113,10 +190,10 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
 
 ## Open work (tracked todos)
 
-- [ ] [OPS] P1. Sports — operator decision: confirm whether the 27,216→27,210 shrink is a legitimate
-      league-de-registration correction; if so, re-run `lifecycle-catalogue-regen-sports` with
-      `--allow-catalogue-shrink`; if not, investigate the by_date source data regression first. Repo:
-      instruments-service.
+- [x] [OPS] P1. Sports — diagnose the 27,216→27,210 shrink — instruments-service@24f84e86 + evidence: NOT a legitimate
+      league-de-registration and NOT upstream flakiness — a real enumerator bug (rolling `SPORTS_FTP_WINDOW_DAYS=400`
+      window with no frozen tail). Fixed directly + regression-tested + shipped via quickmerge (see "2026-07-15 — 6-row
+      diagnosis + fix" below). Repo: instruments-service.
 - [ ] [INFRA] P1. Prediction — raise `lifecycle-catalogue-regen-prediction`'s Cloud Run Job memory limit above 4Gi (or
       profile/slim the monotonic-guard + promote-write step's peak memory for a 2.67M-row catalogue) so the job stops
       SIGKILLing at the promote stage; re-run once fixed and verify `prod/catalog.parquet` advances past
@@ -132,3 +209,12 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
   tradfi corp-actions commit (`03f71c81a`) caused this staleness. Regression CLEARED (different script/artifact +
   tradfi-scoped edit + timing precludes causation — see above). Root-caused both alerts via live
   `gcloud run jobs executions list` + `gcloud logging read` + `gsutil stat` (no code changes made; diagnosis only).
+- 2026-07-15 (follow-up): Dispatched per operator decision to investigate the sports 6-row shrink before deciding on
+  `--allow-catalogue-shrink`. Reproduced the roll-up read-only against live prod GCS, identified the exact accounting (9
+  rows aged off the FTP grain's rolling 400-day window, 3 new same-day fixtures gained, net −6 — see "2026-07-15 —
+  sports 6-row diagnosis + fix" above), reached a BUG verdict (not legitimate, not transient), and fixed it directly per
+  the operator's pre-authorized "bug → fix + test + ship" branch: instruments-service@24f84e86 (frozen-tail merge for
+  the sports FTP grain via the existing `_merge_incremental` engine), 2 new regression tests, quality gates green,
+  shipped via quickmerge to `live-defi-rollout`. Did NOT run `--allow-catalogue-shrink` (out of scope per operator
+  instruction — that remains a human/operator-facing override action, moot now that the underlying bug is fixed). Left
+  one P2 follow-up todo to verify the next scheduled run actually promotes clean.
