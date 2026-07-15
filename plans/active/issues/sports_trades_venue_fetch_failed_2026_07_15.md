@@ -86,6 +86,7 @@ estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
+depends_on: []
 ---
 
 # sports/trades VENUE_FETCH_FAILED + EmptyFromLiveInstrumentError-guard investigation — 2026-07-15

@@ -45,6 +45,9 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # features-onchain bare bucket is not an asset-group-classifiable migration target
