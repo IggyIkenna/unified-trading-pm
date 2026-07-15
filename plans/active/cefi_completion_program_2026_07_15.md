@@ -212,3 +212,37 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   then IS back-to-back before any recompute). Awaiting SHAs.
 - Lesson: my original E spec was a mis-diagnosis; adversarial verification caught a real T0 regression pre-ship. Verify
   denominator changes against actual enumerator behavior, not the rule shape.
+
+### 2026-07-15T14:05Z — tick 3: MTDS agent done (D-code-MTDS + I diagnosis) — two more corrections
+
+**D-code-MTDS — HL phantom: RECONCILE not re-capture (mtds@57e26c0f, regression test only):**
+
+- My `@LIN`-churn hypothesis was WRONG. The 1,277 `phantom_captured_no_parquet_at_canonical_path` HL rows are
+  `pipeline_mode=live_hyperliquid`, OLD form `HYPERLIQUID:PERP:<COIN>`, dates 2026-06-23→06-29 — and the parquets EXIST
+  on disk at the live path. Root cause: an OLD reconcile run probed only `batch_*` prefixes → false-phantomed live
+  cells. Already fixed in UAC 2026-07-11 (`canonical_path_templates('cefi')` emits both batch+live prefixes).
+- Split: **1,277 RECONCILE / 0 RECAPTURE** (proven via production-tool dry-run: unphantom 1277, still-phantom 0).
+- **D-tail correction**: the plan's "re-capture the 1,277 phantom dates" is UNNECESSARY — data on disk; a re-census
+  suffices. Command (run in workstream H, coordinated):
+  `cd instruments-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --unphantom-only --venues HYPERLIQUID --workers 16`
+  (add `--dry-run` first; `--unphantom-only` is safe — only flips af→captured).
+- The genuine HL tail gap = 2026-06-30 → now (part of workstream A recent-tail backfill). Separate residual: 206
+  `StreamingParquetWriter pre-write validation failed` rows (blank itype, 2024-01-03→2026-02-05) = genuine writer fails,
+  no parquet → need re-capture in the B sweep, not the re-census.
+- MTDS deliverable = a `parse_hive_path` regression test locking BOTH HL conventions (live old-form + batch `@LIN`). No
+  MTDS prod-code change (the scanner already resolves both; duplicating path-templates would recreate Axis-10 drift).
+
+**I — EXTENDED-STARKNET book5: genuinely LIVE-ONLY → UAC `batch_capable=False`:**
+
+- MTDS `cli/handlers/_onchain_perp_batch_live_only.py` declares
+  `LIVE_ONLY_DATA_TYPES["EXTENDED-STARKNET"]={book_snapshot_5}` (orderbook endpoint is snapshot-only, no history — same
+  as ASTER). Adapter has no historical orderbook method.
+- UAC contradiction: `data_type_capability.py:653-669` — a comprehension sets `batch_capable=True` for (PACIFICA-SOLANA,
+  EXTENDED-STARKNET, LIGHTER-ZKSYNC) × (trades, book_snapshot_5, derivative_ticker), contradicting ASTER's own book5
+  entry (batch_capable=False) + the MTDS runtime SSOT. Also LIGHTER-ZKSYNC trades is over-declared batch.
+- FIX (UAC edit, route through the UAC agent once it frees — avoid two-on-UAC): carve book5 (and LIGHTER trades) out of
+  the batch_capable=True comprehension → `batch_capable=False, live_capable=True` (mirror ASTER). Post-fix the
+  0-captured book5 becomes correct `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]`. This is the SAME
+  live-only-not-in-batch- denominator principle as the ASTER liquidations ruling (tick 2).
+- Status flips: D-code-MTDS ✅ shipped (mtds@57e26c0f). I = queued UAC edit. HL phantom re-census + 206-writer-fails =
+  queued into H/B.
