@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Canonical MVP Scope — the SSOT for "what MVP means" per asset_group × venue × data_type
 summary: >-
-  Canonical MVP-scope SSOT — the strict rules-derived subset of the could-exist universe per
-  (asset_group, venue, instrument_type, data_type): CeFi perp-gate + options_chain-only + Coinbase
-  trades-only, TradFi CME ohlcv_1m-only, DeFi tag-all, Sports 94-league football, Prediction
-  Polymarket+Kalshi arb-overlap; code SSOT MVP_SCOPE at config version 11.
+  Canonical MVP-scope SSOT — the strict rules-derived subset of the could-exist universe per (asset_group, venue,
+  instrument_type, data_type): CeFi perp-gate + options_chain-only + Coinbase trades-only, TradFi CME ohlcv_1m-only +
+  OPTION narrowed to the ES/S&P-500 complex only, DeFi tag-all, Sports 94-league football, Prediction Polymarket+Kalshi
+  arb-overlap; code SSOT MVP_SCOPE at config version 14.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,9 +21,13 @@ related:
   ]
 created: 2026-06-27
 authoritative_for: [canonical MVP scope definition per asset_group]
-referenced_by: [codex/04-architecture/instrument-universe-registry-consolidation.md, codex/09-strategy/mvp-universe-per-asset-group.md]
+referenced_by:
+  [
+    codex/04-architecture/instrument-universe-registry-consolidation.md,
+    codex/09-strategy/mvp-universe-per-asset-group.md,
+  ]
 owner:
-last_reviewed: 2026-06-27
+last_reviewed: 2026-07-14
 code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py]
 codified: 2026-06-27
 ---
@@ -68,15 +72,28 @@ screen lands). data_types: dex_pool_state/dex_pool_swaps/lst_rates/lending_indic
 
 ### TradFi
 
-| Axis              | MVP                                                                                                                   |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Venue             | CME (futures complex). Equity-basis carve-out: NASDAQ/NYSE/ARCA/KRX EQUITY/ETF in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` |
-| Instrument types  | FUTURE · **OPTION** (CME options — MVP once ingested; catalogue has 0 CME OPTION rows today)                          |
-| **data_type cut** | **ohlcv_1m ONLY** (decision #7 — NO ohlcv_1s, NO trades/tbbo)                                                         |
-| Underliers        | ES · NQ · VX + the CME commodity roots backing a Binance tradfi-perp (GC/SI/PL/PA/NG/CL/HG)                           |
+| Axis                         | MVP                                                                                                                                                                                                                                 |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venue                        | CME (futures complex). Equity-basis carve-out: NASDAQ/NYSE/ARCA/KRX EQUITY/ETF in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`                                                                                                               |
+| Instrument types             | FUTURE · OPTION (CME options — ingested 2026-07-14, 739,278 catalogue rows)                                                                                                                                                         |
+| **data_type cut**            | **ohlcv_1m ONLY** (decision #7 — NO ohlcv_1s, NO trades/tbbo)                                                                                                                                                                       |
+| Underliers (FUTURE)          | ES · NQ · VX + the CME commodity roots backing a Binance tradfi-perp (GC/SI/PL/PA/NG/CL/HG)                                                                                                                                         |
+| **Underliers (OPTION only)** | **ES ONLY** (`TradFiMvpRule.option_underliers` / `TRADFI_MVP_OPTION_UNDERLYING_ROOTS`, operator ruling 2026-07-14) — GC/CL/NG/SI/PL/PA/HG/NQ/VX options are explicitly OUT of MVP even though those roots stay MVP for FUTURE cells |
 
-> **CME options ingestion is a SEPARATE agent's job** — this rule only ensures CME options tag MVP at ohlcv_1m once the
-> option instrument-definitions are ingested into instruments-service.
+> **CME options are now ingested** (739,278 catalogue rows as of the 2026-07-14 tradfi lifecycle-catalogue-regen). Once
+> ingested, the naive rule (every FUTURE underlier's OPTION also MVP) tagged ALL 739,278 rows `mvp=True` — the `is_mvp`
+> grain has no per-instrument_type underlier narrowing before v14. **Operator ruling (2026-07-14,
+> `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`, verbatim): "We DO want tradfi options for S&P 500 — options
+> and futures — but NO other options in tradfi MVP; just the single stocks, ETFs and futures already in MVP."**
+> Implemented as a new `option_underliers` field on `TradFiMvpRule` (mirrors the pre-existing CeFi `options_base_ccys`
+> Deribit-options narrowing pattern) — OPTION cells resolve their underlying FUTURE contract's root
+> (`build_instrument_catalogue.py::_tradfi_contract_code_to_root`) and gate on `option_underliers` instead of the flat
+> `underliers` set. Post-narrowing: OPTION `mvp=True` rows dropped from 739,278 → 414,140 (raw catalogue leaves; all
+> resolve to an `ES*` underlying contract code). The historical (2018–2026) `expected_unattempted` catch-up this
+> narrowing unblocked: full-history scan-only 1,711,386 → 498,840 candidates (well under the 1,000,000 enumerator safety
+> cap), applied via `enumerate_expected_universe.py --enumerator-version v2 --apply-write` (498,840 rows: 290,688
+> `expected_unattempted` + 208,152 typed `empty_confirmed`; 95,785 of those are the `options_chain` bundle grain). SSOT:
+> `unified-api-contracts@1753a084`.
 
 ### Sports
 
@@ -118,7 +135,11 @@ expected-absent AND skipped by the IS producers (no attempt → no `attempted_fa
 
 ## Config versioning
 
-`MVP_SCOPE_CONFIG_VERSION = 11` (v11 = COINBASE-SPOT/-FUTURES trades-only, drop book_snapshot_5; Coinbase-only — NO
-Deribit override) / `MVP_SCOPE_CONFIG_HASH` flips IFF `MVP_SCOPE` content changes (a scope-change vs a data-change,
-surfaced in data-status). The sports-leagues config (`SPORTS_LEAGUES_CONFIG_VERSION`) versions `LEAGUE_REGISTRY`
-independently. Bump the version on any rule-content change — keep the predicate deterministic.
+`MVP_SCOPE_CONFIG_VERSION = 14` (v14 = tradfi OPTION underlier narrowing to `option_underliers={"ES"}`, 2026-07-14; v13
+= DeFi "everything we capture" broadening; v12 = DeFi ROCKETPOOL-ETHEREUM exclusion; v11 = COINBASE-SPOT/-FUTURES
+trades-only, drop book_snapshot_5, Coinbase-only, NO Deribit override) / `MVP_SCOPE_CONFIG_HASH` flips IFF `MVP_SCOPE`
+content changes (a scope-change vs a data-change, surfaced in data-status). The sports-leagues config
+(`SPORTS_LEAGUES_CONFIG_VERSION`) versions `LEAGUE_REGISTRY` independently. Bump the version on any rule-content change
+— keep the predicate deterministic. Full per-version changelog:
+`unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py` docstring on
+`MVP_SCOPE_CONFIG_VERSION`.

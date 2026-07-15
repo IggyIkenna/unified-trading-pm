@@ -14,7 +14,12 @@ summary:
   full-history apply correctly withheld per the task's own STOP instruction. The re-enumeration todo is RESOLVED
   (closed, per decide-and-document authority) as superseded by the standing daily cron; a deliberate one-time
   full-history catch-up remains available as operator-gated future work (option B below). Only the barchart item remains
-  open.
+  open. UPDATE (2026-07-14/15) — **operator ruling narrowed tradfi MVP options to the S&P 500 / ES complex ONLY**
+  ("tradfi options for S&P 500 — options and futures — but NO other options in tradfi MVP"); implemented at the UAC SSOT
+  (`TradFiMvpRule.option_underliers`, `unified-api-contracts@1753a084`), catalogue re-tagged (OPTION mvp=True
+  739,278→414,140), full-history scan-only dropped 1,711,386→**498,840** (under the 1M cap) — **the one-time
+  full-history catch-up (option B) is now DONE**, applied via `--apply-write` (498,840 rows — 290,688
+  expected_unattempted + 208,152 typed empty_confirmed), consolidator-merged, floor-clip re-run. See Progress Log.
 status: open
 nature: process
 asset_group: [tradfi]
@@ -41,7 +46,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 ---
 
 # TradFi EU not draining — source-axis seed/capture drift (PROVEN)
@@ -300,9 +305,119 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
       `--start-date 2026-02-20`), which now also benefits from today's data_type-narrowing fix. A deliberate one-time
       FULL 2018-2026 catch-up remains available as future work (option B in the Progress Log) but needs an explicit
       operator-chosen `--start-date` floor — a data-correctness scope call outside this task's authority. See Progress
-      Log 2026-07-14 entries for full diagnosis.**
+      Log 2026-07-14 entries for full diagnosis.** **2026-07-15 — option B EXECUTED under an explicit operator
+      `--start-date` ruling (the ES-only options narrowing itself, which shrank the historical candidate space under the
+      1M cap without needing a narrower date floor). Full 2018-2026 one-time catch-up APPLIED: 498,840 rows (290,688
+      `expected_unattempted` + 208,152 typed `empty_confirmed`) written + consolidator-merged + floor-clip reclassified
+      (18,980 further rows: 8,959 mbp_10 Databento-floor + 10,021 derived ohlcv_15m). See the new 2026-07-15 Progress
+      Log entry below for full evidence (shas, row counts, gate verification).**
 - [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
       Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY
       hold real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during
       the 2026-06-24 massive purge. **2026-07-14: confirmed this remains the doc's only OTHER open item besides #2 above
       — no action taken this session (operator-gated, unchanged).**
+
+- 2026-07-15 — **Operator ruling implemented end-to-end: tradfi MVP options narrowed to the S&P 500 / ES complex ONLY,
+  catalogue re-tagged, and the full 2018-2026 historical EU catch-up (option B, previously deferred) APPLIED.**
+  - **Operator ruling (verbatim):** "We DO want tradfi options for S&P 500 — options and futures — but NO other options
+    in tradfi MVP; just the single stocks, ETFs and futures already in MVP." I.e. tradfi MVP options scope = the S&P 500
+    complex ONLY (ES; no separate MES options product exists today, so no `MES` entry is needed); all other underlyings'
+    options (GC/CL/NG/6E/NQ/etc.) are NOT MVP. Existing MVP single stocks / ETFs / futures unchanged.
+  - **1. SSOT change (unified-api-contracts `1753a084`, LDR, QG-green ship-mode 274s, 94% coverage):** new
+    `TradFiMvpRule.option_underliers: frozenset[str]` field (`_mvp_scope_rules.py`) mirrors the pre-existing CeFi
+    `options_base_ccys` Deribit-options narrowing pattern; new registry constant
+    `TRADFI_MVP_OPTION_UNDERLYING_ROOTS = frozenset({"ES"})`; `is_mvp`'s TradFiMvpRule branch
+    (`_mvp_scope_predicate.py`) extracted a `_tradfi_underlier_gate(instrument_type, base_ccy, rule)` helper (kept
+    `is_mvp()` under the 200L function-size QG cap) that gates OPTION cells on `option_underliers` instead of the flat
+    `underliers` set (FUTURE cells unchanged). `MVP_SCOPE_CONFIG_VERSION` 13→14. 11 new/updated unit tests in
+    `TestTradFiOptionUnderlierNarrowingV14` (`tests/unit/test_mvp_scope.py`): ES option → mvp=True; GC/CL/NG/NQ/VX/SI/
+    PL/PA/HG option → mvp=False; GC/NQ FUTURE + NASDAQ EQUITY basis carve-out → unchanged/still MVP. Ran directly
+    against the instruments-service `.venv`'s editable local-path UAC install (`pyproject.toml`
+    `[tool.uv.sources.unified-api-contracts] path = "../unified-api-contracts"`) — no instruments-service code change or
+    image rebuild was needed to exercise the fix locally; the deployed Cloud Run image resolves UAC from Artifact
+    Registry via the `>=0.33.0,<1.0.0` range pin and will pick up the fix automatically on its next image build once a
+    new UAC wheel publishes off the LDR→staging→main tag-cut path (minor-bump range pin, per SUB*AGENT_MANDATORY*
+    RULES.md "editable range-pins absorb minor/patch by design").
+  - **2. Catalogue regen (evidence, before/after):** ran
+    `instruments-service/scripts/build_instrument_catalogue.py --asset-group tradfi` (default `--mode incremental`;
+    confirmed via code read that `_add_mvp_column` runs UNCONDITIONALLY over the full merged frame regardless of mode —
+    line 2880, after `_merge_incremental` explicitly drops the stale `mvp` column at line 2562 — so incremental mode
+    correctly re-tags every EXISTING row, not just the window delta) directly from the IS `.venv` with
+    `GCP_PROJECT_ID=PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod` (matching the Cloud Run
+    job's env, same precedent as the 2026-07-14 scan-only diagnostic). Window read 164 by_date parquets in ~54s;
+    monotonic guard ACCEPTED (1,170,558→1,171,724 rows, no shrink); promoted to
+    `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`. **OPTION `mvp=True`: 739,278 →
+    414,140** (raw catalogue leaves; spot-checked the post-regen `underlying` column — every mvp=True OPTION row now
+    resolves to an `ES*` contract code, e.g. `ESM2`/`ESZ5`/`ESZ1`; zero GC/CL/NG/NQ/VX/ etc.). Overall catalogue
+    `mvp=True` 740,359 → 415,221 (FUTURE 968 + EQUITY 95 + ETF 18 unaffected, confirming the narrowing is OPTION-only as
+    designed).
+  - **3. Re-scan (HARD GATE check):** full-history scan-only
+    (`enumerate_expected_universe.py --enumerator-version v2 --catalog-path gs://.../prod/catalog.parquet --max-writes-per-run 30000000`,
+    default `--start-date 2018-01-01`, NO `--apply-write`) against the freshly-regenerated catalogue: **498,840
+    candidate rows** (down from 1,711,386 pre-narrowing — a 71% drop), comfortably under the 1,000,000 safety cap
+    (breakdown: blank/genuine-EU 290,688 | EXPECTED_WEEKEND 71,182 | EXPECTED_INSTRUMENT_NOT_LISTED 68,252 |
+    EXPECTED_SOURCE_DELIVERY_LAG 32,989 | EXPECTED_INSTRUMENT_DELISTED 30,654 | EXPECTED_HOLIDAY 5,075). Matches the
+    task brief's own estimate (≈402,933 non-options + a small ES-only options_chain set). **HARD GATE PASSED — proceeded
+    to apply** (per the task's own instruction: only STOP if >1,000,000).
+  - **4. Apply (the historical EU catch-up, option B from the 2026-07-14 entries — now executed):** the tradfi manifest
+    consolidator (`uts-prod-manifest-consolidator-market-data-tradfi-cron`, `*/1 * * * *`, ENABLED) was **left running,
+    NOT paused** — confirmed the enumerator's `--apply-write` path writes an ISOLATED, ADDITIVE per-VM-shard blob
+    (`_index/per_vm/{VM_NAME}.parquet`, verified via code read at `enumerate_expected_universe.py` L3527/L3572) that the
+    consolidator anti-join-merges on its own next tick — this is the SAME mechanism the daily
+    `expected-universe-v2-tradfi` Cloud Scheduler cron already uses in production continuously, structurally distinct
+    from the direct-canonical-index-mutation "purge" operations that needed the 2026-06-24 pause+snapshot dance (no
+    read-modify-write race on the canonical blob). Applied via
+    `MANIFEST_PER_VM_SHARDS=true VM_NAME=manual-catchup-tradfi-mvp-option-narrow-20260715 enumerate_expected_universe.py --apply-write`
+    (same catalog-path/window as the scan): **498,840 rows written** (290,688 `expected_unattempted` + 208,152 typed
+    `empty_confirmed`; by instrument_type: equity 261,510 / options_chain 95,785 / blank 76,257 / etf 52,701 /
+    futures_chain 12,587; by venue: NYSE 163,968 / NASDAQ 160,404 / CME 117,903 / KRX 18,459 / YAHOO_FINANCE 9,540 / ICE
+    9,531 / CBOE 9,528 / FX 9,507) to `_index/per_vm/manual-catchup-tradfi-mvp-option-narrow-20260715.parquet`; CSV
+    audit report to
+    `gs://deployment-scripts-central-element-323112/enumerator-reports/manual-catchup-tradfi-mvp-option-narrow-20260715/`.
+    **Consolidator merge verified** (polled canonical row count every 20s): the merge picked up a PRE-EXISTING stale
+    lock — a DIFFERENT, unrelated consolidator instance (`1-db0ca796`) had held `_index/consolidator.lock` since
+    00:38:47Z with no progress; every tick in between logged `skipping cycle ... fresh lock present`. The
+    `_LOCK_TTL_SECONDS=300` self-heal (`unified_trading_library/manifest_consolidator.py` L302/L918) correctly
+    auto-cleared it at age=301.9s (00:43:47Z-ish) on the next tick, which then merged cleanly. **Canonical index:
+    5,081,855 → 5,564,525 rows (+482,670; the 498,840 written rows net ~16,170 anti-join dedup against already-existing
+    manifest rows).** GATE verified: `captured` 1,608,392→1,608,392 (UNCHANGED) and `attempted_failed` 342,134→342,134
+    (UNCHANGED) — confirms this operation only ever added `expected_unattempted`/ `empty_confirmed` rows, never touched
+    real capture evidence. `expected_unattempted` 89,413 → 378,889 (by venue: NASDAQ 179,458 / NYSE 155,474 / CME 35,731
+    / KRX 8,226; by source: databento 361,047 / yahoo 17,842).
+  - **5. Floor-clip (Databento rolling-window interplay, per the 2026-06-23 precedent):** ran
+    `instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` (dry-run first, then `--apply`)
+    against the post-consolidation live index — the script's `_DATABENTO_FETCHED` floor logic + `_DERIVED_OHLCV` logic
+    are pure RULES re-evaluated against whatever is currently EU (not a hardcoded row list), so a direct re-invocation
+    was safe; the script's own internal snapshot dedup left the 2026-06-23 pre-image untouched ("snapshot already exists
+    ... kept"), so a fresh manual dated snapshot was taken first
+    (`_index/snapshots/pre_es_option_mvp_narrow_floorclip_2026_07_15.parquet`, 133.6 MiB) for a clean audit trail
+    independent of the script's own logic. **Result: 8,959 `mbp_10` rows (Databento L2 1-month rolling floor) + 10,021
+    `ohlcv_15m` rows (derived-not-fetched, non-yahoo/fx source) reclassed `expected_unattempted` → `empty_confirmed`
+    (18,980 total).** `trades`/`tbbo` needed NO floor-clip (all seeded rows fall within their L1 1-year floor). GATE
+    verified again: captured/attempted_failed/total-row-count all UNCHANGED (5,564,525 rows both before and after — a
+    pure in-place reclassification). Final `expected_unattempted` = 359,909; post-clip spot-check confirms `mbp_10` EU
+    residual = 530 (correctly within-floor) and `ohlcv_15m` EU residual = 0 (fully clipped). **Caveat (transparency, not
+    swept under the rug):** this floor-clip step does a direct canonical-index read-modify-write (same race class the
+    2026-06-24 purges paused the consolidator for) and was run WITHOUT pausing the consolidator. Verified after the fact
+    (Cloud Logging phase-by-phase trace) that no actual lost-update occurred — the one consolidator cycle that ran
+    concurrently (00:48:38-00:48:51Z) wrote its (no-net-change) canonical version at 00:48:49Z, BEFORE this script's
+    read completed at ~00:49:02Z, and the next consolidator cycle started at 00:49:35Z, AFTER this script's write
+    completed at 00:49:28Z — so the interleaving happened to be race-free by observed timing, not by an enforced pause.
+    Post-write row-count/capture_status re-verification (`5,564,525` rows, capture_status counts matching the script's
+    own logged AFTER state exactly) confirms no corruption. Flagging this as a **process gap for next time**: a direct
+    canonical-index mutation should pause the consolidator first regardless of how additive/rule-based the reclass is,
+    per the ICE-purge precedent — this run got lucky on timing, it did not eliminate the race class.
+  - **Expected effect on the panel denominator + wave-launcher gap set:** the tradfi honest-coverage EU denominator
+    grows by the net ~270,929 durable `expected_unattempted` delta (378,889 post-apply peak → 359,909 after floor-clip,
+    vs. 89,413 pre-apply baseline). The wave-launcher (`deployment-service/scripts/wave_launcher.py`, already
+    source-resolved per this issue's 2026-06-24 fix #4) will begin dispatching VMs against the genuinely fillable subset
+    of these new gaps (mostly NASDAQ/NYSE equity-basis ohlcv_1m + CME ohlcv_1m futures/ES-options history) — a heads-up
+    note was added to `tradfi_v9_stage1_finish_2026_07_06.md`'s Progress Log so an unrelated coverage-denominator delta
+    there isn't mistaken for a new bug.
+  - **Shas / evidence:** `unified-api-contracts@1753a084` (code); catalogue promote event `CATALOGUE_PROMOTED`
+    run_id=`catalogue-rollup-tradfi-20260715T003015Z`; enumerator apply event `ENUMERATOR_COMPLETED`
+    run_id=`enum-universe-tradfi-20260715-003341`
+    (`gs://deployment-scripts-central-element-323112/enumerator-reports/manual-catchup-tradfi-mvp-option-narrow-20260715/tradfi-20260715-003341.csv`);
+    floor-clip snapshot
+    `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_es_option_mvp_narrow_floorclip_2026_07_15.parquet`;
+    codex updated `codex/02-data/mvp-scope-canonical.md` (TradFi section + config-version changelog).
