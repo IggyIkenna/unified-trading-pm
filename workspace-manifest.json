@@ -534,7 +534,7 @@
         "warn_file_count": 11,
         "qg_red_reason": "pytest"
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
