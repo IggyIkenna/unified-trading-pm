@@ -440,20 +440,33 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       forced under time pressure; soft-delete expires ~2026-07-20). Full writeup:
       `plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md`.
 - [x] ✅ [DATA] P2. `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%,
-      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z) — INVESTIGATED + FIXED. Live re-query
-      found the count has already drifted to 0 in both plausible sports manifests (a one-off manual-run artifact, not
-      ongoing scheduled traffic). Root cause was a real, standing classification bug (not upstream-only):
-      `SportsBucketAssignmentAdapter.process_to_candles()` raised `MalformedTickFieldError` whenever every tick row
-      failed the `bm_time <= fetch_utc` causality check, even though `bm_minutes_to_kickoff` + h2h columns were
-      genuinely present — mislabeling honest absence (vendor clock-skew/stale snapshot) as a malformed field, the same
-      false-failure class the adapter's own existing "no h2h rows" Path A½ fix already corrected for a sibling
-      condition. Fixed `market-data-processing-service@7ff43d7197a50cfe52d9ad8fe514cd6a2ca09558` (now records
-      `empty_confirmed` for the 100%-causality-drop case; genuine schema drift still raises as before), 3 new regression
-      tests (coverage.xml-verified both branches hit), `quality-gates.sh --no-fix` green. Checked for correlation with
-      the sibling `sports/trades` `VENUE_FETCH_FAILED` investigation (same `attempted_at` batch window) — no issue doc
-      filed for it yet as of this writing; based on this investigation's own evidence the two are NOT the same root
-      cause (different services/manifests/code paths), noted for the next investigator rather than asserted without
-      evidence. Full writeup: `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md`.
+      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z) — CODE FIX SHIPPED; RECONCILIATION
+      CORRECTED 2026-07-15 (see below). **🔴 The earlier "Live re-query found the count has already drifted to 0 in both
+      plausible sports manifests" claim was WRONG** — a wrong-predicate artifact. The original query filtered
+      `data_type=='odds_horizon_bucket'` (base name, NO `_15m` suffix), which genuinely has 0 attempted_failed; the 66
+      rows are live under `data_type=='odds_horizon_bucket_15m'` in `market-data-tick-sports` (the canonical
+      instruments-store-sports manifest has no timeframe-suffixed variant at all). Reconciliation verdict = **(b)
+      different predicate**, proven by re-running BOTH queries side by side (the original numbers still reproduce
+      byte-for-byte under the base data_type; the 66 are static under `_15m`). Same bug spans all 4 timeframe variants:
+      `_15m=66, _1h=63, _4h=89, _1d=87` (305 rows). Provenance: 36 genuine pre-fix MDPS `process_to_candles()` rows
+      (2026-05-24) + 30 `rebuild_sports_manifest_v9.py` E4 re-emit duplicates (2026-07-13T23:56:41-48Z, the SAME re-emit
+      the sibling `sports_trades_venue_fetch_failed_2026_07_15.md` identified). Root-cause code fix is real + correct +
+      on LDR: `market-data-processing-service@7ff43d7197a50cfe52d9ad8fe514cd6a2ca09558` (records `empty_confirmed` for
+      the 100%-causality-drop case; genuine schema drift still raises), 3 regression tests, QG green — but it is
+      **FORWARD-ONLY** and did not clean the 66 existing rows. Historical-row cleanup deferred (see the new `[ ]`
+      follow-up below) because a naive delete would RESURRECT from `_legacy_seed.parquet` (36 of the rows sit there as
+      attempted_failed — the identical vector that reverted the cefi orphan delete). Issue doc `open`, `resolved_by`
+      cleared, full reconciliation + safe recipe:
+      `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md` § "RECONCILED".
+- [ ] [DATA] P2. `sports/odds_horizon_bucket_*` historical-row cleanup (305 `MalformedTickFieldError` `attempted_failed`
+      rows across `_15m/_1h/_4h/_1d` in `market-data-tick-sports`, all `venue=FOOTBALL`, 17 shard-dates
+      2025-08…2025-12). Stale pre-fix rows; `market-data-processing-service@7ff43d7` prevents recurrence but did not
+      clean them. **Do NOT delete** — 36 sit in `_index/per_vm/_legacy_seed.parquet` as attempted_failed and would
+      resurrect on the next consolidator cycle (same vector that reverted the cefi orphan delete in this plan). Safe
+      path: deploy `7ff43d7`, re-process the 17 shards so the WRITER records the correct status, then verify the rows
+      stay gone across ≥2 consolidator cycles. Full recipe in the issue doc's "Safe cleanup recipe" section.
+      Controlled-window production-data pass, same class as the deferred sports/trades / mbp_10 / corp-actions
+      historical-row cleanups.
 
 ### Post-reconciliation progress
 
@@ -926,3 +939,20 @@ clusters above. Verdicts:
 actively regressing post-"fix", not merely stale bookkeeping, and the odds_horizon fix didn't resolve the rows the alert
 keys on.** Not re-dispatching fixes in this turn — reporting this accurately to the operator first rather than
 compounding the pattern of declaring victory before it's verified.
+
+### 2026-07-15 — `odds_horizon_bucket` reconciliation RESOLVED (the "count=66 vs 0" contradiction)
+
+Re-queried the live manifests to settle why the doc claimed "0 rows" while adversarial verification found 66. **Verdict
+= (b) different predicate.** The original investigation queried `data_type == "odds_horizon_bucket"` (base name, NO
+`_15m` suffix) → genuinely 0 attempted_failed (still reproduces byte-for-byte today). The alert + the 66 rows live under
+`data_type == "odds_horizon_bucket_15m"` in `market-data-tick-sports` — a distinct data_type string the original pass
+never queried; the canonical `instruments-store-sports` manifest has no timeframe-suffixed variant at all, so its leg
+could never have found them either. Same bug spans all 4 timeframe variants (`_15m/_1h/_4h/_1d` = 305 rows). Provenance:
+36 genuine pre-fix MDPS `process_to_candles()` rows (2026-05-24) + 30 `rebuild_sports_manifest_v9.py` E4 re-emit
+duplicates (2026-07-13T23:56:41-48Z — the SAME re-emit `sports_trades_venue_fetch_failed_2026_07_15.md` found). The code
+fix `market-data-processing-service@7ff43d7` is real, correct, and on LDR, but FORWARD-ONLY — it did not clean the 66
+existing rows, and the doc's "0 rows / resolved" claim (not the fix) was the defect. Historical-row cleanup deferred
+(new `[ ]` todo above) because a delete would resurrect from `_legacy_seed.parquet` (36 rows sit there as
+attempted_failed — verified live; identical vector to the cefi orphan-delete revert). Issue doc corrected + kept `open`,
+`resolved_by` cleared, side-by-side query outputs + safe recipe in its "RECONCILED" section:
+`plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md`.
