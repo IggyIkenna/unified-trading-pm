@@ -3714,3 +3714,22 @@ it's new adapter work, not a data-audit residual).
       dates; otherwise a real backfill). Not fixed in this pass; the existing issue doc already tracks it as open, so no
       new todo filed — this entry adds the root-cause hypothesis and corrects the stale "same operation closes both"
       expectation for whoever picks up finding A next.
+
+- **2026-07-15 (residual-closer round2 crash + round3 relaunch)** — the `--vm-name …-round2` process (PID 54681, running
+  since 2026-07-14 11:17am) crashed after ~18h with `ManifestConsolidatorStaleError` (consolidated blob age 334.6s >
+  120s threshold) rather than exhausting its `--max-rounds 4` naturally. Root-caused via
+  `gcloud run jobs executions list --sort-by=~metadata.creationTimestamp`: one single consolidator execution (`…-v2zqj`,
+  started 04:36:02 UTC) took **7m42s** to complete vs. the normal ~40-50s — every execution immediately before and after
+  it completed normally — a transient slow duckdb-merge cycle, not a sustained outage. The crash is the script's
+  staleness guard correctly refusing an unsafe per-VM-shard fallback merge during that one slow window; the underlying
+  data was never at risk (a fail-safe, not a fail-open), but the residual-closer script itself has no retry/backoff
+  around this specific read and hard-crashes instead — a minor robustness gap, not fixed in this pass. Confirmed the
+  consolidator fully recovered (blob updated 04:43:42 UTC, fresh) before taking any action.
+  - **Real progress had already happened before the crash** — live re-check: total api_football `attempted_failed` 4,138
+    → **1,004** (−75.7%, more than the 64% reported at the dispatch's own final checkpoint — the closer kept working for
+    hours afterward). Breakdown now: blank-dt-461 (unchanged, separate open issue per above), FIXTURE_STATS 209 (was
+    327), FIXTURE_EVENTS 177 (was 327), FIXTURE_LINEUPS 121 (was 310), TEAMS 22, PLAYER_STATS 14 — the CF11 `[DATA] P2`
+    class (FIXTURE_STATS/EVENTS/LINEUPS) is genuinely converging, not stuck.
+  - **Relaunched as round3** (PID 21102, same args, fresh log `scratchpad/api_football_round3.log`) with a fresh
+    `run_in_background` watchdog armed on the new PID — continuing already-authorized, already-scoped work (the CF11
+    backfill todo above), not a new decision.

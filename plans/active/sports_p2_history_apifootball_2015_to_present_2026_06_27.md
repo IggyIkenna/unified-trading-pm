@@ -1791,3 +1791,11 @@ by the time I reached this point — left as-is, no duplicate edit needed.
   ~5,5xx (missing/attempted_failed/EU classes listed, untouched). APPLY phase launched (sequential per-entity shard
   writes, VM_NAME=hist-false-empty-repair-20260714, cron-absorb, then per-entity --verify) as a loop-owned tracked task.
   Every restamp reduces the running 2020+ enrichment fleet's remaining work (presence-skip).
+- 2026-07-15 04:45Z (autonomous tick 10): **PRE-2025 FALSE-EMPTY SWEEP COMPLETE — loop success criterion (4) MET.** All
+  52,591 evidenced restamps applied + verified by content: EVENTS 15,312/15,312, LINEUPS 14,981/14,981, STATS
+  11,568/11,568, PLAYER_STATS 10,730/10,730 (after the available_at point-in-time-guard fix — pre-2025 PLAYER_STATS
+  parquets predate availability stamping; script now stamps per UAC semantics, sha in the 04:0xZ entry). GW-window
+  captured rows 535,055, monotonic across all cycles (zero clobbers). Adjudicated-empty 41,292 stand honest; report-only
+  classes (~5.5k missing/attempted_failed) listed in the per-entity CSVs for the canonical-completion stream. Every
+  restamp shrinks the running 2020+ enrichment fleet's remaining work (presence-skip). Remaining loop criteria: (2)
+  enrichment fleet completion + parquet-level verify, (3) historical features recompute + final gates.
