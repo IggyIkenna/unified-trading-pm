@@ -12,7 +12,7 @@ summary:
   /api/backlog/reload` + `POST /api/backlog/regen`, which re-derived the same id with clean `status: queued,
   dispatched_to: null, done_sha: null` — confirming the bug is in the id-reuse path specifically, not a permanent hash
   collision."
-status: open
+status: resolved # both actionable todos [x], agent-orchestrator@4695db6 ships the fix + regression coverage
 priority: P2
 nature: notes
 asset_group: [meta]
@@ -30,7 +30,7 @@ source:
   returned task JSON for the new todo carried the previous, unrelated task's terminal fields."
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: "slot-11 (todo 1), slot-10 (todo 2), agent-orchestrator@4695db6"
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -100,6 +100,13 @@ state.
       the exact repro end-to-end (complete + prune a checkbox in one tick, append an unrelated new checkbox in a later
       tick, `regen()` + `sync_backlog_to_db()` as the endpoint does) — currently `xfail(strict=True)` pending todo 2's
       fix; verified it fails at the intended assertion via `--runxfail`. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Fix the reuse path to reset terminal fields (`status`, `dispatched_to`, `done_sha`, `queued_at`)
+- [x] ✅ [SCRIPT] P2. Fix the reuse path to reset terminal fields (`status`, `dispatched_to`, `done_sha`, `queued_at`)
       whenever a regen assigns an existing id to different checkbox content (compare stored title/brief hash, not just
-      id string equality). (repo: agent-orchestrator)
+      id string equality). (repo: agent-orchestrator) — agent-orchestrator@4695db6. Added
+      `TaskRow.brief_hash =     sha256(brief)` (migrated via the existing ALTER-TABLE pattern); `sync_backlog_to_db` now
+      compares it on every existing row and, on mismatch, resets
+      status/dispatched_to/dispatched_at/dispatched_worktree/done_sha/done_at/
+      done_evidence/done_verification_json/failover_origin/queued_at to a fresh queued state (a NULL hash — a
+      pre-migration row — only backfills on first sync, never resets). Removed the `xfail(strict=True)` marker on
+      `test_regen_id_slot_reuse_inherits_stale_terminal_status` (now passes) + added 3 unit tests in
+      `tests/test_regen_backlog_from_plan.py`. Both todos in this issue doc are now closed.
