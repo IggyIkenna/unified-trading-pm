@@ -191,3 +191,24 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
   optional-dim key is value-presence-gated vs the consolidator's schema-union key `_resolve_dedup_cols`) — exactly the
   candidate-#1 class. Both structural fixes remove the exposure regardless of which optional dim collapsed: the job no
   longer touches the canonical, and any residual direct writer that collapses >2% is refused.
+- **Pre-clobber canonical unrecoverable**: bucket has NO object versioning (single generation `#1784115419463073`) and
+  NO soft-delete policy — the 5,758,047-row generation cannot be restored; re-emission is the only repair path.
+- **P2 executed (other direct writers on consolidator-managed indexes)**: full env enumeration of every prod Cloud Run
+  job (region asia-northeast1) for `MANIFEST_PER_VM_SHARDS`. CONFIRMED same-class writers converted in place (2026-07-15
+  ~12:05Z): `uts-prod-instruments-service-{cefi,defi,tradfi,prediction}-t1-recon` → `MANIFEST_PER_VM_SHARDS=true` +
+  `VM_NAME=is-{ag}-t1-recon-job` (same IS code path, same canonical-index race, other asset_groups).
+  `uts-prod-market-tick-data-service-fast-t1-recon` already ran per-VM (the sanctioned precedent). Remaining jobs
+  without the env var are predominantly non-manifest-writers (digests/watchers/paging/tarball/paper) — any residual
+  writer among them is now covered by the UTL >2% shrink-refusal guard once its image picks up
+  `unified-trading-library@45a43438`; `uts-dev-instruments-service-t1-recon` (dev tier) left unconverted deliberately.
+- **Deploy progress**: promote PRs merged to main — UTL#576 (45a43438), IS#796 (a25cf70d), DS#402 (17320c6), IS#797
+  (digest bump `23982794` → UTL base `sha256:c19afa13…` built from 45a43438 by cloudbuild `07c7fd55` SUCCESS). IS image
+  builds: `6b190bc1` SUCCESS (completeness fix, revision a6caef61 content-verified) → final `8221bc75` (revision
+  e63e90f6 content-verified: new base digest + completeness fix both present).
+- **First watched execution attempt (gv5g5, 11:55Z) FAILED at preflight** with `ManifestConsolidatorStaleError` — the
+  consolidator's cycles under the 3-VM af-backfill load run ~430s each (interleaved `error=locked` cycles), so the
+  canonical blob age exceeds the 120s staleness gate for most of each ~8-min window; the loud-fail is the DESIGNED
+  health contract (refuse the possibly-OOM per-VM fallback merge). Not a regression, self-heals when the af fleet
+  completes. Watched-green-execution + scheduler re-enable therefore sequenced AFTER af-fleet completion (monitor armed;
+  ETA ~15:00-15:30Z from per-shard date-progress: FIXTURE_LINEUPS@2026-04-06, FIXTURE_EVENTS@2025-12-02,
+  FIXTURE_STATS@2025-08-12 at ~3.3 months/h).
