@@ -130,31 +130,110 @@ fix shipped in that same window. The three Tardis VMs fetching throughout that w
   relabel/reconcile pass once the writer is fixed. This is why that lane was left running rather than killed — but every
   additional Tardis VM-hour without a plan to relabel is deferred work, not progress on G4.
 
+## Root cause, code-traced end-to-end (2026-07-15T19:xx, data_engineering slot-12)
+
+This is NOT a simple oversight — it is a **documented, intentional design decision** that now conflicts with the newer
+Layer-1 honest-coverage gate's requirement that captured rows key on canonical `instrument_id`.
+
+**The parquet FILE content is already correct.** `finalise_rows_and_path()`
+(`market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py:717`) calls `derive_row_instrument_id()` per
+row, which correctly canonicalizes every tested raw KRAKEN-FUTURES symbol (live tested against the running fleet's
+actual symbols): `PI_ETHUSD → KRAKEN-FUTURES:PERPETUAL:ETH-USD@INV`,
+`PF_IOTAUSD → KRAKEN-FUTURES:PERPETUAL:IOTA-USD@LIN`, `PI_XBTUSD → KRAKEN-FUTURES:PERPETUAL:BTC-USD@INV`. This is the
+SAME canonicalization mechanism `OnchainPerpBatchHandler` uses successfully (confirmed above) — it is NOT missing, it
+works.
+
+**The MANIFEST write is a completely separate, parallel path that never calls this function.** Traced end-to-end:
+
+1. `tardis_batch_download.py::_run_per_symbol_batch` (line ~146) builds each fetch task's `row_key` with
+   `"instrument_id": sym` — the RAW wire symbol, set at task-creation time, before any canonicalization.
+2. Per-shard bookkeeping (`tardis_cefi_shards.py::_tardis_cefi_shard_router` line ~433, `partitioned_writer.py`'s
+   `record_shard_count`) groups by the raw `symbol` column (`third_key`) — also never canonicalized.
+3. `venue_fetch.py::_record_venue_shard_counts` (line 348) sets
+   `instrument_id_for_manifest = "" if is_derivative else third_val` — `third_val` is that same raw wire symbol, flowing
+   straight into `state.shard_counts`.
+4. `manifest_finalize.py::_write_shard_counts_to_manifest` (line ~292) unpacks `instrument_id_key` from `shard_counts`
+   and passes it to the actual `record_captured()` call — still the raw wire symbol. **This function is shared across
+   asset groups** (sports `odds` shards go through the same code, line ~329) — not cefi-specific.
+5. A canonicalization function DOES exist and IS called somewhere in this vicinity —
+   `preflight.py::_canonicalize_captured_instrument_id` (line 464) — but its own docstring says explicitly: _"Used by
+   the Tier-3 sentinel comparison so captured shards correctly suppress false attempted_failed rows. **Never used for
+   path or manifest writes — those keep wire form.**"_ This is the smoking gun: whoever wrote this knew the manifest
+   stores wire-form and documented it as intentional, presumably before Layer-1 completeness became a hard gate
+   requirement.
+
+**Why this is NOT a quick solo fix**: `_write_shard_counts_to_manifest` and `_record_venue_shard_counts` are shared
+plumbing, not cefi-only — a naive "just canonicalize `third_val`" edit risks regressing sports `odds` manifest writes
+(same code path) and the Tier-3 sentinel's OWN dedup logic, which currently RE-canonicalizes wire-form on read
+specifically BECAUSE the manifest stores wire form (`_canonicalize_captured_instrument_id`'s whole reason to exist).
+Changing the manifest's stored form without also revisiting the sentinel comparison could silently break the sentinel
+(double-canonicalizing an already-canonical id, or losing the wire-form fallback for unrecognised shapes it currently
+relies on). This needs a scoped design decision, not a blind edit under time pressure.
+
 ## Recommended decision
 
 Three options, not mutually exclusive, in dependency order — scoped to the Tardis lane only:
 
-1. **Fix `TardisAdapter`'s manifest write path** (`market_tick_data_service`) to stamp the canonical `instrument_key` at
-   write time instead of the raw vendor symbol, mirroring the pattern `OnchainPerpBatchHandler`'s
-   `native_symbol_to_instrument_id` already uses successfully. The catalogue already carries the canonical id as of
-   `instruments-service@f90d0e0` — the writer needs to resolve through it rather than passing the raw symbol straight to
-   `record_captured`.
+1. **Fix the manifest write path** — thread a cefi/Tardis-specific canonicalization call (reusing the already-correct
+   `derive_row_instrument_id`/`finalise_rows_and_path` logic, NOT `_canonicalize_captured_instrument_id` which is
+   intentionally lossy/best-effort) into `venue_fetch.py::_record_venue_shard_counts` line 348, gated to cefi
+   Tardis-sourced shards specifically so sports `odds` writes (same shared function) are untouched. Requires also
+   auditing whether the Tier-3 sentinel (`sentinels.py`) needs a matching update once the manifest itself carries
+   canonical form (it may become simpler — no more wire↔canonical translation needed for cefi — but that must be
+   verified, not assumed).
 2. **Relabel/reconcile the existing raw-id Tardis captures** in place (one pass over the manifest, mapping raw symbol →
-   canonical instrument_key per venue using the now-fixed catalogue) rather than re-fetching — the underlying parquet
-   bytes are correct, only the manifest's `instrument_id` key is wrong.
+   canonical instrument_key per venue using `derive_row_instrument_id`, which the parquet FILE content already proves
+   correct) rather than re-fetching — the underlying parquet bytes are correct, only the manifest's `instrument_id` key
+   is wrong.
 3. **Do NOT widen the Tardis lane (relaunch chronological waves, add venues) before (1) lands** — doing so burns more of
    the hard-capped 3-VM Tardis quota into the same uncredited namespace. The non-Tardis `OnchainPerpBatchHandler` lane
    is unaffected and may continue/widen normally.
 
-- [ ] [BACKEND] P0. Audit `TardisAdapter`'s manifest-write call sites in market-tick-data-service and confirm exactly
-      where the raw vendor symbol is stamped instead of the canonical `instrument_key`; fix to resolve through the
-      instruments-service catalogue at write time (mirror `OnchainPerpBatchHandler`'s `native_symbol_to_instrument_id`
-      pattern). (repo: market-tick-data-service)
-- [ ] [SCRIPT] P0. Write a one-time relabel/reconcile script for the cefi prd manifest: map existing raw-symbol
-      `captured` rows (Tardis-sourced venues only) to their canonical `instrument_key` per venue (using the now-fixed
-      catalogue), snapshot-first (mirrors the pattern in
-      `scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`), verified before/after row counts. Do NOT
-      re-fetch — the parquet bytes are correct, only the manifest key is wrong. (repo: instruments-service)
+- [x] ✅ [BACKEND] P0. Fix `venue_fetch.py::_record_venue_shard_counts` (line ~348) to canonicalize
+      `instrument_id_for_manifest` for cefi Tardis-sourced shards using the proven-correct
+      `derive_row_instrument_id`/`finalise_rows_and_path` logic (not `_canonicalize_captured_instrument_id`, which is
+      explicitly documented as sentinel-only/lossy). Scope the change to cefi (or Tardis-sourced venues specifically) so
+      sports `odds` writes through the same shared function are unaffected. Audit `sentinels.py`'s Tier-3 comparison for
+      whether it needs updating once the manifest carries canonical form instead of wire form. (repo:
+      market-tick-data-service) — `market-tick-data-service@56679e78`. Added `PartitionedTickWriter.asset_group`
+      property (new, additive) so the fix scopes precisely via `writer.asset_group == "cefi"` — sports `odds` and every
+      other asset_group untouched. Direct-tested (not just unit-suite-relied-on) against real symbols before shipping:
+      KRAKEN-FUTURES (`PF_IOTAUSD`/`PI_XBTUSD`/`XBT` → correct canonical ids matching the peer's original proof),
+      BINANCE-SPOT/FUTURES, DERIBIT, a chain-bundle itype (correctly skipped, unaffected), and a sports `odds` itype
+      (correctly skipped, unaffected — confirms the scope guard). Full `quality-gates.sh` green (1 pre-existing flaky
+      unrelated timing test — `test_helius_batches_resolve_concurrently_not_sequentially`, Solana Drift/Helius, nothing
+      to do with cefi/venue_fetch.py — confirmed passes in isolation, re-ran the full suite clean on retry).
+      `sentinels.py` Tier-3 audit NOT yet done this session — flagged as still open, see below. **`sentinels.py` Tier-3
+      follow-up still needed** (not done this pass): now that cefi manifest rows carry canonical form,
+      `_canonicalize_captured_instrument_id`'s wire→canonical translation may be partially redundant for cefi going
+      forward (new captures) while still needed for the EXISTING raw-id historical rows until relabeled — verify the
+      sentinel doesn't double-canonicalize or regress once relabel (todo 2) lands. **VM relaunch note**: the 3
+      currently-running Tardis `cefi-queue-*` VMs are on a pre-fix tarball (verified via SSH —
+      `_canonical_cefi_manifest_instrument_id` absent from the deployed venv) and will keep writing raw-symbol rows
+      until relaunched against a fresh tarball. No tarball exists yet for `56679e78` as of this entry (checked
+      `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@56679e78*` — 404; CI hasn't
+      fired for this SHA yet either — this repo's `quality-gates-v2` runs on the staging promotion PR, not directly on
+      LDR pushes, so both CI + tarball build trail the LDR push by up to the ~15min Tier-C drain window). Do NOT
+      kill+relaunch the Tardis lane until the fresh tarball is confirmed present — this is the exact stale-tarball
+      gotcha this plan already hit once (BITGET-FUTURES, 2026-07-14).
+- [x] ✅ [SCRIPT] P0. Write a one-time relabel/reconcile script for the cefi prd manifest: map existing raw-symbol
+      `captured` rows (Tardis-sourced venues only) to their canonical `instrument_key` per venue (reusing
+      `derive_row_instrument_id`, already proven correct against live symbols above), snapshot-first (mirrors the
+      pattern in `scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`), verified before/after row
+      counts. Do NOT re-fetch — the parquet bytes are correct, only the manifest key is wrong. (repo:
+      instruments-service) — `instruments-service@f021cb2b`,
+      `scripts/relabel_cefi_tardis_raw_symbol_to_canonical_2026_07_15.py`. Mapping source: instruments-service's OWN
+      reference-data catalogue (`raw_symbol`/`instrument_key` columns already resolved at catalogue-build time — cannot
+      import MTDS's `derive_row_instrument_id` directly, service↔service imports are banned) — case-insensitive match
+      (measured: catalogue stores lowercase `raw_symbol`, manifest stores uppercase `instrument_id`). Dry-run verified
+      live 2026-07-15 against the `-prd` cefi bucket (main index + 9 per-VM shards): 3,133,117 in-scope candidates,
+      2,590,229 (82.7%) resolved + relabeled, 542,888 left untouched as honest unresolved (delisted/legacy-venue symbols
+      not in today's active catalogue — reported, not silently dropped); reconcile pass found 214,008 stale
+      `expected_unattempted` duplicate rows that become redundant once their shard key is relabeled. `--apply`
+      intentionally NOT run this session — see `/blocked` question posted for this task (relabeling the primary key
+      across the entire cefi Tardis corpus + dropping the eu duplicates is a large, hard-to-reverse-in-spirit production
+      mutation; snapshot-first makes it recoverable, but sign-off requested before executing, per this issue's own
+      "OPERATOR DECISION" framing and the precedent set by `BLK-cbee81bc` for the comparably-large legacy-bucket purge).
 - [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
-      `measure_honest_coverage.py     --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical
-      keys and start reducing `expected_unattempted`. (repo: instruments-service)
+      `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
+      and start reducing `expected_unattempted`. (repo: instruments-service)

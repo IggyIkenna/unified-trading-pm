@@ -22,7 +22,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-12
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_06_29)

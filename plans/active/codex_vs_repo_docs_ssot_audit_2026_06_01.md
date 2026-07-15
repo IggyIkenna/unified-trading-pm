@@ -122,7 +122,8 @@ Service/library/infra (codex-overlap heavy → audit first): `deployment-service
 `client-reporting-api`, `alerting-service`, `trading-agent-service`, `ibkr-gateway-infra`,
 `batch-live-reconciliation-service`, `system-integration-tests`, `features-service` (per-family doc dirs). UI (mostly
 UI-specific — audit only the data/path/contract docs, leave genuine UI docs): `unified-trading-system-ui`,
-`deployment-ui`, `user-management-ui`.
+`deployment-ui` (`user-management-ui` ARCHIVED 2026-04-20 — corrected 2026-07-15, plan-reconcile: repo archival, drop
+from scope).
 
 > `unified-trading-pm` itself is NOT a target — it _is_ the codex/plans SSOT. Its `plans/*` are historical records (do
 > not rewrite). Repo `issues/*` + `*_LOG-REVIEW.md` + vendored `context/codex|pm/*` mirrors are records/mirrors, not
@@ -136,9 +137,9 @@ UI-specific — audit only the data/path/contract docs, leave genuine UI docs): 
   `issues/repo_docs_codex_ssot_consolidation_2026_06_01.md`).
 - [ ] [DOCS] P0. **Phase 1 — audit-complete the remaining 12 repos** (read-only): agent-orchestrator, deployment-api,
       client-reporting-api, alerting-service, trading-agent-service, ibkr-gateway-infra,
-      batch-live-reconciliation-service, system-integration-tests, deployment-ui, user-management-ui,
-      unified-trading-system-ui (data/path docs only), + finish features-service audit. Produce the full per-doc
-      registry (extend the pass-1 registry).
+      batch-live-reconciliation-service, system-integration-tests, deployment-ui (`user-management-ui` ARCHIVED
+      2026-04-20, dropped — corrected 2026-07-15, plan-reconcile), unified-trading-system-ui (data/path docs only), +
+      finish features-service audit. Produce the full per-doc registry (extend the pass-1 registry).
 - [ ] [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
       codex-missing), write/extend the codex SSOT doc first. Commit codex changes. This must precede any
       REDIRECT/DELETE.
@@ -197,7 +198,8 @@ UI-specific — audit only the data/path/contract docs, leave genuine UI docs): 
 - [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
 - [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
       / **system-integration-tests** (1).
-- [ ] [DOCS] P2. **deployment-ui** (3) / **user-management-ui**.
+- [ ] [DOCS] P2. **deployment-ui** (3) (`user-management-ui` dropped — ARCHIVED 2026-04-20, corrected 2026-07-15,
+      plan-reconcile).
 - [ ] [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs.
 
 ### FIX-STALE pass-1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held), ~340 fixes on LDR

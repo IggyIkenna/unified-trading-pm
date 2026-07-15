@@ -554,13 +554,14 @@ All 3 dispatched follow-up fixes from the operator-decision round are complete:
 likely also defi/tradfi), the missing OHLCV-aggregation writer, and the phantom `YAHOO_FINANCE` venue — all
 filed/documented, none blind-fixed.
 
-**Total for the full session**: 10 code fixes shipped and independently verified across 6 repos (`alerting-service`,
-`deployment-service`×2, `features-service`, `market-tick-data-service`×2, `unified-trading-library`,
-`unified-api-contracts`, `instruments-service`×2), all via `quickmerge` with passing tests and green quality gates; 1
-fix corrected after adversarial verification caught an overstatement; 3 genuine new issues filed rather than papered
-over; 1 item deliberately parked per operator decision; 1 item deliberately left at its existing scope per operator
-decision. This plan's original ask is now substantively addressed — remaining open items are either freshly-discovered
-follow-up work (expected outcome of a real audit) or explicit operator-parked decisions, not gaps in effort.
+**Total for the full session**: 10 code fixes shipped and independently verified across 7 repos (corrected 2026-07-15,
+plan-reconcile: parenthetical lists 7 distinct repos) (`alerting-service`, `deployment-service`×2, `features-service`,
+`market-tick-data-service`×2, `unified-trading-library`, `unified-api-contracts`, `instruments-service`×2), all via
+`quickmerge` with passing tests and green quality gates; 1 fix corrected after adversarial verification caught an
+overstatement; 3 genuine new issues filed rather than papered over; 1 item deliberately parked per operator decision; 1
+item deliberately left at its existing scope per operator decision. This plan's original ask is now substantively
+addressed — remaining open items are either freshly-discovered follow-up work (expected outcome of a real audit) or
+explicit operator-parked decisions, not gaps in effort.
 
 ## 🔴 2026-07-15 (later) — independent re-verification pass; 1 more overstatement caught + 4 more real fixes landed
 

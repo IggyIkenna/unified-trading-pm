@@ -70,10 +70,12 @@ drift_direction: advance-code
 - `codex/02-data/honest-absence-downstream-handling.md` — reason taxonomy; DERIBIT-COMBO + HL/ASTER honest-absence.
 - `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator-on-fixed-image; MANIFEST_ALLOW_STALE_FALLBACK.
 - `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default backfill standard.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe. **[A20 NOTE]**
-  this doc is git-dated 2026-06-16 → STALE on venue-registry/MVP (predates registry-consolidation + MVP v12); the codex
-  flip that refreshes it is an OPEN item in `instrument_universe_registry_consolidation_2026_06_29.md` (Phase-2 codex
-  flip). Do NOT draw venue/MVP facts from it; use live `mvp_scope.py` v12 + `VENUES_BY_ASSET_GROUP`.
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe. **[A20 NOTE,
+  resolved 2026-07-15]** the codex flip is now shipped — the doc's own banner records the registry-consolidation as
+  "shipped 2026-06-29 → 2026-07-03" (venue lists + venue→adapter-key routing are UAC data; IS is the thin resolver); the
+  tracking plan `instrument_universe_registry_consolidation_2026_06_29.md` is archived, status `completed`. The codex
+  doc is now authoritative for venue/MVP facts; cross-check against live `mvp_scope.py` v12 + `VENUES_BY_ASSET_GROUP` if
+  in doubt.
 
 ## What v10 changed (the 7 canonical decisions this catalogue reflected — cite mvp-scope-canonical.md, do NOT trust any older plan)
 

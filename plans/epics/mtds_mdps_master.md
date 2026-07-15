@@ -16,10 +16,10 @@ tags: [mtds, mdps, backfill, polars, book-microstructure, data-correctness, cost
 related:
   [
     ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
-    ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md,
-    ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md,
+    ../archive/2026_07/mdps_book_microstructure_precompute_columns_2026_06_28.md,
+    ../archive/2026_07/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
+    ../archive/2026_07/mdps_features_full_month_benchmark_binance_2026_06_28.md,
+    ../archive/2026_07/mdps_polars_engine_cost_sharpening_2026_06_28.md,
     ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
     ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
     ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md,
@@ -75,10 +75,10 @@ codex_ssots:
 related_plans:
   [
     ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
-    ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md,
-    ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md,
+    ../archive/2026_07/mdps_book_microstructure_precompute_columns_2026_06_28.md,
+    ../archive/2026_07/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
+    ../archive/2026_07/mdps_features_full_month_benchmark_binance_2026_06_28.md,
+    ../archive/2026_07/mdps_polars_engine_cost_sharpening_2026_06_28.md,
     ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
     ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
     ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md,
@@ -124,8 +124,9 @@ related_plans:
     ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 last_updated:
-  2026-07-14 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
-  # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped)
+  2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
+  # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
+  # plan-reconcile: related:/related_plans: repointed 4 folded plans from ../active/ to ../archive/2026_07/)
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 ---

@@ -364,21 +364,45 @@ session.
 - [x] ✅ [CODE] P0. Fix the `flush()`-debounce silent no-op + add post-write read-back verification in
       `write_sports_instruments_legacy_gap_manifest_2026_07_13.py` (`close()` + `_per_vm_shard_rowcount` ERROR guard).
       Repo: market-tick-data-service.
-- [ ] [DATA] P0. **OPERATOR RULING — are the UAC sports coverage floors correct?** The api_football per-fixture floor
-      (2020-06-06) is a POLICY choice whose own UAC comment says the data _"nominally ha[s] data going back to 2017-10"_
-      and justifies the floor by _"our backfill never captured 2018-2020 dates"_ — yet the legacy bucket demonstrably
-      HOLDS captured 2018-2020 rows + 22,327 backing objects for exactly those dates, so that stated premise is at least
-      partly false. Either (a) the floors stand → the 2,848 legacy-only cells are permanently EXPECTED and the L6 gate
-      must be redefined (below), or (b) the floors are wrong → amend
-      `unified_api_contracts.canonical.domain.sports.league_data`, then re-run this session's recipe (it will then flow
-      through the writer legitimately, no bypass). Repo: unified-api-contracts.
-- [ ] [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude pre-launch
-      (`is_pre_launch_date`) + `instrument_count=0` cells from the legacy-only diff, so it measures GENUINE data loss
-      (currently 0 on both sports surfaces) instead of a permanent by-design RED. Without this, E8 can never green.
-      Repo: unified-trading-pm.
+- [x] ✅ [DATA] P0. ~~**OPERATOR RULING — are the UAC sports coverage floors correct?**~~ **RULED 2026-07-15: option (b)
+      — THE FLOORS WERE WRONG. "Amend floors to reality."** Executed in full: floors amended to the earliest date we
+      hold REAL objects, evidence-derived per source — `unified-api-contracts@c280e1ff` (+ blast radius
+      `instruments-service@83e9bb23`). footystats 2019-01-01→**2018-01-01**; transfermarkt 2019-01-01→**2018-01-01**;
+      open_meteo 2019-03-02→**2018-01-01**; the four api_football per-fixture 2020-06-06 overrides **DELETED** (measured
+      earliest real = 2018-01-01 = the source-wide floor, so they were redundant AND contradicted the dict's own "later
+      than source-wide" contract). api_football (2018-01-01), understat (2014-01-01), soccer_football_info (2019-01-01)
+      and SFI_PROGRESSIVE_STATS (2020-01-01) measured **already correct** → unchanged. The false premise is replaced in
+      the UAC comments by the measured evidence. **Then re-ran this session's recipe and it flowed through the writer
+      legitimately — no bypass**: 31,301/31,301 rows accepted by the pre-launch guard (0 dropped), all 2,848 REAL cells
+      now captured in canonical. Method + full evidence table: the canonicalisation plan's "L6 floors-to-reality"
+      Progress Log entry. Repo: unified-api-contracts.
+- [ ] [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude
+      `instrument_count=0` cells from the legacy-only diff, so it measures GENUINE data loss instead of a permanent
+      by-design RED. Without this, E8 can never green. Repo: unified-trading-pm. **NARROWED + SHARPENED 2026-07-15 by
+      the floors amendment** (the pre-launch half of this todo is now moot — see below), and this is now the ONLY thing
+      standing between L6 and GREEN: - The **pre-launch exclusion is no longer needed**. The floors were the wrong half
+      of the model: amending them to reality made all 2,848 pre-launch REAL cells legitimately writable, and they are
+      now captured in canonical. Re-audited legacy-only residual = **468, of which REAL (ic>0) = 0 and phantom (ic=0) =
+      468**. So the gate should NOT special-case pre-launch dates — the floors now tell the truth on their own, and a
+      future pre-launch cell would be a real signal worth surfacing, not noise to suppress. - The **ic=0 exclusion IS
+      still required**, and is the entire remaining gap: 468 on IS + 140 on MDPS, all of them the operator-ACCEPTED
+      phantom class (incl. the 28 INJURIES + 2 WEATHER). These have **no backing data** — an object probe this session
+      found INJURIES objects exist for every day from 2018 but are **zero-row on every one of the first 60 days probed,
+      on both surfaces**. Fabricating `captured` rows for them is banned (`record_failed`/`record_empty`, never a fake
+      `record_captured`), so no migration can ever green them. - **Proposed criterion**:
+      `L6-legacy-only := legacy captured cells with instrument_count>0 that are absent from       canonical` (i.e. drop
+      the ic=0 cells from `lc` before the set-diff, and report them separately as an informational `L6-phantom-residual`
+      line so the class stays VISIBLE rather than silently suppressed). On today's data-state that criterion is **GREEN
+      on both sports surfaces (0 and 0)** — measured, not projected. - Do NOT green the gate by fabricating rows;
+      redefine the criterion or leave it RED. E8 stays operator-gated regardless of the gate's colour.
 - [ ] [DATA] P1. **Forensics (the remaining open question)**: what wrote pre-launch captured rows into the IS canonical
       such that 2026-07-14 audits read legacy-only=28? Not the 07-13 script (guard-blocked), not sufficiently the 18KB
       `_legacy_seed.parquet`. Whatever it is bypasses the writer's pre-launch chokepoint and is the true
       illegitimate-row vector. Repos: unified-trading-library, market-tick-data-service.
-- [ ] [DATA] P2. **Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in canonical
-      without manifest rows — leave (manifest-invisible) or remove. Repo: instruments-service.
+- [x] ✅ [DATA] P2. ~~**Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in
+      canonical without manifest rows — leave (manifest-invisible) or remove.~~ **RESOLVED 2026-07-15 by the floors
+      ruling — they were given proper manifest rows, not removed.** Under the amended footystats floor (2018-01-01)
+      those objects are legitimate canonical data, so the correct fix was to make them VISIBLE rather than delete them.
+      The re-emission covered the ODDS class (123 cells / 2,723 objects) among the 2,848; all 123 ODDS cells verified
+      `captured` in the canonical index post-consolidation. The manifest-invisible-object anomaly is closed: zero
+      deletions. Repo: instruments-service.

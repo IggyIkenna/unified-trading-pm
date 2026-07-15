@@ -1,7 +1,11 @@
 ---
 doc_type: plan
-title: MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies + models), toggled in data-status so missing-data only counts what's in-scope
-summary: Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a toggle into data-status so missing-data counts only MVP in-scope cells.
+title:
+  MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
+  models), toggled in data-status so missing-data only counts what's in-scope
+summary:
+  Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a
+  toggle into data-status so missing-data counts only MVP in-scope cells.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -24,7 +28,14 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on: []
-source: ['operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types + base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models catalogues so missing-data only looks at what can exist")', composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md]
+source:
+  [
+    'operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types +
+    base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into
+    MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models
+    catalogues so missing-data only looks at what can exist")',
+    composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
+  ]
 drift_direction: advance-code
 ---
 
@@ -60,12 +71,12 @@ drift_direction: advance-code
 ### 2. The UAC `mvp_scope` rule shape (illustrative — finalise in Phase 1)
 
 > **⚠️ [v12 NOTE 2026-06-30] — THIS BLOCK IS STALE/ILLUSTRATIVE ONLY; the LIVE authority is `mvp_scope.py`
-> `MVP_SCOPE_CONFIG_VERSION == 12` (`mvp_scope.py:761`), NOT this YAML.** Do NOT execute against this block. Known
-> drift vs the v10/v12 canonical scope: (a) tradfi lists `trades` — v10/v12 tradfi is **`ohlcv_1m`-ONLY** (no
-> trades/tbbo; `TRADFI_TICK_DATA_WINDOWS=[]` suppresses tradfi tick); (b) instrument types are UPPERCASE here — the
-> canonical manifest/UAC grain is **lowercase** (`perpetual`/`spot_pair`); (c) prediction omits **KALSHI** — v12
-> prediction = `{POLYMARKET, KALSHI}` (and the cefi perps `KALSHI-PERP`/`POLYMARKET-PERP` are a DISTINCT cefi surface).
-> The Phase-1 ✅ items below shipped the REAL typed config in UAC (`@d6e0775f`); this YAML is the original sketch.
+> `MVP_SCOPE_CONFIG_VERSION == 12` (`mvp_scope.py:761`), NOT this YAML.** Do NOT execute against this block. Known drift
+> vs the v10/v12 canonical scope: (a) tradfi lists `trades` — v10/v12 tradfi is **`ohlcv_1m`-ONLY** (no trades/tbbo;
+> `TRADFI_TICK_DATA_WINDOWS=[]` suppresses tradfi tick); (b) instrument types are UPPERCASE here — the canonical
+> manifest/UAC grain is **lowercase** (`perpetual`/`spot_pair`); (c) prediction omits **KALSHI** — v12 prediction =
+> `{POLYMARKET, KALSHI}` (and the cefi perps `KALSHI-PERP`/`POLYMARKET-PERP` are a DISTINCT cefi surface). The Phase-1
+> ✅ items below shipped the REAL typed config in UAC (`@d6e0775f`); this YAML is the original sketch.
 
 ```
 mvp_scope:
@@ -151,9 +162,12 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
       covered (`deployment-api@3390c98` `test_route_venue_year_coverage_scope.py` asserts denominator monotonicity
       `mvp ≤ could_exist ≤ all` + the `is_mvp` filter). The full real-DATA verify needs a fresh consolidated `_index` —
-      currently stale because the manifest consolidators are intentionally PAUSED behind the held
-      manifest-canonicalisation `--apply` (R5 in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`). Runs
-      once the migration `--apply` resumes the consolidators (operator-gated); not a code task.
+      **note (corrected 2026-07-15, plan-reconcile): the "consolidators intentionally PAUSED" premise cleared** — per
+      `mvp_catalogue_finalization_v10_2026_06_27.md` G0 (2026-06-27), all 5 per-AG instruments consolidators were
+      directly re-verified ENABLED with a fresh `_index` heartbeat (<1900s), superseding the prior PAUSED claim below
+      (originally: currently stale because the manifest consolidators are intentionally PAUSED behind the held
+      manifest-canonicalisation `--apply`, R5 in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`). This
+      todo remains open pending a re-check of current consolidator status and the actual real-DATA verify run.
 
 ## Config versioning (config_version) — per-config, metadata-not-path-axis
 

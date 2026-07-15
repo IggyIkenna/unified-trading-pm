@@ -67,9 +67,11 @@ depends_on: []
 
 ## Unscheduled P3 enhancements
 
-- [ ] [BACKEND] P3. **Deployed AWS-credential cutover to keyless WIF.** Wire the Athena reader to the keyless WIF role
-      (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev uses
-      the ambient profile; only needed at deploy time.
+- [x] ✅ [BACKEND] P3. **Deployed AWS-credential cutover to keyless WIF.** Wire the Athena reader to the keyless WIF
+      role (`_code_builds_aws.py` precedent) so the Cloud Run deployment reaches Athena without a static key. Local dev
+      uses the ambient profile; only needed at deploy time. **Shipped** `deployment-api@d8add54` (`aws_wif.py`;
+      corrected 2026-07-15, plan-reconcile: already resolved per
+      plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md, not still-open).
 - [ ] [BACKEND] P3. **Provisional flag: make the AWS cutoff month-aware.** The provisional flag is trailing-2-days for
       BOTH clouds, but AWS re-trues the whole current month (6th–7th). Early-current-month AWS days render as final
       though they are not — make the AWS cutoff month-aware.

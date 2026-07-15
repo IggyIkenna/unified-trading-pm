@@ -17,7 +17,7 @@ source: [plan_hygiene_master]
 assigned_vm: vm-cross-cutting
 resolved_by:
 locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_since: 2026-06-25 # (was: 2026-05-21 -- corrected 2026-07-15, plan-reconcile: predated created: 2026-06-25, an impossible ordering -- realigned to created)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

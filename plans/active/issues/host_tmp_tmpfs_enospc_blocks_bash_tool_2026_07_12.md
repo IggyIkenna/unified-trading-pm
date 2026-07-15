@@ -7,7 +7,7 @@ summary: >-
   /tmp/claude-1000/<session>/tasks/, which needs headroom even for a zero-stdout command — every Bash invocation now
   fails with ENOSPC, including no-op commands (`true`, `:`, `echo`). This blocks git commit/push, quickmerge, and every
   orchestrator-API curl call for any affected slot, not just the one that discovers it.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,8 @@ parent_epic: infrastructure_master
 priority: P0
 source: [slot-6, sports_p2_history_reference_and_odds_2015_to_present-002]
 assigned_vm: planning
-resolved_by:
+resolved_by: [slot-12, slot-6, slot-7, slot-8]
+resolved: "2026-07-12 (corrected 2026-07-15, plan-reconcile: all 3 todos + Progress Log show full closure)"
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code

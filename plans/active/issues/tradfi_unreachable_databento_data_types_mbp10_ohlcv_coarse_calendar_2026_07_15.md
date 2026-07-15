@@ -97,6 +97,16 @@ were verified via grep + read, not assumed.
 
 ### (1) `mbp_10` — genuine adapter-wiring gap (scenario "a": broken/unimplemented path)
 
+> **CORRECTED (2026-07-15, plan-reconcile)**: per
+> `tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`'s live query of the same manifest snapshot,
+> the specific 1,186 `mbp_10` `attempted_failed` rows counted in this doc's summary/finding (1) are NOT explained by the
+> `_DATABENTO_SUPPORTED_DATA_TYPES` gap below — all 1,186 are NYSE/KRX/NASDAQ out-of-scope-instrument rows carrying
+> `error_reason="EXPECTED_SOURCE_NOT_AVAILABLE"`, since reclassified `attempted_failed` → `empty_confirmed` (honest
+> absence, not an adapter-wiring failure). The `_DATABENTO_SUPPORTED_DATA_TYPES` allowlist gap described below is still
+> a real, independently-confirmed code-level finding (CME wants `mbp_10`, the allowlist excludes it) — it just does not
+> account for the 1,186-row figure this doc originally attributed to it. Original framing left in place below per this
+> workspace's correct-don't-silently-rewrite convention.
+
 - `market_tick_data_service/adapters/umi_tick_provider.py:143`:
   `_DATABENTO_SUPPORTED_DATA_TYPES = frozenset({"trades", "ohlcv_1s", "ohlcv_1m", "tbbo"})` — `mbp_10` is absent.
 - This set gates `fetch_tick_data_for_venue`'s `_route_databento` call (line 467:

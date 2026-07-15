@@ -957,9 +957,12 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 4.2 cal AI-days (class: design) — added 2026-07-12 (was: missing from roster; finding
 #58). BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus.
 
-### [`features_service_qg_cleanup_2026_05_11`](../active/features_service_qg_cleanup_2026_05_11.md)
+### [`features_service_qg_cleanup_2026_05_11`](../archive/2026_05/features_service_qg_cleanup_2026_05_11.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
+**status**: active-phase2-blocked (archived) · **estimate**: 1.2 cal AI-days (class: refactor) (corrected 2026-07-15,
+plan-reconcile: link + status were stale — plan lives at `plans/archive/2026_05/`, not `plans/active/`, with frontmatter
+`status: active-phase2-blocked`, and is not one of the 3 plans named in this doc's own 2026-07-12 roster-correction
+banner above)
 
 ### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
 

@@ -470,9 +470,10 @@ B-queue ruling)
 
 ### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md) — survivor **I-2**
 
-**status**: 🟠 ACTIVE (60 open) — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation.
-The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting] (label stale — same
-as above; finding 123, §A2 B-queue ruling)
+**status**: 🟠 ACTIVE (57 open) — (corrected 2026-07-15, plan-reconcile: direct checkbox count in the child plan itself
+is 57 open / 57 done, not the previously-stated 60) IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding
+code remediation. The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting]
+(label stale — same as above; finding 123, §A2 B-queue ruling)
 
 ### 🔴 2026-07-08 canonical instrument_id audit + remediation
 
@@ -536,7 +537,9 @@ working end-to-end).
   any output path.
 - [`sports_dependency_check_manifest_vs_gcs_path_2026_07_08`](../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md)
   — sports fixture-dependency check does per-date live GCS probes instead of a manifest slice; measured 60-130x slower
-  for a 1-year backfill (~11-25 min vs. ~11s).
+  for the one function originally measured (~11-25 min vs. ~11s), but (corrected 2026-07-15, plan-reconcile: the issue
+  doc's own 2026-07-08 follow-up sweep across 5 files) real total sports-backfill overhead is roughly 2-4x larger — tens
+  of minutes to ~1-2 hours across a full-year backfill, not a single fixable hot path.
 - [`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08`](../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
   — from the operator-requested MVP-catalogue-code audit: TradFi's `mvp_mode` fetch-time filter is unreachable dead code
   (zero real callers pass `mvp_mode=True` anywhere); production always downloads the full 93-instrument universe

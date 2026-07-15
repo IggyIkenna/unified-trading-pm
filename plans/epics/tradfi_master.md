@@ -217,8 +217,12 @@ respective umbrellas.
   feature calculator + full backtest run pending.
 - **CeFi+TradFi tick data backfill** at 15/24 = 62% done. TradFi half: CBOE VIX 15m wiring landed via VIX layering rule
   (CLAUDE.md); CME ES/MES backfill ongoing; ETF cleanup pending.
-- **Per VIX 15m source layering rule** (CLAUDE.md): Barchart preload 2020-01-02 → 2025-11-12; Yahoo rolling 60-day for
-  post-cutoff; honest gap 2025-11-13 → today−60d.
+- ~~**Per VIX 15m source layering rule** (CLAUDE.md): Barchart preload 2020-01-02 → 2025-11-12; Yahoo rolling 60-day for
+  post-cutoff; honest gap 2025-11-13 → today−60d.~~ **[2026-07-15 correction, plan-reconcile]** STALE — operator
+  decision 2026-06-23 deleted the VIX cash index entirely (`instruments-service@814b14a`, 1,621 GCS objects removed);
+  there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce. VIX exposure is VX-futures-only via Databento
+  `XCBF.PITCH` (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). See § Scope (line ~186) and §
+  Anti-patterns (line 774).
 
 ## Critical path
 

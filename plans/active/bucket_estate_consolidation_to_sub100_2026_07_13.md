@@ -235,8 +235,9 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [ ] [DOCS] P2. **Post-phase codex audit**: give the bucket-SSOT rule a live codex home (audit found
       `bucket-naming-and-config.md` superseded pointing at a CLAUDE.md section that no longer exists + CLAUDE.md
       pointing at an archived plan — fix both); update `bucket-isolation-model.md`, `gcs-lifecycle-policies.md`,
-      `per-asset-group-bucket-layouts.md`; final estate re-count; flip [[bucket_env_split_rollout_2026_06]] to
-      complete/superseded per its banner; close the three audit issue docs.
+      `per-asset-group-bucket-layouts.md`; final estate re-count (corrected 2026-07-15, plan-reconcile:
+      [[bucket_env_split_rollout_2026_06]] already flipped to status: superseded / archived same-day per line-68 banner,
+      so that sub-clause is dropped as done); close the three audit issue docs.
 
 ## Deferred work after 2026-07-13 (autonomous dispatch session end)
 

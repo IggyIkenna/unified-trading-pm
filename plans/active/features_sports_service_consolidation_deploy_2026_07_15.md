@@ -191,13 +191,68 @@ repo. This plan tracks that work.
       post-build `gcloud run jobs update --image` (or `terraform apply     -replace`) step to the features-service
       rollout so the tag→digest re-pins every build — a bare `:latest` alone does NOT auto-propagate to Cloud Run job
       executions._
-- [ ] [INFRA] P1. Apply the separately-found `--category`→`--asset-group` Workflow-YAML terraform drift (confirmed real,
+- [x] [INFRA] P1. Apply the separately-found `--category`→`--asset-group` Workflow-YAML terraform drift (confirmed real,
       independent of the import crash, found via `terraform plan` on the old job's Workflow resources) — carry the fix
-      into the new job's Workflow definitions; required before scheduling can safely resume.
+      into the new job's Workflow definitions; required before scheduling can safely resume. — ✅ 2026-07-15
+      (DriftRetireReenable phase): verified SATISFIED-by-construction, no apply needed. The `--category` drift lives
+      ONLY in the LEGACY workflows — `gcloud workflows describe features-sports-service-daily` line 36 = `--category`,
+      `features-sports-service-backfill` line 15 = `--category`. The NEW job's workflows already use `--asset-group` in
+      BOTH terraform code (`terraform/services/features-service-sports/gcp/main.tf` lines 107, 168) AND live
+      (`gcloud     workflows describe features-service-sports-daily` → `--asset-group` at line 38). `terraform plan` on
+      the new job dir (`-lock=false`) = ZERO infra drift (only a benign `backfill_example_command` output-value refresh,
+      no resource change). The legacy `--category` workflows get destroyed with the legacy job (todo 7), so the fix
+      needs no separate application. The real scheduled fire (todo 8) exercised the `--asset-group` workflow end-to-end.
+- [ ] [INFRA] P1. **[BLOCKED — new dependency found 2026-07-15]** Repoint the per-fixture Tier-3/4 sports feature
+      triggers (`features_pre_match` @ T-1h, `features_post_match` @ T+25h) in
+      `deployment-service/configs/sports-trigger-tiers.yaml` (lines 189, 248,
+      `cloud_run_job_name:     "features-sports-service-job"`) from the legacy job to the new
+      `features-service-sports-job` — this is a PREREQUISITE for todo 7 (retiring the legacy job would otherwise break
+      these live per-fixture dispatches). It is NOT a simple YAML name-swap: the consolidated `features-service` image's
+      baked `command = ["python", "-m",     "features_service"]` is the multi-family dispatcher that REQUIRES a
+      `--feature-family sports` prefix, but the dispatch path
+      (`deployment_service/sports_trigger_scheduler.py::_build_cli_cmd`, line 418-423) emits
+      `python -m     features_service --operation compute --mode batch --asset-group SPORTS …` with NO
+      `--feature-family sports`, and `_strip_python_module_prefix` then forwards `--operation …` as the args override —
+      so the new job would reject the invocation. Fix = inject `--feature-family <family>` into `_build_cli_cmd` (or a
+      per-service config field) for the consolidated features-service, then repoint the two tier entries, then dispatch
+      one real per-fixture trigger to the new job and confirm SUCCEEDED. Found 2026-07-15 (DriftRetireReenable phase)
+      via grep of the legacy job name + reading the dispatch code. (The legacy per-family image had `command: None`, so
+      `--operation …` alone worked against it — that is why the tiers ran against the legacy job historically.)
 - [ ] [INFRA] P1. Retire the old `features-sports-service-job` Cloud Run job + its Cloud Scheduler trigger once the new
-      job is confirmed healthy end-to-end (avoid a double-fire window).
-- [ ] [INFRA] P0. Re-enable scheduling for the new job (equivalent of `features-sports-service-daily-trigger`); verify
-      one real scheduled (not just manual) fire succeeds.
+      job is confirmed healthy end-to-end (avoid a double-fire window). — ⏸️ 2026-07-15 (DriftRetireReenable phase):
+      DEFERRED, `depends_on` the new repoint todo above. The legacy job's terraform is 4 resources in its own state
+      prefix `services/features-sports-service` (`module.daily_job.google_cloud_run_v2_job.job`,
+      `module.daily_workflow.google_{workflows_workflow,cloud_scheduler_job.trigger[0]}`,
+      `module.backfill_workflow.google_workflows_workflow.workflow`) — retirement = `terraform state rm` each + `gcloud`
+      delete + remove the legacy `.tf` dir. NOT done this touch because `configs/sports-trigger-tiers.yaml` still
+      dispatches per-fixture Tier-3/4 features to `features-sports-service-job`; deleting it now converts a "broken
+      image" failure into a "job not found" failure on those live triggers. The double-fire risk todo 7 guards against
+      is fully mitigated meanwhile: the legacy DAILY scheduler `features-sports-service-daily-trigger` stays PAUSED
+      (verified `0 7 * * *`, same slot as the new one — kept paused deliberately). The separately-noted
+      `uts-prod-features-sports-t1-schedule` / `features-sports-service-t1-recon`
+      (`terraform/gcp/t1_batch_scheduler.tf`) does NOT target the legacy daily job — it targets
+      `uts-prod-features-sports-service-t1-recon`, a job the file's own comment (lines 73-74) records as never having
+      existed in any tier; it is a dead, already-PAUSED scheduler, left as-is (repointing it to the new job would
+      conflate the T+1-recon architecture with the daily-window job).
+- [x] [INFRA] P0. Re-enable scheduling for the new job (equivalent of `features-sports-service-daily-trigger`); verify
+      one real scheduled (not just manual) fire succeeds. — ✅ 2026-07-15 (DriftRetireReenable phase, real evidence, not
+      inference): `gcloud scheduler jobs resume features-service-sports-daily-trigger` → `state: ENABLED`; then
+      `gcloud     scheduler jobs run features-service-sports-daily-trigger` (force fire at 19:13:56Z) → the scheduler
+      POSTed to the `features-service-sports-daily` workflow executions endpoint, creating workflow execution
+      `05bd100d-848d-4142-8fcc-699987f7a79c` (startTime 19:13:58Z). Watched live to terminal: workflow → `SUCCEEDED`,
+      result
+      `{"start_date":"2026-07-14","end_date":"2026-07-22","status":"completed","execution":"…features-service-sports-job-6tm9w"}`
+      (a real T-1..T+7 window computed from `sys.now()`). The workflow spawned job execution
+      `features-service-sports-job-6tm9w` → `status.conditions[0]=Completed/True`, `succeededCount=1`, `failedCount=0`.
+      **Consolidator preflight healthy on EVERY date under the scheduled fire** (not just the manual one): logs show
+      `sports batch startup gate: instruments-store consolidator healthy for sports (bucket=instruments-store-sports-prd-central-element-323112)` +
+      `market-data consolidator healthy` repeated across the window, ZERO `CONSOLIDATOR_DOWN`. Real features computed:
+      `compute_fixture_features[2026-07-18]: 55 fixtures`, `[2026-07-19]: 28`, `[2026-07-20]: 1`, `[2026-07-21]: 14`,
+      `[2026-07-22]: 19`, then `Processing completed successfully` + `[features-service] shutdown complete`. Fresh
+      non-empty parquet landed in the canonical bucket:
+      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-18/league=<L>/feature_group=fixture_features/features.parquet`
+      written `2026-07-15T19:16:03-04Z` (17,750 B, matching the write-log line, not a placeholder). Scheduler left
+      ENABLED on this verified-healthy state.
 - [ ] [INFRA] P2. Finish the deferred [[bucket_estate_consolidation_to_sub100_2026_07_13]] `features-sports` bare bucket
       delete (1 real migrated object + 2 confirmed-ephemeral VM-staging objects already accounted for) —
       `terraform state rm` the `google_storage_bucket.features_sports` resource before the physical delete (mirrors the
@@ -555,3 +610,32 @@ repo. This plan tracks that work.
   (bucket delete + issue-doc closure). No terraform/config/code changes this touch (the job/image were already correctly
   deployed by the prior VerifyImageDeploy phase); this plan edit is the only change, shipped docs-only via the PM
   `docs(plans):` carve-out.
+- 2026-07-15 (~19:18Z, DriftRetireReenable phase, todos 6-8 — real evidence, not inference). Reverify handed off
+  `manualExecutionSucceeded=true` (execution `qsqs4` SUCCEEDED); independently re-verified live
+  (`gcloud run jobs executions describe features-service-sports-job-qsqs4` → `Completed/True`, `succeededCount=1`)
+  before proceeding, then executed the phase. **Todo 6 (`--category`→`--asset-group` Workflow drift): SATISFIED,
+  verified no-op.** The drift lives ONLY in the LEGACY workflows (`features-sports-service-daily` line 36 =
+  `--category`, `features-sports-service-backfill` line 15 = `--category`, confirmed via `gcloud workflows describe`);
+  the NEW job's workflows already carry `--asset-group` in both terraform code and live, and `terraform plan` on
+  `terraform/services/features-service-sports/gcp` = zero infra drift (only a benign output refresh). The legacy
+  `--category` workflows are destroyed with the legacy job (todo 7), so no separate apply is required. **Todo 8
+  (re-enable scheduling + verify a real scheduled fire): DONE end-to-end.**
+  `gcloud scheduler jobs resume features-service-sports-daily-trigger` → ENABLED; `gcloud scheduler jobs run …`
+  (19:13:56Z) → workflow execution `05bd100d-848d-4142-8fcc-699987f7a79c` → `SUCCEEDED` (computed window
+  start=2026-07-14 / end=2026-07-22); spawned job execution `features-service-sports-job-6tm9w` → `Completed/True`,
+  `succeededCount=1`, `failedCount=0`; consolidator preflight healthy on every date (no `CONSOLIDATOR_DOWN`); real
+  features computed across T-1..T+7 (07-18: 55, 07-19: 28, 07-20: 1, 07-21: 14, 07-22: 19 fixtures); fresh non-empty
+  parquet in `gs://features-sports-prd-central-element-323112/…/day=2026-07-18/…/features.parquet` written 19:16:03-04Z.
+  Scheduler left ENABLED on this verified-healthy state. **Todo 7 (retire legacy job): DEFERRED — a real new dependency
+  was discovered.** `configs/sports-trigger-tiers.yaml` (lines 189, 248) still dispatches the per-fixture Tier-3/4
+  sports feature triggers (`features_pre_match`, `features_post_match`) to `features-sports-service-job`; retiring the
+  legacy job now would break those live dispatches ("job not found"). Repointing them to the new job is NOT a simple
+  YAML name-swap — the consolidated image needs a `--feature-family sports` prefix that the dispatch path
+  (`deployment_service/sports_trigger_scheduler.py::_build_cli_cmd`) does not currently emit, so a dispatch-code change
+  is required first. Filed as a new P1 prerequisite todo above; the legacy job is left in place. The double-fire risk
+  todo 7 guards against is fully mitigated meanwhile: the legacy daily scheduler `features-sports-service-daily-trigger`
+  stays PAUSED (same `0 7 * * *` slot). The separately-noted `uts-prod-features-sports-t1-schedule` /
+  `features-sports-service-t1-recon` was re-checked — it targets `uts-prod-features-sports-service-t1-recon`, a
+  never-existent job (per `t1_batch_scheduler.tf` comment, lines 73-74), NOT the legacy daily job, so it needs no action
+  here (dead + already PAUSED). No terraform/code changes this touch; this plan edit is the only change, shipped
+  docs-only via the PM `docs(plans):` carve-out.

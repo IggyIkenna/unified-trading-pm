@@ -668,22 +668,24 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       (client*isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
       touch. — DONE 2026-06-13 (W8, registry layer) — unified-api-contracts@2c399a1
       (`architecture_v2/jurisdiction_overlay.py`: `Jurisdiction` StrEnum {UK_FCA,US_CFTC,CAYMAN,EU_MICA,
-      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` + `allowed_venues_for*
-      jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in source_note (US_CFTC
-      BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA pairings →
-      UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance fail-safe): any
-      unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently allowed.** 19
-      tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer (noted in gap
-      tracker).
+      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` +
+      `allowed_venues_for*     jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in
+      source_note (US_CFTC BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA
+      pairings → UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance
+      fail-safe): any unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently
+      allowed.** 19 tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer
+      (noted in gap tracker).
 
 ## Success criteria
 
 - Phase 0: fresh generator run green; zero phantom/missing services; architecture_v2 enums + capability registry present
   in `ui-reference-data.json`; drift gate FAILS on synthetic mismatch.
-- Phase 1: manifest covers all 53 archetypes × all registered venues/instruments/algos/sources; every dimension either
-  populated or carries a typed gap — **no silent omissions**; orphan/dead-end report distinguishes logical vs unbuilt.
+- Phase 1: manifest covers all 57 archetypes (corrected 2026-07-15, plan-reconcile: archetype count grew 53->57 during
+  execution, see Progress Log) × all registered venues/instruments/algos/sources; every dimension either populated or
+  carries a typed gap — **no silent omissions**; orphan/dead-end report distinguishes logical vs unbuilt.
 - Phase 2: each gap registry has UAC schema + at least MVP-universe backfill; manifest consumes them.
-- Phase 3: prospectus renders for all 53 archetypes; two-sided audit report produced; discrepancies filed as gaps.
+- Phase 3: prospectus renders for all 57 archetypes (corrected 2026-07-15, plan-reconcile: matches delivered 57/57 count
+  in Progress Log); two-sided audit report produced; discrepancies filed as gaps.
 - Phase 4: wizard walkthrough reaches a complete strategy config for ≥3 real archetypes (e.g. carry spot-vs-perp BTC,
   LST-stake-and-short-perp, an options vol archetype) with only-valid-options filtering; capability tab live in
   deployment-ui; pw:L2 green both repos.
