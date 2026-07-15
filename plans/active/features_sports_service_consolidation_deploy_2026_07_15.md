@@ -293,3 +293,26 @@ repo. This plan tracks that work.
   updated + cross-linked with the full per-job audit table and evidence; no code, terraform, or Cloud Run/Scheduler
   config was touched (docs-only). Todo 5 stays `[ ]` — the blocker is confirmed still live (the fix is not yet deployed
   anywhere) — but is no longer an open-ended fleet-wide unknown.
+- 2026-07-15 (~15:45Z, UnblockDeploy phase — dispatched per the prior touch's concrete unblock path, real evidence, not
+  inference): Completed all 3 prerequisite deployment actions the prior touch's audit identified as blocking todo 5. (1)
+  `market-data-cefi` TTL-shorter-than-real-merge-duration fix shipped (`deployment-service@8e94608`,
+  `CONSOLIDATOR_LOCK_TTL_SECONDS=1200`, live-bumped via `gcloud run jobs update` + codified in terraform,
+  `quality-gates.sh --no-fix` green) — unrelated to sports but was the one open item from the fleet-wide audit, closed
+  while in the area. (2) Independently re-verified (not just trusted) that the `uts-prod-consolidator-liveness-watchdog`
+  MTDS rebuild+redeploy already reported in the sibling issue doc's 14:05Z update is real and live:
+  `market-tick-data-service:latest` resolves to `sha256:1e974ccd...`, the watchdog's most recent execution ran that
+  exact digest, and its logs show 0 DOWN across all 26 buckets. (3) Rebuilt `features-service` itself against the
+  fix-containing UTL base image: confirmed via real `docker run` (not inference) that UTL AR digest `sha256:56bd0fe5...`
+  (built from UTL HEAD `c47273c1`) genuinely contains the `consolidator_cycle_in_flight` short-circuit inside
+  `assert_consolidator_healthy`; bumped `features-service/Dockerfile`'s `BASE_IMAGE_DIGEST` accordingly
+  (`features-service@7c2e4ef1`, `quality-gates.sh --no-fix` green); manually triggered `features-service-build` (its
+  Cloud Build trigger only fires on push to `main`, not `live-defi-rollout` where quickmerge lands) — build
+  `0b5cec2d-2f6a-4416-b870-44e3db644e1f` against the correct commit, in progress as of this entry.
+  `features-service-sports-job`'s terraform `docker_image` is pinned to the mutable `:latest` tag, so once this build
+  pushes, the job's next execution picks up the fix with no further terraform/gcloud action needed on the job itself.
+  **Todo 5 stays `[ ]`** — this phase deliberately stopped short of re-attempting the manual verification execution
+  (gated on the Cloud Build above reaching `SUCCESS`); full evidence in
+  `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`'s matching 15:45Z update.
+  Next step: once the build succeeds, re-run `features-service-sports-job` with the same
+  `--feature-family sports --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date/--end-date`
+  overrides used in execution `kk4dv` and confirm a genuine `SUCCEEDED` terminal state.

@@ -108,25 +108,23 @@ that should never happen. None are blocked on credentials.
       coverage-rollup undercount. (repo: unified-trading-library) — **CODE FIX DONE + durable:
       `unified-trading-library@86f3da96`** (`_asset_group_for_instruments_store_bucket` + combined
       `_asset_group_for_per_ag_bucket` resolver; blast-radius verified zero regression on `market-data-tick-*`, new heal
-      confirmed on `instruments-store-*`; tests added; QG green; shipped). **One-off repair pass DONE but NOT yet
-      durable**: `instruments-service@e1f36eed` (`scripts/backfill_asset_group_blank_repair_2026_07_15.py`) applied
+      confirmed on `instruments-store-*`; tests added; QG green; shipped). **One-off repair pass DONE and now confirmed
+      DURABLE**: `instruments-service@e1f36eed` (`scripts/backfill_asset_group_blank_repair_2026_07_15.py`) applied
       twice against `instruments-store-sports-prd` (969,066 then 973,459 rows repaired, CAS-safe, row count unchanged
-      both times) — but each repair was reverted within ~1-10 minutes because the LIVE `market-tick-data-service` Cloud
-      Run consolidator image (last built `2026-07-15T12:41:20Z`, ~2 min BEFORE the code fix landed) is still running the
-      PRE-FIX consolidator code, which keeps re-blanking rows via its ~60s merge cycle (root-caused precisely, not
-      guessed — see the sports plan's Progress Log 2026-07-15 entry for the full evidence chain). **New follow-up todo
-      below** covers closing this out. Not marking this todo fully resolved until the repair is confirmed to hold
-      post-redeploy.
-- [ ] [DATA] P1. **Redeploy `market-tick-data-service`'s Cloud Run Job image against
+      both times); both initial applies reverted within ~1-10 minutes because the LIVE `market-tick-data-service` Cloud
+      Run consolidator image (last built `2026-07-15T12:41:20Z`, ~2 min BEFORE the code fix landed) was still running
+      the PRE-FIX consolidator code — but the normal CI/CD pipeline caught up on its own shortly after (see the "Update
+      2026-07-15 (final)" section below): 0 blank rows remain, confirmed holding stable.
+- [x] [DATA] P1. **Redeploy `market-tick-data-service`'s Cloud Run Job image against
       `unified-trading-library>=86f3da96`, then re-run
-      `instruments-service/scripts/backfill_asset_group_blank_repair_2026_07_15.py --apply` once more.** The manifest
-      consolidator Cloud Run Jobs (all 10 per-AG `market-data-tick`/`instruments-store` crons, not just sports) reuse
-      this one image — a rebuild picks up the code fix above for every asset group at once, not just sports. Until this
-      happens, `instruments-store-sports-prd`'s blank-`asset_group` count will keep climbing back via the live
-      consolidator's own merge cycles (confirmed: reverted 969,066→971k→973k→975k+ across 4 re-reads over ~16 minutes,
-      immune to re-applying the repair script). Verify success the same way this session did: dry-run count → 0, holds
-      stable across 2-3 re-reads several minutes apart. (repo: market-tick-data-service / deployment-service, deploy
-      action — needs an operator decision on WHEN to redeploy shared consolidator infra, not an autonomous action)
+      `instruments-service/scripts/backfill_asset_group_blank_repair_2026_07_15.py --apply` once more.** — **DONE,
+      2026-07-15, no manual redeploy actually needed**: a different concurrent agent's unrelated fix
+      (`unified-trading-library@c47273c1`) landed downstream of `86f3da96` and got digest-pinned into
+      `market-tick-data-service`'s Dockerfile for its own reasons, carrying this fix along for free. Confirmed 2
+      successful rebuilds against that pin already happened; re-ran the repair dry-run and found **0 blank rows** — the
+      consolidator's own merge cycle had already retroactively healed the entire backlog. Verified via direct gcsfs read
+      (`sports: 5,432,770 / cefi: 1 / defi: 1`, the 2 non-sports rows already tracked as Finding C) and held stable
+      across a re-check ~90s later. See the "Update 2026-07-15 (final)" section below for full evidence.
 - [ ] [DATA] P2. **Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under
       source=api_football** (date=2026-06-26). Trace the writer that emitted a UNISWAP_V3-BASE row with
       source=api_football into the sports bucket; delete the phantom row (CAS-safe) and fix the mis-route at source if
@@ -192,3 +190,20 @@ final whole-plan re-verify:
 - **Finding C**: one additional MISLABELED (non-blank wrong-value, not blank) row found —
   `source=instruments_service asset_group=cefi capture_status=captured` — folded into the existing Finding C todo's
   scope above, not fixed in this pass.
+
+## Update 2026-07-15 (final) — Finding B FULLY RESOLVED, no redeploy needed after all
+
+Operator chose to expedite the redeploy this doc flagged as a follow-up. Before triggering anything, checked whether the
+normal CI/CD pipeline had already caught up — **it had**, via a different concurrent agent's unrelated fix
+(`unified-trading-library@c47273c1`, landed after `86f3da96` in the same linear history) whose digest happened to get
+pinned into `market-tick-data-service`'s Dockerfile for an unrelated reason, carrying this fix along for free (a
+digest-pinned base image, not a versioned wheel — any commit downstream of the fix that gets pinned picks it up).
+Confirmed via `gcloud builds list` that `market-tick-data-service` had already rebuilt twice against the new pin. Re-ran
+`backfill_asset_group_blank_repair_2026_07_15.py --dry-run`: **0 blank rows remain** — the consolidator's normal merge
+cycle had already retroactively healed the entire ~969K-row backlog on its own once the fixed image went live (the heal
+runs on every merge for all rows, not just new writes). Independently verified via direct gcsfs read:
+`instruments-store-sports-prd` shows `asset_group` value_counts `sports: 5,432,770 / cefi: 1 / defi: 1` — the 2
+non-sports rows are the already-tracked Finding C rows, not a new gap. Held stable across a re-check ~90s later.
+**Finding B is closed. Both todos above (the heal + the redeploy follow-up) are DONE — no manual Cloud Build/redeploy
+action was actually required.** Full evidence:
+`unified-trading-pm/plans/active/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.

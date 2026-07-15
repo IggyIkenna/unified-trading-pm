@@ -349,6 +349,49 @@ that framing:**
    possibly-fleet-wide livelock" to "known, root-cause-fixed-in-code, pending deployment" — a materially different (and
    much less alarming) risk picture than this doc's original P1 framing implied.
 
+## UPDATE 2026-07-15 (~15:45Z) — UnblockDeploy phase: the 3 recommended actions all completed, with real evidence
+
+Dispatched specifically to unblock `features_sports_service_consolidation_deploy_2026_07_15.md` todo 5 per the
+"Corrected recommendation" above. All three items done, verified live, not inferred:
+
+1. **`market-data-cefi` TTL override shipped**: `deployment-service@8e94608` adds `CONSOLIDATOR_LOCK_TTL_SECONDS=1200`
+   for `market-data-cefi` in `terraform/gcp/manifest_consolidator_scheduler.tf` (mirrors the defi/sports precedent, set
+   above the observed 432-510s real-merge ceiling and above the bucket's own 1800s `timeout_seconds`). Live-bumped
+   immediately via
+   `gcloud run jobs update uts-prod-manifest-consolidator-market-data-cefi --update-env-vars CONSOLIDATOR_LOCK_TTL_SECONDS=1200`
+   — confirmed present via `gcloud run jobs describe` before AND after the terraform ship. `quality-gates.sh --no-fix`
+   green (93s).
+2. **MTDS consolidator-liveness-watchdog rebuild+redeploy INDEPENDENTLY RE-VERIFIED** (this was already done by the
+   14:05Z update below at the time this dispatch started — re-confirmed rather than trusted): `market-tick-data-service`
+   `:latest` tag resolves to digest `sha256:1e974ccd...` (tags `0.92.0,260b1ab,57e26c0,a01113e,latest`, pushed
+   2026-07-15T14:34:57Z). The most recent `uts-prod-consolidator-liveness-watchdog` execution
+   (`uts-prod-consolidator-liveness-watchdog-2dhtv`, completed 14:42:50Z) ran that exact digest
+   (`gcloud run jobs executions describe` → `spec.template.spec.containers[0].image`) and its logs show **0 DOWN across
+   all 26 watched buckets** (`instruments-store-sports-prd → ok`, etc.) — the false-positive stream is confirmed gone,
+   live, not just claimed.
+3. **`features-service` image rebuilt against the fix-containing UTL base image**: confirmed via real `docker run`
+   (before touching anything) that UTL AR digest `sha256:56bd0fe5...` (tag `0.55.0,latest`, pushed 2026-07-15T14:10:18Z,
+   built from `unified-trading-library` HEAD `c47273c1`) genuinely contains the fix —
+   `inspect.getsource(assert_consolidator_healthy)` shows the `consolidator_cycle_in_flight` short-circuit inline (not
+   inferred from version numbers). `features-service`'s own `pyproject.toml` UTL constraint (`>=0.13.0,<1.0.0`) is
+   satisfied by the installed package version (`importlib.metadata.version` → `0.55.0`; the
+   `unified_trading_library.__version__` attribute reads `"1.6.0"` but is a manually-maintained internal doc string, NOT
+   the packaging version — verified this distinction directly to avoid a false constraint-violation conclusion). Bumped
+   `features-service/Dockerfile`'s `ARG BASE_IMAGE_DIGEST` from the stale `sha256:b7e391f8...` to `sha256:56bd0fe5...`,
+   shipped as `features-service@7c2e4ef1`, `quality-gates.sh --no-fix` green. Cloud Build trigger
+   `features-service-build` only fires on push to `main` (not `live-defi-rollout`, where quickmerge lands), so manually
+   ran `gcloud builds triggers run features-service-build --branch=live-defi-rollout --region=asia-northeast1` —
+   confirmed building the correct commit (`substitutions.COMMIT_SHA=7c2e4ef1d19b155fb70e05b55363d06a3e55d270`), build id
+   `0b5cec2d-2f6a-4416-b870-44e3db644e1f`.
+4. **`features-service-sports-job`'s terraform `docker_image` is pinned to the mutable `:latest` tag** (not a digest),
+   so once the build above pushes `:latest`, the job's NEXT execution picks up the fix automatically — no further
+   terraform apply / `gcloud run jobs update` needed on the job itself for this to take effect.
+
+**Not yet done this touch** (deliberately, per this dispatch's own instruction to stop short of the actual
+re-verification): did not re-attempt the manual `features-service-sports-job` execution — that is the next phase's job,
+gated on the Cloud Build above reaching `SUCCESS` first. `readyToReverify` should be assessed against that build's
+terminal status, not assumed here.
+
 ### Evidence (this update)
 
 - `gcloud run jobs list --project=central-element-323112 --region=asia-northeast1 --filter="metadata.name:uts-prod-manifest-consolidator" --format='value(metadata.name)'`

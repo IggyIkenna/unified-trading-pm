@@ -787,9 +787,17 @@ Full writeup in `plans/active/issues/manifest_consolidator_instruments_sports_in
   any live path.
 - **Production tracing** assessed: nothing to trace while it's not reproducing; documented the exact one-line
   `_release_lock` trace to add if the overlapping-acquire signature ever returns.
-- **Remaining for Item 1**: deploy the UTL fix live (MTDS image rebuild → watchdog + features-VM redeploy — a UTL
-  range-pinned bump does not auto-rebuild MTDS) and verify the live `CONSOLIDATOR_DOWN` stream stops. Then the issue doc
-  closes.
+- **Item 1 DEPLOYED + VERIFIED DONE (~14:05Z)** — see the issue doc's "Update 2026-07-15 (~14:05Z)" for the full chain.
+  Deployed UTL `c47273c1` (MTDS Dockerfile digest bump `market-tick-data-service@459d1b7e` → MTDS build `c9c18263` →
+  watchdog redeployed to `sha256:1e974ccd`). **While verifying, caught + corrected my own earlier scope overstatement**:
+  the `CONSOLIDATOR_DOWN` stream had TWO causes, and the lock-aware code fixed only one. Cause #1 (long-merge
+  false-positive on active `-prd-` buckets, defi/sports) → the lock-aware code, VERIFIED
+  (`market-data-tick-defi-prd → ok` mid-24min-merge). Cause #2 (the DOMINANT ~56%): the deployed watchdog `--buckets`
+  args were STALE — still watching decommissioned legacy no-`-prd-` buckets (the Terraform source removed
+  instruments/market-data {cefi,defi,sports}-legacy
+  - gas-fees 2026-07-12/13) → reconciled the deployed args to the 26-bucket source list via gcloud-direct. **Verified
+    end-state: a full watchdog execution reports 0 DOWN buckets** (vs ~564/4h). The sibling `market-data-cefi`
+    concurrent-merge TTL issue (a different class) is tracked separately, annotated-not-fixed.
 
 ### Item 2 (4 `DP_RUN_MOSTLY_EMPTY` cells) — ADVERSARIALLY VERIFIED SOUND; the bottom-of-doc "still open" claim is STALE
 
@@ -818,5 +826,59 @@ confirmed ancestors of `origin/live-defi-rollout`):
   record.
 - **The genuine remaining root cause of the recurring alerts** (re-confirmed by the verifier): the `DP_RUN_MOSTLY_EMPTY`
   detector counts `attempted_failed` over the WHOLE manifest history with NO recency window, so the static historical
-  defi/sports-trades rows keep tripping it even though nothing is actively regressing. Assessing a recency-window fix as
-  the highest-leverage "clean the channel" action (see below).
+  defi/sports-trades rows keep tripping it even though nothing is actively regressing. **NOTE: NOT actioned as a
+  detector change** — the operator already decided this ("Alert detector recency window: purge/reclassify stale rows
+  per-bucket as they come up, NOT a systemic detector change"). Per-bucket historical-row cleanups are the tracked
+  follow-ups (mbp_10 / corp_action / YAHOO_FINANCE 11,676-row / defi-recollect), not a detector rewrite.
+
+### Item 3 (YAHOO_FINANCE phantom venue) — DONE
+
+`unified-api-contracts@fec3f110` (via sub-agent, independently re-verified by me:
+`get_expected_data_types_for_venue( "YAHOO_FINANCE") == []`, the 5 sports NO_ADAPTER_YET venues still get their 10
+fallback types, source modeling intact). Removed YAHOO_FINANCE from all 5 venue-shaped registries + emptied the
+now-stale sentinel/parity allowlists; KEPT the SOURCE modeling (`data_source_continuity`, `capability_declarations`, the
+Yahoo adapter). The footgun was neutralized BY the de-enumeration itself (empty asset_group → `[]`), not a code guard —
+a blanket `NO_ADAPTER_YET → []` guard would have broken the 5 legit MTDS-owned sports odds venues that rely on the same
+fallback (verified). PM flip `unified-trading-pm@f6fc0eda4` + a P3 follow-up for the 11,676 existing
+`venue=YAHOO_FINANCE` manifest rows (forward-only fix; historical cleanup deferred, same pattern as mbp_10/corp_action).
+Multi-agent note: quickmerge swept a concurrent workstream-E OKX-liquidations correction into `fec3f110` (contained,
+QG-green) — the "same file never" hazard on `market_data_categories.py` recurred; worth serializing future edits to that
+file.
+
+### Item 4 (CBOE ohlcv_24h UAC gate) — DONE (operator decided ENABLE)
+
+Presented the decision to the operator via AskUserQuestion (the dispatch explicitly reserved it: "check whether the
+operator wants this... don't assume"). **Operator chose ENABLE.** `unified-api-contracts@2ace1fca` adds `ohlcv_24h` to
+`VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` (start `2000-01-03`) + `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CBOE"]`, so
+`venue_fetch.py`'s UAC-intersection no longer filters `(CBOE, ohlcv_24h)` out before the shipped routing fix
+(`market-tick-data-service@764e7170`) Yahoo-routes it — US Treasury-yield tenors now capture live under venue=CBOE,
+source=yahoo; VX-futures `ohlcv_1s`/`ohlcv_1m` stay Databento. 5 new regression tests, QG green. P3 flipped in the issue
+doc.
+
+## Continuation session close-out (2026-07-15 ~14:20Z) — all 4 remaining open items DONE
+
+The four items left genuinely open from prior sessions are all complete + independently verified (details in their
+per-item entries above / the cited issue docs):
+
+1. **Sports consolidator `_acquire_lock` race (P0)** — the race is NOT reproducing (6h of perfectly-serialised
+   acquisitions, min gap 361s, zero overlaps → the TTL=2400 fix holds). While verifying, found + fixed the ACTUAL live
+   `CONSOLIDATOR_DOWN` noise, which had TWO causes: (a) long-merge false-positive on active `-prd-` buckets → lock-aware
+   liveness fix `utl@c47273c1`, deployed (MTDS `459d1b7e`/build `c9c18263`, watchdog redeployed) + VERIFIED
+   (`market-data-tick-defi-prd → ok` mid-24min-merge); (b) the dominant ~56% → deployed watchdog watching decommissioned
+   legacy no-`-prd-` buckets (stale args vs Terraform source) → reconciled to the 26-bucket source list via gcloud.
+   **Verified: watchdog reports 0 DOWN; live stream dropped from ~140/hr to 1 in the following ~40min.**
+2. **4 `DP_RUN_MOSTLY_EMPTY` cells** — adversarially re-verified SOUND (all 4 fix SHAs confirmed ancestors of origin;
+   defi cells static-historical not a broken gate; sports/trades a bulk-reemit artifact; odds_horizon fully resolved,
+   count=0). The bottom-of-doc "still open" close-out was STALE bookkeeping — reconciled. Recurring-alert root cause
+   (no-recency-window detector) is operator-decided-against (per-bucket cleanup, not a detector change).
+3. **`YAHOO_FINANCE` phantom venue** — removed from all 5 venue-shaped registries (`uac@fec3f110`), source modeling
+   kept; footgun neutralized by de-enumeration (a blanket `NO_ADAPTER_YET→[]` guard would have broken 5 legit sports
+   odds venues — verified). 11,676 orphaned rows → P3 follow-up (data mutation, deferred per the established pattern).
+4. **CBOE `ohlcv_24h` UAC gate** — operator chose ENABLE (AskUserQuestion). `uac@2ace1fca` declares the capability so
+   the shipped routing fix `market-tick-data-service@764e7170` carries live US-Treasury-yield traffic (venue=CBOE,
+   source=yahoo); VX-futures stay Databento. Live capture flows on the next MTDS rebuild + tradfi batch (normal
+   cadence).
+
+**Documented follow-ups (not gaps in effort — data mutations / separate-issue-tracked / operator-decided-incremental)**:
+the 11,676 `venue=YAHOO_FINANCE` rows; the mbp_10 / corp_action historical rows; defi re-collect; the sports/trades
+`attempted_at` restore; the `market-data-cefi` concurrent-merge TTL override (a different class, tracked separately).
