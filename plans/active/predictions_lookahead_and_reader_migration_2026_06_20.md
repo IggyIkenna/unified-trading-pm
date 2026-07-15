@@ -81,10 +81,11 @@ where `market_created_at ≤ T`.
 
 ## P1 — feature registry
 
-- [ ] [SCRIPT] P1. **Predictions feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. Per-canonical_question_group +
+- [x] [SCRIPT] P1. **Predictions feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. Per-canonical_question_group +
       per-binary-outcome features need registry entries. Source-of-truth: the features-\* services that consume
       prediction tick data. (Coordinator: `available_at_lookahead_bias_completion` Phase 4 — this is the
-      predictions-feature-registry slice.)
+      predictions-feature-registry slice.) — **FOLDED OUT** to plans/epics/predictions_master.md (2026-07-15,
+      plan-reconcile §6 operator ruling); tracked there, not here.
 
 ## Success criteria
 

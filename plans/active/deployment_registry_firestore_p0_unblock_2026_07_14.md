@@ -109,6 +109,17 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       (`docs(plans):`), so the fleet ingests Phase 1. Activate ONLY the immediate next phase, nothing further
       downstream.
 
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
+      VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
+      last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
+      **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3): validated against REAL
+      Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
+      (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. Enabling the flag on live VMs needs the
+      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy. (FOLDED IN from
+      deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
+
 ## Success criteria
 
 - prod Deployments tab (deployed API) returns the live fleet within 45s; `active/` object count ≈ running-VM count.

@@ -109,19 +109,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                          > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                          > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                          > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                          > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                          > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                          > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                          > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                          > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                          > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                          > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                          > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                          > — it caused no canonical-form regression. Recorded in
-                                          > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                  > — it caused no canonical-form regression. Recorded in
+                                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -1178,28 +1178,28 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       DISTINCT client from `firm-paper-determinism` (`resolve_canonical_run` isolation intact).
 
       Residual NON-paper-stream sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without
-              it); (c) odom-portal UI image auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code
-              landed `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag
-              `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine
-              `strategy-service@5557e7ef` + job/scheduler `deployment-service@ae9d6e6`). Remaining operational steps + WHO
-              can run them in this env (SA = `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven:
-              `projects.getIamPolicy` denied): (a) **`tofu apply -target` the schedulers**
-              (`defi_forward_poll_scheduler.tf` + `paper_stream_scheduler.tf`, both gated by `enable_*`/`paper_stream_enabled`
-              default-true) — **operator/CI** (no `tofu`/`terraform` binary in this slot env; the deployment-service CI
-              applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the mtds live-tag fix + the
-              paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once the workspace clones
-              are clean.
+                      it); (c) odom-portal UI image auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code
+                      landed `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag
+                      `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine
+                      `strategy-service@5557e7ef` + job/scheduler `deployment-service@ae9d6e6`). Remaining operational steps + WHO
+                      can run them in this env (SA = `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven:
+                      `projects.getIamPolicy` denied): (a) **`tofu apply -target` the schedulers**
+                      (`defi_forward_poll_scheduler.tf` + `paper_stream_scheduler.tf`, both gated by `enable_*`/`paper_stream_enabled`
+                      default-true) — **operator/CI** (no `tofu`/`terraform` binary in this slot env; the deployment-service CI
+                      applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the mtds live-tag fix + the
+                      paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once the workspace clones
+                      are clean.
 
-              (c) **odom-portal UI image deploy** (`bash scripts/deploy-cloud-run.sh --env=prod --cloud`) — **operator/CI**:
-              this SA lacks `serviceusage.services.use` on `central-element-323112_cloudbuild` → `gcloud builds submit` is
-              FORBIDDEN (the ONE genuine IAM-denied step, surfaced to the operator; the UI code is landed
-              `unified-trading-system-ui@a67e3c34` and rides the normal LDR→staging→main→image CI path on promotion
-              regardless). (d) **manual one-shot proof of the live capture**
-              (`bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`) —
-              **runnable by this SA** (compute-capable) → T+10min check rows at
-              `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`;
-              needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
-              unified-trading-system-ui.
+                      (c) **odom-portal UI image deploy** (`bash scripts/deploy-cloud-run.sh --env=prod --cloud`) — **operator/CI**:
+                      this SA lacks `serviceusage.services.use` on `central-element-323112_cloudbuild` → `gcloud builds submit` is
+                      FORBIDDEN (the ONE genuine IAM-denied step, surfaced to the operator; the UI code is landed
+                      `unified-trading-system-ui@a67e3c34` and rides the normal LDR→staging→main→image CI path on promotion
+                      regardless). (d) **manual one-shot proof of the live capture**
+                      (`bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`) —
+                      **runnable by this SA** (compute-capable) → T+10min check rows at
+                      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`;
+                      needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
+                      unified-trading-system-ui.
 
 - [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
       Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via
@@ -1249,25 +1249,25 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
 
       - **PARTIAL (autonomous 2026-06-23, NOT yet landed in the live ledger — stall-safety stop):**
-                `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed. FIXED:
-                `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod` (was
-                the address). The catalog spec (`catalog_yield_defi.py` `DEFI_LP_VAULT`/POOL/CONCENTRATED) now carries a
-                canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
-                emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
-                engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
+                        `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed. FIXED:
+                        `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod` (was
+                        the address). The catalog spec (`catalog_yield_defi.py` `DEFI_LP_VAULT`/POOL/CONCENTRATED) now carries a
+                        canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
+                        emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
+                        engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
 
-              **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
-              after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
-              confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live strategies →
-              engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
-              **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
-              instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
-              `symbol` was added → need re-registration / fresh spec load).
+                      **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
+                      after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
+                      confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live strategies →
+                      engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
+                      **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
+                      instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
+                      `symbol` was added → need re-registration / fresh spec load).
 
-              NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault` + GroupBRunner build the engine's `params` from the spec
-              and confirm `symbol` reaches `engine.params`; add a test that exercises the LIVE replay path (paper_run →
-              emitted ledger row), asserting `"0x" not in` the row's `instrument_key` (the unit test covered the engine path,
-              not the replay path, so it passed while live failed).
+                      NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault` + GroupBRunner build the engine's `params` from the spec
+                      and confirm `symbol` reaches `engine.params`; add a test that exercises the LIVE replay path (paper_run →
+                      emitted ledger row), asserting `"0x" not in` the row's `instrument_key` (the unit test covered the engine path,
+                      not the replay path, so it passed while live failed).
 
 - [x] ✅ [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** —
       **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (`CoinPriceChart`
@@ -1402,30 +1402,30 @@ arguably daily-OK.
       price-sensitive ops (gated by `enable_defi_forward_poll`, default true; slow ops stay daily). **REMAINING:**
 
       (a) ✅ **mtds live pipeline_mode fix + DeFi-live heartbeat LANDED 2026-06-22 —
-              `market-tick-data-service@3f5c61f9`** (on origin/live-defi-rollout, full QG `--no-fix` exit-0 + content sentinel
-              verified). Folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*`
-              (dex_pools/dex_swaps/oracle_prices) AND emits a per-shard `emit_pipeline_heartbeat` on the live forward-poll
-              path (subsumes (c)). **NOTE on the prior "blocker": the local QG was NOT a coverage mis-root** — that
-              `rootdir: unified-trading-pm, collected 6` line is the intentional `PM_INT_TEST` integration check (a red
-              herring); the real failures were a missing `# noqa: qg-deep-import` on the new
-              `from unified_trading_library.events import emit_pipeline_heartbeat` lines (events helper, not top-level
-              re-exported) + a method-size trim on `oracle_prices_handler.process()` (53→48L). Python service repos
-              quickmerge locally fine.
+                      `market-tick-data-service@3f5c61f9`** (on origin/live-defi-rollout, full QG `--no-fix` exit-0 + content sentinel
+                      verified). Folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*`
+                      (dex_pools/dex_swaps/oracle_prices) AND emits a per-shard `emit_pipeline_heartbeat` on the live forward-poll
+                      path (subsumes (c)). **NOTE on the prior "blocker": the local QG was NOT a coverage mis-root** — that
+                      `rootdir: unified-trading-pm, collected 6` line is the intentional `PM_INT_TEST` integration check (a red
+                      herring); the real failures were a missing `# noqa: qg-deep-import` on the new
+                      `from unified_trading_library.events import emit_pipeline_heartbeat` lines (events helper, not top-level
+                      re-exported) + a method-size trim on `oracle_prices_handler.process()` (53→48L). Python service repos
+                      quickmerge locally fine.
 
-              (b) **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project;
-              use `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the
-              launched VMs. (c) ✅ **heartbeat** (`emit_pipeline_heartbeat`) — DONE, landed with (a) above. Manual verify
-              when applied: `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`
-              → T+10min check rows at
-              `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`.
+                      (b) **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project;
+                      use `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the
+                      launched VMs. (c) ✅ **heartbeat** (`emit_pipeline_heartbeat`) — DONE, landed with (a) above. Manual verify
+                      when applied: `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`
+                      → T+10min check rows at
+                      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`.
 
-              Orig intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading
-              archetypes (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the
-              CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1)
-              for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
-              lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
-              market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
-              archetype going live.
+                      Orig intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading
+                      archetypes (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the
+                      CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1)
+                      for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
+                      lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
+                      market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
+                      archetype going live.
 
 ### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
 
@@ -4722,15 +4722,15 @@ range never overlaps a still-in-flight per-market-only day).
       `day=/category=defi/venue={FLAT}/chain=/…` form.
 
       The C0/**v9** step is a NEW, separate read+rewrite tool —
-              `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
-              2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
-              that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
-              partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
-              complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where
-              present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
-              `{kind}-prd-{project}` bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
-              VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
-              sub-todos C0a–C0f below.**
+                      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
+                      2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
+                      that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
+                      partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
+                      complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where
+                      present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
+                      `{kind}-prd-{project}` bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
+                      VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
+                      sub-todos C0a–C0f below.**
   - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
         supersedes the "no new buckets/VMs" pause): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`,
         `perp-funding-prd`, `gas-fees-prd` — all `*-prd-central-element-323112`, ASIA-NORTHEAST1, NEARLINE@90d +
@@ -4876,14 +4876,14 @@ range never overlaps a still-in-flight per-market-only day).
       `asset_group=defi`).
 
       Verification (per CLAUDE.md "Plans Run To Actual Completion"):
-              `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
-              returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-              `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
-              equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
-              days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
-              `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
-              wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
-              2026-07-13 per MTDS consolidation ruling.)**
+                      `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
+                      returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
+                      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
+                      equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
+                      days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
+                      `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
+                      wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+                      2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
       Terminal A:
@@ -5356,3 +5356,11 @@ Evidence: `gcloud storage buckets delete gs://dex-pools-test-central-element-323
 `gcloud storage buckets describe gs://dex-pools-test-central-element-323112` → 404 (both run live this session,
 2026-07-14); `deployment-service@f04cc39` (precedent commit read, confirming no resource block ever existed for
 `dex-pools`, no new commit needed there); `unified-trading-pm@<see this commit>` (this doc entry).
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — only after Phase 3's parity verification is fully green: delete the
+      non-canonical (glued + bare-underlying) originals. Version-aware, snapshot first, same rigor as
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly NOT bundled with the reshape
+      apply step. (FOLDED IN from bybit_futures_chain_write_shape_migration_2026_07_13, 2026-07-15, plan-reconcile §6
+      operator ruling)

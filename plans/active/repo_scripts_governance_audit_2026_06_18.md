@@ -245,3 +245,17 @@ a verdict). Heaviest:
   flipped; delete + deprecate + promote execution todos scoped with the gating rule. **Next:** Phase 0 marker
   codification, then the immediately-safe ~40 deletes (UI splitters + done bucket migrations + dead checkers), then the
   campaign-gated cohort as each plan archives.
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [SCRIPT] P1. **BLOCKED — `[OPERATOR]`-gated; do NOT start until every Phase-0 + Phase-1 repo above is ✅** (else
+      it reds the whole fleet on still-unstamped repos). Build + wire the lifecycle-marker QG checker so the 3-field
+      marker is enforced like other frontmatter'd filetypes: a checker
+      (`scripts/quality_gates/check_script_lifecycle_markers.py`) that FAILS when a `scripts/` file is missing any of
+      `# Epic:` / `# Lifecycle:` / `# Delete-when:`, or has an invalid `Lifecycle` value, or an `Epic:` not in
+      `orchestrator_vm_registry.yaml`'s epic set, or a non-`permanent` carrying `Delete-when: NA`. Wire it into the
+      PM-sourced `base-service.sh` + `base-library.sh` so it rides fleet-wide with NO per-repo rollout (mirror STEP
+      5.94/5.95). The operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is empty
+      fleet-wide. Update `codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/ file"
+      in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. (FOLDED IN from
+      scripts_lifecycle_marker_rollout_2026_06_18, 2026-07-15, plan-reconcile §6 operator ruling)

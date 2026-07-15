@@ -112,7 +112,7 @@ Three steady-state surfaces + the final verdict:
       consecutive days: 2026-06-23 16:52→16:53, 2026-06-24 01:00→01:01, 2026-06-25 01:00→01:01, 2026-06-26 01:00→01:01,
       2026-06-27 01:00→01:00 (each within ~51s). catalog.parquet updated (P1e task 002 ✅).
       `DP_CATALOG_NOT_RUNNING(sports)` cleared (P1e alerts task ✅). Gate ALL PASSED.
-- [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE-LOOP HALT).** **FINAL full-history
+- [x] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE-LOOP HALT).** **FINAL full-history
       zero-missing (R1/R2/R3).** **Gate**: `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index`
       over 2015→present (single-walk discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0
       un-evidenced `attempted_failed` for EVERY `(source, data_type)` within coverage windows; features ML-ready. Output
@@ -203,7 +203,9 @@ Three steady-state surfaces + the final verdict:
       enumerator's deployed runtime. The **already-written** rows still need a purge/retype pass — tracked in
       `plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`
       §B, deliberately deferred until the in-flight P0 index repair settles. Until that purge lands, treat this eu
-      figure as **denominator pollution** (it depresses every ODDS coverage ratio ~4.6×), not as work.
+      figure as **denominator pollution** (it depresses every ODDS coverage ratio ~4.6×), not as work. — **FOLDED OUT**
+      to plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md (2026-07-15, plan-reconcile §6
+      operator ruling); tracked there, not here.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward
       is live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert

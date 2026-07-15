@@ -565,3 +565,11 @@ DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
   prediction markets. Polymarket writes OK; Kalshi adapter dormant until credentials land. (**MIGRATED FROM:**
   `instruments_backfill_phase3_2026_05_22`)
 - **IS bucket canonicalisation (P2)**: Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` or
+      `codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
+      polarity or canonical_instrument_id's CeFi/DeFi scope; update/SUPERSEDED-banner if they assert the old (wrong)
+      state. (FOLDED IN from canonical_instrument_id_cefi_defi_backfill_2026_07_14, 2026-07-15, plan-reconcile §6
+      operator ruling)

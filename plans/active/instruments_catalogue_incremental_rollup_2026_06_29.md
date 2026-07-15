@@ -186,14 +186,19 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
       re-verify + flip, not open work.)_ — **VERIFIED instruments-service@dce8e85a (slot-2, 2026-07-03)**: full
       `quality-gates.sh --no-fix` exit 0 (unit suite green incl.
       `tests/unit/scripts/test_build_instrument_catalogue.py`, zero-test guard passed, `.qg_last_passed_sha` == HEAD).
-- [ ] [INFRA] P1. (Interim band-aid, optional / operator-gated) bump `lifecycle_catalogue_scheduler.tf`
+- [x] [INFRA] P1. ✅ (Interim band-aid, optional / operator-gated) bump `lifecycle_catalogue_scheduler.tf`
       `timeout_seconds` 3600→10800 for tradfi ONLY so the daily catalogue stays fresh until the incremental path ships.
       Gate: `terraform plan` shows only the timeout delta. (Operator declined the band-aid 2026-06-29 — keep unchecked
       unless the catalogue goes stale again before Phase 3 lands.) _(2026-07-03: the stale-again condition DID
       re-trigger — tradfi `prod/catalog.parquet` last written 2026-06-29T18:25Z, every daily run since killed at the
       3600s timeout ("The configured timeout was reached", e.g. execution `lifecycle-catalogue-regen-tradfi-8gcml`
       01:00→02:04 UTC 2026-07-03). Operator (Ikenna) declined the band-aid AGAIN: system is pre-prod, staleness
-      acceptable; the incremental path is the fix. Keep unchecked.)_
+      acceptable; the incremental path is the fix. Keep unchecked.)_ — **FLIPPED 2026-07-15 (plan-reconcile §6)**:
+      superseded, band-aid never needed — Phase 3 shipped same-day (instruments-service@b0596d0c incremental engine +
+      instruments-service@5d31994a coverage-horizon warning + deployment-service@c1d2e3e6 weekly `--mode full` self-heal
+      jobs, `terraform apply` "12 added, 0 changed, 0 destroyed", cloudbuild=78e5e3a7-48ca-4f2d-8d51-579c9d8f4812
+      SUCCESS), permanently resolving the 3600s-timeout staleness this interim band-aid targeted; the triggering
+      condition ("stale again before Phase 3 lands") is now moot.
 
 ### Phase 1 — incremental engine (tradfi/cefi/defi)
 

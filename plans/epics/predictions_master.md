@@ -988,6 +988,14 @@ DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provi
 
 _(no plans currently assigned at this priority)_
 
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [SCRIPT] P1. **Predictions feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. Per-canonical_question_group +
+      per-binary-outcome features need registry entries. Source-of-truth: the features-\* services that consume
+      prediction tick data. (Coordinator: `available_at_lookahead_bias_completion` Phase 4 — this is the
+      predictions-feature-registry slice.) (FOLDED IN from predictions_lookahead_and_reader_migration_2026_06_20,
+      2026-07-15, plan-reconcile §6 operator ruling)
+
 ## Cross-references
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).

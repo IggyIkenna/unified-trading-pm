@@ -405,7 +405,7 @@ source: deployment_observability_expansion_2026_07_08.md
       same hotspot file (CLOUD_RUN_SERVICE census`ab0c431`, ECS/Lambda field surfacing, the oom-risk/stalled alert
       wiring `5e25dce`) — one import-ordering conflict, one `build_inventory`new-param conflict (kept both the
       sibling's`cloud_run_services`param and my`object_deltas` param). QG green (sentinel 29f3be5, 119s).
-- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+- [x] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
       Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
       calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
       (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
@@ -416,7 +416,9 @@ source: deployment_observability_expansion_2026_07_08.md
       `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0 principle 2), and the
       oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so nothing misfires while
       these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is wired + shipped. This item
-      stays open (not a fake `[x]`) as an explicit, tracked deferral.
+      stays open (not a fake `[x]`) as an explicit, tracked deferral. — **FOLDED OUT** to
+      plans/active/deployment_observability_expansion_2026_07_08.md (2026-07-15, plan-reconcile §6 operator ruling);
+      tracked there, not here.
 - [x] ✅ [REVIEW] P3. **`deployments_inventory.py` hotspot — split into sibling modules** (cap 900; QG's file-size check
       is non-blocking today but the file was a real hotspot). Now that the plan's todos stopped converging on it,
       extracted the two lowest-coupling cohesive chunks the todo named: **service-taxonomy →

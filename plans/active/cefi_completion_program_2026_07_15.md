@@ -447,4 +447,26 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 - ETA HONESTY: recent-tail (June-July) fill is SLOWER than the earlier 1.5-2d — the SPOT-preempt + relaunch-from-Jan +
   chronological grind + N≤3 lease is choppy; grind still in 2026-01 after ~5h. Realistic tail-landed: several days. Full
   af=0 history: ~2-3wk (cap-3 ceiling). Unchanged: all Phase-1 code shipped + landed.
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
+      expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
+      trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
+      2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
+      counts them zero by construction.**); every absence typed honest (pre-venue-launch / expiry-window /
+      deferred-no-source). Repos: `instruments-service`, `e2e-testing`. **Run:**
+      `python scripts/measure_honest_coverage.py --asset-group cefi`;
+      `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`;
+      `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
+      (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
+      (Layer-1) `layer_1.by_asset_group.cefi.denominator_complete == True` (100%, `missing_tuples == []`) in the same
+      coverage.json — **[Corrected 2026-07-14, finding 26]** (was: a baked-in "Layer-1 currently 79.55% with 9 real
+      holes" baseline that never matched any logged run in this doc, incl. the 07-03 runs closest to it at 61.4%/17 and
+      73.61%/19 tuples) — Layer-1 last measured 91.78% (6 missing tuples) at the 2026-07-13T23:22Z→2026-07-14T00:05Z
+      session close (see Progress Log "G4 Session Close-out"); re-run `measure_honest_coverage.py` fresh before relying
+      on any number here, this line is a point-in-time snapshot, not the gate's live source of truth. G4 cannot close
+      before the denominator-gap work in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` lands. Verdict to Progress
+      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A. (FOLDED IN from
+      mvp_backfill_cefi_tick_v10_2026_06_27, 2026-07-15, plan-reconcile §6 operator ruling)
 - Backing off to a pure 1h cap-backstop; will act only on (tail reaches June → WS-H) / (cap breach) / (completion).

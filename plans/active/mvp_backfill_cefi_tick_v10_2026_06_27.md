@@ -220,7 +220,7 @@ BLOCKED.
 > denominator has holes. This SUPERSEDES the 2026-06-29 Progress-Log note "Layer-1 is a denominator audit; does NOT
 > block G4 gate directly" (kept below as historical record).
 
-- [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
+- [x] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
       expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
       trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
       2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
@@ -237,7 +237,9 @@ BLOCKED.
       session close (see Progress Log "G4 Session Close-out"); re-run `measure_honest_coverage.py` fresh before relying
       on any number here, this line is a point-in-time snapshot, not the gate's live source of truth. G4 cannot close
       before the denominator-gap work in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` lands. Verdict to Progress
-      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
+      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A. — **FOLDED OUT** to
+      `plans/active/cefi_completion_program_2026_07_15.md` (2026-07-15, plan-reconcile §6 operator ruling); tracked
+      there, not here.
 - [x] ✅ [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a
       pre-purge `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12,
       plan-reconciliation finding 30: delete rather than scope-exclude. — **DONE 2026-07-12** —

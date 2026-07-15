@@ -81,9 +81,10 @@ drift_direction: correct-codex
       `codex/09-strategy/operational/paper-batch-live-reconciliation.md`,
       `codex/04-architecture/trading-agent-service-directive-pipeline.md`, `codex/02-venues/prime-brokers.md`, and
       `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
-- [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
+- [x] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
       regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
-      split family per the 5-step HARD RULE once all repos hit C5.
+      split family per the 5-step HARD RULE once all repos hit C5. — **FOLDED OUT** to
+      plans/epics/infrastructure_master.md (2026-07-15, plan-reconcile §6 operator ruling); tracked there, not here.
 
 ## Success criteria
 

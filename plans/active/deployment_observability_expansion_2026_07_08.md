@@ -117,7 +117,7 @@ daemon reads structured-progress-when-present, else the log-scrape) means it rol
 ## WS-A — Merge live/batch/paper into one Deployments tab ✅ DONE
 
 - [x] 1. ✅ [UI] P0. Collapse the 3 mode tabs + tiles + nav into one unified all-modes Deployments table (Mode =
-     filter); kill the bad columns — `deployment-ui@50a6947` + QG green (915 vitest, pw smoke).
+      filter); kill the bad columns — `deployment-ui@50a6947` + QG green (915 vitest, pw smoke).
 
 ## WS-B — Census the compute kinds the backend ignores (make the mock real) ✅ COMPLETE
 
@@ -306,8 +306,8 @@ uses ready-state + revision health in place of desired/running.
 > checkboxes) so the future plan can lift it verbatim.
 >
 > **(was: `consolidator_throughput_backlog_monitor_2026_07_09.md`'s WS-2 pointed to this doc as "tracked here if/when
-> WS-H ships" — that pointer is now stale/dangling since this same-day extraction; no plan currently owns WS-H until
-> the operator creates one. [finding 183, synced 2026-07-14])
+> WS-H ships" — that pointer is now stale/dangling since this same-day extraction; no plan currently owns WS-H until the
+> operator creates one. [finding 183, synced 2026-07-14])
 
 Spec to lift into the future plan:
 
@@ -405,3 +405,19 @@ Spec to lift into the future plan:
 
 - GitHub Actions minutes / runner cost as a "kind" (out of scope — different axis).
 - Per-client isolation view of deployments (funds-isolation is a separate surface).
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+      Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
+      calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
+      (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
+      would have to be extended to carry the counter history first). **Decision**: both are genuinely NEW subsystems — a
+      market calendar and a counter-history tracker — disproportionate to build for a P3 `stalled` refinement, so they
+      are DEFERRED to a future phase (tracked in the parent `deployment_observability_expansion_2026_07_08.md`). The
+      current **honest-`"unknown"` degradation is confirmed correct** as the v1: `_composite_health_status` returns
+      `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0 principle 2), and the
+      oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so nothing misfires while
+      these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is wired + shipped. This item
+      stays open (not a fake `[x]`) as an explicit, tracked deferral. (FOLDED IN from
+      deployment_obs_backend_kinds_health_2026_07_09, 2026-07-15, plan-reconcile §6 operator ruling)
