@@ -79,6 +79,173 @@ drift_direction: advance-code
 
 ---
 
+## Audit results — April–July 2026 (measured, replaces the 13.5h sample)
+
+> Ran the two Phase-0 audit todos for the full 4 months (operator ask 2026-07-15). **Method:** dollar figures are exact
+> from the GitHub Enhanced-Billing ledger (`settings/billing/usage`, per repo × day × SKU). Per-workflow attribution is
+> a **proxy** — GitHub's per-run timing endpoint returns 0 on this account, so we distribute PM's real ledger dollars
+> across workflows by `run_count × billable_jobs_per_run` (the 1-min-per-job minimum dominates, so this tracks billed
+> cost well). Per-workflow counts use a 30-day window (2026-06-15→07-15; GitHub purges run history at ~90 days, so
+> earlier per-workflow detail is unavailable — but the ledger dollars go back the full 4 months).
+
+### Fleet monthly totals (net, 100% Actions Linux — no storage/packages/Copilot)
+
+| Month             | Net $      | Gross $ | Actions Linux min | Notes                                                 |
+| ----------------- | ---------- | ------- | ----------------- | ----------------------------------------------------- |
+| Apr 2026          | **$2**     | $22     | 3,605             | CI/CD machinery barely on yet                         |
+| May 2026          | **$146**   | $165    | 27,472            | machinery ramping                                     |
+| Jun 2026          | **$1,441** | $1,541  | 256,753           | **peak / incident-heavy** (Jun 11 alone ≈ $248 fleet) |
+| Jul 2026 (1–15)   | **$485**   | $518    | 86,327            | ~$1,000/mo run-rate                                   |
+| **4-month total** | **$2,074** | $2,246  | 374,157           | avg $518/mo (skewed low by near-zero April)           |
+
+**Read the trend, not the 4-mo average:** April was pre-machinery (~$0); the real steady-state is **~$1,000/mo** (June
+actual, July annualized), with June inflated by an incident. Rate confirmed **$0.006/min**.
+
+### Per-repo, 4-month (Actions Linux net $) — PM dominates and its share is climbing
+
+| Repo                       | Apr | May | Jun | Jul | 4-mo     | %         |
+| -------------------------- | --- | --- | --- | --- | -------- | --------- |
+| **unified-trading-pm**     | 0   | 72  | 504 | 231 | **$808** | **39.0%** |
+| features-service           | 0   | 0   | 80  | 11  | $92      | 4.4%      |
+| unified-api-contracts      | 0   | 9   | 63  | 17  | $89      | 4.3%      |
+| unified-trading-library    | 0   | 12  | 51  | 21  | $84      | 4.1%      |
+| market-tick-data-service   | 0   | 5   | 52  | 26  | $83      | 4.0%      |
+| instruments-service        | 0   | 7   | 50  | 23  | $81      | 3.9%      |
+| execution-service          | 0   | 10  | 48  | 9   | $67      | 3.2%      |
+| deployment-service         | 0   | 5   | 43  | 17  | $65      | 3.1%      |
+| deployment-api             | 0   | 3   | 48  | 14  | $64      | 3.1%      |
+| _(≈15 more service repos)_ | —   | —   | —   | —   | ~2–3% ea | —         |
+
+PM share by month: Apr 18% · **May 49.5% · Jun 35% · Jul 47.7%**. Every _other_ repo is a near-uniform ~2–4% — that flat
+tail is the per-repo CI baseline; PM is the outlier because it's the control tower. (Self-hosted runner audit: **0
+registered fleet-wide** — confirmed.)
+
+### PM per-workflow attribution (30-day window, anchored to PM's real $510 net for Jun15–Jul15)
+
+| Workflow                          | runs/30d | jobs/run | ~$/mo | % of PM   |
+| --------------------------------- | -------- | -------- | ----- | --------- |
+| **ci-status-update**              | 13,022   | 2        | ~$165 | **32.4%** |
+| **quality-gates-v2**              | 3,215    | 5        | ~$102 | **20.0%** |
+| SIT Debounce Trigger              | 1,426    | 4        | ~$36  | 7.1%      |
+| update-repo-version               | 1,142    | 3        | ~$22  | 4.3%      |
+| staging-to-main                   | 1,050    | 3        | ~$20  | 3.9%      |
+| cloud-build-router                | 912      | 3        | ~$17  | 3.4%      |
+| Plan Health Agent                 | 2,214    | 1        | ~$14  | 2.8%      |
+| Conflict Resolution Agent         | 1,037    | 2        | ~$13  | 2.6%      |
+| Rules Alignment Agent             | 644      | 3        | ~$12  | 2.4%      |
+| main-backmerge-to-ldr             | 1,922    | 1        | ~$12  | 2.4%      |
+| branch-health                     | 465      | 4        | ~$12  | 2.3%      |
+| Plan Notification & Approval Gate | 613      | 3        | ~$12  | 2.3%      |
+| ldr-to-staging-promote            | 1,620    | 1        | ~$10  | 2.0%      |
+| cloud-build-router-aws            | 635      | 2        | ~$8   | 1.6%      |
+| _(tail: promote/reconcile/etc.)_  | —        | —        | ~$45  | ~9%       |
+
+### PM by cluster (the shape that drives the Set B decision)
+
+| Cluster                                 | ~$/mo | % of PM   | Where it goes under Set B                            |
+| --------------------------------------- | ----- | --------- | ---------------------------------------------------- |
+| **ci-status-update**                    | ~$165 | **32.4%** | → self-host (B1) or serverless (B2) → ~$0            |
+| **promotion / health / reconcile bots** | ~$144 | **28.2%** | → self-host (B1) → ~$0 (git+PR bots stay on Actions) |
+| **quality-gates-v2** (real tests)       | ~$102 | **20.0%** | Set A shrinks it (docs-skip + fan-out collapse)      |
+| **agent / plan / misc bots**            | ~$69  | **13.5%** | → self-host (B1) → ~$0                               |
+| **cloud-build-router(+aws)**            | ~$25  | **5.0%**  | → self-host (B1) or B2                               |
+
+### Corrections vs the earlier 13.5h sample (why the 4-month audit mattered)
+
+- **`cloud-build-router` is ~5%, NOT ~20%** — the small sample caught a deploy burst. It fires ~900×/30d, and the AWS
+  mirror is disabled. This meaningfully **de-prioritizes A4** (merging router jobs saves ~$8–15/mo, not ~$25–30).
+- **The promotion/health/reconcile-bot cluster is ~~28% (~~$144/mo)** — bigger than the earlier "~18% crons" framing,
+  and spread across many bots (SIT Debounce alone is 7%, `update-repo-version` 4.3%, `staging-to-main` 3.9%). These are
+  the fat middle that **self-hosting (B1) zeroes** — reinforcing B1 as the highest-value move after the Set-A bug-fixes.
+- **`ci-status-update` (32%) and `quality-gates-v2` (20%) hold** as the top two — the plan's spine is unchanged.
+- **~79% of PM is glue** (everything except quality-gates-v2) — consistent with the run-mix finding.
+
+---
+
+## Capacity assessment — planning-VM as the glue runner host (B1, operator-chosen 2026-07-15)
+
+> Operator decision 2026-07-15: **glue → the planning-VM (central orchestrator VM) for now** (B1). This section sizes
+> the CI-side load against the VM's live headroom. **Bottom line: it fits comfortably — glue is IO-bound and light; the
+> VM is ~90% idle on CPU with 27 GB RAM free.**
+
+### The host — `i-0c9b283b31d6b5ca7` (EIP 13.113.200.22, AWS Tokyo)
+
+| Resource | Spec                                                                                          | Live usage (2026-07-15, measured via SSM) | Headroom              |
+| -------- | --------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------------- |
+| CPU      | **8 vCPU** (m8i.2xlarge)                                                                      | load avg **0.73 / 0.84 / 0.89** (~10%)    | **~7 cores idle**     |
+| RAM      | **32 GiB**                                                                                    | 4.8 GB used, 16 GB buff/cache             | **~27 GB available**  |
+| Disk     | 300 GB gp3                                                                                    | 232 GB used (**80%**)                     | 59 GB free ← tightest |
+| Running  | ~10 orchestrator Claude slots (`orch-agent-main` + `orch-slot-*`) — IO/network-bound, low CPU |                                           |                       |
+
+### The glue workload (moving PM's ~50 glue workflows off GitHub-hosted; `quality-gates-v2` STAYS hosted)
+
+Measured from real run timings (1,000-run/13.4h sample + 30-day counts):
+
+- **~3,100 glue job-executions/day**, average **~47s each** — short, IO-bound (a checkout + a Python/`gcloud`/Firestore
+  call), not CPU-bound.
+- **Average concurrency ≈ 1.7 jobs → ~1.7 cores continuous** (~41 CPU-hours/day).
+- **Peak burst ≈ 26 concurrent runs** (~40–50 job-slots momentarily) when the fleet's CI completes together — but jobs
+  are seconds-long, so bursts drain in minutes.
+- **RAM:** ~0.5–1.5 GB per active job → a few GB at peak.
+- **Disk per runner:** a PM checkout is only **~120 MB tracked tree / ~290 MB with shallow `.git`**; 6–8 runners +
+  shared tool caches ≈ **~3–5 GB** total.
+
+### Fit verdict
+
+|      | Glue needs (steady / peak) | VM headroom               | Verdict                                          |
+| ---- | -------------------------- | ------------------------- | ------------------------------------------------ |
+| CPU  | ~1.7 cores avg / bursts    | ~7 idle cores             | ✅ trivial                                       |
+| RAM  | a few GB                   | ~27 GB                    | ✅ trivial                                       |
+| Disk | ~3–5 GB                    | 59 GB free (but 80% used) | ✅ fits, but disk is the pre-existing watch-item |
+
+The glue's **steady draw (~1.7 cores, a few GB RAM, ~5 GB disk) disappears into the VM's idle headroom.** It does not
+meaningfully compete with the orchestrator slots (both are IO/network-bound, not CPU-bound). Key framing: these are
+**background glue jobs, not developer-facing CI**, so a short queue during a burst is acceptable — we size runners for
+throughput + tolerable latency, **not** zero-queue at peak.
+
+### Sizing + guardrails
+
+- **6–8 ephemeral runner processes**, label `glue`, systemd-managed with auto-restart. At 8 slots a worst-case ~50-job
+  burst drains in ~5 min; typical bursts far less.
+- **Hard-cap CPU** so a CI burst can never starve the orchestrator: systemd `CPUQuota` on the runner slice (e.g. total
+  glue ≤ 400% = 4 cores), leaving ≥4 cores always free for AO. RAM cap via `MemoryMax` (e.g. 8 GB slice).
+- **Ephemeral runners (`--ephemeral`) + periodic `_work` cleanup** so disk doesn't creep — disk is already at 80% (from
+  AO worktrees, not the glue). Optional: online-resize the gp3 300→400 GB (~$8/mo) if the 80% becomes a standing
+  concern; that's a pre-existing AO issue, not caused by this move.
+- **KEEP on GitHub-hosted:** `quality-gates-v2` (pytest is CPU-bound ~12 min — moving it would actually load the VM),
+  and any `pull_request`-triggered test job. Shrink QG via Set A instead. **MOVE:** the `repository_dispatch` / schedule
+  / push glue (ci-status-update, cloud-build-router(+aws), promotion/health/reconcile crons, agent/plan bots).
+- **Realized saving:** this zeroes GitHub cost on ~~79% of PM (~~$400/mo) → PM from ~$480–510/mo to
+  ~$100/mo (QG only,
+  which Set A further trims); fleet ~$1,000 → ~$550–650, before Set A's docs-skip lands across the
+  other repos.
+
+**Net: the planning-VM absorbs the entire CI-glue load with room to spare — the things to actively manage are memory
+(the QG interaction below) and disk; a CPU cap protects the orchestrator.** If ci-status-update's burst latency ever
+matters, that single workflow is the natural first candidate for the B2 serverless move (already in the plan as the "B2
+next" step).
+
+### Reconciliation with the QG-offload ADR (2026-06-02) — complementary, not contradictory
+
+`codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` (accepted, Option A) **rejected a central
+self-hosted runner pool — but for the _heavy QG gate_**, because moving the authoritative pass/fail off the worker
+breaks the local feedback loop (which SHA is tested; async failure-routing back to the agent). It kept heavy
+`quality-gates.sh` **local on the worker VMs**, governed by `qg-host-governor.sh` (K = `floor(vCPU/4)` concurrent).
+
+B1 here does **not** re-open that decision:
+
+- **We move GLUE, not QG.** ci-status-update / routers / promotion bots are fire-and-forget automation — no agent blocks
+  on their pass/fail, so the feedback-loop objection does not apply. `quality-gates-v2` **stays off** the self-hosted
+  runners (label `glue`, distinct from the ADR's rejected `qg` pool).
+- **Security patterns match the ADR:** ephemeral + single-job (JIT), private-repo-only, never on fork PRs.
+- **Memory interaction (the ADR's real concern) — accounted for:** the orchestrator VM's slots ARE workers, so local QG
+  bursts already land here (governor K = `floor(8/4)` = **2** concurrent × ~5.3 GB ≈ ~10 GB). Budget: ~5 GB base + ~10
+  GB QG burst + the glue slice's **8 GB `MemoryMax`** ≈ **~23 GB of 32 GB** (~9 GB headroom). The 8 GB glue cap is sized
+  precisely so glue + local-QG + orchestrator never exceeds RAM — this is why memory is a managed watch-item, and why
+  the heavy CPU/RAM QG must NOT be added to the glue pool.
+
+---
+
 ## The big picture: what's worth doing vs not
 
 Four investigations converged on the same shape. **The most "drastic-sounding" ideas are the least worth doing**, and
@@ -154,6 +321,50 @@ now, B2 for the highest-frequency `ci-status-update` later, is a sensible sequen
 
 ---
 
+## Engineering notes & refinements (from the walkthrough — review these)
+
+> Added 2026-07-15 after going over the items live. These are the "how I'd actually do it" nuances beyond the option
+> tables above — read alongside each lettered item.
+
+### Cross-cutting: Cluster A splits into UNCONDITIONAL vs B-DEPENDENT
+
+Set A is not one bucket. **Unconditional** items (A1, A2, A5, A6, A7, A8) are worth doing no matter which Set B path we
+pick. But **A3 and A4 are B-dependent** — they optimize `ci-status-update` and `cloud-build-router`, the exact workflows
+Set B (B1/B2) may move OFF Actions. Polishing a workflow we are about to delete is wasted work. → **Do the unconditional
+A items now; hold A3/A4 until the Set B decision.** This also means the Set B decision does not block the biggest,
+safest wins.
+
+### Per-item refinements
+
+- **A1 (docs-only fast-path).** Biggest beneficiary is NOT feature PRs — it is the **LDR→main promotion PRs during the
+  freeze**, which are almost always pure docs/plans/codex yet run the full ~12-min pytest leg for nothing. Safe by
+  construction: the regex skips only when EVERY changed file is a doc extension, so any `.py`/`.yml`/lockfile in the
+  diff forces the full gate. Get the scope right: `plans/**` + `codex/**` (both `.md`) IN; `uv.lock` / `requirements*` /
+  workflow YAML OUT. High confidence — just do it.
+- **A2 (dead rerun cache) — a cleaner fix than resurrecting `actions/cache`.** The cache broke specifically in the
+  reusable-workflow / PR-dispatch context and may re-break. Better: we **already store the state to dedup** — the
+  `ci_status` Firestore store records SIT-validated **tree fingerprints** (`sit_validated_tree` /
+  `sit_validated_workspace_digest`). A cheap "has this exact tree already passed?" check against that is more durable
+  than a GH cache blob. Cheapest interim: **delete the dead job now** (stop paying for a probe that can never hit), then
+  revisit the Firestore-based dedup once the 30-day data shows how large the redundant-rerun class actually is.
+- **A5 (collapse QG fan-out).** A1 already removes the expensive pytest leg from MOST PM changes, so A5's remaining
+  value is mostly on the **code repos**. Merging `typecheck`+`lint-codex` is safe only if the combined leg stays under
+  the pytest leg (pytest ~12 min dominates, so it should) — **measure per-repo before blanket-merging.**
+- **A6/A7 (staging crons) — verified safe.** Measured 2026-07-15: **23 repos `ldr_main`, 2 unset, ZERO repos with any
+  staging activity** (no locks, no queued `staging_commits`). Use the proven `ldr-to-staging-promote` pattern: comment
+  the `schedule:`, keep `repository_dispatch` + `workflow_dispatch` as the escape hatch. One open thread: confirm the
+  **2 unset repos** are not intended to route through staging before treating the whole staging path as dormant.
+- **A8 (runaway cap).** Set a sane fleet-wide default (`timeout-minutes` ~30–45) via the workflow TEMPLATE, not
+  per-repo.
+- **A3/A4 (B-dependent).** Real wins (~$140/mo + ~$20–30/mo) IF those workflows stay on Actions; wasted if B2 moves them
+  into deployment-api. Hold for the Set B decision.
+
+### Sequencing implication
+
+The safe order is: **(1) unconditional Set A now** (A1, A2-delete, A5, A6/A7, A8) → **(2) decide Set B** → **(3)
+B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherwise). Re-measure Set A alone against the
+30-day baseline before committing to how far Set B needs to go.
+
 ## Recommended sequencing (proposal — not approved)
 
 - [ ] [MEASURE] P1. Phase 0 of the sibling plan: pull the full 30-day per-workflow attribution so every $ below is
@@ -176,9 +387,11 @@ now, B2 for the highest-frequency `ci-status-update` later, is a sensible sequen
 
 1. Approve the direction? (Set A + one Set B path)
 2. **Set B: B1 self-host / B2 deployment-api service / B3 RunsOn?** (rec: B1 now → B2 for ci-status-update later)
-3. A2: fix the content-gate cache properly, or just delete the dead job?
-4. A6 + A7: confirm no repo is mid-flight through staging before disabling staging crons?
+3. A2: fix the content-gate cache properly (Firestore tree-fingerprint dedup), or just delete the dead job now?
+4. ✅ A6 + A7 staging-in-flight — **VERIFIED SAFE 2026-07-15** (23 `ldr_main`, 2 unset, zero staging activity).
+   Remaining sub-question: confirm the 2 `promotion_model`-unset repos are not intended to route through staging.
 5. Confirm **no hard spending cap** (soft alerts only), given the 2026-06-22 outage?
+6. Sequencing: OK to ship the **unconditional Set A** items now and hold A3/A4 until the Set B decision? (rec: yes)
 
 ---
 
@@ -302,6 +515,9 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
 ## Codex SSOTs (read before executing any item)
 
 - `codex/08-workflows/ci-cd-flow.md` — pipeline / promotion / branch protection
+- `codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` — the QG-offload ADR (Option A: heavy QG
+  stays LOCAL, rejected central `qg` pool). B1 here is complementary (moves GLUE, keeps QG off self-hosted) — see
+  §"Reconciliation with the QG-offload ADR" above; **do not** add QG to the `glue` pool.
 - `codex/04-architecture/tier-and-import-architecture.md` — the no-service-deps rule (why monorepo is rejected)
 - `codex/04-architecture/runtime-deployment-topology.md` +
   `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — why deployment-api (public Cloud Run) is the
@@ -322,3 +538,23 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   / new work / risks / effort; complete GitHub-native lever detail incl. the two bugs' exact file:line, full cron
   inventory, and the do-NOT-touch list; and a re-verify checklist). Decisions deferred by the operator — no path chosen
   yet.
+- 2026-07-15 — Added **"Engineering notes & refinements"** section from the live walkthrough: the
+  UNCONDITIONAL-vs-B-DEPENDENT split of Cluster A (hold A3/A4 until Set B is chosen), per-item refinements (A1 biggest
+  win = freeze-time promotion PRs; A2 cleaner Firestore tree-fingerprint dedup vs resurrecting `actions/cache`; A5
+  measure-per-repo; A8 template-level default), and the safe sequencing. **Verified staging-in-flight = zero** (23
+  `ldr_main`, 2 unset) → decision #4 closed bar the 2-unset-repos sub-check. Still awaiting operator ruling on the
+  remaining § "Decisions needed".
+- 2026-07-15 — Ran the **4-month audit** (Apr–Jul) → §"Audit results"; **flipped both Phase-0 todos done** in the
+  sibling plan. Ledger-exact fleet/per-repo dollars + a 30-day per-workflow proxy. Correction: `cloud-build-router` ~5%
+  (not ~20%); promotion/health/reconcile bot cluster ~28%.
+- 2026-07-15 — **Operator decision: Set B = B1 on the planning-VM (for now).** Added §"Capacity assessment" — measured
+  the host live (m8i.2xlarge, 8 vCPU / 32 GB / 300 GB, load 0.8, 27 GB RAM free, disk 80%) vs the glue footprint (~3,100
+  job-execs/day, ~1.7 cores avg, peak ~26 concurrent runs, ~5 GB disk). Verdict: **fits comfortably**; size 6–8
+  ephemeral runners with a systemd CPU cap to protect the orchestrator; keep `quality-gates-v2` on GitHub-hosted; disk
+  is the only watch-item. Everything LOCAL/uncommitted per operator ("no push").
+- 2026-07-15 — Runner infra files pushed (PM@a8696bb48). **Reconciled with the QG-offload ADR (2026-06-02)**: found via
+  grep-then-READ; it rejected a central self-hosted pool for the _heavy QG_ (feedback-loop), kept QG local. B1 here is
+  complementary (moves GLUE not QG; QG stays off `glue`). Refined the capacity note — local QG bursts (governor K=2 ≈
+  ~10 GB) already land on this VM, so **memory is a managed watch-item** and the 8 GB glue `MemoryMax` is sized so
+  glue+QG+orchestrator ≈ ~23 GB of 32 GB. Added the ADR to Codex SSOTs. Work now continues from **slot 1** (root left to
+  the AO worker).

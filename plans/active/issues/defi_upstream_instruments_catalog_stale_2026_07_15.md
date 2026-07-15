@@ -73,7 +73,12 @@ resolved_by:
   [
     "market-tick-data-service@927acf01cf98b03655bd4e04fa73f7b4d19e539d (code fix: lst_rates_handler.py._check_preflight
     threads mode= into assert_defi_catalog_fresh, mirroring dex_pools_handler.py/risk_params_handler.py; 3 new
-    regression tests)",
+    regression tests) — NECESSARY BUT NOT the cause of the recurrence (see RE-INVESTIGATED below)",
+    "market-tick-data-service@420221b45251943ff48c16114bac13c36c5b4b40 (ROOT-CAUSE code fix: new
+    DefiManifestRecorder.record_catalog_unavailable splits catalog-gate-blocked shards into honest
+    EXPECTED_PRE_VENUE_LAUNCH (empty_confirmed, pre-genesis/pre-launch) vs retryable UPSTREAM_INSTRUMENTS_CATALOG_STALE
+    (attempted_failed, catalogue-behind) via the UAC-SSOT max(chain_genesis, protocol_launch) composition; wired into
+    dex_pools_handler + lst_rates_handler; 4 new regression tests, 2 existing updated; quality-gates.sh --no-fix GREEN)",
   ]
 locked_by:
 locked_since:
@@ -224,18 +229,36 @@ already handles honestly).
 - [ ] [DATA] P1. Execute the re-collect commands above (or launch as a proper monitored backfill job/VM per this
       workspace's backfill conventions) once scoped; verify before/after counts; this is what actually clears the
       `DP_RUN_MOSTLY_EMPTY` alert for both cells. Repo: market-tick-data-service.
-- [ ] [SCRIPT] P2. Thread `mode=` into the remaining 8 DeFi handlers sharing the same gap (`token_transfers_handler.py`,
-      `liquidations_handler.py`, `flash_loan_events_handler.py`, `bridge_events_handler.py`,
-      `native_staking_handler.py`, `liquidation_events_handler.py`, `lending_indices_handler.py`,
-      `aggregator_route_handler.py`, `solana_defi_handler.py`) — same pattern as this issue's `lst_rates_handler.py`
-      fix. Defense-in-depth; none of these were proven to have caused a live incident (unlike `lst_rates_handler.py`,
-      which is directly named in this alert), so this is lower priority. Repo: market-tick-data-service.
-- [ ] [DESIGN] P3. Consider whether the IS DeFi historical catalogue backfill (the job that wrote the
-      `instrument_availability/by_date/day=<date>/` snapshots on 2026-06-29) should emit a completion signal/event that
-      MTDS's stale-catalog-failed shards could subscribe to for an automatic retry-sweep, rather than relying on a
-      manual re-probe/re-collect after the fact — the exact gap R5-fix-7 was trying to close. Out of scope here (new
-      infra, not a fix to something that mostly exists). Repo: market-tick-data-service / deployment-service (whichever
-      owns the IS catalogue backfill scheduling).
+- [ ] [SCRIPT] P2. Thread `mode=` **AND** the new `record_catalog_unavailable` pre-genesis split into the remaining 9
+      DeFi handlers sharing the same gate-failed branch (`token_transfers_handler.py`, `liquidations_handler.py`,
+      `flash_loan_events_handler.py`, `bridge_events_handler.py`, `native_staking_handler.py`,
+      `liquidation_events_handler.py`, `lending_indices_handler.py`, `aggregator_route_handler.py`,
+      `solana_defi_handler.py`) — same pattern as this issue's `dex_pools_handler.py` + `lst_rates_handler.py` fix
+      (`market-tick-data-service@420221b4`). Each still does a blanket
+      `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` on gate-block, so any of them backfilled over pre-genesis
+      dates would reproduce this exact recurrence. The
+      `lending_indices`/`flash_loan_events`/`liquidation_events`/`risk_params` cells in the current index (65/24/30/51
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE` rows) are the same class. Defense-in-depth. Repo: market-tick-data-service.
+- [ ] [DEPLOY] P1 **NEW (2026-07-15 re-investigation)**. Redeploy the DeFi backfill VM tarball/image with `420221b4` so
+      the NEXT `collect-dex-pools`/`collect-lst-rates` re-walk of 2020-01 records honest `empty_confirmed` instead of
+      recurring `attempted_failed`. The two VMs currently running (`mtds-dex-pools-backfill`,
+      `mtds-lst-rates-20260715-121257`) launched on the pre-fix image — this fix is forward-only. Repo:
+      market-tick-data-service / deployment-service (VM tarball build).
+- [ ] [DATA] P1 **NEW (2026-07-15 re-investigation)**. Clean the 627 (and the older ~900 residual, all pre-2020-01-20)
+      already-written `attempted_failed[UPSTREAM_INSTRUMENTS_CATALOG_STALE]` pre-genesis rows. Cheapest correct path:
+      once `420221b4` is on the backfill image (DEPLOY P1 above), re-run `collect-dex-pools`/`collect-lst-rates` for
+      `--start-date 2020-01-01 --end-date 2020-01-19` — the fixed code rewrites them as
+      `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]` via the canonical write path (no bespoke reclassification predicate
+      needed, no risk of real data existing — these dates unambiguously predate the DeFi universe). Verify before/after
+      via this issue's live-count query. This is the same [DATA] P1 re-collect already scoped below, now UNBLOCKED and
+      CORRECT (was previously going to re-stamp `attempted_failed`). Repo: market-tick-data-service.
+- [ ] [DESIGN] P3. IS-DeFi-catalogue-completion-signal retry-sweep — **RE-SCOPED by the 2026-07-15 re-investigation:
+      this is NOT what the 627 recurring rows needed** (they are pre-genesis; no completion signal will ever fire for
+      pre-2020-01-20 dates — the classification fix `420221b4` is the correct + complete remedy for that class). P3
+      remains a valid nice-to-have ONLY for the genuine catalogue-behind class (a POST-genesis date whose per-date
+      snapshot the backfill hasn't reached yet) — which, after `420221b4`, is now the ONLY thing the gate still labels
+      `attempted_failed`. Lower priority; not a fix to something that mostly exists. Repo: market-tick-data-service /
+      deployment-service (whichever owns the IS catalogue backfill scheduling).
 
 ## Progress Log
 
@@ -250,6 +273,26 @@ already handles honestly).
   Data remediation (re-collecting 2,958 affected shards) deliberately NOT executed — flagged as a properly-scoped
   follow-up with exact commands, per this task's own instruction not to force a rushed large-scope live-API operation.
   Issue filed per the workspace's findings-triage HARD RULE (data-correctness, big finding).
+- 2026-07-15 ~17:25Z (RE-INVESTIGATION, adversarial, live evidence): the "temporal race, not a live regression"
+  characterization was WRONG for the recurrence. Confirmed 627 NEW rows live (551 dex_pool_state @12:22Z + 76 lst_rates
+  @12:15-16Z), ALL for shard dates 2020-01-01..01-19, `batch_onchain_subgraph`. Identified the exact writers: two
+  RUNNING backfill VMs (`mtds-dex-pools-backfill` created 12:19:56Z, `mtds-lst-rates-20260715-121257` created 12:13:04Z)
+  — the [DATA] P1 re-collect launched as VMs today. Read the current code: `dex_pools_handler` ALREADY threads `mode=`,
+  so `927acf01`'s lst-only fix never covered the dominant data_type and was NOT the recurrence cause.
+  `gcloud storage ls` proved the IS DeFi catalogue's earliest `by_date` snapshot is `day=2020-01-20` — the 19 failing
+  dates are PRE-GENESIS (before the DeFi universe existed; Curve launched 2020-01-19, most protocols/chains later).
+  Root-cause verdict: a THIRD category, not (a)/(b) — a data-correctness CLASSIFICATION bug. The gate correctly finds no
+  catalogue, but all 11 DeFi handlers only ever recorded `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` for a
+  gate-block, never the `record_empty` the gate's own docstring prescribes — so a permanent pre-genesis absence was
+  stamped as a retryable failure, re-piling every backfill re-walk. Fixed at root cause:
+  `market-tick-data-service@420221b4` (new `DefiManifestRecorder.record_catalog_unavailable` splits pre-effective-launch
+  → `EXPECTED_PRE_VENUE_LAUNCH` (honest empty) vs at/after → `UPSTREAM_INSTRUMENTS_CATALOG_STALE` (retryable), via the
+  UAC-SSOT `max(chain_genesis, protocol_launch)` composition; wired into both named handlers; 4 new tests + 2 updated;
+  `quality-gates.sh --no-fix` GREEN). Verified 626/627 rows resolve to honest empty (the 1 exception, CURVE-ETHEREUM on
+  its 2020-01-19 launch date, correctly stays a 1-day catalogue-boundary gap). Fix is forward-only: the running VMs are
+  on the pre-fix image, so the 627 already-written rows + a NEXT-backfill re-emit both need the fixed image deployed —
+  added [DEPLOY] P1 + [DATA] P1 (re-collect 2020-01-01..19 with the fixed image, which rewrites them as
+  `empty_confirmed`). Full raw evidence in § "RE-INVESTIGATED 2026-07-15 ~17:25Z".
 
 ## REOPENED — this is NOT a purely historical/static issue; actively recurring post-fix (2026-07-15 ~15:30Z)
 
@@ -277,3 +320,91 @@ promoted to an actual fix rather than left as a "nice to have."
 
 Status intentionally left `open` — reclosing/reconciling this as "stale bookkeeping" without addressing the live
 127-hour recurrence would repeat the exact overclaiming pattern this correction exists to fix.
+
+## RE-INVESTIGATED 2026-07-15 ~17:25Z — root cause FOUND (a third category, not (a) or (b) as framed) + code fix shipped
+
+Adversarial re-investigation with live evidence (not inference). **Verdict: neither (a) a residual `mode=` gap nor (b)
+"the IS catalogue backfill hasn't caught up yet" — it is a THIRD thing: a data-correctness CLASSIFICATION bug. The gate
+correctly finds no catalogue for pre-genesis dates, but the handler mislabels that PERMANENT, expected absence as a
+retryable `attempted_failed`.** Fixed at root cause in `market-tick-data-service@420221b4`.
+
+### 1. The 627 rows confirmed live (re-queried `market-data-tick-defi-prd` availability_index, 2026-07-15 ~17:10Z)
+
+| data_type      | rows | `attempted_at` window (UTC)      | shard `date` range    | same-day? | pipeline_mode            |
+| -------------- | ---: | -------------------------------- | --------------------- | --------- | ------------------------ |
+| dex_pool_state |  551 | 2026-07-15T12:22:20 .. T12:22:55 | **2020-01-01..01-19** | 0%        | `batch_onchain_subgraph` |
+| lst_rates      |   76 | 2026-07-15T12:15:20 .. T12:16:01 | **2020-01-01..01-19** | 0%        | `batch_onchain_subgraph` |
+
+Shape = a clean cross-product: dex 29 (protocol×chain) × 19 dates = 551; lst 4 sentinels (LIDO/ETHERFI/ETHENA-ETHEREUM,
+MARINADE-SOLANA) × 19 dates = 76. Every shard date is **2020-01-01 through 2020-01-19** — 0% same-day, all historical.
+
+### 2. What WROTE them (exact writers, not inferred) — two RUNNING backfill VMs
+
+`gcloud compute instances list` (both clouds) — two RUNNING GCE VMs, timing matches to the second:
+
+- `mtds-dex-pools-backfill` — created **2026-07-15T12:19:56Z** (`VM_OPERATION`/`VM_START_DATE` metadata) → wrote the 551
+  `dex_pool_state` rows at **12:22Z**.
+- `mtds-lst-rates-20260715-121257` — created **2026-07-15T12:13:04Z** → wrote the 76 `lst_rates` rows at
+  **12:15–12:16Z**.
+
+These are the issue's own § "Exact commands for the follow-up" [DATA] P1 re-collect, launched as backfill VMs today.
+They walk from 2020-01-01 forward; the 627 rows are the tail of the run's **first 19 days** (2020-01-01..19). No Cloud
+Run job executions in the window (defi collection is VM-driven, not Cloud Run).
+
+### 3. Which code path (read the actual current code)
+
+- **`dex_pool_state` (551, dominant)**: `dex_pools_handler._run_process` **already threads
+  `mode=("live" if _run_tag == "live" else "batch")`** into `assert_defi_catalog_fresh` (`dex_pools_handler.py:646-651`)
+  — it was NEVER missing the `mode=` fix. So `927acf01`'s scope was irrelevant to the dominant data_type.
+- **`lst_rates` (76)**: `lst_rates_handler._check_preflight` threads `mode=` post-`927acf01`
+  (`lst_rates_handler.py:430-436`).
+- Both used `mode=batch` → `assert_defi_catalog_fresh._use_coverage=True` → `_assert_defi_catalog_covers_date()` probes
+  `instrument_availability/by_date/day=<date>/` in `instruments-store-defi-prd`. The gate returned False (no snapshot),
+  and BOTH handlers' gate-failed branches then recorded **every** venue/chain as
+  `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)`.
+
+### 4. Root-cause verdict — the catalogue for these dates does not exist and NEVER will (pre-genesis), so `attempted_failed` is a lie
+
+`gcloud storage ls` on `gs://instruments-store-defi-prd-central-element-323112/instrument_availability/by_date/`: the
+**earliest** snapshot is **`day=2020-01-20`** (then continuous). There is NO snapshot for 2020-01-01..01-19 — the exact
+19 dates these 627 rows are for. This is not "the backfill hasn't caught up yet" (theory b): 2020-01-20 is the genuine
+**genesis** of the IS DeFi catalogue, because essentially no DeFi instrument universe existed before then (Curve
+launched 2020-01-19, Uniswap V3 2021-05, GMX 2021-09, Aerodrome 2023, most chains — ARBITRUM 2021-08-31, BASE
+2023-08-09, AVALANCHE/BSC/POLYGON 2020-08..09 — all post-date 2020-01-19). The catalogue will never cover pre-genesis
+dates.
+
+So `assert_defi_catalog_fresh`'s docstring/`_assert_defi_catalog_covers_date` was already right that absence should
+route "`record_failed`/**`record_empty`** per shard" — **but the `record_empty` branch was never implemented**; every
+one of the 11 DeFi handlers only ever called `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)`. A permanent, expected,
+pre-DeFi- universe absence was being stamped as a retryable fetch failure. That is why it "actively recurs": each
+backfill re-walk of 2020-01 re-stamps 627 fresh `attempted_failed` rows with today's `attempted_at`, re-firing
+`DP_RUN_MOSTLY_EMPTY` as a false live-regression. The correct honest-coverage classification is
+`empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`.
+
+### 5. The fix (`market-tick-data-service@420221b4`)
+
+New `DefiManifestRecorder.record_catalog_unavailable(...)` (`_defi_manifest.py`) + module helper
+`_defi_effective_earliest_date(venue, chain)` = the UAC-SSOT composition
+`max(get_chain_genesis_date(chain), get_protocol_launch_date(chain, venue))`
+(`unified_api_contracts.registry.chain_env`). On a catalog-gate block: if `target_day < effective earliest` →
+`record_empty(EXPECTED_PRE_VENUE_LAUNCH)` (honest empty, keystone-exempt — nothing existed to fetch); else →
+`record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` (unchanged — the genuine catalogue-behind/temporal-race case, theory
+(b), which a retry-sweep DOES fix). Wired into `dex_pools_handler` + `lst_rates_handler` gate-failed branches (both
+named in this alert). Verified the composition against all 33 affected venue-chains: **626 of 627 rows** resolve to
+pre-effective-launch → honest empty; the 1 remaining (`CURVE-ETHEREUM` on 2020-01-19, Curve's exact launch date)
+correctly stays as a genuine 1-day catalogue-boundary gap. 4 new regression tests (`test_defi_manifest_recorder.py`:
+helper composition + pre-genesis→empty + post-launch→stale + LST-Solana pre-genesis) + 2 existing stale-catalog tests
+updated; `quality-gates.sh --no-fix` GREEN (6127 passed), sentinel==HEAD.
+
+### 6. Why this does NOT need the [DESIGN] P3 completion-signal, and why the recurrence still needs 2 follow-ups
+
+- **[DESIGN] P3 (IS-catalogue-completion-signal retry-sweep) is NOT what these 627 rows needed** — that would help
+  theory (b) (dates the catalogue eventually covers). These dates are pre-genesis; no completion signal will ever fire
+  for them. The classification fix is the correct and complete remedy for the pre-genesis class. P3 remains a valid
+  nice-to-have for the genuine catalogue-behind class only (now correctly the ONLY thing left labelled
+  `attempted_failed` by the gate).
+- **Forward-only + running-VM caveat (honest)**: the two backfill VMs above launched on the PRE-fix image (12:13/12:19Z,
+  hours before `420221b4` at ~17:25Z), so THIS run's 627 rows are already written and this run has already walked past
+  the 2020-01 window (won't re-emit more this pass). The fix prevents the recurrence on the NEXT backfill only once the
+  fixed image is deployed. The 627 already-written rows persist until re-collected with the fixed image (or
+  reclassified). Both captured as follow-ups below.

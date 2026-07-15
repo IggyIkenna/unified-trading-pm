@@ -97,29 +97,38 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
 
 ### Phase 0 — Make the case airtight (do this first, low-risk, read-only)
 
-- [ ] [MEASURE] P1. Pull the **full 30-day** per-workflow billed-minute attribution (not the 13.5h sample) so every %
-      and $ below is exact before we change anything. Script against `settings/billing/usage` + the Actions runs/jobs
-      API; store the breakdown table as evidence in this plan's Progress Log.
-- [ ] [MEASURE] P1. Confirm fleet-wide there are **zero self-hosted runners** and record the current baseline: $/mo per
-      repo and per top workflow (the number we measure the fix against).
+- [x] ✅ [MEASURE] P1. Pull the **full 4-month (Apr–Jul 2026)** billed attribution + a 30-day per-workflow breakdown —
+      DONE 2026-07-15. Results written to the companion doc §"Audit results — April–July 2026" (fleet monthly totals,
+      per-repo 4-mo matrix, PM per-workflow + per-cluster). Key: fleet ~$1,000/mo steady-state (Jun peak $1,441, Apr
+      ~$0
+      pre-machinery); PM $808/4mo = 39% (share climbing to 47.7% in Jul); PM clusters ci-status-update 32% /
+      promotion-health-bots 28% / quality-gates-v2 20% / agent-plan bots 13.5% / routers 5% (router **corrected DOWN**
+      from the 13.5h sample's ~20%).
+- [x] ✅ [MEASURE] P1. Confirm fleet-wide **zero self-hosted runners** + baseline — DONE 2026-07-15: `actions/runners`
+      total_count = 0; rate $0.006/min; baseline = ~$1,000/mo fleet / ~$480–510/mo PM (the number the fixes are measured
+      against). Evidence in the companion doc §"Audit results".
 
 ### Phase 1 — Self-host the switchboard + cron glue (biggest win, ~70% of PM)
 
-- [ ] [OPERATOR-DECISION] P1. **Decide the runner host** — reuse the always-on orchestrator VM (near-zero marginal cost,
-      but shares capacity with AO) vs a small dedicated runner VM (~$30–60/mo, isolated). Recommendation: orchestrator
-      VM to start, split out later if capacity contends.
-- [ ] [INFRA] P1. Register **3–4 self-hosted runner processes** on the chosen host with label `glue` (parallel so
-      concurrent dispatches don't serialize into a backlog), under systemd with auto-restart; verify toolchain
-      (gcloud/python/gh) present.
-- [ ] [REVIEW] P1. **Security gate:** confirm every workflow moved to `glue` is triggered ONLY by `repository_dispatch`
-      / `schedule` / `push` (no untrusted fork-PR code ever runs on our VM). Any `pull_request`-triggered job stays on
-      GitHub-hosted for this phase.
-- [ ] [INFRA] P1. Flip `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]` for the glue workflows
-      (`ci-status-update`, `cloud-build-router`, `cloud-build-router-aws`, `ldr-to-main-promote`, `-fleet`,
-      `staging-to-main`, `branch-health`, `ci-health`, and the small reconcile/conflict/plan-health bots) — via the
-      workflow-template SSOT + `rollout-workflow-templates.sh`, never hand-editing per-repo copies.
-- [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes; confirm the glue workflows now bill ~$0 and the VM
-      absorbed the load without contention.
+- [x] ✅ [OPERATOR-DECISION] P1. **Runner host DECIDED (operator 2026-07-15): the planning-VM** (central orchestrator,
+      `i-0c9b283b31d6b5ca7`, m8i.2xlarge 8vCPU/32GB). Capacity verified: glue ~1.7 cores avg vs ~7 idle; fits with a CPU
+      cap. See companion doc §"Capacity assessment".
+- [x] ✅ [INFRA] P1. **Runner infra files AUTHORED 2026-07-15** (created locally, NOT yet deployed) —
+      `scripts/self-hosted-runners/`: `setup-glue-runners.sh` (install/status/teardown/prune), `glue-runner-run.sh`
+      (JIT-ephemeral wrapper), `github-glue-runner@.service` + `.slice` (CPUQuota≤400% / MemoryMax 8G to protect AO),
+      `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
+      verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
+      pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **52 MOVE / 4 KEEP** — KEEP =
+      `quality-gates-v2`, `python-quality-gates-v2` (CPU-bound tests, stay hosted), + the two `pull_request` agent bots
+      (`plan-health-agent`, `conflict-resolution-merged`). Confirm the MOVE set carries no untrusted fork-PR code
+      (private repo → none) before flipping.
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the MOVE set only (`ubuntu-latest` → `[self-hosted, glue]`), via the
+      template SSOT + `rollout-workflow-templates.sh`. **Migrate ONE low-risk workflow first** (`branch-health` or
+      `reconcile-release-tags`), confirm a green self-hosted run, then batch. (Takes effect on push — do NOT push until
+      the runners are live on the VM, else those workflows queue with no runner.)
+- [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
+      VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
 
 ### Phase 2 — Kill the 1-minute-minimum tax on quality-gates-v2 (~18%)
 
@@ -199,3 +208,8 @@ proposal keeps heavy test jobs on GitHub-hosted and only moves the glue.
   (4 parallel investigations). This plan is the execution vehicle for the **self-host** path; the companion doc is the
   wider decision menu (self-host vs fold-into-deployment-api vs RunsOn; the no-infra GitHub-native fixes incl. two
   latent bugs; and why Cloud Build / monorepo / merge-queue were rejected). Baseline rate corrected to **$0.006/min**.
+- 2026-07-15 — **Phase 1 STEP 1 cracked** (operator: B1 on the planning-VM). Authored the runner infra under
+  `scripts/self-hosted-runners/` (setup/wrapper/systemd template+slice/classifier/runbook) — pinned runner v2.335.1 +
+  sha256, JIT-ephemeral, repo-scoped to PM (all glue lives here), CPU-capped to protect the orchestrator, shellcheck
+  clean. `classify-glue-workflows.sh` → 52 MOVE / 4 KEEP. Files created LOCAL/uncommitted (operator: "no push"); deploy
+  on the VM + the runs-on flip are the next steps, gated on operator go.
