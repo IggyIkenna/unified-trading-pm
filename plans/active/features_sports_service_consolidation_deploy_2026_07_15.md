@@ -824,3 +824,26 @@ repo. This plan tracks that work.
   NEXT features-service image rollout — not actionable now, the job is correctly pinned to the current verified digest)
   and the P3 fleet-skew audit (explicitly optional stretch). Plan kept `status: active` as a tracking vehicle for those
   two; nothing blocks it.
+- 2026-07-15 (FixDigestPin phase — footgun B, operator-directed): Designed + verified (read-only) the permanent fix for
+  the P2 re-pin footgun so future rollouts never need a manual digest re-pin. CONVENTION CHOSEN: the fleet-standard
+  post-push `gcloud run jobs update <job> --image=…:latest` auto-repin step in the service's OWN cloudbuild.yaml (three
+  precedents: `deployment-service/cloudbuild.yaml` id `redeploy-monitor-jobs`,
+  `deployment-service/cloud-build/deployment-service-jobs-image.cloudbuild.yaml` id `redeploy-jobs`,
+  `deployment-service/scripts/cloud-run/deploy-shared.sh` rollup sync) — this is EXACTLY the "_Alternative if the
+  operator prefers tag-tracking_" spelled out in the P2 todo above, and it removes the footgun rather than replacing a
+  manual step (digest re-pin) with another manual step. Two edits made (both a MATCHED PAIR): (1)
+  `features-service/cloudbuild.yaml` — new `redeploy-features-jobs` step re-pins `features-service-sports-job` to the
+  freshly-built `:latest` on every build; (2) `terraform/services/features-service-sports/gcp/terraform.tfvars` —
+  `docker_image` flipped `@sha256:b7fc3d7f…` → `:latest` (matches every other service tfvars). Verified read-only:
+  `features-service:latest` resolves to `sha256:b7fc3d7f…` — the EXACT pinned digest (so the flip is behavior-neutral
+  today); the job exists on that digest; cloudbuild.yaml yaml-parses; prettier + `tofu fmt` clean; **deployment-service
+  QG green** (sentinel `0c3fb77`). NOT SHIPPED — BLOCKED: `features-service` `live-defi-rollout` (HEAD==origin
+  `d695c06b`) is RED on a pre-existing, unrelated sports coverage-gate test
+  (`tests/sports/unit/test_run_new_calculators_coverage_gate.py::…::test_squad_value_pre_launch_is_out_of_coverage`,
+  `'partial' != 'out_of_coverage'`; features-service `quality-gates-v2` CI FAILED 5 of last 6 runs →
+  flaky/data-dependent; my only diff is `cloudbuild.yaml`, never imported by pytest) → no green local sentinel →
+  `quickmerge` refuses; and the tfvars `:latest` half MUST NOT ship alone (it recreates the footgun). Not fixing the
+  sports test here (out of scope, collision risk, could mask a real coverage regression). Blocker + ready-to-ship fix
+  filed: `plans/active/issues/features_service_red_tree_blocks_digest_pin_fix_2026_07_15.md`. P2 re-pin todo
+  intentionally LEFT `[ ]` (honest: the fix is prepared + verified but NOT shipped — flip it green only after both files
+  land, with the two shas).
