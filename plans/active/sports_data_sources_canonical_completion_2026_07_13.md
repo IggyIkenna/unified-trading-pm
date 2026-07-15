@@ -4063,3 +4063,26 @@ it's new adapter work, not a data-audit residual).
     `_run_ref` path silently don't, meaning genuinely-successful re-fetches never got a chance to supersede the failed
     rows). **Do NOT dispatch another blind residual-closer round until this write-path bug is fixed** — it will likely
     just burn more real API quota without net progress, exactly as round6 did.
+
+- **2026-07-15 (independent second cross-check of the round6 finding above, done blind before reading this Progress Log
+  section).** Was independently dispatched to run this same CF11 backfill via the same closer (round6, PID 67375,
+  `--vm-name api-football-cf11-backfill-round6 --max-rounds 12`, `MANIFEST_ALLOW_STALE_FALLBACK=true` after confirming
+  shard count still 5). Before reading any of the above, took my own baseline (direct atomic `fs.cat_file` read of the
+  canonical, bypassing `read_availability_index()` entirely) at launch time: 273 non-blank api_football
+  `attempted_failed` (`FIXTURE_EVENTS` 89 / `PLAYER_STATS` 87 / `FIXTURE_LINEUPS` 60 / `TEAMS` 24 / `FIXTURE_STATS` 13),
+  75 blank-`data_type`. Polled the process synchronously to its real exit (~5h20m, `MAX ROUNDS reached` cleanly, no
+  crash) rather than trusting a notification. Its own self-report (per-VM-shard-only view): 64 remaining. My own
+  post-run canonical re-read (same atomic method, confirmed fresh — consolidator back to ~40s/cycle baseline by then, 7+
+  full cycles completed since the closer's exit): **456 non-blank** (`FIXTURE_EVENTS` 94 / `FIXTURE_STATS` 92 /
+  `FIXTURE_LINEUPS` 91 / `PLAYER_STATS` 88 / `STANDINGS` 69 / `TEAMS` 22), `error_reason` breakdown
+  `LEAGUE_MAP_INCOMPLETE` 362 / `rateLimit` 69 / `ApiFootballResponseError` 22 / 3 phantom-class — **matching the
+  numbers already documented above to the row, independently derived.** Critically, **zero rows carry
+  `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` in my own read** — corroborating slot-11's
+  `instruments-service@87d1a353` manifest-reconcile claim (18/18 → captured, 0 remaining) for the ORIGINAL CF11 class
+  this todo names, from a completely independent measurement. Net assessment unchanged from the analysis above: the
+  original CF11 target is genuinely closed (by the reconcile fix, not by round6's re-fetch mechanism, since the real
+  data was already on disk); round6 itself was a legitimate, correctly-run attempt that did not net-progress due to the
+  two already-diagnosed causes (record_captured no-op + LEAGUE_MAP_INCOMPLETE scope-widening under `redo_all=True`), not
+  an execution error on this dispatch's part. Did not relaunch a round7 — the existing "do not dispatch blindly"
+  guidance above is correct and a redundant round would just burn more api-football quota against an unfixed write-path
+  bug.
