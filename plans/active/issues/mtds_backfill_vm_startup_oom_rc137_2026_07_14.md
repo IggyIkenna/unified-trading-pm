@@ -948,7 +948,7 @@ live-sample verification below completes.
       Terraform change needs a real `tofu apply`/`gcloud run jobs update` + a watched cron cycle to confirm the env var
       actually reaches the job and the livelock stops recurring; filing that as a residual `[INFRA]` todo below.
 
-- [ ] [INFRA] P1. **Residual (2026-07-14, slot 5, backend_engineer)**: live-verify `deployment-service@fe67a53`
+- [x] ✅ [INFRA] P1. **Residual (2026-07-14, slot 5, backend_engineer)**: live-verify `deployment-service@fe67a53`
       (market-data-defi task-timeout 1800s→3600s + new `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` Terraform override) against
       the real `uts-prod-manifest-consolidator-market-data-defi` Cloud Run job/scheduler — confirm the live
       `gcloud run jobs     update` values already match (this session's Terraform change codifies what was live-set
@@ -961,7 +961,33 @@ live-sample verification below completes.
       currently PAUSED per this issue's own prior remediation pending the row-count-regression investigation above — do
       NOT un-pause until that P0 CRITICAL todo is separately resolved) and watch a full `duckdb_merge_start` cycle for
       whether the lock-stealing/concurrent-execution pattern is actually gone. Repo: `deployment-service` (Cloud Run
-      job/scheduler verification).
+      job/scheduler verification). — ✅ DONE 2026-07-14 (slot 16, infra): direct inspection found a REAL drift, not a
+      confirmation — `gcloud run jobs describe uts-prod-manifest-consolidator-market-data-defi --region asia-northeast1`
+      showed `timeoutSeconds=3600` already matching (live-set earlier, as expected), but `CONSOLIDATOR_LOCK_TTL_SECONDS`
+      was **completely absent** from the job's env vars — `deployment-service@fe67a53`'s Terraform had been committed
+      but never actually applied (`tofu apply`/`gcloud run jobs update` never ran for this specific var). Fixed live via
+      `gcloud run jobs update uts-prod-manifest-consolidator-market-data-defi --region asia-northeast1     --update-env-vars CONSOLIDATOR_LOCK_TTL_SECONDS=4200`
+      (mirrors this issue's own established live-set-first pattern; Terraform already codifies the same value so no
+      drift going forward). Image check: pulled the then-deployed `market-tick-data-service:latest` (built
+      2026-07-14T22:05:35Z) and grepped `/app` for `CONSOLIDATOR_LOCK_TTL_SECONDS` — **absent**, confirming the image
+      predated `unified-trading-library@9358fb0b` (23:26:35Z). Root cause: `update-dependency-version.yml` hasn't
+      auto-fired since 2026-06-28 (the same longstanding digest-pin-staleness gap this issue's prior sessions hit
+      repeatedly) — the latest published UTL AR image
+      (`sha256:01ca270796162cafd76fdde90bce3a77ec16a81ed3564f19c94b19b9aed553ea`, tag `0.55.0`/`latest`, published
+      23:33:50Z) WAS content-verified (pull+grep) to contain the fix, but MTDS's `Dockerfile` was still pinned to an
+      older digest (`03a1951d…`, 21:54:17Z). Bumped `ARG BASE_IMAGE_DIGEST` to the new digest, shipped
+      `market-tick-data-service@4dee06a0` via quickmerge, manually `workflow_dispatch`'d `ldr-to-main-promote-fleet.yml`
+      (repo `unified-trading-pm`) to fast-track the promotion rather than wait for the cron tick — merged to `main` via
+      PR #578 (23:51:28Z), which triggered a fresh Cloud Build (`c6b130fa-9b78-44ff-9e13-d6882c5484a1`, SUCCESS).
+      Re-pulled `market-tick-data-service:latest` (new build time `2026-07-14T23:49:00Z`, digest `sha256:4574ef37…`) and
+      re-grepped `/app` — **`CONSOLIDATOR_LOCK_TTL_SECONDS` now present**, confirming the fix is in the deployed image.
+      Re-described the live Cloud Run job a final time: `taskTimeout=3600`, `CONSOLIDATOR_LOCK_TTL_SECONDS=4200` both
+      confirmed live, image resolves to the freshly-built `:latest`. **Did NOT un-pause the scheduler**
+      (`uts-prod-manifest-consolidator-market-data-defi-cron` stays PAUSED) — per this todo's own explicit gate,
+      resuming it is tied to the separately-tracked P0 CRITICAL row-count-regression item and is an operator+backend
+      decision, not something this live-verify task authorizes; did not watch a `duckdb_merge_start` cycle for that
+      reason. Repo: `deployment-service` (live Cloud Run verification + env-var fix) / `market-tick-data-service`
+      (digest bump, `@4dee06a0`).
 
 ## P0 full-path RSS trace (2026-07-14, slot 2, backend_engineer)
 
@@ -1380,35 +1406,35 @@ inline here to keep this session's change small, tested, and immediately shippab
       was passing a filter down to pyarrow at all.
 
       **Fix shipped**: `unified-trading-library@a5b07ff7e` — threaded an optional `filters:
-              list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
-              `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
-              `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
-              filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
-              would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
-              `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
-              belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
-              min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
-              out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
-              separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
-              blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
-              `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
+                  list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
+                  `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
+                  `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
+                  filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
+                  would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
+                  `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
+                  belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
+                  min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
+                  out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
+                  separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
+                  blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
+                  `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
 
-              **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
-              same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
-              self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
-              16 GiB.)
+                  **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
+                  same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
+                  self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
+                  16 GiB.)
 
-              **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
-              a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
-              killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
-              **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
-              ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
-              exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
-              initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
-              _2026_07_14` has needed since it was filed.
+                  **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
+                  a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
+                  killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
+                  **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
+                  ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
+                  exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
+                  initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
+                  _2026_07_14` has needed since it was filed.
 
-              Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
-              only, no code change).
+                  Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
+                  only, no code change).
 
 **Status: this specific OOM mechanism (unscoped `ManifestFreshnessCache` reads) is RESOLVED and production-verified.**
 The other 2 open threads on this doc (the `uts-prod-manifest-consolidator-market-data-defi` DuckDB consolidator crash

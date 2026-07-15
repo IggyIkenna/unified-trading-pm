@@ -38,7 +38,9 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
-depends_on: []
+depends_on:
+  - sports_p2_features_history_to_ml_ready_2026_06_27.md
+gate_on_depends: true
 last_updated: 2026-07-14
 locked_by:
 resolved_by:
@@ -275,6 +277,60 @@ chase or relaunch.
 Not re-filing a duplicate `/blocked` (slot-14's structural-gate ask still stands unanswered; a 3rd ask adds no new
 information). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
 
+### 2026-07-14T23:5xZ — data_engineering slot-10 (12th consecutive dispatch — applied main's durable fix from BLK-a1781d76)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD. That plan
+currently has exactly 2 open todos: Todo 1 (2015→present compute) and "Features manifest clean over history" (itself
+logically downstream of Todo 1).
+
+Found main's answer to slot-2's `/blocked` (`BLK-a1781d76`, answered 23:43:35Z, event id 144301) via the live activity
+feed: **B, not A** — the backlog.yaml parking recipe (option A) is rejected as a known-failed action (it reverted twice,
+because `PlanRegenLoop` re-derives `backlog.yaml` from the plans every ~30min and a hand-edit not sourced from a plan
+gets clobbered). Main's directed **durable fix**: encode the dependency in the SOURCE PLAN itself, the same mechanism
+that lets other gates survive regen — read `agent-orchestrator/server/regen_backlog_from_plan.py`
+(`_parse_frontmatter_depends_on` / `_parse_frontmatter_gate_on_depends` / `_wire_gate_on_depends_prereqs`, lines
+396-461, 1473-1512) to confirm the exact mechanism rather than guess: a plan/issue-doc frontmatter
+`depends_on: [<upstream plan filename incl. .md>]` + `gate_on_depends: true` makes every regen tick wire this doc's
+derived tasks' `prereqs.completed_tasks` to every currently-open task derived from the named upstream plan(s) — durable
+because it's re-derived from the plan file every tick, not a one-off YAML poke. Confirmed the exact frontmatter shape
+against a live working example (`deployment_registry_firestore_p4_dynamodb_2026_07_14.md`'s
+`depends_on:`/`gate_on_depends: true` block).
+
+**Applied**: added `depends_on: [sports_p2_features_history_to_ml_ready_2026_06_27.md]` + `gate_on_depends: true` to
+this issue doc's frontmatter (this doc, above). Since the upstream plan currently has only 2 open todos (both
+legitimately prerequisite to a meaningful Todo-2 gap-fill), this should stop the churn without over-gating. This is a
+plans-repo frontmatter edit (worker write-scope, NOT the banned root-clone `backlog.yaml` hand-edit) — implements main's
+directed fix, not a unilateral infra decision. Declining Todo 2 itself (still genuinely BLOCKED-PREREQ) — no code
+touched, Todo 2 checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-15T00:1x UTC — data_engineering slot-11 (Todo 2 re-dispatch — 13th consecutive check; depends_on fix confirmed committed but not yet wired by regen)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD.
+
+**Checked slot-10's durable fix took effect**: `git log` on this issue doc shows `bab7a2250` (the
+`depends_on: [sports_p2_features_history_to_ml_ready_2026_06_27.md]` + `gate_on_depends: true` frontmatter commit)
+landed, and it's present in this doc's frontmatter (confirmed by read). But `GET /api/backlog` for this task's entry
+shows `priority: 50`, no visible `prereqs.prerequisites`/`completed_tasks` gate, and `dispatch_reason` on my own `/boot`
+was "prereqs met" — i.e. the `depends_on`→`prereqs.completed_tasks` wiring hasn't been applied by `PlanRegenLoop` yet
+(fix committed only ~20 min before this dispatch; regen ticks ~every 30 min, so this is expected lag, not a failure of
+the fix). Separately confirmed the OLD condition-based mechanism (`sports-p2-todo1-2015-present-complete`) is a dead
+end, not the live fix: `GET /api/state` shows it exists (`value: false`, `set_by: main`) but `gates_queued: 0` — never
+attached to any task, consistent with slot-2's 00:0x finding that only half the parking recipe landed. That mechanism is
+superseded by slot-10's `depends_on` fix now in the doc; no further action needed on it.
+
+Cheap non-GCS-walk fleet check (`gcloud compute instances list --project=central-element-323112`, filtered
+`sport|features`): **zero** running instances right now — fleet between relaunch cycles, consistent with slot-2's 00:0x
+note.
+
+Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task` with reason recorded (per-slot
+exclusion so slot-11 isn't redispatched this exact task again while it stays structurally blocked). Recommend the next
+dispatch wait for a `PlanRegenLoop` tick (~30 min from `bab7a2250`) before re-checking whether `depends_on` actually
+gated this task out of the queue — if it's STILL being dispatched after that window, the `depends_on`/`gate_on_depends`
+mechanism itself may not apply to issue-doc-derived tasks the way it does for plan-derived tasks, and that would be a
+genuine escalation-worthy finding (not another identical re-check).
+
 ### 2026-07-15T00:0x UTC — data_engineering slot-2 (Todo 2 re-dispatch — 11th consecutive check; filed fresh `/blocked`, prior ones had cleared unanswered)
 
 **Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
@@ -298,3 +354,32 @@ queue was empty — not a duplicate) spelling out the exact remaining fix for ma
 `prereqs.prerequisites: [sports-p2-todo1-2015-present-complete]` + `priority: 999` + `priority_override: true` to this
 task's backlog entry, `POST /api/backlog/reload`, and verify it survives the next regen tick (it has NOT survived twice
 so far). Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-14T23:56 UTC — data_engineering slot-4 (Todo 2 re-dispatch — 14th consecutive check; depends_on fix confirmed committed, regen lag still within expected window)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` via direct grep after fresh-pull to LDR HEAD.
+
+Re-checked slot-10's durable `depends_on` fix (`bab7a2250`,
+`depends_on: [sports_p2_features_history_to_ml_ready_2026_06_27.md]` + `gate_on_depends: true`): commit timestamp
+`2026-07-14 23:50:19 +0000`, this dispatch's check at `23:56:43 UTC` — only ~6 minutes elapsed. Root-clone
+`agent-orchestrator/data/config/backlog.yaml` (read-only check) still shows `prereqs.completed_tasks: []` /
+`prereqs.prerequisites: []` on this task's entry, matching slot-11's finding — expected, since `PlanRegenLoop` ticks
+~every 30 min and only ~6 min have passed since the fix landed, not yet evidence the mechanism has failed. Skipped a
+redundant fleet/coverage GCS check — slot-11 completed one ~6 minutes prior with no reason to expect material drift in
+that window (single-walk discipline).
+
+Declining — no action taken, no code touched, checkbox NOT flipped. Recommend the next dispatch (if any) wait until at
+least ~30 min post-`bab7a2250` (i.e. after ~00:20 UTC) before treating continued dispatch as evidence the `depends_on`
+mechanism doesn't apply to issue-doc-derived tasks. `/skip-current-task`.
+
+### 2026-07-15T00:00 UTC — data_engineering slot-7 (Todo 2 re-dispatch — 15th consecutive check; still inside expected regen-lag window)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged.** Parent plan `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+("Compute features 2015→present") confirmed still `[ ]` after fresh-pull to LDR HEAD (`434604fae`). Live backlog entry
+for this task (`GET /api/backlog`) still shows no `prereqs.completed_tasks`/`prereqs.prerequisites` — `depends_on` fix
+(`bab7a2250`, landed 23:50:19Z) is only ~10 min old at this check (00:00:34Z), well inside the ~30 min `PlanRegenLoop`
+tick window slot-4 already flagged (wait-until ~00:20Z). Skipped the redundant GCS/fleet re-check — slot-2/slot-4/
+slot-11 all checked within the last few minutes with no reason to expect drift (single-walk discipline). No new
+information to add beyond slot-4's entry immediately above. Declining — no action taken, no code touched, checkbox NOT
+flipped. `/skip-current-task`.

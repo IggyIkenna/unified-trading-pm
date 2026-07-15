@@ -95,11 +95,9 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [ ] [INFRA] P0. Diagnose (via background agent, in flight) and fix the alert-repeat/no-dedup/no-RESOLVED-green bug so
-      `DP_RUN_MOSTLY_EMPTY` (and other CRITICAL DP-\* alerts) stop re-posting byte-identical payloads on every detector
-      tick and instead follow fire-on-change / dedup-while-unchanged / explicit RESOLVED-on-fix, mirroring the
-      `codex/04-architecture/ci-alerting.md` dedup_key+cooldown model. Repo: alerting-service (+ whichever detector cron
-      owns the DP-FETCH-007 post-run manifest scan). File/update the issue doc either way.
+- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — `alerting-service@fe76ded34a4`
+      (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) + `deployment-service` source-side re-nag (in flight, see
+      Progress Log). Issue doc: `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
 - [ ] [CODE] P1. Implement bounded retry-with-backoff in the features-service compute VM startup gate (Option 2 from
       `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) so a transient consolidator-stale
       reading doesn't burn a full SPOT VM launch. Ship + update that issue doc with the fix commit.
@@ -136,3 +134,27 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   checks, AO backlog check) summarized in "Ground truth" above. Two background agents in flight: (1) cross-reference of
   the alert batch against tracked issue docs — DONE, findings folded into Ground Truth; (2) alert-repeat/dedup
   root-cause investigation — in flight, will fold in on completion.
+- 2026-07-15 (later same session): Alert-dedup root cause DIAGNOSED (agent completed) — full code-level cause with
+  file:line refs, filed as `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`
+  (unified-trading-pm@1db306a86). Corrected the codex incident-gateway wiring claim in
+  `codex/05-infrastructure/data-pipeline-alerts.md` (same commit) — DP_\* CRITICAL events were never actually wired
+  through the incident gateway, contrary to the diagram; they rely on `AlertDeduplicator` + a per-event cooldown map.
+  Live-verified the defi consolidator lock-TTL/livelock fix (shipped by another slot, `unified-trading-library@9358fb0b`
+  - `deployment-service@fe67a53`, deployed with `CONSOLIDATOR_LOCK_TTL_SECONDS=4200`) is WORKING: a 24m28s execution
+    completed successfully post-fix (no SIGKILL), canonical manifest fresh. Did NOT duplicate that work. Dispatched 4
+    parallel sub-agents (SUB_AGENT_MANDATORY_RULES.md + AUTONOMOUS_AGENT_RULES.md injected):
+  1. `alerting-service` — implement cadence-aware cooldown fix #1 for `DP_RUN_MOSTLY_EMPTY` (dedup issue doc todo 1).
+  2. `deployment-service` — source-side re-nag interval fix #2, defense-in-depth (dedup issue doc todo 2).
+  3. `unified-trading-library` + `features-service` — investigate whether the sports 8-9min intermittent slow-run issue
+     shares the defi livelock root cause (and fix via Terraform lock-TTL override if so), plus ship bounded
+     retry-with-backoff in the features-service startup gate regardless (Option 2 from
+     `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`).
+  4. Research/triage sweep of remaining cefi/tradfi (asset_group, data_type) pairs from the alert batch not yet
+     explained — classify tracked-vs-new, file/annotate issue docs. All 4 in flight as this entry is written; will fold
+     results in on completion (harness auto-notifies on each).
+- 2026-07-15 (agent 1 DONE): alerting-service dedup fix shipped —
+  `alerting-service@fe76ded34a46f0cfa880c563fe462c155d50809f`. `_RECURRING_WARN_EVENTS: frozenset[str]` →
+  `_RECURRING_ALERT_COOLDOWNS: dict[str, float]`, `DP_RUN_MOSTLY_EMPTY: 1800.0` added. Regression tests added (router +
+  data_pipeline_rules), `quality-gates.sh --no-fix` green. Issue doc todo 1 flipped (`unified-trading-pm@0b7654658`).
+  Todos 2 (deployment-service) and 3 (docs) left untouched as instructed — todo 3 was already done by the parallel docs
+  commit; agent correctly preserved it rather than overwriting.
