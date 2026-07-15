@@ -554,3 +554,43 @@ the process, matching this doc's own established pattern (the `_acquire_lock` re
 first" status (the `_acquire_lock` race — already open — and the cefi orphan-row resurrection — newly caught) out of
 what was otherwise reported as fully closed. This is exactly the pattern this doc's own adversarial-verification
 practice is meant to catch — noted, not hidden.
+
+## Second interactive reconciliation round (2026-07-15, later) — new alert batch + parallel-session findings absorbed
+
+Operator pasted a fresh alert batch (2 `DP_CATALOG_NOT_RUNNING`, 4 `DP_RUN_MOSTLY_EMPTY` RESOLVED bookends) and asked
+for the remaining decisions. Dispatched 2 investigation agents first: (1) confirmed the `DP_CATALOG_NOT_RUNNING` alerts
+are UNRELATED to this session's corp-actions fix (different script entirely, timing precludes it; root causes: sports
+has a legitimate monotonic-guard blocking a 6-row catalogue shrink, prediction has been OOM-crashing 3 days straight) —
+issue doc filed `dp_catalog_not_running_sports_prediction_2026_07_15.md`. (2) confirmed the 4 RESOLVED bookends are
+genuine — traced to a THIRD, independently-shipped fix (not from this session): `market-tick-data-service@92d4fb18`
+reclassified 34,260 rows workspace-wide that had `EXPECTED_*`-prefixed `error_reason` but were wrongly stored as
+`attempted_failed` instead of `empty_confirmed`, with a companion UTL guard against recurrence. Also confirmed defi
+consolidator's issue doc was stale (already fixed 2026-07-14, doc never updated) and corrected it.
+
+**Absorbed a full independent re-verification pass from a different session** (found while re-syncing this plan
+mid-round) that: caught the cefi orphan-row delete SILENTLY REVERTING ~1h after landing (the legacy-seed resurrection
+risk, previously "not yet observed", is now confirmed live) and escalated that issue to P0 with an explicit
+do-not-re-run hold; independently found and fixed the same 34,260-row `EXPECTED_*` misclassification bug; corrected a
+wrong claim that `YAHOO_FINANCE` dominates `ohlcv_15m` failures (it doesn't — NYSE/CBOE do); and logged 4 more
+genuinely-new uncovered `DP_RUN_MOSTLY_EMPTY` cells (`defi/dex_pool_state`, `defi/lst_rates`, `sports/trades`,
+`sports/odds_horizon_bucket_15m`) not yet actioned.
+
+**Presented the consolidated remaining-decisions list to the operator** (compiled via a dedicated Workflow re-scan of
+every touched issue doc). Decisions made:
+
+- Legacy-seed tie-break: **special-case the legacy seed out of the merge tie-break** (not periodic re-freeze).
+- Alert detector recency window: **purge/reclassify stale rows per-bucket as they come up** (not a systemic detector
+  change) — largely already satisfied by the independently-shipped `EXPECTED_*` reclassification.
+- Phantom `YAHOO_FINANCE` venue: **operator corrected the framing** — Yahoo Finance is a legitimate DATA SOURCE (not
+  venue) already used/intended for DXY/treasuries/KRWUSD daily OHLCV; the manifest/registry needs to correctly model
+  this as a source relationship, not delete it as phantom coverage. Re-investigation dispatched with the corrected
+  framing.
+- Sports catalogue shrink: **investigate the 6-row diff first** before deciding whether to override the guard.
+
+**Dispatched 3 more agents** (this round): (1) P0 fix for the legacy-seed tie-break in
+`unified_trading_library/manifest_consolidator.py` — explicitly NOT to re-run the cefi delete itself, that's gated on
+this fix holding across multiple consolidator cycles; (2) re-investigation of the Yahoo-Finance-as-source question with
+the operator's corrected framing, instructed to reach an honest verdict rather than just validate the operator's belief;
+(3) investigation of the sports catalogue's specific 6 missing rows (legitimate shrink vs. bug vs. transient),
+diagnosis-only — not authorized to force an `--allow-catalogue-shrink` override itself. Prediction catalogue OOM (memory
+bump) and a re-run of the cefi delete (once gated fix confirms holding) remain as pending follow-ups after this round.
