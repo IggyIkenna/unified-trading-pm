@@ -60,6 +60,12 @@ import yaml
 #: — handlers route "source succeeded, zero rows" through it instead of a bare
 #: ``record_empty(SOURCE_RETURNED_ZERO)``; counting it keeps the contract-call total stable across
 #: that rename (and recognises it as a first-class manifest-emission contract call).
+#: ``record_catalog_unavailable`` (added 2026-07-15, defi_upstream_instruments_catalog_stale_2026_07_15)
+#: is the sanctioned honest-absence routing for a DeFi catalog-gate-blocked shard — it always emits
+#: either ``record_empty(EXPECTED_PRE_VENUE_LAUNCH)`` (pre-genesis) or ``record_failed`` (catalogue
+#: behind), so DeFi handlers route the ``assert_defi_catalog_fresh``→False branch through it instead
+#: of a bare ``record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)``; counting it keeps the
+#: contract-call total stable across that swap.
 CONTRACT_PATTERNS: Final[tuple[str, ...]] = (
     "classify_venue_error",
     "ADAPTER_FETCH_FAILED",
@@ -67,6 +73,7 @@ CONTRACT_PATTERNS: Final[tuple[str, ...]] = (
     "record_empty",
     "record_zero_rows",
     "record_failed",
+    "record_catalog_unavailable",
 )
 
 _CONTRACT_RE: Final[re.Pattern[str]] = re.compile("|".join(CONTRACT_PATTERNS))
