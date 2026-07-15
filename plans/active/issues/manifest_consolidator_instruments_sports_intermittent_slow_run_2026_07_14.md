@@ -14,7 +14,7 @@ summary:
   consolidator appears DOWN... do NOT fall back to the per-VM merge'). Two consecutive waves of 3 features-sports
   gap-fill VMs each (launched ~22:09Z and ~22:26Z) failed identically at startup for this exact reason, wasting ~6 SPOT
   VM-launches with zero compute progress before a 3rd wave succeeded by timing the launch to a freshly-updated window."
-status: open
+status: resolved
 nature: record
 asset_group: [sports]
 stage: [data]
@@ -42,6 +42,9 @@ source: [sports_p2_features_history_to_ml_ready-001]
 parent_epic: sports_master
 priority: P1
 resolved_by:
+  "UTL c47273c1 (lock-aware consolidator liveness — a fresh held lock is proof-of-life, not DOWN); deployed into
+  features-service:latest + MTDS consolidator-liveness-watchdog, proven via features-service-sports-job's real scheduled
+  fire (zero CONSOLIDATOR_DOWN across the T-1..T+7 window)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -488,3 +491,15 @@ acquisitions, zero overlaps) and the lock-aware startup gate, this issue's origi
   brief live-soak note: the sibling `market-data-cefi` concurrent-merge (300s-TTL-vs-real-merge, cause of overlapping
   merges — a DIFFERENT class from the liveness false-positive, needs a per-bucket `CONSOLIDATOR_LOCK_TTL_SECONDS`
   override like defi/sports got) is tracked separately and is NOT fixed here — annotated, not scope-crept.
+
+## Final note — status → resolved (2026-07-15, features-sports deploy close-out)
+
+The lock-aware liveness fix (`unified-trading-library@c47273c1`) is now **deployed and proven in production**, so this
+record's original subject — the intermittent 8-9min consolidator merge tripping the 120s startup-gate freshness budget
+and failing/wasting features-sports compute — is fully addressed at the consumer boundary. `features-service:latest`
+(carrying `c47273c1`) and the MTDS `uts-prod-consolidator-liveness-watchdog` both treat a fresh held lock as
+proof-of-life. Proof: `features-service-sports-job` reached a genuine `SUCCEEDED` on a real scheduled fire (`…-6tm9w`)
+with the consolidator preflight passing on EVERY date and ZERO `CONSOLIDATOR_DOWN` — the exact failure this record
+described no longer occurs. The `market-data-cefi` TTL-vs-real-merge item noted above was ALSO closed while in the area
+(`deployment-service@8e94608`, `CONSOLIDATOR_LOCK_TTL_SECONDS=1200`, codified in terraform + live-bumped). Closing as
+`resolved`; this doc remains the durable root-cause record for the slow-merge-vs-freshness-gate mechanism.

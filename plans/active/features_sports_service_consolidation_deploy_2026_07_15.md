@@ -253,13 +253,36 @@ repo. This plan tracks that work.
       `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-18/league=<L>/feature_group=fixture_features/features.parquet`
       written `2026-07-15T19:16:03-04Z` (17,750 B, matching the write-log line, not a placeholder). Scheduler left
       ENABLED on this verified-healthy state.
-- [ ] [INFRA] P2. Finish the deferred [[bucket_estate_consolidation_to_sub100_2026_07_13]] `features-sports` bare bucket
+- [x] [INFRA] P2. Finish the deferred [[bucket_estate_consolidation_to_sub100_2026_07_13]] `features-sports` bare bucket
       delete (1 real migrated object + 2 confirmed-ephemeral VM-staging objects already accounted for) —
       `terraform state rm` the `google_storage_bucket.features_sports` resource before the physical delete (mirrors the
-      `features-calendar` precedent), then delete the bucket.
-- [ ] [DOCS] P2. Close `plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md` (status →
+      `features-calendar` precedent), then delete the bucket. — ✅ 2026-07-15 (FinishBucketAndDocs phase, real
+      evidence): re-confirmed the bare `gs://features-sports-central-element-323112` held exactly the expected 3 live
+      objects (1 migrated `sfi_progressive.parquet` + 2 ephemeral `_vm_staging/fss_backfill/*`), 39 total rows incl.
+      noncurrent versions all collapsing to those same 3 logical paths (no hidden data); verified the migrated object is
+      intact in the canonical `gs://features-sports-prd-central-element-323112` (25,989 B).
+      `tofu state rm     google_storage_bucket.features_sports` (prod state, prefix `terraform/state/prod`) →
+      "Successfully removed 1 resource instance(s)"; canonical
+      `google_storage_bucket.canonical["features-sports-prd-…"]` untouched. Removed the resource block from
+      `deployment-service/terraform/gcp/main.tf` + the orphaned import block from `_imports_reconcile.tf` (both →
+      REMOVED comments mirroring the features-calendar precedent), `tofu validate` clean; shipped
+      `deployment-service@bfea7928` (quickmerge `--agent --files`, `quality-gates.sh --no-fix` green, sentinel==HEAD — a
+      concurrent foreign soft-delete WIP in main.tf was stash-isolated so ONLY my hunk landed, then restored). Physical
+      delete: `gcloud storage rm --recursive --all-versions --continue-on-error` (purged all 3 objects + all noncurrent
+      versions → bucket empty) then `gcloud storage buckets delete --quiet`; `buckets describe` → `404 not found`.
+      Canonical bucket + migrated object re-verified alive post-delete.
+- [x] [DOCS] P2. Close `plans/active/issues/features_sports_service_cloud_run_job_broken_image_2026_07_15.md` (status →
       resolved), append final Progress Log entries to both this plan and
       `bucket_estate_consolidation_to_sub100_2026_07_13.md`, and note in
+      `plans/archive/features_repo_consolidation_2026_05_08.plan.md` that the deploy-side gap is now closed. — ✅
+      2026-07-15 (FinishBucketAndDocs phase): flipped all 4 related issue docs to `status: resolved` with Resolution
+      sections + `resolved_by` provenance — `features_sports_service_cloud_run_job_broken_image_2026_07_15.md`,
+      `features_service_cloud_build_quality_gates_hang_2026_07_15.md` (root cause = a unit-test gs:// hermeticity bug,
+      fixed `features-service@bd0db4d7`, green build `fd73ca17`), and the two consolidator docs
+      (`instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` closed as a MISDIAGNOSIS of its
+      already-root-caused sibling `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`; both
+      fixed by UTL `c47273c1`, now deployed + proven). Appended the closing Progress Log entry below + a closing entry
+      to `bucket_estate_consolidation_to_sub100_2026_07_13.md`, and annotated
       `plans/archive/features_repo_consolidation_2026_05_08.plan.md` that the deploy-side gap is now closed.
 - [ ] [REVIEW] P3. _(stretch, optional)_ Scope (do not fix here) whether other services built in the 2026-04-02 →
       mid-2026 window touch `config_interface/auth/entitlements.py` and could have the same silent breakage — file a
@@ -639,3 +662,44 @@ repo. This plan tracks that work.
   never-existent job (per `t1_batch_scheduler.tf` comment, lines 73-74), NOT the legacy daily job, so it needs no action
   here (dead + already PAUSED). No terraform/code changes this touch; this plan edit is the only change, shipped
   docs-only via the PM `docs(plans):` carve-out.
+- 2026-07-15 (FinishBucketAndDocs phase, todos 9-10 — FINAL, real evidence, not inference). Gate re-verified live before
+  any destructive action: `features-service-sports-daily-trigger` = `ENABLED`, the last scheduled fire's job execution
+  `SUCCEEDED` — so `schedulingReenabled` + `realScheduledFireSucceeded` both hold; proceeded. **Todo 9 (bucket delete):
+  DONE.** Re-confirmed `gs://features-sports-central-element-323112` held exactly the expected 3 live objects (1
+  migrated `sports_features/…/day=2020-01-01/…/sfi_progressive.parquet` + 2 ephemeral `_vm_staging/fss_backfill/*`); 39
+  all-version rows collapse to those same 3 logical paths (no hidden data); verified the migrated object present +
+  intact (25,989 B) in the canonical `gs://features-sports-prd-central-element-323112` first.
+  `tofu state rm google_storage_bucket.features_sports` on the PROD state (**note: the live prod resources live at
+  backend prefix `terraform/state/prod`, NOT the `terraform/state/dev` default hardcoded in `main.tf`'s backend block —
+  init with `-backend-config="prefix=terraform/state/prod"`; the `dev` prefix is a near-empty 11-entry state**) →
+  "Successfully removed 1 resource instance(s)"; canonical `google_storage_bucket.canonical["features-sports-prd-…"]`
+  confirmed still in state (untouched). Removed the resource block from `deployment-service/terraform/gcp/main.tf` + the
+  now-orphan import block from `_imports_reconcile.tf` (both → REMOVED comments, mirroring the features-calendar
+  precedent so a future apply cannot resurrect the bucket / error on a dangling import target); `tofu validate` clean.
+  Shipped `deployment-service@bfea7928` (`quickmerge --agent --files`, `quality-gates.sh --no-fix` green in 65s,
+  sentinel==HEAD). **Multi-agent note:** `main.tf` carried a concurrent FOREIGN soft-delete/versioning WIP (a different
+  workstream: `instruments_cefi`/`instruments_sports`/`market_data_sports`,
+  `deployment_scripts_bucket_softdelete_log_churn`); isolated it via `git stash push -- terraform/gcp/main.tf` so ONLY
+  my features_sports-removal hunk landed, then `git stash pop` restored it byte-for-byte (verified: 34+/17- across
+  exactly those 3 blocks, zero features_sports in the residual diff) — the foreign WIP was neither shipped nor
+  clobbered. Physical delete: `gcloud storage rm --recursive --all-versions --continue-on-error` (all objects +
+  noncurrent versions → empty) then `gcloud storage buckets delete --quiet`; `buckets describe` → `404 not found`.
+  Canonical bucket + migrated object re-verified alive post-delete. **Todo 10 (docs closure): DONE.** Flipped all 4
+  related issue docs to `status: resolved` + Resolution sections + `resolved_by` provenance:
+  `features_sports_service_cloud_run_job_broken_image_2026_07_15.md` (Path B deploy complete + proven),
+  `features_service_cloud_build_quality_gates_hang_2026_07_15.md` (root cause = a unit-test `gs://` hermeticity bug in
+  `tests/sports/unit/test_gcs_paths_and_reader_deps.py`, NOT xdist/memory; fixed `features-service@bd0db4d7`, green
+  build `fd73ca17-8d5a-435c-8ec6-9af11eb377fc`), `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`
+  (closed as a MISDIAGNOSIS of its already-root-caused sibling — a legit ~7-8min real merge, not a livelock), and
+  `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` (the durable root-cause record; both
+  fixed by UTL `c47273c1`, now deployed + proven via the scheduled fire's zero-`CONSOLIDATOR_DOWN`). Appended a closing
+  entry to `bucket_estate_consolidation_to_sub100_2026_07_13.md` and annotated
+  `plans/archive/features_repo_consolidation_2026_05_08.plan.md` that the deploy-side gap is now closed. Flipped todos 9
+  - 10 → `[x]` above. **Remaining open (deliberate, tracked — NOT this phase's scope):** todo 7 (retire the legacy
+    `features-sports-service-job`) stays deferred behind its P1 prerequisite — the `configs/sports-trigger-tiers.yaml`
+    Tier-3/4 per-fixture triggers still dispatch to the legacy job and need a `--feature-family sports` dispatch-code
+    change in `deployment_service/sports_trigger_scheduler.py::_build_cli_cmd` before repointing; double-fire risk fully
+    mitigated by the legacy daily scheduler staying PAUSED. Two P2 terraform-hygiene follow-ups (job `args` default
+    dates; re-pin `docker_image` digest on next rollout) + the P3 optional fleet-skew audit also remain. Plan shipped
+    docs-only via the PM `docs(plans):` carve-out; the only CODE change this phase was the terraform removal
+    (`deployment-service@bfea7928`).
