@@ -151,7 +151,14 @@ repo. This plan tracks that work.
       `availability_index.parquet` past the 120s freshness budget `features-service.compute_features` requires,
       `recovery=fail_fast`). Import chain + CLI contract + GCS mount all confirmed WORKING on this attempt — the blocker
       is downstream, in a different system. Per this touch's explicit instruction, did NOT proceed to retire the legacy
-      job. Still `[ ]` — retry once the linked issue is resolved.
+      job. Still `[ ]` — retry once the linked issue is resolved. **UPDATE 2026-07-15 ~19:53Z (VerifyImageDeploy):
+      unblocked at the image/deploy boundary** — the CI hang is fixed, `features-service:latest` is now the fixed
+      `0.66.0`/`afbe1ef` image, and the job is re-pinned to that verified digest `@sha256:b7fc3d7f…`
+      (`deployment-service@6c47fa1d`, live job generation 2, scheduler still PAUSED). Re-attempt the manual execution
+      with the same
+      `--feature-family sports --operation compute --mode batch --asset-group SPORTS     --tables fixture_features --start-date/--end-date`
+      overrides used in `kk4dv` and confirm a genuine `SUCCEEDED`; the `c47273c1` lock-aware preflight (now in-image,
+      verified) should clear the false `CONSOLIDATOR_DOWN`.
 - [ ] [INFRA] P2. Fix `terraform/services/features-service-sports/gcp/main.tf`'s `module.daily_job.args` default
       (currently `--feature-family sports --operation compute --mode batch --asset-group SPORTS`, no dates) — a bare
       `gcloud run jobs execute` with no overrides fails CLI validation
@@ -160,6 +167,17 @@ repo. This plan tracks that work.
       default. Found + evidenced 2026-07-15 during the DeployAndVerify phase (see
       `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` evidence section, execution
       `features-service-sports-job-fs8sj`).
+- [ ] [INFRA] P2. On the NEXT features-service image rollout, re-pin
+      `terraform/services/features-service-sports/gcp/terraform.tfvars`'s `docker_image` to the new verified digest (it
+      is now an explicit `@sha256:…` pin, not `:latest` — deliberately, so the job runs a KNOWN verified image rather
+      than silently inheriting whatever `:latest` resolved to at the last apply, which is how it ran the stale broken
+      `c204c49d`). Verify the new digest in-container
+      (`docker run … import     unified_trading_library.config_interface.auth.entitlements` +
+      `assert_consolidator_healthy` source) before re-pinning. Added 2026-07-15 VerifyImageDeploy phase
+      (`deployment-service@6c47fa1d`). _Alternative if the operator prefers tag-tracking: keep `:latest` but add a
+      post-build `gcloud run jobs update --image` (or `terraform apply     -replace`) step to the features-service
+      rollout so the tag→digest re-pins every build — a bare `:latest` alone does NOT auto-propagate to Cloud Run job
+      executions._
 - [ ] [INFRA] P1. Apply the separately-found `--category`→`--asset-group` Workflow-YAML terraform drift (confirmed real,
       independent of the import crash, found via `terraform plan` on the old job's Workflow resources) — carry the fix
       into the new job's Workflow definitions; required before scheduling can safely resume.
@@ -469,3 +487,32 @@ repo. This plan tracks that work.
   `fd73ca17-8d5a-435c-8ec6-9af11eb377fc` against `bd0db4d7` — being watched to SUCCESS. Once green + image push verified
   to carry UTL `c47273c1`, todo 5 (sports-job re-verify) unblocks; todos 6-10 follow. Full detail in
   `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`.
+
+- 2026-07-15 (~19:53Z, VerifyImageDeploy phase — real evidence, not inference): Verified the fixed image AND corrected a
+  latent Cloud-Run image-pinning trap that would have kept the job on the broken image even after the rebuild. **(1)
+  Image verified in-container** (`docker run --rm --entrypoint python <img> -c ...`): `:latest` has moved PAST `bd0db4d`
+  — a newer fleet rebuild `afbe1ef` (still `0.66.0`, built `2026-07-15T19:38:03Z`) now holds the `latest` tag at digest
+  `sha256:b7fc3d7f7b92fe37edfae592b8c62244ecc46d5598dd4e08571508de08fb3117`. That digest docker-run-verifies to contain
+  BOTH fixes: `import unified_trading_library.config_interface.auth.entitlements` succeeds (no
+  `unified_api_contracts.internal` ModuleNotFoundError), and `inspect.getsource(assert_consolidator_healthy)` shows the
+  UTL `c47273c1` lock-aware short-circuit
+  (`from ... import consolidator_cycle_in_flight; if consolidator_cycle_in_flight(client, bucket): return`) — the exact
+  mechanism that turns the `kk4dv` false `CONSOLIDATOR_DOWN` (heartbeat 208s > 120s while a legit long merge holds the
+  lock) into a pass. **(2) Corrected the prior touch's `:latest`-auto-propagates assumption** (15:45Z entry: "the job's
+  next execution picks up the fix with no further terraform/gcloud action needed"): Cloud Run resolves an image
+  tag→digest at job **create/update** time, not per-execution. Proven:
+  `gcloud run jobs executions describe features-service-sports-job-kk4dv` ran `@sha256:c204c49d…` (the stale 2026-07-14
+  image), and `terraform state show` recorded the job image as the bare `:latest` tag — so a plain re-apply is a no-op
+  and a new execution would have re-run the BROKEN c204c49d, silently. **(3) Re-pinned the job to the verified digest
+  via terraform** (state-consistent path): set `terraform/services/features-service-sports/gcp/terraform.tfvars`
+  `docker_image` to the explicit `@sha256:b7fc3d7f…` digest,
+  `terraform plan -target=module.daily_job.google_cloud_run_v2_job.job` → `0 to add, 1 to change, 0 to destroy`
+  (image-only, in-place), applied clean. Confirmed live: `gcloud run jobs describe features-service-sports-job` now
+  shows `image = …@sha256:b7fc3d7f…` (generation 2); scheduler `features-service-sports-daily-trigger` still `PAUSED`
+  (unchanged). Shipped `deployment-service@6c47fa1d` (`quickmerge --agent --files`, `quality-gates.sh --no-fix` green,
+  sentinel==HEAD). **Todo 5 stays `[ ]`** — this phase did NOT run the verification execution (that is todo 5's Execute
+  step); the image is now verified-fixed and the job points at it, so todo 5 is unblocked at the image/deploy boundary.
+  Execution success still depends on the instruments-sports consolidator being genuinely healthy at run time (per the
+  ~13:45Z audit it is — a ~7-8min real merge, not an indefinite livelock — and `c47273c1` now tolerates its in-flight
+  lock), which todo 5 must prove by actually reaching `SUCCEEDED`. Added todo below re: the digest-pin now needing a
+  re-pin on future features-service rollouts.
