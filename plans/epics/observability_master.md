@@ -307,6 +307,13 @@ rebuilding:") — [doc-reconciliation 2026-07-12, finding 202, §A2 B-queue ruli
 - [ ] [AGENT] P3. **Harsh pair-review PR** — alerting-service is Harsh's repo; raise PR for Tab L diff + get Harsh's
       sign-off before merging to main.
 
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [REVIEW] P3. WS-4 (verify): re-pull a 24–48 h `#ci-failures` window post-rollout and confirm the volume drop
+      (promotion-lag re-reminds ~2 h not hourly, no green all-clears, QG failures dedup per-branch); drop the evidence
+      jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.) (FOLDED IN from
+      ci_failures_channel_cleanup_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)
+
 ## Archived plans
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)

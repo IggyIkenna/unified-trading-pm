@@ -27,8 +27,8 @@ scope: [engineer]
 tags: [features, onchain, builder-registry, data-correctness, non-determinism, utl]
 related:
   [
-    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
-    plans/active/utl_reuse_phase4_features_builder_registry_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase4_features_builder_registry_2026_07_13.md,
     features_service/onchain/schemas/feature_builder_registry.py,
   ]
 created: 2026-07-13

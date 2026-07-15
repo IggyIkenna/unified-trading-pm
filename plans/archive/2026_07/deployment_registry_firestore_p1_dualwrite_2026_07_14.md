@@ -6,7 +6,7 @@ summary:
   and dual-write every register/heartbeat/complete to BOTH GCS and Firestore behind a flag (Firestore best-effort). No
   reader changes — purely additive, so we can validate that Firestore mirrors GCS on the live fleet before any cutover.
   Reuses the existing firestore_lifecycle client factory and the ci_status_store CAS-in-transaction ordering pattern.
-status: draft
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -104,13 +104,15 @@ UTC datetimes only. QG-green per repo before commit.
       UTL and deployment-api. — utl@bf56debe: 10 store tests (fake firestore module) + 4 dual-write/query tests
       (`_SpyStore`, `_RaisingStore`); UTL `quality-gates.sh --no-fix` green (113s). deployment-api unaffected (no code
       change there this phase).
-- [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
+- [x] ✅ [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
       last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
       **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3): validated against REAL
       Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
       (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. Enabling the flag on live VMs needs the
-      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.
+      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy. — **FOLDED OUT** to
+      plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md (2026-07-15, plan-reconcile §6 operator
+      ruling); tracked there, not here.
 - [x] ✅ [INFRA] P1. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off —
       activate BOTH downstream branches (they depend only on this phase and run in parallel): set
       `deployment_registry_firestore_p2_readers_2026_07_14.md` AND

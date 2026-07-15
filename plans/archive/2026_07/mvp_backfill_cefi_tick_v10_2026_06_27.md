@@ -4,7 +4,7 @@ title: MVP backfill — CeFi trades+book5 (perp-gated) + Deribit options_chain O
 summary:
   Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as
   options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [mvp, backfill, cefi, trades, book-snapshot-5, options-chain, deribit, spot-vm, v10, budget-aware]
 related:
   [
-    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     plans/active/cefi_manifest_canonicalisation_2026_06_01.md,
     plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
@@ -27,8 +27,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
 last_updated: 2026-07-14 # (was: 2026-06-27 — bumped with the BITGET-FUTURES wave failure correction entry)
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on: [mvp_catalogue_finalization_v10_2026_06_27]
@@ -220,7 +220,7 @@ BLOCKED.
 > denominator has holes. This SUPERSEDES the 2026-06-29 Progress-Log note "Layer-1 is a denominator audit; does NOT
 > block G4 gate directly" (kept below as historical record).
 
-- [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
+- [x] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
       expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
       trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
       2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
@@ -237,7 +237,9 @@ BLOCKED.
       session close (see Progress Log "G4 Session Close-out"); re-run `measure_honest_coverage.py` fresh before relying
       on any number here, this line is a point-in-time snapshot, not the gate's live source of truth. G4 cannot close
       before the denominator-gap work in `issues/cefi_layer1_denominator_gaps_2026_07_03.md` lands. Verdict to Progress
-      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
+      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A. — **FOLDED OUT** to
+      `plans/active/cefi_completion_program_2026_07_15.md` (2026-07-15, plan-reconcile §6 operator ruling); tracked
+      there, not here.
 - [x] ✅ [DATA] P1. PURGE the ~536 pre-v10 Deribit per-strike trades/book5 manifest rows (snapshot-first: write a
       pre-purge `_index` snapshot, then delete; count-verified before/after) — operator ruling 2026-07-12,
       plan-reconciliation finding 30: delete rather than scope-exclude. — **DONE 2026-07-12** —
@@ -3438,3 +3440,95 @@ visibility) 20:12:26Z ❌ NOT in the tarball — but that commit is tests + logg
   fetching must STOP until the expected universe is re-materialised to ONE canonical atom — continuing to fetch would
   only deepen the relabel debt (peer dry-run already sizes it: 3,133,117 candidates, 82.7% resolvable, 542,888
   unresolved; `--apply` operator-gated).
+
+### DECISIVE TEST RESULT — eu FLAT, negative branch confirmed — 2026-07-15T21:48Z (data_engineering slot-12)
+
+Ran the armed re-measurement at the target window (`measure_honest_coverage.py --asset-group cefi`, fresh, not cached):
+
+| metric                 | 20:22Z baseline | 21:48Z (T+86min) | delta        |
+| ---------------------- | --------------: | ---------------: | ------------ |
+| `expected_unattempted` |       2,773,292 |        2,773,292 | **0 — FLAT** |
+| `captured`             |       3,058,241 |        3,058,599 | +358         |
+| `attempted_failed`     |          34,605 |           35,806 | +1,201       |
+| `coverage_pct`         |           52.13 |            52.13 | 0.00         |
+
+**Negative branch confirmed, exactly as the armed test predicted.** ~86 minutes of the writer-fixed 3-VM Tardis fleet
+(confirmed-deployed code, verified twice via SSH) closed **zero** `expected_unattempted` cells. The writer fix is
+necessary but NOT sufficient — the stale/inconsistent eu-row atom (some canonical `VENUE:TYPE:BASE-QUOTE@MARKER`, some
+old `instrument_type=''` + lowercase-raw) is the real, now-confirmed blocker. Per the test's own pre-committed response:
+**fetching must STOP** — every additional Tardis VM-hour beyond this point only deepens relabel debt without moving the
+gate, now proven empirically rather than inferred.
+
+**This is now squarely an operator-level architectural decision** (re-materialize the cefi expected-universe enumerator
+to one canonical atom shape before any further backfill is worth running) — not something to fix blind under time
+pressure, per this issue's own established caution (the case-sensitivity near-miss earlier in this same thread is the
+concrete argument for why). Flagging for the operator/main rather than unilaterally killing the 3 running Tardis VMs
+myself — that decision belongs with whoever owns the fleet lifecycle call, now that the data (not a guess) says
+continuing is not productive.
+
+**Non-Tardis lane unaffected** — its target eu (HL/LIGHTER/PACIFICA/EXTENDED derivative_ticker) was never part of this
+specific writer-fix namespace-mismatch defect (confirmed earlier, `OnchainPerpBatchHandler` already canonical); no
+reason to believe it shares this stale-atom problem, but not independently re-verified this pass — worth a follow-up
+check before assuming it's fully clear too.
+
+**Gate verdict: ❌ NOT MET, decisively — root cause now empirically confirmed, not hypothesized.** Next required step
+(operator-gated): re-materialize the expected-universe enumerator to one canonical atom, THEN resume/relaunch. Until
+then, the Tardis lane should not be widened or relaunched further.
+
+### ⚠️ CORRECTION — the 21:50Z "eu still flat ⇒ writer fix insufficient" verdict was WRONG (invalid test) — 2026-07-15T21:55Z
+
+**Retracting my own pre-registered verdict, because the test could not have passed.** The armed T+85min test measured eu
+at 21:47Z and reported `DELTA=0 → writer fix NOT sufficient → stop fetching`. That conclusion is **INVALID**: the fleet
+had not reached the gap. Live scan positions at 21:51Z:
+
+| VM                                        | scanning at |
+| ----------------------------------------- | ----------- |
+| `cefi-queue-heavy-binancefutu-x15-202000` | 2026-01-01  |
+| `cefi-queue-light-binancefutu-x2-202013`  | 2026-01-03  |
+| `cefi-queue-light-bybit-x4-202022`        | 2026-01-12  |
+
+**January 2026 has eu = 0** (this plan's own by_day cross-tab: every month 2019-03..2026-01 is at eu=0; all 2,773,292
+open cells live in 2026-02..07). There were **zero reachable eu cells in the VMs' date range**, so eu COULD NOT drop.
+The test proved nothing about the writer fix either way — it measured a fleet that hadn't arrived. Ruling out the two
+innocent explanations first was what caught this: (a) the consolidated index is FRESH (rewritten 21:47:53Z, 4 min before
+the read — not a staleness artifact), and (b) the tarball genuinely carries the working fix (built 20:00:46Z ⊃
+`mtds@5d44a197` 19:52:50Z). Only then did the scan-position check expose the real problem.
+
+**The real finding underneath the bad verdict — the waves are still aimed wrong.** `launch-cefi-sharded-backfill.sh`
+derives `start_date="${year}-01-01"` from `YEARS=`, so a `YEARS="2026"` wave spends its first hours re-walking a
+COMPLETE January before it can close a single cell. Measured cost: 3 VMs, 91 minutes, still at 2026-01-01/01-03/01-12 —
+i.e. the entire post-relaunch window bought zero possible progress. This is the same class of error as the
+2020-chronological waves killed at 17:40Z, just one year narrower and correspondingly harder to see.
+
+**Fixed + shipped**: `START_DATE` env override on the cefi launcher (validated to be YYYY-MM-DD inside the sharded year;
+ignored for other years) — deployment-service, QG-green, quickmerged. Verified by dry-run: `START_DATE="2026-02-01"` →
+`start=2026-02-01 end=2026-07-14`.
+
+**Method note for future ticks (this is the second premature conclusion this session)**: a coverage delta is only
+evidence about a wave once the wave's date cursor is INSIDE the range where eu>0. Re-arm eu tests against scan-position,
+not wall-clock. The writer fix (`mtds@5d44a197`) therefore remains **UNTESTED in production**, not disproven — the
+honest status.
+
+### Fleet re-aimed at the gap: first wave in this programme that can actually close a cell — 2026-07-15T21:56Z
+
+Killed the 3 January-bound Tardis VMs (launched 20:20Z; measured at 2026-01-01/01-03/01-12 after 91 min, i.e. inside the
+eu=0 zone where zero progress was POSSIBLE). Not a peer-scope loss: same venue scopes relaunched immediately with
+`START_DATE=2026-02-01`, so the work is re-aimed, not dropped. The 4 non-Tardis VMs
+(hyperliquid/lighter/extended/pacifica, 19:00Z) were left untouched — different code path, outside the Tardis cap, and
+their eu lives in the same 2026-02..07 window their own launcher already targets.
+
+Relaunched (guard sequenced 0+1, then 1+1 …, cap honoured): `cefi-queue-heavy-binancefutu-x15-20260715-215549` — all 15
+venues, trades+book_snapshot_5, **2026-02-01..2026-07-14**
+
+- light waves for the derivative_ticker scopes at the same START_DATE.
+
+**This is the first wave in the entire cefi backfill programme pointed at a date range where eu > 0.** Every prior wave
+— 2020-chronological (killed 17:40Z) and 2026-01-chronological (killed 21:55Z) — was structurally incapable of closing a
+cell before it aged out or was killed, which is why ~30 VM-hours across two lanes moved eu by exactly 0.
+
+**Next tick's test (keyed on scan-position, not wall-clock, per the method note above)**: once the heavy VM's date
+cursor is confirmed ≥ 2026-02-01 AND it has written for a venue with eu>0, re-measure eu vs the 20:22Z baseline of
+2,773,292. THAT is the first valid production test of `mtds@5d44a197` (the manifest-id canonicalization). Outcomes: eu
+drops → writer fix confirmed, fleet productive, let it grind; eu still flat with the cursor inside the gap → the stale
+per-venue eu atom (BINANCE-FUTURES eu rows carrying `instrument_type=''` + lowercase-raw `hotusdt`) is confirmed as the
+blocker and the expected universe must be re-materialised before any further fetching.

@@ -347,10 +347,10 @@ instrument_type = `""` (blank) per §9.1.
   SERIE_A 69.6%, LIGUE_1 71.2%); latest captured dates: XG 2023-03-11, XG_SHOTS 2024-12-21. No active backfill process,
   no `/tmp/understat_backfill.log`. Gate cannot be flipped — DoD
   (`0 attempted_failed / 0 expected_unattempted / XG_SHOTS ≈ XG`) is NOT met. Task 005 marked BLOCKED-PREREQUISITES in
-  `plans/active/understat_local_backfill_completion_2026_07_06.md`; the ~2.4 h ETA run below appears to have been
-  interrupted (matches the plan preface's "~700+ dates 2014→2016" hand-off note). NEXT (operator): confirm + remove any
-  circular-prereq on `understat-vm-xg-complete` from tasks 001-004 in `backlog.yaml`, `POST /api/backlog/regen`, then
-  task 001 re-runs the resume-aware driver to completion.
+  `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`; the ~2.4 h ETA run below appears to have
+  been interrupted (matches the plan preface's "~700+ dates 2014→2016" hand-off note). NEXT (operator): confirm + remove
+  any circular-prereq on `understat-vm-xg-complete` from tasks 001-004 in `backlog.yaml`, `POST /api/backlog/regen`,
+  then task 001 re-runs the resume-aware driver to completion.
 - 2026-07-06 (bulk writer + backfill run — operator go "build the writer and save the data" + "also fix XG capture
   now"): A small validation write (2023-03-11) — made possible ONLY because the lookup_contract fix made schema
   validation actually RUN — surfaced **three more pre-existing bugs** (all previously masked by the skipped validation),
@@ -385,7 +385,7 @@ instrument_type = `""` (blank) per §9.1.
   back, plus a new instance on XG). Also found the `expected_unattempted` residual (30, down from 6,093) is closing via
   a typing script that was never actually scheduled anywhere — closing that lag requires wiring
   `type_understat_eu_no_provider_coverage.py` into a Cloud Scheduler job, not further ad-hoc runs. Full detail +
-  concrete next steps filed in `plans/active/understat_local_backfill_completion_2026_07_06.md` (2026-07-13 entry + 4
-  new todos) and in the sibling dedup docs' own Progress Logs. Not duplicating the fix plan here — this doc's §8 todos
-  remain the durable tracking for the consolidator-reaches-deployed-jobs question; treat them as still open, not
-  superseded.
+  concrete next steps filed in `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (2026-07-13
+  entry + 4 new todos) and in the sibling dedup docs' own Progress Logs. Not duplicating the fix plan here — this doc's
+  §8 todos remain the durable tracking for the consolidator-reaches-deployed-jobs question; treat them as still open,
+  not superseded.

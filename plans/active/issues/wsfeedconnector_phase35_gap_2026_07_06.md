@@ -826,8 +826,8 @@ approve / defer per category rather than per-venue.
      BOTH COIN-M perps + COIN-M delivery futures at BINANCE, not just perps).
   2. `unified-trading-pm/codex/02-data/mvp-scope-canonical.md` NOT-MVP row:
      `**NOT MVP** = **BINANCE-DELIVERY** (COIN-M inverse/delivery — dropped, decision #3)`. Codex SSOT is definitive.
-  3. `unified-trading-pm/plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` cefi-G3 sign-off: "BINANCE-DELIVERY 222
-     rows all mvp=False ✓". Catalogue reality matches the decision.
+  3. `unified-trading-pm/plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md` cefi-G3 sign-off:
+     "BINANCE-DELIVERY 222 rows all mvp=False ✓". Catalogue reality matches the decision.
   4. `unified-api-contracts/unified_api_contracts/registry/venue_constants.py:413` still lists
      `"BINANCE-DELIVERY": {"PERPETUAL", "FUTURE"}` — reference-data-only classification retained for
      manifest/backfill-legacy paths; not a live-scope entry.

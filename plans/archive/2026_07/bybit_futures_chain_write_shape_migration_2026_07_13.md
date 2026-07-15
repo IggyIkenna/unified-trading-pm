@@ -7,7 +7,7 @@ summary: >-
   a regex bug fixed in code 2026-07-09 was never backfilled, and the true affected window is wider than first estimated.
   Audit the exact scope, then reshape/backfill to the single canonical underlying= form with parity verification before
   any cleanup of the non-canonical originals.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -36,8 +36,8 @@ source:
     ETH.parquet, coexisting with the glued BTCUSDT-style files on the same day; no futures_chain data found for BYBIT at
     all June-July 2026, pre- or post the 2026-07-09 code fix — needs explanation).",
   ]
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 ---
@@ -301,10 +301,11 @@ remediation todo below).
 
 ## Phase 4 — Cleanup (gated, separate from the reshape — P1)
 
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — only after Phase 3's parity verification is fully green: delete the
+- [x] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — only after Phase 3's parity verification is fully green: delete the
       non-canonical (glued + bare-underlying) originals. Version-aware, snapshot first, same rigor as
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly NOT bundled with the reshape
-      apply step.
+      apply step. — **FOLDED OUT** to plans/active/data_completion_to_100_all_ag_2026_06_21.md (2026-07-15,
+      plan-reconcile §6 operator ruling); tracked there, not here.
 
 ## Success criteria
 

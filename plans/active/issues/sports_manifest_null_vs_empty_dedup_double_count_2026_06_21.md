@@ -91,9 +91,9 @@ the stated double-count mechanism is **incorrect**:
 Confirms this doc's option (a) is no longer hypothetical —
 `unified_trading_library.manifest_consolidator._dedup_key_sql` already coalesces NULL and `""` to one sentinel (shipped
 as `unified-trading-library@f5ec2291f`, §9.2b, referenced from
-`plans/active/understat_local_backfill_completion_2026_07_06.md`). Verified the SQL is _correct_ by feeding it the exact
-duplicate pair directly (DuckDB `PARTITION BY` on the normalized key correctly picks 1 survivor). Yet the LIVE sports
-canonical index still carried the twins. Two independent gaps, both now closed:
+`plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`). Verified the SQL is _correct_ by feeding it
+the exact duplicate pair directly (DuckDB `PARTITION BY` on the normalized key correctly picks 1 survivor). Yet the LIVE
+sports canonical index still carried the twins. Two independent gaps, both now closed:
 
 1. **Reader-side gap (different code path, same bug class)** —
    `unified_trading_library/manifest_writer/_read_index.py ::_merge_shard_frames` (the pandas dedup
@@ -109,8 +109,9 @@ canonical index still carried the twins. Two independent gaps, both now closed:
    consolidator job's incremental cycles were NOT applying the `_dedup_key_sql` fix continuously in production — either
    a stale image (never rebuilt post-`f5ec2291f`) or the incremental anti-join is missing some contested-key cases the
    isolated SQL test doesn't reproduce. **Not root-caused further here** — out of this session's scope (infra/deploy
-   craft, not data_engineering) and already tracked as `plans/active/understat_local_backfill_completion_2026_07_06.md`
-   task -003 ("confirm §9.2b consolidator deployed"). **Mitigated for sports only**: ran
+   craft, not data_engineering) and already tracked as
+   `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` task -003 ("confirm §9.2b consolidator
+   deployed"). **Mitigated for sports only**: ran
    `python -m unified_trading_library.manifest_consolidator --bucket instruments-store-sports-prd-central-element-323112 --force`
    (one-off full rebuild, sanctioned per the tool's own docstring: "one-off seed after backfill"). Result:
    `rows_in=5,175,040 rows_out=4,901,461 dedup_dropped=273,579` — a FAR larger cleanup than the 297 keys I could see
@@ -131,9 +132,9 @@ cells, plus a new instance on XG itself). This is consistent with — and likely
 still-open gap: something about the consolidator's incremental/per-VM-shard merge path is not durably retiring
 corrective/dedup fixes, so a previously-collapsed duplicate can reappear without any new "bad" write. This raises the
 priority of actually root-causing item 2 above (rather than continuing to rely on periodic manual `--force` rebuilds as
-the only mitigation) — tracked as a todo in `plans/active/understat_local_backfill_completion_2026_07_06.md` (2026-07-13
-entry) scoped to the sports bucket; the cross-bucket check this doc already calls out (cefi/defi/tradfi/prediction)
-remains a separate, not-yet-scheduled follow-up.
+the only mitigation) — tracked as a todo in `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`
+(2026-07-13 entry) scoped to the sports bucket; the cross-bucket check this doc already calls out
+(cefi/defi/tradfi/prediction) remains a separate, not-yet-scheduled follow-up.
 
 **CORRECTION (same session, later 2026-07-13): the "recurrence" above was a misdiagnosis — it was NOT this doc's
 consolidator gap.** Root-caused fully: the fresh 2026-07-13T06:21Z duplicates were collateral damage from an unrelated

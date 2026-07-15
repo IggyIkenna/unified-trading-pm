@@ -424,6 +424,17 @@ reconciling + signing off, not redoing.)_
 
 ---
 
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
+      gate applies). **→ MOVED to `instruments_completion_tracker_2026_07_06.md` Stage 6 (last open `honest_coverage_v2`
+      item; too small for its own AO plan, tracked as tracker hygiene singleton per operator 2026-07-06).** This plan's
+      **measurement track is now CLOSED** — every Phase 0/1/2 measurement item complete; only this UI drill-down
+      remains, and it is now owned by tracker Stage 6. (FOLDED IN from
+      honest_coverage_v2_instrument_denominator_2026_06_28, 2026-07-15, plan-reconcile §6 operator ruling)
+
+---
+
 ## 🚦 Parallel per-AG tracks (current gate on each)
 
 | AG             | Canonical? | Current gate / next action                                                                          |

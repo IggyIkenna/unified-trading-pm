@@ -8,6 +8,13 @@ were v8) and emits a per-CF GREEN/RED with evidence + a machine-readable result 
 Optionally diffs a legacy bucket to compute legacy-only `(date,venue,data_type)` cells
 (the L6-decommission data-loss gate).
 
+L6 criterion (REDEFINED 2026-07-15, operator ruling — "redefine to real-data-only"): the gate
+counts only legacy cells WITH BACKING DATA (per-cell MAX `instrument_count` > 0) that are absent
+from canonical, so it measures GENUINE data loss. ic=0 PHANTOM cells (legacy claims `captured`,
+nothing backs it) are excluded and reported separately as `L6-phantom-residual` — they can never
+be migrated (fabricating `captured` rows is banned), so counting them made the gate unreachable
+by construction.
+
 Extended 2026-06-08 (audit_criteria_automation_2026_06_08.md Tier-3) from CF-1…CF-12 to
 CF-1…CF-14 + Era-B: adds CF-13 (pipeline_mode SOURCE-AWARE form, not just populated),
 Era-B (chains are instrument_types w/ data_type=trades — count data_type=options_chain/
@@ -146,6 +153,40 @@ def _cells(df: pd.DataFrame) -> set[tuple[str, ...]]:
     return set(map(tuple, cap[cols].astype(str).itertuples(index=False, name=None)))
 
 
+def _split_backed_cells(df: pd.DataFrame) -> tuple[set[tuple[str, ...]], set[tuple[str, ...]]]:
+    """Split a manifest's captured cells into (real-data-backed, phantom) by `instrument_count`.
+
+    A cell is REAL iff its per-cell **MAX** `instrument_count` is > 0. The MAX (not any/first) is
+    the shard atom's own rule: a cell fans out to many rows (per-league/per-instrument populations)
+    and a single ic>0 row means the cell has backing data — a per-row test would misclassify a real
+    cell whose first row happens to be an ic=0 population (the 25th touch's Gotcha-#2 lesson).
+
+    Cells with MAX ic == 0 are PHANTOMS: the legacy manifest claims `captured` but no instruments
+    back it (probed: INJURIES objects exist for every day from 2018 yet are zero-row on every one of
+    the first 60 days, both surfaces). They can never be migrated — fabricating `captured` rows for
+    them is the banned fake-`record_captured` pattern — so they are excluded from the L6 data-loss
+    gate and reported SEPARATELY (never silently suppressed; honest-absence discipline).
+
+    When `instrument_count` is absent the split is impossible → every cell is treated as REAL (the
+    conservative direction: the gate may read RED, but it can never under-report data loss).
+    """
+    cap = df[df["capture_status"] == "captured"] if "capture_status" in df.columns else df
+    cols = [c for c in ("date", "venue", "data_type") if c in cap.columns]
+    if "instrument_count" not in cap.columns or not cols:
+        return _cells(df), set()
+    keyed = cap[[*cols, "instrument_count"]].copy()
+    for c in cols:
+        keyed[c] = keyed[c].astype(str)
+    per_cell_max = keyed.groupby(cols, dropna=False)["instrument_count"].max()
+    real = per_cell_max > 0  # NaN-safe: a null ic is NOT real-data evidence
+    return _index_to_cells(per_cell_max[real].index), _index_to_cells(per_cell_max[~real].index)
+
+
+def _index_to_cells(idx: pd.Index) -> set[tuple[str, ...]]:
+    """A groupby index (Multi- or single-level) → the audit's `(date, venue, data_type)` cell set."""
+    return set(map(tuple, idx.to_frame(index=False).astype(str).itertuples(index=False, name=None)))
+
+
 def _check_cf1_schema_version(df: pd.DataFrame, n: int) -> str:
     """CF-1: schema_version == 9 (data-state). `schema_version` is stored as an object/string
     column on-disk (values "9"/"4"), so a `dist.get(CANONICAL_SCHEMA_VERSION, 0)` int-key lookup
@@ -161,6 +202,49 @@ def _check_cf1_schema_version(df: pd.DataFrame, n: int) -> str:
     print(f"CF-1 schema_version  [{status}]  v9={v9:,}/{n:,} ({_pct(v9, n)})")
     print("     dist:", dict(dist.head(8)))
     return status
+
+
+def _legacy_diff(df: pd.DataFrame, legacy: str, tmp: Path, results: dict[str, str]) -> None:
+    """L6 decommission data-loss gate: which legacy captured cells are missing from canonical?
+
+    REAL-DATA-ONLY criterion (operator ruling 2026-07-15): the gate counts only legacy cells that
+    have BACKING DATA (per-cell MAX `instrument_count` > 0) and are absent from canonical — i.e.
+    it measures GENUINE data loss ("no REAL data is stranded in legacy"), which is what it always
+    meant.
+
+    Why the old `all captured cells` criterion was wrong: it also counted ic=0 PHANTOM cells
+    (legacy claims `captured`, nothing backs it). Those can never be migrated — the only way to
+    clear them would be to fabricate `captured` rows, which is banned — so the gate was
+    UNREACHABLE by construction: no migration could ever green it while legacy retains a single
+    phantom. Phantoms are reported on their OWN line (`L6-phantom-residual`, informational) so the
+    class stays VISIBLE rather than silently suppressed (honest-absence discipline).
+    """
+    print(f"\n-- legacy diff :: {legacy} --", flush=True)
+    ldf = _read_index(legacy, tmp, "legacy")
+    if ldf is None:
+        print("  cannot read legacy _index")
+        return
+    cc = _cells(df)
+    legacy_real, legacy_phantom = _split_backed_cells(ldf)
+    legacy_only = legacy_real - cc  # REAL data stranded in legacy → the data-loss gate
+    phantom_residual = legacy_phantom - cc  # no backing data → informational only
+    results["L6-legacy-only"] = "GREEN" if not legacy_only else "RED"
+    results["L6-phantom-residual"] = f"INFO({len(phantom_residual):,})"
+    lc_total = len(legacy_real) + len(legacy_phantom)
+    print(
+        f"legacy captured cells: {lc_total:,}  (real ic>0: {len(legacy_real):,}  "
+        f"phantom ic=0: {len(legacy_phantom):,})  canonical: {len(cc):,}  "
+        f"overlap: {len((legacy_real | legacy_phantom) & cc):,}"
+    )
+    print(f"LEGACY-ONLY REAL-DATA CELLS (canonical MISSING): {len(legacy_only):,}  [{results['L6-legacy-only']}]")
+    for e in sorted(legacy_only)[:8]:
+        print("   ", e)
+    print(
+        f"legacy-only PHANTOM cells (instrument_count=0, no backing data — NOT migratable, "
+        f"excluded from the gate): {len(phantom_residual):,}  [informational]"
+    )
+    for e in sorted(phantom_residual)[:8]:
+        print("    phantom:", e)
 
 
 def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
@@ -337,21 +421,9 @@ def audit(canonical: str, legacy: str | None) -> tuple[int, dict[str, str]]:
         results["CF-14"] = "SKIP(catalogue not materialised — G1)"
         print("CF-14 catalogue ⊇ present  [SKIP]  no _catalogue/ artifact (G1 build_instrument_catalogue pending)")
 
-    # legacy diff → legacy-only cells (L6 data-loss gate)
+    # legacy diff → legacy-only cells (L6 data-loss gate) — see `_legacy_diff` for the criterion.
     if legacy:
-        print(f"\n-- legacy diff :: {legacy} --", flush=True)
-        ldf = _read_index(legacy, tmp, "legacy")
-        if ldf is None:
-            print("  cannot read legacy _index")
-        else:
-            lc, cc = _cells(ldf), _cells(df)
-            legacy_only = lc - cc
-            results["L6-legacy-only"] = "GREEN" if not legacy_only else "RED"
-            print(f"legacy captured cells: {len(lc):,}  canonical: {len(cc):,}  overlap: {len(lc & cc):,}")
-            print(f"LEGACY-ONLY CELLS (canonical MISSING): {len(legacy_only):,}  [{results['L6-legacy-only']}]")
-            if legacy_only:
-                for e in sorted(legacy_only)[:8]:
-                    print("   ", e)
+        _legacy_diff(df, legacy, tmp, results)
     print(f"\n(temp: {tmp})", flush=True)
     return 0, results
 

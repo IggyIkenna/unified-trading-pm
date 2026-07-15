@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 2 API auth dedup (alerting-service 
 summary:
   Migrate alerting-service (prod-live X-API-Key path) and unified-trading-api middleware auth onto UTL create_api_auth's
   new legacy X-API-Key branch; UTL extension + client-reporting-api already shipped.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7: operator [unlock-plan]; all todos [x], evidence spot-checked reachable, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

@@ -7,7 +7,7 @@ summary: >-
   tickers). The regex falls through to grabbing the 2-letter type-prefix, so BCH/ETH/LTC/XBT/XRP quarterly futures (same
   expiry) all collapse onto the byte-identical instrument_id KRAKEN-FUTURES:FUTURE:FI-USD-inverse-20220325 — confirmed
   via 5 real GCS parquet files. Real data corruption risk, not a naming/format issue.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -123,7 +123,7 @@ greedily grabs `FI` (the 2-letter contract-type prefix) instead of the real tick
       row cannot correctly represent a 6-ticker split without re-deriving multiple new rows against a 7.2M-row SSOT
       index outside the consolidator's own rebuild path) — flagged for the manifest consolidator to reconcile on its
       next real-content rebuild.
-- [ ] [DATA] P2. **NEW (found during this fix's historical-damage verification, 2026-07-08): resolve the `FI_`-vs-`FF_`
+- [x] [DATA] P2. **NEW (found during this fix's historical-damage verification, 2026-07-08): resolve the `FI_`-vs-`FF_`
       same-(ticker,expiry) instrument_id collision** — 13 real (ticker, expiry) pairs (ETH/XBT only, 2024-2026 range, 45
       of the 125 remediated files) have BOTH an `FI_` and an `FF_` raw Tardis symbol with real, differing row counts
       (not duplicates) that now derive the IDENTICAL corrected `instrument_id` because `derive_row_instrument_id`'s
@@ -131,7 +131,8 @@ greedily grabs `FI` (the 2-letter contract-type prefix) instead of the real tick
       represents relative to `FF_` for KRAKEN-FUTURES (the existing code comment in `tardis_shared.py` calling `FI_`
       "old index, pre-2020, no longer active" is contradicted by real 2024-2026 data found here) and how to encode the
       distinction in the canonical instrument_id (e.g. a contract-subtype marker) before any further Kraken-Futures
-      remediation or backfill.
+      remediation or backfill. — **FOLDED OUT** to plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md
+      (2026-07-15, plan-reconcile §6 operator ruling); tracked there, not here.
 - [x] [SCRIPT] P1. **Ship the fix via quickmerge**, quality-gates green, following this workspace's standard
       commit-push-flip discipline. — market-tick-data-service@3d7491b1bcbebc17af0aa31219e90f38478d57cd via
       `bash scripts/quickmerge.sh ... --agent --files 'market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py tests/unit/test_tardis_symbol_normalization.py'`.

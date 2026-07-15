@@ -31,7 +31,7 @@ tags: [sports, manifest, fixtures, expected-unattempted, honest-coverage, enumer
 related:
   [
     plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
-    plans/active/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     codex/02-data/availability-manifest-and-data-status.md,
     codex/02-data/honest-coverage-model.md,
@@ -264,7 +264,10 @@ Follow-ups (post-remediation):
   07-13 → pending, NOT EXPECTED_NO_FIXTURE; fresh 20260714-001053 → stampable). **FIX 3 — audit script prd bucket
   default** (@bd6b797a): `audit_fixtures_via_api_football.py` default bucket now resolves via
   `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (runtime-verified ==
-  `instruments-store-sports-prd-central-element-323112`, write blob under the gate's
-  `\_audits/fixtures_truthset*`union prefix — no more server-side copies);`--bucket` stays as the explicit override. **Rollout**: tonight's 16Gi re-execution ran the PREVIOUS image — the nightly enum (`expected-universe-v2-sports-daily`, 01:30Z) picks up FIX 2 only after the next LDR→main promote rebuilds `instruments-service:latest`; until then the 00:0xZ daily-run ordering can still stamp same-day absences off a stale calendar, and the day-closeout sweep remains the backstop. Same-commit inherit: 5 stranded empty-string-fallback `#
-  noqa`annotations in`reconcile_lending_indices_phantom.py` (dead autostash WIP; ratchet restored to exactly the 366
-  baseline).
+  `instruments-store-sports-prd-central-element-323112`, write blob under the gate's `\_audits/fixtures_truthset*`union
+  prefix — no more server-side copies);`--bucket` stays as the explicit override. **Rollout**: tonight's 16Gi
+  re-execution ran the PREVIOUS image — the nightly enum (`expected-universe-v2-sports-daily`, 01:30Z) picks up FIX 2
+  only after the next LDR→main promote rebuilds `instruments-service:latest`; until then the 00:0xZ daily-run ordering
+  can still stamp same-day absences off a stale calendar, and the day-closeout sweep remains the backstop. Same-commit
+  inherit: 5 stranded empty-string-fallback `# noqa`annotations in`reconcile_lending_indices_phantom.py` (dead autostash
+  WIP; ratchet restored to exactly the 366 baseline).

@@ -94,11 +94,12 @@ locked_since: 2026-05-07
 # Infrastructure Master — shard / data-status / deployment-build umbrella
 
 > **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
-> [`utl_reuse_phase0_guardrails_2026_07_13`](../active/utl_reuse_phase0_guardrails_2026_07_13.md); compose phases:
-> `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM), `utl_reuse_phase3_ml_model_registry_2026_07_13`
-> (ml ModelRegistry), `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent
-> slots: do not re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase
-> plans land — check them first.
+> [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
+> phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),
+> `utl_reuse_phase3_ml_model_registry_2026_07_13` (ml ModelRegistry),
+> `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent slots: do not
+> re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase plans land —
+> check them first.
 
 ## Scope
 
@@ -745,3 +746,10 @@ Active sub-plans owned by or closely coordinated with this epic:
 - `venue_axis_asset_group_vocabulary_2026_04_25.md` — 2 absorbed SSOT-cleanup items (`venue_start_dates` deletion
   - dashboard SSOT verify) lifted above; `poolGetSnapshots` historical-TVL item folded into `defi_master`; Waves
     A/B/C/D/E vocabulary migration shipped per CLAUDE.md "Asset-group vocabulary" section.
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
+      regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
+      split family per the 5-step HARD RULE once all repos hit C5. (FOLDED IN from
+      utl_reuse_phase8_codex_ssot_archive_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)

@@ -824,3 +824,54 @@ repo. This plan tracks that work.
   NEXT features-service image rollout — not actionable now, the job is correctly pinned to the current verified digest)
   and the P3 fleet-skew audit (explicitly optional stretch). Plan kept `status: active` as a tracking vehicle for those
   two; nothing blocks it.
+- 2026-07-15 (FixDigestPin phase — footgun B, operator-directed): Designed + verified (read-only) the permanent fix for
+  the P2 re-pin footgun so future rollouts never need a manual digest re-pin. CONVENTION CHOSEN: the fleet-standard
+  post-push `gcloud run jobs update <job> --image=…:latest` auto-repin step in the service's OWN cloudbuild.yaml (three
+  precedents: `deployment-service/cloudbuild.yaml` id `redeploy-monitor-jobs`,
+  `deployment-service/cloud-build/deployment-service-jobs-image.cloudbuild.yaml` id `redeploy-jobs`,
+  `deployment-service/scripts/cloud-run/deploy-shared.sh` rollup sync) — this is EXACTLY the "_Alternative if the
+  operator prefers tag-tracking_" spelled out in the P2 todo above, and it removes the footgun rather than replacing a
+  manual step (digest re-pin) with another manual step. Two edits made (both a MATCHED PAIR): (1)
+  `features-service/cloudbuild.yaml` — new `redeploy-features-jobs` step re-pins `features-service-sports-job` to the
+  freshly-built `:latest` on every build; (2) `terraform/services/features-service-sports/gcp/terraform.tfvars` —
+  `docker_image` flipped `@sha256:b7fc3d7f…` → `:latest` (matches every other service tfvars). Verified read-only:
+  `features-service:latest` resolves to `sha256:b7fc3d7f…` — the EXACT pinned digest (so the flip is behavior-neutral
+  today); the job exists on that digest; cloudbuild.yaml yaml-parses; prettier + `tofu fmt` clean; **deployment-service
+  QG green** (sentinel `0c3fb77`). NOT SHIPPED — BLOCKED: `features-service` `live-defi-rollout` (HEAD==origin
+  `d695c06b`) is RED on a pre-existing, unrelated sports coverage-gate test
+  (`tests/sports/unit/test_run_new_calculators_coverage_gate.py::…::test_squad_value_pre_launch_is_out_of_coverage`,
+  `'partial' != 'out_of_coverage'`; features-service `quality-gates-v2` CI FAILED 5 of last 6 runs →
+  flaky/data-dependent; my only diff is `cloudbuild.yaml`, never imported by pytest) → no green local sentinel →
+  `quickmerge` refuses; and the tfvars `:latest` half MUST NOT ship alone (it recreates the footgun). Not fixing the
+  sports test here (out of scope, collision risk, could mask a real coverage regression). Blocker + ready-to-ship fix
+  filed: `plans/active/issues/features_service_red_tree_blocks_digest_pin_fix_2026_07_15.md`. P2 re-pin todo
+  intentionally LEFT `[ ]` (honest: the fix is prepared + verified but NOT shipped — flip it green only after both files
+  land, with the two shas).
+- 2026-07-15 (FixStatePrefixTrap phase — footgun C, operator-directed): Removed the `deployment-service/terraform/gcp`
+  invocation trap. **Two real footguns confirmed by evidence:** (1) `main.tf`'s `backend "gcs"` block hardcodes
+  `prefix = "terraform/state/dev"` (backend blocks can't interpolate vars) — but the live prod estate (~198 resources)
+  lives under `terraform/state/prod`; `dev` is a near-empty ~11-entry state, so a bare `tofu init && apply` silently
+  targets the wrong env (verified: `.terraform/terraform.tfstate` backend cache currently shows
+  `prefix: terraform/state/prod`, and `scripts/bootstrap/bootstrap_gcp.sh` already passes
+  `-backend-config=prefix=terraform/state/${ENV}` with a required `--env` — so the OFFICIAL bootstrap path is safe, but
+  a direct `tofu`/`terraform` call is not). (2) The dir is **OpenTofu** — the git-tracked `.terraform.lock.hcl` pins
+  providers from `registry.opentofu.org` (confirmed `git show HEAD:...lock.hcl`), so running the `terraform` binary here
+  rewrites those provider sources to `registry.terraform.io` (HashiCorp) — a committable regression (this exact churn
+  already bit the FixDigestPin phase's `tofu init` and had to be `git checkout`-restored). **FIX (PREFERRED wrapper+doc,
+  non-colliding — main.tf was carrying concurrent foreign soft-delete/versioning WIP so it was NOT touched):** added
+  `deployment-service/terraform/gcp/tofu.sh` — a wrapper that REQUIRES an explicit `ENV` (dev|staging|prod) or leading
+  positional and refuses without it (exit 2), maps `ENV` → `-backend-config=prefix=terraform/state/<env>` + `bucket` +
+  `-reconfigure` on `init`, injects the required tofu vars (`project_id`/`region`/`environment`/`bucket_prefix`) via
+  `TF_VAR_*`, invokes `tofu` and HARD-FAILS if the binary is absent (exit 3 — never falls back to `terraform`), and
+  carries a cross-invocation guard that reads the cached backend prefix and refuses a `plan`/`apply` whose `ENV`
+  disagrees with the last `init` (exit 4). **Verified (dry, no live-infra mutation):** shellcheck CLEAN; exercised all
+  four refusal paths (no-ENV→2, bad-ENV→2, ENV=dev-vs-cached-prod→4) and the init/positional/pass-through dispatch via a
+  fake `tofu` shim on PATH (correct `-backend-config` bucket+prefix+reconfigure emitted). **SHIPPED:** wrapper
+  `deployment-service@dea0e2c7d13b0475244b0fc1e6ff73bee397dfe3` (`quality-gates.sh --no-fix` GREEN 99s, sentinel
+  `0c3fb77`==HEAD; `quickmerge --agent --files 'terraform/gcp/tofu.sh'`; landed on `origin/live-defi-rollout`,
+  ancestor-verified). The Fix-B tfvars `:latest` half was left held/dirty and NOT staged (still blocked on the
+  features-service red tree). Codex runbook (both gotchas + owner/cadence/verifier/last_executed frontmatter):
+  `codex/05-infrastructure/deployment-service-gcp-tofu-state.md`. **DEFERRED (small tracked follow-up):** hardening the
+  `main.tf` backend-block default itself (fail-loud, or correct to prod) — deferred because main.tf was contested by
+  foreign WIP at fix time and the wrapper removes the trap for the normal path; recorded in the codex runbook's
+  Footgun-1 follow-up note. Docs-only via the PM `docs(...)` carve-out.

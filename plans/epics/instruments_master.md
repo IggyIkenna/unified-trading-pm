@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [instruments, catalogue, mtds, single-walk, canonicalisation, tradfi, defi, registry]
 related:
   [
-    ../active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     ../archive/2026_05/d1_is_hardening_2026_05_20.md,
     ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
     ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,
@@ -39,7 +39,7 @@ co_operators:
 codex_ssots:
 related_plans:
   [
-    ../active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     ../archive/2026_05/d1_is_hardening_2026_05_20.md,
     ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
     ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,
@@ -47,7 +47,7 @@ related_plans:
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     ../active/instruments_service_docs_consolidation_2026_07_08.md,
     ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
     ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
     ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
@@ -492,7 +492,7 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
   — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
 - ✅
-  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../active/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
+  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
   — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed. Caveat
   (2026-07-14, finding 150): DONE covers the ticker-collision remediation only (125/125 files, verified); the plan's own
   frontmatter is `status: active` and still carries an unresolved `- [ ] [DATA] P2` todo (was: presented above as a flat
@@ -565,3 +565,11 @@ DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
   prediction markets. Polymarket writes OK; Kalshi adapter dormant until credentials land. (**MIGRATED FROM:**
   `instruments_backfill_phase3_2026_05_22`)
 - **IS bucket canonicalisation (P2)**: Migrated to: `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6.
+
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` or
+      `codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
+      polarity or canonical_instrument_id's CeFi/DeFi scope; update/SUPERSEDED-banner if they assert the old (wrong)
+      state. (FOLDED IN from canonical_instrument_id_cefi_defi_backfill_2026_07_14, 2026-07-15, plan-reconcile §6
+      operator ruling)

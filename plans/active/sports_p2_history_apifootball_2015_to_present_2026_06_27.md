@@ -262,6 +262,76 @@ drift_direction: advance-code
   - **Verification**: the full-history audit output (per data_type pending=0/blank=0/failed=0-or-evidenced) + the G2
     verdict pasted into the Progress Log.
 
+## Folded-in scope 2026-07-15 (plan-reconcile §6)
+
+- [ ] [VERIFY] P0. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE-LOOP HALT).** **FINAL full-history
+      zero-missing (R1/R2/R3).** **Gate**: `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index`
+      over 2015→present (single-walk discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0
+      un-evidenced `attempted_failed` for EVERY `(source, data_type)` within coverage windows; features ML-ready. Output
+      pasted into the log. **Task-10 self-park precedent applied** (see `tradfi_v9_stage1_finish_2026_07_06.md` task 10
+      — slot-7 in-checkbox marker; also `honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` -004 slot-6 marker
+      2026-07-06). This task has bounced 6× today (slot-2 06-28+06-29, slot-14 06-29, slot-12 07-06 20:52 UTC, slot-4
+      07-06 ~22 UTC `BLK-4d04041a`, slot-6 07-06 this session `BLK-36e5e51e` answered by main "yield this slot
+      immediately"); priority=999 alone does NOT suppress dispatch. Slot-12 evidence (20:52 UTC 2026-07-06) is
+      definitive: **656,486 total pending_fetch shards** (eu=651,185 + af=5,301) across every non-`odds_api` source, so
+      the gate fails by 6 orders of magnitude. **Un-block sequence**: (a) Understat VM re-launched + drained (was
+      PREEMPTED 2026-06-25 at 2018-04-25 per P2c 18th-dispatch log, still never re-launched); (b) P2a enrichment
+      coordinator drains the ~180k api_football fixture-enrichment EU shards; (c) P2b footystats VM
+      `fs-backfill-20260706-161335` drains 51k footystats EU shards; (d) P2c features compute reaches ≥1 %; (e)
+      phantom-audit `--apply` clears 2,094 `phantom_captured_no_parquet_at_canonical_path` rows after `prefix_tpls`
+      cover the new shape; (f) operator clears this BLOCKED- marker → verify re-dispatches. — 2026-06-28
+      BLOCKED-UPSTREAM: P2a 5/6 complete (AF cleanliness BLOCKED-CREDENTIALS); P2b 4/7 complete (Understat VM
+      `us-backfill-20260627-210801` running, ~4-5d ETA; footystats VM running; odds-api not started); P2c 0/3 compute
+      complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c VMs complete. Audit script
+      ships at instruments-service (run_fixture_completeness_audit_2026_06_25.py). Re-run this task after P2b
+      Understat+footystats+odds-api VMs TERMINATED and P2c compute is done. — 2026-06-28 slot-2 VERIFY RUN (23:34 UTC):
+      Audit ran (IS index 87.5MB, updated 23:33 UTC). Results: Total captured: 77,382 | Total expected: 77,677 | Overall
+      depth: 99.62% | Targeted shards: 8,366. Breakdown: 7,560 pre-coverage (2014-2017, outside api_football
+      coverage_start=2018-01-01; these are `attempted_failed` rows that predate the UAC fix and should be typed as
+      EXPECTED_PRE_SOURCE_COVERAGE_START); ~806 in-coverage (2018-2025, all `attempted_failed` — real fetch failures).
+      Gate FAILS (requires 0). VM status: odds-api VM `mtds-backfill-odds-1` TERMINATED exit_code=0 (03:41 UTC
+      2026-06-28) ✅; footystats M+P VM `fs-backfill-20260627-200928` TERMINATED exit_code=0 (01:06 UTC 2026-06-28) ✅;
+      footystats ODDS VM + historical M+P 2019→2026-02-19 VMs NOT YET LAUNCHED; Understat VM
+      `us-backfill-20260628-070120` RUNNING (ETA ~2026-07-01 07:00 UTC). P2a truthset recovery (PID 497391) STILL
+      RUNNING as of 23:38 UTC (242/712 pairs); after completion a dedup pass is needed to clear duplicate AF rows
+      created by IS consolidator append behavior. P2b Todo 4 (footystats) checkbox shows ✅ but needs ODDS + historical
+      M+P VMs still. P2c features compute: 0% (not started, blocked on P2a+P2b). Gate cannot pass for ≥3 days. Blocking
+      path: (1) P2a truthset recovery + dedup → FIXTURES verify; (2) footystats ODDS+M+P VMs launched + terminated; (3)
+      Understat VM TERMINATED (~July 1); (4) P2b verify; (5) P2c features compute (~2-3d); (6) P2c verify; then re-run
+      this VERIFY task. — 2026-06-29 slot-2 UPDATE (00:30 UTC): P2a truthset recovery COMPLETED (00:09 UTC, 712/712
+      pairs, 116,149 fixtures written). IS index merged at 00:30 UTC (88.2MB). Re-audit (--start-date 2018-01-01): **P2a
+      FIXTURES gate NOW PASSES** — 0 targeted shards, 77,755 captured vs 77,677 expected (100.10% depth). P2a Todo 6 can
+      Per-source expected_unattempted totals: api_football 542,912 (dominated by TEAMS eu=194,331 + ODDS eu=89,073
+      [**CORRECTION 2026-07-15: the ODDS eu=89,073 slice is NOT a fetchable gap — see the note below; do NOT point a
+      fetch fleet at it**] + fixture-enrichment types eu≈180k — awaiting P2a enrichment coordinator); footystats 51,246
+      (VM `fs-backfill-20260706-161335` RUNNING since 16:13 UTC, ETA ~2026-07-07/08); transfermarkt 36,379; understat
+      14,126 (Understat VM PREEMPTED at 2018-04-25 on 2026-06-29 and NEVER re-launched per P2c 18th-dispatch log);
+      soccer_football_info 3,261; open_meteo 3,261. attempted_failed 5,301 total, 0 blank-error_reason (all evidenced);
+      dominant reasons: phantom_captured_no_parquet_at_canonical_path 2,094 (needs phantom-audit --apply once new
+      prefix_tpls cover the shape); ApiFootballResponseError 1,639; FIXTURES_FETCH_FAILED 665;
+      UNCLASSIFIED_ADAPTER_ERROR 461; HTTP_NOT_FOUND 384. Only `odds_api` derivative rows (arbitrage_opportunity /
+      odds_movement / odds_snapshot) are at 0/0/0. No action taken — task is [PARKED], priority 999; prereqs
+      P2a-enrichment + P2b-Understat re-launch + P2b-footystats VM completion + P2c-features compute are all
+      outstanding. /blocked filed; re-dispatch after all four prereqs land. — **CORRECTION 2026-07-15 (api_football ×
+      ODDS eu=89,073 is IMPOSSIBLE, not fetchable — do NOT fetch it).** The `api_football … ODDS eu=89,073` slice above
+      is counted as a real gap "awaiting P2a enrichment coordinator". It is not: **api_football has no odds path in
+      instruments-service** — the adapter's `get_odds()` is a deprecated stub that logs "use
+      `get_fixture_odds_snapshot()` instead" (`codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
+      fleet, and no credit spend can ever move these cells; ODDS is **footystats**-owned in IS (operator ruling
+      2026-06-27, #6 REVERSED). The league counts are the tell: footystats ODDS spans 46 leagues (the codex footystats
+      denominator); these rows span **94** — the api_football league universe cross-producted against a data_type
+      api_football does not serve. **Root cause (fixed 2026-07-15):** a UAC registry split-brain — `("sports","ODDS")`
+      was missing from `SOURCE_PRIORITY` (stripped by `8fb1f54f` 2026-06-25, not restored by the partial #6 revert
+      `c75101be`), so the IS enumerator's `_derive_pm_source_transport` probe missed and its CF-3 fallback resolved the
+      sports asset_group DEFAULT → `batch_api_football`, stamping `source=api_football` on every seeded ODDS row.
+      Registry restored in unified-api-contracts@57bcc7c5 → the seed now resolves
+      `('batch_footystats','footystats','rest')`, so the nightly 01:30 cron stops minting these once the fix reaches the
+      enumerator's deployed runtime. The **already-written** rows still need a purge/retype pass — tracked in
+      `plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`
+      §B, deliberately deferred until the in-flight P0 index repair settles. Until that purge lands, treat this eu
+      figure as **denominator pollution** (it depresses every ODDS coverage ratio ~4.6×), not as work. (FOLDED IN from
+      sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27, 2026-07-15, plan-reconcile §6 operator ruling)
+
 ## Success criteria
 
 - FIXTURES zero-missing 2015→present; enrichment/core zero-missing within coverage windows; pre-coverage cells typed.

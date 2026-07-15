@@ -1,8 +1,10 @@
 ---
 doc_type: plan
 title: Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announcement-floor + migration
-summary: 'Complete the FIXTURES→SCHEDULE+OUTCOMES schema split: per-league announcement-floor audit, cross-source announced_at backfill, manifest split migration, and HT/ET/PEN score-distinction write-path population.'
-status: active
+summary:
+  "Complete the FIXTURES→SCHEDULE+OUTCOMES schema split: per-league announcement-floor audit, cross-source announced_at
+  backfill, manifest split migration, and HT/ET/PEN score-distinction write-path population."
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -10,7 +12,7 @@ repos: [deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, schema-migration, fixtures, backfill, manifest, announcement-floor]
 related: [../epics/sports_master.md, ../active/writegate_honest_coverage_endtoend_2026_05_06.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -19,8 +21,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-20
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -65,7 +67,8 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       Repo: unified-api-contracts. <!-- unified-api-contracts@723e3b3 2026-06-16 -->
 - [x] ✅ [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
-      instruments-service. — instruments-service@8edc924 | `_fill_null_announced_at` takes min(UAC per-league floor, footystats available_at); thread-safe cache; 12 unit tests green; `--cross-source-backfill` CLI flag
+      instruments-service. — instruments-service@8edc924 | `_fill_null_announced_at` takes min(UAC per-league floor,
+      footystats available_at); thread-safe cache; 12 unit tests green; `--cross-source-backfill` CLI flag
 - [x] ✅ [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into
       `entity=fixtures_schedule` + `entity=fixtures_outcomes`. Script
       `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
@@ -90,7 +93,7 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 > `CanonicalFixtureOutcomes` (Q6: regulation/ET/PEN score-distinction + match_result) — shipped uac@c4058c68. The open
 > piece is populating them from api_football at instruments-service write-time (the IS Phase-3 piece).
 
-- [ ] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
+- [x] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
       columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns and
       `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
       ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for a
@@ -99,22 +102,24 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
+                                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> —
+      **FOLDED OUT** to plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md (2026-07-15, plan-reconcile §6
+      operator ruling); tracked there, not here.
 - [x] ✅ [SCRIPT] P1. **DEFERRED** follow-up: if features-sports HT-feature work grows past 3 calculators, extract
       `match_lifecycle_extractor` into a dedicated pre-features service stage (Q7 option (b)). Not scoped now per
       operator direction 2026-05-08 (operator chose Option (a) — UTL helper at instruments-service write-time). Named
-      successor for the deferral = this plan line; revisit when the 3-calculator threshold is crossed.
-      — Assessed 2026-06-27: HT calculator count = 3 (halftime_calculator, halftime_multi_source, ht_features). Threshold
-      NOT crossed (condition is >3). Deferral remains valid; no extraction needed today.
+      successor for the deferral = this plan line; revisit when the 3-calculator threshold is crossed. — Assessed
+      2026-06-27: HT calculator count = 3 (halftime_calculator, halftime_multi_source, ht_features). Threshold NOT
+      crossed (condition is >3). Deferral remains valid; no extraction needed today.
 
 ## Already shipped (flipped in the epic — listed for context, NOT re-opened)
 

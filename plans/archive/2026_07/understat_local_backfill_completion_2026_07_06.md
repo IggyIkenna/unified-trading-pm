@@ -6,7 +6,7 @@ summary:
   local driver, then re-evaluate the understat-vm-xg-complete gate and unblock the parked sports tasks. All code fixes
   are already shipped; this plan is the operational finish-line. Runs LOCALLY on the orchestrator host (NOT a SPOT VM) —
   a deliberate one-off exception documented below.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -26,8 +26,8 @@ last_updated: 2026-07-13
 depends_on: []
 assigned_role: data_engineering
 drift_direction: advance-code
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 source:
@@ -134,12 +134,17 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       instrument_type on XG_SHOTS shipped as `instruments-service@4281a01db`), NOT the captured-vs-seed class §9.2b
       targets. Task 004's one-off normalization pass will clean the 10 residual test-row dups (safe to run now that the
       captured-vs-seed dedup has stabilised). No code shipped this session — verification-only.
-- [ ] [DATA] P1. **UNBLOCKED (2026-07-08, slot-2)** — prior BLOCKED-PREREQUISITES cleared: task -003 (§9.2b consolidator
+- [x] [DATA] P1. **UNBLOCKED (2026-07-08, slot-2)** — prior BLOCKED-PREREQUISITES cleared: task -003 (§9.2b consolidator
       confirmation) is now VERIFIED complete (2026-07-07, slot-7 opus/max entry above) — 0 captured-vs-seed dup groups
       for XG/XG_SHOTS on all leagues, consolidator confirmed deployed and taking effect on the live sports manifest.
       One-off manifest normalization (issue doc §8) may now run against the clean consolidator: clean the 10 residual
       test-row dups (2024-12-14, `instrument_type` `'shot'` vs `'None'`, pre-dating `instruments-service@4281a01db`) +
-      re-verify no new captured-vs-seed dups reappeared.
+      re-verify no new captured-vs-seed dups reappeared. **SUPERSEDED/DONE (2026-07-15, plan-reconcile §6) —** a much
+      larger dedup fix already shipped and re-verified in this same plan necessarily supersedes this narrower 10-row
+      2024-12-14 residual: `instruments-service@2f56038e` (direct canonical rewrite, 2026-07-13) dropped 683,592
+      mislabeled duplicate rows, and this plan's own final `[VERIFY] P0` todo (DONE 2026-07-13, slot-3) independently
+      re-confirmed `dup_groups=0` for both XG and XG_SHOTS on the big-5 via a fresh manifest read — a literal zero that
+      necessarily includes and closes the 10-row residual this item targeted.
 - [x] ✅ [VERIFY] P0. **DONE 2026-07-12 (slot-10, `data_engineering`).** Gate `understat-vm-xg-complete` flipped green.
       Discovered the condition had already been flipped `true` by `slot-5` at `2026-07-12T03:33:11Z` (independent of
       this session). Re-verified live manifest fresh (`/tmp/verify_understat_gate.py`, single-parquet read): big-5

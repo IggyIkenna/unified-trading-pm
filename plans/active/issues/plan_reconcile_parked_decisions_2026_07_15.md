@@ -41,8 +41,20 @@ locked_since:
 > 3236 done checkboxes. 158 hunt agents (81 epic-cluster + 16 topic + 23 done-but-unchecked + 2 mechanical + 20
 > fully-done archival verifiers + 16 near-complete analyzers); 484 agents total including adversarial
 > refuter/confirmer/tiebreaker verification. **82 raw contradictions + 45 raw flips → 61 + 39 CONFIRMED, 27 REFUTED**
-> (21% kill-rate). Auto-fix classes applied + committed separately. **Nothing below was applied** — each item is a
-> judgment call parked per the skill's autonomous contract.
+> (21% kill-rate). Auto-fix classes applied + committed separately. Everything below was parked as a judgment call per
+> the skill's autonomous contract.
+
+> **🟢 OPERATOR RULED 2026-07-15 (same session) — §2, §6, §7 answered and APPLIED. §1, §3, §4, §8 remain open.**
+>
+> | §                            | Ruling                    | Applied                                                                                                                 |
+> | ---------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+> | **§2** CLAUDE.md Polygon.io  | **A** — edit CLAUDE.md    | ✅ `2235cd79c` — verified against live UAC (`possible_manifest.py:217`, `canonical_mappings.py:124/456`) before editing |
+> | **§6** fold 16 near-complete | **A** — approve the table | ✅ `93cb228c5` (14 folded verbatim + 2 flipped) → `98e8fd5ba` (13 shells archived; 3 parked, codex-referenced)          |
+> | **§7** unlock 14 fully-done  | **A** — unlock + verify   | ✅ `ed58dd108` — 14/14 verified: 13 SAFE_TO_ARCHIVE, **1 KEEP_ACTIVE**; 6 archived, 7 blocked on a repoint pass         |
+>
+> **Corpus effect: 143 → 117 active plans.** Still open below: **§1** (CeFi reclass non-durable), ~~**§3**~~
+> (`p1_dualwrite` draft — RESOLVED by the §6 ruling, option B), **§4** (deployment-ui staging stage), **§8** (the
+> 5358-line split), plus the residual archival blockers recorded in §5b/§7-residual.
 
 ## §1 — P1 DATA-CORRECTNESS: CeFi `futures_chain` reclass is NON-DURABLE (big finding)
 
@@ -88,7 +100,7 @@ judgment, however strong the evidence. This one needs your word.
 ## §3 — P1 dispatch-affecting: `deployment_registry_firestore_p1_dualwrite` stuck at `status: draft`
 
 **Docs:** `plans/active/deployment_registry_firestore_migration_2026_07_14.md` ↔
-`plans/active/deployment_registry_firestore_p1_dualwrite_2026_07_14.md:9`
+`plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md:9`
 
 P1's frontmatter is still `status: draft` (never flipped to `active`) although 6/7 of its todos have shipped; the P0
 plan's own draft-gating todo (to flip P1 active) was never executed. `draft` = NOT ingested by the orchestrator, so the
@@ -97,12 +109,17 @@ plan is invisible to dispatch despite being live work.
 **Why parked:** flipping `draft → active` changes what the AO ingests and dispatches — a live-routing change, not
 bookkeeping.
 
+> **🟢 RESOLVED 2026-07-15 by the §6 ruling — option B, no separate answer needed.** The operator's §6 approval covered
+> `deployment_registry_firestore_p1_dualwrite → deployment_registry_firestore_p0_unblock_2026_07_14.md`, which IS option
+> B below. Applied: remnant folded (`93cb228c5`), shell reached zero open todos, archived to `plans/archive/2026_07/` as
+> `status: complete` (`98e8fd5ba`). The dispatch-invisibility is therefore gone — the live work is now tracked in
+> P0_unblock, which is `status: active` and ingested. Nothing further to rule here.
+
 - **A: Flip `p1_dualwrite:9` `status: draft` → `active` (truth-telling; the work already happened) and tick the P0
-  gating todo. [WORKER REC]**
-- **B:** Leave draft; fold the one open todo into `deployment_registry_firestore_p0_unblock_2026_07_14.md` and archive
-  the P1 shell (see §6 — the near-complete analyzer independently recommends this same fold target).
+  gating todo. [WORKER REC — superseded]**
+- **B: ✅ TAKEN (via §6):** fold the one open todo into `deployment_registry_firestore_p0_unblock_2026_07_14.md` and
+  archive the P1 shell.
 - **C:** Leave as-is (intentionally parked pending the fleet dual-write decision).
-- **Other:** operator free-text.
 
 ## §4 — P2 cross-repo CODE defect: deployment-ui hard-codes a `staging` promotion stage
 
@@ -270,8 +287,37 @@ which is why it grew past the ceiling. It has 160 open / 171 done todos.
 - **C:** Raise M-1's exemption to master-plan status and accept >5000 (rejects the ceiling you just set).
 - **Other:** operator free-text.
 
+## §7-residual — 7 verified-done plans still blocked from archival (after the §7 ruling)
+
+The §7 [unlock-plan] ruling was applied: all 14 were verified, 6 archived (`ed58dd108`). These 7 are **verified
+SAFE_TO_ARCHIVE** but their blast radius is not autonomous-safe — archiving them needs a deliberate repoint pass:
+
+| Plan                                                   | Blocker                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utl_reuse_phase1_strategy_risk_hwm_2026_07_13`        | 1 codex SSOT ref → plans→codex edit (never autonomous)                                                                                      |
+| `utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13` | 1 codex SSOT ref                                                                                                                            |
+| `utl_reuse_phase6_venue_health_retry_2026_07_13`       | 1 codex SSOT ref                                                                                                                            |
+| `aster_cefi_data_defi_bucket_migration_2026_07_13`     | 14 live refs, mixed live + historical                                                                                                       |
+| `coinbase_bare_name_migration_2026_07_06`              | **live functional `depends_on`** from the draft follow-on `coinbase_bare_name_migration_execution_service_2026_07_10` — not a cosmetic link |
+| `mvp_reconciliation_closeout_v10_2026_06_27`           | 5 live refs                                                                                                                                 |
+| `utl_reuse_phase7_low_lint_tail_2026_07_13`            | 4 live refs, mixed                                                                                                                          |
+
+Plus the 3 §6 shells parked for the same reason (codex-referenced, remnants already folded out, zero open todos):
+`honest_coverage_v2_instrument_denominator_2026_06_28` · `instruments_catalogue_incremental_rollup_2026_06_29` ·
+`scripts_lifecycle_marker_rollout_2026_06_18`.
+
+**And one KEEP_ACTIVE (correctly not archived):** `sports_odds_bookmaker_coverage_enumeration_2026_06_20` — all 3 boxes
+`[x]` with all 3 shas verified reachable, but the body carries extensive unresolved open work never converted to
+checkboxes. The 4th false-done plan this run caught.
+
+- **A: One dedicated archival+codex-sync pass — repoint the codex refs, resolve the coinbase `depends_on`, leave
+  historical citations untouched, archive all 10. [WORKER REC]**
+- **B:** Archive only the 4 non-codex ones (aster_cefi, coinbase, mvp_reconciliation_closeout, utl_reuse_phase7) after
+  resolving the coinbase dependency; hold the codex-referenced 6.
+- **C:** Leave all 10 active — they are inert (zero open todos) and harmless where they are.
+
 ## Answering
 
-Reply per-section (`§1: A`, `§6: A except layer1_remeasure → B`, …). Ruled items are applied on the next
-`/plan-reconcile` pass. §2 (CLAUDE.md) and §7 (`[unlock-plan]`) are the two blocking on your word specifically — the
-rest have safe defaults.
+Reply per-section (`§1: A`, `§4: B`, …). **§2, §6, §7 were ruled + applied on 2026-07-15.** Still open: **§1** (CeFi
+reclass non-durable — data-correctness), **§3** (`p1_dualwrite` draft), **§4** (deployment-ui staging stage), **§8**
+(5358-line split), and **§7-residual** above.

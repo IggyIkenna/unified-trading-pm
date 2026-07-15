@@ -237,9 +237,101 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       across the entire cefi Tardis corpus + dropping the eu duplicates is a large, hard-to-reverse-in-spirit production
       mutation; snapshot-first makes it recoverable, but sign-off requested before executing, per this issue's own
       "OPERATOR DECISION" framing and the precedent set by `BLK-cbee81bc` for the comparably-large legacy-bucket purge).
-- [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
+- [x] ✅ [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
-      and start reducing `expected_unattempted`. (repo: instruments-service)
+      and start reducing `expected_unattempted`. (repo: instruments-service) — **RESULT: NEGATIVE.** Ran the decisive
+      re-measurement at the armed T+86min window (20:22Z baseline → 21:48Z): `expected_unattempted` FLAT at 2,773,292
+      (zero delta) despite the confirmed-deployed, confirmed-correct writer fix running continuously. Confirms the
+      writer fix is necessary but NOT sufficient — todo below (enumerator re-materialization) is the actual remaining
+      blocker. See `mvp_backfill_cefi_tick_v10_2026_06_27.md` Progress Log "DECISIVE TEST RESULT" entry for full detail.
+- [x] ✅ [BACKEND] P0. **NEW, confirmed blocker (the actual G4 gate-closer): re-materialize the cefi expected-universe
+      enumerator so every `expected_unattempted` row carries ONE canonical atom shape.** Live-verified the
+      `expected_unattempted` side is currently a MIX: some rows canonical (`VENUE:PERPETUAL:BASE-QUOTE@MARKER`, matching
+      the now-fixed writer's output), some rows stale (`instrument_type=''` + lowercase-raw id, e.g.
+      BINANCE-FUTURES/trades `hotusdt`) — a direct violation of the workspace HARD RULE "shard atom identical across
+      writer/manifest/status/gate/UI" (CLAUDE.md § DATA). Even a perfectly-canonicalizing writer cannot close a
+      `(itype='', id='hotusdt')` eu cell. Fix: identify + correct whatever wrote the stale-shape eu rows (an older
+      enumerator version, most likely — `enumerate_expected_universe.py` or its per-instrument-day writer), then
+      re-materialize so ALL eu rows for cefi share the current canonical atom. AFTER this lands, re-run the relabel
+      script (todo 2, still operator-gated for `--apply`) and re-measure — do NOT relaunch/widen the Tardis fleet
+      further until this lands (per operator ruling `BLK-b319db38`, disposition B: existing 3-VM fleet keeps running
+      since its captures are canonical/reusable pre-fetch, but no widening). (repo: instruments-service) —
+      `instruments-service@a2468dd9` (code fix) + `instruments-service@7f1aed10` (purge script, dry-run only).
+      **Root-cause diagnosis (live manifest read, prd cefi bucket, 2026-07-15T22:2x Z)**: cross-tabbed all 3,106,459
+      `expected_unattempted` rows by shard-atom shape. 3,039,660 (97.8%) already canonical. The remaining 66,799
+      non-canonical split into THREE distinct classes, only two of which are `expected_unattempted` (the third, 18,855,
+      was a false positive in the first-pass regex — `KRAKEN-FUTURES:FUTURE:BTC-USD@LIN-20260626` IS canonical, my
+      initial check just didn't allow for the per-contract expiry suffix): (a) **42,993 legacy rows**,
+      `enumerator_run_id` column absent (written before that column existed — pre-shape-aware enumerator/writer),
+      `instrument_type=''` + a bare, sometimes-lowercase `BASE-QUOTE` id (confirmed live examples:
+      `BINANCE-FUTURES/book_snapshot_5` → `ethusdt`/`ontusdt`/`etcusdt`, `COINBASE/book_snapshot_5` → `ETC-USD`, across
+      CRYPTOFACILITIES/BITFINEX/BITFINEX-DERIVATIVES/OKEX*/KRAKEN/BYBIT*/BINANCE*/DERIBIT/HYPERLIQUID/UPBIT/
+      BITGET-FUTURES — pure historical debris, not reproducible by current code). (b) **6,727 rows tagged with the
+      CURRENT enumerator_run_id** (`enum-universe-cefi-20260715-013053`, i.e. an ACTIVE bug, not just debris) — ALL from
+      `_enumerate_v2_cefi`'s per-underlying BUNDLE handling (`futures_chain`/`options_chain`,
+      DERIBIT/OKX-FUTURES/BYBIT/KRAKEN-FUTURES/BINANCE-FUTURES): the synthetic entry `_rollup_bundle_grain` produces
+      carries `instrument_id=<underlying>` (e.g. `SOL`/`BTC`/`FIL`), and `_enumerate_v2_cefi` was blindly copying
+      `instr.instrument_id` straight into the `ExpectedRow` for EVERY emission site, never reading `instr.underlying` —
+      producing `(instrument_id='SOL', underlying='')` instead of the MTDS writer's actual bundle-capture shard atom
+      `(instrument_id='', underlying='SOL')` (`_UNDERLYING_PARTITIONED_TYPES`, confirmed in
+      `market_tick_data_service/reader.py`/`manifest_finalize.py`). **This exact bug was ALREADY FIXED for tradfi**
+      (`_enumerate_v2_tradfi`'s `is_bundle` branch) — its own present-cols docstring said, verbatim, "Scoped to tradfi
+      to leave the cefi / defi / prediction grain — and their per-AG enumerators, which do not yet collapse bundle
+      `instrument_id` — untouched." This task is exactly that untouched cefi gap. **Fix shipped**
+      (`instruments-service@a2468dd9`): mirrored `_enumerate_v2_tradfi`'s `is_bundle` pattern into `_enumerate_v2_cefi`
+      (via `grain_for_instrument_type("cefi", instr.instrument_type, instr.venue) ==     GRAIN_BUNDLE_BY_UNDERLYING`)
+      across all 3 `ExpectedRow` emission sites; generalized the present-set columns (`_TRADFI_PRESENT_COLS` →
+      `_UNDERLYING_AWARE_PRESENT_COLS`, now routes BOTH tradfi and cefi through the underlying-aware key) — without this
+      half, the shape fix alone would have made every bundle underlying's blank `instrument_id` collide in the
+      present-set match (one captured underlying falsely marking every OTHER underlying's cell "present", an
+      UNDER-seeding regression). Updated 7 pre-existing unit tests whose fixtures/assertions encoded the old
+      uncanonicalized bundle shape (2 in `test_enumerate_expected_universe_v2.py` caught the bug directly on first QG
+      run; a full-suite QG pass then caught 5 more + 1 in `test_build_instrument_catalogue.py`). Full `quality-gates.sh`
+      green (4,404 passed; the 1 pre-existing `check_adapter_contract_regression` warning is MTDS-repo, unrelated,
+      already tracked in `lint_sweep_774602ea8_regression_audit_2026_05_20.md`). **Re-materialization (the legacy-debris
+      half, `instruments-service@7f1aed10`)**: the code fix only stops FUTURE writes from being non-canonical — it
+      cannot retroactively fix the 49,720 rows (both classes above) already on disk. Wrote
+      `scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py`, mirroring the established
+      snapshot-first/dry-run-default/STOP-ON-SURPRISE pattern
+      (`purge_deribit_option_per_strike_trades_book5_2026_07_12.py`). Dry-run verified live against the prd cefi bucket:
+      49,720 matches (0 in any of the 5 per-vm shards, all in the main `_index/availability_index.parquet`), within the
+      STOP-ON-SURPRISE bound `[5,000, 250,000]`. **`--apply` intentionally NOT run this session** — same precedent as
+      this doc's own todo (2) relabel script: deleting ~50K manifest rows corpus-wide, while low-risk (these are
+      `expected_unattempted` placeholder rows, not captured data — a stale row is purely denominator debris; either the
+      cell genuinely needs re-seeding, which a fresh post-fix enumerator run supplies correctly, or the catalogue no
+      longer lists the instrument and the row shouldn't exist at all), is still a real production mutation. Sign-off
+      requested — see `/blocked` question posted for this task. **NEW FOLLOW-UP FINDING (filed as its own P1 todo below,
+      NOT fixed here)**: a THIRD, narrower non-canonical shape class exists — `BINANCE-FUTURES` dated futures (e.g.
+      `BINANCE-FUTURES:FUTURE:ETHUSDT_260626`, 1,776 rows, all current-run) carry a venue:type: prefix glued onto a
+      raw/wire-form middle segment (`ETHUSDT_260626`, underscore+YYMMDD) instead of the dash-form
+      `BASE-QUOTE@MARKER-YYYYMMDD` every OTHER dated-futures venue uses (confirmed against KRAKEN-FUTURES/BYBIT, which
+      correctly produce e.g. `KRAKEN-FUTURES:FUTURE:BTC-USD@LIN-20260626`). This is a LEAF row (not a bundle), so
+      `_enumerate_v2_cefi` correctly passes through whatever `instrument_id` the instruments-service CATALOGUE supplies
+      — the defect (if any) is upstream, in `build_instrument_catalogue.py`'s catalogue-build step, not in this
+      enumerator. Diagnosing both sides (ambiguous → don't blind-edit, per the standing triage rule) was out of this
+      todo's scope; flagged as its own follow-up rather than fixed blind.
+- [ ] [BACKEND] P1. **NEW FINDING — BINANCE-FUTURES dated-futures catalogue `instrument_id` carries a raw/wire-form
+      middle segment instead of the dash-canonical shape every other dated-futures venue uses.** Found while diagnosing
+      the P0 above: live cefi manifest has 1,776 `expected_unattempted` rows (all tagged with the current
+      `enum-universe-cefi-20260715-013053` run) shaped `BINANCE-FUTURES:FUTURE:ETHUSDT_260626` /
+      `BINANCE-FUTURES:FUTURE:BTCUSDT_260626` — a correct `VENUE:TYPE:` prefix glued onto `ETHUSDT_260626` (underscore +
+      6-digit YYMMDD, the raw Binance wire form) rather than the dash-canonical `BASE-QUOTE@MARKER-YYYYMMDD`
+      (`ETH-USDT@LIN-20260626`) that `KRAKEN-FUTURES`/`BYBIT` dated futures correctly produce in the SAME manifest, SAME
+      enumerator run (e.g. `KRAKEN-FUTURES:FUTURE:BTC-USD@LIN-20260626`). Confirmed via
+      `market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py::derive_row_instrument_id`
+      (`InstrumentType.FUTURE` branch, `_MARGIN_MARKER_VENUES`): the MTDS writer's OWN canonical shape for a dated
+      future is the dash form — so `ETHUSDT_260626` cannot be what a correct writer would ever stamp for this cell. This
+      is a LEAF row (not `futures_chain`/`options_chain` bundle-grain), so `_enumerate_v2_cefi` correctly passes through
+      whatever `instrument_id` the instruments-service catalogue supplies for it — meaning the raw-shape `instrument_id`
+      is coming FROM the catalogue (`build_instrument_catalogue.py`'s roll-up), not from this enumerator. **Not fixed
+      here** — deliberately out of this todo's authorized scope (a catalogue-build-step defect, not an
+      `enumerate_expected_universe.py` defect; "ambiguous → diagnose both sides, don't blind-edit" per the standing
+      triage rule) and low relative priority (1,776 rows vs the 49,720-row P0 above — 3.6% of the non-canonical total).
+      Recommend: read `build_instrument_catalogue.py`'s BINANCE-FUTURES dated-future `instrument_id`/`instrument_key`
+      derivation (likely reads the adapter's raw `instrument_key` verbatim rather than re-deriving the canonical dash
+      form the way `_cefi_perp_lineage_key`/`_canonical_instrument_id` do for other id-convention chains) and either fix
+      at catalogue-build time or confirm this is an intentional per-venue convention divergence that the
+      enumerator/writer should instead special-case. (repo: instruments-service)
 - [x] ✅ [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
       SHA) — check `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@<sha>*` — then
       relaunch the 3 `cefi-queue-*` Tardis VMs against it (respect the hard 3-VM Tardis cap: kill-then-relaunch, never
@@ -276,7 +368,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       `instrument_id` are canonical); the orphan/relabel quantification for that is already covered by todo (2)'s
       dry-run above (3,133,117 candidates / 82.7% resolvable / 542,888 honest-unresolved) — nothing new to quantify
       since this pass changed no filenames.
-- [ ] [BACKEND] P1. **NEW FINDING — the Tier-3 sentinel's OWN captured-vs-expected comparison looks broken for CeFi
+- [x] ✅ [BACKEND] P1. **NEW FINDING — the Tier-3 sentinel's OWN captured-vs-expected comparison looks broken for CeFi
       Tardis venues, independent of and pre-dating this whole defect class.** `sentinels.py::_emit_tier3_for_dt` diffs
       `expected_instruments` (from `get_expected_instruments_for_venue`, whose `instruments_provider` resolves to
       `cefi_catalog_by_venue` — `CeFiCatalogReader`'s `instrument_id` column, confirmed via
@@ -304,7 +396,26 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       pattern as todo 1, but needs its own case-sensitivity/scope care — this exact defect class has already bitten
       TWICE in this doc, `56679e78`→`5d44a197`), or (b) normalising `expected_instruments` DOWN to the legacy bare form
       instead — a real design decision, not obviously correct either way without checking every venue, not just Kraken.
-      Recommend a dedicated fix-plan todo, same pattern as this doc's own P0 items.
+      Recommend a dedicated fix-plan todo, same pattern as this doc's own P0 items. —
+      `market-tick-data-service@bbf6649c`. Fixed in `venue_fetch.py::_record_venue_shard_counts`: for Tardis-sourced
+      venues (`_VENUE_TO_DATA_SOURCE[venue] == "tardis"`, same scope guard as todo 1's manifest-write fix), add the
+      manifest-write canonicalizer's output (`_canonicalize_manifest_instrument_id` — the SAME proven-correct derivation
+      as todo 1, not `_canonicalize_captured_instrument_id`) to `captured_per_instrument_shards` **alongside** the
+      legacy bare form, rather than replacing it. Live-tested this decision was necessary, not just simpler: a
+      pre-existing test
+      (`test_orchestrator_per_data_type_sentinel.py::     test_tier3_cefi_perp_partial_capture_fans_out_per_instrument`)
+      failed on a naive "swap the function" fix — its fixture (and the real fallback path in `sentinel_catalogs.py`,
+      which silently falls back to the v1 UAC seed tables on ANY catalog-read exception) proves `expected_instruments`
+      is sometimes the bare UAC-seed shape (`BTC-PERP`), not always the IS catalogue's full canonical `InstrumentKey`.
+      Since `captured_per_instrument_shards` is a set used purely for membership-testing, carrying both candidate shapes
+      is cheap and correct regardless of which comparison mode is active for a given date/venue — confirmed via a live
+      repro (`_canonicalize_manifest_instrument_id("KRAKEN-FUTURES", "PERPETUAL", "PF_IOTAUSD")` →
+      `"KRAKEN-FUTURES:PERPETUAL:IOTA-USD@LIN"`, matching the catalogue shape) and unit tests locking both the
+      Tardis-canonical-match case and the non-Tardis/sports untouched case
+      (`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py::TestTier3CapturedInstrumentsCanonicalization`, 6
+      new tests). Full `quality-gates.sh` green (6172 passed) both before commit and re-verified after the rebase
+      pull-in (a peer slot's `tardis_concurrency_lease.py` fix landed mid-session); the file-size ratchet forced a trim
+      of the inline comment to stay under the 900-line cap for `venue_fetch.py` (908→898 lines).
 
 ## Progress Log
 
@@ -433,3 +544,28 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   `availability_index.parquet`) for a `capture_status=captured` row with a canonical (not raw-symbol) `instrument_id`
   before re-measuring — if none yet, wait longer or spot-check a known-gap date/venue directly rather than re-measure
   prematurely.
+
+- **2026-07-15T22:2x Z (backend_engineer, slot-6)**: Picked up the final P0 todo (re-materialize the enumerator so every
+  eu row shares one canonical atom). Downloaded + cross-tabbed the live prd cefi `_index/availability_index.parquet`
+  (11.37M rows) directly rather than trusting the "hotusdt"-style example verbatim — found the real shape mix is
+  3,106,459 total `expected_unattempted` rows, 3,039,660 (97.8%) already canonical, 66,799 non-canonical of which 18,855
+  were a false positive in my own first-pass regex (dated-futures expiry suffix, actually canonical). Of the genuine
+  49,720: 42,993 pure historical debris (`enumerator_run_id` absent, pre-dates that column), 6,727 an ACTIVE bug in
+  `_enumerate_v2_cefi`'s bundle-grain handling (confirmed via the SAME run id as the 3.04M canonical rows — i.e. the
+  CURRENT code was still producing some non-canonical rows, not just old debris). Root-caused the active bug to
+  `_enumerate_v2_cefi` never reading `instr.underlying` for `_rollup_bundle_grain`'s synthetic bundle entries — a gap
+  the tradfi enumerator's equivalent function had ALREADY closed (its own present-cols docstring explicitly said
+  "cefi... does not yet collapse bundle instrument_id — untouched"). Fixed by mirroring `_enumerate_v2_tradfi`'s
+  `is_bundle` pattern exactly (`instruments-service@a2468dd9`) — 7 pre-existing unit tests needed updating to match the
+  now-correct shape (2 caught the bug directly, a full-suite QG pass caught 5 more that were encoding the same pre-fix
+  assumption). Full `quality-gates.sh` green. Wrote + dry-run-verified (against the LIVE bucket, read-only) a
+  snapshot-first purge script for the 49,720 already-on-disk stale rows (`instruments-service@7f1aed10`) — matches my
+  manual count exactly (49,720 across 6 blobs, 0 in per-vm shards). Did **not** run `--apply`: per this doc's own
+  established precedent (todo 2's relabel script, same operator-gating reasoning), a corpus-wide manifest mutation gets
+  a sign-off ask even though this one is objectively lower-risk (denominator placeholder rows, not captured data). Filed
+  a `/blocked` question for the `--apply` sign-off. Also surfaced and filed (not fixed — out of this todo's scope,
+  catalogue-build-step not enumerator) a narrower THIRD non-canonical class: 1,776 BINANCE-FUTURES dated-futures rows
+  carrying a raw wire-form id segment (`ETHUSDT_260626`) instead of the dash-canonical shape every other dated-futures
+  venue in the same run correctly produces — new P1 todo above. Did not touch todo 2's `--apply` gate, VM
+  launch/relaunch, or widen the Tardis fleet (out of scope; also blocked by `BLK-b319db38` disposition B until this
+  todo's purge fully lands and is re-measured).

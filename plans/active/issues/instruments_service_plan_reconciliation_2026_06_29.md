@@ -158,9 +158,9 @@ Citations are file:line or plan/commit.
   plans citing other coverage numbers as current (stale-number). **Corrected 2026-07-12 (was: this A19 entry itself now
   the stale artifact; finding 345, §A2 B-queue ruling): these 06-29 figures were themselves superseded by the 2026-07-03
   UAC/writer reconciliation (cefi 65.91→79.55) and then by the 2026-07-06 15:01 UTC re-certification in
-  `plans/active/layer1_remeasure_and_certify_2026_07_06.md:98` (cefi 73.61, defi 94.81, tradfi 51.43 [BLOCKED-PLAN2],
-  sports 30.77, prediction 66.67), which explicitly labels the intervening 79.55 number "stale (06-29)". cefi was
-  re-measured again 2026-07-07 08:54 UTC to 72.60% — see
+  `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md:98` (cefi 73.61, defi 94.81, tradfi 51.43
+  [BLOCKED-PLAN2], sports 30.77, prediction 66.67), which explicitly labels the intervening 79.55 number "stale
+  (06-29)". cefi was re-measured again 2026-07-07 08:54 UTC to 72.60% — see
   `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md:200`. Treat `layer1_remeasure_and_certify_2026_07_06`
   (+ its 07-07 cefi update) as the current Layer-1 certification, not this A19 entry.**
 
@@ -708,9 +708,10 @@ and v12's changes are DeFi-only. Pass-2 already refuted the scary "v10 gate misf
 
 **RESOLVED 2026-06-30 (operator: fix in place):** bumped the cefi_tick L96 authority pointer to `mvp_scope.py` v12
 (`MVP_SCOPE_CONFIG_VERSION`) and clarified the OPTION cut as "canonical since v10, in force at v12" so L96 no longer
-competes with the L39 v11 banner. Applied to `plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` (local commit,
-unpushed per hold). **Deferred (out of cefi scope):** the same stale-`v10` authority pin recurs in the other 4 v10 plans
-(defi_onchain / tradfi_ohlcv1m / catalogue_finalization / reconciliation_closeout) — fix when each is next touched.
+competes with the L39 v11 banner. Applied to `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md` (local
+commit, unpushed per hold). **Deferred (out of cefi scope):** the same stale-`v10` authority pin recurs in the other 4
+v10 plans (defi_onchain / tradfi_ohlcv1m / catalogue_finalization / reconciliation_closeout) — fix when each is next
+touched.
 
 ### C4 — `mvp_backfill_cefi_tick_v10` L534 "Layer-1 does NOT block the G4 gate" vs the two-layer model (A12 / D2a) — CHECKED vs codex + the G4 gate def; CONFIRMED real contradiction (terminal-gate certification), coupled to C2
 

@@ -470,8 +470,9 @@ sign-off that isn't evidenced.)**
       (`lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH registered);
       alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail). Follow-ups tracked separately:
       the 486→0 within-window silent-gap drain landed 2026-06-26 (`cefi-instr-all-20260626-161800`);
-      MVP-capture-perp-gated backfill in-flight under `plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` (separate,
-      waves G1→G4 already SIGNED there). — instruments-service@f739a41 + @cc81cad + deployment-service@9d0e457.
+      MVP-capture-perp-gated backfill in-flight under `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`
+      (separate, waves G1→G4 already SIGNED there). — instruments-service@f739a41 + @cc81cad +
+      deployment-service@9d0e457.
 - 🚦 **GATE G2 — SIGNED OFF 2026-07-06** (evidence above).
 - [x] ✅ [SCRIPT] P0. **G3 — aggregate + verify the scheduler runs the latest code — SIGNED OFF 2026-07-06** (RECONCILE:
       already-run). Evidence: (1) `lifecycle-catalogue-regen-cefi` at 01:00 UTC in the per-AG daily scheduler

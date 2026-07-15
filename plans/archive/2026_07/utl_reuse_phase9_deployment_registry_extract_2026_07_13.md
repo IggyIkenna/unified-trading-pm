@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 9 deployment-api→deployment-servi
 summary:
   Relocate the shared deployments_registry GCS accessor from deployment-service into UTL so both deployment-api and
   deployment-service import it from UTL, removing the last service-dep edge; plus a deferred hardening item.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7: operator [unlock-plan]; all todos [x], evidence spot-checked reachable, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

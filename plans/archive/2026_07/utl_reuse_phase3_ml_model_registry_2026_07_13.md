@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 3 ml-service ModelRegistry (EXTEND 
 summary:
   Carry ml-service's load-bearing writegate/manifest/allowlist controls into UTL ModelRegistry (MINOR bump), fix a
   latent manifest-match bug on the way, then delete the local registry + dead TypedDict.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7: operator [unlock-plan]; all todos [x], evidence spot-checked reachable, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -25,8 +25,8 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on: [utl_reuse_phase0_guardrails_2026_07_13]

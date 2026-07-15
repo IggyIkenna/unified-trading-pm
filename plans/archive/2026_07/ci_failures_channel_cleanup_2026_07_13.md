@@ -10,7 +10,7 @@ summary:
   reporters (python-quality-gates-v2 per-run 105, ci-status-update-transition 39, ldr-ci-monitor hourly 11) differ
   because they run at different granularities; the per-run QG alert dedups by SHA so it never suppresses across commits
   — key it by branch instead so a still-red repo pages once, not per failing push.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §6: remnant folded out to its target (operator ruling); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -176,24 +176,25 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
 - [x] [OPERATOR] P1. ✅ All decisions resolved (2026-07-13): D1=2h cooldown, D2=dedup-by-branch, D3=drop CI-RECOVERED
       (+digest later), D4=keep 60-min threshold. Plan unblocked for implementation.
 - [x] 1. ✅ [INFRA] P2. WS-1: bumped `branch-health.yml` `lag-notify` `cooldown_min` 60 → 120 (D1); `promotion-lag`
-     dedup_key + `lag-notify-resolved` bookend intact. PM-local cron (no rollout) — takes effect from `main`. —
-     unified-trading-pm@e4b494356; YAML parses.
+      dedup_key + `lag-notify-resolved` bookend intact. PM-local cron (no rollout) — takes effect from `main`. —
+      unified-trading-pm@e4b494356; YAML parses.
 - [x] 2. ✅ [INFRA] P2. WS-3: `python-quality-gates-v2.yml` `notify-qg-fail` `dedup_key` `qg-fail:<repo>:<sha>` →
-     `qg-fail:<repo>:<ref_name>` + `cooldown_min` 45 → 120 (D2). Reusable workflow — applies fleet-wide via the
-     `@live-defi-rollout` ref (no rollout). — unified-trading-pm@e4b494356.
+      `qg-fail:<repo>:<ref_name>` + `cooldown_min` 45 → 120 (D2). Reusable workflow — applies fleet-wide via the
+      `@live-defi-rollout` ref (no rollout). — unified-trading-pm@e4b494356.
 - [x] 3. ✅ [INFRA] P2. WS-2: gated `ci-status-update.yml` `notify` on `status == 'FAILING'` so only regressions page;
-     the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
-     PM-local (fires from `main`). — unified-trading-pm@e4b494356.
+      the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
+      PM-local (fires from `main`). — unified-trading-pm@e4b494356.
 - [x] 4. ✅ [REVIEW] P3. WS-4 (doc): wrote the CI-alert dedup/cooldown SSOT `codex/04-architecture/ci-alerting.md` — the
-     `notify-slack.yml` carrier contract (read-back dedup, `dedup_key`+`cooldown_min`, `recovery`-gating, fail-open),
-     the per-reporter key/cooldown table (branch-health lag/AR, `notify-qg-fail`, `ci-status-update`), the 3-way-count
-     explainer (per-run vs per-transition vs hourly), and the "cooldown tracks MEASURED cadence not declared cron" rule.
-     Cross-linked from `ci-cd-flow.md` § CI-health + the CLAUDE.md Slack-notifications bullet. Also fixed a stale
-     SHA-based dedup comment in `python-quality-gates-v2.yml` left by WS-3 (actionlint clean). Frontmatter + size-cap +
-     prettier green. — unified-trading-pm (this commit).
-- [ ] [REVIEW] P3. WS-4 (verify): re-pull a 24–48 h `#ci-failures` window post-rollout and confirm the volume drop
+      `notify-slack.yml` carrier contract (read-back dedup, `dedup_key`+`cooldown_min`, `recovery`-gating, fail-open),
+      the per-reporter key/cooldown table (branch-health lag/AR, `notify-qg-fail`, `ci-status-update`), the 3-way-count
+      explainer (per-run vs per-transition vs hourly), and the "cooldown tracks MEASURED cadence not declared cron"
+      rule. Cross-linked from `ci-cd-flow.md` § CI-health + the CLAUDE.md Slack-notifications bullet. Also fixed a stale
+      SHA-based dedup comment in `python-quality-gates-v2.yml` left by WS-3 (actionlint clean). Frontmatter + size-cap +
+      prettier green. — unified-trading-pm (this commit).
+- [x] [REVIEW] P3. WS-4 (verify): re-pull a 24–48 h `#ci-failures` window post-rollout and confirm the volume drop
       (promotion-lag re-reminds ~2 h not hourly, no green all-clears, QG failures dedup per-branch); drop the evidence
-      jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.)
+      jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.) — **FOLDED OUT** to
+      plans/epics/observability_master.md (2026-07-15, plan-reconcile §6 operator ruling); tracked there, not here.
 
 ## Progress Log
 

@@ -19,7 +19,7 @@ stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [qg-red, adapter-contract-regression, repo-blocker, stale-baseline]
-related: [plans/active/bybit_futures_chain_write_shape_migration_2026_07_13.md]
+related: [plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md]
 created: 2026-07-13
 parent_epic: mtds_mdps_master
 priority: P1
