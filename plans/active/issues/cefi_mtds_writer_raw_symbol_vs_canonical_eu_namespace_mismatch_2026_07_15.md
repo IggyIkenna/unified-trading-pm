@@ -240,13 +240,15 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
 - [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
       and start reducing `expected_unattempted`. (repo: instruments-service)
-- [ ] [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
+- [x] ✅ [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
       SHA) — check `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@<sha>*` — then
       relaunch the 3 `cefi-queue-*` Tardis VMs against it (respect the hard 3-VM Tardis cap: kill-then-relaunch, never
       exceed 3 concurrent). Do NOT relaunch against `56679e78` — confirmed a silent no-op, superseded by `5d44a197`.
       This is the live-smoke-capture precondition todo (3) is blocked on: verify post-relaunch that newly captured
       Tardis-sourced rows in the cefi prd manifest carry canonical `instrument_id` (not raw wire symbol) before todo (3)
-      re-measures. (repo: deployment-service)
+      re-measures. (repo: deployment-service) — see Progress Log entry (infra, slot-6) below for the relaunch + partial
+      live-smoke-capture status. **Todo (3) should still wait**: canonical-manifest-row proof was not yet observed live
+      by the end of this session (natural backfill sequencing, not a fix failure — see entry).
 - [x] ✅ [BACKEND] P2. Persisted unit-test + honest-absence gap on todo (1)'s fix — neither `56679e78` nor `5d44a197`
       shipped a repo-visible test for `_canonicalize_manifest_instrument_id` (both verified by ad hoc manual repro
       only), and the unresolved-symbol fallback logged at DEBUG only (silent in normal ops). Closed both: added
@@ -285,8 +287,8 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       test suite (`test_orchestrator_canonicalize_captured.py`) documents a bare `BASE-PERP` output shape, not
       `VENUE:TYPE:BASE-QUOTE[@MARKER]`). **Verified live** (`.venv/bin/python`, instructions-service venv):
       `_canonicalize_captured_instrument_id("KRAKEN-FUTURES", "PI_XBTUSD")` returns `"PI_XBTUSD"` **unchanged**
-      (Kraken's PI_/PF_-prefixed shapes aren't recognised by that heuristic's dispatcher at all — its own test file says
-      as much: "Kraken's PI_BTCUSD wire shape is rarer; the dispatcher peels USD but won't strip the PI_ prefix"). This
+      (Kraken's PI*/PF*-prefixed shapes aren't recognised by that heuristic's dispatcher at all — its own test file says
+      as much: "Kraken's PI*BTCUSD wire shape is rarer; the dispatcher peels USD but won't strip the PI* prefix"). This
       can never equal the catalogue's `KRAKEN-FUTURES:PERPETUAL:BTC-USD@INV` — meaning the Tier-3
       `if     instrument_id in captured_instruments` set-membership check has likely been silently missing on every real
       capture for KRAKEN-FUTURES (and plausibly other Tardis venues whose heuristic output doesn't happen to match the
@@ -361,7 +363,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
 
 - **2026-07-15T~20:15Z (orchestrator dispatch, re-verification + follow-up pass)**: Dispatched independently to verify +
   fix "the manifest write path stamps raw symbol vs canonical" — re-verified the finding directly against the live prd
-  `availability_index.parquet` per the dispatch's own instructions (KRAKEN-FUTURES/book_snapshot_5: 25,462 `captured` /
+  `availability_index.parquet` per the dispatch's own instructions (KRAKEN-FUTURES/book*snapshot_5: 25,462 `captured` /
   40,223 `expected_unattempted` / 0 canonical-shaped captured rows — confirms the finding as given) BEFORE discovering
   both `56679e78` and `5d44a197` had already landed on `live-defi-rollout` mid-investigation (this is a multi-slot
   workspace; the fix shipped while this dispatch was reading code). Re-audited both landed commits directly (not just
@@ -381,9 +383,53 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   change) — but while confirming that independence, direct code + live evidence surfaced that the Tier-3 comparison's
   OWN two sides use different id schemes (`expected_instruments` = full canonical `instrument_key` via
   `CeFiCatalogReader`; `captured_instruments` = the older bare-`BASE-PERP` `_canonicalize_captured_instrument_id`
-  heuristic, verified NOT to touch Kraken's `PI_`/`PF_` prefixes at all) — a separate, likely pre-existing defect, not
+  heuristic, verified NOT to touch Kraken's `PI*`/`PF\_`prefixes at all) — a separate, likely pre-existing defect, not
   something this session's fixes caused or need to fix to close THIS issue's own scope. Filed as a new P1 todo above
   with the concrete repro rather than fixed blind, per the standing "ambiguous → diagnose both sides, don't blind-edit"
   triage rule — recommend it become its own dedicated fix-plan todo, same pattern the P0 items in this doc already
-  followed. Deliberately did NOT touch VM launch/relaunch (todo 4) or the relabel `--apply` (todo 2, operator-gated) —
+  followed. Deliberately did NOT touch VM launch/relaunch (todo 4) or the relabel`--apply` (todo 2, operator-gated) —
   both explicitly out of this dispatch's authorized scope.
+
+- **2026-07-15T20:19-20:40Z (infra, slot-6)**: Picked up todo (4). **Tarball confirmed**: the un-suffixed
+  `gs://deployment-scripts-central-element-323112/code/mtds-code.tar.gz` alias (what launchers actually pull) was built
+  at 20:00:43Z from `commit_sha=5d44a197bc02510a53d9b3b4973ce49d1e7833eb` (its own `mtds-code.manifest.json`) —
+  satisfies "5d44a197 or later" exactly; confirmed the SHA-suffixed `market-tick-data-service-code@<sha>*` objects were
+  stale (last build 2026-07-12) so that naming scheme isn't what's actually deployed — the un-suffixed alias is the one
+  `setup-data-pipeline-vm.sh`/launchers use. Also reviewed `90ecde17` (landed after 5d44a197, before this tarball build)
+  and confirmed it's a non-behavioral logging/test-only follow-up (adds a WARNING summary +
+  `cefi_manifest_id_unresolved` accumulator + persisted unit tests; does not change canonicalization OUTPUT for any
+  symbol that resolves) — so relaunching against the 5d44a197-built tarball is safe and equivalent for this todo's
+  purpose. **Relaunched**: killed the 3 pre-fix-tarball VMs (`cefi-queue-heavy-20260715-174106`,
+  `cefi-queue-light-20260715-174110`, `cefi-queue-light-20260715-183058`, all confirmed via SSH-checked deployed venv to
+  predate `_canonical_cefi_manifest_instrument_id` per the todo's own note), relaunched 3 equivalents mirroring each
+  VM's exact venue/data_type scope via `launch-cefi-sharded-backfill.sh` `SINGLE_VM_QUEUE=1`
+  (`cefi-queue-heavy-binancefutu-x15-...`: 15-venue trades+book_snapshot_5; `cefi-queue-light-binancefutu-x2-...`:
+  BINANCE-FUTURES+BITGET-FUTURES derivative_ticker/liquidations/futures_chain; `cefi-queue-light-bybit-x4-...`:
+  BYBIT+OKX-SWAP+KRAKEN-FUTURES+BITFINEX-FUTURES same data_types), all with
+  `TARDIS_CONCURRENCY_LEASE=1 TARDIS_CONCURRENCY_LEASE_BUCKET=config-store-central-element-323112` per the multi-VM-wave
+  HARD RULE. `tardis-concurrency-guard.sh` confirmed the cap was respected at every step (0→1→2→3, never exceeded 3).
+  All 3 STARTED <60s (gcloud instances list RUNNING), zero fire-and-forget — actively monitored ~20 min post-launch.
+  **Partial live-smoke-capture verification**: the parquet FILE content path (`derive_row_instrument_id` inside
+  `finalise_rows_and_path`) was reconfirmed already-correct via live `run.log` — "canonical shard binance/avntusdt" etc.
+  lines for every write. The MANIFEST write path specifically (this issue's actual defect) could **not** be confirmed
+  with a genuine NEW `captured` row within this session's wall-clock: pre-flight correctly (not a bug) skips re-fetching
+  Jan-2026 dates it already sees as "fully covered" (mislabeled-but-present raw-symbol rows from before the fix), so the
+  fleet must sequentially traverse ~30+ already-covered days before reaching dates with a genuine `expected_unattempted`
+  gap that would produce a fresh, fix-covered `captured` row — `cefi-queue-light-bybit-x4` was still on 2026-01-06 (of
+  2026-01-01→2026-07-14) after 20 min at its own natural ~2.5min/day pace, i.e. genuinely ~1h+ away from the earliest
+  plausible new-capture date, too long to block this dispatch on synchronously. Checked 3x over the monitoring window
+  (per-VM manifest shards downloaded + read directly, `capture_status` column) — all rows so far are
+  `attempted_failed`/`empty_confirmed`, none yet `captured`. **New finding, filed separately (not blocking this todo,
+  but relevant to todo 3's eventual re-measure)**: `../issues/tardis_concurrency_lease_intra_process_race_2026_07_15.md`
+  (`unified-trading-pm@686f0d2e8`) — the `TardisConcurrencyLease` process-wide singleton lets ~15 of every 16
+  concurrently-gathered symbol-fetch coroutines bypass the lease-wait entirely (flag flips synchronously before the
+  blocking `acquire()` resolves), reproducing the exact `code=274 concurrent-IP-lock` 403 the lease exists to prevent —
+  live-observed on `cefi-queue-light-binancefutu-x2` (1928 403s, 9-min stall on a single date) while the other 2 VMs in
+  the same wave ran clean, ruling out cross-VM contention as the cause. Does not block todo (4)'s own scope (the
+  relaunch itself is correct and complete) but will inflate `attempted_failed` counts in the interim and should be fixed
+  before todo (3)'s re-measure treats a large `attempted_failed` delta as meaningful. **Left all 3 VMs running** — they
+  are legitimate, correctly-configured production backfill work; killing them again would waste the progress already
+  made. **Next session picking up todo (3)**: re-check `_index/per_vm/cefi-queue-*` (or the consolidated
+  `availability_index.parquet`) for a `capture_status=captured` row with a canonical (not raw-symbol) `instrument_id`
+  before re-measuring — if none yet, wait longer or spot-check a known-gap date/venue directly rather than re-measure
+  prematurely.
