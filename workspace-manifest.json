@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 72.78,
-        "warn_file_count": 11,
         "qg_red_reason": null,
-        "large_file_count": 1
+        "warn_file_count": 10,
+        "large_file_count": 2,
+        "coverage_pct": 72.87
       }
     },
     "execution-service": {
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": 85.41,
+        "qg_red_reason": null,
         "warn_file_count": 11,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "coverage_pct": 85.42
       },
       "ldr_ci_status": "GREEN"
     },
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.03,
-        "warn_file_count": 7,
         "qg_red_reason": null,
-        "large_file_count": 6
+        "warn_file_count": 7,
+        "large_file_count": 6,
+        "coverage_pct": 91.12
       }
     },
     "market-data-processing-service": {
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 20,
-        "coverage_pct": 87.71,
         "qg_red_reason": null,
-        "large_file_count": 6
+        "warn_file_count": 20,
+        "large_file_count": 6,
+        "coverage_pct": 87.67
       }
     },
     "unified-trading-pm": {
