@@ -24,7 +24,7 @@ summary:
   migrate/delete was executed this session (diagnostic-only, per this repo''s findings-triage HARD RULE: a big finding —
   data-correctness / cross-repo / SSOT contradiction — routes to operator notification + an issue doc, not a unilateral
   mechanical migration).'
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cefi]
 stage: [data, meta]
@@ -43,7 +43,7 @@ source:
   bucket as NOT fitting the assigned pattern; this doc formalizes that finding for operator ruling before any
   apply-phase action is taken."
 assigned_vm: NA
-resolved_by:
+resolved_by: "2026-07-15 execute-phase sub-agent (Option A)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -148,3 +148,39 @@ C: **Delete the dead code paths only, defer the bucket itself.** Ship the two no
 and leave the bare-bucket relocate-or-exclude decision (A vs B) for later.
 
 Other: operator can specify a different path (e.g. a different destination bucket name/kind).
+
+## Resolution (2026-07-15, execute phase — Option A)
+
+Operator ruled **Option A**. A prior session provisioned the destination (`onchain-research-central-element-323112`,
+registered as kind `onchain-research` in `deployment-service/configs/bucket_config.yaml`'s `infrastructure_buckets.gcp`
+list — `deployment-service@45c9924b`) and confirmed no live automated GCS writer races the bucket. This session executed
+the remainder:
+
+1. **Copy** — all 16 objects (70,768,303 bytes) copied `netflow_xsec_research/` -> the new bucket via UTL
+   `gcs_copy_object` (server-side rewrite; no `gsutil`/`gcloud` subprocess). Every object individually verified
+   size+crc32c match post-copy.
+2. **Verify** — both live sleeve files (`_dune_sleeve_ledger.csv`, `_dune_sleeve_state.json`) byte-diffed src-vs-dst
+   (not just crc32c) twice — immediately post-copy and again as the final pre-delete gate — bit-for-bit identical both
+   times. Total corpus byte-count (`gcloud storage du -s`) matched on both sides throughout.
+3. **Repoint** — `e2e-testing/scripts/onchain/gcs_sync.py` (docstring + `BUCKET` constant) and `README.md` (Data SSOT
+   line) repointed to `gs://onchain-research-central-element-323112/netflow_xsec_research`. `_dune_sleeve_deploy.py`
+   re-confirmed to need no change (zero `gs://`/bucket-name references). Proved the repointed script works end-to-end:
+   ran `gcs_sync.py pull` then `gcs_sync.py push` live against the new bucket (idempotent, corpus unchanged). Shipped
+   `e2e-testing@a4f8bdc6` via `quickmerge --agent --files`.
+4. **Terraform/config check** — confirmed (again, independently) zero terraform resource ever managed the bare bucket
+   and zero remaining bare-name references in `bucket_config.yaml`/`cloud-providers.yaml`/VM-launcher scripts — no
+   `terraform state rm` needed.
+5. **Delete** — `gcloud storage rm --recursive --continue-on-error` then `gcloud storage buckets delete --quiet` on
+   `gs://features-onchain-central-element-323112`. Post-delete `gcloud storage buckets describe` returns `404`; the new
+   bucket independently re-verified intact (70,768,303 bytes / 16 objects) after the source delete.
+
+**Deliberately NOT done this session** (Option A's secondary dead-code cleanup — a distinct, lower-risk follow-up, not
+required to safely relocate+delete the bucket): the 3 `e2e-testing/configs/defi/local-{live,batch,paper}.env`
+`FEATURES_ONCHAIN_BUCKET=` lines, `execution-service/execution_service/service_config.py`'s
+`features_onchain_source_bucket` field, and `dependency_checker.py`'s `features-onchain` bucket-template entry remain —
+these feed a confirmed-dead code path (zero real consumers) and are safe to delete independently of this bucket's
+lifecycle. **Open follow-up**: file/track a small cleanup touch for these 3 dead references (incl. regenerating the
+mirrored `unified-api-contracts/openapi/config-registry.json` copies if the `service_config.py` field is removed).
+
+Full narrative + evidence: see the Progress Log entry dated 2026-07-15 ("operator ruling executed (Execute phase)") in
+`../bucket_estate_consolidation_to_sub100_2026_07_13.md`.

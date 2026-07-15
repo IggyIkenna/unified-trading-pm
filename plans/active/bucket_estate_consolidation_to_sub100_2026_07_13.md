@@ -1780,3 +1780,53 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   two VM-fanout launchers' `GCS_BUCKET` default) is unchanged and still requires a separate cutover touch before any
   Verify+Delete re-attempt. Next follow-up: repoint the 3 live-reference surfaces to the canonical `-prd-` bucket,
   re-verify `readyForDelete`, then delete.
+
+- **2026-07-15, operator ruling executed (Execute phase) — `features-onchain` bare bucket relocated + deleted, item (3)
+  CLOSED.** Operator ruled Option A on
+  `plans/active/issues/features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15.md`: relocate the bare
+  `features-onchain-central-element-323112` bucket's only content (`netflow_xsec_research/`) to a new dedicated research
+  bucket, repoint the live consumer, then delete. A prior session already provisioned
+  `onchain-research-central-element-323112` (registered as kind `onchain-research` in
+  `deployment-service/configs/bucket_config.yaml`'s `infrastructure_buckets.gcp` list, shipped
+  `deployment-service@45c9924b`) and confirmed no live automated GCS writer races the bucket. This touch executed the
+  copy/repoint/verify/delete: **(1) copy** — all 16 objects (STRATEGY_STATE.md, netflow_granular_cadence.png, 8 `data/`
+  parquets, 2 `live/` files incl. the live `_dune_sleeve_ledger.csv`/`_dune_sleeve_state.json`, 4 `plots/` PNGs) copied
+  via UTL `gcs_copy_object` (server-side rewrite, no subprocess `gsutil`/`gcloud`) — every object individually verified
+  size+crc32c match post-copy (16/16 OK). **(2) verify** — `gcloud storage du -s` confirmed identical total corpus size
+  both sides (70,768,303 bytes) before and after every subsequent step; the two live sleeve files were independently
+  byte-diffed (not just crc32c) src-vs-dst twice (once immediately post-copy, once again as the final pre-delete gate) —
+  both `_dune_sleeve_ledger.csv` and `_dune_sleeve_state.json` bit-for-bit identical at the new location both times.
+  **(3) repoint** — grepped the whole workspace fresh (not trusting the prior session's list at face value): confirmed
+  exactly 2 live-consumer hits, both in `e2e-testing/scripts/onchain/` (`gcs_sync.py`'s docstring + its `BUCKET`
+  constant; `README.md`'s Data SSOT line) — `_dune_sleeve_deploy.py` re-confirmed zero `gs://`/`BUCKET`/bucket-name
+  references (reads/writes only local ROOT-relative paths). Repointed both hits to
+  `gs://onchain-research-central-element-323112/netflow_xsec_research` (kept the same `data/`+`live/`+`plots/`
+  sub-layout under the new bucket root — smaller diff, no restructuring). Proved the repointed script actually works
+  against the new bucket, not just a string-match: ran `gcs_sync.py pull` (pulled all 8 `data/` parquets, 66.6 MiB) then
+  `gcs_sync.py push` (idempotent rsync — mtime-copy only, corpus byte-total unchanged post-push) live against
+  `onchain-research-central-element-323112`. `quality-gates.sh --no-fix` green on e2e-testing (sentinel written ==
+  HEAD); shipped solo via `quickmerge --agent --files 'scripts/onchain/README.md scripts/onchain/gcs_sync.py'` —
+  `e2e-testing@a4f8bdc6` ("chore(onchain): repoint netflow research pipeline Data SSOT to dedicated onchain-research
+  bucket"), landed on `live-defi-rollout`. Re-grepped post-ship: zero remaining code hits for the bare bucket name
+  anywhere in the workspace (only historical/archived-plan mentions remain, not live code). The 3 env-file
+  `FEATURES_ONCHAIN_BUCKET=` lines (`e2e-testing/configs/defi/local-{live,batch,paper}.env`) + `execution-service`'s
+  `features_onchain_source_bucket` field + `dependency_checker.py`'s `features-onchain` bucket-template check were
+  **deliberately NOT touched this session** — the prior session's investigation confirmed these feed a genuinely DEAD
+  code path (zero real runtime consumers workspace-wide) and recommended DELETION (not repointing) as a distinct
+  follow-up, out of scope for this repoint-and-delete-the-bucket task; flagged again here as an open deferred item.
+  **(4) terraform + config check** — grepped all of `deployment-service/terraform/**` for the bare bucket name literal:
+  zero hits (only the untouched `features-onchain-cefi/defi` asset-group siblings' terraform show up, per the separate
+  Group-B rollback decision) — confirms the issue doc's own Finding that no `google_storage_bucket` resource ever
+  managed this bare bucket, so no `terraform state rm` was needed. Checked `bucket_config.yaml`/`cloud-providers.yaml`/
+  VM-launcher scripts for any bare-name reference: none found (the new `onchain-research` kind entry already carries a
+  comment documenting the migration + consumer). **(5) delete** — re-ran the full pre-delete verification one final time
+  immediately before the destructive step (corpus byte-total + both live-sleeve-file byte-diffs, all still matching),
+  then
+  `gcloud storage rm --recursive --continue-on-error gs://features-onchain-central-element-323112/ netflow_xsec_research`
+  (16/16 objects removed) followed by
+  `gcloud storage buckets delete gs://features-onchain-central-element-323112 --quiet`. Post-delete:
+  `gcloud storage buckets describe` on the bare bucket now returns `404`; the new
+  `onchain-research-central-element-323112` bucket independently re-verified still intact (70,768,303 bytes, 16 objects)
+  after the source delete. No data loss, no unauthorized deletes, live sleeve state fully intact and reachable only from
+  the new location now. Item (3) is CLOSED — issue doc status flipped to resolved (see issue doc for the closing note).
+  Estate count this touch: **-1**.
