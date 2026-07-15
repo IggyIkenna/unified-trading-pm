@@ -400,15 +400,23 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       can recur silently. Dispatched to a sub-agent (data-fix: reclassify the ~7,700 rows + regression tests; code-fix:
       guard `record_failed()` against `EXPECTED_*`-prefixed reasons; new issue doc) — see that issue doc for the
       resolution once shipped. Repos: `market-tick-data-service` (data fix), `unified-trading-library` (writer guard).
-- [ ] [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050 attempted_failed,
-      0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100% `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE`,
-      `attempted_at` spanning 2026-06-21 to 06-30 (historical, not fresh). NOT found tracked in any existing
-      `plans/active/` doc as of this pass (closest precedent,
-      `master_data_canonicalisation_migration_catalogue_     2026_06_07.md`'s R5-fix-7 defi catalog-freshness gate, is
-      dated 2026-06-08 — predates this window and appears already resolved/re-promoted, so this looks like a RECURRING
-      instance of a resolved-once issue, not the same still-open instance). Needs its own investigation: is
-      `assert_defi_catalog_fresh`'s freshness gate itself stale/broken again, or is this a different trigger. File as a
-      new issue doc if picked up.
+- [x] ✅ [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050
+      attempted_failed, 0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100%
+      `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE` — INVESTIGATED 2026-07-15: live-requeried counts confirmed
+      (dex_pool_state 2107/2109, lst_rates 851/851, `attempted_at` 2026-06-21..06-25 / ..06-30 respectively). Root cause
+      is a **temporal race, not a broken/regressed gate**: every affected row is a historical backfill shard (shard
+      `date` years before `attempted_at`, 0% same-day) whose `assert_defi_catalog_fresh` coverage-check genuinely found
+      no IS DeFi catalogue snapshot for that historical date AT THE TIME — proven via `gcs_describe_object()` timestamps
+      showing the catalogue snapshots that now cover those dates were written 2026-06-29, AFTER every affected attempt.
+      R5-fix-7 (2026-06-08) referenced an earlier, smaller re-promote (R4, defi 6,853 rows) — the full historical
+      per-date catalogue backfill these rows needed didn't finish until 2026-06-29, three weeks later. Also found +
+      fixed a real, adjacent code gap while tracing this: `lst_rates_handler.py` was 1 of 9 DeFi handlers never
+      threading `mode=` into `assert_defi_catalog_fresh` (only `dex_pools_handler.py` + `risk_params_handler.py` did) —
+      didn't cause these specific rows but is a genuine near-term-batch-run latent bug, fixed with 3 new regression
+      tests. Data remediation (re-collecting the 2,958 affected shards) deliberately NOT executed — a live, multi-year,
+      production-API-quota-consuming re-collect is out of scope for a rushed mid-investigation action; scoped as a
+      follow-up with exact commands. Full writeup, evidence, and follow-up todos:
+      `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Repo: market-tick-data-service.
 - [ ] [DATA] P1 **NOT YET COVERED**: `sports/trades` (112277/522276 attempted_failed, 21.5%) —
       `error_reason=VENUE_FETCH_FAILED` dominates (94127 of the 112277), `attempted_at` up to 2026-07-13T23:56Z
       (freshest of all the alert-batch cells — worth checking if this is still actively recurring). `VENUE_FETCH_FAILED`
@@ -419,11 +427,21 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
       tracked (`data_completion_to_100_all_ag_2026_06_21.md:461-489`, marked `[x]` done for bookmaker venues via a
       `BOOKMAKER_NO_COVERAGE` reclassify), but these alert-batch instances run through 2026-07-13 — AFTER that fix
       landed — worth verifying whether the fix's venue/date coverage is actually complete or these are a residual gap.
-- [ ] [DATA] P2 **NOT YET COVERED**: `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%) —
-      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z (same batch as the sports/trades failures
-      above — likely same root run). NOT found tracked anywhere in `plans/active/` (only hit is an unrelated chaos-test
-      scenario file). Small absolute count (66) but 100% ratio triggered the alert; needs its own investigation into
-      what's malformed and why.
+- [x] ✅ [DATA] P2. `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%,
+      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z) — INVESTIGATED + FIXED. Live re-query
+      found the count has already drifted to 0 in both plausible sports manifests (a one-off manual-run artifact, not
+      ongoing scheduled traffic). Root cause was a real, standing classification bug (not upstream-only):
+      `SportsBucketAssignmentAdapter.process_to_candles()` raised `MalformedTickFieldError` whenever every tick row
+      failed the `bm_time <= fetch_utc` causality check, even though `bm_minutes_to_kickoff` + h2h columns were
+      genuinely present — mislabeling honest absence (vendor clock-skew/stale snapshot) as a malformed field, the same
+      false-failure class the adapter's own existing "no h2h rows" Path A½ fix already corrected for a sibling
+      condition. Fixed `market-data-processing-service@7ff43d7197a50cfe52d9ad8fe514cd6a2ca09558` (now records
+      `empty_confirmed` for the 100%-causality-drop case; genuine schema drift still raises as before), 3 new regression
+      tests (coverage.xml-verified both branches hit), `quality-gates.sh --no-fix` green. Checked for correlation with
+      the sibling `sports/trades` `VENUE_FETCH_FAILED` investigation (same `attempted_at` batch window) — no issue doc
+      filed for it yet as of this writing; based on this investigation's own evidence the two are NOT the same root
+      cause (different services/manifests/code paths), noted for the next investigator rather than asserted without
+      evidence. Full writeup: `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md`.
 
 ### Post-reconciliation progress
 
