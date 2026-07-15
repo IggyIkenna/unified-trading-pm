@@ -294,19 +294,20 @@ these 5 cells.
       out-of-scope follow-up, new todo below** (mirrors the mbp_10/CME precedent above: routing fixed here, UAC
       capability restoration deferred). See "Verdict — Yahoo Finance source-vs-venue investigation" below for full
       evidence.
-- [ ] [DATA] P3. `unified-api-contracts`: add `ohlcv_24h` to CBOE's `VENUE_DATA_TYPE_CAPABILITIES` +
-      `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]` entries (currently `["ohlcv_1s", "ohlcv_1m"]` only,
-      `expected_coverage.py:173`) — the UAC-registry half of the Treasury-yield-tenor fix above.
-      `market-tick-data-service@764e7170` (this same doc's CBOE routing fix) makes `route_yahoo_tradfi()` correctly
-      Yahoo-route a `(CBOE, ohlcv_24h)` request end-to-end, but `venue_fetch.py`'s per-shard UAC-intersection step
-      filters `ohlcv_24h` out of any CBOE request BEFORE it ever reaches routing, since UAC does not (yet) declare
-      `ohlcv_24h` as CBOE-capable — so the new routing code is correct but structurally unreachable from a live/default
-      MTDS orchestrator run until this registry entry lands. **Caution flagged by the dispatching task**: CBOE's
-      capability dict is currently non-empty (`{"ohlcv_1s", "ohlcv_1m"}`), so adding one more entry does NOT trip
-      `get_expected_data_types_for_venue()`'s undocumented fall-through-to-ALL-10-datatypes footgun
-      (`market_data_categories.py:1881-1884`, which only fires on an EMPTY/absent capability dict) — but re-verify that
-      invariant still holds before shipping, since that footgun is exactly what made the separate `YAHOO_FINANCE`
-      phantom-venue todo above risky to touch carelessly.
+- [x] ✅ [DATA] P3. **DONE 2026-07-15 (operator decided ENABLE)** — `unified-api-contracts@2ace1fca`. Added `ohlcv_24h`
+      to `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` (start `2000-01-03` = `US_TREASURY_YIELD_DAILY_FIRST_DATE`, mirroring
+      the ICE:DXY Yahoo-daily precedent) + `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CBOE"]`, so `venue_fetch.py`'s
+      UAC-intersection no longer filters `(CBOE, ohlcv_24h)` out before the shipped routing fix
+      (`market-tick-data-service@764e7170`) sends it to Yahoo. VX-futures `ohlcv_1s`/`ohlcv_1m` stay on the Databento
+      path (the routing fix's data_type discriminator, 4 regression tests). Confirmed the footgun invariant held (CBOE
+      dict was non-empty, so the addition did not trip the ALL-10 fall-through). 5 new regression tests
+      (`TestCboeTreasuryOhlcv24hEnabled`) + the existing `tradfi["CBOE"]` assertion updated; `quality-gates.sh --no-fix`
+      green (234s). **Operator decision** (`data_pipeline_alerts_batch_remediation_2026_07_15`, AskUserQuestion): enable
+      now — treasury yields are wanted macro reference data, distinct from the mbp_10/CME MVP-scope gate left closed.
+      (Original ask: add `ohlcv_24h` to CBOE's `VENUE_DATA_TYPE_CAPABILITIES` + `EXPECTED_COVERAGE_BY_ASSET_GROUP`,
+      since `market-tick-data-service@764e7170`'s routing was correct but structurally unreachable while
+      `venue_fetch.py`'s UAC-intersection filtered `(CBOE, ohlcv_24h)` out pre-routing. The footgun caution was
+      confirmed non-applicable — CBOE's dict was non-empty, so the addition did not trip the ALL-10 fall-through.)
 
 ## Resolution — mbp_10 (2026-07-15)
 

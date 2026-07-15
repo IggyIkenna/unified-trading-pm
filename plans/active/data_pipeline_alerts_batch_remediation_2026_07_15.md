@@ -826,5 +826,31 @@ confirmed ancestors of `origin/live-defi-rollout`):
   record.
 - **The genuine remaining root cause of the recurring alerts** (re-confirmed by the verifier): the `DP_RUN_MOSTLY_EMPTY`
   detector counts `attempted_failed` over the WHOLE manifest history with NO recency window, so the static historical
-  defi/sports-trades rows keep tripping it even though nothing is actively regressing. Assessing a recency-window fix as
-  the highest-leverage "clean the channel" action (see below).
+  defi/sports-trades rows keep tripping it even though nothing is actively regressing. **NOTE: NOT actioned as a
+  detector change** — the operator already decided this ("Alert detector recency window: purge/reclassify stale rows
+  per-bucket as they come up, NOT a systemic detector change"). Per-bucket historical-row cleanups are the tracked
+  follow-ups (mbp_10 / corp_action / YAHOO_FINANCE 11,676-row / defi-recollect), not a detector rewrite.
+
+### Item 3 (YAHOO_FINANCE phantom venue) — DONE
+
+`unified-api-contracts@fec3f110` (via sub-agent, independently re-verified by me:
+`get_expected_data_types_for_venue( "YAHOO_FINANCE") == []`, the 5 sports NO_ADAPTER_YET venues still get their 10
+fallback types, source modeling intact). Removed YAHOO_FINANCE from all 5 venue-shaped registries + emptied the
+now-stale sentinel/parity allowlists; KEPT the SOURCE modeling (`data_source_continuity`, `capability_declarations`, the
+Yahoo adapter). The footgun was neutralized BY the de-enumeration itself (empty asset_group → `[]`), not a code guard —
+a blanket `NO_ADAPTER_YET → []` guard would have broken the 5 legit MTDS-owned sports odds venues that rely on the same
+fallback (verified). PM flip `unified-trading-pm@f6fc0eda4` + a P3 follow-up for the 11,676 existing
+`venue=YAHOO_FINANCE` manifest rows (forward-only fix; historical cleanup deferred, same pattern as mbp_10/corp_action).
+Multi-agent note: quickmerge swept a concurrent workstream-E OKX-liquidations correction into `fec3f110` (contained,
+QG-green) — the "same file never" hazard on `market_data_categories.py` recurred; worth serializing future edits to that
+file.
+
+### Item 4 (CBOE ohlcv_24h UAC gate) — DONE (operator decided ENABLE)
+
+Presented the decision to the operator via AskUserQuestion (the dispatch explicitly reserved it: "check whether the
+operator wants this... don't assume"). **Operator chose ENABLE.** `unified-api-contracts@2ace1fca` adds `ohlcv_24h` to
+`VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` (start `2000-01-03`) + `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CBOE"]`, so
+`venue_fetch.py`'s UAC-intersection no longer filters `(CBOE, ohlcv_24h)` out before the shipped routing fix
+(`market-tick-data-service@764e7170`) Yahoo-routes it — US Treasury-yield tenors now capture live under venue=CBOE,
+source=yahoo; VX-futures `ohlcv_1s`/`ohlcv_1m` stay Databento. 5 new regression tests, QG green. P3 flipped in the issue
+doc.
