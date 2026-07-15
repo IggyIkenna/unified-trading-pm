@@ -180,6 +180,20 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
 
 ## Progress log
 
+- 2026-07-15 (coordinator, autonomous close-out) — **CI-verified fleet-green; one real ordering defect found + fixed.**
+  The consumer-first ship order I dispatched (instruments-service BEFORE unified-api-contracts) INVERTED the cross-repo
+  invariant `UAC VENUE_TO_ADAPTER_KEY ⊆ IS factory._ADAPTERS`: is@9f7ffb27 removed the adapter classes at 17:48 while
+  UAC still declared the 3 venue keys, so instruments-service CI run 29440517050 (sha 1aeb5e3c, 18:26Z) went RED on
+  `test_adapter_routing_uac_invariant::test_every_uac_adapter_key_resolves_to_a_class` +
+  `test_factory_comprehensive::test_adapter_data_sources_covers_all_adapters` for a ~50-minute window. Root cause was
+  the ORDER, not the deletion: for a "provider declares, consumer implements" invariant the PROVIDER (UAC) must shed the
+  declaration FIRST, or both repos must land inside one promotion. Closed by uac@70e7a697 (18:40Z); verified directly
+  (`VENUE_TO_ADAPTER_KEY` ∩ {MANGO,ZETA,FLASH} = ∅; only the pre-existing `__no_adapter_yet__` sentinels remain, which
+  the tests allowlist via known_gaps), then the SAME failing run's workflow was manually re-dispatched (rule 10) → run
+  29441021802 sha 1aeb5e3c **conclusion=success**. unified-api-contracts CI green both runs. **Lesson for the next venue
+  removal** (worth honouring, this class recurs): ship the UAC registry deletion FIRST, then the IS adapter deletion —
+  or accept a red consumer window and say so up front.
+
 - 2026-07-15: Filed from the operator's ruling in the main session, following the funding dual-capture investigation
   (perp_funding vs derivative_ticker). Parity check deliberately gated on the DRIFT backfill grind finishing so it
   compares complete data.
