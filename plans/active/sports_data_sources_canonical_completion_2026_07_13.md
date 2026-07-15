@@ -3775,3 +3775,23 @@ it's new adapter work, not a data-audit residual).
     exactly the documented purpose of this env var. Scoped to this single script invocation only — no shared library
     code touched, no change to `_LOCK_TTL_SECONDS`/`_is_lock_fresh`/`_acquire_lock` (respecting the standing rule from
     the earlier lock-orphan incident this session not to touch that logic).
+
+- **2026-07-15 (round5 completed cleanly — `MAX ROUNDS reached`, no crash).** Ran for ~1h32m end-to-end and exhausted
+  its `--max-rounds 4` naturally this time — the `MANIFEST_ALLOW_STALE_FALLBACK=true` fix held for the entire run, no
+  further `ManifestConsolidatorStaleError`. Script's own final tally: 305 non-blank-`data_type` `attempted_failed`
+  remaining (`PLAYER_STATS` 87, `FIXTURE_STATS` 80, `FIXTURE_EVENTS` 65, `FIXTURE_LINEUPS` 49, `TEAMS` 24).
+  **Independently re-verified against live production** (not just trusting the script's self-report): direct read of
+  `instruments-store-sports-prd`'s `_index/availability_index.parquet` confirms total api_football `attempted_failed` =
+  **766**, exactly matching the script's own 305 + the separately-tracked blank-dt-461 (unchanged, still needing its own
+  dedicated reconciliation per the earlier finding — confirmed still 100% blank `league_id`, not touched by this
+  closer). **Total reduction this session: 4,138 → 766 (−81.5%).**
+  - **This is a legitimate natural stopping point for this specific mechanism, not a stall** — the residual-closer
+    completed its designed work; the remaining 305 (PLAYER_STATS/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/TEAMS) is
+    the same class already tracked as the `[DATA] P2` CF11 backfill todo above, which explicitly calls for a _different_
+    mechanism (a dedicated per-fixture-entity re-fetch via `fixture_ids_override`, not another round of this general
+    closer) — further blind relaunches of THIS script are unlikely to move these further. No more residual-closer rounds
+    queued; the remaining work routes through the existing CF11 todo + the blank-dt-461 finding, both already tracked,
+    not new scope.
+  - **api_football's INJURIES/FIXTURES/general-residual thread (started this session) is now fully concluded**: 0
+    INJURIES, 0 FIXTURES, 81.5% reduction on the general residual, both remaining classes root-caused and routed to
+    their existing tracked todos. This closes out todo #16-18 of this session's working list.
