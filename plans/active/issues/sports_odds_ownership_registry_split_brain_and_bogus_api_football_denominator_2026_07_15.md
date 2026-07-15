@@ -284,7 +284,7 @@ also depresses every ODDS honest-coverage ratio by ~4.6× on the denominator.
       `source=api_football` × `ODDS` rows in the IS sports `_index`; ODDS coverage ratios re-measured post-purge;
       snapshot-first per the standard wipe ritual.
 - [x] ✅ [DOCS] P2. Un-park / re-scope `sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md` so ODDS
-      eu=89,073 is not carried as an api_football fetch target. — **DONE 2026-07-15**, unified-trading-pm@<sha-b>.
+      eu=89,073 is not carried as an api_football fetch target. — **DONE 2026-07-15**, unified-trading-pm@b836cab53.
       Annotated in place (the plan is `[PARKED]`/priority-999, so it was corrected, not un-parked — un-parking is the
       plan owner's call and the other prereqs are still outstanding): the eu=89,073 line now carries an inline
       **do-NOT-fetch** marker plus a full correction note (impossible-by-construction, the 46-vs-94 league tell, the
