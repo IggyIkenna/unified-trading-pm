@@ -1650,3 +1650,96 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   as other recon-bucket findings this plan already tracks) — unrelated to this bucket's delete, needs its own triage.
   **Verdict for the orchestrating verify+delete-phase task**: DONE — bare bucket physically deleted, terraform state +
   config reconciled so a future `terraform apply` cannot resurrect it, no code/data regressions, estate count -1.
+
+- **2026-07-15, Final audit — flat `features-*`/`instruments-store-*`/`market-data-tick-*` bucket sweep, consolidated
+  across-bucket result (5-bucket workflow run).** This entry rolls up the per-bucket Verify+Delete-phase results for the
+  5 buckets dispatched this sweep and re-confirms nothing else in the estate was missed. **Net estate change this sweep:
+  -1 bucket** (`features-calendar` only; the other 4 are still-open follow-ups, none regressed).
+
+  **(1) Migrated + deleted — `features-calendar` (estate count -1, DONE)**: bare
+  `features-calendar-central-element-323112` confirmed 0 live/noncurrent/soft-deleted objects, physically deleted
+  (`gcloud storage buckets describe` now 404), `terraform state rm google_storage_bucket.features_calendar` run before
+  the delete, `main.tf`/`outputs.tf` resource+output removed with a REMOVED-banner, one stale doc-comment path fixed in
+  `run-features-pipeline-backfill.sh`. Canonical siblings (`features-calendar-{prd,test}`) confirmed live and receiving
+  writes. Shipped `deployment-service@82eadd50e977b300828842aa3fb5989721148b1f`. 3 small out-of-scope dead-code/config
+  items deferred (dead `cloud_interface.constants.get_features_calendar_bucket()`, a dormant `gcs_volumes` bare-bucket
+  ref in the never-deployed `features-delta-one-service` terraform module, and a pre-existing `PAUSED`
+  `uts-prod-features-calendar-t1-schedule` scheduler — all noted in the entry above, none live/blocking). Full
+  narrative: the 2026-07-15 `features-calendar` Progress Log entry immediately above this one.
+
+  **(2) Migrate-phase code not yet shipped, live refs not yet cut over — `features-sports` (NOT deleted, blocked)**:
+  bare `features-sports-central-element-323112` is genuinely legacy-flat and in-scope (distinct from the deliberately-
+  held Group-B `features-*` buckets below), but this run's Verify+Delete touch correctly declined to force it —
+  `readyForDelete=false` on re-verification. Two concrete blockers, both requiring a prior touch: (a) the migrate-phase
+  one-off script
+  `features-service/features_service/sports/scripts/migrate_features_sports_flat_bucket_gap_2026_07_15.py` is still
+  untracked (`??`) — never ran through `quality-gates.sh` or `quickmerge`; (b) three live-reference surfaces still point
+  at the bare bucket and need repointing before any delete: `deployment-service/terraform/gcp/main.tf:474`
+  `google_storage_bucket.features_sports` (+ its `_imports_reconcile.tf:51-52` import block), the live
+  features-sports-service Cloud Run job's GCS-FUSE mount, and two VM-fanout backfill launchers
+  (`deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh`,
+  `features-service/scripts/sports/launch_parallel_backfill.sh`) whose `GCS_BUCKET` default still points at the bare
+  name. Nothing modified/committed/deleted this touch — bare bucket fully intact. Follow-up: ship the migrate script
+  first, then a separate touch for the terraform/launcher/FUSE-mount cutover, then re-attempt Verify+Delete.
+
+  **(3) Blocked on an operator ruling — `features-onchain` (NOT deleted, NOT a migration gap)**: bare
+  `features-onchain-central-element-323112` holds exactly 16 objects (70,768,303 bytes), all under one
+  `netflow_xsec_research/` prefix — 7 parquet research datasets, a **live** `_dune_sleeve_ledger.csv`/
+  `_dune_sleeve_state.json` personal trading-sleeve state, 4 PNGs, and a `STRATEGY_STATE.md`. There is zero
+  `asset_group`/`pipeline_mode`/by-date hive partitioning to classify these into the canonical
+  `features-onchain-{cefi,defi}` siblings, and
+  `e2e-testing/scripts/onchain/{README.md, gcs_sync.py, _dune_sleeve_deploy.py}` hardcode this exact bare bucket+prefix
+  as their documented "Data SSOT" with edits as recent as 2026-07-05 (a live consumer, not dead code). Deleting this
+  bucket now would destroy a live personal trading-sleeve's only backing store with no replacement. Filed + confirmed
+  still open: `plans/active/issues/features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15.md`, which lays
+  out 3 operator options (A: relocate `netflow_xsec_research/` to a dedicated research bucket + repoint e2e-testing then
+  delete the bare bucket [prior agent's recommendation]; B: exclude this bucket from the features-* migration entirely;
+  C: ship only the 2 non-blocking dead-code fixes now, defer the bucket decision). No operator ruling has landed yet —
+  **this bucket needs an explicit operator decision before further dispatch**, re-running the same task will just
+  re-produce the same STOP.
+
+  **(4) Deliberately HELD, collision with a sister plan — `market-data-tick-sports` + `instruments-store-sports` (NOT
+  deleted, NOT a gap in this plan)**: both buckets are item G of this plan but are actively owned/dispatched by
+  `sports_manifest_canonicalisation_2026_06_01.md` (`locked_by: live-defi-rollout`, `assigned_vm: planning`), gated on
+  CF-8 (`available_at` backfill still RED on the MDPS surface, 85.3% non-null as of the sister plan's latest entries)
+  needing a scheduled maintenance window + a `service_name`-aware manifest-consolidator write redesign before any
+  further backfill attempt — an architectural gap, not a quick fix. `instruments-store-sports` additionally has 400
+  confirmed-unmigrated unique objects (two genuine bare-only prefixes: `day=2026-03-21/venue=BETFAIR/` and
+  `sports_reference_v1_archive/by_date/` ~398 day-partitions) plus a live
+  terraform/scheduler/FUSE-mount/VM-launcher/~30-script reference surface. Re-verified this run: item G's "Still HELD —
+  do not purge/delete either bucket" directive (line ~533) is unchanged; no GCS/terraform/config action taken on either
+  bucket. **Re-check only after `sports_manifest_canonicalisation_2026_06_01.md`'s E1/E8 CF-8 gate clears on BOTH halves
+  of the pair.**
+
+  **Group-B exclusion, explicitly re-confirmed out of scope (NOT a gap, NOT touched this sweep)**: per the
+  operator-approved 2026-05-19 Phase D rollback (`plans/active/bucket_env_split_rollout_2026_06.md` Phase 1, still
+  pending re-provisioning), the following remain **deliberately flat by design** and were correctly NOT migrated,
+  env-split, or deleted by any of the 5 dispatched touches this sweep:
+  `features-delta-one-{cefi,tradfi,defi,pred,sports}`, `features-volatility-{cefi,tradfi,defi,pred,sports}`,
+  `features-onchain-cefi-{pid}` / `features-onchain-defi-{pid}` (the per-asset-group split siblings — distinct from the
+  bare shared `features-onchain-{pid}` bucket in item (3) above, which IS in scope),
+  `features-xinstrument-{cefi,tradfi,defi,pred,sports}`, `features-mtf-{cefi,tradfi,defi}`, `ml-artifacts-{pid}`,
+  `ml-training-artifacts-{pid}`, `strategy-store-{pid}`, `execution-store-{cefi,tradfi,defi,sports}`. Re-grepped
+  `deployment-service/configs/cloud-providers.yaml`'s comment block this touch (lines ~38-72) — confirms the rollback
+  framing is unchanged and these are documented as intentionally flat, not accidental legacy.
+
+  **Workspace-wide spot-check (this touch, no fresh full-corpus walk — single-walk discipline honored)**: confirmed
+  `cloud-providers.yaml` already resolves all 5 assigned bucket keys (`features-calendar`, `features-sports`,
+  `features-onchain` [per-AG], `market-data-tick-sports`/`market_data_cefi` family, `instruments-store-sports`) to
+  canonical env-tiered names in both GCP and AWS blocks — no code-level stray references found beyond the
+  already-itemized deferred items above. Consistent with the workspace-wide grep already run earlier this session (zero
+  live producer/consumer code hardcoding any of the 5 bare bucket names as string literals).
+
+  **Unrelated but found + fixed in the same session — MorphoAdapter chain-awareness fix**: `market-tick-data-service`
+  commit `2b73729e` ("fix(defi): make MorphoAdapter chain-aware for market discovery + subgraph resolution") shipped
+  during this session. It is **unrelated to this bucket sweep** — filed here only because it was discovered+fixed in the
+  same working session and the operator asked it be noted. Natural follow-up once this bucket sweep lands: a Base-chain
+  Morpho backfill relaunch (the chain-awareness fix means prior Base-chain Morpho captures may have been silently
+  mis-resolved to the wrong chain's subgraph; a targeted backfill VM launch would confirm/backfill any gap).
+
+  **Overall verdict**: 1 of 5 assigned buckets fully migrated+deleted (`features-calendar`); 2 blocked on prior-touch
+  code-ship + live-reference cutover (`features-sports`) or an explicit operator ruling (`features-onchain`); 2
+  correctly left untouched as a sister-plan collision (`market-data-tick-sports` + `instruments-store-sports`, item G,
+  re-verified HELD); Group-B's 10 buckets/families explicitly reconfirmed out of scope; no regressions, no data loss, no
+  unauthorized deletes. Estate count this sweep: **-1** (241 baseline tracking unaffected beyond the single
+  `features-calendar` delete already reflected in the entry above).
