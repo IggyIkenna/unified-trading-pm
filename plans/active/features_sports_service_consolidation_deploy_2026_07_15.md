@@ -371,3 +371,30 @@ repo. This plan tracks that work.
   guess. Next step (per the issue doc's updated "not yet tried" list): get live/streamed pytest output out of a Cloud
   Build run (currently fully silent until pass/fail) so the NEXT attempt can localize exactly which test is stuck, or
   bisect by feature-family via a throwaway trigger, before proposing any resource/parallelism change.
+- 2026-07-15 (DriftFixRetireReenable phase re-dispatch, todos 6-8 — STOPPED again per the same gating condition, real
+  evidence, not inference): Re-dispatched with `manualExecutionSucceeded=false` handed off from the reverify phase. Per
+  the task's explicit instruction ("if manualExecutionSucceeded is false, STOP and report why — do not retire anything
+  or touch scheduling"), independently re-verified live rather than trusting the handoff flag alone (account
+  `ikenna@odum-research.com` / project `central-element-323112`, both confirmed matching this time — no auth/project
+  mismatch this touch):
+  `gcloud scheduler jobs describe features-service-sports-daily-trigger --location=asia-northeast1` → still
+  `state: PAUSED`. `gcloud run jobs executions list --job=features-service-sports-job` → still only the same two
+  executions (`kk4dv`, `fs8sj`); `gcloud run jobs executions describe features-service-sports-job-kk4dv` →
+  `Completed=False`, `reason=NonZeroExitCode`, `failedCount=1` — no execution (manual or scheduled) has ever reached
+  `SUCCEEDED`. `gcloud artifacts docker images list …/features-service --include-tags --sort-by=~CREATE_TIME` →
+  `:latest` is still digest `sha256:c204c49d…`, built 2026-07-14T00:58:45 — unchanged, still predates the UTL `c47273c1`
+  lock-aware-consolidator-liveness fix. `gcloud builds list` (newest-first, 8 builds) shows the most recent
+  features-service build attempt is still `cc976c01-794a-4437-a745-4e1c8ccf722f` (`CANCELLED`, 16:30:50Z, the same one
+  already filed in the issue doc) — no new features-service build has been triggered since; the builds newer than it are
+  all `unified-trading-library`/`market-tick-data-service` (unrelated). **Gate condition holds**
+  (`manualExecutionSucceeded=false`) — did NOT apply the `--category`→`--asset-group` Workflow-YAML drift fix (todo 6),
+  did NOT run `terraform plan`/`apply` on it, did NOT touch `terraform state rm` or delete the legacy
+  `features-sports-service-job`/`features-sports-service-daily-trigger` (todo 7), and did NOT un-pause
+  `features-service-sports-daily-trigger` or force a scheduler fire (todo 8). No terraform/config/code changes made in
+  any repo this touch; this Progress Log append is the only change. Todos 6-8 remain `[ ]`. Next unblock step unchanged
+  from the prior touch: get a `features-service` Cloud Build to genuinely reach `SUCCESS` against the UTL
+  `c47273c1`-based commit (root-causing the quality-gates hang in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md` is the prerequisite — its "not yet
+  tried" list, in order: (a) stream pytest output live instead of the current silent redirect so a hang localizes to a
+  specific test, (b) bisect by feature-family via a throwaway Cloud Build trigger), verify the new digest carries the
+  fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, THEN revisit todos 6-8 in a future touch.
