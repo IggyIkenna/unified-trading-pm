@@ -102,13 +102,13 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
       `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
 - [x] [CODE] P1. Bounded retry-with-backoff shipped — `features-service@5e1ffd2e`
       (`_assert_consolidator_healthy_with_retry`, 3 attempts/75s/150s total, fail-fast intent preserved).
-- [x] [INFRA] P1. Root cause found: `instruments-sports` consolidator has the IDENTICAL lock-contention livelock class
-      already fixed for defi (just triggered by ordinary shard-backlog growth, not date-range chunking) — live
-      `"clearing stale lock ... age>TTL"` reclaim signature confirmed it, `market-data-sports` control group (same
-      timeout tier) stayed fast the whole time. Fixed via `deployment-service@69136c2c`
-      (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400` Terraform override, live-applied). Post-fix: 2+ six-minute cycles with ZERO
-      stale-lock reclaims (previously guaranteed). Issue doc flipped `open` → `resolved`:
-      `unified-trading-pm@05942b2f0`.
+- [x] [INFRA] P1 — REOPENED 2026-07-15 by adversarial verification (see below). `deployment-service@69136c2c` (Terraform
+      lock-TTL override) IS live and DID close the stale-lock-reclaim trigger path, but an independent verifier found
+      fresh post-fix Cloud Logging evidence of 3 executions still running full concurrent merges simultaneously via a
+      DIFFERENT mechanism (a genuine CAS race in `_acquire_lock`'s `if_generation_match=0`, not TTL-expiry). The
+      "resolved" claim was overstated and has been corrected — issue doc reopened to `open`, `resolved_by` cleared:
+      `unified-trading-pm@140579a41`. Follow-up investigation of the real concurrent-acquisition bug dispatched
+      separately (fleet-wide scope — shared UTL code, not sports-only).
 - [x] [INFRA] P1 — SUPERSEDED, not needed. The stdout-logging-bootstrap plan for defi turned out unnecessary: the actual
       root cause (lock-TTL livelock, not an unobservable in-container crash) was found and fixed via Terraform alone
       (see Ground Truth — defi fix already verified live-working before this todo was ever picked up). Leaving unstruck
@@ -119,6 +119,12 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
       mechanical fix dispatched separately). Big finding: cefi blank-data_type 9,757-row "RESOLVED" claim was incomplete
       — live re-query confirms real-but-static orphan rows (not actively growing), annotated
       `phantom_captures_cefi_2026_06_28.md`. Commits: `unified-trading-pm@{0378027e6,fe674d7a3}`.
+- [ ] [INFRA] P0. NEW (from adversarial verification): investigate + fix the real `_acquire_lock` concurrent-acquisition
+      race in `unified_trading_library/manifest_consolidator.py` — `if_generation_match=0` GCS conditional-write is
+      letting multiple Cloud Run executions acquire the lock simultaneously (NOT a TTL-expiry reclaim; confirmed via
+      live logs showing 3 overlapping full-length merges with no "clearing stale lock" line between them). Shared code
+      across the WHOLE consolidator fleet (~26 jobs) — check whether defi and others are latently exposed too, not just
+      sports. Repo: unified-trading-library.
 - [ ] [INFRA] P2. Re-run the manifest-consolidator-ssot.md verification recipe across the full fleet (all ~26 Cloud Run
       jobs) after the above fixes land; confirm no job is stuck on a stale/failing image or lock; note any PAUSED legacy
       job that's still being polled by the liveness watchdog (false-positive class already flagged in the defi sigkill
@@ -220,3 +226,13 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   `deployment-service@{0aaab1a22,69136c2c}`, `features-service@5e1ffd2e`, `market-tick-data-service@e2018167`. Launched
   an independent adversarial-verification Workflow (5 skeptics, one per fix, no context from the implementing agents)
   before declaring any of this genuinely done — result to follow.
+- 2026-07-15: **Adversarial verification pass complete — 4/5 CONFIRMED, 1/5 DISPUTED.** Verdicts:
+  `alerting-service-dedup` CONFIRMED (mechanism, cooldown boundary math, and test-would-actually-catch-a-regression all
+  independently re-derived, not just read). `deployment-service-renag` CONFIRMED (wiring order, key-identity match with
+  the existing MissTracker, and the file-size-ratchet-is-pre-existing-not-new claim all independently re-verified by
+  re-running the gate). `features-service-retry` CONFIRMED (traced that `MANIFEST_ALLOW_STALE_FALLBACK` is untouched —
+  the claimed "no weakening" is real, not asserted). `mtds-mbp10-allowlist` CONFIRMED-WITH-CAVEAT (the caveat is the one
+  already disclosed — UAC registry gate — not a new hidden gap). **`deployment-service-sports-ttl` DISPUTED** — see the
+  corrective entry + reopened issue doc above. This is adversarial verification doing exactly its job: catching an
+  overstated "resolved" claim before it became a stale false-green in the tracker. New P0 todo added for the real fix
+  (the `_acquire_lock` CAS race).
