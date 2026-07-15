@@ -20,7 +20,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-15
 locked_since: 2026-05-21
 ---
 
@@ -310,5 +310,6 @@ canonical mid-run, proving the safety mechanism works; the retry succeeded):
 
 Evidence: live production reads/writes against `market-data-tick-cefi-prd-central-element-323112`, 2026-07-15, this
 session (ad hoc diagnostic + the committed one-off delete script; single-read discipline per query, no whole-corpus
-walk). Code fix + test: instruments-service commit (see git log for this file's neighboring commit — pushed same session
-via quickmerge).
+walk). Code fix + test: `instruments-service@dd6b4e82650a0fa54111eb6268cf274cea510407` ("fix(instruments-service):
+harden phantom-audit blank-data_type filter + delete 9,757 confirmed-stale cefi orphan rows"), landed on
+`live-defi-rollout` via quickmerge, full `quality-gates.sh --no-fix` green (117s, sentinel-verified) before ship.
