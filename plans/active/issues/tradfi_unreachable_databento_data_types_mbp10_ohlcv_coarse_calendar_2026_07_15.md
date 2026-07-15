@@ -195,9 +195,12 @@ these 5 cells.
       `quality-gates.sh --no-fix` green. See "Resolution — mbp_10 (2026-07-15)" below for what this does and does NOT
       unblock; the L2 30-day-lookback manifest-classification sub-question folds into the existing P3 VERIFY todo below
       (not resolved by this fix — still open).
-- [ ] [DESIGN] P2. Operator/architecture decision for `ohlcv_15m`/`ohlcv_24h`'s MTDS-tick-download expected coverage —
-      narrow (KRX/ICE precedent) vs. wire a real downstream-aggregation-driven manifest write. Raise as a structured
-      options question, do not guess.
+- [x] ✅ [DESIGN] P2. Operator/architecture decision for `ohlcv_15m`/`ohlcv_24h`'s MTDS-tick-download expected coverage
+      — AUDITED (per `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s operator-directed audit todo) + CBOE's
+      slice mechanically fixed via the KRX/ICE narrowing precedent. Remaining sub-findings (no aggregation writer exists
+      anywhere despite 3 docs/comments claiming one does; `"YAHOO_FINANCE"` is a phantom no-adapter venue inflating the
+      failure counts) still need their own decisions — see "Resolution — ohlcv_15m/ohlcv_24h audit (2026-07-15)" below
+      for the full writeup + 2 new scoped follow-up todos.
 - [ ] [DESIGN] P2. Operator/architecture decision for `corporate_action_confirmed`/`earnings_result`'s MTDS-tick-bucket
       expected coverage vs. features-service's actual ownership of this domain. Raise as a structured options question,
       do not guess. If descoped from MTDS, also flag to whoever owns
@@ -208,6 +211,23 @@ these 5 cells.
       requested-but-`_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets recorded (`attempted_failed` vs.
       `empty_confirmed`) — not traced to the manifest-write layer in this pass; needed to fully close out mechanism
       (1)/(2)'s classification question.
+- [ ] [DESIGN] P2. Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
+      silence). If yes: build a downstream-aggregation writer (reuse `features-service`'s already-tested exact-OHLC
+      `candle_resampler.py` engine rather than writing new resampling logic) that resamples CBOE's Databento
+      `ohlcv_1s`/`ohlcv_1m` into `ohlcv_15m` and writes it into the MTDS tick-manifest namespace — this is the ONLY
+      concrete unfed consumer found (`vix_features` in UAC `required_inputs.py` requires `(tradfi, ohlcv_15m)` for
+      `features-service`'s `vix_calculator.py`). If no: `vix_features`' required-input declaration should be corrected
+      to `ohlcv_1m` only (which IS real and flowing). See "Resolution" below — this is a real multi-service gap, not a
+      registry-narrowing fix like the CBOE item above.
+- [ ] [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,
+      `unified_api_contracts/registry/market_data_categories.py:329`) with `NO_ADAPTER_YET`
+      (`registry/venue_adapter_keys.py:137`) and is expected for `["ohlcv_15m","ohlcv_24h"]`
+      (`registry/expected_coverage.py:185`) — every cell is structurally unfulfillable, same misclassification shape as
+      the already-decided `corporate_action_confirmed`/`earnings_result` fix elsewhere in this doc. Likely the DOMINANT
+      contributor to the reported 3589/3590 `ohlcv_15m` + part of the 2852/7118 `ohlcv_24h` failure counts. Not
+      blind-fixed here: the existing code comment explicitly flags a "manifest churn" risk (real historical rows may be
+      stamped under this venue name) — needs the same structured operator decision the cefi-orphan-rows item got, not a
+      silent delete. See "Resolution" below.
 
 ## Resolution — mbp_10 (2026-07-15)
 
@@ -250,6 +270,96 @@ most likely a fixed historical count (residue from before the 2026-05-15 MVP nar
 pre-narrowing live run originally hit the fetch path) rather than actively-growing — not independently re-verified
 against a live manifest query in this pass (would require the P3 VERIFY trace below).
 
+## Resolution — ohlcv_15m/ohlcv_24h audit (2026-07-15)
+
+Per `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s operator decision #2 ("this is very likely NOT greenfield
+design work... UAC/instruments-service/MTDS already has infrastructure for per-venue source-capability constraints and
+this 'might need completion' rather than a new design — AUDIT FIRST"), this section is that audit. Read (not grepped)
+`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`, `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+`codex/02-data/honest-coverage-model.md`, and the relevant UAC/instruments-service/MTDS/market-data-processing-service
+source directly.
+
+**Verdict: the operator's prior was substantially correct.** The per-venue source-capability/granularity distinction he
+described (Databento-uncovered venues like FX-spot/Korean-equities get whatever granularity their real source provides,
+which may only be daily; Databento-covered venues should get finer bars, not be capped) is **already encoded and mostly
+correct** in two complementary UAC registries — this was a completion + drift-cleanup task, not new design.
+
+**1. What already exists (with citations):**
+
+- `unified_api_contracts/registry/expected_coverage.py::EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]` (the "what we plan
+  to fill" policy layer, line ~145) +
+  `unified_api_contracts/registry/market_data_categories.py::VENUE_DATA_TYPE_CAPABILITIES` (the "what a venue could
+  emit" layer, line ~1153) **already implement the operator's exact per-venue distinction**:
+  - Databento-covered venues `CME`/`NASDAQ`/`NYSE` → `{ohlcv_1s, ohlcv_1m}` ONLY, deliberately excluding
+    `ohlcv_15m`/`ohlcv_24h` (Databento doesn't serve those schemas — by design, per the sourcing SSOT).
+  - Databento-NOT-covered venues `ICE` (Yahoo DXY "usd index"), `KRX` ("Korean equities"), `FX` (KRW/USD) →
+    `{ohlcv_24h}` ONLY — daily genuinely IS the ceiling (Yahoo is the only source) — **this is precisely the operator's
+    own example**, and it's already modeled correctly.
+  - `CBOE` (mixed: VX futures via Databento +, until this fix, a legacy Yahoo VIX-cash-index `ohlcv_15m` entry).
+- `unified_api_contracts/registry/data_source_continuity.py::_SOURCE_RESOLVERS` + `get_source_for_instrument()` /
+  `data_types_for_instrument()` (lines 253-297) — a SECOND, complementary per-instrument temporal source-capability
+  registry (KRX/DXY/Treasury-yield-index → `ohlcv_24h` via Yahoo, each with its own genesis-date floor). This is exactly
+  the kind of "per-(venue/instrument, data_type) → source + ceiling" mechanism the operator predicted existed.
+
+**2. What was genuinely stale/missing — 3 distinct findings, not one:**
+
+**(A) SHIPPED — CBOE's `ohlcv_15m` capability+expected entry was stale drift, not a design gap.** It was correct while
+the VIX cash index came from Yahoo, but that fetch path was REMOVED 2026-06-25/26 (operator decision;
+`data_source_continuity.py`'s own docstring confirms: "VIX-15m ohlcv_15m index was retired 2026-06-26... now purely the
+VX FUTURES front contract... aggregated downstream"). The registry entries were never updated to match, so
+`market_tick_data_service/adapters/umi_tick_provider.py`'s own LIVE code comment (lines 643-646) already documented the
+resulting bug: a `(CBOE, ohlcv_15m)` request "now falls through to the databento path" (no 15m schema there) → 100%
+`attempted_fail`. **Fixed via the exact same narrowing pattern as the already-shipped KRX (2026-07-12) and ICE
+(2026-07-13) precedents** — removed `ohlcv_15m` from `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` and
+`EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CBOE"]`, updated 2 stale test assertions + 3 stale comments.
+`unified-api-contracts@78b9e899`. `quality-gates.sh --no-fix` green (295s, 0 new violations; only pre-existing unrelated
+warnings). Verified no other consumer depends on the removed entry: `TestRegistryConsistencyWithCapabilities` still
+passes (ohlcv_15m stays in the general `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` set); the parquet-schema-completeness
+fixture for historical `(tradfi, ohlcv_15m, CBOE)` rows (`test_schema_spec_completeness.py:859`) is untouched — it
+documents already-captured historical data shape, unrelated to forward expected-coverage.
+
+**(B) NOT SHIPPED — genuinely missing, recommend as scoped follow-up.** "Aggregate the coarser bars downstream" is
+asserted in **three separate places** — `codex/02-data/tradfi-databento-sourcing-ssot.md`, the `umi_tick_provider.py`
+CBOE comment, and `market-data-processing-service`'s `TradfiOhlcv15mAdapter` docstring
+(`app/adapters/tradfi/ohlcv_passthrough.py:397`: "VX futures aggregated from Databento ohlcv-1m") — **but no such
+aggregator exists anywhere in the codebase.** Verified by reading `TradfiOhlcvPassthroughAdapter` in full: it is a bare
+PASSTHROUGH adapter ("Handles pre-aggregated OHLCV data... IMPORTANT: For timeframes finer than the source data... most
+candles will be NaN since we cannot subdivide") — it requires raw `ohlcv_15m`/`ohlcv_24h` to already exist upstream; it
+does NOT resample from `ohlcv_1s`/`ohlcv_1m`. `market-data-processing-service`'s `GranularityDetector`
+(`app/core/granularity_detector.py`) only LABELS the native granularity of whatever it's handed — also not a resampler.
+A real, well-tested, exact-OHLC resampler DOES exist —
+`features-service/features_service/delta_one/app/core/candle_resampler.py` (open=first/high=max/low=min/close=last/
+volume=sum, right-edge labeled, polars `group_by_dynamic`) — but it's wired for feature-VALUE candle frames inside
+features-service's delta_one module, not for writing MTDS-tick-manifest-satisfying rows. This causes NO alert noise for
+CME/NASDAQ/NYSE (correctly excluded from expected coverage, so no gap there) but DOES leave a real, named downstream
+consumer unfed: `unified_api_contracts/canonical/domain/features/required_inputs.py`'s `"vix_features"` entry requires
+`InputReq(asset_group="tradfi", data_type="ohlcv_15m", ...)` for `features-service`'s
+`features_service/volatility/calculators/vix_calculator.py` — and with CBOE's only historical `ohlcv_15m` source now
+formally gone (finding A), this feature has no real feed at all. **Recommendation (new todo above)**: decide whether
+real aggregated 15m/24h VIX-futures bars are actually wanted; if yes, build a small MTDS-side (or MDPS-side) writer
+reusing the existing `candle_resampler.py` engine, scoped to CBOE only (the one venue with a live product need); if no,
+correct `vix_features`'s required-input declaration instead. Either way this is a real cross-service wiring decision,
+correctly NOT rushed in this pass.
+
+**(C) FLAGGED, NOT shipped — same misclassification class as the already-decided `corporate_action_confirmed`/
+`earnings_result` fix.** `"YAHOO_FINANCE"` is declared as a literal TradFi VENUE in `VENUES_BY_ASSET_GROUP["tradfi"]`
+(`market_data_categories.py:329`), with its own code comment admitting: "legacy source-as-venue artifact (pre-existing;
+flagged by the venue/source parity gate — not a real venue, kept to avoid manifest churn)." It's declared expected for
+`["ohlcv_15m","ohlcv_24h"]` (`expected_coverage.py:185`) and has capability entries, but its adapter-key registration is
+explicitly `NO_ADAPTER_YET` (`registry/venue_adapter_keys.py:137`) — every `(YAHOO_FINANCE, ohlcv_15m/24h)` cell is a
+**structurally guaranteed permanent failure**. This is very likely the DOMINANT contributor to the reported 3589/3590
+(100%) `ohlcv_15m` and part of the 2852/7118 (40%) `ohlcv_24h` failure counts — a phantom venue, not a routing bug.
+**Not blind-fixed here**: the existing comment's own "manifest churn" flag means there may be real historical rows
+stamped under this venue name that need a considered migration, not a silent registry delete — same shape as the
+cefi-orphan-rows decision the operator already made elsewhere in this remediation pass. New todo above routes this to
+the same kind of structured decision.
+
+**Bottom line**: mostly a completion task, as the operator suspected. One completion shipped (CBOE narrowing,
+precedent-matching, low-risk, tested). Two items remain genuinely open — not because the infrastructure doesn't exist,
+but because (B) is a real, never-built multi-service aggregation writer (despite 3 places claiming one exists) and (C)
+has an already-flagged "manifest churn" risk that deserves the same explicit operator decision its twin
+(`corporate_action_confirmed`/`earnings_result`) already got.
+
 ## Progress Log
 
 - 2026-07-15: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
@@ -276,3 +386,15 @@ against a live manifest query in this pass (would require the P3 VERIFY trace be
   `expected_unattempted`-with-reason (vs. `attempted_failed`) so it stops presenting as an active failure in
   `DP_RUN_MOSTLY_EMPTY`'s ratio math — worth a small follow-up if this cell keeps contributing to future alert noise;
   not pursued in this pass to avoid scope creep into the alert-classification system beyond what was asked.
+- 2026-07-15 (later same day, background research agent — ohlcv_15m/ohlcv_24h audit dispatched from
+  `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s operator decision #2): audited UAC/instruments-service/MTDS
+  for existing per-venue source-capability/granularity infrastructure per the operator's strong prior that it already
+  exists. **Confirmed the prior was substantially correct** — see "Resolution — ohlcv_15m/ohlcv_24h audit" above for
+  full citations. Shipped one completion fix (CBOE `ohlcv_15m` narrowing, `unified-api-contracts@78b9e899`, same pattern
+  as KRX/ICE, QG green). Found and documented (not blind-fixed) 2 further sub-findings: (B) no downstream OHLCV
+  aggregation writer exists anywhere despite 3 places in the codebase asserting one does, leaving `vix_features`'s real
+  `ohlcv_15m` input requirement unfed; (C) `"YAHOO_FINANCE"` is a phantom no-adapter venue in
+  `VENUES_BY_ASSET_GROUP["tradfi"]` declared expected for `ohlcv_15m`/`ohlcv_24h` — likely the dominant contributor to
+  the reported failure counts, same misclassification class as this doc's `corporate_action_confirmed`/`earnings_result`
+  finding. Both routed to new scoped todos above rather than rushed, per each finding's own risk profile (B = real
+  multi-service build; C = an already-flagged "manifest churn" risk needing an explicit operator decision).

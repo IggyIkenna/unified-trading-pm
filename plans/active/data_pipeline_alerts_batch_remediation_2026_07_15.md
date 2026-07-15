@@ -330,10 +330,17 @@ Presented all 5 open items to the operator with recommendations; decisions below
       unconditionally flagged phantom regardless of whether real data exists; then delete the confirmed 9,757 stale
       orphan rows (per `phantom_captures_cefi_2026_06_28.md`'s 2026-07-15 investigation section for the exact
       predicate/evidence). Repo: likely e2e-testing or unified-trading-library — locate via grep.
-- [ ] [DATA] P1. Tradfi ohlcv_15m/ohlcv_24h: AUDIT existing UAC (`unified_api_contracts`), instruments-service, and MTDS
-      code for per-venue source-capability/granularity routing that may already largely cover this (operator's strong
-      prior) before designing anything new. Report what exists, what's genuinely missing, and complete the gap — do not
-      build a parallel/duplicate mechanism.
+- [x] ✅ [DATA] P1. Tradfi ohlcv_15m/ohlcv_24h: AUDITED — operator's prior CONFIRMED (per-venue source-capability
+      infrastructure already exists in `unified_api_contracts/registry/expected_coverage.py` +
+      `market_data_categories.py::VENUE_DATA_TYPE_CAPABILITIES` + `data_source_continuity.py::_SOURCE_RESOLVERS`, and is
+      mostly already correct — CME/NASDAQ/NYSE correctly excluded from ohlcv_15m/24h, ICE/KRX/FX correctly capped at
+      ohlcv_24h). Shipped one completion fix (CBOE's stale ohlcv_15m entry, `unified-api-contracts@78b9e899`, same
+      narrowing pattern as KRX/ICE, QG green) and found + documented 2 further genuine gaps rather than rushing them (no
+      downstream aggregation writer exists anywhere despite 3 places claiming one does; `"YAHOO_FINANCE"` is a phantom
+      no-adapter venue inflating the failure counts, same class as the corporate_action_confirmed/ earnings_result fix
+      below). Full writeup + 2 new scoped todos:
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+      ohlcv_15m/ohlcv_24h audit (2026-07-15)".
 - [ ] [CODE] P1. Tradfi corporate_action_confirmed/earnings_result: stop
       `instruments-service/scripts/enumerate_expected_universe.py` (or wherever the actual seeding happens — confirm via
       the issue doc's citations) from seeding these as expected cells in the MTDS tick manifest bucket.
@@ -342,3 +349,10 @@ Presented all 5 open items to the operator with recommendations; decisions below
       registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
       the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected
       rather than continuing to page as if it's an active problem.
+
+### Post-reconciliation progress
+
+- 2026-07-15 (background research agent): completed the ohlcv_15m/ohlcv_24h audit todo above. Full findings + the
+  shipped CBOE fix + 2 new scoped follow-up todos are in
+  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
+  ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
