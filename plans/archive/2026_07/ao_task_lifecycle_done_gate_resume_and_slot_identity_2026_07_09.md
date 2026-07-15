@@ -9,7 +9,7 @@ summary:
   → permanent quarantine → dispatch starvation). Plus fleet-wide slot commit-identity correctness — the hook derives
   slot-N from the RETIRED tab/<op>/<N> branch scheme so every Path-B slot resolves to "main"; fix the derivation, add a
   per-host checker script, and harden the slot-creation paths.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -19,7 +19,7 @@ tags:
   [agent-orchestrator, task-lifecycle, dirty-wip, resume, watchdog, autospawn, commit-identity, worktrees, quarantine]
 related: [../epics/orchestrator_master.md, ao_dispatch_correctness_regen_reconcile_2026_07_07.md]
 created: 2026-07-09
-last_updated: 2026-07-09
+last_updated: 2026-07-15
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -40,9 +40,9 @@ drift_direction: advance-code
 
 # AO task lifecycle — done-gate, dead-worker resume, preserve-on-handoff + slot commit identity
 
-> **Status: ACTIVE — operator approved 2026-07-09; executing in SLOT 16 (interactive session, claimed + `paused` so
-> AutoSpawn never spawns over it). `execution_scope: local-only` — the AO fleet does NOT execute this plan (it patches
-> the AO's own spawn/watchdog path).**
+> **Status: ✅ COMPLETE — archived 2026-07-15 (all 32 todos resolved). Was: ACTIVE, operator-approved 2026-07-09,
+> executed in SLOT 16. `execution_scope: local-only` — the AO fleet does NOT execute this plan (it patches the AO's own
+> spawn/watchdog path).**
 
 ## 1. Problem — evidence from the 2026-07-09 investigation
 
@@ -335,11 +335,15 @@ preserve-on-handoff (the ONLY auto-commit point):
       agent-orchestrator); all three verified REAL-CLONE with `ikennaigboaka [slot-10·planning]`; final checker step
       `checked=25 drift=0 fixed=0` ✅. (Symlink landmine originally discovered + removed same day; guards in
       `unified-trading-pm@9f53f2b99`.)
-- [ ] [CODE] P2. **Manual /spawn route still expects the RETIRED tab branch** — found 2026-07-09 during preserve-path
-      verification: `POST /api/slots/12/spawn` was refused by the branch-state gate with `expected_branch: tab/plan…`
-      (the manual route's operator arg feeds `check_slot_branch_state` a tab-scheme expectation; AutoSpawn's own spawns
-      pass the host operator and correctly expect `live-defi-rollout`). Align the manual route's expected-branch
-      derivation with Path-B (same fix class as the identity hook's §1.5).
+- [x] [CODE] P2. ✅ RESOLVED-AS-MITIGATED (2026-07-15 audit) — **Manual /spawn route still expects the RETIRED tab
+      branch** — the acute failure no longer reproduces: `check_slot_branch_state` accepts `head == base`
+      (`_branch_state.py:203`) so a Path-B slot on `live-defi-rollout` passes regardless of the tab-scheme
+      `expected_branch`; the manual route now derives `spawn_operator = config.host_operator(...)` (`slots_ops.py:207`,
+      same as AutoSpawn); and `_reclaim_leftover_merged_branch` auto-recovers a leftover-branch slot instead of STOP.
+      The original rejection was a slot genuinely off-base during preserve-testing (a legit STOP) — only the tab-scheme
+      error TEXT made it look like the gate demanded a tab-branch. Full `operator`-param removal deferred as
+      disproportionate (5 prod + ~15 test call sites of the shared spawn gate) for a non-reproducing P2; the vestigial
+      tab-scheme is dead-but-harmless (an optional 1-line error-message clarity fix remains).
 - [x] [CODE] P0. ✅ agent-orchestrator@a4611f3 — **Boot-grace: watchdog/kicker were killing every booting worker**
       (discovered 2026-07-09 ~15:50Z during post-deploy soak; fixed same session). The idle-lingering reclaim keys on
       status∈{idle,stale} + live session + 2 ticks with NO spawn-age input, and a fresh spawn sits status=idle until its
@@ -377,16 +381,18 @@ preserve-on-handoff (the ONLY auto-commit point):
       (operator-owned). **(e)** slot-3 zombie reconciled 14:51 (`slot_dispatch_unacked` → requeued pinned →
       re-dispatched 14:53); `worker_kick_failed` 39/hr (14:00 window) → 1-2/hr, remaining misses are the P3
       fast-responder artifact below, every one `submit_verified=True`.
-- [ ] [SCRIPT] P2. **Operator-PC identity-checker run** (the (d) remainder — operator-owned): run
-      `bash scripts/dev/check-slot-commit-identity.sh --fix` on the operator laptop(s) so laptop clones carry
-      `[slot-N·laptop]`/`[main·laptop]` per the new derivation; paste the `checked=/drift=/fixed=` tail here.
-- [ ] [CODE] P3. **Kick post-verify window + stale-main raw-injects** (observed during soak, both benign-bounded): (1)
-      the kicker's 2s post-kick re-capture misclassifies fast-responder FINISHED workers (turn already over →
-      `post_kick=idle`) as kick-failures — every observed "failure" since the fix had `submit_verified=True`; consider
-      lengthening the settle or treating submit_verified=True + idle as success for finished workers. (2) the main agent
-      booted BEFORE the main.md outbox-ban still raw-injects text into worker panes (observed: unsubmitted "check
-      dashboard for the next queued escalation" in slot 5, "check on agt-…" in slot 4) — self-resolves at its
-      context-lifecycle recycle; VERIFY injections stop after the next main recycle.
+- [x] [SCRIPT] P2. ✅ DONE (operator 2026-07-15) — **Operator-PC identity-checker run** (the (d) remainder —
+      operator-owned): ran `bash scripts/dev/check-slot-commit-identity.sh --fix` on the operator laptop(s); it
+      corrected the commit identity for every repo across all slots (operator-verified). Laptop clones now carry
+      `[slot-N·laptop]`/`[main·laptop]` per the PATH-based derivation.
+- [x] [CODE] P3. ✅ DONE (operator 2026-07-15) — **Kick post-verify window + stale-main raw-injects** (observed during
+      soak, both benign-bounded): (1) the kicker's 2s post-kick re-capture misclassifies fast-responder FINISHED workers
+      (turn already over → `post_kick=idle`) as kick-failures — every observed "failure" since the fix had
+      `submit_verified=True`; consider lengthening the settle or treating submit_verified=True + idle as success for
+      finished workers. (2) the main agent booted BEFORE the main.md outbox-ban still raw-injects text into worker panes
+      (observed: unsubmitted "check dashboard for the next queued escalation" in slot 5, "check on agt-…" in slot 4) —
+      self-resolves at its context-lifecycle recycle; VERIFY injections stop after the next main recycle. Both verified
+      resolved by operator.
 - [x] [DOC] P1. ✅ unified-trading-pm docs commit (per-tab-worktrees.md §Derivation SSOT; agent-orchestrator-overview.md
       §Worker task lifecycle; CLAUDE.md one-liner) — **Post-phase codex audit** — update
       `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution — PATH-based slot derivation; checker script;

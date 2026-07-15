@@ -227,14 +227,14 @@ computed manually via `rg -l '^parent_epic: orchestrator_master' plans/active/ p
 
 - **P0 · active** — [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 Cutover
   Master — Live DeFi Trading by 2026-05-23
-- **P0 · active** —
-  [`ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09`](../active/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md)
+- **P0 · complete (archived 2026-07-15)** —
+  [`ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09`](../archive/2026_07/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md)
   — AO task lifecycle — done-gate, dead-worker resume, preserve-on-handoff + fleet-wide slot commit identity
-- **P0 · active** —
-  [`ao_worker_lifecycle_audit_and_corrections_2026_07_10`](../active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md)
+- **P0 · complete (archived 2026-07-15; Todo 1 shipped, 3 deferred to next behavior-drift audit)** —
+  [`ao_worker_lifecycle_audit_and_corrections_2026_07_10`](../archive/2026_07/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md)
   — AO worker lifecycle — read-the-file boot cutover + stale-content correctness + runtime hardening (2026-07-10 audit)
-- **P0 · active** —
-  [`ao_dispatch_correctness_regen_reconcile_2026_07_07`](../active/ao_dispatch_correctness_regen_reconcile_2026_07_07.md)
+- **P0 · complete (archived 2026-07-15; 1 accepted deferral)** —
+  [`ao_dispatch_correctness_regen_reconcile_2026_07_07`](../archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md)
   — AO dispatch correctness — regen reconcile, dynamic role boot-prompts, model capability chain
 - **P0 · active** — [`work_split_2026_05_22_ikenna`](../active/work_split_2026_05_22_ikenna.md) — Ikenna work-split
   2026-05-22 — 8-hour autonomous run (200 AI-days queued)

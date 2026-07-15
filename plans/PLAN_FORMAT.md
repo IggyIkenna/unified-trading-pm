@@ -488,7 +488,7 @@ promote went **green / SUCCESS** — MUST cite structured evidence on the checkb
   A (strict-0) FAILS the gate if any cited `cloudbuild=<id>` resolves to a terminal NON-success; sub-rule B (baselined
   ratchet) flags a runtime-green claim that cites NO evidence. A code-ship claim (`<repo>@<sha>` + "QG green") is NOT a
   runtime infra claim and needs no build-id — its evidence is the commit + the local QG sentinel.
-- The persistent UAT/QA review agent (`agent-orchestrator/agents/review.md`) RUNS this verification (triggers/polls the
+- The persistent UAT/QA review agent (`unified-trading-pm/agents/review.md`) RUNS this verification (triggers/polls the
   build, then `describe → SUCCESS`) before allowing the checkbox flip — never trust a build-id from an agent self-report.
 
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)

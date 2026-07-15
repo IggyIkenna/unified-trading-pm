@@ -124,26 +124,38 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       (`plan-health-agent`, `conflict-resolution-merged`). Confirm the MOVE set carries no untrusted fork-PR code
       (private repo → none) before flipping.
 - [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the MOVE set only (`ubuntu-latest` → `[self-hosted, glue]`), via the
-      template SSOT + `rollout-workflow-templates.sh`. **Migrate ONE low-risk workflow first** (`branch-health` or
-      `reconcile-release-tags`), confirm a green self-hosted run, then batch. (Takes effect on push — do NOT push until
-      the runners are live on the VM, else those workflows queue with no runner.)
+      template SSOT + `rollout-workflow-templates.sh`. **Pace = canary → phased groups (operator 2026-07-15):** flip ONE
+      low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a green self-hosted run, then roll
+      the remaining 52 MOVE workflows out in **small batches** (not all at once). (Takes effect on push — do NOT push
+      until the runners are live on the VM, else those workflows queue with no runner.)
 - [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
       VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
 
-### Phase 2 — Kill the 1-minute-minimum tax on quality-gates-v2 (~18%)
+### Phase 2 — Shrink the fleet-wide hosted QG (the real $ that stays on GitHub-hosted: A1 + A2 + A5)
 
-- [ ] [INFRA] P2. In the `quality-gates-v2` / `python-quality-gates-v2` templates, **collapse the sub-minute jobs**
-      (content-sentinel, Slack-notify, dispatch) into the main/slice jobs. Rule: keep a job split out ONLY when it
-      genuinely runs >1 min AND parallelism speeds developer feedback; otherwise merge to stop paying a 1-min minimum
-      per boot.
-- [ ] [VERIFY] P2. Re-measure a representative QG run's billed job-minutes before/after; target ~30–40% fewer billed
-      minutes per run with no loss of gate coverage.
+> These three touch the shared reusable `python-quality-gates-v2.yml` (44 callers, all ~25 repos) → fleet-wide savings.
+> QG is the ADR-sensitive gate — no coverage loss, green-only guards.
+
+- [ ] [INFRA] P1. **A1 — docs-only fast-path (operator: do it).** Extend the committed-diff check
+      (`python-quality-gates-v2.yml` L170-202 / L585-607) to the `base-service.sh:596` docs regex so a pure
+      docs/plans/codex change skips the ~12-min pytest+typecheck legs (keep lint-codex). Scope: `plans/**`+`codex/**`
+      IN, lockfiles/workflow-YAML OUT. Also gate `dispatch-cloud-build` on `docs_only!='true'`.
+- [ ] [INFRA] P1. **A2 — FIX the content-gate dedup properly (operator: fix now).** Rebuild the byte-identical-tree skip
+      on the **Firestore tree-fingerprints** (replace the broken `actions/cache` at L90-137 / L647-653). **Correctness
+      guard: skip ONLY when that exact tree previously passed GREEN** (never off a failed/unknown run); relies on QG
+      determinism. Fleet-wide (does NOT touch SIT; never skips a changed tree).
+- [ ] [INFRA] P2. **A5 — collapse the fan-out (operator: measure-then-collapse).** Confirm the merged
+      `typecheck`+`lint-codex` leg stays under the pytest leg on the slowest repo, then merge + fold the sub-minute jobs
+      (content-sentinel/Slack/dispatch). Target ~30–40% fewer billed job-minutes/run, no coverage loss.
+- [ ] [VERIFY] P2. Re-measure a representative QG run's billed job-minutes + the docs-PR / identical-tree skip rates
+      before/after (ledger + run counts).
 
 ### Phase 3 — Cadence + de-duplication (cheap wins)
 
-- [ ] [OPERATOR-DECISION] P2. **Retire the duplicate promote bot** — `ldr-to-main-promote` and
-      `ldr-to-main-promote-fleet` do near-identical work (mid-migration overlap). Decide which survives, finish the
-      migration, delete the other (no shim).
+- [x] ✅ [OPERATOR-DECISION] P2. **Promote bots — KEEP BOTH (operator 2026-07-15; "retire duplicate" WITHDRAWN).**
+      Re-inspection: `ldr-to-main-promote` is **PM-only** and `ldr-to-main-promote-fleet` serves the **23 `ldr_main`
+      repos** (PM excluded, `promotion_model` unset) — disjoint scopes, complementary, NOT duplicates. Optional future
+      consolidation only (moot once self-hosted at $0).
 - [ ] [INFRA] P2. Slow promotion/health crons from `*/15` toward **hourly** (or purely event-driven off the promotion PR
       event) during freeze; keep the event path for real-time needs. Lower priority once these are on self-hosted, but
       fewer idle boots is cleaner regardless.

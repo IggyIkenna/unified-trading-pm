@@ -13,6 +13,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role, infra, craft-role, boot-prompt]
+related: []
 created: 2026-06-26
 role: infra
 model: sonnet

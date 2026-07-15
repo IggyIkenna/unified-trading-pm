@@ -88,13 +88,19 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 ### Phase 1 — code / SSOT fixes (fast; correct the denominator before re-measuring)
 
-- [ ] [DATA] P0. **E — liquidations SSOT fix.** Add `liquidations` to `CeFiMvpRule.data_types` for the venue/itype cells
-      where a Tardis liquidations feed genuinely exists (perp venues with a liq channel; NOT HL — no liq feed; NOT
-      spot). Bump `MVP_SCOPE_CONFIG_VERSION`. Supersede/reconcile the `mvp-universe.yaml` (2026-03-04) vs
-      `mvp-scope-canonical.md` contradiction. UAC + codex. Evidence: uac@<sha> + a `data_type_capability` cross-check +
-      codex update.
-- [ ] [DATA] P1. **I — EXTENDED-STARKNET book5.** Registry says `book_snapshot_5` batch_capable=True but 0 captured.
-      Diagnose (adapter vs capability drift), fix so book5 is either captured or honestly-typed. UAC/MTDS. Evidence.
+- [x] ✅ [DATA] P0. **E — liquidations SSOT fix.** liquidations is MVP for the PERPETUAL leg on the 6 real-feed venues,
+      gated so it never false-seeds spot/HL/dated. **SHIPPED** — core: **uac@494fd90c** (PERPETUAL override +
+      `get_mvp_data_types_for_cefi_venue_itype` helper + capability gating, version→15) · **is@92f3ca22** (itype-aware
+      MVP-cut in `enumerate_expected_universe.py`) · **pm@68018d0f** (codex reconciliation). Companion: **is@8b6bd8f8**
+      (`build_expected` itype-aware so liquidations counts in the MEASUREMENT denominator too — both producers now
+      agree; cefi golden +6 liquidations tuples). Regression-safe (no COINBASE inflation — proven). OKX correction: bare
+      OKX is the fold-target of OKX-SWAP so it KEEPS liquidations (restored). MVP_SCOPE_CONFIG_VERSION=15.
+- [x] ✅ [DATA] P1. **I — EXTENDED-STARKNET book5.** Diagnosis (MTDS agent a9ee9179): `batch_capable` is a DEAD field (0
+      readers); the real gate `LIVE_ONLY_DATA_TYPES` in `_onchain_perp_batch_live_only.py` ALREADY declares EXTENDED/
+      PACIFICA/LIGHTER book5 (+ASTER liq, LIGHTER trades) live-only → EXTENDED book5 is ALREADY honest
+      `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` in batch, NOT a coverage gap. **Functionally satisfied
+      at runtime**; the `data_type_capability.py batch_capable=False` edit is purely cosmetic declarative-consistency
+      (no functional effect) — done as a tidy-up if the worktree is free, else harmless.
 - [x] ✅ [BACKEND] P1. **G-code — equity-perp Phase 2 type-stamp.** IS: stamp `EQUITY_PERP` on the 70 catalogued equity
       perps (Binance/OKX/Bybit + fleet) via `CEFI_EQUITY_PERP_BASE_UNIVERSE`/`crypto_equity_link`; fix the ASTER-only
       legacy-row dating bug (`ASTER:PERP:*` uniform venue-launch `available_from`). instruments-service. **CODE SHIPPED
@@ -323,3 +329,77 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   mvp-scope-canonical version prose 14→15. Awaiting SHAs.
 - **Phase-1 status**: G-code ✅ · D-code ✅ (is@559c6920 + mtds@57e26c0f) · E core ✅ (flip pending build_expected) · I
   ⏳ (in the same follow-up). Once E-companion + I land → Phase 1 DONE → Phase 2 backfill monitoring + WS-H apply-list.
+
+### 2026-07-15T14:36Z — tick 6: P0 LIVE multi-agent collision → PROTECT + wait; 2 correctness saves
+
+- **INCIDENT** (issue doc `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`, pm@058cbb913): a
+  concurrent YAHOO_FINANCE-removal agent is ACTIVELY writing this slot-3 worktree (UAC files 0-min mtime). Its removal
+  (`uac@fec3f110`) left IS QG RED (test_silent_absent_fixes fixture + stale tradfi golden; 1 failed/4461) =
+  fleet-blocking. Per multi-agent-safety HARD RULE (live WIP → PROTECT), I am NOT touching contested UAC/IS files; the
+  UAC agent HARD-STOPPED correctly. NOTIFIED operator. (Uncommitted plan edits are being reverted by the contended
+  worktree — hence the issue doc is the durable record.)
+- **Save 1 (my ruling was wrong)**: bare `OKX` is the canonical fold-target for `OKX-SWAP` in
+  `check_enumeration_completeness._CEFI_VENUE_FOLD`, so it MUST carry liquidations — removing it (my tick-2 instruction)
+  would have zeroed OKX-SWAP's 191,923 captured liq. Agent RESTORED it (landed in fec3f110, content-correct). E core is
+  CORRECT.
+- **Save 2 (WS-I already satisfied)**: `batch_capable` is a DEAD field; the real gate MTDS `LIVE_ONLY_DATA_TYPES`
+  already declares EXTENDED/PACIFICA/LIGHTER book5 (+ASTER liq, LIGHTER trades) live-only → already `empty_confirmed`
+  [EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE] in batch. So EXTENDED book5 is NOT a coverage gap. I = functionally DONE
+  (the `data_type_capability.py` edit is cosmetic; do it when the worktree frees).
+- **E-companion** (build_expected itype-aware + cefi golden, +6/−0 verified) HELD uncommitted in IS, blocked by red
+  tree + live collision. Ship `--files`-scoped to `scripts/expected_universe.py`+`goldens/…/cefi.json` ONLY (NOT the
+  YAHOO agent's tradfi/defi/prediction/sports golden regens) once IS is single-owner + green.
+- **PLAN**: loop re-checks worktree mtime each tick; when the concurrent agent goes idle (>~5 min stale) AND IS is green
+  → reconcile + ship E-companion → flip E + I. Backfill A/B monitoring continues (orthogonal, no collision).
+
+### 2026-07-15T16:35Z — tick 7: collision cleared (dead agent) → IS reconciled + E-companion SHIPPED → Phase 1 DONE
+
+- Concurrent YAHOO/CBOE agent went DEAD (~2h idle, files 100-135min stale). Inherited-dead-WIP per multi-agent-safety.
+- Reconciliation agent a3123cbc SHIPPED **is@8b6bd8f8** (7 files, IS QG GREEN, 266 tests pass — the fleet-blocking IS
+  red tree is FIXED):
+  - build_expected itype-aware LANDED (E-companion) → liquidations counts in the MEASUREMENT denominator; both producers
+    now agree.
+  - 5 goldens regenerated FRESH + every diff explainable: cefi +6 liquidations (incl. BITGET-FUTURES + OKX-fold); tradfi
+    −13 YAHOO +1 CBOE ohlcv_24h (my regen SUPERSEDED the dead agent's stale golden — it had removed YAHOO but MISSED the
+    CBOE tuple its own committed code produces); defi/prediction/sports = captured_at date bump only.
+  - Red-test fixed root-cause: `test_silent_absent_fixes.py` YAHOO_FINANCE fixture → FX (sole TradFi NO_ADAPTER_YET
+    venue), teeth preserved. + a pre-existing RUF002 `×`-in-docstring fixed in-commit.
+  - Non-blocking FYI: pre-existing MTDS contract-integrity advisory (3 handlers below baseline) + a BSD-grep bug in a QG
+    advisory script — advisory (QG exit 0), different repo, untouched.
+- **E ✅ fully done** (uac@494fd90c + is@92f3ca22 + pm@68018d0f + is@8b6bd8f8, v15). **I ✅ functionally satisfied**
+  (runtime LIVE_ONLY_DATA_TYPES already excludes EXTENDED book5; cosmetic cap edit optional).
+- **PHASE 1 COMPLETE**: G ✅ · D ✅ · E ✅ · I ✅. Remaining = Phase 2 backfill (A tail VM launched + B/F/G-tick, cap-3
+  bound) → WS-H apply-list (gated on backfill) → C alias-kill. The code substance is fully landed.
+
+### 2026-07-15T17:05Z — tick 8: recent-tail VM (A) confirmed running; fleet 3/3
+
+- Tail VM **cefi-queue-heavy-20260715-160552** UP + running the real backfill (serial + run.log verified):
+  `mtds --operation download --mode batch --asset-group CEFI --venues <all 15 main> --start-date 2026-01-01 --end-date 2026-07-14 --data-types trades book_snapshot_5`.
+  Heartbeat active. Fleet = 3/3 (cap).
+- Launched from human-planning Linux VM (i-0dd9812a96cdda5dc) via SSM as `sudo -iu ubuntu`, deployment-service launcher,
+  `SINGLE_VM_QUEUE=1 LAUNCH_GROUPS=heavy TARDIS_CONCURRENCY_LEASE=1 ONLY=<15 venues>:2026:heavy`. Guard OK 2+1=3.
+- REALITY CHECK: launcher is YEAR-granular (`start_date=${year}-01-01` hardcoded, no sub-year override), so the tail VM
+  processes 2026 CHRONOLOGICALLY — currently re-capturing 2026-01 failed shards (403-heavy) before it reaches the empty
+  June-July tail. It IS the only VM on 2026 (the 2 queue VMs are at mid-2020), so still the fast path. run.log shows
+  Tardis 403 code=274 (expected N=3 lease-rotation contention, ~50-70% efficiency per the cap-3 SSOT). ETA to fill the
+  empty June-July tail: ~1-3 days. Not worth a launcher code-change to skip Jan-May.
+- LIGHT slice (derivative_ticker/funding + liquidations) for the tail: blocked at 3/3 cap — launch `LAUNCH_GROUPS=light`
+  same ONLY when a slot frees (a queue VM finishes / the tail VM completes).
+- Gate A (collision) RESOLVED tick-7 (is@8b6bd8f8, IS green). Remaining = throughput-bound: A(tail heavy running) +
+  B(queue VMs, weeks) + light slice → WS-H apply → F, C.
+
+### 2026-07-15T17:41Z — tick 9: tail VM preempted (SPOT) → relaunched; fleet volatile; honest ETA revision
+
+- Tail VM cefi-queue-heavy-20260715-160552 **DIED ~17:23Z** (SPOT preemption — `describe`=Could not fetch resource,
+  run.log stopped mid-2026-01-11, ~50min uptime, never wrote a per_vm shard = never reached the empty tail). A queue VM
+  also dropped (guard now counts **1 running**). SPOT preemption is churning the fleet.
+- **RELAUNCHED** the tail VM (idempotent, guard OK 1+1=2; PID 2131271 on i-0dd9812a96cdda5dc). It resumes 2026 heavy.
+- **HONEST ETA REVISION**: the recent-tail (empty June-July) fill is SLOWER than the earlier ~1-2d estimate — three
+  compounding drags: (a) SPOT preemption kills the VM ~hourly (idempotent resume, but restart overhead + it re-walks);
+  (b) the launcher is YEAR-granular so the VM grinds 2026-01+ re-captures (403-heavy) before reaching the empty tail;
+  (c) N=3 single-IP lease = ~50-70% efficiency + 403 churn. Realistic empty-tail fill: **several days**, not 1-2.
+- OPTION if the tail keeps preempting without reaching June: add a `START_DATE` override to the launcher (currently
+  hardcodes `${year}-01-01`) so a tail VM jumps straight to 2026-06-01 (small ~44-day empty slice → fills before
+  preemption). Deferred (launcher is a shared macOS-untestable script; only worth it if the plain relaunch keeps failing
+  to progress). Full af=0 all-history stays ~2-3 weeks (cap-3 ceiling) regardless.
+- Phase-1 code remains DONE + landed; this is purely backfill throughput under the operator's cap-3 + SPOT constraints.

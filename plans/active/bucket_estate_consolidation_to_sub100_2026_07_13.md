@@ -1932,3 +1932,26 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   same unresolved operator A/B decision** (rebuild source-of-truth choice) called out in the entry above — no new
   blocker introduced, no progress lost, nothing to re-verify differently on the next attempt beyond re-checking
   `manualExecutionSucceeded` once a rebuilt image is actually deployed and a clean execution is observed.
+
+- **2026-07-15 (~17:02Z), `features-sports` bare-bucket FinishBucketAndDocs re-dispatch — STOPPED again, gate condition
+  re-confirmed still unmet, bucket left untouched.** Dispatched as the (intended) final closing touch of the whole
+  `features-sports-service` consolidation thread, gated on "`schedulingReenabled` false or `realScheduledFireVerified`
+  false → STOP, do not delete." Independently re-verified live rather than trusting the handoff:
+  `gcloud scheduler jobs describe features-service-sports-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  → `state: PAUSED`; `gcloud run jobs executions list --job=features-service-sports-job` → only the same two executions
+  (`kk4dv`, `fs8sj`), both `Completed=False`/`NonZeroExitCode` — no execution has ever reached `SUCCEEDED`;
+  `gcloud artifacts docker images list .../features-service --include-tags --sort-by=~CREATE_TIME` → `:latest` still
+  `sha256:c204c49d...` (built 2026-07-14), still predating the UTL `c47273c1` consolidator-liveness fix. Root blocker is
+  now a features-service Cloud Build reproducibly hanging inside its quality-gates test step (2/2 attempts, tracked in
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md`, `status: open`) — until a build
+  actually reaches `SUCCESS` and pushes a new `:latest` image, `features-service-sports-job` will keep hitting the same
+  manifest-consolidator false-DOWN preflight failure on any re-attempt, so none was made. **Zero destructive or infra
+  action taken**: bare bucket `gs://features-sports-central-element-323112`, its terraform resource
+  (`google_storage_bucket.features_sports`), `_imports_reconcile.tf`'s import block, and all 4 linked issue docs
+  (`features_sports_service_cloud_run_job_broken_image_2026_07_15.md`,
+  `features_service_cloud_build_quality_gates_hang_2026_07_15.md`,
+  `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`,
+  `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) all remain exactly as they were
+  (statuses unchanged, all still `open`). This item stays open, gated on the SAME unresolved blocker as every touch
+  since the build-hang was discovered — no new blocker introduced, no progress lost. Full evidence + next-step detail in
+  the matching append to `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md`'s Progress Log.

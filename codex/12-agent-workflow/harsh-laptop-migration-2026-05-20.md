@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Harsh laptop migration — from epiphanytechnologies.com to shared agent-orchestrator
 summary:
-  Migration checklist retiring Harsh's standalone orch.epiphanytechnologies.com backend and making his
-  laptop a worker host (slots 13–20) against the shared central agent-orchestrator — clone update, slot
-  bootstrap, JWT + per-slot tokens, FF-pull + git-status crons, per-operator commit identity, local vs
-  fleet-VM auth. Tab-branch steps 3 / 4.5 are SUPERSEDED by Path-B reference-clones (2026-06-08 banner).
+  Migration checklist retiring Harsh's standalone orch.epiphanytechnologies.com backend and making his laptop a worker
+  host (slots 13–20) against the shared central agent-orchestrator — clone update, slot bootstrap, JWT + per-slot
+  tokens, FF-pull + git-status crons, per-operator commit identity, local vs fleet-VM auth. Tab-branch steps 3 / 4.5 are
+  SUPERSEDED by Path-B reference-clones (2026-06-08 banner).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,21 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [orchestrator, infrastructure, migration, quickmerge, self-healing]
-related: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/per-tab-worktrees.md, codex/12-agent-workflow/README.md, agent-orchestrator/agents/main.md, agent-orchestrator/agents/worker.md]
+related:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/05-infrastructure/per-tab-worktrees.md,
+    codex/12-agent-workflow/README.md,
+    unified-trading-pm/agents/main.md,
+    unified-trading-pm/agents/worker.md,
+  ]
 created: 2026-05-20
 authoritative_for: [harsh laptop worker-host migration setup]
-referenced_by: [codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner: ikenna
 last_reviewed:
 code_refs:
@@ -123,10 +134,10 @@ Read these BEFORE any commands. They are the source of truth that the migration 
    surface, model tiers.
 3. `unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md` — the 3-tier (operator → slot → sub-agent)
    isolation model + the `setup-tab-worktrees.sh` bootstrap.
-4. `agent-orchestrator/agents/RULES.md` — slim shared rules for every agent (worker / main / review). Read first per its
+4. `unified-trading-pm/agents/RULES.md` — slim shared rules for every agent (worker / main / review). Read first per its
    STEP 0 directive.
-5. `agent-orchestrator/agents/worker.md` — what Harsh's per-slot Claude sessions should run as.
-6. `agent-orchestrator/agents/main.md` — if Harsh wants to also run a "main" agent (orchestration assistant chat), this
+5. `unified-trading-pm/agents/worker.md` — what Harsh's per-slot Claude sessions should run as.
+6. `unified-trading-pm/agents/main.md` — if Harsh wants to also run a "main" agent (orchestration assistant chat), this
    is the prompt.
 
 ---
@@ -318,7 +329,7 @@ done
 ```
 
 Once spawned, each session needs the worker boot prompt pasted in. The canonical template is
-`agent-orchestrator/agents/worker.md`. For Harsh, the per-slot prompt is:
+`unified-trading-pm/agents/worker.md`. For Harsh, the per-slot prompt is:
 
 ```
 You are slot <N> (find your slot number from PWD: .tabs/<N>/).
@@ -432,10 +443,9 @@ interactive sessions that accumulate uncommitted WIP behave identically to a stu
 orchestrator's perspective and from the cron's perspective (the FF-pull cron logs `[skip:dirty]`, the slot falls behind
 `origin/live-defi-rollout`, peers cannot safely rebase onto it).
 
-**Verify every host** (Harsh's laptop included): `bash scripts/verify-slot-host-symmetry.sh`
-(exit 0 = both crons installed + ran <10 min + report posted). SSOTs: this doc ·
-`agent-orchestrator/agents/worker.md` · `scripts/dev/slot-cron-ff-pull.sh` ·
-`scripts/dev/slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
+**Verify every host** (Harsh's laptop included): `bash scripts/verify-slot-host-symmetry.sh` (exit 0 = both crons
+installed + ran <10 min + report posted). SSOTs: this doc · `unified-trading-pm/agents/worker.md` ·
+`scripts/dev/slot-cron-ff-pull.sh` · `scripts/dev/slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
 
 ---
 

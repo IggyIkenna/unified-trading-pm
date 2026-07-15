@@ -398,3 +398,37 @@ repo. This plan tracks that work.
   tried" list, in order: (a) stream pytest output live instead of the current silent redirect so a hang localizes to a
   specific test, (b) bisect by feature-family via a throwaway Cloud Build trigger), verify the new digest carries the
   fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, THEN revisit todos 6-8 in a future touch.
+- 2026-07-15 (~17:02Z, FinishBucketAndDocs phase re-dispatch — STOPPED again per the identical gating condition, real
+  evidence, not inference): Re-dispatched with the explicit instruction "if `schedulingReenabled` is false or
+  `realScheduledFireVerified` is false, STOP and report why — do not delete the bucket on an unhealthy/unverified
+  service." Independently re-verified live rather than trusting the handed-in flags or any prior touch's entry:
+  `gcloud scheduler jobs describe features-service-sports-daily-trigger --location=asia-northeast1 --project=central-element-323112`
+  → still `state: PAUSED`. `gcloud run jobs executions list --job=features-service-sports-job` → still only the same two
+  executions (`kk4dv` @ 2026-07-15T12:37:32Z, `fs8sj` @ 2026-07-15T12:33:56Z), both `Completed=False`/`NonZeroExitCode`
+  — no execution, manual or scheduled, has ever reached `SUCCEEDED`.
+  `gcloud artifacts docker images list .../features-service --include-tags --sort-by=~CREATE_TIME` → `:latest` is still
+  digest `sha256:c204c49d...`, built 2026-07-14T00:58:45 — unchanged, still predates the UTL `c47273c1`
+  lock-aware-consolidator-liveness fix (`gcloud builds list` itself was unreachable this touch — repeated calls timed
+  out after 60-90s with no output, a tooling/API-latency issue distinct from the build-hang bug itself — but the
+  Artifact Registry digest/timestamp is the authoritative signal for "has a build ever pushed a new image," and it is
+  unchanged, so the gate conclusion does not depend on the builds-list call succeeding). Cross-checked all 4 linked
+  issue docs' frontmatter `status:` field directly (not just prose):
+  `features_sports_service_cloud_run_job_broken_image_2026_07_15.md` = `open`,
+  `features_service_cloud_build_quality_gates_hang_2026_07_15.md` = `open`,
+  `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` = `open`,
+  `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` = `open`. **Gate condition holds**
+  (`schedulingReenabled=false`, `realScheduledFireVerified=false`) — did NOT touch the `features-sports` bare bucket
+  (`gs://features-sports-central-element-323112`), did NOT edit `deployment-service/terraform/gcp/main.tf`'s
+  `google_storage_bucket.features_sports` resource or its `_imports_reconcile.tf` import block, did NOT run any
+  `terraform state rm`/`gcloud storage rm`/`gcloud storage buckets delete`, did NOT close ANY of the 4 linked issue docs
+  (all remain `status: open`, none flipped to `resolved`), and did NOT flip todos 6-10 (all remain `[ ]`). No
+  terraform/config/code changes made in any repo this touch; this Progress Log append (+ the matching append to
+  `bucket_estate_consolidation_to_sub100_2026_07_13.md`) is the only change, shipped docs-only per the PM `docs(plans):`
+  direct-push carve-out. Next unblock step unchanged from every prior touch since the build-hang was discovered: get a
+  `features-service` Cloud Build to genuinely reach `SUCCESS` against the UTL `c47273c1`-based commit
+  (root-causing/fixing the hang in `features_service_cloud_build_quality_gates_hang_2026_07_15.md` is the prerequisite —
+  its "not yet tried" list is unchanged: (a) stream pytest output live instead of the current silent redirect to
+  localize the stuck test/module, (b) bisect by feature-family via a throwaway Cloud Build trigger), verify the new
+  digest carries the fix, re-attempt `features-service-sports-job` to a genuine `SUCCEEDED`, un-pause + verify one real
+  scheduled fire — only then is a future touch safe to revisit todos 6-10 (Workflow-YAML drift, legacy-job retirement,
+  scheduling re-enable, bucket delete, issue-doc closure).

@@ -143,13 +143,112 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       divergence-removal + reader-tolerance disposition; new §4a derivative_ticker entry),
       `data-lineage-MTDS-features-ml.md` (new Layer-1 defi-axis derivative_ticker row + bypass-types table row).
 
+- [ ] [DESIGN] P1 [GATED on todo 4's parity results]. **Decide: demote `perp_funding` from a captured raw type to a
+      DERIVED interval view.** Rationale (operator discussion 2026-07-15): with derivative_ticker now the canonical raw
+      funding home for ALL perps, `perp_funding` is derivable everywhere — for interval-native sources (Hyperliquid
+      REST, GMX events) the two are literally the same rows written twice (the GMX dual-write in todo 2 proves it: same
+      rows, zero extra API calls); for event-native sources (Drift) perp_funding is an aggregate of the settlements. No
+      perp venue class structurally requires a separate funding capture (no defi perp venue is an AMM in the Uniswap
+      sense — Drift/Hyperliquid are CLOBs; GMX is pool-as-counterparty but still emits funding as EVENTS). If todo 4's
+      parity holds within ε, the dual-capture is pure redundancy + a permanent parity-policing burden. **Scope of the
+      decision** (do NOT execute before the parity evidence exists): (a) migrate features-onchain's `perp_funding`
+      BYPASS read (`data-lineage-MTDS-features-ml.md`) to the derived view or to derivative_ticker directly; (b) re-home
+      the `mvp_backfill_defi_onchain_v10` MVP gate accounting — perp_funding is one of its 6 gate data_types with months
+      of manifest history, so the shard atom + coverage denominator implications must be worked through, not hand-waved
+      (honest-coverage model: a retired data_type's historical rows stay, they don't vanish); (c) stop capturing
+      perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes as "keep both — parity report explains why".
+      Repos: market-tick-data-service, features-service, unified-api-contracts.
+- [ ] [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data adapters +
+      factory registration + tests exist; zero MTDS capture; not in the venues list / `VENUES_BY_ASSET_GROUP`). Decide:
+      (A) complete onboarding (add to the venues list + build MTDS capture incl. derivative_ticker per the 2026-07-15
+      ruling), or (B) delete the whole vertical slice (3 IS adapters + their tests + factory registrations +
+      `venue_adapter_keys.py:224-226`) per the no-shims/delete-deprecated-code rule. Do NOT delete the keys alone — that
+      breaks `reference_data/factory.py`. Repos: instruments-service, unified-api-contracts.
+
 ## Progress log
 
 - 2026-07-15: Filed from the operator's ruling in the main session, following the funding dual-capture investigation
   (perp_funding vs derivative_ticker). Parity check deliberately gated on the DRIFT backfill grind finishing so it
   compares complete data.
+- 2026-07-15 (main session, operator Q): "Why does perp_funding need to exist whilst derivative_ticker exists?" —
+  answered + captured as the new parity-gated [DESIGN] P1 todo above (demote-to-derived-view decision). Also asked why
+  MANGO/ZETA/FLASH-SOLANA appeared in the coverage table when they are not in the venues list: they surfaced because the
+  todo-1 sweep was scoped to "any perpetual venue in the registry" and those three have `venue_adapter_keys.py` entries.
+  **Correction to a claim the coordinator made in chat**: those keys are NOT dead/orphan pointers — a blast-radius audit
+  found REAL instruments-service reference-data adapters behind them
+  (`reference_data/adapters/defi/{mango,zeta,flash_trade}.py`, ~8-9 KB each, registered in `reference_data/factory.py`
+  :137/150/182, with unit tests). The true state is a **half-onboarded vertical**: IS reference-data (instrument
+  universe) exists; MTDS market-data capture and venues-list membership do not. Deleting only the adapter keys would
+  break the IS factory. Operator decision pending (see the `[OPERATOR-DECISION] P2` todo above) — nothing deleted.
 - 2026-07-15: Todos 1/2/3/5 completed (todo 4 stays gated per its own condition — the DRIFT backfill grind). Coverage
   table (todo 1) pinned scope before any code was written. Shas:
   unified-api-contracts@2170b388d8901a22f17cc2b59245a4b9894671e4,
   market-tick-data-service@5f659c12b4eeed348aea2abe657714c2c9b226df. Side-finding filed (pre-existing, unrelated,
   warn-only): `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
+- 2026-07-15 (operator ruling, verbatim): "OK so let's kill them all — clear them from everything, delete any data from
+  them and catalogue/MVP/manifest entries. They are useless. Without exception." This resolves the
+  `[OPERATOR-DECISION] P2` todo above to **option (B) — delete the whole vertical slice.** Split across two agents: CODE
+  side (IS adapters + UAC registry + codex) owned by a sibling agent; **DATA/STATE side (this entry) verified every
+  GCS/BQ surface read-only and found NOTHING to purge** — the "half-onboarded" framing was accurate: IS reference-data
+  adapters existed in code but were never actually invoked (not in `VENUES_BY_ASSET_GROUP`, so the standing orchestrator
+  never scheduled them), so zero rows were ever written anywhere. Full surface-by-surface evidence:
+  - **Instrument catalogue** (`instruments-store-defi-prd-central-element-323112`): downloaded + duckdb-queried the LIVE
+    canonical `prod/catalog.parquet` (env=`prod`, per `build_instrument_catalogue.py`'s `DEPLOYMENT_ENV` default;
+    updated 2026-07-15T01:01:36Z, 10,387 rows) —
+    `select distinct venue from catalog where upper(venue) like '%MANGO%' or '%ZETA%' or '%FLASH%'` → **0 rows**.
+    Cross-checked the stale `prd/catalog.parquet` (7,223 rows, updated 2026-06-28) and the legacy
+    `reference_data/instruments/asset_group=defi/written_at=2026-05-23T13:03:49Z/ all.parquet` snapshot (9,820 rows) —
+    both **0 rows** too. **VERIFIED ZERO — no purge.**
+  - **Availability manifest** (`market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`,
+    downloaded to a uniquely-named scratchpad file per this session's namespace-collision note, updated
+    2026-07-15T16:58:47Z, 27,955,143 rows spanning 2020-01→2026-07): checked both glued (`MANGO-SOLANA` etc.) and bare
+    (`MANGO`/`ZETA`/`FLASH`/`FLASH_TRADE`) venue spellings, exact-match and substring — **0 rows** for all three
+    targets. The only substring hit was `FLASHBOTS` (24,777 `empty_confirmed` rows, asset_group=defi, chain=ETHEREUM,
+    data_types incl. dex_pool_swaps/oracle_prices/perp_funding) — a genuinely distinct MEV-relay venue, **not** Flash
+    Trade; left untouched. Also confirmed this manifest partitions `venue`+`chain` separately (bare protocol name, e.g.
+    `DRIFT`+`SOLANA`, not glued `DRIFT-SOLANA`) — the exact-match query covered both conventions. **VERIFIED ZERO — no
+    purge.**
+  - **Raw tick data** (`market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/...`): two literal
+    recursive wildcard walks (`day=*/pipeline_mode=*/asset_group=defi/venue=<X>/**`) timed out (>90s / >2min each) —
+    correctly abandoned rather than forced through, since that is exactly the whole-corpus GCS walk the single-walk
+    discipline flags as review-blocking. Substituted a bounded, targeted scan: queried the manifest for which
+    `pipeline_mode` values real Solana perp-DEX peers (DRIFT, PACIFICA) actually use
+    (`batch_hyperliquid`/`batch_onchain_rpc`/`batch_onchain_subgraph`/`batch_pyth_hermes`/`batch_solana_rpc` — pipeline
+    modes here name the SOURCE MECHANISM, not the venue, so venue-named-directory guessing would have been wrong), then
+    listed `asset_group=defi/` under each of those 5 modes on 7 sample days spanning 2025-01-15→2026-07-14 (incl. today)
+    — **0 venue=MANGO/ZETA/FLASH matches on any sampled day/mode combo.** Also fully enumerated the small legacy
+    `dex_pools/` (kamino, orca, raydium) and `lending_indices/` (kamino, solend) namespaces — **0 matches**. **VERIFIED
+    ZERO (bounded evidence, not a full walk) — no purge.**
+  - **Other state** (workspace-wide, bounded): `rg` across every non-IS, non-PM-codex repo (deployment-api,
+    deployment-service, deployment-ui, market-tick-data-service, market-data-processing-service,
+    unified-trading-system-ui, ml-service, execution-service, strategy-service, features-service) for the 3 venue
+    strings (glued + bare, quoted literals) — **0 hits** anywhere in code or `.yaml`/`.yml`/`.json` config. BigQuery:
+    `bq ls` across `market_tick`/`market_tick_asia`/`market_data`/`features`/`market_data_candles_derivative_ticker` —
+    **0 matching table names.** One coincidental false-positive investigated: `_cache/ solana_creation_timestamps.json`
+    (instruments-store-defi bucket, a generic on-chain-address→creation-timestamp cache, NOT venue-keyed) contains the
+    key `ooXZetAXMwzvbQ4fJrv8KjCkhb2JkbdDeVMBWjHTg6B` — a Solana account/pool address whose base58 encoding happens to
+    contain the 4-char substring "Zeta"; this is NOT the real Zeta Markets program ID and is unrelated to the
+    ZETA-SOLANA venue — left untouched (correctly not purged; recorded here so it is not re-flagged as a miss). The only
+    real references to the 3 venues anywhere in the workspace are
+    `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py` (sibling's file — confirmed via
+    `git status` mid-edit, `M` not yet committed at time of this check) and PM `codex/` docs (sibling's to update) plus
+    2 archived plans (historical, no action).
+  - **Scope-guard sanity check** (confirms MNGO/ZETA-as-token rows were never at risk): queried the CeFi instruments
+    catalogue (`instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`) for
+    `base_asset in ('MNGO','ZETA')` — found **14 legitimate rows across 9 real CeFi venues** (BINANCE-FUTURES,
+    BITFINEX-SPOT, BITGET-FUTURES/SPOT, BYBIT/BYBIT-SPOT, COINBASE-FUTURES/SPOT, HYPERLIQUID, KRAKEN-FUTURES/SPOT,
+    OKX-SPOT/SWAP, UPBIT) — all untouched, as expected, since every purge-surface query in this pass was scoped strictly
+    to the `venue` column (never a `base_asset`/`raw_symbol` substring match).
+  - **Purge script: NONE WRITTEN** — every surface came back verified-zero, so per the task's own instruction ("If
+    NOTHING needs purging, write NO script") there is nothing to purge, snapshot, or roll back. The
+    `_index/ snapshots/pre_<slug>_<ts>.parquet` / consolidator-pause / dry-run/apply ICE-purge precedent
+    (`market-tick-data-service/market_tick_data_service/scripts/purge_tradfi_ice_non_24h_2026_07_14.py`) was read as
+    reference but not needed — it applies when rows are FOUND, not when the surface is already clean.
+  - **Net effect**: the operator's "kill them all... delete any data... catalogue/MVP/manifest entries" ruling is
+    ALREADY fully satisfied on the data/state side — there was never any data to delete. Completion of the overall
+    ruling is gated only on the sibling agent's CODE-side deletion (IS adapters + UAC registry + codex), which was
+    observed mid-flight (staged `git rm` on
+    `instruments-service/instruments_service/reference_data/adapters/defi/ {mango,zeta,flash_trade}.py` + their tests,
+    `unified-api-contracts/unified_api_contracts/registry/ venue_adapter_keys.py` modified, both uncommitted) at the
+    time of this check — not committed/shipped by this agent, per the collision-avoidance instruction to not touch the
+    sibling's repos.

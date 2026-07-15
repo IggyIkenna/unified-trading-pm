@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — AutoSpawn Architecture
 summary:
-  AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass
-  (queue non-empty, no active worker, account headroom <95%, slot configured, not in cooldown); model-tier-aware
-  opus routing, anti-flap 1h backoff + Slack alert.
+  AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass (queue
+  non-empty, no active worker, account headroom <95%, slot configured, not in cooldown); model-tier-aware opus routing,
+  anti-flap 1h backoff + Slack alert.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +21,14 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
-referenced_by: [codex/04-architecture/agent-orchestrator-backlog-state-alignment.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/agent-orchestrator-worker-liveness.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed: 2026-06-29
 code_refs:
@@ -115,7 +122,8 @@ wedges a Sonnet slot. **Verified live 2026-06-29**: an autospawned Opus slot pic
 task (`mdps_polars_engine_cost_sharpening`). Commits: dispatch gate `agent-orchestrator@c627276`; prereq-aware +
 affinity upgrade `@5929815` (extends the original spawn-time pinned upgrade). Tests:
 `tests/test_dispatch_model_gate.py`, `tests/test_autospawn.py::test_*model*`/`*pinned*`/`*required*`. Cross-refs:
-`role-registry.md` (per-role model defaults), `codex/06-coding-standards/model-tier-selection.md` (the tier SSOT).
+`unified-trading-pm/agents/<role>.md` (per-role `model` frontmatter defaults),
+`codex/06-coding-standards/model-tier-selection.md` (the tier SSOT).
 
 **Quota note.** Opus is genuinely available (Max-20 accounts carry Opus headroom; there is **no** opus-budget guard in
 code), but Opus burns the weekly quota faster — so `opus-required` is rightly reserved for cross-repo/schema work, and

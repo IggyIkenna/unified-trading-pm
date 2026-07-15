@@ -195,7 +195,7 @@ def sample_paths(pm_root: Path, n: int) -> dict[str, list[Path]]:
         "audit-instruction": pick((pm_root / "plans/audit/instructions").rglob("*.md")),
         "codex-ssot": pick(p for p in (pm_root / "codex").rglob("*.md") if "15-runbooks" not in str(p)),
         "codex-runbook": pick((pm_root / "codex/15-runbooks").rglob("*.md")),
-        "agent-role": pick((ws / "agent-orchestrator/agents").glob("*.md")),
+        "agent-role": pick((ws / "unified-trading-pm/agents").glob("*.md")),
     }
 
 

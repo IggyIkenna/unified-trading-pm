@@ -14,7 +14,7 @@ summary:
   agents can't trip on stale info, and four runtime hygiene gaps (teardown orphan leak; idle_blocker_inferred +
   slot_released_prereq_blocked log spam; the worker_kick_failed artifact; proactive-spawn churn). Runtime is HEALTHY now
   — this is latent drift, not an incident.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -36,7 +36,7 @@ tags:
   ]
 related: [../epics/orchestrator_master.md, ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md]
 created: 2026-07-10
-last_updated: 2026-07-10
+last_updated: 2026-07-15
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -376,16 +376,20 @@ while the kicker fought it: its pane carried unsubmitted planner text ("check on
 classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration N" turn → re-frozen ~90s later. **55 kicks in
 ~100 min**, each a full model turn at 55% context. Recurring class per operator._
 
-- [ ] [CODE] P1. Pending-operator visibility: a partial answer must NOT close the pending half. Give /blocked answers an
-      explicit disposition (final vs partial-operator-pending): a partial answer delivers the interim guidance but keeps
-      an OPEN operator-pending surface (blocked row stays open with `authority: operator_pending`, or a linked follow-up
-      row) that shows in the dashboard blocked queue + re-alerts on an interval until the operator decides. Main's
-      rubric section in `agents/main.md` then instructs: partial answers use the pending disposition, never a plain
-      answer. (Root cause of the invisible 2h wait.)
-- [ ] [CODE] P2. (NARROWED 2026-07-10 PM — the repo-blocker waiter suppression in todo 20 covers the incident class;
-      remaining scope only) Generic wait-loop kick suppression for NON-blocker waits, plus the phantom-frozen
-      `classify_pane` shape: unsubmitted planner text (e.g. "check on X again in a bit") left in the input box between
-      turns reads as frozen input today.
+- [x] [CODE] P1. ✅ DONE (2026-07-15) — agent-orchestrator@f821840 + PM `agents/main.md` — Pending-operator visibility:
+      a partial answer must NOT close the pending half. Shipped: `AnswerRequest.disposition` (`final`|`partial`);
+      `partial_answer_blocked()` records the interim answer + sets `authority: operator_pending` and LEAVES
+      `answered_at` null so the row stays in the blocked queue; `answer_blocked_endpoint` branches on disposition
+      (delivers interim guidance + unblocks the worker on partial, logs `blocked_partial_answer`); the operator-gated
+      re-alert now covers `operator_pending` rows; `agents/main.md` rubric instructs partial answers to use
+      `disposition: partial`, never a plain answer. Tests: `test_blocked_partial_answer.py` (2) + full QG green (1282
+      passed). Fixes the invisible 2h wait.
+- [ ] [CODE] P2. 🟡 DEFERRED (operator 2026-07-15 → next behavior-drift audit) — (NARROWED 2026-07-10 PM — the
+      repo-blocker waiter suppression in todo 20 covers the incident class; remaining scope only) Generic wait-loop kick
+      suppression for NON-blocker waits, plus the phantom-frozen `classify_pane` shape: unsubmitted planner text (e.g.
+      "check on X again in a bit") left in the input box between turns reads as frozen input today. DEFERRED: a fuzzy
+      semantic heuristic on the kill-decision path (highest fleet-brick risk) — the next audit round re-derives the
+      actual drift + right-fit before implementing.
 - [x] 20. ✅ [CODE] P1. Repo-blocker mechanism — the operator-designed backend-owned resolution of the recurring "agent
       A shipped a commit that turned the repo QG red; agent B can't ship" wait (design principle: depend LEAST on an
       agent relaying the green signal, MOST on the backend). Shipped: `repo_blockers` registry (`RepoBlockerRow`,
@@ -400,30 +404,30 @@ classifies FROZEN → "— proceed now" kick → tiny "still waiting, iteration 
       cases. Evidence: agent-orchestrator@b46613d; worker.md §4b + cicd.md fast-path shipped in the same PM commit as
       this flip.
 
-- [ ] [CODE] P2. `worker_polling_dead` false alarms on PRESCRIBED-idle workers (found 2026-07-10 PM, 15 events that
-      day): every event was an IDLE slot (`task=None`, queue holding only a prereq-blocked task — "idle: 1 task(s)
-      blocked on footystats-mp-complete") tripping health.py's 300s heartbeat-silence alarm. Under the read-the-file
-      contract an idle worker sends ONE final heartbeat and waits quietly, so >300s silence is the DESIGNED posture, not
-      death — the alarm predates the no-busy-poll cutover. Fix BOTH halves: (a) health.py must not fire polling-dead for
-      a task-less idle slot with a live tmux session (that state belongs to the idle reclaim); (b) diagnose WHY those
-      sessions lingered for HOURS instead of being reaped by the 2-tick idle reclaim (slots 1/2/3/4 repeatedly
-      re-tripped the alarm 12:33-16:30Z — either the reclaim isn't firing, its ticks reset on each alarm/kick, or
-      something respawns idle workers into a queue with zero dispatchable work, burning spawn cycles). DIAGNOSIS
-      COMPLETE (2026-07-10 ~16:45Z, slot-2 timeline): the slots are the ESCALATION/PLAN-HEALTH dispatch pool — 8
-      escalation + 7 plan-health dispatches landed on slot 2 alone 13:05-16:30 (all legitimate: the cicd agents resolved
-      ~10 real ldr_qg_failure walls today, mostly 1 attempt, resolution=qg_v2_green — the firefighting fleet is
-      HEALTHY). The waste is the AFTERMATH of each one-shot: (a) the finished worker's session lingers at the prompt
-      with its own final planner text ("exit cleanly, no next task" / "go idle" / "wait for the next dispatch") — the
-      kicker reads that ghost text as FROZEN and burns kick-turns on a FINISHED worker; (b) the idle-reclaim's 300s
-      boot-grace plus the 300s polling-dead threshold guarantee the FALSE alarm always fires before the reclaim can reap
-      a short-lived one-shot (alarm at silence +300s; reclaim earliest at spawn +300s + 2 ticks); (c) at least some
-      kick-escalation respawns boot a GENERIC worker into a queue with ZERO dispatchable work (11 slot_boot + 11
-      boot_read_unconfirmed on slot 2 with no dispatchable task all afternoon) — the auto-respawn path does NOT consult
-      the AutoSpawn dispatchable-work gate. Fixes: exempt task-less idle+live-session slots from polling_dead/idle_stale
-      (the reclaim owns them); start idle-reclaim ticks at IDLE-TRANSITION time, not spawn time, for finished one-shots;
-      gate the kick-escalation respawn on `_has_queued_work` (same fail-closed gate as AutoSpawn); teach `classify_pane`
-      the finished-one-shot ghost-text shape (same phantom-frozen family as the narrowed suppression todo above — fix
-      together).
+- [ ] [CODE] P2. 🟡 DEFERRED (operator 2026-07-15 → next behavior-drift audit) — `worker_polling_dead` false alarms on
+      PRESCRIBED-idle workers (found 2026-07-10 PM, 15 events that day): every event was an IDLE slot (`task=None`,
+      queue holding only a prereq-blocked task — "idle: 1 task(s) blocked on footystats-mp-complete") tripping
+      health.py's 300s heartbeat-silence alarm. Under the read-the-file contract an idle worker sends ONE final
+      heartbeat and waits quietly, so >300s silence is the DESIGNED posture, not death — the alarm predates the
+      no-busy-poll cutover. Fix BOTH halves: (a) health.py must not fire polling-dead for a task-less idle slot with a
+      live tmux session (that state belongs to the idle reclaim); (b) diagnose WHY those sessions lingered for HOURS
+      instead of being reaped by the 2-tick idle reclaim (slots 1/2/3/4 repeatedly re-tripped the alarm 12:33-16:30Z —
+      either the reclaim isn't firing, its ticks reset on each alarm/kick, or something respawns idle workers into a
+      queue with zero dispatchable work, burning spawn cycles). DIAGNOSIS COMPLETE (2026-07-10 ~16:45Z, slot-2
+      timeline): the slots are the ESCALATION/PLAN-HEALTH dispatch pool — 8 escalation + 7 plan-health dispatches landed
+      on slot 2 alone 13:05-16:30 (all legitimate: the cicd agents resolved ~10 real ldr_qg_failure walls today, mostly
+      1 attempt, resolution=qg_v2_green — the firefighting fleet is HEALTHY). The waste is the AFTERMATH of each
+      one-shot: (a) the finished worker's session lingers at the prompt with its own final planner text ("exit cleanly,
+      no next task" / "go idle" / "wait for the next dispatch") — the kicker reads that ghost text as FROZEN and burns
+      kick-turns on a FINISHED worker; (b) the idle-reclaim's 300s boot-grace plus the 300s polling-dead threshold
+      guarantee the FALSE alarm always fires before the reclaim can reap a short-lived one-shot (alarm at silence +300s;
+      reclaim earliest at spawn +300s + 2 ticks); (c) at least some kick-escalation respawns boot a GENERIC worker into
+      a queue with ZERO dispatchable work (11 slot_boot + 11 boot_read_unconfirmed on slot 2 with no dispatchable task
+      all afternoon) — the auto-respawn path does NOT consult the AutoSpawn dispatchable-work gate. Fixes: exempt
+      task-less idle+live-session slots from polling_dead/idle_stale (the reclaim owns them); start idle-reclaim ticks
+      at IDLE-TRANSITION time, not spawn time, for finished one-shots; gate the kick-escalation respawn on
+      `_has_queued_work` (same fail-closed gate as AutoSpawn); teach `classify_pane` the finished-one-shot ghost-text
+      shape (same phantom-frozen family as the narrowed suppression todo above — fix together).
 
 ### Phase D — Fleet dashboard + slot-state correctness (backend-owned)
 
@@ -458,13 +462,22 @@ idle+killed slots, and PLAN ≠ TASK on working slots (slot 7 = deployment task 
 
 ### Phase C — Verify
 
-- [ ] [VERIFY] P1. Live verification with evidence per fix: a freshly-spawned worker's `/boot` confirms it read its role
-      file + RULES.md (in-context), the boot stub carries the correct per-session + escalation vars, and it operates
-      only in its slot; no extraction/paste step remains; teardown reap leaves 0 new orphans after a kill;
-      `idle_blocker_inferred` / `slot_released_prereq_blocked` / `worker_kick_failed` rates drop in the activity log;
-      dashboard escalation_to renders correctly; the FLEET table shows PLAN==TASK on working slots, blank
-      context/ping/message on killed+idle slots, and the lifecycle phase in STATUS. Cite `agent-orchestrator@<sha>` +
-      `unified-trading-pm@<sha>` (relocated files) + activity-log deltas.
+- [ ] [VERIFY] P1. 🟡 DEFERRED (operator 2026-07-15 → post-deploy soak, next audit) — Live verification with evidence
+      per fix: a freshly-spawned worker's `/boot` confirms it read its role file + RULES.md (in-context), the boot stub
+      carries the correct per-session + escalation vars, and it operates only in its slot; no extraction/paste step
+      remains; teardown reap leaves 0 new orphans after a kill; `idle_blocker_inferred` / `slot_released_prereq_blocked`
+      / `worker_kick_failed` rates drop in the activity log; dashboard escalation_to renders correctly; the FLEET table
+      shows PLAN==TASK on working slots, blank context/ping/message on killed+idle slots, and the lifecycle phase in
+      STATUS. Cite `agent-orchestrator@<sha>` + `unified-trading-pm@<sha>` (relocated files) + activity-log deltas.
+
+## Final disposition at archival (2026-07-15)
+
+Todo 1 (pending-operator visibility) SHIPPED — agent-orchestrator@f821840 + PM `agents/main.md`, 2 tests + full QG green
+(1282 passed); fixes the invisible 2h wait. Todos 2 (phantom-frozen `classify_pane` / generic wait-loop suppression), 3
+(`worker_polling_dead` false alarms), and 4 (post-deploy soak VERIFY) are **DEFERRED to the next behavior-drift audit**
+(operator 2026-07-15): 2 + 3 are fleet-critical, interdependent, and partly a fuzzy heuristic on the kill-decision path
+— rather than guess, the next audit round re-derives the actual drift + right-fit from code/codex before implementing;
+4's rate-drop evidence needs a live soak after 2/3 ship. Plan ARCHIVED with these three carried forward.
 
 ## 4. Codex SSOTs (read before touching each area — plan↔codex drift is review-blocking)
 

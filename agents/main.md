@@ -217,6 +217,13 @@ curl -sS -X POST $SERVER_URL/api/blocked/<blocked_id>/answer \
   -d '{"answer": "<decision + 1-line why>", "from_role": "main"}'
 ```
 
+**PARTIAL vs FINAL disposition (ao_worker_lifecycle Todo 1).** If your answer is only INTERIM — enough to unblock the
+worker NOW but the real decision is genuinely the operator's — add `"disposition": "partial"` to the body. A partial
+answer delivers your interim guidance AND keeps the operator-pending decision OPEN (it stays in the blocked queue +
+pages the operator) instead of silently closing it. Use it whenever you hand the worker a stopgap while flagging the
+decision upward — NEVER a plain answer for a decision the operator still owns (that is the invisible-wait bug this
+fixes). A plain answer (default `disposition: "final"`) is for a decision you can fully make yourself.
+
 3. Leave it for the operator ONLY when it is genuinely theirs to decide: spend/credentials, destructive or
    hard-to-reverse actions, scope changes the plan doesn't cover, or anything the hard-stop list reserves for humans. Do
    NOT re-answer or churn a question you've deferred — note it once in your operator chat reply ("BLK-xxx needs you:
