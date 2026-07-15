@@ -138,6 +138,34 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 09:30Z — data_engineering slot-10 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; fast re-verify only, both tracked VMs still running + making genuine progress, same known consolidator-staleness self-recovering)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-9's 09:1xZ entry (same 2 tracked VMs,
+`features-sports-sports-20260715-004933` covering 2018-07-09→2019-08-11 and `-091218` covering 2020-09-09→2020-10-05,
+~15 min elapsed). Gate remains structurally unreachable — Todo 3 ("features manifest clean over history") cannot pass
+while Todo 1 (full-history compute) is still mid-run, per the well-established pattern this todo has hit 30+ times.
+
+**Verified both tracked VMs via `gcloud compute instances list`**: both still `RUNNING`. Features bucket unique-date
+count is now **3,044** (up from 3,041 at slot-9's 09:1xZ check) — steady forward progress. Tailed both VMs' `run.log`s:
+both show fresh timestamps (09:28-09:29Z) with genuine per-date compute (real `fixture_features`/`ManifestWriter` writes
+across leagues) — same already-tracked
+`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` staleness warning recurring on
+`-091218` (274s→344s across retry attempts) but no fatal exit, consistent with the established self-recovering pattern.
+Not filing a new issue (same root cause already tracked, already P1).
+
+Did not attempt a manifest-based gap scan or the trailing-edge pass (2026-07-14→today) — both VMs are still actively
+closing their assigned ranges; per the single-walk/efficiency craft north-star, adding another GCS-list pass while the
+known gaps are still genuinely mid-compute would just add congestion to the same bucket. Checkbox NOT flipped (both Todo
+1 and Todo 3 gates unmet).
+
+**Handoff for the next dispatch**: unchanged — once `-004933` and `-091218` both complete (self-delete on
+`VM_SHUTDOWN_ON_COMPLETION=true`), launch the trailing-edge pass (2026-07-14→today), then re-run a manifest-based (not
+GCS-listing-diff) full-history gap scan before declaring Todo 1 complete — only then does Todo 3's gate become
+reachable. `/skip-current-task` per this task's established convention.
+
+No repo code commit this entry (VM/manifest verification only, no code changed); this plan-doc edit ships via the
+`docs(plans):` carve-out.
+
 ### 2026-07-15 09:1xZ — data_engineering slot-9 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; fast re-verify only, both tracked VMs still running + making genuine progress, consolidator staleness recurring but self-recovering)
 
 Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-4's 09:1xZ entry (same 2 tracked VMs, ~7 min
