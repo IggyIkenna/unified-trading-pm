@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: DeFi Data Types Catalog
 summary: >-
   Per-data_type capture catalog for the ~24 MTDS DeFi data_types (dex_swaps, dex_pool_state, lending_indices,
-  perp_funding, lst_rates, oracle_prices, gas_fees, +Solana basis MVP types) — CLI operation, sources, shard
-  key, instrument_type, schema fields, GCS path convention and per-protocol coverage matrix; carries a partial
-  staleness banner deferring current-state to defi-data-pipeline + defi-canonical-naming.
+  perp_funding, lst_rates, oracle_prices, gas_fees, +Solana basis MVP types) — CLI operation, sources, shard key,
+  instrument_type, schema fields, GCS path convention and per-protocol coverage matrix; carries a partial staleness
+  banner deferring current-state to defi-data-pipeline + defi-canonical-naming.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,12 +13,29 @@ stage: [meta]
 repos: [deployment-service, features-service, instruments-service]
 scope: [engineer]
 tags: [defi, mtds, catalogue, data-pipeline, features]
-related: [defi-data-pipeline.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, mtds-data-source-coverage-matrix.md]
+related:
+  [
+    defi-data-pipeline.md,
+    defi-data-type-taxonomy.md,
+    defi-venue-protocol-catalogue.md,
+    instrument-pipeline-defi.md,
+    mtds-data-source-coverage-matrix.md,
+  ]
 created: 2026-04-24
 authoritative_for: [DeFi MTDS per-data_type definitions catalog, DeFi data_type to CLI-operation and source mapping]
-referenced_by: [codex/02-data/README.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/drift-v2-data-sources.md, codex/15-runbooks/backfill-completion-playbook.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md]
+referenced_by:
+  [
+    codex/02-data/README.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/02-data/defi-data-type-taxonomy.md,
+    codex/02-data/defi-venue-protocol-catalogue.md,
+    codex/04-architecture/drift-v2-data-sources.md,
+    codex/15-runbooks/backfill-completion-playbook.md,
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+  ]
 owner:
-last_reviewed: 2026-05-13
+last_reviewed: 2026-07-15
 code_refs:
 ---
 
@@ -153,16 +170,47 @@ Daily lending rate indices. One row per market (token) per day.
 
 ### 4. perp_funding (canonical; was `funding_rates`)
 
-| Field               | Value                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **CLI operation**   | `collect-perp-funding` (perp_funding_handler)                                                                             |
-| **Sources**         | Hyperliquid REST, Aster REST, GMX (The Graph), Pacifica REST, Lighter (Tardis CSV), Drift (Data API + S3). NOT Synthetix. |
-| **Shard key**       | venue × chain × date                                                                                                      |
-| **Instrument type** | `perpetual`                                                                                                               |
-| **Status**          | Production                                                                                                                |
-| **Schema fields**   | symbol, ts_event, venue, chain, funding_rate, annualized_rate                                                             |
+| Field               | Value                                                                                                                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-perp-funding` (perp_funding_handler) for GMX; `solana-defi` (solana_defi_handler / `_collect_drift`) for DRIFT-SOLANA.                                                                                                                                                                                                          |
+| **Sources**         | GMX (The Graph), Drift (Data API + S3). **Hyperliquid/Aster/Pacifica-Solana/Lighter-ZKSYNC standalone perp_funding capture was RETIRED 2026-07-08** (operator-approved) — those 4 venues' funding is now sourced solely from `derivative_ticker`'s embedded `funding_rate` field (byte-identical, same underlying fetch). See §4a below. |
+| **Shard key**       | venue × chain × date                                                                                                                                                                                                                                                                                                                     |
+| **Instrument type** | `perpetual`                                                                                                                                                                                                                                                                                                                              |
+| **Status**          | Production                                                                                                                                                                                                                                                                                                                               |
+| **Schema fields**   | symbol, ts_event, venue, chain, funding_rate, annualized_rate                                                                                                                                                                                                                                                                            |
 
-Perpetual funding rates. One row per market per funding interval.
+Perpetual funding rates — the PER-INTERVAL canonical VIEW (operator ruling 2026-07-15,
+`defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`). One row per market per funding
+interval. `annualized_rate` (a simple multiplicative annualization of ONE rate — e.g. Drift's `_collect_drift` now
+computes `funding_rate * 365` from its 24h-window rate) is fine; venue-specific rolling-WINDOW aggregates are NOT — the
+Drift-only `funding_rate_24h`/`funding_rate_7d`/`funding_rate_30d` columns (a pre-ruling divergence: no other venue's
+writer aggregated funding into rolling windows) were removed from `_collect_drift`'s write path 2026-07-15.
+Already-written historical rows carrying those columns are NOT restamped — `schema_validation.py`'s required-columns
+check already accepts `funding_rate_24h` as an alternative to `funding_rate` (reader tolerance, not schema breakage).
+
+---
+
+### 4a. derivative_ticker (canonical raw-funding home for ALL perps, 2026-07-15)
+
+| Field               | Value                                                                                                                                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **CLI operation**   | `collect-perp-funding` (GMX, dual-write alongside perp_funding) · `solana-defi`/UMI batch-live (Drift, Data API only, `date >= 2025-01-01`) · UMI tick-provider batch-live (Hyperliquid/Aster/Pacifica-Solana/Extended-Starknet, native REST/S3) · Tardis (Lighter-ZKSYNC, `date >= 2026-04-17` only). |
+| **Sources**         | The Graph (GMX), Drift Data API `/fundingRates`, Hyperliquid S3 `asset_ctxs` + REST, Aster `/fapi/v1/fundingRate`, Pacifica `/funding_rate/history`, Extended `/info/{symbol}/funding`, Tardis archive (Lighter).                                                                                      |
+| **Shard key**       | venue × chain × date                                                                                                                                                                                                                                                                                   |
+| **Instrument type** | `perpetual`                                                                                                                                                                                                                                                                                            |
+| **Status**          | Production (GMX/Drift/Hyperliquid/Aster/Pacifica/Extended/Lighter all wired); MANGO-SOLANA/ZETA-SOLANA/FLASH-SOLANA have zero MTDS capture of any kind — not derivative_ticker-specific, no adapter exists at all — out of scope until a full adapter is built.                                        |
+| **Schema fields**   | instrument_id, venue, chain, symbol, ts_event, funding_rate (nullable — but effectively always populated), open_interest (nullable), mark_price (nullable), index_price (nullable)                                                                                                                     |
+
+**Operator ruling (2026-07-15, verbatim intent)**: "the highest-resolution derivative_ticker data should be run for ALL
+perps — even if they don't have OI at the data source — for canonicalisation of where raw funding is." This is the
+canonical RAW-funding home for every perp venue — captured at the highest resolution the source genuinely offers
+(settlement-event grain where available; a poll/snapshot where the source has no settlement-level feed), never
+synthesized. OI/mark/index are honestly nullable — GMX's native `fundingRateChangedEvents` query has no OI field at all,
+Drift/Aster/Pacifica/Extended similarly omit it at this grain; only Hyperliquid (S3 archive) and Lighter (Tardis)
+genuinely have real OI. `funding_rate` + `ts_event` are mandatory. No venue-specific raw-layer aggregation (that's what
+§4's `perp_funding` divergence-removal above is about) — aggregation windows belong downstream in features, not in
+either raw capture data_type. Full per-venue coverage-table evidence (file:line, verified 2026-07-15):
+`unified-trading-pm/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
 
 ---
 

@@ -33,7 +33,7 @@ referenced_by:
     codex/05-infrastructure/chain-rpc-mev-tenderly.md,
   ]
 owner:
-last_reviewed: 2026-05-15
+last_reviewed: 2026-07-15
 code_refs:
 ---
 
@@ -67,20 +67,20 @@ what's the canonical schema, and what cluster validation rule applies.
 
 ## Canonical data-type families
 
-| Family                                        | Members                                                                                                                  |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Lending**                                   | `lending_indices`, `oracle_prices`, `rewards`, `risk_params`, `liquidation_events`, `flash_loan_events`, `position_data` |
-| **DEX (spot)**                                | `dex_swaps`, `dex_pools`, `position_data`                                                                                |
-| **DEX (aggregator)**                          | `aggregator_routes` (read-only API capture)                                                                              |
-| **LST**                                       | `lst_rates`, `oracle_prices`, `staking_yields`                                                                           |
-| **Vault**                                     | `vault_share_price`, `vault_apy`, `vault_tvl`                                                                            |
-| **Restaking + LRT**                           | `restaking_rewards` (formerly `eigenlayer_rewards`), `staking_yields`, `restaking_yields`, `slashing_events`             |
-| **Perp** (DeFi-side; CeFi handled separately) | `perp_funding`, `liquidations`, `oracle_prices`                                                                          |
-| **Native Staking (Solana)**                   | `native_staking_rates` (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)                                 |
-| **Governance**                                | `governance_proposals` (NEW per `defi_simulation_realism` Phase 1C)                                                      |
-| **Bridge**                                    | `bridge_events`                                                                                                          |
-| **MEV**                                       | `mev_events`                                                                                                             |
-| **Token transfers**                           | `token_transfers`                                                                                                        |
+| Family                                        | Members                                                                                                                            |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Lending**                                   | `lending_indices`, `oracle_prices`, `rewards`, `risk_params`, `liquidation_events`, `flash_loan_events`, `position_data`           |
+| **DEX (spot)**                                | `dex_swaps`, `dex_pools`, `position_data`                                                                                          |
+| **DEX (aggregator)**                          | `aggregator_routes` (read-only API capture)                                                                                        |
+| **LST**                                       | `lst_rates`, `oracle_prices`, `staking_yields`                                                                                     |
+| **Vault**                                     | `vault_share_price`, `vault_apy`, `vault_tvl`                                                                                      |
+| **Restaking + LRT**                           | `restaking_rewards` (formerly `eigenlayer_rewards`), `staking_yields`, `restaking_yields`, `slashing_events`                       |
+| **Perp** (DeFi-side; CeFi handled separately) | `perp_funding`, `derivative_ticker` (added 2026-07-15 — canonical raw-funding home for ALL perps), `liquidations`, `oracle_prices` |
+| **Native Staking (Solana)**                   | `native_staking_rates` (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)                                           |
+| **Governance**                                | `governance_proposals` (NEW per `defi_simulation_realism` Phase 1C)                                                                |
+| **Bridge**                                    | `bridge_events`                                                                                                                    |
+| **MEV**                                       | `mev_events`                                                                                                                       |
+| **Token transfers**                           | `token_transfers`                                                                                                                  |
 
 ## Per-protocol-family data-type matrix
 
@@ -136,8 +136,32 @@ what's the canonical schema, and what cluster validation rule applies.
 
 ### Perp (DeFi-side; CeFi handled in CeFi taxonomy)
 
-CeFi-axis classification per FLAG 1 RESOLUTION; on-chain CLOBs (Hyperliquid / Aster / GMX / DRIFT / Pacifica / Extended
-/ Lighter) capture under cefi axis. DeFi-axis perp would only apply to non-CLOB perps if any; currently none.
+CeFi-axis classification per FLAG 1 RESOLUTION; on-chain CLOBs (Hyperliquid / Aster / Pacifica / Extended / Lighter)
+capture under cefi axis. GMX and DRIFT-SOLANA stay defi-axis (on-chain settlement, not CLOB-style; see
+`DEFI_PERP_VENUES` in `unified_api_contracts/registry/defi_venues.py`).
+
+**derivative_ticker canonicalisation (operator ruling 2026-07-15,
+`defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`)**: `derivative_ticker` is the canonical
+RAW-funding home for EVERY perp venue, defi-axis and cefi-axis alike — captured at the highest resolution each source
+offers, even where the source has no open interest (OI/mark/index fields nullable; `funding_rate` + `ts_event`
+mandatory). `perp_funding` stays the per-interval canonical VIEW (annualizing a single rate into `annualized_rate` is
+fine — a unit conversion, not aggregation) but MUST NOT carry venue-specific rolling-window aggregates (the Drift-only
+`funding_rate_24h`/`funding_rate_7d`/`funding_rate_30d` columns were removed 2026-07-15 —
+`market-tick-data-service/.../cli/handlers/solana_defi_drift.py`'s `_collect_drift`). Per-venue resolution (verified
+2026-07-15, see the issue doc's coverage table for full evidence + file:line):
+
+| Venue                        | Axis | derivative_ticker source                                                                                       | OI at source         | Notes                                                                                                                                     |
+| ---------------------------- | ---- | -------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| GMX-ARBITRUM / GMX-AVALANCHE | defi | The Graph `fundingRateChangedEvents` (event-driven, dual-written alongside `perp_funding` from the SAME fetch) | No                   | Native query has no OI field at all — nullable, never fabricated. `_perp_funding_gmx.py`.                                                 |
+| DRIFT-SOLANA                 | defi | Drift Data API `/fundingRates` (per-settlement)                                                                | No (mark_price only) | Only `date >= 2025-01-01` (Data API window) — pre-2025 funding is `perp_funding`-only via a separate S3-archive path. `drift_adapter.py`. |
+| HYPERLIQUID                  | cefi | S3 `hyperliquid-archive/asset_ctxs/` (real OI) + REST fallback                                                 | Yes (S3), No (REST)  | `hyperliquid_s3.py`.                                                                                                                      |
+| ASTER                        | cefi | `/fapi/v1/fundingRate` REST                                                                                    | No                   | `_umi_aster.py`.                                                                                                                          |
+| PACIFICA-SOLANA              | cefi | `/funding_rate/history` REST                                                                                   | No                   | `_umi_pacifica.py`.                                                                                                                       |
+| EXTENDED-STARKNET            | cefi | `/info/{symbol}/funding` REST                                                                                  | No                   | `_umi_extended.py`.                                                                                                                       |
+| LIGHTER-ZKSYNC               | cefi | Tardis archive, `date >= 2026-04-17` only                                                                      | Yes (Tardis)         | Native REST has zero funding code; a public current-snapshot endpoint exists but has no history — Tardis is the real source.              |
+
+MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA have URDI reference-data adapter keys but ZERO MTDS market-data capture of any
+kind (not derivative_ticker-specific — no trades/book_snapshot either) — out of scope until a full adapter is built.
 
 ### Native Staking — Solana (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)
 
