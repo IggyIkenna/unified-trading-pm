@@ -138,6 +138,34 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 10:04Z — data_engineering slot-8 (Todo 3 dispatch — still BLOCKED-PREREQ, fast re-verify only, both tracked VMs healthy + progressing, no new action needed)
+
+Fresh-pulled slot repos clean. My task is Todo 3 ("Features manifest clean over history"), which depends on Todo 1
+(full-history compute) completing — still mid-run, so this stays BLOCKED-PREREQ.
+
+**Re-verified both tracked VMs** (`gcloud compute instances list`, `/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap
+`gcloud` on PATH is broken here): `features-sports-sports-20260715-004933` and `-091218` both still `RUNNING`. Features
+bucket unique-date count is **3,054** (`gsutil ls .../sports_features/by_date/ | wc -l`) — up from 3,050 at 09:54Z (9
+min gap), confirming genuine ongoing progress, not a stall.
+
+Tailed both VMs' `run.log` (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, direct GCS read):
+`-004933` fresh at 10:02:51Z (check time 10:03:48Z, <60s stale) with genuine per-date reference-merge + fixture-target
+writes for 2018-11-30. `-091218` hit the already-tracked, already-escalated P1 consolidator-staleness fail-fast
+(`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) at 10:00:50Z (409s-stale
+heartbeat), then self-recovered on retry — confirmed the consolidator's `_index/availability_index.parquet` wrote fresh
+at 10:01:39Z, and re-tailing the log at 10:04Z showed it back to genuine per-date calculator output (`multisource_xg`,
+`team_derived`, etc.) for the next date. Not filing a new issue (same root cause, already P1-tracked).
+
+**Secondary finding (non-blocking)**: the June-27 note's suggested
+`check_pipeline_completeness.py --check-manifest-clean` invocation does not exist in the script (`git log` + `grep`
+confirm no such flag was ever implemented across any revision) — the script's only args are
+`--start-date/--end-date/--services/--output/--stale-hours`. This doesn't change today's outcome (Todo 1 isn't done yet
+regardless), but whoever picks up Todo 3 once Todo 1 completes will need to either extend this script with a
+manifest-cleanliness mode or write the query some other way. Not filing a standalone issue doc — captured here since
+it's moot until the prereq clears and the next dispatcher will read this log.
+
+Checkbox NOT flipped (gate structurally unmet — Todo 1 still running).
+
 ### 2026-07-15 09:54Z — data_engineering slot-7 (Todo 1 dispatch — fast re-verify only, both tracked VMs still healthy + progressing, consolidator fresh, no new action needed)
 
 Fresh-pulled all 24 slot repos clean. Gate remains unmet — full-history compute still mid-run on both tracked VMs, per
