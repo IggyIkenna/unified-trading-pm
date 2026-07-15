@@ -1,0 +1,21 @@
+# github-glue-runner.slice — resource cap for the WHOLE glue-runner fleet.
+#
+# Epic: deployment_and_user_management_master (CI/CD cost reduction — B1)
+# Lifecycle: permanent   Delete-when: glue host retired (B2/B3)
+#
+# Purpose: a CI burst must NEVER starve the agent-orchestrator sharing this VM. This slice caps the
+# COMBINED CPU/RAM of every github-glue-runner@N instance, guaranteeing the orchestrator always keeps
+# >= 4 of the 8 vCPUs. Glue is IO-bound, so 8 runners rarely approach this cap — it is a safety fence,
+# not an expected operating point.
+[Unit]
+Description=Resource cap for GitHub Actions glue runners (protects the agent-orchestrator)
+
+[Slice]
+# <= 4 of 8 vCPU for the entire glue fleet (leaves >=4 cores for the orchestrator).
+CPUQuota=400%
+# CPU shares below default so the orchestrator wins any contention.
+CPUWeight=50
+# Hard + soft memory ceilings for the whole fleet (VM has 32 GiB).
+MemoryMax=8G
+MemoryHigh=6G
+TasksMax=8192

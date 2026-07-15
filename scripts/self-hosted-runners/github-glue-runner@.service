@@ -1,0 +1,35 @@
+# github-glue-runner@.service — systemd template unit; one instance per runner (glue-1 .. glue-N).
+#
+# Epic: deployment_and_user_management_master (CI/CD cost reduction — B1)
+# Lifecycle: permanent   Delete-when: glue host retired (B2/B3)
+#
+# Enable N runners with:  systemctl enable --now github-glue-runner@{1..8}
+[Unit]
+Description=GitHub Actions ephemeral glue runner %i (IggyIkenna/unified-trading-pm)
+After=network-online.target
+Wants=network-online.target
+# Never give up restarting (ephemeral runners exit after every single job by design).
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+# Non-root; the toolchain (gcloud/gh/python/uv) is provisioned for this user on the VM.
+User=ubuntu
+Slice=github-glue-runner.slice
+# GH_TOKEN (Administration:write on the repo) — 0600, root:root. Optionally GH_TOKEN_SECRET instead.
+EnvironmentFile=/etc/github-glue-runner.env
+WorkingDirectory=/opt/github-glue-runners/glue-%i
+ExecStart=/opt/github-glue-runners/glue-runner-run.sh %i
+# One job per process; restart to re-register for the next.
+Restart=always
+RestartSec=5
+# Be a polite neighbour to the orchestrator.
+Nice=5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+# Give a running job time to finish on stop/redeploy before SIGKILL.
+KillSignal=SIGTERM
+TimeoutStopSec=90
+
+[Install]
+WantedBy=multi-user.target
