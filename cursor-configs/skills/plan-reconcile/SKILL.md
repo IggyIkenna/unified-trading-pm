@@ -78,8 +78,18 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
 
 ## Phase 2 — done-but-unchecked sweep
 
-For every `- [ ]` todo in ACTIVE (non-draft) plans, hunt evidence the work already shipped. Evidence bar, in descending
-strength — flip requires at least one HARD item:
+Sweep **every checkbox surface in the audit corpus**, not just active plans — the false-unchecked class hides in issue
+docs and epics too. For every `- [ ]` in each of the three surfaces, hunt evidence the work already shipped:
+
+1. **ACTIVE (non-draft) plans** — `plans/active/*.md` todos (the primary surface).
+2. **Issue docs** — `plans/active/issues/*.md` action items / remediation checkboxes (an issue whose fix demonstrably
+   shipped but whose `- [ ]` never flipped, or whose resolution warrants closing the doc).
+3. **Epic checkboxes** — `plans/epics/*.md` items that reference a child plan/milestone: flip when that child is
+   verifiably done (all its todos flipped, or it's archived). A ticked epic box over an unfinished child is the inverse
+   contradiction (route to Phase 1), not a flip.
+
+(`status: draft` plans are excluded — WIP, not yet dispatched.) The same HARD-evidence bar below applies to all three
+surfaces; evidence in descending strength — a flip requires at least one HARD item:
 
 - **HARD**: a pushed commit implementing the item, verified reachable (`git log`/`gh api` on the named repo;
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` or on main); the named artifact demonstrably live (the
