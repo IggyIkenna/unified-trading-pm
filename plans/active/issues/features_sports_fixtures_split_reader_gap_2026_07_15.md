@@ -377,10 +377,17 @@ depends_on: []
       `tests/unit/test_data_status_sports.py` covering: legacy singleton still counted, post-cutover split-entity now
       counted (previously silently empty), oldest legacy fallback preserved, no-data case, per-league split-entity
       detection, and genuine gaps still reported missing. Full `quality-gates.sh` green (94s).
-- [ ] [CODE] P1. Fix `market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py`'s
+- [x] ✅ [CODE] P1. Fix `market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py`'s
       `_FIXTURES_BLOB_TEMPLATE` (MTDS manifest sentinel fan-out / Phase 3.D.5 v2 sports enumerator) to also probe
       `entity=fixtures_schedule/league={league_id}/` — currently silently yields an empty per-day fixture universe for
-      post-cutover dates. (repo: market-tick-data-service)
+      post-cutover dates. (repo: market-tick-data-service) — market-tick-data-service@7c3e5160: added
+      `_FIXTURES_SCHEDULE_BLOB_TEMPLATE` (canonical `pipeline_mode=batch_api_football/entity=fixtures_schedule/` prefix
+      — the split entity has no legacy/no-pipeline_mode variant, unlike `entity=fixtures`) and `list_instruments()` now
+      falls back to it whenever the legacy `entity=fixtures` blob is absent. 3 regression tests in
+      `tests/unit/engine/test_sports_catalog_reader_split_entity_fallback.py` covering: legacy-absent falls back to
+      schedule and yields the fixture, legacy-present short-circuits without probing schedule (no behavior change
+      pre-cutover), and neither entity present is a silent skip (not an error). Full `quality-gates.sh` green (6106
+      tests), shipped via quickmerge.
 
 ## References
 
