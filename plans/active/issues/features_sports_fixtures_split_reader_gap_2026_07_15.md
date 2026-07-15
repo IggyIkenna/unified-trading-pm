@@ -340,10 +340,17 @@ depends_on: []
       `deployment_api/services/data_status_drilldown/_fixtures_pools.py`) to also probe the split entities — currently
       silently degrade (empty/None) for the Upcoming Fixtures panel + Data Status drilldown CSV export/pool on any date
       on/after the cutover. (repo: deployment-api)
-- [ ] [CODE] P1. Fix
+- [x] ✅ [CODE] P1. Fix
       `deployment-service/deployment_service/cli/utils/data_status_sports.py::     _load_fixture_counts_for_date` to
       also probe `entity=fixtures_schedule` — currently silently reports 0 fixtures (read as genuine expected-absence)
-      for post-cutover dates. (repo: deployment-service)
+      for post-cutover dates. (repo: deployment-service) — deployment-service@2c9d743: added `_FIXTURES_SCHEDULE_PREFIX`
+      probe (canonical `pipeline_mode=batch_api_football/entity=fixtures_schedule/` shape) as a fallback tier in
+      `_load_fixture_counts_for_date` (the calendar denominator) AND in `_check_league_status`'s per-league existence
+      check (same legacy-only drift, same file) — without both, the calendar would show fixtures exist but the
+      completeness check would still report them missing. 6 regression tests added in
+      `tests/unit/test_data_status_sports.py` covering: legacy singleton still counted, post-cutover split-entity now
+      counted (previously silently empty), oldest legacy fallback preserved, no-data case, per-league split-entity
+      detection, and genuine gaps still reported missing. Full `quality-gates.sh` green (94s).
 - [ ] [CODE] P1. Fix `market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py`'s
       `_FIXTURES_BLOB_TEMPLATE` (MTDS manifest sentinel fan-out / Phase 3.D.5 v2 sports enumerator) to also probe
       `entity=fixtures_schedule/league={league_id}/` — currently silently yields an empty per-day fixture universe for
