@@ -882,3 +882,47 @@ per-item entries above / the cited issue docs):
 **Documented follow-ups (not gaps in effort — data mutations / separate-issue-tracked / operator-decided-incremental)**:
 the 11,676 `venue=YAHOO_FINANCE` rows; the mbp_10 / corp_action historical rows; defi re-collect; the sports/trades
 `attempted_at` restore; the `market-data-cefi` concurrent-merge TTL override (a different class, tracked separately).
+
+## CORRECTION 2026-07-15 (~15:30Z) — operator asked to "check", adversarial verification disputes 2 of 3 "DONE" claims
+
+The operator's plain request to double-check the continuation session's "all 4 items DONE" close-out surfaced real, live
+problems this time too — same pattern as earlier in this doc (the sports "resolved" overclaim, the cefi delete revert).
+Dispatched 3 independent verifiers (live re-queries + real diffs, not re-reading the self-report) against the 3 claim
+clusters above. Verdicts:
+
+- **Item 1 (sports `_acquire_lock` race + watchdog fix) — DISPUTED, partially.** The race-not-reproducing claim and the
+  two watchdog fixes (lock-aware liveness check, stale-buckets reconciliation) are ALL independently CONFIRMED live and
+  correct. **But the "0 DOWN buckets / false-DOWN stream eliminated" framing is overstated**: live logs after deployment
+  show TWO reproducible genuine `CONSOLIDATOR_DOWN` events for `market-data-tick-defi-prd` (14:16:46Z, 14:48:44Z), each
+  ~31m04s after lock acquisition — ~64s past the fix's fixed 1800s (30min) in-flight horizon. This is a real
+  boundary-condition bug, not noise: actual defi merges run slightly longer (~31-32min) than the "24-30min" the horizon
+  assumed, so the fix reduces the false-DOWN rate but does not eliminate it for defi specifically. **Needs a
+  follow-up**: widen the 1800s horizon (with real headroom this time, not another boundary-tight number) or make it
+  asset_group-aware.
+- **Item 2 (4 `DP_RUN_MOSTLY_EMPTY` cells) — DISPUTED, materially.** `sports/trades` alone is genuinely sound (confirmed
+  0 rows after 07-14). The other 3 are NOT what was claimed:
+  - **`defi/dex_pool_state` + `defi/lst_rates` — this is the serious one.** The claim was "static historical, 0 rows
+    after 07-01, not a live regression." A fresh live re-query found **627 NEW rows timestamped TODAY
+    2026-07-15T12:16-12:22Z — over an hour AFTER the cited fix (`927acf01`, landed 11:12Z) — same
+    `UPSTREAM_INSTRUMENTS_CATALOG_STALE` reason.** This directly contradicts the "not a live regression" verdict: it's
+    actively recurring right now, post-fix. Needs real investigation, not a bookkeeping reconciliation.
+  - **`sports/odds_horizon_bucket_15m` — the fix did not work.** Claimed "live count is 0"; a fresh re-query shows the
+    count is still **66**, timestamps unchanged from the original pre-fix figure. The code fix
+    (`market-data-processing-service@7ff43d7197`) may be correct for future rows, but it did not touch/resolve the
+    existing 66 rows the alert is actually keying on, and the claim that it did is false as measured.
+  - Consequently the "bottom-of-doc 'still open' note is stale bookkeeping, disregard it" framing was itself wrong for 3
+    of these 4 cells — the STALE note was closer to correct than the correction that superseded it.
+- **Item 3 (`YAHOO_FINANCE` phantom venue) — CONFIRMED, cleanly.** Every sub-claim independently re-verified true
+  against live code, a live 170-test run, and a live GCS manifest re-query (11,676 orphaned rows count matched exactly).
+  Only a minor, already-self-disclosed caveat (an unrelated OKX-liquidations edit rode along in the same commit via
+  quickmerge whole-file staging — coherent, not reverted, just means the commit is less narrowly-scoped than "just
+  Yahoo"). This item is genuinely done.
+- **Item 4 (CBOE `ohlcv_24h` UAC gate) — CONFIRMED**, with one trivial correction (4 new tests, not 5 — a pre-existing
+  test's assertion was modified, not a wholly new 5th test). The operator-decision claim, the routing discrimination,
+  and the registry change all independently checked out. This item is genuinely done.
+
+**Honest current status: 2 of 4 items (YAHOO_FINANCE, CBOE gate) are actually complete. Item 1 needs a follow-up
+(widen/asset-group-scope the liveness horizon). Item 2 needs real re-investigation — the defi cells are apparently
+actively regressing post-"fix", not merely stale bookkeeping, and the odds_horizon fix didn't resolve the rows the alert
+keys on.** Not re-dispatching fixes in this turn — reporting this accurately to the operator first rather than
+compounding the pattern of declaring victory before it's verified.
