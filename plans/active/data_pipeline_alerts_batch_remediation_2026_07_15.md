@@ -31,6 +31,7 @@ related:
     plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md,
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
     plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-15
@@ -430,6 +431,20 @@ against existing docs. Logging what's confirmed genuinely new/untracked here rat
   shipped CBOE fix + 2 new scoped follow-up todos are in
   `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` § "Resolution —
   ohlcv_15m/ohlcv_24h audit (2026-07-15)" (not duplicated here per the plan-references-codex/issue-docs discipline).
+- 2026-07-15 (dispatched sub-agent — tradfi mbp_10 investigation escalated into a much bigger cross-cutting finding):
+  while investigating the narrow tradfi mbp_10 `DP_RUN_MOSTLY_EMPTY` cell, found the live tradfi manifest
+  (`market-data-tick-tradfi-prd-central-element-323112`) had 34,260 rows (not the ~7,700 in the initial narrow grep)
+  where `error_reason` carried an `EXPECTED_*`-prefixed honest-absence value but `capture_status="attempted_failed"`
+  instead of `empty_confirmed` — a real, cross-cutting data-correctness bug per the workspace's findings-triage HARD
+  RULE (big finding, data-correctness). Fixed both halves: **data fix**
+  `market-tick-data-service@92d4fb18b826c7b43aa3597d5b1eeb135e26d829` (one-off reclassification script,
+  dry-run+`--apply`+snapshot+before/after-verified: `attempted_failed` -34260, `empty_confirmed` +34260, total rows
+  unchanged) and **code fix** `unified-trading-library@c08a8d61b96d6d1570389f9396068bed51001816`
+  (`ManifestWriter.record_failed()` now hard-rejects an `EXPECTED_*`-prefixed `error` string — mirror-image guard to
+  `record_empty()`'s existing `EmptyFromLiveInstrumentError` check — preventing recurrence). Root-cause writer
+  provenance NOT established (flagged honestly, not guessed — the 2026-07-07 06:39-07:29 UTC writer is not visible in
+  currently-committed source). Full writeup, counts, taxonomy-gap flag, and follow-ups:
+  `plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`.
 - 2026-07-15 (independent second dispatch of the SAME ohlcv_15m/ohlcv_24h audit todo — a duplicate-in-flight, not a new
   todo): re-derived the same audit conclusion independently (operator's per-venue-routing prior confirmed; 4 existing
   routing layers cited) before discovering the above agent's work had already landed. Added value rather than
