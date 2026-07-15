@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Sports Scheduling & Sharding
 summary:
   Sports scheduling + sharding SSOT — shard atom (asset_group,source,data_type,league_id,day) with fixture_id row-level,
-  per-provider fetch cadence + publish windows, historical-backfill lookahead-bias rules, and per-fixture denormalisation.
+  per-provider fetch cadence + publish windows, historical-backfill lookahead-bias rules, and per-fixture
+  denormalisation.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,24 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer]
 tags: [sports, manifest, backfill, data-correctness, mtds, orchestrator]
-related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/availability-manifest-and-data-status.md, codex/05-infrastructure/vm-tarball-deployment.md]
+related:
+  [
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 created: 2026-04-21
-authoritative_for: [sports fetch scheduling cadence and shard-atom contract, sports historical-backfill lookahead-bias rules]
-referenced_by: [codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-fixtures-lifecycle.md, codex/02-data/sports-gcs-path-ssot.md]
+authoritative_for:
+  [sports fetch scheduling cadence and shard-atom contract, sports historical-backfill lookahead-bias rules]
+referenced_by:
+  [
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-data-types-catalog.md,
+    codex/02-data/sports-fixtures-lifecycle.md,
+    codex/02-data/sports-gcs-path-ssot.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -53,8 +68,8 @@ Every piece of sports data — schedules, stats, odds, standings, weather, playe
 day-aggregate. **`fixture_id` is a row-level column inside the parquet, NOT a hive-partition shard axis** —
 `(league_id, day)` already bounds the per-day fixture set; per-fixture detail at drill-down comes from reading the
 parquet, not from a separate manifest row. Avoids ~10× manifest inflation. Fixture-native data_types: `ODDS_SNAPSHOT`,
-`ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `FIXTURE_PLAYER_STATS`, `INJURIES`
-(when fixture-scoped). Day-aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`.
+`ODDS_MOVEMENT`, `ARBITRAGE`, `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES` (when
+fixture-scoped). Day-aggregate data_types: `STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`.
 
 **Cluster validation MANDATORY for fixture-native per-day bundles** (writegate Phase 1A + 2.B): per-fixture aggregate
 clusters live INSIDE the per-(league, day) parquet — `cluster_extractor=lambda row: row["fixture_id"]` (or `bookmaker`
@@ -120,8 +135,8 @@ For each provider, four dimensions:
   window; on a cache-hit non-trigger date (`get_leagues_needing_refresh(date) == []`) the adapter short-circuits the
   per-league API loop, populates `_captured_league_counts` from the cache, and emits `UPSTREAM_FETCH_COMPLETED` with
   `details.cached=True`. The cache is rewritten on every live-fetch branch, keeping `last_fetched_at` fresh. Reader:
-  [`features-service (sports family)/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season:
-  int)`](../../../features-service (sports family)/features_sports_service/data/gcs_reader.py).
+  [`features-service (sports family)/features_sports_service/data/gcs_reader.py::read_transfermarkt_team_mapping(season: int)`](../../../features-service
+  (sports family)/features_sports_service/data/gcs_reader.py).
 
 ### 2.3 FootyStats (`footystats.py`)
 
@@ -157,9 +172,9 @@ For each provider, four dimensions:
   flat parquet at `sports_reference/mappings/sfi_league_mapping.parquet` (not season-scoped — SFI hex league IDs are
   long-lived). Columns: `canonical_league_id, sfi_league_hex, name, last_fetched_at`. 24h staleness window. Cache-hit on
   non-trigger dates skips the paid `get_leagues` call and feeds `sfi_league_ids` directly from the cache;
-  progressive-stats per-match fetches still run because they're date-scoped. Reader: [`features-service (sports
-  family)/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-service (sports
-  family)/features_sports_service/data/gcs_reader.py).
+  progressive-stats per-match fetches still run because they're date-scoped. Reader:
+  [`features-service (sports family)/features_sports_service/data/gcs_reader.py::read_sfi_league_mapping()`](../../../features-service
+  (sports family)/features_sports_service/data/gcs_reader.py).
 
 ### 2.5 OpenMeteo / Weather (`open_meteo.py`)
 
@@ -568,12 +583,38 @@ VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in eac
 
 ### 12.2 Open — data coverage + adapter quality
 
-| Priority | Plan                                                                                                                                                          | Repos                                                                                               | Gated on                                                                                                                                 | Delivers                                                                                                                                                                                                                                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **P0**   | [`apifootball_enrichment_historical_backfill`](../../plans/archive/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)                             | deployment-service                                                                                  | —                                                                                                                                        | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over 2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+                                                                                                                                                                                       |
-| **P1**   | [`non_apifootball_provider_backfill_launchers`](../../plans/archive/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)                           | deployment-service                                                                                  | —                                                                                                                                        | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF launcher                                                                                                                                                                                                                                                  |
-| **P1**   | [`instruments_service_orchestrator_reliability_fixes`](../../plans/archive/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md)             | instruments-service                                                                                 | —                                                                                                                                        | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1 adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped `8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs 7-8) + Phases 6-7 open |
-| **P2**   | [`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md) | unified-api-contracts + instruments-service + features-service (sports family) + unified-trading-pm | `features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` + `features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits `ADAPTER_FETCH_ANOMALY` when `                                                   | got - expected | /expected > 10%`without blocking manifest writes. 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
+| Priority | Plan | Repos | Gated on | Delivers | | -------- |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| --------------------------------------------------------------------------------------------------- |
+----------------------------------------------------------------------------------------------------------------------------------------
+
+|
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| -------------- |
+-------------------------------------------------------------------------------------------------------------------- | |
+**P0** |
+[`apifootball_enrichment_historical_backfill`](../../plans/archive/apifootball_enrichment_historical_backfill_2026_04_21.plan.md)
+| deployment-service | — | Biggest SPORTS coverage lift: FIXTURE_STATS / EVENTS / LINEUPS / PLAYER_STATS / INJURIES over
+2019-01-16..2026-04-20. Takes attempted-coverage 17.8% → 50%+ | | **P1** |
+[`non_apifootball_provider_backfill_launchers`](../../plans/archive/non_apifootball_provider_backfill_launchers_2026_04_21.plan.md)
+| deployment-service | — | 4 new launchers for Transfermarkt / FootyStats / OpenMeteo / Understat mirroring the AF
+launcher | | **P1** |
+[`instruments_service_orchestrator_reliability_fixes`](../../plans/archive/instruments_service_orchestrator_reliability_fixes_2026_04_21.plan.md)
+| instruments-service | — | 8 bugs: 3 reliability (Pydantic None-goals, UnboundLocalError, 404 on future dates) + 1
+adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard uniformity (WEATHER + XG **shipped
+`8a91324`**; AF enrichments + STANDINGS open — Bugs 7-8). **Currently C1** — Phases 1-3, 3b, 4 shipped; Phase 5 (Bugs
+7-8) + Phases 6-7 open | | **P2** |
+[`transfermarkt_sfi_team_mapping_cache_and_drift_detection`](../../plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md)
+| unified-api-contracts + instruments-service + features-service (sports family) + unified-trading-pm |
+`features_sports_denormalisation_pipeline` ✅ C5 + `features_sports_derived_data_crime_fixes` +
+`features_sports_upstream_coverage_gaps` | Cut redundant TM + SFI API calls via
+`sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds
+UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits
+`ADAPTER_FETCH_ANOMALY` when
+`                                                   | got - expected | /expected > 10%`without blocking manifest writes.
+22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
 
 ### 12.3 Open — manifest + UI hygiene (gated on 12.2)
 

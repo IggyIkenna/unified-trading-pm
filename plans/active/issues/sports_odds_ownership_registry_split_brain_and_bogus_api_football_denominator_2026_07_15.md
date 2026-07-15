@@ -37,10 +37,16 @@ resolution_progress:
   key made _derive_pm_source_transport's CF-3 fallback resolve the sports asset_group default -> batch_api_football,
   stamping source=api_football on every seeded ODDS row; proven by simulation + the live index's
   pipeline_mode=batch_api_football + footystats-derived error_reason on the same row). Fixed by A; regression-guarded in
-  instruments-service@c7d97b5d; NO enumerator change made. STILL OPEN: (1) the 127,018-row purge, deliberately deferred
-  behind the in-flight P0 index repair; (2) post-deploy verification that the nightly re-seed stopped; (3) NEW finding
-  A2 — a SECOND split-brain (PLAYER_STATS vs FIXTURE_PLAYER_STATS) caught by the new drift guard, quarantined in a
-  shrink-only baseline pending an operator naming ruling."
+  instruments-service@c7d97b5d; NO enumerator change made. A2 (the SECOND split-brain caught by A's new drift guard):
+  RULED + FIXED 2026-07-15 (unified-api-contracts@f66a3dea) — `PLAYER_STATS` is canonical, `FIXTURE_PLAYER_STATS` was a
+  PHANTOM (the `entity=fixture_player_stats` GCS folder name seeded into the two crosscutting registries at 106430c9 by
+  analogy with its FIXTURE_* neighbours, while PLAYER_STATS already existed in SPORTS_DATA_TYPE_TO_SOURCE — a seed-time
+  fabrication, NOT the ODDS partial-revert class). 219,508 live PLAYER_STATS rows vs ZERO FIXTURE_PLAYER_STATS; zero
+  manifest rows rewritten. Mis-stamp guard now ON and proven to ACCEPT the real write path
+  (`_sports_ref_source('player_stats')='api_football'`); `_KNOWN_SPORTS_REGISTRY_DRIFT` is EMPTY (reconciled, not
+  waived). Docs aligned: deployment-service@bc30249 + PM codex. STILL OPEN: (1) the 127,018-row ODDS purge, deliberately
+  deferred behind the in-flight P0 index repair; (2) post-deploy verification that the nightly ODDS re-seed stopped; (3)
+  the §D post-07-13 rebuild-delta reconcile."
 nature: notes
 asset_group: [sports, meta]
 stage: [meta]
@@ -177,12 +183,55 @@ rows are stamped with anything unexpected the writer starts raising `MissingSour
 **shrink-only** baseline (`_KNOWN_SPORTS_REGISTRY_DRIFT` in `tests/unit/test_source_priority.py`, guarded by
 `test_known_sports_registry_drift_baseline_only_shrinks` so it cannot silently become permanent).
 
-- [ ] [OPERATOR-DECISION] P1. Rule on `PLAYER_STATS` vs `FIXTURE_PLAYER_STATS`: (a) same grain under two names → pick
-      the canonical one + migrate the other side; (b) genuinely distinct grains (per-day-per-league IS capture vs
-      per-fixture features record) → register `("sports","PLAYER_STATS")` in both crosscutting registries alongside
-      `FIXTURE_PLAYER_STATS`. Then delete `PLAYER_STATS` from `_KNOWN_SPORTS_REGISTRY_DRIFT`. Gate:
-      `has_source_priority("sports","PLAYER_STATS")` is True + the baseline is empty. **Do the ruling before the next
-      api_football enrichment wave** — the guard flips from OFF to ON for a live fleet.
+> **CORRECTION 2026-07-15 (the ruling below).** The table above overstates the case for `FIXTURE_PLAYER_STATS` — it is
+> **not** a live name, and the features-service column is a **misread**. features-service uses
+> `FIXTURE_PLAYER_STATS_COLUMNS` / `FixturePlayerStatsRecord` / `fixture_player_stats` as **column-set + record + export
+> names** (matching the GCS `entity=fixture_player_stats` folder, which is CORRECT per
+> `codex/02-data/sports-gcs-path-ssot.md:103`); it never calls `has_source_priority` / `get_availability_semantic` /
+> `is_valid_manifest_source` **at all** — zero registry coupling, so nothing there breaks. The deployment-service +
+> codex hits were data_type enumerations carrying the phantom name (doc drift, now aligned). `FIXTURE_PLAYER_STATS`
+> existed ONLY in the two UAC crosscutting registries and their tests.
+
+- [x] ✅ [OPERATOR-DECISION] P1. Rule on `PLAYER_STATS` vs `FIXTURE_PLAYER_STATS`. — **DONE 2026-07-15**,
+      unified-api-contracts@f66a3dea + deployment-service@bc30249 + PM codex alignment. **RULING: (a) — same grain under
+      two names; `PLAYER_STATS` is canonical and `FIXTURE_PLAYER_STATS` was a PHANTOM** (the `entity=` folder name
+      promoted into a data_type registry), now retired. This was NOT the ODDS partial-revert class: git shows
+      `FIXTURE_PLAYER_STATS` was **born** in the crosscutting registries at `106430c9` (2026-05-06, "add
+      availability_semantics + source_priority crosscutting SSOTs") — seeded by analogy with its `FIXTURE_STATS` /
+      `FIXTURE_EVENTS` / `FIXTURE_LINEUPS` neighbours — while `PLAYER_STATS` **already existed** at
+      `106430c9^:league_data.py:144` (`SPORTS_DATA_TYPE_TO_SOURCE`) and `:103` (launch-date override). A fabrication at
+      seed time, never a rename. **Evidence that `PLAYER_STATS` is canonical** — it is the name in EVERY data_type
+      registry (`SPORTS_DATA_TYPE_TO_SOURCE` league_data.py:182, `gcs_paths.py:52,124` entity+layout,
+      `data_type_capability.py:1252`, `provider_league_ids.py:783,844`, `sports_league_entity_coverage.py:52`,
+      `_honest_coverage_*`), the name the writer emits (`_sports_ref_source("player_stats") = "api_football"`), the name
+      the af-backfill launcher takes (`launch-api-football-backfill-vm.sh:55 --entity … | PLAYER_STATS`), and the name
+      **219,508 live rows carry vs ZERO for `FIXTURE_PLAYER_STATS`** (IS sports `_index` read 2026-07-15T18:32Z: 192,538
+      `empty_confirmed` + 24,992 `captured` + 1,232 `expected_unattempted` + 658 blank-source + 88 `attempted_failed`,
+      all `source=api_football`, 94 leagues). Decisive disambiguation: `codex/02-data/sports-gcs-path-ssot.md:103`
+      already documented `data_type=PLAYER_STATS` ↔ `entity=fixture_player_stats` in its "non-obvious `entity=` folder
+      names" table — the registry simply took the wrong column. **Fix direction chose itself: ZERO manifest rows
+      rewritten** (the canonical name is the one already at scale; the phantom had no rows to migrate). Registered
+      `("sports","PLAYER_STATS"): ["api_football"]` + `AVAILABILITY_AT_SEMANTICS = "match_end_time"` **together** (the
+      bidirectional closed-set `test_every_source_priority_pair_has_availability_semantic` forces it) and deleted the
+      phantom from both + its `_SOURCE_PRIORITY_EXCLUSION_REASONS` entry
+      (`test_exclusion_list_entries_are_all_in_source_priority` forces that as one unit — and the exclusion existed
+      precisely BECAUSE the phantom was absent from `SPORTS_DATA_TYPE_TO_SOURCE`, which was the tell).
+      **`_KNOWN_SPORTS_REGISTRY_DRIFT` is now EMPTY** — reconciled, not waived. **Runtime gate (measured, IS `.venv`):**
+      `has_source_priority("sports","PLAYER_STATS") is True` (was False), `get_primary_source(…) == "api_football"`,
+      `get_availability_semantic(…) == "match_end_time"`,
+      `is_valid_manifest_source("sports","PLAYER_STATS","api_football") is True`, and `footystats` / `transfermarkt` /
+      `odds_api` / `understat` / `bogus_vendor` all **False** (mis-stamp guard live);
+      `has_source_priority("sports","FIXTURE_PLAYER_STATS") is False` (phantom gone). **Blast radius PROVEN against the
+      real code path, not assumed** (the reason this was parked): composing the actual writer stamp with the actual
+      guard predicate (`_writer_ingest.py:485`) — `_sports_ref_source("player_stats") = "api_football"` →
+      `guard_on=True, accepts=True` → **no `MissingSourceError`**; PLAYER_STATS now behaves identically to its
+      FIXTURE_STATS/EVENTS/LINEUPS/INJURIES siblings, which have run under this guard all along. Blank-source rows are
+      safe too: single-source ⇒ `default_source = "api_football"` auto-stamps and `source_required is False`, so the 658
+      blank rows' write path does not raise. The original blocker (guard flipping ON for a live fleet) was cleared
+      independently — the af-backfill enrichment fleet FINISHED (zero VMs, verified 18:34Z). Evidence:
+      `quality-gates.sh --no-fix` **exit 0, ALL GATES PASSED (436s)**, full suite green incl. the A-commit drift guard
+      over every sports data_type — and the previously-known-red `test_contracts_vs_reality` is now green too (the
+      foreign barchart WIP landed at `bf17231d`).
 
 ## B. 127,018 bogus `api_football × ODDS` rows — an impossible denominator, re-seeded nightly
 
