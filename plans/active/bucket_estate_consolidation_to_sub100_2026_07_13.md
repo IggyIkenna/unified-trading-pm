@@ -1956,3 +1956,21 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   (statuses unchanged, all still `open`). This item stays open, gated on the SAME unresolved blocker as every touch
   since the build-hang was discovered — no new blocker introduced, no progress lost. Full evidence + next-step detail in
   the matching append to `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md`'s Progress Log.
+- **2026-07-15, `features-sports` bare bucket DELETED — blocker cleared, item CLOSED.** The gating blocker (the
+  features-service Cloud Build hang + the resulting stale image + the manifest-consolidator false-DOWN preflight) is now
+  fully resolved on the sister plan `features_sports_service_consolidation_deploy_2026_07_15.md`:
+  `features-service:latest` was rebuilt (green build `fd73ca17-8d5a-435c-8ec6-9af11eb377fc`, carrying UTL `c47273c1`),
+  `features-service-sports-job` reached a genuine `SUCCEEDED` on a real scheduled fire, and its scheduler is `ENABLED`.
+  With the service proven healthy, the deferred `features-sports` bare-bucket delete was executed: re-confirmed the bare
+  `gs://features-sports-central-element-323112` held exactly the expected 3 live objects (1 migrated
+  `sfi_progressive.parquet` — verified intact in the canonical `gs://features-sports-prd-central-element-323112` at
+  25,989 B — + 2 ephemeral `_vm_staging/fss_backfill/*`), all noncurrent versions collapsing to those same 3 logical
+  paths; `tofu state rm google_storage_bucket.features_sports` (PROD state, prefix `terraform/state/prod`) → removed;
+  the resource block in `deployment-service/terraform/gcp/main.tf` + the orphan import block in `_imports_reconcile.tf`
+  removed → REMOVED comments (features-calendar precedent), `tofu validate` clean, shipped `deployment-service@bfea7928`
+  (a concurrent foreign soft-delete WIP in main.tf was stash-isolated so only my hunk landed, then restored intact);
+  `gcloud storage rm --recursive --all-versions` then `gcloud storage buckets delete --quiet` → `buckets describe` =
+  `404 not found`. Canonical `-prd-` bucket + migrated object re-verified alive post-delete. All 4 linked issue docs
+  flipped to `status: resolved` with Resolution sections. **This `features-sports` bucket-estate item is now fully
+  CLOSED** — the flat legacy bucket is gone, the canonical `features-sports-prd-{pid}` is the sole SSOT. Full evidence:
+  the FinishBucketAndDocs Progress Log entry in `features_sports_service_consolidation_deploy_2026_07_15.md`.

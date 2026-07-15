@@ -37,7 +37,7 @@ summary:
   (`uts-prod-manifest-consolidator-*`, ~29 total jobs share this pattern per `gcloud run jobs list`) — none of the
   others were checked in this touch, so whether they exhibit the same livelock (vs. just not currently being probed by a
   120s-budget consumer) is unknown and flagged as a follow-up, not this issue''s scope.'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data, meta]
@@ -70,6 +70,10 @@ source:
   mandated 'watch to a genuine SUCCEEDED terminal state' verification step."
 assigned_vm: NA
 resolved_by:
+  "MISDIAGNOSIS of the already-root-caused sibling
+  manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md (a legit ~7-8min real merge, not an
+  indefinite livelock); fixed by UTL c47273c1 (lock-aware consolidator liveness), now deployed + proven via
+  features-service-sports-job's scheduled fire (zero CONSOLIDATOR_DOWN)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -503,3 +507,22 @@ line:
 itself remains untouched + empirically sound per the earlier investigation; this doc's subject — the false
 `CONSOLIDATOR_DOWN` stream on slow-merge buckets — is now eliminated fleet-wide, with the per-AG horizon covering defi's
 real merge duration with margin.)
+
+## Final note — status → resolved (2026-07-15, features-sports deploy close-out)
+
+**This issue was a MISDIAGNOSIS of an already-root-caused sibling.** What looked like an "indefinite livelock" on the
+`instruments-store-sports` consolidator's own GCS lock was, on a live re-watch (13:32–13:39Z), a _legitimate_
+~7–8-minute real merge (one watched end-to-end at 434.7s: clean acquire → merge → write → release, lock correctly absent
+immediately after) colliding with a naive freshness gate (`assert_consolidator_healthy` / `ConsolidatorLivenessMonitor`)
+that could not tell a legit in-flight merge from a downed consolidator. That exact mechanism had _already_ been
+independently root-caused in the sibling issue
+[`manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`](./manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md)
+(the two docs were filed on the same underlying bug from two different entry points).
+
+**Fix + proof:** `unified-trading-library@c47273c1` ("lock-aware consolidator liveness — a fresh held lock is
+proof-of-life, not DOWN") is now baked into `features-service:latest` (verified in-container via
+`inspect.getsource(assert_consolidator_healthy)` showing the `consolidator_cycle_in_flight` short-circuit) and into the
+MTDS `uts-prod-consolidator-liveness-watchdog`. Proven end-to-end: `features-service-sports-job` reached a genuine
+`SUCCEEDED` on both a manual (`…-qsqs4`) and a real scheduled fire (`…-6tm9w`) with the consolidator preflight passing
+on EVERY date and ZERO `CONSOLIDATOR_DOWN` — the exact false-DOWN this doc described, now cleared. No change to the
+consolidator lock primitive was needed. Closing as `resolved`; the sibling doc carries the durable root-cause record.

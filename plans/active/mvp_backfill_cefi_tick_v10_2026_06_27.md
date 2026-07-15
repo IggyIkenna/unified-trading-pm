@@ -3280,3 +3280,161 @@ VMs + ASTER) unaffected by any of this, continues progressing normally.
 the operator-approved `--apply` (relabel). Not blocked by CREDENTIALS/OPERATOR/UPSTREAM in the deferral sense for the
 writer-fix side (mechanical, just needs the tarball to catch up); genuinely operator-gated for the relabel `--apply`
 side.
+
+### BLOCKED-UPSTREAM — market-tick-data-service LDR→main promotion stuck on a 3h-old backmerge conflict — 2026-07-15T19:48Z
+
+Filed `BLK-5bcfcd1e` after finding the LDR→main promote PR (#589, for the batch including this session's writer fix
+`56679e78`) sat `mergeable_state=dirty` 25+ min past the usual `*/15min` v2-gated auto-merge cadence. Main answered with
+the real root cause (not this lane's guess of "just needs another promote cycle"): `main-repo` PR #586
+(`[backmerge] main → live-defi-rollout (CONFLICT — needs resolution)`) has been open ~3h — market-tick's `main` is
+diverged from LDR by one unreconciled commit, and THAT is what makes every subsequent LDR→main promote PR (incl. #589)
+dirty. `ci-failure-watcher --auto-recover` only heals the v2-never-reported deadlock (a missing required check), NOT a
+genuine git conflict — auto-merge can never fire on a `CONFLICTING` PR, so monitoring/polling alone would stall
+indefinitely. Main is escalating #586 to the operator directly (main-repo context needed to resolve it; the operator
+personally enabled auto-merge on #589).
+
+**Disposition for this lane: HOLD the Tardis relaunch, stop polling the promotion pipeline** (per main's explicit
+instruction — don't spin-wait/burn cycles on something only the operator can unblock). The writer fix
+(`market-tick-data-service@56679e78`) is confirmed already landed on LDR — if the VM tarball-build pipeline can be made
+to source from LDR directly rather than waiting on the promoted-`main` artifact, that would be a faster unblock, but
+that is explicitly an operator call (build-source deviation), not something to self-authorize.
+
+**Non-Tardis lane unaffected and continuing**: all 4 new VMs
+(`cefi-hyperliquid/lighter-zksync/pacifica-solana/extended-starknet-2026-20260715-190049`) confirmed genuinely
+progressing via SSH (LIGHTER-ZKSYNC at chunk 86/196 as of 19:43Z; others healthy CPU + heartbeats). ASTER + the 3 Tardis
+`cefi-queue-*` VMs also still running, untouched.
+
+**Gate verdict: ❌ NOT MET, now genuinely operator-gated** on two independent fronts: (1) the #586 backmerge resolution
+(unblocks the Tardis-lane relaunch), (2) the relabel script's `--apply` sign-off (issue doc todo 2). Both tracked;
+
+### Writer fix re-verified + test/honest-absence gap closed + a NEW independent Tier-3 finding — 2026-07-15T~20:20Z (orchestrator dispatch)
+
+Dispatched independently (fresh context) to verify + fix "the writer stamps raw symbol, denominator expects canonical."
+Re-verified the finding first per the dispatch's own instructions — direct filtered read of the live prd
+`availability_index.parquet` (KRAKEN-FUTURES/book_snapshot_5): confirmed 0/25,462 `captured` rows canonical-shaped,
+matching the 18:50Z entry above exactly. Mid-investigation discovered this lane's own fix had ALREADY landed (`56679e78`
+then `5d44a197` superseding a case-sensitivity bug in the first cut — full detail in the issue doc's Progress Log) —
+this is a multi-slot workspace and the fix shipped while this dispatch was still reading code.
+
+Rather than duplicate already-shipped work, audited both landed commits directly and found two real gaps: **(a)** no
+persisted unit test for `_canonicalize_manifest_instrument_id` (both prior commits verified by ad hoc manual repro only
+— the exact class of gap that let the case-sensitivity bug through undetected in the first place); **(b)** the
+unresolved-symbol fallback logged at DEBUG only (silent), which the honest-absence/shard-level-failure-isolation
+standards this dispatch was scoped under explicitly require to be visible, not swallowed. Closed both — added
+`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py` (locks the real fixed function against the exact
+live-manifest KRAKEN-FUTURES samples that proved the bug, using the real UPPERCASE `itype` shape — would have caught
+`56679e78`'s no-op) + upgraded the fallback to WARNING + a bounded per-run/per-venue `state.cefi_manifest_id_unresolved`
+accumulator surfaced as a summary WARNING in `manifest_finalize.py`. Shipped `market-tick-data-service@90ecde17`, full
+`quality-gates.sh` green (79.95% coverage). Confirmed the live/websocket capture path is a separate, already-canonical
+code path (unaffected); confirmed the GCS filename is unchanged by design (still raw wire symbol — no new orphan/relabel
+quantification needed since nothing about file placement changed, and the existing todo-2 dry-run already covers it:
+3,133,117 candidates / 82.7% resolvable).
+
+**New, separate finding** (not this session's fixes' doing, pre-existing): while re-auditing `sentinels.py`'s Tier-3
+comparison per the issue doc's own flagged-open question, found live+code evidence that Tier-3's captured-vs-expected
+comparison uses TWO DIFFERENT id schemes for CeFi Tardis venues (`expected_instruments` = full canonical
+`instrument_key` via `CeFiCatalogReader`; `captured_instruments` = the older bare-`BASE-PERP`
+`_canonicalize_captured_instrument_id` heuristic, verified live to leave KRAKEN-FUTURES's `PI_`/`PF_`-prefixed symbols
+completely untouched) — meaning the per-run Tier-3 sentinel fan-out has likely been silently mismatching (spurious
+`record_empty`/`record_failed` rows for already-captured instruments) independent of and pre-dating this whole G4
+writer-fix thread. Filed as a new P1 todo in the issue doc with the concrete repro, NOT fixed blind (needs its own
+scoped decision, same caution this doc's own case-sensitivity near-miss argues for) — full detail there.
+
+Did not touch VM launch/relaunch (todo 4, blocked on the #586 backmerge above) or the relabel `--apply` (todo 2,
+operator-gated) — both correctly out of this dispatch's scope. Full detail + evidence:
+`issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (updated same session).
+
+**Gate verdict: unchanged, ❌ NOT MET** — this pass improved fix QUALITY/durability (tests + visibility) and surfaced
+one new adjacent finding; it does not by itself move `expected_unattempted`, which still needs the #586 backmerge
+resolution → tarball → VM relaunch (todo 4) and/or the relabel `--apply` (todo 2), both operator-gated, unchanged from
+the entry above. neither is a "just wait a bit longer" situation — both need a human with repo/production-mutation
+authority.
+
+### Writer fix VERIFIED shipped (3 commits, one was a silent no-op) + the REMAINING mismatch is a STALE eu SHAPE — 2026-07-15T19:20Z
+
+**The writer fix landed** — and notably it was fixed THREE times by three independent lanes converging on the same
+defect within ~an hour: `market-tick-data-service@56679e78` (first cut), `@5d44a197` (fixed a case-sensitivity bug that
+made 56679e78 a **silent no-op** for every real Tardis venue — the write path emits uppercase `PERPETUAL` but the first
+fix's membership set was lowercase-only), and `@90ecde17` (this lane: the missing persisted unit tests — neither prior
+commit had one, which is exactly the gap that let the no-op through — plus honest-absence visibility: unresolved symbols
+now WARN + accumulate + emit a per-run summary instead of `logger.debug` silence). Bug site was
+`engine/orchestrator/venue_fetch.py::_record_venue_shard_counts` (`instrument_id_for_manifest = third_val`, the raw wire
+symbol) → `manifest_finalize.py::_write_shard_counts_to_manifest` → `record_captured`. **The parquet FILE content was
+always correct** (`tardis_shared.py::finalise_rows_and_path` → `derive_row_instrument_id`) — only the manifest KEY was
+raw. GCS filenames remain raw (unchanged, separate concern).
+
+**Orchestrator false alarm, corrected here for the record**: the shipped code reads
+`instrument_id_for_manifest = "" if is_derivative else _canonicalize_manifest_instrument_id(...)`, which looked like it
+skipped canonicalization for every derivative venue (i.e. most of the gap). It does NOT:
+`_UNDERLYING_PARTITIONED_TYPES = {"options_chain", "futures_chain", "combo"}` (`symbol_rules.py:258`) are DATA TYPES
+partitioned by underlying, not instrument types — `perpetual`/`future`/`spot` all take the canonicalizing branch. The
+variable name is misleading; the logic is right. Verified before reporting, not assumed.
+
+**The REAL remaining mismatch — the eu rows themselves carry a STALE, per-venue-inconsistent shape.** Live manifest
+reads show the expected side is not one namespace but a mix:
+
+| venue / data_type      | `expected_unattempted` shape                        | `captured` shape (pre-fix)      |
+| ---------------------- | --------------------------------------------------- | ------------------------------- |
+| KRAKEN-FUTURES/book5   | itype set, id CANONICAL `…:PERPETUAL:PIXEL-USD@LIN` | id raw `PI_ETHUSD`              |
+| BINANCE-FUTURES/trades | itype **EMPTY**, id **lowercase raw** `hotusdt`     | itype `perpetual`, id `BTCUSDT` |
+
+So some eu rows were materialised by an OLD enumerator (lowercase-raw id, empty instrument_type) and some by the current
+canonical one. Even with the writer now emitting canonical ids, a capture will NOT close a `(itype='', id='hotusdt')` eu
+cell. **This is a direct violation of the workspace HARD RULE "shard atom identical across
+writer/manifest/status/gate/UI"** (CLAUDE.md § DATA) — the atom currently differs between the enumerator's old output,
+the enumerator's new output, and the writer.
+
+**Next required step (NOT done — needs the operator's call on sequencing):** re-materialise the expected universe so
+every eu row carries the canonical atom, THEN relaunch waves on fresh tarballs so captures land matching. Until both
+sides speak one atom, coverage cannot move regardless of how much data is fetched. Related: a peer's relabel dry-run
+(`instruments-service@f021cb2b`) already quantified the historical raw-id captures — **3,133,117 candidates, 82.7%
+resolvable, 542,888 honestly unresolved** — `--apply` operator-gated, not run.
+
+**Also filed, not blind-fixed** (separate pre-existing defect, same class): `sentinels.py` Tier-3 diffs
+`expected_instruments` (canonical `instrument_key` via `CeFiCatalogReader`) against `captured_instruments` (populated by
+the older `_canonicalize_captured_instrument_id` heuristic, verified live to leave Kraken's `PI_`/`PF_` symbols
+untouched) — two schemes that cannot match.
+
+**Fleet note**: the 3 Tardis VMs + ASTER still run PRE-FIX tarballs, so they are still writing raw manifest ids. They
+are not destructive (the parquet bytes are correct and the relabel pass can credit them), but they are not closing eu
+either. Fleet decisions deliberately left to the operator/next tick rather than killed unilaterally mid-investigation.
+
+### /autonomous tick — MEASURED PROOF: 2h of pre-fix fetching closed ZERO eu; fixed fleet now live, decisive test armed — 2026-07-15T20:25Z
+
+**Hard evidence for the namespace-mismatch root cause** (two real `measure_honest_coverage` runs, 3 Tardis VMs fetching
+continuously between them):
+
+| metric               | 18:30Z    | 20:22Z    | delta         |
+| -------------------- | --------- | --------- | ------------- |
+| expected_unattempted | 2,773,292 | 2,773,292 | **0**         |
+| captured             | 3,057,681 | 3,058,241 | +560 (raw ns) |
+| attempted_failed     | 29,107    | 34,605    | +5,498        |
+| coverage_pct         | 52.18     | 52.13     | −0.05         |
+
+Two hours, three VMs, **zero** eu cells closed — coverage went slightly BACKWARD (af grew). This is the loop's
+flat-metric stall condition; it is already diagnosed (raw-vs-canonical id namespaces), so the response is to test the
+fix rather than burn ticks re-fetching.
+
+**Fleet state (peer lanes moved while this lane investigated — reconciled, not duplicated):**
+
+- 3 Tardis VMs relaunched 20:20Z **using this lane's scope-encoding names** (`cefi-queue-heavy-binancefutu-x15`,
+  `cefi-queue-light-binancefutu-x2`, `cefi-queue-light-bybit-x4`) — the naming fix is in service and the fleet is now
+  self-documenting.
+- 4 non-Tardis VMs launched 19:00Z (`cefi-hyperliquid-2026`, `cefi-lighter-zksync-2026`, `cefi-extended-starknet-2026`,
+  `cefi-pacifica-solana-2026`) — exactly the ~173k non-Tardis derivative_ticker eu this lane scoped at 18:35Z, now being
+  worked. Cap respected (they do not consume Tardis slots).
+
+**CRITICAL timing verification — the running fleet DOES carry the working fix**: tarball `mtds-code.tar.gz` built
+20:00:46Z; `mtds@56679e78` (first cut) 19:30:28Z ✅ in; `mtds@5d44a197` (**the real fix** — corrected the
+case-sensitivity bug that made 56679e78 a silent no-op) 19:52:50Z ✅ in; `mtds@90ecde17` (unit tests + unresolved-symbol
+visibility) 20:12:26Z ❌ NOT in the tarball — but that commit is tests + logging only, no behavioural change, so the
+20:20Z fleet canonicalizes correctly.
+
+**DECISIVE TEST ARMED** (T+85min, ~21:50Z): re-measure eu against the 20:22Z baseline of 2,773,292.
+
+- eu DROPS → the writer fix is sufficient; let the fleet run and the gate finally moves.
+- eu STILL FLAT → the writer fix is NOT enough and the **stale per-venue eu atom** is the true blocker (BINANCE-FUTURES
+  eu rows carry `instrument_type=''` + lowercase-raw `hotusdt`, which no canonical capture can ever match). In that case
+  fetching must STOP until the expected universe is re-materialised to ONE canonical atom — continuing to fetch would
+  only deepen the relabel debt (peer dry-run already sizes it: 3,133,117 candidates, 82.7% resolvable, 542,888
+  unresolved; `--apply` operator-gated).

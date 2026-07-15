@@ -29,7 +29,7 @@ summary:
   path (`features_sports_service.cli.main`, singular-underscore, distinct from this workspace''s `features-service`
   repo''s `features_service.sports.*` package) suggests this may be a pre-consolidation, never-rebuilt image left
   pointing at a `unified_api_contracts` internal-namespace shape that no longer exists.'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data, meta]
@@ -47,6 +47,8 @@ source:
   GCS-FUSE mount repoint — the mount itself verified healthy, but the job as a whole does not, for an unrelated reason."
 assigned_vm: NA
 resolved_by:
+  "features_sports_service_consolidation_deploy_2026_07_15.md (Path B — finish the consolidation deploy side); new
+  features-service-sports-job proven healthy on a real scheduled fire, legacy job's daily scheduler paused"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -181,3 +183,32 @@ reproduce against it) and shipped new Cloud Run Job + Workflow terraform
 NOT yet applied/deployed. This issue stays `open` until the plan's later todos (deploy, verify SUCCEEDED, retire the
 legacy job, re-enable scheduling, close this issue) complete — see that plan's Progress Log for full detail; do not
 duplicate it here.
+
+## Resolution (2026-07-15)
+
+**RESOLVED — Path B (finish the consolidation deploy side) is complete and proven live.** The org-decided fix was to
+stand up real deployment for the consolidated `features_service/sports/*` code rather than patch the archived
+`features-sports-service` repo. End-state, all verified against live GCP `central-element-323112` / `asia-northeast1`:
+
+- **Root cause eliminated at the image boundary.** `features-service:latest` (the shared multi-family image) resolves
+  `unified_api_contracts.internal` cleanly — the fleet-wide UTL/UAC version-skew bug does NOT reproduce. The new job
+  runs a digest-pinned image (`...@sha256:b7fc3d7f…`, `0.66.0`) that `docker run`-verifies to contain BOTH the UAC
+  internal-namespace fix AND UTL `c47273c1` (lock-aware consolidator liveness). The 3-day features-service Cloud Build
+  hang that blocked producing this image is itself resolved (see
+  `features_service_cloud_build_quality_gates_hang_2026_07_15.md`; green build `fd73ca17-8d5a-435c-8ec6-9af11eb377fc`).
+- **New Cloud Run Job live + healthy.** `features-service-sports-job` (terraform
+  `deployment-service/terraform/services/features-service-sports/gcp/**`, applied) reached a genuine `SUCCEEDED`
+  (execution `features-service-sports-job-qsqs4`, then the scheduled `…-6tm9w`) — manifest-consolidator preflight passes
+  with zero `CONSOLIDATOR_DOWN`, real fixture features written to the canonical bucket
+  `gs://features-sports-prd-central-element-323112`.
+- **Scheduling re-enabled + a real scheduled fire proven.** `features-service-sports-daily-trigger` is `ENABLED`; a
+  forced scheduler run drove workflow `05bd100d-…` → `SUCCEEDED`, spawning job `…-6tm9w` (`succeededCount=1`), features
+  computed across T-1..T+7.
+- **Legacy path safely quiesced.** The legacy `features-sports-service-job`'s daily scheduler
+  `features-sports-service-daily-trigger` stays PAUSED (no double-fire). Full retirement of the legacy job is tracked as
+  a remaining P1 in the owning plan (it still receives per-fixture Tier-3/4 dispatches from
+  `configs/sports-trigger-tiers.yaml` that need a `--feature-family sports` dispatch-code change before repoint) — not a
+  blocker on this issue's subject (the broken deployed image), which is fully addressed.
+
+Full evidence chain: `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md` Progress Log
+(ReverifyExecution + DriftRetireReenable + FinishBucketAndDocs phases).

@@ -22,7 +22,7 @@ summary:
   (`sha256:c204c49d...`) that predates the UTL fix — features-service-sports-job (which resolves the mutable `:latest`
   tag at execution time) will keep hitting the manifest-consolidator false-DOWN error until this is resolved and a build
   actually reaches SUCCESS."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -56,6 +56,8 @@ source:
   of triggering that build."
 assigned_vm: NA
 resolved_by:
+  "features-service@bd0db4d7 (mock the fixtures split-fallback so no unit test makes a real gs:// read); green build
+  fd73ca17-8d5a-435c-8ec6-9af11eb377fc → features-service:latest rebuilt carrying UTL c47273c1"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -291,3 +293,22 @@ risky to guess-fix under time pressure without reproducing the resource-pressure
 - **Kept as permanent hardening:** the `timeout_method = thread` (pyproject) + faulthandler watchdog (tests/conftest.py,
   CLOUD_BUILD-gated 420s exit=True) + base-service.sh `tee`-streaming (`unified-trading-pm@0148b6f34`) all stay — they
   turn any FUTURE CI hang into a fast fail with a stack dump instead of a silent 1800s timeout.
+
+## Resolution (2026-07-15)
+
+**RESOLVED.** Root cause was a unit-test hermeticity bug, NOT the originally-suspected xdist/memory pressure (which was
+falsified: `features-service/scripts/quality-gates.sh` forces `PYTEST_WORKERS=0`, so pytest is already single-process in
+CI). The instrumentation shipped to make a silent hang fail-fast (thread-method pytest timeout + a CLOUD_BUILD-gated
+import-time faulthandler watchdog + `tee`-streamed pytest output) did its job: instrumented build `136fce13` failed fast
+with a thread stack dump pinpointing `tests/sports/unit/test_gcs_paths_and_reader_deps.py:138` →
+`_read_split_fixtures_fallback` → UTL `read_fixtures_joined` → `pd.read_parquet(gs://…)` → pyarrow `get_file_info`
+hanging on native C++ GCS I/O that `pytest-socket` cannot block (hangs on a GCE Cloud Build worker with ambient ADC;
+passes locally). **Fix:** `features-service@bd0db4d7` mocks the fixtures split-fallback so no unit test issues a real
+`gs://` read (sweep-confirmed the sole unit-level offender); full local `quality-gates.sh` green (278s).
+
+**Verified end-to-end.** Rebuild `fd73ca17-8d5a-435c-8ec6-9af11eb377fc` against `bd0db4d7` completed `SUCCESS` and
+pushed a fresh `features-service:latest` — confirmed in-container to carry both the UAC internal-namespace fix and UTL
+`c47273c1` (lock-aware consolidator liveness). That image unblocked `features-service-sports-job`, which then reached a
+genuine `SUCCEEDED` on both a manual and a real scheduled fire (see
+`features_sports_service_consolidation_deploy_2026_07_15.md`). The hardening changes are retained fleet-wide as
+permanent regression protection.
