@@ -35,6 +35,7 @@ tags:
     live-only,
     onchain-perp,
     mvp-backfill-v10,
+    batch-vs-live,
   ]
 related:
   [
@@ -51,10 +52,23 @@ priority: P1
 source: mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12 session (via sub-agent code trace)
 assigned_vm: planning
 resolved_by:
-  "operator ruled (b) via /blocked 2026-07-13; implemented market-tick-data-service@3dd28d5e (slot-2); re-measured
-  2026-07-13 (slot-6) — cefi Layer-1 completeness rose 90.4%→93.2%, none of the 6 live-only tuples remain missing. All 3
-  todos [x]. Flipped open→resolved 2026-07-14 per verify-rerun-2 finding 35 (was: status: open, resolved_by: empty
-  despite the Progress Log's own 'All 3 todos in this issue doc are now done.')."
+  "SUPERSEDING RULING 2026-07-15: operator narrowed the 2026-07-13 (b) decision — typed empty_confirmed rows are NOT
+  wanted for 'literally impossible' batch combos either (only eu was the complaint before; now empty_confirmed too).
+  Implemented option (c) — a NEW batch-vs-live capability axis, not (a) [wholesale UAC deletion, would break live] nor
+  the original (b) [typed empty rows]: added `VENUE_DATA_TYPE_NO_BATCH_SOURCE` to UAC (unified-api-contracts@7754661a)
+  declaring the 5 tuples (LIGHTER-ZKSYNC trades+book_snapshot_5, ASTER book_snapshot_5, EXTENDED-STARKNET
+  book_snapshot_5, PACIFICA-SOLANA book_snapshot_5 — COINBASE-CDE/trades EXCLUDED, it gained a real batch adapter
+  mtds@28ad6b38 2026-07-13, no longer live-only) as live-capable-but-batch-incapable; wired into instruments-service's
+  expected_universe.py (Carve-out 1b) + enumerate_expected_universe.py's _row_data_types (instruments-service@1aeb5e3c)
+  so these 5 tuples are excluded from the BATCH expected/reachable universe ENTIRELY (no eu, no empty_confirmed, no
+  Layer-1 hole requirement) while VENUE_DATA_TYPE_CAPABILITIES (the live-mode declaration) stays untouched. Removed the
+  now-redundant typed-empty-row write in MTDS (market-tick-data-service@0f0cc598, _onchain_perp_batch_live_only.py) —
+  the 2026-07-13 BLK-afc672cf fix is fully superseded, not just supplemented. Re-measured: cefi expected_unattempted
+  2,969,412→2,773,292 (−196,120, exact), empty_confirmed 1,227,739→1,059,752, coverage_pct 50.49%→52.18%, Layer-1 stays
+  100%/denominator_complete=True (the 5 tuples are now Layer-1 STRAY not MISSING — harmless). Historical rows already
+  written for these tuples (the 2026-07-11 typed-empty batch + the eu skeleton materialised since) are left in place as
+  harmless stray manifest rows (filtered out of every reported view) rather than risking a bulk-delete migration on the
+  live, contended manifest."
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
@@ -233,8 +247,65 @@ SSOT contradiction) requiring NOTIFY OPERATOR.
       written to `gs://central-element-323112-honest-coverage/2026-07-13/coverage.json` (09:42 UTC run); manifest row
       counts 7465459→7465500 across the two runs.
 
+## Todos (2026-07-15 revision — supersedes the (b) typed-empty-row shape above)
+
+- [x] ✅ [BACKEND] P1. Operator narrowed the ruling further (verbatim: "empty confirmed being in denominator is fine BUT
+      its the literally impossible combinations i dont even need in empty confirmed like a data type that literally
+      short of magic cannot physically be retrieved for a venue") — implement option (c): a batch-vs-live-aware
+      capability distinction in UAC (NOT wholesale deletion — these 5 tuples DO exist live) so the BATCH
+      expected-universe producer never seeds eu OR empty_confirmed for them. (repos: unified-api-contracts,
+      instruments-service) — **DONE 2026-07-15**: `VENUE_DATA_TYPE_NO_BATCH_SOURCE` added to
+      `unified_api_contracts/registry/market_data_categories.py` (unified-api-contracts@7754661a) + consumed by
+      `expected_universe.py` Carve-out 1b and `enumerate_expected_universe.py`'s `_row_data_types`
+      (instruments-service@1aeb5e3c). Golden fixture regenerated (cefi 79→74 tuples); 3 pre-existing tests that asserted
+      the OLD "must be seeded" behavior for ASTER book_snapshot_5 flipped to assert the new exclusion
+      (`test_check_enumeration_completeness.py::TestAsterCapabilities`,
+      `test_enumerate_expected_universe.py::test_row_data_types_aster_capability_profile`). Full `quality-gates.sh`
+      green both repos.
+- [x] ✅ [BACKEND] P2. Remove the now-redundant typed-empty-row write in MTDS's OnchainPerpBatchHandler — writing
+      `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` for these 5 tuples is no longer necessary (they are
+      not "expected" for batch at all anymore) and the operator explicitly does not want it. (repo:
+      market-tick-data-service) — **DONE 2026-07-15**: deleted `record_live_only_empty_rows` + `LIVE_ONLY_DATA_TYPES`
+      from `_onchain_perp_batch_live_only.py` (now imports UAC's `venue_data_type_has_batch_source` directly;
+      `DROPPED_DATA_TYPES` — the separate "no feed on ANY transport" concept — stays MTDS-local, unaffected); removed
+      the call site + method binding in `onchain_perp_batch_handler.py`. 5 tests in `test_onchain_perp_batch_handler.py`
+      updated to assert `record_empty.assert_not_called()` instead of asserting the typed-empty-row write. Shipped
+      market-tick-data-service@0f0cc598.
+- [x] ✅ [SCRIPT] P3. Re-run `measure_honest_coverage.py --asset-group cefi` to confirm the 5 tuples vanish from
+      `by_venue_data_type` entirely (not just Layer-1) and eu drops by exactly their prior contribution. (repo:
+      instruments-service) — **DONE 2026-07-15**: real run against the live pinned-primary manifest
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 11,273,581 raw rows).
+      All 5 target tuples (`LIGHTER-ZKSYNC/{trades,book_snapshot_5}`, `EXTENDED-STARKNET/book_snapshot_5`,
+      `ASTER/book_snapshot_5`, `PACIFICA-SOLANA/book_snapshot_5`) return `None` from `by_venue_data_type.cefi` (fully
+      absent from the Layer-2 view — confirmed via direct JSON query, not eyeballing). `COINBASE-CDE/trades` unchanged
+      (450 eu preserved — correctly NOT touched, it has a real batch adapter as of mtds@28ad6b38). Measured:
+      `expected_unattempted` 2,969,412→2,773,292 (−196,120, exact match to the 5 tuples' prior eu sum),
+      `empty_confirmed` 1,227,739→1,059,752, `coverage_pct` 50.49%→52.18%. Layer-1 unaffected: `EXPECTED` 74 tuples (was
+      79), `denominator_complete=True`, `layer1_completeness_pct=100.0` — the 5 tuples now show as Layer-1 STRAY
+      (writer-emits-but-UAC-doesn't-sanction), not MISSING; harmless. Evidence:
+      `/tmp/claude-1000/.../scratchpad/cov_after_fix.json` (this session) vs the pre-fix
+      `/tmp/claude-1000/.../scratchpad/cov_1718.json` baseline (same session, 2026-07-15T17:18Z).
+- [ ] [SCRIPT] P3. Wider sweep: audit UAC's `VENUE_DATA_TYPE_CAPABILITIES`/`INSTRUMENT_TYPES_BY_VENUE` for OTHER "short
+      of magic cannot physically be retrieved in ANY mode" combos beyond this issue's 5 (e.g.
+      options_chain/futures_chain declared for a venue with no such products, a data_type a venue has never offered on
+      any transport) and, for any HIGH-confidence finding, remove it from UAC outright (option (a) — no live mode to
+      preserve, unlike this issue's 5). (repo: unified-api-contracts) — dispatched to a research sub-agent 2026-07-15
+      (read-only investigation); see this doc's Progress Log for the findings once returned.
+
 ## Progress Log
 
+- **2026-07-15** — Operator narrowed the ruling (see new Todos section above): typed empty_confirmed rows are ALSO
+  unwanted for genuinely batch-impossible combos, not just eu. Re-opened this doc (the (b) typed-empty-row shape from
+  2026-07-13 is superseded, not merely supplemented) and re-resolved via option (c) — a new UAC batch-vs-live capability
+  axis (`VENUE_DATA_TYPE_NO_BATCH_SOURCE`) rather than (a) [wholesale UAC deletion — would break the live pipeline for
+  these 5 tuples, which DO exist live] or the original (b). Shipped `unified-api-contracts@7754661a` +
+  `instruments-service@1aeb5e3c` + `market-tick-data-service@0f0cc598` (all 3 gate-green). Skipped the
+  originally-planned Part 1 VM-based historical backfill of MORE typed-empty rows — once the
+  enumerator/expected-universe fix landed, the 5 tuples vanish from the denominator entirely (no eu, no empty_confirmed
+  needed at all), making that backfill redundant work the operator explicitly didn't want. Real before/after coverage
+  measurement in the P3 todo above. Also dispatched a wider-sweep research sub-agent per the operator's "audit for MORE
+  impossible combos" ask — findings will land in a follow-up Progress Log entry once it returns (does not block this
+  doc's resolution — the sweep is additive, not a precondition).
 - **2026-07-14** — Doc-reconciliation fixer (verify-rerun-2, finding 35). Frontmatter `status` was `open` /
   `resolved_by:` blank, contradicting this doc's own 2026-07-13 Progress Log entry below ("All 3 todos in this issue doc
   are now done.") and all 3 `## Todos` items genuinely `[x]` with cited evidence (operator decision via `/blocked`,

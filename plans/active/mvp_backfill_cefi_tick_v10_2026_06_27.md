@@ -3029,3 +3029,66 @@ overlap is handed to it below.
 **UNKNOWN, not glossed**: Tardis billing granularity (per-symbol-day vs per-exchange-day) was not traced, so the dollar
 cost of the 6.6% duplicate fetch is unquantified; the academic key looks concurrency-limited rather than
 per-request-billed, in which case the cost is VM time (~6.6%), not money.
+
+### Live-only 5-tuple no-batch-source fix lands — denominator drops 196,120 cells, coverage 50.49%→52.18% — 2026-07-15T18:23Z
+
+Operator ruling (verbatim, refining the 2026-07-13 BLK-afc672cf decision this plan's
+`issues/ cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md` previously closed): "no i mean
+empty confirmed being in denominator is fine BUT its the literally impossible combinations i dont even need in empty
+confirmed like a data type that literally short of magic cannot physically be retrieved for a venue that's what i mean."
+The prior fix (typed `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` rows for the 6 live-only tuples) is
+superseded, not supplemented — the operator doesn't want a row AT ALL for a batch-impossible cell, not even an empty
+one.
+
+**Implemented option (c)**: a new batch-vs-live capability axis, `VENUE_DATA_TYPE_NO_BATCH_SOURCE`, added to UAC
+(`unified-api-contracts@7754661a`) for the 5 tuples that ARE declared live capabilities but have ZERO batch/historical
+source (LIGHTER-ZKSYNC trades+book_snapshot_5, ASTER book_snapshot_5, EXTENDED-STARKNET book_snapshot_5, PACIFICA-SOLANA
+book_snapshot_5). **COINBASE-CDE/trades excluded from this set** — verified it gained a REAL native-REST batch adapter
+(`market-tick-data-service@28ad6b38`, `adapters/coinbase_cde_batch.py`) on 2026-07-13, with its `venue_mapping.py`
+start_date already updated to 2025-12-12 (2026-07-14) — it is no longer a live-only-no-batch-source case, so its 450 eu
+cells are a genuine, fetchable backfill gap, left untouched. Wired the new UAC axis into instruments-service's
+`expected_universe.py` (Carve-out 1b, gates Layer-1 EXPECTED + the Layer-2 MVP read-time filter) and
+`enumerate_expected_universe.py`'s `_row_data_types` (the per-instrument-day WRITER, so no NEW eu rows seed for these
+cells going forward either) — `instruments-service@1aeb5e3c`. Removed the now-unnecessary typed-empty-row write in
+MTDS's `OnchainPerpBatchHandler` (`_onchain_perp_batch_live_only.py` — deleted `record_live_only_empty_rows` +
+`LIVE_ONLY_DATA_TYPES`, now imports UAC's `venue_data_type_has_batch_source` directly) — shipped
+`market-tick-data-service@0f0cc598`. All 3 repos' `quality-gates.sh` green (fresh runs, sentinel-verified, not cached);
+golden fixture `tests/unit/scripts/goldens/expected_universe/cefi.json` regenerated (79→74 tuples) and 3 pre-existing
+tests that asserted the OLD "ASTER book_snapshot_5 must be seeded" behavior flipped to the new exclusion.
+
+**Skipped the originally-scoped Part 1** (a VM-based historical backfill writing MORE typed-empty rows for
+2026-02→2026-07-14): once the enumerator/expected-universe fix lands, these 5 tuples vanish from the denominator
+entirely (no eu, no empty_confirmed needed), making that backfill redundant work the operator explicitly ruled out —
+"don't burn a VM on typed-empty-row writes you're about to make unnecessary." No VM launched; no Tardis-cap contention
+added to the 3-VM fleet already running (`cefi-queue-heavy-*`/`cefi-queue-light-*`/`cefi-aster-2026-*` from the
+17:39-17:45Z re-cut wave above, untouched by this work).
+
+**Real measured before/after** (`measure_honest_coverage.py --asset-group cefi`, fresh runs against the live
+pinned-primary manifest, both this session):
+
+| field                   | pre-fix (17:18Z, `cov_1718.json`) | post-fix (18:23Z, `cov_after_fix.json`)      |
+| ----------------------- | --------------------------------- | -------------------------------------------- |
+| expected_unattempted    | 2,969,412                         | **2,773,292** (−196,120, exact)              |
+| empty_confirmed         | 1,227,739                         | 1,059,752                                    |
+| captured                | 3,056,663                         | 3,057,681 (fleet still capturing, unrelated) |
+| coverage_pct            | 50.49%                            | **52.18%**                                   |
+| layer1_completeness_pct | 100.0                             | 100.0 (unchanged — still green)              |
+| denominator_complete    | True                              | True (unchanged)                             |
+
+All 5 target tuples return `None` from `by_venue_data_type.cefi[VENUE][DT]` post-fix — confirmed absent from the Layer-2
+view entirely via direct JSON query (not eyeballing). `COINBASE-CDE/trades` unchanged (450 eu preserved, as intended).
+Layer-1's raw EXPECTED set dropped 79→74 tuples; the 5 removed tuples now show as Layer-1 STRAY
+(writer-emits-a-row-UAC-doesn't-sanction — the historical rows already written for these cells before the fix are
+harmless leftovers, not re-derived or deleted), never MISSING — no Layer-1 regression.
+
+**Deliberately left in place**: the historical typed-empty rows written 2026-07-11 + the eu skeleton materialised for
+these 5 tuples since (~196,120 rows across 2026-02→2026-07-14) are NOT bulk-deleted from the manifest — they are inert
+stray rows, invisible to every reported view via the Carve-out 1b filter, and a bulk-delete migration on the live,
+heavily-contended cefi manifest (4 VMs writing concurrently right now) was judged not worth the risk for a cosmetic
+cleanup with zero effect on any measured number.
+
+**Also dispatched** (2026-07-15, read-only, background): a wider-sweep research sub-agent auditing UAC's
+`VENUE_DATA_TYPE_CAPABILITIES`/`INSTRUMENT_TYPES_BY_VENUE` for OTHER "short of magic" impossible combos beyond these 5
+(per the operator's "sweep wider" ask) — findings will land in
+`issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md`'s Progress Log once it returns;
+does not block this entry.
