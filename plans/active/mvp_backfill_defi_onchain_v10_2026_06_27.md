@@ -271,40 +271,40 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
           and the VM relaunch remain.
 
           **VERIFICATION 2026-07-14 13:15Z (data_engineering slot-2) — fleet did NOT drain, gate NOT met.** Ran this
-                                                                                                                                                              todo's own checklist: (1) FALSE — neither walker reached its `--back-to` floor. Both
-                                                                                                                                                              (`mtds-drift-sig-walker-resume-20260714-123928`, `mtds-drift-sig-walker-gap-20260714-123952`) exhausted 5
-                                                                                                                                                              Helius 429 retries on page 1 within ~1-15 min of launch, logged `"Walk complete: 0 new sigs"` (a
-                                                                                                                                                              false-positive — see the code-defect fix below), exited 0, and self-deleted; zero parts written to either
-                                                                                                                                                              `_parts/` or `_parts_gap/` (confirmed via `aggregated_list_instances` — both VMs gone entirely, not merely
-                                                                                                                                                              TERMINATED — and `gs://deployment-scripts-.../vm-logs/<vm>/run.log` for both). This is NOT a SPOT preemption
-                                                                                                                                                              (sub-item 2 doesn't apply) — the Helius API key shared by all 3 fleet VMs is saturated/exhausted, exactly
-                                                                                                                                                              the scenario this todo's own inline warning anticipated. (3) N/A — no new indexing happened, nothing to
-                                                                                                                                                              re-run the backfill VM against. (4) FALSE — `measure_honest_coverage.py --asset-group defi` (2026-07-14
-                                                                                                                                                              13:13Z): DRIFT perp_funding `captured=8, empty_confirmed=1816, attempted_failed=39,
-                                                                                                                                                              expected_unattempted=0` (17.02% coverage_pct / 0.43% all_shards_coverage_pct) — `attempted_failed` is NOT 0.
-                                                                                                                                                              **Code-defect fix shipped: `market-tick-data-service@e4c04c64`** —
-                                                                                                                                                              `_walk_signatures_chunked` returned the identical `(0 sigs, 0 parts)` tuple whether the walk genuinely
-                                                                                                                                                              reached its floor OR retry-exhausted on page 1 (both logged as "Walk complete"), silently masking the
-                                                                                                                                                              failure as success; now returns a `retry_exhausted` flag and `_async_main` exits 1 + logs ERROR on
-                                                                                                                                                              saturation instead. 3 new unit tests (genuine-empty-page vs retry-exhaustion vs partial-batch-flush-on-abort),
-                                                                                                                                                              33/33 green, QG sentinel `e4c04c64`.
+                                                                                                                                                                  todo's own checklist: (1) FALSE — neither walker reached its `--back-to` floor. Both
+                                                                                                                                                                  (`mtds-drift-sig-walker-resume-20260714-123928`, `mtds-drift-sig-walker-gap-20260714-123952`) exhausted 5
+                                                                                                                                                                  Helius 429 retries on page 1 within ~1-15 min of launch, logged `"Walk complete: 0 new sigs"` (a
+                                                                                                                                                                  false-positive — see the code-defect fix below), exited 0, and self-deleted; zero parts written to either
+                                                                                                                                                                  `_parts/` or `_parts_gap/` (confirmed via `aggregated_list_instances` — both VMs gone entirely, not merely
+                                                                                                                                                                  TERMINATED — and `gs://deployment-scripts-.../vm-logs/<vm>/run.log` for both). This is NOT a SPOT preemption
+                                                                                                                                                                  (sub-item 2 doesn't apply) — the Helius API key shared by all 3 fleet VMs is saturated/exhausted, exactly
+                                                                                                                                                                  the scenario this todo's own inline warning anticipated. (3) N/A — no new indexing happened, nothing to
+                                                                                                                                                                  re-run the backfill VM against. (4) FALSE — `measure_honest_coverage.py --asset-group defi` (2026-07-14
+                                                                                                                                                                  13:13Z): DRIFT perp_funding `captured=8, empty_confirmed=1816, attempted_failed=39,
+                                                                                                                                                                  expected_unattempted=0` (17.02% coverage_pct / 0.43% all_shards_coverage_pct) — `attempted_failed` is NOT 0.
+                                                                                                                                                                  **Code-defect fix shipped: `market-tick-data-service@e4c04c64`** —
+                                                                                                                                                                  `_walk_signatures_chunked` returned the identical `(0 sigs, 0 parts)` tuple whether the walk genuinely
+                                                                                                                                                                  reached its floor OR retry-exhausted on page 1 (both logged as "Walk complete"), silently masking the
+                                                                                                                                                                  failure as success; now returns a `retry_exhausted` flag and `_async_main` exits 1 + logs ERROR on
+                                                                                                                                                                  saturation instead. 3 new unit tests (genuine-empty-page vs retry-exhaustion vs partial-batch-flush-on-abort),
+                                                                                                                                                                  33/33 green, QG sentinel `e4c04c64`.
 
-                                                                                                                                                              **BLOCKED-OPERATOR-DECISION (2026-07-14, slot-2):** the still-running `mtds-solana-drift-backfill` VM is
-                                                                                                                                                              ALSO absorbing 429s (557+ so far) but surviving via a longer per-batch retry budget — it is consuming
-                                                                                                                                                              Helius-key headroom that starved both walkers on their very first request. Options: **(A)** stop
-                                                                                                                                                              `mtds-solana-drift-backfill` temporarily, relaunch the 2 walkers alone (no contention) with the SAME
-                                                                                                                                                              launcher args (`--resume` picks up from 0 parts = fresh start, no data lost), then re-launch the backfill
-                                                                                                                                                              VM once the sig-index gap is filled; **(B)** request a higher-tier/higher-rate-limit Helius API key/plan
-                                                                                                                                                              before relaunching anything; **(C)** leave the backfill VM running (it IS making genuine progress through
-                                                                                                                                                              Dec 2025 despite 429s) and accept the sig-index gap (2025-01-15→2025-12-23) will not be built — the backfill
-                                                                                                                                                              VM's own fallback will keep recording `empty_confirmed`/`SOURCE_RETURNED_ZERO` for those dates via the
-                                                                                                                                                              parts-only index (7169 parts, pre-existing), which is a DATA-CORRECTNESS RISK worth flagging separately:
-                                                                                                                                                              Drift V2 has been an actively-traded perp market throughout 2025, so "0 sigs in window" for that gap may be
-                                                                                                                                                              an artifact of missing sig-index coverage, not genuine inactivity — needs verification once/if the gap is
-                                                                                                                                                              properly indexed. **Recommendation: (A)** — the walkers are cheap or free to retry from scratch (no parts
-                                                                                                                                                              lost) and removing the backfill VM's contention gives them a real chance to actually build the index;
-                                                                                                                                                              revisit whether (B) is needed only if (A) still saturates. Repos: `deployment-service`,
-                                                                                                                                                              `market-tick-data-service`, `instruments-service`.
+                                                                                                                                                                  **BLOCKED-OPERATOR-DECISION (2026-07-14, slot-2):** the still-running `mtds-solana-drift-backfill` VM is
+                                                                                                                                                                  ALSO absorbing 429s (557+ so far) but surviving via a longer per-batch retry budget — it is consuming
+                                                                                                                                                                  Helius-key headroom that starved both walkers on their very first request. Options: **(A)** stop
+                                                                                                                                                                  `mtds-solana-drift-backfill` temporarily, relaunch the 2 walkers alone (no contention) with the SAME
+                                                                                                                                                                  launcher args (`--resume` picks up from 0 parts = fresh start, no data lost), then re-launch the backfill
+                                                                                                                                                                  VM once the sig-index gap is filled; **(B)** request a higher-tier/higher-rate-limit Helius API key/plan
+                                                                                                                                                                  before relaunching anything; **(C)** leave the backfill VM running (it IS making genuine progress through
+                                                                                                                                                                  Dec 2025 despite 429s) and accept the sig-index gap (2025-01-15→2025-12-23) will not be built — the backfill
+                                                                                                                                                                  VM's own fallback will keep recording `empty_confirmed`/`SOURCE_RETURNED_ZERO` for those dates via the
+                                                                                                                                                                  parts-only index (7169 parts, pre-existing), which is a DATA-CORRECTNESS RISK worth flagging separately:
+                                                                                                                                                                  Drift V2 has been an actively-traded perp market throughout 2025, so "0 sigs in window" for that gap may be
+                                                                                                                                                                  an artifact of missing sig-index coverage, not genuine inactivity — needs verification once/if the gap is
+                                                                                                                                                                  properly indexed. **Recommendation: (A)** — the walkers are cheap or free to retry from scratch (no parts
+                                                                                                                                                                  lost) and removing the backfill VM's contention gives them a real chance to actually build the index;
+                                                                                                                                                                  revisit whether (B) is needed only if (A) still saturates. Repos: `deployment-service`,
+                                                                                                                                                                  `market-tick-data-service`, `instruments-service`.
 
 ### G1.6 — Solana DEX-pool venues (ORCA/RAYDIUM/KAMINO) never backfilled (found during G2 2026-07-12)
 
@@ -3516,3 +3516,33 @@ data_types axis while adding cost, same reasoning as every prior session since r
 `/skip-current-task` so this returns to the queue; next session should keep the same posture (cheap VM-roster + run.log
 check only, full re-scan only once DRIFT's chronological grind is closer to its 2026-07-14 window end or another
 data_type's VM starts independent compute).
+
+### 2026-07-15T11:14Z — data_engineering slot-3 (cheap re-verify: DRIFT backfill VM healthy, advanced Jan-14→Jan-15, no independent movement elsewhere)
+
+**Dispatched to `mvp_backfill_defi_onchain_v10-002`** on `/heartbeat`. Fresh-pulled all 24 slot repos clean. Own venv
+(`deployment-service`) was missing — ran `uv sync --frozen` to build it fresh rather than reuse the shared
+`.venv-workspace` (that one resolves `unified-api-contracts` from a DIFFERENT slot's clone via a stale path and has a
+broken pydantic/pydantic-core pin — do not use `.venv-workspace` for this check going forward, always `uv sync` inside
+the repo whose client you need).
+
+- **VM roster** (`gcp_instance_lister.list_running_vm_names`, project `central-element-323112`): 8 RUNNING VMs total,
+  only `mtds-solana-drift-backfill` relevant to this gate — zero VMs running for dex_pool_state/dex_pool_swaps/
+  lending_indices/lst_rates/oracle_prices, same as every session since the sig-index walk completed.
+- **`mtds-solana-drift-backfill` run.log tail** (via UTL `download_from_storage`,
+  `GCP_PROJECT_ID=central-element-323112` env needed for `get_project_id()` — sandbox has no gcloud/gsutil, same
+  constraint noted throughout this plan): 2025-01-14 genuinely COMPLETED at 11:11:39Z (817,166 rows written to
+  `.../day=2025-01-14/.../data_type=perp_funding/drift_helius_SOL-PERP_20250114.parquet`, manifest per-VM shard
+  updated), then immediately picked up 2025-01-15 (905,200 sigs loaded from the parts-based sig index for that window).
+  Heartbeats current to 11:14:22Z, `RESOURCE_SAMPLE` steady ~1.2-2.2% CPU / ~28-32% mem — healthy, not stalled. One day
+  advanced in ~3 min this time (vs ~4h/day at the 06:55Z→11:02Z checkpoint) — throughput is genuinely improving as the
+  walk moves off the January-2025 peak-activity days, matching the plan's own "declining but still heavy" prediction. No
+  429/504-exhaustion pattern in this window.
+- **`/api/blocked/stats`**: `total: 426`, `unanswered: 0` (unchanged since slot-8's 11:02Z check).
+  **`/api/activity?limit=15`**: no new operator ruling or drift-fleet event — feed is dominated by unrelated slot
+  boot/autospawn/liveness-watchdog noise from the concurrent fleet.
+
+**Verdict: unchanged — nothing dispatchable, gate still structurally can't pass.** Not re-running
+`measure_honest_coverage.py` (no new capture for the other 5 data_types, near-byte-identical result, same reasoning as
+every prior session since run #6). Checkbox NOT flipped. `/skip-current-task` so this returns to the queue; next session
+should keep the same cheap-check posture (VM roster + run.log tail only) until DRIFT's chronological grind closes in on
+its window end or another data_type's VM starts independent compute.
