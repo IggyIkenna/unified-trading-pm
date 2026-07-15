@@ -343,8 +343,8 @@
       "codebase_health": {
         "large_file_count": 3,
         "qg_red_reason": null,
-        "warn_file_count": 15,
-        "coverage_pct": 82.08
+        "coverage_pct": 82.06,
+        "warn_file_count": 15
       }
     },
     "deployment-service": {
@@ -880,9 +880,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 82.98,
         "warn_file_count": 38,
+        "qg_red_reason": null,
+        "coverage_pct": 82.99,
         "large_file_count": 0
       }
     },
@@ -1264,8 +1264,8 @@
       "codebase_health": {
         "large_file_count": 6,
         "qg_red_reason": null,
-        "warn_file_count": 20,
-        "coverage_pct": 87.72
+        "coverage_pct": 87.73,
+        "warn_file_count": 20
       }
     },
     "unified-trading-pm": {
