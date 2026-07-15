@@ -284,13 +284,43 @@ fix below lands.
       eyeballing raw timestamps. Never alerts or auto-kills (dry_run always True). Unit tests: `test_check_vm.py` (pure
       verdict logic incl. the OOM-zombie shape — frozen run.log, no sidecar/shard-mtime) + `test_check_vm_cli.py` (CLI
       wiring). Full `quality-gates.sh` green (2684 passed).
-- [ ] [DATA] P3. Once the streaming fix lands, relaunch `mtds-solana-drift-backfill` (same launcher args, `--resume`
+- [x] ✅ [DATA] P3. Once the streaming fix lands, relaunch `mtds-solana-drift-backfill` (same launcher args, `--resume`
       semantics) to continue past 2025-01-09 — do NOT relaunch with today's unfixed code, since the identical crash will
       very likely recur on the same day. (repo: deployment-service launcher + market-tick-data-service) — **⚠️
       2026-07-15 (data_engineering slot-10): this todo is now GATED by the new P0 todo above.** The
       streaming/chunked-resolution fix already landed (see `solana_defi_drift_helius.py` module docstring
       "Chunked-resolution OOM fix"), so the OOM itself is mitigated — but relaunching this VM at all means continuing to
-      invest in the path the new P0 finding says may be obsolete. Do not relaunch until the P0 ruling lands.
+      invest in the path the new P0 finding says may be obsolete. Do not relaunch until the P0 ruling lands. — **CLOSED
+      AS SUPERSEDED 2026-07-15T23:09-23:33Z (data_engineering slot-13).** Dispatched to this exact todo and fresh-pulled
+      `unified-trading-pm` at ~23:08Z — **before** slot-10's 23:12:03Z commit landed the P0-gate note above, so my
+      pulled copy of this doc still showed the plain unchecked P3 todo with no gate. Executed it literally: rebuilt the
+      4 core tarballs (`create-code-tarballs.sh`, no `--asset-group`) after confirming the deployed `mtds-code.tar.gz`
+      was pinned to `545ce50b` — an ancestor of, and ~4 minutes older than, the streaming fix
+      `market-tick-data-service@1df45ce3` (the exact silent-stale-tarball trap `lc_verify_tarball_freshness` exists to
+      catch); new tarball pinned `mtds-code@1df45ce3b6ab`. Deleted the stale `TERMINATED` VM and relaunched
+      `mtds-solana-drift-backfill --start 2025-01-09 --end 2026-07-14` (same window as the original 2026-07-14 12:37Z
+      launch per the v10 plan's G1.5 entry — no explicit `--resume` flag exists on this launcher; "resume" here is the
+      shard-level manifest re-entry the per-day backfill already gets for free). Confirmed via fresh `run.log` (new
+      deployment ID, `RESOURCE_SAMPLE` RSS flat at 552-557MiB through the sig-index parts-cache scan phase, vs. 14.1GB
+      pre-fix) that the VM booted clean on the fixed code — did **not** get far enough to observe the fix actually
+      resolving a busy day (still mid-scan) before the next event below. **Received a steering message from main
+      mid-session** relaying the P0 ruling this todo's gate was waiting on: the Helius sig-index/day-backfill path is
+      OBSOLETE (`codex/04-architecture/drift-v2-data-sources.md`, current since 2026-06-01) — ruling is (a), switch to
+      the Velocity Data API path; "if your sub-task depends on the sig-index/sig-walker, STOP investing further ...
+      verify the Velocity path on a sample market-day first, then decommission." This task depends on it entirely.
+      Independently re-verified before acting: `curl https://data.api.drift.trade/market/SOL-PERP/fundingRates/2025/1/9`
+      → `200`, clean per-market SOL-PERP funding rows (not program-wide) for the exact crash date — matches slot-2's
+      pre-ruling verification above. **Decommissioned**: deleted the just-relaunched `mtds-solana-drift-backfill` VM
+      (`gcloud compute instances delete`, confirmed) rather than let it keep burning SPOT VM-hours resolving a path the
+      ruling retires. **Net effect**: the todo's literal instruction (streaming-fix relaunch) was executed and verified
+      OOM-free, but the underlying goal (draining DRIFT `perp_funding` via this VM) is now moot — future DRIFT
+      `perp_funding` backfill routes through `backfill_drift_v2_historical.py` (Velocity path) instead, which is
+      `mvp_backfill_defi_onchain_v10-005`'s scope (slot-2, already pivoting per main's message), not re-actioned here.
+      Checkbox flipped to reflect the todo is CLOSED, not because the Helius path succeeded, but because it's now
+      superseded and no further Helius-path relaunch should happen. No code changes this session beyond the tarball
+      rebuild (no source diff — tarball packaging only); repos touched: `deployment-service` (tarball rebuild + VM
+      launch/delete, no committed code change), `market-tick-data-service` (tarball packaging of the already-shipped
+      `@1df45ce3`, no new commit).
 
 ## Progress Log
 
@@ -317,3 +347,22 @@ via `POST /api/agents/by-role/main/message` (data-correctness + cross-repo + SSO
 CLAUDE.md governance rules, not something a single P2 task should resolve unilaterally given it implies
 stopping/redirecting a live multi-VM SPOT fleet). No code changes this session — investigation + issue-doc closure only,
 per the task's own scope (P2, 1h estimate, "Investigate whether...").
+
+### 2026-07-15T23:09-23:33Z — data_engineering slot-13: executed the pre-gate P3 relaunch, then stopped + decommissioned on main's mid-session ruling
+
+Dispatched straight to the P3 relaunch todo. Fresh-pulled `unified-trading-pm` at ~23:08Z, before slot-10's 23:12:03Z
+commit landed the P0-gate note on this todo — so proceeded on a copy of this doc that still read as a plain actionable
+P3 item. Rebuilt the 4 core VM tarballs (confirmed the deployed `mtds-code.tar.gz` was pinned `545ce50b`, an ancestor of
+and ~4 minutes older than the streaming fix `market-tick-data-service@1df45ce3` — would have silently shipped the
+pre-fix OOM code, the exact class of bug `lc_verify_tarball_freshness` exists to catch), deleted the stale `TERMINATED`
+VM, and relaunched `mtds-solana-drift-backfill --start 2025-01-09 --end 2026-07-14` (same window as the original
+launch). Watched the fresh `run.log`: new deployment ID, RSS flat 552-557MiB through the sig-index parts-cache scan (vs
+14.1GB pre-fix) — confirmed the fixed code boots clean, but the VM hadn't yet reached actual day-resolution when a
+steering message from main arrived mid-session relaying the P0 ruling: option (a), Helius path OBSOLETE, switch to
+Velocity. Independently re-verified before acting further (`curl` to `/market/SOL-PERP/fundingRates/2025/1/9` → 200,
+clean per-market rows for the exact crash date), then killed the background watcher and deleted the just-relaunched VM
+rather than let it keep resolving a retired path. Folded the outcome into the P3 todo above (flipped,
+closed-as-superseded, not claimed as a clean win). Did not pick up the Velocity-path re-implementation itself (`-005`,
+already slot-2's scope per main's message). Repos touched: `deployment-service` (tarball rebuild + VM launch/delete
+only, no source diff), `market-tick-data-service` (tarball packaging of the pre-existing `@1df45ce3`, no new commit this
+session).
