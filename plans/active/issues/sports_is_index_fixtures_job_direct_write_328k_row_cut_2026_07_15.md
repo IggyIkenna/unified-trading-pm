@@ -251,3 +251,127 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
 all four verified **ENABLED** (schedules `0 0/6/12/18 * * *`). Safe to re-enable: the job is per-VM-shard-mediated and
 UTL refuses any >2% direct-canonical shrink, so a scheduled fire can only (i) write a per-VM shard the consolidator
 absorbs, or (ii) fail-safe at the staleness preflight — never clobber the index.
+
+### STEP 3 — 🔴 RE-EMISSION DELIBERATELY **NOT** PERFORMED: this doc's central premise is FALSIFIED
+
+> **Headline for the operator: the 328,292 rows were NOT legitimate data.** They were PRE-LAUNCH rows that the UAC
+> coverage SSOT says must not exist, and that `ManifestWriter` refuses to write BY DESIGN. The canonical is now EXACTLY
+> coverage-clipped — i.e. CORRECT. Re-emitting them would fabricate the exact phantom class the 2026-05-04 purge
+> removed, so I stopped rather than force them in. This invalidates this doc's own "Recommended next step" P0-DATA
+> re-emission item and the plan's E8 L6 `legacy_only == 0` criterion, and needs an operator ruling.
+
+**How it surfaced.** Ran the sanctioned recipe end-to-end: regenerated the cell list fresh (2,848 REAL ic>0 cells /
+2,484 unique `(date,data_type)` pairs), ran the object-copy leg, then the manifest re-emit. The re-emit reported a
+confident `DONE: written_captured=31301 (of 31301)` — **and wrote nothing at all**: no shard in `_index/per_vm/`, and
+consolidator cycles kept reporting `shards=1 rows_in=0`. Two distinct bugs stacked:
+
+1. **Script bug (FIXED this session)** — the script called `writer.flush()`. `flush()` force-drains the module buffer
+   but **deliberately DEBOUNCES the per-VM shard rewrite** (the GCS-429 fix); only `close()`/atexit pass
+   `process_final=True` and actually persist `_index/per_vm/{VM_NAME}.parquet` (UTL: _"Only close() / atexit force the
+   shard write … so nothing is ever stranded"_). Fixed → `writer.close()` + a **post-write read-back verification**
+   (`_per_vm_shard_rowcount`) that ERRORs when the shard is empty/missing. `written_captured` counts rows handed to the
+   writer, NEVER rows persisted — that gap is what made the silent no-op look like success.
+2. **The real finding — the UAC PRE-LAUNCH GUARD blocks 100% of the target slice.** With `close()` in place the shard
+   was STILL empty. Instrumenting the writer: after 5 successful `writer.add()` calls, `len(writer._records)==0` — rows
+   discarded at `add()` with no exception (DEBUG log only). Cause: `_writer_ingest.py`'s pre-launch guard —
+   `if is_pre_launch_date(data_type, date_str): return` — installed as the single chokepoint after the **2026-05-04
+   incident where 229,224 pre-launch rows had to be PURGED** from the sports manifest.
+
+**Measured: 2,848 / 2,848 target cells are pre-launch → 0 writable.** Per UAC `canonical/domain/sports/league_data.py`:
+`DATA_TYPE_COVERAGE_START` floors api_football `FIXTURE_EVENTS`/`FIXTURE_LINEUPS`/`FIXTURE_STATS`/`PLAYER_STATS` at
+**2020-06-06** (a deliberate POLICY floor — _"we only need data ≥ 2020-06 to match the odds_api downstream cutoff …
+strategies built on these features can't trade on dates without odds anyway"_), and `SOURCE_COVERAGE_START` floors
+footystats (MATCHES/PREDICTIONS/ODDS) + transfermarkt (PLAYER_VALUES) at **2019-01-01**. The target slice is entirely
+2018 (1,462) / 2019 (1,064) / 2020-pre-06-06 (322).
+
+**The clinching evidence — the canonical is ALREADY exactly coverage-clipped.** Across the 8 target data_types the
+canonical carries **19,222 captured `(date,data_type)` pairs / 250,607 captured rows and ZERO pre-launch ones**, and the
+minimum captured date per data_type equals its UAC floor EXACTLY:
+
+| data_type                                                       | canonical min captured date | UAC floor                  |
+| --------------------------------------------------------------- | --------------------------- | -------------------------- |
+| FIXTURE_EVENTS / FIXTURE_LINEUPS / FIXTURE_STATS / PLAYER_STATS | **2020-06-06**              | 2020-06-06 (per-type)      |
+| MATCHES / ODDS / PREDICTIONS                                    | **2019-01-01**              | 2019-01-01 (footystats)    |
+| PLAYER_VALUES                                                   | **2019-01-01**              | 2019-01-01 (transfermarkt) |
+
+A perfect boundary on every axis is not a coincidence, and not what a 328k-row data-loss event leaves behind. **These
+2,848 cells are correctly absent by design; their legacy-only status is the coverage-clip policy working, not data
+loss.**
+
+**Consequence — this doc's timeline attribution is wrong.** Both the coverage floors (UAC `7fb79f85`, 2026-05-01) and
+the writer guard (predating the 2026-06-11 module split) were live LONG before 2026-07-13. So the 2026-07-13 targeted
+migration — same script → same `add()` → same guard — **cannot have written these rows either**; the claim that the
+vanished cohort "is precisely the 2026-07-13 migration's re-emitted captured rows" does not survive contact with the
+guard. NOT root-caused this session: what DID put pre-launch captured rows into the canonical such that 2026-07-14
+audits read legacy-only=28. The `_legacy_seed.parquet` resurrection vector
+(`legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md`) is the shape-wise candidate, but THIS bucket's seed is
+only 18,771 bytes — far too small to carry ~328k rows — so it is NOT a sufficient explanation. **That is the one genuine
+open question left**, and it is a forensic question about how illegitimate rows GOT IN, not about restoring them.
+
+**Decision (autonomous rule 12(f) decide-and-document; data-correctness HARD RULE).** I did NOT bypass the guard.
+Forcing these rows in would be the banned `fake record_captured` pattern and would re-create the 229,224-row purge
+class. If the coverage floors are judged WRONG, the correct and only sanctioned mechanism is to **amend the UAC coverage
+SSOT** (a policy decision + a one-line floor edit per data_type), after which this same script flows through the writer
+legitimately with no bypass. That is an operator ruling, not a worker call.
+
+**⚠️ Side-effect requiring an operator ruling (surfaced honestly; done BEFORE the pre-launch finding emerged).** The
+object-copy leg ran `--apply` and **copied 2,769 objects** legacy→canonical (`objects_found=22,327`,
+`skipped_existing=19,558`, `zero_object_cells=0`) — essentially the ODDS `footystats_odds` 2018 tree (2,723 objects),
+the one genuine OBJECT-layer legacy-only gap. Those objects now sit in canonical **with NO manifest rows** (the writer
+refuses them), so they are inert/unreferenced by every manifest-driven reader and the coverage clip keeps 2018 out of
+every expected-date denominator — but they ARE pre-launch artifacts in canonical, and a reader that globs GCS paths
+directly (`candidate_parquet_paths()`) rather than reading the manifest could theoretically see them. I did **not**
+delete them (zero-deletions HARD RULE + the standing legacy-bucket constraint). **Ruling requested**: leave (harmless,
+manifest-invisible) vs. remove the copied 2018 `footystats_odds` tree.
+
+### STEP 4 — L6/E8 gate re-run (official `cf_manifest_audit_2026_06_01.py`, both surfaces, 2026-07-15 ~17:35Z)
+
+| surface                                        | index rows    | legacy captured | canonical | overlap | **legacy-only** |
+| ---------------------------------------------- | ------------- | --------------- | --------- | ------- | --------------- |
+| IS `instruments-store-sports-prd-…`            | **5,432,782** | 41,939          | 78,530    | 38,623  | **3,316** [RED] |
+| MDPS `market-data-tick-sports-prd-…` (control) | **1,958,499** | 32,755          | 36,837    | 32,615  | **140** [RED]   |
+
+**Decomposition of the IS 3,316 — every one legitimately-absent; the genuine data-loss component is ZERO:**
+
+- **2,848 = PRE-LAUNCH real (ic>0)** — correctly clipped per the UAC coverage SSOT (proof above). NOT data loss, NOT
+  migratable without a coverage-policy change.
+- **468 = `instrument_count=0` phantoms** (incl. the 28 INJURIES + 2 WEATHER accepted class) — no real backing data;
+  `_load_target_cells`' own `ic>0` filter excludes them; fabricating captured rows for them is banned.
+- **0 = genuinely-migratable real cells.**
+
+MDPS **140 unchanged** — the operator-ACCEPTED phantom class (all `instrument_count=0`, canonical
+honest-`empty_confirmed`). Left exactly as-is; no captured rows fabricated, per instruction.
+
+**Gate verdict (honest, NOT a naive GREEN).** The L6 **data-loss** gate is satisfied on both surfaces: **0 real
+migratable cells**. But `cf_manifest_audit`'s literal `legacy_only == 0` criterion reads RED and is **unreachable BY
+DESIGN** — it models neither the coverage-clip policy nor the accepted-phantom class, so no migration can ever green it
+while the legacy buckets retain pre-clip-era artifacts. **The gate's DEFINITION needs amending** (exclude pre-launch +
+ic=0 cells, exactly as the MDPS 140 were accepted) — filed as a P0 below. I did NOT flip the E8-verify todo to GREEN,
+because claiming GREEN against the criterion as written would be false.
+
+**E8 delete: BLOCKED PENDING OPERATOR RULING** — honoured as a HARD STOP; zero deletions performed anywhere this
+session.
+
+### Recommended next steps (SUPERSEDING this doc's earlier P0-DATA re-emission item, which is now void)
+
+- [x] ✅ [CODE] P0. Fix the `flush()`-debounce silent no-op + add post-write read-back verification in
+      `write_sports_instruments_legacy_gap_manifest_2026_07_13.py` (`close()` + `_per_vm_shard_rowcount` ERROR guard).
+      Repo: market-tick-data-service.
+- [ ] [DATA] P0. **OPERATOR RULING — are the UAC sports coverage floors correct?** The api_football per-fixture floor
+      (2020-06-06) is a POLICY choice whose own UAC comment says the data _"nominally ha[s] data going back to 2017-10"_
+      and justifies the floor by _"our backfill never captured 2018-2020 dates"_ — yet the legacy bucket demonstrably
+      HOLDS captured 2018-2020 rows + 22,327 backing objects for exactly those dates, so that stated premise is at least
+      partly false. Either (a) the floors stand → the 2,848 legacy-only cells are permanently EXPECTED and the L6 gate
+      must be redefined (below), or (b) the floors are wrong → amend
+      `unified_api_contracts.canonical.domain.sports.league_data`, then re-run this session's recipe (it will then flow
+      through the writer legitimately, no bypass). Repo: unified-api-contracts.
+- [ ] [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude pre-launch
+      (`is_pre_launch_date`) + `instrument_count=0` cells from the legacy-only diff, so it measures GENUINE data loss
+      (currently 0 on both sports surfaces) instead of a permanent by-design RED. Without this, E8 can never green.
+      Repo: unified-trading-pm.
+- [ ] [DATA] P1. **Forensics (the remaining open question)**: what wrote pre-launch captured rows into the IS canonical
+      such that 2026-07-14 audits read legacy-only=28? Not the 07-13 script (guard-blocked), not sufficiently the 18KB
+      `_legacy_seed.parquet`. Whatever it is bypasses the writer's pre-launch chokepoint and is the true
+      illegitimate-row vector. Repos: unified-trading-library, market-tick-data-service.
+- [ ] [DATA] P2. **Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in canonical
+      without manifest rows — leave (manifest-invisible) or remove. Repo: instruments-service.
