@@ -138,6 +138,32 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 01:12 UTC — data_engineering slot-12 (Todo 1 re-dispatch — fast re-verify, fleet still healthy following slot-2's 00:53Z relaunch, steady genuine progress, no new action)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-2's 00:53Z entry (same 3 gap-fill VMs, ~19 min
+elapsed). Verified via `gcloud compute instances list` (non-snap `google-cloud-sdk` binary — the snap `gcloud`/`gsutil`
+in this sandbox is broken, `snap-confine`/`cap_dac_override` error; use `/home/ubuntu/google-cloud-sdk/bin` on `PATH`
+instead) that all 3 tracked VMs (`features-sports-sports-20260715-004933` covering 2018-07-09→2019-08-11, `-004954`
+covering 2020-03-07→2020-10-05, `-005012` covering 2025-08-11→2026-07-14) are still `RUNNING`. Tailed each VM's
+`run.log` at the canonical path `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` (not the features
+bucket — no per-VM log there): all 3 show fresh timestamps (01:07-01:09Z) with genuine per-date compute (real GCS
+reference-data reads, honest-absence WARNING lines for genuinely-missing entities, `PIPELINE_HEARTBEAT` lines from the
+vm-life-emitter) — no repeat of the prior "Manifest consolidator appears DOWN" failure, no stall. Features bucket
+unique-date count is now **2,897** (up from 2,888 at slot-2's 00:53Z entry, growing steadily). Given all 3 ranges are
+multi-hundred-day and only ~19 min into the run, none are near completion — did not attempt a 4th gap-fill launch
+(premature manifest-based gap-hunting while the known 3 gaps are still actively closing would be wasted GCS-list cost
+per the single-walk/efficiency craft north-star). No new BLK — same well-documented compute-not-done wait as every prior
+dispatch on this todo. Checkbox NOT flipped (Gate: `by_date/day=*/...` for every in-coverage day — not yet met while the
+3 known gaps remain open).
+
+**Handoff for the next dispatch**: re-check
+`gsutil ls gs://features-sports-prd-central-element-323112/sports_features/by_date/ | wc -l` (currently 2,897) and the 3
+VMs' `run.log` freshness at the `deployment-scripts-central-element-323112` path above. If all 3 have completed (VM list
+no longer shows them — `VM_SHUTDOWN_ON_COMPLETION=true` self-deletes on exit 0), re-run `check_pipeline_completeness.py`
+over each closed range to confirm, then do a manifest-based (not GCS-listing-diff) scan for the next genuine gap before
+declaring Todo 1 complete. Releasing via `/skip-current-task` per this task's established convention (done_definition
+"checkbox flipped in plan + code shipped" isn't met this dispatch).
+
 ### 2026-07-15 01:00 UTC — data_engineering slot-2 (Todo 3 dispatch, same session — BLOCKED-PREREQ as established, fast re-verify only, no new investigation needed)
 
 Dispatched immediately after this same slot's own Todo 1 re-dispatch above (same session). Gate remains structurally
