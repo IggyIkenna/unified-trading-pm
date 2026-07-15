@@ -150,9 +150,43 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
 
 - [x] [INFRA] P1. Resume `uts-prod-manifest-consolidator-market-data-defi-cron` (Cloud Scheduler) — done this session,
       2026-07-15T11:56Z, verified a new execution started. (repo: deployment-service)
-- [ ] [INFRA] P1. Determine why `uts-prod-consolidator-liveness-watchdog` Cloud Run Job exit(1) failures (12+
+- [x] [INFRA] P1. ✅ Determine why `uts-prod-consolidator-liveness-watchdog` Cloud Run Job exit(1) failures (12+
       consecutive cycles over 13.5h) did not escalate to a Slack/human page; wire the missing alert or fix the broken
-      routing. (repo: deployment-service)
+      routing. — deployment-service@546216f. Findings: the app-level path (`log_event(CONSOLIDATOR_DOWN)` →
+      `lifecycle-events` Pub/Sub → alerting-service's `handle_consolidator_down_payload` → PagerDuty/Telegram,
+      `alerting-service/alerting_service/rules/consolidator_rules.py:103-136`) is fully coded and, per the incident's
+      own quoted logs (no swallowed exception in `check_and_emit`), DID fire during the incident — the
+      `unified_trading_library@bf6fb9c3` (2026-07-12) fix that wired `setup_events()` into
+      `consolidator_liveness._main()` was already live. The confirmed, closeable gap was different: **zero
+      Cloud-Monitoring-level coverage existed for this Cloud Run Job's own exit code** — grepping every
+      `google_monitoring_alert_policy` in `deployment-service/terraform/gcp/*.tf` found none keyed off
+      `resource.type="cloud_run_job"` for `uts-prod-consolidator-liveness-watchdog` (or any Cloud Run Job generically);
+      the watchdog itself — the one thing watching the consolidator — had no independent watcher, violating the "each
+      layer independent of the one it watches" design in `codex/05-infrastructure/deployment-observability.md` §
+      "Out-of-band liveness". **Fix shipped**: added
+      `google_monitoring_alert_policy.consolidator_liveness_watchdog_failed` to `consolidator_liveness_scheduler.tf`, a
+      log-matched-condition alert on `resource.type="cloud_run_job" AND job_name=<this job> AND severity="ERROR"`, wired
+      to the already-provisioned `google_monitoring_notification_channel.monitoring_deadman_email` (the same real,
+      non-toothless channel `deployment_api_memory_alert.tf`/`critical_service_uptime.tf` use — deliberately NOT the
+      empty-default-var pattern in `cf_manifest_audit_scheduler.tf`, which ships an alert nobody receives until a
+      separate wiring step). Rate-limited to 1 page/hour while the condition persists (cron is `*/2 min`), auto-close
+      7d. `terraform validate` clean. **Residual, NOT closed by this fix** (flagged as a fresh follow-up below since
+      it's outside what could be verified from a repo-only sandbox): whether the app-level Pub/Sub→alerting-service page
+      for THIS specific incident was actually delivered end-to-end or silently dropped downstream —
+      `alerting-service/subscribers/alert_subscriber.py`'s `_route_one` wraps `dispatch_event()` in a broad
+      `except Exception` that only `logger.warning`s ("skipping") on failure, so a PagerDuty/Telegram misconfiguration
+      would silently eat a page with no escalation of that failure either. This repo-only investigation could not verify
+      live Cloud Logging / PagerDuty delivery, so this is tracked as new todo #4 below rather than closed here.
 - [ ] [SCRIPT] P2. Extend `ConsolidatorLivenessMonitor` (or add a sibling check) to query the triggering Cloud Scheduler
       job's `state` directly and flag `PAUSED` as a distinct, higher-confidence DOWN reason (not just consolidated-blob
       heartbeat age). (repo: unified-trading-library)
+- [ ] [BACKEND] P2. `alerting-service/subscribers/alert_subscriber.py`'s `_route_one` (~lines 400-431) wraps
+      `dispatch_event()` in a broad `except Exception` that only `logger.warning`s ("skipping ...") on failure — a
+      downstream fault (missing PagerDuty/Telegram secret, a misconfigured rule, an unhandled payload shape) silently
+      drops a page with no escalation of that failure itself, the same "who watches the watcher" gap this issue's P1
+      todo just closed at the Cloud-Monitoring layer. Add a paging/summary-log path for `_route_one` dispatch failures
+      (mirrors `notify_daily_summary_failed`'s "a dead digest must not be silent" pattern in
+      `codex/04-architecture/agent-orchestrator-alerting.md`) so a broken alert route is itself loud. Found while
+      investigating why the 2026-07-15 consolidator-liveness-watchdog exit(1) failures never paged — could not verify
+      live whether THIS specific incident's page was actually delivered or silently eaten by this exact code path (no
+      live Cloud Logging/PagerDuty access from a repo-only investigation). (repo: alerting-service)
