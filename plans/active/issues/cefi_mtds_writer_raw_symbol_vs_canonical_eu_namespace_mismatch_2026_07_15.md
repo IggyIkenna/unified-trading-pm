@@ -196,12 +196,24 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       sports `odds` writes through the same shared function are unaffected. Audit `sentinels.py`'s Tier-3 comparison for
       whether it needs updating once the manifest carries canonical form instead of wire form. (repo:
       market-tick-data-service)
-- [ ] [SCRIPT] P0. Write a one-time relabel/reconcile script for the cefi prd manifest: map existing raw-symbol
+- [x] ✅ [SCRIPT] P0. Write a one-time relabel/reconcile script for the cefi prd manifest: map existing raw-symbol
       `captured` rows (Tardis-sourced venues only) to their canonical `instrument_key` per venue (reusing
       `derive_row_instrument_id`, already proven correct against live symbols above), snapshot-first (mirrors the
       pattern in `scripts/purge_deribit_option_per_strike_trades_book5_2026_07_12.py`), verified before/after row
       counts. Do NOT re-fetch — the parquet bytes are correct, only the manifest key is wrong. (repo:
-      instruments-service)
+      instruments-service) — `instruments-service@f021cb2b`,
+      `scripts/relabel_cefi_tardis_raw_symbol_to_canonical_2026_07_15.py`. Mapping source: instruments-service's OWN
+      reference-data catalogue (`raw_symbol`/`instrument_key` columns already resolved at catalogue-build time — cannot
+      import MTDS's `derive_row_instrument_id` directly, service↔service imports are banned) — case-insensitive match
+      (measured: catalogue stores lowercase `raw_symbol`, manifest stores uppercase `instrument_id`). Dry-run verified
+      live 2026-07-15 against the `-prd` cefi bucket (main index + 9 per-VM shards): 3,133,117 in-scope candidates,
+      2,590,229 (82.7%) resolved + relabeled, 542,888 left untouched as honest unresolved (delisted/legacy-venue symbols
+      not in today's active catalogue — reported, not silently dropped); reconcile pass found 214,008 stale
+      `expected_unattempted` duplicate rows that become redundant once their shard key is relabeled. `--apply`
+      intentionally NOT run this session — see `/blocked` question posted for this task (relabeling the primary key
+      across the entire cefi Tardis corpus + dropping the eu duplicates is a large, hard-to-reverse-in-spirit production
+      mutation; snapshot-first makes it recoverable, but sign-off requested before executing, per this issue's own
+      "OPERATOR DECISION" framing and the precedent set by `BLK-cbee81bc` for the comparably-large legacy-bucket purge).
 - [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
       and start reducing `expected_unattempted`. (repo: instruments-service)
