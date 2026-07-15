@@ -177,9 +177,28 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       `except Exception` that only `logger.warning`s ("skipping") on failure, so a PagerDuty/Telegram misconfiguration
       would silently eat a page with no escalation of that failure either. This repo-only investigation could not verify
       live Cloud Logging / PagerDuty delivery, so this is tracked as new todo #4 below rather than closed here.
-- [ ] [SCRIPT] P2. Extend `ConsolidatorLivenessMonitor` (or add a sibling check) to query the triggering Cloud Scheduler
-      job's `state` directly and flag `PAUSED` as a distinct, higher-confidence DOWN reason (not just consolidated-blob
-      heartbeat age). (repo: unified-trading-library)
+- [x] [SCRIPT] P2. ✅ Extend `ConsolidatorLivenessMonitor` (or add a sibling check) to query the triggering Cloud
+      Scheduler job's `state` directly and flag `PAUSED` as a distinct, higher-confidence DOWN reason (not just
+      consolidated-blob heartbeat age). (repo: unified-trading-library) — unified-trading-library@64cf6c6a.
+      `check_and_emit()` now derives the triggering scheduler job name from the bucket string
+      (`market-data-tick-{ag}-...` / `instruments-store-{ag}-...` → `{env_prefix}-manifest-consolidator-{key}-cron`,
+      mirroring `manifest_consolidator_scheduler.tf`), describes it via a deferred-import Cloud Scheduler client
+      (mirroring deployment-service's `_make_scheduler_state_reader`, since UTL has no cross-repo access to that private
+      helper), and tags the emitted `CONSOLIDATOR_DOWN` event `reason=scheduler_paused` (vs the prior generic
+      `reason=heartbeat_stale`) plus `scheduler_job`/`scheduler_state` fields when `state=PAUSED`. Fails open (`None`,
+      never a fabricated `PAUSED`) on any SDK/ADC/lookup failure. Unit-tested
+      (`tests/unit/test_consolidator_liveness_scheduler_paused.py`), `quality-gates.sh` green. **Finding surfaced while
+      implementing (new todo below)**: `google-cloud-scheduler` was not an installed dependency ANYWHERE in the fleet —
+      confirmed via a direct `import google.cloud.scheduler_v1` failure against deployment-service's own root `.venv` —
+      so this todo's own scheduler-describe call, and the pre-existing DP-WATCHER-003 check in deployment-service
+      (`consolidator_scheduler_watcher.py`, created 2026-07-13, TWO DAYS BEFORE this incident) that already implements
+      the identical "PAUSED = page" check, have both been silently no-op since creation (the deferred
+      `importlib.import_module("google.cloud.scheduler_v1")` calls in both hit `ModuleNotFoundError` and fall back to
+      their fail-open no-op readers/listers). This directly explains why DP-WATCHER-003 did NOT catch the defi
+      consolidator being paused on 2026-07-14/15 despite existing specifically to catch that. Added
+      `google-cloud-scheduler>=2.20.0,<3.0.0` to unified-trading-library's `pyproject.toml` (this todo's own fix now
+      actually functions), but deployment-service needs the same dependency added or its
+      DP-WATCHER-003/`check_cron_fired` KEY #2 pause-awareness remains dead code in production.
 - [ ] [BACKEND] P2. `alerting-service/subscribers/alert_subscriber.py`'s `_route_one` (~lines 400-431) wraps
       `dispatch_event()` in a broad `except Exception` that only `logger.warning`s ("skipping ...") on failure — a
       downstream fault (missing PagerDuty/Telegram secret, a misconfigured rule, an unhandled payload shape) silently
@@ -190,3 +209,16 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       investigating why the 2026-07-15 consolidator-liveness-watchdog exit(1) failures never paged — could not verify
       live whether THIS specific incident's page was actually delivered or silently eaten by this exact code path (no
       live Cloud Logging/PagerDuty access from a repo-only investigation). (repo: alerting-service)
+- [ ] [INFRA] P1. `google-cloud-scheduler` is not an installed dependency anywhere in deployment-service (not in
+      `pyproject.toml`, not in `uv.lock`, confirmed via a direct `import google.cloud.scheduler_v1` failure against the
+      repo's own root `.venv`) — so `_make_scheduler_state_reader()` /`_make_consolidator_scheduler_lister()`
+      (`deployment_service/data_pipeline_monitors/cli.py:433-507`) always hit their `except Exception` fallback and
+      return no-op readers/listers. This means DP-WATCHER-003
+      (`deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py`, created 2026-07-13) and the
+      pause-awareness in `check_cron_fired` (KEY #2) have been silently non-functional in production since creation —
+      the exact check designed to catch "a manifest-consolidator scheduler was accidentally left PAUSED" could not have
+      caught the 2026-07-14/15 defi incident this issue documents, because its Cloud Scheduler client never actually
+      imports. Add `google-cloud-scheduler` to `deployment-service/pyproject.toml` (resolves to `2.20.0` via
+      `uv pip compile`), run `uv lock`, and verify with a live `gcloud`-free `import google.cloud.scheduler_v1` check in
+      the built venv before closing. Found while implementing this issue's own todo #3 in unified-trading-library, which
+      needed the same dependency and would have shipped equally dead without adding it. (repo: deployment-service)
