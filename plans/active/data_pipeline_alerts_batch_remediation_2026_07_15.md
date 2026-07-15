@@ -787,9 +787,17 @@ Full writeup in `plans/active/issues/manifest_consolidator_instruments_sports_in
   any live path.
 - **Production tracing** assessed: nothing to trace while it's not reproducing; documented the exact one-line
   `_release_lock` trace to add if the overlapping-acquire signature ever returns.
-- **Remaining for Item 1**: deploy the UTL fix live (MTDS image rebuild → watchdog + features-VM redeploy — a UTL
-  range-pinned bump does not auto-rebuild MTDS) and verify the live `CONSOLIDATOR_DOWN` stream stops. Then the issue doc
-  closes.
+- **Item 1 DEPLOYED + VERIFIED DONE (~14:05Z)** — see the issue doc's "Update 2026-07-15 (~14:05Z)" for the full chain.
+  Deployed UTL `c47273c1` (MTDS Dockerfile digest bump `market-tick-data-service@459d1b7e` → MTDS build `c9c18263` →
+  watchdog redeployed to `sha256:1e974ccd`). **While verifying, caught + corrected my own earlier scope overstatement**:
+  the `CONSOLIDATOR_DOWN` stream had TWO causes, and the lock-aware code fixed only one. Cause #1 (long-merge
+  false-positive on active `-prd-` buckets, defi/sports) → the lock-aware code, VERIFIED
+  (`market-data-tick-defi-prd → ok` mid-24min-merge). Cause #2 (the DOMINANT ~56%): the deployed watchdog `--buckets`
+  args were STALE — still watching decommissioned legacy no-`-prd-` buckets (the Terraform source removed
+  instruments/market-data {cefi,defi,sports}-legacy
+  - gas-fees 2026-07-12/13) → reconciled the deployed args to the 26-bucket source list via gcloud-direct. **Verified
+    end-state: a full watchdog execution reports 0 DOWN buckets** (vs ~564/4h). The sibling `market-data-cefi`
+    concurrent-merge TTL issue (a different class) is tracked separately, annotated-not-fixed.
 
 ### Item 2 (4 `DP_RUN_MOSTLY_EMPTY` cells) — ADVERSARIALLY VERIFIED SOUND; the bottom-of-doc "still open" claim is STALE
 

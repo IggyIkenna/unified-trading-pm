@@ -438,3 +438,53 @@ overlapping concurrent merges — the same failure class `market-data-defi` and 
 for). Full per-job breakdown + tally lives in the sibling doc's "UPDATE 2026-07-15 (~13:45Z)" section — this doc remains
 the primary root-cause/fix SSOT for the underlying mechanism; the sibling doc is the `features-service-sports-job`
 deploy-blocker–specific tracker. Both stay `open` pending the same UTL `c47273c1` deployment.
+
+## Update 2026-07-15 (~14:05Z) — UTL c47273c1 DEPLOYED + a SECOND root cause found & fixed; false-DOWN stream VERIFIED eliminated
+
+Completed the deployment of the lock-aware liveness fix AND, while verifying it end-to-end, caught + fixed a distinct
+second cause of the `CONSOLIDATOR_DOWN` noise. **Correcting my own earlier (same-session) framing**: the DOWN stream was
+NOT one bug — live per-bucket tracing showed it had TWO distinct causes, and the lock-aware code fix only addressed one.
+
+### Deployment of the lock-aware fix (cause #1 — long-merge false-positive on ACTIVE `-prd-` buckets)
+
+- UTL `c47273c1` image built (Cloud Build `dee05161`, SUCCESS → UTL AR digest `sha256:56bd0fe5`). MTDS Dockerfile
+  base-image digest bumped to it (`market-tick-data-service@459d1b7e`, quickmerge), MTDS image rebuilt (Cloud Build
+  `c9c18263`, SUCCESS). The consolidator-liveness watchdog Cloud Run job was redeployed to the fix-containing MTDS image
+  (`sha256:1e974ccd`, build `38abbb36`/commit `57e26c0` on live-defi-rollout — a descendant of the Dockerfile bump).
+- **VERIFIED WORKING**: a fresh watchdog execution (`uts-prod-consolidator-liveness-watchdog-mbr2b`, completed in 44.7s,
+  exit 0) reported `market-data-tick-defi-prd → ok` **while defi was mid 24-min merge holding a fresh lock**
+  (`gs://market-data-tick-defi-prd-.../_index/consolidator.lock` written 13:45:42Z), and
+  `instruments-store-sports-prd → ok`. Before the fix those two would have emitted CONSOLIDATOR_DOWN during every long
+  merge (15 defi-prd DOWN events in the prior 90m window alone). The same `assert_consolidator_healthy` gate now
+  protects features-sports compute VMs at startup (fix reaches a VM on its next launch, since VMs pull the image at
+  boot).
+
+### Cause #2 (found during verification — the DOMINANT contributor, ~56% of the stream): stale watchdog `--buckets` args
+
+Live per-bucket breakdown of the DOWN stream (90m window) was: **22 = `instruments-store-sports-central-element-323112`
+(NO `-prd-`)**, 15 = `market-data-tick-defi-prd` (cause #1), 2 = `instruments-store-sports-prd`. The no-`-prd-` bucket
+is an ORPHANED/decommissioned legacy bucket — only 2 shards, newest a `fixtures-recovery-20260627` from 2026-06-27, and
+there is NO consolidator job writing to it (the sole job `uts-prod-manifest-consolidator-instruments-sports` writes to
+the `-prd-` bucket). Its `_index/availability_index.parquet` is frozen at 2026-06-27, so the watchdog reported it
+permanently DOWN. Root cause: the **deployed** watchdog `--buckets` arg (33 buckets) was STALE vs the Terraform source —
+`manifest_consolidator_scheduler.tf` had already removed the legacy no-`-prd-` `instruments-{cefi,defi,sports}` +
+`market-data-tick-{cefi,defi,sports}` entries (documented 2026-07-13, "legacy writers drained + repointed to canonical")
+and `gas-fees` (2026-07-12, "bucket fully deleted"), but the deployed job's args were never re-applied.
+
+- **Fixed** by reconciling the deployed watchdog `--buckets` to the current Terraform source's 26-bucket list via
+  `gcloud run jobs update` (removed the 7 decommissioned buckets), matching this repo's established "removed directly
+  via gcloud since a real tofu apply is not runnable here" pattern (the same gas-fees comment in that `.tf`). The
+  Terraform SOURCE already reflects the 26-bucket list, so this is pure drift-reduction — a future apply preserves it.
+  No source change needed.
+
+### Verified end-state
+
+The post-fix watchdog execution `mbr2b` reports **0 DOWN buckets** (every one of the 26 → `ok`), vs the prior ~564
+CONSOLIDATOR_DOWN/4h. The `*/2` cron watchdog runs the same new revision, so the live stream is eliminated going
+forward. Combined with the resolved `_acquire_lock` race (§ "Update 2026-07-15 (~12:40Z)": 6h of perfectly-serialised
+acquisitions, zero overlaps) and the lock-aware startup gate, this issue's original subject — the intermittent slow-run
+
+- the wasted features-sports SPOT VMs + the alert noise — is now genuinely addressed. **Status → resolvable.** Leaving a
+  brief live-soak note: the sibling `market-data-cefi` concurrent-merge (300s-TTL-vs-real-merge, cause of overlapping
+  merges — a DIFFERENT class from the liveness false-positive, needs a per-bucket `CONSOLIDATOR_LOCK_TTL_SECONDS`
+  override like defi/sports got) is tracked separately and is NOT fixed here — annotated, not scope-crept.
