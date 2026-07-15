@@ -240,6 +240,13 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
 - [ ] [SCRIPT] P1. Once (1) lands and is verified with a live smoke capture, re-measure
       `measure_honest_coverage.py --asset-group cefi` and confirm the Tardis lane's NEW writes land under canonical keys
       and start reducing `expected_unattempted`. (repo: instruments-service)
+- [ ] [INFRA] P0. Confirm a fresh MTDS deployment tarball exists for `market-tick-data-service@5d44a197` (or a later
+      SHA) — check `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@<sha>*` — then
+      relaunch the 3 `cefi-queue-*` Tardis VMs against it (respect the hard 3-VM Tardis cap: kill-then-relaunch, never
+      exceed 3 concurrent). Do NOT relaunch against `56679e78` — confirmed a silent no-op, superseded by `5d44a197`.
+      This is the live-smoke-capture precondition todo (3) is blocked on: verify post-relaunch that newly captured
+      Tardis-sourced rows in the cefi prd manifest carry canonical `instrument_id` (not raw wire symbol) before todo (3)
+      re-measures. (repo: deployment-service)
 
 ## Progress Log
 
@@ -280,3 +287,18 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   (`venue_fetch.py::_record_venue_shard_counts` lines ~360-362) — a SEPARATE code path from the manifest's
   `instrument_id_for_manifest` field this fix changes. It never reads the persisted manifest's stored `instrument_id`
   for its comparison, so canonicalizing the manifest write path doesn't require or interact with any sentinel change.
+
+- **2026-07-15T20:10Z (data_engineering, slot-9)**: Picked up todo (3) once (1)+(2) both flipped ✅. Captured a
+  before-baseline (`measure_honest_coverage.py --asset-group cefi`, local output, not the canonical
+  `gs://central-element-323112-honest-coverage/` path) at 19:29Z, pre-fix: `captured=3,057,713`,
+  `expected_unattempted=2,773,292`, `coverage_pct=52.16` — matches the issue's own 18:30Z figure, confirming zero
+  movement in the interim as expected. Re-pulled MTDS at 20:07Z and confirmed `5d44a197` is on `live-defi-rollout` (git
+  log), and the manifest-write canonicalization code (`_canonicalize_manifest_instrument_id` →
+  `derive_row_instrument_id`) is present in `venue_fetch.py`. **Todo (3) is still blocked**, though: no deployment
+  tarball exists yet for `5d44a197` (checked `gs://deployment-scripts-central-element-323112/code/` — no matching object
+  as of 20:08Z; `5d44a197` landed at 19:56:14Z, `quality-gates-v2` is green at 19:29Z for the prior HEAD, still within
+  the ~15min Tier-C drain window per (1)'s own note) and the 3 live `cefi-queue-*` Tardis VMs are still on the pre-fix
+  tarball — no live smoke capture has happened against the actual fix yet, only unit-level verification. No backlog task
+  tracked this relaunch step, so filed it as a new `[INFRA] P0` todo above (todo 4) rather than silently waiting on
+  nothing. Re-measuring now would just reproduce the same before-baseline and falsely look like "no progress" — waiting
+  on todo (4) before re-running todo (3)'s measurement.
