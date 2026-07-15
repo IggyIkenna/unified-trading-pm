@@ -452,3 +452,25 @@ the fix by observing live logs across several real defi merge cycles (each ~30mi
 snapshot, which is exactly what produced the overstated claim being corrected here.
 
 Status intentionally left `open` — this issue is not resolved, only partially mitigated.
+
+## UPDATE 2026-07-15 (~17:15Z) — boundary-condition fix SHIPPED (code); deploy + multi-cycle live verification IN PROGRESS
+
+Picked up the OPEN boundary-condition residual above. Root cause confirmed as stated: the c47273c1 in-flight horizon was
+a single fixed **1800s** value picked against an assumed "24-30min" defi ceiling with ~0 margin; real defi merges run
+~31-32min, so the two post-deploy DOWN events (14:16:46Z, 14:48:44Z) landed ~64s past 1800s.
+
+**Fix shipped `unified-trading-library@2d1f77a8`**: replaced the single fixed horizon with a **PER-ASSET_GROUP** horizon
+(`manifest_writer/_staleness_budget.py::AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC` +
+`consolidator_inflight_horizon_for_bucket()`), mirroring the existing `AG_STALENESS_BUDGET_SEC` pattern and the per-job
+`CONSOLIDATOR_LOCK_TTL_SECONDS` Terraform overrides: **defi 4200s** (= its lock TTL; covers ~32min merges with ~40%
+margin), **sports 2400s**, generic **3600s** default (covers cefi's ~8-9min + any bucket to ~1h — deliberately generous
+so the too-tight-boundary mistake can't recur). `consolidator_cycle_in_flight()` now resolves the horizon per-bucket
+when not explicitly passed. Regression tests directly reproduce the boundary: a defi lock at **1864s** (the observed
+~31min merge) now reads IN-FLIGHT (the OLD 1800s wrongly returned False → the false DOWN). `quality-gates.sh --no-fix`
+green (151s).
+
+**NOT done — deploy + live multi-cycle verification pending (deliberately NOT claiming resolved, per this doc's own
+warning against point-in-time snapshots):** the fix reaches the live watchdog only after the UTL image rebuild (Cloud
+Build `e7f72dc4`, in flight) → MTDS Dockerfile digest bump → MTDS rebuild → watchdog redeploy (same chain as c47273c1).
+After deploy I will watch live `CONSOLIDATOR_DOWN` for `market-data-tick-defi-prd` across **several real defi merge
+cycles (~30min each)** and confirm zero DOWN events past the new 4200s horizon before this closes. Status stays `open`.
