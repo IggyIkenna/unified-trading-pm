@@ -760,3 +760,63 @@ newly-logged `DP_RUN_MOSTLY_EMPTY` cells (`defi/dex_pool_state`, `defi/lst_rates
 undocumented fallback footgun); UAC's `VENUE_DATA_TYPE_CAPABILITIES["CBOE"]` gate (the treasury-yields routing fix is
 shipped and tested but needs this separate registry entry before it carries live traffic, same precedent as mbp_10). All
 are documented with enough evidence for a future pass to pick up cold.
+
+## Continuation session (2026-07-15 ~12:40Z) — picking up the 4 genuinely-open items
+
+`/autonomous` dispatch to close the four remaining open items in order. Progress:
+
+### Item 1 (P0 — sports consolidator `_acquire_lock` race) — LIVE-RE-CHECKED + ROOT-CAUSE-FIXED IN CODE
+
+Full writeup in `plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` §
+"Update 2026-07-15 (~12:40Z)". Summary (not duplicated per plan-references-issue-doc discipline):
+
+- **The double-acquisition is NOT reproducing.** Live `phase=lock_acquired` logs over a 6-hour window (48 acquisitions)
+  show a MINIMUM inter-acquire gap of 361s and ZERO overlaps — the consolidator is now perfectly serialised (~7-8min
+  merge per cycle). The 00:09Z incident was a transient of the TTL=300→2400 revision-transition window + manual agent
+  activity; `deployment-service@69136c2c`'s TTL fix genuinely holds. The `_acquire_lock` CAS primitive was untouched.
+- **Lead A (liveness staleness threshold) PANNED OUT — real, live, high-volume false-positive** (~564
+  `CONSOLIDATOR_DOWN`/4h fleet-wide; instruments-sports emitting CRITICAL every ~2min) and is the actual "why do the
+  alerts keep firing" driver AND the original wasted-SPOT-VM cause (same heartbeat check gates the features-VM startup).
+  **Root-cause fix shipped `unified-trading-library@c47273c1`**: a stale heartbeat while a FRESH consolidator lock is
+  held is proof-of-life, not an outage — new read-only `consolidator_cycle_in_flight()` wired into BOTH
+  `ConsolidatorLivenessMonitor.check` and `assert_consolidator_healthy`; fleet-safe (can only suppress a false-positive
+  on a held lock, never mask a real outage — a dead consolidator holds no fresh lock). 6 regression tests, QG green
+  (150s). Supersedes the earlier `--cycles-grace` Terraform-override idea.
+- **Lead B (recovery-actuator `/tmp` cooldown) CONFIRMED non-functional but neutralised** — the actuator is
+  image-unavailable (hands off to a worker) AND the Lead-A fix removes the trigger. Follow-up hardening tracked, not on
+  any live path.
+- **Production tracing** assessed: nothing to trace while it's not reproducing; documented the exact one-line
+  `_release_lock` trace to add if the overlapping-acquire signature ever returns.
+- **Remaining for Item 1**: deploy the UTL fix live (MTDS image rebuild → watchdog + features-VM redeploy — a UTL
+  range-pinned bump does not auto-rebuild MTDS) and verify the live `CONSOLIDATOR_DOWN` stream stops. Then the issue doc
+  closes.
+
+### Item 2 (4 `DP_RUN_MOSTLY_EMPTY` cells) — ADVERSARIALLY VERIFIED SOUND; the bottom-of-doc "still open" claim is STALE
+
+Dispatched an independent adversarial-verification sub-agent (live git-log + manifest re-queries, not self-reports).
+Verdict: **all three issue docs are HONEST and their cited code fixes are REAL and genuinely shipped** (all 4 SHAs
+confirmed ancestors of `origin/live-defi-rollout`):
+
+- `defi/dex_pool_state` + `defi/lst_rates` — **SOUND.** `assert_defi_catalog_fresh`'s freshness gate is current + sound
+  (date-aware coverage fallback, routes honest-absence not a raise); it is NOT stale/broken again. The rows are static
+  historical (max `attempted_at` 2026-06-25 / 06-30, **0 rows after 2026-07-01**), a temporal race — not a live
+  regression. `market-tick-data-service@927acf01` (`lst_rates_handler.py` `mode=` threading) is committed. The
+  multi-year re-collection remains a follow-up owned by `mvp_backfill_defi_onchain_v10-002` (already re-collecting — do
+  NOT duplicate; findings-triage "fits another plan → annotate, don't fix").
+- `sports/trades` — **SOUND.** All 112,277 attempted_failed rows share one 8-second `attempted_at` window
+  (2026-07-13T23:56:41–48Z), **0 rows after 2026-07-14** — a bulk RE-EMIT artifact, not a live outage.
+  `VENUE_FETCH_FAILED` confirmed dead vocab (removed `market-tick-data-service@b989284c`, 2026-06-28). Code fix
+  `@6fad6565` committed. The `BOOKMAKER_NO_COVERAGE` fix scope is genuinely complete. The `attempted_at`-restore of the
+  corrupted rows is an honest follow-up (soft-delete expires ~2026-07-20).
+- `sports/odds_horizon_bucket_15m` — **SOUND + FULLY RESOLVED** (only one of the four with code AND data done): code fix
+  `market-data-processing-service@7ff43d7197` committed (records empty_confirmed on 100%-causality-drop, still raises on
+  genuine schema drift), and the live count is **0**.
+- **The plan-internal contradiction is REAL bookkeeping drift**: the bottom-of-doc "Session close-out → Genuinely still
+  open (not actioned)" list (which names all 4 cells) is STALE — a different concurrent session investigated +
+  code-fixed all 4 and flipped the todos; the round-4 close-out session had a stale local vantage. For odds_horizon it
+  is simply wrong (fully resolved). The `[x] ✅` todos in the "New todos (later same day)" section are the accurate
+  record.
+- **The genuine remaining root cause of the recurring alerts** (re-confirmed by the verifier): the `DP_RUN_MOSTLY_EMPTY`
+  detector counts `attempted_failed` over the WHOLE manifest history with NO recency window, so the static historical
+  defi/sports-trades rows keep tripping it even though nothing is actively regressing. Assessing a recency-window fix as
+  the highest-leverage "clean the channel" action (see below).

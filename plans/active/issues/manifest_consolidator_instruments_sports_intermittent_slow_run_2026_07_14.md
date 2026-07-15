@@ -330,3 +330,91 @@ order:
    mechanism instead); the fleet-wide blast-radius picture is still incomplete.
 5. If a next investigator DOES find a genuine code-level double-acquire mechanism (as opposed to an external-trigger
    one), the regression test added in `unified-trading-library@324f1056` is exactly the harness to prove a fix against.
+
+## Update 2026-07-15 (~12:40Z) — live-state re-check: double-acquire RESOLVED; Lead A confirmed live + root-cause-fixed; Lead B + tracing assessed
+
+Picked up as the P0 item of `data_pipeline_alerts_batch_remediation_2026_07_15.md`. Chased the two flagged
+deployment-service leads and re-checked live production tracing, per the dispatch. Findings, in order:
+
+### 1. The `_acquire_lock` concurrent-acquisition race is NOT currently reproducing — the TTL=2400 fix holds
+
+Direct live evidence (`gcloud logging read` for `phase=lock_acquired`, i.e. every WON CAS, on
+`uts-prod-manifest-consolidator-instruments-sports`, project `central-element-323112`):
+
+- **Over a full 6-hour window (06:51Z→12:32Z, 48 acquisitions) the MINIMUM gap between consecutive `phase=lock_acquired`
+  events was 361s; every gap was 361–486s.** ZERO overlaps (nothing remotely near the <180s that an overlapping
+  double-acquire produces). The consolidator is now perfectly serialised: acquire → hold ~7-8min (a legit
+  date-range-chunked merge; one execution measured "completed successfully in 7m50.59s") → release → the next cron tick
+  acquires. Every intervening `*/1` cron tick correctly hits the fresh-lock skip.
+- Contrast the 00:09Z incident this doc reopened on: `vx6zs`/`cr4bp`/`s6pkx` acquired at 00:09:44 / 00:10:45 / 00:12:38
+  — three overlapping wins inside ~3 minutes. That pathology is **gone**.
+- **Most-likely explanation for the transient 00:09Z incident** (consistent with all evidence, now that it has cleared):
+  it fell inside the TTL=300→2400 env-var **revision-transition window** (the live bump was applied ~00:00–00:07Z) plus
+  heavy concurrent MANUAL agent activity during the live investigation itself (agents running `gcloud run jobs execute`
+  / `relaunch_consolidator` by hand). An execution still on the OLD 300s-TTL revision reading a legit ~5-8min merge's
+  lock as "stale" (age>300s) and reclaiming it is exactly the overlapping-acquire signature, and its
+  `clearing stale lock` log would belong to that OLD-revision execution — NOT to any of the four NEW-revision executions
+  the prior verifier grepped, which is why the grep found none. Once every execution rolled onto the 2400s revision, a
+  7-8min merge's lock is structurally never >2400s old, so the stale-reclaim-during-legit-merge path cannot fire. **6
+  hours of perfectly serialised acquisitions is direct proof the TTL fix (`deployment-service@69136c2c`) genuinely
+  closed the incident** — the earlier `resolved`-was-overstated correction caught a real transient during the revision
+  transition, but that transient has since fully cleared. No code change was made to the `_acquire_lock` CAS primitive
+  (it was empirically proven sound and remains untouched).
+
+### 2. Lead A (liveness-monitor staleness threshold) — CONFIRMED a real, LIVE, high-volume false-positive bug — ROOT-CAUSE FIXED
+
+This lead panned out, and it is the actual driver of the "why do these alerts keep firing" symptom:
+
+- `ConsolidatorLivenessMonitor` (`unified_trading_library/monitors/consolidator_liveness.py`) declares
+  `CONSOLIDATOR_DOWN` when the consolidated `_index/availability_index.parquet` heartbeat is older than `max_age_sec`
+  (default 5×60 = **300s**) while per-VM shards exist. But now that instruments-sports merges run **back-to-back at
+  ~7-8min each**, the heartbeat is legitimately stale for most of every cycle: the lock-holder only refreshes the
+  canonical mtime at merge COMPLETION, and every intervening `*/1` cron tick hits the fresh-lock skip and returns
+  WITHOUT touching it. So the 300s threshold false-positives on essentially every cycle.
+- **Live confirmation**: instruments-store-sports emitted `CONSOLIDATOR_DOWN` (CRITICAL) roughly **every 2 minutes**
+  (the watchdog's `*/2` cadence) — e.g. 12:21, 12:23, 12:25, 12:27, 12:30, 12:33Z — and there were **564
+  `CONSOLIDATOR_DOWN` events fleet-wide in a 4-hour window**. The consolidator is provably healthy the entire time (§1).
+- **This same false-positive is the ORIGINAL user-visible impact**: `assert_consolidator_healthy`
+  (`manifest_writer/_state.py`, the shared VM startup gate) uses the exact same heartbeat check with a 120s budget — it
+  is what produced the `heartbeat is 136-137s old (> 120s budget)` failures that wasted the 9 features-sports SPOT-VM
+  launches this doc opened on. Same root cause, two gates.
+- **Root-cause fix shipped: `unified-trading-library@c47273c1`.** A stale heartbeat while a **fresh consolidator lock is
+  held** is NOT an outage — it is a long merge actively in flight. Added a read-only, side-effect-free
+  `read_consolidator_lock_age_sec()` + `consolidator_cycle_in_flight()` (a fixed 1800s in-flight horizon that spans the
+  longest legit merge — sports ~8min, defi ~24-30min — independent of the per-consolidator-job
+  `CONSOLIDATOR_LOCK_TTL_SECONDS` env the gate PROCESSES don't carry), and wired it into BOTH gates
+  (`ConsolidatorLivenessMonitor.check` and `assert_consolidator_healthy`): a fresh held lock ⇒ return OK / don't raise.
+  Fleet-safe by construction — a genuinely-down consolidator holds no fresh lock (never wrote one, or its SIGKILL-orphan
+  aged past the horizon), so the DOWN verdict still stands; the check can only SUPPRESS a false-positive on positive
+  proof-of-life, never mask a real outage. This SUPERSEDES the prior `--cycles-grace` Terraform-override suggestion (a
+  code-level fix that self-adjusts to any bucket's merge duration beats a per-bucket threshold guess). 6 new/updated
+  regression tests, `quality-gates.sh --no-fix` green (150s). **NOT yet live** — the liveness watchdog + features VMs
+  bundle UTL via the `market-tick-data-service:latest` image, so this needs an MTDS image rebuild + watchdog/job
+  redeploy to take effect (a UTL range-pinned dep bump does not auto-rebuild MTDS). Deployment pending (see the parent
+  plan's Progress Log).
+
+### 3. Lead B (recovery-actuator `/tmp` cooldown sentinel) — CONFIRMED non-functional, but impact is neutralised
+
+`deployment-service/scripts/recovery/relaunch_consolidator.py`'s cooldown sentinel is written under
+`tempfile.gettempdir()` (a fresh, empty `/tmp` on every separate escalation-pipeline invocation), so it genuinely does
+NOT rate-limit across invocations — Lead B is real. BUT its practical impact is already neutralised twice over: (a) in
+the Cloud Run monitor image the actuator is `_ACTUATORS_AVAILABLE == False` (the `scripts/recovery/` source is dropped),
+so `_recover_consolidator` returns UNAVAILABLE and hands off to a `repository_dispatch` worker rather than ever running
+the relaunch/cooldown in-image (`deployment_service/data_pipeline_monitors/escalation.py`); and (b) the Lead-A fix
+removes the false-positive `CONSOLIDATOR_DOWN` trigger entirely, so there is nothing to relaunch. The durable-cooldown /
+in-flight-guard hardening is tracked as a follow-up in the parent plan; it is no longer on any live failure path.
+
+### 4. Better production tracing — assessed
+
+The one missing observability primitive for a FUTURE recurrence is a log line on the lock RELEASE path (`_release_lock`
+is silent on the owner's-`finally` delete; only the stale-reclaim branch logs). Since the double-acquire is not
+currently reproducing (§1), speculative instrumentation of a resolved, fleet-critical primitive is not warranted now. If
+the overlapping-`phase=lock_acquired` signature ever reappears, the exact trace to add is a single `logger.info` in
+`_release_lock`'s successful-delete path recording the deleted lock's `started_at` — pairing a release-time with the
+next spurious acquire-time pins the delete→acquire sequence. Documented here rather than shipped, per "don't touch a
+fleet-critical primitive without a live reason."
+
+**Status**: the double-acquire incident is resolved (§1, evidence-backed). The live false-positive `CONSOLIDATOR_DOWN`
+stream + the original VM-startup-gate failures are root-cause-fixed in code (§2, `unified-trading-library@c47273c1`),
+pending the MTDS image rebuild + watchdog redeploy to carry it live. Leaving `open` until that deployment is verified to
+stop the live DOWN stream; then it closes.
