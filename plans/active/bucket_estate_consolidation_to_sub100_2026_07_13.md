@@ -1524,3 +1524,41 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
     delete/migrate-then-delete this round — reported back structurally as blocked-collides-with-sports-plan, matching
     the diff-phase touch's own recommendation (trust-and-verify confirmed, not re-derived). No regression introduced;
     bucket estate count and item G's status are unchanged by this touch.
+
+- **2026-07-15, `market-data-tick-sports` Migrate-phase dispatch — data-side confirmed clean, but delete deferred,
+  collision with item G / HELD sports plan; zero objects copied, zero manifest rows written, zero code shipped.** A
+  prior-touch diff phase (already recorded, structured JSON echoed back in this session's dispatch) re-ran the manifest
+  cell-diff (legacy vs. canonical `-prd-`, `capture_status=captured`) and found `uniqueObjectCount=0`,
+  `safeToDeleteWithoutMigration=true`: legacy-only=140 cells, all confirmed (via ~18 targeted non-recursive prefix
+  listings spread across the date range, single-walk discipline respected) to be `ODDS_API`/`ODDS`
+  instrument_count=0/schema_version=4 phantom-capture rows with no backing GCS object in either bucket — same
+  already-accepted class as item G's own note ("MTDS surface 140 legacy-only cells, all verified phantom-capture").
+  Cloud Monitoring corroborates: legacy bucket live-object count static at 406,581 (8.08GB, unchanged 7d = frozen);
+  canonical `-prd-` bucket already strictly ahead at 487,864 live objects. Re-confirmed light-touch this pass (no
+  re-derivation): both buckets (`market-data-tick-sports-central-element-323112`,
+  `market-data-tick-sports-prd-central-element-323112`) still exist and are unchanged via
+  `gcloud storage buckets describe`; re-grepped `sports_manifest_canonicalisation_2026_06_01.md`'s latest entries — CF-8
+  is still RED on the MDPS (`market-data-tick-sports-prd`) surface as of its most recent Progress Log entries (85.3%
+  `available_at` non-null, unchanged, captured-row-specific gap, parking-fix not yet applied) — i.e. this bucket pair's
+  E1/E8 ownership by the sister plan has NOT resolved since item G was last written.
+  - **Why this touch did NOT proceed to delete despite `safeToDeleteWithoutMigration=true`**:
+    `safeToDeleteWithoutMigration` only answers the data-loss question (is there unique data that would need copying
+    first) — it does NOT override item G's explicit, current, unedited-by-me directive at line ~533: **"Still HELD — do
+    not purge/delete either bucket"** (`market-data-tick-sports`/`instruments-store-sports`, jointly owned by
+    `sports_manifest_canonicalisation_2026_06_01` E1/E8, gated on CF-8's captured-row `available_at` backfill which per
+    that plan's own 2026-07-14 entries needs a scheduled maintenance window + service_name-aware write redesign before
+    another live attempt). Also unresolved and un-actioned this touch, matching the diff-phase report: 3 live
+    Terraform/IAM references (`google_storage_bucket.market_data_sports` resource block + `_imports_reconcile.tf` import
+    block + `instrument_catalogue_scheduler.tf` for_each IAM grant) that would need coordinated `terraform state rm` +
+    apply before any physical delete — deliberately not touched, since there is no delete to precede. Per workspace
+    findings-triage ("fits another plan → annotate, don't fix" — collision risk), and matching the identical precedent
+    set immediately above for `instruments-store-sports` on this same date: did not hand-edit the 4,145-line sister plan
+    directly (active-churn, `locked_by: live-defi-rollout`); this Progress Log entry is the lower-risk annotation
+    surface, flagging for the sister plan's next real touch (once CF-8 is unblocked) that the MTDS-side data diff is now
+    independently reconfirmed clean and the pair is delete-ready from a pure-data standpoint the moment E1/E8's CF-8
+    gate clears.
+  - **Verdict for the orchestrating migrate-phase task**: migration step is genuinely a no-op (0 unique objects) —
+    confirmed, not re-derived from scratch. `readyForDelete=false` for the overall bucket, NOT because of any data risk
+    but because of the item-G HELD/collision status; the delete phase must wait for the sister plan's E1/E8 gate (CF-8)
+    to clear on BOTH halves of the pair before this bucket can move. No regression introduced; bucket estate count and
+    item G's status are unchanged by this touch.
