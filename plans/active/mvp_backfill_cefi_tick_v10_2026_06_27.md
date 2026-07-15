@@ -3472,3 +3472,37 @@ check before assuming it's fully clear too.
 **Gate verdict: ❌ NOT MET, decisively — root cause now empirically confirmed, not hypothesized.** Next required step
 (operator-gated): re-materialize the expected-universe enumerator to one canonical atom, THEN resume/relaunch. Until
 then, the Tardis lane should not be widened or relaunched further.
+
+### ⚠️ CORRECTION — the 21:50Z "eu still flat ⇒ writer fix insufficient" verdict was WRONG (invalid test) — 2026-07-15T21:55Z
+
+**Retracting my own pre-registered verdict, because the test could not have passed.** The armed T+85min test measured eu
+at 21:47Z and reported `DELTA=0 → writer fix NOT sufficient → stop fetching`. That conclusion is **INVALID**: the fleet
+had not reached the gap. Live scan positions at 21:51Z:
+
+| VM                                        | scanning at |
+| ----------------------------------------- | ----------- |
+| `cefi-queue-heavy-binancefutu-x15-202000` | 2026-01-01  |
+| `cefi-queue-light-binancefutu-x2-202013`  | 2026-01-03  |
+| `cefi-queue-light-bybit-x4-202022`        | 2026-01-12  |
+
+**January 2026 has eu = 0** (this plan's own by_day cross-tab: every month 2019-03..2026-01 is at eu=0; all 2,773,292
+open cells live in 2026-02..07). There were **zero reachable eu cells in the VMs' date range**, so eu COULD NOT drop.
+The test proved nothing about the writer fix either way — it measured a fleet that hadn't arrived. Ruling out the two
+innocent explanations first was what caught this: (a) the consolidated index is FRESH (rewritten 21:47:53Z, 4 min before
+the read — not a staleness artifact), and (b) the tarball genuinely carries the working fix (built 20:00:46Z ⊃
+`mtds@5d44a197` 19:52:50Z). Only then did the scan-position check expose the real problem.
+
+**The real finding underneath the bad verdict — the waves are still aimed wrong.** `launch-cefi-sharded-backfill.sh`
+derives `start_date="${year}-01-01"` from `YEARS=`, so a `YEARS="2026"` wave spends its first hours re-walking a
+COMPLETE January before it can close a single cell. Measured cost: 3 VMs, 91 minutes, still at 2026-01-01/01-03/01-12 —
+i.e. the entire post-relaunch window bought zero possible progress. This is the same class of error as the
+2020-chronological waves killed at 17:40Z, just one year narrower and correspondingly harder to see.
+
+**Fixed + shipped**: `START_DATE` env override on the cefi launcher (validated to be YYYY-MM-DD inside the sharded year;
+ignored for other years) — deployment-service, QG-green, quickmerged. Verified by dry-run: `START_DATE="2026-02-01"` →
+`start=2026-02-01 end=2026-07-14`.
+
+**Method note for future ticks (this is the second premature conclusion this session)**: a coverage delta is only
+evidence about a wave once the wave's date cursor is INSIDE the range where eu>0. Re-arm eu tests against scan-position,
+not wall-clock. The writer fix (`mtds@5d44a197`) therefore remains **UNTESTED in production**, not disproven — the
+honest status.
