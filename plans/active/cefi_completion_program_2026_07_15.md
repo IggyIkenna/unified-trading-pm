@@ -95,13 +95,19 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
       codex update.
 - [ ] [DATA] P1. **I — EXTENDED-STARKNET book5.** Registry says `book_snapshot_5` batch_capable=True but 0 captured.
       Diagnose (adapter vs capability drift), fix so book5 is either captured or honestly-typed. UAC/MTDS. Evidence.
-- [ ] [BACKEND] P1. **G-code — equity-perp Phase 2 type-stamp.** IS: stamp `EQUITY_PERP` on the 70 catalogued equity
+- [x] ✅ [BACKEND] P1. **G-code — equity-perp Phase 2 type-stamp.** IS: stamp `EQUITY_PERP` on the 70 catalogued equity
       perps (Binance/OKX/Bybit + fleet) via `CEFI_EQUITY_PERP_BASE_UNIVERSE`/`crypto_equity_link`; fix the ASTER-only
-      legacy-row dating bug (`ASTER:PERP:*` uniform venue-launch `available_from`). instruments-service. Evidence.
-- [ ] [BACKEND] P1. **D-code — HYPERLIQUID dedup + phantom-path logic.** IS catalogue: alias old HL IDs / add
-      rename-detection to `_merge_incremental` so the 176 `:PERP:`/`:PERPETUAL:…@LIN` rows collapse to one lineage.
-      MTDS: make the phantom-audit resolve the `@LIN` canonical path (or re-point/relocate) so the 1,277 phantoms clear.
-      Evidence: is@<sha> + mtds@<sha> + catalogue dedup verified.
+      legacy-row dating bug (`ASTER:PERP:*` uniform venue-launch `available_from`). instruments-service. **CODE SHIPPED
+      is@559c6920**: 1,316 rows re-typed (1,237 PERP→EQUITY_PERP + 79 SPOT_PAIR→TOKENIZED_EQUITY, IDs unchanged); ASTER
+      dating fixed (1,501→505 lineages, 0G→2025-09-24 discarding spurious 2023-07-22); 8 tests green. Classification
+      lives in the catalogue builder (not adapter) to honor "don't change IDs". PROD EFFECT pending full rebuild (H).
+- [x] ✅ [BACKEND] P1. **D-code — HYPERLIQUID dedup + phantom-path logic.** IS catalogue: alias old HL IDs / add
+      rename-detection so the `:PERP:`/`:PERPETUAL:…@LIN` rows collapse to one lineage. MTDS: HL phantoms resolve.
+      **CODE SHIPPED is@559c6920 + mtds@57e26c0f**. HL dedup 534→182 (3 forms/instrument, not 2), 0 live lost, 0
+      collisions — root cause is FLEET-WIDE (@LIN migration dup'd every perp venue: BINANCE-FUTURES 1686→849, BITGET-F
+      1708→994, LIGHTER 646→216 …). `_cefi_perp_lineage_key(venue,raw_symbol,margin)` keys on the underlying, wired into
+      full+incremental. MTDS: HL phantom = RE-CENSUS not re-capture (1,277 on disk, 0 recapture) + a `parse_hive_path`
+      regression test. PROD EFFECT pending full rebuild + `reconcile_phantom_manifest_rows_all.py --unphantom-only` (H).
 
 ### Phase 2 — data / backfill (under the Tardis cap-3 lease; SPOT VMs)
 
@@ -246,3 +252,34 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   live-only-not-in-batch- denominator principle as the ASTER liquidations ruling (tick 2).
 - Status flips: D-code-MTDS ✅ shipped (mtds@57e26c0f). I = queued UAC edit. HL phantom re-census + 206-writer-fails =
   queued into H/B.
+
+### 2026-07-15T14:20Z — tick 4: IS agent done (G-code + D-code-IS) → is@559c6920; flipped G-code + D-code
+
+- **is@559c6920** (build_instrument_catalogue.py + test, direct-push under dirty-deps carve-out since UAC is dirty with
+  the sibling E agent's WIP; only its 2 files committed, strict-quickmerge passed). 8 new tests; 102 catalogue + 165
+  enumerator tests green.
+- G-code ✅: 1,316 rows re-typed (1,237 PERP→EQUITY_PERP + 79 SPOT_PAIR→TOKENIZED_EQUITY); ASTER dating fixed.
+- D-code ✅ (both halves): HL dedup 534→182; the fix is **fleet-wide** (every perp venue's @LIN dup collapses), verified
+  0 live lost / 0 collisions.
+- **FLAGS to carry**: (1) HL=534→182 not ~358 (3 forms/instrument — correct). (2) Dedup blast radius is FLEET-WIDE (cefi
+  perp-family 9,177→5,358 rows) — a corrective SHRINK; prod apply needs `--allow-catalogue-shrink` + a live-count
+  invariant check at apply. (3) EQUITY_PERP includes commodities/indices (XAU/XAG/NATGAS/SPX/SPY/QQQ) per the UAC
+  universe composition — name reads "EQUITY" but matches `CEFI_EQUITY_PERP_BASE_UNIVERSE`; follow-up naming decision
+  only, not a blocker. (4) Classification is at the catalogue-rollup layer (not adapter) — the by_date adapter still
+  emits generic PERPETUAL/SPOT_PAIR; catalogue is the derived-type SSOT.
+
+**Workstream-H apply-list (accumulating — run ONCE, coordinated, after E lands):**
+
+1. Full catalogue rebuild `build_instrument_catalogue.py … --allow-catalogue-shrink` (cefi) — lands the HL/fleet dedup +
+   ASTER dating + EQUITY_PERP/TOKENIZED_EQUITY re-type on prod `catalog.parquet`. Verify live-instrument count unchanged
+   (dedup must not drop any `available_to IS NULL` row).
+2. HL phantom re-census:
+   `reconcile_phantom_manifest_rows_all.py --asset-group cefi --unphantom-only --venues HYPERLIQUID --workers 16`
+   (dry-run first → expect 1,277 unphantom / 0 still-phantom).
+3. Re-enumerate the expected universe (`enumerate_expected_universe.py`) against the new UAC (liquidations v15 +
+   EXTENDED book5 live-only) + the rebuilt catalogue → materialize the denominator.
+4. `compute_honest_coverage` → the new coverage.json; assert `denominator_complete: true`, `expected_unattempted=0`,
+   `attempted_failed=0` (genuine, after the tail/403 backfill B/A completes).
+
+**Current Phase-1 status**: D-code-MTDS ✅ mtds@57e26c0f · G-code ✅ · D-code ✅ is@559c6920 · E ⏳ (UAC agent) · I ⏳
+(queued UAC edit after E). Backfill A/B ⏳ (queue VMs). Then F, G-tick, C, H.
