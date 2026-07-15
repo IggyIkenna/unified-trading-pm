@@ -130,6 +130,13 @@ footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` =
       sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md L79-84) — do NOT execute; synced 2026-07-14,
       verify-rerun finding 215. (was:
       `- [ ] [DATA] P2. Wipe the existing IS footystats ODDS (194,789 manifest rows + the 29,701 captured cells' GCS objects) — snapshot-first, consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds source (211,299 captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch PREDICTIONS.`)
-- [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in
-      `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md`
-      (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).
+- [x] **CANCELLED 2026-07-15** — CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27 (decision #6 REVERSED, see
+      `sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md` L92-97) — do NOT execute; the third sibling,
+      missed when the two above were cancelled on 2026-07-14 (found by the 2026-07-15 ODDS-ownership audit,
+      `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` §C). Executing it
+      would write the REVERSED (wrong) rule into codex, contradicting the canonical SSOT
+      `codex/02-data/sports-data-types-catalog.md:48-52` ("`data_type=ODDS` in instruments-service is the FootyStats
+      pre-match snapshot … legitimately coexist") + `codex/02-data/sports-data-source-coverage-matrix.md` §4. Rule as
+      actually ruled: RAW bookmaker TICK odds = odds-api (MTDS); footystats' _predictive_ `ODDS` **+** `PREDICTIONS` =
+      IS reference. (was:
+      `- [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md` (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).`)

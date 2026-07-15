@@ -201,10 +201,14 @@ before the reversal** — 29,129 "captured" rows became phantom and 26,220 flipp
 (`sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md:99-108`); a re-fetch VM
 (`fs-backfill-20260629-043218`) had to re-pull 2019→present. This todo is the same decision's last live thread.
 
-- [ ] [DOCS] P1. Cancel the `[DOCS] P3` todo at `sports_golden_window_attempted_failed_remediation_2026_06_24.md:143`
+- [x] ✅ [DOCS] P1. Cancel the `[DOCS] P3` todo at `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
       with the same `CANCELLED-BY-OPERATOR-REVERSAL 2026-06-27` marker as its two siblings, **or** rewrite it to state
       the rule as actually ruled: RAW bookmaker tick odds = odds-api/MTDS; footystats predictive `ODDS` + `PREDICTIONS`
-      = IS reference.
+      = IS reference. — **DONE 2026-07-15**, unified-trading-pm@<sha-c>. Struck in place at the (drifted) line
+      `:133-135` — the doc had moved from the audited `:143`; marker + one-line reversal citation
+      (`sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md` L92-97) + the codex SSOT
+      (`sports-data-types-catalog.md:48-52`) added, original text preserved in a `(was: …)` tail like its two siblings.
+      The landmine can no longer be picked up and executed.
 
 ## D. Volume reference (measured 2026-07-15, canonical dedup key)
 
