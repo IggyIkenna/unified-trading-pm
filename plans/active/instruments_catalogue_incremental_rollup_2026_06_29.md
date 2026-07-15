@@ -20,7 +20,7 @@ related:
   [
     plans/active/instruments_foundation_completeness_2026_06_24.md,
     plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
-    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     plans/archive/2026_06/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
   ]
 created: 2026-06-29

@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [mvp, reconciliation, codex-alignment, v10, closeout, plan-hygiene, honest-coverage]
 related:
   [
-    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     plans/active/instruments_foundation_completeness_2026_06_24.md,
     plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]

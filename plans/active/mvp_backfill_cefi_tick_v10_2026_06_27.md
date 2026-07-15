@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [mvp, backfill, cefi, trades, book-snapshot-5, options-chain, deribit, spot-vm, v10, budget-aware]
 related:
   [
-    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     plans/active/cefi_manifest_canonicalisation_2026_06_01.md,
     plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,

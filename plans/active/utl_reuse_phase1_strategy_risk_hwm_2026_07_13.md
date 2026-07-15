@@ -15,7 +15,7 @@ tags: [utl, uac, consolidation, refactor, risk, hwm, split]
 related:
   [
     plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md,
-    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md,
   ]
 created: "2026-07-13"
 last_updated: "2026-07-13"

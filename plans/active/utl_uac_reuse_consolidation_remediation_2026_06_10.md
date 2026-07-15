@@ -18,16 +18,16 @@ related:
     plans/epics/features_and_ml_master.md,
     plans/epics/execution_master.md,
     plans/epics/orchestrator_master.md,
-    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md,
     plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
-    plans/active/utl_reuse_phase2_api_auth_dedup_2026_07_13.md,
-    plans/active/utl_reuse_phase3_ml_model_registry_2026_07_13.md,
-    plans/active/utl_reuse_phase4_features_builder_registry_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase2_api_auth_dedup_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase3_ml_model_registry_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase4_features_builder_registry_2026_07_13.md,
     plans/active/utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13.md,
     plans/active/utl_reuse_phase6_venue_health_retry_2026_07_13.md,
     plans/active/utl_reuse_phase7_low_lint_tail_2026_07_13.md,
     plans/active/utl_reuse_phase8_codex_ssot_archive_2026_07_13.md,
-    plans/active/utl_reuse_phase9_deployment_registry_extract_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase9_deployment_registry_extract_2026_07_13.md,
   ]
 created: "2026-06-10"
 parent_epic: infrastructure_master

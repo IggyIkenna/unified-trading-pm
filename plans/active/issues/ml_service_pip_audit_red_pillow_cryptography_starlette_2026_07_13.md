@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [ml-service, pip-audit, dependency, security, quality-gates, cve]
 related:
   [
-    plans/active/utl_reuse_phase0_guardrails_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md,
     ml-service/scripts/quality-gates.sh,
     ml-service/pyproject.toml,
   ]

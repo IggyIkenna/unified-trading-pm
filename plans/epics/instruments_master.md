@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [instruments, catalogue, mtds, single-walk, canonicalisation, tradfi, defi, registry]
 related:
   [
-    ../active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     ../archive/2026_05/d1_is_hardening_2026_05_20.md,
     ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
     ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,
@@ -39,7 +39,7 @@ co_operators:
 codex_ssots:
 related_plans:
   [
-    ../active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
     ../archive/2026_05/d1_is_hardening_2026_05_20.md,
     ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
     ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,

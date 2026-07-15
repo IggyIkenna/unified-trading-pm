@@ -4,7 +4,7 @@ title: MVP Phase 0 — finalize all 5 catalogues on canonical MVP scope v10 (the
 summary:
   Regenerate all 5 instrument catalogues on canonical mvp_scope v10, populate CME OPTION definitions, and verify each AG
   catalogue is MVP-correct + honest-coverage clean before any MVP backfill begins.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7: operator [unlock-plan]; all todos [x], evidence spot-checked reachable, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -29,8 +29,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on: []
