@@ -967,3 +967,49 @@ existing rows, and the doc's "0 rows / resolved" claim (not the fix) was the def
 attempted_failed — verified live; identical vector to the cefi orphan-delete revert). Issue doc corrected + kept `open`,
 `resolved_by` cleared, side-by-side query outputs + safe recipe in its "RECONCILED" section:
 `plans/active/issues/sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md`.
+
+## Re-scoped 3-item pass (2026-07-15 ~18:15Z) — after the operator's adversarial re-verification caught 2 overstatements in the prior close-out
+
+The operator's independent re-check correctly found the earlier "all 4 done" close-out overstated on 2 of 4 items (the
+lock-horizon fix still false-DOWN'd defi; the "static/count-0" claims for the defi-catalog + odds_horizon cells were
+wrong). This pass re-did those 3 genuinely-open items with LIVE multi-cycle evidence and independent adversarial
+verification (no self-report trust) — and deliberately does NOT re-declare "done" on anything not live-verified.
+
+**Item A — lock in-flight horizon — FIXED + DEPLOYED + LIVE-VERIFIED across 2 defi cycles.** Root cause: the first cut
+used a single fixed **1800s** horizon that under-covered defi's real **~35-36min** merges (confirmed live) by ~64s. Fix
+`unified-trading-library@2d1f77a8`: **per-asset_group** horizon
+(`_staleness_budget.AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC` — defi **4200s** / sports 2400s / generic 3600s, mirroring the
+per-job `CONSOLIDATOR_LOCK_TTL_SECONDS`). Deployed: UTL img `e7f72dc4` → MTDS Dockerfile bump `21c3ece8` → MTDS build
+`6facfb38` → watchdog redeployed to `sha256:b39a7a53` (~17:01Z). **Live-verified (NOT a point-in-time snapshot):**
+across 2 full defi merge cycles the watchdog checked `market-data-tick-defi-prd` six times while the lock was PAST the
+old 1800s horizon — cycle 1 @ 17:30/17:32/17:34 (lock 1866-2097s), cycle 2 @ 18:06/18:08/18:10 (lock 1802-2039s) — **all
+`-> ok`**; **0 CONSOLIDATOR_DOWN fleet-wide for ~70min**; watchdog confirmed healthy (26 buckets checked, exit 0 —
+ruling out a silent break). Independent adversarial verifier dispatched. Issue doc:
+`instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`.
+
+**Item B — defi UPSTREAM_INSTRUMENTS_CATALOG_STALE — ROOT-CAUSED + FULLY FIXED (all 11 catalog-gate handlers).** The
+"static, not a live regression" claim was WRONG: 627 NEW `attempted_failed` rows (2026-07-15T12:16-22Z) were written by
+2 live backfill VMs attempting **PRE-GENESIS** shard dates (2020-01-01..19 — before the DeFi universe existed; IS
+catalogue's earliest snapshot is 2020-01-20). Root cause: every DeFi catalog-gate handler stamped a permanent, expected
+pre-genesis absence as a _retryable_ `attempted_failed` instead of `empty_confirmed`. Fixed
+`market-tick-data-service@420221b4` (dex_pools + lst_rates) + `@42527190` (the 10 remaining handlers — verified 0
+handlers left with the blanket bug; found+fixed a native_staking gate-ordering bug too); new `EXPECTED_PRE_VENUE_LAUNCH`
+classification via UAC genesis dates; 439 tests pass; both MTDS builds SUCCESS. Independently adversarially confirmed
+(627 rows + shard dates reproduce, IS earliest genuinely 2020-01-20, fix wiring + 626/627 arithmetic verified). Issue
+doc: `defi_upstream_instruments_catalog_stale_2026_07_15.md`.
+
+**Item C — odds_horizon MalformedTickFieldError — RECONCILED + CONFIRMED.** The "count=0" was a **predicate mismatch**:
+`data_type='odds_horizon_bucket'` (base) genuinely has 0 attempted_failed, but the alert's 66 rows live under
+`data_type='odds_horizon_bucket_15m'` (distinct string). The 66 are static pre-fix rows (36 genuine MDPS + 30 rebuild
+re-emit); the code fix `market-data-processing-service@7ff43d7` is correct forward-only; a naive delete would RESURRECT
+(36 of them are in `_index/per_vm/_legacy_seed.parquet` — the same vector that reverted the cefi delete). Doc
+corrected + adversarially confirmed on fresh live data. Issue doc:
+`sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md` (commit `988661578`).
+
+**Genuinely outstanding — GATED data-mutation follow-ups (NOT overstated as done):** the forward-facing CODE fixes above
+are complete + verified; what remains is cleaning the historical rows they explain, which are live-manifest mutations
+carrying real legacy-seed resurrection risk — so they are controlled-window passes, tracked with step-by-step recipes in
+the issue docs, exactly the plan's established pattern (mbp_10 / corp_action / cefi): (1) re-collect the 627 pre-genesis
+defi rows with the now-fixed MTDS image → rewrites them `empty_confirmed`; (2) the 305 odds_horizon rows
+(reclassify/delete after handling the legacy seed); (3) the separately-flagged YAHOO_FINANCE/CBOE UAC operationalization
+(IS/MTDS image rebuilds already carry the new UAC via the base image) + the 11,676-row YAHOO cleanup.
