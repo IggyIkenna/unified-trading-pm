@@ -212,8 +212,6 @@ baseline:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/drift.py:
     count: 4
-  instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py:
-    count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/jito.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py:
@@ -221,8 +219,6 @@ baseline:
   instruments-service/instruments_service/reference_data/adapters/defi/kamino.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/lifinity.py:
-    count: 4
-  instruments-service/instruments_service/reference_data/adapters/defi/mango.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/marginfi.py:
     count: 3
@@ -251,8 +247,6 @@ baseline:
   instruments-service/instruments_service/reference_data/adapters/defi/uniswap_v3.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/uniswap_v4.py:
-    count: 4
-  instruments-service/instruments_service/reference_data/adapters/defi/zeta.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/prediction/kalshi.py:
     count: 12
