@@ -115,7 +115,7 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
 
 ## Recommended next steps
 
-- [ ] [CODE] P0. Root-cause + fix the fixtures-job direct-write row loss (repo: unified-trading-library +
+- [x] [CODE] P0. Root-cause + fix the fixtures-job direct-write row loss (repo: unified-trading-library +
       instruments-service): reproduce the ManifestWriter direct-update read path against a copy of the current
       canonical + live shards and find where 328k rows drop (dedup-key mismatch vs stale base vs silent filter). The
       structural fix should ALSO stop the standing race: either move the fixtures job to per-VM-shard mode
@@ -129,7 +129,7 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
       collision). Regenerate the cell list fresh at run time (the af fleet is re-capturing some 2020+ cells; 2018/2019
       footystats-era cells it cannot re-capture). Then re-run `cf_manifest_audit_2026_06_01.py … --legacy …` per-cell to
       a stable count.
-- [ ] [DATA] P2. Determine whether any OTHER canonical index has the same fixtures-job-style direct-writer racing its
+- [x] [DATA] P2. Determine whether any OTHER canonical index has the same fixtures-job-style direct-writer racing its
       consolidator (grep services for non-per-VM `ManifestWriter` usage against consolidator-managed buckets); the
       lost-update pattern is generic.
 
@@ -212,3 +212,42 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
   completes. Watched-green-execution + scheduler re-enable therefore sequenced AFTER af-fleet completion (monitor armed;
   ETA ~15:00-15:30Z from per-shard date-progress: FIXTURE_LINEUPS@2026-04-06, FIXTURE_EVENTS@2025-12-02,
   FIXTURE_STATS@2025-08-12 at ~3.3 months/h).
+
+## Repair execution — autonomous finish-to-done session (2026-07-15, from ~16:33Z)
+
+### STEP 1 — fix behaviour VERIFIED GREEN (watched execution `-7vlhs`)
+
+- The dispatched watched execution `-nmg4j` (16:32:14→16:33:05Z, 51s) FAILED at the freshness preflight with
+  `ManifestConsolidatorStaleError`
+  (`process_preflight.py:141 _fixture_leagues_for_date → read_availability_index → _read_slow_path`). This is the
+  DESIGNED loud-fail (blob age >120s while per-VM shards exist under the tail of the af-backfill load) — a SAFE refusal
+  BEFORE any write, not a regression and not a direct-write. `-gv5g5` (11:55Z) failed the same way earlier.
+- **af-backfill fleet DRAINED**: `af-backfill-20260714-172403` + `-172532` both powered off (172403 gone by ~16:44Z,
+  172532 by ~16:51Z); their per-VM shards were absorbed + pruned from `_index/per_vm/` (only `_legacy_seed.parquet`
+  remains). Consolidator resumed writing fresh (`update_time` 16:51:30Z, blob age → ~8s).
+- **Fresh watched execution launched right after a consolidator write → `-7vlhs` SUCCEEDED** (16:52:05→16:57:09Z, ~5-min
+  real run, `succeededCount=1`, `failedCount=0`, exit 0). All three STEP-1 assertions hold:
+  - **(a) succeeded** — completeness fix `instruments-service@a25cf70d` works: a full run finalised without the
+    `InvalidCompletenessFractionError` that killed every 00:10/06:10 run. (jrgn5, a 43-min full run 12:15→12:58Z, is a
+    second independent green.)
+  - **(b) per-VM shard, NOT a direct index write** — `gcloud logging` on `-7vlhs` (and `-jrgn5`): **ZERO**
+    `"ManifestWriter: updated availability index"` lines; MANY
+    `"per-VM shard updated … _index/per_vm/ sports-fixtures-job.parquet"` lines. Job env confirmed
+    `MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=sports-fixtures-job`, `MANIFEST_ALLOW_STALE_FALLBACK` unset (loud-refuse
+    retained). The job can no longer read-modify-write the canonical.
+  - **(c) index row count did NOT decrease across the run** — consolidator `rows_out` monotonically non-decreasing
+    5,432,776 (16:36Z) → 5,432,779 (16:43Z) → 5,432,782 (16:51Z) → 5,432,782 (17:00Z), spanning `-7vlhs`. The UTL >2%
+    shrink guard `unified-trading-library@45a43438` would block any regression regardless.
+- **Consolidator cadence note (NOT a blocker; separate concern)**: real consolidation cycles run ~7.5 min each
+  (bottleneck = read-merge-dedup-write of the 5.4M-row / 119 MB canonical; interleaved fast `error=locked` back-offs
+  from overlapping invocations). So the canonical blob is fresh (<120s) only ~2 min of each ~7.5-min window → a fixtures
+  execution launched at a random time has ~25-30% chance of passing the 120s preflight gate (`maxRetries=0`, so a stale
+  fire fails safe with no retry). This pre-dates the incident and is bounded to a SAFE degraded-freshness failure (never
+  a clobber, post-fix); tracked as the generic consolidator-throughput concern, not a re-enable blocker.
+
+### STEP 2 — 4 t1 schedulers RE-ENABLED (containment lifted; clobber vector closed)
+
+`gcloud scheduler jobs resume uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule --location asia-northeast1` →
+all four verified **ENABLED** (schedules `0 0/6/12/18 * * *`). Safe to re-enable: the job is per-VM-shard-mediated and
+UTL refuses any >2% direct-canonical shrink, so a scheduled fire can only (i) write a per-VM shard the consolidator
+absorbs, or (ii) fail-safe at the staleness preflight — never clobber the index.
