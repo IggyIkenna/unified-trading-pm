@@ -51,7 +51,7 @@ related:
 created: 2026-07-15
 last_updated: 2026-07-15
 parent_epic: infrastructure_master
-priority: P1
+priority: P0
 source: |
   Discovered live, as a side effect, during the CeFi blank-data_type orphan-row deletion in
   phantom_captures_cefi_2026_06_28.md (this session, 2026-07-15). Not a query-definition mismatch or a laptop-only
@@ -138,6 +138,27 @@ landmine entirely: reading + writing the canonical blob directly (bypassing the 
 compare-and-set (`StorageClient.conditional_upload_bytes(..., if_generation_match=...)`, the same GCS
 generation-precondition primitive `manifest_consolidator.py` and `manifest_writer/_writer_io.py` use for their own
 canonical writes) — see `scripts/delete_cefi_blank_data_type_orphan_rows_2026_07_15.py` in instruments-service.
+
+## 🔴 2026-07-15 (~1h later) — CONFIRMED LIVE: the resurrection actually happened in production, not just theoretical
+
+Independent re-verification (different session) re-queried the CeFi canonical directly: **the 9,757 blank-`data_type`
+rows are back**, with the SAME original `attempted_at=2026-06-28T03:12:34Z` / `written_at` (April 6-20) timestamps as
+before the delete — this is the SAME frozen-seed data resurrecting, not a new/different orphan population. The canonical
+blob's own `Update time` (`gsutil stat`) is **2026-07-15T03:15:13Z** — a write landed only ~2 minutes before this check,
+meaning the confirmed-safe delete (which held through one full consolidator cycle at 02:19:41Z per this doc's own "What
+I found" section above) was reverted by a SUBSEQUENT consolidator run sometime between then and now.
+
+**This closes this doc's own "main open question"**: whatever protected production during the FIRST post-delete cycle
+did NOT protect it on a later cycle — the captured-outranks tie-break interacting with the permanently-frozen
+`_legacy_seed.parquet` is a REAL, LIVE, currently-active production bug, not a latent/theoretical one. Re-running the
+same delete script again would almost certainly get reverted again on the next consolidator cycle without first
+addressing the tie-break/seed-freshness issue this doc already recommends fixing (P1 items below) — **do not re-attempt
+the cefi delete until one of those P1 items lands**, or it will just burn another CAS-write cycle for a result that
+reverts again.
+
+**Escalating priority**: given this is now confirmed live (not theoretical) and the doc's own analysis already
+establishes cross-asset-group exposure (defi + tradfi both carry the same frozen `_legacy_seed.parquet` pattern), this
+should be treated as an active P0/P1 production data-correctness bug, not a background research item.
 
 ## Recommended next steps
 
