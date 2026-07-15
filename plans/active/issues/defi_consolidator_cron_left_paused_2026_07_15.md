@@ -216,7 +216,7 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       loop). 3 new unit tests cover: the failure path pages instead of silently skipping, the direct-webhook path fires
       when configured, and the helper never raises (no webhook configured / config lookup itself throws). Full QG green
       (873 pre-existing tests + 3 new, coverage 79.67%). (repo: alerting-service)
-- [ ] [INFRA] P1. `google-cloud-scheduler` is not an installed dependency anywhere in deployment-service (not in
+- [x] [INFRA] P1. ✅ `google-cloud-scheduler` is not an installed dependency anywhere in deployment-service (not in
       `pyproject.toml`, not in `uv.lock`, confirmed via a direct `import google.cloud.scheduler_v1` failure against the
       repo's own root `.venv`) — so `_make_scheduler_state_reader()` /`_make_consolidator_scheduler_lister()`
       (`deployment_service/data_pipeline_monitors/cli.py:433-507`) always hit their `except Exception` fallback and
@@ -228,4 +228,17 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       imports. Add `google-cloud-scheduler` to `deployment-service/pyproject.toml` (resolves to `2.20.0` via
       `uv pip compile`), run `uv lock`, and verify with a live `gcloud`-free `import google.cloud.scheduler_v1` check in
       the built venv before closing. Found while implementing this issue's own todo #3 in unified-trading-library, which
-      needed the same dependency and would have shipped equally dead without adding it. (repo: deployment-service)
+      needed the same dependency and would have shipped equally dead without adding it. — deployment-service@77d2206.
+      Added `google-cloud-scheduler>=2.20.0,<3.0.0` to `pyproject.toml`, `uv lock` resolved `2.20.0`, verified
+      `import google.cloud.scheduler_v1` succeeds in the built `.venv`. **Finding surfaced while implementing (fixed in
+      the same commit)**: with the dependency now real,
+      `_make_scheduler_state_reader()`/`_make_consolidator_scheduler_lister()` construct a REAL `CloudSchedulerClient`,
+      and `tests/unit/test_data_pipeline_monitors_cli.py::test_main_meta_mode_dry_run` started timing out past pytest's
+      60s cap — the GAPIC client's default retry policy treated the pytest-socket-blocked auth/network failure as
+      retryable and stalled well past this module's own documented fail-safe intent ("a lookup error returns None
+      promptly"). Fixed by adding an explicit 10s `timeout=` to the `get_job`/`list_jobs` RPC calls (bounds a real
+      production outage to a fast fail too, not just the test) and by stubbing the three deferred-import client
+      factories (`_make_scheduler_state_reader`, `_make_consolidator_scheduler_lister`, `_make_execution_history_reader`
+      — the last already used a pre-existing real `google-cloud-run` client and was never stubbed either) in the
+      meta-mode dry-run test, matching the test file's own documented "credential-free" intent. Full `quality-gates.sh`
+      green (2675 tests, coverage 71.05%). (repo: deployment-service)
