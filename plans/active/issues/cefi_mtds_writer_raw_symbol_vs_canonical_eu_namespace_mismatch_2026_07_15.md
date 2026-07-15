@@ -67,6 +67,9 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # CeFi MTDS writer: raw exchange symbol vs canonical instrument_key — eu namespace mismatch
