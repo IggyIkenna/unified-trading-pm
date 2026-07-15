@@ -131,7 +131,7 @@ defect to patch"**). The premise is false; the decision rests on it.
       the dirty-deps carve-out, precedent instruments-service@a771e3e2).
 - [x] ✅ [DOCS] P2. Correct the false premise at `sports_data_sources_canonical_completion_2026_07_13.md:928` and
       re-check the 6-row `attempted_failed` decision that rests on it. — **DONE 2026-07-15**,
-      unified-trading-pm@<sha-a2>. Line corrected + a dated CORRECTION block added. **Re-check outcome: the finding is
+      unified-trading-pm@e43378c13. Line corrected + a dated CORRECTION block added. **Re-check outcome: the finding is
       NOT reopened — the decision survives.** This issue doc claimed _"the decision rests on it"_; reading the code
       shows only the **premise** was unsound, never the **conclusion**. The 6 rows were written BEFORE the 2026-06-25
       removal, i.e. while `SOURCE_PRIORITY` genuinely did reserve ODDS for footystats — so the gate behaved exactly as
