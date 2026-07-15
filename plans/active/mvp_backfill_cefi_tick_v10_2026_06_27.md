@@ -3243,3 +3243,40 @@ relabel/reconcile pass for existing raw-id Tardis captures (issue doc todo 2); (
 only after (1)-(2) land; (4) non-Tardis lane (this session's 4 VMs + ASTER) continues unaffected, monitor for
 completion + re-measure once done. Not blocked by CREDENTIALS/OPERATOR/UPSTREAM in the deferral sense — this is a P0
 code defect with a clear owner path, tracked as an issue-doc todo for PlanRegenLoop dispatch.
+
+### Writer fix SHIPPED + relabel script written (joint, two lanes) — 2026-07-15T19:36Z
+
+**This lane (data_engineering slot-12) — issue doc todo 1 (writer fix) DONE**: shipped
+`market-tick-data-service@56679e78` — `venue_fetch.py::_record_venue_shard_counts` now canonicalizes the manifest-facing
+`instrument_id` for cefi Tardis-sourced per-instrument shards (reusing the already-correct `derive_row_instrument_id`),
+scoped via a new `PartitionedTickWriter.asset_group` property so sports `odds` (same shared write path) is untouched.
+Direct-tested against real KRAKEN-FUTURES/BINANCE/DERIBIT symbols plus explicit chain-bundle and sports-`odds`
+guard-rail cases before shipping — full match to the peer's original raw-symbol proof, now correctly canonicalized. Full
+`quality-gates.sh` green (one pre-existing flaky, unrelated Solana/Helius timing test confirmed passing in isolation).
+
+**Parallel lane (slot-3) — issue doc todo 2 (relabel script) DONE, dry-run only**: shipped
+`instruments-service@f021cb2b` — `scripts/relabel_cefi_tardis_raw_symbol_to_canonical_2026_07_15.py`. Dry-run against
+the live `-prd` cefi bucket: 3,133,117 in-scope raw-id candidates, 2,590,229 (82.7%) resolvable via the catalogue's own
+`raw_symbol`↔`instrument_key` mapping, 542,888 honestly left unresolved (delisted/legacy symbols), plus 214,008 stale
+`expected_unattempted` duplicate rows identified for cleanup once relabeled. `--apply` intentionally NOT run — slot-3
+filed `/blocked` for operator sign-off before mutating the primary key across the whole cefi Tardis corpus
+(snapshot-first, recoverable, but correctly treated as needing explicit approval, mirroring the `BLK-cbee81bc` precedent
+for the comparably-large legacy-bucket purge).
+
+**Not yet done — the actual gate-closing step**: the 3 running Tardis `cefi-queue-*` VMs are on a PRE-FIX tarball
+(SSH-confirmed: `_canonical_cefi_manifest_instrument_id` absent from the deployed venv) and will keep writing raw-id
+rows until relaunched. No tarball exists yet for `56679e78` (checked GCS directly — 404) and CI hasn't fired for this
+SHA yet (this repo's `quality-gates-v2` gates the LDR→staging promotion PR, not the raw LDR push, so both trail by up to
+the ~15min Tier-C drain). Deliberately did NOT kill+relaunch the Tardis lane yet — this is the exact stale-tarball trap
+this plan already hit once (BITGET-FUTURES, 2026-07-14T11:22Z entry). **Concrete next steps, in order**: (a) wait for a
+fresh `market-tick-data-service-code@56679e78*` tarball to appear in GCS; (b) once confirmed, kill the 3 stale-tarball
+Tardis VMs and relaunch against the fresh tarball (2026-scoped, matching this session's earlier YEARS=2026 pattern); (c)
+operator decision on relabel `--apply` (todo 2, independent of (a)/(b) — either order is fine, they don't block each
+other); (d) re-measure `measure_honest_coverage.py --asset-group cefi` once both land. Non-Tardis lane (this session's 4
+VMs + ASTER) unaffected by any of this, continues progressing normally.
+
+**Gate verdict: ❌ NOT MET** — real progress (both blocking code paths now fixed/scripted), but the actual
+`expected_unattempted` reduction hasn't happened yet — it requires the tarball refresh + VM relaunch (writer fix) and
+the operator-approved `--apply` (relabel). Not blocked by CREDENTIALS/OPERATOR/UPSTREAM in the deferral sense for the
+writer-fix side (mechanical, just needs the tarball to catch up); genuinely operator-gated for the relabel `--apply`
+side.

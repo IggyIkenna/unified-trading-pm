@@ -189,13 +189,33 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
    the hard-capped 3-VM Tardis quota into the same uncredited namespace. The non-Tardis `OnchainPerpBatchHandler` lane
    is unaffected and may continue/widen normally.
 
-- [ ] [BACKEND] P0. Fix `venue_fetch.py::_record_venue_shard_counts` (line ~348) to canonicalize
+- [x] ✅ [BACKEND] P0. Fix `venue_fetch.py::_record_venue_shard_counts` (line ~348) to canonicalize
       `instrument_id_for_manifest` for cefi Tardis-sourced shards using the proven-correct
       `derive_row_instrument_id`/`finalise_rows_and_path` logic (not `_canonicalize_captured_instrument_id`, which is
       explicitly documented as sentinel-only/lossy). Scope the change to cefi (or Tardis-sourced venues specifically) so
       sports `odds` writes through the same shared function are unaffected. Audit `sentinels.py`'s Tier-3 comparison for
       whether it needs updating once the manifest carries canonical form instead of wire form. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — `market-tick-data-service@56679e78`. Added `PartitionedTickWriter.asset_group`
+      property (new, additive) so the fix scopes precisely via `writer.asset_group == "cefi"` — sports `odds` and every
+      other asset_group untouched. Direct-tested (not just unit-suite-relied-on) against real symbols before shipping:
+      KRAKEN-FUTURES (`PF_IOTAUSD`/`PI_XBTUSD`/`XBT` → correct canonical ids matching the peer's original proof),
+      BINANCE-SPOT/FUTURES, DERIBIT, a chain-bundle itype (correctly skipped, unaffected), and a sports `odds` itype
+      (correctly skipped, unaffected — confirms the scope guard). Full `quality-gates.sh` green (1 pre-existing flaky
+      unrelated timing test — `test_helius_batches_resolve_concurrently_not_sequentially`, Solana Drift/Helius, nothing
+      to do with cefi/venue_fetch.py — confirmed passes in isolation, re-ran the full suite clean on retry).
+      `sentinels.py` Tier-3 audit NOT yet done this session — flagged as still open, see below. **`sentinels.py` Tier-3
+      follow-up still needed** (not done this pass): now that cefi manifest rows carry canonical form,
+      `_canonicalize_captured_instrument_id`'s wire→canonical translation may be partially redundant for cefi going
+      forward (new captures) while still needed for the EXISTING raw-id historical rows until relabeled — verify the
+      sentinel doesn't double-canonicalize or regress once relabel (todo 2) lands. **VM relaunch note**: the 3
+      currently-running Tardis `cefi-queue-*` VMs are on a pre-fix tarball (verified via SSH —
+      `_canonical_cefi_manifest_instrument_id` absent from the deployed venv) and will keep writing raw-symbol rows
+      until relaunched against a fresh tarball. No tarball exists yet for `56679e78` as of this entry (checked
+      `gs://deployment-scripts-central-element-323112/code/market-tick-data-service-code@56679e78*` — 404; CI hasn't
+      fired for this SHA yet either — this repo's `quality-gates-v2` runs on the staging promotion PR, not directly on
+      LDR pushes, so both CI + tarball build trail the LDR push by up to the ~15min Tier-C drain window). Do NOT
+      kill+relaunch the Tardis lane until the fresh tarball is confirmed present — this is the exact stale-tarball
+      gotcha this plan already hit once (BITGET-FUTURES, 2026-07-14).
 - [x] ✅ [SCRIPT] P0. Write a one-time relabel/reconcile script for the cefi prd manifest: map existing raw-symbol
       `captured` rows (Tardis-sourced venues only) to their canonical `instrument_key` per venue (reusing
       `derive_row_instrument_id`, already proven correct against live symbols above), snapshot-first (mirrors the
