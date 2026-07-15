@@ -328,12 +328,23 @@ depends_on: []
       `tests/unit/test_sports_dependency_bucket.py`. `fixtures_schedule` alone (not `fixtures_outcomes`) is used as the
       equivalent "api-football ran" marker since it covers every fixture (played or not). QG green, shipped via
       quickmerge.
-- [ ] [CODE] P1. Register `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` in
+- [x] ✅ [CODE] P1. Register `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` in
       `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SPORTS_DATA_TYPE_TO_FOLDER`
       (or teach `candidate_parquet_paths("FIXTURES", ...)` to probe both split entities) — the SSOT gap silently breaks
       every caller post-cutover, confirmed affecting
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py` and
       `instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py`. (repo: unified-api-contracts)
+      — unified-api-contracts@c11e2899: did BOTH — registered `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` in
+      `SPORTS_DATA_TYPE_TO_FOLDER`/`SPORTS_DATA_TYPE_LAYOUT` (reusing the existing `fixture_lifecycle.py` constants) AND
+      taught `candidate_parquet_paths("FIXTURES", ...)` to auto-append `FIXTURES_SCHEDULE` candidates (not
+      `FIXTURES_OUTCOMES` — that's a completed-fixtures-only subset and would under-report thin days as missing), so
+      existing "FIXTURES" callers like MTDS `fixture_id_resolver.py` stay correct across the cutover with no call-site
+      change. Also corrected `fixture_lifecycle.py`'s stale "gated, not shipped" docstring to reflect the 2026-07-14+
+      cutover. New regression tests in `tests/unit/sports/test_gcs_paths_player_values.py` +
+      `tests/unit/test_partition_paths.py` (dispatcher test updated for the new 4-candidate FIXTURES list). QG green,
+      shipped via quickmerge. Note: re-checked `sports_fixtures_daily_repoll.py` — it does NOT actually call
+      `candidate_parquet_paths` in code (only docstring mentions); the confirmed real caller is
+      `fixture_id_resolver.py`.
 - [ ] [CODE] P1. Fix `deployment-api`'s 3 hardcoded `entity=fixtures` readers
       (`deployment_api/services/upcoming_fixtures.py::_read_one_day_frame`,
       `deployment_api/services/data_status_drilldown/_csv_export.py::build_fixtures_csv_export`,
