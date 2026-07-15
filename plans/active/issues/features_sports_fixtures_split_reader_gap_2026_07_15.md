@@ -95,6 +95,7 @@ estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
+depends_on: []
 ---
 
 > **🔴 NOTIFY-OPERATOR — cross-repo data-correctness gap, likely live-pipeline-affecting.** instruments-service shipped
