@@ -3820,3 +3820,20 @@ it's new adapter work, not a data-audit residual).
   - **api_football's INJURIES/FIXTURES/general-residual thread (started this session) is now fully concluded**: 0
     INJURIES, 0 FIXTURES, 81.5% reduction on the general residual, both remaining classes root-caused and routed to
     their existing tracked todos. This closes out todo #16-18 of this session's working list.
+
+- **2026-07-15 (blank-dt-461 CLOSED — reconciliation shipped + verified, code fix found already landed).** Root-caused
+  the exact write path via `process_completeness.py`'s `missing_shards` handling: a generic
+  `row_key={"date": date, "venue": venue}` corrective write (no `data_type`) for any venue "missing" after retries.
+  **The code-side fix for this exact bug class already landed earlier this session** (`instruments-service@9ce3450ef`,
+  2026-07-13 19:01:36+0100) —
+  `expected_venues -= _NON_VENUE_GRAIN_VENUE_NAMES - {"API_FOOTBALL", "POLYMARKET", "KALSHI"}` excludes
+  FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO from `expected_venues` entirely, so they can never
+  again land in `missing_shards` and trigger this write — only the 461 pre-fix historical rows (all `attempted_at`
+  2026-06-25/26) needed cleanup, no new code change required. **Shipped**:
+  `scripts/backfill/api_football_blank_dt_venue_orphan_reconcile_2026_07_15.py` (`instruments-service@3582d33`) —
+  mirrors the established blank-league_id orphan-closer pattern, only retiring a row when real per-source coverage now
+  exists for that date. Dry-run then applied: 386/460 reconciled (74 left correctly untouched — all in 2014/2017, before
+  each source's own documented coverage-start floor of 2019, a genuine expected gap, not a bug). **Verified holding
+  stable across 4 consolidator cycles + 3 independent re-reads over ~7 minutes**: 74 remaining, unchanged. This closes
+  the blank-dt-461 finding from finding A of
+  `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` completely.
