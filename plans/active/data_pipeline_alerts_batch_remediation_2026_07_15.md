@@ -350,6 +350,63 @@ Presented all 5 open items to the operator with recommendations; decisions below
       the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected
       rather than continuing to page as if it's an active problem.
 
+### 2026-07-15 (later same day) — re-pasted alert batch, picked up by a different session; 5 new findings
+
+Operator re-pasted the SAME `DP_RUN_MOSTLY_EMPTY` alert batch into a different session. Cross-checked against this
+plan's own state first (git log showed the reconciliation above landed ~12 min earlier) rather than duplicating —
+dispatched 4 parallel sub-agents (per this plan's own "sub-agents, looping" charter) against the 4 approved todos above,
+in isolated worktrees. While investigating item 4 (mbp_10) directly, found the "1186/1186" figure the doc analyzed does
+NOT match the CURRENT real failing population: **CME currently has ZERO `attempted_failed` mbp_10 rows** — the real 1186
+rows are `KRX=742, NYSE=292, NASDAQ=152`, venues the operator's CME-specific decision never covered. Investigating those
+revealed a bigger, cross-cutting bug (see new todo below) — NOT applying the CME reclassification logic to these 3
+different venues, since that would be guessing past what was actually decided.
+
+Also found 3 more `DP_RUN_MOSTLY_EMPTY` cells from the SAME alert batch that this plan's earlier "swept every
+(asset_group, data_type) pair" pass (todo above, `unified-trading-pm@{0378027e6,fe674d7a3}`) did not cover — that sweep
+says "cefi/tradfi partial-ratio cells: already tracked", but did not explicitly re-verify SPORTS or all of DEFI's cells
+against existing docs. Logging what's confirmed genuinely new/untracked here rather than assuming covered:
+
+- [ ] [DATA] P0 **NEW FINDING**: real cross-cutting classification bug — rows with an `EXPECTED_*`-prefixed
+      `error_reason` (e.g. `EXPECTED_SOURCE_NOT_AVAILABLE`) are being stored with `capture_status="attempted_failed"`
+      instead of `expected_unattempted`/`empty_confirmed` (an `EXPECTED_*` reason should NEVER pair with
+      `attempted_failed` per this workspace's honest-absence convention). Confirmed real, live counts (may drift by the
+      time this is picked up): tradfi/ohlcv_15m (~2347 rows), tradfi/trades (~2343), tradfi/ohlcv_1m (~1832),
+      tradfi/mbp_10 (~1186, spanning KRX/NYSE/NASDAQ — NOT CME) — ~7,700+ rows total, clustered around a single ~90s
+      batch window (`attempted_at≈2026-07-07T07:28-07:29Z`). Root-cause research (before dispatching the fix agent)
+      found: the 2 known committed call sites that use this exact reason string
+      (`reclass_krx_eu_source_not_available.py`, `reclass_oos_equity_eu_not_in_dataset.py`) both correctly pair it with
+      `empty_confirmed` and don't match this bug's footprint (wrong data_type scope, wrong row count) — the actual
+      writer that produced the mismatched rows is NOT visible in current committed source (likely an uncommitted/ad-hoc
+      pass). Also confirmed a systemic gap: `ManifestWriter.record_failed()` has NO validation preventing an
+      `EXPECTED_*`-prefixed reason from being passed to it (unlike `record_empty()`'s closed-set enum check), so this
+      can recur silently. Dispatched to a sub-agent (data-fix: reclassify the ~7,700 rows + regression tests; code-fix:
+      guard `record_failed()` against `EXPECTED_*`-prefixed reasons; new issue doc) — see that issue doc for the
+      resolution once shipped. Repos: `market-tick-data-service` (data fix), `unified-trading-library` (writer guard).
+- [ ] [DATA] P1 **NOT YET COVERED by this plan's earlier sweep**: `defi/dex_pool_state` (2109/1583050 attempted_failed,
+      0.1%) and `defi/lst_rates` (851/15830, 5.4%) — both 100% `error_reason=UPSTREAM_INSTRUMENTS_CATALOG_STALE`,
+      `attempted_at` spanning 2026-06-21 to 06-30 (historical, not fresh). NOT found tracked in any existing
+      `plans/active/` doc as of this pass (closest precedent,
+      `master_data_canonicalisation_migration_catalogue_     2026_06_07.md`'s R5-fix-7 defi catalog-freshness gate, is
+      dated 2026-06-08 — predates this window and appears already resolved/re-promoted, so this looks like a RECURRING
+      instance of a resolved-once issue, not the same still-open instance). Needs its own investigation: is
+      `assert_defi_catalog_fresh`'s freshness gate itself stale/broken again, or is this a different trigger. File as a
+      new issue doc if picked up.
+- [ ] [DATA] P1 **NOT YET COVERED**: `sports/trades` (112277/522276 attempted_failed, 21.5%) —
+      `error_reason=VENUE_FETCH_FAILED` dominates (94127 of the 112277), `attempted_at` up to 2026-07-13T23:56Z
+      (freshest of all the alert-batch cells — worth checking if this is still actively recurring). `VENUE_FETCH_FAILED`
+      is heavily tracked for CeFi/Tardis (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`) but NOT found tracked for
+      sports specifically. A smaller slice (several hundred rows) shows a DIFFERENT, more interesting pattern: a
+      `record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on     <VENUE>/<DATE>. Use record_failed(EmptyFromLiveInstrumentError(...)) instead`
+      guard message (BETFAIR, MATCHBOOK, PINNACLE, and others, many 2022-era dates) — this exact pattern + fix design IS
+      tracked (`data_completion_to_100_all_ag_2026_06_21.md:461-489`, marked `[x]` done for bookmaker venues via a
+      `BOOKMAKER_NO_COVERAGE` reclassify), but these alert-batch instances run through 2026-07-13 — AFTER that fix
+      landed — worth verifying whether the fix's venue/date coverage is actually complete or these are a residual gap.
+- [ ] [DATA] P2 **NOT YET COVERED**: `sports/odds_horizon_bucket_15m` (66/66 attempted_failed, 100%) —
+      `error_reason=MalformedTickFieldError`, `attempted_at` 2026-07-13T23:56Z (same batch as the sports/trades failures
+      above — likely same root run). NOT found tracked anywhere in `plans/active/` (only hit is an unrelated chaos-test
+      scenario file). Small absolute count (66) but 100% ratio triggered the alert; needs its own investigation into
+      what's malformed and why.
+
 ### Post-reconciliation progress
 
 - 2026-07-15 (background research agent): completed the ohlcv_15m/ohlcv_24h audit todo above. Full findings + the
