@@ -156,6 +156,33 @@ depends_on: []
    column-naming axis independent of the entity-split axis — likely from an earlier, unrelated Q6 column-rename that
    also didn't reach this module.
 
+7. **Live-incident check (this session, slot-7, 2026-07-15) — RULED OUT, no live production incident.**
+   - Code path: `features-service/features_service/sports/cli/handlers/live_handler.py`'s `LiveHandler` (PubSub
+     `persist-sports-odds-features-reader` subscriber) calls the shared engine
+     `features_service/sports/engine/orchestrator.py::process_sports_record` / `_process_sports_record_impl`. That
+     module has **zero import or call of `read_reference_entity`** — it computes features directly from the PubSub odds
+     payload and never reads the `entity=fixtures` GCS blob. The `DependencyError` signature is raised only from
+     `gcs_reader.py::read_reference_entity`, which is called exclusively by `batch_handler.py` and
+     `pipeline/fixture_features.py` — both BATCH-mode-only code. So even if sports live mode were running, this exact
+     error cannot fire on that path today.
+   - Deployment check: no `mdps-features-live-sports-*` VM (the asset-scoped live launcher,
+     `deployment-service/scripts/vm/launch-mdps-features-live.sh --asset-group sports`) has EVER been created — verified
+     via `gcloud logging read` GCE-insert audit trail over the last 30 days (zero hits, project
+     `central-element-323112`), consistent with that launcher's own header comment: "operational launch awaits Harsh
+     slot 5 per-service consumer wiring + Phase 12 reconciliation gate green" (i.e. Phase 15 of
+     `live_pipeline_mtds_mdps_features_2026_05_08.md` has not shipped for any asset_group, sports included). No
+     equivalent instance found on AWS EC2 either (only the two `agent-orchestrator*` VMs are running there).
+   - The only running/recent `*sports*` GCE instances (checked via `gcloud compute instances list` +
+     `gcloud logging read` insert/delete audit trail, project `central-element-323112`) are a churn of short-lived
+     `features-sports-sports-<date>-<time>` VMs — these are the BATCH gap-fill/backfill fleet from
+     `sports_p2_features_history_to_ml_ready-001` (the same family as this issue's trigger VM), not live mode.
+   - **Conclusion: no live/forward sports feature-compute incident, past or present.** The writer/reader desync is
+     currently a backfill-only blocker (Todo 1 in "Recommended decision" is answered: rule out confirmed). Still worth
+     fixing Todos 2-4 before ANY future live launch of sports (Phase 15), since the live gap only stays closed by
+     accident (no reader call path today) — once #2 lands and something starts calling the fixed
+     `read_fixtures_joined()`, or if the live engine is ever extended to read fixtures reference data directly, the same
+     entity-split desync would resurface unless UTL's `joined_reader.py` is fixed first.
+
 ## Why it matters
 
 - **Blocks `sports_p2_features_history_to_ml_ready-001`'s Todo 1** ("Compute features 2015→present") at its leading edge
@@ -188,9 +215,12 @@ depends_on: []
 
 ## Todos
 
-- [ ] [CODE] P0. Check live/forward sports feature-compute logs (features-service `--mode live`) since 2026-07-14 for
+- [x] ✅ [CODE] P0. Check live/forward sports feature-compute logs (features-service `--mode live`) since 2026-07-14 for
       the `DependencyError: ... entity=fixtures` signature — confirm/rule out a live production incident. (repo:
-      features-service)
+      features-service) — unified-trading-pm (this doc, "What I found" #7): RULED OUT. No `mdps-features-live-sports-*`
+      VM has ever been launched (0 hits in 30-day GCE-insert audit log); the sports live engine
+      (`process_sports_record`) never calls `read_reference_entity` at all, so the signature cannot fire on that path
+      even once live mode is launched. No live production incident, past or present.
 - [ ] [CODE] P1. Implement the two-entity `fixtures_schedule`/`fixtures_outcomes` join in
       `unified_trading_library/fixtures/joined_reader.py._load_fixtures_for_day` (the TODO already left in that file) +
       update `OUTCOME_COLUMNS`/`_derive_outcomes_available_at` to the current Q6 raw column names
