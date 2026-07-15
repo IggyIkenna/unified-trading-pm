@@ -315,4 +315,10 @@ repo. This plan tracks that work.
   `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`'s matching 15:45Z update.
   Next step: once the build succeeds, re-run `features-service-sports-job` with the same
   `--feature-family sports --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date/--end-date`
-  overrides used in execution `kk4dv` and confirm a genuine `SUCCEEDED` terminal state.
+  overrides used in execution `kk4dv` and confirm a genuine `SUCCEEDED` terminal state. **UPDATE (~15:37Z): the Cloud
+  Build did NOT reach `SUCCESS`** — it hung inside the quality-gates test step both times (original + one retry) and
+  never pushed a new image; `features-service:latest` is confirmed still the stale 2026-07-14 image. Filed as
+  `plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md` (P1, suspected `E2_HIGHCPU_8`
+  memory pressure, not confirmed). Todo 5 stays `[ ]` and should NOT be re-attempted yet — it would still hit the same
+  false-DOWN error against the un-updated image. This is now the blocking item, ahead of the consolidator livelock doc
+  (which is otherwise resolved pending this deploy).

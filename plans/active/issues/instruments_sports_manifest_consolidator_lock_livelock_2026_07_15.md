@@ -392,6 +392,18 @@ re-verification): did not re-attempt the manual `features-service-sports-job` ex
 gated on the Cloud Build above reaching `SUCCESS` first. `readyToReverify` should be assessed against that build's
 terminal status, not assumed here.
 
+**UPDATE (~15:37Z): item 3's Cloud Build did NOT reach `SUCCESS`** — build `0b5cec2d-2f6a-4416-b870-44e3db644e1f` hung
+inside the quality-gates test step and hit its 1800s timeout; a manual retry (`c4262919-003a-468c-9b9d-169b64a2adc8`)
+reproduced the IDENTICAL stall point (same log-line count) and was cancelled after ~7 minutes flat rather than waiting
+out a second full timeout. The local `quality-gates.sh --no-fix` run on the same commit completes in 93s, so this is a
+Cloud-Build-environment-specific hang, not a code regression from the Dockerfile bump. Filed as its own issue:
+`plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md` (suspected root cause:
+`E2_HIGHCPU_8` machine type — 8 vCPU/~8GB RAM — under memory pressure from the consolidated 8-family test suite's
+pytest-xdist parallelism; not confirmed). **`features-service:latest` in Artifact Registry is STILL the pre-fix
+2026-07-14 image (`sha256:c204c49d...`)** — re-verified live via `gcloud artifacts docker images list` after the
+cancelled retry. `readyToReverify=false` — the manual `features-service-sports-job` re-verification execution should NOT
+be attempted yet; it will still hit the same false-DOWN error against the stale image.
+
 ### Evidence (this update)
 
 - `gcloud run jobs list --project=central-element-323112 --region=asia-northeast1 --filter="metadata.name:uts-prod-manifest-consolidator" --format='value(metadata.name)'`
