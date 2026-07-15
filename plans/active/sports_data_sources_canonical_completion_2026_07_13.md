@@ -3733,3 +3733,23 @@ it's new adapter work, not a data-audit residual).
   - **Relaunched as round3** (PID 21102, same args, fresh log `scratchpad/api_football_round3.log`) with a fresh
     `run_in_background` watchdog armed on the new PID — continuing already-authorized, already-scoped work (the CF11
     backfill todo above), not a new decision.
+
+- **2026-07-15 (round3 crash — this is a SUSTAINED consolidator slowdown, not a one-off blip like round2's).** Round3
+  crashed almost immediately on startup with the identical `ManifestConsolidatorStaleError`. Direct verification (not
+  the round2 assumption of "transient"): read `_index/consolidator.lock` directly — a genuinely fresh, actively-held
+  lock (93s old at the time, instance `1-6d51100e`), not an orphan. Read the consolidator's own `phase=*` structured
+  logs directly (`gcloud logging read 'resource.labels.job_name="uts-prod-manifest-consolidator-instruments-sports"'`)
+  and found the real cause: a genuine full merge completed at 09:31:14 UTC with **`latency_ms=396974` (~6.6 minutes)** —
+  `rows_in=5,901,362 → rows_out=5,432,273` (466,276 deduped) — vs. the ~40-50s baseline seen everywhere else this
+  session. A new merge re-acquired the lock and started again within seconds of that one finishing. **This is a real
+  ~10x throughput regression** (almost certainly caused by today's own activity — the 328K-row pre-launch purge + the
+  day's heavy backfill/reconciliation volume growing the dataset substantially), not a stuck/orphaned lock.
+  Consolidated-blob age tracked over several minutes: 384s → 160s → 365s — NOT monotonically recovering like round2's
+  incident; merges now legitimately take long enough (~6-7 min) that the 120s `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+  threshold most readers check against is frequently already blown by the time anything reads it, even though the
+  consolidator itself is healthy and making real progress every cycle. **Not filed as a new issue doc in this pass**
+  (would need to watch for a few more full merge cycles to confirm this settles down naturally as today's backfill
+  volume tapers off, vs. needing an actual capacity bump to `memory_limit`/`chunk_days`/`threads`) — noting here as a
+  known, root-caused, currently-live condition for whoever next reads this manifest's health. **Mitigation applied**:
+  rather than blindly retrying into the same crash, polled blob freshness directly and relaunched round4 the moment a
+  fresh window opened (see below), instead of a fixed-interval retry loop.

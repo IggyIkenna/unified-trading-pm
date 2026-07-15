@@ -138,6 +138,141 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Progress Log
 
+### 2026-07-15 09:33Z — data_engineering slot-3 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; fast re-verify only, both tracked VMs still alive, known consolidator-staleness recurring but self-recovering, no new action needed)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-10's 09:30Z entry (same 2 tracked VMs, ~3-4 min
+elapsed). Gate remains structurally unreachable — Todo 3 ("features manifest clean over history") cannot pass while Todo
+1 (full-history compute) is still mid-run, per the well-established pattern this todo has hit 30+ times.
+
+**Verified both tracked VMs via `gcloud compute instances list`**: `features-sports-sports-20260715-004933`
+(2018-07-09→2019-08-11) and `-091218` (2020-09-09→2020-10-05) both still `RUNNING`. Features bucket unique-date count is
+now **3,046** (up from 3,044 at slot-10's 09:30Z check) — steady forward progress.
+
+**`-004933`** log fresh (09:32:47Z at check time 09:33:51Z), genuine per-date compute continuing (currently 2018-11-23,
+honest-absence WARNING lines for genuinely-missing entities, real `GCS read` + `PIPELINE_HEARTBEAT` lines).
+
+**`-091218`** hit the same already-tracked, already-escalated P1 consolidator-staleness issue
+(`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`): retry attempts at 09:29:41
+(344s stale) and 09:30:56 (419s stale, fail-fast ERROR, re-entered startup gate for next attempt) — same signature every
+prior dispatch has already documented. Live-checked consolidator freshness directly:
+`gsutil stat .../availability_index.parquet` showed `Update time: 09:31:13Z`, i.e. it wrote fresh moments after the
+fail-fast, consistent with the established self-recovering pattern. VM remains `RUNNING` with no new failure signature.
+Not filing a new issue (same root cause already tracked, already P1).
+
+Did not attempt a manifest-based gap scan or launch new work — both known VMs are still actively closing their assigned
+ranges; per the single-walk/efficiency craft north-star, adding another GCS-list/compute contributor to the same
+congested bucket while known gaps are still genuinely mid-compute would just add congestion, not progress. Checkbox NOT
+flipped (both Todo 1 and Todo 3 gates unmet).
+
+**Handoff for the next dispatch**: same as prior entries — once `-004933` and `-091218` both complete (self-delete on
+`VM_SHUTDOWN_ON_COMPLETION=true`), launch the trailing-edge pass (2026-07-14→today), then re-run a manifest-based (not
+GCS-listing-diff) full-history gap scan before declaring Todo 1 complete — only then does Todo 3's gate become
+reachable. `/skip-current-task` per this task's established convention.
+
+No repo code commit this entry (VM/manifest verification only, no code changed); this plan-doc edit ships via the
+`docs(plans):` carve-out.
+
+### 2026-07-15 09:30Z — data_engineering slot-10 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; fast re-verify only, both tracked VMs still running + making genuine progress, same known consolidator-staleness self-recovering)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-9's 09:1xZ entry (same 2 tracked VMs,
+`features-sports-sports-20260715-004933` covering 2018-07-09→2019-08-11 and `-091218` covering 2020-09-09→2020-10-05,
+~15 min elapsed). Gate remains structurally unreachable — Todo 3 ("features manifest clean over history") cannot pass
+while Todo 1 (full-history compute) is still mid-run, per the well-established pattern this todo has hit 30+ times.
+
+**Verified both tracked VMs via `gcloud compute instances list`**: both still `RUNNING`. Features bucket unique-date
+count is now **3,044** (up from 3,041 at slot-9's 09:1xZ check) — steady forward progress. Tailed both VMs' `run.log`s:
+both show fresh timestamps (09:28-09:29Z) with genuine per-date compute (real `fixture_features`/`ManifestWriter` writes
+across leagues) — same already-tracked
+`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` staleness warning recurring on
+`-091218` (274s→344s across retry attempts) but no fatal exit, consistent with the established self-recovering pattern.
+Not filing a new issue (same root cause already tracked, already P1).
+
+Did not attempt a manifest-based gap scan or the trailing-edge pass (2026-07-14→today) — both VMs are still actively
+closing their assigned ranges; per the single-walk/efficiency craft north-star, adding another GCS-list pass while the
+known gaps are still genuinely mid-compute would just add congestion to the same bucket. Checkbox NOT flipped (both Todo
+1 and Todo 3 gates unmet).
+
+**Handoff for the next dispatch**: unchanged — once `-004933` and `-091218` both complete (self-delete on
+`VM_SHUTDOWN_ON_COMPLETION=true`), launch the trailing-edge pass (2026-07-14→today), then re-run a manifest-based (not
+GCS-listing-diff) full-history gap scan before declaring Todo 1 complete — only then does Todo 3's gate become
+reachable. `/skip-current-task` per this task's established convention.
+
+No repo code commit this entry (VM/manifest verification only, no code changed); this plan-doc edit ships via the
+`docs(plans):` carve-out.
+
+### 2026-07-15 09:1xZ — data_engineering slot-9 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; fast re-verify only, both tracked VMs still running + making genuine progress, consolidator staleness recurring but self-recovering)
+
+Fresh-pulled all 24 slot repos clean. Picked up immediately after slot-4's 09:1xZ entry (same 2 tracked VMs, ~7 min
+elapsed). Gate remains structurally unreachable — Todo 3 ("features manifest clean over history") cannot pass while Todo
+1 (full-history compute) is still mid-run, per the well-established pattern this todo has hit 30+ times.
+
+**Verified both tracked VMs via `gcloud compute instances list`**: `-004933` (2018-07-09→2019-08-11) and `-091218`
+(2020-09-09→2020-10-05) both still `RUNNING`. Features bucket unique-date count is now **3,041** (up from 3,023 at
+slot-6's 08:0xZ check) — steady forward progress.
+
+**Investigated `-091218`'s log more closely** since it showed a fail_fast `ERROR` at 09:17:30 (consolidator staleness
+grew 254s→329s→404s across 3 in-VM retry attempts, exhausting the bounded retry-with-backoff added by the 00:10Z fix) —
+confirmed this is the SAME known, already-escalated `open` P1 issue
+(`issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`, root cause NOT yet found despite
+3 separate investigation passes; a genuine concurrent-lock-acquisition race in
+`unified_trading_library/manifest_consolidator.py`, out of this task's craft scope — INFRA/library-primitive work, not
+data-pipeline-code). After the ERROR, the process re-entered the startup gate for its next date rather than exiting
+(consistent with per-date retry, not a fatal crash) — live-checked the consolidator's own freshness immediately after:
+`gsutil stat` showed a write at 09:18:32Z, 36s old at check time, i.e. it self-recovered within the same minute. Both
+VMs remain `RUNNING` with no new failure signature beyond the already-documented one. Not filing a new issue (same root
+cause already tracked, already P1, already has next-investigator todos queued outside this craft).
+
+Did not attempt a manifest-based gap scan (premature while Todo 1 compute is still genuinely mid-range on both known
+gaps) and did not launch the trailing-edge pass (2026-07-14→today) slot-6 flagged — both VMs are still actively closing
+their assigned ranges, launching more work now would just add another consolidator-load contributor to the same
+congested bucket. Checkbox NOT flipped (both Todo 1 and Todo 3 gates unmet).
+
+**Handoff for the next dispatch**: same as slot-4's — once `-004933` and `-091218` both complete (self-delete on
+`VM_SHUTDOWN_ON_COMPLETION=true`), launch the trailing-edge pass (2026-07-14→today), then re-run a manifest-based (not
+GCS-listing-diff) full-history gap scan before declaring Todo 1 complete — only then does Todo 3's gate become
+reachable. `/skip-current-task` per this task's established convention.
+
+No repo code commit this entry (VM/manifest verification only, no code changed); this plan-doc edit ships via the
+`docs(plans):` carve-out.
+
+### 2026-07-15 09:1xZ — data_engineering slot-4 (Todo 3 dispatch — still BLOCKED-PREREQ per established pattern; MANIFEST-verified a real gap left by slot-6's tracked VM dying mid-range, launched gap-fill, other tracked VM confirmed healthy)
+
+Dispatched to Todo 3 ("features manifest clean over history"). Gate remains structurally unreachable while Todo 1
+(full-history compute) is still mid-run, per the 28+ prior dispatches on this pattern. Fresh-pulled all 24 slot repos
+clean.
+
+**Checked the 2 VMs handed off by slot-6's 08:0xZ entry**: `-004933` (2018-07-09→2019-08-11) still `RUNNING`, log fresh
+(09:09-09:11Z), genuine per-date compute continuing (currently 2018-11-18), recovered cleanly from one transient
+consolidator-staleness retry-with-backoff cycle (the fix from the 00:53Z entry confirmed holding again). `-004954`
+(2020-03-07→2020-10-05) was **gone** (not in `gcloud compute instances list`) with its last log line a heartbeat at
+08:45:04Z and no exit/completion marker — consistent with a SPOT preemption mid-range rather than a clean finish.
+
+**MANIFEST-verified (not GCS-listing) the resulting gap** via
+`check_pipeline_completeness.py --start-date 2020-09-08 --end-date 2020-10-05`: real gap confirmed, only 3/28 dates
+present (2020-09-08/10/12), 25 missing (2020-09-09/11/13→2020-10-05) — matches the VM's last log line ("Target fixtures
+on 2020-09-13") dying mid-date.
+
+**Action taken**: launched a gap-fill VM for the confirmed missing range —
+`launch-features-vm.sh --feature-family sports --asset-group SPORTS --start-date 2020-09-09 --end-date 2020-10-05 --mode batch --operation compute --launch-mode full`
+→ **`features-sports-sports-20260715-091218`** (SPOT). All 5 tarballs reported fresh (features-service@c084023d,
+mtds@7c3e5160, unified-api-contracts@c11e2899, unified-trading-library@428ef1b5, deployment-service@70849060).
+No-fire-and-forget check passed: confirmed `RUNNING` via `gcloud compute instances list` immediately after launch and
+~2min later; cloud-init finished cleanly (serial console), tarball-fetch/compute startup in progress (`run.log` not yet
+written — too early, this is normal, not a failure).
+
+**What I did NOT do**: did not attempt the trailing-edge pass slot-6 flagged (2026-07-14→today) — `-004933` is still
+genuinely mid-range and the newly-launched gap-fill just started; per the single-walk/efficiency craft north-star,
+sequencing one new launch at a time and confirming it clears the startup gate before adding more avoids wasted GCS-list
+cost from premature parallel gap-hunting. Did not flip Todo 1 or Todo 3 (compute still genuinely in progress on 2 of 3
+now-tracked VMs).
+
+**Handoff for the next dispatch**: verify `-091218` gets past the startup gate (check its `run.log` for
+`"sports batch startup gate: instruments-store consolidator healthy for sports"` and real per-date compute, not a repeat
+consolidator-down failure) and makes progress toward 2020-10-05. Once `-004933` and `-091218` both complete, launch the
+trailing-edge pass (2026-07-14→today) slot-6 already flagged, then re-run a manifest-based (not GCS-listing-diff)
+full-history gap scan before declaring Todo 1 complete — only then does Todo 3's gate become reachable. Checkbox NOT
+flipped (both Todo 1 and Todo 3 gates unmet). `/skip-current-task` per this task's established convention.
+
 ### 2026-07-15 08:0xZ — data_engineering slot-6 (Todo 1 re-dispatch — real fix shipped: cross-repo fixtures-split reader gap found + fixed at the leading edge; 2 gap-fill VMs still healthy mid-history, checkbox NOT flipped)
 
 **Fresh-pulled all 24 slot repos clean.** Verified the 2 gap-fill VMs from slot-2's 00:53Z relaunch

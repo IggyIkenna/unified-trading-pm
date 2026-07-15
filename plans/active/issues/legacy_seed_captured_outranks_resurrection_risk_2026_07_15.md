@@ -162,16 +162,16 @@ should be treated as an active P0/P1 production data-correctness bug, not a back
 
 ## Recommended next steps
 
-- [ ] [SCRIPT] P1. Determine why the production `manifest_consolidator.py` Cloud Run job has NOT (observably) reverted
-      the CeFi 9,757-row fix despite carrying the same leading captured-outranks `CASE` in its merge SQL and
-      `_legacy_seed.parquet` still holding the stale `captured` state — read the consolidator's actual shard-scan /
-      already-absorbed-shard tracking logic end-to-end (not just the merge SQL) to find the actual protection (if one
-      exists) or confirm there is none and this is a live, unmitigated production risk. Repo: unified-trading-library.
-  - [ ] [SCRIPT] P1. If no real protection is found: either (a) special-case `_legacy_seed.parquet` out of the
-        captured-outranks tie-break specifically (recency-only comparison against the frozen seed, since by definition
-        anything in the live canonical postdates the seed's freeze), or (b) refresh/re-freeze each bucket's
-        `_legacy_seed.parquet` periodically (or after any bulk reconciliation pass) so it never diverges this far from
-        canonical truth. Repo: unified-trading-library.
+- [x] ✅ [SCRIPT] P1. Determine why the production `manifest_consolidator.py` Cloud Run job has NOT (observably)
+      reverted the CeFi 9,757-row fix — MOOT, superseded by the 2026-07-15 (later) confirmed-live resurrection below: it
+      DID revert, on a subsequent cycle, so there was no real protection to find (the first-cycle survival was
+      incidental to the incremental path's mtime-staleness cutoff naturally excluding the frozen seed most cycles — not
+      a deliberate absorbed-shard guard). Not independently re-derived in this pass; superseded by shipping the fix
+      directly. Repo: unified-trading-library.
+  - [x] ✅ [SCRIPT] P1. Option (a) implemented exactly as specified — special-cased `_legacy_seed.parquet` out of the
+        captured-outranks tie-break by shard-identity (not option (b), periodic refresh; not a general recency
+        reordering) — `unified-trading-library@f14b13ae`. See the dated section below for the full writeup. Repo:
+        unified-trading-library.
 - [ ] [SCRIPT] P2. Audit `reconcile_phantom_manifest_rows_all.py`'s existing DeFi delete passes
       (`_apply_delete_chain_level_defi_phantoms` / `_apply_delete_legacy_combined_venue_defi_phantoms`) against the DeFi
       bucket's own `_legacy_seed.parquet` (frozen 2026-06-24T17:28:59Z) for the same class of silent-resurrection
@@ -185,3 +185,58 @@ single-read discipline maintained per read, no whole-corpus GCS walk); `gcloud s
 `_index/per_vm/` for cefi/defi/tradfi buckets; direct reads of `unified_trading_library/manifest_writer/_read_index.py`
 (`_merge_shard_frames`) and `unified_trading_library/manifest_consolidator.py` (`_LEGACY_SEED_PATH`, the leading
 `CASE WHEN capture_status = 'captured'` ORDER BY).
+
+## 🟢 2026-07-15 (later) — FIX SHIPPED: legacy seed special-cased out of the captured-outranks tie-break
+
+Operator decision (interactive session, 2026-07-15): special-case the legacy seed out of the tie-break — option (a) from
+this doc's own "Recommended next steps" — not option (b) (periodic seed refresh), and not a general recency-reordering
+of the whole tie-break's semantics (deemed higher-risk for shared consolidator-fleet code). Implemented exactly this, in
+both places this doc identified the byte-identical tie-break logic living
+(`unified-trading-library@f14b13aeac298f70ea07bbf5ed30ca4f480ab8e9`):
+
+- **`unified_trading_library/manifest_consolidator.py::_duckdb_merge_payload`** (the production Cloud Run consolidator's
+  own merge SQL, ~line 2232 pre-fix): the legacy seed shard is now downloaded to its own fixed local basename
+  (`__legacy_seed__.parquet`, never the generic index-numbered scheme ordinary shards use) and its rows are tagged
+  `is_legacy_seed_row` via `ends_with(filename, ...)` on DuckDB's `filename` pseudo-column
+  (`read_parquet(..., filename=true)`). The leading `order_by` CASE now reads
+  `CASE WHEN capture_status = 'captured' AND NOT is_legacy_seed_row THEN 1 ELSE 0 END DESC` — a captured row sourced
+  from the legacy seed no longer gets the outranking boost; it falls through to plain recency like any non-captured row,
+  so a newer, non-tainted competitor for the same key always wins. The synthetic column is excluded from every final
+  written-parquet output (all 3 merge-completion sites: incremental + full-rebuild × Option-B/non-Option-B). No-op —
+  byte-identical SQL — when the legacy seed doesn't participate in a given cycle, which is the overwhelming majority
+  (its frozen mtime naturally excludes it from most incremental cycles' "changed shards" set; it only re-enters via a
+  full rebuild, which is when the resurrection actually manifested).
+- **`unified_trading_library/manifest_writer/_read_index.py::_merge_shard_frames`** (the Python reader-side helper this
+  doc's own diagnostic exercised directly — the ACTUAL call that returned 0 rows instead of 9,757):
+  `_read_and_merge_per_vm_shards` tags the frame read from `_LEGACY_SEED_PATH` with a synthetic `_IS_LEGACY_SEED_COL`
+  marker; `_merge_shard_frames`'s captured-outranks rank computation now ANDs in `NOT is_legacy_seed`, so a tainted row
+  never outranks a newer, untainted competitor. The taint survives exactly ONE additional chained-merge hop (new
+  `keep_legacy_seed_taint` kwarg) so `merge_canonical_with_outstanding_shards`'s own canonical-vs-shard merge — the
+  specific call this doc's diagnostic used — is protected too; the taint is always stripped before any value returned to
+  an external caller (verified by a dedicated regression test asserting the synthetic column never leaks).
+- **`unified_trading_library/manifest_writer/_maintenance.py::rebuild_manifest_from_canonical_paths`**: same
+  chained-merge shape found on a second, previously-unaudited call site (its own staleness-guard merge against
+  freshly-discovered-from-GCS rows) — given the identical `keep_legacy_seed_taint` treatment.
+
+**Scope confirmed cross-asset-group**: `manifest_consolidator.py` is bucket-parametrized shared code (not
+per-asset-group duplicated), so this fix protects cefi, defi, and tradfi uniformly — all three buckets carry their own
+frozen `_legacy_seed.parquet` per this doc's own §6 above. No separate per-asset-group fix was needed.
+`instruments-service`'s `reconcile_phantom_manifest_rows_all.py` (this doc's §"Why it matters" — its DeFi delete passes
+use `merge_canonical_with_outstanding_shards` as their staleness guard) needs NO direct change — it calls the now-fixed
+UTL function and inherits the protection transitively once instruments-service picks up the new UTL version.
+
+**Tests** (3 new regression tests, all reproducing the exact resurrection scenario and asserting it no longer occurs):
+`test_consolidate_legacy_seed_does_not_resurrect_corrected_row` (DuckDB full-rebuild path, in
+`tests/unit/test_manifest_consolidator.py`); `test_merge_shard_frames_legacy_seed_taint_never_outranks_newer_correction`
+
+- `test_merge_canonical_with_outstanding_shards_legacy_seed_does_not_resurrect_corrected_row` (Python reader path, in
+  `tests/unit/test_manifest_writer_per_vm.py` — the latter a direct reproduction of this doc's own diagnostic: a
+  canonical holding the corrected `attempted_failed` state plus a `_legacy_seed.parquet` shard holding the stale
+  `captured` state for the identical key). Full `unified-trading-library` test suite + `quality-gates.sh` green before
+  shipping.
+
+**Still open / explicitly NOT done by this fix**: the cefi 9,757-row delete has NOT been re-run. Re-running it is a
+separate follow-up gated on confirming this fix holds across MULTIPLE production consolidator cycles (not just shipped
+code) — per operator instruction, out of scope for the session that shipped this fix. Priority stays P0 and
+`status: open` until that live multi-cycle confirmation lands. See
+`plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md`'s matching update for the cross-plan link.

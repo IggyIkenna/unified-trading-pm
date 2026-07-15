@@ -135,14 +135,24 @@ deployment-api (LDR — `002c479`):
   fixture to a currently-declared venue-level TRADFI pair (`ICE/ohlcv_24h`); no assertions weakened. File now 156 passed
   / 2 skipped.
 
-## Follow-ups (not blocking; captured for a later pass)
+## Follow-ups — both DONE (2026-07-15, deployment-api@db9c8ed)
 
-- [ ] [INFRA] P2. Bake `--memory 8Gi` into the deploy config (currently persisted via gcloud on rev `00173`; the
-      `deployment-api-main-deploy` deploy step does NOT set `--memory`, so it survives — but it should be explicit in
-      the cloudbuild deploy template rather than relying on revision inheritance).
-- [ ] [PERF] P2. Proper root fix — memory-efficient drilldown read: `read_availability_index` loads the ENTIRE
-      multi-year index then window-filters in memory; a date-window predicate pushdown (read only the requested window's
-      rows) would make each build small enough that concurrency + memory tuning become moot. Likely a UTL-level change.
+- [x] [INFRA] P2. Bake `--memory 8Gi` into the deploy config — deployment-api@db9c8ed. Added `--memory 8Gi` explicitly
+      to the `gcloud run deploy` in `cloudbuild.yaml`'s deploy step (alongside `WORKERS=2`), so memory is no longer
+      silently inherited from the prior revision. (Note: the deploy step lives in the per-repo cloudbuild.yaml,
+      maintained by direct commits like `ab07227`, not the generic api template — pre-existing template drift, out of
+      scope here.)
+- [x] [PERF] P2. Proper root fix — memory-efficient drilldown read — deployment-api@db9c8ed. UTL
+      `read_availability_index` ALREADY supports `columns=`/`filters=` pyarrow row-group predicate pushdown (built for
+      `mtds_backfill_vm_startup_oom_rc137`). Wired `manifest_source.read_manifest_index(bucket, date_window=...)` to
+      take that path (project `DRILLDOWN_COLUMNS` — the audited union of every axis-matrix axis + provenance cols + the
+      `_merge_shard_frames` dedup keys — and filter `date` to the window), and `get_hierarchical_drilldown` now passes
+      its window. Each build decodes only the window's row groups instead of the whole multi-year index (UTL benchmark:
+      ~14.86 GiB → ~5 MB for a single-day filter on the 27.4M-row DeFi index). **Byte-identical output verified** on
+      instruments-service/cefi (old full-read vs new pushdown: same totals, same 27 tree nodes, same completion_pct);
+      108 drilldown unit tests + full QG green. Stale-tolerant fall-through preserved (a raising/empty pushdown falls
+      back to the full read). Shipped via the dirty-deps direct-push carve-out (unified-trading-library had foreign
+      uncommitted WIP at push time; F2 does not depend on it).
 
 ## Data observation (not a defect of this fix)
 
