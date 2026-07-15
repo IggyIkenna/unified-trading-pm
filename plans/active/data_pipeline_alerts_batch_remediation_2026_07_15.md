@@ -1020,3 +1020,35 @@ the issue docs, exactly the plan's established pattern (mbp_10 / corp_action / c
 defi rows with the now-fixed MTDS image → rewrites them `empty_confirmed`; (2) the 305 odds_horizon rows
 (reclassify/delete after handling the legacy seed); (3) the separately-flagged YAHOO_FINANCE/CBOE UAC operationalization
 (IS/MTDS image rebuilds already carry the new UAC via the base image) + the 11,676-row YAHOO cleanup.
+
+## Historical-row cleanups — ALL DONE + verified-to-HOLD (2026-07-16 ~00:00Z), independently re-confirmed
+
+After the 3 code fixes were live-verified, the operator directed the gated historical-row cleanups be driven to
+completion. All 3 done, each proven to HOLD across real consolidator cycles (not point-in-time), then re-verified by the
+orchestrator with fresh live queries:
+
+- **Item B — 627 pre-genesis defi rows → cleaned.** Resurrection vector found (551 dex rows sit in the still-running
+  old-image `mtds-dex-pools-backfill` VM's per-VM shard, re-emitted every merge). Hold-safe method: wrote the correct
+  classification into a DEDICATED cleanup shard with a newer `attempted_at` (fixed CLI `mtds@42527190`; pre-genesis
+  dates route to `EXPECTED_PRE_VENUE_LAUNCH` before any external API), so last-write-wins dominates. **627 → 1** (626
+  `empty_confirmed`; the 1 remaining is correctly `CURVE-ETHEREUM 2020-01-19`, Curve's launch day — the documented
+  626/627 boundary). Held across 3 merges incl. one where the cleanup shard was pruned so only the canonical baseline
+  defended. `PM@2e281e8e3`. Orchestrator re-verify: `[('CURVE','2020-01-19',1)]`.
+- **Item C — 305 odds_horizon Malformed rows → cleaned.** Classification PROVEN honest-absence by replaying the fixed
+  adapter on the real raw ODDS_API ticks (66/66 → empty). Corrected a stale premise (UTL Part-2 `8e783d70` already
+  excludes the legacy seed entirely from full-rebuilds). Atomic-CAS reclass (`mtds@545ce50b`) with snapshot + invariant
+  guards. **305 → 0**, held across 2 `--force` full rebuilds (the exact cefi-revert vector) + 5 cron cycles.
+  `PM@62bdbb33f` (doc resolved). Orchestrator re-verify: `0`.
+- **YAHOO/CBOE — 11,676 canonical + 5,080 range rows → cleaned; seeding STOPPED.** Fixed a real IS build blocker (the
+  first UTL base predated `uac@7754661a`'s new symbol) → durable `is@3e5b1039` (`cloudbuild=d00de7ec`). Re-pinned + ran
+  the sole seeder `expected-universe-v2-tradfi` → fresh shard 5,709 rows, YAHOO=0, real venues intact. Deleted the
+  phantom rows from the canonical AND the honest-coverage `expected_universe_ranges` denominator (snapshots kept). Held
+  across ≥5 cycles. CBOE `ohlcv_24h` confirmed live. `PM@657a2f7b`. Orchestrator re-verify: `0`.
+
+**Remaining honest follow-ups (documented, low residual risk):** (1) `[DEPLOY] P1` — the fixed MTDS image is now
+`:latest`, so any NEW defi backfill uses it; the only residual is a hypothetical backfill pinned to an OLD digest
+re-walking 2020-01 (won't happen on `:latest`); the still-running `mtds-dex-pools-backfill` VM forward-walks past
+2020-01 and won't resurrect. (2) Two PRE-EXISTING, unrelated MTDS adapter-contract-baseline regressions surfaced during
+QG (`solana_defi_drift.py` 10<12, `_onchain_perp_batch_live_only.py`) — outside this remediation's scope, warn-only,
+flagged here for a separate pass (an adapter with fewer classify_venue_error/record_* calls than baseline may not be
+classifying errors fully).
