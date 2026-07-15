@@ -1562,3 +1562,38 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
     but because of the item-G HELD/collision status; the delete phase must wait for the sister plan's E1/E8 gate (CF-8)
     to clear on BOTH halves of the pair before this bucket can move. No regression introduced; bucket estate count and
     item G's status are unchanged by this touch.
+
+- **2026-07-15, `market-data-tick-sports` Verify+Delete-phase dispatch — declined per the migrate-phase's own
+  `readyForDelete=false` verdict, collision with item G / HELD sports plan unchanged; zero objects deleted, zero
+  terraform touched, zero config touched, zero code shipped.** Dispatch instructions for this touch were explicit: "Only
+  proceed if readyForDelete is true — if not, STOP and report why instead of forcing it." The immediately preceding
+  migrate-phase entry (above, same date) already set `readyForDelete=false` for this exact bucket, for a reason that is
+  a plan-collision/HELD-status gate, not a data-safety gate that could have changed since. Re-checked before stopping
+  (light-touch, no full-corpus walk, no new manifest/data-status query — the migrate-phase already ran the
+  honest-coverage/data-diff check this session and nothing about the data state can have changed in the interim): (1)
+  re-grepped item G at line ~533 of THIS plan — still reads **"Still HELD — do not purge/delete either bucket"**,
+  unedited since the migrate-phase touch; (2) re-grepped `sports_manifest_canonicalisation_2026_06_01.md`'s latest
+  Progress Log entries (lines ~4035-4130) — CF-8 still `RED` on the MDPS (`market-data-tick-sports-prd`) surface,
+  `available_at` non-null still 85.3% (1,670,401/1,958,499), unchanged from the migrate-phase's own citation, parking
+  fix still not applied, sister plan still `locked_by: live-defi-rollout` (active-churn — did not hand-edit it). No
+  operator or sister-plan update has landed between the migrate-phase touch and this touch that would flip the gate.
+  **Verify-phase checks explicitly NOT performed given the STOP** (would be wasted/premature work ahead of an unclear
+  delete): did not re-query deployment-api's data_status/honest-coverage endpoints (the migrate-phase's Cloud
+  Monitoring + manifest-based diff already stands, re-deriving it adds no new information while the gate itself is
+  unchanged); did not touch `deployment-service/terraform/gcp/*.tf` (the 3 live Terraform/IAM references the diff-phase
+  found — `google_storage_bucket.market_data_sports`, `_imports_reconcile.tf` import block,
+  `instrument_catalogue_scheduler.tf` for_each IAM grant — remain undeclared-for-removal, since removing them ahead of
+  an actual delete would desync terraform state from live infra for no reason); did not touch
+  `deployment-service/configs/bucket_config.yaml` or any scheduler/cron/VM-launcher config; did not run
+  `gcloud storage rm`/`gcloud storage buckets delete` against either bucket. **Nothing was deleted; both buckets
+  (`market-data-tick-sports-central-element-323112`, `market-data-tick-sports-prd-central-element-323112`) remain
+  exactly as they were.** This Progress Log entry is the only artifact of this touch (docs-only, pushed directly per the
+  PM cross-repo `docs(plans):` carve-out) — matching the same low-risk annotation pattern used by the migrate-phase
+  entry and by the sibling `instruments-store-sports` touches on this same date, per workspace findings-triage ("fits
+  another plan → annotate, don't fix" is the collision-risk case, and forcing a delete against an explicit STOP
+  instruction plus an explicit HELD directive would be the opposite of that). **Verdict for the orchestrating
+  verify+delete-phase task**: correctly declined — `readyForDelete` is still `false` for `market-data-tick-sports`, for
+  the identical reason cited by the migrate-phase (item G HELD, gated on the sister plan's CF-8 backfill needing a
+  scheduled maintenance window + service_name-aware write redesign), and nothing in this touch's re-check changed that.
+  Re-check this bucket once `sports_manifest_canonicalisation_2026_06_01.md`'s E1/E8 CF-8 gate clears on BOTH halves of
+  the sports pair (`market-data-tick-sports` AND `instruments-store-sports`).
