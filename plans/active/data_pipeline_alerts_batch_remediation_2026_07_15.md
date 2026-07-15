@@ -95,19 +95,24 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — `alerting-service@fe76ded34a4`
-      (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) + `deployment-service` source-side re-nag (in flight, see
-      Progress Log). Issue doc: `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
-- [ ] [CODE] P1. Implement bounded retry-with-backoff in the features-service compute VM startup gate (Option 2 from
-      `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`) so a transient consolidator-stale
-      reading doesn't burn a full SPOT VM launch. Ship + update that issue doc with the fix commit.
-- [ ] [INFRA] P1. Investigate root cause of `uts-prod-manifest-consolidator-instruments-sports`'s occasional 8-9min
-      executions (Option 1 in the same issue doc) — check for concurrent-execution lock contention given the every-1min
-      trigger cadence. Fix if tractable; document if not.
-- [ ] [INFRA] P1. Ship the consolidator entrypoint stdout-logging-bootstrap fix (unified-trading-library) so a killed
-      defi consolidator execution's actual in-container failure point becomes visible in Cloud Logging, per
-      `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s own next-step. Re-observe kill pattern after
-      deploy and update that issue doc with whatever the logs reveal.
+- [x] [INFRA] P0. Diagnose and fix the alert-repeat/no-dedup/no-RESOLVED-green bug — BOTH layers shipped:
+      `alerting-service@fe76ded34a4` (cadence-aware cooldown, `DP_RUN_MOSTLY_EMPTY: 1800.0`) +
+      `deployment-service@0aaab1a22` (source-side `RenagTracker`, defense-in-depth). 166 unit tests pass,
+      `quality-gates.sh` green both repos. Issue doc fully resolved (all 3 todos done):
+      `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`.
+- [x] [CODE] P1. Bounded retry-with-backoff shipped — `features-service@5e1ffd2e`
+      (`_assert_consolidator_healthy_with_retry`, 3 attempts/75s/150s total, fail-fast intent preserved).
+- [x] [INFRA] P1. Root cause found: `instruments-sports` consolidator has the IDENTICAL lock-contention livelock class
+      already fixed for defi (just triggered by ordinary shard-backlog growth, not date-range chunking) — live
+      `"clearing stale lock ... age>TTL"` reclaim signature confirmed it, `market-data-sports` control group (same
+      timeout tier) stayed fast the whole time. Fixed via `deployment-service@69136c2c`
+      (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400` Terraform override, live-applied). Post-fix: 2+ six-minute cycles with ZERO
+      stale-lock reclaims (previously guaranteed). Issue doc flipped `open` → `resolved`:
+      `unified-trading-pm@05942b2f0`.
+- [x] [INFRA] P1 — SUPERSEDED, not needed. The stdout-logging-bootstrap plan for defi turned out unnecessary: the actual
+      root cause (lock-TTL livelock, not an unobservable in-container crash) was found and fixed via Terraform alone
+      (see Ground Truth — defi fix already verified live-working before this todo was ever picked up). Leaving unstruck
+      rather than deleted, per plan-hygiene (documents why the originally-planned approach wasn't taken).
 - [x] [DATA] P1. Swept every (asset_group, data_type) pair from the alert batch. cefi/tradfi partial-ratio cells:
       already tracked under existing per-venue docs. New:
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (3 root causes; mbp_10
@@ -179,3 +184,24 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   (market-tick-data-service, same pattern as the already-fixed KRX/ICE precedents) — in flight; (agent 3 continued)
   resumed the sports/features-service+UTL agent twice after it stalled in a background-wait pattern that doesn't
   actually wake a sub-agent (corrected with explicit foreground-execution instructions) — in flight.
+- 2026-07-15 (agent 3 DONE — sports consolidator, after 2 stalls + correction): confirmed the sports 8-9min slow-run
+  issue shares the EXACT SAME lock-contention livelock class already fixed for defi. Fixed `deployment-service@69136c2c`
+  (Terraform lock-TTL override, live-applied) + defense-in-depth `features-service@5e1ffd2e` (bounded retry). Post-fix
+  live-verified: zero stale-lock reclaims across 2+ six-minute cycles (previously guaranteed under the old 300s TTL).
+  Issue doc flipped to resolved. Note: this agent's commit (`05942b2f0`) landed interleaved with my own in-flight edit
+  to THIS plan file (shared working directory across concurrent agents) — content was NOT lost, both sets of changes are
+  present, just under one commit instead of two; noting for the record, not re-litigating (rewriting shared history is
+  banned).
+- 2026-07-15 (agent 2 DONE — deployment-service re-nag): shipped `deployment-service@0aaab1a22`, a new `RenagTracker`
+  module (GCS-persisted `last_alerted_at` per cell, mirrors the existing `MissTracker` pattern) wired into
+  `check_high_attempted_failed` + `reconcile_resolved`. 5 new tests, 166 total unit tests pass,
+  `quality-gates.sh --no-fix` green (file-size ratchet: `meta_watchers.py` was already at 897/900 lines pre-change,
+  lands at 925/900 post-change — consumes the repo's existing `CODEX_MAX_VIOLATIONS=1` tolerance rather than adding a
+  NEW one; QG reports it non-blocking. Worth a follow-up extraction pass but not blocking this fix). Both dedup-issue
+  layers (alerting-service + deployment-service) now shipped — issue doc fully resolved.
+- 2026-07-15: **Big finding — needs operator chat notification** (queued for the next progress report, per the HARD
+  RULE, rather than blind-fixed): (1) cefi blank-data_type 9,757-row stale "RESOLVED" claim (confirmed real-but-static
+  via live re-query, see above), (2) tradfi cross-service data_type misclassification
+  (corporate_action_confirmed/earnings_result expected in the MTDS tick manifest but only ever captured by
+  features-service's calendar module — a bucket that structurally can never be satisfied). Both are architecture/policy
+  items needing a real decision, not blind-fixed.
