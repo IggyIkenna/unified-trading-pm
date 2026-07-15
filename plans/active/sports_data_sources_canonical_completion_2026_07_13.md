@@ -237,8 +237,8 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       → new P2 remove/relabel todo. Residual: the api_football-specific scheduled-jobs sub-check was NOT performed here
       (needs Cloud Scheduler access; partly covered by the sibling scheduled-job VERIFY todos below). The RED findings
       are tracked as auto-dispatchable fix todos in the issue doc; api_football is NOT clean until they land.**
-- [ ] [DATA] P2. **api_football: backfill the 1,090 `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` per-fixture-entity gaps (NEW
-      2026-07-14, found during the deep-investigation re-verify).** FIXTURE_EVENTS 372 / FIXTURE_STATS 363 /
+- [x] ✅ [DATA] P2. **api_football: backfill the 1,090 `CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` per-fixture-entity gaps
+      (NEW 2026-07-14, found during the deep-investigation re-verify).** FIXTURE_EVENTS 372 / FIXTURE_STATS 363 /
       FIXTURE_LINEUPS 355 across 114 distinct match-days (2020-10-06→2026-03-26), lower-tier/cup leagues (DANISH_CUP,
       KNVB_CUP, EERSTE_DIVISIE, ENG_NATIONAL_LEAGUE, CHILE_PRIMERA_B, …). These are NOT a defect: the v9-rebuild
       step-6.7 CF-11 gate (`market-tick-data-service/scripts/rebuild_sports_manifest_v9.py:378`, operator directive
@@ -268,21 +268,24 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
       non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
-      operation closes both.** **🔴 BLOCKED-UPSTREAM-BUG 2026-07-15 (slot-11): the residual is now 18 CF11 rows
-      (FIXTURE_EVENTS 8 / FIXTURE_LINEUPS 10, 11 match-days) and the standard re-drive CANNOT clear them — root-caused
-      to a UTL bug, NOT a data gap. api_football HAS the events/lineups (live probe: 9-23 events + 34-40 lineups per
-      fixture) AND the canonical per-league DATA parquets are PRESENT on disk for every cell, but
-      `ManifestWriter.record_captured()` SILENTLY NO-OPS for sports FIXTURE_EVENTS/FIXTURE_LINEUPS
-      (`MANIFEST_WRITE_SCHEMA_MISSING` → row never staged; reproduced via the orchestrator path, a force re-fetch, AND a
-      direct record_captured() call — all `flush_all_pending_buckets()=={}`, no shard, cell unchanged). So the cells are
-      a permanent manifest-vs-data drift: the prior 2026-07-13 closer AND this session's runs both leave them
-      attempted_failed for the same reason. FULL root-cause + repro + fix todos (fix record_captured's schema-missing
-      skip in unified-trading-library, THEN targeted-recovery re-drive of the 18 cells) filed in
-      `plans/active/issues/api_football_cf11_record_captured_noop_manifest_vs_data_drift_2026_07_15.md`. NOT flipping
-      this checkbox to done (no false progress). Also filed a sibling read-path finding
-      `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (sports lacks an
+      operation closes both.** ✅ RESOLVED 2026-07-15 (slot-11) — `instruments-service@b10434b2`
+      (`scripts/backfill/api_football_cf11_manifest_reconcile_2026_07_15.py`): **18/18 CF11 cells → captured, 0
+      `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` api_football attempted_failed remaining** (live-verified
+      against instruments-store-sports-prd). Root cause: these were a manifest-vs-data DRIFT, not a data gap —
+      api_football HAS the events/lineups (live probe: 9-23 events + 34-40 lineups/fixture; only 1 genuinely-empty
+      fixture) AND the canonical per-league DATA parquets were already PRESENT on disk for all 18 cells (14-141 rows
+      each). The prior closers failed to flip them because they called `flush_all_pending_buckets()` (bucket-level
+      pending) but never `ManifestWriter.write()` (the writer instance's staged `self._records`) — so their
+      `record_captured` rows were staged then silently discarded. Fix = reconcile each cell to captured from its present
+      parquet (`record_captured` + `write()`; cells with no parquet skipped, never fake-stamped). NB: my first-cut issue
+      doc mis-blamed `record_captured` as broken (`MANIFEST_WRITE_SCHEMA_MISSING`) — that is warn-only and was a red
+      herring; CORRECTED. Full resolved writeup:
+      `plans/active/issues/api_football_cf11_record_captured_noop_manifest_vs_data_drift_2026_07_15.md` (status:
+      resolved, parent_epic manifest_master, cross-linked to the sibling
+      `manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`). Sibling read-path finding still
+      open: `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (sports lacks an
       AG_STALENESS_BUDGET_SEC override → false ManifestConsolidatorStaleError on a healthy ~11-min-cadence
-      consolidator). Do NOT relabel these empty_confirmed — the CF-11 gate forbids it and the data is present.**
+      consolidator).**
 - [x] [DATA] P0. **mdps_odds_horizon_bucket: root-cause zero-ever-captured.** — DONE, code fix + backfill shipped:
       `market-data-processing-service@6907257e4` (manifest-bucket routing fix, ALSO fixed a second independent
       `_resolve_bucket()` project_id bug in the same commit) + `instruments-service@0ae48c3b0` (metadata backfill of the
