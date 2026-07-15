@@ -303,7 +303,9 @@ destructive todos on the 2026-06-27 reversal:
       (was: `Wipe the existing IS footystats ODDS (194,789 manifest rows + the 29,701 captured cells' GCS objects) …`)
 ```
 
-…but the third was missed and is **still open** (`:143`):
+…but the third was missed and was **still open** at audit time (`:143`) — **CANCELLED 2026-07-15**,
+unified-trading-pm@f70a2caf0 (the quoted block below is the now-struck original, preserved for the record; it had
+drifted to `:133-135` by the time it was cancelled):
 
 ```
 - [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in
