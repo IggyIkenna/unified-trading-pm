@@ -253,9 +253,10 @@ computed manually via `rg -l '^parent_epic: orchestrator_master' plans/active/ p
   [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
   — Agent-Orchestrator Alert Channel Cleanup — remove lifecycle churn, daily digest, dedup git-health, richer BLOCKED
   schema
-- **P0 · active** (added 2026-07-14, finding 188 — created 2026-07-13, after the 2026-07-12 regen) —
-  [`main_agent_spawn_surgery_regression_2026_07_13`](../active/main_agent_spawn_surgery_regression_2026_07_13.md) — Fix
-  broken main/review agent_id-injection surgery in spawn paths + add regression tests
+- **P0 · complete (archived 2026-07-15)** (added 2026-07-14, finding 188 — created 2026-07-13, after the 2026-07-12
+  regen) —
+  [`main_agent_spawn_surgery_regression_2026_07_13`](../archive/2026_07/main_agent_spawn_surgery_regression_2026_07_13.md)
+  — Fix broken main/review agent_id-injection surgery in spawn paths + add regression tests
 
 Orchestrator work also lives in the Phase 6/9/11 rows of the table above.
 
