@@ -202,22 +202,37 @@ repo. This plan tracks that work.
       the new job dir (`-lock=false`) = ZERO infra drift (only a benign `backfill_example_command` output-value refresh,
       no resource change). The legacy `--category` workflows get destroyed with the legacy job (todo 7), so the fix
       needs no separate application. The real scheduled fire (todo 8) exercised the `--asset-group` workflow end-to-end.
-- [ ] [INFRA] P1. **[BLOCKED — new dependency found 2026-07-15]** Repoint the per-fixture Tier-3/4 sports feature
-      triggers (`features_pre_match` @ T-1h, `features_post_match` @ T+25h) in
-      `deployment-service/configs/sports-trigger-tiers.yaml` (lines 189, 248,
-      `cloud_run_job_name:     "features-sports-service-job"`) from the legacy job to the new
-      `features-service-sports-job` — this is a PREREQUISITE for todo 7 (retiring the legacy job would otherwise break
-      these live per-fixture dispatches). It is NOT a simple YAML name-swap: the consolidated `features-service` image's
-      baked `command = ["python", "-m",     "features_service"]` is the multi-family dispatcher that REQUIRES a
-      `--feature-family sports` prefix, but the dispatch path
-      (`deployment_service/sports_trigger_scheduler.py::_build_cli_cmd`, line 418-423) emits
-      `python -m     features_service --operation compute --mode batch --asset-group SPORTS …` with NO
-      `--feature-family sports`, and `_strip_python_module_prefix` then forwards `--operation …` as the args override —
-      so the new job would reject the invocation. Fix = inject `--feature-family <family>` into `_build_cli_cmd` (or a
-      per-service config field) for the consolidated features-service, then repoint the two tier entries, then dispatch
-      one real per-fixture trigger to the new job and confirm SUCCEEDED. Found 2026-07-15 (DriftRetireReenable phase)
-      via grep of the legacy job name + reading the dispatch code. (The legacy per-family image had `command: None`, so
-      `--operation …` alone worked against it — that is why the tiers ran against the legacy job historically.)
+- [x] [INFRA] P1. Repoint the per-fixture Tier-3/4 sports feature triggers (`features_pre_match` @ T-1h,
+      `features_post_match` @ T+25h) in `deployment-service/configs/sports-trigger-tiers.yaml` from the legacy job to
+      the new `features-service-sports-job` — PREREQUISITE for todo 7. — ✅ 2026-07-15 (RepointDispatch phase),
+      `deployment-service@9ec1c3bef2330fe4fa53a38eefde634d66b996b4` (quickmerge `--agent --files`, landed on
+      `live-defi-rollout`, `quality-gates.sh --no-fix` green in 59s, sentinel==HEAD; foreign soft-delete WIP in
+      `terraform/gcp/main.tf` left untouched/isolated). **Dispatch-code fix (the real prerequisite, not a YAML swap):**
+      `deployment_service/sports_trigger_scheduler.py::_build_cli_cmd` now injects a leading `--feature-family sports`
+      (derived from `asset_group.lower()`) for the consolidated features-service via a new
+      `_MULTI_FAMILY_DISPATCH_SERVICES = frozenset({"features-service"})` guard — so it emits
+      `python -m features_service --feature-family sports --operation compute --mode batch --asset-group SPORTS …` and,
+      after `_strip_python_module_prefix` (drops only `python -m <module>`), the Cloud Run args override leads with
+      `--feature-family sports` (the exact selector the multi-family dispatcher `features_service/cli/main.py`
+      requires). **Family/service-aware, NOT always-emit** — verified `_build_cli_cmd` is SHARED across services
+      (instruments-service Tier-1/2, MTDS Tier-3), so instruments-service/MTDS dispatches are unchanged (2 new
+      regression tests assert features-service gets the prefix + instruments-service does NOT). **YAML repoint:** both
+      `features-service` entries (`features_pre_match` `--tables fixture_features,odds_features`; `features_post_match`
+      `--tables derived_features`) `cloud_run_job_name` → `features-service-sports-job` (+ header-comment note refresh).
+      **Runtime PROOF the new job accepts the per-fixture shape (real production path, not just a unit test):** drove
+      the exact chain `_build_cli_cmd → _strip_python_module_prefix → CloudRunBackend.deploy_shard` (the same code a
+      live per-fixture trigger runs) for BOTH shapes with a real single fixture date (start==end==2026-07-14): (1)
+      pre_match override
+      `--feature-family sports --operation compute --mode batch --asset-group SPORTS --start-date 2026-07-14 --end-date 2026-07-14 --run-tag live --tables fixture_features,odds_features`
+      → execution `features-service-sports-job-trb5m` → genuine `Completed/True`, `succeededCount=1` ("completed
+      successfully in 1m0.9s"); logs show `instruments-store consolidator healthy` + `market-data consolidator healthy`
+      (no `CONSOLIDATOR_DOWN`), `fixture_features` computed, `odds_features` honestly recorded confirmed-empty (no
+      upstream MTDS odds for that date), `Processing completed successfully`. (2) post_match override
+      `… --tables derived_features` → execution `features-service-sports-job-slz8z` → genuine `Completed/True`,
+      `succeededCount=1` ("completed successfully in 4m21.06s"); `Wrote derived_features: 14 total rows across leagues`
+      (129/2·UCL/848·UECL/874), `Processing completed successfully` (the `recovery=skip` data_quality NaN warnings are a
+      reference-data-completeness note, not a dispatch/exit failure). `readyToRetire=true` — todo 7 (legacy-job
+      retirement) is now unblocked.
 - [ ] [INFRA] P1. Retire the old `features-sports-service-job` Cloud Run job + its Cloud Scheduler trigger once the new
       job is confirmed healthy end-to-end (avoid a double-fire window). — ⏸️ 2026-07-15 (DriftRetireReenable phase):
       DEFERRED, `depends_on` the new repoint todo above. The legacy job's terraform is 4 resources in its own state
@@ -233,7 +248,15 @@ repo. This plan tracks that work.
       (`terraform/gcp/t1_batch_scheduler.tf`) does NOT target the legacy daily job — it targets
       `uts-prod-features-sports-service-t1-recon`, a job the file's own comment (lines 73-74) records as never having
       existed in any tier; it is a dead, already-PAUSED scheduler, left as-is (repointing it to the new job would
-      conflate the T+1-recon architecture with the daily-window job).
+      conflate the T+1-recon architecture with the daily-window job). **UPDATE 2026-07-15 (RepointDispatch phase): the
+      blocking prerequisite is now CLEARED + PROVEN** (`readyToRetire=true`) — the two `sports-trigger-tiers.yaml`
+      per-fixture entries were repointed to `features-service-sports-job` and the dispatch code now emits the
+      `--feature-family sports` prefix, with BOTH per-fixture shapes proven SUCCEEDED against the new job via the real
+      `deploy_shard` path (pre_match `trb5m`, post_match `slz8z`; `deployment-service@9ec1c3be`, see the repoint todo
+      above). Retiring the legacy `features-sports-service-job` (4 terraform resources in state prefix
+      `services/features-sports-service`: `terraform state rm` each + `gcloud` delete + remove the legacy `.tf` dir) is
+      now safe — nothing live dispatches to it (tiers repointed; legacy daily scheduler stays PAUSED). Left `[ ]` for
+      the retirement phase.
 - [x] [INFRA] P0. Re-enable scheduling for the new job (equivalent of `features-sports-service-daily-trigger`); verify
       one real scheduled (not just manual) fire succeeds. — ✅ 2026-07-15 (DriftRetireReenable phase, real evidence, not
       inference): `gcloud scheduler jobs resume features-service-sports-daily-trigger` → `state: ENABLED`; then
@@ -703,3 +726,37 @@ repo. This plan tracks that work.
     dates; re-pin `docker_image` digest on next rollout) + the P3 optional fleet-skew audit also remain. Plan shipped
     docs-only via the PM `docs(plans):` carve-out; the only CODE change this phase was the terraform removal
     (`deployment-service@bfea7928`).
+- 2026-07-15 (RepointDispatch phase — the todo-7 prerequisite; real evidence, not inference). Cleared the last blocking
+  dependency on retiring the legacy `features-sports-service-job`: the per-fixture Tier-3/4 sports-feature triggers now
+  dispatch to the consolidated `features-service-sports-job`, and the new job is PROVEN to accept the exact per-fixture
+  shape. **Dispatch-code fix (the real prerequisite):** `deployment_service/sports_trigger_scheduler.py::_build_cli_cmd`
+  now prepends `--feature-family <asset_group.lower()>` (→ `sports`) for the consolidated features-service, gated by a
+  new module-level `_MULTI_FAMILY_DISPATCH_SERVICES = frozenset({"features-service"})` — family/service-aware, NOT an
+  always-emit, because `_build_cli_cmd` is SHARED with the single-family instruments-service (Tier-1/2) and MTDS
+  (Tier-3) dispatches, which must NOT receive the flag (2 new regression tests lock both directions). The prefix sits
+  right after `python -m features_service` so `_strip_python_module_prefix` (drops only the `python -m <module>` head)
+  preserves it as the leading Cloud Run args-override arg the multi-family dispatcher `features_service/cli/main.py`
+  requires. **YAML repoint:** both `features-service` entries in `configs/sports-trigger-tiers.yaml`
+  (`features_pre_match` `--tables fixture_features,odds_features`; `features_post_match` `--tables derived_features`)
+  `cloud_run_job_name` → `features-service-sports-job` (+ stale header-comment reference refreshed). Shipped
+  `deployment-service@9ec1c3bef2330fe4fa53a38eefde634d66b996b4` (quickmerge `--agent --files`,
+  `quality-gates.sh --no-fix` green 59s, sentinel==HEAD; the concurrent foreign soft-delete WIP in
+  `terraform/gcp/main.tf` was left untouched — not staged, not shipped). **Runtime PROOF (real production dispatch path,
+  start==end single fixture date 2026-07-14):** drove the exact live chain
+  `_build_cli_cmd → _strip_python_module_prefix → CloudRunBackend.deploy_shard` (the same code a per-fixture trigger
+  runs — gcloud's `--args` ArgList rejects the duplicate `--start-date`/`--end-date` value, but the real API path passes
+  args as a list so it is the faithful proof) for BOTH tiers: pre_match override
+  `--feature-family sports --operation compute --mode batch --asset-group SPORTS --start-date 2026-07-14 --end-date 2026-07-14 --run-tag live --tables fixture_features,odds_features`
+  → execution `features-service-sports-job-trb5m` → genuine terminal `Completed/True` `succeededCount=1` ("completed
+  successfully in 1m0.9s"), logs `instruments-store consolidator healthy` + `market-data consolidator healthy` (no
+  `CONSOLIDATOR_DOWN`), `fixture_features` computed, `odds_features` honestly confirmed-empty (no upstream MTDS odds for
+  the date), `Processing completed successfully`; post_match override `… --tables derived_features` → execution
+  `features-service-sports-job-slz8z` → genuine terminal `Completed/True` `succeededCount=1` ("completed successfully in
+  4m21.06s"), `Wrote derived_features: 14 total rows across leagues` (129/2·UCL/848·UECL/874),
+  `Processing completed successfully` (the `recovery=skip` all-NaN data_quality warnings are a
+  reference-data-completeness note for that date's leagues, not a dispatch/exit failure). **`readyToRetire=true`** —
+  todo 7 (retire the legacy job + its already-PAUSED scheduler) is now unblocked and safe (nothing live dispatches to
+  the legacy job). Did NOT perform the legacy-job retirement itself this phase (destructive `terraform state rm` +
+  delete on the `services/features-sports-service` state prefix — the retirement phase's scope); flipped the repoint
+  prerequisite todo `[x]` and annotated todo 7 with the unblock. This plan edit is docs-only via the PM `docs(plans):`
+  carve-out.
