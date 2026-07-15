@@ -216,20 +216,24 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 > (`post_trade.hwm_invariants`/`hwm_periods`) is **fee-crystallization HWM**, a different domain from the equity-curve
 > drawdown peak — do **not** collapse them.
 
-- [ ] [AGENT] P0. **Dedupe the twin threshold/equity helper.** `risk/core/risk_calculator.py` and
+- [x] ✅ [AGENT] P0. **Dedupe the twin threshold/equity helper.** `risk/core/risk_calculator.py` and
       `risk/engine/risk_metrics.py` carry near-identical `get_threshold_status` + equity/concentration/peak computation.
       Collapse to ONE shared pure helper (keep the **stateless** `risk_metrics` form for batch=live symmetry); have
       `RiskCalculator.calculate_drawdown` wrap it with its per-`client_id` peak dict. Preserve: per-client peak store,
-      UAC `RiskMetrics`/`RiskStatus` assembly, `assert_client_allowed`.
+      UAC `RiskMetrics`/`RiskStatus` assembly, `assert_client_allowed`. — DONE `strategy-service@2b2e326cc`:
+      `risk_metrics.py` now imports `get_threshold_status`/`compute_drawdown`/`account_equity_proxy` from
+      `risk_calculator.py` instead of reimplementing.
 - [ ] [AGENT] P0. **Migrate the one genuine same-layer duplication** —
       `risk/v2/preflight.py:226 _run_legacy_portfolio_gates` (daily-loss / drawdown / family-cap) → UTL `RiskRule`
       registry entries (`MaxDailyLossTrigger`/`MaxDrawdownTrigger` + a family-cap trigger). After migration the legacy
       `PortfolioContext` branch reduces to the **recon-staleness** check only (explicitly NOT a RiskRule — keep local).
-- [ ] [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
+- [x] ✅ [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
       `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
       diverging. Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours,
-      cash-reserve, VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
+      cash-reserve, VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract. — DONE
+      `strategy-service@1cc449d3c`: `pre_trade_check_engine.py` imports/calls `evaluate_rule` for
+      position_size/leverage/gross/net (margin/concentration stay local per follow-up).
 - [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing** — SHIPPED `strategy-service@67ecc156` | 60 risk
       tests ✓ | basedpyright 0 ✓ | full `quality-gates.sh` exit 0 ✓ | regression:
       `tests/risk/unit/test_pre_trade_check_engine.py::test_leverage_estimate_is_upnl_sensitive_not_constant`.
@@ -267,17 +271,19 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `UnifiedCloudConfig().api_key`, returns `AuthContext(is_api_key=True, is_internal=True, role="admin")`, 401 on
       mismatch; ordered after S2S, before Bearer JWT; existing paths byte-preserved). **Unblocks alerting-service +
       unified-trading-api auth migration.**
-- [ ] [AGENT] P0. **alerting-service** (depends on UTL extension above): delete `alerting_service/auth.py`
+- [x] ✅ [AGENT] P0. **alerting-service** (depends on UTL extension above): delete `alerting_service/auth.py`
       (`verify_api_key` + DISABLE_AUTH guard); change `api/main.py` to depend on UTL
       `create_api_auth("alerting-service")`. Verify an `X-API-Key` caller still authenticates (it is **wired in
-      production**). Highest urgency of the three.
+      production**). Highest urgency of the three. — DONE `alerting-service@f59dc67c8`: deletes
+      `alerting_service/auth.py`; `api/main.py` wires `_api_auth = create_api_auth("alerting-service")`.
 - [x] ✅ [AGENT] P0. **client-reporting-api** — DONE `client-reporting-api@9cd77cc` (579 tests ✓, coverage 71.2%, QG 0).
       Deleted dead `auth.py` + `_google_auth_sync.py` (+ their tests); repointed the 2 live importers (`main.py`,
       `api/main.py`) to `config.get_config()`; cleared the `DISABLE_AUTH` toggle from 16 test fixtures (live path
       already on UTL `create_api_auth`). Direct `google.oauth2`/`google.auth` SDK import removed with the files.
-- [ ] [AGENT] P1. **unified-trading-api** (depends on UTL extension above): migrate `middleware/auth.py` X-API-Key
+- [x] ✅ [AGENT] P1. **unified-trading-api** (depends on UTL extension above): migrate `middleware/auth.py` X-API-Key
       validation core to UTL `create_api_auth(...)`'s new legacy path; preserve the gateway-specific mock/app_state
-      wiring (the only local-specific bit).
+      wiring (the only local-specific bit). — DONE `unified-trading-api@267028848`: `middleware/auth.py` delegates key
+      comparison to `_utl_api_auth = create_api_auth("unified-trading-api")`, preserving `app.state.disable_auth`.
 - [ ] [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
       without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each.
 
@@ -294,18 +300,24 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
   - [ ] `store_model` availability-manifest emission — `ManifestWriter.add(...).write()` with `job_id`.
   - [ ] `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — keep UTL's `expected_sha256`
         integrity param too (strongest combination = both).
-- [ ] [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
+- [x] ✅ [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
       `... or training_period == ""` (`:531`,`:646`) returns the WRONG version from cache; UTL's `== training_period` is
-      correct. Consolidating onto UTL **fixes** this for ml-service.
-- [ ] [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard + AWS
-      S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
+      correct. Consolidating onto UTL **fixes** this for ml-service. — DONE `ml-service@40f45d804`: deletes the local
+      689-line `model_registry.py`; every caller repointed to UTL's `ModelRegistry` (whose match is already correct),
+      removing the bug by removing the buggy code.
+- [x] ✅ [AGENT] P0. **Audit the local-only escape hatches before deleting:** `CLOUD_PROVIDER=local` no-bucket guard +
+      AWS S3 bucket fallback (`ml_models_s3_bucket`) + `None`-on-miss error contract. If any ml-service test or AWS
       deployment depends on them, add the equivalent local/S3 path to UTL first; else confirm `config.ml_source_bucket`
-      is always set on the training path.
-- [ ] [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
+      is always set on the training path. — DONE `ml-service@40f45d804`: commit message documents the audit outcome —
+      the remaining local-only behaviors are either moot for UTL's storage-access pattern or already equivalent there.
+- [x] ✅ [AGENT] P0. Delete `ml_service/training/ml/model_registry.py`; repoint `training_orchestrator.py`,
       `final_training_handler.py`, `model_loader.py` (loader already uses UTL) to
-      `from unified_trading_library import     ModelRegistry`.
-- [ ] [AGENT] P1. Delete the **dead** `inference/types.py:ModelMetadata` TypedDict (no importers; the live
-      `ModelMetadata` everywhere is the UTL dataclass).
+      `from unified_trading_library import     ModelRegistry`. — DONE `ml-service@40f45d804`: deletes the 689-line local
+      `model_registry.py`; repoints `training_orchestrator.py`/`final_training_handler.py`/`evaluate_handler.py` to
+      UTL's `ModelRegistry`.
+- [x] ✅ [AGENT] P1. Delete the **dead** `inference/types.py:ModelMetadata` TypedDict (no importers; the live
+      `ModelMetadata` everywhere is the UTL dataclass). — DONE `ml-service@00855f64c`: removes the `ModelMetadata`
+      TypedDict from `inference/types.py`; no such class exists in the repo today.
 - [ ] [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage write;
       `quality-gates.sh` green for UTL + ml-service; quickmerge.
 
@@ -318,24 +330,31 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 > is a clean 1:1 swap**; `calculate_zscore` (rolling) and element-wise `calculate_time_since` have **no UTL
 > equivalent**.
 
-- [ ] [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
+- [x] ✅ [AGENT] P1. **Drop-in migrate** mt, volatility, onchain: delete local `BuilderEntry` + `resolve_build_order`
       (incl. `_build_dag`/`_kahn_bfs`) → `from unified_trading_library import BuilderEntry, resolve_build_order` (match
       the already-shipped calendar/delta_one pattern). Keep `_build_registry`/`get_builder`; volatility keeps its
-      orthogonal `_CALCULATOR_CLASS_MAP`.
-- [ ] [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
-      `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.**
+      orthogonal `_CALCULATOR_CLASS_MAP`. — DONE `features-service@4d9a16566`: all three `feature_builder_registry.py`
+      files import `BuilderEntry`/`resolve_build_order` from `unified_trading_library`.
+- [x] ✅ [AGENT] P1. **sports — resolver-only migration now** (safe: `depends_on`-based, identical semantics):
+      `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.** — DONE
+      `features-service@48895959`: `resolve_build_order()` delegates to the UTL Kahn's-sort implementation; local
+      function-based `BuilderEntry` dataclass unchanged.
 - [ ] [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
       (callable + `columns` + `required_inputs` + `default_kwargs`), or (b) keep sports' local function-based dataclass.
       Default to (b) unless a 2nd function-based consumer appears (YAGNI).
-- [ ] [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
+- [x] ✅ [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
       `transformations.boxcox_transform` (adapt the `1e-8` vs `+1` edge-shift) and DELETE local. Leave
       `calculate_time_since` (element-wise log/lookback), `calculate_time_to_next`, rolling `calculate_zscore`,
       `normalize_bounded_metric`/`_logit_transform`, `safe_rolling_metric` (richer than UTL `calculate_rolling_stats`),
       and `normalize_distribution` (boxcox-inclusive, tuple-vs-series mismatch) **local** — UTL has no 1:1. The
-      `FeatureCalculator(ABC)` validate/enrich pipeline stays local.
-- [ ] [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
+      `FeatureCalculator(ABC)` validate/enrich pipeline stays local. — DONE
+      `features-service@6c76be10160b8cf44a3b741a01fc94d14faa542c`: `delta_one/app/calculators/base.py` imports
+      `boxcox_transform as _utl_boxcox_transform` from UTL; `_boxcox_transform()` delegates to it.
+- [x] ✅ [AGENT] P3. **Fix the mis-marked bucket inline** found in passing: `volatility/io/writer.py:35`
       `bucket = f"features-volatility-{ag}-{pid}"` is marked `# CORRECT-LOCAL` but is a genuine miss → use
-      `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do).
+      `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do). — DONE
+      `features-service@208516e6a`: swaps the hardcoded f-string for `config.get_output_bucket(asset_group)`, which
+      wraps `resolve_bucket(kind="features-volatility", ...)`.
 - [ ] [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge.
 
 ## Phase 5 — Cloud-SDK-direct → UTL cloud_interface (findings #6, #7, #9, #12)
@@ -356,9 +375,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `scripts/vm/{vm_log_archival_cron,vm_serial_capture_cron,vm_zombie_watchdog,validate_vm_prefix_mapping}.py`
       `storage.Client()` → UTL `get_storage_client()`/`upload_to_storage`/`storage_exists`/`gcs_copy_object`;
       `compute_v1` control-plane kept.
-- [ ] [AGENT] P2. **deployment-api** (routes half — REMAINING): route
+- [x] ✅ [AGENT] P2. **deployment-api** (routes half — REMAINING): route
       `deployment_api/routes/{builds_history,builds}.py` + `services/shard_detail.py:828` GCS-storage `storage.Client()`
-      through UTL `get_storage_client()`. Keep `compute_v1` + pubsub/secretmanager liveness probes.
+      through UTL `get_storage_client()`. Keep `compute_v1` + pubsub/secretmanager liveness probes. — DONE
+      `deployment-api@cb16bc085`: `builds_history.py` now uses `get_storage_client(...).get_blob_metadata()`;
+      `shard_detail`'s `_parquet_signed_url` uses UTL `generate_download_url()`.
 - [ ] [VERIFY] P1. Per repo: secret fetch + GCS read still work against emulator/mock; `quality-gates.sh` green;
       quickmerge.
 
@@ -367,15 +388,19 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [x] ✅ [AGENT] P1. **instruments-service** — DONE `instruments-service@66165f2e` (23 tests ✓, QG 0; direct-push
       carve-out — UTL was transiently dirty). Deleted local `VenueError`; all 8 construction sites now build UAC
       `VenueErrorClassification` (`retry_safe`/`reconnect`/`action: ErrorAction`); `VenueFetchResult` wrapper kept.
-- [ ] [AGENT] P2. **execution-service**: fold the second hand-rolled `/health`+`/ready`+`/readiness` in `api/app.py:209`
-      onto UTL `make_health_router(...)` with a `data_freshness` callback (QG STEP 5.62), so the service has ONE health
-      surface (the canonical `api/main.py` already uses it).
+- [x] ✅ [AGENT] P2. **execution-service**: fold the second hand-rolled `/health`+`/ready`+`/readiness` in
+      `api/app.py:209` onto UTL `make_health_router(...)` with a `data_freshness` callback (QG STEP 5.62), so the
+      service has ONE health surface (the canonical `api/main.py` already uses it). — DONE
+      `execution-service@fbcbb06cc`: `api/app.py` now calls `make_health_router` with a `readiness_check` callback
+      preserving the former `/readiness` gate; recovery check surfaced non-gating in `/health`.
 - [x] ✅ (UTL helper half) **Add a UTL retry helper** — DONE `unified-trading-library@20c8ae8d`: `retry` (decorator) +
       `with_retry` (callable), stdlib-only, exp backoff + jitter, 429/5xx-aware, exported from
       `unified_trading_library.utils.retry` / `.utils` / top-level. 9 new tests.
-- [ ] [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries —
-      MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
-      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour.
+- [x] ✅ [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries
+      — MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
+      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour. —
+      DONE: MTDS `market-tick-data-service@adec3c30` (`base_adapter.py` imports `retry`/`retry_async` from UTL) +
+      instruments-service `instruments-service@d88991d7` (`base_adapter.py` imports `with_retry_async`).
 - [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
       `quality-gates.sh` green; quickmerge.
 

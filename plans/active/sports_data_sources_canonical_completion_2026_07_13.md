@@ -268,7 +268,7 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
       non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
-      operation closes both.** ✅ RESOLVED 2026-07-15 (slot-11) — `instruments-service@b10434b2`
+      operation closes both.** ✅ RESOLVED 2026-07-15 (slot-11) — `instruments-service@87d1a353`
       (`scripts/backfill/api_football_cf11_manifest_reconcile_2026_07_15.py`): **18/18 CF11 cells → captured, 0
       `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` api_football attempted_failed remaining** (live-verified
       against instruments-store-sports-prd). Root cause: these were a manifest-vs-data DRIFT, not a data gap —
@@ -3982,3 +3982,107 @@ it's new adapter work, not a data-audit residual).
     zero manual Cloud Build/redeploy action was actually needed once verified. Todo B in
     `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` and its follow-up
     redeploy todo are both DONE.
+
+- **2026-07-15 (CF11 305-row backfill — completed all 12 rounds, but net count went UP not down; root-caused to a
+  genuinely NEW, distinct finding, not a regression).** The dispatched agent's round6 closer (`--max-rounds 12`,
+  `MANIFEST_ALLOW_STALE_FALLBACK=true`) ran for ~5h20m and hit `MAX ROUNDS` cleanly. Its OWN final self-report said 64
+  remaining — **independently verified via a direct canonical gcsfs read (bypassing the stale-fallback view entirely)
+  and found 456 remaining instead**, a 7x discrepancy. Confirmed the canonical blob was genuinely fresh (6.7s old) at
+  the time of this check, ruling out simple consolidator lag as the explanation for the gap between the two numbers —
+  the closer's own `MANIFEST_ALLOW_STALE_FALLBACK=true` self-view (per-VM-shards only, not the full canonical picture)
+  is simply unreliable for judging true progress, consistent with the same limitation already documented earlier this
+  session for the reconciliation script's find-orphans step.
+  - **The apparent "increase" (baseline ~305 → now 456) is NOT a regression** — verified every one of the 362
+    `LEAGUE_MAP_INCOMPLETE`-tagged rows (79% of the 456 total) has `attempted_at` on TODAY's date only, meaning this run
+    re-attempted round5's existing residual and re-classified it with a newly-precise root cause, rather than creating
+    fresh damage. Breakdown: `error_reason` = `LEAGUE_MAP_INCOMPLETE` 362, `rateLimit` 69 (all STANDINGS, for very
+    recent dates like 2026-07-14 that simply hadn't been attempted before — genuinely new, rate-limit-bound, not
+    previously-good-data-gone-bad), `ApiFootballResponseError` 22, plus 3 already-known phantom-class rows.
+  - **New root cause found (not yet fixed)**: `LEAGUE_MAP_INCOMPLETE`
+    (`instruments_service/engine/orchestrator/sports_reference_fixtures.py:650`) fires when a per-fixture-entity fetch
+    (FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS — the 362 rows split almost evenly across these 4, ~88-92 each) returns
+    rows whose fixture_id can't be mapped to a canonical league via `_af_fid_to_league` (built from
+    `get_leagues_by_classification("Prediction"|"Features"|"Reference")` — i.e., only REGISTERED leagues are mappable).
+    A comment at the same site notes this fix itself only landed 2026-07-14 (making a previously-SILENT drop — "225,854
+    fetched-then-dropped rows across the fleet, quota spent with no manifest trace" — into an honest, visible
+    `record_failed` instead). **Not yet determined**: whether these 362 fixture_ids belong to
+    genuinely-deregistered/noncanonical leagues (in which case `attempted_failed` is the WRONG classification — should
+    be a silent skip or `expected_unattempted`/`empty_confirmed`, not a perpetual failure needing backfill) or a real
+    gap in the league registry that should be added. Re-running the SAME closer will not resolve this — the mapping gap
+    will recur identically on every retry regardless of API success. **Filed as a new todo below** rather than chased
+    further in this pass, given the scope of investigation still needed (confirming which specific leagues these
+    fixture_ids belong to).
+  - **Net honest assessment**: api_football's non-blank `attempted_failed` did not shrink this round (305→456, apparent
+    regression), but genuine diagnostic progress was made — 79% of the residual is now root-caused to one specific,
+    actionable, well-understood mechanism instead of being an opaque mixed bag. STANDINGS's 69 rate-limited rows are a
+    separate, likely self-resolving-on-retry class (once today's api-football quota window resets).
+
+- [ ] [DATA] P2. **Determine whether the 362 `LEAGUE_MAP_INCOMPLETE` per-fixture-entity rows
+      (FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS) are genuinely-deregistered/noncanonical league fixtures (→ should be
+      silently skipped or `expected_unattempted`/`empty_confirmed`, NOT `attempted_failed`) or a real league-registry
+      gap (→ add the missing league(s) to the registry).** Sample the actual API-Football league IDs behind a handful of
+      the unmapped `fixture_id`s (via a direct API probe) and cross-reference against
+      `delete_noncanonical_sports_leagues_2026_06_25.py`'s removed-leagues list. Fix accordingly — either a
+      classification correction in `sports_reference_fixtures.py:633-653` (skip/empty-confirm noncanonical-league
+      fixtures instead of `record_failed`) or a registry addition. (repo: instruments-service)
+
+- **2026-07-15 (LIKELY ROOT CAUSE of the CF11 oscillation found — a concurrent slot independently discovered and
+  partially fixed a genuine silent-data-loss bug in the SAME code path this dispatch used).** Cross-referencing a
+  sibling issue doc that landed mid-investigation:
+  `plans/active/issues/api_football_cf11_record_captured_noop_manifest_vs_data_drift_2026_07_15.md` (slot-11,
+  `resolved`). Their finding: `ManifestWriter.record_captured()` stages a row on the **writer instance**
+  (`self._records`) and returns — it does NOT push to the process-global bucket-pending queue. Persistence only happens
+  via `ManifestWriter.write()` (or its own `batch_size` auto-write). Both the original 2026-07-13 closer AND "this
+  session's first closer" create a fresh `ManifestWriter` per date and only ever call `flush_all_pending_buckets()` at
+  the very end — which drains the BUCKET-level pending, NOT a live writer instance's un-flushed `_records` — so every
+  `record_captured` row from that code path was silently discarded the moment the per-date writer fell out of scope.
+  - **Independently confirmed this applies to the CF11 round6 dispatch's own script**:
+    `scripts/backfill/api_football_attempted_failed_residual_closer_2026_07_13.py`'s `_run_ref._one()` (lines 214-228)
+    creates `manifest = ManifestWriter(...)` fresh per date, passes it into `_fetch_sports_reference_data(...)`, and
+    returns with **no `manifest.write()` or `.close()` call anywhere in this function**. Grepped
+    `instruments_service/engine/orchestrator/sports_reference.py` (the callee) for `manifest.write()`/`.close()` —
+    **zero matches**. The script's only flush call (`_mw.flush_all_pending_buckets()`, line 307) runs ONCE at the very
+    end and — per the sibling doc's finding — does not drain per-date writer instances that already went out of scope
+    hundreds of dates ago.
+  - **This is a strong, consistent explanation for round6's oscillating/non-converging residual** (189→171→366→132→
+    147→168→453 across 12 rounds, ending net HIGHER than the 305 baseline despite hours of real, successful-looking API
+    fetches — "Fetched N events/lineups for fixture=X" log lines with no corresponding manifest change): every
+    `_run_ref`-path capture this session's rounds made may have been fetched from the real API (spending real quota),
+    logged as a success, and then silently thrown away, so the SAME cells kept reappearing as `attempted_failed` round
+    after round. This does NOT retroactively invalidate the EARLIER-VERIFIED 4,138→766 reduction (that was independently
+    confirmed via direct canonical reads holding stable across multiple minutes-apart checks — genuinely persisted)
+    since that reduction's dominant contributors were the INJURIES/FIXTURES CODE fixes (`instruments-service@493393c8`)
+    and the dedicated reconciliation scripts (which DO call `.write()` correctly, confirmed by inspection) — not
+    `_run_ref`'s own direct fetch-and-persist path, which is exactly the part that got stuck.
+  - **Already tracked, not duplicating**: the sibling doc's own P2 follow-up ("`_fetch_sports_reference_data` / backfill
+    callers must call `ManifestWriter.write()`... two separate CF11 closers hit this exact footgun") already covers the
+    general fix needed. Adding this session's CF11 round6 evidence here as corroboration for whoever picks that todo up
+    — this is likely the SINGLE biggest lever for actually closing the remaining api_football residual (potentially
+    explains most of the 362 LEAGUE_MAP_INCOMPLETE + STANDINGS/TEAMS/FIXTURE_* rows too, if `record_failed` calls
+    persist correctly — confirmed they do, since these DO show up live — while `record_captured` calls from the SAME
+    `_run_ref` path silently don't, meaning genuinely-successful re-fetches never got a chance to supersede the failed
+    rows). **Do NOT dispatch another blind residual-closer round until this write-path bug is fixed** — it will likely
+    just burn more real API quota without net progress, exactly as round6 did.
+
+- **2026-07-15 (independent second cross-check of the round6 finding above, done blind before reading this Progress Log
+  section).** Was independently dispatched to run this same CF11 backfill via the same closer (round6, PID 67375,
+  `--vm-name api-football-cf11-backfill-round6 --max-rounds 12`, `MANIFEST_ALLOW_STALE_FALLBACK=true` after confirming
+  shard count still 5). Before reading any of the above, took my own baseline (direct atomic `fs.cat_file` read of the
+  canonical, bypassing `read_availability_index()` entirely) at launch time: 273 non-blank api_football
+  `attempted_failed` (`FIXTURE_EVENTS` 89 / `PLAYER_STATS` 87 / `FIXTURE_LINEUPS` 60 / `TEAMS` 24 / `FIXTURE_STATS` 13),
+  75 blank-`data_type`. Polled the process synchronously to its real exit (~5h20m, `MAX ROUNDS reached` cleanly, no
+  crash) rather than trusting a notification. Its own self-report (per-VM-shard-only view): 64 remaining. My own
+  post-run canonical re-read (same atomic method, confirmed fresh — consolidator back to ~40s/cycle baseline by then, 7+
+  full cycles completed since the closer's exit): **456 non-blank** (`FIXTURE_EVENTS` 94 / `FIXTURE_STATS` 92 /
+  `FIXTURE_LINEUPS` 91 / `PLAYER_STATS` 88 / `STANDINGS` 69 / `TEAMS` 22), `error_reason` breakdown
+  `LEAGUE_MAP_INCOMPLETE` 362 / `rateLimit` 69 / `ApiFootballResponseError` 22 / 3 phantom-class — **matching the
+  numbers already documented above to the row, independently derived.** Critically, **zero rows carry
+  `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` in my own read** — corroborating slot-11's
+  `instruments-service@87d1a353` manifest-reconcile claim (18/18 → captured, 0 remaining) for the ORIGINAL CF11 class
+  this todo names, from a completely independent measurement. Net assessment unchanged from the analysis above: the
+  original CF11 target is genuinely closed (by the reconcile fix, not by round6's re-fetch mechanism, since the real
+  data was already on disk); round6 itself was a legitimate, correctly-run attempt that did not net-progress due to the
+  two already-diagnosed causes (record_captured no-op + LEAGUE_MAP_INCOMPLETE scope-widening under `redo_all=True`), not
+  an execution error on this dispatch's part. Did not relaunch a round7 — the existing "do not dispatch blindly"
+  guidance above is correct and a redundant round would just burn more api-football quota against an unfixed write-path
+  bug.

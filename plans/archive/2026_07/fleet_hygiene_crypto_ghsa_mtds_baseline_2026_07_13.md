@@ -4,7 +4,7 @@ title: Fleet Hygiene — cryptography GHSA floor bump + MTDS QG baseline ratchet
 summary:
   Bump the fleet's cryptography dependency off the GHSA-537c-gmf6-5ccf advisory line and drop the transient
   --ignore-vuln; ratchet MTDS's DTZ + fallback-import QG baselines down now that the underlying fix already landed.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile: all todos [x], evidence spot-checked, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

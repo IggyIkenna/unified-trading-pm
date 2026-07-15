@@ -105,7 +105,7 @@ commit date), file count, `.py` count, and a class:
 
 ### Phase 1 — build + smoke-test the script (this host)
 
-- [ ] [INFRA] P3. Write `unified-trading-pm/scripts/dev/audit-stash-pile.sh` (home: alongside the other per-host
+- [x] [INFRA] P3. ✅ Write `unified-trading-pm/scripts/dev/audit-stash-pile.sh` (home: alongside the other per-host
       slot-hygiene scripts — `slot-cron-ff-pull.sh`, `verify-slot-host-symmetry.sh`). Behaviour: iterate every repo
       under `$WORKSPACE_ROOT` with a non-empty `refs/stash`; per repo → archive 3-way under
       `.stash-archive-<host>-<date>/` + `refs/stash-archive/*`; classify each stash per the taxonomy; in `--apply` mode
@@ -113,7 +113,8 @@ commit date), file count, `.py` count, and a class:
       `.stash-audit-<host>-<date>.md` listing every genuine-WIP survivor with owner branch + diffstat + age. **Default =
       dry-run** (classify + report, drop nothing). Flags: `--apply`, `--repo <name>` (single-repo smoke), `--base <ref>`
       override. Base ref resolves per-repo: `origin/main` for agent-orchestrator, `origin/live-defi-rollout` otherwise.
-      — owner: planning-host
+      — owner: planning-host — unified-trading-pm@e4ef61532 (scripts/dev/audit-stash-pile.sh, implements dry-run
+      default + --apply/--repo/--base + classification taxonomy)
 - [ ] [INFRA] P3. Smoke-test: run `--dry-run --repo unified-trading-pm` on this host; eyeball the 31-stash
       classification; hand-verify 2-3 "redundant" calls actually have no net diff vs LDR before trusting the auto-drop
       class. — owner: planning-host

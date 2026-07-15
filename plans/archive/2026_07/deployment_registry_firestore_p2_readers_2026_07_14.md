@@ -8,7 +8,7 @@ summary:
   reader before cutting any (dual-write must outlive the last reader) — and the correctness win — decouple the census so
   VM rows come from the fast GCE list and registry metadata is best-effort per row, so a slow or absent registry
   degrades enrichment columns to a dash, never the row set. Removes the download-all-in-45s failure mode entirely.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile: all todos [x], evidence spot-checked, no open prose work
 nature: process
 asset_group: [meta]
 stage: [meta]

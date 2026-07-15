@@ -192,8 +192,8 @@ Two secondary findings:
 
 ## Todos
 
-- [ ] [FIX] P0. **LIGHTER-ZKSYNC: fix the wrong Tardis exchange slug AND symbol format together — CONFIRMED both needed,
-      verified live 2026-07-07.** Fixing only the slug (`lighter-zksync` → `lighter`) at the 4 hardcoded sites
+- [x] [FIX] P0. ✅ **LIGHTER-ZKSYNC: fix the wrong Tardis exchange slug AND symbol format together — CONFIRMED both
+      needed, verified live 2026-07-07.** Fixing only the slug (`lighter-zksync` → `lighter`) at the 4 hardcoded sites
       (`umi_tick_provider.py:243`, `venue_mapping.py:60,197,223`, `_perp_funding_pacifica_lighter.py:219`) gets past
       Tardis's exchange check but then fails on symbol (`HTTP 400`, Tardis wants the numeric `market_id` string like
       `"1"` for BTC, not a bare ticker like `"BTC"`). Fixing both together got a real `HTTP 200` with 238,122 real
@@ -201,11 +201,13 @@ Two secondary findings:
       real book_snapshot_5 rows, same probe) — **this is currently the ONLY path that would give this venue a funding
       floor at all**, since the native adapter has no funding endpoint. Free-tier Tardis key only allows first-of-month
       historical dates — re-verify with a paid key or a first-of-month date before declaring this resolved in
-      production.
-- [ ] [FIX] P0. **LIGHTER-ZKSYNC: fix the separate native-trades `limit=500` bug** — `_fetch_lighter_trades_for_symbol`
-      hardcodes `"limit": "500"` on `GET /recentTrades`; Lighter rejects this with `HTTP 400`. Confirmed live:
-      `limit≤100` returns real trades immediately. This is independent of the Tardis-slug bug above — it breaks the
-      NATIVE (pre-2026-04-17) trades path specifically. One-line fix.
+      production. — market-tick-data-service@0c4000a02 fixes lighter exchange fallback slug + adds Tardis numeric
+      market_id resolution + corrects data_type mapping to derivative_ticker.
+- [x] [FIX] P0. ✅ **LIGHTER-ZKSYNC: fix the separate native-trades `limit=500` bug** —
+      `_fetch_lighter_trades_for_symbol` hardcodes `"limit": "500"` on `GET /recentTrades`; Lighter rejects this with
+      `HTTP 400`. Confirmed live: `limit≤100` returns real trades immediately. This is independent of the Tardis-slug
+      bug above — it breaks the NATIVE (pre-2026-04-17) trades path specifically. One-line fix. —
+      market-tick-data-service@0c4000a02 changes `_umi_lighter.py` limit param from "500" to "100".
 - [ ] [FIX] P1. **LIGHTER-ZKSYNC: fix the `pipeline_mode_resolver.py:58` venue-key mismatch**
       (`_VENUE_OVERRIDES["LIGHTER"]` never matches the real normalized key `"LIGHTER_ZKSYNC"`) — also correct the
       override's own comment ("Solana perp" → zkSync) — and investigate why native `ohlcv_1m` capture stopped after

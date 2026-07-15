@@ -208,8 +208,11 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 
 ## Stage 2 — Denominator correctness (the core; cefi leads)
 
-- [ ] [CODE] P0. **2a. Land the single `build_expected` producer** (A17 — `honest_coverage_v2` Phase 1). Root fix; **now
-      unblocked** (blocker archived 07-03). Bake **D2a** into it.
+- [x] [CODE] P0. **2a. Land the single `build_expected` producer — ✅ DONE** (A17 — `honest_coverage_v2` Phase 1). Root
+      fix; **now unblocked** (blocker archived 07-03). Bake **D2a** into it. — `instruments-service@681f50a` (canonical
+      landed SHA; `a1038eef8` is the pre-quickmerge QG sentinel for the same commit) — consolidates the single public
+      `build_expected(ag)` EXPECTED-universe producer, routing `check_enumeration_completeness` +
+      `measure_honest_coverage` through it.
 - [ ] [CODE] P0. **2b. cefi gate-authority fix on `build_expected`** (`issues/cefi_layer1_denominator_gaps`): apply
       D2a/D2b → ASTER live-forward split (**enumerator `start_date` support is a hard prereq before the UAC capability
       flip**) → BYBIT-SPOT `PERPETUAL` relabel → C2 MVP-data-type intersection

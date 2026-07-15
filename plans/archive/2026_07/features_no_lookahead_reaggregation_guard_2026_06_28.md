@@ -5,7 +5,7 @@ summary:
   Audit + guard every place features re-aggregate or roll candles (resample 1m→5m→1h, rolling windows, PIT joins,
   forward-fill, multi-TF confluence) so the right-edge t_close convention holds and no future value leaks; add a gate
   script + regression tests.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile: all todos [x], evidence spot-checked, no open prose work
 nature: process
 asset_group: [cross-cutting]
 stage: [features]

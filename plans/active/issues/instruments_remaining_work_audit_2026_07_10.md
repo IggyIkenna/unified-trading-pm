@@ -687,7 +687,7 @@ The 15 genuinely resolved (flipped `unified-trading-pm@8f15f8233`):
 - `plans/active/issues/mtds_defi_catalog_reader_reads_dead_static_snapshot_path_2026_07_06.md`
 - `plans/active/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md`
 - `plans/active/issues/uac_ws_cassette_coexistence_20_missing_map_entries_and_cassettes_2026_07_07.md`
-- `plans/active/canonical_id_p1_onchain_perp_perp_shorthand_2026_07_08.md`
+- `plans/archive/2026_07/canonical_id_p1_onchain_perp_perp_shorthand_2026_07_08.md`
 - `plans/active/issues/features_read_book_columns_not_snapshots_2026_06_28.md`
 - `plans/active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`
 - `plans/active/foundation_gates_and_capture_to_100_2026_07_06.md`

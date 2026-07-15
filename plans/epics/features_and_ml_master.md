@@ -237,7 +237,7 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 
 ## DeFi data-loading dispatch (slot 7, 2026-06-01 — from `features_service_defi_data_loading_blockers_2026_05_29.md`)
 
-- [ ] [CODE] P1. **DeFi #1 — map `volume_analysis` / `vwap` / `microstructure` feature groups → `dex_pool_swaps`** via
+- [x] [CODE] P1. **DeFi #1 — map `volume_analysis` / `vwap` / `microstructure` feature groups → `dex_pool_swaps`** via
       UAC `resolve_data_type_for_feature_group()` so DeFi features resolve to the canonical `dex_pool_swaps` data_type
       (was: "canonical dex_swaps data_type" — corrected 2026-07-14, verify-rerun-2 finding 68: `dex_swaps` is a BANNED
       alias per the operator-locked `defi-canonical-naming-ssot.md` / archived
@@ -245,6 +245,8 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
       name is `dex_pool_swaps`, matching this same bullet's own mapping-target clause). Repo: features-service
       (self-contained). Operator decision 2026-06-01. **Consumer-side mapping (NOT manifest work)** — depends on
       `defi_manifest_canonicalisation_2026_06_01.md` § C2 establishing the canonical `dex_pool_swaps` data_type.
+      **SHIPPED unified-api-contracts@a967121a**: `FEATURE_GROUP_DATA_TYPE_OVERRIDES['defi']` maps
+      volume_analysis/vwap/microstructure → dex_pool_swaps in `market_data_categories.py`.
 - [ ] [DATA] P2. **DeFi #2 — legacy bucket = read-only historical archive; NO manifest rebuild.** Operator decision
       2026-06-01: the legacy DeFi bucket is a read-only historical archive; do NOT rebuild its manifest (that would be
       manifest-canon work). Treat as read-only when loading historical DeFi features. Repo: features-service (policy).
@@ -252,14 +254,15 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
   `defi_manifest_canonicalisation_2026_06_01.md` § C0-RD6** (it's a `dex_swaps` superset-union refinement on existing
   parquet → must fold into the single-walk, not a separate schema change). Slot-7 DeFi #3 confirmed they are exact
   aliases (`swap_count == trade_count`, `volume_quote_usd == volume`). Tracked there to avoid dual-tracking.
-- [ ] [DOCS] P1. **DeFi #3 — UAC contract-doc: document `dex_swaps` OHLC semantics.** Slot-7 investigation 2026-06-01:
+- [x] [DOCS] P1. **DeFi #3 — UAC contract-doc: document `dex_swaps` OHLC semantics.** Slot-7 investigation 2026-06-01:
       O/H/L/C are **USD-normalized pool spot prices** (price = `amountUSD / abs(base amount)`; for USDC/WETH this yields
       ~1.0 = USDC-per-WETH, which is correct, not a bug). The UAC contract is currently SILENT on this. Add a docstring
       to the `swaps_ohlcv_*` schema in
       `unified-api-contracts/unified_api_contracts/internal/schemas/_candle_contracts.py` clarifying the three
       aggregation methods (amountUSD/base, amount_in_usd/amount_in, token-ratio fallback). NO MDPS bug found
       (`market_data_processing_service/app/adapters/defi/swap_adapter.py:237-316` is correct). Repo:
-      unified-api-contracts.
+      unified-api-contracts. **SHIPPED unified-api-contracts@455ddf9a**: docstring block documenting USD-normalized
+      spot-price semantics landed in `_candle_contracts.py`.
 
 ## Open questions
 

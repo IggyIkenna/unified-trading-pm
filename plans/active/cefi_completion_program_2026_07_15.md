@@ -423,3 +423,14 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
   that's the ~2-3wk af=0 work, lower priority than the tail.
 - Both tail slices (heavy+light) now cover the empty 2026-06+ tail (still chronological-from-Jan, SPOT-preemptible). Net
   state is HEALTHY at N=2.
+
+### 2026-07-15T19:02Z — tick 11: fleet cap-safe (3); co-manager active; widening cadence
+
+- Fleet = 3, cap-safe: cefi-queue-heavy-174106 + cefi-queue-light-174110 + cefi-queue-light-183058 (co-manager launched
+  a 2nd light at 18:30). 1 heavy + 2 light — redundant-ish but NOT over-cap → no protective kill (killing would race the
+  co-manager). Both light VMs writing.
+- Tail (2026-06+) still NOT filling — all VMs on 2026-01 chronological grind (year-granular launcher). Slow but not
+  broken; will reach June eventually.
+- ROLE: the co-manager is actively driving the VM fleet. My unique remaining jobs = (a) cap-safety backstop (kill only
+  if >3), (b) the WS-H apply once the tail+sweep land, (c) F + C + rule-9 report. Backing off to a ~1h monitor cadence
+  (nothing to do between data-landing milestones; frequent checks are noise). No code/data changes this tick.

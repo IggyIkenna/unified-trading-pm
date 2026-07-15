@@ -54,7 +54,7 @@ source:
   instruments-service/scripts/backfill/api_football_cf11_manifest_reconcile_2026_07_15.py."
 locked_by:
 resolved_by:
-  "instruments-service@b10434b2 (api_football_cf11_manifest_reconcile_2026_07_15.py) — 18/18 captured, 0 CF11 remaining"
+  "instruments-service@87d1a353 (api_football_cf11_manifest_reconcile_2026_07_15.py) — 18/18 captured, 0 CF11 remaining"
 execution_scope: local-only
 model_tier: sonnet-doable
 drift_direction: advance-code
@@ -100,7 +100,7 @@ parquet existed, so they were frozen `attempted_failed(CF11)`.
 ### Resolution
 
 `instruments-service/scripts/backfill/api_football_cf11_manifest_reconcile_2026_07_15.py` (shipped
-`instruments-service@b10434b2`) reconciles each stuck CF11 cell to `captured` from its PRESENT parquet
+`instruments-service@87d1a353`) reconciles each stuck CF11 cell to `captured` from its PRESENT parquet
 (`record_captured` + `write()`; cells with no parquet are skipped + reported, never fake-stamped). Result: **18/18
 captured, 0 `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` api_football `attempted_failed` rows remaining**,
 live-verified against the sports canonical (self-shard-merged read); the per-minute consolidator absorbs the reconcile

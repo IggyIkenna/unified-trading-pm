@@ -144,24 +144,27 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       `assert_yahoo_intraday_within_limit` already wired in `_normalize_and_guard_intraday_window` (called before
       `_fetch_ticker_history`); adapter-level unit tests added: 31d-back 1m raises + 90d-back 15m raises + within-limit
       passes — market-tick-data-service@13b90034
-- [ ] [SCRIPT] P1. **KRX venue registration (mirror NYSE end-to-end).** Add venue `KRX` (source=`yahoo`) across: (a) UAC
-      `market_data_categories` `VENUES_BY_ASSET_GROUP["tradfi"]` + `VENUE_TO_ASSET_GROUP` + `ALL_VENUES`; (b) UAC
+- [x] ✅ [SCRIPT] P1. **KRX venue registration (mirror NYSE end-to-end).** Add venue `KRX` (source=`yahoo`) across: (a)
+      UAC `market_data_categories` `VENUES_BY_ASSET_GROUP["tradfi"]` + `VENUE_TO_ASSET_GROUP` + `ALL_VENUES`; (b) UAC
       `SOURCE_PRIORITY[("tradfi", ohlcv_1d/1h/15m/1m)]` must reach yahoo for KRX (via `_VENUE_SOURCE_EXCLUSIONS` or a
       KRX-aware slice — KRX is yahoo-only, exclude databento/massive for KRX); (c) IS venue registry/enumeration
       (`get_venues_for_asset_groups` / the tradfi adapter venue set); (d) MTDS venue→source routing
       (`live_source_for_venue` / preflight) so KRX resolves yahoo; (e) the manifest/availability_index venue set; (f)
       deployment-api/ui if they enumerate venues. Grep how NYSE is registered across these + mirror. Repos:
-      unified-api-contracts + instruments-service + market-tick-data-service (+ deployment-api/ui).
-- [ ] [UAC] P1. **3 KRX stocks in UAC tradfi universe + MVP basis carve-out → 103/103.** Add Samsung(005930.KS), SK
+      unified-api-contracts + instruments-service + market-tick-data-service (+ deployment-api/ui). —
+      unified-api-contracts@844c5ee6b (venue_mapping.py + market_data_categories.py KRX registration) +
+      instruments-service@1ba5da4b (KRX venue + reference records).
+- [x] ✅ [UAC] P1. **3 KRX stocks in UAC tradfi universe + MVP basis carve-out → 103/103.** Add Samsung(005930.KS), SK
       Hynix(000660.KS), Hyundai(005380.KS) as venue=KRX equities (source=yahoo) to the tradfi universe + the MVP
       equity-basis carve-out (`mvp_scope` — extend the carve-out to accept venue=KRX × EQUITY × the 3 KRX bases, OR add
       KRX bases to `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Their Binance perps are already cefi-MVP → both legs MVP → the
-      tradfi-perp superset closes at 103/103. Repo: unified-api-contracts.
+      tradfi-perp superset closes at 103/103. Repo: unified-api-contracts. — unified-api-contracts@844c5ee6b
+      (tradfi_ticker_universe.py + tradfi_instrument_universe.py: 005930/000660/005380 .KS entries).
 - [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks via guardrailed Yahoo (operator ladder).** Per stock: 1d since 2019-01-01
       (full) + 1h 730d + 15m 89d(range=60d) + 1m 28d(7d-chunked). FX→yahoo wave-launcher is the precedent for a
       yahoo-source backfill. Verify rows captured + manifest reflects them (KRX shard). Repo: deployment-service
       (launcher) + market-tick-data-service.
-- [ ] [SCRIPT] P1. **CENTRALISED data-driven venue/source/adapter/MVP parity gate (the general guard).** ONE
+- [x] ✅ [SCRIPT] P1. **CENTRALISED data-driven venue/source/adapter/MVP parity gate (the general guard).** ONE
       parametrised gate (UAC contract test + a `check_*` wired into `base-*.sh` where cross-repo) that ITERATES the
       canonical registries: every venue in the universe/MVP → assert present in IS-registry + MTDS-routing + manifest
       venue set + a resolvable source (+ UI/api if they enumerate); every (venue, data_type) in the MVP set → a declared
@@ -169,7 +172,9 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       every adapter → declares supported (data_types, granularity/lookback limits) enforced on its fetch path (Yahoo
       guardrail = the first example). Parametrise over registry contents (no new test code per future venue). It AUDITS
       existing venues too — report pre-existing half-wired ones (fix small, issue-doc big). PROVE: removing KRX from
-      MTDS routing RED-fails a named assertion. Repos: unified-api-contracts (contract test) + base-\*.sh wiring.
+      MTDS routing RED-fails a named assertion. Repos: unified-api-contracts (contract test) + base-\*.sh wiring. —
+      unified-api-contracts@844c5ee6b, tests/unit/test_venue_source_adapter_parity.py (408 lines, parametrised over
+      registries).
 - [ ] [UAC] P1. **Databento L-floor boundary PRECISION.** PROBE databento live (`metadata.get_dataset_range` per
       schema + binary-search progressively-older requests until entitlement denies) to MEASURE the EXACT
       earliest-accessible date per level for OUR subscription: L0 (~16y), L1 trades/tbbo/mbp-1/bbo ("1yr" → is it

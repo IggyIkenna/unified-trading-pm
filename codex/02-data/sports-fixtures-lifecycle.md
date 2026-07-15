@@ -11,9 +11,16 @@ stage: [meta]
 repos: [deployment-ui, instruments-service]
 scope: [engineer, admin]
 tags: [sports, instruments, data-correctness, reconciliation, data-status, validation]
-related: [codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/match-end-time-cascade.md, codex/02-data/honest-absence-downstream-handling.md]
+related:
+  [
+    codex/02-data/sports-data-types-catalog.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/02-data/match-end-time-cascade.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+  ]
 created: 2026-05-13
-authoritative_for: [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
+authoritative_for:
+  [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
 referenced_by: [codex/02-data/sports-data-types-catalog.md, codex/04-architecture/instruments-live-architecture.md]
 owner: sports-domain
 last_reviewed: 2026-05-17
@@ -78,7 +85,7 @@ stamp depends on which state's data type is being written:
 | SFI_PROGRESSIVE_STATS   | LIVE → MATCH_END | per-snapshot wall-clock; freeze stamp = match_end_time    |
 | LIVE_ODDS               | LIVE → MATCH_END | per-update wall-clock                                     |
 | FIXTURE_STATS           | POST_MATCH       | `match_end_time + SFI_DATA_LAG_P95_SECONDS (=300s)`       |
-| FIXTURE_PLAYER_STATS    | POST_MATCH       | same as FIXTURE_STATS                                     |
+| PLAYER_STATS            | POST_MATCH       | same as FIXTURE_STATS                                     |
 | Understat XG            | POST_MATCH       | Understat data-available timestamp (typically T+1h)       |
 | FootyStats MATCHES post | POST_MATCH       | FootyStats fetched_at (batched, T+5-15min)                |
 | WEATHER (actual)        | POST_MATCH       | OpenMeteo reanalysis publish time (T+24h)                 |

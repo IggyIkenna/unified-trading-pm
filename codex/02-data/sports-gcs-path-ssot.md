@@ -11,10 +11,22 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer]
 tags: [sports, uac, single-walk, data-correctness, audit, canonicalisation]
-related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-adapter-dependency-order.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-08
-authoritative_for: [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_LEAGUE/BARE/FLAT)]
-referenced_by: [codex/01-domain/sports-instruments.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-data-types-catalog.md]
+authoritative_for:
+  [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_LEAGUE/BARE/FLAT)]
+referenced_by:
+  [
+    codex/01-domain/sports-instruments.md,
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-data-types-catalog.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -108,6 +120,27 @@ Some sources have non-obvious `entity=` folder names that don't match the data_t
 
 Hardcoding any of these inline is a phantom-row foot-gun. The resolver maintains the mapping; readers never need to know
 it.
+
+### An `entity=` name is NEVER a `data_type` (HARD RULE)
+
+The left column is the ONLY legal `data_type` vocabulary; the right column names a GCS folder and nothing else.
+Promoting an `entity=` name into a data_type registry mints a **phantom data_type** — a key nothing writes and nothing
+reads, whose real consequence is silent: the UTL write-time mis-stamp guard is gated on
+`has_source_priority(asset_group, data_type)` (`_writer_ingest.py`), so the pair the writer ACTUALLY uses goes
+unregistered and **every row of it is written with source validation OFF**.
+
+This has happened. `FIXTURE_PLAYER_STATS` (the `entity=fixture_player_stats` folder) was seeded into `SOURCE_PRIORITY` +
+`AVAILABILITY_AT_SEMANTICS` at `106430c9` (2026-05-06) by analogy with its `FIXTURE_*` neighbours, while the real
+data_type `PLAYER_STATS` already existed in `SPORTS_DATA_TYPE_TO_SOURCE`. Nothing ever wrote the phantom: at detection
+(2026-07-15) the live IS sports index held **219,508 `PLAYER_STATS` rows and ZERO `FIXTURE_PLAYER_STATS` rows**, and the
+mis-stamp guard had been OFF for every one of them. Reconciled onto `PLAYER_STATS` (unified-api-contracts@57bcc7c5 → the
+A2 fix); the cross-registry drift guard `test_every_sports_data_type_to_source_key_has_source_priority` now fails closed
+on a recurrence.
+
+**Same class as the ODDS split-brain** (`ODDS` stripped by `8fb1f54f`, partially reverted by `c75101be`) — two
+registries disagreeing about one data_type, detected only because a guard was added. When adding a sports data_type:
+register it in `SPORTS_DATA_TYPE_TO_SOURCE` **and** `SOURCE_PRIORITY` **and** `AVAILABILITY_AT_SEMANTICS`, keyed on the
+data_type the writer emits — never the folder name.
 
 ## Hive-vocab discipline
 

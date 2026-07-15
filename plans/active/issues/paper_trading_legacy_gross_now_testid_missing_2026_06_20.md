@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Legacy paper-trading dashboard missing `pt-gross-now` testid — smoke spec fails
-summary: '`tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure (now) symmetric with Net exposure (now)" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`...'
+summary:
+  '`tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure (now) symmetric with Net exposure
+  (now)" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`...'
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +15,7 @@ related: []
 created: 2026-06-20
 parent_epic: infrastructure_master
 priority: P2
-source: ['tests/smoke/paper-trading.smoke.spec.ts:22', unified-trading-system-ui/app/paper-trading/page.tsx]
+source: ["tests/smoke/paper-trading.smoke.spec.ts:22", unified-trading-system-ui/app/paper-trading/page.tsx]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -25,34 +27,30 @@ last_updated: 2026-06-27
 
 ## What I found
 
-`tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure
-(now) symmetric with Net exposure (now)" FAILS: it navigates to the legacy
-engine-snapshot dashboard (`/paper-trading`, no `?client`) and asserts a
-`data-testid="pt-gross-now"` element + the literal "Gross exposure (now)" /
-"Gross exposure (max)" labels. **`pt-gross-now` does not exist anywhere in
-`app/` or `components/`** (`grep -rn pt-gross-now app/ components/` = 0 hits).
-The margin panel in `app/paper-trading/page.tsx` renders `data.margin.gross_usd`
-("Gross exposure (now)") and `s.net_usd_max` ("Net exposure (max)") but has no
-`pt-gross-now` testid and no "Gross exposure (max)" row.
+`tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure (now) symmetric with Net exposure (now)"
+FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`, no `?client`) and asserts a
+`data-testid="pt-gross-now"` element + the literal "Gross exposure (now)" / "Gross exposure (max)" labels.
+**`pt-gross-now` does not exist anywhere in `app/` or `components/`** (`grep -rn pt-gross-now app/ components/` = 0
+hits). The margin panel in `app/paper-trading/page.tsx` renders `data.margin.gross_usd` ("Gross exposure (now)") and
+`s.net_usd_max` ("Net exposure (max)") but has no `pt-gross-now` testid and no "Gross exposure (max)" row.
 
-This is a regression for the documented 2026-06-19 "gross-now gap" (the spec's
-own comment) — the test was written/updated but the page-side `pt-gross-now`
-testid + Gross-(max) row were never added (or were reverted).
+This is a regression for the documented 2026-06-19 "gross-now gap" (the spec's own comment) — the test was
+written/updated but the page-side `pt-gross-now` testid + Gross-(max) row were never added (or were reverted).
 
 ## Why it matters
 
-Pre-existing `tests/smoke/` red unrelated to the real-ledger auth fix shipped
-2026-06-20 (`?client=<id>` reporting-API JWT bridge — that spec
-`paper-trading-ledger.smoke.spec.ts` is green). It pollutes the `pw:L2` gate for
-any UI change touching `tests/smoke/`.
+Pre-existing `tests/smoke/` red unrelated to the real-ledger auth fix shipped 2026-06-20 (`?client=<id>` reporting-API
+JWT bridge — that spec `paper-trading-ledger.smoke.spec.ts` is green). It pollutes the `pw:L2` gate for any UI change
+touching `tests/smoke/`.
 
 ## Recommended decision
 
-- [ ] [UI] P2. Add `data-testid="pt-gross-now"` to the legacy paper-trading
-  margin "Gross exposure (now)" value in `unified-trading-system-ui/app/paper-trading/page.tsx`,
-  and a "Gross exposure (max)" row (Σ|position notional| ceiling, mirroring the
-  net (now)/(max) pair) so the 2026-06-19 gross-now-gap regression spec
-  (`tests/smoke/paper-trading.smoke.spec.ts:22`) passes. Verify `pw:L2 ✓` on
-  that spec. **DEFERRED — successor: `citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent_epic batch_live_symmetry_master); migrated 2026-06-21** — separate from the real-ledger auth bug; needs the
-  gross-now derivation decision for the legacy engine-snapshot panel. Provenance:
-  surfaced while fixing the deployed `?client` paper-trading hang 2026-06-20.
+- [x] [UI] P2. ✅ Add `data-testid="pt-gross-now"` to the legacy paper-trading margin "Gross exposure (now)" value in
+      `unified-trading-system-ui/app/paper-trading/page.tsx`, and a "Gross exposure (max)" row (Σ|position notional|
+      ceiling, mirroring the net (now)/(max) pair) so the 2026-06-19 gross-now-gap regression spec
+      (`tests/smoke/paper-trading.smoke.spec.ts:22`) passes. Verify `pw:L2 ✓` on that spec. **DEFERRED — successor:
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent_epic batch_live_symmetry_master); migrated
+      2026-06-21** — separate from the real-ledger auth bug; needs the gross-now derivation decision for the legacy
+      engine-snapshot panel. Provenance: surfaced while fixing the deployed `?client` paper-trading hang 2026-06-20. —
+      unified-trading-system-ui@f4afdd83e: page.tsx lines 992/1001 now have `data-testid="pt-gross-now"` and a "Gross
+      exposure (max)" row.

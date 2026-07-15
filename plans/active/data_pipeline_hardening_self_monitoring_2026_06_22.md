@@ -383,33 +383,33 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       tracked campaign (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).**
 
       — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the post-`coverage_start`
-                      residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
-                      NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
-                      (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
-                      `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
-                      `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
-                      `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
-                      diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
-                      correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
-                      gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
-                      PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
-                      ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
-                      OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
-                      `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
-                      historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
-                      `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
-                      `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
-                      **unified-api-contracts, market-tick-data-service**
+                              residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
+                              NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+                              (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
+                              `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
+                              `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
+                              `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
+                              diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
+                              correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
+                              gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
+                              PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
+                              ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
+                              OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
+                              `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
+                              historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
+                              `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
+                              `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
+                              **unified-api-contracts, market-tick-data-service**
 
-                      **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
-                      prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
-                      not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
-                      blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
-                      **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
-                      CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
-                      genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
-                      (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
-                      HARD RULE: NO flat clip).
+                              **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
+                              prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
+                              not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
+                              blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
+                              **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
+                              CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
+                              genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
+                              (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
+                              HARD RULE: NO flat clip).
 
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
@@ -1456,8 +1456,9 @@ dispatch prompts.
       `deployment_ui_base_url` from `router._mirror_to_data_pipeline_slack`. — alerting-service@868872c
       (`_build_trace_block` truncates to 3000 + `_build_action_block` omits links when inputs absent / base="" ;
       `send_data_pipeline_alert` + `_mirror_to_data_pipeline_slack` thread base+log_bucket; tests block-network)
-- [ ] [CODE] P2. deployment-service exit_code monitor: add `run_log_tail` (last N lines of RUN_LOG_BLOB) to the finding
-      `details` for the inline trace. — deployment-service
+- [x] ✅ [CODE] P2. deployment-service exit_code monitor: add `run_log_tail` (last N lines of RUN_LOG_BLOB) to the
+      finding `details` for the inline trace. — deployment-service@d2ddb23ca (`exit_code_fleet_monitor.py` calls
+      `_gcs.error_snippet_from_run_log(...)` and sets `finding.details["run_log_tail"] = snippet`)
 - [x] ✅ [CODE] P0. **Fix the GCS run.log freshness freeze (tee-flush lag) — the GCS-log watchers' substrate** — DONE
       **unified-trading-library@13653f9f + deployment-service@82431d1** (QG-green: UTL 127s exit0 + deployment 55s
       exit0; shipped via `quickmerge --agent --files`). The UTL `LogUploader`

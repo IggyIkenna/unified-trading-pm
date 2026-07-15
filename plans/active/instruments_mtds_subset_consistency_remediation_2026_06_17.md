@@ -719,10 +719,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-          finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-          `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-          UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-          (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+                  finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+                  `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+                  UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+                  (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -1213,13 +1213,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-          chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-          even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-          UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-          column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-          migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-          canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-          AG. — market-tick-data-service
+                  chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                  even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                  UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                  column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                  migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                  canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                  AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
@@ -1988,10 +1988,11 @@ unblocks) to flow the actual data into those canonical buckets.
       have >1 manifest row (multi-schema-version + `instrument_type` casing + capture_status collisions). Fix
       WRITER-side row-key idempotency + instrument_type normalization so the ~76/96 repair scripts stop being needed.
       Repo: unified-trading-library (writer) + instruments-service. (MIGRATED FROM: same.)
-- [ ] [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9Ã the 900 cap)** into focused
-      modules (buckets/emission/weather/fixtures/manifest). Repo: instruments-service. **NB: distinct from the MTDS
-      `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**
-      (MIGRATED FROM: same.)
+- [x] ✅ [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9Ã the 900 cap)** into
+      focused modules (buckets/emission/weather/fixtures/manifest). Repo: instruments-service. **NB: distinct from the
+      MTDS `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**
+      (MIGRATED FROM: same.) — instruments-service@cb51c98a0: split into `engine/orchestrator/` package (22 focused
+      modules + thin `__init__`).
 - [ ] [SCRIPT] P3. **Script-tier cloud-agnostic sweep** — ~60 scripts `from google.cloud import storage`/`boto3` →
       `get_storage_client()`; ~30 inline legacy bucket literals → `resolve_bucket_name`;
       `enumerate_expected_universe.py:1381` hardcoded `/tmp/` → `tempfile.gettempdir()`. Repo: instruments-service.
