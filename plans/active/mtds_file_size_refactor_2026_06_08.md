@@ -106,12 +106,15 @@ drift_direction: advance-code
 
 ## Phased execution
 
-- [ ] [REFACTOR] P2. Split the 11 cli/handlers + adapters files (912–2,880L) — per-venue/per-chain/per-protocol
-      extraction, one commit each, QG-green incrementally. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. Split **MTDS** `engine/orchestrator.py` (4,219L, `market-tick-data-service`) LAST — extract
+- [x] [REFACTOR] P2. ✅ Split the 11 cli/handlers + adapters files (912–2,880L) — per-venue/per-chain/per-protocol
+      extraction, one commit each, QG-green incrementally. Repo: market-tick-data-service. —
+      market-tick-data-service@6f753c5cb: all 14 listed cli/handlers+adapters files confirmed ≤900 lines (`wc -l`).
+- [x] [REFACTOR] P2. ✅ Split **MTDS** `engine/orchestrator.py` (4,219L, `market-tick-data-service`) LAST — extract
       pre-flight / classify / dispatch / manifest-emit modules; only after all per-AG `--apply` complete. Full unit
       suite + a migration smoke before/after. **NB: distinct from the `instruments-service` `engine/orchestrator.py`
-      (8,192L) split tracked in I-2 — same filename, different repo; do not conflate.**
+      (8,192L) split tracked in I-2 — same filename, different repo; do not conflate.** —
+      market-tick-data-service@6f753c5cb: monolithic engine/orchestrator.py (4230 lines) removed, replaced with
+      engine/orchestrator/{**init**,_state,manifest_finalize,partitioned_writer,preflight,...}.
 - [ ] [VERIFY] P2. `quality-gates.sh --no-fix` exit 0 (file-size gate GREEN) → `.qg_last_passed_sha` writes → MTDS
       commit-quality-boundary restored (no more basedpyright-on-touched-only workaround).
 

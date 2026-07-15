@@ -313,9 +313,10 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   withdrawals AND deposits to trigger the rebalance, for live and backtest?"). Three deltas:
   1. **Per-variant books** — `--emit-instructions` now emits one IDEAL target book PER strategy variant (staked basis /
      funding dispersion / pure basis / ensemble), not just the ensemble. Each writes
-     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on $100k
-     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH + OKX short,
-     8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
+     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on
+     $100k
+     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH +
+     OKX short, 8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
   2. **Deposit shock in the backtest treasury sim** — withdrawals already existed; added `--deposit-pct` /
      `--deposit-interval-days`. A deposit lands in the treasury wallet (the on-chain entry point) → pushes the treasury
      fraction above the 30% band → the existing rebalance deploys the surplus into the book. Sim line now reports
@@ -323,10 +324,12 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   3. **Flow-triggered rebalance INSTRUCTIONS in the live emitter** — `--flow-usd <signed>` (negative=withdrawal,
      positive=deposit) emits the actual rebalance legs for the ensemble (live) book, same wallet logic as the backtest
      sim: treasury-first on withdrawals (unwind pro-rata only if the buffer is exhausted), deploy-surplus on deposits,
-     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on $100k:
-     `-$10k`covered by treasury (no unwind, positions trim to $14.4k on $90k);`+$30k` deploys $24k surplus (+$4.8k each
-     on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k. Batch==live: the
-     live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
+     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on
+     $100k:
+     `-$10k`covered by treasury (no unwind, positions trim to $14.4k on $90k);`+$30k` deploys $24k surplus
+     (+$4.8k each
+     on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k.
+     Batch==live: the live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
   - **Code quality**: refactored the emitter's instruction structures to TypedDicts (`Position`/`Instructions`/
     `Rebalance`/`ResizeRow`/`FlowAction`) — removed the `dict[str, object]` `reportUnknown` errors AND the 5 banned
     `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
@@ -442,17 +445,11 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   is on NET CARRY, not raw funding** — confirmed correct: the filter is `net_bps >= min_carry_bps`, and `net_bps` per
   archetype is dispersion=`spread x eff` (the funding DIFFERENTIAL), staked=`(funding+staking) x eff` (so 2% funding +
   3% staking clears 5%), pure=`funding x eff` (absolute — the only one where raw funding is the sole metric). No change
-  needed. (2) **Liquidity dampening was capital-BLIND** (operator: at $100k liquidity shouldn't suppress opportunities):
-  the ADV factor `min(1, ADV/$100M)^damp`dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV
-  reference is now **capital-aware** —`liq_ref = (deployable/top_n) / adv_impact_pct`(knob`--adv-impact-pct`, default
-  1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly
-  every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE +
-  LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so
-  liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old
-  chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the
-  **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin
-  additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted
-  to ETH+SOL only** (`_BASE_TO_LST`).
+  needed. (2) **Liquidity dampening was capital-BLIND** (operator: at
+  $100k liquidity shouldn't suppress opportunities):
+  the ADV factor `min(1, ADV/$100M)^damp`dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV reference is now **capital-aware** —`liq_ref
+  = (deployable/top_n) /
+  adv_impact_pct`(knob`--adv-impact-pct`, default 1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE + LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted to ETH+SOL only** (`_BASE_TO_LST`).
 - **2026-06-17** — **Funding-rate diagnostic + concentration knob** (operator: 'if HYPE/Bybit averages 23% how are we
   not getting that action?'). Built **`plot_funding_history.py`** (faceted plot, one panel/coin, line/venue, annualised
   funding over time — served on localhost:8910). Findings: (a) **only 20 of the 40 coins have GCS funding data** in
@@ -818,10 +815,11 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
       the fast S3 `asset_ctxs` archive (`mtds@98d12be`, no REST rate-limit, ~4 min for 374 days/965k rows) + a 7-day
       REST fill for the days HL's S3 archive lags (06-02→08). HL funding history now spans ~3 years for the full
       ~230-coin universe. **Repo: market-tick-data-service.**
-- [ ] [STRATEGY] P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
+- [x] [STRATEGY] ✅ P2. Add the capital-efficiency factor to the harness ranking: structure assignment per (coin, venue)
       (spot-collateral set {Binance/Bybit/OKX/Deribit} vs cash-margin {Hyperliquid/Aster}), per-asset max-move `m` →
       `f=1/(1+m)`, rank by `effective_carry = (funding+staking)×f`, winsorise funding outliers, `--min-carry-bps` floor
-      (default 300). **Repo: e2e-testing harness.**
+      (default 300). **Repo: e2e-testing harness.** — e2e-testing@3d219d7: `_capital_efficiency()` (line 361) computes
+      structure-tagged efficiency + `min_carry_bps` floor (default 300.0, line 1320) wired through universe/EWMA/LP.
 - [ ] [STRATEGY] P2. Add structure-5 (perp–perp funding dispersion: long low/neg-funding perp + short high-funding perp)
       as a candidate alongside the spot/LST basis. **Repo: e2e-testing → strategy-service.**
 - [ ] [RESEARCH] P2. Prime-broker / off-exchange-settlement bridge — confirm whether Copper ClearLoop / Ceffu MirrorX /
@@ -1096,14 +1094,19 @@ repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED o
 
 ## Multi-venue CAPITAL flow + transfer instructions + reversal_z verdict + signal-status CORRECTION (2026-06-18)
 
-**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim: $1M total,
+**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim:
+$1M total,
 equal-weight across Binance+Bybit, PnL accrues per venue, weekly rebalance to equal-weight of equity with a 5% no-move
-band. **Result: $1M -> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
-in 4.5yr, ~$75k/yr moved (avg $42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
-venue-correlation make rebalancing rare). Current instruction: move $78k Binance->Bybit to re-equalise to $1.538M each.
-Transfer log is concrete (date + direction + $) — ready to wire into a TransferIntent flow. Script
-`/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer bars). Composes with
-client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
+band. **Result: $1M
+-> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
+in 4.5yr, ~$75k/yr
+moved (avg
+$42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
+venue-correlation make rebalancing rare). Current instruction: move $78k
+Binance->Bybit to re-equalise to $1.538M each.
+Transfer log is concrete (date + direction + $) — ready to wire into a
+TransferIntent flow. Script `/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer
+bars). Composes with client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
 
 - [ ] [STRATEGY] P3. Productionise the multi-venue capital/transfer layer: emit weekly rebalance TransferIntents
       (intra-client, single client_id) from the live per-venue balances vs target weights, 5% no-move band. **Repo:
@@ -1125,17 +1128,18 @@ blocked.** The CeFi cs alpha is real but 15-min-only — genuinely no value at t
 
 ## Capital-flow CORRECTION — fixed-leverage moves ~4x more (operator 2026-06-18)
 
-The earlier "$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
+The earlier
+"$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
 weight drift) — which minimises transfers but lets LEVERAGE FLOAT DOWN as you profit (under-deployed, idle capital).
 Re-modelled FIXED-LEVERAGE (hold each venue's deployed capital flat, sweep PnL gains to a central treasury / top up
-losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr moved (4.0x more,
-~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever), losses topped up.
-Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage policy:**
-full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers (still cheap —
-weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd actually run). The
-P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding drift-rebalance).
-Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) + `capital_flow_fixedlev.html`
-(fixed-leverage + treasury).
+losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr
+moved (4.0x more, ~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever),
+losses topped up. Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage
+policy:** full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers
+(still cheap — weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd
+actually run). The P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding
+drift-rebalance). Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) +
+`capital_flow_fixedlev.html` (fixed-leverage + treasury).
 
 ## Capital/leverage module + paper-trading runner + return convention (2026-06-18, /autonomous)
 
@@ -1172,10 +1176,11 @@ an LST-collateral venue, LIVE LST APRs (Lido stETH 2.4% @Bybit + ETH funding; ji
 +14.1%/yr net). Restricted to the 30-coin liquid survivor universe (avoids the live 754-perp micro-cap / garbage-basis
 pollution).
 
-Prints + plots per strategy + ensemble: target positions (coin/venue/side/notional/funding/staking), **$ balance
-required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit $167k / Drift $167k),
-and **LIQUIDATION proximity per perp leg with ALERTS** (dist<25% OR margin<3x maint; OK at 3x, min dist 33%).
-`DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps). Plot
+Prints + plots per strategy + ensemble: target positions (coin/venue/side/notional/funding/staking),
+**$ balance
+required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit $167k /
+Drift $167k), and **LIQUIDATION proximity per perp leg with ALERTS** (dist<25% OR margin<3x maint; OK at 3x, min dist
+33%). `DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps). Plot
 `funding_ensemble.html`. Insight: the delta-neutral basis strategies are CASH-heavy (long-spot/LST leg ties up full
 notional) vs the margin-light perp-only dispersion — the per-venue balance shows it.
 
@@ -1198,11 +1203,10 @@ is the validated foundation + a runnable paper path TODAY.
       complete-data DATA*SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
       granted) — **PARTIAL: config piece DONE `strategy-service@c412f6af`** (2026-06-19): typed
       `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
-      env mode; NO os.getenv) +
-      `ensemble_weight*{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}`+    `ensemble_split()` accessor
-      (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests. strategy-service QG GREEN (sentinel=HEAD,
-      coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC archetype enum is the follow-up below**
-      (descoped this session — see why).
+      env mode; NO os.getenv) + `ensemble_weight*{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}`+
+      `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests.
+      strategy-service QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC
+      archetype enum is the follow-up below** (descoped this session — see why).
 - [x] ✅ [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — **DONE
       `unified-api-contracts@487b9a9` + `strategy-service@6b285fad`** (2026-06-19, second autonomous pass when UAC was
       clean). The new `CARRY_FUNDING_DISPERSION` archetype landed ATOMICALLY: UAC `enums.py`

@@ -1,19 +1,37 @@
 ---
 doc_type: issue
-title: uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at risk
-summary: The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
+title:
+  uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at
+  risk
+summary:
+  The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed
+  `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, e2e-testing, fund-administration-service, strategy-service, system-integration-tests, trading-agent-service]
+repos:
+  [
+    agent-orchestrator,
+    e2e-testing,
+    fund-administration-service,
+    strategy-service,
+    system-integration-tests,
+    trading-agent-service,
+  ]
 scope: [engineer, admin]
 tags: [infrastructure, quality-gates, scripts, migration, verification, refactor, ci-cd]
 related: []
 created: 2026-06-22
 parent_epic: infrastructure_master
 priority: P2
-source: [human-planning-vm workspace bootstrap (2026-06-22) — Phase 5 per-repo setup failed for all 25 repos, 'plans/archive/2026_06/uv_lockfile_determinism_2026_06_02.md (the pin SSOT, ARCHIVED)', 'scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)', 'scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167']
+source:
+  [
+    human-planning-vm workspace bootstrap (2026-06-22) — Phase 5 per-repo setup failed for all 25 repos,
+    "plans/archive/2026_06/uv_lockfile_determinism_2026_06_02.md (the pin SSOT, ARCHIVED)",
+    "scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)",
+    "scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167",
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -202,10 +220,12 @@ assert **58**:
   archetype is **engineless but isn't `VOL_*`/`MARKET_MAKING*`** → F48 invariant violated. main's tests also expect 58,
   so the 59th would red main's v2 too. **This blocks ALL PM LDR→main promotion** (not just the boot-scripts) and
   predates this session.
-- [ ] [STRATEGY] P1. **Strategy-owner decision** on `TSMOM_BTC_CTA`: engine-backed (register its engine → F48 passes) or
+- [x] [STRATEGY] P1. **Strategy-owner decision** on `TSMOM_BTC_CTA`: engine-backed (register its engine → F48 passes) or
       spec-only-for-now (F48 must explicitly allowlist the CTA archetype as known-pending)? Then bump the 3
       archetype-count asserts 58→59. Do NOT blind-bump — the F48 failure may signal a real "archetype shipped without an
-      engine" gap. Once v2 is green, PR #498 auto-merges and drains the boot-scripts + all stuck LDR content to main.
+      engine" gap. Once v2 is green, PR #498 auto-merges and drains the boot-scripts + all stuck LDR content to main. —
+      RESOLVED engine-backed, see UPDATE below: strategy-service@f5f00109 / unified-api-contracts@61ac3ad2 /
+      unified-trading-pm@235774d59 (all verified ancestors).
 - [ ] [CICD] P2. Durable fix for the chronic version-split: make `main-backmerge-to-ldr` actually sync the `[skip ci]`
       manifest/version bumps down to LDR (today it "runs green" but leaves the split), so the local-only
       version-alignment gate stops perpetually blocking PM commits.

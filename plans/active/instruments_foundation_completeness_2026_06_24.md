@@ -172,14 +172,16 @@ Coverage is the verification lens — every number flows through `compute_honest
       `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
       `--CEFI/--TRADFI/--DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still scheduled it
       silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
-- [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
+- [x] [INFRA] P1. ✅ **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
       The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
       ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
       one manual run → read the last `[BISECT-*]` marker → fix the real cloud failure. Repo: deployment-service.
       _(Cross-ref 2026-07-03: SUPERSEDED by `instruments_catalogue_incremental_rollup_2026_06_29.md` Phase 3 — the cloud
       failure was diagnosed (full-history walk > 3600s timeout, 3 of 5 AGs), the durable fix is the incremental rollup
       @b0596d0c, and its terraform apply carries `PYTHONUNBUFFERED=1` (already in the tf) + the weekly full self-heal
-      jobs. Verify there before re-doing work here.)_
+      jobs. Verify there before re-doing work here.)_ — instruments-service@f739a41d + deployment-service@c1d2e3e6 (both
+      reachable on origin/live-defi-rollout); terraform/gcp/lifecycle_catalogue_scheduler.tf carries
+      `PYTHONUNBUFFERED = 1`.
 - [ ] [INFRA] P1. **NEW (2026-06-26): the all-AG no-`--asset-group` producer path crashes (exit 1, ~1 min, no
       traceback).** Same image/spec as cefi but omitting `--asset-group` → instant exit 1. The "all" path
       (`instruments_handler.py:367` is_all → SPORTS/CEFI/DEFI/TRADFI) is broken. Fix it so one 00:00 job can capture all
@@ -1293,14 +1295,18 @@ the _process_, those for the _AG-specific execution_.
       Until this lands the dailies only "succeed" at the scheduler layer. Repo: deployment-service +
       instruments-service. assigned_vm: vm-cross-cutting. (MIGRATED FROM:
       `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.)
-- [ ] [INFRA] P1. **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
+- [x] [INFRA] P1. ✅ **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
       (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
-      verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.)
-- [ ] [INFRA] P1. **Make the cloud lifecycle-catalogue-regen job log, then fix the real error** — add
+      verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) — deployment-service@c1d2e3e6
+      (weekly self-heal + terraform apply landed, reachable on origin/live-defi-rollout); per-AG apply verified per
+      `instruments_catalogue_incremental_rollup_2026_06_29.md`.
+- [x] [INFRA] P1. ✅ **Make the cloud lifecycle-catalogue-regen job log, then fix the real error** — add
       `print(..., flush=True)` bisection markers per `run_rollup` phase (or bootstrap stdout logging), localize the
       job-only failure (suspect grpc/pyarrow/GCS native init or a job-env gap), fix it. Until fixed the catalogue
       refreshes via the local-run path. Repo: instruments-service + deployment-service (job env). (MIGRATED FROM: same —
-      supersedes the earlier "diagnose fast-fail" bullet.)
+      supersedes the earlier "diagnose fast-fail" bullet.) — RESOLVED: root cause was full-history-walk timeout, not a
+      grpc/pyarrow init bug; fixed by instruments-service@b0596d0c incremental engine (reachable on
+      origin/live-defi-rollout).
 - [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi/tradfi/defi catalogues APPLIED 2026-06-05; G1
       shape-aware enumerator DONE (is@6ea46565). REMAINING = granularity-aware producer for **prediction** (per-cqg
       grain) + **sports** (per-league vs per-fixture), and per-AG `_enumerate_v2_*` verify emits `expected_unattempted`
@@ -1454,7 +1460,7 @@ universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfi
 (multi-hour): full-history honest-coverage backfills all 5 AGs since inception (empty_confirmed climbing: cefi 0→20k+,
 defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
 OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX (adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI +
-ICE-DXY=Yahoo, both SHIPPED `uac@5480f5d5`+`is@dc0d99a` — NOT blocked; only ICE *commodity* futures remain a Databento
+ICE-DXY=Yahoo, both SHIPPED `uac@5480f5d5`+`is@dc0d99a` — NOT blocked; only ICE _commodity_ futures remain a Databento
 ask], KALSHI historical IS (API), 9e6dab5 cloud-image catch-up (auto on next main promotion → re-resolve cloud jobs).
 
 ### CULMINATION — all 5 AGs honest-coverage (2026-06-26)
@@ -1467,7 +1473,7 @@ correct reason. Writer code: 9e6dab5 (pre-genesis/no-activity/weekend) + d3908c3
 DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/operator): tradfi 9-shard full-history VMs
 still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
 promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX
-(adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI + ICE-DXY=Yahoo, both SHIPPED — NOT blocked; only ICE *commodity*
+(adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI + ICE-DXY=Yahoo, both SHIPPED — NOT blocked; only ICE _commodity_
 futures (IFEU/IFUS Brent/Gasoil) remain a Databento subscription ask], KALSHI historical IS (API access).
 
 ### FINAL — instruments foundation honest-complete (2026-06-27)
@@ -1590,8 +1596,8 @@ and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are
   of 349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
   (BINANCE-FUTURES instrument*count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable;
   parquet 47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
-  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared `build_instrument*
-  catalogue.py` fix with slot-3 tradfi G1.h.
+  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared
+  `build_instrument* catalogue.py` fix with slot-3 tradfi G1.h.
 - **G1.2 (NEW): capture-stability** — a thin/partial venue day must `record_failed`, never overwrite a full prior day
   (the 06-26 partial is what drove G1.1). Canonical test for the §1.2 drawdown metric (678→47).
 - **G1.3 (OVERLAPS the dispatched cefi remediation agent above): canonical-form pollution** — 320 `asset_group=defi`

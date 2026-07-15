@@ -786,12 +786,14 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP`
       the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to
       remove the residual orphans.
-- [ ] [SCRIPT] P1. **Per-repo `semver-agent.yml` rollout fleet-wide** — the PM template fix (additive `push:[staging]`
-      trigger + `head_sha→github.sha` fallback) landed; the per-repo copies are still the OLD orphaned-trigger version.
-      Regen via `rollout-workflow-templates.sh --template semver-agent` + commit per-repo + reach each repo's `main`
-      (the trigger fires from the default branch). Restores staging→main promotion + version-bump/deploy dispatch that
-      was DEAD fleet-wide since the LDR-trunk decoupling dropped `push:[staging]` quality-gates-v2. Verify it fires on a
-      staging push. SSOT: `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk decoupling".
+- [x] ✅ [SCRIPT] P1. **Per-repo `semver-agent.yml` rollout fleet-wide** — the PM template fix (additive
+      `push:[staging]` trigger + `head_sha→github.sha` fallback) landed; the per-repo copies are still the OLD
+      orphaned-trigger version. Regen via `rollout-workflow-templates.sh --template semver-agent` + commit per-repo +
+      reach each repo's `main` (the trigger fires from the default branch). Restores staging→main promotion +
+      version-bump/deploy dispatch that was DEAD fleet-wide since the LDR-trunk decoupling dropped `push:[staging]`
+      quality-gates-v2. Verify it fires on a staging push. SSOT: `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+      decoupling". — strategy-service@e884205a: spot-checked 11 fleet repos, both push:[staging] trigger + github.sha
+      fallback present.
 - [ ] [INFRA] P2. **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status
       rollup `*/5` cron Job) is pinned to a fixed `deployment-api:<tag>`, INDEPENDENT of the `uts-shared-deployment-api`
       service `:latest`. A code deploy does NOT refresh the rollup (had to `gcloud run jobs update --image` + execute
@@ -925,9 +927,8 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   objects verified at spot_pair]; cefi double-hive-key parse [`asset_group=cefi/category=cefi/`, 6 objects → unparseable
   0]). ~25 unit tests added/extended across 7 test files (incl. the `_no_consolidated()` failing-storage seam retrofit
   to all CF-11 suites + `test_rebuild_projection_dates.py` regression for the mixed `processing_date`/`date` coalesce).
-  Projections at
-  `gs://market-data-tick-<tag>-prd-…/\_index/audit/projected_index*<ag>.parquet`; diffs `/tmp/manifest*diff*<ag>.json`.
-  **Per-AG verdicts (projected rows | diff | justification):**
+  Projections at `gs://market-data-tick-<tag>-prd-…/\_index/audit/projected_index*<ag>.parquet`; diffs
+  `/tmp/manifest*diff*<ag>.json`. **Per-AG verdicts (projected rows | diff | justification):**
   - **sports (mdps odds)**: 786,508 rows | **GREEN — removed=0, captured_regressions=0, changed=0, 55,412 cells
     unchanged** | 17,288 blank-status rows (ODDS_API 2026-04-08 zero-count probe artifacts) honestly excluded — cell
     coverage unaffected. ⚠️ FINDING for the sports-AG owner: the CF-5 oracle relabel fired ZERO relabels
@@ -988,9 +989,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
-  (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at
-  `\_index/audit/orphan_sweep*<ag>.parquet`(+ sports per-bucket). This is the ⑬-input snapshot for the verdict packs. ALSO:`DATA*STATUS_BETA_MANIFEST_BLOB`smoke-verified END-TO-END against real GCS (deployment-api seam loaded the 946,360-row tradfi projection with the env set; live index with it unset) — the operator's beta-render recipe is live:`DATA_STATUS_BETA_MANIFEST_BLOB='\_index/audit/projected_index*{asset_group}.parquet'`+`restart-deployment-stack.sh
-  --api`.
+  (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at `\_index/audit/orphan_sweep*<ag>.parquet`(+
+  sports per-bucket). This is the ⑬-input snapshot for the verdict packs.
+  ALSO:`DATA*STATUS_BETA_MANIFEST_BLOB`smoke-verified END-TO-END against real GCS (deployment-api seam loaded the
+  946,360-row tradfi projection with the env set; live index with it unset) — the operator's beta-render recipe is
+  live:`DATA_STATUS_BETA_MANIFEST_BLOB='\_index/audit/projected_index*{asset_group}.parquet'`+`restart-deployment-stack.sh --api`.
 
 - 2026-06-11 (~18:50Z, autonomous run) — **R7 tradfi adjudication: ROOT CAUSE of the all-red diff FOUND + fixed (pending
   ship via the 4-rebuild batch)**. Chain of finds, each verified on real data: (1) rebuild legacy parser shipped
@@ -1011,13 +1014,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   all): cefi 30,803 captured · defi 125,242 captured · tradfi 19,247 captured + 1,141 empty*confirmed · sports
   2,674,759 + 6,869 BLANK-status rows (see todo below) · prediction 4,693 planned/0 moved — every projected row
   v9-shaped (`schema_version=9`, `pipeline_mode=batch_instruments_service`, `source=instruments_service`,
-  `transport=rest`). Logs
-  `/tmp/r7_is*<ag>\_dry.log`. **TradFi market-tick R7 reference loop** (in flight): rebuild now projects via `--beta-manifest-out`
-  (mtds@fa375c7), CF-11 reads the CONSOLIDATED index + collector receives re-emits (37,477 empty + 6,042 failed
-  collected), row_key flattened for the differ; diff progressed 45,003→14,831 removed; remaining removals characterized
-  = the 183,943 PRE-HIVE/no-instrument_type legacy objects' cells (FX 1,967 spot_pair · CME chains · CBOE 15m ·
-  NYSE/NASDAQ equity 1m) — parser extended with legacy shapes C (hive-no-instrument_type) + D (pre-hive instrument-key,
-  ported from the R1 backfill grammar) + an unparseable shape histogram; re-projection running.
+  `transport=rest`). Logs `/tmp/r7_is*<ag>\_dry.log`. **TradFi market-tick R7 reference loop** (in flight): rebuild now
+  projects via `--beta-manifest-out` (mtds@fa375c7), CF-11 reads the CONSOLIDATED index + collector receives re-emits
+  (37,477 empty + 6,042 failed collected), row_key flattened for the differ; diff progressed 45,003→14,831 removed;
+  remaining removals characterized = the 183,943 PRE-HIVE/no-instrument_type legacy objects' cells (FX 1,967 spot_pair ·
+  CME chains · CBOE 15m · NYSE/NASDAQ equity 1m) — parser extended with legacy shapes C (hive-no-instrument_type) + D
+  (pre-hive instrument-key, ported from the R1 backfill grammar) + an unparseable shape histogram; re-projection
+  running.
 - [x] ✅ [DATA] P1. **sports 6,869 blank-capture_status rows — FIXED (phantom drop).** — is@8b3c7ef. Characterized the
       6,869 against the real prod sports IS-store index (`instruments-store-sports-central-element-323112`): ALL are NaN
       capture_status (→ `""` via `_ensure_v9_columns._as_text`) AND blank `data_type` AND blank `league_id`, venues
@@ -1139,12 +1142,12 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 - 2026-06-11 (~09:00Z, autonomous run) — **V3/CF-18 GREEN (R2 ratified decision #2 COMPLETE)**: UAC carries every source
   column (prediction trades/prediction*trades incl. the 11 polymarket columns + trader-profile payload, defi
   rewards/risk_params/utilization/dex_pool_swaps subgraph fields, tradfi trades/tbbo) via `source_aliases` rename maps
-  in new
-  `registry/\_schema_spec*{defi,prediction,tradfi}.py`(uac@715e2ed); the completeness checker now matches via UAC`carried_column_names`
-  (canonical ∪ aliases — renamed-but-carried is GREEN, genuine drop stays RED; is ship). RE-RUN VERDICTS vs real prod
-  GCS: **defi 0 RED (32 cells) · tradfi 0 RED (19) · prediction 0 RED (2)**. cefi re-verifies when R1's sweep re-run
-  produces its report parquet. NOTE: the R-wave agents hit the account session limit (resets 10:10Z) — R2 was finished
-  INLINE from their preserved WIP; R1/R4/R5/R6 resume per the brief in the master plan.
+  in new `registry/\_schema_spec*{defi,prediction,tradfi}.py`(uac@715e2ed); the completeness checker now matches via
+  UAC`carried_column_names` (canonical ∪ aliases — renamed-but-carried is GREEN, genuine drop stays RED; is ship).
+  RE-RUN VERDICTS vs real prod GCS: **defi 0 RED (32 cells) · tradfi 0 RED (19) · prediction 0 RED (2)**. cefi
+  re-verifies when R1's sweep re-run produces its report parquet. NOTE: the R-wave agents hit the account session limit
+  (resets 10:10Z) — R2 was finished INLINE from their preserved WIP; R1/R4/R5/R6 resume per the brief in the master
+  plan.
 
 - 2026-06-10 — plan filed from audit `migration_orphan_safety_goalpost_verification_2026_06_10.md`; CF-15…CF-21 drafted
   into the canonical checklist (V7 item 1); registered as G3.5 in the master coordinator. Awaiting operator review +

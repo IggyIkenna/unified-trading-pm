@@ -410,19 +410,19 @@ Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_20
 
 ## Critical path
 
-| Workstream                                                                       | Status                          | Source                                                      |
-| -------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- | ----------- | ---- |
-| Canonical question group taxonomy + classifier                                   | Phase 0 audit done              | `predictions_canonical_question_group_polymarket_migration` |
-| Lifecycle ingestion (created_at / resolution / settlement per market_id)         | NOT started                     | same                                                        |
-| Polymarket adapter migration (data_type rename)                                  | NOT started                     | same                                                        |
-| Kalshi adapter migration                                                         | NOT started                     | same                                                        |
-| Reader-side migration (callsites: `data_type=BTC                                 | ETH                             | ...` → canonical_question_group)                            | NOT started | same |
-| Per-market lifecycle gating in features compute (`LookaheadBiasError` extension) | NOT started                     | same                                                        |
-| Strategy-service prediction archetypes — canonical_group config                  | NOT started                     | same                                                        |
-| Manifest reflip + parquet migration scripts                                      | scoped                          | same                                                        |
-| ML training Model 2A walk-forward (predictions half)                             | gated on sports half completion | `sports_predictions_e2e`                                    |
-| arb_calculator in FSS                                                            | scoped                          | `sports_predictions_e2e`                                    |
-| Predictions MTDS slice to ≥99%                                                   | partial                         | `market_tick_data_to_100pct` (predictions slice)            |
+| Workstream                                                                                  | Status                          | Source                                                      |
+| ------------------------------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- |
+| Canonical question group taxonomy + classifier                                              | Phase 0 audit done              | `predictions_canonical_question_group_polymarket_migration` |
+| Lifecycle ingestion (created_at / resolution / settlement per market_id)                    | NOT started                     | same                                                        |
+| Polymarket adapter migration (data_type rename)                                             | NOT started                     | same                                                        |
+| Kalshi adapter migration                                                                    | NOT started                     | same                                                        |
+| Reader-side migration (callsites: `data_type=BTC \| ETH \| ...` → canonical_question_group) | NOT started                     | same                                                        |
+| Per-market lifecycle gating in features compute (`LookaheadBiasError` extension)            | NOT started                     | same                                                        |
+| Strategy-service prediction archetypes — canonical_group config                             | NOT started                     | same                                                        |
+| Manifest reflip + parquet migration scripts                                                 | scoped                          | same                                                        |
+| ML training Model 2A walk-forward (predictions half)                                        | gated on sports half completion | `sports_predictions_e2e`                                    |
+| arb_calculator in FSS                                                                       | scoped                          | `sports_predictions_e2e`                                    |
+| Predictions MTDS slice to ≥99%                                                              | partial                         | `market_tick_data_to_100pct` (predictions slice)            |
 
 ## Workstream routing (restructured 2026-06-20)
 
@@ -628,8 +628,11 @@ legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder
       window correct. [AUDIT 2026-05-07: BLOCKED-ON predictions_master:walk-forward run]
 - [ ] [GATE] P0. Block Group F until walk-forward AUC ≥ 0.55 and calibration error ≤ 5%. [AUDIT 2026-05-07: ACTIVE GATE
       — explicitly BLOCKS master_to_live_defi_2026_05_23:Group F]
-- [ ] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
-      [AUDIT 2026-05-07: FRESH — actionable; verify shipped status against features-sports-service catalog]
+- [x] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
+      [AUDIT 2026-05-07: FRESH — actionable; verify shipped status against features-sports-service catalog] (SHIPPED
+      features-service@719c45a9:
+      `feat(sports/arb): implement arb_calculator — cross-bookmaker arb %, eligible pairs,     duration`; verified
+      reachable on origin/live-defi-rollout.)
 - [ ] [ANALYSIS] P1. Persist model + metrics to ml-models registry; tag `model_family=sports_arb_v1`. [AUDIT 2026-05-07:
       BLOCKED-ON predictions_master:walk-forward run]
 
