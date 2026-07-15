@@ -3753,3 +3753,25 @@ it's new adapter work, not a data-audit residual).
   known, root-caused, currently-live condition for whoever next reads this manifest's health. **Mitigation applied**:
   rather than blindly retrying into the same crash, polled blob freshness directly and relaunched round4 the moment a
   fresh window opened (see below), instead of a fixed-interval retry loop.
+
+- **2026-07-15 (round4 crash + round5 fix — the fresh-window catch strategy didn't hold; switched to the sanctioned
+  escape hatch).** The poller caught a fresh window (blob age 37.3s at its 12th attempt) and launched round4, but it
+  crashed anyway ~65s after startup with the identical error (blob age 148.0s by the time of its first read) — the
+  script's own startup overhead (expected-universe computation etc. before its first `_live_failed()` call) ate enough
+  of the 120s budget that, combined with merges now running back-to-back at ~6-7 min each, a caught window closed before
+  the script could use it. 3-for-3 crashes now (round2 eventually self-recovered after 18h; round3 and round4 did not
+  recover within the observation window) — enough to stop the rapid-retry approach and switch strategy rather than try a
+  4th blind catch.
+  - **Checked the sanctioned remediation the error message itself names** (`MANIFEST_ALLOW_STALE_FALLBACK=true`, read
+    directly in `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:130-155`): the loud-fail
+    default exists because "the per-VM recovery merge can be 12+ GB pandas heap on large buckets (cefi: 1700+ shards →
+    SIGKILL at startup)" — a risk that scales with SHARD COUNT, not row count. This bucket's own consolidator logs (same
+    session) show `shards=5` per-VM shards currently, nowhere near cefi's 1700+, and this is a local run on a 24GB
+    machine vs. the Cloud Run job's 8GB container — a materially different, low-risk profile from the scenario the
+    warning is about.
+  - **Relaunched as round5 with `MANIFEST_ALLOW_STALE_FALLBACK=true` set** (PID 12587) — confirmed it survives past the
+    ~65s mark where round4 crashed (still running, no traceback, watchdog armed). This forces the script's own read to
+    do a local per-VM-shard merge instead of depending on the (currently slow) canonical consolidated index, which is
+    exactly the documented purpose of this env var. Scoped to this single script invocation only — no shared library
+    code touched, no change to `_LOCK_TTL_SECONDS`/`_is_lock_fresh`/`_acquire_lock` (respecting the standing rule from
+    the earlier lock-orphan incident this session not to touch that logic).
