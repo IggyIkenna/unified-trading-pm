@@ -268,7 +268,7 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
       data_engineering slot with a working gcloud. NB: a re-run of that closer also re-drives the ~3,116 undocumented
       non-CF11 api_football attempted_failed (INJURIES 1,946 etc.) flagged in
       `plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` finding A — same
-      operation closes both.** ✅ RESOLVED 2026-07-15 (slot-11) — `instruments-service@b10434b2`
+      operation closes both.** ✅ RESOLVED 2026-07-15 (slot-11) — `instruments-service@87d1a353`
       (`scripts/backfill/api_football_cf11_manifest_reconcile_2026_07_15.py`): **18/18 CF11 cells → captured, 0
       `error_reason=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE` api_football attempted_failed remaining** (live-verified
       against instruments-store-sports-prd). Root cause: these were a manifest-vs-data DRIFT, not a data gap —
