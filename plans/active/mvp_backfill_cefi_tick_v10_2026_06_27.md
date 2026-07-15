@@ -3438,3 +3438,37 @@ visibility) 20:12:26Z ❌ NOT in the tarball — but that commit is tests + logg
   fetching must STOP until the expected universe is re-materialised to ONE canonical atom — continuing to fetch would
   only deepen the relabel debt (peer dry-run already sizes it: 3,133,117 candidates, 82.7% resolvable, 542,888
   unresolved; `--apply` operator-gated).
+
+### DECISIVE TEST RESULT — eu FLAT, negative branch confirmed — 2026-07-15T21:48Z (data_engineering slot-12)
+
+Ran the armed re-measurement at the target window (`measure_honest_coverage.py --asset-group cefi`, fresh, not cached):
+
+| metric                 | 20:22Z baseline | 21:48Z (T+86min) | delta        |
+| ---------------------- | --------------: | ---------------: | ------------ |
+| `expected_unattempted` |       2,773,292 |        2,773,292 | **0 — FLAT** |
+| `captured`             |       3,058,241 |        3,058,599 | +358         |
+| `attempted_failed`     |          34,605 |           35,806 | +1,201       |
+| `coverage_pct`         |           52.13 |            52.13 | 0.00         |
+
+**Negative branch confirmed, exactly as the armed test predicted.** ~86 minutes of the writer-fixed 3-VM Tardis fleet
+(confirmed-deployed code, verified twice via SSH) closed **zero** `expected_unattempted` cells. The writer fix is
+necessary but NOT sufficient — the stale/inconsistent eu-row atom (some canonical `VENUE:TYPE:BASE-QUOTE@MARKER`, some
+old `instrument_type=''` + lowercase-raw) is the real, now-confirmed blocker. Per the test's own pre-committed response:
+**fetching must STOP** — every additional Tardis VM-hour beyond this point only deepens relabel debt without moving the
+gate, now proven empirically rather than inferred.
+
+**This is now squarely an operator-level architectural decision** (re-materialize the cefi expected-universe enumerator
+to one canonical atom shape before any further backfill is worth running) — not something to fix blind under time
+pressure, per this issue's own established caution (the case-sensitivity near-miss earlier in this same thread is the
+concrete argument for why). Flagging for the operator/main rather than unilaterally killing the 3 running Tardis VMs
+myself — that decision belongs with whoever owns the fleet lifecycle call, now that the data (not a guess) says
+continuing is not productive.
+
+**Non-Tardis lane unaffected** — its target eu (HL/LIGHTER/PACIFICA/EXTENDED derivative_ticker) was never part of this
+specific writer-fix namespace-mismatch defect (confirmed earlier, `OnchainPerpBatchHandler` already canonical); no
+reason to believe it shares this stale-atom problem, but not independently re-verified this pass — worth a follow-up
+check before assuming it's fully clear too.
+
+**Gate verdict: ❌ NOT MET, decisively — root cause now empirically confirmed, not hypothesized.** Next required step
+(operator-gated): re-materialize the expected-universe enumerator to one canonical atom, THEN resume/relaunch. Until
+then, the Tardis lane should not be widened or relaunched further.
