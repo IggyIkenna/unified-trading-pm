@@ -141,13 +141,26 @@ repo. This plan tracks that work.
       verified in the `terraform plan` output
       (`volume_mounts.mount_path =     /mnt/gcs/features-sports-prd-central-element-323112`,
       `gcs.bucket = features-sports-prd-central-element-323112`).
-- [ ] [INFRA] P1. Deploy the new Cloud Run job; manually trigger a real execution and watch it reach a genuine
-      `SUCCEEDED` terminal state (not just "past the import line") before trusting it. — 🟡 2026-07-15 DeployAndVerify
-      phase: terraform applied clean (see Progress Log), scheduler paused, but BOTH manual executions attempted this
-      touch terminated `NonZeroExitCode` — first on a real, separate terraform bug (default job `args` omit
-      `--start-date`/`--end-date`, see new todo below), second (with correct date overrides) on an external,
-      pre-existing blocker: `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`
-      (the `instruments-store-sports` manifest consolidator is livelocked on its own GCS lock, never refreshing
+- [x] [INFRA] P1. Deploy the new Cloud Run job; manually trigger a real execution and watch it reach a genuine
+      `SUCCEEDED` terminal state (not just "past the import line") before trusting it. — ✅ 2026-07-15 (~19:00Z
+      ReverifyExecution): execution `features-service-sports-job-qsqs4` reached a GENUINE `SUCCEEDED` (`Completed=True`,
+      `succeededCount=1`, `failedCount=0`; watched live to terminal on a 30s cadence). Ran the digest-pinned image
+      `@sha256:b7fc3d7f…`, `command=["python","-m","features_service"]`, args overridden to the full contract
+      `--feature-family sports --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date 2026-07-14 --end-date 2026-07-15`.
+      **The false `CONSOLIDATOR_DOWN` that killed `kk4dv` is CLEARED** — logs show
+      `sports batch startup gate: instruments-store     consolidator healthy for sports (bucket=instruments-store-sports-prd-central-element-323112)`
+      passing for BOTH dates (the exact preflight the UTL `c47273c1` lock-aware fix targets), no heartbeat/DOWN error.
+      **Real output landed in the canonical bucket** (`gs://features-sports-prd-central-element-323112`):
+      `compute_fixture_features[2026-07-14]` → 14 rows across leagues 129/2(UCL)/848(UECL)/874 → 4 non-empty
+      `features.parquet` (17-18KB each) written `2026-07-15T18:59:15Z`; `compute_fixture_features[2026-07-15]` → 3 rows
+      league 255(USL_CHAMPIONSHIP) → 1 parquet (18KB) written `18:59:29Z`; `Processing completed successfully`. Object
+      write-timestamps match the log lines (not stale/placeholder). Scheduler `features-service-sports-daily-trigger`
+      still PAUSED (unchanged — un-pause is todo 8). — 🟡 2026-07-15 DeployAndVerify phase: terraform applied clean (see
+      Progress Log), scheduler paused, but BOTH manual executions attempted this touch terminated `NonZeroExitCode` —
+      first on a real, separate terraform bug (default job `args` omit `--start-date`/`--end-date`, see new todo below),
+      second (with correct date overrides) on an external, pre-existing blocker:
+      `plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` (the
+      `instruments-store-sports` manifest consolidator is livelocked on its own GCS lock, never refreshing
       `availability_index.parquet` past the 120s freshness budget `features-service.compute_features` requires,
       `recovery=fail_fast`). Import chain + CLI contract + GCS mount all confirmed WORKING on this attempt — the blocker
       is downstream, in a different system. Per this touch's explicit instruction, did NOT proceed to retire the legacy
@@ -516,3 +529,29 @@ repo. This plan tracks that work.
   ~13:45Z audit it is — a ~7-8min real merge, not an indefinite livelock — and `c47273c1` now tolerates its in-flight
   lock), which todo 5 must prove by actually reaching `SUCCEEDED`. Added todo below re: the digest-pin now needing a
   re-pin on future features-service rollouts.
+- 2026-07-15 (~19:00Z, ReverifyExecution phase, todo 5 — DONE, real evidence, not inference): Pre-flight confirmed the
+  live job is digest-pinned to the verified `@sha256:b7fc3d7f…` (`command=["python","-m","features_service"]`; default
+  args lack `--tables`/dates by design) and the scheduler is PAUSED. Triggered
+  `gcloud run jobs execute features-service-sports-job --region=asia-northeast1 --project=central-element-323112` with
+  the full-contract `--args` override
+  (`--feature-family sports --operation compute --mode batch --asset-group SPORTS --tables fixture_features --start-date 2026-07-14 --end-date 2026-07-15`,
+  same shape as `kk4dv`) → execution `features-service-sports-job-qsqs4`. Watched live on a 30s cadence (18:57→18:59Z)
+  to a GENUINE terminal `SUCCEEDED`: `status.conditions[0]` = `Completed / True`, `succeededCount=1`, `failedCount=0`.
+  **Both remaining gates PROVEN from logs + GCS, not assumed:** (1) the manifest-consolidator preflight NO LONGER
+  false-fails —
+  `sports batch startup gate: instruments-store consolidator healthy for sports (bucket=instruments-store-sports-prd-central-element-323112)`
+  logged (passing) for BOTH run dates, with NO `CONSOLIDATOR_DOWN`/heartbeat-stale error; this is exactly the false-DOWN
+  that killed `kk4dv`, now cleared by the in-image UTL `c47273c1` lock-aware short-circuit. (2) real feature output
+  landed in the canonical bucket
+  `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=<D>/league=<L>/feature_group=fixture_features/features.parquet`
+  — `compute_fixture_features[2026-07-14]` wrote 14 rows across leagues 129/2(UCL)/848(UECL)/874 → 4 non-empty parquets
+  (17,461 / 18,046 / 17,584 / 17,612 B) `mtime=2026-07-15T18:59:15Z`; `compute_fixture_features[2026-07-15]` wrote 3
+  rows league 255(USL_CHAMPIONSHIP) → 1 parquet (18,359 B) `mtime=18:59:29Z`; `Processing completed successfully` +
+  `[features-service] shutdown complete`. Object write-timestamps match the write-log lines exactly (fresh, not stale
+  placeholders). Todo 5 flipped `[x]`. Scheduler left PAUSED (un-pause is todo 8 — deliberately not touched this touch).
+  The features-service-sports deploy is now proven healthy end-to-end, which UNBLOCKS the previously-gated downstream
+  todos: todo 6 (`--category`→`--asset-group` Workflow-YAML drift), todo 7 (retire the legacy
+  `features-sports-service-job` + its trigger), todo 8 (re-enable + verify one real scheduled fire), then todos 9-10
+  (bucket delete + issue-doc closure). No terraform/config/code changes this touch (the job/image were already correctly
+  deployed by the prior VerifyImageDeploy phase); this plan edit is the only change, shipped docs-only via the PM
+  `docs(plans):` carve-out.
