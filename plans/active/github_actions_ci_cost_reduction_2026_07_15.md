@@ -525,6 +525,43 @@ reports **actionlint clean across all 56 workflows**.
 
 **Running total: 10 of 38 movers self-hosted** (canary + 9). Remaining: **27** + `persist-cicd-event` (MOVE-C).
 
+### 🔑 THE VM MUST HAVE THE REPO'S PYTHON — `setup-python` deleted from the movers (operator 2026-07-16)
+
+> **Operator, on seeing 5 movers still running `actions/setup-python`:** _"if the box doesnt have that version then it
+> should be solved in the bootstrap setup script — if all the workflows will do setup-python then whats the use of long
+> lived vm"._ **Correct, and the sharpest correction of this deploy.**
+
+**What was actually happening:** the box **already had** Python 3.13.13 (uv-managed, the AO's own toolchain). I built
+the slot venv on the **system** python (3.12.3) while `pyproject` declares `requires-python >=3.13,<3.14` — so the venv
+could not satisfy the repo, every mover kept `actions/setup-python`, and **each job downloaded a THIRD copy of Python
+onto a machine we pay for 24/7**. That is the ephemeral-hosted model rebuilt on our own hardware: it keeps the wasted
+wall-clock and the ~400MB/runner, drops the benefit, **and it is what made the shared tool cache race that took the pool
+down**. "The box doesn't have that version" was a **bootstrap gap**, not a reason to re-download per job.
+
+**The fix (all measured on the box, not reasoned):**
+
+- `bootstrap-ci-host.sh` → **`install_repo_python`** guarantees `REPO_PY=3.13` via **uv**, and `verify()` now FAILS if
+  it is missing. Deliberately NOT deadsnakes: 3.13 is not in noble's apt and a third-party PPA on the live orchestrator
+  VM is not a trade worth making — and uv fetches the **same python-build-standalone** `actions/setup-python` does, so
+  it is the same interpreter, just **resident instead of re-downloaded**.
+- `setup-glue-runners.sh` → the slot venv is built with **`uv venv --python 3.13 --seed`** (`--seed` is LOAD-BEARING: a
+  bare `uv venv` has **no pip**, and 8 movers run `python3 -m pip install`), and `install` now **refuses** a venv that
+  violates `requires-python`. `preflight` asserts the **version**, not merely that `python3` exists.
+- The 3 flipped setup-python movers **drop the step entirely**.
+
+**Result, measured:** runner `python3` → `/opt/github-glue-runners/venv/bin/python3` **Python 3.13.13**, pip 26.1.2,
+SATISFIES `requires-python`, firestore pre-installed (STEP 2b). `readiness-verifier` **93s → 64s (−31%)**; the
+`Set up Python` step is gone from the step list; ~400MB of downloaded Python reclaimed; **the tool-cache race class is
+eliminated at the root rather than mitigated.**
+
+⚠️ **Coupling now recorded in each workflow: these are self-hosted-ONLY.** Restoring `runs-on: ubuntu-latest` on any of
+them REQUIRES restoring `setup-python` with it, or they get the hosted image's default python.
+
+⚠️ **Still open — the 2 setup-python movers not yet flipped** (`cassette-drift-check`,
+`removed-symbols-workspace-sweep`) ask for **`python-version: 3.12`**, which contradicts the repo's own
+`requires-python >=3.13,<3.14`. When they flip they will get the slot venv's 3.13. **Check that 3.12 pin is not
+load-bearing before flipping them** — if it is, the fix is a second uv-managed interpreter, not a per-job download.
+
 ### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
 
 - [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **38 flip-MOVE (PM-local direct) workflows only** (`ubuntu-latest`
