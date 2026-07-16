@@ -161,22 +161,75 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       Helius path once Velocity is capturing at scale — root cause found + fixed: `unified-api-contracts@5fd781c7`. See
       Progress Log for the full finding; follow-up materialization todo P1.3 added below (real production write, needs
       its own scoped dispatch, not absorbed into this task per findings-triage discipline).
-- [ ] [DATA] P1.3. Materialize the DRIFT `perp_trades` `expected_unattempted` catalog rows now that the registry gap
-      (P1.2) is fixed — run
-      `instruments-service/scripts/enumerate_expected_universe.py --asset-group defi     --data-types perp_trades --catalog-path <instruments catalog parquet GCS URI> --apply-write`
-      (scan-only dry run FIRST, no `--apply-write`, to confirm row-count estimate before committing to the real write;
-      the v2 enumerator needs `--catalog-path` — locate the current DRIFT/DeFi catalog parquet before running).
-      Restricting `--data-types perp_trades` naturally scopes this to DRIFT only, since DRIFT is currently the only
-      protocol declaring `perp_trades` in `PROTOCOL_CAPABILITIES`. Expect roughly the same order of magnitude as
-      `perp_funding`'s 51,301 all-time `expected_unattempted` rows (~40 DRIFT markets × full history). This is a real
-      production manifest write against `market-data-tick-defi-prd-central-element-323112` — verify count sanity before
-      `--apply-write`. (repo: instruments-service)
+- [x] ✅ [DATA] P1.3. Materialize the DRIFT `perp_trades` `expected_unattempted` catalog rows now that the registry gap
+      (P1.2) is fixed — done 2026-07-16 (data_engineering slot-15), with one real scoping gotcha found + worked around.
+      **The todo's own assumption was wrong**: `--data-types perp_trades` does NOT naturally scope to DRIFT only — an
+      unrelated, already-known-but-under-scoped bug (`A_TOKEN`/`DEBT_TOKEN` lending tokens unmapped in
+      `unified_api_contracts.registry.market_data_categories._INSTRUMENT_TYPE_ALIASES`, same class as the LST finding in
+      `defi_expected_unattempted_backlog_1m_2026_07_03.md`) makes the CLI's `--data-types` override leak onto every
+      unmapped instrument across the WHOLE defi catalogue — a plain unfiltered run produced 7,357,031 candidates, not
+      the expected ~51k. Root-caused, evidenced, and added as a fix todo to that existing issue doc (not duplicated
+      here) rather than fixed inline — the shared alias table is also consumed by `possible_manifest.is_valid_shard_key`
+      (orphan-sweep/phantom-reconciler), too wide a blast radius for this task. **Worked around it instead**: a
+      standalone one-off script (reuses `enumerate_v2`/`_write_absent_rows` verbatim, not committed) filtered the
+      candidate rows to `venue == "DRIFT"` before writing — 250,937 DRIFT-only rows written
+      (`_index/per_vm/enum-drift-perp-trades-materialize-1784165794.parquet`, durably verified by direct read-back: 100%
+      `venue=DRIFT`/`data_type=perp_trades`, `pipeline_mode=batch_onchain_rpc` matching the P1.2 fix, 107,760
+      `expected_unattempted` + 143,177 `empty_confirmed`). See Progress Log for the full finding.
 - [x] ✅ [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
       superseded/moot. — **done 2026-07-16 (data_engineering slot-15)**. See Progress Log.
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-15: materialized DRIFT perp_trades expected_unattempted rows (P1.3)
+
+Picked up `drift_helius_path_obsolete-006` (P1.3). Fresh-pulled clean. Verified the DeFi catalog parquet
+(`gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, 1.24MB, updated 2026-07-15) and ran a
+scan-only dry run per the todo's instruction.
+
+**Found the todo's scoping assumption was wrong.**
+`--asset-group defi --data-types perp_trades --catalog-path <full catalog>` (scan-only, uncapped) produced **7,357,031
+candidate rows**, not the expected ~51k order of magnitude. Traced the cause:
+`unified_api_contracts.registry.market_data_categories._INSTRUMENT_TYPE_ALIASES` doesn't map `a_token`/ `debt_token`
+(the literal catalogue instrument_type tokens for AAVE_V3/MORPHO/FLUID/SPARK/VENUS/SOLEND lending positions) to the
+canonical `lending` type, so `valid_data_types_for_instrument_type` returns `None` (unmapped) for them, and
+`_row_data_types`'s documented fallback-to-ALL behavior means "ALL" = the CLI's `--data-types` override verbatim — i.e.
+every unmapped-type instrument across the WHOLE defi catalogue gets falsely stamped with `perp_trades`, not just DRIFT.
+This is the SAME bug class already flagged (smaller-scale, LST-only) as a "minor secondary finding" in
+`plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` — added a fuller writeup + a new `[DATA] P2`
+fix todo there (don't duplicate here) rather than re-filing a fresh issue doc.
+
+**Did not fix the shared alias table this session** — confirmed via grep that
+`valid_data_types_for_venue_instrument_type`/`_for_instrument_type` is also the validity source for
+`possible_manifest.is_valid_shard_key` (the orphan-sweep/phantom-reconciler check), and the two candidate alias targets
+disagree on `oracle_prices` validity for `A_TOKEN`/`DEBT_TOKEN` (current `PROTOCOL_CAPABILITIES`-derived set excludes
+it; the separate legacy `venue_mapping.DataTypeConfig.instrument_data_types` table includes it) — narrowing on the wrong
+one would newly misclassify real captured `oracle_prices` cells as orphans. That's a genuine SSOT-contradiction call
+outside this task's scope, not a fix to bundle into a P1.3 materialization todo.
+
+**Workaround for my own task** (kept the fix out of shared code): wrote a standalone one-off script (not committed —
+same "reuse the production enumerator functions verbatim" pattern already used in
+`defi_expected_unattempted_backlog_1m_2026_07_03.md`'s own diagnostic) that called `enumerate_v2()` +
+`_write_absent_rows()` from `enumerate_expected_universe.py` directly, filtering the resulting candidate list to
+`venue == "DRIFT"` before the real write. Verified via cross-tab that this exactly isolates DRIFT's own legitimate rows
+(both the 34 PERPETUAL + 46 SPOT_PAIR catalogue instruments' per-instrument lifecycle cells, and DRIFT's own venue-grain
+pre-launch history) from the 7.1M-row leak across the other 63 venues. DRIFT's SPOT_PAIR instruments getting
+`perp_trades` candidates too (not just PERPETUAL) is expected, pre-existing behavior — `PROTOCOL_CAPABILITIES["drift"]`
+already declares both instrument_types with one shared `data_types` list (same coarse-grained modeling `perp_funding`
+already uses today), not a new asymmetry.
+
+Dry-ran first (scan-only): 250,937 DRIFT-scoped rows (107,760 `expected_unattempted` blank-reason + 77,652
+`EXPECTED_INSTRUMENT_NOT_LISTED` + 65,205 `EXPECTED_PRE_GENESIS_CHAIN` + 320 `EXPECTED_INSTRUMENT_DELISTED`). Then ran
+for real (`MANIFEST_PER_VM_SHARDS=true VM_NAME=enum-drift-perp-trades-materialize-<ts>`): wrote 250,937 rows to
+`_index/per_vm/enum-drift-perp-trades-materialize-1784165794.parquet`. **Durably verified** by reading the shard back
+directly: 250,937 rows, 100% `venue=DRIFT` / `data_type=perp_trades`, `pipeline_mode=batch_onchain_rpc` (matching the
+P1.2 shard-atom-identity fix), `capture_status` split 107,760 `expected_unattempted` / 143,177 `empty_confirmed`. Will
+merge into the consolidated index on the next consolidator cycle (~5 min).
+
+No code shipped this session (pure data materialization + a documented workaround; the underlying alias-table fix is
+tracked as its own todo in the sibling issue doc, not this task's scope). Checkbox flipped above.
 
 ### 2026-07-16 — data_engineering slot-15: banner + closure (P2)
 
