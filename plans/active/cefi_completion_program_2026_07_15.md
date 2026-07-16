@@ -1212,3 +1212,6 @@ eu). This is the "Phantom reconcile + manifest hygiene" pass this plan already t
       `expected_unattempted` skeleton row, so cells are double-counted. Fix via the phantom-reconcile/manifest-hygiene
       pass (or extend the reconcile to drop ANY eu row colliding with a captured key, not just relabeled ones).
       Evidence: 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others; pre-relabel snapshot had 10,335 of them.
+
+> **🟠 MAINTENANCE WINDOW OPEN 2026-07-16T11:06Z — operator-authorized manifest fix; cefi backfill VMs + market-data
+> consolidator PAUSED; co-manager DO NOT relaunch until this banner is cleared.**
