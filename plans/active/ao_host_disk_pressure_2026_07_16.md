@@ -120,8 +120,21 @@ deployment never verified.** Each took one command to check.
 
 ### Phase 1 — install the lever that already exists (P1)
 
-- [ ] [INFRA] P1. **Install `install-prune-uv-cache-cron.sh` on the central orchestrator VM.** It was authored as the
-      2026-07-13 recurrence's remediation and **never installed in production** (verified 2026-07-16:
+- [x] [INFRA] P1. ✅ **DONE 2026-07-16 — installed, and a REAL bug found by running it.** Registered on
+      `i-0c9b283b31d6b5ca7` (`0 */6 * * *`, verified in `crontab -l`). **But installing it was not enough — as written
+      it would have done NOTHING, forever.** Running it as the cron actually runs it printed
+      `uv not found on PATH — cannot     prune` and exited 1: cron's PATH is
+      `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin` and excludes `~/.local/bin`, where uv
+      actually lives (`/home/ubuntu/.local/bin/uv`). A LOGIN shell finds it via `.profile`, so `command -v uv` succeeds
+      when a human tests by hand and fails under the cron the script exists for — and it fails SILENTLY, exit 1 into a
+      log nobody reads, so `crontab -l` would show it installed while the 11G cache was never touched. Fixed
+      (`unified-trading-pm@88310f87a`): resolve uv via PATH → `~/.local/bin` → `~/.cargo/bin` → `/usr/local/bin` →
+      `/opt/uv/bin`, invoke by absolute path, and list what was checked on failure. **Gate MET — measured, running it
+      exactly as cron would (`env -i`, no login PATH):** `Removed 26449 files (826.9MiB)` /
+      `[done] before_mb=10889 after_mb=10227 freed_mb=661 rc=0`; `.uv-cache` 11G → 10G; `df -h /` 213G→212G used,
+      77G→78G free. This is the whole "installed ≠ working" lesson of the day in one todo: trusting `crontab -l` would
+      have marked it done. ~~**Install `install-prune-uv-cache-cron.sh` on the central orchestrator VM.**~~ It was
+      authored as the 2026-07-13 recurrence's remediation and **never installed in production** (verified 2026-07-16:
       `crontab -l | grep -i prune-uv` → NONE_FOUND on `i-0c9b283b31d6b5ca7`). This is the cheapest lever available — the
       uv-cache is 11G on that host and is regenerable. **Gate**: `crontab -l` on the VM shows the job; a subsequent run
       is visible in its log; `df -h /` measured before/after.

@@ -54,14 +54,36 @@ if [ ! -d "${CACHE_DIR}" ]; then
     exit 0
 fi
 
-if ! command -v uv >/dev/null 2>&1; then
-    echo "uv not found on PATH — cannot prune" >&2
+# Resolve `uv` explicitly — do NOT rely on an inherited PATH (2026-07-16).
+#
+# This script's whole purpose is to run FROM CRON, and cron's PATH is
+# `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin` — it does NOT
+# include `~/.local/bin`, which is where the uv installer puts the binary and where every
+# host in this fleet actually has it. A LOGIN shell picks it up via .profile, so
+# `command -v uv` succeeds when a human tests it by hand and fails under the cron it was
+# written for. Measured on the central VM 2026-07-16: interactive PATH finds
+# /home/ubuntu/.local/bin/uv; the non-interactive PATH does not.
+#
+# The failure was silent-by-design: the script exits 1 with a message the cron redirects
+# into a log nobody reads, so `crontab -l` shows the job installed and the cache is never
+# pruned. The install would have looked done and achieved nothing — which is exactly the
+# class of not-actually-running failure the 2026-07-16 audit kept finding.
+_resolve_uv() {
+    if command -v uv >/dev/null 2>&1; then command -v uv; return 0; fi
+    local _c
+    for _c in "${HOME}/.local/bin/uv" "${HOME}/.cargo/bin/uv" /usr/local/bin/uv /opt/uv/bin/uv; do
+        [[ -x "${_c}" ]] && { printf '%s\n' "${_c}"; return 0; }
+    done
+    return 1
+}
+if ! UV_BIN="$(_resolve_uv)"; then
+    echo "uv not found (checked PATH, ~/.local/bin, ~/.cargo/bin, /usr/local/bin, /opt/uv/bin) — cannot prune" >&2
     exit 1
 fi
 
 before_kb=$(du -sk "${CACHE_DIR}" 2>/dev/null | cut -f1 || echo 0)
 
-output="$(UV_CACHE_DIR="${CACHE_DIR}" uv cache prune 2>&1)"
+output="$(UV_CACHE_DIR="${CACHE_DIR}" "${UV_BIN}" cache prune 2>&1)"
 rc=$?
 
 after_kb=$(du -sk "${CACHE_DIR}" 2>/dev/null | cut -f1 || echo 0)

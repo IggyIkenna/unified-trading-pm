@@ -19,8 +19,9 @@
 #     ${RUNNER_BASE}/repo       runner-OWNED clone (never an AO slot clone) — pre-staged code for the
 #                               writer so it does NO checkout; kept current by the refresh timer.
 #     ${RUNNER_BASE}/venv       dedicated venv (google-cloud-firestore for STEP 2b) — not AO/system.
-#     ${RUNNER_BASE}/toolcache  shared RUNNER_TOOL_CACHE so actions/setup-python pays download cost
-#                               ONCE across all runners instead of per job.
+#     <runner>/toolcache        PER-RUNNER RUNNER_TOOL_CACHE (a sibling of _work, so the JIT wipe does
+#                               not destroy it). NOT shared: actions/setup-python is delete-then-create
+#                               and races across concurrent runners — see glue-runner-run.sh.
 #   User stays `ubuntu` and reuses the VM's existing GCP/AWS/GitHub creds + toolchain, deliberately:
 #   everything needing true clean-room isolation is GitHub-hosted and stays there.
 #
@@ -289,8 +290,11 @@ cmd_install() {
   #   Error: [Errno 13] Permission denied: '/opt/github-glue-runners/venv'
   # venv and git clone both accept an existing EMPTY dir, so pre-creating is the tight fix (rather
   # than handing the runner user ownership of ${RUNNER_BASE}).
-  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" \
-    "${RUNNER_BASE}/toolcache" "${SLOT_VENV}" "${SLOT_REPO}"
+  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${SLOT_VENV}" "${SLOT_REPO}"
+  # PER-RUNNER tool cache (see glue-runner-run.sh for the measured race that killed the shared one).
+  for inst in $(all_instances); do
+    install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_BASE}/${inst}/toolcache"
+  done
 
   if [ ! -x "${SLOT_VENV}/bin/python" ]; then
     log "creating the slot venv -> ${SLOT_VENV}"
