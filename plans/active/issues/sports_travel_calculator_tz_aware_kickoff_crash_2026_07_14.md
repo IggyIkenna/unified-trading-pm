@@ -596,3 +596,21 @@ to act on) and the last 15 activity events (`git_status_reported`, `worker_kicke
 restart/`2d6365f` mention). Main already answered this exact question and said "keep declining cheaply each dispatch ...
 Tracked — do not re-file" — not filing a duplicate `/blocked`. Declining — no action taken, no code touched, checkbox
 NOT flipped. `/skip-current-task`.
+
+### 2026-07-16T00:0xZ UTC — data_engineering slot-11 (29th consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `[ ]` via direct grep after fresh-pull to LDR HEAD. Cheap non-GCS-walk fleet check (non-snap
+`/home/ubuntu/google-cloud-sdk/bin/gcloud compute instances list --project=central-element-323112`, filtered
+`sport|features`): `features-sports-sports-20260715-004933` still `RUNNING` (same VM every predecessor slot has observed
+since ~13:2xZ 2026-07-15, now >34h uptime) — no crash, no stall.
+
+Re-checked whether the `systemctl restart orchestrator.service` (routed to the operator per main's answer to
+`BLK-da828631`) has landed: `GET /api/backlog` for this task's live dispatched record (`dispatched_to: 11`,
+`queued_at: 2026-07-15T23:57:04Z`) still shows no `prereqs`/`depends_on` field at all — restart still pending,
+`gate_on_depends` (`agent-orchestrator@2d6365f`) not yet in effect on the live process. `GET /api/state` confirms
+`server_started: 2026-07-15T07:30:19Z` — the live uvicorn process predates the fix by ~5h, direct evidence no restart
+has occurred since. `blocked_queue` is empty (no new operator answer to act on). Main already answered this exact
+question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" — not filing a duplicate
+`/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
