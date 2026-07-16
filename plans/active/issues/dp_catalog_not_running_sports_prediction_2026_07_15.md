@@ -20,11 +20,26 @@ summary:
   stage on 3 consecutive days (07-13, 07-14, 07-15), first failure ~40h before the commit landed.'
 status: open
 nature: issue
-asset_group: [sports, prediction]
+asset_group: [sports, prediction, cefi, defi]
 stage: [data]
 repos: [instruments-service, deployment-service]
 scope: [engineer, admin]
-tags: [catalog, catalogue, monotonic-guard, oom, cloud-run-job, monitoring, data-pipeline, sports, prediction]
+tags:
+  [
+    catalog,
+    catalogue,
+    monotonic-guard,
+    oom,
+    cloud-run-job,
+    monitoring,
+    data-pipeline,
+    sports,
+    prediction,
+    cefi,
+    defi,
+    duplicate-merge-key,
+    incremental-merge,
+  ]
 related:
   [
     codex/05-infrastructure/data-pipeline-alerts.registry.yaml,
@@ -33,11 +48,16 @@ related:
     plans/active/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
     plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md,
     plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    plans/active/issues/utl_uac_skew_fleet_audit_2026_07_15.md,
   ]
 created: 2026-07-15
 parent_epic: instruments_master
 priority: P1
-source: ["operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47"]
+source:
+  [
+    "operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47",
+    "Group-C Cloud Run job-failure triage, 2026-07-16 (utl_uac_skew_fleet_audit_2026_07_15.md follow-up)",
+  ]
 assigned_vm:
 resolved_by: ["instruments-service@24f84e86 (sports)", "deployment-service@6bfa284 (prediction)"]
 locked_by:
@@ -45,7 +65,7 @@ locked_since:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 ---
 
 ## Regression check against same-session instruments-service@03f71c81a — CLEARED
@@ -245,3 +265,62 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
   `prod/catalog.parquet` mtime advanced past the frozen 2026-07-14T00:58:37Z). Flipped the P1 prediction todo to done
   with full evidence. Both root-caused alerts (sports shrink-block, prediction OOM) now have shipped fixes; only the P2
   sports-verification and P3 IAM-403 todos remain open.
+
+## 2026-07-16 update — Group-C fleet triage: cefi + defi ALSO hitting `CATALOGUE_SHRINK_BLOCKED` (different root cause, NOT fixed)
+
+Found while triaging the "Group-C fresh-image job failures" sub-finding from `utl_uac_skew_fleet_audit_2026_07_15.md`.
+`lifecycle-catalogue-regen-cefi` and `lifecycle-catalogue-regen-defi` are BOTH failing on today's (2026-07-16 01:0x UTC)
+scheduled run, on a fresh post-06-09 image — same DP-CATALOG-001/`CATALOGUE_SHRINK_BLOCKED` alert class as the
+sports/prediction incidents above, same code file (`build_instrument_catalogue.py`), but a **DIFFERENT** root cause from
+either of those two fixes (not the sports FTP-no-merge bug, not an OOM):
+
+- **cefi**: `Monotonic guard: new=424599 current=427552 decision=REJECT` (`CATALOGUE_SHRINK_BLOCKED`, −2,953 rows).
+- **defi**: `Monotonic guard: new=10378 current=10387 decision=REJECT` (`CATALOGUE_SHRINK_BLOCKED`, −9 rows).
+- Both confirmed via live `gcloud logging read` on 2 consecutive execution attempts each (identical row counts both
+  times — not a flake).
+
+**Root-cause hypothesis (evidenced, not yet fixed): duplicate cefi-perp lineage merge-keys in the PREVIOUS catalogue,
+partially collapsed by `_merge_incremental`'s opportunistic dedup.** Downloaded the live `prod/catalog.parquet` for both
+AGs and re-ran `_incremental_merge_keys()` (the exact function from `build_instrument_catalogue.py`, mirrored read-only)
+over them:
+
+- cefi: 427,552 rows → only 423,733 distinct merge keys — **2,820 duplicate-key groups, 3,819 "excess" rows** that
+  should collapse to one lifecycle each. Sample: `cefiperp::HYPERLIQUID::BCH::LINEAR` has 3 rows —
+  `HYPERLIQUID:PERP:BCH`, `HYPERLIQUID:PERPETUAL:BCH-USD`, `HYPERLIQUID:PERPETUAL:BCH-USD@LIN` — exactly the "2026-07
+  id-convention churn" the function's own docstring describes as the reason the perp lineage key exists ("collapses to
+  ONE lifecycle instead of 3 stale-dup listings").
+- defi: 10,387 rows → 10,370 distinct keys — 17 duplicate groups / 17 excess rows (same DRIFT-SOLANA `PERP:X` vs
+  `PERPETUAL:X` pattern).
+- This is the SAME class of issue the code's own comment already names as precedent: _"the 122-dupe cefi
+  CATALOGUE_SHRINK_BLOCKED on the first weekly self-heal (2026-07-04)"_ — i.e. this has happened before and was
+  presumably absorbed by a `--mode full` weekly rebuild (which recomputes the whole catalogue and naturally collapses
+  every duplicate key in one pass) rather than a code fix to the incremental path.
+- **Why it's only shrinking PART of the dupes today, not all 3,819 at once**: `_merge_incremental`'s `tail` branch drops
+  ALL prev rows whose key appears anywhere in window (`~prev_keys.isin(window_key_set)`), but `updated` is built from
+  raw window rows (`window[known_mask]`) with **no dedup by merge key** — so a duplicate-key group only collapses to one
+  surviving row when the trailing window happens to touch it (today's window: `day>=2026-06-25`), and any duplicate
+  group entirely outside the window stays un-collapsed in `tail`. This explains the accounting exactly: cefi's 23,493
+  prev rows-with-key-in-window minus 19,870 `updated` rows = 3,623 collapsed today (most, not all, of the 3,819 total
+  latent dupes — the rest will trickle out over future days as the widening window eventually touches them, tripping the
+  guard again and again until either (a) a `--mode full` weekly rebuild fully collapses them in one shot, or (b) the
+  incremental merge is fixed to proactively dedupe ALL known-duplicate prev keys, not just window-touched ones).
+
+**NOT fixed this session — filed here instead, per the findings-triage rule** (ambiguous / data-correctness judgment
+call, not a small-clear ≤30min fix): this could be read either as (a) a legitimate corrective dedup (in which case
+`--allow-catalogue-shrink` on today's already-computed 424599/10378-row output is the correct unblock — the code's own
+error message literally suggests this override for "a legitimate corrective shrink"), or (b) a latent correctness gap in
+`_merge_incremental`'s duplicate-key handling that should be fixed at the root (dedupe `updated` by merge key, keeping
+deterministic tie-break) so the guard doesn't keep tripping intermittently as the window walks over the remaining ~3,600
+(cefi) / few (defi) not-yet-collapsed dupes. Recommend whoever picks this up: (1) confirm no row in either duplicate
+group represents a GENUINE distinct listing (spot-checked the sample rows above — they are the same instrument under 3
+successive naming conventions, not 3 different instruments, so (a) looks likely correct), then either run
+`--allow-catalogue-shrink` for cefi+defi's next run or ship a proper root-cause fix to `_merge_incremental` mirroring
+the `_merge_sports_ftp_with_frozen_tail` precedent (dedupe fully, not opportunistically). **Also affects the weekly
+`lifecycle-catalogue-full-defi` and `lifecycle-catalogue-full-tradfi` jobs**, whose last (2026-07-11) executions also
+failed — not deep-dived this session (weekly cadence, next run 2026-07-18, lower urgency), but worth checking against
+the same hypothesis when this is picked up.
+
+Not fixed by me: this is instruments-service reference-data correctness territory requiring a real judgment call on
+whether the shrink is legitimate, which the findings-triage rule reserves for diagnosis + escalation, not a unilateral
+fix. Flagging as a **NOTIFY-OPERATOR class finding** (data-pipeline correctness, instruments-service catalogue SSOT) —
+operator should decide (a) vs (b) above before anyone runs `--allow-catalogue-shrink` on production reference data.

@@ -144,7 +144,7 @@ registered fleet-wide** — confirmed.)
 
 | Cluster                                 | ~$/mo | % of PM   | Where it goes under Set B                            |
 | --------------------------------------- | ----- | --------- | ---------------------------------------------------- |
-| **ci-status-update**                    | ~$165 | **32.4%** | → self-host (B1) or serverless (B2) → ~$0            |
+| **ci-status-update**                    | ~$165 | **32.4%** | → self-host (B1), trim setup steps → ~$0             |
 | **promotion / health / reconcile bots** | ~$144 | **28.2%** | → self-host (B1) → ~$0 (git+PR bots stay on Actions) |
 | **quality-gates-v2** (real tests)       | ~$102 | **20.0%** | Set A shrinks it (docs-skip + fan-out collapse)      |
 | **agent / plan / misc bots**            | ~$69  | **13.5%** | → self-host (B1) → ~$0                               |
@@ -221,9 +221,20 @@ throughput + tolerable latency, **not** zero-queue at peak.
   other repos.
 
 **Net: the planning-VM absorbs the entire CI-glue load with room to spare — the things to actively manage are memory
-(the QG interaction below) and disk; a CPU cap protects the orchestrator.** If ci-status-update's burst latency ever
-matters, that single workflow is the natural first candidate for the B2 serverless move (already in the plan as the "B2
-next" step).
+(the QG interaction below) and disk; a CPU cap protects the orchestrator.**
+
+**B2 DROPPED (operator 2026-07-15):** `ci-status-update` runs on the VM at
+$0 like the rest of the glue — no serverless
+build. **Key mechanism (correcting an earlier muddled framing):** a GitHub Actions job runs the _steps the workflow YAML
+lists_, in a fresh isolated `_work/` dir — it does NOT auto-reuse the host VM's state. So a **plain `runs-on` flip would
+still** `actions/checkout` (fresh clone into `_work`, not the VM's `pm` clone) + `google-github-actions/auth` (ignoring
+the VM's ADC) + `pip install google-cloud-firestore` (ignoring the pre-installed lib) — ~15s of pointless setup on a
+warm VM. **That setup is not inherent — the YAML tells it to.** Because it's OUR long-running VM, we TRIM those steps
+(see the migration todo): pre-install the lib, drop the auth step (use the VM's ADC), reuse a warm checkout
+(`git fetch`, not a fresh clone) → the run is just `fetch + write Firestore` ≈ **~2-5s, $0,
+near-zero boot churn**. Only a pure warm daemon/Cloud Run endpoint would shave the last couple seconds to ~1s, and the
+promotion crons read this on a **15-min cadence** so that's irrelevant. So B2 is **not planned**; revisit only if
+churn/latency ever bites (then a `deployment-api` endpoint is the cheap option).
 
 ### Reconciliation with the QG-offload ADR (2026-06-02) — complementary, not contradictory
 
@@ -307,8 +318,9 @@ Three mutually-comparable ways to stop that — pick the target architecture:
 **B1 vs B2 vs B3 is the core architectural decision.** B1 is fastest to savings. B2 is the "proper" end-state (glue
 becomes service code, not Actions plumbing) and is unusually cheap here because the plumbing already exists in
 deployment-api — but it concentrates the deploy pipeline into one service (single-point-of-failure; keep the manual
-`gcloud builds triggers run` escape hatch). B3 buys managed autoscaling for a small license. They're not exclusive: B1
-now, B2 for the highest-frequency `ci-status-update` later, is a sensible sequence.
+`gcloud builds triggers run` escape hatch). B3 buys managed autoscaling for a small license. **DECISION (2026-07-15): B1
+for everything, B2 DROPPED** — even `ci-status-update` runs on the VM, with its redundant setup steps trimmed to use the
+VM's warm state (see §"Capacity assessment" → B2 DROPPED note). B2/B3 are not planned; revisit only if churn ever bites.
 
 ### OPTION SET C — Drastic redesigns we EVALUATED and do NOT recommend (with why)
 
@@ -388,8 +400,10 @@ B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherw
 All decisions are now closed. Execution follows in the sibling plan.
 
 1. ✅ **Direction approved** — Set A + Set B = B1.
-2. ✅ **Set B = B1** (self-hosted glue runners on the planning-VM; 8 ephemeral runners, CPU/RAM-capped). B2 (serverless
-   ci-status-update) remains the natural later step; B3/RunsOn parked.
+2. ✅ **Set B = B1 for everything; B2 DROPPED, B3/RunsOn parked** (self-hosted glue runners on the planning-VM; 8
+   ephemeral runners, CPU/RAM-capped). Even `ci-status-update` runs on the VM — with its redundant per-run setup
+   (`pip install` / `google-github-actions/auth` / fresh clone) **trimmed** so it uses the VM's warm state (~2-5s). B2
+   (serverless) not planned; revisit only if churn/latency ever bites.
 3. ✅ **A2 = FIX PROPERLY NOW** — rebuild the content-gate dedup on the Firestore tree-fingerprints, **fleet-wide** (it
    lives in the shared reusable `python-quality-gates-v2.yml`, called by 44 workflows across ~25 repos). **Correctness
    guard:** skip ONLY when that exact tree previously passed GREEN (never dedup off a failed/unknown run); relies on QG
@@ -576,3 +590,9 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   tree-fingerprint dedup, green-only guard — it lives in the shared reusable QG, 44 callers); A5 measure-then-collapse;
   A6/A7 disable staging crons; A8 do; A3/A4 deprioritized; spend cap left as-is; migration = canary→phased groups;
   promote bots kept (not duplicates). Recorded in §"Decisions — MADE". Next: execute the changes.
+- 2026-07-15 — **B2 DROPPED + ci-status-update handled properly** (operator). Corrected a muddled latency framing: a
+  plain `runs-on` flip keeps the Actions job's per-run setup (fresh checkout / `google-github-actions/auth` / runtime
+  `pip install`) even on a warm VM (~15s) because the runner executes the YAML steps in an isolated `_work` dir — the
+  VM's warm state isn't auto-reused. Fix = **trim those steps** (pre-installed lib + VM ADC + reused shallow checkout) →
+  ~2-5s at $0, near-zero boot churn. Added sibling STEP 2b for the trim; Phase 4 (serverless) marked DROPPED; counts
+  corrected to 50 MOVE / 6 KEEP.

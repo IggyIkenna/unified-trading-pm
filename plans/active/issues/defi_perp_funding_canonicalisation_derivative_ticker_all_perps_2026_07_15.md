@@ -178,6 +178,19 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       untouched — every query scoped to the `venue` column, never a symbol substring. `FLASHBOTS` (distinct MEV relay)
       and a coincidental base58 address containing "Zeta" also correctly preserved.
 
+- [ ] [CODE] P1. **DRIFT derivative_ticker funding endpoint is DEAD (403) — measured 2026-07-16.** The endpoint
+      `market-tick-data-service/market_tick_data_service/adapters/drift_adapter.py:12` documents and uses —
+      `GET https://data.api.drift.trade/fundingRates?marketName={SYMBOL}-PERP&limit=2400` — now returns **HTTP 403
+      `{"message":"Forbidden"}`** (probed live, both with and without `limit`). This is the DRIFT leg of the
+      derivative_ticker canonicalisation wired by todo 2 above, so that leg cannot currently capture. WORKING
+      replacement found in the same probe: the per-day CSV form
+      `GET https://data.api.drift.trade/market/{MARKET}/fundingRates/{YYYY}/{MM}/{DD}?format=csv` → HTTP 200 with real
+      data (e.g. SOL-PERP 2025-01-09 → 6,956 B), covering genesis 2022-11-04 → ~2026-03-31 (archive lags real-time by
+      ~3.5 months — 2026-04-05+ returns 200/0 bytes; full envelope + bisect evidence in
+      `issues/mtds_solana_drift_backfill_manifest_staleness_redoes_captured_days_2026_07_15.md`). Repoint the adapter to
+      the per-day CSV path for history and confirm the live/recent-tail source separately (the CSV archive does NOT
+      cover the last ~3.5 months). Repo: market-tick-data-service.
+
 ## Progress log
 
 - 2026-07-15 (coordinator, autonomous close-out) — **CI-verified fleet-green; one real ordering defect found + fixed.**

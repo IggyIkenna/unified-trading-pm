@@ -327,7 +327,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_lighter.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_live_only.py:
-    count: 1
+    count: 0
   market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_umi.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_gmx.py:
@@ -403,7 +403,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_drift.py:
-    count: 12
+    count: 11
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_yield.py:

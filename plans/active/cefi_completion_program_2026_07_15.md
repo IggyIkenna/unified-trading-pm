@@ -535,3 +535,53 @@ the relabel pass over historical raw-id captures (peer dry-run `instruments-serv
       its explicit framing as a design decision, not a mechanical fix. SSOT to correct once done:
       `codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
       currently false for this family).
+
+### 🔴 FOURTH blocker + it CORRUPTS the manifest: 3 lease-ON VMs in the real gap = 403 storm, ~94% false failures — 2026-07-16T06:10Z
+
+**The first VALID production test finally ran** — the light waves survived ~8h with cursors deep inside the gap
+(2026-05-17 and 2026-05-28, well past the eu=0 zone). Result, measured (20:22Z baseline → 06:05Z):
+
+| metric               | 20:22Z    | 06:05Z    | delta        |
+| -------------------- | --------- | --------- | ------------ |
+| expected_unattempted | 2,773,292 | 3,193,942 | **+420,650** |
+| captured             | 3,058,241 | 3,060,443 | **+2,202**   |
+| attempted_failed     | 34,605    | 71,817    | **+37,212**  |
+| coverage_pct         | 52.13     | 48.38     | **−3.75**    |
+
+**8 hours × 3 VMs bought +2,202 captures and +37,212 FAILURES — a ~94% failure rate, and coverage went BACKWARD.**
+
+**Mechanism (verified in the VMs' own logs, all three confirmed `TARDIS_CONCURRENCY_LEASE=1`):**
+
+```
+cefi-queue-light-bybit-x4       : 10,300 × HTTP 403 concurrent-IP-lock  vs   912 successes
+cefi-queue-light-binancefutu-x2 : 15,034 × HTTP 403 concurrent-IP-lock  vs     0 successes
+```
+
+The lease is not merely failing to help — **it is the amplifier**. Its fail-open path
+(`Tardis lease FAIL-OPEN: could not acquire within 1800s — proceeding WITHOUT the single-IP lock`) means that at N=3
+every VM waits 30 min, fails to acquire, and then they ALL proceed unlocked _simultaneously_ — a guaranteed mutual-403
+storm.
+
+**Why the 2026-07-14 "N=3 grinds at ~50-70% efficiency" observation was misleading (and this lane propagated it):** that
+measurement was taken while the VMs were re-walking **2020 data that was already captured** — skip-scans need few real
+Tardis calls, so contention was mild and 3 VMs looked survivable. In the REAL gap every cell needs a live fetch, so N=3
+is maximal contention. The operator's cap-3 hard rule was calibrated on the wrong regime. **The honest conclusion: for
+genuine gap fetching, N=1.** (Cap-3 remains a correct upper bound — it just is not a target.)
+
+**This is a DATA-CORRECTNESS issue, not just waste**: those +37,212 `attempted_failed` rows are **FALSE** — the cells
+were never really attempted against the source, they were 403'd by our own self-contention. They now pollute the
+manifest as if the venue had refused the data. (Workstream **B — 403 re-capture sweep + af-census → 0** in this plan is
+exactly the cleanup, and its scope just grew by ~37k self-inflicted rows.)
+
+**Action taken**: killed the two 403-storming light VMs; left ONE Tardis VM running
+(`cefi-queue-heavy-binancefutu-x15-20260716-025616`, all 15 venues, trades+book5, START_DATE=2026-02-01, cursor
+2026-02-02) so it can acquire the lease uncontended. Non-Tardis VMs (pacifica etc.) untouched — different key, no
+contention.
+
+**Note on eu +420,650**: the expected universe GREW during the window (new days accrue daily + catalogue growth) —
+another reason a fetch-only strategy cannot converge while the daily inflow is unclosed. The forward/live capture path
+is what should be preventing new gap accrual; that it is not is worth its own investigation.
+
+**Writer fix (`mtds@5d44a197`) status: STILL not cleanly testable** — this test was valid on scan-position but the 403
+storm meant almost nothing was actually fetched (+2,202 captures across 3 VMs/8h). The N=1 run now in flight is the
+first configuration that can produce a clean signal.

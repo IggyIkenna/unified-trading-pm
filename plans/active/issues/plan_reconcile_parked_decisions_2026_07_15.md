@@ -316,8 +316,53 @@ checkboxes. The 4th false-done plan this run caught.
   resolving the coinbase dependency; hold the codex-referenced 6.
 - **C:** Leave all 10 active — they are inert (zero open todos) and harmless where they are.
 
+## §9 — P2: `carry_staked` says the ledger EventType closed-set is 37; the re-audit AST-counted 39
+
+> **Filed late (2026-07-15).** This was the 4th operator-gated contradiction and was MISSED from the first cut of this
+> doc — recorded here rather than silently dropped.
+
+**Docs:** `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md:212` (and again `:250`) ↔
+`plans/active/global_ledger_epic_reaudit_2026_07_12.md:214`
+
+- A: _"Ledger taxonomy = UAC `canonical.crosscutting.ledger` (37 EventTypes incl DEPOSIT/WITHDRAWAL_TO_BANK/…)"_
+- B: _"`EventType` = **39** at HEAD `a2751f36` (AST-counted), not 37 (`+2` via `dc67ae6f` margin-traceability,
+  additive)."_
+
+The carry plan asserts 37 as an unqualified current fact, twice, in a **funds-isolation-adjacent** design context.
+Authoritative side is **B** (AST-verified at HEAD, dated later, `status: complete`).
+
+- **A: Drop the number — say "the UAC `canonical.crosscutting.ledger` EventType closed set" with no count, so it cannot
+  re-stale on the next enum bump. [WORKER REC]** — the count is derivable from UAC; hardcoding it in prose is the bug.
+- **B:** Write "39 EventTypes (37 base + 2 margin-traceability via `dc67ae6f`)" at both sites — accurate today,
+  re-stales on the next bump.
+- **C:** Leave it as a point-in-time note.
+
+## §10 — 10 contradiction fixes the writer-agents SKIPPED (not applied, not previously surfaced)
+
+Phase 5b applied 55 and **skipped 10**. The count was reported; the items were not. Surfacing them now — several are
+genuine rulings, not noise. **None were applied.**
+
+| #   | Doc                                                        | Skipped because                                                                                                                                                        |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `epics/instruments_master.md`                              | Roster says "3 active plans"; 15 declare this `parent_epic`. Regenerating it is a restructure, not a fix — needs `populate_epic_bodies` or an operator-directed regen. |
+| 2   | `issues/phantom_captures_tradfi_2026_06_28.md`             | The recommended_fix text was **truncated mid-sentence** in my bundle — the agent refused to guess. (My bundling bug, not the agent's.)                                 |
+| 3   | `pipeline_mode_partition_migration_2026_06_01.md`          | Re-verified as a **non-finding** at apply-time — line 49 already has the correct canonical hive key order.                                                             |
+| 4   | `honest_coverage_smoke_harness_2026_06_28.md`              | **Operator-gated**: flipping `status: active → complete` conflicts with the doc's own newer 2026-07-14 annotation (finding 22). Also codex-referenced (see §5b).       |
+| 5   | `epics/manifest_master.md`                                 | Placing `mtds_available_at_cross_asset_backfill` into a P0/P1/P2/P3 tier is a **planning decision**, not a count fix.                                                  |
+| 6   | `epics/mtds_mdps_master.md`                                | Part 2 of the fix targeted a **second file** — outside the one-file-per-agent scope. Needs a follow-up pass.                                                           |
+| 7   | `issues/capability_wizard_analysis_findings_2026_06_11.md` | The mirrored F43 flip lives in a **different file** (`capability_wizard_gap_discovery`) — out of scope.                                                                |
+| 8   | `issues/capability_wizard_analysis_findings_2026_06_11.md` | Two further in-file "F43 = OPEN" mentions weren't named by the confirmed fix; one sits **inside a table** (fragile).                                                   |
+| 9   | `issues/tradfi_unreachable_databento_..._2026_07_15.md`    | The stale `1186/1186, 100.0%` clause sits inside a **large quoted YAML scalar** — a surgical edit risked breaking the frontmatter.                                     |
+| 10  | `issues/macro_micro_econ_data_capture_audit_2026_06_05.md` | **The recommended fix is unsafe** — doc_b contains a _later reversal_ of the very correction being applied. Applying it would have re-introduced a stale claim.        |
+
+- **A: Action 4/5/6/7/8 as a small follow-up pass (the real ones); close 3 and 10 as refuted-at-apply-time; re-run 2 and
+  9 with the fix-text intact and a YAML-safe editor. [WORKER REC]**
+- **B:** Fold all 10 into the next `/plan-reconcile` run's candidate set.
+- **C:** Accept as-is — none are correctness-critical.
+
 ## Answering
 
-Reply per-section (`§1: A`, `§4: B`, …). **§2, §6, §7 were ruled + applied on 2026-07-15.** Still open: **§1** (CeFi
-reclass non-durable — data-correctness), **§3** (`p1_dualwrite` draft), **§4** (deployment-ui staging stage), **§8**
-(5358-line split), and **§7-residual** above.
+Reply per-section (`§1: A`, `§4: B`, …). **§2, §6, §7 were ruled + applied on 2026-07-15**; **§3** self-resolved via §6.
+Still open: **§1** (CeFi reclass non-durable — data-correctness), **§4** (deployment-ui staging stage), **§8**
+(5358-line split), **§7-residual** (10 verified-done plans blocked on a repoint/codex-sync pass), **§9** (ledger
+EventType count), **§10** (the 10 skipped fixes).

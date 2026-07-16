@@ -131,6 +131,12 @@ run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_form
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
 run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
+# depends_on was SEEDED by fix_frontmatter.py but never VALIDATED — nothing checked the graph
+# itself. A cycle (A->B->A) gates archival forever (CLAUDE.md: depends_on gates archival), so
+# neither plan can ever close: silent permanent stasis, no error. Whole-graph check, so it lives
+# in the full sweep, not the staged-files-only --precommit path. Corpus proven clean (0 cycles,
+# 0 self-deps) before this was made hard. SSOT: check_depends_on_graph.py.
+run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_depends_on_graph.py" --quiet
 run_check "Line caps (500 soft/1000 hard)"   soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"

@@ -54,9 +54,14 @@ Registering the runners does **nothing** until a workflow asks for them. Flip `r
 ```
 
 - **MOVE** (IO-bound glue: `repository_dispatch` / `schedule` / `push` bots): `ci-status-update`, `cloud-build-router`,
-  `cloud-build-router-aws`, the promotion/health/reconcile crons, the agent/plan bots.
-- **KEEP on GitHub-hosted**: `quality-gates-v2` / `python-quality-gates-v2` (pytest is CPU-bound ~12 min — moving it
-  would load the VM) and any `pull_request`-triggered test job.
+  `cloud-build-router-aws`, the promotion/health/reconcile crons, the SIT/promotion **orchestration** bots (`sit-gate`,
+  `sit-unlock`, `ldr-to-main-promote`, `staging-to-main` — they only open PRs / dispatch, they do NOT run tests), the
+  agent/plan bots. **50 workflows.**
+- **KEEP on GitHub-hosted** (**6**): `quality-gates-v2` / `python-quality-gates-v2` (the heavy pytest/typecheck gate —
+  CPU-bound ~12 min), the two `pull_request` agent bots, and — flagged `KEEP*` by the classifier's heavy-compute
+  detector — **`build-smoke-all-repos`** (25-job `docker buildx` matrix) and **`publish-package`** (builds a wheel).
+  These build LOCALLY, so they must not run on the light glue VM. **The heavy test gate never touches the VM** — the
+  promotion bots (on the VM) just open the PR; the `quality-gates-v2` check that fires on it runs on GitHub-hosted.
 
 Roll the `runs-on` change out via the template SSOT + `rollout-workflow-templates.sh`, never by hand-editing per-repo
 copies. **Migrate ONE low-risk workflow first** (recommend `branch-health` or `reconcile-release-tags`), confirm a green

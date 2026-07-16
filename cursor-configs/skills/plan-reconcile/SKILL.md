@@ -45,9 +45,12 @@ Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse
 
 - per-doc: path, size, `status`, `assigned_vm`, `parent_epic`, `depends_on`, `supersedes`, `superseded_by`, `related`,
   `locked_by`, `title`;
-- mechanical flags: dangling `depends_on`/`related`/`supersedes` refs; `superseded_by` set while `status: active`;
-  terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]` while
-  `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
+- mechanical flags: dangling `depends_on`/`related`/`supersedes` refs; **`depends_on` CYCLES** (A→B→A) and
+  self-dependency (A→A) — a cycle gates archival forever, so neither plan can ever close (walk the live subgraph; a
+  `depends_on` pointing at an ARCHIVED plan is NOT a finding — it means the prerequisite is done and the dependent is
+  unblocked); **git conflict markers** (`<<<<<<<`/`=======`/`>>>>>>>`) left in a doc; `superseded_by` set while
+  `status: active`; terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]`
+  while `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
   candidate); **body over the line-cap** — normal plans 500 soft / 1000 hard (per `run_hygiene_sweep.sh`), but
   **long-lived master plans + epics (`plans/epics/*.md`, `*_master*`, living-inventory/hub plans) are EXEMPT from the
   500/1000 caps** (they are intentionally long), with a **strict 5000-line ABSOLUTE ceiling on ANY file regardless of
@@ -57,8 +60,22 @@ Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse
   candidates are computed deterministically (they are candidates, still verified in Phase 2/3 before any archival).
 
 Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans/archive/` or codex (parser artifact).
-Also run the existing hygiene tooling and fold its output in: `run_hygiene_sweep.sh`,
-`regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking on its own).
+
+**`run_hygiene_sweep.sh` is a first-class STEP of this skill, and it BOOKENDS the run — not a footnote:**
+
+- **Phase 0 (entry, read-only):** `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` — `--no-regen` exists
+  precisely for this read-only input-gather (it avoids dirtying `master_to_live_defi_…`). Fold its output into the
+  candidate set and **do not re-implement what it already checks**: frontmatter validity + schema, todo format,
+  todo-regression vs origin, runbook fields, **conflict markers**, prettier-mangling, **the `depends_on` DAG (cycles +
+  self-deps)**, line caps, estimate sanity, superseded-in-active, codex path refs, parent-epic alignment,
+  CLAUDE↔SUB_AGENT parity. A RED hard check here is a finding in its own right, before any agent runs.
+- **Phase 5 (exit, HARD green-gate):** re-run it **with** regen (`--ci`) and require **0 hard failures** + `0 orphans`
+  before the run may be called done (see Phase 5).
+
+It is the same gate the fleet already enforces (prek pre-commit via `--precommit`, CI `plan-health-agent.yml`, and the
+daily cron) — so a deterministic corpus-wide check belongs THERE, not in this skill's prose, where it then runs on every
+commit rather than only when someone happens to reconcile. `regenerate_active_plan_inventory.py` runs at Phase 5 (orphan
+count >0 is review-blocking on its own).
 
 ## Phase 1 — multi-agent contradiction sweep
 
@@ -185,11 +202,46 @@ with everything else and applies the ruled items on the next pass.
   a split finding, no exemption. Canonical format is the contract, same as a `quality-gates.sh`-green tree for code.
 - NEVER write agent memory; NEVER create `*_SUMMARY.md` — the final report is chat text.
 
+## Phase 5.9 — the NO-MISS LEDGER (HARD — every one of these has actually been missed)
+
+> Added 2026-07-15 after a real run silently dropped work in **three** separate ways. The class is always the same: a
+> finding was identified, then quietly never delivered — no error, no failure, just absence. Counting is the defence.
+
+**(a) Routed-to-operator MUST equal parked. Reconcile the counts, do not eyeball it.** Compute
+`routed = |{confirmed findings where needs_operator OR NOT auto_fixable}|`, then assert `routed == parked_in_issue_doc`.
+Print both numbers in the Phase-6 report. _(Real miss: 4 contradictions were routed to the operator; only 3 were written
+into the issue doc. The 4th — a ledger `EventType` count in a funds-isolation-adjacent plan — was silently dropped, and
+only surfaced because the operator asked.)_
+
+**(b) A sub-agent SKIP is an ACTION POINT, not a statistic.** Every `skipped` item any apply-agent returns MUST be
+enumerated into the issue doc with its reason — never reported as a bare count. Skips are where the genuinely-hard
+findings collect: operator-gated calls, cross-file fixes outside a one-file mandate, truncated fix-text, and
+fixes-that-are-actually-unsafe. _(Real miss: 45 agents returned 10 skips; the run reported "10 skipped" and surfaced
+none of them — including one where the agent correctly refused because the target doc held a LATER reversal of the
+fix.)_
+
+**(c) VERIFY AT HEAD — never trust a commit summary.** After every commit, confirm the change actually landed:
+`git show HEAD:<path> | grep <the-thing-you-changed>`. A green commit line does NOT mean your edit is in the commit.
+_(Real miss: an archival commit moved 13 plans but landed them still `status: active` — prek stashes unstaged changes, a
+hook conflicts, the restore fails, and your edits are silently rolled back while the working tree still LOOKS right.
+`git mv` reporting `(100%)` rename similarity is the tell that content you expected to change did not.)_
+
+**(d) Conservation on any MOVE.** When work moves between docs (a fold, a consolidation), assert it landed on the other
+side: count FOLDED-OUT markers == FOLDED-IN markers == new folded-in sections. A move that deletes without adding is
+data loss.
+
+**(e) Every count in the final report must be a measurement, not a memory.** Re-derive it from the corpus or the run
+artifacts at report time.
+
 ## Phase 6 — report
 
 Finish with text: counts by severity/class, the applied-fix list (commit shas), the operator-decision list (or parked
-issue doc path), refuted-candidate count, and coverage (docs read / batches / topics swept). Recommend a re-run cadence
-(post-major-phase or weekly) until the confirmed-findings count trends to zero.
+issue doc path), refuted-candidate count, and coverage (docs read / batches / topics swept). **Include the Phase-5.9
+ledger explicitly — `routed_to_operator == parked` and `agent_skips == enumerated`, as NUMBERS.** If either pair does
+not balance, the run is NOT done: go park the difference before reporting. Report honestly what did NOT land, too — a
+silently-dropped finding is the failure this skill exists to prevent, so a run that hides its own misses is worse than
+one that reports them. Recommend a re-run cadence (post-major-phase or weekly) until the confirmed-findings count trends
+to zero.
 
 ## AO-VM handoff (target end-state)
 
