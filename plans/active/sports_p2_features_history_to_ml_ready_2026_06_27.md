@@ -134,16 +134,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                           GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                           gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                           Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                           LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                           Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                           writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                           Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                           were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                           Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                           on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -160,6 +160,57 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-16 19:56Z — data_engineering slot-3 (Todo 1 dispatch — both tracked VMs found dead on the now-resolved consolidator bug; corrected a load-bearing wrong assumption from prior sessions; launched 4-VM parallel gap-fill covering full 2017-2026 span)
+
+Fresh-pulled all 24 slot repos clean. Operator message on this dispatch: "default fuller solution, do not idle" — went
+beyond a fast re-verify.
+
+**Both previously-tracked VMs (`features-sports-sports-20260715-004933`, `-091218`) are gone and both FAILED (rc=1)**,
+not completed — `gcloud compute instances list` shows zero `features-sports-*`/`fss-backfill-vm-*` VMs running. Root
+cause confirmed via `run.log`: both hit
+`Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112'` — the exact
+failure mode `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` already root-caused and
+shipped a fix for (`unified-trading-library@c47273c1`, deployed ~2026-07-15 14:05Z). Both dead VMs launched BEFORE that
+deploy (00:49Z and 09:12Z on 07-15, image pulled at boot), so they ran the old, buggy image the whole time and paid for
+it at the tail: `-004933` (range 2018-07-09→2019-08-11) got through 397/399 days, dying on the LAST day (2019-08-11);
+`-091218` (range 2020-09-09→2020-10-05) completed through its last day too but died on the wrap-up health check, leaving
+only its FIRST day (2020-09-09) uncomputed. Confirmed the consolidator is genuinely healthy now (`gsutil stat` on the
+consolidated index, fresh) — a fresh VM launch now pulls the fixed image, so this should not recur.
+
+**Correcting a load-bearing wrong assumption several prior sessions made** ("scattered single-day gaps = honest absence,
+no fixtures that day"): did a full single-walk listing of `sports_features/by_date/` (3,254 unique dates present,
+2017-02-02→2026-07-23) and diffed against the full calendar 2017-02-02→2026-07-16 (3,452 days) — 205 missing, of which
+188 are isolated 1-2 day gaps and 2 are 3+ day blocks (`2017-02-19→21`, 3d; `2024-02-03→08`, 6d). Spot-checked 11 of the
+"single-day" gaps spread across 2017-2026 against the upstream `instruments-store-sports-prd` fixtures path: **10 of 11
+had real fixtures (3-40 leagues each)** — only the earliest (2017-02-03, inside the already-confirmed pre-coverage
+window) was genuine honest-absence. So the vast majority of these scattered gaps are real, uncomputed days, not
+honest-absence — the "single-day gaps are all honest-absence" framing several 2026-07-14/15 sessions used to justify "no
+new action" was not backed by an upstream check and was wrong more often than not.
+
+**Action taken**: launched
+`deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2017-02-01 --end 2026-07-16 --vms 4`
+(default `--skip-existing`, `--tables` unset → all 3 feature groups per date, confirmed via `vm_fss_features.sh` startup
+banner: "Skip existing: true / Tables: all"). This is the SSOT-recommended year-chunked/resumable mechanic, parallelized
+4-way by the existing launcher rather than 190 individual single-day VMs — skip-existing makes the ~3,250 already-done
+days cheap existence-checks instead of full recompute, so this closes every real gap across the whole history in one
+dispatch, not just the 2 tiny tail gaps the dead VMs left behind. Confirmed no pre-existing `fss-backfill-vm-*` VM was
+running before launch (checked via `gcloud compute instances list`, no name-collision risk this dispatch). All 4 VMs
+(`fss-backfill-vm-1..4`, SPOT, e2-standard-4) confirmed `RUNNING` post-launch with fresh, correct startup logs:
+
+- `fss-backfill-vm-1`: 2017-02-01 → 2019-06-13 (863 days)
+- `fss-backfill-vm-2`: 2019-06-14 → 2021-10-23 (863 days)
+- `fss-backfill-vm-3`: 2021-10-24 → 2024-03-04 (863 days)
+- `fss-backfill-vm-4`: 2024-03-05 → 2026-07-16 (864 days)
+
+Checkbox NOT flipped (gate structurally unmet — these 4 VMs still need hours to run through their skip-checks + the
+genuine ~200-day compute). **Handoff for the next dispatch**: check
+`bash deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --status` (or
+`gcloud compute instances list --filter="name~fss-backfill-vm"` + per-VM `run.log` tail) before assuming these are done
+or dead; if any VM died prematurely, relaunch just its sub-range with `launch-features-vm.sh --feature-family sports`
+(note: that consolidated launcher has NO `--skip-existing` passthrough today — pass a NARROW date range matching only
+the actual gap, don't re-run its full original range without skip-existing, or it will recompute every already-done day
+in range).
 
 ### 2026-07-15 10:10Z — data_engineering slot-11 (Todo 1 dispatch — fast re-verify only, both tracked VMs healthy + progressing, known consolidator-staleness self-recovering, no new action needed)
 
