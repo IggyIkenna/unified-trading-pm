@@ -482,3 +482,25 @@ now with `done_sha: null`, so a future `/done` on any of them goes through the f
 repeating this exact failure mode. Audit sweep is complete: no other `status: done` + `plan_ref` task existed fleet-wide
 beyond the 7 found (0 remain, and the sweep re-ran against live state post-fix, not a stale snapshot). Closing this
 todo. (repo: agent-orchestrator) — infra slot-15, 2026-07-16.
+
+### 2026-07-16T19:5xZ UTC — infra slot-15 (adjacent finding + fix: this task's own `/done` self-blocked on the fresh gate)
+
+Calling `/done` for this task hit the very gate Todo 2 just shipped: 409 `cross_repo_pm_log_clean` against
+`plan_ref: "plans/active/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md"` (no `issues/`) even though
+the real file — and my genuine flip commit `unified-trading-pm@828c7ac` — live at
+`plans/active/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`. Root cause: this task's own
+`TaskRow`/`backlog.yaml` entry was created BEFORE the `regen_backlog_from_plan.py` `issues/`-segment fix landed
+(`agent-orchestrator@666c860`, Todo 2's follow-on), so it still carries the pre-fix, `issues/`-stripped `plan_ref`. That
+fix only corrects NEW parses — it does not retroactively correct already-existing rows — so `check_plan_flip`'s
+cross-repo git-log search (`_pm_log_touches_plan_ref`) was searching a path that doesn't exist and finding nothing, even
+though the flip is real. Given the fresh hard-409 gate is now LIVE fleet-wide, every other pre-fix issue-doc- sourced
+task carries the same stale `plan_ref` and would hit the identical false rejection on its own `/done` — a fleet-wide
+footgun, not a one-off. Fixed `check_plan_flip` (`server/verify.py`) to try both the literal `plan_ref` and its
+`issues/` variant (added `_plan_ref_candidates()`), in both the mode-1 file-in-worktree check and the mode-2 cross-repo
+git-log search, before concluding no flip happened. New regression test
+(`test_done_accepts_when_task_plan_ref_is_stale_missing_issues_segment`) reproduces this exact self-block. Full
+`quality-gates.sh` green (1358 passed, 1 skipped, up from 1357). Shipped via `quickmerge --agent --files`:
+`agent-orchestrator@7053dcf`. Per findings-triage (in-file → same-commit-adjacent scope): this bug is in the exact
+mechanism (`check_plan_flip`) my own task's `/done` call just exercised, and leaving it unfixed would silently
+false-reject every other pre-fix issue-doc-sourced task's legitimate `/done` — clearly in-scope here. Calling `/done`
+again now with the corrected gate in place.
