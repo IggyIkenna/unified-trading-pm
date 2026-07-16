@@ -693,3 +693,23 @@ lost by making T+1 wait, whereas letting T+1 preempt would mean the multi-day ba
 3. **Pause-and-retry, never false failures** — when the slot is held, a waiting consumer must back off and retry rather
    than burn attempts into `attempted_failed`. Today's behaviour manufactured **+37,212 FALSE af rows in 8h**; that is
    manifest corruption, and it is the single most damaging part of this whole class.
+
+### Concurrency ramp measured: 64 streams = 2x throughput, box still ~94% idle — 2026-07-16T07:25Z
+
+Single SPOT VM (`cefi-queue-heavy-binancefutu-x15-20260716-063714`, e2-highmem-16, cap-1, lease-ON, bundled 15 venues
+via SINGLE_VM_QUEUE, START_DATE=2026-02-01), `TARDIS_MAX_CONCURRENT_DOWNLOADS=64` +
+`TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT=16` (both VERIFIED on the instance) vs the 16/4 defaults measured at 06:05Z:
+
+| metric                | 16/4 defaults | 64/16 ramp | note                             |
+| --------------------- | ------------- | ---------- | -------------------------------- |
+| 403s / 600 log lines  | 0             | **0**      | N=1 holds — no contention at all |
+| successes / 600 lines | 29            | **59**     | ~2x throughput                   |
+| rss                   | 7.8 GB        | **8.6 GB** | of 128 GB — barely moved         |
+| cpu                   | 104% /1600%   | **~104%**  | ~6% of the box                   |
+
+**Read**: 4x concurrency bought ~2x throughput, so a second (non-CPU, non-RAM, non-403) limiter is partially binding —
+per-connection Tardis pacing and/or per-day shard size are the candidates. But NOTHING on the box is saturated (RAM
++0.8GB for 4x streams proves the StreamingShardFinalizer batching keeps per-stream memory bounded, exactly as designed),
+so **the ramp should continue** — 128 then 192, watching rss/cpu/403 at each step, staying inside the operator's
+~100-200-concurrent tolerance (~2k is the level Tardis rejects). Machine upsizing is NOT indicated yet: at ~6% CPU a
+bigger box would burn money for nothing. Revisit only if CPU crosses ~70% at high stream counts.
