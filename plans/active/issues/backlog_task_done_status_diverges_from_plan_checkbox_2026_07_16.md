@@ -172,3 +172,15 @@ Flipped Todo 1 (root-cause) `[x]`; left Todos 2 (the actual code fix) and 3 (aud
 follow-up, since shipping a fleet-wide `/done`-semantics change is a higher-blast-radius call than this task's remit
 justifies unilaterally. `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 itself remains genuinely blocked
 regardless (ground truth re-checked, unchanged) — see the sibling issue doc.
+
+### 2026-07-16T18:5xZ UTC — data_engineering slot-13 (Todo 4 dispatched — still premature, declining)
+
+Backlog regen already picked up this doc's own Todo 4 ("once the above is root-caused and corrected, re-verify whether
+`sports_p2_features_history_to_ml_ready-001` is actually complete") and dispatched it back to me
+(`backlog_task_done_status_diverges_from_plan_checkbox-003`). Its own text is explicit: "**once** the above is
+root-caused **and corrected**" — root-cause (Todo 1) is now `[x]`, but "corrected" (Todo 2, the `no_plan_flip`→hard-409
+fix) is still open. So this todo's own stated precondition isn't fully met yet; doing the re-verify now would be the
+same premature-dispatch pattern this whole doc exists to describe. Re-checked ground truth anyway (cheap, no GCS walk):
+fresh-pulled to LDR HEAD, `sports_p2_features_history_to_ml_ready_2026_06_27.md` lines 101/109 still `- [ ]` — Todo 1
+("Compute features 2015→present") is still genuinely incomplete, consistent with every prior check today. Not flipping
+this todo — declining, `/skip-current-task`, will re-check once Todo 2 (the code fix) ships.
