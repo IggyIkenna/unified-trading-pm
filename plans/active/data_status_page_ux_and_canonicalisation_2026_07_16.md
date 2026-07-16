@@ -322,11 +322,20 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
   (verified row counts on real infra); UI can show + copy the contract address; discovery-time emission keeps it
   current.
 
-- [ ] [UI] P1. _(A)_ Axis-aware `formatValueLabel` (`BreakdownsAccordion.tsx`) — "(legacy — pre-job_id)" only for the
-      `job_id` axis, "(unlabeled)" for instrument_type/data_type. `[UI]` + pw:L2.
-- [ ] [UI] P1. _(A)_ Display-only canonical alias map in `deployment-ui/src/lib/data-status-helpers.ts` (spot→SPOT_PAIR,
-      perp/perpetual→PERPETUAL, futures→FUTURE, lending_market→LENDING, … from `_instrument_enums.py` docstring),
-      applied AFTER grouping; raw value stays the query key + shows on hover.
+- [x] [UI] P1. ✅ _(A)_ Axis-aware `formatValueLabel(axis, value)` (`BreakdownsAccordion.tsx`) — the `__legacy__`
+      sentinel renders "(legacy — pre-job_id)" ONLY on the `job_id` axis; "(unlabeled)" on every other axis
+      (instrument_type/data_type/…). — deployment-ui@7853409 + Evidence: `BreakdownsAccordion.test.tsx` "labels
+      **legacy** as '(unlabeled)' on a NON-job_id axis" + the existing job_id legacy test both green. `[UI]` + pw:L2.
+- [x] [UI] P1. ✅ _(A)_ Display-only canonical alias map `canonicalInstrumentTypeLabel`
+      (`deployment-ui/src/lib/data-status-helpers.ts`, from the UAC `_instrument_enums.py InstrumentType` docstring:
+      spot→SPOT_PAIR, perp/perpetual→PERPETUAL, futures/future→FUTURE, option→OPTION, pool→POOL,
+      lending_market/lending→LENDING, lst→LST, yield→YIELD_BEARING, etf→ETF), applied AFTER grouping to the
+      `instrument_type` axis only. Unmapped values (already-canonical + DeFi mid-migration A_TOKEN/DEBT_TOKEN/STAKING)
+      return verbatim (honest — never force-uppercased). Raw value stays the manifest query key + shows on hover
+      (`title="raw: <value>"`). — deployment-ui@7853409 + Evidence: `data-status-helpers.test.ts`
+      "canonicalInstrumentTypeLabel" + `BreakdownsAccordion.test.tsx` "canonicalises legacy instrument_type labels but
+      keeps the raw query key" (asserts display=SPOT_PAIR, hover=`raw: spot`, onSelectValue sends raw `spot`) green.
+      `[UI]` + pw:L2.
 - [ ] [DATA] P2. _(A)_ Root-cause the legacy values — grep the instruments-service catalogue/manifest writer for where
       `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
       canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
