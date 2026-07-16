@@ -1235,3 +1235,56 @@ eu). This is the "Phantom reconcile + manifest hygiene" pass this plan already t
 > I did NOT manually launch (would race the keeper). Co-manager may resume. Follow-ups: consolidator lost-update-bug
 > redeploy; bare COINBASE still in expected_universe (318, may re-materialize as eu daily); blank-venue MDPS
 > re-attribution; HL phantom re-census (deferred — see report).**
+
+### 🔴 STALL: 5h15m of VMs produced +45 captured rows — the backfill is NOT working (ConnectionTimeout storm) — 2026-07-16T16:15Z
+
+Operator asked "is the spot VM still grinding?" — **technically running, effectively NOT.** Measured, 10:55Z→16:10Z
+(5h15m):
+
+| metric               | 10:55Z    | 16:10Z    | delta    |
+| -------------------- | --------- | --------- | -------- |
+| captured             | 3,060,161 | 3,060,206 | **+45**  |
+| expected_unattempted | 2,892,108 | 2,892,108 | **0**    |
+| coverage_pct         | 50.79     | 50.79     | **0.00** |
+
+**+45 rows in 5h15m against a 2.89M gap.** At that rate the backfill never finishes. This is the loop's flat-metric
+stall condition → STOPPED rather than burning more (keeper's blind relaunch loop killed; the current VM left running for
+diagnosis, it costs little on SPOT).
+
+**Root cause (evidence, not inference): a ConnectionTimeout storm, NOT 403s** (403s = 0 — the N=1 cap is working):
+
+```
+190x ERROR Tardis streaming error: ConnectionTimeoutError
+ 72x Connection timeout to host https://s3.us-east-1.wasabisys.com     <- Tardis's backing store
+ 53x Connection timeout to host https://datasets.tardis.dev/v1/cry...
+ 37x Connection timeout to host https://datasets.tardis.dev/v1/byb...
+ 19x Tardis HTTP 400  |  14x Empty CSV file
+```
+
+`cpu=0.4%` (vs ~104% when genuinely fetching) — the VM is IDLE, failing streams fast, not downloading. The data path is
+Tokyo (asia-northeast1) → Tardis → **Wasabi S3 us-east-1**; that long haul is timing out.
+
+**NOT caused by my 128-stream ramp — checked before blaming it**: the 64-stream VM logged **953**
+ConnectionTimeoutErrors over 3h16m (~4.9/min); the 128-stream VM logs 176 over ~33min (~5.3/min). Same rate. The
+timeouts are a persistent condition at both concurrencies, not an overshoot. (Success density IS lower at 128 — 21/600
+lines vs 59/600 at 64 — so 128 is not helping, but it is not the cause.)
+
+**Compounding churn**: VMs die every ~30-60min — keeper logs `cumulative preemptions=3`, plus `075338` was DELETED at
+11:14Z by `ikenna@odum-research.com` (a peer lane, not a preemption). Every relaunch re-scans from 2026-02-01, so the
+fleet never gets past ~2026-02-02 before dying. Restart-from-scratch + frequent death + timeout-throttled throughput =
+structurally zero progress.
+
+**Candidate causes to test next (do NOT guess — measure):** (1) Tokyo→us-east-1 Wasabi path is simply too slow/lossy for
+this volume → test a VM in a US region (Tardis/Wasabi are us-east-1; the whole fleet being in asia-northeast1 may be the
+core mistake); (2) Tardis-side connection throttling that manifests as timeouts rather than 403s at high concurrency →
+test a LOW concurrency (8-16) long-lived run and compare captured/hour; (3) the day-1 fan-out (15 venues × full
+instrument universe) is simply enormous → narrow to ONE venue-week per VM so a wave COMPLETES before dying. **Recommend
+(3) + (1) first**: they are cheap to test and (1) would explain the whole session's throughput mystery.
+
+- [ ] [INFRA] P0. **Diagnose the ConnectionTimeout storm — the backfill is currently incapable of finishing.** Measured:
+      +45 captured rows in 5h15m; cpu 0.4%; 0 403s; timeouts to `s3.us-east-1.wasabisys.com` + `datasets.tardis.dev` at
+      BOTH 64 and 128 streams (~5/min either way). Test in order: (a) region — run one VM in a US region near
+      Tardis/Wasabi us-east-1 vs the current asia-northeast1, compare captured/hour; (b) low concurrency (8-16)
+      long-lived, compare captured/hour (if timeouts are throttle-driven, low concurrency should beat high); (c) narrow
+      scope to one venue-week per VM so a wave completes inside the preemption window. Until this is understood, adding
+      VMs/streams/hours cannot close the 2.89M gap.
