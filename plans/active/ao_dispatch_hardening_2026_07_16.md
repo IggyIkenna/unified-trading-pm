@@ -333,20 +333,23 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 - [ ] [BACKEND] P0. Regression suite green + full `bash scripts/quality-gates.sh` on agent-orchestrator; ship via
       `quickmerge.sh "fix(dispatch): ..." --agent --files '<paths>'`. **Gate**: QG green + `Quickmerge:` trailer + LDR
       landed.
-- [ ] [OPERATOR] P0. 🔴 **BLOCKED ON A DEPLOY — and the blocker is the finding of the day.** The fixes were **never
-      running**: the first Phase-3 check was "is the fixed code even on the VM?" and
-      `grep -c claimable_queued_task_ids server/dispatch.py` on `i-0c9b283b31d6b5ca7` returned **0**. The clone
-      `orchestrator.service` runs from has been frozen at **2026-07-14 16:40 / 23 commits behind** for two days, because
-      ONE untracked file (`main-agent-checkpoint.md`, written BY DESIGN on RECYCLE per `context_lifecycle.py`) made
-      `slot-cron-ff-pull.sh` log `[skip:dirty]` every 5 minutes — with **zero tracked modifications**. So every AO fix
-      shipped in that window was on LDR and not running; the fleet was executing code we had already fixed. **Root cause
-      FIXED** (`agent-orchestrator@96d005f` gitignore + `unified-trading-pm@5a8d6bc4d` — untracked-only dirt no longer
-      blocks an FF, verified empirically A/B/C + a 25-repo dry-run). **VM recovery is operator-owned** (ruling
-      2026-07-16): unfreezing pulls 23 commits, ~22 written by other sessions and unverified here, onto the live
-      orchestrator — rule-11 says don't ship what you haven't verified. Tracked with recovery commands in
-      [`issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md`](issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md).
-      **Runtime verification — the real bar.** After the ship, measure the churn ratio over a live window and compare to
-      the 24h pre-fix baseline (**1014 autospawns / 954 deaths → 217 dispatches / 101 done**). **Gate**:
+- [ ] [OPERATOR] P0. 🟡 **UNBLOCKED + FIRST READING TAKEN 2026-07-16 15:08Z — NOT yet a verdict (needs a multi-hour
+      window).** Operator deployed; verified live: clone `behind = 0`, HEAD `96d005f`, and the code is **RUNNING**
+      (journal `15:01:03 WatchFiles detected changes in 'server/dispatch.py' … Reloading`, worker re-forked `15:01:12`,
+      `Application startup complete`). **Deploy is CLEAN**: zero errors, zero tracebacks, zero mentions of the new
+      symbols in any failure; the `slot_messages` migration ran once in prod and backfilled historical→terminal exactly
+      as designed (the flood risk did NOT materialise). **Baseline CONFIRMED from the live DB** (not just the doc's
+      claim) — prior 24h: `autospawn_succeeded` **954**, `slot_boot` 1330, `worker_kicked` 1174, `worker_polling_dead`
+      932, and `task_dispatched` **not even in the top 8** (<241). That is the pathology exactly. **Early signal that R1
+      is working in prod**: every tick since the reload reads
+      `checked=17 spawned=1 failed=0 skips={… 'queue_satisfied': 10–13}` — the budget is SATISFIED after ONE spawn, so
+      10–13 slots correctly stand down. Pre-fix the budget was 6 against 1 claimable task and it spawned into all of
+      them. **Why this is not the verdict**: the window is 7 minutes and a reload restarts every worker, so it is
+      dominated by fleet re-establishment, not steady state. 3 autospawns in 7.4 min extrapolates to ~24/h vs the
+      39.75/h baseline — directionally right, statistically meaningless. **Re-measure over ≥6h of normal operation**,
+      comparing `autospawn_succeeded : task_dispatched` against 954 : <241. Query: `activity_log` (NOT `activity`) on
+      `/var/lib/orchestrator/state.db`; the box has no `sqlite3` CLI — use `.venv/bin/python3`. **Runtime verification —
+      the real bar.** the 24h pre-fix baseline (**1014 autospawns / 954 deaths → 217 dispatches / 101 done**). **Gate**:
       autospawn:dispatch ratio materially down + no idle-respawn loop on a fleet-skipped task. Code-shipped ≠ fixed —
       this plan is not done until the burn is measured to have stopped.
 
@@ -419,3 +422,12 @@ Three of this plan's own source docs prescribe fixes that current code contradic
   source issue docs (`ao_fleet_stall…`, `dispatcher_role_eligibility…`, `ao_operator_message_silent_drop…`) are at zero
   open todos and are deliberately NOT archived until Phase 3 passes. Full finding + recovery commands:
   `issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md`.
+- **2026-07-16 15:08Z (deployed + first reading)** — Operator deployed the VM (and separately repaired a root-PM
+  divergence — the clone the AO backend reads plans from, a second staleness with the same blast radius). The 2026-07-16
+  dispatch fixes executed on the fleet for the FIRST time at 15:01:12. Deploy is clean (0 errors, 0 tracebacks); the
+  `slot_messages` migration ran once in prod and its backfill behaved. Live ticks show
+  `spawned=1 … queue_satisfied: 10-13` — R1's intended shape. Baseline re-confirmed from the DB itself (954
+  autospawn_succeeded / 24h vs <241 dispatches). **Phase 3 stays OPEN**: 7 minutes post-reload is fleet
+  re-establishment, not steady state, and calling it proven on that would be exactly the false-completion this
+  reconciliation exists to prevent. Re-measure over ≥6h. Operator is routing the durable staleness UI/alerting to a
+  separate agent.

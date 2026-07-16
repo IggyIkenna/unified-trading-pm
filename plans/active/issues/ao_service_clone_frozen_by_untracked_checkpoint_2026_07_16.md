@@ -52,7 +52,16 @@ source:
 
 # The central AO VM has been running 2-day-old code
 
-> **🔴 OPERATOR ACTION REQUIRED — the VM is still frozen.** The root cause is fixed and shipped, but the fix cannot
+> **✅ RECOVERED 2026-07-16 — the operator deployed it.** VERIFIED live: clone HEAD `96d005f`, `behind = 0`, all four
+> fixes present on the box (R1 `claimable_queued_task_ids` ×3, R2 `_spawn_param_plan` ×3, R5 `_target_slot_is_dead` ×3,
+> R6 `review_slot` ×10) + the gitignore. And the code is genuinely **RUNNING**, not merely on disk:
+> `--reload --reload-dir server` is in ExecStart, the journal shows
+> `15:01:03 WatchFiles detected changes in 'server/dispatch.py', … Reloading…` and the reloader's worker was re-forked
+> at `15:01:12` (PID 1921076, parent 1544329 — the supervisor survives reloads by design, which is why its Jul-15 start
+> time is NOT evidence of stale code). The operator also fixed a **root-PM divergence** — the clone the AO backend reads
+> plans FROM — separately. **Phase 3 of `ao_dispatch_hardening` is UNBLOCKED.** Original finding retained below.
+>
+> ~~**🔴 OPERATOR ACTION REQUIRED — the VM is still frozen.**~~ The root cause is fixed and shipped, but the fix cannot
 > reach the clone it fixes: a frozen clone cannot pull the change that unfreezes it. Someone has to break the loop by
 > hand — recovery commands below. **Operator ruling 2026-07-16: this deploy is the operator's**, because unfreezing
 > pulls 23 commits (~22 written by other sessions and not verified here) onto the live orchestrator.
@@ -118,36 +127,42 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
 
 ## Todos
 
-- [ ] [INFRA] P0. **Unfreeze + deploy the central VM** (operator-owned per the 2026-07-16 ruling). The tree is clean
-      apart from the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
+- [x] [INFRA] P0. ✅ **DONE 2026-07-16 — operator deployed; VERIFIED live (not assumed).** Clone HEAD `96d005f`,
+      `behind = 0`, R1/R2/R5/R6 all present on the box, and the running worker re-forked at `15:01:12` after WatchFiles
+      saw the change — so the fixes are executing, not just sitting on disk. The operator also repaired a **root-PM
+      divergence** (the clone the AO backend reads plans from), which was a second, independent staleness.
+      ~~**Unfreeze + deploy the central VM** (operator-owned per the 2026-07-16 ruling).~~ The tree is clean apart from
+      the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
 
       ```bash
-          cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
-          sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
-          sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
-          sudo -u ubuntu git fetch origin live-defi-rollout
-          sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
-          sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
-          grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
-          sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
-          systemctl is-active orchestrator.service
-          ```
+              cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+              sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
+              sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
+              sudo -u ubuntu git fetch origin live-defi-rollout
+              sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
+              sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
+              grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
+              sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
+              systemctl is-active orchestrator.service
+              ```
 
-          **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
-          `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
-          commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
-          session that found this.
+              **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
+              `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
+              commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
+              session that found this.
 
 - [ ] [INFRA] P1. **Then run Phase 3 of `ao_dispatch_hardening_2026_07_16`** — the runtime churn verification against
       the 24h pre-fix baseline (**1014 autospawns / 954 worker-deaths → 217 dispatches / 101 done**). It was blocked on
       this: the fixes were never running, so there was nothing to measure. Until it passes, the dispatch-hardening plan
       is **code-shipped, not proven**, and its source issue docs stay open by design.
 
-- [ ] [INFRA] P2. **Make a single frozen clone visible.** The dirty-streak WARN only fires when EVERY repo in a sweep is
-      dirty, so this outage was silent for two days. Alert on a per-repo streak (repo X
-      `[skip:dirty]`/`[skip:ff-failed]` for N consecutive ticks), not on an all-repos-dirty sweep. The signal already
-      exists — `_ff_record` tokens and `ff_pull_last_result` are per-sweep; make them per-repo. **Gate**: a single
-      deliberately-frozen clone raises a WARN within N ticks.
+- [ ] [INFRA] P2. **HANDED OFF 2026-07-16 — operator is routing the UI-surface + alerting work to a separate agent**
+      ("this needs a proper UI surface and alerting system so it doesn't occur again"). Kept here as the requirement of
+      record; do NOT start it from this doc without checking with that owner first. **Make a single frozen clone
+      visible.** The dirty-streak WARN only fires when EVERY repo in a sweep is dirty, so this outage was silent for two
+      days. Alert on a per-repo streak (repo X `[skip:dirty]`/`[skip:ff-failed]` for N consecutive ticks), not on an
+      all-repos-dirty sweep. The signal already exists — `_ff_record` tokens and `ff_pull_last_result` are per-sweep;
+      make them per-repo. **Gate**: a single deliberately-frozen clone raises a WARN within N ticks.
 
 - [ ] [INFRA] P2. **Audit every host for the same freeze.** The gitignore + ff-pull fixes stop it recurring, but any
       clone already frozen by an untracked file stays frozen until someone FFs it (self-sustaining). Sweep every host's
@@ -172,3 +187,10 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
   clobbered mid-session. Editing that file requires landing edit→commit→push inside one 5-minute window. Not a bug — but
   an undocumented foot-gun that costs a confusing debug cycle, and precisely the kind of self-healing mechanism that
   fights the person trying to heal it.
+
+- **2026-07-16 (RECOVERED)** — Operator deployed the VM and separately repaired a root-PM divergence (the clone the AO
+  backend reads plans from — a second staleness with the same blast radius: a stale plan clone means the backlog the
+  fleet works from is stale). Verified rather than trusted: `behind = 0`, all four fixes greppable on the box, and the
+  journal + re-forked worker PID prove the running process picked them up at 15:01:12. **The 2026-07-16 dispatch fixes
+  executed on the fleet for the first time at that moment** — everything before it was code-shipped-not-running.
+  Operator is routing the durable UI-surface + alerting work (todo 3) to a dedicated agent.
