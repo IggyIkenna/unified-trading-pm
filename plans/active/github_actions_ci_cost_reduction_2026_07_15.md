@@ -323,20 +323,14 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
       untrusted fork-PR code (private repo → none) before flipping.
 
-- [ ] [INFRA] P0. **`quickmerge.sh --agent` sentinel races its OWN rebase on a busy branch — found 2026-07-16, cost ~5
-      failed ship attempts.** STAGE 0.4 does `git pull --rebase`, which **rewrites the SHAs of your local commits**;
-      STAGE 3 (line ~1225) then demands the `.qg_last_passed_sha` sentinel be `==` HEAD, or an **ancestor** of it for
-      the content-scoped fallback. When the sentinel points at _your own_ commit, a rebase makes it neither — so on a
-      branch with pushes every ~1–3 min (LDR under the AO fleet) `--agent` can **never** validate a sentinel it just
-      wrote. The design implicitly assumes UNCOMMITTED work (sentinel = an upstream commit, which survives the rebase
-      because the dirty files are autostashed); pre-committed work — which the same script explicitly supports ("clean
-      tree with N unpushed commit(s) … shipping the committed work") — has no such luck. **Workaround used:** chain
-      `quality-gates.sh --no-fix && quickmerge.sh …` in ONE shell so no upstream commit can land between them — still a
-      race, just a narrow one. **Real fix (pick one):** (a) re-derive/refresh the sentinel AFTER STAGE 0.4's rebase
-      rather than before; (b) make the content-scoped fallback use the merge-base instead of requiring ancestry, so a
-      rebase of your own commits doesn't invalidate a QG that still covers the shipped files. Affects **every agent** on
-      LDR, not just this plan → escalate to the CI/CD owner or file
-      `plans/active/issues/quickmerge_agent_sentinel_race_2026_07_16.md`.
+- [ ] [INFRA] P1. **`quickmerge.sh --agent` sentinel races its OWN rebase — WRITTEN UP, operator will fix later.** Full
+      analysis (mechanism, line refs, repro, 3 candidate fixes + the negative test that must keep passing) lives in
+      **`plans/active/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md`** — that doc is the SSOT; do
+      not re-analyse it here. One-line essence: STAGE 0.4 rebases your local commits (new SHAs), then STAGE 3 demands
+      the `.qg_last_passed_sha` sentinel be `==` HEAD or an ANCESTOR of it — which a rebase of your own commits makes
+      impossible, so on a busy LDR `--agent` can never validate a sentinel it just wrote. **Working practice until
+      fixed:** chain `quality-gates.sh --no-fix && quickmerge.sh …` in ONE shell (narrows the window; does not close
+      it). Operator 2026-07-16: "we will also fix the issues with quickmerge --agent" — UNACKED, no plan owns it yet.
 
 ### ▶ DEPLOY RUNBOOK — D1…D6, strictly in order (operator-approved 2026-07-16)
 
@@ -359,7 +353,14 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       rotation needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL Secret
       Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on the npm
       branch); `quality-gates.sh --no-fix` **exit 0**.
-- [ ] [SECURITY] P0. **Rotate `GH_PAT` — agent-caused exposure 2026-07-16, operator decision pending.** While testing
+- [ ] [SECURITY] P1. **Rotate `GH_PAT` — agent-caused exposure 2026-07-16. OPERATOR-DEFERRED to after this exercise**
+      (operator 2026-07-16: "dont worry about the GH_PAT for now i will rotate it after we finish this exercise").
+      **Rotation is SAFE whenever you want it — VERIFIED on the box, not assumed:** the PAT is read once at runner START
+      (`glue-runner-run.sh:46-47`) purely to mint a JIT config / registration token; the running runner then
+      authenticates with its OWN `.credentials`, so rotating deregisters nothing. Everything reads the secret's `latest`
+      **by name**, and `glue-*` restarts after every job, so a new version is live within one job cycle (the writers
+      pick it up on their next restart). **The real caution is other consumers** — check `deployment-api` and the other
+      GitHub tokens for anything pinning a version or holding a copy BEFORE disabling the old version. While testing
       D1's resolver, a harness assertion compared the token **by value** and printed it on mismatch, putting the live
       `GH_PAT` (fine-grained, `Administration:write`, **never expires**) into the session transcript
       (`~/.claude/projects/…/03a5cc50-*.jsonl`) + that conversation's API context. Nothing published publicly. **Fix
@@ -645,7 +646,17 @@ already live. `ci-status-update` is the special one: **`[self-hosted, glue-write
       **dedicated low-privilege runner user + scoped service account** (separate from the orchestrator SA), the runner
       in its own isolated slot (already decided); and **if the exposure ever becomes a real concern, move the runners to
       a dedicated VM** (operator's stated fallback). Update `codex/05-infrastructure/` (runner conventions) +
-      `codex/07-security/`. Reduced severity given the slot-isolation; documented so the posture is explicit.
+      `codex/07-security/`. Reduced severity given the slot-isolation; documented so the posture is explicit. **Two
+      facts MEASURED on the box at D4/D6 (2026-07-16) that this doc must record, because both correct a claim the design
+      comments currently make:** (1) **the JIT config is passed as a COMMAND-LINE ARG**
+      (`run.sh --jitconfig     <base64>`), so the blob — which decodes to `.credentials` incl. the auth URL and RSA
+      params — is visible in `ps` to any local user. Single-use and auto-deregistered, and the box is effectively
+      single-tenant (`ubuntu` + root, and the AO already runs as `ubuntu`), so this is consistent with the accepted
+      isolation scope — but it is NOT the "no credential exposure" the JIT-vs-long-lived framing implies. (2) **the
+      ephemeral pool DOES write `.credentials` / `.credentials_rsaparams` / `.runner` to disk**, contradicting the
+      letter of `glue-runner-run.sh`'s "No long-lived `.credentials` on disk". The spirit holds — they are single-use,
+      replaced each cycle, and belong to an already-deregistered runner — but the wrapper wipes only `_work`/`_diag`, so
+      a stale (useless) credential file persists between cycles. Fix the comment, and decide whether to wipe them too.
 - [x] ✅ [OPERATOR-DECISION] P2. **Failure-independence RESOLVED (operator 2026-07-16 — the review's #2).** The 4
       CI-health watchers (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) **STAY HOSTED**
       (`KEEP-M`) alongside `overnight-dead-man-switch` — GitHub-hosted is the right home for light monitors whose value
