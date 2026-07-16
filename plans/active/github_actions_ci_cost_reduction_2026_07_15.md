@@ -9,8 +9,8 @@ summary: >-
   All repos are private (every minute billed) and there are ZERO self-hosted runners, so the biggest untapped lever is
   moving lightweight glue off $0.008/min GitHub-hosted runners onto compute we already run 24/7. This plan proposes a
   tiered fix — self-host the switchboard+crons, collapse the quality-gates job fan-out that pays a 1-min minimum per
-  sub-second job, retire a duplicate promote bot + slow crons, and (later) move ci-status-update to a serverless write.
-  THESE ARE SUGGESTIONS FOR REVIEW, NOT FINAL DECISIONS — nothing here is approved to execute yet.
+  sub-second job, and fix cron cadence. Decisions closed 2026-07-15 (B1 on the planning-VM; ci-status-update trimmed to
+  use the VM's warm state; serverless B2 dropped; promote bots kept). Execution in progress.
 status: draft
 nature: process
 asset_group: [cross-cutting]
@@ -119,15 +119,24 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **52 MOVE / 4 KEEP** — KEEP =
-      `quality-gates-v2`, `python-quality-gates-v2` (CPU-bound tests, stay hosted), + the two `pull_request` agent bots
-      (`plan-health-agent`, `conflict-resolution-merged`). Confirm the MOVE set carries no untrusted fork-PR code
-      (private repo → none) before flipping.
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **50 MOVE / 6 KEEP** — KEEP =
+      `quality-gates-v2` + `python-quality-gates-v2` (CPU-bound tests, stay hosted), the two `pull_request` agent bots
+      (`plan-health-agent`, `conflict-resolution-merged`), and the two `KEEP*` **local builders**
+      `build-smoke-all-repos` (docker buildx) + `publish-package` (wheel). Confirm the MOVE set carries no untrusted
+      fork-PR code (private repo → none) before flipping.
 - [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the MOVE set only (`ubuntu-latest` → `[self-hosted, glue]`), via the
       template SSOT + `rollout-workflow-templates.sh`. **Pace = canary → phased groups (operator 2026-07-15):** flip ONE
       low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a green self-hosted run, then roll
-      the remaining 52 MOVE workflows out in **small batches** (not all at once). (Takes effect on push — do NOT push
+      the remaining 50 MOVE workflows out in **small batches** (not all at once). (Takes effect on push — do NOT push
       until the runners are live on the VM, else those workflows queue with no runner.)
+- [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** A plain `runs-on`
+      flip keeps the job's pointless per-run setup (fresh `actions/checkout` into `_work`, `google-github-actions/auth`,
+      runtime `pip install google-cloud-firestore`) — ~15s on a warm VM for a 1-row write. Trim it so it uses the VM's
+      warm state: **(1)** pre-install `google-cloud-firestore` in the runner's Python env; **(2)** drop the `auth` step
+      — the Firestore client picks up the VM's ADC; **(3)** reuse a warm checkout (shallow `git fetch` on the existing
+      clone, not a fresh clone). Result: `fetch + write` ≈ **~2-5s, near-zero boot churn**. Guard the trimmed steps to
+      self-hosted only (they'd fail on GitHub-hosted). Highest-frequency workflow (~13k/mo) so the trim matters most
+      here; apply the same pattern to any other high-freq mover that does redundant setup.
 - [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
       VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
 
@@ -163,12 +172,12 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       one write instead of N runner boots (careful to preserve the CAS + stale-write ordering the Firestore store relies
       on).
 
-### Phase 4 — (Later / optional) Move ci-status-update off Actions entirely
+### Phase 4 — Serverless (B2) — DROPPED (operator 2026-07-15)
 
-- [ ] [OPERATOR-DECISION] P3. Decide whether to go further than self-hosting for the busiest workflow: wrap the existing
-      `scripts/cicd/ci_status_store.py` write logic in a small **Cloud Run / Cloud Function** endpoint and have each
-      repo's CI POST directly, removing the Actions run (and its checkout) entirely. Folds into Phase 1's savings but
-      removes VM load + cuts latency ~30s→~1s. Medium effort — only if we want the elegant end-state.
+- [x] ✅ [OPERATOR-DECISION] P3. **B2 DROPPED.** ci-status-update runs on the VM (B1) with its setup trimmed (STEP 2b) →
+      ~2-5s at $0; the only thing serverless would add (~1s + zero boot churn) is irrelevant at the promotion crons'
+      15-min read cadence. The `deployment-api` endpoint stays a cheap **fallback** to revisit ONLY if VM churn/latency
+      ever bites — not planned now.
 
 ### Phase 5 — Prove the savings
 
@@ -193,13 +202,12 @@ Self-hosted runners are infrastructure **we** now maintain (patching, disk, capa
 glue on a VM we already run 24/7 that is nearly free. For heavy test fleets it is real work — which is exactly why the
 proposal keeps heavy test jobs on GitHub-hosted and only moves the glue.
 
-## Decisions needed (operator) before any of this becomes `active`
+## Decisions — RESOLVED (operator 2026-07-15)
 
-1. Approve the direction at all? (self-host glue vs leave as-is vs a different approach)
-2. Runner host: shared orchestrator VM vs dedicated small runner VM?
-3. Which promote bot survives (`ldr-to-main-promote` vs `-fleet`)?
-4. Do we want Phase 4 (serverless ci-status-update), or is self-hosting enough?
-5. Acceptable cron cadence during freeze (hourly? event-only?).
+All closed; full ledger in the companion doc §"Decisions — MADE". In short: (1) direction approved; (2) runner host =
+the shared orchestrator/planning-VM; (3) promote bots — **keep both** (not duplicates, disjoint scopes); (4) **B2
+serverless DROPPED** — ci-status-update runs on the VM with its setup trimmed to use warm state; (5) cron cadence —
+disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self-hosted; the SLA was deliberate).
 
 ## Codex SSOTs (read before executing any item)
 
