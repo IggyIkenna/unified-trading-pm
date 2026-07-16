@@ -1062,10 +1062,32 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       not: T2.1 deletes it). If T2.3 lands class-A objects under a new prefix, this arg must be updated or the catalogue
       silently under-covers. _Gate_: `prod/catalog.parquet` mtime advances; row count ≥ 27,221; league_id nunique ≥ 94.
       _ABORT_: row count drops → the regen lost coverage → restore the T0.2 `.bak` and diagnose.
-- [ ] [INFRA] P0. **T4.4 — `terraform plan` shows ZERO diff touching either legacy bucket. THIS IS THE GATE.**
-      _Mechanism_: after T5.1's config removal, `tofu plan` must not propose creating either bucket. _Gate_: plan clean.
-      _ABORT_: plan wants to CREATE a legacy bucket → T5.1 was skipped or incomplete → **do not delete** (see F-6 / the
-      resurrection precedent).
+- [x] ✅ [INFRA] P0. **T4.4 — `terraform plan` shows ZERO diff touching the INSTRUMENTS legacy bucket. GATE PASSED
+      2026-07-16 for the instruments half** (MDT half stays open — that bucket is deliberately retained on OR-5b).
+      _Measured_, not asserted: a real `tofu plan` against `terraform/state/prod` executed **inside Cloud Build
+      `ea03c145-25a0-4280-acc3-75a99486ed76` (SUCCESS)** — required because `unified-trading-sa` lacks
+      `storage.buckets.get`/`getIamPolicy` and the plan dies locally on **174** pre-existing 403 refresh errors
+      (project/pubsub IAM reads, unrelated to sports); the Cloud Build SA `1060025368044@cloudbuild.gserviceaccount.com`
+      holds the perms. Result **`Plan: 1 to import, 20 to add, 51 to     change, 1 to destroy`** and the gate assertion:
+      **ZERO plan actions reference `instruments-store-sports-central-element-323112`** ⇒ resurrection is structurally
+      impossible (block removed ds@4637aed + state entry removed, prod state serial 344→345). Corroborated statically:
+      every remaining non-comment terraform reference to a sports instruments bucket is `-prd-`, and the
+      `google_storage_bucket.canonical` `for_each` derives from `cloud-providers.yaml:153`
+      (`instruments-store-sports-${DEPLOYMENT_ENV_SHORT}-…` → `-prd-`), so no config path can emit the flat name.
+      **Scope preserved**: `google_storage_bucket.market_data_sports` → _"will be updated in-place"_ (**retained, NOT
+      destroyed**). The plan's only `destroy` is
+      `instrument_catalogue_market_data_reader["market-data-tick-sports-central-element-323112"]` — the stale **MDT**
+      IAM key superseded by T1.4's `-prd-` repoint, on a bucket that still exists ⇒ not a hazard, not this leg's to
+      apply. _ABORT not triggered_. **🔴 BUT THE PLAN SURFACED AN ARMED RESURRECTION THAT IS NOT OURS** — the plan's
+      ONLY bucket-create is **`google_storage_bucket.instruments_cefi will be created`**, while
+      `instruments-store-cefi-central-element-323112` is **404** (confirmed via the elevated SA, build
+      `0aa821f4-adf2-4ff2-b68d-96d917c4ed1d`): cefi got the physical delete WITHOUT the config removal + `state rm`, so
+      the next prod `tofu apply` recreates it as an empty shell. **⇒ A FULL `tofu apply` ON PROD IS NOW UNSAFE TO RUN**
+      (it would resurrect cefi + make 71 unaudited changes across other plans' resources). Filed + operator-notified →
+      [`issues/terraform_instruments_cefi_armed_resurrection_2026_07_16.md`](issues/terraform_instruments_cefi_armed_resurrection_2026_07_16.md).
+      _Mechanism (original)_: after T5.1's config removal, `tofu plan` must not propose creating either bucket. _Gate_:
+      plan clean. _ABORT_: plan wants to CREATE a legacy bucket → T5.1 was skipped or incomplete → **do not delete**
+      (see F-6 / the resurrection precedent).
 - [ ] [INFRA] P1. **T4.5 — Resolve the `--asset-group`-less recon job (OR-8).** _Mechanism_:
       `uts-prod-market-tick-data-     service-fast-t1-recon`'s baked args are `[--operation download --mode batch]` with
       **no `--asset-group`**; UTL `service_cli.py:163-167` defines it `nargs='+'` with **no default** (→ `None`). The
@@ -1078,8 +1100,27 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 > **Non-negotiable ordering: config removal + `state rm` (T5.1) → apply + confirm no recreate (T4.4) → object-version
 > purge (T5.3) → bucket delete (T5.4).** Deleting before T5.1 resurrects the buckets.
 
-- [ ] [INFRA] P0. **T5.1 — Remove the Terraform DECLARATIONS + the import block, then `state rm`. Terraform does not
-      _reference_ these buckets — it OWNS them.** _Mechanism_: `terraform/gcp/main.tf:179-212`
+- [x] ✅ [INFRA] P0. **T5.1 — DONE 2026-07-16 for the INSTRUMENTS half — deployment-service@4637aed.** Removed
+      `resource "google_storage_bucket" "instruments_sports"` (found at **`main.tf:182-215`**, not the `:179-212` this
+      todo predicted — line numbers had drifted; verified before cutting) and replaced it with a REMOVED comment in the
+      verbatim shape of the `:172-180` tradfi/defi precedent. Then **`tofu state rm` BEFORE any physical delete** — 3
+      instances, prod state **serial 344→345, resources 258→257**, backed up first to
+      `…/sports_cutover_2026_07_16/tfstate_prod_prestaterm_20260716-184233.json` (973,163 B):
+      `google_storage_bucket.instruments_sports` +
+      `google_storage_bucket_iam_member.{catalogue_regen,instrument_catalogue}_instruments_reader["instruments-store-sports-central-element-323112"]`.
+      **The 2 IAM `state rm`s are how R-16 was satisfied WITHOUT an apply** — terraform no longer tracks any binding on
+      the dying bucket, so no post-delete apply can error on one (the T1.4 apply itself is impossible under this SA's
+      perms **and** now unsafe — see T4.4's cefi finding). **DELIBERATELY NOT DONE, per scope**:
+      `google_storage_bucket.market_data_sports` (`main.tf:345` post-edit) and its paired import block
+      `_imports_reconcile.tf:74-77` are **RETAINED** — that bucket is still blocked on OR-5b and is NOT being deleted,
+      so R-15's "remove the import block in the SAME commit" correctly does **not** apply to this half. Verified
+      post-commit: `market_data_sports` still declared; import block intact (2 refs). **Also fixed in the same commit
+      (adjacent finding)**: `configs/sports-trigger-tiers.yaml:274` `fixture_calendar.bucket_template` still read
+      `instruments-store-sports-{project_id}` — a dangling pointer to the bucket being deleted, which **T1.5's gate
+      missed because it grepped the literal `sports-central-element-323112`, not the `{project_id}` template form**.
+      Verified DEAD config first (nothing in the workspace parses the `fixture_calendar` key; live readers resolve via
+      `resolve_bucket_name()`), so it is declaration-only with zero runtime effect. _Mechanism_:
+      `terraform/gcp/main.tf:179-212`
       `resource "google_storage_bucket" "instruments_sports" { name = "instruments-store-sports-${var.project_id}" }`
       and `:358-374` `"market_data_sports" { name = "market-data-tick-sports-${var.project_id}" }` are **live resource
       blocks with `force_destroy=false` + `versioning{enabled=true}`**. Delete both blocks (leave a REMOVED comment per
@@ -1097,16 +1138,23 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       was deleted"_; _"the exact failure that recreated ~30 cleanup-deleted buckets on 2026-07-12T21:59Z"_
       (`[[terraform_bucket_estate_drift_resurrection_2026_07_13]]`). Sports is the **last** Group-A legacy twin still
       declared — cefi/tradfi/defi were removed this way 2026-07-14 (`:309-322`), prediction 2026-07-13.
-- [ ] [INFRA] P0. **T5.2 — FINAL live-writer re-check immediately before the delete.** _Mechanism_: **CORRECTED
-      2026-07-16 (T0.1) — do NOT gate on "newest object mtime"/`updated`.** That is precisely the measurement that
-      manufactured F-5: an OLM `STANDARD→NEARLINE @ 90d` transition bumps `updated` **every single day** on a bucket
-      nobody is writing, so an `updated`-based gate ABORTS this cutover forever on a false positive. Re-run
-      `~/tmp-cutover/scan_writers.py <bucket>` and gate on the **write** discriminator: an object is genuinely written
-      **iff** its `generation` is new — operationally, `updated != timeStorageClassUpdated` **OR** `timeCreated >= T0.6`
-      (the age-0 case: a fresh create has all three timestamps equal, which is how T0.1 caught the only 3 real writes).
-      _Gate_: **zero objects with `timeCreated >= T0.6`** and zero with `updated != timeStorageClassUpdated` in **both**
-      legacy buckets. (Transitions are expected and are NOT a writer — ignore them.) _ABORT_: any object **created**
-      since T0.6 → **DO NOT DELETE**; return to T0.1.
+- [x] ✅ [INFRA] P0. **T5.2 — FINAL live-writer re-check — PASS 2026-07-16T18:3xZ (instruments half).** Re-measured
+      immediately before the delete with the **R-1b-correct** discriminator (`~/tmp-or9/t5_2_writer_recheck.py`):
+      **968,927 scanned · 0 objects with `timeCreated >= the 08:18:00Z T0.6 freeze` · 0 genuine writes
+      (`updated != timeStorageClassUpdated`)**. Newest genuine `timeCreated` = **2026-07-16T08:05:03Z** = our own T0.2
+      snapshot backup, **13 min BEFORE** the freeze. **The R-1b trap, demonstrated**: **968,927 / 968,927** objects
+      (100%) carry `updated == timeStorageClassUpdated` — i.e. the ENTIRE bucket reads as "just touched" to a naive
+      newest-mtime gate while holding **zero** writers. Gating on `updated` would have false-ABORTed this cutover
+      permanently, exactly as R-1b predicts. _Mechanism_: **CORRECTED 2026-07-16 (T0.1) — do NOT gate on "newest object
+      mtime"/`updated`.** That is precisely the measurement that manufactured F-5: an OLM `STANDARD→NEARLINE @ 90d`
+      transition bumps `updated` **every single day** on a bucket nobody is writing, so an `updated`-based gate ABORTS
+      this cutover forever on a false positive. Re-run `~/tmp-cutover/scan_writers.py <bucket>` and gate on the
+      **write** discriminator: an object is genuinely written **iff** its `generation` is new — operationally,
+      `updated != timeStorageClassUpdated` **OR** `timeCreated >= T0.6` (the age-0 case: a fresh create has all three
+      timestamps equal, which is how T0.1 caught the only 3 real writes). _Gate_: **zero objects with
+      `timeCreated >= T0.6`** and zero with `updated != timeStorageClassUpdated` in **both** legacy buckets.
+      (Transitions are expected and are NOT a writer — ignore them.) _ABORT_: any object **created** since T0.6 → **DO
+      NOT DELETE**; return to T0.1.
 - [ ] [INFRA] P0. **T5.3 — Purge object VERSIONS before the shell delete.** _Mechanism_: both buckets carry
       `versioning{enabled=true}` + `force_destroy=false`, so the bucket cannot be deleted until every object **version**
       is purged — `gcloud storage rm --recursive --all-versions gs://<legacy-bucket>`. _Gate_:

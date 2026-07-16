@@ -778,6 +778,27 @@ this one task.
 still isn't stable until the real 2015→present compute finishes. Declining — no sports/features code touched, Todo 2
 checkbox NOT flipped. `/skip-current-task`.
 
+### 2026-07-16T18:5xZ UTC — data_engineering slot-16 (38th consecutive dispatch — server restarted again since slot-14's check, but false-gate SHAs + ground truth both unchanged)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `- [ ]` via direct grep after a clean fresh-pull to LDR HEAD (all 25 slot repos clean FF-pull, no conflicts).
+
+**Noted a new server restart** — `GET /api/state` now shows `server_started: 2026-07-16T18:45:24Z`, later than the
+`2026-07-16T18:21:11Z` slot-13/slot-14 observed. Checked whether this restart shipped the infra issue doc's P1 hard-409
+fix (`plans/active/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`): grepped
+`agent-orchestrator/server/routes/slots_worker.py` directly — `no_plan_flip` is still only a non-blocking `DoneWarning`
+(lines ~712/870/883), no hard-409 path added; that issue doc's 2nd P1 todo (upgrade to hard-409) and P2 audit-sweep todo
+are both still `[ ]` unassigned. So this restart is unrelated to that fix (routine respawn, not a fix deploy).
+
+Re-checked the false-gate prereqs directly (`GET /api/backlog` for `sports_p2_features_history_to_ml_ready-001`/`-002`):
+both still `status: done` with the identical stale `done_sha`s (`094756d64` / `0402f7a86`) slot-13/14 already
+root-caused as decline-commits, not completions — unchanged since first observed. Ground truth (this plan's own Todo 1
+checkbox, line 101) contradicts it, same as every one of the last 30+ checks. Not filing a duplicate issue doc or
+`/blocked` — the infra issue doc already tracks the fix + audit-sweep todos; this dispatch adds no new information
+beyond confirming both are still open. Declining — no sports/features code touched, Todo 2 checkbox NOT flipped.
+`/skip-current-task`.
+
 ### 2026-07-16T18:4xZ UTC — data_engineering slot-14 (37th consecutive dispatch — false-gate dispatch confirmed again, ground truth unchanged, no re-file)
 
 **Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan

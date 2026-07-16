@@ -135,20 +135,28 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       is accepted. No DB/YAML mutation performed (root-clone write is outside worker scope); this todo closes the "which
       of a/b/c" question raised at filing time — it is (a) verbatim, confirmed. (repo: agent-orchestrator) —
       data_engineering slot-13, 2026-07-16.
-- [ ] [INFRA] P1. **Upgrade `no_plan_flip` from warning to a hard 409** in `done_slot()`
-      (`server/routes/slots_worker.py`) whenever `plan_flip["applicable"]` is true — reject `/done` when the cited
-      commit doesn't touch the task's `plan_ref` checkbox, mirroring the existing strict-mode pattern used for the M9
-      `sha_unverifiable`/origin gate. Add a regression test asserting a `/done` citing an unrelated-but-valid SHA for a
-      path-shaped `plan_ref` task gets rejected. (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P1. **Upgraded `no_plan_flip` from warning to a hard 409** in `done_slot()`
+      (`server/routes/slots_worker.py`) — new `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP` config flag (default ON, mirrors the
+      `ORCHESTRATOR_DONE_REQUIRE_ORIGIN` strict-mode pattern) hard-rejects `/done` with a 409 whenever
+      `plan_flip["applicable"]` is true and the cited commit didn't touch the task's `plan_ref` checkbox; the legacy
+      warn-only M3 path is preserved as the env-gated fallback. Added 3 regression tests
+      (`tests/test_done_gate_plan_flip_hard_reject.py`): reject-on-unrelated-sha, accept-on-flip, and
+      legacy-path-when-env-disabled. Full `quality-gates.sh` green (1350 passed, 1 skipped). (repo: agent-orchestrator)
+      — agent-orchestrator@87d6fde, infra slot-13, 2026-07-16.
 - [ ] [INFRA] P2. **One-off audit sweep**: cross-check every current `status: done` backlog task carrying a `plan_ref`
       against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
       this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
       fixed. (repo: agent-orchestrator)
-- [ ] [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
+- [x] ✅ [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
       `sports_p2_features_history_to_ml_ready-001` (Todo 1, "Compute features 2015→present") is actually complete before
       trusting any future `gate_on_depends` dispatch of `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 —
-      as of this doc's creation it is still genuinely in-progress per the plan's own Progress Log (~68%+ coverage, not
-      100%). (repo: features-service, plan: sports_p2_features_history_to_ml_ready_2026_06_27.md)
+      **re-verified NOT complete**: `sports_p2_features_history_to_ml_ready_2026_06_27.md` line 101 is still `- [ ]` at
+      LDR HEAD `6a076159a`, and the plan's own Progress Log's most recent bucket-coverage reading is ~55.4% (2,332/4,210
+      days) — genuinely in-progress, nowhere near the ≥95% completeness gate. The backlog's `status: done`/`done_sha` on
+      `-001` (and `-002`) is confirmed STALE/WRONG and must not be trusted by any `gate_on_depends` dispatch until Todo
+      3's audit sweep reopens it. Not reopening it myself — that DB/YAML mutation is `[INFRA]`-scoped (Todo 3) and
+      outside this `data_engineering` task's remit. (repo: features-service, plan:
+      sports_p2_features_history_to_ml_ready_2026_06_27.md) — data_engineering slot-6, 2026-07-16.
 
 ## Progress Log
 
@@ -204,6 +212,35 @@ the actual gating fix and it's `[INFRA]`-tagged, outside this task's `data_engin
 absorbing it unilaterally (single-agent, higher-blast-radius change to `/done` semantics). Declining again via
 `/skip-current-task` — will be actionable once Todo 2 ships.
 
+### 2026-07-16T19:2xZ UTC — infra slot-13 (Todo 2 shipped — hard-409 live)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-001` (Todo 2, `[INFRA]`-tagged, in scope). Implemented
+the fix in `agent-orchestrator/server/routes/slots_worker.py::done_slot()`: the existing `no_plan_flip` warning block
+(previously append-only) now also raises `HTTPException(409)` — logging `slot_done_rejected_no_plan_flip` first — when a
+new config flag `done_require_plan_flip` (env `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP`, `BoolEnvTrue`, **default ON**) is
+set, mirroring the existing `done_require_origin`/`ORCHESTRATOR_DONE_REQUIRE_ORIGIN` warn-first-ratchet pattern used for
+the M9 origin gate. Chose default-ON (unlike M9's default-OFF) because this is a confirmed, already-exploited
+data-integrity hole (this doc's own `-001`/`-002` instances) rather than a speculative risk — env stays as the emergency
+off-switch, and the pre-existing warn-only M3 dual-flip-pattern escalation block is preserved as the fallback path when
+the flag is disabled. Added `server/config.py::done_require_plan_flip` field.
+
+Added `tests/test_done_gate_plan_flip_hard_reject.py` (3 tests, calling `slots_worker.done_slot()` directly against a
+real git repo + bare origin, mirroring `test_task_lifecycle_done_gate_resume.py`'s pattern): (1)
+`test_done_rejects_unrelated_sha_for_path_shaped_plan_ref` — a commit that touches an unrelated file gets a 409, task
+stays `dispatched`; (2) `test_done_accepts_when_commit_flips_the_plan_checkbox` — a commit that DOES flip the checkbox
+completes normally; (3) `test_done_gate_disabled_by_env_keeps_legacy_warning_path` —
+`ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP=false` falls back to the pre-existing warn-only behavior. Also tightened the
+now-inaccurate `DoneWarning` docstring (`server/models/worker_api.py`) which claimed "never blocks /done" — it already
+didn't, for the M9 origin gates, and now doesn't for `no_plan_flip` either.
+
+Ran `bash scripts/quality-gates.sh` (Pass 1, full, no skip flags) on committed HEAD: ruff lint/format clean,
+basedpyright 0 errors, pytest 1350 passed / 1 skipped (existing `test_task_lifecycle_done_gate_resume.py` suite + the 3
+new tests, no regressions). Shipped via `quickmerge.sh --agent --files`: landed on `live-defi-rollout` @
+`agent-orchestrator@87d6fde`. Todo 2 flipped `[x]` in this same turn. Todos 3 (one-off audit sweep of pre-existing
+false-`done` tasks) and the sibling plan's Todo 4 (re-verify `sports_p2_features_history_to_ml_ready-001`) remain open —
+the audit sweep (Todo 3) is a fleet-wide DB/YAML mutation task outside a single worker's normal write scope and is left
+for a follow-up dispatch.
+
 ### 2026-07-16T18:5xZ UTC — data_engineering slot-2 (Todo 4 re-dispatched a third time — precondition still unmet)
 
 Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 2.
@@ -228,3 +265,109 @@ staleness exception is present in `tests/unit/test_route_health_overview.py`). N
 This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
 `[INFRA]`-scoped and outside this task's `data_engineering` assigned_role. Declining again via `/skip-current-task` —
 will be actionable once Todo 2 ships.
+
+### 2026-07-16T18:5xZ UTC — data_engineering slot-5 (Todo 4 re-dispatched a fourth time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 5.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99`, `unified-trading-pm` HEAD
+`7ae7ac3ef7e5541854abc9af6878a9b0b9ec042f`):
+
+- **Todo 2 (the code fix) still not shipped**: read `agent-orchestrator/server/routes/slots_worker.py` `done_slot()`
+  directly at this HEAD — `no_plan_flip` is still only appended to `warnings: list[DoneWarning]` (line 712) and logged
+  as an activity event (lines 870/883); the function's only `HTTPException` raises remain the B1 already-done/not-holder
+  checks and the strict-mode M9 origin/`sha_unverifiable` gates. No hard-409 branch exists for `no_plan_flip` yet — same
+  HEAD as the slot-2 check, confirming no fix has landed since.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped and outside this task's `data_engineering` assigned_role, and per the single-task/no-fan-out rule I'm
+not absorbing it unilaterally in this session. Declining again via `/skip-current-task` — will be actionable once Todo 2
+ships.
+
+### 2026-07-16T19:0xZ UTC — data_engineering slot-3 (Todo 4 re-dispatched a fifth time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 3.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99` — same as the slot-2/slot-5 checks, confirming no
+fix has landed since, `unified-trading-pm` HEAD `d01105238bb0b890b8d5d8e5a53a007d5c5ab308`):
+
+- **Todo 2 (the code fix) still not shipped**: read `agent-orchestrator/server/routes/slots_worker.py` `done_slot()`
+  directly at this HEAD (lines 700-730) — `no_plan_flip` is still only appended to `warnings: list[DoneWarning]` (line
+  712); the function's only `HTTPException` raises remain the B1 already-done/not-holder checks and the strict-mode M9
+  origin/`sha_unverifiable` gates. No hard-409 branch exists for `no_plan_flip` yet. Checked `GET /api/backlog`: task
+  `backlog_task_done_status_diverges_from_plan_checkbox-001` (the actual fix) is `status: dispatched` — actively being
+  worked by another slot, not stuck/idle, just not yet shipped.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped, actively dispatched to another slot, and outside this task's `data_engineering` assigned_role.
+Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:1xZ UTC — data_engineering slot-7 (Todo 4 re-dispatched a sixth time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 7.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99` — same as the slot-2/slot-5/slot-3 checks,
+confirming no fix has landed since):
+
+- **Todo 2 (the code fix) still not shipped**: read `agent-orchestrator/server/routes/slots_worker.py` `done_slot()`
+  directly at this HEAD (lines 700-730) — `no_plan_flip` is still only appended to `warnings: list[DoneWarning]` (line
+  712); the function's only `HTTPException` raises remain the B1 already-done/not-holder checks and the strict-mode M9
+  origin/`sha_unverifiable` gates. No hard-409 branch exists for `no_plan_flip` yet. `GET /api/backlog`:
+  `backlog_task_done_status_diverges_from_plan_checkbox-001` (the fix) and `-002` (the audit sweep) both
+  `status: dispatched` — actively being worked, not stuck/idle, just not yet shipped.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped, actively dispatched to another slot, and outside this task's `data_engineering` assigned_role.
+Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:2xZ UTC — data_engineering slot-6 (Todo 4 re-dispatched a seventh time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 6.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99` — same as the slot-2/slot-5/slot-3/slot-7 checks,
+confirming no fix has landed since; `unified-trading-pm` HEAD `350fb86efcfe166525a8e68368ff853b9be65a17`):
+
+- **Todo 2 (the code fix) still not shipped**: `GET /api/backlog` shows
+  `backlog_task_done_status_diverges_from_plan_checkbox-001` (the fix) and `-002` (the audit sweep) both
+  `status: dispatched` (no `done_sha`) — actively being worked, not stuck/idle, just not yet shipped. Confirmed via
+  direct read of `agent-orchestrator/server/routes/slots_worker.py` at this HEAD: `no_plan_flip` is still only appended
+  to `warnings: list[DoneWarning]` (line 712); no hard-409 branch exists yet.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped, actively dispatched to another slot (not stalled), and outside this task's `data_engineering`
+assigned_role. Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:2xZ UTC — data_engineering slot-6 (Todo 2 landed mid-session — precondition now met, Todo 4 done)
+
+While preparing to push the above decline entry, `git push` was rejected as non-fast-forward (branch drift, 1 commit
+behind). Ran `git pull --rebase --autostash origin live-defi-rollout` (never force-push) and the incoming commit was
+`6a076159a` — "docs(plans): flip Todo 2 — no_plan_flip hard-409 shipped (agent-orchestrator@87d6fde)" from slot-13:
+`no_plan_flip` is now a hard 409 (env flag `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP`, default ON), with 3 regression tests,
+full QG green. So Todo 1 (root-caused) and Todo 2 (corrected) are BOTH now `[x]` — this task's own stated precondition
+is met for the first time across its 7 dispatches today.
+
+Did the actual re-verify (this task's real deliverable): re-checked
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` at the new LDR HEAD — line 101 ("Compute features 2015→present",
+task -001) is still `- [ ]`. Checked the plan's own Progress Log for the latest bucket-coverage reading rather than
+re-walking the corpus (single-walk discipline): most recent entries read ~55.4-56.1% (2,332-2,363/4,210 days) — well
+below the ≥95% completeness gate, genuinely incomplete. So `sports_p2_features_history_to_ml_ready-001` is confirmed NOT
+complete, meaning the backlog's `status: done`/`done_sha=094756d64` on it is stale/wrong, same for `-002`
+(`done_sha=0402f7a86`, line 109 also still `- [ ]`) — `GET /api/backlog` confirms `-002` (the audit sweep, Todo 3) is
+still `status: dispatched`, so reopening these two false-done tasks is pending that INFRA-scoped sweep, not this task.
+
+Flipped Todo 4 `[x]` with this finding recorded inline. Not reopening `-001`/`-002` myself (DB/YAML mutation is Todo 3's
+`[INFRA]` scope, outside this `data_engineering` task's remit and outside worker scope per RULES.md §4 — no
+`/api/backlog` reopen endpoint exists anyway, confirmed by the original filing). Shipping this doc via quickmerge and
+calling `/done`.
