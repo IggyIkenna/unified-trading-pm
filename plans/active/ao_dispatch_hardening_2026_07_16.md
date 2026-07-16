@@ -333,8 +333,20 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 - [ ] [BACKEND] P0. Regression suite green + full `bash scripts/quality-gates.sh` on agent-orchestrator; ship via
       `quickmerge.sh "fix(dispatch): ..." --agent --files '<paths>'`. **Gate**: QG green + `Quickmerge:` trailer + LDR
       landed.
-- [ ] [OPERATOR] P0. **Runtime verification — the real bar.** After the ship, measure the churn ratio over a live window
-      and compare to the 24h pre-fix baseline (**1014 autospawns / 954 deaths → 217 dispatches / 101 done**). **Gate**:
+- [ ] [OPERATOR] P0. 🔴 **BLOCKED ON A DEPLOY — and the blocker is the finding of the day.** The fixes were **never
+      running**: the first Phase-3 check was "is the fixed code even on the VM?" and
+      `grep -c claimable_queued_task_ids server/dispatch.py` on `i-0c9b283b31d6b5ca7` returned **0**. The clone
+      `orchestrator.service` runs from has been frozen at **2026-07-14 16:40 / 23 commits behind** for two days, because
+      ONE untracked file (`main-agent-checkpoint.md`, written BY DESIGN on RECYCLE per `context_lifecycle.py`) made
+      `slot-cron-ff-pull.sh` log `[skip:dirty]` every 5 minutes — with **zero tracked modifications**. So every AO fix
+      shipped in that window was on LDR and not running; the fleet was executing code we had already fixed. **Root cause
+      FIXED** (`agent-orchestrator@96d005f` gitignore + `unified-trading-pm@5a8d6bc4d` — untracked-only dirt no longer
+      blocks an FF, verified empirically A/B/C + a 25-repo dry-run). **VM recovery is operator-owned** (ruling
+      2026-07-16): unfreezing pulls 23 commits, ~22 written by other sessions and unverified here, onto the live
+      orchestrator — rule-11 says don't ship what you haven't verified. Tracked with recovery commands in
+      [`issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md`](issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md).
+      **Runtime verification — the real bar.** After the ship, measure the churn ratio over a live window and compare to
+      the 24h pre-fix baseline (**1014 autospawns / 954 deaths → 217 dispatches / 101 done**). **Gate**:
       autospawn:dispatch ratio materially down + no idle-respawn loop on a fleet-skipped task. Code-shipped ≠ fixed —
       this plan is not done until the burn is measured to have stopped.
 
@@ -399,3 +411,11 @@ Three of this plan's own source docs prescribe fixes that current code contradic
   `agent-orchestrator@4695db6`. Operator ruling 2026-07-16: **two human plans** — this one (backend craft) plus a
   sibling infra plan for host disk/governor, so they run in parallel. Estimate 4→6 baseline days for the three new
   items.
+- **2026-07-16 (Phase 3 blocked — the fixes were never running).** Every code phase is shipped and QG-green, but the
+  runtime bar cannot be measured yet: the central VM's service clone has been frozen 23 commits behind since 2026-07-14
+  by a single untracked file, so R1/R2/R5/R6 have not executed once. Root cause fixed in two ships; VM recovery left to
+  the operator per their ruling (23 commits, ~22 unverified by this session, onto the live orchestrator). **This plan is
+  code-shipped, NOT proven — and that distinction is the entire point of the reconciliation that produced it.** The
+  source issue docs (`ao_fleet_stall…`, `dispatcher_role_eligibility…`, `ao_operator_message_silent_drop…`) are at zero
+  open todos and are deliberately NOT archived until Phase 3 passes. Full finding + recovery commands:
+  `issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md`.

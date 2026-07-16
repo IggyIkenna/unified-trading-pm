@@ -1,0 +1,174 @@
+---
+doc_type: issue
+title:
+  The central orchestrator VM has been running 2-day-old code — one untracked file froze the SERVICE clone at 23 commits
+  behind, and the FF-pull skipped it silently every 5 minutes
+summary: |
+  The clone `orchestrator.service` runs from (WorkingDirectory=/home/ubuntu/unified-trading-system-repos/agent-orchestrator)
+  was stuck at HEAD 9599c91 / 2026-07-14 16:40, 23 commits behind live-defi-rollout. Cause: ONE untracked file,
+  main-agent-checkpoint.md — which context_lifecycle.py instructs the main agent to write BY DESIGN on RECYCLE — made
+  slot-cron-ff-pull.sh classify the clone [skip:dirty] and refuse to fast-forward, every 5 minutes, for two days. Zero
+  tracked modifications. The freeze is self-sustaining: a clone that cannot FF never stops being dirty. Consequence:
+  every agent-orchestrator fix shipped in that window (including the whole 2026-07-16 R1/R2/R5/R6 dispatch-hardening
+  set) was on LDR and NOT RUNNING — the fleet was executing code we had already fixed. Root cause is FIXED (two ships,
+  below). The VM itself is NOT yet recovered: operator ruling 2026-07-16 is that the deploy is theirs to run, because
+  unfreezing pulls 23 commits, ~22 of them not written or verified by this session, onto the live orchestrator.
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: [agent-orchestrator, deployment, ff-pull, stale-clone, fleet-capacity, infrastructure, operator-action]
+related:
+  [
+    ao_dispatch_hardening_2026_07_16.md,
+    ../../codex/05-infrastructure/per-tab-worktrees.md,
+    ../../epics/orchestrator_master.md,
+  ]
+created: 2026-07-16
+last_updated: 2026-07-16
+parent_epic: orchestrator_master
+priority: P0
+assigned_vm: NA
+execution_scope: local-only
+resolved_by:
+locked_by:
+locked_since:
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
+supersedes:
+superseded_by:
+depends_on:
+assigned_role: infra
+drift_direction: advance-code
+source:
+  - "Live SSM inspection of i-0c9b283b31d6b5ca7 2026-07-16 while attempting Phase 3 (runtime verification) of
+    ao_dispatch_hardening_2026_07_16"
+  - "scripts/dev/slot-cron-ff-pull.sh (the [skip:dirty] gate) + its own auto-clean carve-out comments recording the two
+    prior incidents"
+---
+
+# The central AO VM has been running 2-day-old code
+
+> **🔴 OPERATOR ACTION REQUIRED — the VM is still frozen.** The root cause is fixed and shipped, but the fix cannot
+> reach the clone it fixes: a frozen clone cannot pull the change that unfreezes it. Someone has to break the loop by
+> hand — recovery commands below. **Operator ruling 2026-07-16: this deploy is the operator's**, because unfreezing
+> pulls 23 commits (~22 written by other sessions and not verified here) onto the live orchestrator.
+
+## What was measured (live, read-only SSM, 2026-07-16)
+
+Host `agent-orchestrator-vm-1` / `i-0c9b283b31d6b5ca7` — the central orchestrator VM.
+
+| Probe                                                  | Result                                                               |
+| ------------------------------------------------------ | -------------------------------------------------------------------- |
+| `systemctl is-active orchestrator.service`             | `active` — the service is UP and looks healthy                       |
+| `WorkingDirectory` (systemd unit)                      | `/home/ubuntu/unified-trading-system-repos/agent-orchestrator`       |
+| `git log -1` in that clone                             | `9599c91` — **2026-07-14 16:40**                                     |
+| `git rev-list --count HEAD..origin/live-defi-rollout`  | **23**                                                               |
+| `git status --short`                                   | `?? main-agent-checkpoint.md` — **one untracked file**               |
+| `git diff --stat`                                      | **empty — zero tracked modifications**                               |
+| `grep -c claimable_queued_task_ids server/dispatch.py` | **0** — R1 is not on the box                                         |
+| FF-pull cron log                                       | `[skip:dirty] agent-orchestrator — uncommitted changes`, every 5 min |
+
+The same cron log shows every OTHER clone pulling fine in the same sweep (`[ff] agent-orchestrator … FF +1 → f1638923`
+into the SLOT clones, `[ff] unified-trading-pm … FF +3`). **The cron is healthy. Only the service clone is frozen.**
+
+## Why one untracked file is fatal
+
+1. `context_lifecycle.py:195` instructs main, on RECYCLE, to write its watchlist/open-items/unanswered-messages
+   checkpoint to `main-agent-checkpoint.md` and EXIT; the fresh boot reads it back. So the file exists **by design** in
+   the clone root of any host running a main agent. It was never gitignored.
+2. `slot-cron-ff-pull.sh` treated ANY `git status --porcelain` output as `[skip:dirty]` and refused to fast-forward.
+3. Therefore the clone could never FF — **and because it could never FF, the file never stopped being dirt.** The freeze
+   is self-sustaining: a stray file costs FOREVER, not one tick.
+
+**This is the THIRD instance**, and the first two are memorialised in that script's own auto-clean carve-outs:
+
+| Date       | File                                       | Clone                  | Damage                                 |
+| ---------- | ------------------------------------------ | ---------------------- | -------------------------------------- |
+| 2026-06-10 | `plan_health_digest.md`/`plan_skeleton.md` | vm-planning PM clone   | **545 commits behind** → empty backlog |
+| 2026-07-14 | cron self-pull artifacts                   | root-PM                | **1138 commits behind**                |
+| 2026-07-16 | `main-agent-checkpoint.md`                 | **CENTRAL AO service** | **23 commits behind, 2 days**          |
+
+Each was patched by allowlisting one more filename to `git clean`. An allowlist can only ever name files someone already
+got burned by, so the next new scratch file does it again — which is exactly what happened.
+
+## Why it went unnoticed for two days
+
+The FF-pull already has a dirty-streak alert (`FF_DIRTY_STREAK_THRESHOLD=3`) — but it only fires when **EVERY repo in
+the sweep** is `[skip:dirty]`. Here 24 repos pulled fine and one was frozen, so the streak never triggered. **A single
+frozen clone among healthy ones is invisible to the alarm that exists to catch exactly this.** Same shape as
+`needs_operator_count` being computed and rendered nowhere.
+
+## Root cause — FIXED (2 ships)
+
+- **`agent-orchestrator@96d005f`** — gitignore `main-agent-checkpoint.md`. Chosen over adding it to the `git clean`
+  allowlist because clean would **delete** the checkpoint, which is live state the next main boot reads to recover its
+  identity and watchlist; ignoring keeps the file AND removes it from `--porcelain`, so the FF proceeds. The ff-pull
+  script's own comment already prescribed this ("Should also be gitignored; this is the per-tick safety net").
+- **`unified-trading-pm@5a8d6bc4d`** — the general fix (operator ruling 2026-07-16: "fix it now").
+  `slot-cron-ff-pull.sh` now blocks only on **TRACKED** dirt. Untracked-only dirt proceeds, because an FF moves only
+  tracked content, and in the one case where an untracked file genuinely collides git refuses on its own ("untracked
+  working tree files would be overwritten") into the existing `[skip:ff-failed]`/`conflict` branch. **Git is the
+  authority; guessing "dirty ⇒ skip" is what turned a harmless stray file into a permanent outage.** Verified
+  empirically on a purpose-built repo (A: untracked-only → FF succeeds, file preserved; B: tracked dirt → still skips;
+  C: real collision → git refuses, nothing clobbered), plus a `--dry-run` across all 25 real workspace repos (clean).
+
+## Todos
+
+- [ ] [INFRA] P0. **Unfreeze + deploy the central VM** (operator-owned per the 2026-07-16 ruling). The tree is clean
+      apart from the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
+
+      ```bash
+          cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+          sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
+          sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
+          sudo -u ubuntu git fetch origin live-defi-rollout
+          sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
+          sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
+          grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
+          sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
+          systemctl is-active orchestrator.service
+          ```
+
+          **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
+          `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
+          commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
+          session that found this.
+
+- [ ] [INFRA] P1. **Then run Phase 3 of `ao_dispatch_hardening_2026_07_16`** — the runtime churn verification against
+      the 24h pre-fix baseline (**1014 autospawns / 954 worker-deaths → 217 dispatches / 101 done**). It was blocked on
+      this: the fixes were never running, so there was nothing to measure. Until it passes, the dispatch-hardening plan
+      is **code-shipped, not proven**, and its source issue docs stay open by design.
+
+- [ ] [INFRA] P2. **Make a single frozen clone visible.** The dirty-streak WARN only fires when EVERY repo in a sweep is
+      dirty, so this outage was silent for two days. Alert on a per-repo streak (repo X
+      `[skip:dirty]`/`[skip:ff-failed]` for N consecutive ticks), not on an all-repos-dirty sweep. The signal already
+      exists — `_ff_record` tokens and `ff_pull_last_result` are per-sweep; make them per-repo. **Gate**: a single
+      deliberately-frozen clone raises a WARN within N ticks.
+
+- [ ] [INFRA] P2. **Audit every host for the same freeze.** The gitignore + ff-pull fixes stop it recurring, but any
+      clone already frozen by an untracked file stays frozen until someone FFs it (self-sustaining). Sweep every host's
+      root + slot clones for `HEAD..origin/live-defi-rollout > 0` with untracked-only dirt. The main agent's own
+      checkpoint (read 2026-07-16) already reports a related, unresolved staleness on host `hk`: "hk utm behind 12→20→49
+      (growing steadily); FOUR hk repos now behind (deployment-ui=2, features-service=4, instruments-service=3,
+      market-tick-data-service=6)" — it correctly concluded "host-side cron restart = operator/host-owned (outside my
+      API surface)" and could not act. Check whether that shares this root cause.
+
+## Progress Log
+
+- **2026-07-16** — Found while attempting Phase 3 (runtime verification) of `ao_dispatch_hardening_2026_07_16`: the
+  first check was "is the fixed code even running on the VM?" and the answer was no —
+  `grep -c claimable_queued_task_ids server/dispatch.py` → **0**. That single check is the reason this surfaced at all;
+  the plan would otherwise have been declared done on the strength of a green QG. Root cause fixed in two ships
+  (`agent-orchestrator@96d005f` gitignore, `unified-trading-pm@5a8d6bc4d` general ff-pull fix). VM recovery left to the
+  operator per their ruling — unfreezing deploys 23 commits, ~22 unverified by this session, onto the live orchestrator,
+  and rule-11 blast-radius discipline says do not ship what you have not verified.
+- **2026-07-16** — Worth recording as its own lesson: the general fix could not be committed on the first two attempts
+  because **the crontab overwrites `slot-cron-ff-pull.sh` in the working tree from `origin` every 5 minutes** (the
+  managed-cron-file self-pull; "local edits to them are overwritten every tick BY DESIGN"). The edit was silently
+  clobbered mid-session. Editing that file requires landing edit→commit→push inside one 5-minute window. Not a bug — but
+  an undocumented foot-gun that costs a confusing debug cycle, and precisely the kind of self-healing mechanism that
+  fights the person trying to heal it.
