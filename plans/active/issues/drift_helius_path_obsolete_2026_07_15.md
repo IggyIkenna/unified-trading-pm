@@ -157,12 +157,20 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       "actually run it" step P1.2 below needs; without this todo P1.2's park-behind-prereq has no gate to open. On
       completion: flip `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: true}`) so
       P1.2 unparks. (repo: deployment-service) — done 2026-07-16 (infra slot-2). See Progress Log.
-- [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
-      path once Velocity is capturing at scale — UNPARKED as of 2026-07-16 (infra slot-2 flipped
-      `drift_velocity_backfill_running_at_scale` to `true` after confirming the launch-at-scale VM is genuinely on the
-      Velocity path and writing correct-partition rows); still not yet executed. `priority: 999` +
-      `priority_override: true` may still be set in `backlog.yaml` per `BLK-b72a4b59` rider 3 — verify at pickup whether
-      it needs clearing now that the gating condition is true. (repos: market-tick-data-service, instruments-service)
+- [x] ✅ [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old
+      Helius path once Velocity is capturing at scale — root cause found + fixed: `unified-api-contracts@5fd781c7`. See
+      Progress Log for the full finding; follow-up materialization todo P1.3 added below (real production write, needs
+      its own scoped dispatch, not absorbed into this task per findings-triage discipline).
+- [ ] [DATA] P1.3. Materialize the DRIFT `perp_trades` `expected_unattempted` catalog rows now that the registry gap
+      (P1.2) is fixed — run
+      `instruments-service/scripts/enumerate_expected_universe.py --asset-group defi     --data-types perp_trades --catalog-path <instruments catalog parquet GCS URI> --apply-write`
+      (scan-only dry run FIRST, no `--apply-write`, to confirm row-count estimate before committing to the real write;
+      the v2 enumerator needs `--catalog-path` — locate the current DRIFT/DeFi catalog parquet before running).
+      Restricting `--data-types perp_trades` naturally scopes this to DRIFT only, since DRIFT is currently the only
+      protocol declaring `perp_trades` in `PROTOCOL_CAPABILITIES`. Expect roughly the same order of magnitude as
+      `perp_funding`'s 51,301 all-time `expected_unattempted` rows (~40 DRIFT markets × full history). This is a real
+      production manifest write against `market-data-tick-defi-prd-central-element-323112` — verify count sanity before
+      `--apply-write`. (repo: instruments-service)
 - [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
@@ -175,6 +183,44 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       Re-check once P1.2 lands. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-14: root-caused + fixed the perp_trades catalog gap (P1.2)
+
+Picked up P1.2. Verified the VM launched by infra slot-2 was genuinely alive
+(`deployment-service/scripts/data_pipeline_monitors/check_vm_cli.py --vm-name mtds-solana-drift-backfill`,
+heartbeat/run-log age <1min) before touching manifest data.
+
+Read the current DRIFT manifest state via the safe filtered path
+(`read_availability_index(bucket, columns=[...], filters=[("venue","==","DRIFT"), ...])`, never a full-index/corpus walk
+— the DeFi bucket's full-index read is a known OOM risk per `manifest_index_read_oom_canonical_cache_2026_06_24.md`; ran
+under an RSS-guarded wrapper as an added precaution on this shared host). For the `2025-01-15`–`2025-12-23` gap:
+`perp_funding` shows 3 `captured` / 27 `attempted_failed` (all "day sig count exceeds 50000 ceiling" — the old Helius
+wall, on specific high-volume days) / 313 `empty_confirmed` / 13720 `expected_unattempted` (~40 markets × 343 days) —
+this part is coherent and will naturally self-correct as Velocity's writes supersede the stale rows per the
+dedup/captured-outranks logic, no code change needed there.
+
+**Real bug found**: `perp_trades` has exactly ONE row in DRIFT's ENTIRE manifest history — the single day manually
+reconciled last session (P1.1) — versus `perp_funding`'s 51,301 `expected_unattempted` catalog rows. Traced root cause
+(background Explore agent + my own verification of both files): the expected-universe seeder
+(`instruments-service/scripts/enumerate_expected_universe.py`) enumerates candidate
+`(date, venue, chain, data_type, market)` cells from two UAC registries — `PROTOCOL_CAPABILITIES["drift"].data_types`
+and `DATA_TYPES_BY_ASSET_GROUP["defi"]` — and neither ever listed `"perp_trades"`, even though the MTDS Velocity
+ingester (`drift_v2_historical_handler.py`) and the UAC schema/contract layer (`DataType.PERP_TRADES`,
+`DEFI_PERPETUAL_PERP_TRADES` contract) both already fully support it. Confirmed via `git log -S` this was an original
+gap (perp_trades added system-wide in `f26097f9`, scoped to schema/contracts only, never touched these two enumeration
+registries) — not a regression.
+
+**Fix**: added `"perp_trades"` to both registries (additive, DRIFT/DeFi-scoped only — cannot leak onto other DeFi
+protocols since `valid_data_types_for_venue_instrument_type` narrows per-protocol) + a regression test
+(`test_drift_has_perp_trades`) in `unified-api-contracts`. Full `quality-gates.sh` green (sentinel matches HEAD),
+shipped `unified-api-contracts@5fd781c7` (`--files`-scoped quickmerge).
+
+**Scope call**: the actual materialization of ~51k-scale `expected_unattempted` rows for DRIFT `perp_trades` requires
+running `enumerate_expected_universe.py --apply-write` against production — a real, separately-scoped write op (needs a
+`--catalog-path` located first, dry-run row-count sanity check before commit). This is a genuine discovery the original
+P1.2 todo didn't anticipate (it assumed only stale `attempted_failed`→`captured` transitions, not a missing catalog
+registration), so per findings-triage discipline I'm not absorbing it into this task — added as `P1.3` above, scoped to
+`instruments-service`. P1.2 itself (the code-level root-cause fix) is now shipped, hence flipped done.
 
 ### 2026-07-16 — infra slot-2: launched the re-routed Velocity VM at scale (P1)
 
