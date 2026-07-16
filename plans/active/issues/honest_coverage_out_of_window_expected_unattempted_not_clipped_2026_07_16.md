@@ -1,21 +1,30 @@
 ---
 doc_type: issue
-title: Honest-coverage out-of-window exclusion — VERIFIED already correct (out-of-life cells are `empty_confirmed` → clipped); no fleet-wide change needed
+title:
+  Honest-coverage out-of-window exclusion — VERIFIED already correct (out-of-life cells are `empty_confirmed` →
+  clipped); no fleet-wide change needed
 summary:
-  Investigated 2026-07-16 on operator request while root-causing the 2019 CME OHLCV false-CRITICAL
-  DP_VM_GONE_NO_CAPTURE alerts ("what about honest coverage… outside window not a gap, else the denominator looks
-  larger than needed"). Conclusion: the coverage denominator ALREADY correctly excludes out-of-coverage-window cells.
-  Out-of-life cells (pre-genesis-chain / pre-venue-launch / pre-source-coverage / not-listed / delisted / pre/post-season)
-  are written as `capture_status=empty_confirmed` with the OUT_OF_COVERAGE_WINDOW reason (the instruments-service
-  `enumerate_expected_universe.py` enumerator + `record_expected_empty`, which delegates to `record_empty` →
-  `empty_confirmed`), and `compute_honest_coverage` CLIPS them from both numerator and denominator via `out_of_window`
-  (operator direction 2026-06-23). The `expected_unattempted` rows carry BLANK reasons (`pending_fetch`, the real
-  backlog); `record_expected_unattempted` takes no reason arg, so `expected_unattempted_known_empty` (which the compute
-  numerator-credits) is effectively empty in practice — there is no live inflation from out-of-window cells. A candidate
-  compute-layer fix (clip the out-of-window subset of `expected_unattempted_known_empty`) was drafted and then reverted
-  as unnecessary once the write-path was traced. NOTE: initial framing in this session incorrectly assumed
+  "Investigated 2026-07-16 on operator request while root-causing the 2019 CME OHLCV false-CRITICAL
+  DP_VM_GONE_NO_CAPTURE alerts ('what about honest coverage… outside window not a gap, else the denominator looks larger
+  than needed'). Conclusion: the coverage denominator ALREADY correctly excludes out-of-coverage-window cells.
+  Out-of-life cells (pre-genesis-chain / pre-venue-launch / pre-source-coverage / not-listed / delisted /
+  pre/post-season) are written as `capture_status=empty_confirmed` with the OUT_OF_COVERAGE_WINDOW reason (the
+  instruments-service `enumerate_expected_universe.py` enumerator + `record_expected_empty`, which delegates to
+  `record_empty` → `empty_confirmed`), and `compute_honest_coverage` CLIPS them from both numerator and denominator via
+  `out_of_window` (operator direction 2026-06-23). The `expected_unattempted` rows carry BLANK reasons (`pending_fetch`,
+  the real backlog); `record_expected_unattempted` takes no reason arg, so `expected_unattempted_known_empty` (which the
+  compute numerator-credits) is effectively empty in practice — there is no live inflation from out-of-window cells. A
+  candidate compute-layer fix (clip the out-of-window subset of `expected_unattempted_known_empty`) was drafted and then
+  reverted as unnecessary once the write-path was traced. NOTE: initial framing in this session incorrectly assumed
   `record_expected_empty` writes `expected_unattempted`; it writes `empty_confirmed` — which is exactly why the existing
-  clip already covers these cells.
+  clip already covers these cells."
+source:
+  [
+    "operator request 2026-07-16 (honest-coverage out-of-window question, raised while root-causing the 2019 CME OHLCV
+    false-CRITICAL DP_VM_GONE_NO_CAPTURE alerts)",
+  ]
+resolved_by: "VERIFIED-ALREADY-CORRECT 2026-07-16 — write-path traced; no code change needed"
+locked_by:
 status: resolved
 nature: process
 asset_group: [cefi, tradfi, defi, sports, prediction]
@@ -23,11 +32,7 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, deployment-api, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, data-correctness, denominator, out-of-window, verification]
-related:
-  [
-    codex/02-data/honest-coverage-model.md,
-    codex/02-data/tradfi-databento-sourcing-ssot.md,
-  ]
+related: [codex/02-data/honest-coverage-model.md, codex/02-data/tradfi-databento-sourcing-ssot.md]
 created: 2026-07-16
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -62,8 +67,8 @@ Two mechanisms exclude out-of-window cells from the completion-% denominator, an
 The key write-path fact (traced this session): **out-of-life cells are written as `empty_confirmed`, not
 `expected_unattempted`.**
 
-- `record_expected_empty(reason=EXPECTED_*)` is a thin wrapper over `record_empty` →
-  `capture_status="empty_confirmed"` (UTL `manifest_writer/_writer_record.py:343`).
+- `record_expected_empty(reason=EXPECTED_*)` is a thin wrapper over `record_empty` → `capture_status="empty_confirmed"`
+  (UTL `manifest_writer/_writer_record.py:343`).
 - The enumerator `instruments-service/scripts/enumerate_expected_universe.py` writes not-listed / delisted /
   pre-venue-launch cells as `empty_confirmed` (lines 1060-1061, 1004-1038), keyed to the OUT_OF_COVERAGE_WINDOW reason.
 - `record_expected_unattempted` takes **no** `reason` argument — it always writes `error_reason=""` → `pending_fetch`
