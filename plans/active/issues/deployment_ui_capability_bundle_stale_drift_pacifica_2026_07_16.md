@@ -205,4 +205,19 @@ discovered and documented in this session's sibling issue doc
 `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` (UAC-source portion now resolved by this dispatch;
 the UI-mirror portion remains open there).
 
+**Fourth instance found, NOT applied — `unified-api-contracts/openapi/prospectus/*.md` (57 files)**: these carry a
+`[MACHINE-DERIVED]`/`[CODEX-DERIVED]` header and a real in-repo(-adjacent) generator —
+`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py` — unlike the three JSON bundles above. Ran it dry
+(`--uac-root <UAC> --output-dir <scratch>`) to check whether regenerating would cleanly drop the `DRIFT` residue
+(`CARRY_STAKED_BASIS.md`, `CARRY_STAKED_BASIS_DATED.md`, `CARRY_BASIS_PERP.md`, `CARRY_RECURSIVE_STAKED.md`,
+`YIELD_STAKING_SIMPLE.md` all still list DRIFT in venue-universe tables/mermaid diagrams post the UAC source fix). The
+dry-run diff shows the generator has drifted (no pun intended) from the committed files on MANY unrelated axes too —
+different venue-category classification (CEFI+DEFI vs DEFI-only), different execution-algorithm lists (including literal
+`Selector contradiction: ...` diagnostic strings not present in the committed copies), different markdown fence/table
+formatting, a different `generated_from_commit` baseline, and 2 archetypes (`CARRY_FUNDING_DISPERSION.md`,
+`TSMOM_BTC_CTA.md`) that don't exist in the committed set at all. This is the same "blind full regen risks silently
+changing more than the one thing you meant to fix" situation as the JSON bundles — NOT applied. Non-blocking for
+shipping (no `unified-api-contracts` quality-gate reads `openapi/prospectus/`), so left for whoever owns the
+prospectus-generator/committed-copy resync.
+
 ## Progress log
