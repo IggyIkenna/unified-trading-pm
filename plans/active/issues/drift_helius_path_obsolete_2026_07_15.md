@@ -238,3 +238,12 @@ let it OOM. Created this consolidation doc per main's step-5 instruction. Steps 
 reconcile manifest) are scoped as todos above, not executed this session — they involve stopping a live multi-VM SPOT
 fleet and infra changes better suited to a dedicated follow-up dispatch than folded into this single P0 verification
 task.
+
+### 2026-07-16T00:1xZ — data_engineering slot-11 (dispatched to -004, the banner todo — declined, genuinely premature)
+
+**Dispatched to `drift_helius_path_obsolete-004`** ("Once (2)-(4) land, add a banner..."). Fresh-pulled clean. This
+todo's own text is explicit: it only fires once steps 2 ([INFRA] stop the Helius fleet), 3 ([INFRA] re-route the
+launcher), and 4 ([DATA] reconcile the manifest) all land. Checked this doc's own todo list directly — all three are
+still `[ ]` (none executed since slot-2's session created this doc). Adding the "retired, superseded" banner now would
+be false — the Helius fleet hasn't actually been stopped yet, so declaring the path "retired" in the plan/issue docs
+would misrepresent live system state. Declining — no action taken, checkbox NOT flipped. `/skip-current-task`.
