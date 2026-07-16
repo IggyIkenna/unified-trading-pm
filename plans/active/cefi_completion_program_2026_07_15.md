@@ -773,3 +773,27 @@ only ONE automation should own a capped singleton.
 **Current fleet**: `cefi-queue-heavy-binancefutu-x15-20260716-075338` (SPOT, 128 trade / 32 book5 streams VERIFIED,
 lease-ON, 2026-02-01→yesterday, START_DATE-scoped). Probe watching for the throughput ceiling / CPU clustering / 403
 onset at 128.
+
+### 2026-07-16T08:35Z — [slot-3] G-code REVISED per operator: equity types collapsed → PERPETUAL/SPOT_PAIR + tags
+
+- Operator 2026-07-16 challenged the EQUITY_PERP/TOKENIZED_EQUITY distinct instrument_types: "broad definitions should
+  remain perpetual and equities; but the system must be able to KNOW what's an equity perp (to find the tradfi spot leg
+  etc) — a tag or mapping must exist". Verified: instrument_type = contract mechanics; the equity-nature is an
+  attribute; NO code branched on `==EQUITY_PERP` for behavior (ledger→PERP, mvp→base-gated); the distinct type was
+  non-load-bearing AND caused the WS-H double-seed blocker.
+- **REFACTOR SHIPPED**: **uac@b44eb28c** (deprecate-not-remove EQUITY_PERP/TOKENIZED_EQUITY enum values [kept parseable
+  — canonical_id_builder + full-enum-coverage test + persisted strings need them]; removed from
+  CeFiMvpRule.instrument_types → equity perps MVP-gate as PERPETUAL via base_ccys; fixed liquid_representative) ·
+  **is@350f0460** (build_instrument_ catalogue: `_refine_cefi_instrument_type` → `_cefi_equity_tags`; stamps
+  `tracks_equity`[real-equity ticker from crypto_equity_link] + `is_equity_perp` catalogue columns instead of minting
+  the types) · **pm@b8600b138** (codex).
+- **PROD catalogue RE-STAMPED** (`--mode full --allow-catalogue-shrink`, backup
+  `backups/prod/catalog.parquet.pre-equity-tags-2026-07-16`): EQUITY_PERP 636→0, TOKENIZED_EQUITY 79→0; 717 equity
+  instruments now 638 PERPETUAL + 79 SPOT_PAIR, all is_equity_perp=True + tracks_equity populated (15 linked tickers:
+  NVDA/META/AAPL/TSLA/COIN/… ; '' for pre-IPO SPCX + commodity/index XAU/SPX). LIVE count 10,122→10,130 (no drop);
+  dedup+ASTER-dating INTACT (HL 182, ASTER 506, perp-family 5,391).
+- **WS-H DOUBLE-SEED BLOCKER RESOLVED** — catalogue instrument_type == manifest (PERPETUAL) for these instruments; the
+  denominator reconciles, enumerate no longer double-seeds. (The equity-perp coverage-propagation follow-up from the
+  earlier WS-H run is now moot.)
+- G-code net: EQUITY_PERP-typing SUPERSEDED by the tag approach; the dedup + ASTER-dating parts of G/D remain landed +
+  correct. Design principle codified: instrument_type = mechanics only; underlying-asset-class = a tag/mapping.
