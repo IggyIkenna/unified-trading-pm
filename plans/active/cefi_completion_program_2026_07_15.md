@@ -652,10 +652,44 @@ notice.
 4. The running backfill VM should also yield gracefully rather than 403-storm when live grabs the slot (today it just
    fails cells and records them as `attempted_failed`).
 
-- [ ] [INFRA] P0. **Make the Tardis cap see forward-poll / T+1-cron / live VMs.** Today the cap is enforced only across
-      backfill VM name shapes, so a T+1 forward-poll or `tardis-machine` live VM silently contends with the capped
-      backfill and re-creates the 403 storm + FALSE-af manifest corruption. Implement per the design above:
-      `VM_TARDIS_CONSUMER=1` metadata stamp from every Tardis-consuming launcher + guard counts it; backfill yields to
-      live/forward (never the reverse); backfill should pause-and-retry rather than record false `attempted_failed` when
-      the slot is held. SSOTs to update once shipped: `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap +
-      the CLAUDE.md one-liner.
+- [ ] [INFRA] P0. **Scope the Tardis cap to AUTHENTICATED batch consumers only (operator-verified model 2026-07-16).**
+      Today the cap is enforced only across backfill VM name shapes, so a T+1 forward-poll or `tardis-machine` live VM
+      silently contends with the capped backfill and re-creates the 403 storm + FALSE-af manifest corruption. Implement
+      per the design above: `VM_TARDIS_CONSUMER=1` metadata stamp from every Tardis-consuming launcher + guard counts
+      it; backfill yields to live/forward (never the reverse); backfill should pause-and-retry rather than record false
+      `attempted_failed` when the slot is held. SSOTs to update once shipped:
+      `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner.
+
+### ✅ CORRECTION to the FIFTH gap — only AUTHENTICATED batch contends; live + IS are free (operator model, code-verified) — 2026-07-16T07:15Z
+
+Operator asserted and asked to be checked: _"live mtds tardis doesn't require auth… because it's behind free public
+APIs. same for batch or live IS related tardis… it's just t+1 backfills that would need to queue behind long running
+batch backfills and only for mtds; is can run freely and live too — double check my assumptions"_. **Checked against
+code. The assumptions HOLD, and they invalidate part of my own prior entry:**
+
+| path                         | endpoint / evidence                                                                                                                                                                                                                  | auth?   | contends? |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | --------- |
+| **live MTDS tardis-machine** | `live/connectors/tardis_machine_ws.py`: `_DEFAULT_TARDIS_MACHINE_WS_URL = "ws://localhost:8002/ws-stream-normalized"` — a LOCAL sidecar normalising exchanges' own public feeds; **zero** `api_key`/`Authorization` in the connector | **NO**  | **NO**    |
+| **IS Tardis**                | `reference_data/adapters/cefi/tardis/adapter.py` → `api.tardis.dev/v1/exchanges/*` (public metadata; the audit lane queried it unauthenticated all session)                                                                          | **NO**  | **NO**    |
+| **T+1 forward-poll**         | `launch-cefi-forward-poll.sh`: `--operation backfill --mode batch` + `tardis-machine-api-key` from Secret Manager → the `datasets.tardis.dev` path (the SAME one that emits `403 code=274 concurrent-IP-lock`)                       | **YES** | **YES**   |
+| **batch backfill**           | `cefi-queue-*` / `mtds-backfill-cefi-*` — datasets API                                                                                                                                                                               | **YES** | **YES**   |
+
+**My prior entry was WRONG on two points, corrected here:** (1) it listed `mtds-live-*` as a contender needing to be
+counted — it is NOT, live never consumes the licensed slot, so counting it would have STALLED the backfill for no
+reason; (2) it proposed "live/forward always wins, backfill yields" — the live half is moot (no contention), and the
+operator's rule for the forward half is the INVERSE: **T+1 queues BEHIND the long-running batch backfill.** That is safe
+precisely because the backfill's own range (2026-02-01→yesterday) already covers the days T+1 would fill — so nothing is
+lost by making T+1 wait, whereas letting T+1 preempt would mean the multi-day backfill never finishes.
+
+**Operator-approved design (2026-07-16), now the spec for the P0 above:**
+
+1. **Self-declaring, not a regex** — every launcher that opens an AUTHENTICATED Tardis (datasets) connection stamps
+   `VM_TARDIS_CONSUMER=1` into VM metadata; the guard counts THAT. A name pattern across 83 launchers can never stay in
+   sync, and (as just proven) name-matching would have wrongly caught the unauthenticated live VMs. **Stamp it on**:
+   `launch-cefi-sharded-backfill.sh` (+ AWS twin), `launch-mtds-backfill-vm.sh` (cefi), `launch-cefi-forward-poll.sh`.
+   **Do NOT stamp**: `launch-mtds-live.sh` (tardis-machine = unauthenticated local sidecar), anything IS-side.
+2. **Asymmetric priority** — the guard is wired into the QUEUING side only: T+1/forward-poll checks and waits; the
+   long-running backfill is not blocked by it. (Live is exempt entirely, so it is never wired in.)
+3. **Pause-and-retry, never false failures** — when the slot is held, a waiting consumer must back off and retry rather
+   than burn attempts into `attempted_failed`. Today's behaviour manufactured **+37,212 FALSE af rows in 8h**; that is
+   manifest corruption, and it is the single most damaging part of this whole class.
