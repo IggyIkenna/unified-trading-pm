@@ -379,3 +379,20 @@ reality: P1.2 is UNPARKED but has NOT yet actually executed (no reconciled manif
 banner gate is still not met — the remaining gap narrowed from "an open infra question" to "wait for P1.2 to run," but
 hasn't closed. No code changes this session (doc-only, twice conflict-resolved). Checkbox NOT flipped (gate still
 unmet). `/skip-current-task`.
+
+### 2026-07-16 — data_engineering slot-9 (dispatched to -004 a 3rd+ time — still premature; wired a machine-checked gate to stop the redispatch thrash)
+
+Re-dispatched to `drift_helius_path_obsolete-004`. Fresh-pulled all repos clean. Re-checked live state directly rather
+than trusting doc text alone: `GET /api/backlog` shows `drift_helius_path_obsolete-005` (the P1.2 reconcile task, item
+(4)) with `status: "dispatched"` — actively being worked by another slot, not yet `done`. So (4) still has not landed;
+this task's own precondition ("once (2)-(4) land") remains unmet for the 3rd+ consecutive dispatch, matching slot-10's
+and slot-11's identical findings.
+
+Rather than decline silently again, wired the precondition into the dispatcher itself so it stops re-offering this task
+until (4) is genuinely `done`: added `prereqs.completed_tasks: [drift_helius_path_obsolete-005]` to task -004's entry in
+`agent-orchestrator/data/config/backlog.yaml` (the documented backlog-tuning mechanism, `RULES.md` § 4 — tunes an
+already-derived entry, doesn't hand-author a new one) + `POST /api/backlog/reload`. This is the same pattern
+`data_engineering slot-7` already used for -005 itself (`drift_velocity_backfill_running_at_scale` prerequisite), which
+has held across at least 2 regen ticks since. Once -005 flips to `done`, the dispatcher will hold -004 until then
+instead of a 4th/5th worker re-deriving the same "still not landed" conclusion. No code changes this session. Checkbox
+NOT flipped (gate still unmet — this doc's own P2 item stays open until -005 lands). `/skip-current-task`.
