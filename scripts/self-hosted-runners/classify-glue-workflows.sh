@@ -28,13 +28,21 @@ for f in "${WF_DIR}"/*.yml; do
   done
   [ -z "${trig}" ] && trig="(none/manual)"
 
+  # HEAVY-compute detection: a job that BUILDS locally (docker image / wheel) is CPU/RAM-heavy and must NOT run on the
+  # light glue VM — keep it hosted. NOTE: `gcloud builds triggers run` / `codebuild start-build` only DISPATCH to the
+  # cloud (light on the runner), so they are NOT heavy.
+  heavy=""
+  grep -qiE 'docker build|docker buildx|buildx build|docker/build-push|(uv|poetry|python -m) build|twine upload|npm (run )?build|pytest' "${f}" && heavy="1"
+
   if printf '%s' "${base}" | grep -qiE 'quality-gates' || has pull_request; then
     verdict="KEEP"; keep=$((keep+1))
+  elif [ -n "${heavy}" ]; then
+    verdict="KEEP*"; keep=$((keep+1)) # kept because it builds locally (heavy compute)
   else
     verdict="MOVE"; move=$((move+1))
   fi
   printf '%-40s %-6s %s\n' "${base}" "${verdict}" "${trig}"
 done
 echo
-printf 'MOVE (→ self-hosted glue): %d   KEEP (→ GitHub-hosted): %d\n' "${move}" "${keep}"
+printf 'MOVE (→ self-hosted glue): %d   KEEP (→ GitHub-hosted): %d  [KEEP* = kept due to local build/heavy compute]\n' "${move}" "${keep}"
 echo 'Flip only MOVE workflows: runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'
