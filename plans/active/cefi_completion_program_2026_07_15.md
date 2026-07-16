@@ -1157,3 +1157,58 @@ unified-trading-pm@49a9ce243 Progress Log for the operator to apply.
   → separate MDPS re-attribution fix. Kept (not deleted).
 - C status: purge VERIFIED-SAFE + READY; durable execution gated on a consolidator-quiescent window (aligns with the
   final af=0 recompute timing). BYBIT-FUTURES migration + consolidator redeploy = follow-ups.
+
+### ✅ OPERATOR-APPROVED OPS EXECUTED — purge + relabel + codex edit; coverage 48.43% → 50.79% — 2026-07-16T11:00Z
+
+Operator approved all three gated items ("can you do these"). All executed, snapshot-first, with measured before/after.
+
+**1. Codex edit — DONE** (`unified-trading-pm@d0a86e30c`). `spot-vms-for-backfill.md`'s HARD RULE claimed "a preempted
+shard re-runs cleanly — there is no correctness cost to preemption, only a restart". That premise was FALSE until
+2026-07-16 (nothing re-ran it). Corrected in place: the claim now holds **only for launchers that call
+`lc_write_launch_params()`** (cefi sharded + AWS twin), via `exit_code_fleet_monitor` PREEMPTED → `RelaunchPreemptedVm`
+replaying captured params through `tardis_concurrency_guard`; a launcher without that helper gets best-effort
+ambient-env relaunch, NOT an exact-params replay (explicit warning for whoever adds the next launcher). Also added to
+`vm-launcher-runbook.md` § Tardis cap: the `VM_TARDIS_CONSUMER=1` self-declaring model, the code-verified **exempt**
+list (live `tardis-machine` = local ws://localhost:8002 sidecar over public feeds, no auth; IS = public api.tardis.dev
+metadata), and that a relaunch routes through the guard so it can never breach the cap.
+
+**2. Purge stale-shape eu — DONE, gate GREEN.** `purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`:
+snapshot → `_index/snapshots/pre_purge_stale_shape_eu_availability_index_20260716T103453Z.parquet`; **49,732 rows
+deleted** (11,964,457 remain); post-apply gate: **0 stale-shape eu rows remain**. Per-VM shards had 0 matches (the
+debris was main-index-only), consistent with the legacy-seed origin.
+
+**3. Relabel raw→canonical — DONE, 2.59M rows.** `relabel_cefi_tardis_raw_symbol_to_canonical_2026_07_15.py --apply`:
+catalogue map = 18 venues / 11,127 resolvable (venue, raw_symbol) pairs / 297 ambiguous EXCLUDED (not guessed).
+**3,134,443 candidates → 2,590,193 relabeled (82.6%), 544,250 left honestly raw** (unresolvable — NOT faked), plus
+**286,492 redundant eu rows dropped**. Snapshots taken for all 4 blobs. Wrote main index (11,677,965 rows) AND every
+`_index/per_vm/*.parquet` — critical, because the consolidator rebuilds the index from those shards, so an index-only
+relabel would have been silently reverted on the next consolidation.
+
+**MEASURED (real runs, not projections):**
+
+| metric               | before (10:2xZ) | after (10:55Z) | delta                               |
+| -------------------- | --------------- | -------------- | ----------------------------------- |
+| expected_unattempted | 3,185,339       | 2,892,108      | **−293,231**                        |
+| coverage_pct         | 48.43           | **50.79**      | **+2.36**                           |
+| captured             | 3,060,161       | 3,060,161      | +0 (rename, not re-fetch — correct) |
+| attempted_failed     | 73,231          | 73,231         | +0                                  |
+
+**Post-apply gate on the relabel: RED — 10,368 eu rows still collide with a captured key. DIAGNOSED, and it is NOT this
+relabel's doing (verified, not assumed):** the collisions are 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others
+— i.e. the **non-Tardis native-REST venues**, which the relabel never touched (its catalogue map is the 18 TARDIS
+venues; those lanes' `OnchainPerpBatchHandler` already writes canonical ids natively). **Proof it predates the run: the
+PRE-relabel snapshot already contained 10,335 of the same collisions** — my run contributed ~33 (concurrent captures by
+the live VM during the ~7-min write window). Re-running the script CANNOT fix them (verified: re-run = 0 relabeled / 0
+redundant — its reconcile only drops eu twins of rows IT relabeled, while the gate checks ALL eu-vs-captured
+collisions), so I did not blind-retry.
+
+**What the 10,368 actually are**: cells genuinely CAPTURED by the non-Tardis VMs (launched 2026-07-15T19:00Z) whose eu
+skeleton twin was never dropped — the manifest double-counts them, understating coverage by ~10,368 cells (~0.36% of
+eu). This is the "Phantom reconcile + manifest hygiene" pass this plan already tracks as never-re-run.
+
+- [ ] [DATA] P1. **Drop eu twins of natively-canonical (non-Tardis) captures — 10,368 rows.** The relabel's gate is RED
+      on these and its reconcile structurally cannot fix them (it only reconciles its own relabels). Root: the
+      OnchainPerpBatchHandler lane writes canonical `captured` rows but nothing drops the matching
+      `expected_unattempted` skeleton row, so cells are double-counted. Fix via the phantom-reconcile/manifest-hygiene
+      pass (or extend the reconcile to drop ANY eu row colliding with a captured key, not just relabeled ones).
+      Evidence: 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others; pre-relabel snapshot had 10,335 of them.
