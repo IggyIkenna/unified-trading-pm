@@ -136,12 +136,32 @@ MOVE set.** The 17 KEEP fall in six classes, five of which would BREAK something
 
 ### Deploy mechanism (Track 1 step 1)
 
-- The planning-VM `i-0c9b283b31d6b5ca7` has **no inbound SSH/:8765** → drive it via **AWS SSM**
+- **Target VM — VERIFIED 2026-07-16** (`aws ec2 describe-instances`): `i-0c9b283b31d6b5ca7` =
+  **`agent-orchestrator-vm-1`**, EIP **13.113.200.22**, **m8i.2xlarge (8 vCPU / 32 GiB)**, running — matches CLAUDE.md's
+  central orchestrator, and its 8-vCPU/32-GiB shape is what `github-glue-runner.slice` assumes (`CPUQuota=400%`,
+  `MemoryMax=8G`). **NOT** `i-0dd9812a96cdda5dc` (= `agent-orch-human-planning-vm`, 52.194.240.144, m7i.xlarge — the
+  operator's interactive box).
+- It has **no inbound SSH/:8765** → drive it via **AWS SSM**
   (`aws ssm send-command --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7 …`), the same channel as
   `/check-agent-orchestrator`. Then `bash scripts/self-hosted-runners/setup-glue-runners.sh install`.
-- Registration token = an **admin PAT with `Administration:write` on unified-trading-pm**. The fleet `GH_PAT` (loaded by
-  `load-gh-token.sh`; Secret Manager `github-token`) was **verified** to register runners (JIT `generate-jitconfig`
-  returned ok=true 2026-07-15). Prefer the Secret-Manager path (`GH_TOKEN_SECRET`) so no PAT sits on disk.
+- **Registration token = `GH_PAT` in GCP Secret Manager — CORRECTED 2026-07-16 (this doc previously named the WRONG,
+  now-DEAD secret).** Probed all candidates against
+  `POST /repos/IggyIkenna/unified-trading-pm/actions/runners/registration-token`:
+  - ✅ **`GH_PAT`** → **201** (has `Administration:write`). Fine-grained (`github_pat_`), **never expires**. The fleet
+    standard — `deployment-api`, `batch-live-reconciliation-service`, `client-reporting-api`, `alerting-service` and
+    `scripts/workspace/load-gh-token.sh:68` (`--secret=GH_PAT`) all use it. **Use this one.**
+  - ⚠️ `github-automation-token` → 201, fine-grained, non-expiring. Works, but only referenced by docs + a SIT probe
+    (legacy "automation workflows" token). Valid fallback, not the standard.
+  - ❌ `github-token` → **401 DEAD** (classic `ghp_`, created 2025-11-24, expired/revoked). **This doc used to name it**
+    — following the old text would have failed the deploy on a 401. The 2026-07-15 `generate-jitconfig` verification was
+    real but was done against `GH_PAT`; only the recorded secret NAME was wrong.
+  - Prefer the Secret-Manager path (`GH_TOKEN_SECRET=GH_PAT`) so no PAT sits on disk — **but see the blocker below:
+    `cmd_install` currently HARD-REQUIRES `GH_PAT` in the env, so the SM path can't be used for install as written.**
+- **⛔ PRE-DEPLOY BLOCKER (found 2026-07-16):** `setup-glue-runners.sh cmd_install` does `[ -n "${GH_PAT:-}" ] || die`
+  and writes the literal token into `/etc/github-glue-runner.env`. That directly contradicts this plan's own "prefer the
+  Secret-Manager path so no PAT sits on disk". Fix `install` to accept `GH_TOKEN_SECRET` (write
+  `GH_TOKEN_SECRET`+`GCP_PROJECT` to the env file, leave `GH_TOKEN` unset — the wrapper already resolves it at runtime
+  via ADC) **before** deploying.
 - Runner pinned **v2.335.1** + sha256 `4ef2f25285f0…` (in `setup-glue-runners.sh`). Then flip ONE canary
   (`reconcile-release-tags` — a MOVE workflow with `workflow_dispatch`; `branch-health` is now KEEP-M so it can't be the
   canary) → verify green → phased groups.
@@ -740,3 +760,20 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   silently yields zero matches and an alarm that never fires. QG caught 3 real lint errors of mine (C420 dict
   comprehension, E501, N802) — fixed. **Still unproven against a live outage** (no runners exist yet) — the deploy is
   what proves it end-to-end.
+- 2026-07-16 — **Token + VM claims PROBED before deploy — one was wrong, one was right.** ❌ **This plan named a DEAD
+  secret**: it said the registration PAT was Secret Manager `github-token`, which probes **401** (classic `ghp_`,
+  created 2025-11-24, expired/revoked) — following the deploy step as written would have failed on a 401. The real
+  secret is **`GH_PAT`** (what `load-gh-token.sh:68` actually loads, and what `deployment-api`,
+  `batch-live-reconciliation-service`, `client-reporting-api` and `alerting-service` all use): probed **201** on
+  `POST …/actions/runners/registration-token` ⇒ has `Administration:write`; fine-grained `github_pat_`, **never
+  expires** (so the pool can't die on a token expiry). `github-automation-token` also probes 201 and is a valid
+  fallback, but is only referenced by docs + a SIT probe. The 2026-07-15 `generate-jitconfig` verification was genuine —
+  only the recorded NAME was wrong. ✅ **VM claim was right**: `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`, EIP
+  13.113.200.22, **m8i.2xlarge (8 vCPU / 32 GiB)**, running — which also independently validates the slice sizing
+  (`CPUQuota=400%` of 8 vCPU, `MemoryMax=8G` of 32 GiB). It is NOT `i-0dd9812a96cdda5dc` (the human-planning box) —
+  worth stating because deploying to the wrong VM would put CI runners on the operator's interactive machine. All probes
+  printed status codes and metadata only; no token value was ever echoed.
+- 2026-07-16 — **PRE-DEPLOY BLOCKER found in my own script**: `cmd_install` hard-requires `GH_PAT` in the env and writes
+  the literal token to `/etc/github-glue-runner.env`, which contradicts this plan's own stated preference for the
+  Secret-Manager path (`GH_TOKEN_SECRET`) "so no PAT sits on disk". The runtime wrapper already resolves
+  `GH_TOKEN_SECRET` via ADC — only `install` lacks the path. Fix before deploying.
