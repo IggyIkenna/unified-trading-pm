@@ -21,7 +21,7 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
-last_updated: 2026-07-14
+last_updated: 2026-07-16
 locked_by:
 locked_since:
 supersedes:
@@ -120,3 +120,13 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
   Human-driven (`assigned_vm: NA`) — it modifies live escalation plumbing, so operator-driven + additive. Closes the
   three scout-found gaps (scoped-link / alert-state / role-generalization). Depends on the broker
   (`role_registry_schema_and_broker_mvp`, W9).
+- 2026-07-16: **Audited — KEPT (not archived); genuine unstarted work.** Code-verified all 5 todos are UNBUILT:
+  `BlockedRow` (`server/orm.py:163`) is still bare (no `role`/`domain`/`severity`/`state`); no `EscalationRow`, no state
+  machine, no `POST /api/escalation/{id}/claim`; no scoped `/escalation/{id}` Slack link (the alert still links to the
+  dashboard/queue); no deployment-ui escalation tab. It sharpens the human-gated 5% (self-heal 95% already covered).
+  **Stale dependency to fix when we resume**: `depends_on: role_registry_schema_and_broker_mvp` names the message broker
+  that was ARCHIVED as NOT-REQUIRED (2026-07-16, superseded by `assigned_role` dispatch). The plan is NOT actually
+  blocked — the reply path (Phase 1b) already exists via the `/blocked` answer mechanism
+  (`POST /api/blocked/{id}/answer` → worker reads on next poll), and Phases 0/1a/2 (record + state + scoped link + UI)
+  need no broker at all. **Deferred next step (operator, keep-for-now):** drop the broker `depends_on` + reword Phase 1b
+  to reuse `/blocked`, then reprioritize off `status: paused`.

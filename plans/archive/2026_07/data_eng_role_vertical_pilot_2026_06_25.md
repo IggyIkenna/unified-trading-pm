@@ -4,13 +4,13 @@ title: Data-Engineering role — vertical pilot (first end-to-end role on the sp
 summary:
   Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit
   workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
 repos: [agent-orchestrator, alerting-service]
 scope: [engineer, admin]
-tags: [role-registry, data-engineering, data-quality, daily-audit, triage]
+tags: [role-registry, data-engineering, data-quality, daily-audit, triage, archived]
 related:
   [
     ../epics/agent_operating_framework_master.md,
@@ -25,7 +25,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-25
+last_updated: 2026-07-16
 locked_by:
 locked_since:
 supersedes:
@@ -37,6 +37,18 @@ drift_direction: advance-code
 ---
 
 # Data-Engineering role — vertical pilot (first end-to-end role on the spine)
+
+> **🗄️ ARCHIVED 2026-07-16 — charter delivered; pilot scope deferred; ONE live bug carved out (operator decision).**
+> Phase 1 charter is DONE + loaded: `unified-trading-pm/agents/data_engineering.md` carries the `agent-role` row
+> (`role: data_engineering`, `model: sonnet`, `thinking: high`, `lifecycle: scheduled`), is `docspec`-green, loads in
+> `role_registry.py` (schema SSOT `scripts/docs/docspec.py`; `role-registry.md` codex doc deleted 2026-07-16). Phase 2
+> `/data-freshness` shipped at MVP (documented boot-prompt command in `data_engineering.md § Available skills`). Phase 3
+> (daily-audit Workflow) is deferred pilot scope — one of the 4 role pilots `agent_operating_framework_master` defers to
+> next quarter. **⚠️ Phase 0 is a genuine LIVE BUG, NOT deferred pilot scope**:
+> `alerting-service/alerting_service/core/claude_slack_agent.py:43` still discards the computed AI triage
+> (`_ = triage_text`) instead of posting it to the `#data-pipeline-alerts` thread — a near-free, spine-independent fix
+> carved out here (see Phase 0 + Progress Log); flagged to the operator to extract as an issue doc if it should stay
+> tracked as active work.
 
 > **W6 role instance** of `agent_operating_framework_master` — the **first full vertical** proving the pattern
 > end-to-end. Chosen because it has the most existing scaffolding: the daily Cloud Run audit crons, the
@@ -92,28 +104,36 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
 
 - [ ] [CODE] P1. Wire the discarded AI triage: in `alerting-service/.../claude_slack_agent.py` deliver `triage_text` as
       the Slack thread reply (replace `_ = triage_text`) so `DP_*` alerts carry root-cause + suggested actions.
-      **Gate**: a synthetic `DP_*` fire posts a triage thread reply in a test channel; QG green.
+      **Gate**: a synthetic `DP_*` fire posts a triage thread reply in a test channel; QG green. — **⚠️ LIVE BUG, CARVED
+      OUT (not deferred pilot scope).** Verified 2026-07-16: `claude_slack_agent.py:43` still does `_ = triage_text`.
+      Near-free fix, independent of the registry/broker spine — preserved as a finding on archival; extract to an issue
+      doc if it should be tracked as active work.
 
 ### Phase 1 — Data-Eng charter row [depends: spine Phase 1]
 
-- [ ] [DOCS] P1. `unified-trading-pm/agents/data_engineering.md` registry row: `role: data_engineering`,
+- [x] ✅ [DOCS] P1. `unified-trading-pm/agents/data_engineering.md` registry row: `role: data_engineering`,
       `model: sonnet`, `thinking: high` (correctness heartbeat), `lifecycle: scheduled`, `triggers` (daily audit crons +
       `DP_*` walls + "is data healthy?" query), `does`/`does_not`, `escalation_to` (operator for credentials/decisions),
-      `temperament_base: diligent`. **Gate**: `docspec --check` clean; loads in `role_registry.py`.
+      `temperament_base: diligent`. **Gate**: `docspec --check` clean; loads in `role_registry.py`. — DONE: charter
+      carries `role: data_engineering` / `sonnet` / `thinking: high` / `lifecycle: scheduled`, docspec-green, loads in
+      `role_registry.py`. (`temperament_base`/`escalation_to` left unfilled — elective, not blocking.)
 
 ### Phase 2 — On-demand verb (the cross-agent Q&A) [depends: P1]
 
 - [ ] [CODE] P1. `/data-freshness <asset_group>` skill → light JSON
       `{ last_captured, expected_unattempted, missing,     stale }` read from the availability manifest
       (`_index/availability_index.parquet`) — **no whole-corpus GCS walk** (single-walk discipline). **Gate**: returns
-      valid JSON for a known AG; matches the manifest's 4-state counts.
+      valid JSON for a known AG; matches the manifest's 4-state counts. — MVP-DONE as a documented boot-prompt command
+      (`data_engineering.md § Available skills`); backend light-JSON endpoint deferred. NOT REQUIRED for archival.
 
 ### Phase 3 — Daily-audit workflow (heavy fan-out) [depends: P1]
 
 - [ ] [CODE] P1. Package the t+1 batch-vs-live availability audit as a Workflow: fan out one Sonnet worker per asset
       group (audit completeness + continuity + perf regression vs the manifest), synth a single light-JSON verdict +
       escalate REDs through E1. Reuses the existing cron checks; does not re-walk GCS. **Gate**: workflow runs over ≥2
-      AGs on real manifest data, emits a verdict, a synthetic RED escalates via the pipeline.
+      AGs on real manifest data, emits a verdict, a synthetic RED escalates via the pipeline. — DEFERRED pilot scope
+      (heavy fan-out build; not built — no such Workflow exists). Not on the make-AO-usable critical path per the epic;
+      next quarter.
 
 ## Success criteria
 
@@ -139,3 +159,10 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
   `{planning, NA}` only, dispatch routes via `assigned_role` instead. Corrected 2026-07-12, doc-reconciliation autofix
   finding 8, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling). Depends on
   `role_registry_schema_and_broker_mvp`; escalates via `escalation_pipeline_mvp`.
+- 2026-07-16: **ARCHIVED** (operator decision). Phase 1 charter delivered + loaded (`agents/data_engineering.md`,
+  `role: data_engineering`, `lifecycle: scheduled`, docspec-green); Phase 2 `/data-freshness` at MVP (documented
+  command). Phase 3 daily-audit Workflow = deferred pilot scope (next quarter, per `agent_operating_framework_master`).
+  **Phase 0 (discarded AI triage) is a genuine live bug carved out on archival** — `alerting-service` still does
+  `_ = triage_text` (`claude_slack_agent.py:43`), throwing away the computed root-cause triage instead of posting it to
+  `#data-pipeline-alerts`; a near-free fix independent of the spine (flagged to operator to extract as an issue doc if
+  tracked). Moved to `plans/archive/2026_07/`.

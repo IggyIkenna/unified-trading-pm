@@ -27,12 +27,8 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
-  - ../active/data_eng_role_vertical_pilot_2026_06_25.md
   - ../active/l0_doc_index_generator_2026_06_24.md
-  - ../active/pm_role_charter_formalization_2026_06_25.md
-  - ../active/role_registry_schema_and_broker_mvp_2026_06_25.md
   - ../active/task_template.md
-  - ../active/uat_role_charter_2026_06_27.md
 last_updated: 2026-06-25
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
@@ -229,12 +225,12 @@ merge**:
 workflows (heavy fan-out, Opus only at synth) + triggers + a UI tab. `lifecycle` decides standing-holder (query roles:
 DevOps/Data-Eng "is it healthy?") vs cold one-shot (fix-it roles: CI-escalate/DP-fix).
 
-| WS / plan                                               | Kind                                                                                                                                                                                                                                                                                                                                                                          | Depends | Priority | Status      |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------- | ----------- |
-| **W9** `role_registry_schema_and_broker_mvp_2026_06_25` | registry+broker spine — W6 registry schema DELIVERED + live; W9 message broker NOT REQUIRED (superseded by `assigned_role` dispatch); plan ARCHIVED 2026-07-16                                                                                                                                                                                                                | W2      | P0       | 🗄️ archived |
-| **W10** `agent_role_criticality_registry` (future)      | diligence dial `temperament × criticality(ag,env,path)` — BizDev+PM                                                                                                                                                                                                                                                                                                           | W9      | P2       | proposed    |
-| role `pm_role_charter_formalization_2026_06_25`         | W6 instance — PM (keeps the AO flow live)                                                                                                                                                                                                                                                                                                                                     | W9      | P1       | ✅ created  |
-| role `data_eng_role_vertical_pilot_2026_06_25`          | W6 instance — Data-Eng (first full vertical; dispatched via `assigned_role: data-pipeline-engineer` (was: **dispatched harsh_pc** — corrected 2026-07-12, finding id 7, §A2 B-queue ruling; `harsh_pc` was a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot; plan frontmatter `assigned_vm: NA` is current per its own 2026-07-12 historical-dispatch-note)) | W9      | P1       | ✅ created  |
+| WS / plan                                               | Kind                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Depends | Priority | Status      |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------- | ----------- |
+| **W9** `role_registry_schema_and_broker_mvp_2026_06_25` | registry+broker spine — W6 registry schema DELIVERED + live; W9 message broker NOT REQUIRED (superseded by `assigned_role` dispatch); plan ARCHIVED 2026-07-16                                                                                                                                                                                                                                                                                              | W2      | P0       | 🗄️ archived |
+| **W10** `agent_role_criticality_registry` (future)      | diligence dial `temperament × criticality(ag,env,path)` — BizDev+PM                                                                                                                                                                                                                                                                                                                                                                                         | W9      | P2       | proposed    |
+| role `pm_role_charter_formalization_2026_06_25`         | W6 instance — PM charter DELIVERED + live (main.md); ARCHIVED 2026-07-16                                                                                                                                                                                                                                                                                                                                                                                    | W9      | P1       | 🗄️ archived |
+| role `data_eng_role_vertical_pilot_2026_06_25`          | W6 instance — Data-Eng charter DELIVERED + live; ARCHIVED 2026-07-16 (Phase-0 triage bug carved out) (first full vertical; dispatched via `assigned_role: data-pipeline-engineer` (was: **dispatched harsh_pc** — corrected 2026-07-12, finding id 7, §A2 B-queue ruling; `harsh_pc` was a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot; plan frontmatter `assigned_vm: NA` is current per its own 2026-07-12 historical-dispatch-note)) | W9      | P1       | 🗄️ archived |
 
 **Escalation is its own epic** — [`escalation_and_disaster_recovery_master`](escalation_and_disaster_recovery_master.md)
 (E1 `escalation_pipeline_mvp_2026_06_25`, human-driven) owns the role-agnostic blocked→Slack→resolve→UI pipeline + the
@@ -244,10 +240,10 @@ self-healing/auto-recovery substrate; composes with `observability_master`. The 
 chaos/load split), Business-Dev (owns the criticality registry), Trading-Analysis, CTO. Quant-research stays P2 (least
 existing scaffolding). Starter set chosen by the operator (2026-06-25): **spine + PM + Data-Eng + Escalation-MVP** (4).
 (was: QA/UAT framed purely as a not-yet-started fast-follow — **corrected 2026-07-14, finding 9**: QA/UAT's Phase 0
-charter (`../active/uat_role_charter_2026_06_27.md`, W6 role instance) already shipped `agent-orchestrator@acbf930` —
-the SAME commit that shipped the spine's own Phase 1 — so QA/UAT work began concurrently with, not strictly after, the
-spine + Data-Eng pilot; this section was never revised to reflect that. `uat_role_charter_2026_06_27.md` is also missing
-from this epic's `related_plans` frontmatter.)
+charter (`../archive/2026_07/uat_role_charter_2026_06_27.md`, W6 role instance; plan ARCHIVED 2026-07-16) already
+shipped `agent-orchestrator@acbf930` — the SAME commit that shipped the spine's own Phase 1 — so QA/UAT work began
+concurrently with, not strictly after, the spine + Data-Eng pilot; this section was never revised to reflect that.
+`uat_role_charter_2026_06_27.md` is also missing from this epic's `related_plans` frontmatter.)
 
 ## Composition with other epics
 
@@ -363,37 +359,19 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_6 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+_2 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`role_registry_schema_and_broker_mvp_2026_06_25`](../active/role_registry_schema_and_broker_mvp_2026_06_25.md)
-
-**status**: active · **estimate**: 5 cal AI-days (class: brand-new) **title**: Role registry schema + message-broker MVP
-(the role-based-agent spine)
+_(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
-
-### [`data_eng_role_vertical_pilot_2026_06_25`](../active/data_eng_role_vertical_pilot_2026_06_25.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Data-Engineering role — vertical pilot
-(first end-to-end role on the spine)
 
 ### [`l0_doc_index_generator_2026_06_24`](../active/l0_doc_index_generator_2026_06_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: L0 doc-index generator (grep-native map) +
 FF-cron auto-regen
-
-### [`pm_role_charter_formalization_2026_06_25`](../active/pm_role_charter_formalization_2026_06_25.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: PM role charter formalization (make the
-live orchestrator-as-PM an explicit registry row)
-
-### [`uat_role_charter_2026_06_27`](../active/uat_role_charter_2026_06_27.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: UAT / QA role charter — the review agent
-as PR gate
 
 ## P2 — useful; opportunistic
 
