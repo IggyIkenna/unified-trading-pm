@@ -369,8 +369,17 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
 - **Acceptance:** on the IS page the Data Coverage grid renders but the redundant Instrument-Coverage-Summary drilldown
   button is gone for cefi/tradfi/defi; prediction (`:4111`) + sports drilldowns intact; other services unchanged. pw:L2.
 
-- [ ] [UI] P1. Gate the `:1884` `LazyDrilldownDetails` behind an axis-comparison predicate (files: `DataStatusTab.tsx`
-      only; keep `HierarchicalShardDrilldown.tsx` + `LazyDrilldownDetails`). `[UI]` + pw:L2.
+- [x] [UI] P1. ✅ Gated the `:1884` `LazyDrilldownDetails` behind the axis-comparison predicate
+      `isHierarchicalDrilldownRedundant(service, assetGroup, shardAxisMatrix)` — suppresses the drilldown ONLY for
+      instruments-service asset groups whose shard axes ⊆ `{venue, chain}` (cefi/tradfi/defi); IS sports (`league_id`) +
+      prediction (`canonical_question_group`) + every other service keep it. Predicate is a pure helper in
+      `data-status-helpers.ts` (testable in isolation; `HierarchicalShardDrilldown.tsx` + `LazyDrilldownDetails`
+      untouched). — deployment-ui@953fa81 + Evidence: `data-status-helpers.test.ts` 5 specs green
+      (cefi/tradfi/defi→true, sports/prediction/MTDS→false, case-insensitive, fail-open) + full UI QG green
+      (tsc/eslint/vitest 87/build). `[UI]` + pw:L2 (Vitest regression spec). _(Minor file-scope note: the pure predicate
+      lives in `data-status-helpers.ts` rather than inline in `DataStatusTab.tsx` — the plan's "DataStatusTab.tsx only"
+      note was to keep `HierarchicalShardDrilldown`/`LazyDrilldownDetails` untouched, which holds; a pure exported
+      helper is far more testable.)_
 
 ## P6 — Instrument catalogue explorer (per-AG list, CSV, search, MVP filter)
 
@@ -438,7 +447,13 @@ across chains) need the chain axis.
       Evidence: `test_v4_sub_dimensions_chain_gated_on_defi.py` (cefi→no chains, defi→chains) + quality-gates.sh green
       (117s). _(Read-side display gate only; manifest query key unchanged. NOTE — the writer-side split rows
       `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of P7's read-side scope; see Progress Log.)_
-- [ ] [UI] P2. Resolve the "instruments breakdown" button per the P5 decision; confirm shard-level CSV consistency.
+- [x] [UI] P2. ✅ Resolved by the P5 gate. There were two overlapping "Instrument breakdown" affordances: (a) the nested
+      link inside the hierarchical drilldown (`DataStatusTab.tsx:4092`), suppressed for IS cefi/tradfi/defi by the P5
+      predicate; and (b) the Data Coverage grid's venue-detail "Instrument breakdown" link (`DataStatusTab.tsx:5582` →
+      `handleVenueClick` → `VenueDetailPanel`). Removing (a) leaves (b) as THE single, unambiguous instrument-breakdown
+      path. Shard-level CSV stays consistent across AGs — the grid retains its
+      `shard-csv-date-found`/`shard-csv-date-missing` per-date CSV download buttons (`DataStatusTab.tsx:5514,5553`)
+      unchanged. — deployment-ui@953fa81 (same P5 change; no separate button removal needed).
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 
