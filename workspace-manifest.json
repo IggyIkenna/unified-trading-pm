@@ -818,7 +818,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 1,
         "coverage_pct": 88.56,
@@ -878,7 +878,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 0,
         "coverage_pct": 81.97,
