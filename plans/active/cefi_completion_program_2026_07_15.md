@@ -136,27 +136,40 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 ### Phase 3 — cleanup (only after Phase-2 data is verified present under canonical names)
 
-- [ ] [DATA] P1. **C — kill legacy venue aliases (verify → migrate → auto-delete), EXCEPT DERIBIT-COMBO.** For
-      OKEX/OKEX-SWAP/OKEX-FUTURES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, bare BINANCE/BITFINEX/BITGET/KRAKEN,
-      CRYPTOFACILITIES, and the lowercase-itype strays (`spot`/`spot_pair`/`perpetual`): (1) verify every aliased
-      shard's data already exists under the canonical venue+UPPERCASE itype; (2) migrate any genuinely-unique data; (3)
-      **auto-delete** the alias manifest rows + GCS objects; (4) re-consolidate the index. Evidence: pre/post row
-      counts + GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.** **TOOL ALREADY
-      BUILT — this is the `expected_unattempted`-side portion of C**:
-      `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` (snapshot-first,
-      dry-run-default, STOP-ON-SURPRISE `[5000,250000]`, post-apply verify gate). Freshly re-confirmed 2026-07-16T09:21Z
-      (dry-run re-run, read-only): **49,732** stale-shape eu rows live right now (42,993 legacy pre-`enumerator_run_id`
-      debris under retired venue strings CRYPTOFACILITIES/OKEX*/BITFINEX-DERIVATIVES/etc + lowercase-raw ids,
-      ~4,951-5,700 bundle-grain old-shape duplicates for DERIBIT/OKX-FUTURES `futures_chain`/`options_chain` left over
-      from the pre-`a2468dd9` enumerator run) — essentially unchanged from the 07-15T22:2xZ measurement (49,720),
-      confirming (a) nothing new is accumulating and (b) `--apply` has NOT been run yet. **Still BLOCKED-OPERATOR** —
-      sign-off already requested via `/blocked` in
-      `issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (do not duplicate the ask;
-      this todo's C is the same gated mutation). Exact command once approved:
-      `cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false .venv/bin/python scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`.
-      See 2026-07-16T09:xxZ Progress Log entry below for the full re-verification + why a bare enumerator re-run cannot
-      self-heal this (append-only writer + per-key consolidator dedup never collapses two DIFFERENT `instrument_id`
-      values for what should be the same cell).
+- [x] ✅ [DATA] P1. **C (venue-alias half) DONE + DURABLE (maint window 2026-07-16, agent a68aa6dc).**
+      Operator-authorized stop-fix-restart: paused the market-data cefi consolidator
+      (`uts-prod-manifest-consolidator-market-data-cefi-cron`) + stopped the backfill VM → quiesced index; **purged the
+      13 stray alias venues = −526,104 index rows** (all 0-captured, 0 GCS objects) INCLUDING the same 13 from
+      `_legacy_seed.parquet` (the seed-carry was why the prior purge re-merged — THIS is what made it stick); **migrated
+      BYBIT-FUTURES** (45 real live-perp objects 2026-06-23→27 → canonical BYBIT + reclassify af→captured, +45); resumed
+      consolidator + keeper relaunched backfill. **STUCK verified 3× over ~70min post-resume.** Canonical-unchanged
+      proof: exactly ONE venue changed (BYBIT +45); all others bit-for-bit; exclusions intact
+      (DERIBIT-COMBO/bare-OKX/prediction/blank). Backups:
+      `_index/backups/availability_     index.pre-maint-20260716T115054Z.parquet`. REMAINING C sub-parts (eu-side,
+      follow-up): the ~49,732 stale-shape `expected_unattempted` rows (co-manager's
+      `purge_stale_shape_cefi_expected_unattempted` tool) + bare-COINBASE 318 eu rows still in
+      `expected_universe_ranges` (drop bare COINBASE from cefi enumeration → COINBASE-SPOT, else daily re-materializes).
+      Original C todo detail ⇩:
+- [~] [DATA] P1. **C — kill legacy venue aliases (verify → migrate → auto-delete), EXCEPT DERIBIT-COMBO.** For
+  OKEX/OKEX-SWAP/OKEX-FUTURES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, bare BINANCE/BITFINEX/BITGET/KRAKEN,
+  CRYPTOFACILITIES, and the lowercase-itype strays (`spot`/`spot_pair`/`perpetual`): (1) verify every aliased shard's
+  data already exists under the canonical venue+UPPERCASE itype; (2) migrate any genuinely-unique data; (3)
+  **auto-delete** the alias manifest rows + GCS objects; (4) re-consolidate the index. Evidence: pre/post row counts +
+  GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.** **TOOL ALREADY BUILT — this is
+  the `expected_unattempted`-side portion of C**:
+  `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` (snapshot-first,
+  dry-run-default, STOP-ON-SURPRISE `[5000,250000]`, post-apply verify gate). Freshly re-confirmed 2026-07-16T09:21Z
+  (dry-run re-run, read-only): **49,732** stale-shape eu rows live right now (42,993 legacy pre-`enumerator_run_id`
+  debris under retired venue strings CRYPTOFACILITIES/OKEX*/BITFINEX-DERIVATIVES/etc + lowercase-raw ids, ~4,951-5,700
+  bundle-grain old-shape duplicates for DERIBIT/OKX-FUTURES `futures_chain`/`options_chain` left over from the
+  pre-`a2468dd9` enumerator run) — essentially unchanged from the 07-15T22:2xZ measurement (49,720), confirming (a)
+  nothing new is accumulating and (b) `--apply` has NOT been run yet. **Still BLOCKED-OPERATOR** — sign-off already
+  requested via `/blocked` in `issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (do
+  not duplicate the ask; this todo's C is the same gated mutation). Exact command once approved:
+  `cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false .venv/bin/python scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`.
+  See 2026-07-16T09:xxZ Progress Log entry below for the full re-verification + why a bare enumerator re-run cannot
+  self-heal this (append-only writer + per-key consolidator dedup never collapses two DIFFERENT `instrument_id` values
+  for what should be the same cell).
 
 ### Phase 4 — close + prove
 
