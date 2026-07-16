@@ -1,5 +1,14 @@
 self-hosted-runner:
-  labels: []
+  # Custom labels for the self-hosted glue runner pools on the orchestrator VM (CI-cost B1).
+  # Without these, actionlint flags every flipped workflow with `label "glue" is unknown` — noise
+  # that would grow to 38 findings and drown the real lint signal.
+  #
+  # The two are DISJOINT on purpose and must stay that way: runner label matching is a SUBSET test,
+  # so a writer also carrying `glue` would satisfy `runs-on: [self-hosted, glue]` and steal the
+  # low-frequency movers' jobs. `glue` = JIT-ephemeral pool (the movers); `glue-writer` = long-lived
+  # pool (ci-status-update only, ~13k/mo at ~3s a job).
+  # SSOT: scripts/self-hosted-runners/README.md
+  labels: [glue, glue-writer]
 
 config-variables: null
 
