@@ -29,7 +29,7 @@ created: 2026-05-21
 name: orchestrator_master
 tier: L5
 priority: P0
-assigned_vm: vm-orchestrator
+assigned_vm: planning # was: vm-orchestrator — corrected 2026-07-16 (ao_docs_reconciliation F1). vm-orchestrator is a pre-2026-06-27 multi-VM host id retired by the single-VM pivot; valid values are {planning, NA} only. This epic's own body already carried a 2026-07-11 supersede notice saying so ("the assigned_vm: vm-orchestrator frontmatter is SUPERSEDED by the single-VM role-based dispatch architecture") — the field was simply never updated to match its own doc. Matches the agent_operating_framework_master + plan_hygiene_master precedent.
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh]
 codex_ssots:
@@ -40,7 +40,7 @@ codex_ssots:
 related_plans:
   - ../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md
   - ../active/master_to_live_defi_2026_05_23.md
-last_updated: 2026-07-12
+last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 external_references:

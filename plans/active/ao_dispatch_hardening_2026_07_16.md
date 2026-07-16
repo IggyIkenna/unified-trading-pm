@@ -330,7 +330,13 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 3 — prove it (P0)
 
-- [ ] [BACKEND] P0. Regression suite green + full `bash scripts/quality-gates.sh` on agent-orchestrator; ship via
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — every unit shipped QG-green via quickmerge, each with the gate's OWN exit
+      code checked (not `tail`'s — I misread that once and reported a green that wasn't).** Ships: `54c9e8d` (Phase 0) ·
+      `7baeedc` (R1) · `bf9a61b` (filter table) · `962e676` (R6) · `6ae43b5` (R2) · `860eaf7` (R5) · `d90f0f5` (worker
+      messages) · `fa73b5d` (needs_operator UI) · `da053a9` (nudge) · `f163892` (comment) · `96d005f` (gitignore) ·
+      `e7f70c8` (disk backstop). Final QG: **1329 passed, 1 skipped, basedpyright 0 errors, tsc clean, 90 vitest**. All
+      landed on LDR; all verified RUNNING on the central VM after the operator's deploy. ~~Regression suite green + full
+      `bash scripts/quality-gates.sh` on agent-orchestrator; ship via~~
       `quickmerge.sh "fix(dispatch): ..." --agent --files '<paths>'`. **Gate**: QG green + `Quickmerge:` trailer + LDR
       landed.
 - [ ] [OPERATOR] P0. 🟡 **UNBLOCKED + FIRST READING TAKEN 2026-07-16 15:08Z — NOT yet a verdict (needs a multi-hour
@@ -355,26 +361,55 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 4 — close the paper trail (P2)
 
-- [ ] [BACKEND] P2. Document the (now-fixed) spawn-budget contract in
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `unified-trading-pm@5a79c4c23`.** Rewrote
+      `codex/04-architecture/agent-orchestrator-autospawn.md`: added the **§ Spawn budget** section X3 flagged as
+      missing (the `FilterScope` table, the measured 1014/101 churn, and an explicit warning that 'simplifying'
+      `CAPABILITY` into the budget starves the fleet), corrected Gate 1 to CLAIMABLE-not-queued, and fixed live
+      codex↔code drift — the doc still documented `_top_queued_task_params`, which R2 **deleted**. `last_reviewed`
+      bumped. ~~Document the (now-fixed) spawn-budget contract in~~
       `codex/04-architecture/agent-orchestrator-autospawn.md` — the doc-gap flagged as X3's third corroboration in
       `ao_docs_reconciliation_2026_07_15`.
-- [ ] [BACKEND] P2. Clean the stale `recovery-audit` comment at `server/routes/agents.py:146` (carried from the
-      recovery-audit ruling — a one-line cleanup deliberately batched here to avoid a separate code ship).
-- [ ] [REVIEW] P2. Close out the source issue docs once Phase 3's runtime gate passes — archive
-      `ao_skip_blind_spawn_budget_phantom_churn` (R1), `dispatcher_role_eligibility_gap_review_slots` (R6),
-      `ao_dispatch_residuals` (R1-R7 index; note R3/R4/R7 disposition explicitly, don't let them go dark), and flip
-      `ao_fleet_stall_opus_spawn_and_skip_thrash`'s R2 todo. **Gate**: no residual left without a home.
-- [ ] [REVIEW] P2. Fix the F5 epic seam: `ao_skip_blind_spawn_budget_phantom_churn` carries
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@f163892`.** The comment cited `recovery-audit` as the
+      live NEVER_LAUNCH example; that set is now `frozenset()` and its only member's template is deleted, so it pointed
+      at nothing. Branch kept (it is the enforcement point for any future never-launch role), and the comment now
+      records the scope a reader would otherwise get wrong: the Layer-1 signoff FUNCTION is not retired, only its AO
+      worker-role producer. ~~Clean the stale `recovery-audit` comment at `server/routes/agents.py:146` (carried from
+      the~~ recovery-audit ruling — a one-line cleanup deliberately batched here to avoid a separate code ship).
+- [~] [REVIEW] P2. 🟡 **HALF DONE 2026-07-16 — todos flipped (`unified-trading-pm@5a79c4c23`), ARCHIVAL correctly still
+  pending Phase 3.** 7 todos flipped with shas across 4 source docs; `ao_fleet_stall`, `dispatcher_role_eligibility` and
+  `ao_operator_message_silent_drop` are now at **0 open todos** and archivable — but deliberately NOT archived, because
+  this todo gates archival on the runtime proof and code-shipped ≠ fixed. R3/R4/R7 dispositions are recorded explicitly
+  (R7 DOWN-prioritised: its dangerous half is already fixed at `4695db6`), so nothing goes dark. `ao_skip_blind` keeps 1
+  open todo by design (durable park — R1 made it MORE important, not less: it fixed the churn and thereby turned a LOUD
+  failure into a silent one). ~~Close out the source issue docs once Phase 3's runtime gate passes — archive~~
+  `ao_skip_blind_spawn_budget_phantom_churn` (R1), `dispatcher_role_eligibility_gap_review_slots` (R6),
+  `ao_dispatch_residuals` (R1-R7 index; note R3/R4/R7 disposition explicitly, don't let them go dark), and flip
+  `ao_fleet_stall_opus_spawn_and_skip_thrash`'s R2 todo. **Gate**: no residual left without a home.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-16 — `unified-trading-pm@5a79c4c23`.** Repointed `agent_operating_framework_master`
+      → `orchestrator_master`, matching the other four dispatch-code docs/plans; it was the lone outlier. Rationale
+      recorded inline: `orchestrator_master` owns the AO RUNTIME (dispatch/autospawn/slots),
+      `agent_operating_framework_master` owns how agents WORK (retrieval, charters, plan format) — a skip-blind spawn
+      budget is runtime. ~~Fix the F5 epic seam: `ao_skip_blind_spawn_budget_phantom_churn` carries~~
       `parent_epic: agent_operating_framework_master` while every other dispatch-code doc/plan uses
       `orchestrator_master`. Repoint it. (Surfaced by this plan's authoring; `ao_docs_reconciliation` F5 = "cross-epic
       dispatch-code ownership seam fuzzy".)
 
 ### Phase 5 — process residuals (P2, from ao_fleet_stall)
 
-- [ ] [OPERATOR] P2. Monitor/main-agent guard — don't extrapolate one gate to "fleet deadlocked"; re-check
+- [x] [OPERATOR] P2. ✅ **DONE 2026-07-16 (R3) — `unified-trading-pm@5a79c4c23`.** `agents/main.md` **STEP 2.4**: never
+      conclude the fleet is deadlocked from ONE gated task — PROVE it per task via `GET /api/backlog/{task_id}/blockers`
+      before stopping dispatch (≥1 `ready (no blockers)` ⇒ NOT deadlocked ⇒ the problem is spawn/dispatch-side), and a
+      slot saying "no work for me" is evidence about THAT SLOT, never the queue. `agents/monitor.md`: alert on what you
+      MEASURED, never on what you infer — a fleet-stall belief is a HYPOTHESIS, not a breach, and must never be the
+      reason dispatch stops. ~~Monitor/main-agent guard — don't extrapolate one gate to "fleet deadlocked"; re-check~~
       `/api/backlog/{id}/blockers` before declaring a stall.
-- [ ] [OPERATOR] P2. Operating guidance — mixing a high-priority Opus plan with Sonnet plans in one queue is a
-      known-degraded shape; R2 reduces but does not eliminate it. Capture the guidance once R2 lands.
+- [x] [OPERATOR] P2. ✅ **DONE 2026-07-16 (R4) — `unified-trading-pm@5a79c4c23`.** `agents/main.md` **STEP 2.6**. The
+      framing CHANGED with R2 and the todo says so: per-slot spawn params remove the COST blow-up (one opus plan no
+      longer drags every worker up a tier), so the residual guidance is about queue SHAPE, not cost — and it explicitly
+      forbids the tempting wrong fix of re-tiering plans to smooth the queue, which would trip the worker's own SSOT
+      self-check on "Sonnet on opus-required". ~~Operating guidance — mixing a high-priority Opus plan with Sonnet plans
+      in one queue is a~~ known-degraded shape; R2 reduces but does not eliminate it. Capture the guidance once R2
+      lands.
 
 ## Out of scope (named successors — nothing goes dark)
 
@@ -431,3 +466,19 @@ Three of this plan's own source docs prescribe fixes that current code contradic
   re-establishment, not steady state, and calling it proven on that would be exactly the false-completion this
   reconciliation exists to prevent. Re-measure over ≥6h. Operator is routing the durable staleness UI/alerting to a
   separate agent.
+
+## Deferred work after 2026-07-16
+
+Everything below is TRACKED, not dropped. Nothing here is "done enough" — each row says who owns it and why it did not
+happen in this session. Read this + the Progress Log to resume losslessly.
+
+| #   | Item                                                    | Where it lives                                                                    | Why deferred / what to do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | ------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Phase 3 runtime verdict — the only bar that matters** | this plan, Phase 3                                                                | Fixes are LIVE (worker re-forked 15:01:12, 0 errors) and the early signal is right (`spawned=1 … queue_satisfied: 10-13`), but 7 min post-reload is fleet re-establishment, not steady state. **Needs ≥6h.** Baseline confirmed from the live DB: **954 `autospawn_succeeded` / 24h vs `task_dispatched` not in the top 8 (<241)**. Query `activity_log` (NOT `activity`) on `/var/lib/orchestrator/state.db`; the VM has **no `sqlite3` CLI** — use `.venv/bin/python3`. Gate: autospawn:dispatch ratio materially down + no idle-respawn loop on a fleet-skipped task. **Until this passes, this plan is code-shipped, NOT proven** — and the 3 source issue docs at 0 open todos stay UNARCHIVED by design. |
+| 2   | **Durable park for fleet-skipped tasks**                | `issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15` (1 open todo)        | R1 made this MORE important, not less. It fixed the churn — which converts a LOUD failure (visible spawn thrash) into a SILENT one: a task every slot has skipped now simply never spawns anything and nobody is told. Same shape as `needs_operator_count` being computed and rendered nowhere. Out of scope for this plan (dispatch correctness); needs its own.                                                                                                                                                                                                                                                                                                                                             |
+| 3   | **Recovery-audit Layer-1 producer rewire**              | `issues/ao_recovery_audit_layer1_deleted_2026_07_15`                              | Operator ruled **B (re-home a standalone producer), scheduled LAST** — after the AO dispatch work. That work is now done, so this is next in that queue. ~90% already exists (contract + ingest + actuation + UI); only the producer is gone. The automated `DISPUTE→SAFE_MODE` tripwire does not fire until it lands.                                                                                                                                                                                                                                                                                                                                                                                         |
+| 4   | **Staleness UI surface + alerting**                     | `issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16` (todo 3)      | **Operator is routing this to a dedicated agent** (2026-07-16). Do NOT start it from here without checking with that owner. Requirement of record: a SINGLE frozen clone must raise a WARN — today's dirty-streak alert only fires when EVERY repo in a sweep is dirty, which is why a 2-day outage was invisible.                                                                                                                                                                                                                                                                                                                                                                                             |
+| 5   | **Audit every host for the same freeze**                | same doc (todo 4)                                                                 | The gitignore + ff-pull fixes stop RECURRENCE, but a clone already frozen stays frozen (self-sustaining). Main's own checkpoint reports host `hk` "behind 12→20→49, FOUR repos" — check whether it shares this root cause.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 6   | **Prove the deep `plan-reconciler`**                    | `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10` (3 open)        | The keystone: its proving dispatch was due **2026-06-17** and is ~1 month overdue; it gates the RULE-11 retire of 3 overlapping hygiene runtimes. It runs AS an AO worker, so it was correctly gated behind AO dispatch correctness — **which is now shipped**, so it is unblocked. NB its 2026-06-12 audit findings are STALE (the daily Haiku GHA is 10/10 green, the Cloud Run sweep 8/8).                                                                                                                                                                                                                                                                                                                  |
+| 7   | **capability_wizard reconciliation**                    | `issues/capability_wizard_{analysis_findings,gap_discovery}_2026_06_11` (41 open) | **Verified OUT of AO scope** — 1 of 41 todos touches agent-orchestrator and it is already fixed. The wizard is alive and shipping; ~25 of 41 todos are already done and never checked off. Needs its own reconciliation pass before anyone dispatches against it.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 8   | **uv-cache dual-path reconcile**                        | `ao_host_disk_pressure_2026_07_16` (1 open, P2)                                   | Cosmetic: both caches sit on the same filesystem so dedup is unaffected. Documentation-vs-reality drift, not a disk-pressure driver.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
