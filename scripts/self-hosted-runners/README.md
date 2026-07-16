@@ -1,82 +1,146 @@
 <!--
 owner: platform / ci-cd (operator: Ikenna)
 cadence: on-demand (install/teardown) + weekly health glance
-verifier: bash setup-glue-runners.sh status  (systemd active + >=1 runner Online)
-last_executed: NEVER (files created 2026-07-15; not yet deployed — awaiting operator go)
+verifier: bash setup-glue-runners.sh status  (systemd active + >=1 runner Online per pool + slot clone fresh)
+last_executed: NEVER (files created 2026-07-15, redesigned two-pool 2026-07-16; not yet deployed)
 -->
 
 # Self-hosted "glue" runners on the planning-VM
 
 Moves unified-trading-pm's IO-bound CI **glue** off GitHub-hosted runners ($0.006/min, billed) onto the always-on
-orchestrator VM (self-hosted runner minutes are **free** from GitHub's side). This is **B1** from
-[`../../plans/active/github_actions_cost_reduction_options_analysis_2026_07_15.md`](../../plans/active/github_actions_cost_reduction_options_analysis_2026_07_15.md)
-§ "Capacity assessment". **All glue workflows live in this repo**, so runners register to `unified-trading-pm` only (a
-personal account has no org-level runners — repo-scoped is correct).
+orchestrator VM (self-hosted runner minutes are **free** from GitHub's side). This is **B1** of
+[`../../plans/active/github_actions_ci_cost_reduction_2026_07_15.md`](../../plans/active/github_actions_ci_cost_reduction_2026_07_15.md)
+— read that plan's **▶ START HERE** before deploying. **All glue workflows live in this repo**, so runners register to
+`unified-trading-pm` only (a personal account has no org-level runners — repo-scoped is correct, and it's exactly why
+cross-repo reusables must stay hosted).
 
-## Why this is safe here
+## Two pools — and why
 
-- Repos are **private** → no untrusted fork PRs → self-hosted is safe even for PR jobs (we still keep the heavy test
-  gate on GitHub-hosted, for VM capacity not security).
-- Runners are **ephemeral** (JIT config): one job per process, fresh identity each time, auto-deregister, no long-lived
-  credentials on disk.
-- The whole fleet is **CPU/RAM-capped** by `github-glue-runner.slice` (<=4 of 8 vCPU, <=8 GiB) so a CI burst can never
-  starve the agent-orchestrator sharing the VM. Measured glue load: ~1.7 cores avg, ~3,100 jobs/day.
+| Pool       | Mode              | Labels                    | Serves                                    |
+| ---------- | ----------------- | ------------------------- | ----------------------------------------- |
+| `glue-N`   | JIT-**ephemeral** | `self-hosted,glue`        | the ~37 low-frequency movers              |
+| `writer-N` | **long-lived**    | `self-hosted,glue-writer` | `ci-status-update` (~13k/mo, ~2-5s a job) |
+
+The writer pool exists because JIT re-registration (generate-jitconfig + config + connect ≈ seconds) would **dominate**
+a ~3s job and cap burst throughput. Three things about this are load-bearing and easy to break:
+
+- **The labels are DISJOINT on purpose.** Label matching is a **subset** test — a writer labelled
+  `self-hosted,glue,writer` would still satisfy `runs-on: [self-hosted, glue]` and steal the movers' jobs. So the writer
+  pool omits `glue` entirely. `ci-status-update.yml` is therefore the **one** MOVE workflow that does not get the
+  uniform flip recipe: it targets `[self-hosted, glue-writer]`.
+- **There is no "long-lived JIT."** A JIT config is single-use _by construction_ (auto-deregisters after one job). The
+  writer registers once via `config.sh` + a registration token, then loops `run.sh`. That means the writer **does** keep
+  `.credentials` on disk — the accepted trade, and the reason the security-codex todo exists.
+- **`prune` is EPHEMERAL-ONLY.** A JIT runner is only ever `offline` if it crashed, but a long-lived writer is
+  _legitimately_ offline across every reboot. Pruning on `offline` alone would deregister the writer pool out from under
+  a rebooting VM. The `glue-` name prefix is the guard.
+
+## Isolation scope — folder/venv/clone only (operator decision, 2026-07-16)
+
+Runners run as **`ubuntu`** and reuse the VM's **existing** GCP/AWS/GitHub creds and toolchain. There is **no dedicated
+OS user and no separate service account**, deliberately:
+
+- Everything needing true clean-room isolation (QG, PR gates, image builds) is **already GitHub-hosted and stays
+  there**.
+- The MOVE set is all first-party automation with **zero `pull_request` triggers** (by construction — the classifier
+  sends every `pull_request` workflow to KEEP), and all repos are **private**, so there is no fork-PR path for untrusted
+  code to reach the box.
+- The **AO already runs as `ubuntu`** on this VM with the same ambient creds, so glue-as-`ubuntu` barely moves the blast
+  radius.
+
+What _is_ isolated is the slot: its **own folder, own venv, own clone** — never an AO slot clone (that would race a live
+worker). `HOME` is deliberately **not** redirected: it would break `$HOME/.config/gcloud` ADC resolution, and the
+`git config --global` in two movers is inert because every clone carries a **local** identity that overrides it.
+
+## The slot
+
+| Path                               | Role                                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| `${RUNNER_BASE}/repo`              | runner-**owned** clone; pre-staged code so the writer does **no checkout at all** |
+| `${RUNNER_BASE}/venv`              | dedicated venv (`google-cloud-firestore` for STEP 2b) — not AO/system Python      |
+| `${RUNNER_BASE}/toolcache`         | shared `RUNNER_TOOL_CACHE` — `actions/setup-python` pays download cost **once**   |
+| `${RUNNER_BASE}/repo.refreshed-at` | freshness stamp; `status` flags it red past 30 min                                |
+
+`${RUNNER_BASE}` defaults to `/opt/github-glue-runners`.
 
 ## Files
 
-| File                          | Role                                                          |
-| ----------------------------- | ------------------------------------------------------------- |
-| `setup-glue-runners.sh`       | install / status / teardown / prune (run ON the VM)           |
-| `glue-runner-run.sh`          | per-runner ExecStart wrapper (JIT config → one ephemeral job) |
-| `github-glue-runner@.service` | systemd template unit (one instance per runner)               |
-| `github-glue-runner.slice`    | resource cap protecting the orchestrator                      |
+| File                                       | Role                                                                   |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| `setup-glue-runners.sh`                    | install / status / preflight / teardown / prune (run ON the VM)        |
+| `glue-runner-run.sh`                       | per-runner ExecStart wrapper; **forks on the pool** in the `%i` name   |
+| `job-cleanup.sh`                           | `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` — per-job `_work` wipe for writers |
+| `refresh-slot-repo.sh`                     | FF-pulls the slot clone; **stale pre-staged code = silent wrongness**  |
+| `github-glue-runner@.service`              | systemd template unit (`%i` = `<pool>-<index>`)                        |
+| `github-glue-slot-refresh.{service,timer}` | 10-min slot-clone refresh                                              |
+| `github-glue-runner.slice`                 | resource cap protecting the orchestrator                               |
+| `classify-glue-workflows.sh`               | **SSOT** for MOVE vs KEEP                                              |
 
 ## Deploy (on the planning-VM, as a sudo user)
 
 ```bash
-# the VM already has a unified-trading-pm clone; from it:
 cd <pm-clone>/scripts/self-hosted-runners
-sudo GH_PAT="$(<admin PAT with Administration:write on unified-trading-pm>)" \
-     RUNNER_COUNT=8 ./setup-glue-runners.sh install
-./setup-glue-runners.sh status         # expect 8 units active, runners Online/idle
+./setup-glue-runners.sh preflight      # toolchain parity vs ubuntu-latest — do this FIRST
+sudo GH_PAT="<admin PAT with Administration:write on unified-trading-pm>" \
+     GLUE_COUNT=5 WRITER_COUNT=3 ./setup-glue-runners.sh install
+./setup-glue-runners.sh status         # expect 8 units active, both pools Online/idle, slot fresh
 ```
 
 The token can instead be fetched from GCP Secret Manager at runtime (no PAT on disk): set
 `GH_TOKEN_SECRET=<secret-name>` (+ `GCP_PROJECT`) in `/etc/github-glue-runner.env` and leave `GH_TOKEN` unset.
 
-## Which workflows move (STEP 2 — separate change, takes effect on push)
+**Toolchain parity is the real migration risk**, not isolation. Hosted `ubuntu-latest` pre-seeds a large toolchain; this
+VM does not. `preflight` checks what the MOVE set actually invokes (`gh` 181 · `jq` 111 · `python3` 105 · `uv` 32 ·
+`aws` 22 · `gcloud` 16 · `pip` 15 · `npm` 1). `docker` is **not** needed — its hits are a step _named_ `docker-build`
+that only dispatches to Cloud Build, plus the Artifact Registry hostname in `gcloud artifacts docker images describe`.
 
-Registering the runners does **nothing** until a workflow asks for them. Flip `runs-on: ubuntu-latest` →
-`runs-on: [self-hosted, glue]` for the glue set only. Get the candidate list with:
+## Which workflows move
+
+Registering runners does **nothing** until a workflow asks for them. `classify-glue-workflows.sh` is the SSOT:
 
 ```bash
-./classify-glue-workflows.sh          # prints MOVE (glue) vs KEEP (hosted) for every PM workflow
+./classify-glue-workflows.sh          # -> MOVE (→ PM-local direct flip): 39   KEEP (→ GitHub-hosted): 17
 ```
 
-- **MOVE** (IO-bound glue: `repository_dispatch` / `schedule` / `push` bots): `ci-status-update`, `cloud-build-router`,
-  `cloud-build-router-aws`, the promotion/health/reconcile crons, the SIT/promotion **orchestration** bots (`sit-gate`,
-  `sit-unlock`, `ldr-to-main-promote`, `staging-to-main` — they only open PRs / dispatch, they do NOT run tests), the
-  agent/plan bots. **50 workflows.**
-- **KEEP on GitHub-hosted** (**6**): `quality-gates-v2` / `python-quality-gates-v2` (the heavy pytest/typecheck gate —
-  CPU-bound ~12 min), the two `pull_request` agent bots, and — flagged `KEEP*` by the classifier's heavy-compute
-  detector — **`build-smoke-all-repos`** (25-job `docker buildx` matrix) and **`publish-package`** (builds a wheel).
-  These build LOCALLY, so they must not run on the light glue VM. **The heavy test gate never touches the VM** — the
-  promotion bots (on the VM) just open the PR; the `quality-gates-v2` check that fires on it runs on GitHub-hosted.
+> ⚠️ **Flip PM's `.github/workflows/*.yml` DIRECTLY. Do NOT route this through `rollout-workflow-templates.sh`.** The 4
+> `KEEP-T` fleet templates are rolled out to ~24 repos that have **no glue runners**; flipping a template would hang the
+> workflow in every one of them. This is the opposite of the normal never-hand-edit-a-per-repo-copy rule, because here
+> PM _is_ the only repo involved.
 
-Roll the `runs-on` change out via the template SSOT + `rollout-workflow-templates.sh`, never by hand-editing per-repo
-copies. **Migrate ONE low-risk workflow first** (recommend `branch-health` or `reconcile-release-tags`), confirm a green
-run on `[self-hosted, glue]`, then batch the rest.
+**Never flip** a `KEEP-*` verdict, and never flip `persist-cicd-event` (verdict `MOVE-C` — it moves off hosted by being
+**converted to a composite action**, not by a `runs-on` change; a reusable's `runs-on` is independent of its caller, so
+flipping it would hang its hosted callers). The six KEEP classes, five of which break something if naively flipped:
+
+- `KEEP` (4) — real test/PR gates (`quality-gates-v2`, `python-quality-gates-v2`, …): CPU-bound, and the clean room.
+- `KEEP*` (2) — `build-smoke-all-repos`, `publish-package`: build **locally** (heavy), must not hit the light VM.
+- `KEEP-T` (4) — fleet templates: flipping hangs ~24 repos.
+- `KEEP-R` (1) — `image-build-validate`: a **cross-repo reusable** called by 24 repos; a reusable runs on the
+  **caller's** runners, which are hosted → flipping blocks every staging→main promote fleet-wide.
+- `KEEP-M` (5) — failure-independence monitors: their value is detecting that **this VM** is broken.
+- `KEEP-D` (1) — `notify-slack`: the alert carrier the KEEP-M monitors call; on the VM, a VM outage would let them
+  detect a failure but not page.
+
+**Canary `reconcile-release-tags`** (a MOVE workflow that has `workflow_dispatch`). Do **not** use `branch-health` — it
+is now `KEEP-M`.
+
+> **Ordering:** runners must be live **before** any flip reaches `main`. `schedule` / `repository_dispatch` workflows
+> run their definition from the **default branch**, so a flip on LDR does nothing until it promotes — and once it does,
+> a missing runner means a hung job.
 
 ## Verify / operate
 
 ```bash
-./setup-glue-runners.sh status        # systemd + live runner list + slice memory
-journalctl -u 'github-glue-runner@1' -n 50 --no-pager
-./setup-glue-runners.sh prune         # clear OFFLINE glue-* runners left by a crashed wrapper
+./setup-glue-runners.sh status                        # both pools + slot freshness + slice memory
+journalctl -u 'github-glue-runner@glue-1' -n 50 --no-pager
+journalctl -u 'github-glue-runner@writer-1' -n 50 --no-pager
+systemctl list-timers 'github-glue-slot-refresh*'     # slot clone must refresh every ~10 min
+./setup-glue-runners.sh prune                         # clear OFFLINE EPHEMERAL runners only
 ```
 
-Health signal: >=1 runner `Online` and the slice `MemoryCurrent` well under 8 GiB. A queued glue job with 0 Online
-runners = the fleet is down → `systemctl restart 'github-glue-runner@*'`.
+Health signal: `>=1` runner Online **per pool**, slice `MemoryCurrent` well under 8 GiB, and the slot clone refreshed
+within ~10 min. A queued glue job with 0 Online runners = that pool is down →
+`systemctl restart 'github-glue-runner@glue-*'`. **A stale slot clone is the quiet failure**: the writer keeps
+succeeding while writing Firestore rows from outdated code, so treat a red freshness stamp as an incident, not a nit.
 
 ## Rollback (instant, safe)
 
@@ -86,5 +150,6 @@ Flip the affected workflows' `runs-on` back to `ubuntu-latest` (they run on GitH
 ## Security notes
 
 - `/etc/github-glue-runner.env` holds the admin token 0600/root; or use the Secret-Manager path (nothing on disk).
-- Runners run as non-root `ubuntu`; JIT ephemeral means no persistent `.credentials`.
+- Runners run as non-root `ubuntu` and carry the VM's **ambient cloud identity** (ADC + AWS-WIF) — see the plan's
+  security-codex todo. The JIT pool keeps no persistent `.credentials`; the **writer pool does**, by necessity.
 - Hardening option: a dedicated fine-grained PAT scoped to **only** `Administration: write` on unified-trading-pm.

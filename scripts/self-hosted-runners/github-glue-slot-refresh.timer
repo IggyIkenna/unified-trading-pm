@@ -1,0 +1,20 @@
+# github-glue-slot-refresh.timer — run the slot-clone refresh every 10 minutes.
+#
+# Epic: deployment_and_user_management_master (CI/CD cost reduction — B1)
+# Lifecycle: permanent   Delete-when: glue host retired (B2/B3)
+#
+# Cadence rationale: the writer serves ci-status-update (~13k/mo). 10 min bounds how long a stale
+# ci_status_store.py could be in service after a merge to main, while staying far cheaper than the
+# per-job checkout STEP 2b removes. Persistent=true so a rebooted VM refreshes immediately rather
+# than waiting out the interval with a pinned mirror.
+[Unit]
+Description=Periodic refresh of the GitHub glue runner slot clone
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=github-glue-slot-refresh.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+# github-glue-slot-refresh.service — oneshot; keeps the runner slot's clone current with main.
+#
+# Epic: deployment_and_user_management_master (CI/CD cost reduction — B1)
+# Lifecycle: permanent   Delete-when: glue host retired (B2/B3)
+#
+# Driven by github-glue-slot-refresh.timer. See refresh-slot-repo.sh for why staleness matters:
+# the writer runs pre-staged code with NO checkout, so a drifting mirror = silently stale logic.
+[Unit]
+Description=Refresh the GitHub glue runner slot's clone to origin/main
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Slice=github-glue-runner.slice
+ExecStart=/opt/github-glue-runners/refresh-slot-repo.sh
+# A failed refresh must be visible in `systemctl status`, not silently retried into oblivion.
+Restart=no
