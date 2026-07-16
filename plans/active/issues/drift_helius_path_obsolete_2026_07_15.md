@@ -171,18 +171,32 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       `perp_funding`'s 51,301 all-time `expected_unattempted` rows (~40 DRIFT markets × full history). This is a real
       production manifest write against `market-data-tick-defi-prd-central-element-323112` — verify count sanity before
       `--apply-write`. (repo: instruments-service)
-- [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
+- [x] ✅ [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
-      superseded/moot. **Still gated as of 2026-07-16 (data_engineering slot-10)**: (2) stop/do-not-relaunch and (3)
-      re-route launcher are landed; (4) reconcile-manifest (P1.2 above) is now UNPARKED (the launch-at-scale VM is
-      confirmed running on the Velocity path per infra slot-2's Progress Log entry) but has NOT yet actually executed —
-      no reconciled counts exist yet. Declining again this session for the same reason `slot-11` declined it earlier
-      (2026-07-16T00:1xZ): adding a "retired" banner before P1.2 has real reconciled counts would get ahead of the
-      actual system state, even though the remaining gap is now just "wait for P1.2 to run," not an open infra question.
-      Re-check once P1.2 lands. (repo: unified-trading-pm)
+      superseded/moot. — **done 2026-07-16 (data_engineering slot-15)**. See Progress Log.
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-15: banner + closure (P2)
+
+Re-dispatched to `-004`. Verified live state before acting rather than trusting doc text: `GET /api/backlog` showed
+`drift_helius_path_obsolete-005` (the P1.2 reconcile task, item (4)) at `status: "done"` — confirmed via this doc's own
+Progress Log (slot-14's entry above: root cause fixed, `unified-api-contracts@5fd781c7` shipped) that all of (2), (3),
+(4) have now genuinely landed, unlike the 4 prior dispatches (slot-9/10/11/13) that correctly declined because (4) was
+still open. Added the retirement banner to both target docs:
+
+- `issues/drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` — new 🟢 banner confirming the migration is
+  complete, with the specific commits (`deployment-service@46d6492`/`@ee859e4`, `unified-api-contracts@5fd781c7`).
+  Checked that doc's own `[INFRA] P2` (zombie-VM CLI monitor) and `[DATA] P3` (relaunch) todos: both were already
+  checked off from prior sessions. P3 was already explicitly closed "AS SUPERSEDED" (slot-13); P2 is a permanent,
+  protocol-agnostic monitoring tool independent of the Helius/Velocity question, so it stays done-not-moot (called this
+  out explicitly in the banner rather than silently leaving it ambiguous).
+- `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` — new 🟢 banner placed directly after the two
+  DRIFT-sig-walker banners (13:15Z BLOCKED-OPERATOR-DECISION / 14:07Z resolved-and-relaunched) it supersedes, marking
+  that content historical and pointing at `issues/drift_helius_path_obsolete_2026_07_15.md` as the migration SSOT.
+
+No code changes (doc-only task, `repos: []`). This doc's own P2 todo flipped above.
 
 ### 2026-07-16 — data_engineering slot-14: root-caused + fixed the perp_trades catalog gap (P1.2)
 
