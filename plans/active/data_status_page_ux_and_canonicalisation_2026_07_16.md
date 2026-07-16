@@ -184,13 +184,21 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
       per unique (chain, token → `contract_address`) across the DeFi + spot-CeFi universe, so **every base AND quote leg
       of a `SPOT_PAIR`/`POOL` (and LST/A_TOKEN/DEBT_TOKEN underlyings) resolves to a SPOT_ASSET with a contract
       address** — the wallet/chain position-monitoring identity. Decomposed into the todos below.
-- [ ] [DATA] P1. **SPOT_ASSET backfill/migration** — derive the unique token set from the per-date instruments-store
-      rows (where the DeFi adapters already stamp addresses — `uniswap_v2/v3.py`, `curve.py`, `renzo.py`, `etherfi.py`,
-      `solend.py` set base/quote/LST contract addresses on the record) and emit one SPOT_ASSET record per token with its
-      `base_asset_contract_address`. NOTE: the rolled-up `catalog.parquet` `CATALOG_COLUMNS` (build_instrument_catalogue
-      .py:264-303) does **NOT** carry contract addresses today — so either read the per-date rows for the backfill
-      and/or add address columns to `CATALOG_COLUMNS` (recommended, so SPOT_ASSET has a durable home). Verify
-      LST/A_TOKEN/ DEBT_TOKEN addresses are present in the fetched records and reuse them.
+- [ ] [DATA] P1. **Add address columns to the instrument catalogue (enabling step — cheap projection + regen, operator
+      2026-07-16).** The addresses ALREADY exist in the per-date instruments-store parquet schema
+      (`instrument.py:205-206` — `pool_address`, `pool_fee_tier`, `base_asset_contract_address`,
+      `quote_asset_contract_address`, + `atoken_address`/`debt_token_address`), and the catalogue builder ALREADY
+      consumes `pool_address` (DeFi POOL `instrument_id == pool_address.lower()`, `_pool_address_of`) — they are simply
+      not PROJECTED into the output. Add `pool_address` (for POOLs) + `base_asset_contract_address` +
+      `quote_asset_contract_address` (+ `atoken_address`/ `debt_token_address` where present) to `CATALOG_COLUMNS`
+      (`build_instrument_catalogue.py:264-303`), project them from the source rows, and **regen the catalogue**. This is
+      a projection change, NOT a re-fetch. Then pools resolve to their `pool_address` and spot legs to their token
+      `contract_address` from a single catalogue read.
+- [ ] [DATA] P1. **SPOT_ASSET backfill/migration** — with the address columns in place, derive the unique token set
+      (base + quote legs of every `SPOT_PAIR`/`POOL`, + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET
+      record per unique (chain, token → `base_asset_contract_address`). Reuse the LST/A_TOKEN/DEBT_TOKEN addresses
+      (confirmed fetched by the DeFi adapters — `renzo.py`/`etherfi.py`/`solend.py` set the LST token address;
+      `curve.py`/ `uniswap_v2/v3.py` set base/quote). Idempotent; runs on real infra (manifest-verified rows).
 - [ ] [DATA] P1. **CeFi-spot leg mapping** — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address; map
       each CeFi spot leg's symbol → native-chain canonical `contract_address` (e.g. ETH → WETH/native on ethereum) via a
       symbol→chain→address registry so CeFi SPOT_PAIR legs also resolve to a SPOT_ASSET. Flag any symbol with no
