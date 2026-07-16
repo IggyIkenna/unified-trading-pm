@@ -344,11 +344,39 @@ ff_one() {
             fi
         fi
     fi
-    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+    # Dirt gate. TRACKED dirt (modified/staged/renamed/deleted) blocks the FF — that is real
+    # WIP and we never clobber it. UNTRACKED-ONLY dirt does NOT (2026-07-16).
+    #
+    # WHY (this check has frozen a production clone THREE times):
+    #   - 2026-06-10 — plan_health_digest.md/plan_skeleton.md (untracked agent output) froze the
+    #     vm-planning PM clone 545 commits behind → empty backlog, no plan-health work.
+    #   - 2026-07-14 — the cron self-pull artifacts froze root-PM 1138 commits behind.
+    #   - 2026-07-16 — main-agent-checkpoint.md (untracked, written BY DESIGN on RECYCLE per
+    #     context_lifecycle.py) froze the CENTRAL orchestrator VM's SERVICE clone at 23 commits
+    #     behind for 2 days. Every AO fix shipped in that window was on LDR and NOT running.
+    # Each was "fixed" by allowlisting one more filename to the auto-clean above. That cannot
+    # scale: an allowlist can only ever name files someone already got burned by. The freeze is
+    # also SELF-SUSTAINING — a clone that cannot FF never stops being dirty, so one stray file
+    # costs FOREVER, not one tick.
+    #
+    # An untracked file is not a reason to refuse: an FF only moves TRACKED content. In the one
+    # case where an untracked file genuinely collides (the incoming commit ADDS that same path),
+    # `git merge --ff-only` refuses on its own with "untracked working tree files would be
+    # overwritten" — recorded by the [skip:ff-failed]/conflict branch below. Git is the authority
+    # on whether the file actually blocks; pre-emptively guessing "dirty ⇒ skip" is what turned a
+    # harmless stray file into a permanent outage. Verified empirically 2026-07-16: untracked-only
+    # → FF succeeds and the file survives; tracked dirt → still skips; real collision → git refuses.
+    _tracked_dirt="$(git status --porcelain --untracked-files=no 2>/dev/null)"
+    if [[ -n "${_tracked_dirt}" ]]; then
         log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
         _ff_record "skip:dirty"
         popd >/dev/null
         return 0
+    fi
+    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+        # Untracked-only: proceed. Logged (not silent) so scratch accumulation stays visible and
+        # the following FF is attributable if git DOES refuse on a collision.
+        log "[untracked-ok] ${repo_name} (${branch}) — untracked-only dirt; FF proceeds (git rejects a real collision)"
     fi
 
     # Step 2: fetch only if not pre-fetched (silent; skip on offline / no-such-ref).
