@@ -283,15 +283,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       a `.bak` into `_index/per_vm/`** — the consolidator globs `per_vm/*.parquet` and absorbs EVERY parquet there as a
       shard; a backup dropped there becomes shard #3, is merged back, and resurrects purged rows
       (`_index/consolidator_stall_state.json` = `{"streak":0,"baseline_shards":2}` confirms the current baseline).
-- [ ] [INFRA] P0. **T0.3 — Freeze the meta-launcher FIRST (freeze_order 1).** _Mechanism_:
+- [x] ✅ [INFRA] P0. **T0.3 — Freeze the meta-launcher FIRST (freeze_order 1). DONE 2026-07-16T08:08:43Z** — paused
+      `uts-prod-sports-scheduler-cron`, verified `state: PAUSED`. Last dispatch execution
+      `uts-prod-sports-scheduler-lx556` completed 08:05:52Z (before freeze); the ~08:11 `*/5` tick did NOT fire —
+      confirmed quiet. _Mechanism_:
       `gcloud scheduler jobs pause uts-prod-sports-scheduler-cron --location=asia-northeast1 --project=central-element-323112`.
       It runs `*/5` and dispatches tiers 1-4 → `uts-prod-instruments-service-sports-fixtures`,
       `features-service-sports-job`, `uts-prod-market-tick-data-service-fast-t1-recon`
       (`deployment-service/configs/sports-trigger-tiers.yaml`). **Pausing the 4 fixture crons without this leaves the
       fixtures job dispatched every 5 min.** _Gate_: `jobs describe` → `state: PAUSED`; no new execution after T+6min.
       _ABORT_: state not PAUSED → stop; everything downstream assumes the writers are quiet.
-- [ ] [INFRA] P0. **T0.4 — Freeze the remaining writer schedulers in freeze_order 2→11 (one `pause` each, verify
-      each).** _Mechanism_:
+- [x] ✅ [INFRA] P0. **T0.4 — Freeze the remaining writer schedulers in freeze_order 2→11. DONE 2026-07-16** — all 17
+      paused one-at-a-time in freeze_order, each verified `PAUSED` immediately after its pause. Final tally: 21/21 of
+      the frozen set (1 meta + 17 writers + 3 consolidators) report PAUSED, 0 ENABLED. Out-of-scope ENABLED remaining:
+      `uts-dev-market-tick-data-fast-t1-schedule` (DEV infra, fires 00:30, resolves dev buckets — not a legacy-sports
+      writer) — noted, not paused (not in the runbook freeze list). _Mechanism_:
       `gcloud scheduler jobs pause <NAME> --location=asia-northeast1 --project=central-element-323112` for, in order —
       `sports-ref-v3-{1,2,3}-start` (2); `uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule` (3);
       `uts-prod-sports-enrichment-{footystats,transfermarkt,soccer-football-info}-daily` (4);
@@ -303,7 +309,14 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       `[--operation download --mode batch]` with **no `--asset-group`**, and UTL `service_cli.py:163-167` gives
       `--asset-group` no default → it may enumerate sports unfiltered. Pause it; **prove or disprove the sports write in
       T4.5** (OR-8).
-- [ ] [INFRA] P0. **T0.5 — DRAIN GATE (freeze_order 19): let in-flight work finish and every per-VM shard merge.**
+- [x] ✅ [INFRA] P0. **T0.5 — DRAIN GATE (freeze_order 19). DONE 2026-07-16** — (1) checked every sports Cloud Run job's
+      most-recent executions: ZERO non-terminal (all `runningCount=0`, completionTime present); newest sports work was
+      `uts-prod-instruments-service-sports-fixtures` @ 06:34Z, terminal. (2) Watched the 3 consolidators ~6 ticks each
+      (08:12→08:17): `verdict=empty`, `rows_added=0` every tick; index row counts perfectly stable (instruments
+      5,465,414 / market-data-tick 1,958,498 / features 168,059); `unmerged_shards=[]` throughout — only `_legacy_seed`
+      remains in each canonical `_index/per_vm/`, the observable proof the reaper
+      (`manifest_consolidator.py:_prune_consolidated_shards`, deletes shards once mtime ≤ canonical content-write
+      marker) had merged every shard. **per_vm drained — no LOST-ROWS risk from freezing the consolidators.**
       _Mechanism_: no pause action. Poll until all sports Cloud Run executions are terminal —
       `gcloud run jobs executions list --region=asia-northeast1 --project=central-element-323112 --format='table(name,status.completionTime,status.conditions[0].type)' | grep -i sports`
       — then let the three consolidators run **≥2 full ticks** (`*/1`) so every `_index/per_vm/*.parquet` merges into
@@ -311,19 +324,29 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       _Gate_: zero non-terminal executions; index mtime advanced; two consecutive ticks add zero rows. _ABORT_: an
       execution is stuck non-terminal > 30 min → diagnose; do NOT freeze the consolidators under it (that strands the
       shard permanently — the legacy bucket has had NO consolidator since 2026-07-13 and its shards can never merge).
-- [ ] [INFRA] P0. **T0.6 — Freeze the 3 consolidators LAST (freeze_order 20→22), after the drain.** _Mechanism_: pause
-      `uts-prod-manifest-consolidator-instruments-sports-cron`, then `-market-data-sports-cron`, then
-      `-features-sports-cron`. _Gate_: all PAUSED; `_index/availability_index.parquet` mtime stops advancing; index row
-      count == the T0.2 snapshot. **From here the index is QUIET — this is the only safe window for Phase 3.** _ABORT_:
-      index still advancing after the pause → an unknown writer exists (relates to F-5/T0.1) → STOP.
-- [ ] [INFRA] P1. **T0.7 — Delete (do not restore) the 2 DEAD schedulers + confirm the 3 phantom VM starters.**
-      _Mechanism_: `uts-staging-features-sports-t1-schedule` (ENABLED, erroring daily) and
-      `uts-prod-features-sports-t1-schedule` (PAUSED) both target `uts-{staging,prod}-features-sports-service-t1-recon`,
-      which **do not exist** (verified against the full 115-job list) →
-      `gcloud scheduler jobs delete <NAME> --location=asia-northeast1`. `sports-ref-v3-{1,2,3}-start` fire annually
-      (`0 0 11 4 *`) at instances that do not exist (`gcloud compute instances list --filter='name~sports'` → zero rows)
-      → recommend delete (OR-7). _Gate_: `jobs list | grep -c 'features-sports-t1'` → 0. _ABORT_: a target job actually
-      resolves → do not delete; re-audit.
+- [x] ✅ [INFRA] P0. **T0.6 — Freeze the 3 consolidators LAST (freeze_order 20→22). DONE 2026-07-16T08:18:00Z** — paused
+      instruments-sports → market-data-sports → features-sports, all verified PAUSED. Post-freeze watch (>11 min):
+      `cons_last_run` frozen at 08:18:09 / 08:18:06 / 08:18:40 (no run after pause); index mtime frozen; row counts ==
+      the T0.2 snapshot exactly (5,465,414 / 1,958,498 / 168,059); `unmerged_shards=[]`. **The index is now QUIET — the
+      safe window for Phase 3 is open.** _Mechanism_: pause `uts-prod-manifest-consolidator-instruments-sports-cron`,
+      then `-market-data-sports-cron`, then `-features-sports-cron`. _Gate_: all PAUSED;
+      `_index/availability_index.parquet` mtime stops advancing; index row count == the T0.2 snapshot. **From here the
+      index is QUIET — this is the only safe window for Phase 3.** _ABORT_: index still advancing after the pause → an
+      unknown writer exists (relates to F-5/T0.1) → STOP.
+- [x] ✅ [INFRA] P1. **T0.7 — Delete the 2 DEAD schedulers + confirm the 3 phantom VM starters. DONE 2026-07-16** —
+      verified both dead schedulers' target Cloud Run jobs `uts-{staging,prod}-features-sports-service-t1-recon` return
+      "Cannot find job" (they write nothing), then deleted `uts-staging-features-sports-t1-schedule` +
+      `uts-prod-features-sports-t1-schedule`. GATE: `jobs list | grep -c features-sports-t1` → **0**. Confirmed the 3
+      `sports-ref-v3-{1,2,3}-start` are phantom: `compute instances list --filter=name~sports` → zero rows; they are
+      PAUSED (frozen in T0.4). **OR-7 RESOLVED = delete (WORKER REC, safe — zero target instances)**; per the runbook
+      the actual v3 deletion is placed at T6.6 (Phase-6 owner) — recorded here, not executed in Phase 0 (pausing already
+      achieves the freeze; deletion is not gate-required). _Mechanism_: `uts-staging-features-sports-t1-schedule`
+      (ENABLED, erroring daily) and `uts-prod-features-sports-t1-schedule` (PAUSED) both target
+      `uts-{staging,prod}-features-sports-service-t1-recon`, which **do not exist** (verified against the full 115-job
+      list) → `gcloud scheduler jobs delete <NAME> --location=asia-northeast1`. `sports-ref-v3-{1,2,3}-start` fire
+      annually (`0 0 11 4 *`) at instances that do not exist (`gcloud compute instances list --filter='name~sports'` →
+      zero rows) → recommend delete (OR-7). _Gate_: `jobs list | grep -c 'features-sports-t1'` → 0. _ABORT_: a target
+      job actually resolves → do not delete; re-audit.
 
 ### PHASE 1 — CODE (repoints + lifecycle marks; lands and applies BEFORE any delete)
 
@@ -1012,3 +1035,42 @@ _Scheduler fleet cross-check (pre-freeze, all runbook-named jobs verified to EXI
 `uts-staging-features-sports-t1-schedule` ENABLED + `uts-prod-features-sports-t1-schedule` PAUSED (the 2 dead ones);
 sports-ref-v3-{1,2,3}-start ENABLED. No job named in the runbook is missing ⇒ no inventory drift; freeze may proceed.
 **⇒ T0.2 GATE PASSES. Proceeding to T0.3 (freeze meta-launcher first).**
+
+---
+
+**2026-07-16 — T0.3–T0.7 EXECUTED (the FREEZE). Writers frozen 08:08:43Z (meta-launcher) → 17 writers → consolidators
+08:18:00Z. All gates PASS.**
+
+_Freeze sequence (strictly freeze_order)_:
+
+1. **T0.3 (order 1)** — `uts-prod-sports-scheduler-cron` paused **08:08:43Z**, verified PAUSED. Its last `*/5` dispatch
+   `uts-prod-sports-scheduler-lx556` completed 08:05:52Z (pre-freeze); the ~08:11 tick did not fire.
+2. **T0.4 (order 2→11)** — 17 writers paused one-at-a-time, each verified PAUSED immediately:
+   sports-ref-v3-{1,2,3}-start · sports-fixtures-{midnight,6am,noon,6pm} ·
+   sports-enrichment-{footystats,transfermarkt,soccer-football-info} · understat-eu-typing-sweep · is-daily-enum-sports
+   · expected-universe-v2-sports · lifecycle-catalogue-regen-sports · mdps-odds-horizon-bucket ·
+   features-service-sports-daily-trigger · market-tick-data-fast-t1-schedule.
+3. **T0.5 DRAIN GATE (order 19)** — ZERO non-terminal sports Cloud Run executions (every job's newest exec terminal,
+   `runningCount=0`). Watched the 3 consolidators ~6 ticks (08:12→08:17): `verdict=empty`, `rows_added=0` every tick;
+   index rows stable; `unmerged_shards=[]` on all three (only `_legacy_seed` remains) ⇒ every shard already reaped =
+   merged. No LOST-ROWS risk from the consolidator freeze.
+4. **T0.6 (order 20→22)** — 3 consolidators paused **08:18:00Z** (instruments → market-data → features), all PAUSED.
+   > 11-min post-freeze watch: `cons_last_run` frozen (08:18:09 / 08:18:06 / 08:18:40), index mtime frozen, row counts
+   > == T0.2 baseline **exactly** (5,465,414 / 1,958,498 / 168,059). **Index is QUIET.**
+5. **T0.7** — verified both dead schedulers' targets (`uts-{staging,prod}-features-sports-service-t1-recon`) do NOT
+   exist, then DELETED `uts-{staging,prod}-features-sports-t1-schedule`. Gate `grep -c features-sports-t1` → **0**.
+   sports-ref-v3 targets confirmed phantom (0 instances). **OR-7 resolved = delete** (recorded for T6.6).
+
+_Final frozen-set tally_: **21/21 PAUSED** (1 meta + 17 writers + 3 consolidators), **0 ENABLED**. Only out-of-scope
+ENABLED sports-adjacent job is `uts-dev-market-tick-data-fast-t1-schedule` (DEV, fires 00:30, dev buckets — not a
+legacy-sports writer).
+
+_10-MIN LEGACY QUIET WATCH (dispatch-mandated — decisive T0.1 confirmation)_: scanned BOTH legacy buckets for objects
+with `timeCreated >= 08:08:43Z` (genuine writes; immune to the 90-day OLM `updated` bump) at **t+0 (08:18Z)** and
+**t+20min (08:29Z)**. Result **QUIET both times: 0 genuine writes to either legacy bucket while everything is frozen.**
+⇒ There is no unfrozen writer; the T0.1 "no live legacy writer" attribution is confirmed by the freeze itself. Verifier:
+`~/tmp-cutover/legacy_write_watch.py`.
+
+**⇒ PHASE 0 COMPLETE. gate_pass=true: all writers PAUSED (verified), per_vm drained, consolidators PAUSED, snapshots
+verified (19/19 crc-matched), legacy buckets QUIET. Phase 1 (code repoints) / Phase 2 (move) may proceed — strictly
+sequential, next phase owner.**
