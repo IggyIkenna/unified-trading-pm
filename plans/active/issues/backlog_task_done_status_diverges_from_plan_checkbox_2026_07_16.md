@@ -203,3 +203,28 @@ So this todo's own stated precondition ("once the above is root-caused **and cor
 the actual gating fix and it's `[INFRA]`-tagged, outside this task's `data_engineering` assigned_role scope anyway. Not
 absorbing it unilaterally (single-agent, higher-blast-radius change to `/done` semantics). Declining again via
 `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T18:5xZ UTC — data_engineering slot-2 (Todo 4 re-dispatched a third time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 2.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled `agent-orchestrator` and
+`unified-trading-pm` in this slot to LDR HEAD `73e6f05135b9`, 2026-07-16T18:46:02Z):
+
+- **Todo 2 (the code fix) still not shipped**: read `agent-orchestrator/server/routes/slots_worker.py` `done_slot()`
+  directly (current LDR HEAD `cb0fe676b756`) — `no_plan_flip` is still only appended to `warnings: list[DoneWarning]`
+  (lines 709-715, and the corresponding activity-log branch at 867-896); the function's only `HTTPException` raises
+  remain the B1 already-done/not-holder checks and the strict-mode M9 origin/`sha_unverifiable` gates. No hard-409
+  branch exists for `no_plan_flip` yet.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+Also independently checked the unrelated but higher-priority operator message that arrived on this session's boot
+heartbeat (a claimed "unpushed CI-red-fix commit `9e41e2a`" in this slot's `deployment-api` clone): confirmed it was
+stale — that commit had been amended to `b63fa7c` (same fix, same message) and already fast-forward-merged onto
+`origin/live-defi-rollout` before this session started (HEAD even with origin; the `(market-data, defi): 3600s`
+staleness exception is present in `tests/unit/test_route_health_overview.py`). Nothing to ship there.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped and outside this task's `data_engineering` assigned_role. Declining again via `/skip-current-task` —
+will be actionable once Todo 2 ships.
