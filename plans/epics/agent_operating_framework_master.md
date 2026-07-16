@@ -27,12 +27,12 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
-  [
-    ../archive/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md,
-    ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md,
-    ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
-    ../archive/2026_07/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
-  ]
+  - ../active/data_eng_role_vertical_pilot_2026_06_25.md
+  - ../active/l0_doc_index_generator_2026_06_24.md
+  - ../active/pm_role_charter_formalization_2026_06_25.md
+  - ../active/role_registry_schema_and_broker_mvp_2026_06_25.md
+  - ../active/task_template.md
+  - ../active/uat_role_charter_2026_06_27.md
 last_updated: 2026-06-25
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
@@ -360,3 +360,47 @@ Everything else (W3–W8) depends on this shape.
   `harsh_pc`). Split out a new epic `escalation_and_disaster_recovery_master` (E1 `escalation_pipeline_mvp`). Starter
   set (4): spine + PM + Data-Eng + Escalation-MVP; all human-driven except the dispatched Data-Eng pilot. Quick win
   flagged: `alerting-service/.../claude_slack_agent.py` computes the AI triage then discards it (`_ = triage_text`).
+
+## Assigned active plans
+
+_6 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+### [`role_registry_schema_and_broker_mvp_2026_06_25`](../active/role_registry_schema_and_broker_mvp_2026_06_25.md)
+
+**status**: active · **estimate**: 5 cal AI-days (class: brand-new) **title**: Role registry schema + message-broker MVP
+(the role-based-agent spine)
+
+## P1 — important; post-current-gate
+
+### [`data_eng_role_vertical_pilot_2026_06_25`](../active/data_eng_role_vertical_pilot_2026_06_25.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Data-Engineering role — vertical pilot
+(first end-to-end role on the spine)
+
+### [`l0_doc_index_generator_2026_06_24`](../active/l0_doc_index_generator_2026_06_24.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: L0 doc-index generator (grep-native map) +
+FF-cron auto-regen
+
+### [`pm_role_charter_formalization_2026_06_25`](../active/pm_role_charter_formalization_2026_06_25.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: PM role charter formalization (make the
+live orchestrator-as-PM an explicit registry row)
+
+### [`uat_role_charter_2026_06_27`](../active/uat_role_charter_2026_06_27.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: UAT / QA role charter — the review agent
+as PR gate
+
+## P2 — useful; opportunistic
+
+### [`task_template`](../active/task_template.md)
+
+**status**: active **title**: Task Template — How to Author a Plan
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_

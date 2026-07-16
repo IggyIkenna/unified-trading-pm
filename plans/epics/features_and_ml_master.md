@@ -40,15 +40,9 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_07/features_read_book_columns_not_snapshots_2026_06_28.md,
-    ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
-    ../archive/features_repo_consolidation_2026_05_08.plan.md,
-    ../active/features_service_qg_cleanup_2026_05_11.md,
-    ../active/ml_repo_consolidation_2026_05_19.md,
-    ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
-    ../active/regime_clustering_structure_allocator_2026_05_29.md,
-  ]
+  - ../active/bigquery_feature_ml_compute_engine_option_2026_06_08.md
+  - ../active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md
+  - ../active/features_service_e2e_pipeline_test_2026_05_26.md
 last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -909,43 +903,15 @@ respectively).
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: features_and_ml_master` in their frontmatter (was: 4 — stale count; corrected
-2026-07-12). Workers pick up in priority order (P0 first). Auto-populated by
-`scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **Roster correction (2026-07-12)**: the auto-populated roster below had drifted from `active/*.md` frontmatter —
-> live-grep on 2026-07-12 shows exactly 3 `status: active` plans declaring `parent_epic: features_and_ml_master`:
-> `features_service_e2e_pipeline_test_2026_05_26` (P0), `bigquery_feature_ml_compute_engine_option_2026_06_08` (P2),
-> `colocated_feature_pipeline_in_memory_handoff_2026_06_21` (P3) — none of which appeared anywhere in this roster before
-> this correction. Added below in their frontmatter priority sections. Findings #57/#58, plan-reconciliation
-> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+_3 active plans declare `parent_epic: features_and_ml_master` in their frontmatter. Workers pick up in priority order
+(P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
 ### [`features_service_e2e_pipeline_test_2026_05_26`](../active/features_service_e2e_pipeline_test_2026_05_26.md)
 
-**status**: active · **estimate**: 6 cal AI-days (class: brand-new) — added 2026-07-12 (was: missing from roster;
-finding #57). Features-service e2e pipeline test (read → calculate → write → read-back) on real GCS data. Carries a
-stale (channel-retired) `ROLLOUT-AGENT HOLD` banner — see the plan's own 2026-07-12 annotation before dispatching.
-
-### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — features/ML cluster
-
-**status**: ✅ COMPLETE (synced 2026-07-11; was: 🟠 ACTIVE — QG sweep for features-service + ml-service +
-ml-inference-service + ml-training-service. All ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP
-violations. PREREQ: MTDS QG green. [vm: vm-ml]) — plan frontmatter is `status: complete`; all 4 assigned repo todos
-(features-service, ml-service, ml-inference-service, ml-training-service) are checked `[x] ✅` QG-green
-(ml-inference-service + ml-training-service N/A: consolidated into ml-service per `workspace-manifest.json`). Synced per
-plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 54).
-
-### [`features_repo_consolidation_2026_05_08`](../archive/features_repo_consolidation_2026_05_08.plan.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-10 shipped; Phase 6 parity RUN deferred to
-`features_service_qg_cleanup_2026_05_11` Phase 2; performance_features wire-in deferred to
-`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19` Phase-H
-
-### [`ml_repo_consolidation_2026_05_19`](../active/ml_repo_consolidation_2026_05_19.md)
-
-**status**: done · **estimate**: 6 cal AI-days (class: infra)
+**status**: active · **estimate**: 6 cal AI-days (class: brand-new) **title**: Features-service end-to-end pipeline test
+(read → calculate → write → read-back) on real GCS data
 
 ## P1 — important; post-current-gate
 
@@ -955,28 +921,14 @@ _(no plans currently assigned at this priority)_
 
 ### [`bigquery_feature_ml_compute_engine_option_2026_06_08`](../active/bigquery_feature_ml_compute_engine_option_2026_06_08.md)
 
-**status**: active · **estimate**: 4.2 cal AI-days (class: design) — added 2026-07-12 (was: missing from roster; finding
-#58). BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus.
-
-### [`features_service_qg_cleanup_2026_05_11`](../archive/2026_05/features_service_qg_cleanup_2026_05_11.md)
-
-**status**: active-phase2-blocked (archived) · **estimate**: 1.2 cal AI-days (class: refactor) (corrected 2026-07-15,
-plan-reconcile: link + status were stale — plan lives at `plans/archive/2026_05/`, not `plans/active/`, with frontmatter
-`status: active-phase2-blocked`, and is not one of the 3 plans named in this doc's own 2026-07-12 roster-correction
-banner above)
-
-### [`phase5_features_streaming_carry_staked_basis_mvp_2026_05_19`](../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phase-H complete; Phases E/F BLOCKED-OPERATOR-DEPLOY (Cloud Run deploy gated). ·
-**estimate**: 15.0 cal AI-days (class: brand-new)
+**status**: active · **estimate**: 4.2 cal AI-days (class: design) **title**: BigQuery as an optional feature/ML compute
+engine over the hive-partitioned GCS corpus — scale path alongside in-process polars/DuckDB
 
 ## P3 — backlog; revisit quarterly
 
 ### [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](../active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md)
 
-**status**: active · **estimate**: 3.0 cal AI-days (class: design) — added 2026-07-12 (was: missing from roster; finding
-#58). Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright
-strictness restore.
+**status**: active · **estimate**: 3.0 cal AI-days (class: design)
 
 ## Archived plans
 

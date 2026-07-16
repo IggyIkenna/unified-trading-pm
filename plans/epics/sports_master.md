@@ -43,24 +43,14 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
-    ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
-    ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    ../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md,
-    ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md,
-    ../active/sports_features_readiness_for_predictions_2026_06_20.md,
-    ../active/sports_manifest_canonicalisation_2026_06_01.md,
-    ../active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
-    ../active/master_to_live_defi_2026_05_23.md,
-    ../active/d2_uac_continuity_2026_05_20.md,
-    ../archive/sports_gcs_partition_rekey_2026_05_23.plan.md,
-    ../archive/2026_05/hard_schema_enforcement_2026_05_08.md,
-    ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md,
-    ../archive/wave3x_residual_ssots_2026_05_08.plan.md,
-    ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
-    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
-  ]
+  - ../active/features_sports_service_consolidation_deploy_2026_07_15.md
+  - ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+  - ../active/sports_catalog_league_grain_only_scope_2026_07_08.md
+  - ../active/sports_legacy_bucket_cutover_2026_07_16.md
+  - ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
+  - ../active/sports_p2_features_history_to_ml_ready_2026_06_27.md
+  - ../active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md
+  - ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
 last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -767,10 +757,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-                  disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-                  (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-                  (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-                  use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+                              disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                              (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                              (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                              use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -895,13 +885,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-              going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-              if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-              (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+                          going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+                          if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+                          (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-              (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-              `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-              CanonicalFixture fields)
+                          (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+                          `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+                          CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -1330,116 +1320,70 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-              `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-              dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-              `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-              clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-              coverage shows 0% until then, correctly).
+                          `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+                          dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+                          `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+                          clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+                          coverage shows 0% until then, correctly).
 
-              `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-              trigger-date≪daily-calendar invariant. QG exit 0.
+                          `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+                          trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans
 
-_Active plans declaring `parent_epic: sports_master`. Workers pick up in priority order (P0 first). Auto-populated by
-`scripts/plans/populate_epic_bodies_2026_05_21.py` — the list below was seeded by the 2026-06-20 restructure and the
-script keeps it in sync from frontmatter._
-
-**Delegated (Sports work tracked under service-epic / cross-cutting plans, listed for visibility — NOT direct
-`parent_epic` children):**
-[`sports_manifest_canonicalisation_2026_06_01`](../active/sports_manifest_canonicalisation_2026_06_01.md) (manifest FORM
-canonicalisation / honest-absence relabel / source-stamp; delegates the bookmaker-coverage _enumeration_ back to the
-net-new child plan below) ·
-[`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](../archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md)
-(Phase 3 drain + Phase 4 GATED `sports-scheduler` relaunch — **FOLDED → M-1 2026-07-13** per the MTDS consolidation; its
-open items now live in `data_completion_to_100_all_ag_2026_06_21.md` §"Folded-in scope 2026-07-13"; ruling 146
-confirmed: delegated visibility row, not a direct `parent_epic` child) ·
-[`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
-(sports `available_at` stamping + feature-required-inputs) ·
-[`trigger_based_reference_data_2026_04_13`](../archive/2026_05/trigger_based_reference_data_2026_04_13.md)
-(`status: active`; trigger-date backfill operational remainder) · [`predictions_master`](./predictions_master.md)
-(predictions ML / Group-E gate half).
+_8 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`sports_legacy_bucket_cutover_2026_07_16`](../active/sports_legacy_bucket_cutover_2026_07_16.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Sports legacy bucket cutover — freeze, move,
+purge, delete, restore
+
 ### [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)
 
-**status**: active · **estimate**: 3.0 cal AI-days (class: brand-new). Net-new ODDS-coverage residual that
-`sports_manifest_canonicalisation` explicitly delegates here: per-league-tier `EXPECTED_BOOKMAKER_MARKET_SETS` empirical
-audit (UAC) + orchestrator post-FIXTURES_SCHEDULE NaN-fill of missing `(fixture × bookmaker × market)` triples + ODDS
-cluster-validation kwargs at `record_captured`.
+**status**: active · **estimate**: 3 cal AI-days (class: brand-new) **title**: Sports ODDS bookmaker × market coverage
+enumeration + NaN-fill + cluster validation
 
-### [`sports_fixtures_schema_split_completion_2026_06_20`](../archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md)
+### [`sports_pipeline_to_100pct_golden_window_first_2026_06_27`](../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)
 
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra). Open remainder of the FIXTURES → SCHEDULE+OUTCOMES
-lookahead-bias split (UAC schema + UTL join already shipped): per-league announcement-floor audit, cross-source
-`announced_at` backfill, one-shot `migrate_fixtures_split.py`, writegate same-day coordination, HT/ET/PEN +
-score-distinction write-path population, deferred pre-features-extractor follow-up.
-
-### [`sports_phantom_recon_and_coverage_windows_2026_06_20`](../archive/2026_06/sports_phantom_recon_and_coverage_windows_2026_06_20.md)
-
-**status**: ✅ COMPLETE / ARCHIVED (was: listed "active" with a dead `../active/` link — corrected 2026-07-12, finding
-id 251, §A2 "50 reclassified" blanket ruling; the plan's own frontmatter reads `status: complete` and it now lives at
-`plans/archive/2026_06/`, with all 6 todos checked `[x]` matching what this table previously listed as outstanding). No
-longer a P0 "must complete before next foundation gate" item. **estimate**: 2.4 cal AI-days (class: research). Diagnose
-SFI_STANDINGS 100%-failed + open-meteo silence; reconcile api-football (2015-vs-2018) + understat (2014-vs-2015)
-`SOURCE_COVERAGE_START` via the `DATA_TYPE_COVERAGE_START` override pattern; footystats-scoped recon + drain-wait +
-clean re-run (<0.5% phantom rate, no blanket-flip).
-
-### [`sports_features_readiness_for_predictions_2026_06_20`](../active/sports_features_readiness_for_predictions_2026_06_20.md)
-
-**status**: ✅ complete (was: active — corrected 2026-07-12, finding ids 260/275, §A2 B-queue ruling; the plan's own
-frontmatter reads `status: complete` with a body "Status-flip note (2026-07-10): both P0/P1 todos confirmed `[x]`") ·
-**estimate**: 1.2 cal AI-days (class: infra). Sports-side feeder for the predictions e2e gate: run FSS on the bucketed
-odds dataset + verify the ML-ready feature matrix (≥95% non-NULL at predictions-target buckets). The predictions Group-E
-ML walk-forward gate itself stays owned by `predictions_master`.
-
-### [`d2_uac_continuity_2026_05_20`](../active/d2_uac_continuity_2026_05_20.md)
-
-**status**: ✅ ARCHIVED — D2 UAC continuity + known-gap-calendar _framework_ (`SourceCapability.coverage_start` /
-`KNOWN_COVERAGE_GAPS` mechanism). The two concrete sports coverage-window reconciliations it never resolved are
-extracted to `sports_phantom_recon_and_coverage_windows_2026_06_20` above. · **estimate**: 1.6 cal AI-days (class:
-infra)
+**status**: active · **estimate**: 1.2 cal AI-days (class: design) **title**: Sports pipeline to 100% —
+golden-window-first (sports automation coordinator)
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`features_sports_service_consolidation_deploy_2026_07_15`](../active/features_sports_service_consolidation_deploy_2026_07_15.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Finish features-sports-service →
+features-service consolidation (deploy side)
+
+### [`sports_p2_features_history_to_ml_ready_2026_06_27`](../active/sports_p2_features_history_to_ml_ready_2026_06_27.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Sports P2c — derived features history to
+ML-ready (2015→present)
+
+### [`sports_p2_history_apifootball_2015_to_present_2026_06_27`](../active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Sports P2a — API-Football history
+2015→present to zero-missing (+ league-noise wipe + 2015-17 diagnosis)
 
 ## P2 — useful; opportunistic
 
-### [`hard_schema_enforcement_2026_05_08`](../archive/2026_05/hard_schema_enforcement_2026_05_08.md)
+### [`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24`](../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all 7 todos shipped; deferred P3 items migrated to
-`tradfi_master.md`
+**status**: active · **estimate**: 7.2 cal AI-days (class: design) **title**: Sports canonical universe + API-Football
+reference expansion (curate, don't over-capture)
 
-### [`sports_scrapers_post_cutover_2026_06_01`](../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md)
+### [`sports_catalog_league_grain_only_scope_2026_07_08`](../active/sports_catalog_league_grain_only_scope_2026_07_08.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — BLOCKED-OPERATOR-DECISION; all phases DEFERRED-POST-CUTOVER-2026-06-01+; activates
-on operator account-provisioning ack · **estimate**: 20 cal AI-days (class: brand-new)
-
-### [`wave3x_residual_ssots_2026_05_08`](../archive/wave3x_residual_ssots_2026_05_08.plan.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 3.6 cal AI-days (class: design) — all tracks shipped; Track D
-implementation → `wave3x_track_d_implementation_2026_05_19`; Track E wire-in →
-`available_at_lookahead_bias_completion_2026_05_08` Phase B
-
-### [`writegate_honest_coverage_endtoend_2026_05_06`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-7.A complete (write-gate + QG STEP 5.64/5.66 wired). Phases 7.B-7.D
-DEFERRED (forward-fix QG step, retrospective backfill ~7.5M rows, verification A3+A4). · **estimate**: 24.0 cal AI-days
-(class: design)
+**status**: active · **estimate**: 3.6 cal AI-days (class: research)
 
 ## P3 — backlog; revisit quarterly
 
-- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md** —
-      Orchestrator zero-fixture-path bug: `recovery_fixture_ids` does not bypass `_read_fixture_ids_from_gcs`; hardcoded
-      `fixture_ids_override=[]` ignores the allowlist entirely. Bug was deferred to an issue doc
-      `plans/active/issues/orchestrator_zero_fixture_path_recovery_bypass_bug_2026_05_14.md` that was never created.
-      Fix: when `fixture_ids_override` is populated, skip the GCS read entirely and use the override list directly.
-      Affects API-Football backfill recovery path. — instruments-service@b91b88a5 (already shipped by Harsh 2026-05-14;
-      fix covers both per-fixture skip path + zero-fixture path; verified on branch)
+_(no plans currently assigned at this priority)_
 
 ## Archived plans
 

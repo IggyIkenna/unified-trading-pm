@@ -73,56 +73,9 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ../archive/2026_07/mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ../archive/2026_07/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
-    ../archive/2026_07/mdps_features_full_month_benchmark_binance_2026_06_28.md,
-    ../archive/2026_07/mdps_polars_engine_cost_sharpening_2026_06_28.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
-    ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md,
-    ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md,
-    ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
-    ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md,
-    ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md,
-    ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md,
-    ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md,
-    ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
-    strategy_repo_consolidation_2026_05_19.md,
-    ml_repo_consolidation_2026_05_19.md,
-    features_repo_consolidation_2026_05_08.md,
-    strategy_execution_contract_remediation_2026_05_20.md,
-    bucket_name_ssot_canonicalisation_2026_05_10.md,
-    code_freeze_migrate_backfill_sequencing_2026_05_10.md,
-    aws_migration_defi_first_2026_05_07.md,
-    gcs_migration_bundle_pipeline_mode_2026_05_08.md,
-    writegate_honest_coverage_endtoend_2026_05_06.md,
-    d3_manifest_v8_finish_2026_05_20.md,
-    manifest_cross_asset_rescan_design_2026_05_08.md,
-    manifest_schema_final_gate_2026_05_09.md,
-    hard_schema_phase1_field_flip_migration_2026_05_19.md,
-    honest_coverage_formula_consolidation_2026_05_19.md,
-    data_status_drilldown_shard_atom_alignment_2026_05_07.md,
-    archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md,
-    deployment_ui_lifecycle_tabs_2026_05_08.md,
-    issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md,
-    audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
-    audit/results/manifest_v8_compliance_2026_05_20_summary.md,
-    audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md,
-    audit/results/manifest_divergence_2026_05_20_summary.md,
-    audit/results/manifest_divergence_all_services_2026_05_20_summary.md,
-    audit/is_mtds_contract_audit_2026_05_20.md,
-    audit/mtds_features_contract_audit_2026_05_20.md,
-    audit/mtds_strategy_contract_audit_2026_05_20.md,
-    audit/strategy_execution_contract_audit_2026_05_20.md,
-    audit/utl_consumer_contract_audit_2026_05_20.md,
-    audit/uac_consumer_contract_audit_2026_05_20.md,
-    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
-    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
-    ../../codex/11-project-management/foundation-completion-gate-discipline.md,
-    ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-  ]
+  - ../active/data_completion_to_100_all_ag_2026_06_21.md
+  - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
+  - ../active/sports_manifest_canonicalisation_2026_06_01.md
 last_updated:
   2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
   # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
@@ -762,137 +715,31 @@ layer**, not a re-statement of the work.
 
 ## Assigned active plans
 
-_33 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter (verified 2026-06-30). Workers pick up in
-priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **[2026-07-12 correction]**: the roster body below is a stale 2026-06-30-or-earlier auto-populated snapshot (was:
-> presented as exhaustive) — it does NOT list several `status: active`, `parent_epic: mtds_mdps_master` plans confirmed
-> live as of this correction (frontmatter re-verified 2026-07-12): `cefi_manifest_canonicalisation_2026_06_01` (P0),
-> `defi_manifest_canonicalisation_2026_06_01` (P0, umbrella), `prediction_manifest_canonicalisation_2026_06_01` (P0),
-> `tradfi_manifest_canonicalisation_2026_06_01` (P0),
-> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` (P0),
-> `downstream_services_manifest_canonicalisation_2026_06_01` (P1), `solana_defi_legacy_migration_2026_05_27` (P1),
-> `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` (P0) [2026-07-12 correction, finding 355, §A2 B-queue]
-> (was: not listed in this missing-plans enumeration). The auto-population script has not been re-run against these;
-> treat the roster below as incomplete until it is. Corrected per plan-reconciliation findings 152/154/161/163/167/174,
-> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+_3 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — MTDS/MDPS cluster
+### [`data_completion_to_100_all_ag_2026_06_21`](../active/data_completion_to_100_all_ag_2026_06_21.md)
 
-**status**: ✅ ARCHIVED (was: "🟠 ACTIVE — QG sweep for market-tick-data-service + market-data-processing-service. Both
-ruff clean; run full `bash scripts/quality-gates.sh` to surface STEP violations. PREREQ: instruments-service QG green.
-[vm: vm-ml]" — stale). **[2026-07-12 correction]**: this plan's own frontmatter reads `status: complete` and
-`parent_epic: infrastructure_master` — it is not live MTDS/MDPS work and does not belong under this epic's P0 roster at
-all (it is listed here only as a corrected historical pointer; ownership is infrastructure_master). Corrected per
-plan-reconciliation findings 139/328, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
-reclassified" blanket ruling.
+**status**: active · **estimate**: 8 cal AI-days (class: infra) **title**: Data completion to 100% — all asset groups,
+batch + live, manifest v9 (MTDS + IS)
 
-### [`d4_mtds_adapters_preflight_2026_05_20`](../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md)
+### [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-4 done; 8 BATCH_ONLY cells BLOCKED-OPERATOR-DECISION
-(hyperliquid/aster/curve/jito/morpho/kalshi/polymarket) · **estimate**: 2.4 cal AI-days (class: infra) **title**: D4 —
-MTDS adapters preflight + batch-live parity
+**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
-### [`live_pipeline_mtds_mdps_features_2026_05_08`](../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
+### [`sports_manifest_canonicalisation_2026_06_01`](../active/sports_manifest_canonicalisation_2026_06_01.md)
 
-**status**: ✅ ARCHIVED (was: "active" — stale). **[2026-07-12 correction]**: this plan's own frontmatter reads
-`status: complete`; its ownership fields read `epic: epic-deployment` / `parent: master_to_live_defi_2026_05_23` — it
-carries **no** `parent_epic: mtds_mdps_master` field at all (was: an earlier 2026-07-12 pass here mis-stated this
-parenthetical as "and `parent_epic: mtds_mdps_master`, correctly owned here" — that claim does not match the archive
-file's actual frontmatter, re-verified directly 2026-07-12; its presence in this epic's roster is a legacy manual
-listing, not a frontmatter-declared ownership match). Corrected per plan-reconciliation findings 140/329,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling /
-B-queue ruling.
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 
-### [`dex_perp_and_venue_data_expansion_2026_05_12`](../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 8 cal AI-days (class: brand-new)
-
-### [`mdps_streaming_and_backpressure_2026_05_07`](../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md)
-
-**status**: active · **estimate**: 3.0 cal AI-days (class: design)
-
-### [`mtds_databento_path_streaming_2026_05_07`](../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); all Databento path-streaming phases done ·
-**estimate**: 1.2 cal AI-days (class: design)
+_(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### GCS partition rename: `dex_pool_state` → `dex_pools` (Phase 9 of data_type_canonicalization)
-
-> **🔴 SUPERSEDED / DEAD-LETTER 2026-06-08 — DO NOT EXECUTE.** The operator-locked `defi-canonical-naming-ssot.md`
-> (2026-06-01) REVERSED this direction: **`dex_pool_state` IS the canonical name** at every surface (path + column +
-> manifest + handler), and the live code + migrator + features all already agree on `dex_pool_state` (verified
-> end-to-end, 2026-06-08 migration-safety sweep). Renaming `dex_pool_state → dex_pools` would BREAK the matched
-> code-vs-data state. There is no divergence to fix. The two items below are retired; D14 in
-> `defi_code_codex_drift_2026_05_27.md` is closed ✅. Pin: defi audit `defi-dexpool-name`.
-
-- [ ] [SCRIPT] P2. ~~**DEFERRED** — Rename on-disk hive partition `data_type=dex_pool_state` → `data_type=dex_pools`~~
-      **RETIRED (canonical is `dex_pool_state`; no rename).** The `mtds_output_config.py` mapping is consistent, not an
-      override to remove. Full (now-reversed) historical spec:
-      [`data_type_canonicalization_2026_05_23.md`](../archive/data_type_canonicalization_2026_05_23.plan.md) Phase 9.
-- [ ] [CODE] P2. ~~**DEFERRED — bundle with the rename (D14)** — flip the MTDS writer `dex_pool_state` → `dex_pools`~~
-      **RETIRED 2026-06-08.** Premise inverted by the SSOT: canonical IS `dex_pool_state`. Per the 2026-06-08 sweep the
-      handler already writes `dex_pool_state` to BOTH the manifest AND the parquet path (the prior
-      `_DEX_POOLS_DATA_TYPE` manifest≠path split is retired) — there is NO divergence and NO flip to do. Source D14
-      closed ✅.
-- [ ] [SCRIPT] P2. **DEFERRED — bundle with the rename above** — convert the DeFi GCS hive key `category=defi` →
-      `asset_group=defi` in the SAME single-walk window (the `data_type=` rename above does NOT touch the `category=`
-      segment). The recurring collection trigger already emits canonical `asset_group` (operation-named scheduler,
-      deployment-service@7b1490f), so this is the on-disk historical-data side only. **MIGRATED FROM:**
-      `defi_market_data_staleness_2026_05_24` residual #2 (trigger-side category→asset_group already resolved).
-
-### greeks-service TradFi IV fitting — MarkUpdateMessage schema gap (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
-
-- [ ] [CODE] P2. **DEFERRED-BLOCKED-SCHEMA** — `MarkUpdateMessage` lacks `underlying_spot` field needed for TradFi
-      options IV fitting in `greeks-service`. Handler comment:
-      `BLOCKED-SCHEMA: MarkUpdateMessage.mark_price is the underlying spot — IV fitting requires a separate option_mark_price or underlying_spot field`.
-      Add `underlying_spot: Decimal | None` to the wire format; wire handler fallback path in `greeks-service`. CeFi
-      path (Deribit IV direct) is fully wired. (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
-
-### greeks-service cloud-providers.yaml PricingLedger sink bucket (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
-
-- [ ] [INFRA] P2. **DEFERRED** — Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for
-      PricingLedger sink bucket. Gated on `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 (IS bucket
-      resolver migration) stabilising. Bucket lookup MUST use `resolve_bucket_name()` per QG STEP 5.69. (**MIGRATED
-      FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`)
-
-### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
-
-**status**: active · **estimate**: 1.5 cal AI-days (class: design) **title**: available_at + lookahead-bias master —
-SINGLE OWNER for all stamping work
-
-### [`dex_perp_onboarding_handover_2026_05_07.HANDOVER`](../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — all tracked checkboxes done; follow-on expansion also archived · **estimate**: 6
-cal AI-days (class: design)
-
-### [`mtds_per_instrument_download_api_2026_04_24`](../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md)
-
-**status**: ✅ ARCHIVED (was: "active" — stale). **[2026-07-12 correction]**: this plan's own frontmatter reads
-`status: complete` — it is archived/complete, not active. Corrected per plan-reconciliation finding 141,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling. · **estimate**: 4.8 cal
-AI-days (class: design)
-
-### [`scratch_codefreeze_phase4_mtds_fanout_2026_05_12`](../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
-
-### [`wave3x_track_d_implementation_2026_05_19`](../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-POST-CUTOVER (UTL primitive + MTDS/MDPS/features wire-in +
-tests); no implementation before 2026-05-23 per operator decision. · **estimate**: 8 cal AI-days (class: brand-new)
-
-**Deferred (MIGRATED FROM archived plan)** — P0 post-cutover backlog:
-
-- **UTL `zero_activity_bars()` primitive**: Gate: operator start signal post-2026-05-23. 8 AI-day estimate.
-- **MTDS/MDPS/features adapter wire-ins**: Gate: UTL primitive above.
-- **Per-adapter smoke tests**: Gate: UTL primitive + adapter wire-ins.
+_(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 

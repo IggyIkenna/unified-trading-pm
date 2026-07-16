@@ -36,18 +36,12 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../active/capability_wizard_and_manifest_2026_06_11.md,
-    ../active/compute_optimization_mock_data_2026_05_13.md,
-    ../archive/2026_05/config_grid_archetype_extend_2026_05_20.md,
-    ../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
-    ../active/defi_recursive_borrow_archetypes_2026_05_10.md,
-    ../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md,
-    ../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md,
-    ../archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
-    ../archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-  ]
+  - ../active/capability_wizard_and_manifest_2026_06_11.md
+  - ../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
+  - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
+  - ../active/l2_book_microstructure_capture_2026_07_13.md
+  - ../active/v2_engine_venue_buildout_2026_06_15.md
+  - ../active/vol_dvol_backtestable_engines_2026_07_13.md
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -111,112 +105,45 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 ## Assigned active plans
 
-_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+_6 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **🟡 STALE INDEX (annotated 2026-07-12)** — (was: "8 active plans", unchanged since the script last ran 2026-05-21). A
-> `parent_epic: strategy_master` frontmatter grep on 2026-07-12 returns **9** files, of which the following declare
-> `parent_epic: strategy_master` but are NOT reflected anywhere in the P0/P1/P2 sections below:
-> `capability_wizard_and_manifest_2026_06_11` (created 2026-06-11),
-> `carry_staked_basis_funding_scan_experiment_2026_06_16` (2026-06-16), `v2_engine_venue_buildout_2026_06_15`
-> (2026-06-15), `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17` (2026-06-17) — all real active
-> plans with open P1-P3 todos. (The remaining 5 of the 9 frontmatter hits are `active/issues/*` docs, not P0-P3
-> dispatchable plans.) Separately, of the 8 plans that ARE itemized below, 4 (`strategy_archetype_taxonomy_2026_05_12`,
-> `strategy_repo_consolidation_2026_05_19`, `config_grid_archetype_extend_2026_05_20`,
-> `defi_recursive_borrow_archetypes_post_cutover_2026_06_01`) are already ✅ ARCHIVED — the "8 active" headline
-> undercounts new plans and overcounts archived ones simultaneously. Durable fix is re-running
-> `scripts/plans/populate_epic_bodies_2026_05_21.py`; not run as part of this doc-reconciliation pass (out of the
-> named-files edit scope). [Doc-reconciliation 2026-07-12, findings 288/298/335, same pass as the Scope § note above.]
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — strategy-service cluster
-
-**status**: 🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors). [vm: vm-trading-core]
-
-> **🟢 LOGIC FREEZE LIFTED 2026-07-12** (operator ruling, plan-reconciliation Q&A findings 286/292 — see
-> `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2). Full logic changes to
-> `engine/strategies/v2/`, `engine/allocator/`, collateral, liquidation, cross-venue transfer are permitted again under
-> normal QG/ship discipline. Historical freeze text: (was: "🟠 ACTIVE — QG sweep for strategy-service (11 ruff errors,
-> SURFACE ONLY — LOGIC FREEZE in effect). Only ruff/pyright surface fixes. No changes to `engine/strategies/v2/`,
-> `engine/allocator/`, collateral, liquidation, cross-venue transfer. Resume full logic fixes after 🟢 STRATEGY-LOGIC
-> UNFREEZE ping lands."). Retroactively ratified under this ruling: funding_dispersion.py (strategy-service@6b285fad) +
-> the USDC-collateral down-size branch (strategy-service@6e9164b1). Previously freeze-gated items (e.g.
-> capability-wizard F27) are dispatchable.
-
-### [`defi_recursive_borrow_archetypes_2026_05_10`](../active/defi_recursive_borrow_archetypes_2026_05_10.md)
-
-**status**: active · **estimate**: 42.3 cal AI-days (class: design)
-
-### [`strategy_archetype_taxonomy_2026_05_12`](../archive/2026_05/strategy_archetype_taxonomy_2026_05_12.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — 100% complete (0 open todos); taxonomy + share-class neutrality + recursive carry
-rename shipped
-
-### [`strategy_repo_consolidation_2026_05_19`](../archive/2026_05/strategy_repo_consolidation_2026_05_19.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 1-11 done (3-repo merge + all cleanup); P2 StrategyDirectiveReloader
-DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
+_(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### AUDIT-03 operator-decision dispatch (slot 7, 2026-06-01 — from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`)
+### [`capability_wizard_and_manifest_2026_06_11`](../active/capability_wizard_and_manifest_2026_06_11.md)
 
-- [ ] [CODE] P1. **F-14 — 1h price-move abort is a SAFETY GAP (NOT equivalent to vol_cap_clamp).** Slot-7 investigation
-      (2026-06-01) confirmed: codex `codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md:129`
-      specs `max_underlying_move_pct: 3.0 # abort/skip if realized move > X% in 1h window` (a circuit-breaker that HALTS
-      trading on a sudden 1h directional move). The implemented `apply_vol_cap_clamp()`
-      (`strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py:286-333` +
-      `price_dispersion.py:420-480`) only CLAMPS leverage when realized-vol > 80% OR vol-zscore > 2.0 — it does NOT
-      abort on a 1h directional price move (different trigger, different action). Implement a separate guard in
-      strategy-service that aborts (returns 0 instructions) when |1h realized price move| > threshold. Repo:
-      strategy-service.
-- [ ] [DOCS] P1. **F-13 / F-15 — reconcile codex strategy-spec → implemented mechanism (code is truth).** Route the
-      actual codex doc edit to `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (do not edit codex from strategy work);
-      this todo tracks the strategy-side reconciliation decision. Repo: codex (via codex_vs_repo_docs owner).
-- [ ] [CODE] P1. **F-34 — add `SUPPORTED_ARCHETYPES` allowlist + typed-error guard + fix docstring.** Operator decision
-      2026-06-01: the 28 implemented archetype engines are the intended May-23 rollout subset (NOT a regression vs the
-      (was: 55-member) `StrategyArchetype` enum — stale as of 2026-06-01; the enum grew to 57 by 2026-06-11 and is
-      59-member as of 2026-07-12, see "Scope inherited" § count-drift note above). In `factory.py`, replace the bare
-      `KeyError` ("every enum value must have an engine") with a guard that returns a typed "archetype not in rollout"
-      error against an explicit `SUPPORTED_ARCHETYPES` allowlist; fix the stale docstring/count against the CURRENT enum
-      size at land-time (59 as of 2026-07-12, not "53"→55 — the number keeps moving; prefer citing
-      `len(StrategyArchetype)` over a hardcoded literal, per `capability_wizard_analysis_findings_2026_06_11.md` F9
-      remedy). Supersedes the per-archetype `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo:
-      strategy-service. **NB**: respect the active strategy-service LOGIC-FREEZE (lifted 2026-07-12 — see banner) — this
-      lives in `factory.py`/registry, not `engine/strategies/v2/`; land after confirming the freeze does not cover the
-      factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping (lifted 2026-07-12 — see banner). **VERIFIED STILL
-      OPEN 2026-07-12**: `strategy-service/strategy_service/engine/strategies/v2/factory.py` still raises a bare
-      `KeyError` at the "no engine registered" branch (no `SUPPORTED_ARCHETYPES` allowlist in the engine registry) —
-      this todo has not been implemented; checkbox correctly remains unflipped. (2026-07-12 doc-reconciliation, same
-      pass as the Scope § note above.)
+**status**: active · **estimate**: 24.0 cal AI-days (class: brand-new)
 
-### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
+### [`vol_dvol_backtestable_engines_2026_07_13`](../active/vol_dvol_backtestable_engines_2026_07_13.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: design)
-
-### [`config_grid_archetype_extend_2026_05_20`](../archive/2026_05/config_grid_archetype_extend_2026_05_20.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All 3 items DEFERRED-OPERATOR-DECISION (critical mismatch between plan's proposed
-dimension names and actual engine params; no operator response since 2026-05-20). · **estimate**: 2.4 cal AI-days
-
-**Deferred (MIGRATED FROM archived plan)** — post-cutover backlog:
-
-- **Confirm per-archetype grid dimension names (P0, BLOCKED-OPERATOR-DECISION)**: Operator must align dims with actual
-  engine params or add proposed params to engines first. `ARBITRAGE_CROSS_DOMAIN_EVENT` needs engine factory entry.
-- **Implement grid branches + smoke tests (P0)**: Gate: operator decision above.
+**status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: DVOL-Backtestable VOL Engines —
+VOL_CARRY + VOL_ARB_RV_IV register-or-honest-absent
 
 ## P2 — useful; opportunistic
 
-### [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+### [`carry_staked_basis_funding_scan_experiment_2026_06_16`](../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
 
-**status**: active · **estimate**: 12 cal AI-days (class: design)
+**status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis funding-carry scan —
+exploratory analysis harness + journal
 
-### [`defi_recursive_borrow_archetypes_post_cutover_2026_06_01`](../archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+### [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 6 (7 items) DEFERRED-SERVICE-REPOS; Phase 13 (3 items) BLOCKED-OPERATOR; all
-other phases DEFERRED-SERVICE-REPOS/DEFERRED-POST-CUTOVER per slot 6 sweep. · **estimate**: 24 cal AI-days (class:
-brand-new)
+**status**: active · **estimate**: 18.0 cal AI-days (class: brand-new) **title**: Collateral-aware sizing +
+opportunity-checker + wizard full-parameterization
+
+### [`l2_book_microstructure_capture_2026_07_13`](../active/l2_book_microstructure_capture_2026_07_13.md)
+
+**status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: Deeper-Than-L5 Order Book Capture —
+populate queue_position_* for MARKET_MAKING_QUEUE_MICROSTRUCTURE
+
+### [`v2_engine_venue_buildout_2026_06_15`](../active/v2_engine_venue_buildout_2026_06_15.md)
+
+**status**: active · **estimate**: 66.0 cal AI-days (class: research) **title**: v2 Engine + Venue Build-Out — 22
+engineless archetypes + 9 unwired venues
 
 ## P3 — backlog; revisit quarterly
 

@@ -7,7 +7,8 @@ summary:
   daily writer OOM'd on an 8GB VM and wrote a silent partial coverage.json; RAM bump + writer partial-stamping + card
   banner shipped and verified live. P2–P8 are the remaining designs — new-listings/expiries + prediction catalogue
   browser + instrument-type canonicalisation (SPOT_ASSET already exists in UAC) + drilldown de-duplication + catalogue
-  explorer + cefi chain-axis drift + sports league-drilldown consistency. Operator-decisions flagged inline.
+  explorer + cefi chain-axis drift + sports league-drilldown consistency. Each point carries a self-contained design
+  guide; operator decisions are all resolved.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -56,7 +57,9 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 > **Human/LOCAL plan** (`assigned_vm: NA`) — operator-driven, not AO-dispatched. Source: operator review of
 > `/service/instruments-service/data-status` on 2026-07-16 + a 16-agent audit (workflow `wf_872e8051-00a`, findings
-> digest cross-checked against live code, the UAC SSOTs, and live GCS reads).
+> cross-checked against live code, the UAC SSOTs, and live GCS reads). **Every point below is self-contained** — read
+> the point's `Design guide`, then do its `- [ ]` todos. Line numbers are 2026-07-16 anchors — always grep-confirm the
+> symbol before editing (files drift).
 
 ## Codex SSOTs (this plan references, does not duplicate)
 
@@ -64,23 +67,67 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 - `codex/02-data/availability-manifest-and-data-status.md` + `…/honest-absence-downstream-handling.md` — manifest
   shard-atom identity + no-silent-placeholders (P1, P4, P7, P8).
 - `unified-api-contracts/.../registry/data_status_axis_matrix.py` — the shard/display axis SSOT: cefi = `("venue",)`,
-  defi adds `chain`; sports = `("data_type","league_id")` (P7, P8).
+  defi adds `chain`; sports = `("data_type","league_id")` (P5, P7, P8).
 - `unified-api-contracts/.../_instrument_enums.py` — canonical `InstrumentType` (SPOT_PAIR/PERPETUAL/SPOT_ASSET/…) (P4).
+- `unified-api-contracts/.../internal/reference/instrument.py` — `InstrumentRecord` address fields (P4-SPOT_ASSET).
 - `instruments-service/docs/PREDICTION_INSTRUMENTS.md` — prediction catalogue + `canonical_question_group` (P3).
 - `codex/06-coding-standards/ui-testing-layers.md` — the `[UI]` + `pw:L2` gate for every deployment-ui tick.
 
 ## Root-cause summary (audit findings, all code/live-verified)
 
-| #   | Issue                                       | Verdict                                                      | Evidence anchor                                                                                                             |
-| --- | ------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| P1  | Honest Coverage card = DeFi only            | **OOM on 8GB VM → silent partial coverage.json** (FIXED)     | `measure_honest_coverage._read_parquet_safe` swallows OOM; live coverage.json `asset_groups_measured` swung defi-only↔all-5 |
-| P2  | New listings + upcoming expiries            | Feasible read-only from `catalog.parquet`                    | `available_from` (listing), `available_to` (expiry folded in)                                                               |
-| P3  | Prediction category dropdown                | Canonical grouping already exists                            | `canonical_question_group` (stored) + `PredictionMarketCategory` (derived)                                                  |
-| P4  | Non-canonical instrument types / SPOT_ASSET | Summary shows RAW manifest values; SPOT_ASSET already in UAC | `_instrument_enums.py:59`; `coverage.py` groups raw `index[axis]`                                                           |
-| P5  | Hierarchical drilldown redundant            | Redundant for instruments-service only                       | `DataStatusTab.tsx:1884` vs TURBO grid `:3383+`                                                                             |
-| P6  | Catalogue explorer                          | Blocks exist but scattered; no MVP filter on lists           | `_instruments.py`, `_csv_export.py`, `_mvp_scope_predicate.py`                                                              |
-| P7  | CeFi chain axis (solana/zksync)             | Axis-matrix drift confirmed                                  | `data_status_axis_matrix.py` cefi=`(venue,)`; `PACIFICA-SOLANA`/`LIGHTER-ZKSYNC` `{proto}-{chain}` names                    |
-| P8  | Sports league-drilldown inconsistency       | Axis-policy + real TEAMS data-correctness drift              | `SPORTS_DATA_TYPE_META`; TEAMS classed global vs per-league SSOT                                                            |
+| #   | Issue                                       | Verdict                                                      | Where it lives                                                                          |
+| --- | ------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| P1  | Honest Coverage card = DeFi only            | **OOM on 8GB VM → silent partial coverage.json** (FIXED)     | `measure_honest_coverage.py` writer; `_live_coverage.py` endpoint; `HonestCoverageCard` |
+| P2  | New listings + upcoming expiries            | Feasible read-only from `catalog.parquet`                    | deployment-api `catalogue_lifecycle` (new) + deployment-ui cards                        |
+| P3  | Prediction category dropdown                | Canonical grouping already exists                            | `canonical_question_group` + `PredictionMarketCategory` + a new catalogue browser       |
+| P4  | Non-canonical instrument types / SPOT_ASSET | Summary shows RAW manifest values; SPOT_ASSET already in UAC | deployment-ui labels + instruments-service catalogue/SPOT_ASSET population              |
+| P5  | Hierarchical drilldown redundant            | Redundant for instruments-service only                       | `DataStatusTab.tsx` (gate one drilldown off for IS)                                     |
+| P6  | Catalogue explorer                          | Blocks exist but scattered; no MVP filter on lists           | deployment-api `_instruments.py`/`_csv_export.py` + a new catalogue surface             |
+| P7  | CeFi chain axis (solana/zksync)             | Axis-matrix drift confirmed                                  | deployment-api/ui chain-derivation gated on `asset_group=='defi'`                       |
+| P8  | Sports league-drilldown inconsistency       | Axis-policy + real TEAMS data-correctness drift              | deployment-api `sports_helpers.py` (reclassify TEAMS) + UI affordance                   |
+
+---
+
+## Execution guide (next agent — READ FIRST)
+
+**Repos + how to run quality gates (QG-green tree is the commit contract):**
+
+- Python repos (`deployment-api`, `instruments-service`, `unified-api-contracts`, `deployment-service`): from the repo
+  root, `bash scripts/quality-gates.sh` (full) or `bash scripts/quality-gates.sh --no-fix` when committing only your own
+  named files. **Never run `pytest` directly.** No `os.getenv()` / `Any` / `# type: ignore` / inline `gs://` / direct
+  `google.cloud`/`boto3`; UTC datetimes; UAC types via `unified_api_contracts.{domain}` (no deep paths).
+- `deployment-ui` (React/TS, **no Python tooling**): `npx tsc --noEmit`, `npx eslint <files>`, `npx vitest run <spec>`,
+  and the **`[UI]` + `pw:L2` gate** — every UI tick needs a cited Playwright/Vitest regression spec
+  (`codex/06-coding-standards/ui-testing-layers.md`). Prettier `.ts/.tsx/.json/.css` before commit.
+
+**Shipping each unit (commit-push-flip in the SAME turn — HARD RULE):**
+
+1. `git status && git diff --cached --stat` (NO path arg) → stage ONLY your files by name (never `git add -A`).
+2. Ship code via `bash scripts/quickmerge.sh "<conventional msg>" --agent --files '<paths>'` (lands on
+   `live-defi-rollout`, runs the gates). This repo's branch is busy — if quickmerge/commit is blocked by the
+   branch-drift hook, `git pull --rebase --autostash origin live-defi-rollout` then retry.
+3. In the same turn, flip this plan's checkbox: `- [x] N. ✅ [TAG] … — <repo>@<sha> + Evidence: <test/run>`, and commit
+   the plan with the `docs(plans):` prefix. A done claim MUST cite `<repo>@<sha>` + a resolving test/build.
+
+**Recommended order** (points are independent; this front-loads confidence):
+
+1. **Quick wins (no new data, high confidence):** P7 (cefi chain gate) → P5 (drilldown gate) → P4-A (UI label
+   normalization). Each is a small, localized change with a pw:L2 spec.
+2. **P1 remaining** (deploy the nightly path so the fix is permanent) — small INFRA + a defence-in-depth DATA todo.
+3. **P4-B catalogue address columns → SPOT_ASSET** (the enabling projection+regen, then the backfill).
+4. **P2** (new-listings/expiries cards) → **P8** (TEAMS reclassify + affordance) → **P3** (prediction browser) → **P6**
+   (catalogue explorer).
+
+**Golden rules for this plan specifically:**
+
+- **Shard-atom identity** — never rewrite a manifest grouping/query KEY to make a label prettier (P4). Fix labels at the
+  DISPLAY layer, or fix the WRITER + a migration; the query value the UI sends back must stay the raw manifest value.
+- **Single-walk discipline** — any NEW whole-corpus GCS walk is review-blocking (P2, P6). Build on
+  `read_availability_index` or ONE bounded single-day `_shard_prefix` walk with a `max_results` cap.
+- **Honest-absence** — never fabricate a value to fill a gap (P3 titles, P4 CeFi addresses, P8 global entities). A blank
+  / slug / explicit "no per-league breakdown" affordance is the honest answer.
+- **Trace-first, don't guess** — where a todo says "trace the derivation point" (P7) or "find the predicate" (P5), grep
+  then READ the candidate before editing; the audit did not pin every exact line.
 
 ---
 
@@ -111,148 +158,308 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## P1 — Honest Coverage: remaining hardening
 
+**Design guide.** The user-facing bug is already fixed and verified (Progress Log). What remains: (a) make the fix
+_permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't recur.
+
+- _Nightly path:_ today's fix was a manual VM run on the new `e2-highmem-4` launcher, but the **scheduled** cron
+  (`honest-coverage-daily`, 00:30 UTC → `launch-honest-coverage-vm.sh` → a code tarball in
+  `gs://deployment-scripts-central-element-323112/`) uses whatever tarball is published. The RAM bump + the writer
+  partial-stamping only reach the nightly run once the tarballs are republished.
+- _Memory driver:_ `measure_honest_coverage._read_parquet_safe`
+  (`instruments-service/scripts/measure_honest_coverage.py` ~226) reads `_READ_COLUMNS` = all 6 incl. `instrument_id`
+  (the high-cardinality column). Dropping `instrument_id` where the coverage math doesn't need it removes the OOM cliff
+  entirely.
+- _Endpoint:_ `get_honest_coverage` (`deployment-api/deployment_api/routes/data_status/_live_coverage.py:598-683`) walks
+  back up to 14 days and returns the file verbatim; the card infers staleness from the payload `date`.
+- **Acceptance:** tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND `partial: false`
+  (`gcloud storage cat gs://central-element-323112-honest-coverage/<YYYY-MM-DD>/coverage.json`).
+
 - [ ] [INFRA] P1. Republish the code tarballs
       (`deployment-service/scripts/vm/lib/create-code-tarballs.sh --include instruments-service deployment-service`) so
-      the **nightly** cron VM runs the new writer (partial-stamping) AND launches `e2-highmem-4`; then verify tomorrow's
-      00:30 UTC run writes a full 5-AG file with `partial: false`. (Today's manual run used the pre-fix tarball, so
-      `partial` is absent on the 2026-07-16 file — expected.)
-- [ ] [DATA] P2. Column-prune the writer read — `_read_parquet_safe` pulls all 6 columns incl. `instrument_id` (the
-      memory driver). Drop `instrument_id` where the coverage compute doesn't need it (or stream row-groups via pyarrow)
-      so the read stops scaling toward OOM regardless of VM RAM. Verify the `by_venue_instrument_type*` breakdowns still
-      populate. _(Defence-in-depth beyond the RAM bump.)_
-- [ ] [BACKEND] P3. _(stretch, optional)_ Endpoint staleness signal — `get_honest_coverage` could add
-      `resolved_date`/`requested_date` so the card distinguishes "today's file" from a 14-day-fallback precisely rather
-      than inferring from the payload `date`. Low priority — the card already derives staleness from `date`.
+      the **nightly** cron VM runs the new writer (partial-stamping) AND launches `e2-highmem-4`; verify tomorrow's
+      00:30 UTC run writes a full 5-AG file with `partial: false`.
+- [ ] [DATA] P2. Column-prune the writer read — drop `instrument_id` from `_read_parquet_safe`'s `_READ_COLUMNS` where
+      the coverage compute doesn't need it (or stream row-groups via pyarrow) so the read stops scaling toward OOM
+      regardless of VM RAM. Verify the `by_venue_instrument_type*` breakdowns still populate. _(Defence-in-depth.)_
+- [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
+      distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
 
 ## P2 — New Listings + Upcoming Expiries (catalogue-derived, user thresholds)
 
-- [ ] [BACKEND] P1. deployment-api service `catalogue_lifecycle.py` (mirror `upcoming_fixtures.py`) reading per-AG
-      `catalog.parquet` — `list_new_listings(max_age_days, asset_group?, venue?)`
-      (`available_from >= today - max_age_days`) and `list_upcoming_expiries(within_days, …)`
-      (`instrument_type ∈ {FUTURE,OPTION,COMBO}` AND `available_to ∈ [today, today+within_days]`). Read-only, 5-min TTL,
-      shard-isolated. Read the parquet directly (deployment-api cannot reach `list_instruments()` — no reader
-      registered, T4).
-- [ ] [BACKEND] P1. Routes `GET /instruments/new-listings` + `GET /instruments/upcoming-expiries` (mirror
-      `routes/fixtures.py`, honour mock mode).
-- [ ] [UI] P1. Two sibling cards next to `UpcomingFixtures` in `DataStatusTab.tsx` (IS-only guard) with numeric
-      threshold inputs ("new if listed within N days", "expiring within M days"); mirror the fixtures card. `[UI]` +
-      pw:L2 regression spec.
-- [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS` in
-      `build_instrument_catalogue.py` (today expiry is folded into the 4-way `available_to`); needed to honour
-      shard-atom identity and to disambiguate expiry vs delisting vs last-observed. Then a catalogue regen.
-- [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows `available_from == pipeline-first-seen` (not a
-      real listing date); quantify + either show provenance or exclude `available_from == pipeline-start` rows.
+**Design guide.** Today the IS data-status page has exactly one forward-looking panel, **"Upcoming fixtures"**, which is
+the exact pattern to clone (it already has a threshold input).
+
+- _Existing pattern (mirror this end-to-end):_ route `deployment-api/deployment_api/routes/fixtures.py:15-24`
+  (`GET /fixtures/upcoming?days=<1..31>&league_id=` — `days` is already a `Query(7, ge=1, le=31)`); service
+  `deployment-api/deployment_api/services/upcoming_fixtures.py` (per-day window read, 5-min TTL cache, shard-isolated,
+  TypedDict return); UI `deployment-ui/src/components/UpcomingFixtures.tsx:74-152` (Card + clamped numeric input +
+  refetch-on-change); client `deployment-ui/src/api/client.ts:944-959`; mount point `DataStatusTab.tsx:1741` under the
+  `serviceName === "instruments-service"` guard.
+- _Data source:_ per-AG lifecycle catalogue `gs://instruments-store-{ag}-{env}-{pid}/{env}/catalog.parquet`
+  (`instruments-service/scripts/build_instrument_catalogue.py`). Columns: `available_from` = listing date
+  (MIN(first-observed, venue-declared)); `available_to` = a **4-way** value (delisted_at / expiry / None-if-active /
+  last-observed — `build_instrument_catalogue.py:1034-1041`). Read the parquet DIRECTLY (deployment-api cannot call
+  `list_instruments()` — no reader registered, T4). Bucket resolve via
+  `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=ag)` (prediction:
+  `kind="instruments-store-prediction"`).
+- _The load-bearing rule:_ **Upcoming Expiries MUST filter `instrument_type ∈ {FUTURE, OPTION, COMBO}` AND
+  `available_to ∈ [today, today+within_days]`.** Because delistings + last-observed values are always ≤ today, the
+  forward window admits only genuine future expiries — the type filter + forward window together make it correct even
+  though `available_to` is overloaded.
+- **Acceptance:** two endpoints honour mock mode; two cards with numeric threshold inputs render next to Upcoming
+  fixtures; a pw:L2 spec drives a threshold change and asserts the list refetches.
+
+- [ ] [BACKEND] P1. New service `deployment-api/deployment_api/services/catalogue_lifecycle.py` (mirror
+      `upcoming_fixtures.py`): `list_new_listings(max_age_days, asset_group?, venue?)`
+      (`available_from >= today - max_age_days`, newest-first) +
+      `list_upcoming_expiries(within_days, asset_group?,     venue?)` (`instrument_type ∈ {FUTURE,OPTION,COMBO}` AND
+      `available_to ∈ [today, today+within_days]`, soonest-first). Read-only, 5-min TTL, shard-isolated (a
+      missing/failed AG parquet is skipped, never a cross-AG raise).
+- [ ] [BACKEND] P1. Routes `GET /instruments/new-listings?max_age_days=<1..365>&asset_group=&venue=` +
+      `GET /instruments/upcoming-expiries?within_days=<1..365>&asset_group=&venue=` (mirror `routes/fixtures.py`; honour
+      `_cfg.is_mock_mode()`). Register beside the fixtures router.
+- [ ] [UI] P1. Two sibling cards next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard) with numeric
+      threshold inputs ("new if listed within N days", "expiring within M days") + client helpers in `client.ts`. Mirror
+      the fixtures card. `[UI]` + pw:L2 regression spec.
+- [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS`
+      (`build_instrument_catalogue.py`) so expiry is stored separately from the overloaded `available_to`; then regen.
+- [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows where `available_from == pipeline-first-seen`
+      (not a real listing), quantify the rate and either show provenance or exclude `available_from == pipeline-start`.
 
 ## P3 — Prediction markets: category dropdown → human-readable catalogue browser
 
-- [ ] [BACKEND] P1. `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)`
-      widening the existing `manifest_source.py` `prod/catalog.parquet` read to project
-      cqg/underlying/raw_symbol/timing; return facet counts per category + per cqg.
-- [ ] [BACKEND] P1. UAC facade — export `PredictionMarketCategory` + add `category_for_group(cqg)` (trivial composition
-      of existing `underlying_for_group` + `_category_for_underlying`) to `unified_api_contracts.predictions` (no
-      deep-path import). Route `GET /data-status/prediction-catalogue`.
+**Design guide.** Prediction is fully onboarded (venues `POLYMARKET`+`KALSHI`, `InstrumentType.PREDICTION_MARKET`); the
+canonical grouping already exists. Build a browse-the-live-catalogue surface, decided to ship on the slug for v1.
+
+- _Grouping (already canonical, already stored):_ `canonical_question_group` (cqg) is a manifest column + the prediction
+  shard axis (`deployment-api/deployment_api/services/data_status_hierarchical.py:16,367-401`; projected in
+  `manifest_source.py:84,92`). The coarse category = `PredictionMarketCategory`
+  (`unified-api-contracts/.../canonical/domain/prediction/prediction_mapping.py:23`, values crypto/politics/sports/…) —
+  **NOT facade-exported today.** `underlying_for_group(cqg)` + `_category_for_underlying(...)` already exist
+  (`.../predictions/cross_venue_mapping.py:279-328`), so `category_for_group(cqg)` is a 2-line composition.
+- _Live source:_ `prod/catalog.parquet` in `instruments-store-pred-{env}-{pid}` (deployment-api already reads it for the
+  unique-count at `manifest_source.py:216-222`, projecting only `instrument_id` — just widen the `columns=`).
+- _Label (v1, honest fallback):_ `raw_symbol` slug (e.g. `bitcoin-up-or-down-june-24-2026`) → `base_asset` (first 50
+  chars of the raw question for OTHER) → Polymarket `event_title` → `instrument_id`. **Never fabricate a title.** Data
+  caveat: `prod/catalog.parquet` may hold NaN `raw_symbol`/`base_asset` until a regen
+  (`PREDICTION_INSTRUMENTS.md:324-326`) — the fallback chain handles it.
+- **Acceptance:** category `<select>` → cqg sub-filter → a paginated, searchable table of human-readable markets with
+  venue chip + resolution/close date; pw:L2 asserts category change narrows the list.
+
+- [ ] [BACKEND] P1. `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)` —
+      widen the existing `manifest_source.py` `prod/catalog.parquet` read to project
+      `cqg/underlying/raw_symbol/base_asset/venue/timing`; return facet counts per category + per cqg. Route
+      `GET /data-status/prediction-catalogue`.
+- [ ] [BACKEND] P1. UAC facade — add `PredictionMarketCategory` + `category_for_group(cqg)` to the
+      `unified_api_contracts.predictions` public facade (compose the existing `underlying_for_group` +
+      `_category_for_underlying`; no deep-path import).
 - [ ] [UI] P1. Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
-      sub-filter → paginated searchable human-readable table (label = `raw_symbol` slug fallback, venue chip, resolution
-      date). `[UI]` + pw:L2.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — human-readable label: ship v1 on the Polymarket `raw_symbol` slug, OR
-      first add a `question`/`title` column to the polymarket/kalshi adapters + `CATALOG_COLUMNS` + regen (multi-hour)
-      so the label is the real question text. **Recommend: slug for v1, title column as a follow-up.** Never fabricate a
-      title.
+      sub-filter → paginated searchable table (label = fallback chain above, venue chip, resolution date). `[UI]` +
+      pw:L2.
+- [x] **DECIDED (operator 2026-07-16): slug for v1 + document the follow-up.** Category from `canonical_question_group`;
+      human label from the slug/base_asset/event_title fallback chain. Confirmed parseable from existing fields
+      (`PREDICTION_INSTRUMENTS.md:217,230,247-266`). Never fabricate a title.
+- [ ] [DATA] P3. _(follow-up)_ Add a real `question`/`title` column to the polymarket/kalshi adapters +
+      `CATALOG_COLUMNS` + a regen so the label is the true question text (upstream title exists at parse time —
+      `event_title` 100% hit for Polymarket sports — and is dropped before roll-up).
 
-## P4 — Instrument Coverage Summary: canonical labels + SPOT_ASSET
+## P4 — Instrument Coverage Summary: canonical labels (A) + SPOT_ASSET population (B)
 
-- [ ] [UI] P1. Axis-aware label fix — `BreakdownsAccordion.formatValueLabel` currently renders the `__legacy__` sentinel
-      as "(legacy — pre-job_id)" for EVERY axis; make it "(legacy — pre-job_id)" only for the `job_id` axis and
-      "(unlabeled)" for instrument_type/data_type. `[UI]` + pw:L2.
-- [ ] [UI] P1. Display-only canonical alias map in `data-status-helpers.ts` (spot→SPOT_PAIR, perp/perpetual→PERPETUAL,
-      futures→FUTURE, lending_market→LENDING, …, from the `_instrument_enums.py` docstring) applied AFTER grouping so
-      the summary shows canonical labels while the query key stays raw (shard-atom identity — do NOT rewrite the
-      grouping key).
-- [ ] [DATA] P2. Root-cause the legacy values — grep the instruments-service catalogue/manifest writer for where
-      `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase). Author a one-off legacy-row
-      canonicalization migration (pattern: `scripts/canonicalize_*_2026_*.py`) for residual lowercase rows. NOTE:
-      `instrument_type` is a SHARD axis for MTDS/MDPS/features — a value migration must preserve shard-atom identity
-      across those services, not just IS.
-- [ ] [DATA] P2. Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA (the
-      LENDING vs A_TOKEN/DEBT_TOKEN mix is canonical-but-mid-migration, not drift).
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — SPOT_ASSET is **already** a canonical `InstrumentType`
-      (`_instrument_enums.py:59`), keyed by `base_asset_contract_address` (an InstrumentRecord attribute), mapped to
-      `LedgerAssetClass.SPOT_TOKEN`, with a `spot_assets` data-type family — but **no live adapter emits it**. Decision:
-      which chains/tokens should emit SPOT_ASSET records (raw fungible on-chain asset → contract address for
-      wallet/chain position monitoring), and is populating it in scope now? If yes → scope an instruments-service
-      adapter task + surface `base_asset_contract_address` in `ShardDetailModal`.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — should the summary show canonical labels only, or raw value + a
-      canonical badge so manifest drift stays visible for remediation?
+**Design guide.** Two INDEPENDENT workstreams. (A) is a small display fix; (B) is a data/backfill effort. Do (A) as a
+quick win; (B) after the catalogue-address enabler.
+
+**(A) Canonical labels.** The "Instrument Coverage Summary" is manifest-derived and shows RAW string values with no UAC
+normalization: `coverage.py:_build_breakdowns` / `_build_latest_day_breakdown` group
+`index[axis].fillna("").astype(str)` (~223-293), a blank → the `"__legacy__"` sentinel (`coverage.py:227,240`), and
+`BreakdownsAccordion.tsx:84` `formatValueLabel` renders `__legacy__` → "(legacy — pre-job_id)" for EVERY axis (wrong on
+instrument_type/data_type; it only means pre-job_id on the `job_id` axis). The canonical enum is
+`_instrument_enums.py:17-82` (UPPERCASE SPOT_PAIR/PERPETUAL/… with a legacy→canonical map in the docstring lines 24-27).
+**DO NOT rewrite the manifest grouping key** — `DataStatusTab.tsx:1863-1870` sends `{axis,value}` back verbatim as a
+secondary-axis manifest query (shard-atom identity). Fix at the DISPLAY layer, raw value kept on hover. NOTE: the DeFi
+type mix (LENDING vs A_TOKEN/DEBT_TOKEN, STAKING/YIELD_BEARING/LST) is CANONICAL-but-mid-migration — do not "fix" it;
+only drain residual LENDING.
+
+**(B) SPOT_ASSET population** (operator-approved). `SPOT_ASSET` is ALREADY a canonical type (`_instrument_enums.py:59`),
+mapped to `LedgerAssetClass.SPOT_TOKEN`, with a `spot_assets` data-type family, and `InstrumentRecord` already carries
+the address fields (`instrument.py`: `pool_address:213`, `base_asset_contract_address:221`,
+`quote_asset_contract_address:225`, `atoken_address:235`, `debt_token_address:239`; validator 325-390 requires
+`pool_address` OR `base_asset_contract_address` for on-chain types) — but **no live adapter emits SPOT_ASSET yet**. The
+addresses already exist in the per-date parquet schema (`instrument.py:205-206`) and the catalogue builder already reads
+`pool_address` (`build_instrument_catalogue.py` `_pool_address_of`; DeFi POOL `instrument_id == pool_address.lower()`);
+they're just not projected into `CATALOG_COLUMNS` (`build_instrument_catalogue.py:264-303`). So the enabler is a
+**projection + regen, not a re-fetch**. Goal: one SPOT_ASSET per unique (chain, token → contract_address) so every base
+AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resolves to a copy-pastable contract address.
+
+- **Acceptance (A):** the summary shows canonical UPPERCASE labels / "(unlabeled)" for blank type/data_type; "(legacy —
+  pre-job_id)" appears ONLY on the job_id axis; raw value visible on hover; the manifest query still works (key
+  unchanged); pw:L2 spec on `BreakdownsAccordion`.
+- **Acceptance (B):** `catalog.parquet` carries `pool_address` + `base_asset_contract_address` +
+  `quote_asset_contract_address`; SPOT_ASSET records exist for every distinct DeFi + spot-CeFi token leg with an address
+  (verified row counts on real infra); UI can show + copy the contract address; discovery-time emission keeps it
+  current.
+
+- [ ] [UI] P1. _(A)_ Axis-aware `formatValueLabel` (`BreakdownsAccordion.tsx`) — "(legacy — pre-job_id)" only for the
+      `job_id` axis, "(unlabeled)" for instrument_type/data_type. `[UI]` + pw:L2.
+- [ ] [UI] P1. _(A)_ Display-only canonical alias map in `deployment-ui/src/lib/data-status-helpers.ts` (spot→SPOT_PAIR,
+      perp/perpetual→PERPETUAL, futures→FUTURE, lending_market→LENDING, … from `_instrument_enums.py` docstring),
+      applied AFTER grouping; raw value stays the query key + shows on hover.
+- [ ] [DATA] P2. _(A)_ Root-cause the legacy values — grep the instruments-service catalogue/manifest writer for where
+      `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
+      canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
+      for MTDS/MDPS/features — the migration must preserve shard-atom identity across those services, not just IS.
+- [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
+- [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
+      below.
+- [ ] [DATA] P1. _(B, enabler)_ Add address columns to the catalogue — add `pool_address` +
+      `base_asset_contract_address` + `quote_asset_contract_address` (+ `atoken_address`/`debt_token_address` where
+      present) to `CATALOG_COLUMNS` (`build_instrument_catalogue.py:264-303`), project them from the source rows
+      (already present), and **regen the catalogue**. Projection change, NOT a re-fetch.
+- [ ] [DATA] P1. _(B)_ SPOT_ASSET backfill/migration — with the address columns in place, derive the unique token set
+      (base + quote legs of every SPOT_PAIR/POOL + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET record
+      per unique (chain, token → contract_address). Reuse LST/A_TOKEN/DEBT_TOKEN addresses (adapters
+      `renzo.py`/`etherfi.py`/ `solend.py` set the LST token address; `curve.py`/`uniswap_v2/v3.py` set base/quote).
+      Idempotent; run on real infra.
+- [ ] [DATA] P1. _(B)_ CeFi-spot leg mapping — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address;
+      map each CeFi spot leg symbol → native-chain canonical `contract_address` (ETH → WETH/native on ethereum) via a
+      symbol→chain→address registry. Flag any symbol with no canonical on-chain address (honest-absence — don't invent).
+- [ ] [BACKEND] P1. _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so the
+      dump is continuous, not a one-off migration.
+- [ ] [UI] P2. _(B)_ Surface `base_asset_contract_address` (+ chain) in `ShardDetailModal` / the instrument drilldown
+      for SPOT_ASSET rows (copyable). `[UI]` + pw:L2.
+- [x] **DECIDED (default): summary shows the CANONICAL label with the raw value on hover** — covered by the two (A)
+      todos above.
 
 ## P5 — Remove the redundant hierarchical-drilldown button (instruments-service only)
 
-- [ ] [UI] P1. Gate off the `LazyDrilldownDetails` at `DataStatusTab.tsx:1884` for instruments-service cefi/tradfi/defi
-      (the venue→[chain]→date tree is a shallower subset of the TURBO Data Coverage grid below, which drills the same
-      axes + a richer 4-tab `ShardDetailModal`). Use an **axis-comparison predicate**, NOT a blanket `serviceName` check
-      — IS-sports and IS-prediction axes differ from the grid and must be kept. Keep `HierarchicalShardDrilldown`
-      (load-bearing for prediction `:4111` + MTDS/features/sports). `[UI]` + pw:L2 asserting the grid renders but the
-      redundant button is gone.
+**Design guide.** `DataStatusTab.tsx:1884` renders `LazyDrilldownDetails` → `HierarchicalShardDrilldown` inside each
+asset-group box of the Instrument Coverage Summary, for every service. For **instruments-service** the axes collapse to
+`venue → [chain] → date` (`data_status_axis_matrix.py:63-70`) — a strict, shallower SUBSET of the TURBO "Data Coverage"
+grid right below it (`DataStatusTab.tsx:3383+`, which drills the same axes and opens a richer 4-tab `ShardDetailModal`).
+The two features that would make the tree non-redundant (per-instrument_id load-more; per-leaf pipeline_mode/source
+provenance) don't fire for IS (single-source venue-level reference data). **Keep the component** — it's the primary
+drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
+
+- _Gotcha:_ do NOT gate on a blanket `serviceName !== "instruments-service"` — the `:1884` drilldown also renders for
+  IS-sports and IS-prediction, whose axes the grid does NOT cover. Use an **axis-comparison predicate** (compare the
+  pair's hierarchical axes vs what the grid already expands) so only IS cefi/tradfi/defi are suppressed.
+- **Acceptance:** on the IS page the Data Coverage grid renders but the redundant Instrument-Coverage-Summary drilldown
+  button is gone for cefi/tradfi/defi; prediction (`:4111`) + sports drilldowns intact; other services unchanged. pw:L2.
+
+- [ ] [UI] P1. Gate the `:1884` `LazyDrilldownDetails` behind an axis-comparison predicate (files: `DataStatusTab.tsx`
+      only; keep `HierarchicalShardDrilldown.tsx` + `LazyDrilldownDetails`). `[UI]` + pw:L2.
 
 ## P6 — Instrument catalogue explorer (per-AG list, CSV, search, MVP filter)
 
-- [ ] [BACKEND] P1. Extend the leaf drilldown — add `mvp_only` + a per-row `is_mvp` tag to `list_instruments_for_shard`
-      (call UAC `is_mvp(...)` mirroring `filter_to_mvp` semantics, reading
-      `base_asset`/`league_id`/`market_group`/`source`), and add `search` + `mvp_only` to `build_csv_export` so
-      "Download CSV" == the on-screen filtered view.
-- [ ] [BACKEND] P2. New aggregated `GET /data-status/catalogue` (+ `.csv` twin) parameterised by pinned axes + search +
-      mvp_only → de-duped instrument list with `is_mvp` + `capture_status`. Build on `read_availability_index` or ONE
-      bounded single-day `_shard_prefix` walk — **do NOT introduce a new whole-corpus GCS walk** (single-walk
-      discipline; review- blocking). Label the surface "captured instruments (availability-derived)", NOT "the
-      catalogue" (deployment-api cannot reach the instruments-service catalogue SSOT — T4).
-- [ ] [UI] P2. `InstrumentsModalStandard` — add an "MVP only" toggle (mirror `VenueCoverageTable` pills) + MVP badge per
-      row + thread `mvp_only`/`search` into the CSV URL. New "Catalogue Explorer" panel driven by
-      `/data-status/catalogue`. `[UI]` + pw:L2.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — "catalogue" vs "availability": do you want instruments that EXIST in
-      the instruments-service catalogue (needs a new deployment-api→IS read path or a manifest-backed projection) or
-      instruments CAPTURED on a day (availability parquets, what every current surface reads)?
+**Design guide.** The building blocks exist but don't compose, and the MVP filter is only on the coverage grid.
 
-## P7 — Data Coverage breakdown: CSV, "instruments breakdown" button, CeFi chain-axis drift
+- _What exists:_ per-AG drill `GET /data-status/drilldown/{service}/{ag}` (`_deploy_turbo.py:59`); instrument LIST only
+  at the deepest leaf (`list_instruments_for_shard`, `_instruments.py:357` — single day + full tuple); CSV at leaf
+  (`build_csv_export`, `_csv_export.py:133`) + per-venue bundle (`_csv_export.py:345`); leaf search
+  (`_apply_search_and_pagination`, `_instruments.py:272`, caps `DEFAULT=50/MAX=500/SEARCH=100` at `:243-247`); cross-AG
+  search `GET /data-status/instruments/search` (`data_query_service.py:283`). `get_instruments_list`
+  (`data_query_service.py:192`) is effectively stale (its `{venue}/{folder}/` prefix mismatches the live
+  `instrument_availability/by_date/day=/venue=/` layout — `_instruments.py:64-86`).
+- _MVP:_ `is_mvp(asset_group, venue, instrument_type, data_type, *, base_asset, league_id, market_group, source)`
+  (`_mvp_scope_predicate.py:229`) + `filter_to_mvp` (`_coverage_scope.py:72-114`) power the grid's `scope=mvp` toggle
+  ONLY (`VenueCoverageTable.tsx`, default 'mvp'); the LIST + CSV paths never call it.
+- _Decision:_ BOTH, phased. Phase 1 = availability-derived; Phase 2 = a true-catalogue projection.
+- _Gotchas:_ **single-walk discipline** — build the new `/catalogue` on `read_availability_index` or ONE bounded
+  single-day `_shard_prefix` walk (`_collect_parquet_files`, `max_results` cap); NO whole-corpus walk. **Label it
+  "captured instruments (availability-derived)", NOT "the catalogue"** — deployment-api cannot reach the IS
+  `InstrumentCatalogReader` SSOT (T4).
+- **Acceptance:** an MVP-only toggle + per-row is_mvp badge on the instrument list; "Download CSV" == the on-screen
+  filtered (search+mvp) view; a per-AG explorer lists instruments with id-substring search + MVP filter + CSV. pw:L2.
 
-- [ ] [BACKEND] P1. **CeFi chain-axis drift** — the axis SSOT sets cefi = `("venue",)`, only defi adds `chain`, but the
-      cefi CLOB-perp venues `PACIFICA-SOLANA` / `LIGHTER-ZKSYNC` (`{protocol}-{chain}` names) make a chain-parser derive
-      `SOLANA`/`ZKSYNC` chains in the cefi breakdown. Fix: stop deriving/displaying a chain axis for cefi venues (their
-      venue name is already unique); keep chain only for multi-chain DeFi protocols (Aave). Trace the exact derivation
-      point (TURBO grid renderer / breakdown builder) and gate it on `asset_group == 'defi'`.
-- [ ] [UI] P2. "instruments breakdown" button — confirm it is the same overlap surfaced in P5; remove or merge per the
-      P5 decision so the button's meaning is unambiguous. Ensure shard-level CSV (`download-shard-csv`) is present +
-      consistent across asset groups at the shard leaf.
+- [ ] [BACKEND] P1. _(phase 1)_ Add `mvp_only` + a per-row `is_mvp` tag to `list_instruments_for_shard` (call UAC
+      `is_mvp(...)` mirroring `filter_to_mvp` — read `base_asset`/`league_id`/`market_group`/`source`), and add
+      `search` + `mvp_only` to `build_csv_export` so CSV == filtered list. Thread the params through the routes
+      (`_query_meta.py`, `_downloads.py`).
+- [ ] [BACKEND] P2. _(phase 1)_ New `GET /data-status/catalogue` (+ `.csv` twin) parameterised by pinned axes + search +
+      mvp_only → de-duped instrument list with `is_mvp` + `capture_status`. Build on `read_availability_index` / one
+      bounded single-day `_shard_prefix` walk (single-walk discipline). Label "captured instruments
+      (availability-derived)".
+- [ ] [UI] P2. _(phase 1)_ `InstrumentsModalStandard` (`DataStatusDrilldown.tsx:481`) — add an "MVP only" toggle (mirror
+      `VenueCoverageTable` pills) + MVP badge per row + thread `mvp_only`/`search` into the CSV URL. New "Catalogue
+      Explorer" panel driven by `/data-status/catalogue`. `[UI]` + pw:L2.
+- [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
+- [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
+      manifest-backed catalogue projection so the explorer can list instruments that EXIST in the catalogue (not just
+      captured). Respect T4 (integrate by contract/projection, not a direct service→service import).
+
+## P7 — Data Coverage breakdown: CeFi chain-axis drift + "instruments breakdown" button
+
+**Design guide.** Confirmed against the SSOT: the shard/display axis for cefi is `("venue",)` and only defi adds `chain`
+(`data_status_axis_matrix.py:67-69`). But the cefi CLOB-perp venues `PACIFICA-SOLANA` and `LIGHTER-ZKSYNC`
+(`unified-api-contracts/.../registry/venue_constants.py:445-447`) use the DeFi-style `{PROTOCOL}-{CHAIN}` naming, so a
+chain-deriving parser (splitting the venue name on `-`) manufactures `SOLANA`/`ZKSYNC` chains in the cefi breakdown.
+Those venues are already unique by name — cefi must not be chain-keyed; only multi-chain DeFi protocols (Aave deployed
+across chains) need the chain axis.
+
+- _TRACE-FIRST (not pinned by the audit):_ grep the TURBO grid renderer + breakdown builder for where a `chain` is
+  derived from the venue string (likely a `split("-")` / `rsplit`), then gate that derivation on `asset_group == 'defi'`
+  so cefi renders venue-only. Confirm the fix in both the backend breakdown and the UI grid.
+- _"instruments breakdown" button:_ this overlaps the P5 redundancy — resolve it with the same decision (remove/merge)
+  so its meaning is unambiguous.
+- **Acceptance:** the CeFi breakdown shows venues only (no `solana`/`zksync` chain sub-rows); DeFi still shows chains;
+  shard-level CSV (`download-shard-csv`) present + consistent across AGs; the "instruments breakdown" button is
+  removed/merged. pw:L2.
+
+- [ ] [BACKEND] P1. Trace the venue→chain derivation and gate it on `asset_group == 'defi'` (cefi = venue-only). Fix in
+      the backend breakdown builder + the UI grid renderer as needed.
+- [ ] [UI] P2. Resolve the "instruments breakdown" button per the P5 decision; confirm shard-level CSV consistency.
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 
-- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION (data-correctness) — TEAMS is classed `global_trigger_date` in
-      deployment-api `SPORTS_DATA_TYPE_META` + codex, but the IS writer emits **per-league** TEAMS rows AND both the UAC
-      `SHARD_AXIS_MATRIX` and `gcs_paths` classify TEAMS **per-league** (a 4-way drift). The UAC shard-atom SSOT
-      mandates **direction A: reclassify TEAMS → per-league** in deployment-api (read-side only, restores shard-atom
-      identity). Confirm direction A vs "writer stops emitting league_id" (a much larger, SSOT-contradicting change).
-- [ ] [BACKEND] P1. (on direction A) `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date`
-      (mirrors PLAYER_VALUES); update codex `sports-data-source-coverage-matrix.md:106` to per-league; add a unit test
-      asserting the TEAMS response carries `leagues`.
+**Design guide.** Drillability is set per data_type by the `axis` in `SPORTS_DATA_TYPE_META`
+(`deployment-api/deployment_api/services/data_status/sports_helpers.py:77-219`): `per_league_*` → the response carries a
+`leagues` map → the UI's `hasLeagues` gate (`DataStatusTab.tsx:4288,5279`) renders a league drilldown; `global_*` →
+`per_league: None` → no league section at all. So some sources drill by league and some don't. Separately, the deeper
+per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
+(`DataStatusTab.tsx:5285,5385,5393,5433,5440,5462`).
+
+- _TEAMS data-correctness drift (decided → direction A):_ TEAMS is classed `global_trigger_date` in
+  `sports_helpers.py:139` + codex, but the IS writer emits **per-league** TEAMS rows (`sports_reference_core.py:293,335`
+  — `row_key={date, data_type:'TEAMS', league_id}`) AND both the UAC `SHARD_AXIS_MATRIX`
+  (`data_status_axis_matrix.py:70`) and `gcs_paths.py:127` classify TEAMS per-league — a 4-way drift. Fix: flip the
+  TEAMS axis to `per_league_trigger_date` (the branch at `sports_helpers.py:582-625` already works for PLAYER_VALUES,
+  which shares TEAMS' trigger-date cadence), a read-side change that RESTORES shard-atom identity.
+- _Seasonal TEAMS is handled by the DATE axis:_ TEAMS is captured on trigger dates (season-start + transfer windows)
+  keyed by `(date, league_id)`, so each season's roster is a distinct snapshot under the same league — the drilldown
+  `TEAMS → league_id → date` surfaces per-season change as the date axis; no extra dimension.
+- **Acceptance:** TEAMS is league-drillable and consistent with STANDINGS; genuinely-global data_types (LEAGUES, VENUES)
+  show an explicit "global reference entity" affordance instead of a silent gap; off-season dates read as legitimately
+  empty. Unit test asserts the TEAMS response carries `leagues`. pw:L2 for the UI affordance.
+
+- [x] **DECIDED (operator 2026-07-16): direction A — reclassify TEAMS → per-league.** Read-side; matches the IS writer +
+      UAC shard-atom SSOT.
+- [ ] [BACKEND] P1. `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date`; update codex
+      `sports-data-source-coverage-matrix.md:106` to per-league; add a unit test asserting the TEAMS response carries
+      `leagues`.
+- [ ] [BACKEND] P1. Verify the `per_league_trigger_date` branch surfaces sensible trigger dates per league in the UI
+      date drilldown (one TEAMS snapshot per season boundary), and that off-season dates read as legitimately empty
+      (honest-absence), not gaps.
 - [ ] [UI] P1. Honest-absence affordance — for genuinely-global data_types (LEAGUES, VENUES) render an explicit "global
-      reference entity — no per-league breakdown (axis: {axis})" row instead of silently omitting the Leagues section
-      (the response already carries `axis`). `[UI]` + pw:L2.
-- [ ] [UI] P2. Deep-drill parity — the per-fixture breakdown + downloads are hardcoded to `name === "FIXTURES"`; either
-      generalize `build_fixture_breakdown` to all `per_league_per_fixture_date` sources (non-trivial — it reads
-      api-football fixture entities) behind a backend `supports_fixture_breakdown` capability flag, OR add a one-line UI
-      note that per-fixture drill/download is FIXTURES-only.
+      reference entity — no per-league breakdown (axis: {axis})" row (the response already carries `axis`,
+      `breakdowns_domain.py:759`) instead of silently omitting the Leagues section. `[UI]` + pw:L2.
+- [ ] [UI] P2. Deep-drill parity — either generalize `build_fixture_breakdown` to all `per_league_per_fixture_date`
+      sources behind a backend `supports_fixture_breakdown` capability flag, OR add a one-line UI note that per-fixture
+      drill/download is FIXTURES-only.
 
 ---
 
-## Operator decisions outstanding (blocking the tagged todos above)
+## Operator decisions — RESOLVED (2026-07-16)
 
-1. **P8 / P0 — TEAMS axis direction** (data-correctness): confirm direction A (reclassify per-league). Code evidence
-   points decisively at A.
-2. **P4 — SPOT_ASSET adoption**: populate now (which chains/tokens emit it) or defer? And: canonical-labels-only vs
-   raw+badge in the summary.
-3. **P3 — prediction label**: slug for v1 (recommended) vs real question-title column first.
-4. **P6 — catalogue vs availability**: which data source for the explorer.
+1. **P8 — TEAMS axis**: ✅ direction A (reclassify per-league). Seasonal change is the trigger-date axis under each
+   league.
+2. **P4 — SPOT_ASSET**: ✅ populate for every base+quote token leg across DeFi + spot-CeFi (catalogue address columns →
+   backfill → live discovery-time emission → CeFi symbol→chain→address mapping). Summary labels = canonical with raw on
+   hover.
+3. **P3 — prediction label**: ✅ slug for v1 (category from `canonical_question_group`), real title column as a
+   follow-up.
+4. **P6 — catalogue explorer**: ✅ both, phased (availability-derived now, true-catalogue projection follow-up).
 
 ## Full audit artefacts
 
 Findings digest + per-agent verdicts: workflow `wf_872e8051-00a` (findings all `CONFIRMED-WITH-CORRECTIONS`; P7 agent
-failed the structured-output cap but the SSOT + venue-name evidence is captured above). This plan is the durable
+failed the structured-output cap, so P7's exact chain-derivation line is TRACE-FIRST above). This plan is the durable
 worklist; the transcript is ephemeral.

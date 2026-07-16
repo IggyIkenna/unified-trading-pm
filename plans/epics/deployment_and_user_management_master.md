@@ -21,7 +21,11 @@ assigned_vm: vm-operator-ops
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md]
+related_plans:
+  - ../active/data_status_page_ux_and_canonicalisation_2026_07_16.md
+  - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
+  - ../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md
+  - ../active/test_fleet_image_builds_from_current_code_2026_06_17.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -79,55 +83,34 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_4 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **Corrected 2026-07-12 (was: banner + P0/P2 blocks below showed 0 active plans, unrun since the two plans below were
-> created)** — manually resynced against a live grep of `plans/active/*.md` `parent_epic:` frontmatter (the populator
-> script's own `WORKSPACE` path is hardcoded to a different host and scans all 19 epics at once, out of scope for this
-> single-file reconciliation pass; the entries below reproduce its documented output format). Finding #314,
-> plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified"
-> blanket ruling.
-
-> **Corrected 2026-07-14, finding 54** (was: roster + count above still said "2 active plans" / omitted the
-> `deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13` plan entirely) — that plan was created 2026-07-13,
-> one day after the prior resync above, with `status: active`, `priority: P0`,
-> `parent_epic: deployment_and_user_management_master` matching this epic's own inclusion criteria; re-synced against a
-> fresh grep of `plans/active/*.md`.
 
 ## P0 — must complete before next foundation gate
 
 ### [`data_status_tab_and_downloads_remediation_2026_06_16`](../active/data_status_tab_and_downloads_remediation_2026_06_16.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) · **title**: Data-status tab + instruments download
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: Data-status tab + instruments download
 remediation (deployment-api / deployment-ui / CeFi universe)
 
 ### [`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13`](../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **title**: deployment-api cache OOM + UI latency
-remediation — bounded caching architecture that fits 4GB. **[Added 2026-07-14, finding 54]**
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: deployment-api cache OOM + UI latency
+remediation — bounded caching architecture that fits 4GB
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`data_status_page_ux_and_canonicalisation_2026_07_16`](../active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+
+**status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
+(shipped) + UX & canonicalisation follow-ups (P1–P8)
 
 ## P2 — useful; opportunistic
 
 ### [`test_fleet_image_builds_from_current_code_2026_06_17`](../active/test_fleet_image_builds_from_current_code_2026_06_17.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research) · **title**: Test fleet image builds from current
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Test fleet image builds from current
 code — local (amd64) → GCP → AWS, base-first, no-deploy
-
-### [`gap_2_4_d_deployment_api_reader_repoint_2026_05_22`](../archive/2026_05/gap_2_4_d_deployment_api_reader_repoint_2026_05_22.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Code half shipped (deployment-api reader repointed to env-tiered bucket names).
-Remaining execution half tracked in `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 2.1 — merges in Phase
-0d window. · **estimate**: 0.8 cal AI-days (class: infra)
-
-### [`deployment_ui_lifecycle_tabs_2026_05_08`](../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Phases A-H shipped (Slots 6+7); H4/G2/G3 DEFERRED-OPERATOR-DECISION (DNS gate) ·
-**estimate**: 30 cal AI-days (class: brand-new)
 
 ## P3 — backlog; revisit quarterly
 

@@ -32,15 +32,10 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
-    ../active/cefi_ml_directional_continuous_live_2026_06_20.md,
-    ../active/cefi_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md,
-    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
-  ]
+  - ../active/cefi_completion_program_2026_07_15.md
+  - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
+  - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
+  - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -633,35 +628,25 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ## Assigned active plans
 
-_Active plans declaring `parent_epic: cefi_master`. Workers pick up in priority order (P0 first). Auto-populated by
-`scripts/plans/populate_epic_bodies_2026_05_21.py` — the list below was seeded by the 2026-06-20 restructure and the
-script keeps it in sync from frontmatter._
-
-**Delegated (CeFi work tracked under service-epic plans, listed for visibility — NOT direct `parent_epic` children):**
-[`cefi_manifest_canonicalisation_2026_06_01`](../active/cefi_manifest_canonicalisation_2026_06_01.md) (manifest /
-coverage / source) ·
-[`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
-(`available_at` stamping — ✅ complete/archived).
+_4 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
+### [`cefi_completion_program_2026_07_15`](../active/cefi_completion_program_2026_07_15.md)
+
+**status**: active · **estimate**: 11.2 cal AI-days (class: infra) **title**: CeFi Completion Program — close the
+honest-coverage gaps to genuinely-done
+
 ### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra). Verify the DERIBIT options/futures + BINANCE-FUTURES
-perp bundle backfill completed (manifest captured %, cluster validation, greeks/IV/funding spot-checks); re-run only
-genuine gaps; per-cluster triage of the 2,223 phantom residual.
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi DERIBIT + BINANCE-FUTURES bundle
+backfill verification + phantom-residual triage
 
 ### [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md)
 
-**status**: active · **estimate**: 12 cal AI-days (class: brand-new). Second live CeFi archetype —
-`ML_DIRECTIONAL_CONTINUOUS` continuous prediction signal on real capital across OKX + Binance + Bybit ≥7 days, full live
-loop + model lifecycle + alerting + kill-switches + DART override + backtest fidelity.
-
-### [`mvp_backfill_cefi_tick_v10_2026_06_27`](../archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md)
-
-**status**: active · **estimate**: 6.4 cal AI-days (class: infra). Backfill CeFi `trades` + `book_snapshot_5` for the
-v10 perp-gated MVP universe and Deribit BTC/ETH options as `options_chain` ONLY (the big cost saver), on SPOT VMs,
-majors-first, reconcile-then-fill. [2026-07-12 correction, finding 31, §A2 B-queue] (was: missing from this P0 roster)
+**status**: active · **estimate**: 12 cal AI-days (class: brand-new) **title**: CeFi ML_DIRECTIONAL_CONTINUOUS — live
+archetype end-to-end (OKX + Binance + Bybit)
 
 ## P1 — important; post-current-gate
 
@@ -669,24 +654,10 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`venue_heartbeat_calibration_2026_05_post23`](../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-OPERATOR-DECISION; blocked on ≥7 days MTDS live telemetry. ·
-**estimate**: 1.8 cal AI-days (class: research)
-
 ### [`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`](../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md)
 
-**status**: active · **estimate**: 6 cal AI-days (class: brand-new) · **title**: Crypto-venue single-stock perps +
-tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb. **[Added 2026-07-14, finding 32]** (was: absent from
-this roster despite declaring `parent_epic: cefi_master` + `priority: P2` in its own frontmatter since 2026-06-20/27,
-contradicting this section's claim that the populator "keeps it in sync from frontmatter").
-
-**Deferred (MIGRATED FROM archived plan)** — P0/P1 post-cutover backlog:
-
-- **Collect inter-message gap telemetry (P0)**: Gate: MTDS live ≥7 days with `LiveConnectivityWatchdog` emitting events.
-- **Compute P99 per (venue, data_type) + update UAC `venue_thresholds.py` (P0)**: Gate: telemetry above.
-- **Staging smoke test — ≤5 spurious events/venue/day (P1)**: Gate: UAC update above.
-- **Codex update — `live-pipeline-architecture.md` heartbeat calibration subsection (P1)**: Gate: UAC update.
+**status**: active · **estimate**: 6 cal AI-days (class: brand-new) **title**: Crypto-venue single-stock perps +
+tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 
 ## P3 — backlog; revisit quarterly
 

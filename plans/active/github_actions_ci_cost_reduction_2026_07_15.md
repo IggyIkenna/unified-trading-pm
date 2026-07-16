@@ -60,8 +60,9 @@ deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), r
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
-**44 MOVE / 12 KEEP** (was 46/10 — corrected 2026-07-16 after the review; see below). **Only flip the MOVE set.** The 12
-KEEP fall in five classes, four of which would BREAK something if naively flipped:
+**40 MOVE / 16 KEEP** (46/10 → 44/12 → 40/16 — the review reclassified `image-build-validate`, then the operator kept
+the 4 CI-health watchers hosted on 2026-07-16). **Only flip the MOVE set.** The 16 KEEP fall in five classes, four of
+which would BREAK something if naively flipped:
 
 - **`KEEP-T` (4): `main-backmerge-to-ldr`, `semver-agent`, `major-bump-issue-handler`, `request-major-bump`** — **fleet
   templates** (`scripts/workflow-templates/`) rolled to EVERY repo. Flip the template → hangs the other ~24 repos (only
@@ -71,23 +72,17 @@ KEEP fall in five classes, four of which would BREAK something if naively flippe
   runners, and our `glue` runners are repo-scoped to PM → flipping it hangs the dual-cloud image-build gate in all 24
   repos, **blocking every staging→main promote fleet-wide**. Same failure mode as KEEP-T; the classifier missed it until
   the 2026-07-16 review (it's not in the template dir). Nearly free to leave hosted (only fires on promote PRs).
-- **`KEEP-M` (1): `overnight-dead-man-switch`** — a failure-independence monitor: it detects the overnight orchestrator
-  (which runs on THIS VM) failing. If it ran on the glue pool, a VM outage would silently kill both the orchestrator and
-  the switch that detects it. Must stay on infra independent of what it watches. (It also then acts as the **daily
-  backstop** that the VM/pool is alive — see the watcher note below.)
+- **`KEEP-M` (5): `overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`,
+  `branch-health`** — **failure-independence monitors** (operator KEPT HOSTED 2026-07-16). Their whole value is
+  detecting that our infra (incl. THIS VM) is broken; running them on the glue pool would let a VM outage silently take
+  out both the detection and the Slack alert (the alerter is on the down box). They're light (a few $/mo total) and
+  GitHub-hosted is the right home. `ci-health` also **auto-recovers** stuck promote PRs / the v2-deadlock;
+  `cloud-build-failure-watcher` is the ONLY detector for out-of-band Cloud Build failures; `overnight-dead-man-switch`
+  watches the orchestrator that runs on this VM. Independence is exactly why these stay.
 - **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for the
   light VM.
 - **`KEEP` (4): `quality-gates-v2` + `python-quality-gates-v2`** (heavy tests) **+ `plan-health-agent` +
   `conflict-resolution-merged`** (`pull_request` bots).
-
-**⚠️ Watcher note (billing-first steer, operator 2026-07-16):** the four CI-health _watchers_ — `ci-health`,
-`cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health` — are in the **MOVE** set for now (immediate scope =
-reduce billing; VM-failure hardening deferred). They alert-only via Slack `#ci-failures` (+ `ci-health` auto-recovers
-stuck promote PRs / the v2-deadlock; `ldr-ci-monitor` writes Firestore `ldr_ci_status`). The residual risk: if the VM
-dies, their detection + `ci-health`'s auto-recovery go dark **silently** (the alerter is on the down box). Accepted for
-now because (a) it's low-probability and (b) the hosted `KEEP-M` dead-man-switch still catches a VM-down orchestrator
-daily. To buy back full failure-independence later, move any of these four into `KEEP_MONITORS` in the classifier (~a
-few $/mo each) — tracked as a todo below + a codex-doc todo.
 
 ### Deploy mechanism (Track 1 step 1)
 
@@ -98,7 +93,8 @@ few $/mo each) — tracked as a todo below + a codex-doc todo.
   `load-gh-token.sh`; Secret Manager `github-token`) was **verified** to register runners (JIT `generate-jitconfig`
   returned ok=true 2026-07-15). Prefer the Secret-Manager path (`GH_TOKEN_SECRET`) so no PAT sits on disk.
 - Runner pinned **v2.335.1** + sha256 `4ef2f25285f0…` (in `setup-glue-runners.sh`). Then flip ONE canary
-  (`branch-health`) → verify green → phased groups.
+  (`reconcile-release-tags` — a MOVE workflow with `workflow_dispatch`; `branch-health` is now KEEP-M so it can't be the
+  canary) → verify green → phased groups.
 - **⚠️ Default-branch timing (easy to miss):** `schedule` and `repository_dispatch` workflows run the definition on the
   **default branch (`main`)** — so a `runs-on` flip on LDR does **nothing** until it promotes to `main`. To test the
   canary on the branch before it lands, trigger via `gh workflow run <wf> --ref live-defi-rollout`
@@ -131,32 +127,36 @@ few $/mo each) — tracked as a todo below + a codex-doc todo.
 ## MOVE / STAY manifest — the authoritative flip list (generated 2026-07-16 from `classify-glue-workflows.sh`)
 
 > The classifier is the SSOT — regenerate with `bash scripts/self-hosted-runners/classify-glue-workflows.sh`. This
-> pasted copy exists so "what moves / what stays" is unambiguous and conflict-free. **Split: 44 MOVE / 12 KEEP.**
+> pasted copy exists so "what moves / what stays" is unambiguous and conflict-free. **Split: 40 MOVE / 16 KEEP.**
 
-**STAY on GitHub-hosted (12) — do NOT flip `runs-on`:**
+**STAY on GitHub-hosted (16) — do NOT flip `runs-on`:**
 
-| Workflow                     | Class      | Why it stays hosted                                                                    |
-| ---------------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `quality-gates-v2`           | KEEP       | real test gate (pull_request/push) — CPU-heavy pytest                                  |
-| `python-quality-gates-v2`    | KEEP       | the reusable heavy QG (44 fleet callers) — stays hosted per the ADR                    |
-| `plan-health-agent`          | KEEP       | `pull_request`-triggered                                                               |
-| `conflict-resolution-merged` | KEEP       | `pull_request`-triggered                                                               |
-| `build-smoke-all-repos`      | KEEP\*     | local docker buildx — too heavy for the light VM                                       |
-| `publish-package`            | KEEP\*     | local wheel build — heavy                                                              |
-| `main-backmerge-to-ldr`      | KEEP-T     | fleet template — flipping hangs ~24 repos; per-repo hand-edit banned                   |
-| `semver-agent`               | KEEP-T     | fleet template                                                                         |
-| `major-bump-issue-handler`   | KEEP-T     | fleet template                                                                         |
-| `request-major-bump`         | KEEP-T     | fleet template                                                                         |
-| `image-build-validate`       | **KEEP-R** | **cross-repo reusable — called by 24 repos; flip hangs their promote gate fleet-wide** |
-| `overnight-dead-man-switch`  | **KEEP-M** | **failure-independence — watches the orchestrator on THIS VM; must stay independent**  |
+| Workflow                      | Class      | Why it stays hosted                                                                    |
+| ----------------------------- | ---------- | -------------------------------------------------------------------------------------- |
+| `quality-gates-v2`            | KEEP       | real test gate (pull_request/push) — CPU-heavy pytest                                  |
+| `python-quality-gates-v2`     | KEEP       | the reusable heavy QG (44 fleet callers) — stays hosted per the ADR                    |
+| `plan-health-agent`           | KEEP       | `pull_request`-triggered                                                               |
+| `conflict-resolution-merged`  | KEEP       | `pull_request`-triggered                                                               |
+| `build-smoke-all-repos`       | KEEP\*     | local docker buildx — too heavy for the light VM                                       |
+| `publish-package`             | KEEP\*     | local wheel build — heavy                                                              |
+| `main-backmerge-to-ldr`       | KEEP-T     | fleet template — flipping hangs ~24 repos; per-repo hand-edit banned                   |
+| `semver-agent`                | KEEP-T     | fleet template                                                                         |
+| `major-bump-issue-handler`    | KEEP-T     | fleet template                                                                         |
+| `request-major-bump`          | KEEP-T     | fleet template                                                                         |
+| `image-build-validate`        | **KEEP-R** | **cross-repo reusable — called by 24 repos; flip hangs their promote gate fleet-wide** |
+| `overnight-dead-man-switch`   | **KEEP-M** | **failure-independence — watches the orchestrator on THIS VM; must stay independent**  |
+| `ci-health`                   | **KEEP-M** | **fleet-wide failure detector + stuck-PR auto-recovery; independence from our infra**  |
+| `cloud-build-failure-watcher` | **KEEP-M** | **only detector for out-of-band Cloud Build failures**                                 |
+| `ldr-ci-monitor`              | **KEEP-M** | **per-repo "is LDR green?" signal**                                                    |
+| `branch-health`               | **KEEP-M** | **promotion-lag / drift / AR-lag monitor**                                             |
 
-**MOVE to `[self-hosted, glue]` (44)** —
-`agent-audit · agent-runner · branch-health · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-health · ci-status-consolidator · ci-status-update · cloud-build-failure-watcher · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-ci-monitor · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · notify-slack · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
+**MOVE to `[self-hosted, glue]` (40)** —
+`agent-audit · agent-runner · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-status-consolidator · ci-status-update · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · notify-slack · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
 
-> ⚠️ Four of the 44 (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) are the
-> **failure-independence watchers** — moved now (billing-first), flagged for the hardening follow-up todo.
-> `notify-slack`, `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are
+> ⚠️ `notify-slack`, `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are
 > `workflow_call` reusables but **PM-internal only** (0 cross-repo callers — verified), so safe to flip.
+> `overnight-agent-orchestrator` moves, but its watcher `overnight-dead-man-switch` stays hosted (KEEP-M) → a VM-down
+> orchestrator is still caught.
 
 ---
 
@@ -226,25 +226,27 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **44 MOVE / 12 KEEP** (see pre-flight
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **40 MOVE / 16 KEEP** (see pre-flight
       § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
       `publish-package`) + `KEEP-T` templates (4) + **`KEEP-R` cross-repo reusable `image-build-validate`** + **`KEEP-M`
-      `overnight-dead-man-switch`**. Confirm the MOVE set carries no untrusted fork-PR code (private repo → none) before
-      flipping.
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **44 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
+      failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
+      `ldr-ci-monitor`, `branch-health`). Confirm the MOVE set carries no untrusted fork-PR code (private repo → none)
+      before flipping.
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **40 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
       `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
-      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R` set stays hosted). **Pace = canary → phased groups
-      (operator 2026-07-15):** flip ONE low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a
-      green self-hosted run, then roll the remaining ~43 out in **small batches** (not all at once). (Takes effect on
-      push — do NOT push until the runners are live on the VM, else those workflows queue with no runner.)
+      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M` set stays hosted). **Pace = canary → phased
+      groups (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
+      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~39 out in **small batches** (not
+      all at once). (Takes effect on push — do NOT push until the runners are live on the VM, else those workflows queue
+      with no runner.)
   - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
     `ci-status-update`, `cloud-build-router*`, `sit-gate`, `sit-unlock`, `hotfix-mode`, `update-repo-version` **cannot
     be canaried on LDR** — `gh workflow run --ref` needs a `workflow_dispatch` trigger, and dispatch/schedule workflows
     only execute their definition from the **default branch (main)**, so the flip is inert on LDR and goes fleet-live
     the instant it hits main. To canary these: **(a)** temporarily add a `workflow_dispatch:` trigger, fire it on LDR,
     remove it after (true pre-merge canary); or **(b)** promote that one flip to main alone with the runners already
-    live and a fast revert ready. Do the workflow_dispatch-capable canary (`branch-health`) FIRST regardless, to prove
-    the pool.
+    live and a fast revert ready. Do the workflow_dispatch-capable canary (`reconcile-release-tags`) FIRST regardless,
+    to prove the pool.
 - [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** Confirmed
       structure: `ci-status-update.yml` `update-ci-status` job does `actions/checkout@v5` (L54) +
       `google-github-actions/auth@v3` (L82) + `pip install google-cloud-firestore` (L104) — ~15s on a warm VM for a
@@ -276,12 +278,12 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       in its own isolated slot (already decided); and **if the exposure ever becomes a real concern, move the runners to
       a dedicated VM** (operator's stated fallback). Update `codex/05-infrastructure/` (runner conventions) +
       `codex/07-security/`. Reduced severity given the slot-isolation; documented so the posture is explicit.
-- [ ] [INFRA] P3. **Failure-independence follow-up (the review's #2, deferred).** The 4 CI-health watchers (`ci-health`,
-      `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) currently MOVE (billing-first). Revisit: either
-      move any back into `KEEP_MONITORS` in the classifier to restore independence from a VM outage (~a few $/mo each),
-      OR add an **independent runner-pool-offline page** (hosted watchdog or external uptime check). Record the chosen
-      posture in `codex/04-architecture/ci-alerting.md`. (The hosted `KEEP-M` dead-man-switch is the interim daily
-      backstop.)
+- [x] ✅ [OPERATOR-DECISION] P2. **Failure-independence RESOLVED (operator 2026-07-16 — the review's #2).** The 4
+      CI-health watchers (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) **STAY HOSTED**
+      (`KEEP-M`) alongside `overnight-dead-man-switch` — GitHub-hosted is the right home for light monitors whose value
+      is independence from our infra. They cost a few $/mo total; keeping them hosted means a VM/pool outage never
+      blinds the fleet's failure detection + auto-recovery. Split → **40 MOVE / 16 KEEP**. (No runner-offline page
+      needed — the watchers ARE the independent signal.)
 
 ### Phase 2 — Shrink the fleet-wide hosted QG (the real $ that stays on GitHub-hosted: A1 + A2 + A5)
 
@@ -388,6 +390,12 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   sha256, JIT-ephemeral, repo-scoped to PM (all glue lives here), CPU-capped to protect the orchestrator, shellcheck
   clean. `classify-glue-workflows.sh` → 46 MOVE / 10 KEEP (refined 2026-07-15). Files pushed; deploy on the VM + the
   runs-on flip are the next steps, gated on operator go.
+- 2026-07-16 (later) — **Operator closed the two open review threads.** (1) The 4 CI-health watchers stay HOSTED
+  (`KEEP-M`) with `overnight-dead-man-switch` — failure-independence over a few $/mo; the failure-independence follow-up
+  todo is RESOLVED. (2) `image-build-validate` stays HOSTED (`KEEP-R`) — moving it would need per-repo runner
+  registrations (personal-account runners are repo-scoped; org migration is the only clean multi-repo path), not worth
+  it for a promote-PR-only workflow. **Split → 40 MOVE / 16 KEEP**; canary switched to `reconcile-release-tags`.
+  Classifier `KEEP_MONITORS` now carries all 5 monitors.
 - 2026-07-16 — **Review pass (operator: "grill the plan properly").** Findings folded in: (1) **fleet-breaker** —
   `image-build-validate` was MOVE but is a cross-repo reusable called by 24 repos (flip hangs their promote gate) →
   reclassified **KEEP-R**; classifier now detects cross-repo reusables + a **KEEP-M** failure-independence class

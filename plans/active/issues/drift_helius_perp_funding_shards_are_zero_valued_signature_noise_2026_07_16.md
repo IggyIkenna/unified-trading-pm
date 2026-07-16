@@ -37,7 +37,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-16
+last_updated: 2026-07-16T07:55Z
 ---
 
 # DRIFT Helius perp_funding shards are zero-valued signature noise (2026-07-16)
@@ -115,11 +115,65 @@ are (a) not funding data and (b) not SOL-PERP's transactions.
       (verified live). If the Helius path is deleted per the todo above this dies with it — otherwise fix the mode
       resolution. Audit whether any OTHER venue's shards carry a foreign `pipeline_mode`. Repo:
       market-tick-data-service.
-- [ ] [DECISION] P1. The ~2026-04-01→today tail has NO Velocity archive coverage (200/0 bytes). Decide the source for
+- [x] ✅ [DECISION] P1. The ~2026-04-01→today tail has NO Velocity archive coverage (200/0 bytes). Decide the source for
       it: (a) wait — the archive lags ~3.5 months and should backfill itself; (b) live capture forward from now; (c)
       another source. Note the DRIFT `derivative_ticker` leg is separately broken (legacy
       `fundingRates?     marketName=` endpoint now 403 — see
-      `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15`).
+      `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15`). — **RULED + BUILT 2026-07-16
+      (data_engineering)**: operator ruled (b) properly-decoded on-chain — see "OPERATOR RULING 2026-07-16" below — and
+      it's now shipped: `market-tick-data-service@3bad0745` adds `drift_v2_onchain_decoder.py` (pure Anchor
+      `FundingRateRecord` event decode — discriminator + fixed-width borsh fields + PDA derivation, all hand-rolled with
+      zero new deps, verified byte-for-byte against the Rust source + published IDL) and wires
+      `DriftV2HistoricalIngester.collect_funding_rates_onchain` as the `perp_funding` source for `day >= 2026-04-01`,
+      tagged `pipeline_mode=batch_solana_rpc` (distinct from Velocity's `batch_onchain_rpc`). **Acceptance gate
+      PASSED**: decoding the real captured `Program data:` log line for tx_sig
+      `Zv6vmk3b2K4ECF4mEM6qfEHeGW9A7R3uydpeTYuKxy5k7JJ4J73cTa4SrAaoet9YSo9GWQHvZspsHQPR2Uhhb2c` (slot 312968596,
+      2025-01-09) reproduces the known-good SOL-PERP Velocity row FIELD-FOR-FIELD, including exact fixed-point decimal
+      strings (`funding_rate="0.002007041"`, `cumulative_funding_rate_long="53.711133650"`, …) — see
+      `test_drift_v2_onchain_decoder.py::TestKnownGoodParity`. **Source-strategy decision**: chose per-market
+      `PerpMarket`-PDA-scoped `getSignaturesForAddress` (option ii, "narrower is better if real") over the operator's
+      literal "walk the whole program once" fallback — measured live: program-wide is ~1.2M sigs/day (the exact volume
+      that OOM-killed the old Helius path); PDA-scoped avoids that class entirely (proven: SOL-PERP's PDA correctly
+      cross-matched a real Jan-2025 funding tx's `loadedAddresses`). **BUT see the new P1 finding below — live
+      verification on the requested 2026-04+ gap surfaced a real, unresolved data-availability problem this decision
+      does NOT yet fully solve.**
+- [ ] [DATA] P1. **NEW FINDING 2026-07-16 (data_engineering), surfaced while proving the on-chain decoder on a real gap
+      day per the work order's step 6.** The decoder is CORRECT (parity test passes field-for-field) but LIVE
+      verification against the 2026-04→2026-07 gap reveals the per-market-PDA-scoped signature walk is currently NOT
+      finding real funding-settlement transactions for Drift's top 3 markets. Measured live 2026-07-16 (Helius RPC,
+      `getSignaturesForAddress` scoped to each market's `PerpMarket` PDA): walked ~125,000 signatures for SOL-PERP (120
+      pages × ~1,000, spanning 2026-04-15 → 2026-07-16) plus spot-checks on BTC-PERP/ETH-PERP — **ZERO transactions with
+      `err: null` (i.e. zero SUCCESSFUL transactions of ANY kind) touch any of these three PerpMarket PDAs anywhere in
+      that window.** Every single sampled signature failed, overwhelmingly with Anchor error code 101 (framework-level
+      "instruction fallback not found" — the discriminator doesn't match any handler in the currently-deployed program)
+      plus some 6012 (`InvalidRepegRedundant`). Corroborating evidence: the `drift-labs/protocol-v2` "master" branch
+      source (`programs/drift/src/lib.rs` lines ~743/751) shows the standalone `update_funding_rate` /
+      `update_perp_bid_ask_twap` instruction entrypoints are COMMENTED OUT — i.e. Drift removed/moved these as
+      directly-callable top-level instructions at some point; funding updates now happen as a side effect inside
+      order-fill logic (`controller/orders.rs:1421` calls `controller::funding::update_funding_rate` internally). The
+      failure wall is consistent with a large population of stale keeper/MEV bots still calling the OLD discriminators
+      against the CURRENT program and getting "instruction fallback not found" on every attempt, burying any genuine
+      (rarer, fill-embedded) successful touch under sheer volume. Cross-check: the Drift PROGRAM address itself is
+      healthy (174/200 and 282/1000 recent samples succeed — Drift is very much alive) but a 61-tx spot-check of recent
+      PROGRAM-wide successes found NONE that reference the SOL-PERP PDA — current perp-market activity in the sampled
+      window skews toward lending/staking/spot rather than the classic direct-PerpMarket-touch pattern the 2025
+      Velocity-era data used. **Practical effect**: for the SPECIFIC example day the work order suggested (2026-05-15,
+      SOL-PERP) the shipped decoder correctly, honestly returns 0 rows in ONE RPC call (page 0 already spans
+      2026-05-12→2026-07-14 with zero entries landing in the 05-15 window specifically — not a page-budget bug, a
+      genuine data gap in this account's signature history) — this is the CORRECT honest-absence behaviour, not a
+      defect, but it means the 2026-04+ gap is NOT yet actually filled for these markets pending this follow-up.
+      **Recommended next steps (not actioned here — this todo's own scope is DATA/investigation, ~0.5-1d)**: (a)
+      identify the CURRENT correct on-chain touchpoint for funding settlement post-upgrade (may require the current
+      Anchor IDL/instruction list rather than the "master" git branch, which may itself lag or lead what's actually
+      deployed) — grep for which anchor instruction currently wraps `fillPerpOrder`/`placeAndTakePerpOrder` and check
+      whether ITS account list reliably includes the `PerpMarket` PDA as writable (if so, scope the signature walk to
+      that instruction's typical account set instead, or accept sparser/costlier discovery); (b) try scoping the
+      signature walk to a genuine Drift keeper wallet (the earlier known-good 2025 funding tx's fee-payer,
+      `FetTyW8xAYfd33x4GMHoE7hTuEdWLj1fNnhJuyVMUGGa`) instead of the market PDA — a real keeper's own signature history
+      wouldn't be polluted by unrelated bots' stale-discriminator failures; (c) confirm with Drift's current
+      docs/Discord whether SOL-PERP/BTC-PERP/ETH-PERP funding settlement genuinely still happens on-chain via a
+      `FundingRateRecord`-emitting path at all in mid-2026, or whether it moved off-chain/into a different settlement
+      cadence. Repo: market-tick-data-service.
 
 ## Drift public-API migration — MEASURED 2026-07-16 (answers "how do we fill the 3.5-month gap?")
 
@@ -153,3 +207,37 @@ per-instrument-per-day writes") was right for exactly this window.
   adapter (fetch program-wide once, filter per market, keep per-instrument-per-day writes) — that design is sound in the
   abstract but unnecessary: the Velocity API already returns correct per-market funding directly, so the recommendation
   is RETIRE rather than redesign. Nothing deleted yet — purge is the P0 todo above.
+
+- 2026-07-16 (data_engineering, on-chain-decoder build): Built + shipped the real on-chain `FundingRateRecord` decoder
+  per the operator ruling above. **Research**: fetched the published Drift Anchor IDL (`sdk/src/idl/drift.json`) and the
+  `programs/drift/src/state/events.rs`/`controller/funding.rs` Rust source (shallow sparse-clone of
+  `drift-labs/protocol-v2`) — confirmed the exact field layout/order/precision of the `#[event] FundingRateRecord`
+  struct, computed its Anchor discriminator (`sha256("event:FundingRateRecord")[:8]`), and hand-verified the whole
+  decode chain against a REAL transaction fetched live from Solana mainnet (public RPC `getTransaction` on the
+  known-good day's tx_sig) — the decode reproduced the known-good SOL-PERP 2025-01-09 Velocity row exactly, including
+  the `market_index=0` PDA (`8UJgxaiQx5nTrdDgph5FiahMmzduuLTLf5WmsPegYA6W`, derived via a hand-rolled ed25519-off-curve
+  `find_program_address` — no solana-py/solders dependency added). **Design decision**: evaluated program-wide "grab
+  once, filter" (the operator's literal fallback) vs per-market `PerpMarket`-PDA-scoped `getSignaturesForAddress` (the
+  "narrower source" option) — chose the latter because it measured orders of magnitude smaller than program-wide
+  (avoiding the exact OOM class from `drift_v2_sig_index_program_wide_helius_oom_2026_07_15`) while still being a REAL,
+  cheap, per-account RPC primitive (not a filter I invented — `getSignaturesForAddress` genuinely indexes any account a
+  tx references). **Shipped**: `market-tick-data-service@3bad0745` — new `drift_v2_onchain_decoder.py` (pure
+  decode/PDA/base58, zero new deps), 2 new RPC primitives in `_solana_rpc_async.py`
+  (`solana_get_signatures_for_address`/`solana_get_transaction`),
+  `DriftV2HistoricalIngester.collect_funding_rates_onchain` wired as the `perp_funding` source for `day >= 2026-04-01`
+  tagged `pipeline_mode=batch_solana_rpc` (distinct from Velocity's `batch_onchain_rpc` — both pre-registered in UAC's
+  `_KNOWN_BATCH_SOURCES_BY_AG[DEFI]`, no UAC changes needed). 44 new/extended unit tests incl. the field-for-field
+  parity acceptance test; full `quality-gates.sh --no-fix` green (6233 passed, sentinel `ba866544...`); quickmerge
+  landed clean on `live-defi-rollout`. **Gap-day proof (work order step 6) — HONEST result, not the hoped-for one**: ran
+  the shipped decoder live against the operator's suggested example (2026-05-15, SOL-PERP) — 0 rows, correctly and
+  cheaply (1 RPC call, honest per-day window check, not a bug). Dug deeper (see the new P1 todo above) because 0 rows on
+  the FIRST example day warranted verification it wasn't a decoder defect: found a much bigger, genuine discovery — zero
+  SUCCESSFUL transactions touch the SOL-PERP/BTC-PERP/ ETH-PERP `PerpMarket` PDAs anywhere across ~125,000 sampled
+  signatures spanning 2026-04-15→2026-07-16, apparently because Drift's currently-deployed program no longer has
+  standalone `update_funding_rate`/ `update_perp_bid_ask_twap` entrypoints (commented out in the "master" source) and a
+  large population of stale bots keep failing against the old discriminators, burying whatever genuine fill-embedded
+  funding-settlement activity remains. **This means the decoder is proven CORRECT but the 2026-04+ gap is not yet
+  actually FILLED for these markets** — filed as the new P1 todo above with 3 concrete next-step options, not resolved
+  in this session (out of this session's scope — the work order asked to build+prove the decoder, not to solve a
+  freshly-discovered protocol-side data-availability question). No fabricated success reported; the manifest-facing
+  behaviour (honest zero via `record_zero_rows`) is unaffected and correct either way.

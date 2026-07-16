@@ -2,10 +2,10 @@
 doc_type: epic
 title: cross-cutting-may-23-2026
 summary:
-  SUPERSEDED (2026-05-21) May-23 cross-cutting epic — its 5 deliverables (strategy catalogue, strategy
-  IDs, clients+accounts, DART UI-replication of every live action, infrastructure/stability) are
-  absorbed into client_isolation_and_governance_master + infrastructure_master + observability_master;
-  kept as archaeology only, no new work here.
+  SUPERSEDED (2026-05-21) May-23 cross-cutting epic — its 5 deliverables (strategy catalogue, strategy IDs,
+  clients+accounts, DART UI-replication of every live action, infrastructure/stability) are absorbed into
+  client_isolation_and_governance_master + infrastructure_master + observability_master; kept as archaeology only, no
+  new work here.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +13,13 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
 tags: [migration, governance, strategy, ui, infrastructure, consolidation]
-related: [client_isolation_and_governance_master.md, infrastructure_master.md, observability_master.md, ../active/master_to_live_defi_2026_05_23.md]
+related:
+  [
+    client_isolation_and_governance_master.md,
+    infrastructure_master.md,
+    observability_master.md,
+    ../active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-08
 name: cross-cutting-may-23-2026
 tier:
@@ -143,7 +149,7 @@ trading goal directly.
 | [`manifest_migration_SUPERSEDED_2026_05_21`](./manifest_migration_SUPERSEDED_2026_05_21.md)                                                                  | Manifest schema v6 + migration coordination                                                                                                                                                                                   | Active            |
 | [`active/writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md)                                         | Write-gate / honest-coverage umbrella                                                                                                                                                                                         | Active            |
 | [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)                                 | `available_at` end-to-end chain coordinator (MDPS bar boundary + per-asset-group adapter stamping + `FEATURE_REQUIRED_INPUTS` expansion + Tab 12 deferral tracker + QG static check + e2e test)                               | Active            |
-| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                             | AWS↔GCP parity (DeFi-first scope, generalises post-May-23)                                                                                                                                                                   | Active            |
+| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                             | AWS↔GCP parity (DeFi-first scope, generalises post-May-23)                                                                                                                                                                    | Active            |
 | [`archive/deployment_api_work_stream_a_2026_05_07.plan.md`](../archive/deployment_api_work_stream_a_2026_05_07.plan.md)                                      | deployment-api work stream A — shipped; archived. Residual deployment-api scope rolls up under [`infrastructure_master`](./infrastructure_master.md).                                                                         | ✓ Done (archived) |
 | [`active/deployment_ui_lifecycle_tabs_2026_05_08`](../active/deployment_ui_lifecycle_tabs_2026_05_08.md)                                                     | deployment-UI lifecycle tabs (live observability)                                                                                                                                                                             | Active            |
 | [`active/deploy_missing_auto_launch_2026_05_07`](../active/deploy_missing_auto_launch_2026_05_07.md)                                                         | Deploy-Missing UI auto-launch                                                                                                                                                                                                 | Active            |

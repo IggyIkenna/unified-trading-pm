@@ -30,15 +30,20 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_07/mvp_reconciliation_closeout_v10_2026_06_27.md,
-    ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    ../archive/2026_05/workspace_qg_sweep_2026_05_23.md,
-    ../archive/2026_05/aws_migration_defi_first_2026_05_07.md,
-    ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md,
-    ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md,
-    ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
-  ]
+  - ../active/bucket_estate_consolidation_to_sub100_2026_07_13.md
+  - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - ../active/codex_violations_ratchet_to_five_2026_06_10.md
+  - ../active/data_pipeline_e2e_check_2026_07_10.md
+  - ../active/defi_dedicated_bucket_shared_migration_2026_07_13.md
+  - ../active/gcs_bucket_estate_cleanup_2026_07_10.md
+  - ../active/mtds_retry_safe_default_audit_2026_07_14.md
+  - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
+  - ../active/repo_scripts_governance_audit_2026_06_18.md
+  - ../active/sports_data_sources_canonical_completion_2026_07_13.md
+  - ../active/stash_pile_workspace_cleanup_2026_06_03.md
+  - ../active/ui_build_warm_cache_2026_06_17.md
+  - ../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md
 last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -485,103 +490,83 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-> **[2026-07-12 correction]** The "_1 active plans..._" auto-populated count below is stale — the generator
-> (`scripts/plans/populate_epic_bodies_2026_05_21.py`) has not been re-run since 2026-05-21 and every entry it lists
-> under P0/P1 is now ✅ ARCHIVED. A hand-reproduction of its scan logic against `plans/active/*.md` +
-> `plans/active/issues/*.md` (verified 2026-07-12) finds **15 active plans** (`bucket_env_split_rollout_2026_06`,
-> `bucket_iam_write_protection_per_tier_2026_06_09`, `cicd_mvp_ldr_to_main_pipeline_2026_06_30`,
-> `codex_violations_ratchet_to_five_2026_06_10`, `data_pipeline_e2e_check_2026_07_10`,
-> `honest_coverage_v2_instrument_denominator_2026_06_28` [P0], `gcs_bucket_estate_cleanup_2026_07_10` [active —
-> corrected 2026-07-15, plan-reconcile: plan flipped `status: complete` → `active` 2026-07-14 (finding 78); one
-> genuinely-open residual action, the lending-indices/lending-indices-prd deletion decision, not zero],
-> `mvp_reconciliation_closeout_v10_2026_06_27`, `org_migration_to_odumresearch_2026_06_07`,
-> `repo_scripts_governance_audit_2026_06_18`, `scripts_lifecycle_marker_rollout_2026_06_18`,
-> `stash_pile_workspace_cleanup_2026_06_03`, `ui_build_warm_cache_2026_06_17`,
-> `understat_local_backfill_completion_2026_07_06`, `utl_uac_reuse_consolidation_remediation_2026_06_10`) **+ 32 issue
-> docs** (27 open + 5 resolved) under `plans/active/issues/` declaring the same `parent_epic`, none of which appear in
-> the P0-P3 tables below. This does not attempt a full re-categorised re-population (that scale of work is its own
-> audit-scope follow-up, not a mechanical sync) — treat the P0-P3 sections beneath as **archaeology** (all entries
-> already ✅ ARCHIVED) and use `rg -l '^parent_epic: infrastructure_master' plans/active/*.md plans/active/issues/*.md`
-> for the live roster. Was: "_1 active plans declare `parent_epic: infrastructure_master`..._". Corrected per findings
-> 60/76/84/68 (near-duplicates), operator ruling 2026-07-12, §A2 B-queue
-> (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`).
->
-> **[2026-07-14 sync]** Two entries in the 2026-07-12 roster above are now stale (this roster is a point-in-time
-> snapshot, not a live query — re-run the `rg` above for the current set): `org_migration_to_odumresearch_2026_06_07`
-> flipped `status: active` → `paused` that same day (0/27 todos executed since 2026-06-07; finding 79/91);
-> `bucket_env_split_rollout_2026_06` was archived 2026-07-13 as `status: superseded` by
-> `bucket_estate_consolidation_to_sub100_2026_07_13` (finding 96). [findings 91, 96, synced 2026-07-14]
-
-_1 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **[2026-07-13 addendum]** `utl_uac_reuse_consolidation_remediation_2026_06_10` was split (operator-approved) into 10
-> AO-dispatchable plans, all `parent_epic: infrastructure_master`: `utl_reuse_phase0_guardrails_2026_07_13`,
-> `utl_reuse_phase1_strategy_risk_hwm_2026_07_13`, `utl_reuse_phase2_api_auth_dedup_2026_07_13`,
-> `utl_reuse_phase3_ml_model_registry_2026_07_13`, `utl_reuse_phase4_features_builder_registry_2026_07_13`,
-> `utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13`, `utl_reuse_phase6_venue_health_retry_2026_07_13`,
-> `utl_reuse_phase7_low_lint_tail_2026_07_13`, `utl_reuse_phase8_codex_ssot_archive_2026_07_13`,
-> `utl_reuse_phase9_deployment_registry_extract_2026_07_13`. The tracker itself is now `execution_scope: local-only`
-> (reference SSOT only, no longer AO-ingested) — see its own split-provenance banner.
+_14 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
+(P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-> **[2026-07-12 correction, finding 61, §A2 B-queue]** This heading implies live outstanding gating work, but every
-> entry below is already ✅ ARCHIVED/complete — kept as historical record only. See the "Assigned active plans"
-> correction note above for the actual current roster (real live P0:
-> `honest_coverage_v2_instrument_denominator_2026_06_28`).
+### [`bucket_estate_consolidation_to_sub100_2026_07_13`](../active/bucket_estate_consolidation_to_sub100_2026_07_13.md)
 
-### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md)
-
-**status**: ✅ ARCHIVED 2026-05-26 — All items completed. Workspace-wide QG green sweep. All 20 Python repos to
-`bash scripts/quality-gates.sh` exit 0. Dep-chain: UAC → UTL → IS/deployment-service → MTDS/features/strategy/execution
-→ ML/misc. Fan-out across vm-cross-cutting (root + misc), vm-cefi (instruments-service), vm-ml (data pipeline),
-vm-trading-core (trading machinery), vm-operator-ops (deployment-service/api). Pre-flight ruff counts recorded in plan
-body. · **estimate**: 1.2 cal AI-days (class: refactor, 0.4× multiplier)
-
-### [`audit03_deployment_cron_provisioning_2026_05_22`](../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — All 11 todos done. F-39/40/41/42 Cloud Run Jobs + Cloud Scheduler crons provisioned
-on GCP; F-43 Solana devnet paper path; F-44 ManualTradeGateDialog Playwright e2e. BLRS dry-run succeeded;
-strategy-service CRJ provisioned. · **estimate**: 2.0 cal AI-days (class: infra)
-
-### [`defi_coverage_capability_alignment_2026_05_22`](../archive/issues/defi_coverage_capability_alignment_2026_05_22.md) — Bug 5 DeFi venue GCS re-key chain
-
-**status**: 🟢 MIGRATION CHAIN DONE (B5.1-B5.9) — residual B5.9b + Bug 4 post-cutover. Root-cause code shipped (B5.1 IS
-writer parquet-path canonicalisation UAC@fdc9206b + IS@a57ae01c; B5.2 no-op). Migration chain (HARD-ORDERED,
-single-walk-discipline gate) **COMPLETE 2026-05-27**: **B5.3** GCS re-key glued→underscore (35,011 objects, 0 errors) →
-**B5.4** manifest reconcile (audited GREEN, no corrector needed) → **B5.5** delete old glued keys (0 glued remain both
-buckets) → **B5.6 [UI]** deployment-api pool-breakdown resolves canonical (no code change) → **B5.7 (VERIFY)** re-drill
-done. **B5.8 (P3)** stale-comment cleanup. **B5.9 — ZKSYNC re-key (operator approved 2026-05-27) DONE**:
-unified-api-contracts@ac5d2340 added `ZKSYNC` to `KNOWN_CHAINS` (chain-token recognition set, no expected-coverage
-expansion, consumer pre-audit clean) + re-keyed **446 `PANCAKESWAPV3-ZKSYNC` → `PANCAKESWAP_V3-ZKSYNC`**
-(instruments-service@445756d3, 0 errors); `LIGHTER-ZKSYNC` correct no-op (654 untouched); MTDS 0 glued ZKSYNC. **⚠️
-Superseded the 2026-05-06 `purge_pancakeswapv3_zksync.py` "do not add ZKSYNC" decision** (purge never ran on the IS
-partitions). Also Bug 2 residual (`liquidation_events_handler` venue casing) fixed MTDS@c60eb053. **Open residuals
-(NICE-TO-HAVE, P3)**: **B5.9b** stale purge-script comment + MTDS combined-vs-protocol-only venue duality +
-`EXTENDED-STARKNET`/`PACIFICA-SOLANA` universe confirm; **B5.10** pool-breakdown can't read migrated
-`pipeline_mode`/flat parquets. **Bug 4 (POST-CUTOVER)**: add a `data_source_type` taxonomy enum so LST venue `ANKR`
-(ankrETH) vs RPC-provider `ANKR` (and `ALCHEMY`/`CHAINLINK`/`GAS_FEES` grid contaminants, DQ-04) are distinguishable —
-fold the `oracle_prices_handler` `COINBASE-SPOT`-into-defi-grid filter fix in here. Full phased todos in the (now
-archived) issue doc.
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: Bucket estate consolidation — 241 → <100
+(waves 0-3, single-migration env-split fold)
 
 ## P1 — important; post-current-gate
 
-### [`vm_launcher_startup_url_migration_2026_05_21`](../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md)
+### [`bucket_iam_write_protection_per_tier_2026_06_09`](../active/bucket_iam_write_protection_per_tier_2026_06_09.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — All 17 todos done. 22 data-pipeline launchers converted to Pattern A
-(startup-script-url); 11 Pattern B exceptions documented in codex. Codex `vm-tarball-deployment.md` updated ✅
-2026-05-21. · **estimate**: 2.4 cal AI-days (class: infra)
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
+per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 
-### [`aws_migration_defi_first_2026_05_07`](../archive/2026_05/aws_migration_defi_first_2026_05_07.md)
+### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-5b complete (DeFi-first: 10 S3 buckets, 346k objects / 36.83 GB migrated,
-Glue DB + Athena configured). Phase 5 cross-cloud rsync + Phase 6 ECS Fargate + Phase 9 full-workspace
-DEFERRED-POST-CUTOVER. · **estimate**: 32 cal AI-days (class: infra)
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: CI/CD MVP — LDR→SIT→main, simplified
+single-path pipeline (supersedes the WS-L complex pipeline)
+
+### [`data_pipeline_e2e_check_2026_07_10`](../active/data_pipeline_e2e_check_2026_07_10.md)
+
+**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
+
+### [`defi_dedicated_bucket_shared_migration_2026_07_13`](../active/defi_dedicated_bucket_shared_migration_2026_07_13.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Migrate dex-pools/lst-rates/perp-funding
+off dedicated buckets onto the shared DeFi tick bucket
+
+### [`gcs_bucket_estate_cleanup_2026_07_10`](../active/gcs_bucket_estate_cleanup_2026_07_10.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: GCS bucket estate cleanup —
+central-element-323112 (332 buckets)
+
+### [`qg_host_adaptive_resource_governor_2026_07_14`](../active/qg_host_adaptive_resource_governor_2026_07_14.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Host-adaptive RAM+CPU QG admission governor —
+replace fixed-K with resource reservation
+
+### [`sports_data_sources_canonical_completion_2026_07_13`](../active/sports_data_sources_canonical_completion_2026_07_13.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Sports asset_group — drive every remaining
+data source to canonical 100%
+
+### [`utl_uac_reuse_consolidation_remediation_2026_06_10`](../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
+
+**status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
+reimplementations, strongest-combination merge
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
+
+**status**: active · **estimate**: 7.2 cal AI-days (class: refactor)
+
+### [`repo_scripts_governance_audit_2026_06_18`](../active/repo_scripts_governance_audit_2026_06_18.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Repo scripts/ governance — ruff-lint pass +
+deprecate/delete audit + strict-quickmerge carve scope (D16)
+
+### [`ui_build_warm_cache_2026_06_17`](../active/ui_build_warm_cache_2026_06_17.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: UI build warm-cache — keep the UI QG build
+cache warm so only changed code rebuilds
+
+## P3 — backlog; revisit quarterly
+
+### [`mtds_retry_safe_default_audit_2026_07_14`](../active/mtds_retry_safe_default_audit_2026_07_14.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
+
+### [`stash_pile_workspace_cleanup_2026_06_03`](../active/stash_pile_workspace_cleanup_2026_06_03.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: Workspace-wide git stash pile audit +
+cleanup — per-host runbook
 
 ## Archived plans
 

@@ -4,8 +4,8 @@ title: Strategy + DART Master (umbrella)
 summary: >-
   SUPERSEDED 2026-05-21 archaeology-only umbrella: the pre-split epic that folded strategy_architecture_v2,
   dart_ux_cockpit_refactor, and consolidated_strategy_and_ui into one SSOT. Split into strategy_master.md (L2,
-  archetype/allocator/risk/pnl) and dart_and_promote_master.md (L3, DART operator UX + promote workflow) —
-  do not add new work here; new plans declare the split parent_epic.
+  archetype/allocator/risk/pnl) and dart_and_promote_master.md (L3, DART operator UX + promote workflow) — do not add
+  new work here; new plans declare the split parent_epic.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -24,8 +24,27 @@ co_operators:
 codex_ssots:
 related_plans:
 deadline: 2026-05-23 (live DeFi) — only manual-trade gate verification + Group F prereq parts; rest post-May-23
-owner_repos: [unified-api-contracts, unified-trading-library, strategy-service, execution-service, position-balance-monitor-service, ml-inference-service, features-delta-one-service, features-onchain-service, features-cross-instrument-service, market-tick-data-service, unified-trading-system-ui, unified-trading-api]
-folds_in: [plans/archive/strategy_architecture_v2_finalization_2026_04_19.md, plans/archive/dart_ux_cockpit_refactor_2026_04_29.md, plans/archive/consolidated_strategy_and_ui_2026_04_15.md]
+owner_repos:
+  [
+    unified-api-contracts,
+    unified-trading-library,
+    strategy-service,
+    execution-service,
+    position-balance-monitor-service,
+    ml-inference-service,
+    features-delta-one-service,
+    features-onchain-service,
+    features-cross-instrument-service,
+    market-tick-data-service,
+    unified-trading-system-ui,
+    unified-trading-api,
+  ]
+folds_in:
+  [
+    plans/archive/strategy_architecture_v2_finalization_2026_04_19.md,
+    plans/archive/dart_ux_cockpit_refactor_2026_04_29.md,
+    plans/archive/consolidated_strategy_and_ui_2026_04_15.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

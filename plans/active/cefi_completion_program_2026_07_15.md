@@ -693,3 +693,66 @@ lost by making T+1 wait, whereas letting T+1 preempt would mean the multi-day ba
 3. **Pause-and-retry, never false failures** — when the slot is held, a waiting consumer must back off and retry rather
    than burn attempts into `attempted_failed`. Today's behaviour manufactured **+37,212 FALSE af rows in 8h**; that is
    manifest corruption, and it is the single most damaging part of this whole class.
+
+### Concurrency ramp measured: 64 streams = 2x throughput, box still ~94% idle — 2026-07-16T07:25Z
+
+Single SPOT VM (`cefi-queue-heavy-binancefutu-x15-20260716-063714`, e2-highmem-16, cap-1, lease-ON, bundled 15 venues
+via SINGLE_VM_QUEUE, START_DATE=2026-02-01), `TARDIS_MAX_CONCURRENT_DOWNLOADS=64` +
+`TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT=16` (both VERIFIED on the instance) vs the 16/4 defaults measured at 06:05Z:
+
+| metric                | 16/4 defaults | 64/16 ramp | note                             |
+| --------------------- | ------------- | ---------- | -------------------------------- |
+| 403s / 600 log lines  | 0             | **0**      | N=1 holds — no contention at all |
+| successes / 600 lines | 29            | **59**     | ~2x throughput                   |
+| rss                   | 7.8 GB        | **8.6 GB** | of 128 GB — barely moved         |
+| cpu                   | 104% /1600%   | **~104%**  | ~6% of the box                   |
+
+**Read**: 4x concurrency bought ~2x throughput, so a second (non-CPU, non-RAM, non-403) limiter is partially binding —
+per-connection Tardis pacing and/or per-day shard size are the candidates. But NOTHING on the box is saturated (RAM
++0.8GB for 4x streams proves the StreamingShardFinalizer batching keeps per-stream memory bounded, exactly as designed),
+so **the ramp should continue** — 128 then 192, watching rss/cpu/403 at each step, staying inside the operator's
+~100-200-concurrent tolerance (~2k is the level Tardis rejects). Machine upsizing is NOT indicated yet: at ~6% CPU a
+bigger box would burn money for nothing. Revisit only if CPU crosses ~70% at high stream counts.
+
+### Preemption handling is a NO-OP that LIES, and CPU is nowhere near exhausted — 2026-07-16T07:35Z
+
+Two operator questions, both answered against code/telemetry:
+
+**Q1: "when spot VMs die from Google reclaim (preemption) vs a normal terminal, do we auto-relaunch via failure
+handling? does this Slack-alert in data-pipeline-alerts? should?"**
+
+**Answer: NO relaunch, NO alert — and the code actively CLAIMS a relaunch that does not exist.**
+
+- `deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py:401-405`: on `TerminationVerdict.PREEMPTED` it
+  emits `logger.info("... preempted → SPOT relaunch (benign, no alert)")` and **does nothing else** — verified: no
+  `instances create`, no `launch-*.sh`, no subprocess, no recovery action anywhere consumes the PREEMPTED verdict. The
+  "→ SPOT relaunch" text is aspirational; there is no relauncher.
+- `launcher_common.sh:33-37`: `lc_write_preemption_signal_file` is documented "observability only, does NOT relaunch the
+  VM". The cefi launcher wires this signal (writes a GCS marker on SIGTERM) but nothing acts on the marker.
+- Alerting: preemption is DELIBERATELY suppressed as benign INFO-only ("no alert"). That suppression was correct ONLY
+  under the assumption a relaunch happens — the same false premise as the codex SPOT rule ("idempotent shards re-run on
+  preemption"). Since NO relaunch happens, the suppression is now a silent-failure bug: **a preempted backfill vanishes
+  with zero operator signal.**
+
+**Operator's instinct is correct.** The fix is one of two ends, not the current no-man's-land: (a) actually relaunch on
+PREEMPTED (then benign + no alert is honest — preferred, and it is exactly the P0 SPOT-preemption relauncher already
+filed), OR (b) if it cannot relaunch, it MUST alert data-pipeline-alerts (`DP_VM_PREEMPTED_NO_RELAUNCH` or similar),
+because a silently-vanished multi-day backfill is not benign. Today it does NEITHER. Folding this into the existing P0
+(the relauncher IS option (a)); adding the alert as its fallback.
+
+**Q2: "did we set TARDIS_MAX_CONCURRENT_DOWNLOADS high enough to exhaust the VM's CPU?"**
+
+**Answer: NO — nowhere close.** e2-highmem-16 = 1600% CPU ceiling. At 64 concurrent downloads: steady ~105% (~7% of the
+box), transient peak 1338% (84%, a momentary decompress/parse/flush burst). The peak proves the work parallelises across
+all 16 cores when there IS CPU work, but steady state is I/O-wait-dominated (Tardis network round-trips) — which is why
+16→64 streams gave ~2x not 4x throughput: the binding limiter is network/Tardis pacing, not CPU/RAM (rss was
+8.6GB/128GB). **Headroom to ramp further** → bumped to `TARDIS_MAX_CONCURRENT_DOWNLOADS=128` +
+`TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT=32` (RAM projection ~13GB, still trivial; CPU still <10% steady). The probe watches
+for the point where either the parse/flush peaks start CLUSTERING into sustained high CPU (→ then a bigger machine is
+finally indicated) or 403s appear (→ Tardis connection ceiling, back off). Do NOT upsize the machine yet — at 7% steady
+it would burn money for nothing.
+
+- [ ] [INFRA] P1. **Alert on SPOT preemption when there is no relaunch (fallback to the P0 relauncher).** Until the
+      relauncher lands, `exit_code_fleet_monitor` must emit a data-pipeline-alerts notification on
+      `TerminationVerdict.PREEMPTED` for backfill VMs (not the current silent INFO log that falsely claims "SPOT
+      relaunch"). Fix the misleading log line either way.
