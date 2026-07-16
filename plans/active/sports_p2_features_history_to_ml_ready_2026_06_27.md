@@ -151,16 +151,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                   GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                   gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                   Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                   LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                   Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                   writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                   Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                   were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                   Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                   on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -287,6 +287,24 @@ reproduce the exact crash-loop documented above, for the exact same root cause.
 discipline — the 19:56Z entry above already did a full walk 8 min ago and nothing legitimate can have changed given all
 writers are frozen). Checkbox NOT flipped (gate structurally unmet, and now doubly so). No code/infra action this entry
 beyond the two read-only re-checks above; ships via the `docs(plans):` carve-out.
+
+### 2026-07-16 (same evening) — data_engineering slot-2 (Todo 1 dispatch — re-verify only, freeze still live, skipped to let queue advance)
+
+Dispatched to Todo 1 (`sports_p2_features_history_to_ml_ready-001`). Local `gcloud` (snap) was broken in this sandbox
+(`snap-confine` capability error), so re-verified via the non-snap install at `~/google-cloud-sdk/bin/gcloud` instead of
+skipping the check:
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron --location=asia-northeast1 --project=central-element-323112`
+→ **`state: PAUSED`**, unchanged from the 20:02Z/20:04Z entries above.
+`gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0 rows**, confirms no relaunch
+happened since. Cross-checked `sports_legacy_bucket_cutover_2026_07_16.md` directly: Phase 6 (RESTORE) todos T6.0-T6.8
+are ALL still `- [ ]` unstarted, and OR-5b (the `market-data-tick-sports` disposition ruling gating Phase 5/6 for that
+leg) is still open per its own Progress Log — so the freeze this plan's banner describes is corroborated from both
+sides, not just this plan's banner text. The freeze genuinely has not lifted; a 3rd consecutive re-verify-only entry
+with no state change adds nothing further, so **not relaunching**, checkbox stays `- [ ]`, and skipping this task
+(`/skip-current-task`) so the dispatcher can route to other queued work instead of a 4th idle re-check loop. Next
+dispatch on this todo should check `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.1 first — once it flips, the
+scheduler `state` will read `ENABLED` and this todo unblocks immediately (single trivial relaunch command, nothing lost
+by waiting). No code/infra change this entry; ships via the `docs(plans):` carve-out.
 
 ### 2026-07-15 10:10Z — data_engineering slot-11 (Todo 1 dispatch — fast re-verify only, both tracked VMs healthy + progressing, known consolidator-staleness self-recovering, no new action needed)
 
