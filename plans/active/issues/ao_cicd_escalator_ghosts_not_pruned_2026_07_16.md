@@ -14,9 +14,15 @@ summary: |
   also deliberately absent from `_SINGLETON_AGENT_KINDS`, so the sessionless-singleton fast-reap never covers it either.
   Net: a finished one-shot escalator (which never calls `/done`, so cleanup depends entirely on the reaper/pruner)
   lingers "active" up to 6h; with frequent CI walls, ~6h of accumulation is the dozen-plus ghosts the operator saw.
-  FIXED: the TmuxPruner now archives one_shot/scheduled agents (exit_reason=`lifecycle-complete`) in the same pass it
-  clears the dead chip, mirroring the reaper so whichever daemon observes the death first agrees.
-status: resolved
+  FIXED IN TWO PARTS. (1) `a21ccba` — the TmuxPruner now archives one_shot/scheduled agents
+  (exit_reason=`lifecycle-complete`) in the same pass it clears the dead chip, mirroring the reaper so whichever daemon
+  observes the death first agrees. (2) `a22c0d7` — REOPENED when the operator saw ghosts STILL listed after (1) was
+  live: the pruner's query filters on `tmux_session IS NOT NULL`, so it can never retire a row that is ALREADY
+  sessionless, which all 11 measured ghosts were. The sessionless case had NO fast path at all. The reaper now splits
+  its grace in two — terminal-lifecycle (one_shot/scheduled) sessionless agents reap on
+  `one_shot_stale_grace_minutes` (default 15), persistent cloud agents keep the 6h — making the outcome
+  order-independent regardless of which daemon wins or how the row reached the sessionless state.
+status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -37,6 +43,8 @@ assigned_vm: NA
 execution_scope: local-only
 resolved_by:
   - "agent-orchestrator@a21ccba — TmuxPruner archives terminal-lifecycle agents on session death + regression test"
+  - "agent-orchestrator@a22c0d7 — reaper reaps SESSIONLESS one_shot/scheduled on a short grace (the 11 measured ghosts
+    a21ccba could not reach); 7 tests incl. live-review + mid-task guards"
 locked_by:
 locked_since:
 estimate_class: refactor
@@ -54,13 +62,22 @@ source:
 
 # Dead cicd escalator agents are not pruned — they linger "active" for up to 6h
 
-> **✅ RESOLVED 2026-07-16 — `agent-orchestrator@a21ccba`.** The TmuxPruner now archives one_shot/scheduled agents on
-> session death, so a finished cicd escalator is reaped within one prune tick (~60s) of its session dying instead of
-> waiting out the 6h `stale_grace`. Full AO quality gate green (1333 passed); 4 new pruner tests + the 52-test reaper
-> suite pass, including `test_multi_instance_cicd_not_deduped_as_singleton` (the reaper's isolated multi-instance
-> contract is unchanged — the fix is in the pruner). Existing terminal ghosts on the live VM drain naturally: the
-> retention prune (`prune_finished_agents`) caps the archived roster, and the next prune tick after each ghost's session
-> is confirmed dead now archives it.
+> **🟡 REOPENED 2026-07-16 — `a21ccba` was necessary but NOT sufficient; second fix `a22c0d7` shipped, awaiting runtime
+> verification.**
+>
+> **Part 1 — `agent-orchestrator@a21ccba`** (verified correct, deployed, live): the TmuxPruner archives
+> one_shot/scheduled agents on session death, so a finished cicd escalator is reaped within one prune tick (~60s) of its
+> session dying instead of waiting out the 6h `stale_grace`. Independently re-verified 2026-07-16: 56 tests green, and
+> bug-injection confirms the 2 positive cases FAIL when the archival is removed (the tests are load-bearing).
+>
+> **Part 2 — `agent-orchestrator@a22c0d7`**: the operator observed ghosts STILL listed 6 minutes after Part 1 went live.
+> That was **not** Part 1 failing — it was Part 1 being unable to reach them. See § "Why a21ccba could not retire the
+> existing ghosts" below. This part gives the sessionless case its own short grace.
+>
+> **Correction to this doc's original claim.** It stated existing ghosts "drain naturally… the next prune tick after
+> each ghost's session is confirmed dead now archives it." That is **false** for an already-sessionless row: the pruner
+> selects on `tmux_session IS NOT NULL`, so it never looks at one again. Those rows drained only on the 6h `stale_grace`
+> — up to 5 more hours of the exact pile-up the fix was written to stop.
 
 ## Symptom (operator FleetView, 2026-07-16)
 
@@ -142,7 +159,73 @@ their session dies" holds regardless of ordering.
   one_shot craft worker that momentarily registers without a session while booting, and would contradict the reaper's
   isolated multi-instance-cicd contract.
 
+## Why `a21ccba` could not retire the existing ghosts (the reopen, 2026-07-16)
+
+Operator, ~6 min after Part 1 went live: _"the ci agents are still not pruned… the backend should be able to detect them
+and remove them… we shouldn't have to change the db by hand. it should be done by backend so that it doesn't recur."_
+
+**Measured on the central VM (`i-0c9b283b31d6b5ca7`, live DB, 15:51 UTC)** — not inferred:
+
+| Fact                                                     | Value                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| `active`/`stale` agent rows total                        | 14                                                      |
+| of those, `cicd` `one_shot` with **`tmux_session=NULL`** | **11**                                                  |
+| their ages (last_ping → now)                             | **0.98h – 4.95h** — every one INSIDE the 6h grace       |
+| genuinely live rows                                      | 3 (orchestrator 0.01h, review 0.03h, plan_health 0.05h) |
+| VM clone HEAD / behind origin                            | `a21ccba` / **0** — Part 1 WAS deployed and running     |
+| `orchestrator.service` last start                        | 15:45:15 UTC (6.5 min before the measurement)           |
+
+The decisive detail: **all 11 ghosts were already `tmux_session=NULL`.** The pruner's loop selects
+`AgentRow.tmux_session.is_not(None)` and acts inside `if name and not has_session(name)`. A row that is already
+sessionless is never selected, so Part 1 — correct as it is — was structurally incapable of retiring a single one of
+them. They were on the 6h `stale_grace`, and would have kept showing "active" for up to ~5 more hours.
+
+The general hole Part 1 left open: **a sessionless terminal-lifecycle agent had no fast reap path at all.** The pruner
+needs a non-null session; the reaper's two fast signals need a non-null session; `cicd` is excluded from
+`_SINGLETON_AGENT_KINDS` so the sessionless-singleton fast-reap skips it. Anything that nulls the field before archival
+(a pre-`a21ccba` prune, `routes/agents.py`, or `update_agent_ping`'s restore-on-ping resurrecting an archived worker)
+drops the record onto a 6h grace designed for a persistent cloud agent. Part 1 closed the RACE; it did not close the
+CLASS.
+
+## The fix, part 2 (`agent-orchestrator@a22c0d7`) — split the grace
+
+`reap_orphan_agents` now takes `terminal_stale_grace` alongside `stale_grace`, and the sessionless branch picks by
+lifecycle:
+
+```python
+elif now - _recency(a) > (terminal_stale_grace if _expected_end else stale_grace):
+```
+
+- New knob `one_shot_stale_grace_minutes` (default **15**, env `ORCHESTRATOR_ONE_SHOT_STALE_GRACE_MINUTES`). For a
+  one_shot worker, sessionless+silent IS the end of its life; the 6h benefit-of-the-doubt belongs to a `review` agent
+  that self-pings for days.
+- **Order-independent** — whichever daemon observes the death first, and however the row became sessionless, it retires
+  within ~15 min. That is the "doesn't recur" the operator asked for, and it drains the existing 11 with **no hand DB
+  edit**.
+- The reaper keeps its injected-grace seam (`state_store/agents.py` imports no config) — the keeper passes
+  `_one_shot_stale_grace()`.
+
+**Why this is safe** (the branch is narrower than it looks): it can only fire on `tmux_session IS NULL`. A live
+escalator holds a session and takes the dead-session / session-reused branches instead, and pings while it works, so its
+recency never crosses the grace. `lifecycle=None` keeps the conservative 6h. A false reap self-heals via restore-on-ping
+(`agents.py`), and `archive_agent` touches the RECORD only — it never kills a session or releases a task. Blast radius
+checked: only `health.py:300` reads the archived state, and `prune_finished_agents` retains 7 days.
+
+**This is the reaper-side change the original doc rejected** ("would falsely reap a one_shot craft worker that
+momentarily registers without a session while booting"). That objection holds against an _immediate_ reap; it does not
+hold against a _15-minute_ one — a boot window is seconds, and restore-on-ping covers the residual.
+
 ## Verification
+
+**Part 2 (`a22c0d7`)** — `bash scripts/quality-gates.sh --no-fix` → **exit 0** (ruff + `basedpyright 0 errors` +
+`1340 passed, 1 skipped` + dashboard tsc/vitest 90). 7 new tests in `tests/test_reap_orphan_agents.py`. Proven by **bug
+injection**: reverting the branch to the single grace fails exactly the 2 positive tests while the 5 guards stay green.
+Guards pinned: a sessionless `review` silent 1h is NOT reaped (else the fix would kill the live review agent every 15
+min); a one_shot that pinged 5 min ago is NOT reaped; a live one_shot holding its session is untouched even at 5h;
+`lifecycle=None` keeps the 6h. One test pins the regression directly — the youngest measured ghost (0.98h) survives
+under the old semantics and dies under the new.
+
+**Part 1 (`a21ccba`)** — independently re-verified, not taken on report:
 
 - `bash scripts/quality-gates.sh` → **PASSED** (ruff + basedpyright + `1333 passed, 1 skipped` + dashboard tsc/vitest).
 - New `tests/test_tmux_pruner_agent_reap.py` (4 cases): dead-session cicd → archived `lifecycle-complete`; dead-session
@@ -153,7 +236,18 @@ their session dies" holds regardless of ordering.
 ## Todos
 
 - [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@a21ccba`.** TmuxPruner archives one_shot/scheduled agents
-      on session death; regression test added; full AO quality gate green.
+      on session death; regression test added; full AO quality gate green. Independently re-verified 2026-07-16 (56
+      tests green + bug-injection proves the tests are load-bearing) — correct, but see P0 below: necessary, not
+      sufficient.
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@a22c0d7`.** REOPEN: ghosts still listed 6 min after
+      `a21ccba` went live. Measured the live DB — 11 sessionless one_shot rows, 0.98h-4.95h, all inside the 6h grace;
+      `a21ccba` cannot reach a row whose `tmux_session` is already NULL. Split the reaper's grace so terminal-lifecycle
+      sessionless agents reap on `one_shot_stale_grace_minutes` (default 15) while persistent agents keep 6h. QG exit 0
+      (1340 passed, basedpyright 0 errors); bug-injection verified.
+- [ ] [BACKEND] P1. **Runtime verdict — prove the 11 ghosts actually drain on the live VM.** Code-shipped is not fixed
+      (the standing lesson of the 2026-07-16 audit). **Gate**: on the central VM, `HEAD` contains `a22c0d7` AND the
+      sessionless-one_shot count goes to 0 within ~15 min of the reload, with `exit_reason='lifecycle-complete'` on
+      those rows. Query in the Progress Log below. Flip this doc to `status: resolved` only then.
 - [ ] [BACKEND] P3. **Optional cleanup — retire the misleading "stays active" assertion.**
       `test_multi_instance_cicd_not_deduped_as_singleton` still documents the pre-fix end-state in its docstring. Its
       PRIMARY assertion (`not superseded-cicd`) is a real reaper contract and must stay; only the incidental "stays
@@ -169,3 +263,21 @@ their session dies" holds regardless of ordering.
   `_SINGLETON_AGENT_KINDS` (cicd excluded). Root cause: the pruner nulling the field before the reaper's instant-reap
   fires, dropping the record onto the 6h cloud-agent `stale_grace`. Fixed in the pruner (archive terminal-lifecycle
   agents on session death); regression test added; full AO quality gate green.
+- **2026-07-16 (later)** — **REOPENED.** Operator: _"the ci agents are still not pruned… it should be done by backend so
+  that it doesn't recur."_ Verified `a21ccba` on the VM first (`HEAD=a21ccba`, behind=0, clean, service up 15:45:15 UTC)
+  — it WAS live, so the ghosts were not a deploy gap. Measured the live DB: 11 sessionless one_shot rows, 0.98h-4.95h.
+  Diagnosis: the pruner's `tmux_session IS NOT NULL` filter makes an already-sessionless row unreachable, and the
+  sessionless terminal-lifecycle case had no fast path anywhere. Shipped `a22c0d7` (split grace). Two process notes
+  worth keeping: (1) a first SSM probe reported `NO-NOT-DEPLOYED` — a **false verdict** caused by git aborting on
+  `dubious ownership` under root, with the `else` branch firing on the failure rather than on an answer; re-run under
+  `sudo -u ubuntu` gave the true `YES-DEPLOYED`. Probes must distinguish "the check failed" from "the answer is no". (2)
+  The QG's own exit code (`0`) is the verdict, never `tail`'s — the first run showed a green vitest tail while the gate
+  had exited 1 on RUF002.
+- **Runtime verdict query** (for the open P1 todo — no `sqlite3` CLI on the VM, use the venv python; the table is
+  `agents`; DB `/var/lib/orchestrator/state.db`; read via `file:…?mode=ro`):
+
+  ```sql
+  SELECT COUNT(*) FROM agents
+  WHERE status IN ('active','stale') AND lifecycle IN ('one_shot','scheduled') AND tmux_session IS NULL;
+  -- expect 0 within ~15 min of the reload; the drained rows carry exit_reason='lifecycle-complete'
+  ```
