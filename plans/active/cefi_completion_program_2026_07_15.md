@@ -585,3 +585,111 @@ is what should be preventing new gap accrual; that it is not is worth its own in
 **Writer fix (`mtds@5d44a197`) status: STILL not cleanly testable** — this test was valid on scan-position but the 403
 storm meant almost nothing was actually fetched (+2,202 captures across 3 VMs/8h). The N=1 run now in flight is the
 first configuration that can produce a clean signal.
+
+### 2026-07-16T05:10Z — tick: WS-H CATALOGUE APPLY LANDED (dedup/equity-perp/dating/liquidations/denominator-complete)
+
+> **[slot-3 /autonomous session]** — coordinating on the shared plan with the backfill co-manager (whose N=1 / 403-storm
+> notes are above). I OWN the CODE + WS-H CATALOGUE side; the co-manager OWNS the Tardis backfill VM strategy. I am
+> STOPPING all backfill VM management (my earlier N=3 tail launches fed the 403 storm — the co-manager's N=1 cut is
+> correct; do not re-add tail VMs).
+
+WS-H apply-list run via SSM on i-0dd9812a96cdda5dc (agent aa0f8f04), NON-tail-gated parts DONE:
+
+- **Catalogue rebuild `--mode full --allow-catalogue-shrink` PROMOTED to prod** (backup:
+  `prod/catalog.pre-wsh-dedup.20260716-050958.bak.parquet`). 427,552→424,224 rows. **CRITICAL INVARIANT PASSED: live
+  count 9,952→10,122 (+170, ZERO live dropped).** Dedup: perp-family 9,177→5,386, HL 534→182 (177 live unchanged).
+  EQUITY_PERP 0→636 + TOKENIZED_EQUITY 0→79. ASTER dating fixed 1,501→506. → G-code + D-code(HL/fleet dedup) PROD EFFECT
+  now LIVE (no longer "pending rebuild").
+- **liquidations (E) LIVE in prod honest-coverage** for all 6 feed venues (1,580,700 rows). **Denominator now
+  `COMPLETE`** (was INCOMPLETE) — a DONE-criteria milestone. cefi recompute = 48.37% vs the complete denominator
+  (remainder = the co-manager's in-flight backfill: expected_unattempted + the 403-class attempted_failed). Published to
+  labeled sibling `gs://central-element-323112-honest-coverage/2026-07-16/coverage_cefi_wsh_20260716.json` (did NOT
+  clobber the canonical defi-only coverage.json).
+- **2 residual follow-ups** (agent STOPPED rather than guess on prod): (1) **HL phantom re-census OOM'd** — the
+  reconcile tool full-loads the 12M-row manifest (~28GB) > the 15GB VM; no prod mutation (was dry-run); needs a 32-64GB
+  VM (e.g. orchestrator m8i.4xlarge) OR a memory-frugal/DuckDB rewrite; the 1,277 HL phantoms are ready. HL will also
+  re-census naturally once the backfill+consolidator run. (2) **equity-perp denominator propagation** deferred —
+  catalogue re-type landed, but manifest rows are still typed PERPETUAL so they're ALREADY counted (just labeled
+  PERPETUAL); re-labeling is cosmetic, not a coverage gap; running enumerate --apply-write now would DOUBLE-SEED
+  (correctness risk) → needs the manifest PERPETUAL rows re-typed first.
+
+**Remaining to DONE**: co-manager's backfill → af=0 (403-class) + recent-tail filled (their N=1 grind); then the FINAL
+coverage recompute asserting af=0; + C (alias verify+auto-delete except DERIBIT-COMBO) + F (DERIBIT-COMBO history) +
+optional HL re-census on a big VM. Phase-1 code + WS-H catalogue = DONE.
+
+### 🔴 FIFTH gap — the Tardis cap is BLIND to forward-poll / T+1-cron / live VMs — 2026-07-16T07:00Z
+
+Operator question: _"what about for the t+1 backfill schedulers that fill yesterday, the live tardis markets vms
+(presumably again needs to be one vm)"_ — **correct, and it is currently unenforced.**
+
+The guard's `TARDIS_VM_NAME_PATTERN` is `^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`. It does
+NOT match:
+
+| launcher                           | VM name shape              | Tardis exposure                                                                                                                                                                               | counted? |
+| ---------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `launch-cefi-forward-poll.sh`      | `cefi-fwd-<ts>`            | **YES** — reads `tardis-machine-api-key` from Secret Manager                                                                                                                                  | ❌ NO    |
+| `launch-cefi-fwd-daily-cron-vm.sh` | `cefi-fwd-daily-cron-<ts>` | indirect — `VM_OPERATION=cron-trigger` that fires the forward-poll                                                                                                                            | ❌ NO    |
+| `launch-mtds-live.sh`              | `mtds-live-*`              | **CONDITIONAL** — `--live-source native\|tardis-machine`; it already passes `TARDIS_CONCURRENCY_LEASE` + cites the lockout issue, so the exposure is known — but it is NOT wired to the guard | ❌ NO    |
+
+**Why we have not been bitten yet — verified, not assumed**: `gcloud compute instances list` shows **zero** `cefi-fwd-*`
+and zero `mtds-live-*` running right now. THAT is why the solo N=1 backfill VM measures ZERO 403s. The instant the T+1
+forward-poll cron fires (or a `tardis-machine` live VM starts), it takes the single IP slot and the backfill silently
+reverts to the 403 storm — including its FALSE `attempted_failed` manifest corruption — with nothing in the guard to
+notice.
+
+**Design note for the fix (deliberately NOT half-shipped — a naive pattern widen would over-block):**
+
+1. **Priority is asymmetric — live/forward MUST win, backfill MUST yield.** So: COUNT fwd/live VMs in
+   `tardis_running_vm_count` (making a backfill launch refuse while they run), but do NOT wire the guard INTO
+   `launch-mtds-live.sh` / `launch-cefi-forward-poll.sh` — live must always be able to start.
+2. **Match precisely.** `^cefi-fwd-[0-9]` catches the forward-poll without false-positiving the `cefi-fwd-daily-cron-`
+   trigger (which holds no Tardis connection itself).
+3. **Live is CONDITIONAL, so a name-only match over-blocks**: a `native`-source live VM does NOT touch Tardis and must
+   not stall the backfill. The count needs the instance's `--live-source`/metadata, not just its name — i.e. read
+   `TARDIS_*` metadata (or a new `VM_TARDIS_CONSUMER=1` stamp set by the launchers) rather than pattern-matching alone.
+   **Recommendation: have every Tardis-consuming launcher stamp `VM_TARDIS_CONSUMER=1` into VM metadata and have the
+   guard count THAT** — self-declaring beats a name regex that must be kept in sync with 83 launchers forever.
+4. The running backfill VM should also yield gracefully rather than 403-storm when live grabs the slot (today it just
+   fails cells and records them as `attempted_failed`).
+
+- [ ] [INFRA] P0. **Scope the Tardis cap to AUTHENTICATED batch consumers only (operator-verified model 2026-07-16).**
+      Today the cap is enforced only across backfill VM name shapes, so a T+1 forward-poll or `tardis-machine` live VM
+      silently contends with the capped backfill and re-creates the 403 storm + FALSE-af manifest corruption. Implement
+      per the design above: `VM_TARDIS_CONSUMER=1` metadata stamp from every Tardis-consuming launcher + guard counts
+      it; backfill yields to live/forward (never the reverse); backfill should pause-and-retry rather than record false
+      `attempted_failed` when the slot is held. SSOTs to update once shipped:
+      `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner.
+
+### ✅ CORRECTION to the FIFTH gap — only AUTHENTICATED batch contends; live + IS are free (operator model, code-verified) — 2026-07-16T07:15Z
+
+Operator asserted and asked to be checked: _"live mtds tardis doesn't require auth… because it's behind free public
+APIs. same for batch or live IS related tardis… it's just t+1 backfills that would need to queue behind long running
+batch backfills and only for mtds; is can run freely and live too — double check my assumptions"_. **Checked against
+code. The assumptions HOLD, and they invalidate part of my own prior entry:**
+
+| path                         | endpoint / evidence                                                                                                                                                                                                                  | auth?   | contends? |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | --------- |
+| **live MTDS tardis-machine** | `live/connectors/tardis_machine_ws.py`: `_DEFAULT_TARDIS_MACHINE_WS_URL = "ws://localhost:8002/ws-stream-normalized"` — a LOCAL sidecar normalising exchanges' own public feeds; **zero** `api_key`/`Authorization` in the connector | **NO**  | **NO**    |
+| **IS Tardis**                | `reference_data/adapters/cefi/tardis/adapter.py` → `api.tardis.dev/v1/exchanges/*` (public metadata; the audit lane queried it unauthenticated all session)                                                                          | **NO**  | **NO**    |
+| **T+1 forward-poll**         | `launch-cefi-forward-poll.sh`: `--operation backfill --mode batch` + `tardis-machine-api-key` from Secret Manager → the `datasets.tardis.dev` path (the SAME one that emits `403 code=274 concurrent-IP-lock`)                       | **YES** | **YES**   |
+| **batch backfill**           | `cefi-queue-*` / `mtds-backfill-cefi-*` — datasets API                                                                                                                                                                               | **YES** | **YES**   |
+
+**My prior entry was WRONG on two points, corrected here:** (1) it listed `mtds-live-*` as a contender needing to be
+counted — it is NOT, live never consumes the licensed slot, so counting it would have STALLED the backfill for no
+reason; (2) it proposed "live/forward always wins, backfill yields" — the live half is moot (no contention), and the
+operator's rule for the forward half is the INVERSE: **T+1 queues BEHIND the long-running batch backfill.** That is safe
+precisely because the backfill's own range (2026-02-01→yesterday) already covers the days T+1 would fill — so nothing is
+lost by making T+1 wait, whereas letting T+1 preempt would mean the multi-day backfill never finishes.
+
+**Operator-approved design (2026-07-16), now the spec for the P0 above:**
+
+1. **Self-declaring, not a regex** — every launcher that opens an AUTHENTICATED Tardis (datasets) connection stamps
+   `VM_TARDIS_CONSUMER=1` into VM metadata; the guard counts THAT. A name pattern across 83 launchers can never stay in
+   sync, and (as just proven) name-matching would have wrongly caught the unauthenticated live VMs. **Stamp it on**:
+   `launch-cefi-sharded-backfill.sh` (+ AWS twin), `launch-mtds-backfill-vm.sh` (cefi), `launch-cefi-forward-poll.sh`.
+   **Do NOT stamp**: `launch-mtds-live.sh` (tardis-machine = unauthenticated local sidecar), anything IS-side.
+2. **Asymmetric priority** — the guard is wired into the QUEUING side only: T+1/forward-poll checks and waits; the
+   long-running backfill is not blocked by it. (Live is exempt entirely, so it is never wired in.)
+3. **Pause-and-retry, never false failures** — when the slot is held, a waiting consumer must back off and retry rather
+   than burn attempts into `attempted_failed`. Today's behaviour manufactured **+37,212 FALSE af rows in 8h**; that is
+   manifest corruption, and it is the single most damaging part of this whole class.

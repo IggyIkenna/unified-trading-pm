@@ -28,7 +28,7 @@ referenced_by:
     codex/02-data/honest-absence-downstream-handling.md,
     codex/02-data/shard-coverage-classification.md,
     codex/05-infrastructure/manifest-consolidator-ssot.md,
-    plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
     plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
     plans/epics/mtds_mdps_master.md,
   ]
@@ -239,8 +239,8 @@ for fleet rollout.
 The `_agent_pings.md` ping-ledger channel and its every-4h orphan-ping audit cron
 (`scripts/agents/audit_ping_orphans.sh` + GCP `uts-prod-orphan-ping-audit` job/scheduler/terraform) were decommissioned
 2026-07-04 — nobody read the ledgers after the 2026-06-27 single-VM AO migration. Do not write pings; route
-agent↔agent/operator comms through the agent-orchestrator HTTP server, and track work as plan todos (`plans/active/…`)
-— the underlying "every notification must reference a plan item" intent lives on in the plan-todo discipline, not in a
+agent↔agent/operator comms through the agent-orchestrator HTTP server, and track work as plan todos (`plans/active/…`) —
+the underlying "every notification must reference a plan item" intent lives on in the plan-todo discipline, not in a
 ledger cron.
 
 ## Composition with other rules

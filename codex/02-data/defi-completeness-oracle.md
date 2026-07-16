@@ -56,8 +56,8 @@ code_refs:
 > Layer-1 denominator.
 >
 > **Provenance.** Design authored 2026-07-06 (data_engineering, slot 5) fulfilling
-> `plans/active/foundation_gates_and_capture_to_100_2026_07_06.md` item — "DeFi completeness ORACLE design" (Gate: an
-> oracle design that answers defi could-exist completeness from chain state, not the manifest). Sketch source:
+> `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` item — "DeFi completeness ORACLE design"
+> (Gate: an oracle design that answers defi could-exist completeness from chain state, not the manifest). Sketch source:
 > `plans/active/instruments_foundation_completeness_2026_06_24.md` §Phase 2+ (defi Tier-B).
 
 ---

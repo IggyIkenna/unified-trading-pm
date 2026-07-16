@@ -29,7 +29,7 @@ related:
     unified_api_contracts/registry/risk_rules/global_rules.py,
     execution-service/execution_service/engine/risk/preflight_gate.py,
     strategy-service/strategy_service/position/core/rule_eval_context_builder.py,
-    plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master

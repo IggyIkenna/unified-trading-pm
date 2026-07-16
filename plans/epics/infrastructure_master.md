@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [infrastructure, data-status, spot-vm, migration, quality-gates, observability, ui]
 related:
   [
-    ../active/mvp_reconciliation_closeout_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_reconciliation_closeout_v10_2026_06_27.md,
     ../archive/2026_05/workspace_qg_sweep_2026_05_23.md,
     ../archive/2026_05/aws_migration_defi_first_2026_05_07.md,
     ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md,
@@ -31,7 +31,7 @@ co_operators:
 codex_ssots:
 related_plans:
   [
-    ../active/mvp_reconciliation_closeout_v10_2026_06_27.md,
+    ../archive/2026_07/mvp_reconciliation_closeout_v10_2026_06_27.md,
     ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
     ../archive/2026_05/workspace_qg_sweep_2026_05_23.md,
     ../archive/2026_05/aws_migration_defi_first_2026_05_07.md,

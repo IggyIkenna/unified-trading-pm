@@ -138,7 +138,7 @@ a verdict). Heaviest:
   corrected 2026-07-12, doc-reconciliation finding 71, §A2 B-queue ruling: operator correction 2026-06-22 made
   `Delete-when` mandatory-and-present on every script, `NA` for `permanent`, so the fleet stays greppable via
   `grep -rL '^# Delete-when:'`; see `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" (the enforced SSOT)
-  and `plans/active/scripts_lifecycle_marker_rollout_2026_06_18.md`.)
+  and `plans/archive/2026_07/scripts_lifecycle_marker_rollout_2026_06_18.md`.)
 
   Closed `Lifecycle` set mirrors the VM `lifecycle_class` spirit: **`permanent`** ≈ LONG_LIVED (`setup.sh`, dev tooling;
   template-managed scripts like `setup.sh`/`quality-gates.sh`/`quickmerge.sh` are auto-permanent — PM-sourced); whereas

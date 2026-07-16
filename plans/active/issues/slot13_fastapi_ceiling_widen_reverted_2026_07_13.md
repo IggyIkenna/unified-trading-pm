@@ -92,9 +92,9 @@ My batch did exactly the thing that comment warns against, across 13 repos.
 
 ## How I found it
 
-Reading `plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md` for an unrelated reason surfaced a reference to
-the exception mechanism, which didn't match what I'd just shipped. Diffed my local `workspace-constraints.toml` against
-`origin/live-defi-rollout` and found slot-3's commit
+Reading `plans/archive/2026_07/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md` for an unrelated reason surfaced a
+reference to the exception mechanism, which didn't match what I'd just shipped. Diffed my local
+`workspace-constraints.toml` against `origin/live-defi-rollout` and found slot-3's commit
 (`1ea525c6e fix(deps): resolve fastapi/starlette canonical-ceiling contradiction with ml-service`) had already landed,
 with the opposite decision from mine.
 

@@ -5,6 +5,20 @@
 """
 Epic body populator — 2026-05-21.
 
+⚠️  DO NOT `--apply` WITHOUT AN OPERATOR RULING (added 2026-07-15, plan-reconcile §10).
+    This script was a SILENT NO-OP from 2026-05-21 until 2026-07-15 (hardcoded macOS WORKSPACE
+    path + a drifted hardcoded epic registry — both fixed below). Because it did not work, several
+    epic rosters were HAND-CURATED instead, under operator rulings — e.g. orchestrator_master was
+    regenerated 2026-07-12 per plan-reconciliation findings 216/323 (§A2), and carries annotations
+    this generator CANNOT reproduce (which children are `status: resolved` and correctly excluded,
+    when each was added, why a count changed).
+
+    A trial `--apply` on 2026-07-15 replaced those rosters and cost -1,719 lines of operator-ruled
+    curation across 23 epics; it was reverted. The generator is strictly LESS informative than the
+    hand-curated rosters it overwrites. `--dry-run` is safe and useful (it prints the true per-epic
+    plan census — that is how the "3 active plans vs 19 actual" staleness was measured). Treat
+    `--apply` as a destructive migration needing a ruling, not routine hygiene.
+
 Scans every active plan in plans/active/*.md for `parent_epic:` frontmatter, groups by epic, and:
 
   1. Updates each epic's `related_plans:` frontmatter list with the full set of plans pointing at it.
@@ -50,39 +64,37 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
-WORKSPACE = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1")
+# Resolve the workspace root from THIS file's location, never a hardcoded path.
+# (Was: Path("/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1") — a macOS operator
+# path baked into the RETIRED .tabs/N worktree model. That made this script a silent no-op
+# everywhere else: it reported "Total plans with parent_epic: 0" and SKIPped every epic as
+# "file missing", so the roster regen it is cited as the fix for could never actually run.
+# Fixed 2026-07-15, plan-reconcile §10.)
+# .../unified-trading-pm/scripts/plans/<this file> -> parents[3] == workspace root
+WORKSPACE = Path(__file__).resolve().parents[3]
 PM = WORKSPACE / "unified-trading-pm"
 ACTIVE = PM / "plans" / "active"
 EPICS = PM / "plans" / "epics"
 
+
 # The 19 active epics (lowercase slugs, matching filenames in plans/epics/<slug>.md)
-ACTIVE_EPICS = [
-    # L0
-    "defi_master",
-    "cefi_master",
-    "tradfi_master",
-    "sports_master",
-    "predictions_master",
-    # L1
-    "instruments_master",
-    "mtds_mdps_master",
-    "features_and_ml_master",
-    "manifest_master",
-    # L2
-    "strategy_master",
-    "execution_master",
-    "trading_agent_master",
-    # L3
-    "dart_and_promote_master",
-    "deployment_and_user_management_master",
-    # L4
-    "infrastructure_master",
-    "observability_master",
-    "batch_live_symmetry_master",
-    "client_isolation_and_governance_master",
-    # L5
-    "orchestrator_master",
-]
+def _discover_active_epics() -> list[str]:
+    """Every live epic on disk, derived — never a hand-maintained list.
+
+    Was a hardcoded 19-name literal frozen at 2026-05-21. It had since drifted: 4 genuinely-live
+    epics created after that date (agent_operating_framework_master, plan_hygiene_master,
+    escalation_and_disaster_recovery_master, global_ledger_pnl_attribution_master) were absent, so
+    every plan under them was WARN-skipped and their rosters could never populate. A registry of
+    what is on disk must be READ from disk. Fixed 2026-07-15, plan-reconcile §10.
+
+    Excludes the README and any *_SUPERSEDED_* epic (retired; must not receive a roster).
+    """
+    if not EPICS.is_dir():
+        return []
+    return sorted(p.stem for p in EPICS.glob("*.md") if p.stem != "README" and "_SUPERSEDED_" not in p.stem)
+
+
+ACTIVE_EPICS = _discover_active_epics()
 
 
 @dataclass

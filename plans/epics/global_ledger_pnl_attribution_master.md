@@ -55,9 +55,9 @@ expansion + recorded decision; operator [ack] pending). Migration plan 0/27 — 
 3 / 5 / 6 decisions (was: "Phase 3 / 4 / 5" — internal numbering error, corrected 2026-07-12; see correction note below)
 before implementation starts (target window: post-cutover, 2026-06-01).
 
-> **CORRECTED 2026-07-12** (full re-audit — `plans/active/global_ledger_epic_reaudit_2026_07_12.md`, operator ruling
-> finding 366): the 05-23 status line above is STALE/CONTRADICTED-BY-CODE on two points, verified read-only against repo
-> HEAD:
+> **CORRECTED 2026-07-12** (full re-audit — `plans/archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md`, operator
+> ruling finding 366): the 05-23 status line above is STALE/CONTRADICTED-BY-CODE on two points, verified read-only
+> against repo HEAD:
 >
 > 1. **`EventType` is now 39 values, not 37** (`unified-api-contracts@dc67ae6f` margin-traceability PR added
 >    `COLLATERAL_POSTED` / `MARGIN_RELEASED`, additive) — `AssetClass` is still 17 (unchanged). Both counts verified by
@@ -122,7 +122,7 @@ stubs), last git-touched 2026-07-04 — CONTRADICTS this epic's own "Archived pl
 "DEFERRED-POST-CUTOVER." **CODEX-GATED finding — ACTIONED 2026-07-13** (was: "not edited by this audit — operator-gated
 codex edit; flagged in the re-audit plan's Progress Log for a follow-up `[DOCS]` todo" — corrected 2026-07-14,
 doc-reconciliation finding 73: operator authorization was granted 2026-07-13 and the codex doc was edited the same day —
-see `plans/active/global_ledger_epic_reaudit_2026_07_12.md`'s Progress Log): `global-ledger-architecture.md`'s
+see `plans/archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md`'s Progress Log): `global-ledger-architecture.md`'s
 "Current-State Gaps" table's `execution-service` row (§ "Current-State Gaps (Audit 2026-05-23)") — which listed a
 `build_attribution_rows() stub`, itself stale/CONTRADICTED-BY-CODE per the Phase 7 evidence above (the function is real,
 140 lines, tested) — now carries a `[DELTA 2026-07-13]`-banner-backed `(was: …)` correction citing
@@ -149,11 +149,11 @@ pick up in priority order (P0 first)."_) — finding 315,
 below are actually active — both `global_ledger_pnl_attribution_discovery_2026_05_21` and
 `global_ledger_pnl_attribution_migration_2026_06_01` are ✅ ARCHIVED / `status: complete` (verified in their own
 frontmatter). The actual current active child is
-[`global_ledger_epic_reaudit_2026_07_12`](../active/global_ledger_epic_reaudit_2026_07_12.md) (status: complete, was:
-"status: active" — corrected 2026-07-14, doc-reconciliation finding 72: the child plan's own frontmatter flipped
-`active` → `complete` on 2026-07-13, per its own Progress Log; this epic was never re-synced after the child closed —
-`parent_epic: global_ledger_pnl_attribution_master`, created 2026-07-12 per finding-366 operator ruling — full epic
-re-audit, its findings folded into the "Codex SSOTs" section above and the correction callout below).
+[`global_ledger_epic_reaudit_2026_07_12`](../archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md) (status:
+complete, was: "status: active" — corrected 2026-07-14, doc-reconciliation finding 72: the child plan's own frontmatter
+flipped `active` → `complete` on 2026-07-13, per its own Progress Log; this epic was never re-synced after the child
+closed — `parent_epic: global_ledger_pnl_attribution_master`, created 2026-07-12 per finding-366 operator ruling — full
+epic re-audit, its findings folded into the "Codex SSOTs" section above and the correction callout below).
 
 ### P0 — Discovery + target-state spec
 
@@ -190,8 +190,9 @@ plan — see the "Archived plans" section below + the re-audit callout above the
 ### P3 — Post-cutover enrichments
 
 - [ ] [CODE] P3. **Live (non-paper) PassiveLedger per-event divergence-check listener** — forward-carried residual from
-      the 2026-07-12 re-audit (`plans/active/global_ledger_epic_reaudit_2026_07_12.md`). The paper/backtest-mode
-      PassiveLedger synthesiser shipped (`strategy-service/strategy_service/engine/backtest/paper_run_passive.py` via
+      the 2026-07-12 re-audit (`plans/archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md`). The
+      paper/backtest-mode PassiveLedger synthesiser shipped
+      (`strategy-service/strategy_service/engine/backtest/paper_run_passive.py` via
       `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`), but the LIVE listener this epic's own "VM
       assignment notes" describe (on-chain/venue-emission-triggered, running inside `StrategySupervisor` per-client
       subprocess, comparing observed emissions against the synthesised expectation) was NOT found in strategy-service at

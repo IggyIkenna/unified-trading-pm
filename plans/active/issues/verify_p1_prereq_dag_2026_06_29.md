@@ -12,11 +12,14 @@ repos: [e2e-testing, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [honest-coverage, smoke-test, sports, golden-window, verification, manifest, data-correctness, mvp]
 related:
-  [plans/active/honest_coverage_smoke_harness_2026_06_28.md, plans/active/issues/sports_data_capture_gap_2026_06_29.md]
+  [
+    plans/archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md,
+    plans/active/issues/sports_data_capture_gap_2026_06_29.md,
+  ]
 created: 2026-06-29
 parent_epic: plan_hygiene_master
 priority: P2
-source: [plans/active/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
+source: [plans/archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
 assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout

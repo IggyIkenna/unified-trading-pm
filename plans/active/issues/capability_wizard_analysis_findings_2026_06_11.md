@@ -408,13 +408,14 @@ follow-up under the venue-axis vocabulary plan — do NOT rename pipeline keys c
 ### F39 — Wizard offers ~13 venues; manifest has 183 — eligibility lists are hand-named subsets (operator-caught)
 
 **Status**: PARTIALLY FIXED uac@def855c (kraken/bitget/coinbase added to \_CEFI_CLOB_VENUES + key leg seeds) +
-pm@4074e49c (audit_venue_coverage.py). OPEN remainder: F42 (adapter-backed venues missing from VENUE_CATEGORY_MAP), F43
-(NASDAQ/NYSE not in leg seeds). Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are among the
-manifest's orphan venue nodes: present in venue registries but referenced by NO capability cell / leg-spec
-eligible_venue_ids (which were seeded from hand-named cell venue lists). Either the execution adapter exists and the
-eligibility list is too narrow (registry gap) or no adapter exists (unbuilt dead-end) — per-venue audit required:
-instruments universe × ENDPOINT_REGISTRY × execution-service adapter inventory × archetype eligibility → widen
-eligibility from ADAPTER INVENTORY (code truth), not hand-named lists.
+pm@4074e49c (audit_venue_coverage.py). OPEN remainder: F42 (adapter-backed venues missing from VENUE_CATEGORY_MAP). (F43
+was listed here as open — RESOLVED via unified-api-contracts@61ba5239; corrected 2026-07-15, plan-reconcile §10.)
+Missing DeFi venues (Curve, Sushi, PancakeSwap, Orca, Raydium, Phoenix, …) are among the manifest's orphan venue nodes:
+present in venue registries but referenced by NO capability cell / leg-spec eligible_venue_ids (which were seeded from
+hand-named cell venue lists). Either the execution adapter exists and the eligibility list is too narrow (registry gap)
+or no adapter exists (unbuilt dead-end) — per-venue audit required: instruments universe × ENDPOINT_REGISTRY ×
+execution-service adapter inventory × archetype eligibility → widen eligibility from ADAPTER INVENTORY (code truth), not
+hand-named lists.
 
 ### F40 — AO server persists runtime usage state into tracked accounts.json → perpetual dirty churn
 
@@ -604,7 +605,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
-| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP), F43 (NASDAQ/NYSE in no leg eligibility)                                                         | OPEN                                             | UAC registry                                                                                                                  |
+| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | OPEN                                             | UAC registry                                                                                                                  |
 | Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
 | Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
 | Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
@@ -635,8 +636,12 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       risk. Target: confirm owner repo (UTL/strategy-service) + whether freeze-gated before flipping.
 - [ ] [SCRIPT] P2. **F42 — register the 6 adapter-backed venues** (FX + BITFINEX/BITGET/KRAKEN spot+futures) in
       `VENUE_CATEGORY_MAP` + `ENDPOINT_REGISTRY`. Target: unified-api-contracts.
-- [ ] [SCRIPT] P2. **F43 — add NASDAQ/NYSE to a leg's `eligible_venue_ids`** (TradFi equities adapters exist, no leg
-      references them). Target: unified-api-contracts.
+- [x] [SCRIPT] P2. **F43 — add NASDAQ/NYSE to a leg's `eligible_venue_ids`** (TradFi equities adapters exist, no leg
+      references them). Target: unified-api-contracts. ✅ SHIPPED unified-api-contracts@61ba5239
+      (`feat(registry): wire archetype-leg eligibility for FX/BITFINEX/NASDAQ/N…`, verified reachable on
+      origin/live-defi-rollout; NASDAQ/NYSE now referenced by leg seeds — `archetype_leg_spec_seeds.py:947`
+      `ibkr-aapl-msft (NASDAQ)`, `ibkr-xom-cvx`/`ibkr-jpm-bac` (NYSE)). Flipped 2026-07-15, plan-reconcile §10: the F43
+      section at ~L459 already read RESOLVED while this todo and the L411/L607 rollups still said OPEN.
 - [ ] [SCRIPT] P3. **F40 — gitignore AO runtime `accounts.json`** (server persists usage state into a tracked file →
       perpetual dirty churn). Target: agent-orchestrator.
 

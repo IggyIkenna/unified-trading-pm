@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Script Homes — where executables live (repo `scripts/` vs deployment-service vs e2e-testing)
 summary: >-
-  Canonical placement rule for every workspace executable — production verb → service
-  CLI subcommand; provision/launch/schedule → deployment-service; cross-repo/smoke/e2e →
-  e2e-testing; one-off single-repo op → repo scripts/ (TEMPORARY); plus the QG-enforced
-  3-line lifecycle marker (Epic / Lifecycle / Delete-when) on every scripts/ file.
+  Canonical placement rule for every workspace executable — production verb → service CLI subcommand;
+  provision/launch/schedule → deployment-service; cross-repo/smoke/e2e → e2e-testing; one-off single-repo op → repo
+  scripts/ (TEMPORARY); plus the QG-enforced 3-line lifecycle marker (Epic / Lifecycle / Delete-when) on every scripts/
+  file.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,7 +16,11 @@ tags: [scripts, script-homes, lifecycle-marker, deployment, refactor, quality-ga
 related: [cli-convention.md, quality-gates.md]
 created: 2026-06-10
 authoritative_for: [script-homes placement decision tree, repo scripts/ lifecycle markers (Epic/Lifecycle/Delete-when)]
-referenced_by: [plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md, plans/audit/results/repo_scripts_characterization_2026_06_18.md]
+referenced_by:
+  [
+    plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md,
+    plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -145,10 +149,10 @@ but a real deletion candidate isn't being edited anyway, so the gap doesn't bias
 
 - **ruff-lint: YES** (cheap rot-catch — syntax / imports / obvious bugs).
 - **Lifecycle-marker presence: QG-ENFORCED** (once fleet-wide rollout completes — the **last Phase-2 item** in
-  `plans/active/scripts_lifecycle_marker_rollout_2026_06_18.md`): `check_script_lifecycle_markers.py` (PM
+  `plans/archive/2026_07/scripts_lifecycle_marker_rollout_2026_06_18.md`): `check_script_lifecycle_markers.py` (PM
   `scripts/quality_gates/`) wired into `base-service.sh` + `base-library.sh` fails CI if any `scripts/` file is missing
-  `# Epic:` / `# Lifecycle:` / `# Delete-when:`, carries an unknown value, or (for non-`permanent`) uses `Delete-when:
-  NA`.
+  `# Epic:` / `# Lifecycle:` / `# Delete-when:`, carries an unknown value, or (for non-`permanent`) uses
+  `Delete-when: NA`.
 - **basedpyright + coverage: NO — by design.** Throwaway code must not manufacture refactor tech-debt (every refactor
   keeping soon-deleted scripts type-clean). Recurring/important logic becomes a **CLI subcommand** (gated as part of
   `$SOURCE_DIR`), never a permanent `scripts/` file. (The cloud-discipline rot — `google.cloud`-direct / hardcoded

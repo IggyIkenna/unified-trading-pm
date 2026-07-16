@@ -27,10 +27,10 @@ resolved_by: "main ruling via BLK-fa2173d1 (option A) — no code change"
 locked_by:
 source:
   [
-    plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md,
     plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md,
   ]
-related: [plans/active/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md]
+related: [plans/archive/2026_07/utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md]
 tags: [utl, uac, risk, pre-trade, spec-gap]
 depends_on: []
 ---

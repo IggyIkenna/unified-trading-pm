@@ -15,7 +15,7 @@ tags: [codex, quality-gates, ratchet, repo-blocker]
 related:
   [
     plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
-    plans/active/utl_reuse_phase7_low_lint_tail_2026_07_13.md,
+    plans/archive/2026_07/utl_reuse_phase7_low_lint_tail_2026_07_13.md,
   ]
 created: "2026-07-13"
 parent_epic: infrastructure_master

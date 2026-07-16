@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [features, ml, uac, data-correctness, mdps, polars, strategy, consolidation]
 related:
   [
-    ../active/features_read_book_columns_not_snapshots_2026_06_28.md,
+    ../archive/2026_07/features_read_book_columns_not_snapshots_2026_06_28.md,
     ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
     ../archive/features_repo_consolidation_2026_05_08.plan.md,
     ../active/features_service_qg_cleanup_2026_05_11.md,
@@ -41,7 +41,7 @@ co_operators:
 codex_ssots:
 related_plans:
   [
-    ../active/features_read_book_columns_not_snapshots_2026_06_28.md,
+    ../archive/2026_07/features_read_book_columns_not_snapshots_2026_06_28.md,
     ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
     ../archive/features_repo_consolidation_2026_05_08.plan.md,
     ../active/features_service_qg_cleanup_2026_05_11.md,

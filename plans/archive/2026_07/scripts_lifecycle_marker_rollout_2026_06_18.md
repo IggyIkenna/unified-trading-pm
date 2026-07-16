@@ -6,7 +6,7 @@ title:
 summary:
   Stamp the 3-line lifecycle marker onto every script/ file across all repos so usage can be tracked and scripts can be
   pruned later; serves as the live AO fleet-test plan.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,7 +31,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
 locked_since:
 supersedes:
 superseded_by:

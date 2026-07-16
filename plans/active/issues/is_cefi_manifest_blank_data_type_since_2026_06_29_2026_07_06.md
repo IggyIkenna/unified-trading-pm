@@ -22,12 +22,12 @@ tags: [instruments, manifest, data-correctness, cefi, data_type, honest-coverage
 related:
   [
     plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md,
-    plans/active/is_catalogue_completion_2d_2026_07_06.md,
+    plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md,
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-06
-source: [plans/active/is_catalogue_completion_2d_2026_07_06.md, is_catalogue_completion_2d-003]
+source: [plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md, is_catalogue_completion_2d-003]
 priority: P1
 parent_epic: instruments_master
 assigned_vm: planning

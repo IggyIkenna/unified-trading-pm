@@ -32,8 +32,8 @@ estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
 last_updated: 2026-07-03
-locked_by: live-defi-rollout
-locked_since: 2026-06-29
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes: []
 superseded_by:
 depends_on: [plans/archive/issues/is_build_catalogue_defi_pool_dual_form_test_failures_2026_06_24.md]

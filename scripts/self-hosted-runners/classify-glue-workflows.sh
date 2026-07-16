@@ -16,6 +16,27 @@ WF_DIR="${WF_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.github/workflows" 
 # fleet workflow-templates dir (rolled out to every repo); may be absent
 TMPL_DIR="$(cd "${WF_DIR}/../../scripts/workflow-templates" 2>/dev/null && pwd || true)"
 
+# CROSS-REPO REUSABLES (KEEP-R): workflows called by OTHER repos via
+#   `uses: <owner>/unified-trading-pm/.github/workflows/<name>@<ref>`.
+# A reusable's jobs run on the CALLER's runners. Our `glue` runners are repo-scoped to PM (personal
+# accounts can't register org runners), so they are invisible to the calling repo — flipping runs-on
+# here would hang the job in EVERY calling repo (same failure mode as KEEP-T). Regenerate the list:
+#   rg -o "uses:.*unified-trading-pm/\.github/workflows/[a-z0-9-]+\.yml" */.github/workflows/ \
+#     | sed -E 's#.*/##; s/@.*//' | sort -u
+# (python-quality-gates-v2 is already KEEP via the quality-gates match; image-build-validate is the
+#  other cross-repo reusable — called by 24 repos' image-build-gate.yml to gate staging→main promote.)
+REUSABLE_CROSSREPO="image-build-validate.yml"
+
+# FAILURE-INDEPENDENCE MONITORS (KEEP-M): a dead-man-switch / watcher whose whole value is detecting
+# that OUR infra (incl. this very VM) is broken MUST run on infra independent of what it watches. If it
+# ran on the glue pool, a VM outage would silently take out BOTH the detection AND the alert (the
+# alerter is on the down box). Only the definitional cases are hard-KEEP here:
+#   - overnight-dead-man-switch: detects the overnight orchestrator (which itself runs on this VM) failing.
+# NOTE (operator-pending, billing-first steer 2026-07-16): the CI-health watchers — ci-health,
+# cloud-build-failure-watcher, ldr-ci-monitor, branch-health — MOVE for now (they're the deferred
+# "harden later" set). Flip any into KEEP_MONITORS to trade ~a few $/mo for failure-independence.
+KEEP_MONITORS="overnight-dead-man-switch.yml"
+
 printf '%-40s %-6s %s\n' "WORKFLOW" "VERDICT" "TRIGGERS (on:)"
 printf '%-40s %-6s %s\n' "--------" "------" "--------------"
 move=0 keep=0
@@ -50,6 +71,10 @@ for f in "${WF_DIR}"/*.yml; do
     verdict="KEEP*"; keep=$((keep+1)) # kept because it builds locally (heavy compute)
   elif [ -n "${tmpl}" ]; then
     verdict="KEEP-T"; keep=$((keep+1)) # templated multi-repo — do NOT flip the template (only PM has runners)
+  elif printf '%s\n' ${REUSABLE_CROSSREPO} | grep -qx "${base}"; then
+    verdict="KEEP-R"; keep=$((keep+1)) # cross-repo reusable — flipping hangs the calling repos (only PM has glue runners)
+  elif printf '%s\n' ${KEEP_MONITORS} | grep -qx "${base}"; then
+    verdict="KEEP-M"; keep=$((keep+1)) # failure-independence monitor — must NOT run on the infra it watches
   else
     verdict="MOVE"; move=$((move+1))
   fi
@@ -58,4 +83,5 @@ done
 echo
 printf 'MOVE (→ PM-local direct flip): %d   KEEP (→ GitHub-hosted): %d\n' "${move}" "${keep}"
 echo '  KEEP* = local build/heavy compute · KEEP-T = fleet template (multi-repo; only PM has runners → keep hosted)'
+echo '  KEEP-R = cross-repo reusable (caller-runner-scoped; flip hangs callers) · KEEP-M = failure-independence monitor'
 echo 'Flip only MOVE workflows: runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'

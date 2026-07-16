@@ -1,0 +1,779 @@
+---
+doc_type: plan
+title: Sports legacy bucket cutover — freeze, move, purge, delete, restore
+summary:
+  Executable cutover runbook retiring the last two non-canonical sports buckets — instruments-store-sports-* and
+  market-data-tick-sports-* — into their -prd- canonical twins. Synthesised from five read-only audits (code, infra,
+  objects, manifests, v1_archive). Freeze writers, repoint the static legacy declarations, MOVE only the 30,333
+  object-layer-verified unique objects to canonical paths, purge the 123,149 bogus index rows in the quiet window, prove
+  zero-unique at the OBJECT layer, then delete and restore in reverse.
+status: active
+nature: process
+asset_group: [sports]
+stage: [data]
+repos:
+  [
+    unified-trading-pm,
+    deployment-service,
+    market-tick-data-service,
+    instruments-service,
+    deployment-api,
+    unified-api-contracts,
+  ]
+scope: [engineer, admin]
+tags: [migration, bucket-canonicalisation, cutover, gcs, terraform, manifest, sports, destructive]
+related:
+  [
+    sports_manifest_canonicalisation_2026_06_01.md,
+    sports_data_sources_canonical_completion_2026_07_13.md,
+    ../epics/sports_master.md,
+  ]
+created: 2026-07-16
+last_updated: 2026-07-16
+parent_epic: sports_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 4
+assigned_role: infra
+drift_direction: advance-code
+depends_on:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: [operator request 2026-07-16, 5-leg read-only audit 2026-07-16]
+---
+
+# Sports legacy bucket cutover — 2026-07-16
+
+> **DESTRUCTIVE PLAN. Phases are STRICTLY SEQUENTIAL. Phase 5 (delete) is gated on Phase 4 (proof) and a FINAL
+> live-writer re-check.** Every phase todo carries a Mechanism, a Verification, and an ABORT condition. An ABORT means
+> STOP the phase and escalate — it never means "note it and continue."
+
+**Operator goal (2026-07-16, verbatim)**: _"instruments-store-sports-central-element-323112 doesnt need to exist whilst
+instruments-store-sports-prd-central-element-323112 exists — its the last instrument store bucket which has non
+canonical [paths]. For that to migrate it needs us to ensure all the code and deployed vms and cloud run/service etc and
+manifests and catalogues etc all migrate fully to the canonical bucket usage, and to avoid redownloading we should
+instead MOVE any non already existent data into the canonical bucket."_ Operator additionally authorises _"stopping all
+sports related crons and vms and cloud stuff to make the migrations and fixes and bucket deletes then rerunning
+everything so sports is in canonical buckets and paths."_
+
+| Legacy (delete)                                   | Canonical (survives)                                  |
+| ------------------------------------------------- | ----------------------------------------------------- |
+| `instruments-store-sports-central-element-323112` | `instruments-store-sports-prd-central-element-323112` |
+| `market-data-tick-sports-central-element-323112`  | `market-data-tick-sports-prd-central-element-323112`  |
+
+## Codex SSOTs (read before executing the phase that cites them)
+
+| SSOT                                                           | Governs                                                          |
+| -------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `codex/02-data/sports-gcs-path-ssot.md`                        | Canonical sports path shape; `candidate_parquet_paths()`         |
+| `codex/02-data/pipeline-mode-partition.md`                     | `{mode}_{source}` segment placement; readers PREFIX-MATCH        |
+| `codex/02-data/availability-manifest-and-data-status.md`       | 4-state `capture_status`; per-VM shards; consolidator contract   |
+| `codex/02-data/honest-absence-downstream-handling.md`          | Phantom vs real absence; never fake `record_captured`            |
+| `codex/02-data/data-pipeline-correctness-hard-rule.md`         | Audit issues fixed in FULL; RED freezes layer N+1                |
+| `codex/02-data/bucket-naming-and-config.md`                    | `resolve_bucket_name()` is the only name producer                |
+| `codex/02-data/sports-data-source-coverage-matrix.md`          | `ODDS` writer is footystats only — no api_football odds path     |
+| `codex/05-infrastructure/gcs-object-operations.md`             | UTL `gcs_copy_object`/`gcs_delete_object` — never `gsutil`       |
+| `codex/05-infrastructure/manifest-consolidator-ssot.md`        | Consolidator is Cloud Run; loud-fails on stale index             |
+| `codex/05-infrastructure/vm-launcher-runbook.md`               | Registered launchers; `VM_PREFIX_TO_BUCKET`; pre-migration drain |
+| `codex/05-infrastructure/deployment-service-gcp-tofu-state.md` | Terraform state ops; `state rm` vs `destroy`                     |
+| `codex/06-coding-standards/script-homes.md`                    | One-off lifecycle markers; delete-after-prod-run                 |
+
+---
+
+## THE HEADLINE — read this before touching anything
+
+Five audits agree on the shape of the work, but **synthesis surfaced three findings no single leg owned**. Each one
+would have caused silent, permanent data loss if the phases below were executed in the obvious order.
+
+### F-1 (BLOCKING) — the designated MOVE vehicle silently enumerates 4 of its 7 trees as EMPTY
+
+`market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical_v9.py` is the plan-of-record
+instruments MOVE vehicle. Its `_list_tree()` (`:463-467`) enumerates exactly one shape:
+
+```python
+def _list_tree(fs, bucket, prefix, days, workers):
+    """List all parquet objects under bucket/prefix/day=D for each day in days."""
+    for found in pool.map(lambda d: fs.find(f"{bucket}/{prefix}/day={d}"), days):
+```
+
+`_INSTR_DATA_TREES` (`:110-117`) declares **seven** trees. Only three are `{prefix}/day={d}` shaped
+(`sports_reference/by_date`, `sports_reference_v2/by_date`, `sports_reference_v1_archive/by_date`). The other four
+resolve to paths that cannot exist:
+
+| Declared tree                                       | Path `_list_tree` probes                     | Legacy's actual shape                      | Result        |
+| --------------------------------------------------- | -------------------------------------------- | ------------------------------------------ | ------------- |
+| `"day="` (bare top-level)                           | `{bucket}/day=/day={d}`                      | `day=2026-03-21/venue=BETFAIR/…`           | **0 objects** |
+| `"instrument_availability"`                         | `{bucket}/instrument_availability/day={d}`   | `instrument_availability/by-date/day-{D}/` | **0 objects** |
+| `sports_reference/mappings` (static)                | `{bucket}/sports_reference/mappings/day={d}` | `…/mappings/season=2019/`                  | **0 objects** |
+| `sports_reference/{fixtures,footystats_league_ids}` | `…/{tree}/day={d}`                           | static, no day shard                       | **0 objects** |
+
+`instrument_availability` alone is **119,858 legacy objects**. The vehicle reports
+`RECONCILE SUMMARY: legacy_only_total=N` and exits 0 — a **systematically undercounted N reported as success**. This is
+the fourth instance of the tooling-lies class this investigation. **Do not trust the vehicle's own enumeration.**
+
+### F-2 (BLOCKING) — the vehicle's set-difference semantic cannot see the 13,222-object data-loss class
+
+`_run_instruments_reconcile` (`:717-737`) is explicit: _"Compute legacy-only (present in legacy, absent from prd) … Copy
+legacy-only objects → prd."_ The objects leg proved **13,222 legacy objects have a canonical counterpart that holds
+STRICTLY FEWER ROWS** (111,827 player_stats rows, 91,380 standings, 69,444 fixture_events, …). Those are **not**
+legacy-only → the vehicle **skips every one of them**. The same is true of
+`migrate_legacy_tick_buckets_to_canonical.py`, whose `gcs_copy_object` skip-if-exists semantic — correctly praised by
+the code leg as matching the operator's "move only non already existent" wording — **skips exactly the objects that
+carry the missing rows**. The vehicle's own docstring concedes this: schema regressions are _"flag[ged] for manual
+column-union."_
+
+> **The operator's "MOVE any non already existent data" is object-existence phrasing. At the row layer, canonical is NOT
+> a superset of legacy.** Taking the phrase literally deletes 305,000+ rows. This needs an OPERATOR RULING (OR-1).
+
+### F-3 (BLOCKING, ordering) — the vehicle would re-import the v1_archive the v1_archive leg says must never enter canonical
+
+`SPORTS_REF_V1_ARCHIVE_PREFIX` is a member of `_INSTR_DATA_TREES` (`:113`) **and** is one of the three trees whose shape
+`_list_tree` _can_ enumerate. The v1_archive leg's verdict is `safe-to-delete` with the explicit warning that _"moving
+it into the canonical bucket would import a retired-schema backup of data canonical already holds, re-contaminating the
+bucket the operator wants clean."_ Running the vehicle before deleting the archive copies all 398 objects **into
+canonical**. → **Phase 2a (delete v1_archive) must run BEFORE Phase 2b (move).**
+
+### F-4 (BLOCKING) — the day window silently truncates both ends
+
+`--start-date` defaults `2019-01-01`, `--end-date` defaults `2026-06-01` (`:813-814`). Verified unique-object date span
+is **2018-01-02 … 2026-12-06**. Defaults silently drop 2018 (`standings`/`teams` from 2018-01-01, `footystats_odds` from
+2018-05-07) and everything after 2026-06-01 (`fixtures_schedule`/`fixtures_outcomes` run to 2026-12-06 — these are
+legitimate future-dated fixtures). Days outside the window are never listed → never reported → never copied.
+
+### F-5 (BLOCKING) — something is STILL WRITING to the legacy bucket
+
+Newest legacy write `2026-07-15T20:07:38Z`; **125 writes on 07-15, 220 on 07-14, 1559 on 07-13, 2398 on 07-12** — and
+not just index artifacts: real data paths
+(`instrument_availability/by_date/day=2021-08-{16,17,18}/venue=API_FOOTBALL_FIXTURES/instruments.parquet`, ~120
+`day=2026-04-14/league=*/venue=API_FOOTBALL/` objects). Yet: no sports VMs exist, every Cloud Run job spec is canonical,
+and **no resolver can produce the legacy name** (proven at runtime — missing env, empty env, every tier → `-prd-`).
+**The writer is unidentified.** A migrate-then-delete without stopping it silently re-creates legacy objects, or
+re-creates the bucket. Phase 0 cannot complete until this is named. (`market-data-tick-sports` legacy IS dormant — all
+406,581 objects written 2026-06-27, single bulk op.)
+
+### The resulting decision
+
+> **Do not drive Phase 2 from the v9 migrator's enumeration.** Drive it from the objects leg's **verified object-layer
+> inventory** (method reproduced in T2.2), and use the migrator only as a copy primitive — or replace it. See **OR-6**.
+
+### Migration payload (object layer — the only layer that counts)
+
+| Class                                               | Objects    | Disposition                                      |
+| --------------------------------------------------- | ---------- | ------------------------------------------------ |
+| Legacy total (`instruments-store-sports`)           | 969,321    | —                                                |
+| ├─ duplicate in canonical (crc match)               | 495,082    | no action                                        |
+| ├─ superseded (canonical ≥ rows, or later snapshot) | 443,508    | no action                                        |
+| ├─ contentless                                      | 0          | — (class is empty; nothing droppable)            |
+| └─ **unique**                                       | **30,731** | —                                                |
+| ├─ class A — no canonical cell at any pipeline_mode | 17,509     | MOVE (minus v1_archive)                          |
+| │ └─ of which `sports_reference_v1_archive/`        | 398        | **DELETE, never move** (v1_archive verdict)      |
+| └─ class B — canonical cell exists, FEWER rows      | 13,222     | **MOVE — blocked on OR-1** (vehicle skips these) |
+| **NET unique to migrate**                           | **30,333** | = (17,509 − 398) + 13,222 ✓                      |
+
+Arithmetic closes against the object layer: 495,082 + 0 + 443,508 + 30,731 = 969,321 = exact legacy object count.
+
+`market-data-tick-sports` (second bucket): 406,581 objects; **~52,400 unique ESTIMATED** (9,927 no-canonical-key
+verified + ~42,500 extrapolated from an n=400 sample of 108,970 crc-differing pairs whose row-count pass ran out of
+budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
+
+---
+
+## Todos
+
+### PHASE 0 — FREEZE (writers first, consolidators LAST after a final drain)
+
+- [ ] [INFRA] P0. **T0.1 — Identify the live legacy writer (F-5). HARD GATE: no later phase may start until this is
+      named.** _Mechanism_: enable/read GCS data-access audit logs and attribute the writes —
+      `gcloud logging read 'resource.type="gcs_bucket" AND resource.labels.bucket_name="instruments-store-sports-central-element-323112" AND protoPayload.methodName="storage.objects.create"' --project=central-element-323112 --freshness=7d --format='table(timestamp, protoPayload.authenticationInfo.principalEmail, protoPayload.resourceName)' --limit=200`.
+      If data-access logging was off, attribute via the object cohort instead: the 07-15 12:18-12:25Z
+      `instrument_availability/by_date/day=2021-08-1{6,7,8}/venue=API_FOOTBALL_FIXTURES/` cluster and the
+      07-15T20:07:38Z `_index/availability_index_backup_20260416.parquet` write both look like a hand-run one-off (an
+      agent/slot running a `scripts/` one-off), not a scheduled job — cross-check against slot shell history and the ~35
+      legacy-reading one-offs enumerated in T1.6. _Gate_: a NAMED principal + mechanism, and it is stopped/quiesced.
+      _ABORT_: writer cannot be identified after audit-log + cohort attribution → **STOP the whole cutover** and
+      escalate (OR-2). Deleting a bucket with an unidentified live writer is the resurrection-plus-data-loss case.
+- [ ] [INFRA] P0. **T0.2 — Snapshot EVERYTHING before any mutation (this is the rollback substrate).** _Mechanism_: for
+      each of the 4 buckets (2 legacy + 2 canonical) copy the control plane to a dated sibling —
+      `_index/availability_index.parquet` → `_index/availability_index.<UTC-ts>.precutover.bak.parquet`,
+      `availability_index/*.parquet`, `prod/catalog.parquet` → `prod/catalog.<UTC-ts>.precutover.bak.parquet`, plus
+      `_index/per_vm/*.parquet` copied **outside** `per_vm/`. Record a full object inventory of all 4 buckets (T2.2
+      lister) to `~/tmp-cutover/inventory_precutover_*.jsonl` and archive it to
+      `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/`. _Gate_: every `.bak` object exists
+      with size > 0; inventory row counts match the audited totals (969,321 / 1,398,521 / 406,581 / 491,576). _ABORT_:
+      any count deviates > 0.5% from audit → re-audit before proceeding; the estate moved under us. **HARD: never write
+      a `.bak` into `_index/per_vm/`** — the consolidator globs `per_vm/*.parquet` and absorbs EVERY parquet there as a
+      shard; a backup dropped there becomes shard #3, is merged back, and resurrects purged rows
+      (`_index/consolidator_stall_state.json` = `{"streak":0,"baseline_shards":2}` confirms the current baseline).
+- [ ] [INFRA] P0. **T0.3 — Freeze the meta-launcher FIRST (freeze_order 1).** _Mechanism_:
+      `gcloud scheduler jobs pause uts-prod-sports-scheduler-cron --location=asia-northeast1 --project=central-element-323112`.
+      It runs `*/5` and dispatches tiers 1-4 → `uts-prod-instruments-service-sports-fixtures`,
+      `features-service-sports-job`, `uts-prod-market-tick-data-service-fast-t1-recon`
+      (`deployment-service/configs/sports-trigger-tiers.yaml`). **Pausing the 4 fixture crons without this leaves the
+      fixtures job dispatched every 5 min.** _Gate_: `jobs describe` → `state: PAUSED`; no new execution after T+6min.
+      _ABORT_: state not PAUSED → stop; everything downstream assumes the writers are quiet.
+- [ ] [INFRA] P0. **T0.4 — Freeze the remaining writer schedulers in freeze_order 2→11 (one `pause` each, verify
+      each).** _Mechanism_:
+      `gcloud scheduler jobs pause <NAME> --location=asia-northeast1 --project=central-element-323112` for, in order —
+      `sports-ref-v3-{1,2,3}-start` (2); `uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule` (3);
+      `uts-prod-sports-enrichment-{footystats,transfermarkt,soccer-football-info}-daily` (4);
+      `understat-eu-typing-sweep-daily` (5); `is-daily-enum-sports` (6); `expected-universe-v2-sports-daily` (7);
+      `lifecycle-catalogue-regen-sports-daily` (8); `uts-prod-mdps-odds-horizon-bucket-daily` (9);
+      `features-service-sports-daily-trigger` (10); `uts-prod-market-tick-data-fast-t1-schedule` (11). _Gate_: all 17
+      report `state: PAUSED`. _ABORT_: any refuses to pause → stop. **Note (11)**: not on the known-jobs list — found by
+      the infra leg. `uts-prod-market-tick-data-service-fast-t1-recon`'s baked args are
+      `[--operation download --mode batch]` with **no `--asset-group`**, and UTL `service_cli.py:163-167` gives
+      `--asset-group` no default → it may enumerate sports unfiltered. Pause it; **prove or disprove the sports write in
+      T4.5** (OR-8).
+- [ ] [INFRA] P0. **T0.5 — DRAIN GATE (freeze_order 19): let in-flight work finish and every per-VM shard merge.**
+      _Mechanism_: no pause action. Poll until all sports Cloud Run executions are terminal —
+      `gcloud run jobs executions list --region=asia-northeast1 --project=central-element-323112 --format='table(name,status.completionTime,status.conditions[0].type)' | grep -i sports`
+      — then let the three consolidators run **≥2 full ticks** (`*/1`) so every `_index/per_vm/*.parquet` merges into
+      `_index/availability_index.parquet`. Poll on a **progress metric** (index mtime + row count), never a fixed sleep.
+      _Gate_: zero non-terminal executions; index mtime advanced; two consecutive ticks add zero rows. _ABORT_: an
+      execution is stuck non-terminal > 30 min → diagnose; do NOT freeze the consolidators under it (that strands the
+      shard permanently — the legacy bucket has had NO consolidator since 2026-07-13 and its shards can never merge).
+- [ ] [INFRA] P0. **T0.6 — Freeze the 3 consolidators LAST (freeze_order 20→22), after the drain.** _Mechanism_: pause
+      `uts-prod-manifest-consolidator-instruments-sports-cron`, then `-market-data-sports-cron`, then
+      `-features-sports-cron`. _Gate_: all PAUSED; `_index/availability_index.parquet` mtime stops advancing; index row
+      count == the T0.2 snapshot. **From here the index is QUIET — this is the only safe window for Phase 3.** _ABORT_:
+      index still advancing after the pause → an unknown writer exists (relates to F-5/T0.1) → STOP.
+- [ ] [INFRA] P1. **T0.7 — Delete (do not restore) the 2 DEAD schedulers + confirm the 3 phantom VM starters.**
+      _Mechanism_: `uts-staging-features-sports-t1-schedule` (ENABLED, erroring daily) and
+      `uts-prod-features-sports-t1-schedule` (PAUSED) both target `uts-{staging,prod}-features-sports-service-t1-recon`,
+      which **do not exist** (verified against the full 115-job list) →
+      `gcloud scheduler jobs delete <NAME> --location=asia-northeast1`. `sports-ref-v3-{1,2,3}-start` fire annually
+      (`0 0 11 4 *`) at instances that do not exist (`gcloud compute instances list --filter='name~sports'` → zero rows)
+      → recommend delete (OR-7). _Gate_: `jobs list | grep -c 'features-sports-t1'` → 0. _ABORT_: a target job actually
+      resolves → do not delete; re-audit.
+
+### PHASE 1 — CODE (repoints + lifecycle marks; lands and applies BEFORE any delete)
+
+- [ ] [BACKEND] P0. **T1.1 — Fix the one LIVE code path that reads the legacy bucket, and its path shape, together.**
+      _Mechanism_: `deployment-service/deployment_service/cli/utils/data_status_sports.py:25` hardcodes
+      `_SPORTS_BUCKET_TEMPLATE = "instruments-store-sports-{project_id}"` (used `:139`) — LIVE via
+      `cli/commands/data_status.py:25` import → invoked `:362`. Replace with
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` and drop the `project_id`
+      plumbing. **Same commit**: `_FIXTURES_PREFIX` (`:26`) is the pre-canonical shape (`entity=fixtures`, no
+      `pipeline_mode=`) while the `:33-35` split-entity probe already carries
+      `pipeline_mode=batch_api_football/entity=fixtures_schedule/` — fix both or the reader still returns nothing.
+      _Gate_: `cd deployment-service && bash scripts/quality-gates.sh --no-fix` green;
+      `data-status --asset-group sports` returns a non-empty league breakdown against canonical. _ABORT_: breakdown
+      empty post-fix → the path shape is still wrong; do not proceed to delete (this reader is a Phase-4 witness).
+- [ ] [BACKEND] P1. **T1.2 — Close the QG blind spot that let T1.1 exist.** _Mechanism_:
+      `scripts/quality_gates/check_no_explicit_project_id_bucket.py` (STEP 5.72) AST-matches
+      `get_bucket_name()`/`get_write_bucket_name()` CALLS carrying an explicit `project_id`; a module-level
+      string-literal template + `.format()` matches neither → undetected. Extend the gate to flag module-level string
+      literals matching `^(instruments-store|market-data-tick|features)-[a-z]+-\{project_id\}$` outside
+      `scripts/`/`tests/`. _Gate_: gate FAILS on a reverted T1.1, passes on the fixed tree. _ABORT_: >5 pre-existing
+      violations surface → baseline them and file an issue doc; do not block the cutover on unrelated repos.
+- [ ] [INFRA] P0. **T1.3 — Remove the 2 MDPS Cloud Run gcsfuse mounts on the legacy buckets (DELETE, do not repoint).**
+      _Mechanism_: `deployment-service/terraform/services/market-data-processing-service/gcp/main.tf` — `:223`
+      `{ name="instruments-store-sports", bucket="instruments-store-sports-${var.project_id}", read_only=true }` and
+      `:230` `{ name="market-data-tick-sports", bucket="market-data-tick-sports-${var.project_id}", read_only=false }`.
+      **`:230` is a live WRITE mount** — deleting the bucket makes the MDPS job **fail to START** (gcsfuse cannot mount
+      a nonexistent bucket), not merely fail a read. Follow the verbatim in-file precedent at `:224-226`/`:231-232` (the
+      prediction mounts were REMOVED 2026-07-12 because MDPS resolves buckets via `resolve_bucket_name` at runtime and
+      needs no FUSE mount). _Gate_: `tofu plan` shows only the 2 volume removals; `tofu apply`; MDPS job executes green
+      post-apply. _ABORT_: MDPS fails to start after apply → it had a real FUSE dependency → restore the mount and
+      re-scope; **do not proceed to Phase 5.**
+- [ ] [INFRA] P0. **T1.4 — Canonicalise the 3 hardcoded legacy IAM grants (one-line each).** _Mechanism_:
+      `terraform/gcp/instrument_catalogue_scheduler.tf:34` + `:52` and `terraform/gcp/catalogue_regen_scheduler.tf:49`
+      carry legacy literals inside `google_storage_bucket_iam_member` `for_each` tosets → swap to
+      `instruments-store-sports-prd-central-element-323112` / `market-data-tick-sports-prd-central-element-323112`. The
+      prediction siblings in the same tosets are already `-pred-prd-` (`:36-39`, `:52-56`) — match that pattern. Left
+      unfixed, `tofu apply` **fails** post-delete (IAM member on a nonexistent bucket). _Gate_: `tofu plan` shows 3 IAM
+      member replacements, no bucket diff; apply green. _ABORT_: plan wants to create/destroy a bucket → STOP (see
+      T1.5).
+- [ ] [INFRA] P1. **T1.5 — Refresh the stale docstrings/comments + the SSOT-contradicting TF header.** _Mechanism_:
+      doc-only, zero runtime impact —
+      `deployment-api/deployment_api/services/{upcoming_fixtures.py:4,     data_query_service.py:441, data_status_drilldown/_csv_export.py:263}`
+      docstrings say legacy while the code (`:68`, `:448`, `:294`) already calls `resolve_bucket_name`;
+      `deployment-ui/src/api/client.ts:2640` JSDoc;
+      `deployment-service/scripts/vm/{launch-sfi-forward-poll.sh:9, launch-api-football-backfill-vm.sh:25,     launch-sports-manifest-rescan-vm.sh:14,155}`
+      comments. **Most important**: `terraform/gcp/main.tf:6-8` header _"Group A (raw data) — no env suffix; all envs
+      share prod-level copy"_ states the very rule that produced these buckets — REVERSED by operator direction
+      2026-05-11 / Phase 0e (`cloud-providers.yaml:136-140`). Leaving it invites a future agent to re-add a no-env
+      Group-A bucket. _Gate_: `rg -c 'sports-central-element-323112'` over non-`scripts/` trees → 0 outside the T1.6
+      one-off corpus. _ABORT_: none (doc-only).
+- [ ] [INFRA] P1. **T1.6 — Lifecycle-mark the ONE unmarked one-off; leave the other 26 parked.** _Mechanism_:
+      `market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical_v9.py` is the **sole** file in
+      the 27-file legacy-sports script corpus without a marker — **CORRECTION (verified 2026-07-16)**: it _does_ now
+      carry `# Epic: sports_master` / `# Lifecycle: oneoff` / `# Delete-when: after E8 legacy-sports-bucket deletion …`
+      at `:2-4`, so the code leg's finding is **already remediated**; this todo is a re-verify, not an edit. The other
+      ~26 (`instruments-service/scripts/**`, `features-service/scripts/sports/migrate_gcs_entity_filenames.sh:18`,
+      `market-tick-data-service/scripts/patch_l6_legacy_manifest_mtds_2026_06_29.py:70`) hardcode legacy **by design**
+      (they are legacy readers; repointing them to canonical would defeat their purpose) and are correctly parked.
+      _Gate_: `rg -L 'Lifecycle:' <the 27 files>` → empty. _ABORT_: none. **Do NOT delete any of them in this phase** —
+      the v9 migrator is the Phase-2 move vehicle; deletion is T6.8.
+
+### PHASE 2 — MOVE (unique objects only, to CANONICAL paths; v1_archive disposed first)
+
+> **Ordering is load-bearing: 2a (delete archive) → 2b (move class A) → 2c (move class B) → 2d (manifest rows).**
+> Running 2b before 2a re-imports the archive into canonical (F-3).
+
+- [ ] [DATA] P0. **T2.1 — PHASE 2a: delete `sports_reference_v1_archive/` (398 objects) — do NOT move it.** _Mechanism_:
+      this executes the already-authored, already-approved P0 operator todo in
+      `plans/ai/sports_fixtures_legacy_schema_migration_2026_04_28.plan.md` — _"After 7 days of green production: delete
+      `gs://…/sports_reference_v1_archive/`"_ — whose 7-day rollback window expired ~2026-05-05, ~2.5 months ago.
+      Verdict `safe-to-delete`, proven at the object layer on **all 398, not sampled**: 398/398 COVERED, 0 GAP;
+      72,522/72,522 fixture rows present in canonical for the same day; every populated column 100.00% value-match
+      (goals, status, referee, venue, kickoff_utc, season, …), **0 mismatches**. The "41 columns vs v2's 32" alarm that
+      forced the union-supersession reasoning was **vacuous — 24 of the 41 columns are 100% NULL across all 72,522
+      rows**; the real payload is 17 populated columns, all covered by v2 fixtures ALONE. The only v1-only fields are
+      pure derivations of canonical fields (logo_url embeds `af_league_id`/`af_home_id`; `slugify(af_home_name)`
+      reproduces `team_id` 31/31; `season` '2017-18' renders int `2017`). Delete via UTL `gcs_delete_object` per
+      `codex/05-infrastructure/gcs-object-operations.md`, never `gsutil`. _Gate_:
+      `gcloud storage ls gs://instruments-store-sports-central-element-323112/sports_reference_v1_archive/**` → "matched
+      no objects"; canonical unchanged (no `sports_reference_v1_archive/` prefix ever appears in `-prd-`). _ABORT_: any
+      object's fixture set fails re-verification against canonical → STOP; it was not superseded. **Confirm OR-3
+      first.**
+- [ ] [DATA] P0. **T2.2 — Regenerate the object-layer inventory and emit an EXPLICIT copy list (do not trust the
+      vehicle's enumeration — F-1).** _Mechanism_: paginated `list_blobs` with a fields projection
+      (`name,size,crc32c,updated`), 12-way prefix-parallel over top-level prefixes (~2 min/bucket; the naive recursive
+      `ls` times out). Key = **cell-key normalisation**, NOT path equality: (1) delete the canonical-only
+      `/pipeline_mode=<x>/` segment, (2) normalise legacy `instrument_availability/by-date/day-<D>/` → hive
+      `by_date/day=<D>`. Derive from the UAC SSOT
+      `unified_api_contracts/canonical/domain/sports/gcs_paths.py::candidate_parquet_paths()` per
+      `codex/02-data/sports-gcs-path-ssot.md`. **Two traps already found and corrected — do not re-introduce**: (a)
+      `fetched_at_hour=` is a SNAPSHOT dimension, not identity — exact-key matching called 124,267 objects unique;
+      latest-wins semantics collapsed 106,758 to superseded (**naive answer was 7× too high**); (b) crc32c-differs ≠
+      content-differs (parquet bytes are non-deterministic) and **byte size is NOT a safe row-count proxy** (n=400 test:
+      3.25% of canonical-bigger-in-bytes objects had FEWER rows — wider schema) → exact row-count via parquet-footer
+      reads. _Gate_: **SAMPLE-VERIFY ≥10 known pairs BEFORE scaling** (prior run: 10/10 CRC-match, 2 genuine misses);
+      the method must independently reproduce the 398 v1_archive count and the 30,731 total, and the classification must
+      close exactly (495,082 + 0 + 443,508 + 30,731 = 969,321). _ABORT_: arithmetic does not close, or the ≥10-pair
+      sample shows any false "unique" → the mapping is wrong; **STOP** (this is the path-shape trap that has already
+      produced three false conclusions).
+- [ ] [DATA] P0. **T2.3 — PHASE 2b: MOVE class A (17,111 objects = 17,509 − 398 archive) to canonical paths.**
+      _Mechanism_: drive from the T2.2 copy list, not `_list_tree`. Copy legacy → canonical **at the canonical path**
+      (insert `pipeline_mode=batch_<source>` between `day=` and `entity=`; normalise the `by-date/day-<D>` dash form)
+      via UTL `gcs_copy_object` (server-side, idempotent, skip-if-exists). Cover the FULL span **2018-01-02 …
+      2026-12-06** — if using the v9 migrator as the primitive, `--start-date 2018-01-01 --end-date 2026-12-31`
+      explicitly (defaults `2019-01-01`/`2026-06-01` silently truncate BOTH ends — F-4). Cover the trees `_list_tree`
+      cannot see (F-1): `instrument_availability/` (119,858 objects), bare `day=2026-03-21/`,
+      `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a canonical object at its derived
+      path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands at a non-canonical path → STOP
+      and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
+- [ ] [DATA] P0. **T2.4 — PHASE 2c: MOVE class B (13,222 objects where canonical has FEWER rows) — BLOCKED on OR-1.**
+      _Mechanism_: **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per
+      OR-1 ruling, either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path
+      (safest; preserves any canonical-only rows), or (b) **overwrite** canonical with legacy where legacy ⊇ canonical
+      (simpler; loses canonical-only rows if the containment does not actually hold). **Verify containment per cell
+      before overwriting either way.** Worst offenders: player_stats 111,827 rows, standings 91,380, fixture_events
+      69,444, teams 16,502, player_values 16,233 (e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical 38).
+      _Gate_: for all 13,222, canonical row count ≥ legacy row count post-move; total rows recovered ≥ 305,000; re-run
+      T2.2 → class B = 0. _ABORT_: any cell where legacy ⊄ canonical AND canonical ⊄ legacy (genuine divergence, not a
+      subset) → STOP and escalate; a blind overwrite loses canonical-only rows.
+- [ ] [DATA] P0. **T2.5 — Re-home the control-plane objects the vehicle skips by construction.** _Mechanism_: `_keep()`
+      (`:167-173`) filters out `/_index/`, `/_vm_staging/`, and `_SKIP_PREFIXES` =
+      `_audits/ _smoke_test/     _catalogue/ availability_index/` → **none** of the control-plane uniques move.
+      Adjudicate each explicitly: `_index/per_vm/_legacy_seed.parquet` (legacy **1,757,469 rows** vs canonical **0** —
+      the canonical seed is EMPTY, 16.2 MB vs 18.7 KB) → **OR-4**; `availability_index/instruments-service.parquet`
+      (22,450 vs 22,445 — 5 rows); `_index/per_vm/fixtures-recovery-20260627-183725.parquet` (34,564 rows, shard mtime
+      18:37 predates the legacy index write 19:14:43Z so it _probably_ merged — **NOT PROVEN**); 2 `_audits`, 2
+      `_index`, `sports_reference/mappings/season=2019` (640 vs 589). **The legacy bucket has had no consolidator since
+      2026-07-13** (`manifest_consolidator_scheduler.tf:67,80`) — these shards can never merge on their own. _Gate_:
+      each of the ~8 control-plane uniques has a written disposition (moved / proven-already-merged /
+      abandoned-with-reason). _ABORT_: `_legacy_seed.parquet` disposition unresolved → **do not delete the bucket**
+      (1.76M rows). **HARD: never place any re-homed object under `_index/per_vm/`** unless it is genuinely a shard to
+      be merged.
+- [ ] [DATA] P0. **T2.6 — Finish the exact row-count pass for `market-data-tick-sports` (the ~52,400 is an
+      EXTRAPOLATION, not a gate).** _Mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated
+      prefix-parallel lister (~2 min each); (2) key =
+      `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the MDT trap differs from the
+      instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS **and** mis-stamps
+      `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to `batch_odds_api`; a
+      `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique (rejected before
+      use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
+      `pyarrow.ParquetFile(fs.open(...)).metadata.num_rows` over gcsfs, 128 threads (measured 395 footer reads/s ⇒ ~9
+      min for 218k reads); (4) classify `lr==0` contentless / `cr>=lr` superseded / `cr<lr` **unique**. Chunk + resume
+      by appending `{l,c,lr,cr,lsz}` to `rowcounts.jsonl` and skipping names already present. Then MOVE the confirmed
+      unique via `migrate_legacy_tick_buckets_to_canonical.py` (PAIRS `:52`) — for class-A-equivalents only;
+      class-B-equivalents inherit OR-1. _Gate_: exact unique count (not extrapolated); classification closes to 406,581.
+      _ABORT_: pass incomplete → **`market-data-tick-sports` is NOT delete-eligible** (OR-5). MDT legacy is dormant (all
+      writes 2026-06-27), so there is no race.
+- [ ] [DATA] P0. **T2.7 — Write the moved cells' manifest rows via a per-VM shard (never a direct index write).**
+      _Mechanism_: the canonical index gains rows only through `_index/per_vm/<VM_NAME>.parquet` + the consolidator's
+      additive merge (proven: 123,149 rows in the consolidated index, 0 in any shard). Emit one shard
+      `VM_NAME=sports-legacy-cutover-20260716` with `MANIFEST_PER_VM_SHARDS=true`, `record_captured(source=…)` for every
+      moved cell (`source=` is crosscutting and REQUIRED), correct source-aware `pipeline_mode`. **Never fake
+      `record_captured` for a cell with no backing object** (`codex/02-data/honest-absence-downstream-handling.md`).
+      _Gate_: shard exists; after the Phase-6 consolidator restart it merges and the index gains exactly the moved-cell
+      count. _ABORT_: any row would be written with `source=''` or a phantom `instrument_count=0` → STOP; that is the
+      pattern that created the 468 phantom residual.
+
+### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
+
+- [ ] [DATA] P0. **T3.1 — Purge the bogus `api_football × ODDS` rows — RE-MEASURE FIRST; the count is 123,149, not
+      127,018.** _Mechanism_: single target
+      `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`; predicate **delete
+      WHERE `source=='api_football' AND data_type=='ODDS'`**. **The `source` filter is MANDATORY** — `data_type=='ODDS'`
+      alone = 263,886 rows (footystats 140,574 + api_football 123,149 + blank-source 163); a sloppy predicate destroys
+      the real footystats population. Snapshot first to `_index/availability_index.<UTC-ts>.purge_af_odds.bak.parquet` —
+      a **SIBLING under `_index/`**, the proven convention (6 such `.bak` files already coexist there, none ever
+      re-absorbed). **NEVER into `_index/per_vm/`** (becomes shard #3 → resurrects every purged row → breaks
+      `baseline_shards=2`). _Gate_: post-purge assert (a) 0 rows match the predicate; (b) **footystats × ODDS == 140,574
+      UNTOUCHED**; (c) total dropped by exactly 123,149; (d) re-verify the count immediately before the delete. _ABORT_:
+      pre-delete count ≠ 123,149 → the class is no longer frozen → STOP and re-derive.
+- [ ] [DATA] P0. **T3.2 — Confirm the purge is TERMINAL before executing it (the "re-seeded nightly" premise is FALSE on
+      both halves).** _Mechanism_: three independent confirmations, all already measured — (1) **provenance**: 82,362 of
+      the 82,509 `expected_unattempted` rows came from ONE bulk run `enum-universe-sports-20260628-213115`, not the
+      01:30 cron (which only ever added 18-21 rows/night: 82,362 + 21 + 18×7 = 82,509 exactly); the 40,640
+      `empty_confirmed` rows were written 2026-07-13 with `enumerator_run_id=None` — not the enumerator at all. (2)
+      **the fix is deployed**: run `enum-universe-sports-20260716-013041` (exec `expected-universe-v2-sports-89dqt`,
+      completed 2026-07-16T01:30:56Z) wrote 45,622 rows with **0 api_football × ODDS** and 4,071 footystats × ODDS; the
+      per-run bogus series ends at 20260715. IS vendors UAC as a **local path dep**
+      (`instruments-service/pyproject.toml:82-83`
+      `[tool.uv.sources.unified-api-contracts] path = "../unified-api-contracts"`), so the image built
+      2026-07-16T01:02:28 baked in LDR's `57bcc7c5` — **IS images track LDR, not UAC main** (this resolves the apparent
+      contradiction). (3) **the writer guard is ON**: UTL `_writer_ingest.py:485` raises `MissingSourceError` when
+      `has_source_priority(ag, dt) and not is_valid_manifest_source(ag, dt, src)`;
+      `has_source_priority("sports","ODDS")` flipped False→True at `57bcc7c5` — the mis-stamp guard was **silently
+      DISABLED for 20 days**, which is how these rows were written unchallenged. _Gate_: all three re-confirmed at
+      execution time. _ABORT_: any per-run bogus count reappears after 20260715 → the fix regressed → do not purge (it
+      will re-seed).
+- [ ] [DATA] P0. **T3.3 — REMOVE, do not retype: `api_football × ODDS` is impossible-by-construction at 3 layers.**
+      _Mechanism_: confirm before purging — (a) **codex** `codex/02-data/sports-data-source-coverage-matrix.md:273-274`
+      _"api_football `/odds` is NOT used by instruments-service … there is no api_football odds path"_; `:312`
+      _"data_type=ODDS writer is footystats `get_fixture_odds_snapshot()` only"_. (b) **code** (grep-then-READ):
+      `api_football.py:649-655` `get_odds()` docstring _"API Football does not provide odds data."_;
+      `footystats.py:322-328` _"FootyStats does not provide odds via the standard interface."_ — both stubs. (c)
+      **UAC**: `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]=="footystats"` (`league_data.py:222`),
+      `("sports","ODDS"):["footystats"]` (`_source_priority_data.py:76`),
+      `is_valid_manifest_source("sports","ODDS","api_football") is False` **PINNED** by
+      `tests/unit/test_source_priority.py:576`. _Gate_: all 3 layers agree → REMOVE. _ABORT_: any layer says
+      api_football odds is legitimate → do not purge; retype instead.
+- [ ] [DATA] P1. **T3.4 — Race guard for the purge window.** _Mechanism_: `_index/per_vm/sports-fixtures-job.parquet` is
+      HOT (mtime 2026-07-16T06:33:51Z; written ~every 5 min by `uts-prod-sports-scheduler-cron`). Phase 0 already paused
+      it and the consolidators; **additionally** take `_index/consolidator.lock` for the read-modify-write so the purge
+      cannot race a consolidation and silently lose the fixtures job's live rows. _Gate_: lock held; shard mtime static
+      across the window. _ABORT_: shard mtime advances mid-purge → a writer escaped Phase 0 (F-5) → STOP, restore the
+      `.bak`.
+- [ ] [REVIEW] P2. **T3.5 — L6 gate redefinition: NO CHANGE NEEDED — verify-only, then close the item.** _Mechanism_:
+      **already implemented, tested, and shipped** — `unified-trading-pm@10ad5d69a` _"fix(audit): redefine
+      L6-legacy-only gate to real-data-only (operator ruling 2026-07-15)"_, verified **ancestor of BOTH
+      `origin/live-defi-rollout` AND `origin/main`**, working tree clean for that path. `_split_backed_cells()`
+      (`plans/audit/results/cf_manifest_audit_2026_06_01.py:156-182`) filters to `capture_status=='captured'`, groups by
+      `(date,venue,data_type)`, takes per-cell **MAX** `instrument_count` (not per-row — a cell fans out to many
+      per-league populations, so a per-row test misclassifies a real cell whose first row is `ic=0`); `_legacy_diff()`
+      (`:207-247`) sets `L6-legacy-only = GREEN if not (legacy_real - canonical)` and reports
+      `L6-phantom-residual = INFO(n)` on a separate visible line (`:242-245`). `"INFO(...)" != "RED"` so it never trips
+      `main()`'s `reds` aggregation (`:437`) nor the wrapper's (`cf_manifest_audit_all.py:80,87`) — **no wrapper change,
+      no alert-cron change, and NO tests must change** (`tests/unit/test_cf_manifest_audit_l6_gate.py`, 11 tests,
+      shipped in the SAME commit). _Gate_: re-run the gate → both surfaces GREEN (measured today: IS legacy-only-real
+      **0**, phantom-residual INFO(**468**); tick legacy-only-real **0**, phantom-residual INFO(**140**)). _ABORT_: gate
+      reads RED → real legacy-only data exists → Phase 2 is incomplete. **Do NOT treat L6 GREEN as delete-clearance —
+      see T4.1.**
+
+### PHASE 4 — VERIFY (object-layer proof; the manifest is NOT evidence)
+
+- [ ] [DATA] P0. **T4.1 — OBJECT-LAYER zero-unique proof. This, not L6, is the delete gate.** _Mechanism_: re-run the
+      T2.2 inventory + classification over both legacy buckets. **Why the manifest cannot clear the delete**: no
+      availability index has a **path/uri/bucket column at all** (columns are date, venue, data_type, source,
+      pipeline_mode, league_id, capture_status, instrument_count, …) — the bucket binding is **positional** (the
+      `_index` object physically lives in its bucket) and paths are DERIVED at read time. Therefore **zero rows in
+      either index mention `v1_archive`, and no row ever could** — the 398 objects were invisible to L6 **by
+      construction**. That is why `L6-legacy-only = 0` coexisted with 398 real legacy-only parquets. _Gate_: unique == 0
+      for **both** buckets, or every residual has a written, operator-accepted disposition. _ABORT_: unique > 0 without
+      a disposition → **DO NOT DELETE**.
+- [ ] [DATA] P0. **T4.2 — Prove the moved objects are READABLE at canonical paths (not merely present).** _Mechanism_:
+      sample ≥25 moved cells across every entity and both class A and class B; resolve each through the UAC SSOT
+      `candidate_parquet_paths()` and read it via the real consumer
+      (`features-service/features_service/sports/data/gcs_paths.py:38-54`
+      `resolve_instruments_bucket`/`resolve_tick_data_bucket`, `instruments-service/.../sports_dependency.py:103`).
+      _Gate_: 25/25 resolve and parse with the expected row counts. _ABORT_: any moved object is unreachable via the
+      SSOT path derivation → the path mapping is wrong → **STOP** (a copy at a path no reader derives is data loss with
+      extra steps).
+- [ ] [DATA] P1. **T4.3 — Rebuild the catalogue on canonical and verify.** _Mechanism_: the catalogue exists **only** in
+      canonical (`prod/catalog.parquet`, 27,221 rows, 435,970 B, mtime 2026-07-16T01:05:55Z); legacy has **no `prod/`
+      tree at all** (`gcloud storage ls -r gs://instruments-store-sports-central-element-323112/prod/` → "matched no
+      objects") — **nothing to migrate, nothing to repoint**; it carries no path/bucket column and zero `gs://` refs.
+      Re-run the regen owner (Cloud Run job `lifecycle-catalogue-regen-sports`, whose 01:00 cron matches the 01:05:55Z
+      mtime exactly). **Argument gap**: its arg is `--by-date-prefix sports_reference/by_date`, which does **not** cover
+      `sports_reference_v2/` — and would not have covered `sports_reference_v1_archive/by_date` had we moved it (we do
+      not: T2.1 deletes it). If T2.3 lands class-A objects under a new prefix, this arg must be updated or the catalogue
+      silently under-covers. _Gate_: `prod/catalog.parquet` mtime advances; row count ≥ 27,221; league_id nunique ≥ 94.
+      _ABORT_: row count drops → the regen lost coverage → restore the T0.2 `.bak` and diagnose.
+- [ ] [INFRA] P0. **T4.4 — `terraform plan` shows ZERO diff touching either legacy bucket. THIS IS THE GATE.**
+      _Mechanism_: after T5.1's config removal, `tofu plan` must not propose creating either bucket. _Gate_: plan clean.
+      _ABORT_: plan wants to CREATE a legacy bucket → T5.1 was skipped or incomplete → **do not delete** (see F-6 / the
+      resurrection precedent).
+- [ ] [INFRA] P1. **T4.5 — Resolve the `--asset-group`-less recon job (OR-8).** _Mechanism_:
+      `uts-prod-market-tick-data-     service-fast-t1-recon`'s baked args are `[--operation download --mode batch]` with
+      **no `--asset-group`**; UTL `service_cli.py:163-167` defines it `nargs='+'` with **no default** (→ `None`). The
+      infra leg **read the argparse definition but did not execute the resolver** to prove what the `None` branch
+      enumerates. Run it in dry-run and observe. _Gate_: a MEASURED list of asset_groups the unfiltered invocation
+      touches. _ABORT_: it writes sports to a **legacy** name → a live legacy writer exists (F-5) → STOP.
+
+### PHASE 5 — DELETE (gated on Phase 4 + a FINAL live-writer re-check)
+
+> **Non-negotiable ordering: config removal + `state rm` (T5.1) → apply + confirm no recreate (T4.4) → object-version
+> purge (T5.3) → bucket delete (T5.4).** Deleting before T5.1 resurrects the buckets.
+
+- [ ] [INFRA] P0. **T5.1 — Remove the Terraform DECLARATIONS + the import block, then `state rm`. Terraform does not
+      _reference_ these buckets — it OWNS them.** _Mechanism_: `terraform/gcp/main.tf:179-212`
+      `resource "google_storage_bucket" "instruments_sports" { name = "instruments-store-sports-${var.project_id}" }`
+      and `:358-374` `"market_data_sports" { name = "market-data-tick-sports-${var.project_id}" }` are **live resource
+      blocks with `force_destroy=false` + `versioning{enabled=true}`**. Delete both blocks (leave a REMOVED comment per
+      the in-file precedent at `:376-379`), delete the paired import block `_imports_reconcile.tf:74-77`
+      (`import { to = google_storage_bucket.market_data_sports; id = "central-element-323112/market-data-tick-sports-central-element-323112" }`)
+      **in the SAME commit** — that file's own header (`:55-57`) documents that an import block whose target resource is
+      removed makes `plan`/`apply` **error** — then
+      `terraform state rm google_storage_bucket.instruments_sports google_storage_bucket.market_data_sports`.
+      **`state rm`, NOT `destroy`** (destroy would attempt a delete and fail on `force_destroy=false`). Canonical
+      `-prd-` is already state-mv'd into the yaml-derived `google_storage_bucket.canonical` `for_each`
+      (`main.tf:301-307`, `canonical_buckets.tf:46,68-80`) so **no replacement block is needed**. _Gate_: T4.4 clean.
+      _ABORT_: `state rm` errors → STOP; do not touch the buckets. **Precedent (this is not hypothetical)**:
+      `main.tf:329-343` verbatim — _"recreated as an empty shell by an out-of-band `tofu apply` (metageneration=1,
+      creation_time=2026-07-13T00:52:06Z) because this resource block was still declared here after the physical bucket
+      was deleted"_; _"the exact failure that recreated ~30 cleanup-deleted buckets on 2026-07-12T21:59Z"_
+      (`[[terraform_bucket_estate_drift_resurrection_2026_07_13]]`). Sports is the **last** Group-A legacy twin still
+      declared — cefi/tradfi/defi were removed this way 2026-07-14 (`:309-322`), prediction 2026-07-13.
+- [ ] [INFRA] P0. **T5.2 — FINAL live-writer re-check immediately before the delete (F-5's last stand).** _Mechanism_:
+      re-run the T0.1 audit-log query with `--freshness=1d` **and** re-read the newest object mtime in both legacy
+      buckets. _Gate_: **zero** writes since T0.6 (the consolidator freeze). _ABORT_: **any** write since T0.6 → **DO
+      NOT DELETE**; return to T0.1. This is the single most likely way this cutover silently fails.
+- [ ] [INFRA] P0. **T5.3 — Purge object VERSIONS before the shell delete.** _Mechanism_: both buckets carry
+      `versioning{enabled=true}` + `force_destroy=false`, so the bucket cannot be deleted until every object **version**
+      is purged — `gcloud storage rm --recursive --all-versions gs://<legacy-bucket>`. _Gate_:
+      `gcloud storage ls -a     gs://<bucket>/**` → empty. _ABORT_: any version survives → the delete will fail;
+      diagnose (retention/hold).
+- [ ] [INFRA] P0. **T5.4 — Delete the two legacy buckets.** _Mechanism_:
+      `gcloud storage buckets delete gs://instruments-store-sports-central-element-323112` then
+      `gs://market-data-tick-sports-central-element-323112`. **`market-data-tick-sports` is gated on T2.6 completing**
+      (its unique count is currently an extrapolation — OR-5). _Gate_: `gcloud storage ls gs://<bucket>` → 404 for both;
+      `tofu plan` still clean 24h later (T6.0). _ABORT_: delete refused → force_destroy/versioning/state not resolved →
+      return to T5.1/T5.3.
+
+### PHASE 6 — RESTORE (exact reverse of the freeze; verify each first run green ON CANONICAL)
+
+> **Nothing un-pauses until: `tofu plan` is clean AND the legacy buckets are gone AND the canonical index has absorbed
+> the moved objects.** Consolidators restart FIRST (they were frozen last).
+
+- [ ] [INFRA] P0. **T6.0 — Post-delete resurrection watch.** _Mechanism_: 24h after T5.4, re-run `tofu plan` and
+      `gcloud storage ls gs://instruments-store-sports-central-element-323112`. _Gate_: plan clean; bucket still 404.
+      _ABORT_: bucket exists again → an out-of-band `apply` resurrected it → T5.1 was incomplete → re-open.
+- [ ] [INFRA] P0. **T6.1 — Restore the 3 consolidators FIRST (reverse order 22→20).** _Mechanism_: un-pause
+      `-features-sports-cron`, then `-market-data-sports-cron`, then `-instruments-sports-cron`. _Gate_ (first run):
+      exits 0; `_index/availability_index.parquet` mtime advances; row count **≥ the pre-freeze snapshot minus exactly
+      123,149** (the T3.1 purge) **plus** the T2.7 moved-cell count — never lower (a drop means the merge clobbered
+      rows); **no `Container terminated on signal 9`** (the instruments-sports merge is the known heavy case —
+      60-80s/2.09M rows/37 shards, 900s bump at `manifest_consolidator_scheduler.tf:88-92`); no stale-index loud-fail.
+      Let them run **≥3 clean ticks before any writer resumes** so the index is a known-good baseline. _ABORT_: row
+      count drops or OOM-kill → restore the T0.2 `.bak`; do not resume writers onto a corrupt index.
+- [ ] [INFRA] P0. **T6.2 — Restore the shared/uncertain writer (11) then features (10).** _Mechanism_: un-pause
+      `uts-prod-market-tick-data-fast-t1-schedule` — verify against T4.5's measured asset-group list that its target is
+      `market-data-tick-sports-prd-*` and **not** a legacy name. Then `features-service-sports-daily-trigger` → the
+      Workflow `features-service-sports-daily` → `features-service-sports-job` writes to
+      `features-sports-prd-central-element-323112`. **Note**: the features job spec has a hardcoded `--date 2026-07-14`
+      — **stale**; confirm the trigger overrides it or the job re-runs one fixed day forever (file an issue if so).
+      _Gate_: both first runs exit 0 onto canonical. _ABORT_: any legacy-name write → STOP; a legacy writer survived.
+- [ ] [INFRA] P0. **T6.3 — Restore the daily writers 9→5 (one at a time, verify each).** _Mechanism_: un-pause in order
+      — `uts-prod-mdps-odds-horizon-bucket-daily` (9; verify `reprocess_sports_odds` writes `processed/` under
+      canonical, exit 0); `lifecycle-catalogue-regen-sports-daily` (8; verify `_catalogue/` on canonical — and see
+      T4.3's `--by-date-prefix` coverage gap); `expected-universe-v2-sports-daily` (7; verify `--apply-write` lands rows
+      and `gs://instruments-store-sports-prd-…/prod/catalog.parquet` resolves — **and that it still writes 0
+      api_football × ODDS**, i.e. the T3.1 purge is not re-seeded); `is-daily-enum-sports` (6; verify the `--force`
+      re-enum writes a per_vm shard under `VM_NAME=is-daily-enum-sports` and the consolidator merges it next tick);
+      `understat-eu-typing-sweep-daily` (5; verify `--apply` exits 0, no manifest row-count regression). _Gate_: each
+      first run green on canonical before the next un-pause. _ABORT_: any regression → re-pause that job and diagnose;
+      do not cascade.
+- [ ] [INFRA] P0. **T6.4 — Restore the 3 enrichment crons (4) then the 4 fixtures crons (3).** _Mechanism_: footystats →
+      transfermarkt → soccer-football-info (verify each writes its `VM_NAME=sports-enrichment-*` per_vm shard and it
+      merges); then midnight → 6am → noon → 6pm (verify `uts-prod-instruments-service-sports-fixtures` exits 0, writes
+      per_vm shard `VM_NAME=sports-fixtures-job`, and does **zero direct index writes** — the per-VM-shard fix is
+      already in place, so a regression here means the fix was lost). _Gate_: each first run green; shards merge.
+      _ABORT_: a direct index write reappears → STOP; that is the bug that produced this whole class.
+- [ ] [INFRA] P0. **T6.5 — Restore the meta-launcher `uts-prod-sports-scheduler-cron` (1) LAST.** _Mechanism_: un-pause
+      only once T6.1-T6.4 are each proven green **individually** — it immediately re-dispatches tiers 1-4 and a failure
+      would be masked by fan-out. _Gate_: first `*/5` tick dispatches with no `"No cloud_run_job_name — skipping"`
+      warning except the known-empty ml-service entry (`sports-trigger-tiers.yaml:224`, deliberately `""`);
+      `sports_scheduler_state/` in `gs://deployment-scripts-central-element-323112` advances `last_run[tier]`. _ABORT_:
+      unexpected skip warnings → re-pause and diagnose.
+- [ ] [INFRA] P1. **T6.6 — Do NOT restore `sports-ref-v3-{1,2,3}-start` (2).** _Mechanism_: their 3 target instances do
+      not exist; leave DISABLED or delete per OR-7. _Gate_: absent from the enabled set. _ABORT_: none.
+- [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
+      `codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
+      `codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
+      `codex/05-infrastructure/manifest-consolidator-ssot.md` (legacy consolidator entries permanently removed);
+      SUPERSEDED-banner anything the cutover invalidated. _Gate_: every codex path named here is either updated or
+      explicitly confirmed unaffected. _ABORT_: none (review-blocking if skipped).
+- [ ] [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick.** _Mechanism_: per each file's
+      own `Delete-when` (all satisfied once T5.4 lands + orphan-sweep = 0): delete `migrate_sports_canonical_v9.py`,
+      `migrate_legacy_tick_buckets_to_canonical.py`, `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, and the ~26
+      legacy-reading `instruments-service/scripts/**` one-offs. **Also delete the doubly-broken gate**
+      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` — see
+      RISK-9; leaving it is a trap that re-issues a false COVERED verdict. **Retire the now-dead
+      `include_legacy_archive` knob** from UAC `gcs_paths.py`/`partition_paths.py`
+      (`rg 'include_legacy_archive\s*=\s*True'` → **zero hits** workspace-wide; the workspace bans shims). **Un-tick /
+      annotate** the plan item `- [x] ✅ [DATA] P0.     v1_archive ROW-coverage gate` in
+      `plans/active/sports_manifest_canonicalisation_2026_06_01.md` — it was ticked on _"GATE SCRIPT SHIPPED"_ evidence
+      (`market-tick-data-service@18ca0e23`), i.e. on **shipping a script, never on a verified run of it**; that is
+      exactly the false-progress class the commit+flip rule targets. Also correct that plan's standing claim that
+      v1_archive is _"COLUMN-superseded by the union of understat_xg + v2 fixtures + v2 fixture_stats"_ —
+      wrong-but-harmless: it is superseded by **v2 fixtures ALONE**, because the columns that supposedly required the
+      union are 100% empty. _Gate_: `rg -c 'sports-central-element-323112'` workspace-wide → 0. _ABORT_: none.
+
+---
+
+## RISK REGISTER — what could lose data at each phase
+
+| #    | Phase | Risk                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Severity | Mitigation                                                                                                                            |
+| ---- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| R-1  | 0     | **Unidentified live writer** re-creates legacy objects after the move, or writes during it → silently lost at delete. 125 writes on 07-15 with no known writer.                                                                                                                                                                                                                                                                                                | CRITICAL | T0.1 HARD GATE (audit logs + cohort attribution); T5.2 final re-check; ABORT the cutover if unnamed.                                  |
+| R-2  | 0     | Freezing the 4 fixture crons but not the `*/5` meta-launcher → fixtures job still dispatched every 5 min into a "frozen" estate.                                                                                                                                                                                                                                                                                                                               | HIGH     | T0.3 freezes the meta-launcher FIRST (freeze_order 1) — `sports-trigger-tiers.yaml` proves it dispatches the 3 job names.             |
+| R-3  | 0     | Freezing consolidators BEFORE the drain strands per-VM shards permanently (legacy has had no consolidator since 2026-07-13 — its shards can never merge).                                                                                                                                                                                                                                                                                                      | HIGH     | T0.5 drain gate ≥2 ticks before T0.6; poll on a progress metric.                                                                      |
+| R-4  | 2     | **The MOVE vehicle enumerates 4 of 7 trees as EMPTY and exits 0** (F-1) — `instrument_availability` alone is 119,858 objects. Undercount reported as success.                                                                                                                                                                                                                                                                                                  | CRITICAL | T2.2 drives from an independent object-layer inventory; the vehicle is a copy primitive only. OR-6.                                   |
+| R-5  | 2     | **Skip-if-exists skips the 13,222 class-B objects** (F-2) — canonical exists but holds fewer rows → 305,000+ rows lost at delete. Canonical is NOT a superset.                                                                                                                                                                                                                                                                                                 | CRITICAL | T2.4 + OR-1 (row-union vs overwrite); per-cell containment check before writing.                                                      |
+| R-6  | 2     | **The vehicle re-imports v1_archive into canonical** (F-3) — `SPORTS_REF_V1_ARCHIVE_PREFIX` ∈ `_INSTR_DATA_TREES` and IS enumerable.                                                                                                                                                                                                                                                                                                                           | HIGH     | T2.1 (delete archive) strictly BEFORE T2.3 (move).                                                                                    |
+| R-7  | 2     | **Day-window truncation** (F-4) — defaults 2019-01-01…2026-06-01 vs real span 2018-01-02…2026-12-06. Out-of-window days are never listed → never reported → never copied.                                                                                                                                                                                                                                                                                      | HIGH     | T2.3 passes the explicit full span; T4.1 re-inventory catches any residual.                                                           |
+| R-8  | 2     | Control-plane uniques are skipped **by construction** (`_keep()` filters `/_index/`, `/_vm_staging/`, `_SKIP_PREFIXES`) — incl. `_legacy_seed.parquet` at 1,757,469 rows.                                                                                                                                                                                                                                                                                      | HIGH     | T2.5 adjudicates each explicitly; OR-4. Delete blocked while `_legacy_seed` is unresolved.                                            |
+| R-9  | 2/4   | **A gate script that reads an empty set and reports PASS.** `verify_v1_archive_row_coverage_2026_06_27.py` globs `v1_archive` in the **PRD** bucket (tree exists only in legacy) → `v1_keys=∅` → _"VERDICT: COVERED — all 0 keys present"_. Second bug: it resolves `fixture_id` (a composite STRING) for v1 vs `af_fixture_id` (int) for v2 → 0/31 overlap → had the bucket been right it would have reported a FALSE 100% GAP. The two bugs mask each other. | CRITICAL | T2.1 proves coverage independently (all 398, real join key); T6.8 DELETES the script.                                                 |
+| R-10 | 3     | Purge predicate without the `source` filter destroys the real footystats population (`data_type=='ODDS'` alone = 263,886 rows vs the 123,149 target).                                                                                                                                                                                                                                                                                                          | CRITICAL | T3.1 mandates `source=='api_football' AND data_type=='ODDS'`; post-assert footystats × ODDS == 140,574 untouched.                     |
+| R-11 | 3     | A `.bak` written into `_index/per_vm/` becomes shard #3 → consolidator merges it → **resurrects every purged row** + breaks `baseline_shards=2`.                                                                                                                                                                                                                                                                                                               | CRITICAL | T0.2 + T3.1 mandate the SIBLING `_index/*.bak.parquet` convention (6 such files already coexist, none re-absorbed).                   |
+| R-12 | 3     | Purge races a consolidation → the hot `sports-fixtures-job.parquet` (mtime T-seconds) loses live rows.                                                                                                                                                                                                                                                                                                                                                         | HIGH     | T3.4 `_index/consolidator.lock` + Phase-0 pauses; ABORT if shard mtime advances.                                                      |
+| R-13 | 4     | **Treating L6 GREEN as delete-clearance.** No index has a path column → no row can reference `v1_archive` → L6 is blind to it **by construction**. This is exactly how "legacy-only=0" coexisted with 398 real parquets.                                                                                                                                                                                                                                       | CRITICAL | T4.1 makes the OBJECT layer the gate. The manifest is never evidence about objects.                                                   |
+| R-14 | 5     | **Terraform resurrection** — the blocks DECLARE the buckets; deleting without removing them recreates empty shells on the next apply.                                                                                                                                                                                                                                                                                                                          | CRITICAL | T5.1 (remove blocks + import block + `state rm`) → T4.4 (clean plan) → T5.3/T5.4. Precedent: ~30 buckets recreated 2026-07-12T21:59Z. |
+| R-15 | 5     | `_imports_reconcile.tf:74-77` left behind → `plan`/`apply` **errors on a missing import target** → blocks the WHOLE estate, not just sports.                                                                                                                                                                                                                                                                                                                   | HIGH     | T5.1 removes it in the SAME commit as the resource block.                                                                             |
+| R-16 | 5     | Legacy IAM grants left behind → `apply` fails post-delete (IAM member on a nonexistent bucket).                                                                                                                                                                                                                                                                                                                                                                | HIGH     | T1.4 canonicalises all 3 before the delete.                                                                                           |
+| R-17 | 5     | MDPS Cloud Run job **fails to START** (gcsfuse cannot mount a deleted bucket) — `:230` is a live **WRITE** mount.                                                                                                                                                                                                                                                                                                                                              | HIGH     | T1.3 removes both mounts + applies BEFORE the delete.                                                                                 |
+| R-18 | 5     | Deleting `market-data-tick-sports` on an **extrapolated** unique count (~52,400 from an n=400 sample).                                                                                                                                                                                                                                                                                                                                                         | HIGH     | T2.6 exact pass is a hard gate on T5.4 for that bucket. OR-5.                                                                         |
+| R-19 | 6     | Restoring writers onto an index that lost rows in the merge, or resuming the meta-launcher first so failures are masked by fan-out.                                                                                                                                                                                                                                                                                                                            | MEDIUM   | T6.1 ≥3 clean consolidator ticks first; T6.5 meta-launcher LAST; per-job first-run verification.                                      |
+| R-20 | all   | **Path-shape trap** — naive path-equality falsely reports "unique" (legacy is bare `entity=`; canonical has `pipeline_mode=`). Also `fetched_at_hour=` is a snapshot dimension (7× overcount) and byte size is NOT a row proxy (3.25% wrong).                                                                                                                                                                                                                  | CRITICAL | T2.2 cell-key normalisation via the UAC SSOT + mandatory ≥10-pair sample-verify before scaling.                                       |
+
+## ROLLBACK
+
+**Rollback is only fully available before T5.3 (object-version purge). After T5.4 the legacy bucket is gone — the T0.2
+snapshot + the moved canonical objects are the only copies.** Versioning is enabled on both legacy buckets, so
+individual object rollback is available until T5.3 purges the versions.
+
+| If this fails         | Rollback                                                                                                                                                                                                                                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 (freeze)      | `gcloud scheduler jobs resume <NAME>` in reverse freeze order. No data touched. Fully reversible.                                                                                                                                                                                                     |
+| Phase 1 (code/TF)     | `git revert` the repoint commits; `tofu apply` restores the mounts/IAM. **T5.1 is NOT part of Phase 1** — no bucket lifecycle change has happened yet. Fully reversible.                                                                                                                              |
+| T2.1 (archive delete) | Object versioning is ON → restore the 398 via `gcloud storage cp --all-versions` **until T5.3**. After T5.3: unrecoverable — but proven superseded on all 398 (0 rows lost).                                                                                                                          |
+| T2.3/T2.4 (moves)     | Copies are ADDITIVE to canonical; legacy is untouched (copy, not move — the delete is Phase 5). Roll back by deleting the copied canonical objects listed in the T2.2 copy list. **Class B overwrites are the exception** — restore the canonical originals from their T0.2 `.bak` / object versions. |
+| T3.1 (127k purge)     | Restore `_index/availability_index.<ts>.purge_af_odds.bak.parquet` over `_index/availability_index.parquet`. **Never restore it into `per_vm/`.**                                                                                                                                                     |
+| T5.1 (TF state rm)    | Re-add the resource blocks + `terraform import` the buckets back. Only possible while the buckets still exist.                                                                                                                                                                                        |
+| T5.4 (bucket delete)  | **NO ROLLBACK.** This is why T4.1 (object-layer zero-unique) + T5.2 (final writer re-check) are hard gates.                                                                                                                                                                                           |
+| Phase 6 (restore)     | Re-pause the offending job; restore the index `.bak`; resume one job at a time.                                                                                                                                                                                                                       |
+
+**Rollback ordering**: always reverse-order. Restoring a writer before its consolidator, or a meta-launcher before its
+tier jobs, re-corrupts the state you just restored.
+
+---
+
+## OPERATOR RULINGS NEEDED
+
+> Each is genuinely undecidable from the audits — they are **not** requests to re-confirm work already proven.
+
+**OR-1 (BLOCKING Phase 2c) — class B: how do we move 13,222 objects whose canonical twin has FEWER rows?** The
+operator's phrasing was _"MOVE any non already existent data"_ — object-existence semantics. But canonical is **not** a
+row-superset of legacy: 13,222 canonical objects hold strictly fewer rows (player_stats 111,827; standings 91,380;
+fixture_events 69,444; teams 16,502; player_values 16,233 — e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical
+38). Both move vehicles use skip-if-exists → they skip **every one of them** → deleting legacy destroys 305,000+ rows.
+
+- **A: row-union legacy ∪ canonical per cell, write the union to the canonical path [WORKER REC]** — safest; preserves
+  canonical-only rows; costs a read-merge-write per cell (13,222 cells).
+- **B: overwrite canonical with legacy wherever legacy ⊇ canonical** — simpler/faster, but loses canonical-only rows
+  anywhere containment does not actually hold.
+- **C: treat "non already existent" literally — skip class B and accept the row loss** — matches the operator's words
+  but contradicts the data-pipeline-correctness HARD RULE.
+- Other.
+
+**OR-2 (BLOCKING Phase 0) — the legacy bucket has a live writer we cannot identify.** 125 writes on 07-15 (real data
+paths, not just index artifacts), 2398 on 07-12 — yet no sports VMs, every Cloud Run spec canonical, and no resolver can
+produce the legacy name (proven at runtime). Cohort shape suggests a hand-run one-off.
+
+- **A: enable GCS data-access audit logs, wait 24-48h for attribution, then proceed [WORKER REC]** — costs delay, buys
+  certainty.
+- **B: proceed on the assumption it is a hand-run one-off now stopped** — risks silent re-creation post-delete.
+- **C: apply a deny-all bucket IAM policy to the legacy bucket and see what breaks/errors** — fast attribution, but may
+  break an unknown live consumer.
+- Other.
+
+**OR-3 (Phase 2a) — confirm executing the already-approved v1_archive delete.** The delete is an already-authored P0
+operator todo in the 2026-04-28 migration plan whose 7-day window expired ~2026-05-05. This audit independently proves
+it safe (398/398 covered, 0 rows lost, 0 value mismatches, the 41-column alarm vacuous). Bucket-scoped deletes are
+destructive → confirming rather than assuming.
+
+- **A: execute the delete now — it is the expired, pre-approved rollback window [WORKER REC]**
+- **B: park it under `_audits/` instead** — not recommended; parking is for real-but-out-of-model data, and this holds
+  zero unique observations (it would just re-contaminate).
+- Other.
+
+**OR-4 (BLOCKING Phase 5) — `_index/per_vm/_legacy_seed.parquet`: 1,757,469 rows in legacy, 0 in canonical.** The
+canonical seed is **EMPTY** (16.2 MB vs 18.7 KB). The legacy bucket has had no consolidator since 2026-07-13, so it can
+never merge on its own; the MOVE vehicle skips `/_index/` by construction.
+
+- **A: re-home it as a canonical per-VM shard and let the consolidator merge it [WORKER REC]** — but this adds 1.76M
+  rows to a 5.46M-row index; needs a row-count assertion.
+- **B: abandon it as a historical seed already reflected in the consolidated index** — plausible (the legacy index at
+  19:14:43Z postdates it) but **NOT PROVEN**.
+- **C: prove-then-decide — diff the seed's cells against the canonical index first.**
+- Other.
+
+**OR-5 (BLOCKING T5.4 for MDT) — delete `market-data-tick-sports` on an extrapolation, or finish the exact pass?** Its
+unique count (~52,400) is 9,927 verified + ~42,500 extrapolated from an n=400 sample of 108,970 crc-differing pairs. The
+exact pass is ~9 min of compute (395 footer reads/s) plus ~4 min of listing.
+
+- **A: finish the exact row-count pass (T2.6) before deleting [WORKER REC]** — ~15 min for certainty.
+- **B: delete on the extrapolation** — risks losing up to ~42,500 objects' unique rows.
+- Other.
+
+**OR-6 (BLOCKING Phase 2) — fix the MOVE vehicle, or drive the move from the object inventory?**
+`migrate_sports_canonical_v9.py` silently enumerates 4 of its 7 declared trees as empty (F-1), cannot see class B (F-2),
+would re-import v1_archive (F-3), and truncates the day window by default (F-4). It reports success while undercounting.
+
+- **A: drive Phase 2 from the T2.2 object-layer inventory; use `gcs_copy_object` directly; delete the vehicle at T6.8
+  [WORKER REC]** — the inventory method is already proven and reproduces every known ground truth.
+- **B: fix the vehicle (4 defects) and re-verify it** — it is a one-off scheduled for deletion at T6.8; fixing it buys
+  nothing durable.
+- **C: fix only `_list_tree` + the day defaults, and handle class B separately.**
+- Other.
+
+**OR-7 (Phase 0/6) — the 3 `sports-ref-v3-{1,2,3}-start` schedulers fire annually at instances that do not exist.**
+
+- **A: delete all 3 [WORKER REC]** — `gcloud compute instances list --filter='name~sports'` returns zero rows.
+- **B: leave them paused** in case the v3 reference VMs are rebuilt.
+- Other.
+
+**OR-8 (Phase 4) — `uts-prod-market-tick-data-service-fast-t1-recon` runs with NO `--asset-group`.** Its baked args are
+`[--operation download --mode batch]`; UTL `service_cli.py:163-167` gives `--asset-group` no default. The infra leg read
+the argparse definition but **did not execute the resolver** to prove what the `None` branch enumerates. It may write
+sports odds unfiltered.
+
+- **A: dry-run it and measure the asset-group list before restoring it (T4.5) [WORKER REC]**
+- **B: pin `--asset-group` explicitly on the job spec** — removes the ambiguity permanently.
+- Other.
+
+---
+
+## Progress Log
+
+**2026-07-16** — Plan authored from the 5-leg read-only audit (code / infra / objects / manifests / v1_archive). All
+five legs were read-only; zero mutations. Synthesis added five findings no single leg owned (F-1…F-5), each verified by
+direct code read at author time, not inherited from a leg:
+
+- **F-1** `migrate_sports_canonical_v9.py:463-467` `_list_tree` probes `{bucket}/{prefix}/day={d}`; 4 of the 7
+  `_INSTR_DATA_TREES` (`:110-117`) are not that shape → silently enumerate 0. `instrument_availability` = 119,858
+  objects.
+- **F-2** `_run_instruments_reconcile:717-737` docstring is explicit set-difference ("copy legacy-only") → the 13,222
+  class-B objects are structurally invisible to it; its own docstring punts schema regressions to "manual column-union".
+- **F-3** `SPORTS_REF_V1_ARCHIVE_PREFIX` ∈ `_INSTR_DATA_TREES:113` **and** is enumerable → the vehicle would re-import
+  the 398 archive objects into canonical, contradicting the v1_archive verdict. Forces 2a-before-2b ordering.
+- **F-4** `--start-date` 2019-01-01 / `--end-date` 2026-06-01 defaults (`:813-814`) vs the verified
+  2018-01-02…2026-12-06 span → silent truncation at BOTH ends.
+- **F-5** legacy bucket is NOT dormant (125 writes 07-15, real data paths) with no identifiable writer → hard gate T0.1.
+
+Also corrected the code leg's lifecycle finding: `migrate_sports_canonical_v9.py:2-4` **does** now carry
+`# Epic:/# Lifecycle:/# Delete-when:` markers — already remediated; T1.6 is a re-verify, not an edit.
+
+**Net payload**: 30,333 objects to migrate for `instruments-store-sports` (17,111 class A + 13,222 class B; the 398
+v1_archive objects are deleted, not moved). `market-data-tick-sports` ~52,400 ESTIMATED — T2.6 must make it exact before
+that bucket is delete-eligible. </content> </invoke>

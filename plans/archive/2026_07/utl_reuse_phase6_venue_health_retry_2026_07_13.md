@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 6 venue-error, health router, retry
 summary:
   Fold execution-service's second hand-rolled /health onto UTL make_health_router, and consolidate the MTDS + IS
   base-adapter retries onto the new UTL retry helper; venue-error classification already shipped.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

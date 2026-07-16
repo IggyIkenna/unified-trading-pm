@@ -15,7 +15,7 @@ tags: [reconciliation, pipeline-mode, data-correctness, live-trading, manifest, 
 related:
   [
     ../archive/2026_07/features_no_lookahead_reaggregation_guard_2026_06_28.md,
-    ../active/honest_coverage_smoke_harness_2026_06_28.md,
+    ../archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md,
     ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md,
     ../archive/2026_05/batch_live_symmetry_2026_05_10.md,
   ]
@@ -30,12 +30,12 @@ codex_ssots:
 related_plans:
   [
     ../archive/2026_07/features_no_lookahead_reaggregation_guard_2026_06_28.md,
-    ../active/honest_coverage_smoke_harness_2026_06_28.md,
+    ../archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md,
     ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md,
     ../archive/2026_05/batch_live_symmetry_2026_05_10.md,
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
-    ../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_strategy_reconciliation_2026_07_08.md,
   ]
 last_updated: 2026-07-12 # was: 2026-07-08 -- corrected 2026-07-14, verify-rerun-2 finding 14: body carries a dated "Count corrected 2026-07-12" entry (finding id 311, §A2 B-queue ruling) that postdated the recorded last_updated
 locked_by: live-defi-rollout
@@ -93,12 +93,12 @@ primarily by `instruments_master`, cross-referenced here since these 2 findings 
 violations). Not a new epic — operator decision 2026-07-08 to track under existing epics. Synced per
 `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (findings 18/19/337/363).
 
-- [x] [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+- [x] [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
       — (RESOLVED) the CCXT live adapter stored bare ccxt-native symbols; batch (Tardis) produced a differently-shaped
       canonical id for the same real instrument, across 13 major CeFi venues. Fixed + shipped
       `instruments-service@8544273d67f2865151ce0aec8e03e2b51ba37397` — all 13 canonical CeFi venues verified converged
       live=batch (status: complete, 2026-07-10).
-- [x] [`canonical_id_p0_strategy_reconciliation_2026_07_08`](../active/canonical_id_p0_strategy_reconciliation_2026_07_08.md)
+- [x] [`canonical_id_p0_strategy_reconciliation_2026_07_08`](../archive/2026_07/canonical_id_p0_strategy_reconciliation_2026_07_08.md)
       — (RESOLVED) depended on the plan above; live position reconciliation was silently defeated for every CCXT venue
       because the canonical-vs-raw string comparison never matched. Fixed + shipped (all 7 todos)
       `strategy-service@0c407b57e1aa92afb430fc818f91abeb7b186c13` +

@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — Phase 5 deployment-api cloud-SDK-direct (
 summary:
   Route deployment-api's remaining raw storage.Client() call-sites (builds routes + shard_detail) through UTL
   get_storage_client(); execution-service, agent-orchestrator, MTDS, and deployment-service already shipped.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,8 +21,8 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
