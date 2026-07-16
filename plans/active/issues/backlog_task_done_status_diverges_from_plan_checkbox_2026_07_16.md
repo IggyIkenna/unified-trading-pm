@@ -141,8 +141,11 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       `plan_flip["applicable"]` is true and the cited commit didn't touch the task's `plan_ref` checkbox; the legacy
       warn-only M3 path is preserved as the env-gated fallback. Added 3 regression tests
       (`tests/test_done_gate_plan_flip_hard_reject.py`): reject-on-unrelated-sha, accept-on-flip, and
-      legacy-path-when-env-disabled. Full `quality-gates.sh` green (1350 passed, 1 skipped). (repo: agent-orchestrator)
-      — agent-orchestrator@87d6fde, infra slot-13, 2026-07-16.
+      legacy-path-when-env-disabled. Full `quality-gates.sh` green (1350 passed, 1 skipped). Follow-on same session:
+      found + fixed two adjacent bugs (`verify._detect_sibling_pm_worktree`'s umbrella-vs-repo-level worktree mismatch,
+      and `regen_backlog_from_plan.py` dropping the `issues/` segment from `plan_ref`) that made this exact gate inert
+      or fleet-wide-false-rejecting for the cross-repo / issue-doc-sourced cases — see Progress Log. (repo:
+      agent-orchestrator) — agent-orchestrator@87d6fde + agent-orchestrator@666c860, infra slot-13, 2026-07-16.
 - [ ] [INFRA] P2. **One-off audit sweep**: cross-check every current `status: done` backlog task carrying a `plan_ref`
       against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
       this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
@@ -371,3 +374,44 @@ Flipped Todo 4 `[x]` with this finding recorded inline. Not reopening `-001`/`-0
 `[INFRA]` scope, outside this `data_engineering` task's remit and outside worker scope per RULES.md §4 — no
 `/api/backlog` reopen endpoint exists anyway, confirmed by the original filing). Shipping this doc via quickmerge and
 calling `/done`.
+
+### 2026-07-16T19:3xZ UTC — infra slot-13 (adjacent bugs found + fixed — the hard-409 now actually protects the cross-repo case)
+
+Before calling `/done` on the same task (`backlog_task_done_status_diverges_from_plan_checkbox-001`) whose own commit
+(`agent-orchestrator@87d6fde`) just shipped Todo 2, simulated `verify.check_plan_flip` locally against this exact
+session's own worktree + this task's own `plan_ref`
+(`plans/active/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`, NOT the `issues/`-prefixed real path
+— see below) to sanity-check the new hard-409 before shipping it fleet-wide. Found `applicable=False`
+(`cross_repo_no_pm_worktree`) — i.e. the gate would NOT have fired for this task at all, cross-repo. Traced why and
+found two confirmed, adjacent bugs in the exact mechanism my fix now hard-enforces:
+
+1. `verify._detect_sibling_pm_worktree` assumed the reported `/boot` worktree is already repo-level
+   (`.tabs/<N>/<repo>/`, PM sibling one level up) — but `verify.verify_done`'s own NEW-3 (2026-05-19) comment confirms
+   workers report the SLOT UMBRELLA (`.tabs/<N>/`), where the PM repo is a DIRECT CHILD, not a sibling of the parent.
+   Under the (now-standard) umbrella convention, `_detect_sibling_pm_worktree` always returned `None` — meaning the
+   ENTIRE cross-repo M3 plan-flip check (the pre-existing warning, and now my hard-409) has been silently inert for the
+   PM-integration-default cross-repo case (agents/RULES.md § 2) this whole time. Fixed to try both layouts (umbrella
+   first, then repo-level fallback).
+2. `regen_backlog_from_plan.py` derived every task's `plan_ref` as `f"plans/active/{plan_path.name}"` — correct for
+   plans directly under `plans/active/`, but WRONG for the `plans/active/issues/` docs the same regen also ingests (line
+   ~1137, the 2026-06-10 close-the-loop fix): it drops the `issues/` segment, so `plan_ref` never matches the real file.
+   Confirmed via this task's OWN `plan_ref` (reported at boot: no `issues/`, but the real file — this doc — lives at
+   `plans/active/issues/...`). Combined with fix #1 making `applicable=True` for real, this would have permanently
+   409-rejected `/done` for EVERY issue-doc-sourced task fleet-wide (found_in_commit can never match a wrong path) — a
+   materially worse outcome than the warning-only gap Todo 2 was fixing. Fixed to derive the ref relative to `plans_dir`
+   (preserves any subdirectory).
+
+Re-simulated after both fixes: `check_plan_flip` now correctly reports `applicable=True` for this task's real cross-repo
+layout. Added regression coverage: `test_detect_sibling_pm_worktree_resolves_umbrella_and_repo_level` +
+`test_done_rejects_cross_repo_umbrella_worktree_when_pm_flip_missing` +
+`test_done_accepts_cross_repo_umbrella_worktree_when_pm_flip_present` (all in
+`tests/test_done_gate_plan_flip_hard_reject.py`) and `test_issue_doc_plan_ref_preserves_issues_subdir` (in
+`tests/test_regen_backlog_from_plan.py`, asserting the exact `plan_ref` value round-trips with `issues/` preserved).
+Full `quality-gates.sh` green (1354 passed, 1 skipped, up from 1350 — the 4 new tests). Shipped via
+`quickmerge --agent --files`: `agent-orchestrator@666c860`.
+
+Per findings-triage (CLAUDE.md § "Findings triage" — "in your file → fix in same commit; adjacent → fix in YOUR plan"):
+both bugs are in the exact file/mechanism (`verify.py`'s `check_plan_flip` machinery) my own task just made
+hard-blocking, and leaving them unfixed would have made the hard-409 either (a) a no-op for the dominant cross-repo case
+or (b) a fleet-wide false-rejection footgun for every issue-doc-sourced task — either outcome undermines the very fix
+this task exists to ship, so both are in-scope here rather than a separate escalation. Calling `/done` now.

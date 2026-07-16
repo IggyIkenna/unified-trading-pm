@@ -1467,6 +1467,34 @@ unaffected — it has its own completed disposition.)
 > **⇒ MDT delete status: 🔴 STILL NOT DELETE-ELIGIBLE**, residue **~2,081 objects on 32 days** (1,737 class-B + 344 G1)
 > carrying **550,062 keys** — not 49,517 objects / 7,079,850 rows. **The correct remedy is a day-scoped recovery of 32
 > days**, not a generation recovery. **OR-5b(a)/(b)/(c) all need re-ruling on these numbers.**
+>
+> ---
+>
+> ## 🟢 CONFIRMED A SECOND TIME 2026-07-16 — and the MECHANISM is now identified → [`issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md)
+>
+> A second leg was dispatched to execute option D (on the pre-banner premise, plus a new "legacy is the ONLY complete
+> raw layer" claim from the recompute leg). It re-measured and **refused the merge again. Zero mutations.** Everything
+> above is upheld, and the missing mechanism is found:
+>
+> - **Why canonical already holds every legacy key**: canonical carries **16,969 `_migrated_` objects** (2026-05-05
+>   refactor, **1,815 days**) that **ARE** the G1 content — **30/30** sampled G1 objects are **row-identical and
+>   tick-key-identical** to their canonical twin (0 legacy-only, 0 canon-only; `source == ODDS_API` both sides).
+>   Canonical migrated ⊇ legacy G1 (1,815 days vs 386). **G1 recovery = copying what canonical has.**
+> - **The 32-day residue is corroborated independently**: **213/3,816** G1 objects have **no** canonical twin, on **23**
+>   days — **22 are exactly the gap days above**. Two methods, one answer.
+> - **🔴 NEW BIG FINDING — the migrated population is MIS-STAMPED and INVISIBLE to MDPS.** All **16,969** are
+>   `venue=ODDS_API` + `data_type=odds` yet **100% stamped `pipeline_mode=batch_footystats`** — **zero are footystats
+>   data** (violates `{mode}_{source}`, `codex/02-data/pipeline-mode-partition.md`). `reprocess_sports_odds.py` lists
+>   only `batch_odds_api`/`live_odds_api` and excludes `_migrated_`, so it reads the **de-duplicated** half (5,626 rows
+>   on 2022-04-16) and never the **full-horizon** half (79,773 rows). **That — not a truncated canonical, and not a
+>   missing legacy recovery — is why the features recompute starves and why `--force` deletes horizons.** The blocked
+>   recompute needs a **~4-line MDPS change**, no GCS migration.
+> - **`sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` has its cause corrected**: its symptom and
+>   every number reproduce; its "canonical raw is truncated ⇒ recover from legacy" diagnosis and fix direction (a) are
+>   **refused**. Its loss-guard (b) stands, P0.
+>
+> **⇒ Option D stays REFUSED (twice, independently). MDT stays NOT delete-eligible on the 32-day / 550,062-key residue.
+> The delete gate is that day-scoped recovery — nothing else.**
 
 **OR-5b(c) (NEW — raised by the OR-5b investigation 2026-07-16, BLOCKING T5.4 for MDT alongside (a)/(b)) — what is the
 disposition of the 746,928 post-kickoff / in-play rows?** ⚠️ **The 746,928 figure is a ROW count and is superseded: the

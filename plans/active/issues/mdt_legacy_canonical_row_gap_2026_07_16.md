@@ -67,6 +67,25 @@ source:
 
 # MDT legacy↔canonical row gap — why canonical holds 6.7M fewer rows (OR-5b)
 
+> # 🟢 CONFIRMED + EXPLAINED 2026-07-16 by [`sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md) — the G1 leg re-ran the merge decision independently and **refused it a second time.**
+>
+> The banner below is **upheld on new, independent evidence**, and the mechanism behind it is now identified:
+>
+> - **Why canonical holds every legacy key**: **16,969** canonical `_migrated_` objects (2026-05-05 refactor, 1,815
+>   days) **are** the G1 content — **30/30** sampled G1 objects are row-identical and tick-key-identical to their
+>   canonical twin (0 legacy-only, 0 canon-only). Canonical migrated ⊇ legacy G1 (1,815 days vs 386). **"Recovering G1"
+>   copies data canonical already has.**
+> - **Why the 32-day residue is real**: **213/3,816** G1 objects have **no** canonical migrated twin, on **23** days —
+>   **22 of them are exactly this banner's gap days**. Two independent methods, one answer. The 550,062-key / 32-day
+>   residue stands.
+> - **Why `G3 ⊂ G2 ⊂ G1` looked true at the row layer**: canonical holds **two** populations per day — the June
+>   `batch_odds_api` capture (de-duplicated, ~1 quote per tick, mostly the T-24h wave) and the `batch_footystats`
+>   `_migrated_` copy (the full fetch-wave grid). Per-pair row comparisons saw only the first.
+>
+> **The one thing the banner missed**: the recompute leg's starvation is real. MDPS reads only the `batch_odds_api`
+> prefix and excludes `_migrated_`, so it cannot see the richer half — "nothing to recover" is right about the
+> **bucket** and wrong about the **consumer**. See the new doc.
+
 > # 🔴 SUPERSEDED IN PART 2026-07-16 by the OR-5b(a) RECOVERY LEG — **THE HEADLINE OF THIS DOC IS AN ARTIFACT. DO NOT ACT ON IT.**
 >
 > **The recovery leg re-measured before writing, per the standing "never inherit a classification, re-measure at the

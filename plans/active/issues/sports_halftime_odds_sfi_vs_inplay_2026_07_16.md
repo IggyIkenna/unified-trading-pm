@@ -462,44 +462,60 @@ proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data d
       dropped row. A wholly in-play shard records `empty_confirmed` (honest absence), never a false `attempted_failed`.
       Evidence: QG green (1978 passed, 1 skipped); 21 new regression tests in `TestPostKickoffRowsRejected`; measured
       OLD admitted 5/5 post-kickoff values into T-0, NEW admits 0/5, pre-match assignment byte-identical.
-- [ ] [DATA] P0. **RECOMPUTE the canonical T-0 lineage + its features descendants (sports is FROZEN — do NOT run this
-      until the cutover completes).** Measured scope, full census, zero misses: - **MDPS canonical**:
-      `data_type=odds_horizon_bucket`, `timeframe=T-0` — **11,373 shards / 368,366 rows** (2020-06-06→2026-06-19, 38
-      leagues). **146,738 rows (39.83%) are post-kickoff** and disappear on re-derive; **7,101/11,373 shards (62.4%)**
-      carry ≥1. Affects **17,899/27,465 fixtures (65.2%)** across **1,316/1,795 days**. The other 7 timeframes are
-      **PROVEN CLEAN — 0/4,151,352 rows** post-kickoff across 97,631 shards (each timeframe's worst value sits exactly
-      inside its own cap: T-10m 5.0, T-1h 50, T-2h 105, T-4h 220, T-6h 330.2, T-12h 675, T-24h 1380) → **recompute scope
-      is T-0 ONLY**, not the whole ladder. - **features-service**: on those 1,316 dates — **1,275 `ODDS_FEATURES` +
-      15,415 `DERIVED_FEATURES` shards** (the 559-col matrix) must re-derive. `FIXTURE_FEATURES` (26,942 shards) are not
-      odds-derived → out of scope. - **RECOMPUTE DELTA (2026-07-16, closing-line-leak leg —
-      features-service@bf6fc2f4).** The horizon-gate fix **widens the ODDS_FEATURES scope from 1,275 to the FULL
-      1,812-shard census** and changes the _reason_. The T-0 ordering bug only touched the **1,316 dates** that actually
-      had post-kickoff rows; the closing-line leak is **unconditional — it affects every date that has any T-0 bucket at
-      all**, because the aux merge broadcast the closing line into the pre-match rows regardless of whether T-0 was
-      clean. Full census (single walk, `gs://features-sports-prd-central-element-323112/sports_features/by_date/**`):
-      **1,812 `ODDS_FEATURES` shards over 2020-06-07→2026-06-20** carry the leak — **+537 shards beyond the ordering-bug
-      scope**. Measured on a 91-date evenly-spaced sample: **1,365/1,914 T-24h rows (71.32%)** carry ≥1 non-NULL
-      closing-derived column, across **78/91 dates (85.7%)**; the residual 28.7% are fixtures with no T-0 bucket (honest
-      absence), not clean rows. `DERIVED_FEATURES` (15,415 shards) are **NOT** widened — they carry no odds columns
-      (`derived_features_exporter` runs no odds calculator), so their recompute stays driven by the T-0 ordering fix
-      alone. **Contaminated column set is also wider than the 27**: + **22 tier** columns
-      (`sharp_consensus_*`/`soft_consensus_*`/`exchange_price_*`/`sharp_soft_delta_*`/`*_disagreement_*`/
-      `bookmaker_count_*`) and + **38 prob-space** columns — all pooled over every horizon incl T-0
-      (`bookmaker_count_total` = **164** in a T-24h row vs **21** genuine T-24h quotes). Recompute must therefore
-      re-derive ODDS_FEATURES on **all 1,812 shards**, not the 1,275 subset. Still **NOT recomputed here — sports is
-      FROZEN mid-cutover.**
-- [ ] [CODE] P0. **The features `HT` model horizon loses its odds source when the leak is fixed — it is fed BY the
-      bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and `FEATURE_HORIZONS["HT"]` ends `[…, "T-0", "HT"]`; MDPS
-      never emits `horizon_name="HT"`, so `_find_best_snapshot` falls back to the **MDPS T-0 bucket** (verified by
-      running the real code). T-0 was the only bucket carrying `bm<0` **because the bug put them there** — so the HT
-      horizon was silently living off the leak. Post-fix, `_find_best_snapshot` still returns T-0, now pre-match-only →
-      **HT feature rows become kickoff prices mislabelled `horizon="HT"`** (conservative — no lookahead — but
-      semantically wrong). Correct fix = point the HT horizon at the **quarantined in-play population** from OR-5b(c)
-      B-REFINED, or drop the HT odds horizon until that population exists. **This invalidates the "there is no HT
-      horizon" framing in §3 of this doc — true of MDPS's `TIER1_HORIZONS`, FALSE of features-service, which has a real,
-      specified HT model boundary** (`features_service/sports/docs/specs/halftime_data_architecture.md`: predict the 2nd
-      half at half-time from actual HT scores + progressive stats). At that boundary post-kickoff odds are **correct PIT
-      data, not leakage** — the defect was always the CONTAINER (a pre-match bucket), never the rows themselves.
+- [~] [DATA] P0. **PARTIALLY DONE 2026-07-16 — MDPS T-0 leg COMPLETE (146,738 → 0, verified); features leg BLOCKED (see
+  § "T-0 recompute executed" below).** The MDPS canonical T-0 lineage is clean: 146,738 post-kickoff rows removed,
+  full-census verified 0 remaining, zero collateral loss. The `ODDS_FEATURES` recompute is **NOT run** — the prescribed
+  `--force` re-derive is DESTRUCTIVE against the current corpus (upstream is thinner than its own descendants: measured
+  13 fixtures → 1 on day=2024-01-01). Needs the per-date guard in the sub-todo below. Original scope text retained:
+  **RECOMPUTE the canonical T-0 lineage + its features descendants (sports is FROZEN — do NOT run this until the cutover
+  completes).** Measured scope, full census, zero misses: - **MDPS canonical**: `data_type=odds_horizon_bucket`,
+  `timeframe=T-0` — **11,373 shards / 368,366 rows** (2020-06-06→2026-06-19, 38 leagues). **146,738 rows (39.83%) are
+  post-kickoff** and disappear on re-derive; **7,101/11,373 shards (62.4%)** carry ≥1. Affects **17,899/27,465 fixtures
+  (65.2%)** across **1,316/1,795 days**. The other 7 timeframes are **PROVEN CLEAN — 0/4,151,352 rows** post-kickoff
+  across 97,631 shards (each timeframe's worst value sits exactly inside its own cap: T-10m 5.0, T-1h 50, T-2h 105, T-4h
+  220, T-6h 330.2, T-12h 675, T-24h 1380) → **recompute scope is T-0 ONLY**, not the whole ladder. -
+  **features-service**: on those 1,316 dates — **1,275 `ODDS_FEATURES` + 15,415 `DERIVED_FEATURES` shards** (the 559-col
+  matrix) must re-derive. `FIXTURE_FEATURES` (26,942 shards) are not odds-derived → out of scope. - **RECOMPUTE DELTA
+  (2026-07-16, closing-line-leak leg — features-service@bf6fc2f4).** The horizon-gate fix **widens the ODDS_FEATURES
+  scope from 1,275 to the FULL 1,812-shard census** and changes the _reason_. The T-0 ordering bug only touched the
+  **1,316 dates** that actually had post-kickoff rows; the closing-line leak is **unconditional — it affects every date
+  that has any T-0 bucket at all**, because the aux merge broadcast the closing line into the pre-match rows regardless
+  of whether T-0 was clean. Full census (single walk,
+  `gs://features-sports-prd-central-element-323112/sports_features/by_date/**`): **1,812 `ODDS_FEATURES` shards over
+  2020-06-07→2026-06-20** carry the leak — **+537 shards beyond the ordering-bug scope**. Measured on a 91-date
+  evenly-spaced sample: **1,365/1,914 T-24h rows (71.32%)** carry ≥1 non-NULL closing-derived column, across **78/91
+  dates (85.7%)**; the residual 28.7% are fixtures with no T-0 bucket (honest absence), not clean rows.
+  `DERIVED_FEATURES` (15,415 shards) are **NOT** widened — they carry no odds columns (`derived_features_exporter` runs
+  no odds calculator), so their recompute stays driven by the T-0 ordering fix alone. **Contaminated column set is also
+  wider than the 27**: + **22 tier** columns
+  (`sharp_consensus_*`/`soft_consensus_*`/`exchange_price_*`/`sharp_soft_delta_*`/`*_disagreement_*`/
+  `bookmaker_count_*`) and + **38 prob-space** columns — all pooled over every horizon incl T-0 (`bookmaker_count_total`
+  = **164** in a T-24h row vs **21** genuine T-24h quotes). Recompute must therefore re-derive ODDS_FEATURES on **all
+  1,812 shards**, not the 1,275 subset. Still **NOT recomputed here — sports is FROZEN mid-cutover.**
+- [x] [CODE] P0. **DONE — features-service@c57cc753** (2026-07-16): HT now emits **honest absence** rather than
+      pre-match prices mislabelled `horizon="HT"`. `_find_best_snapshot` gained `EXACT_SNAPSHOT_HORIZONS = {"HT"}`: HT
+      requires a snapshot captured AT the horizon and returns `None` (logging a typed reason) instead of falling back
+      down `FEATURE_HORIZONS["HT"]` to the pre-match T-0 bucket. The slot stays declared in
+      `MODEL_HORIZONS`/`FEATURE_HORIZONS`, so the OR-5b(c) B-REFINED in-play population (or the odds-api in-play capture
+      leg) populates it with **no contract change**. Ruling applied: honest absence over a mislabelled row
+      (`codex/02-data/honest-absence-downstream-handling.md`). **Verified on real data, not just unit tests**: the claim
+      that HT is fed by the bug is CONFIRMED — shipped HT rows on day=2020-06-07 sit at `minutes_to_kickoff = -18.2`
+      (post-kickoff, i.e. the leak), and on day=2020-06-09 HT resolved to a **T-10m** price (+10.0) — already
+      mislabelled TODAY, before any fix. Evidence: 4 new regression tests (`TestHTHorizonHonestAbsence`) + a live batch
+      run logging `Horizon HT: no snapshot captured at this horizon —     emitting nothing (honest absence)`; QG green
+      (17,611 passed, 209 skipped). Original finding text retained: **The features `HT` model horizon loses its odds
+      source when the leak is fixed — it is fed BY the bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and
+      `FEATURE_HORIZONS["HT"]` ends `[…, "T-0", "HT"]`; MDPS never emits `horizon_name="HT"`, so `_find_best_snapshot`
+      falls back to the **MDPS T-0 bucket** (verified by running the real code). T-0 was the only bucket carrying `bm<0`
+      **because the bug put them there** — so the HT horizon was silently living off the leak. Post-fix,
+      `_find_best_snapshot` still returns T-0, now pre-match-only → **HT feature rows become kickoff prices mislabelled
+      `horizon="HT"`** (conservative — no lookahead — but semantically wrong). Correct fix = point the HT horizon at the
+      **quarantined in-play population** from OR-5b(c) B-REFINED, or drop the HT odds horizon until that population
+      exists. **This invalidates the "there is no HT horizon" framing in §3 of this doc — true of MDPS's
+      `TIER1_HORIZONS`, FALSE of features-service, which has a real, specified HT model boundary**
+      (`features_service/sports/docs/specs/halftime_data_architecture.md`: predict the 2nd half at half-time from actual
+      HT scores + progressive stats). At that boundary post-kickoff odds are **correct PIT data, not leakage** — the
+      defect was always the CONTAINER (a pre-match bucket), never the rows themselves.
 - [x] [CODE] P0. **BIG FINDING (new, independent of the ordering bug) — the horizon gate does not gate the
       T-0-closing-derived columns.** `compute_clv_features` defines closing as `horizon_name == "T-0"` and
       `compute_opening_odds` computes movement vs that closing; `_compute_aux_features` merges
@@ -764,3 +780,138 @@ future exports.
   guard: it strips the aliases regardless of what the sidecar claims.
 - The **HT-horizon odds source** P0 todo above is now _more_ urgent: post-fix, `clv_*` at HT is computed from a T-0
   bucket that `_find_best_snapshot` still resolves — correct PIT, but the HT container question stands.
+
+---
+
+## T-0 recompute EXECUTED — the leak is gone; the features leg is BLOCKED (2026-07-16)
+
+> **Shipped**: features-service@c57cc753 (HT honest absence) · market-data-processing-service@e2ec8ce (stale-shard
+> reconcile). **Sports stayed FROZEN** — all three sports consolidators (`features-sports`, `market-data-sports`,
+> `instruments-sports`) and every sports scheduler verified PAUSED before and after; **nothing was resumed**.
+
+### 1. Scope RE-VERIFIED independently (the standing 4-audits lesson) — every number confirmed
+
+Full census, zero read failures, single walk (`gcloud storage ls -r` cached locally, reused for every check):
+
+| claim                                          | doc     | measured    | verdict         |
+| ---------------------------------------------- | ------- | ----------- | --------------- |
+| canonical T-0 shards                           | 11,373  | **11,373**  | ✅              |
+| T-0 rows                                       | 368,366 | **368,366** | ✅              |
+| T-0 post-kickoff rows                          | 146,738 | **146,738** | ✅ (39.83%)     |
+| T-0 shards carrying ≥1                         | 7,101   | **7,101**   | ✅              |
+| worst `bm_minutes_to_kickoff`                  | −374.6  | **−374.6**  | ✅              |
+| other 7 timeframes post-kickoff                | 0       | **0**       | ✅ of 4,151,352 |
+| `ODDS_FEATURES` shards (FULL scope, not 1,275) | 1,812   | **1,812**   | ✅ 1,812 days   |
+| affected days                                  | 1,316   | **1,316**   | ✅              |
+
+**Two corrections to the doc's own numbers** (immaterial to scope, but the record should be right):
+
+- The "97,631 shards" for the other 7 timeframes is a transcription slip — the real count is **101,631**. The ROW census
+  (4,151,352) matches exactly, so the original census did cover all of them; only the shard tally was mistyped.
+- `DERIVED_FEATURES` exclusion **verified before acting on it**, at BOTH levels: `derived_features_exporter` imports no
+  odds calculator and never calls `read_bucketed_odds` (code), and 0/40 sampled shards carry any odds-family column
+  (data). Correctly excluded.
+
+### 2. 🔴 BIG FINDING — the prescribed `--force` re-derive is DESTRUCTIVE. Each layer is RICHER than its own upstream.
+
+**The recompute mechanism in the todo above cannot be run as written.** Discovered by piloting one day, measured, then
+fully reverted from GCS soft-delete (verified byte-exact).
+
+`reprocess_sports_odds.py --force` re-derives a day from **today's canonical raw**. That raw no longer contains what the
+existing corpus was built from:
+
+| day        | canonical raw rows | legacy raw rows | ratio     |
+| ---------- | ------------------ | --------------- | --------- |
+| 2022-04-16 | **5,626**          | **79,773**      | **14.2×** |
+| 2025-04-12 | 168,653            | —               | intact    |
+| 2024-11-09 | 147,110            | —               | intact    |
+
+A pre-flight harness (read-only: runs the real adapter, compares to the corpus per horizon) gives the verdict per day:
+
+- **2022-04-16 → UNSAFE**: re-derive yields T-24h only; would destroy **4,741 legitimate pre-match rows**
+  (T-10m/T-12h/T-1h/T-2h/T-4h/T-6h all → 0).
+- **2025-04-12 / 2024-11-09 → SAFE**: every non-T-0 horizon reproduces **delta 0** (exact), T-0 drops precisely the
+  post-kickoff rows (+18/+12 extra valid rows the richer raw supports).
+
+**The old corpus is NOT itself mis-bucketed** — falsified rather than assumed: every non-T-0 shard on 2022-04-16 is
+**100% inside its own staleness cap** (T-10m bm 5.6–14.9, T-12h 706.7–744.1, T-6h 343.4–380.4, …). Only T-0 was bad (21%
+valid). So the multi-horizon data is real, and a blind re-derive really would have destroyed it.
+
+**Same pathology one layer down**: `odds_features` is richer than the MDPS bucketed layer it derives from.
+day=2024-01-01 holds **13 fixtures** in `odds_features` while MDPS bucketed holds **1**. Blast radius measured on a
+31-date evenly-spaced sample: **4/31 dates (13%)** would LOSE fixtures on recompute (18 fixtures total) — bounded, not
+universal, but non-zero. **This is why the features recompute was NOT run.**
+
+> **Consequence for the cutover lane**: the sports lineage cannot currently rebuild itself at ANY layer. Until the
+> legacy→canonical raw recovery (OR-5b(b) option-D G1 read-split-merge) lands, every `--force` re-derive is a data-loss
+> event. Filed: `./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`.
+
+### 3. What was actually done — a surgical filter, not a re-derive
+
+MDPS@3bf56ff changes **only** the `bm<0` branch (post-kickoff → reject); rows with `bm>=0` are byte-identical
+(test-enforced). So removing `bm<0` rows from the existing T-0 shards **is exactly what the fixed code emits from the
+same inputs** — with zero dependency on raw completeness. This is the least-bad path: it fulfils the intent (remove the
+leak) without the mechanism's destructiveness.
+
+**Result — verified by a FRESH full census, not by re-reading my own output:**
+
+| metric                    | before  | after       |
+| ------------------------- | ------- | ----------- |
+| canonical T-0 shards      | 11,373  | **8,937**   |
+| canonical T-0 rows        | 368,366 | **221,628** |
+| **T-0 post-kickoff rows** | 146,738 | **0** ✅    |
+| worst `bm`                | −374.6  | **0.0**     |
+
+Both deltas are exact: 11,373 − 2,436 = 8,937; 368,366 − 146,738 = 221,628. 4,665 shards rewritten in place, 2,436
+emptied shards deleted (honest absence — the fixed writer emits no group for them).
+
+**Blast radius contained, measured:** total bucketed objects 222,316 → 219,880 (delta **2,436** = exactly the emptied
+T-0 shards). Non-T-0 canonical **unchanged at 101,631**. The legacy (no-`pipeline_mode=`) layout **untouched at
+109,312** — it is fully shadowed (all 1,813 legacy days have a canonical counterpart, and the features reader probes
+canonical first and only falls back when canonical is empty for that day).
+
+### 4. Writer gap found + fixed — MDPS@e2ec8ce
+
+`_write_bucketed_output` was **overwrite-only**: it uploads the (league, horizon) groups present in the NEW frame and
+never removes shards the derive no longer produces. So a shard whose rows all become invalid keeps its **stale parquet
+on disk**, and readers (which list the date prefix and concatenate) keep consuming it. Measured: **2,436 of the 11,373**
+T-0 shards go fully empty under the fix — a naive `--force` recompute would have left **43,119 leaked rows (29.4%)**
+live, and the "146,738 → 0" assertion would silently have failed at 43,119. Now reconciled via `_delete_stale_shards`
+(canonical prefix only; never the legacy layout; never on a degenerate/empty derive), + 5 regression tests.
+
+### 5. Model quarantine — DONE (nothing deleted)
+
+All 3 CLV models flagged unusable, **artifacts retained**, verified read-back (manifest still parses, 15 other models
+untouched). Leak re-confirmed independently before acting: `target_type='clv'` **and** `clv_home` present in
+`feature_names` — it predicts CLV from CLV. Metrics re-measured: **0.9936** (V20260417164033), **1.0** (…154715,
+degenerate), **0.6411** (…201036).
+
+Flags written (additive keys — `quarantined` / `usable:false` / `promotion_blocked:true` / `quarantine_reason`) to
+`model_registry/manifest.json` (entry + every version), each `model_registry/metadata/<id>/…/metadata.json`, and a
+`QUARANTINED.json` marker beside each `model.joblib`.
+
+### 6. ML-readiness — BEFORE captured; AFTER not meaningful yet
+
+`verify_ml_readiness.py --start-date 2020-06-07 --end-date 2026-06-20` (full corpus), BEFORE: **2,205 dates checked ·
+1,021 passed · 791 failed · 393 missing · avg non-NULL 94.0% · gate NO**. (1,021+791 = 1,812 = the odds_features census
+— consistent.) **AFTER is deliberately not reported**: the gate measures `odds_features`, which was NOT recomputed, so
+it would be unchanged by construction. Reporting it as an "after" would be a false signal.
+
+## Todos (opened 2026-07-16 by the T-0 recompute leg)
+
+- [ ] [DATA] P0. **Recompute `ODDS_FEATURES` (1,812 shards) behind a PER-DATE loss guard.** Blocked on the guard, not on
+      the fix: features-service@bf6fc2f4 + @c57cc753 are live and correct, but a blind recompute drops fixtures on ~13%
+      of dates (measured 4/31 sample; day=2024-01-01 13 → 1). Guard = compare `event_id` count in the existing
+      `odds_features` shard vs fixtures reachable from MDPS bucketed for that date; recompute where `>=`, SKIP + report
+      where it would lose fixtures. Then re-run `verify_ml_readiness.py` and report before/after honestly (a DROP is
+      correct — removing leaked columns removes fake signal). Requires `MANIFEST_CONSOLIDATED_STALENESS_SEC` raised for
+      the run (sports is frozen → its consolidators are deliberately paused → the `assert_upstream_manifest_healthy`
+      startup gate fails closed; the read path lists GCS directly and does not consult the index, and the per-VM merge
+      is only 2 shards / 43 MiB so there is no OOM exposure).
+- [ ] [DATA] P1. **Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards.** They still read as
+      `captured` in the availability index; they should be `empty_confirmed` (honest absence). NOT done here: the
+      operator scoped this session's manifest work to the FEATURES surface only, and the market-data-sports consolidator
+      is owned by the in-flight bucket cutover (its unmerged shard `_index/per_vm/cutover-move-20260716.parquet` must
+      not be merged by anyone else).
+- [ ] [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in place
+      as the reference for what the leak produced. Do not promote or cite them.
