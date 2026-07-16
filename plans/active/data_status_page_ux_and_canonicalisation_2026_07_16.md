@@ -743,12 +743,27 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 - [ ] [DATA] P2. _(Q2 — CeFi legacy lowercase dupes)_ Collapse `perpetual`→`PERPETUAL` (1.15M) + `spot`→`SPOT_PAIR`
       (502k) in the cefi availability index (the P4-A display alias makes them READ canonical, but they remain distinct
       manifest rows). This IS the P4 DATA P2 legacy-row canonicalization migration — do it for cefi.
-- [ ] [DATA] P2. _(Q2 — DeFi two data_types)_ **DECIDED (operator round-2 2026-07-16): `instruments` is canonical for
-      DeFi.** Migrate the defi availability-index rows carrying `data_type='instrument-catalog'` (8.45M) →
-      `data_type='instruments'` (dedup against existing `instruments` rows on the shard atom; see the prior
-      `backfill_defi_catalog_data_type_2026_06_21.py` for the pattern), fix the writer so no new `instrument-catalog`
-      rows are emitted, then regen. Preserve shard-atom identity across MTDS/MDPS/features (data_type is a shard axis
-      there).
+- [x] [DATA] P2. ✅ _(Q2 — DeFi two data_types)_ **DECIDED (operator round-2 2026-07-16): `instruments` is canonical for
+      DeFi.** Root cause: the LEGACY `_write_catalogue_record` path
+      (`instruments_service/engine/orchestrator/     catalogue.py`) used to stamp `data_type='instrument-catalog'` for
+      DeFi rows — that path is DEAD CODE in the current orchestrator (`_write_all_venues` always constructs a live
+      `ManifestWriter`, so `_write_venue`'s batched branch is always taken, which ALREADY stamps the canonical
+      `data_type='instruments'`, confirmed by reading `writers.py`). Fixed the dead legacy stamp anyway (correctness if
+      ever revived) + `scripts/defi_cumulative_drawdown_guard_2026_06_25.py`'s own filter —
+      instruments-service@4d63822d. **Cross-repo finding**: `data_type='instrument-catalog'` is a load-bearing UAC
+      crosscutting preflight-DAG value (`instruments_preflight_dag.py`'s DeFi `defi_market_data` entry, consumed by
+      MTDS's `assert_defi_catalog_fresh` to gate live DeFi collects) — updated `upstream_entity_type` to
+      `'instruments'` + the 3 DeFi-scoped test assertions (CeFi/TradFi DAG entries left untouched, out of
+      scope/unverified) — unified-api-contracts@90b8b986. Migrated the historical rows on real infra:
+      `instruments-service/scripts/     canonicalize_defi_data_type_instrument_catalog_2026_07_16.py` — dry-run found a
+      safety-gate bug in my own first draft (naive `captured_before - dropped_count` formula assumed every dropped
+      duplicate was a captured row; fixed to track `captured_dropped` explicitly + prioritize captured status over
+      recency when picking a collision-group winner) before applying. Applied: 215,501 → 175,080 rows; 126,443 legacy
+      rows migrated, 40,421 duplicate collisions resolved (39,286 were genuine duplicate captures, 1,135 non-captured),
+      captured-row-count invariant held exactly (171,492 → 132,206, delta = captured_dropped). Post-run verify: 0
+      residual `instrument-catalog` rows. `catalog.parquet` doesn't reference this data_type value (verified — no regen
+      needed). No MTDS/MDPS shard-atom coordination needed beyond the preflight-DAG constant (neither reads `data_type`
+      as their own shard key from this IS manifest column).
 - [x] [DATA] P1. ✅ _(Q3 — SPORTS "invalid" `source` values)_ **NOT a bug — root-caused, no fix needed.**
       `mdps_odds_horizon_bucket` and `instruments_service` are both REGISTERED non-vendor `source` identifiers in UAC's
       crosscutting `SOURCE_PRIORITY`/`PipelineMode` registries (`_source_priority_data.py:77` +
