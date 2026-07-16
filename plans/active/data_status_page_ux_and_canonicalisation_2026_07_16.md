@@ -691,13 +691,13 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 
 **Reconciliation — instrument_type + data_type per AG (REAL data, coverage-summary breakdowns):**
 
-| AG         | instrument_type (unique-id counts)                                                                                                       | data_type                                                             | Verdict                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| CEFI       | SPOT_PAIR, PERPETUAL, COMBO, FUTURE, OPTION (canonical) **+ `perpetual` 1.15M, `spot` 502k (LEGACY dupes)** + `__legacy__` 4.85M (blank) | `instruments` (+ `__legacy__` 284)                                    | P4-A canonicalises the DISPLAY (fixed-not-shipped); DATA dupes need the migration (P4 DATA P2).                   |
-| TRADFI     | **`__legacy__` 46.5M (blank — 98% of rows!)** + OPTION/COMBO/SPOT_PAIR/EQUITY/FUTURE/ETF/INDEX                                           | `instruments`                                                         | **not-fixed**: the tradfi/Databento writer isn't stamping instrument_type.                                        |
-| DEFI       | POOL, LENDING, STAKING, YIELD_BEARING, A_TOKEN, DEBT_TOKEN, PERPETUAL, SPOT_PAIR, LST (canonical) + `__legacy__` 3.85M                   | **TWO: `instrument-catalog` 8.45M + `instruments` 3.03M**             | **not-fixed**: two data_types — root-cause (a `backfill_defi_catalog_data_type_2026_06_21` migration left churn). |
-| SPORTS     | (source axis) — see below                                                                                                                | —                                                                     | **not-fixed**: invalid `source` values.                                                                           |
-| PREDICTION | PREDICTION_MARKET                                                                                                                        | `prediction_canonical_question_group` + `prediction_market_lifecycle` | Two prediction GRAINS (cqg bundle + per-market lifecycle) — likely legit; confirm.                                |
+| AG         | instrument_type (unique-id counts)                                                                                                       | data_type                                                             | Verdict                                                                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CEFI       | SPOT_PAIR, PERPETUAL, COMBO, FUTURE, OPTION (canonical) **+ `perpetual` 1.15M, `spot` 502k (LEGACY dupes)** + `__legacy__` 4.85M (blank) | `instruments` (+ `__legacy__` 284)                                    | P4-A canonicalises the DISPLAY (fixed-not-shipped); DATA dupes need the migration (P4 DATA P2).                                                                                     |
+| TRADFI     | (pre-fix) `__legacy__` 46.5M (blank — 98% of rows!) + OPTION/COMBO/SPOT_PAIR/EQUITY/FUTURE/ETF/INDEX                                     | `instruments`                                                         | **✅ fixed 2026-07-16**: instruments-service@66258618 — writer was already fixed pre-mission; migration backfilled the 15,017 blank manifest rows (0 `captured` rows remain blank). |
+| DEFI       | POOL, LENDING, STAKING, YIELD_BEARING, A_TOKEN, DEBT_TOKEN, PERPETUAL, SPOT_PAIR, LST (canonical) + `__legacy__` 3.85M                   | **TWO: `instrument-catalog` 8.45M + `instruments` 3.03M**             | **not-fixed**: two data_types — root-cause (a `backfill_defi_catalog_data_type_2026_06_21` migration left churn).                                                                   |
+| SPORTS     | (source axis) — see below                                                                                                                | —                                                                     | **not-fixed**: invalid `source` values.                                                                                                                                             |
+| PREDICTION | PREDICTION_MARKET                                                                                                                        | `prediction_canonical_question_group` + `prediction_market_lifecycle` | Two prediction GRAINS (cqg bundle + per-market lifecycle) — likely legit; confirm.                                                                                                  |
 
 - [x] **Q1 — Symbol search returned nothing (500).** ✅ **fixed-now.** `_load_corpus_from_per_venue_parquets`
       (`data_query_service.py`) resolved the corpus bucket via `build_bucket("instruments", …)` which DROPS the
@@ -705,10 +705,41 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       Switched to `resolve_bucket_name(kind="instruments-store", …)` (+ prediction's own kind). —
       deployment-api@2cda602 + Evidence: real-GCS `query='BTC-USDT'` → 10 matches (`BINANCE-FUTURES:PERPETUAL:BTC-USDT`
       …); 2 regression tests.
-- [ ] [DATA] P1. _(Q2 — TRADFI blank instrument_type)_ 46.5M of ~47.1M tradfi availability rows have `instrument_type`
-      unset (`__legacy__`), so the tradfi Instrument-Coverage-Summary is ~98% "(unlabeled)". Root-cause the
-      tradfi/Databento writer's instrument_type stamping + author a canonicalization migration (mirror the P4 DATA P2
-      legacy-row migration; preserve shard-atom identity across MTDS/MDPS/features).
+- [x] [DATA] P1. ✅ _(Q2 — TRADFI blank instrument_type)_ — instruments-service@66258618 + Evidence below. **Root
+      cause**: the shared cefi/tradfi/defi manifest writer
+      (`instruments_service/engine/orchestrator/writers.py::_write_venue`) hardcoded `instrument_type=""` on every
+      `manifest.record_captured(...)` call regardless of the underlying DataFrame's own (always-populated since this
+      repo's initial commit) `instrument_type` column — a pure manifest-STAMPING bug, never a data-capture bug (the
+      per-day-per-venue `instruments.parquet` objects always carried the real per-record type). **Writer already fixed
+      pre-mission** by two prior commits already live on `live-defi-rollout`/`main`: `b475ae8e` (2026-06-17, single-type
+      stamping) superseded by `91fc7bd2` (2026-07-07, `_split_by_instrument_type` — one manifest row per distinct type
+      for mixed-type venue-days) — verified by reading `writers.py` at HEAD; no further writer code change was needed.
+      **Real scope** (live GCS read 2026-07-16): the manifest index (`_index/availability_index.parquet`,
+      `instruments-store-tradfi-prd-central-element-323112`) is 17,083 ROWS — the "46.5M of ~47.1M" figure is the SUM of
+      each row's `instrument_count` grouped by blank-vs-typed `instrument_type`, not a manifest row count (15,017/17,083
+      rows blank; those rows' `instrument_count` summed to 46,552,151 of 47,189,618 total — 98.6%, matching the plan
+      figure almost exactly). Of the 15,017 blank rows, 10,542 were `capture_status=captured` with a real backing GCS
+      object; the remaining ~4,475 (82 attempted_failed + 3,883 empty_confirmed + 510 expected_unattempted) captured
+      zero instruments and stayed honestly blank. **Migration**:
+      `scripts/canonicalize_tradfi_instrument_type_2026_07_16.py` — for each blank captured row, targeted single-object
+      read of that exact shard's own `instrument_availability/by_date/day=…/     venue=…/instruments.parquet` (no
+      whole-corpus walk), re-deriving `instrument_type` from the object's own column (mirrors the current writer's
+      `_split_by_instrument_type` — one manifest row per distinct real type found, splitting mixed-type shards). Dry-run
+      → `--apply` → re-verify, on real prod GCS. Evidence: before=15,017/17,083 blank rows (46,552,151/47,189,618
+      instrument-count-weighted); after=4,475/28,028 blank rows (28,028 = 17,083 + 10,945 net new rows from multi-type
+      shard splits); **0 of the 22,870 `captured` rows remain blank** (capture_status×blank crosstab confirmed
+      post-apply); sample CME 2026-07-07 split into FUTURE=347/COMBO=4437/OPTION=69704 rows. Rollback snapshot:
+      `gs://instruments-store-tradfi-prd-central-element-323112/_index/snapshots/pre_tradfi_instrument_type_canon_2026_07_16_20260716T143452Z.parquet`.
+      `prod/catalog.parquet` checked separately — already 0 blank (1,171,776 rows, built from the same always-typed
+      per-record data), no regen needed. MTDS/MDPS/features-service coordination checked (sub-agent investigation): none
+      read this manifest's `instrument_type` for their own shard keys — each stamps its own independently — so this was
+      safely IS-only. **Adjacent finding (flagged, not fixed — separate from instrument_type)**: 931 of the 10,542
+      resolved shards carry a manifest `row_count`/`instrument_count` that is STALE relative to the object's CURRENT
+      content (e.g. CME 2026-06-28: manifest said 74,005, the object now holds 2,826 rows — legitimately overwritten by
+      a later, narrower capture without a manifest update); this migration re-stamps from the real object (honest)
+      rather than preserving the stale count, logged per-shard as `shard count DRIFT` (net magnitude 391,939) — a
+      separate, pre-existing manifest-vs-object staleness bug likely not tradfi-specific, worth its own follow-up
+      investigation.
 - [ ] [DATA] P2. _(Q2 — CeFi legacy lowercase dupes)_ Collapse `perpetual`→`PERPETUAL` (1.15M) + `spot`→`SPOT_PAIR`
       (502k) in the cefi availability index (the P4-A display alias makes them READ canonical, but they remain distinct
       manifest rows). This IS the P4 DATA P2 legacy-row canonicalization migration — do it for cefi.
