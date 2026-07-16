@@ -4,13 +4,13 @@ title: Role registry schema + message-broker MVP (the role-based-agent spine)
 summary:
   Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a
   tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
-status: active
+status: complete
 nature: design
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [role-registry, message-broker, routing, dispatch]
+tags: [role-registry, message-broker, routing, dispatch, archived]
 related:
   [
     ../epics/agent_operating_framework_master.md,
@@ -26,7 +26,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-last_updated: 2026-06-27
+last_updated: 2026-07-16
 locked_by:
 locked_since:
 supersedes:
@@ -39,11 +39,27 @@ drift_direction: advance-code
 
 # Role registry schema + message-broker MVP (the role-based-agent spine)
 
+> **🗄️ ARCHIVED 2026-07-16 — core delivered, broker not required (operator decision).** The **W6** deliverable (registry
+> schema realization) shipped and is live: every `unified-trading-pm/agents/<role>.md` carries `agent-role` frontmatter,
+> `role_registry.py` loads it, and AO dispatch reads `assigned_role` → boot prompt + model. The remaining Phase 2/3
+> todos (the **W9 message broker**: `(role, domain)` resolver + `POST /api/messages` ingest/router/tagger) are **NOT
+> REQUIRED** — Phase 2 is superseded by the shipped `assigned_role` dispatch ("no broker", per
+> `agent_operating_framework_master`'s KEEP/DEFER ruling), and Phase 3 (W9) stays an epic-level deferred item (the
+> escalation/DR epic tracks it if ever revived). The `agent-role` schema SSOT is now `scripts/docs/docspec.py` +
+> `unified-trading-pm/agents/<role>.md` (`codex/04-architecture/role-registry.md` deleted 2026-07-16).
+
 > **W6 (registry schema realization) + W9 (broker)** of `agent_operating_framework_master`. This is the **spine**: the
 > PM-role plan, the Data-Eng-role plan, and the escalation MVP all consume the registry + broker this ships. Built
 > **additively** — the existing plan→`backlog.yaml` ingestion + strict `assigned_vm` matching keep working untouched;
 > this adds a _second_ (role-tagged message) entry path beside them. No new DNS — new endpoints on the existing AO
 > FastAPI (`api.agent-orchestrator.odum-research.com`).
+
+> **📎 role-registry.md retired + consolidated (2026-07-16).** This plan's deliverable — the `agent-role` frontmatter
+> schema — is now the single SSOT in `scripts/docs/docspec.py` (`PER_TYPE['agent-role']`, QG-enforced via
+> `check_frontmatter_schema.py`); per-role data is the frontmatter in each `unified-trading-pm/agents/<role>.md`
+> charter. The `codex/04-architecture/role-registry.md` doc this plan created was **deleted** — the DONE records + paths
+> below (incl. `agent-orchestrator/agents/*.md`, now `unified-trading-pm/agents/`) describe the now-consolidated
+> artifact; do not re-create the doc.
 
 ## Why
 
@@ -110,11 +126,18 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Phase 2 — Dispatch-key generalization (additive) [depends: P1]
 
+> **NOT REQUIRED (archived 2026-07-16)** — superseded by the shipped `assigned_role` dispatch; the `(role, domain)` axis
+> was never built and `domain` appears nowhere in `dispatch.py`/`orm.py`/`regen_backlog_from_plan.py` ("no broker").
+
 - [ ] [CODE] P0. `(role, domain)` resolver beside `assigned_vm` in dispatch: a message tagged `(role, domain)` resolves
       to the registry row → spawn config (model/thinking/lifecycle). Strict `assigned_vm` plan-ingestion path UNCHANGED.
       **Gate**: existing dispatch tests green (no regression); new resolver test green.
 
 ### Phase 3 — Message broker MVP [depends: P2]
+
+> **NOT REQUIRED (archived 2026-07-16)** — the W9 message broker, deferred at the epic level and never built; today's
+> flows are covered by `assigned_role` dispatch + `POST /api/agents/by-role/{role}/message` + `escalation.py`
+> cold-spawns.
 
 - [ ] [CODE] P0. `POST /api/messages` ingest: accepts `{ role, domain, payload, reply_to }` from any authenticated
       sender → durable queue (generalize `AgentMessageRow`, add TTL + delivery ack). **Gate**: ingest + queue unit test.
@@ -161,3 +184,10 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
   but `data_engineering.md` shipped `lifecycle: one_shot`. The skill verbs (`/plan-status` `/pr-check` `/ci-status`
   `/data-freshness`) shipped as MVP boot-prompt STUBS only — the full skill impls (load diff/manifest → light JSON)
   remain `[ ]`.
+- 2026-07-16: **ARCHIVED** (operator decision — the open broker todos are not required). W6 registry realization
+  delivered + live (`agent-role` frontmatter on all charters + `role_registry.py` loader + AO `assigned_role` dispatch).
+  Phase 2/3 (the W9 `(role, domain)` message broker) NOT REQUIRED: Phase 2 superseded by the shipped `assigned_role`
+  dispatch ("no broker", per `agent_operating_framework_master`'s KEEP/DEFER ruling); Phase 3 (W9 broker) stays an
+  epic-level deferred item (escalation/DR epic hard-dependency) if ever revived — not this plan's work. Registry-schema
+  SSOT since consolidated into `scripts/docs/docspec.py` + `unified-trading-pm/agents/<role>.md`
+  (`codex/04-architecture/role-registry.md` deleted 2026-07-16). Moved to `plans/archive/2026_07/`.

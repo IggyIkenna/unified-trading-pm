@@ -65,7 +65,7 @@ it. SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`, `codex/12-age
 
 ### Phase 0 — PM charter row [depends: spine Phase 1]
 
-- [ ] [DOCS] P1. Write `agent-orchestrator/agents/main.md` frontmatter as the PM registry row:
+- [ ] [DOCS] P1. Write `unified-trading-pm/agents/main.md` frontmatter as the PM registry row:
       `role: project_management`, `model`/`thinking` (per `model-tier-selection`: opus-required for
       cross-plan/cross-repo authoring), `lifecycle:     persistent`, `triggers` (plan ingest tick, operator chat,
       blocked-queue), `does`/`does_not` on the autonomy gradient, `escalation_to` (operator for hard-stops),
@@ -96,7 +96,9 @@ it. SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`, `codex/12-age
 ## Codex SSOT updates
 
 - `codex/04-architecture/agent-orchestrator-overview.md` — note PM as the reference role-registry row + its skills.
-- `codex/04-architecture/role-registry.md` (from the spine) — add PM as the worked example.
+- `unified-trading-pm/agents/main.md` is the PM worked-example registry row (`agent-role` schema enforced by
+  `scripts/docs/docspec.py`; the `codex/04-architecture/role-registry.md` doc was retired 2026-07-16, consolidated into
+  docspec + the charters).
 
 ## Progress Log
 

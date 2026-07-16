@@ -2,10 +2,10 @@
 doc_type: plan
 title: UAT / QA role charter — the review agent as PR gate
 summary:
-  Formalize the existing `review` agent as the UAT/QA registry row that gates every PR -- write its charter
-  (model sonnet / thinking high / lifecycle persistent), name its /pr-check skill, document the two-tier
-  light (impl-vs-plan done_definition) / heavy (enhanced tests + opus escalation on a major bump) decision,
-  and land a regression spec proving the gate fires. Additive -- no change to the live PR-review flow.
+  Formalize the existing `review` agent as the UAT/QA registry row that gates every PR -- write its charter (model
+  sonnet / thinking high / lifecycle persistent), name its /pr-check skill, document the two-tier light (impl-vs-plan
+  done_definition) / heavy (enhanced tests + opus escalation on a major bump) decision, and land a regression spec
+  proving the gate fires. Additive -- no change to the live PR-review flow.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role-registry, uat, qa, review, pr-gate, charter]
-related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md, pm_role_charter_formalization_2026_06_25.md]
+related:
+  [
+    ../epics/agent_operating_framework_master.md,
+    role_registry_schema_and_broker_mvp_2026_06_25.md,
+    pm_role_charter_formalization_2026_06_25.md,
+  ]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -49,7 +54,8 @@ not yet a _registry row_: there is no machine-readable charter declaring its mod
 escalation, and its on-demand review verb is not packaged as a named skill. Formalizing it (a) validates the spine
 (`role_registry_schema_and_broker_mvp`) against the QA boundary, and (b) makes "ask the review role to gate this PR" a
 broker lookup like any other. This is additive — the live reviewer keeps running; we add its charter + skill around it.
-SSOTs: `codex/04-architecture/role-registry.md`, `codex/06-coding-standards/model-tier-selection.md`.
+SSOTs: `unified-trading-pm/agents/review.md` (the `review` registry row) + `scripts/docs/docspec.py` (`agent-role`
+schema; the `role-registry.md` codex doc was retired 2026-07-16), `codex/06-coding-standards/model-tier-selection.md`.
 
 ## Locked design (operator, 2026-06-27)
 
@@ -72,7 +78,7 @@ SSOTs: `codex/04-architecture/role-registry.md`, `codex/06-coding-standards/mode
 
 ### Phase 0 — UAT/QA charter row [depends: spine Phase 1]
 
-- [x] ✅ [DOCS] P1. Schematize `agent-orchestrator/agents/review.md` as the UAT/QA registry row: `role: review`,
+- [x] ✅ [DOCS] P1. Schematize `unified-trading-pm/agents/review.md` as the UAT/QA registry row: `role: review`,
       `model: sonnet`, `thinking: high`, `lifecycle: persistent`, `triggers` (any PR opened/updated, plan-checkbox
       flip), `does`/`does_not` (gates PRs; does NOT author plans or ship code), `escalation_to` (opus reviewer on a
       major bump; operator for ambiguous acceptance), `temperament_base` (rigorous). **Note**: this is being done now
@@ -112,8 +118,9 @@ SSOTs: `codex/04-architecture/role-registry.md`, `codex/06-coding-standards/mode
 
 ## Codex SSOTs
 
-- `codex/04-architecture/role-registry.md` — UAT/QA = the `review` row (`role=review`, `model=sonnet`, `thinking=high`,
-  `lifecycle=persistent`); add UAT as the worked example for the PR-gate role.
+- `unified-trading-pm/agents/review.md` is the UAT/QA worked-example registry row (`role=review`, `model=sonnet`,
+  `thinking=high`, `lifecycle=persistent`); the `agent-role` schema is enforced by `scripts/docs/docspec.py` and the
+  `codex/04-architecture/role-registry.md` doc was retired 2026-07-16.
 - `codex/06-coding-standards/model-tier-selection.md` — the opus-on-major-bump escalation is a model-tier decision; the
   heavy review tier follows the synthesis-layer opus policy.
 

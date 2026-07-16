@@ -96,7 +96,7 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
 
 ### Phase 1 — Data-Eng charter row [depends: spine Phase 1]
 
-- [ ] [DOCS] P1. `agent-orchestrator/agents/data_engineering.md` registry row: `role: data_engineering`,
+- [ ] [DOCS] P1. `unified-trading-pm/agents/data_engineering.md` registry row: `role: data_engineering`,
       `model: sonnet`, `thinking: high` (correctness heartbeat), `lifecycle: scheduled`, `triggers` (daily audit crons +
       `DP_*` walls + "is data healthy?" query), `does`/`does_not`, `escalation_to` (operator for credentials/decisions),
       `temperament_base: diligent`. **Gate**: `docspec --check` clean; loads in `role_registry.py`.
@@ -126,7 +126,9 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
 ## Codex SSOT updates
 
 - `codex/02-data/availability-manifest-and-data-status.md` — cross-link the Data-Eng role + `/data-freshness` reader.
-- `codex/04-architecture/role-registry.md` (from the spine) — add Data-Eng as the first vertical worked example.
+- `unified-trading-pm/agents/data_engineering.md` is the Data-Eng worked-example registry row (`agent-role` schema
+  enforced by `scripts/docs/docspec.py`; the `codex/04-architecture/role-registry.md` doc was retired 2026-07-16,
+  consolidated into docspec + the charters).
 
 ## Progress Log
 
