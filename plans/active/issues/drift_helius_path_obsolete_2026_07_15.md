@@ -157,24 +157,84 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       "actually run it" step P1.2 below needs; without this todo P1.2's park-behind-prereq has no gate to open. On
       completion: flip `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: true}`) so
       P1.2 unparks. (repo: deployment-service) — done 2026-07-16 (infra slot-2). See Progress Log.
-- [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
-      path once Velocity is capturing at scale — UNPARKED as of 2026-07-16 (infra slot-2 flipped
-      `drift_velocity_backfill_running_at_scale` to `true` after confirming the launch-at-scale VM is genuinely on the
-      Velocity path and writing correct-partition rows); still not yet executed. `priority: 999` +
-      `priority_override: true` may still be set in `backlog.yaml` per `BLK-b72a4b59` rider 3 — verify at pickup whether
-      it needs clearing now that the gating condition is true. (repos: market-tick-data-service, instruments-service)
-- [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
+- [x] ✅ [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old
+      Helius path once Velocity is capturing at scale — root cause found + fixed: `unified-api-contracts@5fd781c7`. See
+      Progress Log for the full finding; follow-up materialization todo P1.3 added below (real production write, needs
+      its own scoped dispatch, not absorbed into this task per findings-triage discipline).
+- [ ] [DATA] P1.3. Materialize the DRIFT `perp_trades` `expected_unattempted` catalog rows now that the registry gap
+      (P1.2) is fixed — run
+      `instruments-service/scripts/enumerate_expected_universe.py --asset-group defi     --data-types perp_trades --catalog-path <instruments catalog parquet GCS URI> --apply-write`
+      (scan-only dry run FIRST, no `--apply-write`, to confirm row-count estimate before committing to the real write;
+      the v2 enumerator needs `--catalog-path` — locate the current DRIFT/DeFi catalog parquet before running).
+      Restricting `--data-types perp_trades` naturally scopes this to DRIFT only, since DRIFT is currently the only
+      protocol declaring `perp_trades` in `PROTOCOL_CAPABILITIES`. Expect roughly the same order of magnitude as
+      `perp_funding`'s 51,301 all-time `expected_unattempted` rows (~40 DRIFT markets × full history). This is a real
+      production manifest write against `market-data-tick-defi-prd-central-element-323112` — verify count sanity before
+      `--apply-write`. (repo: instruments-service)
+- [x] ✅ [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
-      superseded/moot. **Still gated as of 2026-07-16 (data_engineering slot-10)**: (2) stop/do-not-relaunch and (3)
-      re-route launcher are landed; (4) reconcile-manifest (P1.2 above) is now UNPARKED (the launch-at-scale VM is
-      confirmed running on the Velocity path per infra slot-2's Progress Log entry) but has NOT yet actually executed —
-      no reconciled counts exist yet. Declining again this session for the same reason `slot-11` declined it earlier
-      (2026-07-16T00:1xZ): adding a "retired" banner before P1.2 has real reconciled counts would get ahead of the
-      actual system state, even though the remaining gap is now just "wait for P1.2 to run," not an open infra question.
-      Re-check once P1.2 lands. (repo: unified-trading-pm)
+      superseded/moot. — **done 2026-07-16 (data_engineering slot-15)**. See Progress Log.
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-15: banner + closure (P2)
+
+Re-dispatched to `-004`. Verified live state before acting rather than trusting doc text: `GET /api/backlog` showed
+`drift_helius_path_obsolete-005` (the P1.2 reconcile task, item (4)) at `status: "done"` — confirmed via this doc's own
+Progress Log (slot-14's entry above: root cause fixed, `unified-api-contracts@5fd781c7` shipped) that all of (2), (3),
+(4) have now genuinely landed, unlike the 4 prior dispatches (slot-9/10/11/13) that correctly declined because (4) was
+still open. Added the retirement banner to both target docs:
+
+- `issues/drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` — new 🟢 banner confirming the migration is
+  complete, with the specific commits (`deployment-service@46d6492`/`@ee859e4`, `unified-api-contracts@5fd781c7`).
+  Checked that doc's own `[INFRA] P2` (zombie-VM CLI monitor) and `[DATA] P3` (relaunch) todos: both were already
+  checked off from prior sessions. P3 was already explicitly closed "AS SUPERSEDED" (slot-13); P2 is a permanent,
+  protocol-agnostic monitoring tool independent of the Helius/Velocity question, so it stays done-not-moot (called this
+  out explicitly in the banner rather than silently leaving it ambiguous).
+- `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` — new 🟢 banner placed directly after the two
+  DRIFT-sig-walker banners (13:15Z BLOCKED-OPERATOR-DECISION / 14:07Z resolved-and-relaunched) it supersedes, marking
+  that content historical and pointing at `issues/drift_helius_path_obsolete_2026_07_15.md` as the migration SSOT.
+
+No code changes (doc-only task, `repos: []`). This doc's own P2 todo flipped above.
+
+### 2026-07-16 — data_engineering slot-14: root-caused + fixed the perp_trades catalog gap (P1.2)
+
+Picked up P1.2. Verified the VM launched by infra slot-2 was genuinely alive
+(`deployment-service/scripts/data_pipeline_monitors/check_vm_cli.py --vm-name mtds-solana-drift-backfill`,
+heartbeat/run-log age <1min) before touching manifest data.
+
+Read the current DRIFT manifest state via the safe filtered path
+(`read_availability_index(bucket, columns=[...], filters=[("venue","==","DRIFT"), ...])`, never a full-index/corpus walk
+— the DeFi bucket's full-index read is a known OOM risk per `manifest_index_read_oom_canonical_cache_2026_06_24.md`; ran
+under an RSS-guarded wrapper as an added precaution on this shared host). For the `2025-01-15`–`2025-12-23` gap:
+`perp_funding` shows 3 `captured` / 27 `attempted_failed` (all "day sig count exceeds 50000 ceiling" — the old Helius
+wall, on specific high-volume days) / 313 `empty_confirmed` / 13720 `expected_unattempted` (~40 markets × 343 days) —
+this part is coherent and will naturally self-correct as Velocity's writes supersede the stale rows per the
+dedup/captured-outranks logic, no code change needed there.
+
+**Real bug found**: `perp_trades` has exactly ONE row in DRIFT's ENTIRE manifest history — the single day manually
+reconciled last session (P1.1) — versus `perp_funding`'s 51,301 `expected_unattempted` catalog rows. Traced root cause
+(background Explore agent + my own verification of both files): the expected-universe seeder
+(`instruments-service/scripts/enumerate_expected_universe.py`) enumerates candidate
+`(date, venue, chain, data_type, market)` cells from two UAC registries — `PROTOCOL_CAPABILITIES["drift"].data_types`
+and `DATA_TYPES_BY_ASSET_GROUP["defi"]` — and neither ever listed `"perp_trades"`, even though the MTDS Velocity
+ingester (`drift_v2_historical_handler.py`) and the UAC schema/contract layer (`DataType.PERP_TRADES`,
+`DEFI_PERPETUAL_PERP_TRADES` contract) both already fully support it. Confirmed via `git log -S` this was an original
+gap (perp_trades added system-wide in `f26097f9`, scoped to schema/contracts only, never touched these two enumeration
+registries) — not a regression.
+
+**Fix**: added `"perp_trades"` to both registries (additive, DRIFT/DeFi-scoped only — cannot leak onto other DeFi
+protocols since `valid_data_types_for_venue_instrument_type` narrows per-protocol) + a regression test
+(`test_drift_has_perp_trades`) in `unified-api-contracts`. Full `quality-gates.sh` green (sentinel matches HEAD),
+shipped `unified-api-contracts@5fd781c7` (`--files`-scoped quickmerge).
+
+**Scope call**: the actual materialization of ~51k-scale `expected_unattempted` rows for DRIFT `perp_trades` requires
+running `enumerate_expected_universe.py --apply-write` against production — a real, separately-scoped write op (needs a
+`--catalog-path` located first, dry-run row-count sanity check before commit). This is a genuine discovery the original
+P1.2 todo didn't anticipate (it assumed only stale `attempted_failed`→`captured` transitions, not a missing catalog
+registration), so per findings-triage discipline I'm not absorbing it into this task — added as `P1.3` above, scoped to
+`instruments-service`. P1.2 itself (the code-level root-cause fix) is now shipped, hence flipped done.
 
 ### 2026-07-16 — infra slot-2: launched the re-routed Velocity VM at scale (P1)
 
@@ -379,3 +439,20 @@ reality: P1.2 is UNPARKED but has NOT yet actually executed (no reconciled manif
 banner gate is still not met — the remaining gap narrowed from "an open infra question" to "wait for P1.2 to run," but
 hasn't closed. No code changes this session (doc-only, twice conflict-resolved). Checkbox NOT flipped (gate still
 unmet). `/skip-current-task`.
+
+### 2026-07-16 — data_engineering slot-9 (dispatched to -004 a 3rd+ time — still premature; wired a machine-checked gate to stop the redispatch thrash)
+
+Re-dispatched to `drift_helius_path_obsolete-004`. Fresh-pulled all repos clean. Re-checked live state directly rather
+than trusting doc text alone: `GET /api/backlog` shows `drift_helius_path_obsolete-005` (the P1.2 reconcile task, item
+(4)) with `status: "dispatched"` — actively being worked by another slot, not yet `done`. So (4) still has not landed;
+this task's own precondition ("once (2)-(4) land") remains unmet for the 3rd+ consecutive dispatch, matching slot-10's
+and slot-11's identical findings.
+
+Rather than decline silently again, wired the precondition into the dispatcher itself so it stops re-offering this task
+until (4) is genuinely `done`: added `prereqs.completed_tasks: [drift_helius_path_obsolete-005]` to task -004's entry in
+`agent-orchestrator/data/config/backlog.yaml` (the documented backlog-tuning mechanism, `RULES.md` § 4 — tunes an
+already-derived entry, doesn't hand-author a new one) + `POST /api/backlog/reload`. This is the same pattern
+`data_engineering slot-7` already used for -005 itself (`drift_velocity_backfill_running_at_scale` prerequisite), which
+has held across at least 2 regen ticks since. Once -005 flips to `done`, the dispatcher will hold -004 until then
+instead of a 4th/5th worker re-deriving the same "still not landed" conclusion. No code changes this session. Checkbox
+NOT flipped (gate still unmet — this doc's own P2 item stays open until -005 lands). `/skip-current-task`.

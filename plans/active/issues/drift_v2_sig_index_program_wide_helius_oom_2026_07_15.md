@@ -61,6 +61,19 @@ locked_since:
 > via `POST /api/agents/by-role/main/message` this session** — this is a data-correctness/cost/SSOT-contradiction
 > finding per CLAUDE.md governance rules, not something a single P2 investigation task should resolve unilaterally (it
 > implies killing/not-relaunching a multi-VM SPOT fleet that's been running for ~a month of sessions).
+>
+> **🟢 RETIRED 2026-07-16 (data_engineering slot-15): migration to Velocity complete — the Helius sig-walker path this
+> whole doc is about is now formally retired, not just under investigation.** All of main's sequencing
+> (`issues/drift_helius_path_obsolete_2026_07_15.md`) has landed: the `mtds-drift-sig-walker-*` fleet is stopped and
+> blocked from auto-relaunch (`deployment-service@46d6492`); `mtds-solana-drift-backfill` is re-routed to
+> `backfill_drift_v2_historical.py` (Velocity Data API, e2-highmem-8, `deployment-service@ee859e4`) and launched at
+> scale over the `2025-01-15`–`2025-12-23` gap; the DRIFT manifest registry gap for `perp_trades` is code-fixed
+> (`unified-api-contracts@5fd781c7`). The streaming-fix (P1), per-market investigation (P2), zombie-VM CLI monitor (P2),
+> and relaunch (P3) todos below remain accurate as the historical incident record — the zombie-VM monitor is a
+> permanent, protocol-agnostic tool (not superseded by the Velocity migration), and the relaunch todo is already closed
+> as superseded (slot-13). No further Helius-path work is expected on DRIFT; new gaps route through Velocity. Full
+> migration record: `issues/drift_helius_path_obsolete_2026_07_15.md` (that doc is the migration SSOT — this doc stays
+> the incident post-mortem, not duplicated further here).
 
 ## What I found
 
@@ -202,7 +215,7 @@ fix below lands.
       launched by `launch-mtds-solana-drift-backfill-vm.sh`) sets `VM_TASK=solana-drift-backfill`, which
       `setup-data-pipeline-vm.sh` line ~1410 explicitly routes to `solana_defi_handler.py`'s legacy
       `_backfill_drift_s3_date`/`_backfill_drift_helius_date` — the same OBSOLETE path the codex doc names — via a
-      comment citing a DIFFERENT, older ruling ("Bug-D-prime fix 2026-05-31 … PerpFundingHandler has no _collect_drift
+      comment citing a DIFFERENT, older ruling ("Bug-D-prime fix 2026-05-31 … PerpFundingHandler has no \_collect_drift
       dispatch") that predates and is superseded by the 2026-06-01 Velocity API doc, but was never updated to reflect
       it. 4. **Cross-market mislabeling verdict**: not really an "accepted limitation" in the sense of a deliberate
       data-quality tradeoff someone signed off on — `data_quality="helius_v2_signatures_only"` is a self-documenting
