@@ -363,10 +363,15 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
 - [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
 - [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
       below.
-- [ ] [DATA] P1. _(B, enabler)_ Add address columns to the catalogue — add `pool_address` +
-      `base_asset_contract_address` + `quote_asset_contract_address` (+ `atoken_address`/`debt_token_address` where
-      present) to `CATALOG_COLUMNS` (`build_instrument_catalogue.py:264-303`), project them from the source rows
-      (already present), and **regen the catalogue**. Projection change, NOT a re-fetch.
+- [ ] [DATA] P1. _(B, enabler)_ **CODE SHIPPED; catalogue regen PENDING (real-infra).** Added
+      `base_asset_contract_address` + `quote_asset_contract_address` + `atoken_address` + `debt_token_address` to
+      `CATALOG_COLUMNS` (`pool_address` was already present) + `_extract_meta` reads them + both row-builders (DeFi +
+      prediction) project them. — instruments-service@77f0fdaa + Evidence: `quality-gates.sh --no-fix` green (exit 0;
+      catalogue tests assert `list(df.columns) == CATALOG_COLUMNS`). UAC `InstrumentRecord` carries all four fields
+      (`instrument.py:221/225/235/239`); live source confirmed (`catalog.20260713-…atokendebttoken.bak`). **REMAINING
+      (real-infra):** regen `catalog.parquet` (projection re-roll, NOT a re-fetch) so historical rows populate the new
+      columns — deferred as a tracked run (needs the catalogue-build VM/job on real infra). Every FUTURE build now
+      carries the columns.
 - [ ] [DATA] P1. _(B)_ SPOT_ASSET backfill/migration — with the address columns in place, derive the unique token set
       (base + quote legs of every SPOT_PAIR/POOL + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET record
       per unique (chain, token → contract_address). Reuse LST/A_TOKEN/DEBT_TOKEN addresses (adapters
