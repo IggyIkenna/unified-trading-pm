@@ -1052,3 +1052,24 @@ re-walking 2020-01 (won't happen on `:latest`); the still-running `mtds-dex-pool
 QG (`solana_defi_drift.py` 10<12, `_onchain_perp_batch_live_only.py`) — outside this remediation's scope, warn-only,
 flagged here for a separate pass (an adapter with fewer classify_venue_error/record_* calls than baseline may not be
 classifying errors fully).
+
+### 2026-07-16 — follow-up (2) RESOLVED: both "regressions" were STALE BASELINES, not real error-path loss (PM@0996c5e44)
+
+Investigated the 2 flagged adapter-contract "regressions" — both are stale ratchet entries from **legitimate
+refactors**, NOT data-correctness regressions:
+
+- `_onchain_perp_batch_live_only.py` (baseline 1 → 0): `record_live_only_empty_rows` was **deliberately deleted** in
+  `0f0cc598` ("superseded by the UAC denominator fix"); the file is now a pure helper (`batch_data_types_for_venue`)
+  with no recording responsibility. The checker reported it as "file missing or renamed" — it isn't; it's just no longer
+  an adapter.
+- `solana_defi_drift.py` (baseline 12 → 11): the `7a8bc43c` Helius 429-burst consolidation de-duplicated one
+  `record_failed` (`deebb806` OOM fix re-added one). Traced **every** `except` branch (record_failed at 255/581/608/637,
+  record_zero_rows at 277/660/683, record_captured at 267/729, fatal-transport already-recorded at 674) — all error
+  paths still record honestly before `return 0`. **Zero real error-path loss.** (The count 11 includes 2
+  docstring/comment mentions; 9 actual call sites — either way benign.)
+
+Remedy shipped: surgical 2-line baseline correction (1→0, 12→11) in `adapter_contract_baseline.yaml`, PM@0996c5e44.
+`--regenerate-baseline` deliberately avoided (it rewrites the whole file, ratcheting up every other file's baseline).
+Checker now green (exit 0; 339 baselined files at/above minimum, 0 regressed). Shipped as a PM `scripts/**` carve-out
+direct-push (normal quickmerge path was blocked by pre-existing foreign `ibkr-gateway-infra` cryptography dep drift,
+unrelated to this change). Warn-only gate, so this never blocked any pipeline.
