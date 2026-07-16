@@ -30,12 +30,14 @@ REUSABLE_CROSSREPO="image-build-validate.yml"
 # FAILURE-INDEPENDENCE MONITORS (KEEP-M): a dead-man-switch / watcher whose whole value is detecting
 # that OUR infra (incl. this very VM) is broken MUST run on infra independent of what it watches. If it
 # ran on the glue pool, a VM outage would silently take out BOTH the detection AND the alert (the
-# alerter is on the down box). Only the definitional cases are hard-KEEP here:
-#   - overnight-dead-man-switch: detects the overnight orchestrator (which itself runs on this VM) failing.
-# NOTE (operator-pending, billing-first steer 2026-07-16): the CI-health watchers — ci-health,
-# cloud-build-failure-watcher, ldr-ci-monitor, branch-health — MOVE for now (they're the deferred
-# "harden later" set). Flip any into KEEP_MONITORS to trade ~a few $/mo for failure-independence.
-KEEP_MONITORS="overnight-dead-man-switch.yml"
+# alerter is on the down box). These are light (a few $/mo total) and GitHub-hosted is the right home —
+# KEPT HOSTED by operator decision 2026-07-16:
+#   - overnight-dead-man-switch:   detects the overnight orchestrator (which runs on this VM) failing.
+#   - ci-health:                   fleet-wide workflow-failure detector + stuck-PR auto-recovery.
+#   - cloud-build-failure-watcher: the ONLY detector for out-of-band Cloud Build failures.
+#   - ldr-ci-monitor:              per-repo "is LDR green?" signal.
+#   - branch-health:               promotion-lag / drift / AR-lag monitor.
+KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml"
 
 printf '%-40s %-6s %s\n' "WORKFLOW" "VERDICT" "TRIGGERS (on:)"
 printf '%-40s %-6s %s\n' "--------" "------" "--------------"
