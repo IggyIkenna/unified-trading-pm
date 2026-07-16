@@ -9,8 +9,9 @@ summary: >-
   the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
   fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
   fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
-  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). Nothing
-  deployed yet; next action = runner-infra redesign then deploy.
+  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). Runner
+  infra REDESIGNED + shipped 2026-07-16 (two pools: long-lived writer + JIT-ephemeral glue) but verified off-VM only;
+  nothing deployed, no runs-on flipped. Next action = SSM deploy to the planning-VM (preflight first).
 status: active
 nature: process
 asset_group: [cross-cutting]
