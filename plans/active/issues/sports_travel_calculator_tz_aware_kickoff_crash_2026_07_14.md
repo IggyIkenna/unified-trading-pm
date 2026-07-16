@@ -777,3 +777,27 @@ this one task.
 ~68%+ coverage not 100%) is unchanged regardless of the backlog's incorrect `done` marking; the affected-range boundary
 still isn't stable until the real 2015→present compute finishes. Declining — no sports/features code touched, Todo 2
 checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-16T18:4xZ UTC — data_engineering slot-14 (37th consecutive dispatch — false-gate dispatch confirmed again, ground truth unchanged, no re-file)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `- [ ]` via direct grep after fresh-pull to LDR HEAD (all 25 slot repos clean FF-pull, no conflicts).
+
+Re-confirmed slot-13's finding from the immediately-prior dispatch: `GET /api/backlog` for this exact task
+(`dispatched_to: 14`, `queued_at: 2026-07-16T18:37:23Z`) shows `dispatch_reason` gated on
+`prereqs.completed_tasks: [sports_p2_features_history_to_ml_ready-001, sports_p2_features_history_to_ml_ready-002]` both
+marked `status: done` — but those `done_sha`s (`094756d64` / `0402f7a86`) are decline commits, not completion commits,
+and the actual plan checkbox (line 101) is still unflipped. So `gate_on_depends` (agent-orchestrator@2d6365f) is
+dispatching on a false "prereqs met" signal, exactly as slot-13 documented. Slot-13's issue doc
+(`plans/active/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`, `assigned_role: infra`, 2
+P1 + 1 P2 todos) already tracks this — not filing a duplicate.
+
+Cheap non-GCS-walk fleet check (`gcloud compute instances list --project=central-element-323112`, filter
+`sport|features`): **zero** matching instances running right now — consistent with the last several checks of the fleet
+between relaunch cycles; whether this is a stall or a normal gap remains the parent plan's concern, out of this todo's
+scope to chase.
+
+Ground truth is unchanged: the affected-range boundary for this todo's gap-fill still isn't stable until Todo 1's real
+2015→present compute completes. Declining — no sports/features code touched, Todo 2 checkbox NOT flipped.
+`/skip-current-task`.
