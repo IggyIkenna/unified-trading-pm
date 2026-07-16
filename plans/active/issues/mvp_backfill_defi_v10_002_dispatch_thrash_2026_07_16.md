@@ -115,11 +115,17 @@ the immediate bleed.
 
 ## Fix todos
 
-- [ ] [ADMIN] P1. Park `mvp_backfill_defi_onchain_v10-002`: `priority: 999` + `priority_override: true` +
+- [x] ✅ [ADMIN] P1. Park `mvp_backfill_defi_onchain_v10-002`: `priority: 999` + `priority_override: true` +
       `prereqs.prerequisites: [defi_onchain_v10_universe_v2_seed_or_backfill_progressed]` (create the condition `false`
-      via `POST /api/prerequisites/...` first) on its `backlog.yaml` entry, then `POST /api/backlog/reload`. Verify it
-      survives the next `PlanRegenLoop` tick (not just `/reload`) per the
-      `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` precedent. (repo: agent-orchestrator)
+      via `POST /api/prerequisites/...` first) on its `backlog.yaml` entry, then `POST /api/backlog/reload`. **Applied
+      2026-07-16T20:3xZ (data_engineering slot-3)** — condition created `false`; entry edited (`priority: 10→999`,
+      `priority_override: false→true`,
+      `prereqs.prerequisites: []→[defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`); `/api/backlog/reload`
+      confirmed `ok:true`; `GET /api/backlog` verified `priority: 999` live. Task released via `/skip-current-task`
+      immediately after (gate itself still not met — this todo doesn't flip the G2 checkbox, only stops the redispatch).
+      **Still open**: verify it survives the next `PlanRegenLoop` tick (not just `/reload`) per the
+      `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` precedent — check back after the next tick. (repo:
+      agent-orchestrator)
 - [ ] [ADMIN] P1. Wire the unpark: whoever owns `data_completion_defi_2026_07_15.md`'s seed-chain progress (or the
       `[INFRA]` VM-relaunch todo) flips `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` → `true` once a chunk
       materially closes the `dex_pool_swaps`/`dex_pool_state` gap, then clears `priority_override`. (repo:
@@ -130,3 +136,12 @@ the immediate bleed.
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-16** — Applied fix-todo-1 (data_engineering slot-3, dispatched to `mvp_backfill_defi_onchain_v10-002` at
+  20:2xZ). Created prerequisite `defi_onchain_v10_universe_v2_seed_or_backfill_progressed=false`; edited the live
+  `agent-orchestrator/data/config/backlog.yaml` entry (`priority→999`, `priority_override→true`,
+  `prereqs.prerequisites→[defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`); `/api/backlog/reload` →
+  `ok:true`; `GET /api/backlog` confirmed `priority: 999` live. Released the in-progress dispatch via
+  `/skip-current-task` (the gate itself remains unmet — see `mvp_backfill_defi_onchain_v10_2026_06_27.md` G2 Progress
+  Log). Fix-todo-2 (unpark once the seed/backfill chain progresses) and fix-todo-3 (auto-park heuristic design) remain
+  open.
