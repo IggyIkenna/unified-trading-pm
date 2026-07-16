@@ -133,6 +133,30 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — P7 CeFi chain-axis gate (backend P1) shipped
+
+- **Root cause (trace-first, live-verified against the cefi availability index):** the cefi manifest
+  (`gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet`) holds BOTH the canonical
+  combined form (`venue=PACIFICA-SOLANA`, empty chain) AND residual split rows (`venue=PACIFICA, chain=SOLANA` /
+  `venue=LIGHTER, chain=ZKSYNC`) — 4617 chain-nonempty rows, whose ONLY distinct chains are `SOLANA` + `ZKSYNC`. The
+  Instrument-Coverage-Summary's `extras["chains"]` sub-dimension (`_build_v4_sub_dimensions`) built a chains breakdown
+  from ANY populated `chain` column, so cefi manufactured `SOLANA`/`ZKSYNC` chain sub-rows. `_build_breakdowns` was
+  already clean (UAC `BREAKDOWN_AXES[(is,cefi)] = (instrument_type, data_type)`, no chain).
+- **Fix:** gated the `extras["chains"]` sub-dimension on `cat == 'defi'` (read-side display gate; manifest query key
+  unchanged). UI grid renders `extras["chains"]` verbatim → no UI change needed. `deployment-api@47a7f67`.
+- **DEFERRED finding (manifest-level drift, out of P7 read-side scope):** the split rows `venue=PACIFICA chain=SOLANA` /
+  `venue=LIGHTER chain=ZKSYNC` are a WRITER-side shard-atom drift — cefi keys on `venue` alone, so a chain should never
+  be stamped. These split rows ALSO duplicate the venue axis (`PACIFICA` vs `PACIFICA-SOLANA` render as two venues).
+  This is a data-correctness finding requiring a manifest canonicalization migration (collapse
+  `venue=PACIFICA,chain=SOLANA` → `venue=PACIFICA-SOLANA,chain=""`), tracked as P7-followup below — NOT fixed by the
+  read-side gate.
+
+- [ ] [DATA] P2. _(P7 follow-up — manifest drift)_ Canonicalize the cefi split rows: collapse
+      `venue={PROTOCOL}, chain={CHAIN}` → `venue={PROTOCOL}-{CHAIN}, chain=""` for `PACIFICA-SOLANA`/`LIGHTER-ZKSYNC` in
+      the cefi availability index (one-off migration, pattern `scripts/canonicalize_*_2026_*.py`, run on real infra) so
+      the venue axis stops showing `PACIFICA` + `PACIFICA-SOLANA` as two venues. Also root-cause the writer path that
+      stamped `chain` for a cefi venue (should key on `venue` alone per the UAC shard-atom matrix).
+
 ### 2026-07-16 — P1 Honest Coverage FIXED (immediate + durable), verified live
 
 - **Root cause (live-verified):** the Honest Coverage card is a verbatim mirror of
@@ -174,13 +198,33 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
 - **Acceptance:** tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND `partial: false`
   (`gcloud storage cat gs://central-element-323112-honest-coverage/<YYYY-MM-DD>/coverage.json`).
 
-- [ ] [INFRA] P1. Republish the code tarballs
-      (`deployment-service/scripts/vm/lib/create-code-tarballs.sh --include instruments-service deployment-service`) so
-      the **nightly** cron VM runs the new writer (partial-stamping) AND launches `e2-highmem-4`; verify tomorrow's
-      00:30 UTC run writes a full 5-AG file with `partial: false`.
-- [ ] [DATA] P2. Column-prune the writer read — drop `instrument_id` from `_read_parquet_safe`'s `_READ_COLUMNS` where
-      the coverage compute doesn't need it (or stream row-groups via pyarrow) so the read stops scaling toward OOM
-      regardless of VM RAM. Verify the `by_venue_instrument_type*` breakdowns still populate. _(Defence-in-depth.)_
+- [x] [INFRA] P1. ✅ Nightly cron now launches `e2-highmem-4` (32GB). **BIG FINDING (issue doc):** the plan's INFRA P0
+      fix targeted the WRONG launcher — the live cron is `Cloud Scheduler honest-coverage-daily (00:30 UTC)` →
+      `Cloud Run Job honest-coverage-daily-launcher` → fetches `gs://…/vm/launch-measure-honest-coverage-vm.sh` (NOT
+      `launch-honest-coverage-vm.sh` which P0 `9d97eb2` fixed). That real launcher was downsized to `e2-standard-4`
+      (16GB) on 2026-06-16 citing a column-prune that was never shipped → the nightly wrote 1-AG partial `coverage.json`
+      for weeks (07-12 `[defi]`, 07-13 `[cefi]`, 07-15 `[defi]`; full-5 files were off-schedule manual runs). Reverted
+      to the proven 32GB + uploaded to the cron's GCS path. — deployment-service@4f10b9b + Evidence:
+      `gcloud storage cat gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` shows
+      `--machine-type=e2-highmem-4` (Update Time 2026-07-16T08:36Z); tonight's 00:30 UTC run will use 32GB. Issue doc:
+      `plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`. _(Tarball
+      republish for partial-stamping is BLOCKED — see follow-up below; NOT required for a full 5-AG run at 32GB.)_
+- [ ] [INFRA] P2. _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
+      partial-stamping (`instruments-service@a29e483`) — CURRENTLY BLOCKED: `create-code-tarballs.sh` rebuilds
+      fleet-wide core tarballs (UAC 922M/UTL 1.2G/MTDS 1.3G) and errors on the foreign uncommitted
+      `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
+      another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
+      `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
+- [ ] [DATA] P2. Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **TRACED-UNSAFE
+      as literally stated:** a naive drop of `instrument_id` from `_READ_COLUMNS` corrupts coverage — `_merge_manifests`
+      dedups the prd+oracle merge on `(date, venue, instrument_id, data_type)` and falls back to
+      `(date, venue, data_type)` without it, COLLAPSING distinct instruments into one row (the shard atom is
+      per-instrument, so the denominator + captured counts undercount and the "best status" wins → coverage overstated).
+      `_compute_coverage` + Layer-1 do NOT use `instrument_id` (verified), but the merge does. Correct fix = pyarrow
+      row-group streaming aggregation OR metadata-deferred primary read (secondaries are already re-read eu-only via
+      `_read_parquet_eu_only`, so their full `_read_parquet_safe` materialization is pure waste + the OOM driver) — a
+      real refactor with correctness surface + ~6 selection-test updates in `test_measure_honest_coverage.py`, NOT a
+      one-line column drop. Enables downsizing the cron VM back to 16GB. _(Defence-in-depth.)_
 - [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
       distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
 
@@ -298,11 +342,20 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
   (verified row counts on real infra); UI can show + copy the contract address; discovery-time emission keeps it
   current.
 
-- [ ] [UI] P1. _(A)_ Axis-aware `formatValueLabel` (`BreakdownsAccordion.tsx`) — "(legacy — pre-job_id)" only for the
-      `job_id` axis, "(unlabeled)" for instrument_type/data_type. `[UI]` + pw:L2.
-- [ ] [UI] P1. _(A)_ Display-only canonical alias map in `deployment-ui/src/lib/data-status-helpers.ts` (spot→SPOT_PAIR,
-      perp/perpetual→PERPETUAL, futures→FUTURE, lending_market→LENDING, … from `_instrument_enums.py` docstring),
-      applied AFTER grouping; raw value stays the query key + shows on hover.
+- [x] [UI] P1. ✅ _(A)_ Axis-aware `formatValueLabel(axis, value)` (`BreakdownsAccordion.tsx`) — the `__legacy__`
+      sentinel renders "(legacy — pre-job_id)" ONLY on the `job_id` axis; "(unlabeled)" on every other axis
+      (instrument_type/data_type/…). — deployment-ui@7853409 + Evidence: `BreakdownsAccordion.test.tsx` "labels
+      **legacy** as '(unlabeled)' on a NON-job_id axis" + the existing job_id legacy test both green. `[UI]` + pw:L2.
+- [x] [UI] P1. ✅ _(A)_ Display-only canonical alias map `canonicalInstrumentTypeLabel`
+      (`deployment-ui/src/lib/data-status-helpers.ts`, from the UAC `_instrument_enums.py InstrumentType` docstring:
+      spot→SPOT_PAIR, perp/perpetual→PERPETUAL, futures/future→FUTURE, option→OPTION, pool→POOL,
+      lending_market/lending→LENDING, lst→LST, yield→YIELD_BEARING, etf→ETF), applied AFTER grouping to the
+      `instrument_type` axis only. Unmapped values (already-canonical + DeFi mid-migration A_TOKEN/DEBT_TOKEN/STAKING)
+      return verbatim (honest — never force-uppercased). Raw value stays the manifest query key + shows on hover
+      (`title="raw: <value>"`). — deployment-ui@7853409 + Evidence: `data-status-helpers.test.ts`
+      "canonicalInstrumentTypeLabel" + `BreakdownsAccordion.test.tsx` "canonicalises legacy instrument_type labels but
+      keeps the raw query key" (asserts display=SPOT_PAIR, hover=`raw: spot`, onSelectValue sends raw `spot`) green.
+      `[UI]` + pw:L2.
 - [ ] [DATA] P2. _(A)_ Root-cause the legacy values — grep the instruments-service catalogue/manifest writer for where
       `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
       canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
@@ -310,10 +363,15 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
 - [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
 - [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
       below.
-- [ ] [DATA] P1. _(B, enabler)_ Add address columns to the catalogue — add `pool_address` +
-      `base_asset_contract_address` + `quote_asset_contract_address` (+ `atoken_address`/`debt_token_address` where
-      present) to `CATALOG_COLUMNS` (`build_instrument_catalogue.py:264-303`), project them from the source rows
-      (already present), and **regen the catalogue**. Projection change, NOT a re-fetch.
+- [ ] [DATA] P1. _(B, enabler)_ **CODE SHIPPED; catalogue regen PENDING (real-infra).** Added
+      `base_asset_contract_address` + `quote_asset_contract_address` + `atoken_address` + `debt_token_address` to
+      `CATALOG_COLUMNS` (`pool_address` was already present) + `_extract_meta` reads them + both row-builders (DeFi +
+      prediction) project them. — instruments-service@77f0fdaa + Evidence: `quality-gates.sh --no-fix` green (exit 0;
+      catalogue tests assert `list(df.columns) == CATALOG_COLUMNS`). UAC `InstrumentRecord` carries all four fields
+      (`instrument.py:221/225/235/239`); live source confirmed (`catalog.20260713-…atokendebttoken.bak`). **REMAINING
+      (real-infra):** regen `catalog.parquet` (projection re-roll, NOT a re-fetch) so historical rows populate the new
+      columns — deferred as a tracked run (needs the catalogue-build VM/job on real infra). Every FUTURE build now
+      carries the columns.
 - [ ] [DATA] P1. _(B)_ SPOT_ASSET backfill/migration — with the address columns in place, derive the unique token set
       (base + quote legs of every SPOT_PAIR/POOL + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET record
       per unique (chain, token → contract_address). Reuse LST/A_TOKEN/DEBT_TOKEN addresses (adapters
@@ -345,8 +403,17 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
 - **Acceptance:** on the IS page the Data Coverage grid renders but the redundant Instrument-Coverage-Summary drilldown
   button is gone for cefi/tradfi/defi; prediction (`:4111`) + sports drilldowns intact; other services unchanged. pw:L2.
 
-- [ ] [UI] P1. Gate the `:1884` `LazyDrilldownDetails` behind an axis-comparison predicate (files: `DataStatusTab.tsx`
-      only; keep `HierarchicalShardDrilldown.tsx` + `LazyDrilldownDetails`). `[UI]` + pw:L2.
+- [x] [UI] P1. ✅ Gated the `:1884` `LazyDrilldownDetails` behind the axis-comparison predicate
+      `isHierarchicalDrilldownRedundant(service, assetGroup, shardAxisMatrix)` — suppresses the drilldown ONLY for
+      instruments-service asset groups whose shard axes ⊆ `{venue, chain}` (cefi/tradfi/defi); IS sports (`league_id`) +
+      prediction (`canonical_question_group`) + every other service keep it. Predicate is a pure helper in
+      `data-status-helpers.ts` (testable in isolation; `HierarchicalShardDrilldown.tsx` + `LazyDrilldownDetails`
+      untouched). — deployment-ui@953fa81 + Evidence: `data-status-helpers.test.ts` 5 specs green
+      (cefi/tradfi/defi→true, sports/prediction/MTDS→false, case-insensitive, fail-open) + full UI QG green
+      (tsc/eslint/vitest 87/build). `[UI]` + pw:L2 (Vitest regression spec). _(Minor file-scope note: the pure predicate
+      lives in `data-status-helpers.ts` rather than inline in `DataStatusTab.tsx` — the plan's "DataStatusTab.tsx only"
+      note was to keep `HierarchicalShardDrilldown`/`LazyDrilldownDetails` untouched, which holds; a pure exported
+      helper is far more testable.)_
 
 ## P6 — Instrument catalogue explorer (per-AG list, CSV, search, MVP filter)
 
@@ -404,9 +471,23 @@ across chains) need the chain axis.
   shard-level CSV (`download-shard-csv`) present + consistent across AGs; the "instruments breakdown" button is
   removed/merged. pw:L2.
 
-- [ ] [BACKEND] P1. Trace the venue→chain derivation and gate it on `asset_group == 'defi'` (cefi = venue-only). Fix in
-      the backend breakdown builder + the UI grid renderer as needed.
-- [ ] [UI] P2. Resolve the "instruments breakdown" button per the P5 decision; confirm shard-level CSV consistency.
+- [x] [BACKEND] P1. ✅ Gate the venue→chain derivation on `asset_group == 'defi'` (cefi = venue-only) —
+      `_build_v4_sub_dimensions` chains breakdown now fires only for `cat == 'defi'` (`breakdowns_domain.py`).
+      Trace-first confirmed the leak: the live cefi manifest holds residual split rows (`venue=PACIFICA chain=SOLANA` /
+      `venue=LIGHTER chain=ZKSYNC` — 4617 chain-nonempty rows, only distinct cefi chains `SOLANA`/`ZKSYNC`);
+      `_build_breakdowns` already uses the UAC axis matrix (cefi = instrument_type/data_type, no chain) so only the
+      ungated `extras["chains"]` sub-dimension leaked. UI grid needs no change — it renders the backend
+      `extras["chains"]` verbatim, so gating the backend suppresses cefi chain sub-rows. — deployment-api@47a7f67 +
+      Evidence: `test_v4_sub_dimensions_chain_gated_on_defi.py` (cefi→no chains, defi→chains) + quality-gates.sh green
+      (117s). _(Read-side display gate only; manifest query key unchanged. NOTE — the writer-side split rows
+      `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of P7's read-side scope; see Progress Log.)_
+- [x] [UI] P2. ✅ Resolved by the P5 gate. There were two overlapping "Instrument breakdown" affordances: (a) the nested
+      link inside the hierarchical drilldown (`DataStatusTab.tsx:4092`), suppressed for IS cefi/tradfi/defi by the P5
+      predicate; and (b) the Data Coverage grid's venue-detail "Instrument breakdown" link (`DataStatusTab.tsx:5582` →
+      `handleVenueClick` → `VenueDetailPanel`). Removing (a) leaves (b) as THE single, unambiguous instrument-breakdown
+      path. Shard-level CSV stays consistent across AGs — the grid retains its
+      `shard-csv-date-found`/`shard-csv-date-missing` per-date CSV download buttons (`DataStatusTab.tsx:5514,5553`)
+      unchanged. — deployment-ui@953fa81 (same P5 change; no separate button removal needed).
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 

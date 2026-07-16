@@ -39,8 +39,10 @@ _PER_TYPE_FACETS = {
 }
 
 # The doc roots to walk — PM-repo LIVE trees ONLY (operator decision 2026-07-04):
-#   - NO other repos (the former agent-orchestrator/agents root is removed; cross-repo
-#     coverage is a future task, rolled out deliberately — not one repo at a time here).
+#   - agents/*.md (the agent-role charters) — indexed as a PM-repo live tree since 2026-07-16,
+#     after the charters moved into this repo (the former cross-repo agent-orchestrator/agents
+#     root is gone). Still NO other repos — cross-repo coverage is a future task, rolled out
+#     deliberately, not one repo at a time here.
 #   - NO plans/archive — EVER, even after the archive frontmatter backfill lands. Archived
 #     plans/issues are closed records: indexing them grows the L0 map without routing value.
 #     Agents needing history take the costlier grep-the-archive path, which is rare enough
@@ -52,6 +54,7 @@ _ROOTS: list[tuple[str, str]] = [
     ("plans/audit/results", "**/*.md"),
     ("plans/audit/instructions", "**/*.md"),
     ("codex", "**/*.md"),
+    ("agents", "*.md"),
 ]
 _EXCLUDED_PREFIX = "plans/archive/"  # safety net if a future root glob ever reaches into it
 ROOTS = _ROOTS  # public alias — gen_doc_graph.py walks the same corpus (keep in lockstep)

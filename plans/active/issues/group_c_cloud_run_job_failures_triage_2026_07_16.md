@@ -60,9 +60,11 @@ related:
     ./recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     ./defi_scheduled_collection_outage_paused_crons_2026_07_16.md,
     ./mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
+    ./aws_consolidator_batch_logstream_iam_gap_2026_07_16.md,
+    ../tradfi_v9_stage1_finish_2026_07_06.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-16 # was: 2026-07-16 — task -003 RESUME-runbook session confirmed Cluster 5 also breaks the 11 DeFi mtds-collect-* jobs
 parent_epic: infrastructure_master
 priority: P1
 source:
@@ -275,6 +277,25 @@ MTDS/strategy-service, since `_adapter.py` is shared UTL code.
       UTC): bootstraps fully past the (now-fixed) import point, then hits the identical `Invalid date format ''` crash.
       Raises this from "plausible" to "confirmed blocking every MTDS t1-recon invocation" — see the updated Cluster 5
       symptom section above.
+- [x] [OPS] P1. **UPDATE 2026-07-16 (later session, dispatched to `tradfi_v9_stage1_finish` task -003, the RESUME
+      runbook) — CONFIRMED this exact bug ALSO breaks the 11 DeFi daily-batch `uts-prod-mtds-collect-*` Cloud Run jobs,
+      not just the `-t1-recon` family.** While executing the coordinated 48-scheduler resume, force-ran
+      `uts-prod-mtds-collect-oracle-prices` and `uts-prod-mtds-collect-gas-fees` for real (`gcloud scheduler jobs run` →
+      `gcloud run jobs executions describe`, watched to terminal) — both FAILED with the byte-identical trace:
+      `ERROR Date range validation failed: Invalid date format ''`, `_adapter.py:80` →
+      `io_batch.py:45:DateRangeInput.__aiter__` → `get_date_range('', '')` → `date_utils.py:73`. Confirmed via
+      `deployment-service/terraform/gcp/defi_collection_scheduler.tf:170` that ALL 11 `defi_collect_operations` share
+      the identical `args = ["--operation", "collect-${each.key}", "--mode", "batch"]` template — zero date flags for
+      every one of them — so this is systemic across the whole DeFi collector fleet, not just the 2 sampled. Re-paused
+      all 11 `uts-prod-mtds-collect-*-cron` schedulers immediately after confirming (do not leave broken jobs firing);
+      full accounting in `tradfi_v9_stage1_finish_2026_07_06.md` task -003's Progress Log entry and
+      `defi_scheduled_collection_outage_paused_crons_2026_07_16.md`. This means resuming the DeFi collector schedulers
+      alone is NECESSARY BUT NOT SUFFICIENT to restore steady-state DeFi batch collection — a fix for this cluster's own
+      still-open decision (mirror MDPS's date bridge into MTDS's CLI, or fix the shared `_adapter.py` BATCH branch) is a
+      hard blocker for that separate, DeFi-specific deliverable, raising this finding's urgency further. The 3
+      `defi-fwd-*` live-poll crons (VM-launched with `--mode live`, a DIFFERENT code path that already self-defaults to
+      today per the LIVE branch shown above) are NOT affected — all 3 verified SUCCEEDED with real fresh data this same
+      session.
 
 ### Decision needed (operator / next owner)
 
