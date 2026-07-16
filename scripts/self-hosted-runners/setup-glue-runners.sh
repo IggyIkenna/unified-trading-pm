@@ -63,6 +63,9 @@ SLOT_VENV="${RUNNER_BASE}/venv"
 # Must satisfy pyproject's requires-python (>=3.13,<3.14). The slot venv IS the runner's python3
 # (first on the unit PATH), which is what lets the movers drop actions/setup-python entirely.
 SLOT_PY="${SLOT_PY:-3.13}"
+# SSOT for what the slot venv provides (and which workflow needs each). Pre-installed so no mover
+# downloads at job time — the whole point of a long-lived VM.
+SLOT_REQS="${SLOT_REQS:-${HERE}/slot-venv-requirements.txt}"
 
 log() { printf '\033[36m[glue-runners]\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m[glue-runners] WARN:\033[0m %s\n' "$*" >&2; }
@@ -339,10 +342,19 @@ cmd_install() {
     || die "slot venv is ${slot_py_ver} — the repo requires >=3.13,<3.14 and this venv IS the runner's python3"
   log "slot venv OK — ${slot_py_ver} (satisfies requires-python; movers need no actions/setup-python)"
 
-  # STEP 2b: pre-install so ci-status-update never pays a per-run `pip install google-cloud-firestore`.
-  log "installing slot venv deps (google-cloud-firestore)"
-  sudo -u "${RUNNER_USER}" "${SLOT_VENV}/bin/pip" install --quiet --upgrade google-cloud-firestore \
-    || die "slot venv dep install failed"
+  # Pre-install EVERY dep the movers would otherwise install per-job (operator 2026-07-16: "so that we
+  # are not doing similar install or download on the long-living vm and take the benefit of the vm
+  # properly and fully"). The list — and WHICH workflow needs each — is the SSOT next door; keeping it
+  # in a file rather than inline means the workflows and the venv can be diffed against one thing.
+  # This is STEP 2b generalised: firestore alone made ci-status-update's per-run pip a no-op; the rest
+  # do the same for the other movers.
+  log "installing slot venv deps <- ${SLOT_REQS##*/}"
+  [ -f "${SLOT_REQS}" ] || die "missing ${SLOT_REQS} — it is the SSOT for what the slot venv provides"
+  sudo -u "${RUNNER_USER}" "${SLOT_VENV}/bin/pip" install --quiet --upgrade -r "${SLOT_REQS}" \
+    || die "slot venv dep install failed (see ${SLOT_REQS})"
+  local n_deps
+  n_deps="$(grep -cvE '^\s*(#|$)' "${SLOT_REQS}")"
+  log "slot venv provides ${n_deps} declared dep(s) — movers must NOT install these at runtime"
 
   # Clone via `gh` so we use the VM's EXISTING GitHub creds (operator decision) rather than embedding
   # a PAT in the remote URL, which would persist the token in .git/config.

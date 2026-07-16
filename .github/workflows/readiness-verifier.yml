@@ -64,17 +64,16 @@ jobs:
       # THERE, not here. NOTE: this workflow is now self-hosted-ONLY — restoring runs-on:
       # ubuntu-latest requires restoring setup-python with it.
 
-      - name: Install uv and dependencies
-        run: |
-          pip install uv
-          python -m venv .venv
-          source .venv/bin/activate
-          uv pip install pyyaml
+      # No "Install uv and dependencies" step: this job's python3 IS the runner's slot venv, which
+      # already provides pyyaml and uv (scripts/self-hosted-runners/slot-venv-requirements.txt).
+      # It previously built a PRIVATE .venv and pip-installed into it every run — on a long-lived VM
+      # that is pure overhead, and the two `source .venv/bin/activate` lines below went with it.
+      # Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring this step AND those
+      # activate lines (see scripts/self-hosted-runners/hosted-baseline/readiness-verifier.yml).
 
       - name: Run readiness verifier
         id: verify
         run: |
-          source .venv/bin/activate
           EXIT_CODE=0
           if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
             python scripts/check-repo-readiness.py \
