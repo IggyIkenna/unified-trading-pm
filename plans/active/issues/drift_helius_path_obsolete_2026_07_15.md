@@ -150,13 +150,13 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       unchanged (already SPOT). QG green, dry-run verified (`Machine: e2-highmem-8`), module import path confirmed.
 - [x] [DATA] P1.1. Reconcile the 2025-01-09 SOL-PERP shard — DONE (data_engineering slot-7, 2026-07-16). See Progress
       Log.
-- [ ] [INFRA] P1. Launch the re-routed `mtds-solana-drift-backfill` VM (Velocity path, `deployment-service@ee859e4`) at
-      scale over the real backfill gap (`2025-01-15`–`2025-12-23` per `mvp_backfill_defi_onchain_v10` G1.5) — reuse
+- [x] ✅ [INFRA] P1. Launch the re-routed `mtds-solana-drift-backfill` VM (Velocity path, `deployment-service@ee859e4`)
+      at scale over the real backfill gap (`2025-01-15`–`2025-12-23` per `mvp_backfill_defi_onchain_v10` G1.5) — reuse
       `launch-mtds-solana-drift-backfill-vm.sh` (already registered in `VM_PREFIX_TO_BUCKET`, do not hand-roll a new
       name), `e2-highmem-8`, SPOT default per CLAUDE.md. Both prereq todos (1, 2 above) are landed — this is the missing
       "actually run it" step P1.2 below needs; without this todo P1.2's park-behind-prereq has no gate to open. On
       completion: flip `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: true}`) so
-      P1.2 unparks. (repo: deployment-service)
+      P1.2 unparks. (repo: deployment-service) — done 2026-07-16 (infra slot-2). See Progress Log.
 - [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
       path once Velocity is capturing at scale — PARKED behind the `drift_velocity_backfill_running_at_scale`
       prerequisite (currently `false`) gated on the `[INFRA] P1` launch-at-scale todo directly above; `priority: 999` +
@@ -168,6 +168,38 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       superseded/moot. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-16 — infra slot-2: launched the re-routed Velocity VM at scale (P1)
+
+Picked up the `[INFRA] P1` launch-at-scale todo. Fresh-pulled all repos clean (deployment-service already at `ee859e4`
+as a parent of current HEAD `46d6492`). `gcloud` (the snap CLI) is broken in this slot (`cap_dac_override` snap-confine
+failure, same as every prior session on this host) — used the working non-snap SDK at `~/google-cloud-sdk/bin/gcloud`
+(prepended to `PATH`) for both the pre-launch existing-VM check and the actual launch, per the documented workaround in
+prior issue docs.
+
+Confirmed zero `mtds-solana-drift-*` VMs running before launch. Dry-ran
+`launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-15 --end 2025-12-23` first — confirmed correct config
+(e2-highmem-8, SPOT, `VM_TASK=solana-drift-backfill`, `VM_DRIFT_MARKET=SOL-PERP`). Launched for real (same flags, no
+`--dry-run`): VM created, tarball-freshness check passed for all 4 dependent repos (mtds@1bd507b4, uac@3e3739a1,
+utl@4165f409, deployment-service@46d6492 — a direct child of `ee859e4`, confirmed via `git log --oneline` the Velocity
+re-route commit is included), status `RUNNING` within seconds (no fire-and-forget per infra craft north-star).
+
+**Startup verification** (not fire-and-forget): the VM's log object
+(`gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`) initially still showed the
+STALE tail from the prior (pre-re-route) VM run (`2026-07-15 23:33Z`, Helius-path `Drift Helius backfill: ... sigs`
+messages) — that VM had self-deleted over an hour earlier. Backgrounded a watcher polling `gsutil ls -l` for the log's
+mtime to advance past the stale timestamp, then tailed it once it did (`2026-07-16 00:41Z`, ~3 min after VM create).
+Confirmed the NEW run is genuinely on the Velocity path: log lines read
+`DriftV2 perp_funding/SOL-PERP/<date>: wrote 24 rows to .../pipeline_mode=batch_onchain_rpc/.../data_type=perp_funding/SOL-PERP.parquet`
+(and equivalent for `perp_trades`), i.e. the correct manifest-matching partition path (the exact bug fixed in
+`mtds@1bd507b4`), with `ManifestWriter: per-VM shard updated` entries after each date and a `PIPELINE_HEARTBEAT`
+liveness line. Throughput is dramatically better than the abandoned Helius path — ~5-6s/day vs. the documented ~2-3h/day
+sig-walker stall — so the full `2025-01-15`→`2025-12-23` (345-day) gap should clear in well under an hour, not the 44+
+days the Helius path would have needed.
+
+Flipped `drift_velocity_backfill_running_at_scale` to `true` via `POST /api/prerequisites/...` so P1.2 (the manifest
+cell reconciliation, currently parked behind this condition per `BLK-b72a4b59`) unparks for the next data_engineering
+dispatch. No code changes this session — pure infra launch, `repos: []` on the task. Checkbox flipped above.
 
 ### 2026-07-16 — data_engineering slot-7: P1.2 parked behind a real prereq (`BLK-b72a4b59`)
 
