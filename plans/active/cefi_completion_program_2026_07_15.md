@@ -1213,5 +1213,12 @@ eu). This is the "Phantom reconcile + manifest hygiene" pass this plan already t
       pass (or extend the reconcile to drop ANY eu row colliding with a captured key, not just relabeled ones).
       Evidence: 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others; pre-relabel snapshot had 10,335 of them.
 
-> **🟠 MAINTENANCE WINDOW OPEN 2026-07-16T11:06Z — operator-authorized manifest fix; cefi backfill VMs + market-data
-> consolidator PAUSED; co-manager DO NOT relaunch until this banner is cleared.**
+> **🟢 MAINTENANCE WINDOW CLOSED 2026-07-16T12:50Z — manifest fixed (C purge of 13 stray alias venues, −526,104
+> attempted_failed/eu rows, 0 captured touched; + BYBIT-FUTURES→BYBIT migration, 45 objects moved to canonical path, +45
+> captured; every other canonical venue's captured count bit-for-bit UNCHANGED). Fix is DURABLE — survived the resumed
+> consolidator + live backfill for ~50 min (aliases still 0, BYBIT +45 re-verified 12:49Z on the live index).
+> `_legacy_seed.parquet` also purged (COINBASE+UNKNOWN aliases) so consolidation can't re-merge them. market-data-cefi
+> consolidator RESUMED; backfill restored to exactly 1 VM by the co-manager's `keeper_v2` (N=1 authority, 128/32 ramp) —
+> I did NOT manually launch (would race the keeper). Co-manager may resume. Follow-ups: consolidator lost-update-bug
+> redeploy; bare COINBASE still in expected_universe (318, may re-materialize as eu daily); blank-venue MDPS
+> re-attribution; HL phantom re-census (deferred — see report).**
