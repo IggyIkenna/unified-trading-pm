@@ -186,6 +186,23 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       `slot_role` check as-is; this is a distinct, upstream gate. **Gate**: regression test dispatching a backlog task
       to a `review`-role and a `main`-role slot via BOTH `/boot` and `/heartbeat`, asserting no `task_id` is returned.
 
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@bf9a61b`. QG green (own exit 0): 1297 passed,
+      basedpyright 0 errors.** **R1 hardening — close the drift gap structurally** (operator question 2026-07-16: _"is
+      there a way that we can do this filtering in one place so that the gap between dispatch and AutoSpawn never occurs
+      again?"_ — a fair challenge: `7baeedc` shared the filter PRIMITIVES but each function still composed its OWN list,
+      so adding a 10th filter to `pick_next_task` and forgetting the budget would have brought the phantom churn
+      straight back). `pick_next_task` and `claimable_queued_task_ids` now **derive** from a single `_FILTERS` table;
+      each row declares a `FilterScope` — `FLEET` (same answer for all slots → blocks means nobody can claim it), `SLOT`
+      (varies by slot, AutoSpawn cannot change it → budget honours existentially), `CAPABILITY` (varies by slot but
+      AutoSpawn can spawn one that passes → budget ignores). The asymmetry is now a **type, not tribal memory**: "can
+      any slot take T" is the existential form of "can slot S take T" EXCEPT that AutoSpawn picks tier+role at boot.
+      **Structural, not disciplinary**: `_Filter.scope` has no default, so a filter cannot be constructed without
+      classifying it. **Proved, not asserted** — injecting the plausible "cleanup" (`model_tier` CAPABILITY→FLEET) fails
+      **4** tests: the structural pin, the behavioural contract, and **two pre-existing tests** incl.
+      `test_opus_task_no_longer_starves_behind_idle_sonnet_in_run_one_tick` — someone had already been burned by that
+      exact starvation and left a regression test, which independently confirms the classification is right and that
+      "just make them symmetric" would have re-broken it.
+
 ### Phase 2 — restore designed capacity (P1)
 
 - [ ] [BACKEND] P1. **R2 — per-task tier/role spawn.** Resolve the spawn `(model, effort, thinking, role)` **per slot
