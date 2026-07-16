@@ -384,6 +384,53 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       checkout at all**. If that clone is pinned at install time it silently drifts from `main` and the writer keeps
       writing Firestore rows with **stale logic** — quiet wrongness, the bad kind. Add a systemd timer doing
       `git -C ${SLOT}/repo pull --ff-only` (+ a staleness assertion the writer can fail loudly on).
+- [ ] [INFRA] P0. **Queue-starvation watchdog — BLOCKS THE FLIP (operator 2026-07-16).** After the move a dead VM is
+      **SILENT**: dispatches are still accepted, jobs sit `queued`, and **nothing pages** — verified by grep, all 5
+      KEEP-M monitors (`ci-health`, `branch-health`, `ldr-ci-monitor`, `cloud-build-failure-watcher`) have **ZERO**
+      references to queued/runner state; they detect _failures_, and a queued job isn't a failure until GitHub kills it
+      at **24h**. That window = lost `ci_status` transitions → stale Firestore → blocked promotes (`MAIN_GREEN` is the
+      dep-on-main gate `staging-to-main.yml` STAGE 1.8 reads). **Not a billing risk** (queue time is free — see the
+      Progress Log), purely correctness. **Operator requirement: queued >10 min → page LOUDLY every 15 min until
+      fixed.** **Design (decided — do NOT build a standalone workflow):** fold the detector into **`ci-health`**, which
+      is already `KEEP-M` hosted (correct independence — it must not run on the box it watches), already crons
+      **`*/15`** (exactly the requested cadence), and already matrix-fans `alerts` through `notify-slack` with per-item
+      `dedup_key`+`cooldown_min` (the re-nag machinery EXISTS). **Cost is the reason:** a standalone `*/5` watchdog =
+      **~$52/mo** and `*/15` = **~$17/mo** (1-min minimum × runs), which would eat a third of the saving we're chasing;
+      a **step inside `ci-health`'s already-billed `watch` job = ~$0**, and the `notify` job only bills when firing.
+      Implementation: new `RENAG_GLUE_STARVED_MIN = 15`; an IO detector; emit an item from the **pure** `build_alerts()`
+      (`{key, severity, cooldown_min, message, url}`) → `scripts/repo-management/ci_failure_watcher.py`. Detect on
+      **queued >10 min** (not "0 runners online") so it also catches a **wedged** pool, and put runner state in the
+      message so the responder can tell "VM down" from "pool wedged". `severity: CRITICAL`, stable `key`, recovery
+      bookend on a distinct short-cooldown key. **`ci-health` must stay KEEP-M forever** — flipping it would make the
+      watchdog queue behind the very outage it exists to report.
+- [x] [INFRA] P1. ✅ **Failsafe CI-host bootstrap AUTHORED + container-PROVEN** (unified-trading-pm@80f00684a).
+      `scripts/self-hosted-runners/bootstrap-ci-host.sh` takes a bare Ubuntu box to CI-ready assuming NOTHING present:
+      base OS deps → `gh` (official apt repo) → `gcloud` → `aws` v2 → `uv` (installed **for the runner user**, not root
+      — root's `/root/.local` would be invisible to the runner) → `nodejs/npm` → verify. `--check` verifies without
+      installing. **Evidence: full run against a bare `ubuntu:24.04` container → all 10 tools resolve, EXIT=0.** That
+      run **earned its keep immediately**: it caught a `sudo: command not found` — the script itself calls
+      `sudo -u ${RUNNER_USER}`, but cloud images ship `sudo` so the dependency was **invisible on planning-VM** and
+      would have surfaced only on a minimal/hardened image mid-incident. Exactly the assumed-present class the operator
+      predicted. `sudo` + `python3-venv` (a SEPARATE package — `command -v python3` passes while `python3 -m venv`
+      fails, and the slot venv needs it) are now explicit in `install_base` with the provenance recorded inline.
+      Original todo text retained below. **Failsafe CI-host bootstrap script (operator 2026-07-16).** The current design
+      deliberately reuses planning-VM's existing toolchain + creds — which **hides the dependency**: if that VM dies and
+      we must stand up a replacement CI host, we don't know what it actually needs, and `preflight` only _checks_ (it
+      would fail on a bare box with no path forward). Author `scripts/self-hosted-runners/bootstrap-ci-host.sh` that
+      provisions a **bare Ubuntu** box to CI-ready — **assume NOTHING is present**: OS deps,
+      `git`/`jq`/`python3`+venv/`uv`/`gh`/`gcloud`/ `aws`/`npm`, cloud auth (GCP ADC + AWS), then hand off to
+      `setup-glue-runners.sh install`. **Operator discipline: UPDATE THIS SCRIPT AT EVERY DEPLOY STEP** — each time the
+      real deploy reveals something missing/assumed, fold it back in, so the script converges on truth instead of
+      drifting into fiction.
+- [ ] [VERIFY] P1. **PROVE the bootstrap on a bare host** — ⏳ **PARTIAL** (unified-trading-pm@80f00684a). ✅
+      **Container leg DONE**: bare `ubuntu:24.04` → EXIT=0, all 10 tools resolve; found + fixed the `sudo` assumption.
+      Reproduce:
+      `docker run --rm -v "$PWD/bootstrap-ci-host.sh:/b.sh:ro" ubuntu:24.04 bash -c 'useradd -m -s /bin/bash ubuntu; bash /b.sh'`.
+      ❌ **STILL UNPROVEN — a container structurally cannot exercise these:** IMDS / EC2 instance role · GCP ADC
+      (interactive; STEP 2b's trim depends on runner-user ADC) · **systemd — so `setup-glue-runners.sh install` (units,
+      slice, refresh timer) is UNTESTED end-to-end** · actual runner registration against GitHub. **Do NOT tick this off
+      the container pass**; it closes only when a real bare VM runs it. The upcoming planning-VM deploy proves the
+      systemd/registration legs; the bare-VM leg stays open until we genuinely rebuild a host.
 - [ ] [INFRA] P2. **Toolchain parity with `ubuntu-latest` (gap found 2026-07-16 — the real migration risk, not
       isolation).** ⏳ **PARTIAL** (unified-trading-pm@c44ca1bd4): the inventory is measured and
       `setup-glue-runners.sh preflight` is written (checks `gh`/`jq`/`python3`/`uv`/`aws`/`gcloud`/`git` fatally, `npm`
@@ -633,3 +680,34 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   flipped) and cited the stale 50/6 counts. Now carries the direct-flip warning, the six KEEP classes, the
   `MOVE-C`-don't-flip rule, `reconcile-release-tags` as canary, the runners-live-before-`main` ordering rule, and the
   isolation-scope decision. Anyone following the old README would have broken the fleet.
+- 2026-07-16 — **Queued jobs cost NOTHING — the operator's billing worry doesn't exist** (answering "if the VM is dead
+  and jobs queue 24h, how does that affect the bill?"). GitHub bills **execution minutes on hosted runners**; queued is
+  not executing, and a `runs-on: [self-hosted, glue]` job **cannot execute on billed hardware by definition**. So:
+  $0
+  queued · $0 running · $0 when GitHub kills it at the 24h mark. **A dead VM is the CHEAPEST possible state** — the
+  bill goes DOWN during an outage. The 24h queue is therefore **purely a correctness/availability risk** (lost
+  `ci_status` transitions → stale Firestore → blocked promotes via the `MAIN_GREEN` dep-on-main gate), and the savings
+  survive an outage intact. **Confidence caveat (stated because the notify-slack figure was wrong twice this session):**
+  this is DEDUCTION from the billing model, NOT a measurement — unmeasurable today (zero self-hosted runners ⇒ no
+  historical data; the billing report has no per-workflow granularity). Verified there is **no hosted fallback** that
+  could re-add cost: `ci-status-reconciler` is retired and absent from `.github/workflows/`. That cuts both ways — no
+  hidden spend, but no safety net either. Only real spend in an outage: post-24h mass failures trip `ci-health` →
+  `notify-slack` (both hosted) = cents, i.e. the alerting working as designed.
+- 2026-07-16 — **Queue watchdog design DECIDED — fold into `ci-health`, do NOT build a standalone workflow.** Cost drove
+  it: a standalone `*/5` watchdog = **~$52/mo** and `*/15` = **~$17/mo** (1-min minimum × runs) — a watchdog for a
+  cost-reduction project that eats a THIRD of the saving is self-defeating. `ci-health` is already KEEP-M hosted (the
+  right independence — it must not run on the box it watches), already crons **`*/15`** (exactly the operator's
+  requested page cadence), and its `notify` job **already matrix-fans `alerts` through `notify-slack` with per-item
+  `dedup_key` + `cooldown_min`** — the re-nag machinery the operator asked for EXISTS. So the change is a step in an
+  already-billed job + an item from the **pure** `build_alerts()` → **~$0**. Detect on **queued >10 min** rather than "0
+  runners online" so it also catches a **wedged** pool, with runner state in the message to separate "VM down" from
+  "pool wedged". **`ci-health` must stay KEEP-M forever** — flipping it would make the watchdog queue behind the very
+  outage it exists to report. NOT yet implemented (P0, blocks the flip).
+- 2026-07-16 — **Bootstrap SHIPPED + container-proven** — unified-trading-pm@80f00684a. The container leg immediately
+  justified itself by catching `sudo: command not found`: `bootstrap-ci-host.sh` calls `sudo -u ${RUNNER_USER}` but
+  never installed sudo — invisible on planning-VM (cloud images ship it), fatal on a minimal image, and it would have
+  bitten mid-incident when the failsafe is the only thing standing. `python3-venv` is the same class (present-but-not
+  really: `command -v python3` passes while `python3 -m venv` fails). Both now explicit with provenance inline. **Honest
+  scope: the container proves the tool-install class ONLY** — IMDS/instance-role, GCP ADC, **systemd (so
+  `setup-glue-runners.sh install` remains untested end-to-end)**, and real runner registration are all structurally
+  untestable this way and stay open.
