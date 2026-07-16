@@ -79,12 +79,39 @@ drift_direction: advance-code
      the single most likely thing to be 'helpfully' re-optimised back. Do not.
    - **The wrapper self-heals the JIT 409** left by a SIGTERM'd predecessor. Without it, one `systemctl restart` takes
      the whole glue pool down permanently.
-3. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
+3. **HOW TO TOUCH THE BOX AT ALL — read before any VM step.** There is **no inbound SSH** and no open `:8765`; **AWS SSM
+   is the only way in**. Use `scripts/self-hosted-runners/ssm-run.sh` (snippet on stdin) — it exists so you do not
+   re-discover its three gotchas: SSM runs your snippet under **dash** (so it injects a bash shebang), the payload must
+   travel as a **JSON param file** (inline quoting mangles anything real), and a mangled-to-empty payload still reports
+   **Success** (so read stdout, never just status). **SSM runs as ROOT, and gcloud ADC is PER-USER with root having
+   NONE** — anything touching GCP must `sudo -u ubuntu`.
+   ```bash
+   echo 'systemctl --no-pager list-units "github-glue-runner@*"' | bash scripts/self-hosted-runners/ssm-run.sh
+   ```
+4. **⛔ DEPLOY RULE — `git pull` the deploy clone, NEVER patch it.** The box's copy of these scripts comes from
+   `/opt/glue-deploy/unified-trading-pm`, a real git clone. Update it with
+   `sudo -u ubuntu git -C /opt/glue-deploy/unified-trading-pm fetch --depth 1 origin live-defi-rollout && … reset --hard FETCH_HEAD`,
+   then re-run `install`. **Copying a file straight onto the box (scp/base64/heredoc) creates a second source of truth
+   and WILL be silently reverted** — that exact mistake wiped the JIT-409 self-heal off the live wrapper on 2026-07-16
+   (I patched `/opt/github-glue-runners/` but not the clone; the next `install` copied the clone's older wrapper back
+   over it), leaving the box one `systemctl restart` from the pool-death bug. **Verify after every deploy:** the live
+   wrapper's sha must equal git's —
+   `git show origin/live-defi-rollout:scripts/self-hosted-runners/glue-runner-run.sh | sha256sum` vs
+   `sha256sum /opt/github-glue-runners/glue-runner-run.sh`.
+5. **THE REVERT PATH EXISTS — use it, don't hand-roll one.** `scripts/self-hosted-runners/hosted-baseline/` holds the
+   byte-exact **GitHub-hosted** form of all 56 workflows (the 10 flipped ones recovered from git history; `MANIFEST.tsv`
+   records provenance). `hosted-baseline.sh restore <wf>|--all` puts a workflow back — and it restores the
+   `setup-python` / `pip install` steps the flip DELETED, which reverting `runs-on` alone would not: that would give a
+   hosted job with no Python set up, broken in a NEW way. Run `hosted-baseline.sh verify` before trusting it, and
+   **re-run `snapshot` whenever an UNFLIPPED workflow is edited** (its baseline goes stale; verify catches it). The
+   baseline is `.prettierignore`d ON PURPOSE — prettier rewrote it once and destroyed the byte-exactness that is its
+   whole point.
+6. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
    `classify-glue-workflows.sh` vs `git grep -l 'self-hosted, glue' .github/workflows/`). The tail carries **no new
    capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
    AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
    2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
-4. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
+7. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
    exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
    then checks, so on a busy LDR it can never self-validate; workaround = chain
    `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
