@@ -51,6 +51,9 @@
 set -euo pipefail
 
 RUNNER_USER="${RUNNER_USER:-ubuntu}"
+# The version pyproject declares (requires-python >=3.13,<3.14) — NOT the distro's. The slot venv is
+# built on this and IS the runner's python3, which is what lets movers drop actions/setup-python.
+REPO_PY="${REPO_PY:-3.13}"
 # Where this script lives — verify() reads the runner's PATH out of the sibling unit file so the two
 # can never drift apart.
 _BOOTSTRAP_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -148,6 +151,29 @@ install_uv() {
     || die "uv install failed for ${RUNNER_USER}"
 }
 
+# ── 5b. Python ${REPO_PY} — the version the REPO declares, not the one the distro ships ──────────
+# THE POINT OF A LONG-LIVED VM IS THAT THE TOOLS ARE ALREADY HERE (operator 2026-07-16).
+#
+# pyproject declares requires-python >=3.13,<3.14; Ubuntu 24.04 ships 3.12.3 and has NO python3.13 in
+# apt. Without this step the slot venv gets built on 3.12, which is precisely why 5 movers still
+# carried `actions/setup-python` and re-downloaded a THIRD copy of Python on EVERY job — the
+# ephemeral-hosted model rebuilt on hardware we already pay for 24/7, keeping only the downsides
+# (wasted wall-clock, ~400MB per runner, and the shared-tool-cache race that took the pool down).
+# "The box doesn't have that version" is a BOOTSTRAP gap. This is where it gets fixed.
+#
+# uv, not deadsnakes: 3.13 is not in noble's apt and a third-party PPA on the live orchestrator VM is
+# not a trade worth making. uv is already the repo's Python toolchain and fetches the SAME
+# python-build-standalone builds actions/setup-python does — so this is the same interpreter, just
+# resident instead of re-downloaded per job.
+install_repo_python() {
+  if sudo -u "${RUNNER_USER}" bash -lc "uv python find ${REPO_PY}" >/dev/null 2>&1; then
+    log "Python ${REPO_PY} already present for ${RUNNER_USER} (uv-managed)"; return
+  fi
+  log "installing Python ${REPO_PY} for ${RUNNER_USER} via uv (repo requires >=3.13,<3.14)"
+  sudo -u "${RUNNER_USER}" bash -lc "uv python install ${REPO_PY}" \
+    || die "uv python install ${REPO_PY} failed — the slot venv cannot satisfy requires-python without it"
+}
+
 # ── 6. node/npm — exactly 1 use in the MOVE set ────────────────────────────────────────────────
 # Advisory: only one mover references npm. Installed for completeness so the failsafe host is a true
 # superset; if this ever becomes the only reason to carry the nodejs package, drop it and mark that
@@ -202,6 +228,16 @@ verify() {
     missing=$((missing + 1))
   fi
 
+  # The REPO's python must be RESIDENT on the box. If it is not, the slot venv falls back to the
+  # distro's 3.12, every mover is forced to carry actions/setup-python, and the long-lived VM buys
+  # us nothing over a hosted one. This check is the difference between those two worlds.
+  if sudo -u "${RUNNER_USER}" bash -lc "uv python find ${REPO_PY}" >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m %-10s %s resident (uv-managed) — movers need no setup-python\n' "python${REPO_PY}" "$(sudo -u "${RUNNER_USER}" bash -lc "uv python find ${REPO_PY}" 2>/dev/null)"
+  else
+    printf '  \033[31m✗\033[0m %-10s MISSING — repo requires >=3.13,<3.14; distro ships %s\n' "python${REPO_PY}" "$(python3 --version 2>&1)"
+    missing=$((missing + 1))
+  fi
+
   if have npm; then printf '  \033[32m✓\033[0m %-10s %s\n' "npm" "$(command -v npm)"
   else warn "npm missing — 1 MOVE workflow references it"; fi
   [ "${missing}" -eq 0 ] || die "${missing} required tool(s) missing"
@@ -231,6 +267,7 @@ install_gh
 install_gcloud
 install_aws
 install_uv
+install_repo_python
 install_node
 verify
 

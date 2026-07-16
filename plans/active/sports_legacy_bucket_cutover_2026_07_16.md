@@ -1367,11 +1367,37 @@ the dated pre-match gap). Canonical holds 1.07% in-play vs legacy's 5.59%; 92/11
 **No filter exists in the current adapter** — the mechanism is genuinely unknown, so neither a silent discard nor a
 blind merge is defensible. Deleting the bucket makes this irreversible.
 
-- **A: recover pre-match only; document the 746,928 as a deliberate written exclusion [WORKER REC]** — preserves
-  canonical's apparent pre-match-only property and the lookahead-bias guarantee that may rest on it.
+> **🔬 INVESTIGATED 2026-07-16 (operator question: _"we want half time odds — is there knowledge of this from SFI
+> derived half time?"_) → `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. The mechanism is
+> **PROVEN** and the WORKER REC moves **A → B-REFINED**.**
+>
+> - **SFI ALREADY HOLDS HALF-TIME ODDS — denser than the legacy rows.** The captured `sfi_progressive_stats` contract
+>   carries **12 price columns** (`odds_1x2_*`, `odds_ou_*`, `odds_ah_*`, `odds_asian_corner_*`) + `ht_start_timer`.
+>   Measured live: **100% non-null inside the HT break** (2550-2999s), **31/31 fixtures across 2021→2026 / 5 leagues**,
+>   30-second granularity, genuine repricing (3.30 kickoff → 36.0 at HT). Coverage 2020→2026 over a **superset** of the
+>   10 in-play leagues. **The half-time market LEVEL does not depend on this bucket.**
+> - **The 746,928 are per-bookmaker (23 books) but FULL-TIME markets only** — `h2h`/`totals`/`spreads`/`h2h_lay`; **zero
+>   HT-specific markets, in-play OR pre-match**. Coarse grid (+5/+15/+30/+45/+60/+75/+90/+120), not continuous.
+> - **Only ~3.1% (~23,000 rows) is unique AND usable** — per-bookmaker quotes in the PIT-valid HT-break window
+>   (+45..55). Against `_apply_ht_odds_pit_gate` (default cutoff −55): **63.2% is actively REJECTED as 2nd-half
+>   leakage**, 17.0% is post-match.
+> - **There is NO "HT" horizon** — `TIER1_HORIZONS` is 8 **pre-match** buckets (T-24h…T-0), confirmed on the live
+>   processed layer. **BIG FINDING**: `nearest_idx[vals<0]=N_BUCKETS-1` runs AFTER the staleness rejection → **184/282
+>   (65%) of sampled canonical T-0 rows are post-kickoff**, to −71.1 min = **live lookahead leakage**.
+> - **The HT-RESULT market is captured NOWHERE** — `ht_odds_home_implied` reads the dormant
+>   `CanonicalProgressiveOdds.first_half_*`; SFI's API serves `h1_*` but `_extract_odds()` never reads it →
+>   **re-fetchable capture gap, NOT a deletion loss**.
+
+- ~~**A: recover pre-match only; document the 746,928 as a deliberate written exclusion [WORKER REC]**~~ — **REJECTED
+  2026-07-16**: the "pre-match-only property" is **measurably false** (T-0 is 65% post-kickoff) and no lookahead
+  guarantee rests on it. Discards ~23k non-reproducible per-bookmaker HT-break quotes for no gain.
 - **B: recover them into a distinct population** (own `instrument_type`/`data_type`) so pre-match consumers are
-  unaffected but the observations survive.
-- **C: prove the mechanism first** (deliberate policy vs June-campaign artifact), then rule.
+  unaffected but the observations survive. → **ADOPT as B-REFINED [WORKER REC 2026-07-16]**: they ride along on the
+  option-D G1 read-split-merge (same 3,816 objects — **marginal cost ≈ 0**), landing **quarantined from the pre-match
+  bucketing path** (merging into `data_type=odds` would sweep them into T-0 and deepen the 65% contamination).
+- ~~**C: prove the mechanism first** (deliberate policy vs June-campaign artifact), then rule.~~ — **SPENT**: proven a
+  **June-campaign snapshot-grid artifact, not policy** (no adapter filter AND the processed layer force-feeds
+  post-kickoff rows into T-0).
 - Other.
 
 **OR-9 (NEW, BLOCKING T5.4 for the INSTRUMENTS bucket — surfaced by T4.1 2026-07-16) — how do we dispose of the ~1,834

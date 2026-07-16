@@ -230,6 +230,25 @@ Bounded to **2022-03-07 … 2023-04-30**, 23 venues, 26 leagues.
 
 ### 2. POST-KICKOFF / IN-PLAY — 746,928 rows (10.5%) — verdict **REAL but POLICY-AMBIGUOUS. Operator ruling needed.**
 
+> **🔬 SUPERSEDED IN PART 2026-07-16 by
+> [`sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md)** (operator
+> question: _"we want half time odds — is there knowledge of this from SFI derived half time?"_). **The mechanism below
+> is no longer unproven, and this section's WORKER REC (option A) is superseded by B-REFINED.**
+>
+> - **The exclusion is NOT a deliberate pre-match-only policy** — it is a June-campaign snapshot-grid artifact. The
+>   "lookahead-bias guarantee that may rest on it" **does not exist**: MDPS force-feeds every post-kickoff row into
+>   **T-0** (`nearest_idx[vals<0]=N_BUCKETS-1`, applied AFTER the staleness rejection), and **184/282 (65%) of sampled
+>   canonical T-0 rows are already post-kickoff**, to −71.1 min. There is no pre-match purity to protect.
+> - **SFI already holds half-time ODDS, denser** — the captured `sfi_progressive_stats` contract carries 12 price
+>   columns, **100% non-null inside the HT break**, 31/31 fixtures 2021→2026, 30s granularity, over a superset of these
+>   leagues. The half-time market LEVEL does not depend on these rows.
+> - **Only ~3.1% (~23,000 rows) is unique+usable** — per-bookmaker quotes in the PIT-valid HT-break window (+45..55);
+>   63.2% is what the HT odds PIT gate actively rejects as 2nd-half leakage, 17.0% is post-match. **No HT-specific
+>   market exists in these rows at all** (`h2h`/`totals`/`spreads`/`h2h_lay` only).
+> - **Revised disposition → B-REFINED**: carry the in-play rows through the option-D G1 read-split-merge (they are in
+>   the same 3,816 objects — marginal cost ≈ 0) into a **DISTINCT population quarantined from the pre-match bucketing
+>   path**. Merging them into `data_type=odds` would sweep them into T-0 and deepen the 65% contamination.
+
 Uniform across all seven years, unlike class 1. These are rows with `minutes_to_kickoff < 0` — odds snapshots taken
 **after** the fixture kicked off. Canonical holds **1.07%** in-play vs legacy's **5.59%**; **92/112** sampled canonical
 objects hold **zero** in-play rows.
@@ -363,14 +382,29 @@ and its recommended fallbacks are therefore moot:
 
 Not covered by the operator's 2026-07-16 rulings, and it must not be settled silently by either recovery or deletion.
 
-- **A: recover pre-match only; document the 746,928 in-play rows as a deliberate, written exclusion [WORKER REC]** —
-  preserves canonical's apparent pre-match-only property and the lookahead-bias guarantee that may depend on it; the
-  rows die with the bucket, so the decision is irreversible and must be explicit.
+> **🔬 INVESTIGATED + RE-RECOMMENDED 2026-07-16 →
+> [`sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md). The WORKER
+> REC below moves from A to B-REFINED; C is spent (mechanism proven).**
+
+- ~~**A: recover pre-match only; document the 746,928 in-play rows as a deliberate, written exclusion [WORKER REC]**~~ —
+  **REJECTED**: its premise is measurably false. Canonical has no pre-match-only property to preserve (T-0 is **65%**
+  post-kickoff) and no lookahead guarantee rests on it (MDPS force-feeds post-kickoff rows into T-0). Discards ~23,000
+  non-reproducible per-bookmaker HT-break quotes for no gain.
 - **B: recover in-play too, into a distinct population** (e.g. its own `instrument_type` / `data_type`), so pre-match
-  consumers are unaffected but the observations survive.
-- **C: prove the mechanism first** — establish whether the exclusion is a deliberate policy or a June-campaign artifact,
-  then rule. (No filter exists in the current adapter; the mechanism is genuinely unknown.)
+  consumers are unaffected but the observations survive. → **ADOPT as B-REFINED [WORKER REC 2026-07-16]**: the rows ride
+  along on the option-D G1 read-split-merge (same 3,816 objects — marginal cost ≈ 0), landing in a distinct population
+  **quarantined from the pre-match bucketing path** (merging into `data_type=odds` would sweep them into T-0 and deepen
+  the existing 65% contamination).
+- ~~**C: prove the mechanism first**~~ — **SPENT**: mechanism proven. The exclusion is a **June-campaign snapshot-grid
+  artifact, not a deliberate policy** — no adapter filter exists AND the processed layer actively force-feeds
+  post-kickoff rows into T-0.
 - Other.
+
+**Half-time-odds context (the operator's actual question):** the delete does **not** cost us half-time market knowledge
+— SFI's captured `sfi_progressive_stats` carries 12 populated price columns at 30s granularity, **100% non-null through
+the HT break**, 31/31 fixtures 2021→2026, over a superset of these leagues. What dies is the **per-bookmaker** HT
+dispersion (~3.1% ≈ 23k rows, 23 books). The **HT-RESULT market (first-half 1X2) is in NEITHER source** — SFI's API
+serves `h1_*` but `_extract_odds()` never reads it → a re-fetchable capture gap, not a deletion loss.
 
 ## Cross-checks
 

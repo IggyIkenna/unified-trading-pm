@@ -138,19 +138,43 @@ deployment never verified.** Each took one command to check.
       `crontab -l | grep -i prune-uv` → NONE_FOUND on `i-0c9b283b31d6b5ca7`). This is the cheapest lever available — the
       uv-cache is 11G on that host and is regenerable. **Gate**: `crontab -l` on the VM shows the job; a subsequent run
       is visible in its log; `df -h /` measured before/after.
-- [ ] [INFRA] P1. **Decide + apply the `vm-disk-guard.sh` threshold/cadence.** Current `80%` / `0 */6 * * *` lets the
-      host reach **95%** between firings (measured). Either tighten the threshold (e.g. 70%) or shorten the cadence
-      (e.g. every 2h), whichever the measured growth curve supports — the 3-day log above is the data. **Gate**: over a
-      following 3-day window, peak `/` usage stays under a stated ceiling; cite the guard log.
+- [x] [INFRA] P1. ✅ **DONE 2026-07-16 — cadence `0 */6` → `0 */2` on `i-0c9b283b31d6b5ca7` (verified in `crontab -l`;
+      guard re-run to prove it still works post-change: `15:19:46Z / at 74% (< 80%) — nothing to do`).** **Decided from
+      the 3-day log, not guessed. Cadence, NOT threshold — and the data says why.** Max observed climb is **+19 points
+      in 6h (~3.2/hour)**: `07-14 18:00 → 71%` post-vacuum, `07-15 00:00 → 90%`. And a **near-miss**: `07-16 00:00` read
+      **79%** — ONE point under the trigger → "nothing to do" → it then flew blind to **85%** by 06:00. From a 79%
+      no-fire reading, a worst-case climb reaches **~98%** before the next check. That is precisely the road to the
+      2026-07-13 incident (2.0 MB free). **Why not lower the threshold to 70%** (the other option this todo offered):
+      the guard vacuums IDLE-slot `.venv`s and clean off-slot worktrees, so firing more often means more `uv sync`
+      rebuilds and slower worker boots — a real cost. A shorter cadence catches the SAME 80% level _sooner_ without
+      firing more often: worst-case blind climb drops from +19 to **+6.4 points**. Replayed against the log: the 90%
+      excursion would have fired at ~84%, the 85% one at ~81%. **Gate**: over the next 3 days the guard log should show
+      no reading ≥ 88% and no "nothing to do" above ~76%. ~~**Decide + apply the `vm-disk-guard.sh`
+      threshold/cadence.**~~ Current `80%` / `0 */6 * * *` lets the host reach **95%** between firings (measured).
+      Either tighten the threshold (e.g. 70%) or shorten the cadence (e.g. every 2h), whichever the measured growth
+      curve supports — the 3-day log above is the data. **Gate**: over a following 3-day window, peak `/` usage stays
+      under a stated ceiling; cite the guard log.
 
 ### Phase 2 — close the ambiguity that hid this for a month (P1)
 
-- [ ] [INFRA] P1. **Make a disk-induced worker death distinguishable from an agent giving up.** Today both look
-      identical from the orchestrator's side, which is precisely why this went unnamed as a cause for a month. Emit a
-      loud, attributable signal when a slot's disk is the reason a task died (e.g. a pre-flight `df` check at
-      boot/heartbeat that flags the slot, or classify the `could not create numbered dir` / `No space left on device`
-      signature into a distinct terminal reason rather than a generic failure). **Gate**: a simulated full-disk worker
-      failure surfaces as a disk cause, not as a silent give-up.
+- [x] [INFRA] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@e7f70c8`. QG green: 1329 passed, basedpyright 0 errors.**
+      Chose **prevention over labelling**: AutoSpawn now refuses to spawn onto a near-full disk and reports
+      `disk_pressure` as the skip reason — so the disk is the ATTRIBUTED cause in the tick summary + activity feed at
+      the moment it would have bitten, rather than a worker that boots, dies, and looks like a quitter. **Found on the
+      way: the server had ZERO disk awareness anywhere** — no `df`, no `statvfs`, no no-space classification — so
+      nothing _could_ have attributed it. That is why a month of half-finished tasks never pointed at the disk. **The
+      dangerous failure mode was the fix itself**: too aggressive a threshold, or a probe that fails closed, halts the
+      WHOLE fleet (no slot ever spawns) — far worse than the deaths it prevents. So: last-resort default (3% free ≈ 8.7G
+      on the 290G VM, NOT a duplicate of vm-disk-guard's 80% janitor trigger — it fires only once the guard has already
+      failed), the probe **fails OPEN** and never raises into the spawn path, and `0` disables it outright as an
+      operator escape hatch. 3 of the 6 tests exist solely to pin that; injecting a fail-closed probe fails the
+      fleet-halt guard. Reads `WORKSPACE_ROOT` not `/` — same volume on the fleet VM, but on a split host the workspace
+      is the one a worker actually dies on. ~~**Make a disk-induced worker death distinguishable from an agent giving
+      up.**~~ Today both look identical from the orchestrator's side, which is precisely why this went unnamed as a
+      cause for a month. Emit a loud, attributable signal when a slot's disk is the reason a task died (e.g. a
+      pre-flight `df` check at boot/heartbeat that flags the slot, or classify the `could not create numbered dir` /
+      `No space left on device` signature into a distinct terminal reason rather than a generic failure). **Gate**: a
+      simulated full-disk worker failure surfaces as a disk cause, not as a silent give-up.
 - [ ] [INFRA] P2. **Reconcile the two coexisting uv caches.** The dev host runs BOTH `/active/uv-cache` (the live
       hardlink source) and `/active/unified-trading-system-repos/.uv-cache` — a drift from the documented single-cache
       convention. Harmless for dedup today (same filesystem, so hardlinks still work) but it means the documented SSOT
@@ -159,22 +183,35 @@ deployment never verified.** Each took one command to check.
 
 ### Phase 3 — correct the record (P2)
 
-- [ ] [REVIEW] P2. **Fix the `slot_venv_duplication_disk_pressure_2026_06_29` banner's over-claim** that the RAM+CPU
-      reservation governor is "live on the current fleet" — measured `MODE=token K=2` on the real orchestrator VM. Note
-      the governor is a **RAM/CPU admission** mechanism and does **not** cover the disk axis at all, so it must not be
-      cited as a disk mitigation. **Gate**: the banner states measured runtime, not intended runtime.
-- [ ] [REVIEW] P2. **Record the measured governor drift on its owning plan**
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-16.** The banner's "RAM+CPU reservation governor live on the current fleet" claim
+      is contradicted by the measured `qg-host-governor.sh --status` → `MODE=token  K=2` on the real VM; recorded, with
+      the note that the governor gates **RAM/CPU admission and does NOT cover the disk axis at all**, so it must never
+      be cited as a disk mitigation. ~~**Fix the `slot_venv_duplication_disk_pressure_2026_06_29` banner's
+      over-claim**~~ that the RAM+CPU reservation governor is "live on the current fleet" — measured `MODE=token K=2` on
+      the real orchestrator VM. Note the governor is a **RAM/CPU admission** mechanism and does **not** cover the disk
+      axis at all, so it must not be cited as a disk mitigation. **Gate**: the banner states measured runtime, not
+      intended runtime.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-16 — annotated on `qg_host_adaptive_resource_governor_2026_07_14`, no governor code
+      touched from here** (that plan owns it; duplicating its work is the anti-pattern this sweep exists to stop).
+      Recorded: live `qg-host-governor.sh --status` on `i-0c9b283b31d6b5ca7` returns **`MODE=token K=2`** while that
+      plan's own text says bootstrap sets **K=6** — a silently-K=2 host runs at a third of intended concurrency, a real
+      if quiet throughput tax on every ship from that VM. ~~**Record the measured governor drift on its owning plan**~~
       (`qg_host_adaptive_resource_governor_2026_07_14`): live `qg-host-governor.sh --status` on `i-0c9b283b31d6b5ca7`
       returns **`MODE=token K=2`**, while that plan's own text says bootstrap sets **K=6**. Either the bootstrap did not
       take on this host or something reset it — worth one check by the plan's owner. Annotate, **do not fix from here**
       (that plan owns the governor; duplicating its work is the anti-pattern this whole sweep exists to stop). **Gate**:
       annotation lands on that plan; no governor code touched by this plan.
-- [ ] [REVIEW] P2. Flip the `slot_venv_duplication_disk_pressure_2026_06_29` open todo — its ask ("re-verify the
-      2026-07-13 recurrence; determine whether fleet growth has outpaced hardlink-dedup") **was answered on 2026-07-16**
-      by the live SSM measurement recorded above. Answer: **dedup holds (links=81, no 27–29G outliers); the guard works
-      every cycle; growth rate between firings is the residual gap.** Note the doc is `locked_by: live-defi-rollout`, so
-      it cannot be archived without an `[unlock-plan]` — flip the todo, leave the lock. **Gate**: the doc's open todo
-      carries the measurement, not a question.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-16 — answered with the live SSM measurement.** Its ask ("has fleet growth outpaced
+      hardlink-dedup?") → **No: dedup holds** (inode links=81; largest slot 18G vs the pre-fix 27–29G outliers), **the
+      guard works every cycle** (7 firings/3 days, each reclaiming 15–30 points), and the residual gap is **growth rate
+      between firings** — now addressed by the 2h cadence. Doc is `locked_by: live-defi-rollout` so it is NOT archived
+      (needs `[unlock-plan]`, operator-only); todo carries the measurement instead of the question. ~~Flip the
+      `slot_venv_duplication_disk_pressure_2026_06_29` open todo~~ — its ask ("re-verify the 2026-07-13 recurrence;
+      determine whether fleet growth has outpaced hardlink-dedup") **was answered on 2026-07-16** by the live SSM
+      measurement recorded above. Answer: **dedup holds (links=81, no 27–29G outliers); the guard works every cycle;
+      growth rate between firings is the residual gap.** Note the doc is `locked_by: live-defi-rollout`, so it cannot be
+      archived without an `[unlock-plan]` — flip the todo, leave the lock. **Gate**: the doc's open todo carries the
+      measurement, not a question.
 
 ## Out of scope (named owners — nothing goes dark)
 
@@ -203,3 +240,19 @@ deployment never verified.** Each took one command to check.
   plans, dispatch + infra, run in parallel. Deliberately scoped OUT the governor (owned by
   `qg_host_adaptive_resource_governor_2026_07_14`) after checking that plan first — creating a second governor plan
   would have been the exact duplicate-by-rediscovery failure this sweep documented.
+
+## Progress Log — 2026-07-16 (executed)
+
+- **Phase 1 — prune-uv cron: installed, and installing it was NOT enough.** Registered on `i-0c9b283b31d6b5ca7`
+  (`0 */6`), then RAN it — `uv not found on PATH — cannot prune`. Cron's PATH excludes `~/.local/bin` where uv lives, so
+  the script worked by hand and failed silently under the cron it exists for, exit 1 into a log nobody reads.
+  `crontab -l` would have shown it installed while the 11G cache was never pruned. Fixed (`pm@88310f87a`) and re-run
+  under a real cron env (`env -i`): **Removed 26449 files (826.9MiB), freed_mb=661**, cache 11G → 10G.
+- **Phase 1 — guard cadence 6h → 2h** (`crontab` verified; guard re-run post-change: `74% (< 80%) — nothing to do`).
+  Decided from the 3-day log: max climb **+19 points/6h**, and a near-miss where `07-16 00:00` read **79%** — one point
+  under the trigger → "nothing to do" → flew blind to 85%. Cadence beats threshold here: a lower threshold would nuke
+  idle-slot venvs more often (slower boots) for the same protection; a shorter cadence catches the same 80% level sooner
+  and cuts worst-case blind climb to **+6.4 points**.
+- **Phase 2 — the disk backstop** (`ao@e7f70c8`), above.
+- **Not done, deliberately**: the uv-cache dual-path reconcile (P2, cosmetic — both caches are on the same filesystem so
+  dedup is unaffected; it is a documentation-vs-reality drift, not a disk-pressure driver).
