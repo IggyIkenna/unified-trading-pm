@@ -794,11 +794,16 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       issue, just breakdown-UI cardinality noise. Full writeup + evidence: issue doc
       `plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`. — no code shipped,
       root-cause-only per operator's explicit "root-cause BEFORE any correction" instruction.
-- [ ] [UI] P3. _(Q4 — "unique instruments" label)_ The
+- [x] [UI] P3. ✅ _(Q4 — "unique instruments" label)_ The
       `2,970,327 unique instruments (catalogue-deduplicated, all asset     groups)` count is CORRECT (verified: Σ per-AG
       = total exactly; dominated by expired OPTION/COMBO strikes — cefi 263k+138k, tradfi 1.17M — and resolved
-      prediction markets 1.34M). But the label reads as "active" — clarify to "all-time incl. expired/delisted/resolved"
-      and pair it with the latest-day (123,733) so it isn't mistaken for the live universe.
+      prediction markets 1.34M). Relabeled to "unique instruments — all-time incl. expired/delisted/resolved
+      (catalogue-deduplicated, all asset groups)"; the latest-day figure was already rendered beside it (a prior P9
+      backend fix), relabeled to "N active on latest day" (bold + tooltip) so the two numbers read as
+      all-time-vs-live-universe rather than one being mistaken for the other. — deployment-ui@33a37af + Evidence: full
+      UI QG green (`tsc`/`eslint`/`vitest` 90 tests/build, 74.91% coverage). `[UI]` — pw:L2 deferred to the plan's final
+      local full-stack Playwright validation pass (no dedicated component test scaffold exists for this card — text-only
+      JSX change, verified live instead of via a new Vitest spec).
 - [ ] [UI] P2. _(operator request — fixtures browser)_ Add a fixtures browser to the IS data-status summary: render all
       catalogue fixtures grouped by **league → day** with collapsible dropdowns (same UX as the cefi/defi/tradfi
       instrument drilldown). The parquet exists (`sports_reference/by_date/day=/entity=fixtures/…`, already read by
