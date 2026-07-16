@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "coverage_pct": 81.17,
+        "qg_red_reason": null,
+        "coverage_pct": 81.43,
         "large_file_count": 1,
-        "qg_red_reason": null
+        "warn_file_count": 0
       }
     },
     "batch-live-reconciliation-service": {
@@ -485,7 +485,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
