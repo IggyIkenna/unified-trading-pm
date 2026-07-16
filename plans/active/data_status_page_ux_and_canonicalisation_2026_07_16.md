@@ -590,13 +590,17 @@ across chains) need the chain axis.
       `/data-status/coverage-summary`) returns `CEFI chains: None`. _(Read-side display gate only; manifest query key
       unchanged. NOTE — the writer-side split rows `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of
       P7's read-side scope; see Progress Log.)_
-- [ ] [BACKEND] P2. _(P7 follow-up — stale rollup cache)_ The TURBO "Data Coverage" grid serves a pre-built GCS rollup
-      blob (`data_status_rollup_worker.py` → `rollup_blob_path`, 1800s staleness) that was written BEFORE the P7 fix, so
-      it still carries `cefi.chains=['SOLANA','ZKSYNC']` (confirmed via Playwright against real data). The worker builds
-      the blob via `dss._get_manifest_status_sync` → the SAME gated `_build_v4_sub_dimensions`, so it SELF-HEALS on its
-      next scheduled run after the P7 fix deploys to prod. Verify the TURBO grid shows cefi venue-only after the next
-      rollup rebuild (or force it: `clear_rollup_cache()` / run `data_status_rollup_worker` post-deploy). No code change
-      — this is a cache-invalidation confirmation.
+- [x] [BACKEND] P2. ✅ _(P7 follow-up — stale rollup cache)_ FIXED at the read layer. The TURBO "Data Coverage" grid is
+      served from a pre-built GCS rollup blob (`data_status_rollup_worker.py`); a blob written BEFORE the P7 fix still
+      carried `cefi.chains=['SOLANA','ZKSYNC']` (found via Playwright against real data — the worker DOES use the gated
+      `_build_v4_sub_dimensions`, so it self-heals on its next 5-min run post-deploy, but that leaves a stale-blob
+      window). Added `strip_non_defi_chains()` applied in `slice_rollup_to_window` beside `strip_defi_ghost_venues`, so
+      any non-defi category's `chains` breakdown is dropped at the rollup-CONSUMPTION layer — the TURBO grid is
+      cefi-venue-only regardless of blob staleness (a no-op on a correctly-rebuilt blob). — deployment-api@e27ba4b +
+      Evidence: `test_data_status_beta_rollup_and_cli_config.py::test_strip_non_defi_chains_drops_cefi_keeps_defi` +
+      `::test_slice_rollup_strips_stale_cefi_chains_keeps_defi` green (ruff/basedpyright clean; 10/10 in the file).
+      _(Committed via collision carve-out — foreign live P6 WIP was mid-edit in the shared checkout; scoped-verified my
+      2 files.)_
 - [x] [UI] P2. ✅ Resolved by the P5 gate. There were two overlapping "Instrument breakdown" affordances: (a) the nested
       link inside the hierarchical drilldown (`DataStatusTab.tsx:4092`), suppressed for IS cefi/tradfi/defi by the P5
       predicate; and (b) the Data Coverage grid's venue-detail "Instrument breakdown" link (`DataStatusTab.tsx:5582` →
