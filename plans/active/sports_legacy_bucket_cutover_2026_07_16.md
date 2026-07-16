@@ -478,8 +478,17 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 > **Ordering is load-bearing: 2a (delete archive) → 2b (move class A) → 2c (move class B) → 2d (manifest rows).**
 > Running 2b before 2a re-imports the archive into canonical (F-3).
 
-- [ ] [DATA] P0. **T2.1 — PHASE 2a: delete `sports_reference_v1_archive/` (398 objects) — do NOT move it.** _Mechanism_:
-      this executes the already-authored, already-approved P0 operator todo in
+- [x] ✅ [DATA] P0. **T2.1 — PHASE 2a: delete `sports_reference_v1_archive/` (398 objects) — DONE 2026-07-16T09:37Z.**
+      398/398 DELETED (object-layer gate: live count under the prefix == 0, gcloud-confirmed "matched no objects";
+      canonical `-prd-` never held the prefix — 0, never contaminated). Per-object evidence
+      `~/tmp-cutover/t2_1_delete_evidence.jsonl` (398 rows, each DELETED, present_after=false). **FINDING (Phase-5
+      owner)**: the legacy bucket is NOT retaining noncurrent versions on delete — `gcloud storage ls -a` under the
+      prefix returns ZERO versions post-delete (versioning effectively off at runtime, or these once-written objects had
+      no noncurrent version). So the delete is PERMANENT (the runbook ROLLBACK table's "restore via `--all-versions`
+      until T5.3" does NOT apply to legacy objects), and **T5.3's `--all-versions` purge will likely be a no-op**. Safe
+      regardless: runbook proved 398/398 fully superseded by v2 fixtures ALONE (100% value-match, 0 unique rows, 0
+      mismatches), OR-3 pre-approved, 7-day window expired ~2.5mo ago. _Original mechanism_: this executes the
+      already-authored, already-approved P0 operator todo in
       `plans/ai/sports_fixtures_legacy_schema_migration_2026_04_28.plan.md` — _"After 7 days of green production: delete
       `gs://…/sports_reference_v1_archive/`"_ — whose 7-day rollback window expired ~2026-05-05, ~2.5 months ago.
       Verdict `safe-to-delete`, proven at the object layer on **all 398, not sampled**: 398/398 COVERED, 0 GAP;
@@ -1172,3 +1181,24 @@ unified-trading-pm@0114f846e (PR #1082, auto-merge) · **T1.3/T1.4** deployment-
 
 _Note (disk hygiene)_: freed ~1.2G of orphaned bare-`/tmp` tmpfs temp (`cf_audit_*`, stale loose parquets, 1-2 days old,
 no live process) that was ENOSPC-failing QG runs; foreign session scratchpads left untouched.
+
+---
+
+## PHASE 2 — MOVE (in progress, 2026-07-16, owner: Phase-2 sub-agent)
+
+**Pre-flight re-verified before any mutation**: freeze still holds (all sports writers + meta-launcher + 3 sports
+consolidators PAUSED, verified 09:33Z); legacy QUIET since freeze (`legacy_write_watch.py 2026-07-16T08:08:43Z` → 0
+genuine writes to either legacy bucket); frozen inventory (07:44) still valid. Venv:
+`market-tick-data-service/.venv/bin/python` with `GCP_PROJECT_ID=central-element-323112`.
+
+**T2.1 — PHASE 2a archive delete — DONE 2026-07-16T09:37Z.** 398/398 objects under
+`sports_reference_v1_archive/by_date/day=*/entity=fixtures/fixtures.parquet` (all fixtures-only, one/day, 2018-01-02…)
+deleted via UTL `gcs_delete_object`. **Object-layer gate PASS**: post-delete `list_blobs(prefix)` live count == 0;
+gcloud `ls` "matched no objects". Canonical `-prd-` verified it NEVER held the `sports_reference_v1_archive/` prefix (0
+— no F-3 contamination). Per-object evidence: `~/tmp-cutover/t2_1_delete_evidence.jsonl` (398 rows, status=DELETED,
+present_after=false). Verifier: `~/tmp-cutover/t2_1_delete_archive.py`. **Finding for Phase-5 (T5.3)**: legacy bucket
+retains NO noncurrent versions on delete (`gcloud storage ls -a` under the prefix == 0 post-delete; the SA lacks
+`storage.buckets.get` so versioning config can't be read directly, but the version listing is authoritative) ⇒ the
+archive delete is PERMANENT and **T5.3's `--all-versions` purge is likely a no-op**; the runbook ROLLBACK "restore until
+T5.3" does not apply to legacy objects. Delete is safe on the proven- superseded verdict alone (0 unique rows lost),
+independent of any versioning rollback.
