@@ -1098,3 +1098,33 @@ DP-VM-001/002/003 rows) — not done here since codex edits are operator-gated.
 - The 3 pre-existing sibling actuators' (`_recover_consolidator`/`_recover_backfill_vm`/`_recover_stalled_vm`)
   dynamic-import Any-cascade basedpyright debt — not fixed (out of scope; my new code meets a higher bar without
   requiring a retrofit of the other 3).
+
+### Infra durability SHIPPED to LDR — but relauncher not LIVE until deployed; keeper retirement condition — 2026-07-16T08:35Z
+
+All three Tardis-infra durability fixes shipped: `deployment-service@02be72e6` (preemption-aware relauncher as a 4th
+`auto_recover` actuator `DP_VM_PREEMPTED → RelaunchPreemptedVm`, replaying captured launch params via a new
+`lc_write_launch_params()` GCS persist, always through `tardis_concurrency_guard`; + the preemption alert; +
+`VM_TARDIS_CONSUMER=1` self-declaring cap-scoping wired into the guard and into `launch-cefi-forward-poll.sh` so T+1
+queues behind the long backfill while live/IS stay exempt). 251/251 unit tests green, checkboxes flipped
+(unified-trading-pm@49a9ce243).
+
+**CRITICAL DEPLOY-LAG — the relauncher is NOT yet live**, verified:
+
+- `uts-prod-dp-exit-code-monitor` Cloud Run job runs `*/5`, ENABLED, last success 2026-07-16T10:00Z — the monitor IS
+  live, but on the CURRENT `deployment-api:latest` image which is PRE-fix.
+- `02be72e6` is on LDR but NOT yet on `origin/main` → the image has not rebuilt → the new `DP_VM_PREEMPTED` actuator is
+  not in the running monitor. A preemption RIGHT NOW would still NOT auto-relaunch.
+
+**Therefore the session keeper (`keeper_v2`, single-authority, 128/32) STAYS until the deploy lands.** Retirement
+condition, explicit: kill the keeper only once BOTH (a) `git merge-base --is-ancestor 02be72e6 origin/main` is true AND
+the `uts-prod-dp-exit-code-monitor` image postdates the rebuild, AND (b) a real preemption has been observed to
+auto-relaunch via the actuator (check `DP_VM_PREEMPTED` in the monitor logs + a fresh `cefi-queue-*` VM appearing
+through the guard). Until then the keeper is the safety net. **Keeper + relauncher COEXIST SAFELY**: the guard now
+counts RUNNING+PROVISIONING+STAGING (fixed 07-16 after the 40s race), so whichever fires first on a given preemption
+creates a PROVISIONING VM and the other is refused — no double-launch. So there is zero downside to leaving the keeper
+armed through the deploy window.
+
+**Operator codex edit surfaced by the fix (gated, not applied)**: `codex/05-infrastructure/spot-vms-for-backfill.md`'s
+"idempotent shards re-run on preemption" premise is now TRUE for the cefi/tardis family — Agent A wrote the exact
+replacement wording + a `vm-launcher-runbook.md` note + an optional `DP-VM-007` registry row into the
+unified-trading-pm@49a9ce243 Progress Log for the operator to apply.
