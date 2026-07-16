@@ -209,8 +209,10 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     min/max bands (10%/30%); rebalance automation **NOT yet shipped** (Phase E.3) → the rebalancing sim is a genuine
     prototype of unshipped logic. Capital map = **4-leg AtomicInstruction** (SWAP usdc→eth → STAKE eth→LST → TRANSFER
     LST→perp venue → TRADE short perp) + passive accrual (FUNDING_ACCRUAL + STAKING_REWARD). Ledger taxonomy = UAC
-    `canonical.crosscutting.ledger` (37 EventTypes incl DEPOSIT/WITHDRAWAL_TO_BANK/TRANSFER/CUSTODY_MOVE +
-    FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST); client-funds-isolation HARD RULE (single client_id per transfer).
+    `canonical.crosscutting.ledger` (the EventType closed set — incl DEPOSIT/WITHDRAWAL_TO_BANK/TRANSFER/CUSTODY_MOVE +
+    FUNDING_ACCRUAL/STAKING_REWARD/LENDING_INTEREST; the count is derivable from UAC, never restate it here — corrected
+    2026-07-15, plan-reconcile §9: this said "37" while UAC was AST-verified at 39); client-funds-isolation HARD RULE
+    (single client_id per transfer).
   - **SLIPPAGE — historical vs static (prod intent):** (1) **DEX swap = HISTORICAL** — `slippage_cost_model.py` +
     `amm.py` (Uniswap V2/V3 math) + historical pool depth (`dex_pools` bucket) → `price_impact_bps` from depth (same
     snapshot as the prod batch replay). (2) **Staking LST premium = STATIC** (~0–50 bps; secondary-market premium NOT
@@ -247,9 +249,9 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - **2026-06-16** — **Capital-movement map** (from prod, for fidelity): USDC **DEPOSIT** → treasury (20%) / trading (80%
   TRANSFER treasury→hot) → the 4-leg `AtomicInstruction`: **SWAP** usdc→eth → **STAKE** eth→LST → **TRANSFER** LST→perp
   venue (collateral) → **TRADE** short perp; passive **FUNDING_ACCRUAL + STAKING_REWARD** accrue; on exit unwind (close
-  perp → unstake → swap→usdc) → **WITHDRAWAL_TO_BANK**. Each step is a UAC `ledger` EventType (37-value closed set);
-  every TRANSFER/CUSTODY_MOVE carries a single `client_id` (funds-isolation HARD RULE). The sim models this at the
-  portfolio level (start→deploy→accrue→withdraw); per-leg event ledger = next fidelity.
+  perp → unstake → swap→usdc) → **WITHDRAWAL_TO_BANK**. Each step is a UAC `ledger` EventType (closed set; count lives
+  in UAC, not here); every TRANSFER/CUSTODY_MOVE carries a single `client_id` (funds-isolation HARD RULE). The sim
+  models this at the portfolio level (start→deploy→accrue→withdraw); per-leg event ledger = next fidelity.
 - **2026-06-16** — Gas + slippage = **bundled into the calibrated rebalance cost (v1)** — rotation + static slippage +
   fixed gas. Higher fidelity (next): per-action gas from prod `gas_cost_model.DEFAULT_GAS_ESTIMATES` × GCS gas-price
   data (`gas_fees/`); **historical** DEX slippage from `dex_pools` depth via prod `slippage_cost_model`/`amm.py`; Aave
