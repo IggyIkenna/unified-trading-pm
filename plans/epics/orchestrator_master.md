@@ -200,6 +200,70 @@ Implementation work is owned by the assigned active plans below. Status as of 20
 - Cloud Run / serverless orchestrator backend (today: VM-bound systemd); defer until VM ops become painful
 - Per-VM RBAC
 
+## AO issue register — 2026-07-16 reconciliation sweep
+
+> **Why this section exists.** The AO issue corpus had rotted into false-open/false-resolved claims: docs asserting
+> `resolved` while the bug is still live in code, and docs sitting `open` whose subject the backend deleted weeks ago.
+> Three separate meta-trackers (`issue_docs_remediation_sweep_2026_06_02`, `ao_docs_reconciliation_2026_07_15`,
+> `ao_dispatch_residuals_2026_07_15`) each exist _because_ of this — it is a pattern, not bad luck. Operator ruling
+> 2026-07-16: enumerate every AO issue doc HERE so none is missed, **re-verify each against CODE (ground truth, not the
+> doc)**, archive what is genuinely fixed, and fold the survivors into a small number of plans. Rationale (operator):
+> _"the stale docs are not going to help us much in terms of solving the current issues we have in AO. there have been
+> many updates on the ao backend and its behaviour and if we keep working on old issue docs its possible we would add
+> more regression then fixing it."_
+>
+> **Enumeration method (do not regress it).** The list below is the union of THREE axes, because no single axis is
+> complete: (1) `rg -l '^repos:.*agent-orchestrator' plans/active/issues/`; (2)
+> `parent_epic ∈ {orchestrator_master, agent_operating_framework_master}` — this axis alone caught 5 docs the `repos:`
+> filter misses; (3) `plans/archive/issues/` re-scanned for AO docs that are archived **yet still carry open `- [ ]`
+> todos**. A filename-prefix (`ao_*`) filter is NOT sufficient — it undercounted this corpus by 5 on 2026-07-15.
+>
+> **Verdict column** is filled from per-doc CODE verification (every todo, open _and_ claimed-done, must cite
+> `file:line`). `⚠️` marks a status/todo contradiction found during enumeration.
+
+### Core AO runtime (the "make AO work properly" scope)
+
+| #   | Issue doc                                                                                                                                    | P   | status                                        | open todos              | Code verdict                                                                                                 |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------- | --- | --------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1   | [`ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07`](../active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md)           | P0  | open                                          | 3                       | _verification in flight_                                                                                     |
+| 2   | [`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`](../active/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md)             | P1  | open                                          | 3                       | _verification in flight_                                                                                     |
+| 3   | [`ao_dispatch_residuals_2026_07_15`](../active/issues/ao_dispatch_residuals_2026_07_15.md)                                                   | P1  | open                                          | prose R1–R7             | _verification in flight_                                                                                     |
+| 4   | [`ao_operator_message_silent_drop_no_reply_ack_2026_07_08`](../active/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md)     | P1  | open                                          | 1 (+10 done, re-verify) | _verification in flight_                                                                                     |
+| 5   | [`dispatcher_role_eligibility_gap_review_slots_2026_07_13`](../active/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md)     | P2  | open                                          | 2                       | _verification in flight_                                                                                     |
+| 6   | ⚠️ [`ao_autospawn_role_blind_dispatch_starvation_2026_07_14`](../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md)   | —   | **ARCHIVED yet `resolved` with 2 OPEN todos** | 2                       | _verification in flight — archival itself under test_                                                        |
+| 7   | [`empty_output_category_count_ssot_contradiction_2026_07_03`](../active/issues/empty_output_category_count_ssot_contradiction_2026_07_03.md) | P2  | open                                          | 1                       | _verification in flight_                                                                                     |
+| 8   | [`ao_recovery_audit_layer1_deleted_2026_07_15`](../active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)                             | P1  | open                                          | rewire tracker          | **DEFERRED TO LAST** — operator ruled B (re-home producer) 2026-07-16                                        |
+| 9   | [`ao_docs_reconciliation_2026_07_15`](../active/issues/ao_docs_reconciliation_2026_07_15.md)                                                 | P1  | open                                          | meta-tracker            | remaining: X1 codex single-VM sweep + F1 (this epic's own `assigned_vm: vm-orchestrator` — stale, see below) |
+
+### AO-adjacent (same repo or AO epic; verify relevance before spending on them)
+
+| #   | Issue doc                                                                                                                                  | P   | status             | open todos | Code verdict                                                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | --- | ------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 10  | [`capability_wizard_analysis_findings_2026_06_11`](../active/issues/capability_wizard_analysis_findings_2026_06_11.md)                     | P2  | open               | 11         | _verification in flight — 5wk old, OBSOLETE is a live possibility_                                                   |
+| 11  | [`capability_wizard_gap_discovery_2026_06_11`](../active/issues/capability_wizard_gap_discovery_2026_06_11.md)                             | P2  | open               | 30         | _verification in flight — 5wk old, OBSOLETE is a live possibility_                                                   |
+| 12  | [`dp_alert_flood_triage_and_monitor_fixes_2026_06_23`](../active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md)             | P1  | open               | 2          | _verification in flight_                                                                                             |
+| 13  | [`long_lived_vm_logs_not_backed_up_2026_07_02`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md)                           | —   | parked             | 3          | _verification in flight_                                                                                             |
+| 14  | [`slot_venv_duplication_disk_pressure_2026_06_29`](../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md)                     | —   | open (`locked_by`) | 1          | _verification in flight — 2026-07-13 recurrence: 2.0 MB free mid-QG_                                                 |
+| 15  | [`plan_hygiene_precommit_and_agentic_resolution_2026_06_10`](../active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md) | P2  | open               | 3          | **VERIFIED 2026-07-16 (see Progress Log)** — keystone = prove the `plan-reconciler` (dispatch ~1mo overdue)          |
+| 16  | [`issue_docs_remediation_sweep_2026_06_02`](../active/issues/issue_docs_remediation_sweep_2026_06_02.md)                                   | P1  | open               | 12         | **VERIFIED 2026-07-16** — its `## agent-orchestrator` section is 2/2 DONE (ao@1fe3386); all 12 open todos are non-AO |
+
+### Status/todo contradictions under the AO epic (PM-QG hygiene, not AO runtime)
+
+| #   | Issue doc                                                                                                                                                             | P   | contradiction                                  | Code verdict             |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ---------------------------------------------- | ------------------------ |
+| 17  | ⚠️ [`qg_step_5_101_baseline_seed_undercount_unified_trading_pm_2026_07_08`](../active/issues/qg_step_5_101_baseline_seed_undercount_unified_trading_pm_2026_07_08.md) | P3  | `status: resolved` **but 1 open todo**         | _verification in flight_ |
+| 18  | ⚠️ [`qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14`](../active/issues/qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md)               | P3  | `status: open` **but 0 open todos, 5 done**    | _verification in flight_ |
+| 19  | ⚠️ [`prettier_emphasis_mangling_corpus_corruption_2026_07_14`](../active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md)                           | P1  | `resolved` + 0 open **but still in `active/`** | _verification in flight_ |
+| 20  | ⚠️ [`qg_host_governor_severe_contention_2026_07_13`](../active/issues/qg_host_governor_severe_contention_2026_07_13.md)                                               | P2  | `resolved` + 0 open **but still in `active/`** | _verification in flight_ |
+
+### Known stale field in THIS epic (finding F1, `ao_docs_reconciliation_2026_07_15`)
+
+This epic's own frontmatter still declares `assigned_vm: vm-orchestrator` — a pre-2026-06-27 multi-VM host id retired by
+the single-VM pivot. Valid values are `{planning, NA}` only. The sibling `agent_operating_framework_master` already
+carries the corrected `assigned_vm: planning` (+ an inline note recording the same class of fix). Repointing this one is
+tracked as X1/F1 in `ao_docs_reconciliation_2026_07_15` — **not** silently fixed here, so the reconciliation doc stays
+the single audit trail.
+
 ## Assigned active plans
 
 _2 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
