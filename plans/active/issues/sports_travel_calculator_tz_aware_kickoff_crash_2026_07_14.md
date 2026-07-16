@@ -655,3 +655,26 @@ chase.
 Main already answered this exact question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" —
 not filing a duplicate `/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-16T12:5xZ UTC — data_engineering slot-5 (32nd consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `[ ]` via direct grep after fresh-pull to LDR HEAD (all 25 slot repos clean FF-pull, no conflicts).
+
+Re-checked whether `systemctl restart orchestrator.service` has landed: `GET /api/state` still shows
+`server_started: 2026-07-15T07:30:19Z` — unchanged from every prior check since slot-11's 2026-07-16T00:0xZ finding,
+restart still pending, `gate_on_depends` (`agent-orchestrator@2d6365f`) not yet in effect on the live process (now ~24h
+post-fix). Live `GET /api/backlog` entry for this exact task (`dispatched_to: 5`, `queued_at: 2026-07-16T12:49:35Z`)
+confirms no `prereqs`/`depends_on` field at all on the dispatched record. `blocked_queue` empty — no new operator answer
+to act on.
+
+Cheap non-GCS-walk fleet check
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud compute instances list --project=central-element-323112`, filter
+`sport|features`): **zero** matching instances running right now — consistent with slot-12's prior observation of the
+fleet between relaunch cycles; whether this is a stall or a normal gap remains the parent plan's concern, out of this
+todo's scope to chase.
+
+Main already answered this exact question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" —
+not filing a duplicate `/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
