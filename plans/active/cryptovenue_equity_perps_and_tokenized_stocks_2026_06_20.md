@@ -43,6 +43,23 @@ equity basis/dispersion arb. Verified (web, 2026-06):
 
 ## Architecture decision (HARD)
 
+> **UPDATED 2026-07-16 (operator, SUPERSEDES the distinct-`instrument_type` decision below).** Verbatim: _"system needs
+> to be able to understand what's an equity perp to know to find the spot leg on tradfi venues etc and other nuances but
+> broad definitions should remain perpetual and equities — it's hard to know from name alone or inst_id what's an equity
+> perp so some tag or mapping needs to exist."_ **`instrument_type` reverts to the BROAD contract-mechanics type**: a
+> crypto-venue single-stock perp is **`PERPETUAL`** (NOT `EQUITY_PERP`) and a tokenized stock is **`SPOT_PAIR`** (NOT
+> `TOKENIZED_EQUITY`). The equity identity + real-equity linkage instead ride two durable **catalogue tags** stamped at
+> roll-up (`build_instrument_catalogue._add_equity_tags`): **`is_equity_perp`** (bool — base ∈
+> `CEFI_EQUITY_PERP_BASE_UNIVERSE`, True for BOTH the perp and tokenized-spot forms) and **`tracks_equity`** (the
+> Databento `DBEQ.BASIC` real-equity ticker via `crypto_equity_link.tracks_equity`; `""` for pre-IPO standalones). The
+> `EQUITY_PERP`/`TOKENIZED_EQUITY` `InstrumentType` members are removed from the CeFi MVP rule (equity perps MVP-gate as
+> `PERPETUAL`, their bases already unioned into `base_ccys`) and are DEPRECATED-but-defined in the enum (no longer
+> minted; kept parseable for pre-2026-07-16 persisted rows + external string consumers, and to keep the ledger-asset map
+> complete). **This also resolved the WS-H double-seed blocker**: the catalogue `instrument_type` now equals the
+> manifest's (`PERPETUAL`), so the honest-coverage denominator reconciles. Shipped: unified-api-contracts +
+> instruments-service (see Progress Log 2026-07-16). The basis/dispersion-arb intent below is UNCHANGED — discovery of
+> the real-equity spot leg is via the `tracks_equity` tag/link map instead of a distinct type.
+
 Crypto-venue equity perps/tokenized-stocks are derivatives TRACKING a real equity → map to the **SAME canonical equity
 instrument** as the Databento (DBEQ.BASIC) real equity, as new venue×instrument cells, so **basis/dispersion arb
 (crypto-venue stock-perp vs real equity) + 24/7-vs-market-hours overnight-gap arb** work cross-venue. Funding-bearing
@@ -196,6 +213,29 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
 
 ## Progress Log
+
+### 2026-07-16 — broad `instrument_type` + `is_equity_perp`/`tracks_equity` tags (operator ruling; WS-H double-seed fix)
+
+**Operator ruling** (verbatim in the Architecture-decision banner above): equity-perp typing reverts to the BROAD
+mechanics type; the equity identity moves to catalogue tags. **Implemented (root-cause, cross-repo):**
+
+- **instruments-service** `scripts/build_instrument_catalogue.py`: replaced `_refine_cefi_instrument_type`
+  (PERPETUAL→EQUITY_PERP / SPOT_PAIR→TOKENIZED_EQUITY re-typing) with
+  `_cefi_equity_tags(instrument_type, base_asset) -> (is_equity_perp, tracks_equity)`; `instrument_type` is now left as
+  the raw broad type at roll-up. Added two `CATALOG_COLUMNS` (`tracks_equity`, `is_equity_perp`) stamped by a new
+  `_add_equity_tags` finalization step (mirrors `_add_mvp_column`; re-derived every full + incremental run, excluded
+  from the incremental merge `out_columns`). Removed `EQUITY_PERP`/`TOKENIZED_EQUITY` from `_PERP_FAMILY_ITYPES`
+  (PERPETUAL stays; equity perps already ride it).
+- **unified-api-contracts**: removed `EQUITY_PERP`/`TOKENIZED_EQUITY` from `CeFiMvpRule.instrument_types` (equity perps
+  MVP-gate as `PERPETUAL`; bases already unioned into `base_ccys`). Enum members kept DEPRECATED-but-defined
+  (`_instrument_enums.py` comment) after a full consumer sweep found string/enum consumers + persisted catalogue rows
+  needing them parseable; the `ledger_asset_resolution` map entries retained (kept complete over the enum). Updated
+  `_mvp_scope_capture.py` comments.
+- **Tests**: `test_mvp_scope.py`, `test_crypto_equity_link.py`, and the IS catalogue tests updated to assert the NEW
+  behavior (equity perps are `PERPETUAL` + tagged `is_equity_perp`/`tracks_equity`; NVDA/META/AAPL populate
+  `tracks_equity`). **Codex**: `codex/02-data/cefi-capture-universe.md` updated.
+- **Effect**: catalogue `instrument_type` == manifest `instrument_type` (`PERPETUAL`) → the **WS-H double-seed blocker
+  is resolved** (denominator reconciles). Prod catalogue re-stamped via the `--mode full` rebuild.
 
 ### 2026-06-24 — KRX venue close-out + Yahoo guardrail + centralised venue/source/MVP parity gate (IN PROGRESS)
 

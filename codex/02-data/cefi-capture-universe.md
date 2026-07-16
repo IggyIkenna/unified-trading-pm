@@ -67,23 +67,34 @@ Implemented as `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_
 
 ## Instrument-type scope per base
 
-| Type             | MVP condition                                                            |
-| ---------------- | ------------------------------------------------------------------------ |
-| **PERP**         | Base in universe + venue lists it (self-qualifies via the perp-gate)     |
-| **SPOT**         | Base in universe + that venue also lists a perp for the same base        |
-| **DATED FUTURE** | Base in universe + venue-listed (NOT perp-gated — futures complex)       |
-| **OPTION**       | `venue == DERIBIT` AND `base ∈ {BTC, ETH}` only (for now)                |
-| **EQUITY_PERP**  | Base in `CEFI_EQUITY_PERP_BASE_UNIVERSE` + venue ∈ {Binance, OKX, Bybit} |
+| Type             | MVP condition                                                        |
+| ---------------- | -------------------------------------------------------------------- |
+| **PERP**         | Base in universe + venue lists it (self-qualifies via the perp-gate) |
+| **SPOT**         | Base in universe + that venue also lists a perp for the same base    |
+| **DATED FUTURE** | Base in universe + venue-listed (NOT perp-gated — futures complex)   |
+| **OPTION**       | `venue == DERIBIT` AND `base ∈ {BTC, ETH}` only (for now)            |
+
+> **`instrument_type` is the BROAD contract-mechanics type ONLY (operator 2026-07-16).** A crypto-venue single-stock
+> **perp is `PERPETUAL`** (NOT a distinct `EQUITY_PERP`) and a **tokenized stock is `SPOT_PAIR`** (NOT
+> `TOKENIZED_EQUITY`). It's hard to know from the name / `instrument_id` alone what's an equity perp, so the equity
+> identity + real-equity linkage ride two durable **catalogue tags** stamped at roll-up (`_add_equity_tags`), not a
+> distinct type: **`is_equity_perp`** (bool — base ∈ `CEFI_EQUITY_PERP_BASE_UNIVERSE`; True for both the perp form and
+> the tokenized-spot form) and **`tracks_equity`** (the Databento `DBEQ.BASIC` real-equity ticker, e.g. NVDAUSDT→NVDA,
+> AAPLX→AAPL, `""` for pre-IPO standalones like SPCX). Equity perps therefore MVP-gate as `PERPETUAL` (their equity
+> bases are unioned into the CeFi `base_ccys`). The `EQUITY_PERP` / `TOKENIZED_EQUITY` `InstrumentType` members are
+> DEPRECATED-but-defined (no longer minted; kept parseable for pre-2026-07-16 persisted rows). This also fixed the WS-H
+> double-seed blocker — the catalogue `instrument_type` now equals the manifest's (`PERPETUAL`), so the honest-coverage
+> denominator reconciles.
 
 **data_type cut per instrument-type** (the MVP data_type set is per-`(venue, instrument_type)` — SSOT `CeFiMvpRule` /
 `get_mvp_data_types_for_cefi_venue_itype`; full table in `codex/02-data/mvp-scope-canonical.md` § CeFi):
-SPOT/PERP/DATED-FUTURE/EQUITY-PERP = **trades + book_snapshot_5 + funding** (derivative_ticker/funding_rate);
-**PERPETUAL ALSO carries `liquidations` (v15, 2026-07-15, WS-E)** — a PERPETUAL-leg-ONLY data_type, venue-gated by
+SPOT/PERP/DATED-FUTURE = **trades + book_snapshot_5 + funding** (derivative_ticker/funding_rate); **PERPETUAL ALSO
+carries `liquidations` (v15, 2026-07-15, WS-E)** — a PERPETUAL-leg-ONLY data_type, venue-gated by
 `VENUE_DATA_TYPE_CAPABILITIES` to the **6 real-feed venues** (BINANCE-FUTURES, OKX-SWAP, BYBIT, KRAKEN-FUTURES,
-BITFINEX-FUTURES, BITGET-FUTURES — 732,751 captured PERPETUAL rows, 99.95% of captured cefi liquidations). NOT on SPOT /
-DATED-FUTURE / EQUITY-PERP (dated-futures liq negligible), and NOT on ASTER (live-only, 0 batch) / DERIBIT (noise) /
-HYPERLIQUID (no feed) / COINBASE-FUTURES (trades-only override). OPTION = `options_chain` only; COINBASE-SPOT/-FUTURES =
-`trades` only.
+BITFINEX-FUTURES, BITGET-FUTURES — 732,751 captured PERPETUAL rows, 99.95% of captured cefi liquidations). Equity perps
+are typed `PERPETUAL` (2026-07-16), so a liq-feed-venue equity perp rides this override too; NOT on SPOT / DATED-FUTURE
+(dated-futures liq negligible), and NOT on ASTER (live-only, 0 batch) / DERIBIT (noise) / HYPERLIQUID (no feed) /
+COINBASE-FUTURES (trades-only override). OPTION = `options_chain` only; COINBASE-SPOT/-FUTURES = `trades` only.
 
 ## Exception — staking/LST/LRT spot (spot-without-perp allow-list)
 
@@ -106,7 +117,10 @@ member — its ordinary spot pairs are mvp=true. KRW is accepted as a quote asse
 
 Binance, OKX, and Bybit TradFi-linked perps (underlyings are equities/indices, not crypto coins) are captured via the
 `CEFI_EQUITY_PERP_BASE_UNIVERSE` allow-list. They ride the perp-gate (they ARE perps) — just an allow-list extension
-beyond the crypto universe.
+beyond the crypto universe. **They are typed `PERPETUAL`** (operator 2026-07-16 — NOT a distinct `EQUITY_PERP` type);
+their equity identity is carried by the `is_equity_perp` / `tracks_equity` catalogue tags (see the note under
+Instrument-type scope above), and their tokenized-stock spot form stays `SPOT_PAIR` + tagged. The `tracks_equity` link
+map (`crypto_equity_link.py`) is the discovery path to the real-equity spot leg for basis arb.
 
 ## Coin-margin (inverse) perp rule
 
