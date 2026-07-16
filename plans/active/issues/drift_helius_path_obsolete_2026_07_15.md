@@ -125,10 +125,20 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
 
 ## Remaining todos (steps 2-5, NOT done this session — scoped for follow-up)
 
-- [ ] [INFRA] P0. Stop/do-not-relaunch `mtds-drift-sig-walker-*` (both parts + gap walkers) and
+- [x] ✅ [INFRA] P0. Stop/do-not-relaunch `mtds-drift-sig-walker-*` (both parts + gap walkers) and
       `mtds-solana-drift-backfill` — protective, stops the OOM path + Helius API spend. Verify via
       `gcloud compute     instances list` (project `central-element-323112`) before/after. (repo: deployment-service /
-      GCP console)
+      GCP console) — `deployment-service@46d6492`: verified 0 instances running/present under either prefix in any state
+      (project `central-element-323112`) via `aggregated_list_instances` — the sandboxed `gcloud` CLI is snap-confined
+      here (`cap_dac_override` missing), so listing went through UTL's `get_compute_engine_client` instead — so there
+      was nothing live to stop. Flipped `mtds-drift-sig-walker-` to `None` in
+      `deployment_service/data_pipeline_monitors/launcher_registry.py` so the self-heal actuator escalates to
+      `file_issue` instead of auto-relaunching the retired Helius path (permanent — Option A abandons that path
+      entirely). `mtds-solana-drift-backfill` was left mapped to its launcher: todo 2 below landed concurrently
+      (`ee859e43`, slot-6) while this task was in flight, re-routing `launch-mtds-solana-drift-backfill-vm.sh` to the
+      Velocity ingester — the Helius-spend concern that would have justified disabling it here no longer applied, so
+      auto-relaunch of a stalled, correctly-routed backfill stays enabled. Guard test
+      `tests/unit/test_launcher_registry.py` (7/7) + full `quality-gates.sh` green.
 - [x] ✅ [INFRA] P0. Re-route `mtds-solana-drift-backfill`'s launcher (`launch-mtds-solana-drift-backfill-vm.sh`,
       already registered in `VM_PREFIX_TO_BUCKET` — reuse it, do not hand-roll a new name) to invoke
       `backfill_drift_v2_historical.py` instead of the legacy `solana_defi_handler.py` Helius path (`VM_TASK` routing
@@ -141,15 +151,30 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
 - [x] [DATA] P1.1. Reconcile the 2025-01-09 SOL-PERP shard — DONE (data_engineering slot-7, 2026-07-16). See Progress
       Log.
 - [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
-      path once Velocity starts capturing at scale — NOT started, blocked on `[INFRA] P0` todo 1 above (stop/do-not-
-      relaunch the Helius fleet) still being open; todo 2 (re-route launcher) already landed
-      (`deployment-service@ee859e4`). (repos: market-tick-data-service, instruments-service)
+      path once Velocity starts capturing at scale — NOT started. Both prerequisite todos are now landed: todo 1
+      (stop/do-not-relaunch, `deployment-service@46d6492`) and todo 2 (re-route launcher, `deployment-service@ee859e4`).
+      (repos: market-tick-data-service, instruments-service)
 - [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
       superseded/moot. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-16 — infra slot-16: stop/do-not-relaunch (todo 1)
+
+Picked up the `[INFRA] P0` fleet-stop todo. Listed instances in `central-element-323112` in every state (not just
+RUNNING) via UTL's `get_compute_engine_client(...).aggregated_list_instances` (the sandboxed `gcloud` CLI here is
+snap-confined — `cap_dac_override` missing, unusable) — 0 matches for `mtds-drift-sig-walker-*` or
+`mtds-solana-drift-backfill` in the full 22-instance listing, so no live VM needed stopping. Fixed the durable
+"do-not-relaunch" half: `deployment_service/data_pipeline_monitors/launcher_registry.py` maps VM-name prefixes to the
+self-heal actuator's relaunch script, and both prefixes were still mapped to their launchers — meaning a
+watchdog-detected stall/OOM would have auto-relaunched the retired Helius path. Flipped `mtds-drift-sig-walker-` to
+`None` (permanent — Option A abandons that path entirely, no re-route planned). Left `mtds-solana-drift-backfill` mapped
+to its launcher: `ee859e43` (slot-6, todo 2) landed concurrently mid-task, re-routing that exact launcher to the
+Velocity ingester, so the Helius-spend rationale for disabling it no longer held — auto-relaunch of a correctly-routed
+backfill is desired self-heal behaviour, not a risk. `tests/unit/test_launcher_registry.py` (7/7) + full
+`quality-gates.sh` green. Shipped `deployment-service@46d6492`.
 
 ### 2026-07-16 — data_engineering slot-7: reconciled the 2025-01-09 SOL-PERP shard (P1.1)
 
