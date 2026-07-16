@@ -85,14 +85,20 @@ everything so sports is in canonical buckets and paths."_
 
 ---
 
-> **🟡 DELETE STATUS 2026-07-16 (post-OR-9) — `instruments-store-sports` IS NOW OBJECT-LAYER DELETE-ELIGIBLE (OR-9
-> RESOLVED + EXECUTED). `market-data-tick-sports` is still BLOCKED on OR-5b** (49,517 residual unique objects). **OR-9
-> is closed**: all 2,078 unaccounted objects now carry a written, measured disposition; the re-run T4.1 accounting
-> closes at **968,927 with UNACCOUNTED = 0**. 131 canonical cells were recovered (482 distinct legacy-only keys + 803
-> progressive rows); **not one legacy object was mutated or deleted**. See the Progress Log's OR-9 entry. **T4.1 STAYS
-> `- [ ]` — it gates BOTH buckets and the MDT half is still open (OR-5b).** T5.1-T5.4 have NOT run and still MUST NOT:
-> they also require the two `tofu apply`s (T1.3 MDPS FUSE-mount removal, T1.4 catalogue IAM repoint) and T5.2's final
-> writer re-check.
+> **🟡 DELETE STATUS 2026-07-16 (post-OR-9, post-OR-5b-remeasure) — `instruments-store-sports` IS NOW OBJECT-LAYER
+> DELETE-ELIGIBLE (OR-9 RESOLVED + EXECUTED). `market-data-tick-sports` is still BLOCKED on OR-5b — but the residue is
+> now MEASURED at ~2,081 objects on 32 days carrying 550,062 legacy-only tick keys, NOT 49,517 objects / 7,079,850
+> rows.** The OR-5b recovery leg re-measured at the key layer over ALL 1,837 legacy tick-days (~900k reads, 0 errors):
+> **1,805 days are at exactly ZERO legacy-only keys**; the gap is 32 days, dominated by a canonical capture outage
+> 2022-09-07…2022-10-01. The "6.37M genuine pre-match rows" was a ROW-count + PER-PAIR artifact; **the option-D G1 merge
+> was REFUSED** (it would have duplicated ~15.7M rows) and **zero data objects were mutated**. **43,964/45,701
+> (96.199%)** class-B objects close by direct proof. Also found: **T2.6's 6,110 moved objects are a pure duplicate
+> population** (case-blind strip key) → own issue doc; settle before T6.1. See the OR-5b block + **OR-9 is closed**: all
+> 2,078 unaccounted objects now carry a written, measured disposition; the re-run T4.1 accounting closes at **968,927
+> with UNACCOUNTED = 0**. 131 canonical cells were recovered (482 distinct legacy-only keys + 803 progressive rows);
+> **not one legacy object was mutated or deleted**. See the Progress Log's OR-9 entry. **T4.1 STAYS `- [ ]` — it gates
+> BOTH buckets and the MDT half is still open (OR-5b).** T5.1-T5.4 have NOT run and still MUST NOT: they also require
+> the two `tofu apply`s (T1.3 MDPS FUSE-mount removal, T1.4 catalogue IAM repoint) and T5.2's final writer re-check.
 >
 > **The headline correction (5th "inherited classification" reversal — the reason this leg re-measured instead of
 > executing the ruling as written): the "6,673 genuinely legacy-only keys / GENUINE loss — re-fetch" verdict was ~94%
@@ -1378,11 +1384,53 @@ unaffected — it has its own completed disposition.)
 > - **T2.10 cross-check: LARGELY DISJOINT — no double-counting.** Phantom atoms ∩ OR-5b(b) atoms = **3,354 (7.1%)**
 >   only; T2.10 is an INDEX-layer mis-stamp, OR-5b(b) an OBJECT-layer capture gap. T2.10's purge predicate stands.
 
+> # 🔴 OR-5b RE-MEASURED 2026-07-16 BY THE RECOVERY LEG — **THE INVESTIGATION'S HEADLINE IS AN ARTIFACT. THE MERGE WAS REFUSED. DO NOT EXECUTE OPTION D.**
+>
+> The leg dispatched to execute "recover the 3,816 G1 objects" re-measured before writing (standing rule: never inherit
+> a classification) and the premise collapsed. **Zero data objects were mutated.** Full record →
+> `plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md` (banner + Progress Log).
+>
+> - **The measurement no prior MDT audit ran — WHOLE-DAY, KEY-LEVEL containment over ALL 1,837 legacy tick-days** (~900k
+>   reads, 0 errors): legacy pre-match keys **42,108,211** / in-play **2,542,764**; **absent from canonical = 524,486
+>   (1.2456%) + 25,576 (1.0058%) = 550,062 keys (1.23%)**. **1,805 of 1,837 days are at EXACTLY ZERO.**
+> - **Why 6.37M was wrong**: it counted **ROWS not KEYS** (legacy re-writes each quote at every fetch snapshot;
+>   2022-03-15: G1 = 28,944 rows but 14,104 keys, canonical = 14,904 keys — MORE) and compared **PER-PAIR not
+>   WHOLE-DAY** (canonical splits one legacy object across many — 313 objects on 2022-04-02 — so rows in a sibling
+>   object scored "legacy-only"). The investigation's artifact-checks (ii) and (iii) claimed to have cleared exactly
+>   these two; they did not.
+> - **THE REAL GAP: 32 days / 550,062 keys**, dominated by a contiguous **canonical capture OUTAGE 2022-09-07 …
+>   2022-10-01** (21 days; 2022-10-01: legacy 104,868 keys vs canonical 8,849). By year: 2022 **549,330** · 2023 **377**
+>   · 2025 **355**.
+> - **Option D is void.** **3,472/3,816 (90.985%)** of G1 sits on a zero-gap day (nothing to recover); the dry-run
+>   measured the merge would **ADD ~15.7M rows canonical already holds** (mass duplication). G1 does not even cover **3
+>   of the 32** gap days (2023-07-29, 2025-02-23, 2025-03-02) ⇒ **"G1 recovers 99.98%" is FALSE**. `G3 ⊂ G2 ⊂ G1` is
+>   FALSE at the key layer — canonical holds **98.77%** of every legacy key.
+> - **The 45,701 DO close — by direct proof, not by the nesting claim**: **43,964/45,701 (96.199%)** sit on a zero-gap
+>   day ⇒ provably redundant. **1,737** sit on the 32 gap days and carry the real data.
+> - **The derivation map (a) is CORRECT** — re-validated exhaustively (all 3,816 objects / 19,944,880 rows / 0 errors,
+>   every rule at 100.0000%). It is simply not needed, because there is nothing to derive a path FOR. It also needs
+>   `.upper()`: canonical's native `league_id` is UPPERCASE, and with it **all 49,707** target cells already exist (the
+>   doc's 99,414 is exactly 2× the truth).
+> - **🔴 NEW BIG FINDING → `plans/active/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`: T2.6's 6,110
+>   moved objects are a pure DUPLICATE population** (case-blind strip key; proven content-identical **6,110/6,110**,
+>   12,220 reads, 0 errors). T2.6 recovered **0 rows**, and **T2.7's MDT shard describes the duplicates** — settle it
+>   BEFORE T6.1 merges them.
+>
+> **⇒ MDT delete status: 🔴 STILL NOT DELETE-ELIGIBLE**, residue **~2,081 objects on 32 days** (1,737 class-B + 344 G1)
+> carrying **550,062 keys** — not 49,517 objects / 7,079,850 rows. **The correct remedy is a day-scoped recovery of 32
+> days**, not a generation recovery. **OR-5b(a)/(b)/(c) all need re-ruling on these numbers.**
+
 **OR-5b(c) (NEW — raised by the OR-5b investigation 2026-07-16, BLOCKING T5.4 for MDT alongside (a)/(b)) — what is the
-disposition of the 746,928 post-kickoff / in-play rows?** They are REAL observations, uniform across all 7 years (unlike
-the dated pre-match gap). Canonical holds 1.07% in-play vs legacy's 5.59%; 92/112 sampled canonical objects hold zero.
-**No filter exists in the current adapter** — the mechanism is genuinely unknown, so neither a silent discard nor a
-blind merge is defensible. Deleting the bucket makes this irreversible.
+disposition of the 746,928 post-kickoff / in-play rows?** ⚠️ **The 746,928 figure is a ROW count and is superseded: the
+genuine in-play residue is 25,576 KEYS on 32 days** (see the banner above). The quarantine MECHANISM in B-REFINED is
+also measurably insufficient — `reprocess_sports_odds.py::_is_consumable_trades_blob` matches on the FILENAME only
+(`ticks.parquet`) and never reads the `instrument_type=`/`data_type=` segments, so a distinct instrument_type/data_type
+alone would still be swept into T-0. A working quarantine needs a non-`ticks.parquet` filename AND a distinct
+`data_type=`; `pipeline_mode` must stay `batch_odds_api` (closed UAC enum). Note the sibling leg's adapter fix has
+already landed (`n[vals < 0] = -1`, post-kickoff REJECTED). They are REAL observations, uniform across all 7 years
+(unlike the dated pre-match gap). Canonical holds 1.07% in-play vs legacy's 5.59%; 92/112 sampled canonical objects hold
+zero. **No filter exists in the current adapter** — the mechanism is genuinely unknown, so neither a silent discard nor
+a blind merge is defensible. Deleting the bucket makes this irreversible.
 
 > **🔬 INVESTIGATED 2026-07-16 (operator question: _"we want half time odds — is there knowledge of this from SFI
 > derived half time?"_) → `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. The mechanism is
