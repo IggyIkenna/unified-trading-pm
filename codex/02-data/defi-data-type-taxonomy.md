@@ -136,9 +136,11 @@ what's the canonical schema, and what cluster validation rule applies.
 
 ### Perp (DeFi-side; CeFi handled in CeFi taxonomy)
 
-CeFi-axis classification per FLAG 1 RESOLUTION; on-chain CLOBs (Hyperliquid / Aster / Pacifica / Extended / Lighter)
-capture under cefi axis. GMX and DRIFT-SOLANA stay defi-axis (on-chain settlement, not CLOB-style; see
-`DEFI_PERP_VENUES` in `unified_api_contracts/registry/defi_venues.py`).
+CeFi-axis classification per FLAG 1 RESOLUTION; on-chain CLOBs (Hyperliquid / Aster / Extended / Lighter) capture under
+cefi axis (Pacifica was a fifth venue here until removed 2026-07-16 -- operator ruling, all Solana perp DEXes dropped
+except Jupiter, not integrated). GMX stays defi-axis (on-chain settlement, not CLOB-style; see `DEFI_PERP_VENUES` in
+`unified_api_contracts/registry/defi_venues.py` -- DRIFT-SOLANA was the other defi-axis perp venue here until removed
+2026-07-16, same ruling).
 
 **derivative_ticker canonicalisation (operator ruling 2026-07-15,
 `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`)**: `derivative_ticker` is the canonical
@@ -150,15 +152,15 @@ fine — a unit conversion, not aggregation) but MUST NOT carry venue-specific r
 `market-tick-data-service/.../cli/handlers/solana_defi_drift.py`'s `_collect_drift`). Per-venue resolution (verified
 2026-07-15, see the issue doc's coverage table for full evidence + file:line):
 
-| Venue                        | Axis | derivative_ticker source                                                                                       | OI at source         | Notes                                                                                                                                     |
-| ---------------------------- | ---- | -------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| GMX-ARBITRUM / GMX-AVALANCHE | defi | The Graph `fundingRateChangedEvents` (event-driven, dual-written alongside `perp_funding` from the SAME fetch) | No                   | Native query has no OI field at all — nullable, never fabricated. `_perp_funding_gmx.py`.                                                 |
-| DRIFT-SOLANA                 | defi | Drift Data API `/fundingRates` (per-settlement)                                                                | No (mark_price only) | Only `date >= 2025-01-01` (Data API window) — pre-2025 funding is `perp_funding`-only via a separate S3-archive path. `drift_adapter.py`. |
-| HYPERLIQUID                  | cefi | S3 `hyperliquid-archive/asset_ctxs/` (real OI) + REST fallback                                                 | Yes (S3), No (REST)  | `hyperliquid_s3.py`.                                                                                                                      |
-| ASTER                        | cefi | `/fapi/v1/fundingRate` REST                                                                                    | No                   | `_umi_aster.py`.                                                                                                                          |
-| PACIFICA-SOLANA              | cefi | `/funding_rate/history` REST                                                                                   | No                   | `_umi_pacifica.py`.                                                                                                                       |
-| EXTENDED-STARKNET            | cefi | `/info/{symbol}/funding` REST                                                                                  | No                   | `_umi_extended.py`.                                                                                                                       |
-| LIGHTER-ZKSYNC               | cefi | Tardis archive, `date >= 2026-04-17` only                                                                      | Yes (Tardis)         | Native REST has zero funding code; a public current-snapshot endpoint exists but has no history — Tardis is the real source.              |
+| Venue                        | Axis     | derivative_ticker source                                                                                       | OI at source        | Notes                                                                                                                        |
+| ---------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| GMX-ARBITRUM / GMX-AVALANCHE | defi     | The Graph `fundingRateChangedEvents` (event-driven, dual-written alongside `perp_funding` from the SAME fetch) | No                  | Native query has no OI field at all — nullable, never fabricated. `_perp_funding_gmx.py`.                                    |
+| ~~DRIFT-SOLANA~~             | ~~defi~~ | ~~Drift Data API `/fundingRates` (per-settlement)~~                                                            | —                   | **REMOVED 2026-07-16** (operator ruling, all Solana perp DEXes dropped except Jupiter, not integrated).                      |
+| HYPERLIQUID                  | cefi     | S3 `hyperliquid-archive/asset_ctxs/` (real OI) + REST fallback                                                 | Yes (S3), No (REST) | `hyperliquid_s3.py`.                                                                                                         |
+| ASTER                        | cefi     | `/fapi/v1/fundingRate` REST                                                                                    | No                  | `_umi_aster.py`.                                                                                                             |
+| ~~PACIFICA-SOLANA~~          | ~~cefi~~ | ~~`/funding_rate/history` REST~~                                                                               | —                   | **REMOVED 2026-07-16** (operator ruling, same as above).                                                                     |
+| EXTENDED-STARKNET            | cefi     | `/info/{symbol}/funding` REST                                                                                  | No                  | `_umi_extended.py`.                                                                                                          |
+| LIGHTER-ZKSYNC               | cefi     | Tardis archive, `date >= 2026-04-17` only                                                                      | Yes (Tardis)        | Native REST has zero funding code; a public current-snapshot endpoint exists but has no history — Tardis is the real source. |
 
 MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — DELETED 2026-07-15 (operator ruling): the whole vertical slice (URDI
 reference-data adapters, factory registrations, UAC venue-adapter-key entries) was removed rather than completing

@@ -11,7 +11,7 @@ summary: >
   step (1) — DONE, with one real bug found + fixed in the process — and tracks (2)-(4) as open todos. Original incident
   doc (the Helius OOM crash itself) is `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md`; this doc is the
   single consolidation point for the obsolescence/migration finding per main's instruction — don't duplicate.
-status: open
+status: superseded
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -39,6 +39,14 @@ depends_on: []
 last_updated: 2026-07-15
 locked_since:
 ---
+
+> 🔴 **SUPERSEDED (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole system it's pointless —
+> Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code, adaptors, manifest, gcs,
+> everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
+> (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
+> listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
+> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> banner).
 
 # DRIFT V2 Helius path obsolete — migration ruling + verify-first (2026-07-15)
 

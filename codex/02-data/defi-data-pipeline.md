@@ -2,21 +2,42 @@
 doc_type: codex-ssot
 title: DeFi Data Pipeline — code-grounded current state + Code↔Codex drift register
 summary: >-
-  Code-verified walkthrough of the DeFi data path (IS reference data → MTDS raw capture → MDPS candles →
-  features onchain/delta_one) plus a Code↔Codex drift register (§1, findings D1–D5) reconciling stale codex
-  SSOTs against 2026-05-27 code/GCS reality, incl. the latent lending_indices candle-adapter bug and canonical
-  data_type names.
+  Code-verified walkthrough of the DeFi data path (IS reference data → MTDS raw capture → MDPS candles → features
+  onchain/delta_one) plus a Code↔Codex drift register (§1, findings D1–D5) reconciling stale codex SSOTs against
+  2026-05-27 code/GCS reality, incl. the latent lending_indices candle-adapter bug and canonical data_type names.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [defi, pipeline, data-pipeline, mtds, mdps, features, reconciliation, ssot-audit]
-related: [defi-data-types-catalog.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, defi-canonical-naming-ssot.md]
+related:
+  [
+    defi-data-types-catalog.md,
+    defi-data-type-taxonomy.md,
+    defi-venue-protocol-catalogue.md,
+    instrument-pipeline-defi.md,
+    defi-canonical-naming-ssot.md,
+  ]
 created: 2026-05-27
 authoritative_for: [DeFi data pipeline code-grounded current-state walkthrough, DeFi code-vs-codex drift register]
-referenced_by: [codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/instrument-pipeline-defi.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/audit/instructions/defi_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/02-data/defi-canonical-naming-ssot.md,
+    codex/02-data/defi-data-types-catalog.md,
+    codex/02-data/instrument-pipeline-defi.md,
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/audit/instructions/defi_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed: 2026-05-27
 code_refs:
@@ -131,7 +152,7 @@ instruments" line in MTDS logs (`loaded N stamped instruments for venue=BALANCER
 | `collect-oracle-prices`                                                                                                                 | `oracle_prices`                                                 | Chainlink `latestRoundData()` (EVM) + Pyth Hermes REST (Solana)                                                                                                                                                                                                                                                                                                                                                     |
 | ~~`collect-solana-defi`~~ **(DEPRECATED — MTDS@896d5c9)**                                                                               | ~~`dex_pools`, `lending_indices`, `lst_rates`, `perp_funding`~~ | Monolithic Solana handler deleted Gate 5. Solana venues now in per-data-type handlers: Solana lending (Kamino/Solend/Marginfi) → `collect-lending-indices`; Solana AMM (Orca/Raydium/Phoenix) + Kamino vault → `collect-dex-pools`; LST (Marinade/Jito) → `collect-lst-rates`; Drift → `collect-perp-funding`. instrument_types: `solana_lending`, `solana_vault`, `solana_amm_pool` (UAC@7e9f4ad9 + UAC@90b2bb9d). |
 | `collect-vault-share-price`                                                                                                             | `vault_share_price`                                             | ERC-4626 `convertToAssets`                                                                                                                                                                                                                                                                                                                                                                                          |
-| `collect-perp-funding`                                                                                                                  | `perp_funding`                                                  | Drift / GMX / Hyperliquid                                                                                                                                                                                                                                                                                                                                                                                           |
+| `collect-perp-funding`                                                                                                                  | `perp_funding`                                                  | GMX / Hyperliquid (Drift removed 2026-07-16 -- operator ruling, all Solana perp DEXes dropped except Jupiter, not integrated; see `codex/04-architecture/solana-defi-coverage.md`)                                                                                                                                                                                                                                  |
 | `collect-eigenlayer-rewards`, `-liquidations`, `-flash-loan-events`, `-bridge-events`, `-mev-events`, `-gas-fees`, `-aggregator-routes` | as named                                                        | per-protocol                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 > Canonical `data_type=` strings are `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` (handler
@@ -146,15 +167,16 @@ instruments" line in MTDS logs (`loaded N stamped instruments for venue=BALANCER
 | `lending_indices`   | per-asset lending market snapshot    | `protocol, chain, symbol, liquidity_index, variable_borrow_index, supply_rate, borrow_rate, utilization_rate, total_supply/debt, reserve_factor, IRM slopes` | The Graph (Aave/Messari/Compound); DeFiLlama (Sol)        |
 | `lst_rates`         | LST exchange rate (share→underlying) | `timestamp, token, exchange_rate, apy, quote_asset, protocol, chain, block_number, method, contract, is_rebasing, rebase_rate`                               | EVM `eth_call` @ noon-UTC block; Solana REST              |
 | `oracle_prices`     | reference price feed                 | `feed, base/quote_asset, price, confidence, publish_time, updated_at, round_id, block_number, source, chain`                                                 | Chainlink (EVM on-chain) + Pyth Hermes (Solana)           |
-| `perp_funding`      | DeFi-perp funding/mark               | `protocol, symbol, funding_rate(24h/7d/30d), oracle_px, mark_px, open_interest, oi_long/short`                                                               | Drift S3+API, GMX, Hyperliquid                            |
+| `perp_funding`      | DeFi-perp funding/mark               | `protocol, symbol, funding_rate(24h/7d/30d), oracle_px, mark_px, open_interest, oi_long/short`                                                               | GMX, Hyperliquid (Drift removed 2026-07-16)               |
 | `vault_share_price` | ERC-4626 price-per-share             | `vault_address, share_price, timestamp`                                                                                                                      | ERC-4626 `convertToAssets`                                |
 
 **Schema fallback pattern** (all subgraph handlers): on `SubgraphSchemaError` ("Type X has no field …") advance through
 an ordered schema list; all exhausted → `record_failed`. (The `messari schema failed, trying next fallback` log line.)
 
 **EVM vs Solana:** EVM = The Graph + Alchemy `eth_call` at historical block (subgraph IDs in UAC `SUBGRAPH_IDS`); Solana
-= per-protocol REST/SDK, Pyth via Hermes (archive from 2023-10-01), Drift via S3 (to 2025-01-08) then live, DeFiLlama
-fallback for Solana lending.
+= per-protocol REST/SDK, Pyth via Hermes (archive from 2023-10-01), DeFiLlama fallback for Solana lending. (Drift via S3
+was a source here until removed 2026-07-16 -- operator ruling, all Solana perp DEXes dropped except Jupiter, not
+integrated.)
 
 ---
 
@@ -169,7 +191,8 @@ Feed `arbitrage_price_dispersion`. All provide `dex_swaps` + `dex_pool_state`; v
 
 - EVM: Uniswap V2/V3/V4, Balancer (6 chains), Curve (ETH/OPT/AVAX), PancakeSwap V3, SushiSwap V3/(V2), Aerodrome V3
   (Base), Camelot V3 (ARB, Algebra fork), Velodrome V2 (OPT), Trader Joe V2 (AVAX, currently empty).
-- Solana: Raydium, Orca, Phoenix, Kamino, Drift (CLOB-style).
+- Solana: Raydium, Orca, Phoenix, Kamino. (Drift was the CLOB-style perp entry here until removed 2026-07-16 -- operator
+  ruling, all Solana perp DEXes dropped except Jupiter, not integrated.)
 
 ### 5.2 Unique data — venue is the **only source of one signal**
 
@@ -179,7 +202,7 @@ Feed `arbitrage_price_dispersion`. All provide `dex_swaps` + `dex_pool_state`; v
 | LST/staking (ETH)  | Lido (stETH/wstETH), RocketPool, Coinbase (cbETH), EtherFi (weETH), Ethena (sUSDe), Mantle, Swell, Stader, StakeWise, Puffer, Ankr | `lst_rates` (exchange_rate, is_rebasing, apy)                                                                                       | `carry_staked_basis` staking yield     |
 | LST/staking (SOL)  | Marinade (mSOL), Jito (jitoSOL), SolBlaze (bSOL), Sanctum                                                                          | `lst_rates` (SOL-family)                                                                                                            | `carry_staked_basis` (Solana)          |
 | Oracles            | **Pyth (Solana only)**, **Chainlink (all EVM)**                                                                                    | `oracle_prices` (price + confidence + publish_time)                                                                                 | price feed; deviation/staleness gating |
-| DeFi perps         | GMX (Arb/Avax), Drift (Solana), Hyperliquid (own L1), Aster                                                                        | `perp_funding` (+ liquidations)                                                                                                     | `carry_staked_basis` hedge leg         |
+| DeFi perps         | GMX (Arb/Avax), Hyperliquid (own L1), Aster (Drift removed 2026-07-16, operator ruling)                                            | `perp_funding` (+ liquidations)                                                                                                     | `carry_staked_basis` hedge leg         |
 | Restaking / vaults | EigenLayer; ERC-4626 vaults (EtherFi, Yearn V3, Morpho Vaults, Pendle)                                                             | `rewards` / `restaking_rewards`, `vault_share_price`                                                                                | second-layer AVS yield, vault APY      |
 | Cost / infra       | Alchemy (synthetic), Flashbots, Across/Stargate                                                                                    | `gas_fees`, `mev_events`, `bridge_events`                                                                                           | execution cost / MEV / bridging        |
 
