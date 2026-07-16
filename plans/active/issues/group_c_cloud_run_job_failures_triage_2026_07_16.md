@@ -120,10 +120,19 @@ provenance comment (matching the repo's established rebuild-trigger-comment conv
 
 - [x] [INFRA] P0. Bump MTDS `BASE_IMAGE_DIGEST` to the current UTL `:latest` (post-2026-07-15T18:35Z) —
       market-tick-data-service@205b7e3e, quality gates green. Repo: market-tick-data-service.
-- [ ] [OPS] P1. Verify build `388e21ca-0e64-4827-ad6c-81ff928e6d5c` reaches SUCCESS, docker-confirm the new `:latest`
-      resolves `venue_data_type_has_batch_source`, then re-run `uts-prod-market-tick-data-service-fast-t1-recon`
-      (`gcloud run jobs execute --wait`) and confirm the ImportError is gone (it may then hit Cluster 5's date bug next
-      — see below). Repo: market-tick-data-service.
+- [x] [OPS] P1. Verify build `388e21ca-0e64-4827-ad6c-81ff928e6d5c` reaches SUCCESS, docker-confirm the new `:latest`
+      resolves `venue_data_type_has_batch_source`, then re-run `uts-prod-market-tick-data-service-fast-t1-recon` —
+      **VERIFIED, ImportError CONFIRMED FIXED**: build `388e21ca` → SUCCESS; new digest `sha256:a47967baed26...` →
+      `hasattr(unified_api_contracts, 'venue_data_type_has_batch_source')` → `True` (was `False` on the pre-fix digest).
+      Re-ran the job for real (`gcloud run jobs execute --wait`, execution
+      `uts-prod-market-tick-data-service-fast-t1-recon-tmmw8`): it now bootstraps fully, initializes 158-venue API key
+      validation across 6 data sources (aster/databento/hyperliquid/odds_api/tardis/thegraph) — i.e. it gets MUCH
+      further than the instant import-time crash before — proving the ImportError itself is gone. **The job still does
+      not reach overall SUCCESS**, but for the SEPARATE, ALREADY-KNOWN reason in Cluster 5 below
+      (`Date range validation failed: Invalid date format ''`) — confirming Cluster 5's date-default gap affects
+      `fast-t1-recon` too, not just `cefi-t1-recon` (raises that finding's urgency; see Cluster 5). This import fix is
+      complete and verified for what it targeted; the job's remaining failure is Cluster 5's, tracked separately below.
+      Repo: market-tick-data-service.
 
 ## Cluster 2 — LIVE CLEANUP: orphaned dev-tier scheduler firing a retired job
 
@@ -191,13 +200,29 @@ terraform change needed since it was never in terraform to begin with.
   was a stale manual/leftover trigger, not a live cron. Not a bug — an already-completed retirement, just with the
   orphaned Cloud Run Job resource itself not yet deleted (cosmetic; zero risk since nothing invokes it).
 
-## Cluster 5 — NEW, ESCALATED: UTL `_adapter.py::_build_io()` has no BATCH-mode date default (LIVE mode does)
+## Cluster 5 — NEW, ESCALATED (CONFIRMED wider than first scoped): UTL `_adapter.py::_build_io()` has no BATCH-mode date default (LIVE mode does)
 
 **Symptom**: `uts-prod-market-tick-data-service-cefi-t1-recon` fails with
 `Date range validation failed: Invalid date format ''. Use YYYY-MM-DD format.` →
 `ValueError: time data '' does not match format '%Y-%m-%d'`, thrown from
 `unified_trading_library/core/date_utils.py:parse_date`, reached via
-`unified_trading_library/service_framework/io_batch.py:DateRangeInput.__aiter__` → `get_date_range('', '')`.
+`unified_trading_library/service_framework/io_batch.py:DateRangeInput.__aiter__` → `get_date_range('', '')`. **CONFIRMED
+also hits `uts-prod-market-tick-data-service-fast-t1-recon`**: after Cluster 1's ImportError fix landed, a real re-run
+(`uts-prod-market-tick-data-service-fast-t1-recon-tmmw8`) got past bootstrap + 158-venue API-key validation (proving the
+import fix works) and then hit this EXACT SAME error — so this is not a cefi-only edge case, it blocks every MTDS
+t1-recon invocation that omits `--start-date`/`--end-date` (which is all of them per their Terraform args — see below).
+
+**Confirmed NOT universal to every UTL batch consumer** (narrows/sharpens the finding): checked
+`market-data-processing-service` (`uts-prod-market-data-processing-service-t1-recon`, succeeding today, ALSO invoked
+with zero date args in its Terraform) — its own `cli/main.py:190-192` has a **per-service bridge**:
+`if not start_date and not end_date: start_date = yesterday` (a legacy-argv layer that runs BEFORE the shared UTL
+adapter). So the shared `_adapter.py` gap is real, but several services already work around it with their own
+default-date bridge; MTDS's `cli/main.py` (whose own docstring says "Standard args ... are provided by ServiceCLI" —
+i.e. it relies ENTIRELY on the shared UTL layer, no bridge of its own) does not, which is why it's the one crashing.
+This makes the fix MORE tractable than a blind shared-library change: either (a) add the same "default to yesterday when
+both dates are omitted" bridge to MTDS's CLI (mirroring MDPS's precedent almost exactly), or (b) fix it once in the
+shared `_adapter.py::_build_io()` BATCH branch (benefits every consumer, but needs confirming no OTHER batch consumer
+relies on the current no-default behavior as a deliberate "explicit dates only" gate).
 
 **Root cause (confirmed by code read)**: `unified_trading_library/service_framework/_adapter.py::_build_io()`:
 
@@ -239,14 +264,17 @@ that this triage shouldn't assume is wrong everywhere; (2) if a default is corre
 into the BATCH branch; (3) regression-test against every batch-mode service in the fleet, not just
 MTDS/strategy-service, since `_adapter.py` is shared UTL code.
 
-- [ ] [INFRA] P1. Decide + implement a BATCH-mode date default in
-      `unified_trading_library/service_framework/_adapter.py::_build_io()` (or confirm per-service explicit-date
-      invocation is the intended contract and instead fix the Terraform args for the affected jobs) — needs an owner
-      decision on default policy before coding. Repo: unified-trading-library (or deployment-service, depending on the
-      chosen fix direction).
-- [ ] [OPS] P2. Once Cluster 1's ImportError fix is verified, check whether
-      `uts-prod-market-tick-data-service-cefi-t1-recon` and the `fast` variant both then hit THIS date bug — confirms or
-      refines the blast-radius estimate above.
+- [ ] [INFRA] P1. Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI (mirroring
+      `market-data-processing-service/cli/main.py:190-192`'s precedent almost exactly), OR fix it once in shared
+      `unified_trading_library/service_framework/_adapter.py::_build_io()`'s BATCH branch (benefits every consumer that
+      lacks its own bridge, but needs confirming no batch consumer relies on explicit-dates-only as deliberate behavior)
+      — needs an owner decision on which of the two directions before coding. Repo: market-tick-data-service (option a)
+      or unified-trading-library (option b).
+- [x] [OPS] P2. Once Cluster 1's ImportError fix landed, checked whether `fast-t1-recon` also hits this date bug —
+      **CONFIRMED YES** via a real re-run (`uts-prod-market-tick-data-service-fast-t1-recon-tmmw8`, 2026-07-16 06:10
+      UTC): bootstraps fully past the (now-fixed) import point, then hits the identical `Invalid date format ''` crash.
+      Raises this from "plausible" to "confirmed blocking every MTDS t1-recon invocation" — see the updated Cluster 5
+      symptom section above.
 
 ### Decision needed (operator / next owner)
 
