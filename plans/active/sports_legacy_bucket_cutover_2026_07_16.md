@@ -503,12 +503,28 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       no objects"; canonical unchanged (no `sports_reference_v1_archive/` prefix ever appears in `-prd-`). _ABORT_: any
       object's fixture set fails re-verification against canonical → STOP; it was not superseded. **Confirm OR-3
       first.**
-- [ ] [DATA] P0. **T2.2 — Regenerate the object-layer inventory and emit an EXPLICIT copy list (do not trust the
-      vehicle's enumeration — F-1).** _Mechanism_: paginated `list_blobs` with a fields projection
-      (`name,size,crc32c,updated`), 12-way prefix-parallel over top-level prefixes (~2 min/bucket; the naive recursive
-      `ls` times out). Key = **cell-key normalisation**, NOT path equality: (1) delete the canonical-only
-      `/pipeline_mode=<x>/` segment, (2) normalise legacy `instrument_availability/by-date/day-<D>/` → hive
-      `by_date/day=<D>`. Derive from the UAC SSOT
+- [x] ✅ [DATA] P0. **T2.2 — Object-layer inventory + EXPLICIT copy list — DONE 2026-07-16.** Drove classification from
+      the frozen T0.2 inventory (buckets QUIET since 08:08 ⇒ inventory == live), NOT the F-1 vehicle. **Cell-key** =
+      strip `pipeline_mode=<x>/` + normalise `by-date/day-<D>`→`by_date/day=<D>` + drop `fetched_at_hour=<x>/` (snapshot
+      dim, the 7× trap) + normalise bare-top-level `day=…`→`instrument_availability/by_date/day=…`. **Reconciliation
+      closes EXACTLY**: control 118 + v1_archive 398 + data 968,805 = 969,321. **Class A (no canonical cell at any
+      pipeline_mode) = 17,105** vs runbook 17,111 — delta −6 FULLY EXPLAINED and MORE-correct: −4 = canonical's +4
+      pre-freeze growth (4 cells now covered), −2 = the 2 bare `day=2026-03-21/venue=BETFAIR/<hash>.parquet` objects are
+      crc32c+size-IDENTICAL dups of existing canonical `instrument_availability/…` objects (malformed-path dups, not
+      class A). **CRITICAL RECONCILIATION**: `instrument_availability` (the runbook's "119,858 must move") is NOT a
+      class-A tree — every IA cell has a canonical counterpart (Direction-1 live-verified); the 119,858 was the vehicle
+      **blind-spot** framing, not the object-layer class-A set. **Copy list** (`~/tmp-cutover/t2_3_copylist.jsonl`,
+      17,089 rows) = class A EXCLUDING player_stats: dst = legacy path with `pipeline_mode=<M>` inserted after `day=`, M
+      DERIVED per-entity from canonical's own usage (fixtures*/injuries/teams/fixture_*→batch_api_football;
+      footystats_*→batch_footystats). **16 class-A player_stats deferred to T2.4** (byte-copying legacy-schema
+      player_stats to canonical paths would collide with future fetches + lack available_at). **T2.2 SAMPLE GATE PASS
+      (live)**: Direction-1 (has-canonical match is real) 23/23 across every tree (IA, sports_reference/fixtures, v2,
+      odds-with-differing-hour, venues); Direction-2 (class-A miss is real: src present + dst absent + no canonical cell
+      at any pipeline_mode for that day) 11/11. Verifiers: `~/tmp-cutover/t2_2_{classify,copylist,verify}.py`. _Original
+      mechanism_: paginated `list_blobs` with a fields projection (`name,size,crc32c,updated`), 12-way prefix-parallel
+      over top-level prefixes (~2 min/bucket; the naive recursive `ls` times out). Key = **cell-key normalisation**, NOT
+      path equality: (1) delete the canonical-only `/pipeline_mode=<x>/` segment, (2) normalise legacy
+      `instrument_availability/by-date/day-<D>/` → hive `by_date/day=<D>`. Derive from the UAC SSOT
       `unified_api_contracts/canonical/domain/sports/gcs_paths.py::candidate_parquet_paths()` per
       `codex/02-data/sports-gcs-path-ssot.md`. **Two traps already found and corrected — do not re-introduce**: (a)
       `fetched_at_hour=` is a SNAPSHOT dimension, not identity — exact-key matching called 124,267 objects unique;
@@ -520,39 +536,90 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       close exactly (495,082 + 0 + 443,508 + 30,731 = 969,321). _ABORT_: arithmetic does not close, or the ≥10-pair
       sample shows any false "unique" → the mapping is wrong; **STOP** (this is the path-shape trap that has already
       produced three false conclusions).
-- [ ] [DATA] P0. **T2.3 — PHASE 2b: MOVE class A (17,111 objects = 17,509 − 398 archive) to canonical paths.**
-      _Mechanism_: drive from the T2.2 copy list, not `_list_tree`. Copy legacy → canonical **at the canonical path**
-      (insert `pipeline_mode=batch_<source>` between `day=` and `entity=`; normalise the `by-date/day-<D>` dash form)
-      via UTL `gcs_copy_object` (server-side, idempotent, skip-if-exists). Cover the FULL span **2018-01-02 …
-      2026-12-06** — if using the v9 migrator as the primitive, `--start-date 2018-01-01 --end-date 2026-12-31`
-      explicitly (defaults `2019-01-01`/`2026-06-01` silently truncate BOTH ends — F-4). Cover the trees `_list_tree`
-      cannot see (F-1): `instrument_availability/` (119,858 objects), bare `day=2026-03-21/`,
-      `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a canonical object at its derived
-      path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands at a non-canonical path → STOP
-      and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
-- [ ] [DATA] P0. **T2.4 — PHASE 2c: MOVE class B (13,222 objects where canonical has FEWER rows) — BLOCKED on OR-1.**
-      _Mechanism_: **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per
-      OR-1 ruling, either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path
-      (safest; preserves any canonical-only rows), or (b) **overwrite** canonical with legacy where legacy ⊇ canonical
-      (simpler; loses canonical-only rows if the containment does not actually hold). **Verify containment per cell
-      before overwriting either way.** Worst offenders: player_stats 111,827 rows, standings 91,380, fixture_events
-      69,444, teams 16,502, player_values 16,233 (e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical 38).
-      _Gate_: for all 13,222, canonical row count ≥ legacy row count post-move; total rows recovered ≥ 305,000; re-run
-      T2.2 → class B = 0. _ABORT_: any cell where legacy ⊄ canonical AND canonical ⊄ legacy (genuine divergence, not a
-      subset) → STOP and escalate; a blind overwrite loses canonical-only rows.
-- [ ] [DATA] P0. **T2.5 — Re-home the control-plane objects the vehicle skips by construction.** _Mechanism_: `_keep()`
-      (`:167-173`) filters out `/_index/`, `/_vm_staging/`, and `_SKIP_PREFIXES` =
-      `_audits/ _smoke_test/     _catalogue/ availability_index/` → **none** of the control-plane uniques move.
-      Adjudicate each explicitly: `_index/per_vm/_legacy_seed.parquet` (legacy **1,757,469 rows** vs canonical **0** —
-      the canonical seed is EMPTY, 16.2 MB vs 18.7 KB) → **OR-4**; `availability_index/instruments-service.parquet`
-      (22,450 vs 22,445 — 5 rows); `_index/per_vm/fixtures-recovery-20260627-183725.parquet` (34,564 rows, shard mtime
-      18:37 predates the legacy index write 19:14:43Z so it _probably_ merged — **NOT PROVEN**); 2 `_audits`, 2
-      `_index`, `sports_reference/mappings/season=2019` (640 vs 589). **The legacy bucket has had no consolidator since
-      2026-07-13** (`manifest_consolidator_scheduler.tf:67,80`) — these shards can never merge on their own. _Gate_:
-      each of the ~8 control-plane uniques has a written disposition (moved / proven-already-merged /
-      abandoned-with-reason). _ABORT_: `_legacy_seed.parquet` disposition unresolved → **do not delete the bucket**
-      (1.76M rows). **HARD: never place any re-homed object under `_index/per_vm/`** unless it is genuinely a shard to
-      be merged.
+- [x] ✅ [DATA] P0. **T2.3 — PHASE 2b: MOVE class A — DONE 2026-07-16.** Moved **17,089** objects (class A minus 16
+      player_stats → T2.4) legacy→canonical via server-side `gcs_copy_object` at the T2.2-derived `pipeline_mode=<M>`
+      paths, driven from `~/tmp-cutover/t2_3_copylist.jsonl` (NOT `_list_tree`). **Per-object gate**: 17,089/17,089
+      COPIED, 0 FAILED, every dst crc32c-verified == src crc32c (byte-identical rewrite — stronger than a row-count
+      match, no parquet read). **Reader-resolution gate**: 11/11 sampled moved objects across every class-A entity are
+      both LIVE-present AND resolvable by the UAC SSOT `candidate_parquet_paths()` (guards the "wrong path = invisible"
+      ABORT). COPY only — legacy untouched (delete is Phase 5). Full class-A==0 re-inventory deferred to the combined
+      T4.1 pass (after T2.4/T2.5 also land). Evidence `~/tmp-cutover/t2_3_move_evidence.jsonl` (17,089 rows); verifiers
+      `~/tmp-cutover/t2_3_{move,reader_check}.py`. _Original mechanism_: drive from the T2.2 copy list, not
+      `_list_tree`. Copy legacy → canonical **at the canonical path** (insert `pipeline_mode=batch_<source>` between
+      `day=` and `entity=`; normalise the `by-date/day-<D>` dash form) via UTL `gcs_copy_object` (server-side,
+      idempotent, skip-if-exists). Cover the FULL span **2018-01-02 … 2026-12-06** — if using the v9 migrator as the
+      primitive, `--start-date 2018-01-01 --end-date 2026-12-31` explicitly (defaults `2019-01-01`/`2026-06-01` silently
+      truncate BOTH ends — F-4). Cover the trees `_list_tree` cannot see (F-1): `instrument_availability/` (119,858
+      objects), bare `day=2026-03-21/`, `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a
+      canonical object at its derived path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands
+      at a non-canonical path → STOP and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
+- [x] ✅ [DATA] P0. **T2.4 — PHASE 2c: OR-1 OPTION D IN CANONICAL FORM (player_stats) — DONE 2026-07-16.** **388,825
+      genuine legacy-only player observations RECOVERED into canonical across 4,015 cells; 0 FAIL.** _Measured, not
+      assumed_ — census of all 22,686 legacy player_stats objects: **flattened+covered 17,979 objs (1,688,379 rows)** =
+      the union population; **nested-only+covered 4,691** (canonical already holds them flattened → redundant, skipped);
+      **nested-only+UNCOVERED 16** = the only class-A player_stats (raw stringified `players` payload → re-fetch list,
+      never a fabricated flatten). **Legacy-only computed by GLOBAL (fixture_id, player_id) containment** (the row-gap
+      doc's cross-partition method), NOT per-cell: 389,134 rows / **388,825 unique**. NOTE the row-gap doc's **111,827
+      was a 10-day SAMPLE extrapolation and under-counts the truth by ~3.5×** — the full pass is authoritative;
+      recovering all 388,825 is the non-descoped, data-pipeline-correctness outcome. **available_at: NO re-stamp
+      needed** — measured **0 null / 0 midnight** across every legacy-only row; legacy player_stats already carries
+      honest stamps satisfying UAC `(sports,PLAYER_STATS)="match_end_time"`, so the dispatch's LookaheadBiasError
+      premise ("legacy predates availability stamping") does NOT hold for player_stats (the 38-col legacy schema already
+      has `available_at`; a null gate is asserted on every write regardless). **Write**: per cell → back up canonical to
+      the archive bucket, union canonical ∪ legacy-only, **DEDUPE on (fixture_id, player_id) keep=first (canonical
+      wins)**, write at the CANONICAL path. Schema conformed by coercion (string keys / bool flags / UTC datetime /
+      numeric stats) because canonical stores all-null stat columns as arrow `null` type — forcing the unstable
+      per-object schema fails; coercion is value-preserving and reader-safe. **Per-cell GATE (all 4,015)**: re-read rows
+      == union rows, **rows == unique keys (upsert-safe)**, all legacy-only keys present, all original canonical keys
+      present, 0 null available_at. Independent spot check 20/20. **fixture_events**: RE-FETCH LIST only — **zero 5-col
+      degenerate stubs imported** (they are class-B, never moved); the 40 class-A fixture_events T2.3 moved are
+      10/11-col ATTRIBUTED forms (23,139 rows) whose schemas canonical ALREADY carries, so they are kept (genuine
+      legacy-only data preserved) and listed for schema-upgrade re-fetch. **standings / teams / player_values**: NO
+      ACTION (per ruling). Re-fetch lists: `t2_4_refetch_player_stats.json` (16 cells / 131 fixtures) +
+      `t2_4_refetch_fixture_events.json` (40 cells / 1,542 fixtures). **BIG FINDINGS (pre-existing canonical, NOT
+      cutover-introduced) → `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`**: canonical
+      player_stats carries **740,725 within-object duplicate rows (~26% of 2,882,420)** — vastly bigger than the cited
+      "72/36"; T2.4's dedupe FIXED the 4,015 touched cells, ~13,964 remain; and canonical fixture_events runs **4 schema
+      variants incl. ~30% degenerate 5-col**. Evidence `~/tmp-cutover/t2_4_union_evidence.jsonl` (17,979 rows) +
+      archived to `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/phase2_evidence/`; canonical
+      pre-write backups at `…/player_stats_prewrite_bak/`. Verifiers `~/tmp-cutover/t2_4_*.py`. _Original mechanism_:
+      **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per OR-1 ruling,
+      either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path (safest; preserves
+      any canonical-only rows), or (b) **overwrite** canonical with legacy where legacy ⊇ canonical (simpler; loses
+      canonical-only rows if the containment does not actually hold). **Verify containment per cell before overwriting
+      either way.** Worst offenders: player_stats 111,827 rows, standings 91,380, fixture_events 69,444, teams 16,502,
+      player_values 16,233 (e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical 38). _Gate_: for all 13,222,
+      canonical row count ≥ legacy row count post-move; total rows recovered ≥ 305,000; re-run T2.2 → class B = 0.
+      _ABORT_: any cell where legacy ⊄ canonical AND canonical ⊄ legacy (genuine divergence, not a subset) → STOP and
+      escalate; a blind overwrite loses canonical-only rows.
+- [x] ✅ [DATA] P0. **T2.5 — Control-plane adjudication — DONE 2026-07-16. Every unique has a written disposition; OR-4
+      RESOLVED = ABANDON (option B, now PROVEN).** Legacy control-plane = **118 objects → 111 crc-IDENTICAL to canonical
+      (no action)** + 3 DIFFERS + 4 NO-COUNTERPART = the runbook's ~8. Dispositions:
+
+  | object                                                                  | disposition                      | evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+  | ----------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `_index/per_vm/_legacy_seed.parquet` (1,757,469 rows)                   | **ABANDON — OR-4=B, PROVEN**     | It is a **MANIFEST artifact, not DATA** (the delete gate is the OBJECT layer, class A==0 — the runbook's own "manifest is never evidence about objects" cuts both ways: losing an index row loses no data). OLD **25-col** schema with **no `source`/`asset_group`** → re-homing injects rows violating the `source=` REQUIRED crosscutting rule and fights the T3.1 purge. **88,053 of its 356,670 `captured` rows are RETIRED data types** (TRANSFERMARKT_LEAGUES 75,576 + SFI_LEAGUES 12,477, retired 2026-05-05) → option A would RESURRECT retired types into the canonical index. The scary "105,802 captured cells missing from canonical" is a **league_id REPRESENTATION artifact**: 220 seed-only league_ids are raw numeric provider IDs (`103`, `13973`, `14116`…) vs canonical names; at atom=(date,data_type) only **2** cells are missing (WEATHER 2019-02-23/03-01). Verifier `~/tmp-cutover/t2_5_or4_seed_diff.py`. |
+  | `_index/per_vm/fixtures-recovery-20260627-183725.parquet` (34,564 rows) | **PROVEN-ALREADY-MERGED**        | The runbook called it "probably merged — NOT PROVEN". Now proven: **34,535/34,564 (99.9%) of its cells are present in the canonical index**; 29 residual cells only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+  | `availability_index/instruments-service.parquet` (22,450 vs 22,445)     | **ABANDON — zero unique rows**   | The "5-row" delta is **intra-file duplicates**: legacy-only rows on the common columns = **0**; canonical is a superset (has 1 more).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+  | `_index/availability_index.parquet` (legacy, 38 MB)                     | **ABANDON**                      | The legacy consolidated index. Canonical index (5,465,414 rows) is the SSOT and gains the moved cells via the T2.7 per-VM shard. Manifest artifact, not data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+  | `_index/availability_index.20260523-190934.dedup_phantom.bak.parquet`   | **ABANDON**                      | Historical `.bak` of the (abandoned) legacy index. Zero unique data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+  | `_audits/fixtures_diff_20260714-001053.csv` (14.8 MB)                   | **MOVED → canonical `_audits/`** | T0.1 hand-run audit cohort (its truthset sibling was already copied to prd). crc32c-verified `XUXsqA==` == src.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+  | `_audits/fixtures_recovery_set_20260714-001053.parquet`                 | **MOVED → canonical `_audits/`** | Same cohort. crc32c-verified `x7e4kQ==` == src.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+  **HARD rule honoured**: nothing was placed under canonical `_index/per_vm/` (R-11 — a stray parquet there becomes
+  shard #3 and resurrects purged rows). _Original mechanism_: `_keep()` (`:167-173`) filters out `/_index/`,
+  `/_vm_staging/`, and `_SKIP_PREFIXES` = `_audits/ _smoke_test/     _catalogue/ availability_index/` → **none** of the
+  control-plane uniques move. Adjudicate each explicitly: `_index/per_vm/_legacy_seed.parquet` (legacy **1,757,469
+  rows** vs canonical **0** — the canonical seed is EMPTY, 16.2 MB vs 18.7 KB) → **OR-4**;
+  `availability_index/instruments-service.parquet` (22,450 vs 22,445 — 5 rows);
+  `_index/per_vm/fixtures-recovery-20260627-183725.parquet` (34,564 rows, shard mtime 18:37 predates the legacy index
+  write 19:14:43Z so it _probably_ merged — **NOT PROVEN**); 2 `_audits`, 2 `_index`,
+  `sports_reference/mappings/season=2019` (640 vs 589). **The legacy bucket has had no consolidator since 2026-07-13**
+  (`manifest_consolidator_scheduler.tf:67,80`) — these shards can never merge on their own. _Gate_: each of the ~8
+  control-plane uniques has a written disposition (moved / proven-already-merged / abandoned-with-reason). _ABORT_:
+  `_legacy_seed.parquet` disposition unresolved → **do not delete the bucket** (1.76M rows). **HARD: never place any
+  re-homed object under `_index/per_vm/`** unless it is genuinely a shard to be merged.
+
 - [ ] [DATA] P0. **T2.6 — Finish the exact row-count pass for `market-data-tick-sports` (the ~52,400 is an
       EXTRAPOLATION, not a gate).** _Mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated
       prefix-parallel lister (~2 min each); (2) key =
@@ -1202,3 +1269,47 @@ retains NO noncurrent versions on delete (`gcloud storage ls -a` under the prefi
 archive delete is PERMANENT and **T5.3's `--all-versions` purge is likely a no-op**; the runbook ROLLBACK "restore until
 T5.3" does not apply to legacy objects. Delete is safe on the proven- superseded verdict alone (0 unique rows lost),
 independent of any versioning rollback.
+
+**T2.2 — object-layer classification + class-A copy list — DONE 2026-07-16.** Reconciles EXACTLY (control 118 +
+v1_archive 398 + data 968,805 = 969,321). **Class A = 17,105** (runbook 17,111; −4 canonical pre-freeze growth, −2
+crc-identical bare-`day=`/BETFAIR dups correctly excluded — more-correct). **`instrument_availability` is NOT class A**
+(all cells canonical-covered; the "119,858 must move" was the F-1 vehicle blind-spot, not the object-layer set — this
+retires R-4's move-scope premise for IA). Copy list `~/tmp-cutover/t2_3_copylist.jsonl` = **17,089** rows (class A minus
+16 player_stats → T2.4); dst = `pipeline_mode=<M>` inserted after `day=`, M derived per-entity from canonical usage.
+SAMPLE GATE PASS live both directions (D1 has-canonical-real 23/23 all trees; D2 class-A-miss-real 11/11). Verifiers
+`~/tmp-cutover/t2_2_{shapes,classify,copylist,verify}.py`. Class-A entities: fixtures_outcomes 4966, fixtures_schedule
+4940, footystats_matches 2934, footystats_odds 2044, injuries 1650, fixtures 369, teams 61, fixture_events 40,
+fixture_stats 38, footystats_predictions 31, fixture_lineups 16.
+
+**T2.3 — class-A move — DONE 2026-07-16.** 17,089/17,089 objects server-side-copied to canonical `pipeline_mode=<M>`
+paths, 0 FAILED, all crc32c-verified (byte-identical). Reader-resolution 11/11 via `candidate_parquet_paths()`. Legacy
+untouched. Evidence `~/tmp-cutover/t2_3_move_evidence.jsonl`.
+
+**T2.4 — OR-1 option D (player_stats) — DONE 2026-07-16. 388,825 genuine legacy-only player observations recovered into
+canonical across 4,015 cells, 0 FAIL, every cell verified upsert-safe (rows == unique (fixture_id, player_id)).** Key
+corrections to the plan's premises, all MEASURED:
+
+1. **The 111,827 figure is a sample under-count (~3.5×).** Full global-containment pass = **388,825 unique** legacy-only
+   (fixture_id, player_id). Recovered all of it (data-pipeline-correctness: no descope).
+2. **No available_at stamping was needed.** Legacy player_stats already carries honest `available_at` (0 null / 0
+   midnight measured across every legacy-only row) satisfying UAC `(sports,PLAYER_STATS)="match_end_time"`. The
+   dispatch's "legacy predates availability stamping" does not hold for this entity. A 0-null gate still fires on write.
+3. **Schema is NOT legacy≠canonical for the flattened population** — both are the same 38-col schema incl. available_at.
+   The real variance is that canonical stores all-null stat columns as arrow `null` type, so conforming to the
+   per-object canonical schema FAILS; the union coerces to stable types (value-preserving).
+4. **The 16 class-A player_stats are the only uncovered cells** and are the raw stringified-`players` form → re-fetch
+   list (no fabricated flatten). **fixture_events: zero 5-col stubs imported**; the 40 class-A objects moved in T2.3 are
+   10/11-col ATTRIBUTED forms whose schemas canonical already carries → kept + listed for schema-upgrade re-fetch.
+5. **BIG FINDINGS (pre-existing canonical, not cutover-introduced)** →
+   `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`: canonical player_stats holds **740,725
+   within-object duplicate rows (~26% of 2,882,420)**; T2.4 dedupe fixed the 4,015 touched cells, ~13,964 remain.
+   Canonical fixture_events runs 4 schema variants incl. **~30% degenerate 5-col**.
+
+Rollback substrate: every overwritten canonical object copied to
+`gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/player_stats_prewrite_bak/` first.
+
+_Environment note_: the workspace `unified-trading-library` checkout (78744291, a backmerge) currently **fails to
+import** — `kill_switch/bus.py:144` references `KillSwitchId.KILL_PER_TREASURY_SUB_ACCOUNT_DRIFT`, absent from the enum
+(clean tree; a committed inconsistency, appeared after T2.1/T2.3 ran with UTL fine). Phase-2 scratch tooling routed
+around it via `google.cloud.storage` directly (same pattern as `inventory.py`); no gsutil/gcloud subprocess for object
+ops. Flagged for whoever owns UTL — it breaks any `import unified_trading_library` in this workspace.

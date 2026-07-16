@@ -122,8 +122,23 @@ Wrapped existing safety actions (don't duplicate — wrap the entry point):
 
 ### Layer 1 — LLM recovery-audit-signoff agent
 
-Owned by `plans/active/ai_recovery_audit_signoff_agent_2026_05_23.md`. Agent template:
-`agent-orchestrator/agents/recovery-audit.md`. Registered as `role: custom, label: recovery-audit-signoff`.
+> **⚠️ CODE-DRIFT (2026-07-16) — the Layer-1 PRODUCER is currently ABSENT; a rewire is planned (not retired).** The
+> automated recovery-audit-signoff _agent_ (the producer described below) was removed as collateral when the
+> agent-orchestrator `recovery-audit` **worker-role** was deleted in the AO agent-kind consolidation
+> (`agents/recovery-audit.md` gone, `server/prompts.py` `NEVER_LAUNCH=frozenset()`). The **consuming half of Layer-1
+> remains fully live**: alerting-service ingests signoffs at `POST /safety-ops/signoffs` and still acts on
+> `DISPUTE_AUTOMATED_ACTION`→SAFE_MODE / `ESCALATE_TO_HUMAN`→shortened-ack
+> (`alerting_service/gateway/gateway_state.py`), and the DART Safety-Ops verdict feed renders them (currently backed by
+> `_mock_signoffs()` — no real producer). **So no LLM audit-signoff is produced in real time today** — a wrong automated
+> recovery action is caught only at Layer-5 human audit-ack, not by an automated DISPUTE→SAFE_MODE trip. **Operator
+> decision 2026-07-16: re-home the producer as a standalone signoff agent (NOT an AO worker-role) — DEFERRED** behind
+> the in-flight AO dispatch-correctness work. Tracking:
+> `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`. The description below is the INTENDED
+> (rewire-target) design, not current runtime.
+
+Design owner: `plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md` (archived). Prior agent template
+`agent-orchestrator/agents/recovery-audit.md` (deleted) — the rewire will stand up a standalone producer, not restore
+the AO worker-role. Registered contract: `role: custom, label: recovery-audit-signoff`.
 
 Polls every 60s; subscribes to PubSub `agent-recovery-actions`; for each new AgentActionEvent fetches parent
 IncidentEnvelope + runbook + recovery_verification result; decides verdict; writes RecoveryAuditSignoff to GCS at

@@ -326,3 +326,20 @@ daily-batch collection (the 11 `uts-prod-mtds-collect-*` crons)** — the latter
 UTL code bug, not the scheduler pause. This doc stays open (not fully resolved) pending that code fix; the resume
 runbook itself (task -003) is complete — it correctly resumed what was safe to resume and correctly re-paused/flagged
 what wasn't, rather than leaving broken jobs fail-looping in production.
+
+## FULLY RESOLVED 2026-07-16 (daily-batch restored) — status: resolved
+
+Both legs of scheduled DeFi collection are back:
+
+- *_Live-poll (3 defi-fwd-_ crons)**: resumed + verified earlier (real 2026-07-16 data).
+- *_Daily-batch (11 uts-prod-mtds-collect-_ crons)**: the `Invalid date format ''` blocker was the UTL
+  `service_framework/_adapter.py::_build_io()` batch-mode date-default gap — fixed to default omitted batch dates to
+  yesterday UTC (`unified-trading-library@3485c4d0`, mirrors market-data-processing-service's bridge). Propagated via
+  UTL base image rebuild (`8b380948` → `@d15fb29b`) → mtds Dockerfile digest bump (`market-tick-data-service@b8365c9d`)
+  → mtds image rebuild (Cloud Build `278bd541` SUCCESS, `:latest`=`@b92a8680`). All 11 collector crons re-enabled +
+  verified end-to-end: **oracle-prices** (Pyth+Chainlink, 6 chains), **perp-funding** (41 records, Kalshi/GMX),
+  **gas-fees** (11,072 records, 12 chains) all reached SUCCEEDED writing real 2026-07-15 data to
+  `gs://market-data-tick-defi-prd-central-element-323112`. (One transient `ManifestConsolidatorStaleError` on the first
+  gas-fees run cleared on re-run once the market-data-defi consolidator caught up on the 38-day resume shard-burst.)
+- **AWS consolidators**: re-DISABLED (see aws_consolidator_batch_logstream_iam_gap_2026_07_16.md correction — AWS is a
+  stale/empty mirror, not a live target).

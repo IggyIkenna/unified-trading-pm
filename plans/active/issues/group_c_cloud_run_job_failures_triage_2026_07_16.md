@@ -349,3 +349,11 @@ Two independent judgment calls neither this triage nor a single ≤30min fix sho
 cross-referenced to existing tracked work (Cluster 3), two confirmed non-bugs (Cluster 4), two new findings escalated
 for an operator/owner decision before further code changes (Cluster 5 + the cefi/defi catalogue shrink in the linked
 doc).
+
+## Cluster 5 FIXED 2026-07-16
+
+MTDS batch-mode date-default gap fixed at the shared root cause: UTL `_adapter.py::_build_io()` now defaults omitted
+batch dates to yesterday UTC (`unified-trading-library@3485c4d0`), propagated to mtds via base-image bump
+(`market-tick-data-service@b8365c9d`, image `@b92a8680`). Unblocks the 11 DeFi daily-batch collectors (verified
+SUCCEEDED) and the MTDS `*-t1-recon` jobs that hit the same crash. The cefi/defi catalogue `CATALOGUE_SHRINK_BLOCKED`
+sub-finding remains a separate open owner-decision (unchanged).

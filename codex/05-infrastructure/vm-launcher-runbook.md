@@ -421,6 +421,19 @@ Forward-poll VMs run continuously (no end date). Self-delete on shutdown.
 
 ## Tardis Concurrent-VM Cap (HARD RULE — operator, 2026-07-16: cap is 1)
 
+**Which VMs count (self-declaring, 2026-07-16)**: a launcher that opens an AUTHENTICATED Tardis (`datasets.tardis.dev`)
+connection stamps `VM_TARDIS_CONSUMER=1` into VM metadata and `tardis-concurrency-guard.sh` counts THAT (name patterns
+are a rollout fallback only). **Exempt — do NOT stamp, they never consume the licensed slot** (code-verified
+2026-07-16): live MTDS `tardis-machine` (a LOCAL `ws://localhost:8002` sidecar over exchanges' own public feeds, no
+auth) and instruments-service Tardis (public `api.tardis.dev/v1/exchanges/*` metadata). **Counted**: the cefi sharded
+backfill launchers, `launch-mtds-backfill-vm.sh --asset-group CEFI`, and `launch-cefi-forward-poll.sh` — the T+1
+forward-poll is `--operation backfill --mode batch` and therefore QUEUES behind a running long backfill (asymmetric by
+design: the backfill's own range already covers the recent days the T+1 would fill, so waiting costs nothing, whereas
+preempting the multi-day backfill would mean it never finishes).
+
+**Preemption + the cap**: a preempted backfill VM is auto-relaunched by `RelaunchPreemptedVm` **through this guard**, so
+a relaunch can never breach the cap — see `spot-vms-for-backfill.md` § "Re-runs cleanly requires a relauncher".
+
 **At most 1 Tardis-consuming VM runs at a time, across BOTH clouds (one shared key). The lease does NOT lift the cap —
 it AMPLIFIES the failure** (its fail-open path releases every waiting VM to fetch unlocked simultaneously). **This
 SUPERSEDES the 2026-07-14 cap of 3**, which was measured while VMs re-walked already-captured 2020 data — skip-scans

@@ -484,3 +484,19 @@ new issue doc — this is the same structural class already tracked here, now pa
 Whoever next works this doc's remaining open surface (if any) should re-verify `vm-disk-guard.sh`'s idle-slot
 reinstall + `uv cache prune` are still running as scheduled, and check whether the fleet has simply grown (more live
 slots × more materialised venvs) past what the 2026-06-29 hardlink-dedup fix alone can absorb.
+
+## Open follow-up
+
+> Formalised 2026-07-16 during the AO issue-doc audit: the 2026-07-13 recurrence above was narrative-only with **no
+> checkbox**, so it was invisible to every tracking sweep — exactly the "untracked follow-up" class. The structural
+> C1–C5 fix is code-verified still live (shared `UV_CACHE_DIR` + `UV_LINK_MODE=hardlink` exported by
+> `quality-gates-base/base-service.sh` and `tmux_spawn.py`; `vm-disk-guard.sh` no longer nukes the active shared cache)
+> — so this is a **re-verification**, not a re-fix.
+
+- [ ] [INFRA] P2. Re-verify the 2026-07-13 disk-pressure recurrence (slot 7 hit **2.0 MB free / 100% used** mid-QG, past
+      this doc's post-fix 53%-used baseline). Confirm `vm-disk-guard.sh`'s idle-slot reinstall + `uv cache prune` are
+      still running on schedule, then determine whether fleet growth (more live slots × materialised venvs) has outpaced
+      what hardlink-dedup alone absorbs; if so propose the next lever (concurrent-QG cap, prune cadence, or a per-slot
+      venv budget). **Gate**: a measured `df -h /home` trend + a stated verdict — _guard-running-but-outgrown_ vs
+      _guard-not-running_. Provenance: this doc's 2026-07-13 entry. **Also flagged independently by
+      `ao_docs_reconciliation_2026_07_15.md` (disk/venv row) — close both together, don't double-book.**

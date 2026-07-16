@@ -26,7 +26,7 @@ related:
     plan_reconciliation_operator_decisions_2026_07_11.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 parent_epic: agent_operating_framework_master
 priority: P1
 source:
@@ -387,6 +387,35 @@ post-pivot re-sweep.
 
 ## Progress Log
 
+- **2026-07-16** — **⚠️ The 2026-07-15 "EDITS APPLIED (local, uncommitted)" batch below LARGELY NEVER LANDED** —
+  verified file-by-file this session. It was left local/unpushed and is now lost: `orchestrator_master.md` frontmatter
+  is **still `assigned_vm: vm-orchestrator`** (F1 claim false); the `⚠️ CODE-DRIFT` banner claimed on
+  `recovery-defence-in-depth-layers.md` was **absent** (`rg CODE-DRIFT` → 0 hits); `backlog_regen_drops` and `slot5`
+  were **still `status: open`**. Only `host_tmp_tmpfs`'s flip appears to have survived. **Lesson (feeds X5):** "applied
+  locally, awaiting operator review" is not a durable state — an un-pushed reconciliation edit is indistinguishable from
+  no edit. Land edits or don't claim them.
+- **2026-07-16** — **Tracker partially STALE-COMPLETE: the plan/issue layer (Clusters A–D, F4) is now genuinely DONE**,
+  via work this tracker predates: 3 role-charter plans **ARCHIVED** (not `paused` as the 07-15 entry proposed —
+  `pm_role_charter`/`data_eng_role`/`uat_role_charter` → `plans/archive/2026_07/`, `cdd3cc47c`+`98413f37e`);
+  `role_registry_schema` archived (broker NOT REQUIRED, superseded by `assigned_role` dispatch); **8 code-verified
+  resolved AO issue docs archived** → `plans/archive/issues/` (`01d621f70`, each independently re-verified against
+  ground-truth code by a dedicated agent — all 8 GENUINELY_RESOLVED, no false-resolved). Today additionally:
+  `backlog_regen_drops` + `slot5` flipped `open→resolved` **for real** + archived; `slot_venv_duplication`'s 2026-07-13
+  recurrence formalised as a `- [ ]` todo (it was narrative-only → invisible to every sweep — same X5 class).
+- **2026-07-16** — **X2 (recovery-audit Layer-1) RULED: operator chose B — re-home the producer, DEFERRED to last.** The
+  A/B/C framing rested on a **false premise**: re-verification showed the deletion was **NOT end-to-end** — only the AO
+  `recovery-audit` **worker-role producer** was removed; the whole consuming half is LIVE (alerting-service
+  `POST /safety-ops/signoffs` ingest + `gateway_state.py` `DISPUTE`→SAFE_MODE, UAC contract, strategy subscriber, DART
+  feed serving `_mock_signoffs()`). So Layer-1 is a **producer-less half-dismantled safety layer** (no automated
+  DISPUTE→SAFE_MODE tripwire; caught only at Layer-5 human ack), not a clean descope. Accurate banners **now landed for
+  real** on `recovery-defence-in-depth-layers.md` § Layer 1 + a scope-clarifier on `agent-orchestrator-overview.md`'s
+  "removed end-to-end" line. Rewire tracked in [[ao_recovery_audit_layer1_deleted_2026_07_15]] (stays `open`).
+- **2026-07-16** — **Still open here (the real remainder):** X1 — the single-VM-pivot codex sweep (`canonical-plan-flow`
+  C-E1, `agent-orchestrator-overview` "10 epic VMs/82 slots", `host-offline-failover` premise-moot,
+  `backlog-state-alignment` `vm-ml` examples, `worker-liveness` "10/11 VMs", `runtime-deployment-topology` L589
+  self-contradiction, `autospawn` skip-blind doc-gap) + **F1** `orchestrator_master`. X3/X4 (skip-blind budget +
+  dispatch residuals) are being taken up as the AO dispatch-correctness work — operator's current scope is "make the AO
+  work properly". Once X1/F1 land, this tracker archives.
 - **2026-07-15** — **EDITS APPLIED (local, uncommitted — operator to review diffs before push).** Tier 1: 3 issues
   `open→resolved` + `resolved_by` (`backlog_regen_drops`/`8dd5763`, `host_tmp_tmpfs`/`fd9c002`,
   `slot5`/`f3b803371`+`pm@0c08a0afe`) + resolution banners. Tier 2: `main_agent_spawn_surgery` → `status: complete` +

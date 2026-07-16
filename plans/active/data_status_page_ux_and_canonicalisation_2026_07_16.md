@@ -169,6 +169,48 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | Prediction catalogue browser (backend + UI)      | P3       | full feature — `read_prediction_catalogue` + UAC facade + UI surface.              |
 | Catalogue explorer (MVP filter, CSV, search)     | P6       | full feature — phase 1 availability-derived + phase 2 true-catalogue projection.   |
 
+### 2026-07-16 — Phase A browser-validation of P5/P7/P4-A/P8 (INCONCLUSIVE — mock-fixture gaps, not code bugs)
+
+Continuation session drove `deployment-ui` locally in mock mode (`VITE_MOCK_API=true`, dedicated port 5199) with the
+Playwright MCP to visually confirm the already-unit-tested P5/P7/P4-A/P8 changes. Result: **static code review + the
+cited unit tests all confirm correct behavior, but the local mock fixtures can't fully exercise 3 of the 4 checks** —
+this is a pre-existing gap in `deployment-ui/src/lib/mock-api.ts`, not a defect in the shipped commits:
+
+- **P5/P7 (Instrument Coverage Summary drilldown suppression + chain-axis gate):** `/api/data-status/coverage-summary`'s
+  mock handler (`mock-api.ts:3758-3795`) is hardcoded to return a single `PREDICTION` entry regardless of the requested
+  service, and `/api/config/shard-axis-matrix` (`mock-api.ts:3334-3349`) declares `shard_axes` only for
+  `market-tick-data-service.prediction` — no `instruments-service` key at all. So cefi/tradfi/defi never render as cards
+  in that panel in mock mode, and `isHierarchicalDrilldownRedundant` can't be exercised either way. What DID verify: the
+  separate TURBO "Data Coverage" grid (a different, richer mock) correctly shows CeFi venues only
+  (BINANCE-SPOT/BINANCE-FUTURES/DERIBIT, no SOLANA/ZKSYNC rows), and PREDICTION correctly retains its drilldown.
+- **P4-A (canonical instrument_type labels):** `BreakdownsAccordion` only mounts when `breakdown_axes` is non-empty for
+  the asset group; since the mock shard-axis-matrix has no `instruments-service` entry at all, the accordion never
+  renders on this page in mock mode — INCONCLUSIVE. Static review of `data-status-helpers.ts:106-134` +
+  `BreakdownsAccordion.tsx:96-104` reads correct (alias map, hover tooltip, `(unlabeled)` vs `(legacy — pre-job_id)`
+  scoping) and matches the cited passing Vitest specs.
+- **P8 (TEAMS per-league drilldown + global-reference affordance):** `_mkSportsByDataType()` (`mock-api.ts:340-450`)
+  only defines FIXTURES/LEAGUES/FIXTURE_EVENTS — no TEAMS/STANDINGS/VENUES fixtures exist, so the TEAMS-reclassification
+  claim is INCONCLUSIVE (nothing to compare). What DID verify (PASS): LEAGUES renders the "Global reference entity — no
+  per-league breakdown (axis: global_periodic)" affordance, and FIXTURES shows a real per-league drilldown.
+
+Screenshots: `01-instrument-coverage-summary.png`, `02-sports-breakdown-leagues-affordance.png`,
+`03-cefi-breakdown-venues-only.png` (session scratchpad, not repo-committed). Zero console errors.
+
+**Why not fixed now:** enriching `mock-api.ts` with instruments-service shard-axis-matrix entries + cefi/tradfi/defi
+coverage-summary rows + TEAMS/STANDINGS/VENUES sports fixtures is itself a non-trivial, correctness-sensitive addition
+(wrong mock shapes would give false confidence) and out of this plan's scope. The stronger, lower-risk verification path
+is the LIVE Cloud Run deployment once `deployment-ui`'s LDR→main promote (currently gated on a fresh SIT-validation
+cycle for the tree that includes today's P5/P7/P4-A/P1/P4-B/P8/P2-backend commits — `full-workspace-sit` ran green
+09:50-09:57 UTC, `ldr-to-main-promote-fleet` ticks hourly-ish) catches up and redeploys — real production data has
+cefi/defi/tradfi variety and TEAMS data, so it would resolve all three INCONCLUSIVE checks in one pass.
+
+- [ ] [DATA] P3. _(new, low-priority)_ Enrich `deployment-ui/src/lib/mock-api.ts` so `instruments-service` data-status
+      mock fixtures cover: (a) `shard_axes` entries for cefi/tradfi/defi/sports in `/api/config/shard-axis-matrix`, (b)
+      per-asset-group entries (not just PREDICTION) in `/api/data-status/coverage-summary` with a mix of canonical +
+      legacy-lowercase `instrument_type` values (to exercise `BreakdownsAccordion`), (c) TEAMS/STANDINGS/VENUES sports
+      `data_type` fixtures. Unlocks fully self-contained Playwright verification of this page without needing a live
+      deployment. Not required for this plan's P5/P7/P4-A/P8 acceptance (already unit-tested) — tracked as a follow-up.
+
 ### 2026-07-16 — P7 CeFi chain-axis gate (backend P1) shipped
 
 - **Root cause (trace-first, live-verified against the cefi availability index):** the cefi manifest
@@ -333,13 +375,34 @@ canonical grouping already exists. Build a browse-the-live-catalogue surface, de
 - **Acceptance:** category `<select>` → cqg sub-filter → a paginated, searchable table of human-readable markets with
   venue chip + resolution/close date; pw:L2 asserts category change narrows the list.
 
-- [ ] [BACKEND] P1. `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)` —
-      widen the existing `manifest_source.py` `prod/catalog.parquet` read to project
-      `cqg/underlying/raw_symbol/base_asset/venue/timing`; return facet counts per category + per cqg. Route
-      `GET /data-status/prediction-catalogue`.
-- [ ] [BACKEND] P1. UAC facade — add `PredictionMarketCategory` + `category_for_group(cqg)` to the
-      `unified_api_contracts.predictions` public facade (compose the existing `underlying_for_group` +
-      `_category_for_underlying`; no deep-path import).
+- [x] [BACKEND] P1. ✅ `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)`
+      — new `deployment_api/services/prediction_catalogue.py`, widening the same prediction `prod/catalog.parquet` read
+      `manifest_source.read_unique_instrument_count` uses, to project
+      `underlying/raw_symbol/base_asset/venue/instrument_type/available_from/available_to/data_type/mvp` (schema-aware).
+      **Deviation from the literal plan wording:** `canonical_question_group` is NOT a per-market column on
+      `catalog.parquet` (verified against `build_instrument_catalogue.py`'s `CATALOG_COLUMNS` — only a separate
+      shard-tracking bundle row carries it, `data_type=prediction_canonical_question_group`/`instrument_id=cqg`; real
+      per-market cqg only lives in the availability MANIFEST, a different parquet). So the service DERIVES cqg per row
+      via the SAME deterministic classifiers the IS adapters call at capture time
+      (`classify_kalshi_to_canonical_group`/`classify_polymarket_to_canonical_group`, cached per unique
+      venue+raw_symbol), then composes `category_for_group(cqg)` (cached per unique cqg) — bundle-grain rows are
+      excluded (never a browsable market). Facet counts (`category_counts`/`cqg_counts`) computed over the
+      venue+search-filtered set so the UI `<select>` always renders every bucket. Honest label fallback `raw_symbol` →
+      `base_asset` (50 chars) → `event_title` (schema-checked, absent today) → `instrument_id`. Route
+      `GET /api/data-status/prediction-catalogue` (`routes/prediction_catalogue.py`, mirrors
+      `routes/catalogue_lifecycle.py`, mock-mode aware, registered in `main.py`). — deployment-api@9238983 + Evidence:
+      `test_prediction_catalogue.py` 4 specs green (category facet+filter, cqg sub-filter, search+pagination,
+      label-fallback/bundle-exclusion/honest-empty-on-read-failure) + `quality-gates.sh --no-fix` green (4549 passed; 5
+      pre-existing baseline codex-compliance violations within tolerance, 0 new).
+- [x] [BACKEND] P1. ✅ UAC facade — added `PredictionMarketCategory` + `category_for_group(cqg)` to the
+      `unified_api_contracts.predictions` public facade (composes the existing `underlying_for_group` +
+      `_category_for_underlying`). **Lives in `cross_venue_mapping.py`, not `two_axis.py`** as the plan suggested — a
+      circular-import check confirmed `cross_venue_mapping.py` already imports `underlying_for_group` FROM `two_axis.py`
+      and already has `_category_for_underlying` + `PredictionMarketCategory` imported, so composing there needs no new
+      dependency edge (`two_axis.py` importing FROM `cross_venue_mapping.py` would have cycled). —
+      unified-api-contracts@72fd959 + Evidence:
+      `test_prediction_cross_venue_mapping.py::test_category_for_group_composes_across_all_categories` (crypto/
+      financial/sports/weather/entertainment/politics/other) green + `quality-gates.sh --no-fix` green (188s).
 - [ ] [UI] P1. Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
       sub-filter → paginated searchable table (label = fallback chain above, venue chip, resolution date). `[UI]` +
       pw:L2.
@@ -522,8 +585,22 @@ across chains) need the chain axis.
       ungated `extras["chains"]` sub-dimension leaked. UI grid needs no change — it renders the backend
       `extras["chains"]` verbatim, so gating the backend suppresses cefi chain sub-rows. — deployment-api@47a7f67 +
       Evidence: `test_v4_sub_dimensions_chain_gated_on_defi.py` (cefi→no chains, defi→chains) + quality-gates.sh green
-      (117s). _(Read-side display gate only; manifest query key unchanged. NOTE — the writer-side split rows
-      `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of P7's read-side scope; see Progress Log.)_
+      (117s) + **real-data browser validation 2026-07-16** (local deployment-api on real GCS + deployment-ui +
+      Playwright): the LIVE build (`/data-status/turbo?pipeline_mode=…` cache-bypass, and
+      `/data-status/coverage-summary`) returns `CEFI chains: None`. _(Read-side display gate only; manifest query key
+      unchanged. NOTE — the writer-side split rows `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of
+      P7's read-side scope; see Progress Log.)_
+- [x] [BACKEND] P2. ✅ _(P7 follow-up — stale rollup cache)_ FIXED at the read layer. The TURBO "Data Coverage" grid is
+      served from a pre-built GCS rollup blob (`data_status_rollup_worker.py`); a blob written BEFORE the P7 fix still
+      carried `cefi.chains=['SOLANA','ZKSYNC']` (found via Playwright against real data — the worker DOES use the gated
+      `_build_v4_sub_dimensions`, so it self-heals on its next 5-min run post-deploy, but that leaves a stale-blob
+      window). Added `strip_non_defi_chains()` applied in `slice_rollup_to_window` beside `strip_defi_ghost_venues`, so
+      any non-defi category's `chains` breakdown is dropped at the rollup-CONSUMPTION layer — the TURBO grid is
+      cefi-venue-only regardless of blob staleness (a no-op on a correctly-rebuilt blob). — deployment-api@e27ba4b +
+      Evidence: `test_data_status_beta_rollup_and_cli_config.py::test_strip_non_defi_chains_drops_cefi_keeps_defi` +
+      `::test_slice_rollup_strips_stale_cefi_chains_keeps_defi` green (ruff/basedpyright clean; 10/10 in the file).
+      _(Committed via collision carve-out — foreign live P6 WIP was mid-edit in the shared checkout; scoped-verified my
+      2 files.)_
 - [x] [UI] P2. ✅ Resolved by the P5 gate. There were two overlapping "Instrument breakdown" affordances: (a) the nested
       link inside the hierarchical drilldown (`DataStatusTab.tsx:4092`), suppressed for IS cefi/tradfi/defi by the P5
       predicate; and (b) the Data Coverage grid's venue-detail "Instrument breakdown" link (`DataStatusTab.tsx:5582` →

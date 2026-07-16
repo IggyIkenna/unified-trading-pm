@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: GitHub Actions cost reduction — full options analysis & decision menu (DRAFT / suggestions)
+title: GitHub Actions cost reduction — full options analysis & decision record
 summary: >-
   Companion decision-menu to github_actions_ci_cost_reduction_2026_07_15.md. Four parallel investigations (service
   fold-in, GitHub-native YAML levers, runner infrastructure, drastic redesigns) evaluated every realistic way to cut the
@@ -8,8 +8,9 @@ summary: >-
   are the WORST on savings-per-risk; the real money is in (A) no-new-infra GitHub-native fixes — two of which are latent
   BUGS already half-built and silently disabled — and (B) choosing where the fleet glue executes (self-hosted runner vs
   fold into the existing deployment-api service vs a third-party runner in our own AWS). deployment-api already has most
-  building blocks. THESE ARE SUGGESTIONS FOR REVIEW, NOT FINAL DECISIONS.
-status: draft
+  building blocks. ALL DECISIONS ARE NOW CLOSED (2026-07-15/16) — this doc is the DECISION RECORD + evidence base;
+  execution lives in the sibling plan, which is ACTIVE.
+status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,9 +25,8 @@ tags:
     deployment-api,
     workflows,
     spend-reduction,
-    draft,
-    suggestions,
     options-analysis,
+    decision-record,
   ]
 related:
   - github_actions_ci_cost_reduction_2026_07_15.md
@@ -54,13 +54,13 @@ source:
 drift_direction: advance-code
 ---
 
-# GitHub Actions cost reduction — full options analysis (DRAFT)
+# GitHub Actions cost reduction — full options analysis & decision record
 
-> **⚠️ THESE ARE SUGGESTIONS, NOT FINAL DECISIONS.** `status: draft`, **human-only** (`assigned_vm: NA`) — not ingested,
-> not dispatched. This is the **decision menu**: it lays out every option we evaluated so the operator can choose the
-> path. The chosen path's execution items live in the sibling plan
-> [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md) — this doc does not
-> duplicate them; it frames the wider set of choices around them. Nothing here is approved to execute.
+> **🟢 DECISION RECORD — all decisions CLOSED (2026-07-15/16).** The earlier "suggestions, not decisions" framing is
+> withdrawn; see § "Decisions — MADE". This doc is the **evidence base + the record of what we chose and why** (incl.
+> the options we rejected and the audit numbers). **It is NOT the execution vehicle** — every actionable item lives in
+> the sibling plan [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md),
+> which is **ACTIVE**. `assigned_vm: NA` → never auto-dispatched. Read this for _why_; execute from the sibling.
 
 ## Corrected baseline (measured this session)
 
@@ -177,7 +177,7 @@ registered fleet-wide** — confirmed.)
 | Disk     | 300 GB gp3                                                                                    | 232 GB used (**80%**)                     | 59 GB free ← tightest |
 | Running  | ~10 orchestrator Claude slots (`orch-agent-main` + `orch-slot-*`) — IO/network-bound, low CPU |                                           |                       |
 
-### The glue workload (moving PM's 40 glue workflows off GitHub-hosted; QG + the health watchers STAY hosted)
+### The glue workload (moving PM's 39 glue workflows off GitHub-hosted; QG + the health watchers + notify-slack STAY hosted)
 
 Measured from real run timings (1,000-run/13.4h sample + 30-day counts):
 
@@ -267,16 +267,16 @@ there is unexpected free money in fixing two latent bugs. Options are grouped by
 These are pure workflow-YAML/bash edits to existing files. Two of them are **latent bugs**: machinery that was built to
 save money and is silently disabled today.
 
-| #     | Lever                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Where                                                | Est. saving                                                                     | Risk                                                                                         |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| A1 🐛 | **Docs-only fast-path is CI-blind.** `scripts/quality-gates-base/base-service.sh:580-602` already skips pytest+typecheck for docs-only changes — but it keys off the working-tree diff, which is always empty on a clean CI checkout, so it **never fires server-side**. PM is majority-docs. Extend the existing committed-diff check (`python-quality-gates-v2.yml` L170-202 / L585-607) to the same docs regex → skip the ~12-min pytest leg on every docs/plans/codex-only PR + promotion, fleet-wide. Also gate `dispatch-cloud-build` on `docs_only!='true'`.                  | `python-quality-gates-v2.yml`, `base-service.sh`     | **Large** (removes the long-pole test leg from the majority-docs change stream) | Low — mirrors the already-shipped `metadata_only` fast-path                                  |
-| A2 🐛 | **The redundant-rerun cache is silently disabled.** `content-gate` (`python-quality-gates-v2.yml:90-137`) was built to skip byte-identical reruns (push+PR × main+staging = up to 4×); the cache probe/save were ripped out ~2026-06-26 and hardcoded to `cache-hit=false` / `if: false`. Every QG run now pays a full job-minute for a probe that **can never hit**. Fix it, or delete the dead job.                                                                                                                                                                                | `python-quality-gates-v2.yml:90-137, 647-653`        | Medium–Large if fixed (restores 4× dedup); ~1 job-min/run if just removed       | Low to remove; Medium to properly fix (GHA cache-in-reusable-workflow is a known rough edge) |
-| A3    | **Fold the `persist` job into `ci-status-update`.** `persist` (`ci-status-update.yml:326` → reusable `persist-cicd-event.yml`) is a separate `workflow_call` job firing ~every invocation. Folding it to a final step removes 1 job-min per run. **⚠️ Number corrected 2026-07-16:** ~13k runs × 1 job-min × $0.006 ≈ **~$78/mo standalone (NOT ~$140/mo)** — and it is the **SAME dollars** as ci-status-update itself, which B1 already takes to $0. So A3 is **moot post-B1** (both `update-ci-status` and `persist` self-host → $0); do NOT count it as additive to B1's saving. | `ci-status-update.yml:326`, `persist-cicd-event.yml` | **~$78/mo, but $0 once self-hosted (do not double-count)**                      | Low                                                                                          |
-| A4    | **Merge trivial jobs in `cloud-build-router`(+aws)** — `freeze-check` and `persist` are separate 1-min-minimum `workflow_call` jobs wrapping the real `route-build`; inline them as steps.                                                                                                                                                                                                                                                                                                                                                                                           | `cloud-build-router*.yml`                            | ~$20–30/mo                                                                      | Low                                                                                          |
-| A5    | **Collapse the QG job fan-out** — merge `typecheck`+`lint-codex` into one job (both finish well inside the pytest leg). Base case drops from ~5 jobs/run to ~3 (~40% job-count cut), killing per-job 1-min minimums.                                                                                                                                                                                                                                                                                                                                                                 | `python-quality-gates-v2.yml:149-152`                | Medium, fleet-wide                                                              | Medium (verify combined leg stays under the pytest leg)                                      |
-| A6    | **Kill the dead `staging-to-main` cron.** Staging is bypassed fleet-wide, yet its `*/15` cron still fires 96×/day doing real fleet API queries before finding nothing — the sibling `ldr-to-staging-promote.yml` already got exactly this fix (schedule commented out, dispatch/manual kept). Apply the proven pattern.                                                                                                                                                                                                                                                              | `staging-to-main.yml:16-30`                          | ~$15–25/mo                                                                      | Medium (keep `repository_dispatch` escape hatch)                                             |
-| A7    | **Relax leftover staging-family + backstop crons** — `reconcile-staging-versions`, `staging-conflict-ldr-main-fallback` (hourly, low-urgency), `ci-health` (`*/15`, event path is already primary — same relax precedent as `ldr-ci-monitor`).                                                                                                                                                                                                                                                                                                                                       | various                                              | Small, compounding                                                              | Low                                                                                          |
-| A8    | **Runaway cap** — `qg-slices` has `timeout-minutes: 135` (~11× the ~12-min real cost). Tighten to ~30–45 to bound a hung run.                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `python-quality-gates-v2.yml:156`                    | Tail-risk insurance                                                             | Low                                                                                          |
+| #     | Lever                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Where                                               | Est. saving                                                                     | Risk                                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| A1 🐛 | **Docs-only fast-path is CI-blind.** `scripts/quality-gates-base/base-service.sh:580-602` already skips pytest+typecheck for docs-only changes — but it keys off the working-tree diff, which is always empty on a clean CI checkout, so it **never fires server-side**. PM is majority-docs. Extend the existing committed-diff check (`python-quality-gates-v2.yml` L170-202 / L585-607) to the same docs regex → skip the ~12-min pytest leg on every docs/plans/codex-only PR + promotion, fleet-wide. Also gate `dispatch-cloud-build` on `docs_only!='true'`.                                                                                                                                                                                                                                                                   | `python-quality-gates-v2.yml`, `base-service.sh`    | **Large** (removes the long-pole test leg from the majority-docs change stream) | Low — mirrors the already-shipped `metadata_only` fast-path                                  |
+| A2 🐛 | **The redundant-rerun cache is silently disabled.** `content-gate` (`python-quality-gates-v2.yml:90-137`) was built to skip byte-identical reruns (push+PR × main+staging = up to 4×); the cache probe/save were ripped out ~2026-06-26 and hardcoded to `cache-hit=false` / `if: false`. Every QG run now pays a full job-minute for a probe that **can never hit**. Fix it, or delete the dead job.                                                                                                                                                                                                                                                                                                                                                                                                                                 | `python-quality-gates-v2.yml:90-137, 647-653`       | Medium–Large if fixed (restores 4× dedup); ~1 job-min/run if just removed       | Low to remove; Medium to properly fix (GHA cache-in-reusable-workflow is a known rough edge) |
+| A3 ✅ | **SUPERSEDED 2026-07-16 by the option-C composite-action conversion — see sibling plan STEP 2c.** A3 was "fold the `persist` job into `ci-status-update`" (`ci-status-update.yml:326` → reusable `persist-cicd-event.yml`, a separate `workflow_call` job firing ~every invocation; ~13k runs × 1 job-min × $0.006 ≈ **~$78/mo standalone, NOT ~$140/mo** — and the SAME dollars as ci-status-update, so never additive to B1). The **better, fleet-wide** version the operator chose: convert `persist-cicd-event` to a **composite action** so it runs as a STEP inside each caller's own job → (a) removes the separate 1-min-minimum job for **all 22 callers**, not just ci-status-update, and (b) resolves the hosted-vs-moved straddle (each caller's persist runs on its own runner). Do this instead of the per-caller fold. | `.github/actions/persist-event/` (new) + 22 callers | **~$78/mo+ fleet-wide via STEP 2c (not additive to B1)**                        | Low                                                                                          |
+| A4    | **Merge trivial jobs in `cloud-build-router`(+aws)** — `freeze-check` and `persist` are separate 1-min-minimum `workflow_call` jobs wrapping the real `route-build`; inline them as steps.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `cloud-build-router*.yml`                           | ~$20–30/mo                                                                      | Low                                                                                          |
+| A5    | **Collapse the QG job fan-out** — merge `typecheck`+`lint-codex` into one job (both finish well inside the pytest leg). Base case drops from ~5 jobs/run to ~3 (~40% job-count cut), killing per-job 1-min minimums.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `python-quality-gates-v2.yml:149-152`               | Medium, fleet-wide                                                              | Medium (verify combined leg stays under the pytest leg)                                      |
+| A6    | **Kill the dead `staging-to-main` cron.** Staging is bypassed fleet-wide, yet its `*/15` cron still fires 96×/day doing real fleet API queries before finding nothing — the sibling `ldr-to-staging-promote.yml` already got exactly this fix (schedule commented out, dispatch/manual kept). Apply the proven pattern.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `staging-to-main.yml:16-30`                         | ~$15–25/mo                                                                      | Medium (keep `repository_dispatch` escape hatch)                                             |
+| A7    | **Relax leftover staging-family + backstop crons** — `reconcile-staging-versions`, `staging-conflict-ldr-main-fallback` (hourly, low-urgency), `ci-health` (`*/15`, event path is already primary — same relax precedent as `ldr-ci-monitor`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | various                                             | Small, compounding                                                              | Low                                                                                          |
+| A8    | **Runaway cap** — `qg-slices` has `timeout-minutes: 135` (~11× the ~12-min real cost). Tighten to ~30–45 to bound a hung run.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `python-quality-gates-v2.yml:156`                   | Tail-risk insurance                                                             | Low                                                                                          |
 
 **Already good — do NOT "fix":** `quality-gates-v2` already cancels superseded `push` runs; `ci-status-update`
 deliberately has no concurrency group (Firestore CAS makes unbounded concurrency safe — a shared group previously
@@ -378,24 +378,21 @@ The safe order is: **(1) unconditional Set A now** (A1, A2-delete, A5, A6/A7, A8
 B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherwise). Re-measure Set A alone against the
 30-day baseline before committing to how far Set B needs to go.
 
-## Recommended sequencing (proposal — not approved)
+## Recommended sequencing — ⛔ SUPERSEDED (2026-07-16), do NOT execute from here
 
-- [ ] [MEASURE] P1. Phase 0 of the sibling plan: pull the full 30-day per-workflow attribution so every $ below is
-      exact.
-- [ ] [INFRA] P1. **Set A quick wins first** — they need no infra and include the two bug-fixes (A1 docs-only fast-path,
-      A2 dead cache) + A3 fold-persist (~$78/mo, and $0 once self-hosted — do not double-count) + A6 dead
-      `staging-to-main` cron. Highest bang-for-buck, low risk.
-- [ ] [OPERATOR-DECISION] P1. **Choose the Set B target architecture** — B1 (self-host on the VM) vs B2 (fold into
-      deployment-api) vs B3 (RunsOn in our AWS). Recommendation: **B1 now** for speed, **B2 for `ci-status-update`
-      next** (building blocks already exist), revisit B3 only if autoscaling contention shows up.
-- [ ] [INFRA] P2. Execute the chosen Set B path via the workflow-template SSOT + `rollout-workflow-templates.sh` (never
-      hand-edit per-repo copies); keep promotion/backmerge bots (git+PR ops) on Actions for now — moving those is a
-      separate, larger effort.
-- [ ] [INFRA] P2. Set A cleanup tail (A4, A5 job consolidation; A7 cron relax; A8 runaway cap) + turn on **soft** budget
-      alerts.
-- [ ] [VERIFY] P3. Re-pull the ledger 2 weeks post-rollout; compare to baseline. Target: **fleet
-      ~$1,000/mo →
-      ~$250–400/mo**, structurally flat as activity grows.
+> This section was the pre-decision proposal. **It is superseded by the sibling plan's todos**
+> ([`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md), now ACTIVE) —
+> execute from there, not here. It is kept only as a record of the original proposal. Specifically, three items here are
+> now **factually wrong** and must not be followed:
+>
+> - _"Choose the Set B target architecture"_ → **decided: B1** (self-host on the planning-VM); B2 dropped, B3 parked.
+> - _"Execute the chosen Set B path via the workflow-template SSOT + `rollout-workflow-templates.sh`"_ → **WRONG.** The
+>   flip edits PM's `.github/workflows/*.yml` **directly**; the 4 fleet **templates stay hosted (`KEEP-T`)** — flipping
+>   a template would hang the other ~24 repos. Never roll this out via templates.
+> - _"A3 fold-persist"_ → **superseded by option C** (convert `persist-cicd-event` to a composite action — sibling STEP
+>   2c).
+>
+> Phase-0 measurement is **done** (see § "Audit results"); the ledger re-pull lives in the sibling's VERIFY todos.
 
 ## Decisions — MADE (operator, 2026-07-15)
 
@@ -416,9 +413,10 @@ All decisions are now closed. Execution follows in the sibling plan.
 5. ✅ **Spending cap = LEAVE AS-IS** — a hard cap already exists; operator: do not touch it. (No soft-alert change
    made.)
 6. ✅ **Migration pace = canary → phased groups** — flip one low-risk workflow, verify green on `[self-hosted, glue]`,
-   then roll the 40 MOVE set out in small batches, not all at once (**40 MOVE / 16 KEEP** — see the sibling plan's
-   §"MOVE / STAY manifest"; 52/50 → 44/12 → 40/16 after the 2026-07-16 review reclassified `image-build-validate` as a
-   cross-repo reusable and the operator kept the 4 CI-health watchers hosted). Canary = `reconcile-release-tags`
+   then roll the 39 MOVE set out in small batches, not all at once (**39 MOVE / 17 KEEP** — see the sibling plan's
+   §"MOVE / STAY manifest"; 52/50 → 44/12 → 40/16 → 39/17 after the 2026-07-16 review reclassified
+   `image-build-validate` as a cross-repo reusable, the operator kept the 4 CI-health watchers hosted, and the final
+   review caught the shared alert carrier `notify-slack` (`KEEP-D`, ~$1/mo)). Canary = `reconcile-release-tags`
    (`branch-health` is now hosted).
 7. ✅ **A5 = measure per-repo, then collapse** the QG fan-out.
 8. ✅ **A1 = do it** (docs-only fast-path, fleet QG). **A8 = do it** (template timeout cap). **A3/A4 = deprioritized**
@@ -617,5 +615,31 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   `overnight-dead-man-switch`) — light monitors whose value is independence from our infra; GitHub-hosted is their right
   home. (2) `image-build-validate` **stays hosted** (`KEEP-R`) for now — the blocker is personal-account runner scoping
   (self-hosted runners are repo-scoped; no org pool), so serving its 24 callers would need per-repo registrations for
-  ~no money; revisit only if we convert to a GitHub Org. **Final split → 40 MOVE / 16 KEEP**; canary switched to
+  ~no money; revisit only if we convert to a GitHub Org. Split → 40 MOVE / 16 KEEP; canary switched to
   `reconcile-release-tags` (branch-health now hosted).
+- 2026-07-16 (final review) — **`notify-slack` → `KEEP-D`; final split 39 MOVE / 17 KEEP.** The shared alert carrier the
+  `KEEP-M` monitors call must stay hosted or a VM outage would let them detect-but-not-page (a reusable's `runs-on` is
+  independent of its caller). It's hosted **for the watchers, not the movers** (a mover on a down VM isn't running →
+  nothing to alert; movers call the hosted carrier unchanged — GitHub runs that job on a hosted runner inside a
+  self-hosted workflow). Cost **measured first** (no per-workflow billing + nested reusable → counted the alert ledger +
+  billed `send-notification` jobs):
+  **~$1/mo** (117 posts/30d + a small deduped-but-billed tail); two intermediate
+  figures ($4/$22) were skipped-job +
+  rate-limit artifacts, corrected. `persist-cicd-event` remains the one open straddle (left MOVE — secondary
+  event-ledger, not the alert path).
+- 2026-07-16 (final review) — **Last straddle closed: `persist-cicd-event` → option C (operator), convert to a composite
+  action.** It fires on ~~every run (5 KEEP + 17 MOVE callers incl. the 13k/mo `ci-status-update`), so unlike
+  `notify-slack`
+  (~~$1/mo) where it runs is real money — but one reusable can't be hosted-for-KEEP and on-VM-for-movers,
+  and flipping it would hang the hosted callers during a VM outage. Converting it to `.github/actions/persist-event`
+  makes it run as steps inside each caller's own job → caller's runner (movers → VM/$0,
+  KEEP → hosted, no hang) AND drops the separate 1-min billed job for all 22 callers. **This SUPERSEDES A3** (the
+  per-caller fold) and covers the persist half of A4. Classifier tags it `MOVE-C` (convert, do NOT flip); sibling plan
+  gets **STEP 2c**. **No open straddles or classification questions remain — the flip set is final at 39 MOVE (38 flip +
+  1 convert) / 17 KEEP.**
+- 2026-07-16 — **Flipped `status: draft` → `active` (operator: "make this plan active and start working on it").** This
+  doc is now the **DECISION RECORD** (all decisions closed; the "suggestions, not decisions" banner withdrawn);
+  execution lives in the sibling plan, also ACTIVE. Marked § "Recommended sequencing" **⛔ SUPERSEDED** — it was the
+  pre-decision proposal and three of its items are now factually wrong (Set-B choice is decided = B1; the "roll out via
+  `rollout-workflow-templates.sh`" instruction is WRONG — the flip edits PM's workflows directly and the templates STAY
+  hosted; A3 is superseded by option C). Both plans keep `assigned_vm: NA` → operator-driven, never auto-dispatched.
