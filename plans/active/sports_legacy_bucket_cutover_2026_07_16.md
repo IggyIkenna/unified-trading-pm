@@ -1726,6 +1726,21 @@ remain PAUSED. Zero rows lost.
 `footystats_matches` `empty_confirmed → captured` false-absence corrections, matching `or9_shard_evidence.jsonl`
 exactly. **It is correct and complete — OR-9 needed no further execution work.**
 
+**🟡 OPEN ANOMALY (found at close-out; NOT delete-affecting, NOT mine, content-neutral) — the canonical index was
+REWRITTEN at 18:45:26Z while every consolidator was PAUSED.** T4.2/OR-9 recorded the index generation as frozen at the
+T3.1 purge (`1784207377339311`); it is now **`1784227526828259`, `metageneration=1`,
+`timeCreated == updated == 2026-07-16T18:45:26.846Z`** — i.e. a genuine NEW-generation WRITE, not a storage-class
+transition. **Content is byte-equivalent — nothing was lost**: rows **5,342,265 (delta 0)** · `captured` **1,692,695
+(delta 0)** · footystats × ODDS **140,574** · api_football × ODDS **0** (the T3.1 purge still holds). All 3 consolidator
+crons verified **PAUSED** at the time of measurement, and it is the **only** `_index/` object created since 18:00Z (no
+shard, no backup written alongside). **Not this leg**: every script this leg ran is read-only w.r.t. `-prd-`
+(`or9_verdict.py` performs zero writes; the only mutating calls are `.delete()` inside the name-guarded legacy-bucket
+purge). Timing overlaps this slot's deployment-service QG window (18:44→18:46) — **unproven either way, do not inherit
+either explanation**. **Does not affect T5.4**: the delete gate is the OBJECT layer, and R-13 is explicit that the
+manifest is never evidence about objects. **For T6.1's owner**: re-baseline the "frozen generation" witness to
+`1784227526828259` before the merge — the older `1784207377339311` figure in T4.2/OR-9 is now STALE, and a race-guard
+comparing against it will false-fire.
+
 **Every delete gate RE-MEASURED live (the 4-audits-wrong-by-inheritance rule), not read off the prior verdict:**
 
 | gate                                | method (re-run this leg)                                                     | result                                                           |
