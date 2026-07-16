@@ -151,16 +151,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                           GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                           gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                           Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                           LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                           Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                           writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                           Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                           were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                           Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                           on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -177,6 +177,46 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-16 (later, next) — data_engineering slot-9 (Todo 1 dispatch — re-verify only, freeze still live, skipped — no state change since the prior slot-2 entry below)
+
+Dispatched to Todo 1 (`sports_p2_features_history_to_ml_ready-001`). Re-checked both gating facts via the non-snap
+`gcloud` (`/home/ubuntu/google-cloud-sdk/bin/gcloud`):
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron --location=asia-northeast1 --project=central-element-323112 --format="value(state)"`
+→ **`PAUSED`**, unchanged; `gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0
+rows**. `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.0-T6.8 still ALL `- [ ]`. The freeze has not lifted.
+
+**Not launching a VM, not re-running a manifest scan** (single-walk discipline; nothing legitimate can have changed
+since the prior check). Checkbox stays `- [ ]`. Skipping this task so the dispatcher can route to other queued work.
+Next dispatch on Todo 1 or Todo 3: check `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.1 (sports market-data
+consolidator resume) first — once `state: ENABLED` reads there, this unblocks immediately.
+
+### 2026-07-16 (later, next+1) — data_engineering slot-9 (Todo 3 dispatch, same session — BLOCKED-PREREQ as established, freeze re-verified 2 min prior, skipped)
+
+Dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`, "Features manifest clean over history"), which
+depends on Todo 1's compute run. Same freeze re-checked in my immediately-prior Todo 1 entry above (scheduler `PAUSED`,
+0 backfill VMs, cutover Phase 6 T6.0-T6.8 unchecked) — no new gcloud call, no manifest re-scan (single-walk discipline;
+nothing legitimate changed in the last 2 minutes). Checkbox stays `- [ ]`. Skipping to let the dispatcher route to other
+queued work.
+
+### 2026-07-16 (later) — data_engineering slot-2 (Todo 3 dispatch — re-verify only, freeze still live, skipped — no state change since the prior slot-6/slot-2 entries below)
+
+Dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`), same BLOCKED-PREREQ chain as every dispatch since
+20:02Z. Re-checked both gating facts via the non-snap `gcloud` (`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap
+install on PATH is still broken in this sandbox):
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron --location=asia-northeast1 --project=central-element-323112`
+→ **`PAUSED`**, unchanged; `gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0
+rows**, confirms no relaunch since the 20:02Z deletion. Cross-checked `sports_legacy_bucket_cutover_2026_07_16.md`
+directly: Phase 5 (instruments half) is the latest complete phase (✅ 2026-07-16T19:52Z); Phase 6 (RESTORE) T6.0-T6.8
+are ALL still `- [ ]`; the `market-data-tick-sports` leg (OR-5b) is still open and now needs a fresh re-ruling per its
+own 2026-07-16 re-measurement entry (OR-5b(a)/(b)/(c) all flagged "need re-ruling on these numbers") — genuinely further
+from resolved than a quick check, not closer. The freeze has not lifted.
+
+**Not relaunching, not re-running a manifest scan** (single-walk discipline — no writer has run since the last full
+walk; nothing legitimate can have changed). Checkbox stays `- [ ]`. Skipping this task (`/skip-current-task`) so the
+dispatcher can route to other queued work instead of another idle re-check loop. Next dispatch on Todo 1 or Todo 3
+should check `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.1 (specifically the sports market-data consolidator
+resume) first — once `state: ENABLED` reads there, this unblocks immediately.
 
 ### 2026-07-16 19:56Z — data_engineering slot-3 (Todo 1 dispatch — both tracked VMs found dead on the now-resolved consolidator bug; corrected a load-bearing wrong assumption from prior sessions; launched 4-VM parallel gap-fill covering full 2017-2026 span)
 
@@ -3909,3 +3949,33 @@ eligible) so this session moves to different available work instead of re-runnin
   merged matrix 24x870 with odds columns live, promote PR#248 auto-merge armed; details in the 22:3xZ entry + issue
   doc). The assembled sports ML matrix now works end-to-end (loader trio + join). 68.6%-cluster P2 diagnosis DISPATCHED
   (idle loop capacity while fleets grind). Enrichment fleet + pre-2025 sweep unchanged-healthy.
+
+### 2026-07-16 (data_engineering slot-5 — Todo 3 dispatch, re-verify only, freeze still live, skipped)
+
+Dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`, "Features manifest clean over history"), which
+depends on Todo 1's full-history compute completing. Re-verified both gating facts live via the non-snap `gcloud`
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud`): `uts-prod-manifest-consolidator-market-data-sports-cron` → **`PAUSED`**
+(unchanged); `gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0 rows** (no
+relaunch). Cross-checked `sports_legacy_bucket_cutover_2026_07_16.md` directly: Phase 6 T6.0-T6.5 all still `- [ ]`. No
+state change since the prior 20:xxZ entries. Checkbox stays `- [ ]`; no code changed (re-verification only).
+
+### 2026-07-16 (data_engineering slot-7 — Todo 3 dispatch, re-verify only, freeze still live, skipped)
+
+Dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`). Noted the backlog entry (`priority: 20`,
+`status: dispatched`) does NOT carry the operator's PARK intent from the 20:20Z `main` decision (condition
+`sports-legacy-cutover-phase6-t6-restored` shows `gates_queued: 0` — never attached to this task's
+`prereqs.prerequisites`), so the dispatcher routed it to me anyway despite the "ACTIVE HARM — 4 features VMs already
+crash-looped" ruling. Re-verified both gating facts live via the non-snap `gcloud`
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud`): `uts-prod-manifest-consolidator-market-data-sports-cron` → **`PAUSED`**
+(unchanged); `gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0 rows** (exit 0,
+no relaunch). Cross-checked `sports_legacy_bucket_cutover_2026_07_16.md` directly: Phase 6 T6.1 (and T6.0-T6.5) all
+still `- [ ]`. No state change since the prior slot-5/slot-2/slot-9 entries. Checkbox stays `- [ ]`; not launching a
+features VM (would crash-loop on the paused consolidator per the operator's active-harm ruling); no code changed
+(re-verification only). Skipping via `/skip-current-task` so the dispatcher routes to other queued work. **The backlog
+prereq-attachment gap itself is a separate defect** — the park mechanism (priority 999 + `priority_override: true` +
+`prereqs.prerequisites`) was never actually applied to this task's `data/config/backlog.yaml` entry, so every dispatch
+cycle keeps re-offering it instead of the dispatcher gating it automatically; flagging for main/operator to apply the
+park recipe from `unified-trading-pm/agents/RULES.md` § "Park a task" properly (or attach
+`sports-legacy-cutover-phase6-t6-restored` to `prereqs.prerequisites` on both -001 and -002) rather than relying on each
+dispatched slot to notice and self-skip. `/skip-current-task` per this task's established convention so the dispatcher
+can route to other queued work.

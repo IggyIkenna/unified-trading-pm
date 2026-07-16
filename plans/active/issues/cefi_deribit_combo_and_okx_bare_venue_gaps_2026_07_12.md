@@ -186,42 +186,42 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       was already shipped by prior sessions; this closure is a documentation-accuracy correction only.
 
       **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** —
-          `unified-api-contracts@f0dc61a2` (shipped — see the ship-blocker note below for the full trail) adds the
-          `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
-          own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
-          returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
-          (`return self._get_direct_tardis_match(base_venue)`), which catches ANY `"X-<suffix>"` venue whose base `X` has a
-          direct `tardis_to_venue` entry, regardless of the suffix's semantic meaning. This was true BEFORE my dict-entry
-          addition too — so **exchange-name resolution was never actually the blocker for DERIBIT-COMBO**, contradicting
-          this todo's framing ("zero routing entry ... has no way to map"). The real remaining gaps are exactly the OTHER
-          two items this todo already lists and I did NOT resolve: (a) filtering the Tardis fetch to `type=='combo'` symbols
-          only (not yet touched — no code found that distinguishes combo from bare-Deribit symbols at the fetch layer), and
-          (b) whether `build_instrument_catalogue.py` currently tags catalogue rows `venue=DERIBIT-COMBO` — found a directly
-          relevant comment (`_incremental_merge_keys` docstring, `build_instrument_catalogue.py` ~L2458) stating the `venue`
-          FIELD carries "era-specific raw spelling (`DERIBIT-COMBO` in old rows vs `DERIBIT` in the window for the SAME
-          `instrument_id`)" — i.e. CURRENT/recent catalogue ingestion normalizes combo instruments to `venue=DERIBIT`, not
-          `DERIBIT-COMBO`. If true end-to-end, a venue-field-keyed catalogue lookup for `DERIBIT-COMBO` on RECENT dates
-          would find nothing regardless of exchange routing — the closure likely needs querying catalogue rows under
-          `venue=DERIBIT` and filtering to combo instrument_ids by pattern (Tardis combo symbols look like
-          `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` — distinctive `-CS-`/`-FS-` infixes) rather than relying on a
-          `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
-          (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
-          re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
+              `unified-api-contracts@f0dc61a2` (shipped — see the ship-blocker note below for the full trail) adds the
+              `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
+              own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
+              returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
+              (`return self._get_direct_tardis_match(base_venue)`), which catches ANY `"X-<suffix>"` venue whose base `X` has a
+              direct `tardis_to_venue` entry, regardless of the suffix's semantic meaning. This was true BEFORE my dict-entry
+              addition too — so **exchange-name resolution was never actually the blocker for DERIBIT-COMBO**, contradicting
+              this todo's framing ("zero routing entry ... has no way to map"). The real remaining gaps are exactly the OTHER
+              two items this todo already lists and I did NOT resolve: (a) filtering the Tardis fetch to `type=='combo'` symbols
+              only (not yet touched — no code found that distinguishes combo from bare-Deribit symbols at the fetch layer), and
+              (b) whether `build_instrument_catalogue.py` currently tags catalogue rows `venue=DERIBIT-COMBO` — found a directly
+              relevant comment (`_incremental_merge_keys` docstring, `build_instrument_catalogue.py` ~L2458) stating the `venue`
+              FIELD carries "era-specific raw spelling (`DERIBIT-COMBO` in old rows vs `DERIBIT` in the window for the SAME
+              `instrument_id`)" — i.e. CURRENT/recent catalogue ingestion normalizes combo instruments to `venue=DERIBIT`, not
+              `DERIBIT-COMBO`. If true end-to-end, a venue-field-keyed catalogue lookup for `DERIBIT-COMBO` on RECENT dates
+              would find nothing regardless of exchange routing — the closure likely needs querying catalogue rows under
+              `venue=DERIBIT` and filtering to combo instrument_ids by pattern (Tardis combo symbols look like
+              `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` — distinctive `-CS-`/`-FS-` infixes) rather than relying on a
+              `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
+              (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
+              re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
 
-          **Update 2026-07-13 (slot-2): part (a) was shipped later the same session (this note predates it) — checkbox is
-                                                          stale.** `_filter_bulk_rows_for_deribit_split` (`tardis_bulk_download.py:246`, wired into
-                                                          `_stream_finalise_chain_bulk` at line 329) isolates combo-vs-bare-option rows within Deribit's grouped OPTIONS
-                                                          bulk stream by symbol shape (combo symbols use `-CS-`/`-FS-` infixes that never match the bare-option regex) —
-                                                          exactly the "type=='combo' filtering" this todo asks for, just not keyed off Tardis's own `type` field (Tardis's
-                                                          grouped stream doesn't expose one). Not a static claim: I live-verified this TODAY via a real `opt-deribit-combo-2024`
-                                                          relaunch (see the OOM todo above) — day 1 (2024-01-01) correctly filtered to 0 kept combo rows (honest absence,
-                                                          matches the earlier-corroborated finding that 2024-01-01 had zero real combo trades), and the process reached
-                                                          day 2's real stream without any filtering-related error. **Part (a): effectively closed, just never flipped
-                                                          here.** Part (b) (catalogue `venue=` tagging) is unconfirmed either way, but is now lower-stakes than this todo
-                                                          assumed — my live verify shows the MTDS capture path itself does NOT depend on a catalogue `venue=DERIBIT-COMBO`
-                                                          lookup (it filters directly off the Tardis symbol stream, not a catalogue-driven instrument list), so a stale
-                                                          catalogue tag would not block real row capture the way this todo's framing implied. Leaving this checkbox open
-                                                          only for part (b), now correctly scoped as a catalogue-hygiene question, not a capture-blocking one.
+              **Update 2026-07-13 (slot-2): part (a) was shipped later the same session (this note predates it) — checkbox is
+                                                              stale.** `_filter_bulk_rows_for_deribit_split` (`tardis_bulk_download.py:246`, wired into
+                                                              `_stream_finalise_chain_bulk` at line 329) isolates combo-vs-bare-option rows within Deribit's grouped OPTIONS
+                                                              bulk stream by symbol shape (combo symbols use `-CS-`/`-FS-` infixes that never match the bare-option regex) —
+                                                              exactly the "type=='combo' filtering" this todo asks for, just not keyed off Tardis's own `type` field (Tardis's
+                                                              grouped stream doesn't expose one). Not a static claim: I live-verified this TODAY via a real `opt-deribit-combo-2024`
+                                                              relaunch (see the OOM todo above) — day 1 (2024-01-01) correctly filtered to 0 kept combo rows (honest absence,
+                                                              matches the earlier-corroborated finding that 2024-01-01 had zero real combo trades), and the process reached
+                                                              day 2's real stream without any filtering-related error. **Part (a): effectively closed, just never flipped
+                                                              here.** Part (b) (catalogue `venue=` tagging) is unconfirmed either way, but is now lower-stakes than this todo
+                                                              assumed — my live verify shows the MTDS capture path itself does NOT depend on a catalogue `venue=DERIBIT-COMBO`
+                                                              lookup (it filters directly off the Tardis symbol stream, not a catalogue-driven instrument list), so a stale
+                                                              catalogue tag would not block real row capture the way this todo's framing implied. Leaving this checkbox open
+                                                              only for part (b), now correctly scoped as a catalogue-hygiene question, not a capture-blocking one.
 
 - [x] ✅ [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
       `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
@@ -499,86 +499,86 @@ next session for another full VERIFY-then-fix cycle, not just the two known item
       deployment-service)
 
       **Update 2026-07-13T01:16-01:40Z (slot-7, data_engineering)**: re-dispatched for this exact todo. Tarball
-                                                      rebuilt fresh (mtds@58530378, deployment-service@1735a19). OKX side already closed (see below) — attempted
-                                                      DERIBIT-COMBO's remaining row-capture confirmation despite 3 production VMs still holding the Tardis lock (per
-                                                      this doc's own precedent that proceeding anyway can still yield clean signal). Got a genuine large real stream
-                                                      through on 2024-01-03 (59.7M rows, no OOM on `e2-highmem-8`) but 0 rows post-filter (honest-absence, not yet
-                                                      independently spot-checked); the other 3 dates sampled hit the still-live concurrent-IP-lock or an unrelated
-                                                      transient 500. **Still open** — see the full "VERIFY re-attempt" section near the end of this doc for the
-                                                      complete trail. DERIBIT-COMBO's code is now proven correct under real load twice over; the sole remaining
-                                                      blocker is the shared P0 lock contention, not a code defect.
+                                                          rebuilt fresh (mtds@58530378, deployment-service@1735a19). OKX side already closed (see below) — attempted
+                                                          DERIBIT-COMBO's remaining row-capture confirmation despite 3 production VMs still holding the Tardis lock (per
+                                                          this doc's own precedent that proceeding anyway can still yield clean signal). Got a genuine large real stream
+                                                          through on 2024-01-03 (59.7M rows, no OOM on `e2-highmem-8`) but 0 rows post-filter (honest-absence, not yet
+                                                          independently spot-checked); the other 3 dates sampled hit the still-live concurrent-IP-lock or an unrelated
+                                                          transient 500. **Still open** — see the full "VERIFY re-attempt" section near the end of this doc for the
+                                                          complete trail. DERIBIT-COMBO's code is now proven correct under real load twice over; the sole remaining
+                                                          blocker is the shared P0 lock contention, not a code defect.
 
-                                                      **Update 2026-07-13**: OKX is now CLOSED — see the `[x]` entry near line 599 below (post-perf-fix relaunch,
-                                                                          102,267,484 rows confirmed landed via row-group pushdown, exact match to the streamed count). This top-level
-                                                                          checkbox stays open pending DERIBIT-COMBO, which is blocked by a separate, unrelated OOM bug (see the
-                                                                          "DERIBIT-COMBO per-date catalog OOM" follow-up further below) — not yet attempted post-fix.
+                                                          **Update 2026-07-13**: OKX is now CLOSED — see the `[x]` entry near line 599 below (post-perf-fix relaunch,
+                                                                              102,267,484 rows confirmed landed via row-group pushdown, exact match to the streamed count). This top-level
+                                                                              checkbox stays open pending DERIBIT-COMBO, which is blocked by a separate, unrelated OOM bug (see the
+                                                                              "DERIBIT-COMBO per-date catalog OOM" follow-up further below) — not yet attempted post-fix.
 
-                                                                          **🚧 PARTIAL PROGRESS 2026-07-12 (slot-5, data_engineering)** — dispatched for this exact todo. Rebuilt the
-                                                                                                                      mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI --commit`, via the workaround below), confirmed
-                                                                                                                      fresh via GCS manifest read-back: `mtds-code.manifest.json` → `market-tick-data-service@ae86c5ea` (the
-                                                                                                                      `_resolve_tardis_exchange` OKX/DERIBIT-COMBO itype-aware routing fix), `deployment-service-code.manifest.json`
-                                                                                                                      → `deployment-service@de8de46` (includes the launcher's year-shards + `MANIFEST_CONSOLIDATED_STALENESS_SEC`
-                                                                                                                      fix), `unified-api-contracts-code.manifest.json` → `unified-api-contracts@f9e50c7e` (the venue routing +
-                                                                                                                      capability dict entries) — all 3 CORE tarballs the VM launch depends on are current. **Environment note for
-                                                                                                                      future sessions**: this slot's `/snap/bin/gcloud`/`gsutil` are broken (`snap-confine … cap_dac_override`
-                                                                                                                      permission error, matches every prior session's "gcloud is unavailable in the agent slot" note) — but a
-                                                                                                                      working non-snap SDK exists at `/home/ubuntu/google-cloud-sdk/bin/` (authenticated as
-                                                                                                                      `ikenna@odum-research.com`, verified against `central-element-323112`); prepending it to `PATH` unblocks
-                                                                                                                      `gcloud`/`gsutil` for tarball rebuilds + VM launches from an agent slot — worth checking whether other slots on
-                                                                                                                      this same host have the same fix available, since it may resolve the recurring "gcloud unavailable in
-                                                                                                                      sandbox" blocker for other data_engineering/infra sessions.
+                                                                              **🚧 PARTIAL PROGRESS 2026-07-12 (slot-5, data_engineering)** — dispatched for this exact todo. Rebuilt the
+                                                                                                                          mtds-code tarball (`create-code-tarballs.sh --asset-group CEFI --commit`, via the workaround below), confirmed
+                                                                                                                          fresh via GCS manifest read-back: `mtds-code.manifest.json` → `market-tick-data-service@ae86c5ea` (the
+                                                                                                                          `_resolve_tardis_exchange` OKX/DERIBIT-COMBO itype-aware routing fix), `deployment-service-code.manifest.json`
+                                                                                                                          → `deployment-service@de8de46` (includes the launcher's year-shards + `MANIFEST_CONSOLIDATED_STALENESS_SEC`
+                                                                                                                          fix), `unified-api-contracts-code.manifest.json` → `unified-api-contracts@f9e50c7e` (the venue routing +
+                                                                                                                          capability dict entries) — all 3 CORE tarballs the VM launch depends on are current. **Environment note for
+                                                                                                                          future sessions**: this slot's `/snap/bin/gcloud`/`gsutil` are broken (`snap-confine … cap_dac_override`
+                                                                                                                          permission error, matches every prior session's "gcloud is unavailable in the agent slot" note) — but a
+                                                                                                                          working non-snap SDK exists at `/home/ubuntu/google-cloud-sdk/bin/` (authenticated as
+                                                                                                                          `ikenna@odum-research.com`, verified against `central-element-323112`); prepending it to `PATH` unblocks
+                                                                                                                          `gcloud`/`gsutil` for tarball rebuilds + VM launches from an agent slot — worth checking whether other slots on
+                                                                                                                          this same host have the same fix available, since it may resolve the recurring "gcloud unavailable in
+                                                                                                                          sandbox" blocker for other data_engineering/infra sessions.
 
-                                                                                                                      **Did NOT launch the VMs.** Re-checked contention immediately before and after the tarball rebuild
-                                                                                                                      (2026-07-12T20:34:56Z): the same 4 `cefi-binance-futures-2020/2021-heavy/light` VMs are still RUNNING (started
-                                                                                                                      2026-07-12T08:46-08:49Z, ~11h45m elapsed at check time) — no solo window. Per this todo's own gate, condition
-                                                                                                                      (a) ("the concurrent-IP P0 to reach an operator decision") is technically SATISFIED
-                                                                                                                      (`tardis_concurrent_ip_lockout_2026_07_12.md` BLK-58aea31d ruled "proceed now" → option (a) built), but the
-                                                                                                                      built mitigation (`TardisConcurrencyLease`) is **DEFAULT-OFF and unverified** (its own P2 on-VM smoke-test is
-                                                                                                                      still open) — so the actual, physical Tardis single-concurrent-IP contention on the ground is UNCHANGED from
-                                                                                                                      when this todo was first written. Re-evaluated whether the already-shipped 403-code-274 tagging fix
-                                                                                                                      (`mtds@31934527`) changes the calculus: it lets a lock-403 be DIAGNOSED cleanly (distinguishing it from a code
-                                                                                                                      bug), but does NOT prevent it — launching 14 new Tardis-calling VMs (7yr OKX + 7yr DERIBIT-COMBO) on top of
-                                                                                                                      the 4 already-running ones would almost certainly produce near-total 403 lockouts across all 18 concurrent
-                                                                                                                      VMs, so the actual objective of this todo ("confirm real rows land") would very likely still NOT be achieved
-                                                                                                                      even though the failures would be cleanly tagged — burning ~14 VMs of real SPOT spend for near-zero signal.
-                                                                                                                      Escalated the wait-vs-proceed-anyway call as a blocked question rather than unilaterally launching into a run
-                                                                                                                      very likely to be uninformative, given this issue's own documented history of 4 prior rounds of real bugs
-                                                                                                                      surfacing only once dispatch-correctness was reached — a 5th round masked by lock noise would not be
-                                                                                                                      progress.
+                                                                                                                          **Did NOT launch the VMs.** Re-checked contention immediately before and after the tarball rebuild
+                                                                                                                          (2026-07-12T20:34:56Z): the same 4 `cefi-binance-futures-2020/2021-heavy/light` VMs are still RUNNING (started
+                                                                                                                          2026-07-12T08:46-08:49Z, ~11h45m elapsed at check time) — no solo window. Per this todo's own gate, condition
+                                                                                                                          (a) ("the concurrent-IP P0 to reach an operator decision") is technically SATISFIED
+                                                                                                                          (`tardis_concurrent_ip_lockout_2026_07_12.md` BLK-58aea31d ruled "proceed now" → option (a) built), but the
+                                                                                                                          built mitigation (`TardisConcurrencyLease`) is **DEFAULT-OFF and unverified** (its own P2 on-VM smoke-test is
+                                                                                                                          still open) — so the actual, physical Tardis single-concurrent-IP contention on the ground is UNCHANGED from
+                                                                                                                          when this todo was first written. Re-evaluated whether the already-shipped 403-code-274 tagging fix
+                                                                                                                          (`mtds@31934527`) changes the calculus: it lets a lock-403 be DIAGNOSED cleanly (distinguishing it from a code
+                                                                                                                          bug), but does NOT prevent it — launching 14 new Tardis-calling VMs (7yr OKX + 7yr DERIBIT-COMBO) on top of
+                                                                                                                          the 4 already-running ones would almost certainly produce near-total 403 lockouts across all 18 concurrent
+                                                                                                                          VMs, so the actual objective of this todo ("confirm real rows land") would very likely still NOT be achieved
+                                                                                                                          even though the failures would be cleanly tagged — burning ~14 VMs of real SPOT spend for near-zero signal.
+                                                                                                                          Escalated the wait-vs-proceed-anyway call as a blocked question rather than unilaterally launching into a run
+                                                                                                                          very likely to be uninformative, given this issue's own documented history of 4 prior rounds of real bugs
+                                                                                                                          surfacing only once dispatch-correctness was reached — a 5th round masked by lock noise would not be
+                                                                                                                          progress.
 
-                                                                                                                  **Update (data_engineering slot-2, 2026-07-12T21:44-21:56Z) — proceeded anyway (per the sibling
-                                                                                                                  COINBASE-FUTURES VERIFY's empirical result: contention causes retriable 403s, not a hard block) and got a clean,
-                                                                                                                  informative signal — the "burn 14 VMs for near-zero signal" fear did NOT materialize.** Rebuilt/confirmed the
-                                                                                                                  mtds tarball fresh (`c7065850`, matches HEAD), launched all 14 VMs (7yr OKX + 7yr DERIBIT-COMBO) via
-                                                                                                                  `/snap/google-cloud-cli/current/bin/gcloud` (a second working non-snap-wrapper path, alongside slot-9's
-                                                                                                                  `/home/ubuntu/google-cloud-sdk/bin/` — both resolve the recurring sandbox `gcloud` blocker). **Dispatch is
-                                                                                                                  confirmed fully correct on both venues** — `venues=['OKX']`/`['DERIBIT-COMBO']` resolve to the right exchanges
-                                                                                                                  (`okex-options`, `deribit`), no `ManifestConsolidatorStaleError`, no `OKXAdapter` fallback, no UAC
-                                                                                                                  capability-drop — all 4 sub-bugs (A-D) hold. **But found 2 NEW, distinct, real bugs 5 rounds deep, neither a
-                                                                                                                  regression of A-D:**
+                                                                                                                      **Update (data_engineering slot-2, 2026-07-12T21:44-21:56Z) — proceeded anyway (per the sibling
+                                                                                                                      COINBASE-FUTURES VERIFY's empirical result: contention causes retriable 403s, not a hard block) and got a clean,
+                                                                                                                      informative signal — the "burn 14 VMs for near-zero signal" fear did NOT materialize.** Rebuilt/confirmed the
+                                                                                                                      mtds tarball fresh (`c7065850`, matches HEAD), launched all 14 VMs (7yr OKX + 7yr DERIBIT-COMBO) via
+                                                                                                                      `/snap/google-cloud-cli/current/bin/gcloud` (a second working non-snap-wrapper path, alongside slot-9's
+                                                                                                                      `/home/ubuntu/google-cloud-sdk/bin/` — both resolve the recurring sandbox `gcloud` blocker). **Dispatch is
+                                                                                                                      confirmed fully correct on both venues** — `venues=['OKX']`/`['DERIBIT-COMBO']` resolve to the right exchanges
+                                                                                                                      (`okex-options`, `deribit`), no `ManifestConsolidatorStaleError`, no `OKXAdapter` fallback, no UAC
+                                                                                                                      capability-drop — all 4 sub-bugs (A-D) hold. **But found 2 NEW, distinct, real bugs 5 rounds deep, neither a
+                                                                                                                      regression of A-D:**
 
-                                                                                                                  1. **OKX bulk options_chain OOM/disk-full**: `Tardis stream processing failed ... [Errno 28] No space left on
-                                                                                                                     device` after 180s of streaming. The launcher's own comment already flags Deribit-style options_chain as
-                                                                                                                     disk-heavy ("thousands of strikes/expiries per underlying"); OKX's real options universe apparently exceeds
-                                                                                                                     the `e2-standard-4` disk allotment this launcher provisions. Needs either a bigger disk/machine type for OKX
-                                                                                                                     specifically, or a streaming-chunked write instead of buffering the full stream to `/tmp` first.
-                                                                                                                  2. **DERIBIT-COMBO bulk stream succeeds but yields 0 rows after combo-filtering — confirmed systemic across 2
-                                                                                                                     years (2026-01-01 AND 2025-01-01, both identical)**: `Tardis streaming success: 58830627 rows` /
-                                                                                                                     `79819431 rows` (real, massive successful fetches — 2.6-3.9GB), immediately followed by
-                                                                                                                     `TardisAdapter: bulk deribit/OPTIONS/options_chain parquet empty after streaming` →
-                                                                                                                     `download_batch: deribit <date> — 0 records`. The bulk grouped-'OPTIONS' fetch pulls Deribit's FULL option
-                                                                                                                     chain (bare options + combos mixed, Tardis doesn't separate them at the transport level) — whatever
-                                                                                                                     downstream step is supposed to isolate `type=='combo'` rows for the DERIBIT-COMBO canonical_venue (mirroring
-                                                                                                                     the per-symbol path's `_classify_row_instrument_type` combo handling, per this issue's earlier Bug-D-adjacent
-                                                                                                                     work) is either not wired into the BULK path at all, or is filtering everything out incorrectly. This is a
-                                                                                                                     DIFFERENT code path from the per-symbol fix already shipped (`market-tick-data-service@1bc4e000`/`7dbd19f4`)
-                                                                                                                     — those only cover `_run_per_symbol_batch`, not `_download_bulk`.
+                                                                                                                      1. **OKX bulk options_chain OOM/disk-full**: `Tardis stream processing failed ... [Errno 28] No space left on
+                                                                                                                         device` after 180s of streaming. The launcher's own comment already flags Deribit-style options_chain as
+                                                                                                                         disk-heavy ("thousands of strikes/expiries per underlying"); OKX's real options universe apparently exceeds
+                                                                                                                         the `e2-standard-4` disk allotment this launcher provisions. Needs either a bigger disk/machine type for OKX
+                                                                                                                         specifically, or a streaming-chunked write instead of buffering the full stream to `/tmp` first.
+                                                                                                                      2. **DERIBIT-COMBO bulk stream succeeds but yields 0 rows after combo-filtering — confirmed systemic across 2
+                                                                                                                         years (2026-01-01 AND 2025-01-01, both identical)**: `Tardis streaming success: 58830627 rows` /
+                                                                                                                         `79819431 rows` (real, massive successful fetches — 2.6-3.9GB), immediately followed by
+                                                                                                                         `TardisAdapter: bulk deribit/OPTIONS/options_chain parquet empty after streaming` →
+                                                                                                                         `download_batch: deribit <date> — 0 records`. The bulk grouped-'OPTIONS' fetch pulls Deribit's FULL option
+                                                                                                                         chain (bare options + combos mixed, Tardis doesn't separate them at the transport level) — whatever
+                                                                                                                         downstream step is supposed to isolate `type=='combo'` rows for the DERIBIT-COMBO canonical_venue (mirroring
+                                                                                                                         the per-symbol path's `_classify_row_instrument_type` combo handling, per this issue's earlier Bug-D-adjacent
+                                                                                                                         work) is either not wired into the BULK path at all, or is filtering everything out incorrectly. This is a
+                                                                                                                         DIFFERENT code path from the per-symbol fix already shipped (`market-tick-data-service@1bc4e000`/`7dbd19f4`)
+                                                                                                                         — those only cover `_run_per_symbol_batch`, not `_download_bulk`.
 
-                                                                                                                  **Killed all 14 VMs** once both patterns were confirmed reproducible (2 years each) — no further relaunch could
-                                                                                                                  produce a real row for either without landing these fixes first. Filed as new follow-up todos below rather than
-                                                                                                                  attempting a 6th round of fixes this session (context-constrained). **Net: dispatch-correctness (A-D) is now
-                                                                                                                  FULLY VERIFIED live** — the remaining blockers are two new, narrowly-scoped, well-evidenced bugs in the bulk
-                                                                                                                  download path specifically, not a regression of anything already fixed.
+                                                                                                                      **Killed all 14 VMs** once both patterns were confirmed reproducible (2 years each) — no further relaunch could
+                                                                                                                      produce a real row for either without landing these fixes first. Filed as new follow-up todos below rather than
+                                                                                                                      attempting a 6th round of fixes this session (context-constrained). **Net: dispatch-correctness (A-D) is now
+                                                                                                                      FULLY VERIFIED live** — the remaining blockers are two new, narrowly-scoped, well-evidenced bugs in the bulk
+                                                                                                                      download path specifically, not a regression of anything already fixed.
 
 ## New follow-up todos (slot-2, 2026-07-12T21:56Z — round 5 findings)
 
@@ -794,49 +794,49 @@ DERIBIT-COMBO blocked by a new OOM follow-up below. `[VERIFY]` remains open.
       already owns the live re-launch + real-row confirmation and will exercise this fix as part of that pass.
 
       **⚠️ Live re-verify 2026-07-13T00:34-00:42Z (slot-2): the fix did NOT prevent the OOM — a fresh kill reproduced on
-                                                                  this exact run.** Rebuilt the tarball pinned to `f8cab3f0` (confirmed fresh via GCS manifest — includes both this
-                                                                  fix and `b549b580`), relaunched `opt-deribit-combo-2024` solo (`--venue DERIBIT-COMBO --year 2024`). Day 1
-                                                                  (2024-01-01) streamed successfully (39,226,083 rows, `peak_rss=1288.8MB` — cheap) and correctly produced 0
-                                                                  captured rows (honest absence, matches the already-corroborated finding above), completing cleanly at 00:40:11
-                                                                  ("Processed date=2024-01-01: 0 venues ok, 0 failed, 0 skipped, 0 total records"). The once-per-process catalog
-                                                                  registration then fired for the FIRST time right after (00:38:53-00:39:23, ~1.6M rows across cefi/defi/tradfi —
-                                                                  confirms the fix IS wired in, not skipped). Live `ps`/`free` immediately after showed RSS at **12.1GB/15GB
-                                                                  (80.5% used, 3.1GB available)** — already in the same danger zone as the original crash (~84%) from THIS SINGLE
-                                                                  catalog load alone, before day 2 even starts. Process (`pid=7454`) was `Killed` shortly after (`rc=137`,
-                                                                  `EXIT_STATUS=137` on GCS, deployment `a879760d`), confirmed via a follow-up `ps`/`free` check showing the PID
-                                                                  gone and memory already reclaimed (post-mortem, not a healthy release). **Reframes the bug**: the once-per-process
-                                                                  guard correctly eliminates the N-times RE-load, but a SINGLE catalog load (~1.6M rows across 3 readers) combined
-                                                                  with DERIBIT-COMBO's own bulk-stream overhead already consumes ~80%+ of a 15GB `e2-standard-4` — the original
-                                                                  "day 2" framing was an artifact of WHEN the 2nd (now eliminated) reload happened to tip it over, not evidence
-                                                                  that a single load is cheap. **Not yet root-caused further this session** (would need the todo's own originally-
-                                                                  suggested memory-tracing profile of the catalog-reader construction itself, not just the once-vs-repeated
-                                                                  question) — the todo's other suggested mitigation, bumping `MACHINE_TYPE` for DERIBIT-COMBO shards specifically
-                                                                  in `launch-targeted-options-chain-backfill.sh` (currently `e2-standard-4`, 15GB), is the fastest unblock if a
-                                                                  deeper leak isn't found. Re-opening for further work — do not treat this as closed pending either a memory
-                                                                  profile or a machine-type bump + re-verify.
+                                                                      this exact run.** Rebuilt the tarball pinned to `f8cab3f0` (confirmed fresh via GCS manifest — includes both this
+                                                                      fix and `b549b580`), relaunched `opt-deribit-combo-2024` solo (`--venue DERIBIT-COMBO --year 2024`). Day 1
+                                                                      (2024-01-01) streamed successfully (39,226,083 rows, `peak_rss=1288.8MB` — cheap) and correctly produced 0
+                                                                      captured rows (honest absence, matches the already-corroborated finding above), completing cleanly at 00:40:11
+                                                                      ("Processed date=2024-01-01: 0 venues ok, 0 failed, 0 skipped, 0 total records"). The once-per-process catalog
+                                                                      registration then fired for the FIRST time right after (00:38:53-00:39:23, ~1.6M rows across cefi/defi/tradfi —
+                                                                      confirms the fix IS wired in, not skipped). Live `ps`/`free` immediately after showed RSS at **12.1GB/15GB
+                                                                      (80.5% used, 3.1GB available)** — already in the same danger zone as the original crash (~84%) from THIS SINGLE
+                                                                      catalog load alone, before day 2 even starts. Process (`pid=7454`) was `Killed` shortly after (`rc=137`,
+                                                                      `EXIT_STATUS=137` on GCS, deployment `a879760d`), confirmed via a follow-up `ps`/`free` check showing the PID
+                                                                      gone and memory already reclaimed (post-mortem, not a healthy release). **Reframes the bug**: the once-per-process
+                                                                      guard correctly eliminates the N-times RE-load, but a SINGLE catalog load (~1.6M rows across 3 readers) combined
+                                                                      with DERIBIT-COMBO's own bulk-stream overhead already consumes ~80%+ of a 15GB `e2-standard-4` — the original
+                                                                      "day 2" framing was an artifact of WHEN the 2nd (now eliminated) reload happened to tip it over, not evidence
+                                                                      that a single load is cheap. **Not yet root-caused further this session** (would need the todo's own originally-
+                                                                      suggested memory-tracing profile of the catalog-reader construction itself, not just the once-vs-repeated
+                                                                      question) — the todo's other suggested mitigation, bumping `MACHINE_TYPE` for DERIBIT-COMBO shards specifically
+                                                                      in `launch-targeted-options-chain-backfill.sh` (currently `e2-standard-4`, 15GB), is the fastest unblock if a
+                                                                      deeper leak isn't found. Re-opening for further work — do not treat this as closed pending either a memory
+                                                                      profile or a machine-type bump + re-verify.
 
-                                                              **✅ RE-CLOSED 2026-07-13T00:52-01:03Z (slot-2): machine-type bump confirmed to fix it, live.** Applied the
-                                                              todo's own faster mitigation instead of a deeper memory-tracing profile: added `MACHINE_TYPE_DERIBIT_COMBO`
-                                                              (defaults `e2-highmem-8`, 64GB) to `launch-targeted-options-chain-backfill.sh`, scoped ONLY to the
-                                                              `DERIBIT-COMBO` shard (`deployment-service@1735a19` — other venues on this launcher stay at `e2-standard-4`,
-                                                              proven fine this session). Relaunched `opt-deribit-combo-2024` on the bumped machine (confirmed via
-                                                              `gcloud ... describe --format=value(machineType)`). Day 1 (2024-01-01) streamed + processed cleanly (honest 0
-                                                              rows again, `peak_rss=8690.7MB` for the stream itself — higher than the 15GB run's 1.28GB, plausibly more
-                                                              generous OS buffering on the bigger box, not a concern given the ceiling moved too). Catalog registration fired
-                                                              once (00:58:05-00:58:06) and Tier-3 sentinel fan-out completed — the EXACT point that killed the process on both
-                                                              prior attempts. Live `ps`/`free` immediately after: RSS **7.9GB/62GB (13%), 52GB available** — nowhere near the
-                                                              danger zone. **Day 1 AND day 2 both completed** ("Processed date=2024-01-01: ... 0 total records" then
-                                                              "Processed date=2024-01-02: 0 venues ok, 1 failed, 0 skipped, 0 total records") — day 2's one failure was the
-                                                              SEPARATE, already-tracked `tardis_concurrent_ip_lockout_2026_07_12.md` P0 (`Tardis HTTP 403 code=274
-                                                              concurrent-IP-lock`, cleanly shard-isolated, not a crash), not a repeat OOM. Confirmed process still alive and
-                                                              healthy (RSS 9.2GB/62GB, `Rl`, 109% CPU) after day 2 before killing the VM manually (further days would only
-                                                              re-hit the same concurrent-IP-lock while the other 4 long-running cefi VMs hold it — no new signal, avoided the
-                                                              spend). **The OOM is fixed for DERIBIT-COMBO's backfill; the concurrent-IP-lock is a separate, already-tracked,
-                                                              pre-existing blocker for full-year completion** (needs either the P0's `TardisConcurrencyLease` enablement or a
-                                                              genuinely solo window, same as every other venue this session). Root cause of why a single ~1.6M-row catalog
-                                                              load costs ~80% of 15GB is still not deeply profiled — the mitigation unblocks the venue without requiring that
-                                                              profile; left as a nice-to-have, not tracked as a separate open item (no operational impact once headroom is
-                                                              this large).
+                                                                  **✅ RE-CLOSED 2026-07-13T00:52-01:03Z (slot-2): machine-type bump confirmed to fix it, live.** Applied the
+                                                                  todo's own faster mitigation instead of a deeper memory-tracing profile: added `MACHINE_TYPE_DERIBIT_COMBO`
+                                                                  (defaults `e2-highmem-8`, 64GB) to `launch-targeted-options-chain-backfill.sh`, scoped ONLY to the
+                                                                  `DERIBIT-COMBO` shard (`deployment-service@1735a19` — other venues on this launcher stay at `e2-standard-4`,
+                                                                  proven fine this session). Relaunched `opt-deribit-combo-2024` on the bumped machine (confirmed via
+                                                                  `gcloud ... describe --format=value(machineType)`). Day 1 (2024-01-01) streamed + processed cleanly (honest 0
+                                                                  rows again, `peak_rss=8690.7MB` for the stream itself — higher than the 15GB run's 1.28GB, plausibly more
+                                                                  generous OS buffering on the bigger box, not a concern given the ceiling moved too). Catalog registration fired
+                                                                  once (00:58:05-00:58:06) and Tier-3 sentinel fan-out completed — the EXACT point that killed the process on both
+                                                                  prior attempts. Live `ps`/`free` immediately after: RSS **7.9GB/62GB (13%), 52GB available** — nowhere near the
+                                                                  danger zone. **Day 1 AND day 2 both completed** ("Processed date=2024-01-01: ... 0 total records" then
+                                                                  "Processed date=2024-01-02: 0 venues ok, 1 failed, 0 skipped, 0 total records") — day 2's one failure was the
+                                                                  SEPARATE, already-tracked `tardis_concurrent_ip_lockout_2026_07_12.md` P0 (`Tardis HTTP 403 code=274
+                                                                  concurrent-IP-lock`, cleanly shard-isolated, not a crash), not a repeat OOM. Confirmed process still alive and
+                                                                  healthy (RSS 9.2GB/62GB, `Rl`, 109% CPU) after day 2 before killing the VM manually (further days would only
+                                                                  re-hit the same concurrent-IP-lock while the other 4 long-running cefi VMs hold it — no new signal, avoided the
+                                                                  spend). **The OOM is fixed for DERIBIT-COMBO's backfill; the concurrent-IP-lock is a separate, already-tracked,
+                                                                  pre-existing blocker for full-year completion** (needs either the P0's `TardisConcurrencyLease` enablement or a
+                                                                  genuinely solo window, same as every other venue this session). Root cause of why a single ~1.6M-row catalog
+                                                                  load costs ~80% of 15GB is still not deeply profiled — the mitigation unblocks the venue without requiring that
+                                                                  profile; left as a nice-to-have, not tracked as a separate open item (no operational impact once headroom is
+                                                                  this large).
 
 ## Follow-up (slot-2, 2026-07-12T23:2x-23:44Z — superseded 69f14aa5, closed the actual O(rows) cost)
 
@@ -1369,41 +1369,41 @@ materially bigger, separate scope than this todo's "rebuild tarball, relaunch, c
       so each combo lands in at least one by_date snapshot inside its real listing window.
 
       **What I ran** (real production infra, `central-element-323112`, no mocks):
-              1. `python -m instruments_service --operation instruments --mode batch --asset-group cefi --venues
-                 DERIBIT-COMBO --start-date 2022-08-23 --end-date 2026-07-14 --force` — 1,422 dates processed in ~45 min
-                 (single local process; the adapter's 24h Tardis-fetch cache made every date after the first a cheap
-                 in-memory re-filter, no VM needed). Zero errors, zero empty-record dates across the full run — confirmed via
-                 grep of the full run log (18,966 lines, 0 ERROR/Traceback/Exception hits).
-              2. `python scripts/build_instrument_catalogue.py --asset-group cefi --mode full` (dry-run first, then
-                 promoted) — `--mode full` was required since the default `incremental` mode only re-reads a trailing window
-                 and would never reach back to 2022. Rolled up the FULL cefi `by_date` corpus (53,040 parquet files) into
-                 427,496 catalogue rows (up from 358,455), monotonic guard `ACCEPT` (new >= current), promoted to
-                 `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`.
+                  1. `python -m instruments_service --operation instruments --mode batch --asset-group cefi --venues
+                     DERIBIT-COMBO --start-date 2022-08-23 --end-date 2026-07-14 --force` — 1,422 dates processed in ~45 min
+                     (single local process; the adapter's 24h Tardis-fetch cache made every date after the first a cheap
+                     in-memory re-filter, no VM needed). Zero errors, zero empty-record dates across the full run — confirmed via
+                     grep of the full run log (18,966 lines, 0 ERROR/Traceback/Exception hits).
+                  2. `python scripts/build_instrument_catalogue.py --asset-group cefi --mode full` (dry-run first, then
+                     promoted) — `--mode full` was required since the default `incremental` mode only re-reads a trailing window
+                     and would never reach back to 2022. Rolled up the FULL cefi `by_date` corpus (53,040 parquet files) into
+                     427,496 catalogue rows (up from 358,455), monotonic guard `ACCEPT` (new >= current), promoted to
+                     `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`.
 
-              **Verified result** (direct pyarrow read of the promoted catalogue): DERIBIT-COMBO now has **68,847 rows** (up
-              from 4) — an EXACT match to Tardis's live-confirmed combo-symbol count — spanning `available_from` 2022-08-23 to
-              2026-07-13, e.g. `DERIBIT-COMBO:COMBO:BTC-FS-30SEP22_PERP` (available_from=2022-08-23,
-              available_to=2022-10-01) through live-today combo spreads with `available_to=None`. `mvp` is `False` for all
-              68,847 rows — this is CORRECT and UNCHANGED behaviour, not a bug: UAC's `CeFiMvpRule.instrument_types`
-              (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431) does
-              not include `"COMBO"`, so `is_mvp(...)` was already returning `False` for the 4 pre-existing rows too —
-              populating `available_from`/`available_to` correctly does not and should not change that predicate's output.
+                  **Verified result** (direct pyarrow read of the promoted catalogue): DERIBIT-COMBO now has **68,847 rows** (up
+                  from 4) — an EXACT match to Tardis's live-confirmed combo-symbol count — spanning `available_from` 2022-08-23 to
+                  2026-07-13, e.g. `DERIBIT-COMBO:COMBO:BTC-FS-30SEP22_PERP` (available_from=2022-08-23,
+                  available_to=2022-10-01) through live-today combo spreads with `available_to=None`. `mvp` is `False` for all
+                  68,847 rows — this is CORRECT and UNCHANGED behaviour, not a bug: UAC's `CeFiMvpRule.instrument_types`
+                  (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431) does
+                  not include `"COMBO"`, so `is_mvp(...)` was already returning `False` for the 4 pre-existing rows too —
+                  populating `available_from`/`available_to` correctly does not and should not change that predicate's output.
 
-              **Downstream verification** (read-only, via a fresh sub-agent, no code changes): confirmed
-              `market_tick_data_service/market_interface/adapters/tradfi/tardis_symbol_resolution.py::_catalogue_symbols_for_venue_date`
-              (lines 209-301) correctly reads the new catalogue data — calling it live for `DERIBIT-COMBO`/`2026-07-11` with
-              `MTDS_CEFI_INCLUDE_NON_MVP=true` set resolves **387 real symbols** (e.g. `BTC-CCAL-17JUL26_10JUL26-63000`),
-              proving the backfilled data is genuinely capture-ready. **Without** that env var (the function's unconditional
-              `mvp==True` gate, lines 273-281) it still resolves to 0 symbols — this is the SAME already-identified, separate,
-              cross-repo gap (UAC's `CeFiMvpRule.instrument_types` missing `"COMBO"`) this doc's earlier 2026-07-14T10:55Z
-              entry already named; NOT something this backfill task should or can silently fix (changes MTDS
-              capture-universe denominator behaviour for a decision the operator hasn't ruled on — see the new follow-up todo
-              below). The manifest-relabel script `scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py`
-              (`empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]`, ~22-day + long-tail window) is now stale given
-              both this backfill AND the adapter's own 2026-07-14 docstring fix — flagged as a companion cleanup, not fixed
-              here (out of this task's scope; the manifest and the catalogue are different GCS objects/buckets).
+                  **Downstream verification** (read-only, via a fresh sub-agent, no code changes): confirmed
+                  `market_tick_data_service/market_interface/adapters/tradfi/tardis_symbol_resolution.py::_catalogue_symbols_for_venue_date`
+                  (lines 209-301) correctly reads the new catalogue data — calling it live for `DERIBIT-COMBO`/`2026-07-11` with
+                  `MTDS_CEFI_INCLUDE_NON_MVP=true` set resolves **387 real symbols** (e.g. `BTC-CCAL-17JUL26_10JUL26-63000`),
+                  proving the backfilled data is genuinely capture-ready. **Without** that env var (the function's unconditional
+                  `mvp==True` gate, lines 273-281) it still resolves to 0 symbols — this is the SAME already-identified, separate,
+                  cross-repo gap (UAC's `CeFiMvpRule.instrument_types` missing `"COMBO"`) this doc's earlier 2026-07-14T10:55Z
+                  entry already named; NOT something this backfill task should or can silently fix (changes MTDS
+                  capture-universe denominator behaviour for a decision the operator hasn't ruled on — see the new follow-up todo
+                  below). The manifest-relabel script `scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py`
+                  (`empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]`, ~22-day + long-tail window) is now stale given
+                  both this backfill AND the adapter's own 2026-07-14 docstring fix — flagged as a companion cleanup, not fixed
+                  here (out of this task's scope; the manifest and the catalogue are different GCS objects/buckets).
 
-- [ ] [SCRIPT] P2. **Operator decision needed** (new, slot-15 2026-07-14): `unified-api-contracts`'s
+- [x] ✅ [SCRIPT] P2. **Operator decision needed** (new, slot-15 2026-07-14): `unified-api-contracts`'s
       `CeFiMvpRule.instrument_types` (`unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431)
       does not include `"COMBO"`, so `is_mvp(...)` unconditionally returns `False` for every DERIBIT-COMBO catalogue row
       regardless of `available_from`/`available_to` — this is why the now-fully-populated 68,847-row catalogue (todo
@@ -1416,7 +1416,19 @@ materially bigger, separate scope than this todo's "rebuild tarball, relaunch, c
       DERIBIT-COMBO capture launcher instead. (repo: unified-api-contracts or deployment-service, depending on the
       decision) — big finding (data-correctness, cross-repo) per this doc's own history (operator decision #6,
       2026-07-10, already set the precedent that DERIBIT-COMBO's MVP scope is an explicit operator call, not an inferred
-      default).
+      default). **✅ CLOSED 2026-07-16 (slot-5, data_engineering)** — filed as `/blocked` `BLK-985d97cf` with options
+      (a)/(b) + recommendation (a); operator answered "proceed now" (with (a) as the implicitly-approved
+      recommendation). Shipped `unified-api-contracts@bd442418`: added `"COMBO"` to `CeFiMvpRule.instrument_types`,
+      bumped `MVP_SCOPE_CONFIG_VERSION` 15→16. No other code change needed — the existing DERIBIT-COMBO
+      `venue_data_types` override (`{trades, book_snapshot_5}`, operator decision #6, 2026-07-10) already wins over any
+      per-instrument_type default regardless of instrument_type, so this does not mint a phantom `options_chain` cell;
+      `"COMBO"` is scoped to CeFi's DERIBIT-COMBO venue only (TradFi's Databento spread/bag `"COMBO"` rows route through
+      the separate `TradFiMvpRule`, unaffected). 6 new regression tests (`TestDeribitComboInstrumentTypeV16`); updated 2
+      pre-existing tests whose fixtures assumed `"COMBO"` was still excluded
+      (`test_non_mvp_instrument_type_returns_false` now uses `"POOL"` as its non-MVP-itype example;
+      `test_config_version_is_latest` pinned to 16). Full `quality-gates.sh` green (235s), sentinel-verified quickmerge.
+      Real-row capture confirmation (the doc's own still-open `[VERIFY]` todo above) is unaffected by this change and
+      remains separately gated on the Tardis concurrent-IP-lock P0.
 - [x] ✅ [SCRIPT] P3. deployment-service: `setup-data-pipeline-vm.sh` silently drops unrecognized `VM_*`-adjacent
       metadata keys (e.g. `MTDS_CEFI_INCLUDE_NON_MVP`) instead of erroring — either wire a generic passthrough for
       `MTDS_*`-prefixed diagnostic env toggles, or document that ad-hoc env vars require manual SSH injection (this
