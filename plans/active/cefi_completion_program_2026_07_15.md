@@ -526,5 +526,12 @@ the relabel pass over historical raw-id captures (peer dry-run `instruments-serv
       `launch-transfermarkt-backfill-vm.sh`) or move to `--instance-termination-action=STOP` + a restart watchdog —
       architecture call. Until shipped, a session-scoped keeper loop is refilling the fleet to cap every 30 min
       (`START_DATE=2026-02-01`, lease-ON, `STALL_TIMEOUT_SEC=3900`, always via `tardis_concurrency_guard`), which is a
-      crutch, not the fix. SSOT to correct once done: `codex/05-infrastructure/spot-vms-for-backfill.md` (its
-      "idempotent shards re-run on preemption" premise is currently false for this family).
+      crutch, not the fix. **Partial progress (data_engineering slot-12, 2026-07-16T02:15Z)**: shipped
+      `deployment-service@dabcf05` — a new `lc_write_preemption_signal_file()` helper in `launcher_common.sh` (mirrors
+      `launch-transfermarkt-backfill-vm.sh`'s existing pattern), wired into both `launch-cefi-sharded-backfill.sh`
+      `gcloud compute instances create` call sites. This is observability-only (marks a SPOT preemption in GCS so fleet
+      monitors classify it as expected rather than an unexplained `DP_VM_GONE_NO_CAPTURE`) — it does NOT auto-relaunch.
+      The actual relaunch mechanism (the "architecture call" above) is still open; deliberately not attempted solo given
+      its explicit framing as a design decision, not a mechanical fix. SSOT to correct once done:
+      `codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
+      currently false for this family).
