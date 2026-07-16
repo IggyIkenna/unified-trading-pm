@@ -51,6 +51,9 @@
 set -euo pipefail
 
 RUNNER_USER="${RUNNER_USER:-ubuntu}"
+# Where this script lives — verify() reads the runner's PATH out of the sibling unit file so the two
+# can never drift apart.
+_BOOTSTRAP_HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK_ONLY=false
 [ "${1:-}" = "--check" ] && CHECK_ONLY=true
 
@@ -164,29 +167,58 @@ verify() {
     else printf '  \033[31m✗\033[0m %-10s MISSING\n' "${t}"; missing=$((missing + 1)); fi
   done
   # python3 -m venv is the one that bites: python3 can be present while venv is not.
-  if python3 -m venv --help >/dev/null 2>&1; then printf '  \033[32m✓\033[0m %-10s (python3 -m venv)\n' "venv"
-  else printf '  \033[31m✗\033[0m %-10s MISSING — install python3-venv\n' "venv"; missing=$((missing + 1)); fi
-  # uv resolves from the RUNNER USER's PATH, not root's — check it the way the runner will.
-  if sudo -u "${RUNNER_USER}" bash -lc 'command -v uv' >/dev/null 2>&1; then
-    printf '  \033[32m✓\033[0m %-10s (as %s)\n' "uv" "${RUNNER_USER}"
-  else printf '  \033[31m✗\033[0m %-10s MISSING for %s\n' "uv" "${RUNNER_USER}"; missing=$((missing + 1)); fi
-  have npm && printf '  \033[32m✓\033[0m %-10s %s\n' "npm" "$(command -v npm)" \
-    || warn "npm missing — 1 MOVE workflow references it"
+  #
+  # MEASURED 2026-07-16 on planning-VM: `python3 -m venv --help` SUCCEEDS on a box where creating a
+  # venv FAILS with "ensurepip is not available" — --help never touches ensurepip. The old --help
+  # probe therefore reported venv ✓ on a host where setup-glue-runners.sh install would die at the
+  # slot-venv step. Only building a real (throwaway) venv proves it.
+  local _venv_probe; _venv_probe="$(mktemp -d)"
+  if python3 -m venv "${_venv_probe}/v" >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m %-10s (python3 -m venv creates a real venv)\n' "venv"
+  else
+    printf '  \033[31m✗\033[0m %-10s BROKEN — install python3-venv (a passing --help means nothing)\n' "venv"
+    missing=$((missing + 1))
+  fi
+  rm -rf "${_venv_probe}"
+
+  # uv + the rest resolve from the RUNNER's PATH — which is NOT root's and NOT a login shell's.
+  #
+  # MEASURED 2026-07-16: the old probe was `sudo -u ubuntu bash -lc 'command -v uv'`. The -l makes it
+  # a LOGIN shell, which sources ~/.profile and finds ~/.local/bin/uv — so it reported ✓ while the
+  # runner (systemd, no ~/.profile) could not see uv at all. GitHub Actions `run:` steps are
+  # non-login shells, so the unit's PATH is the only environment that counts. Read it from the unit
+  # file to keep ONE source of truth, and scrub the env (`env -i`) so nothing inherited can fake it.
+  local _unit="${_BOOTSTRAP_HERE}/github-glue-runner@.service" _rp=""
+  [ -f "${_unit}" ] && _rp="$(sed -n 's/^Environment=PATH=//p' "${_unit}" | head -1)"
+  if [ -z "${_rp}" ]; then
+    warn "cannot read Environment=PATH from ${_unit} — falling back to systemd's default PATH for the uv probe"
+    _rp="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin"
+  fi
+  if sudo -u "${RUNNER_USER}" env -i PATH="${_rp}" HOME="/home/${RUNNER_USER}" \
+       bash -c 'command -v uv' >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m %-10s (as %s, on the RUNNER PATH)\n' "uv" "${RUNNER_USER}"
+  else
+    printf '  \033[31m✗\033[0m %-10s not on the RUNNER PATH for %s — 32 movers invoke uv\n' "uv" "${RUNNER_USER}"
+    missing=$((missing + 1))
+  fi
+
+  if have npm; then printf '  \033[32m✓\033[0m %-10s %s\n' "npm" "$(command -v npm)"
+  else warn "npm missing — 1 MOVE workflow references it"; fi
   [ "${missing}" -eq 0 ] || die "${missing} required tool(s) missing"
   log "toolchain OK"
 
   # Creds are NOT provisioned here — they are interactive/instance-specific. Report, don't fail:
   # a bare box legitimately reaches this point unauthenticated.
   log "credential state (provision these BEFORE setup-glue-runners.sh install):"
-  sudo -u "${RUNNER_USER}" gh auth status >/dev/null 2>&1 \
-    && printf '  \033[32m✓\033[0m gh authenticated (as %s)\n' "${RUNNER_USER}" \
-    || warn "gh NOT authenticated for ${RUNNER_USER} — run: gh auth login  (needed for the slot clone)"
-  sudo -u "${RUNNER_USER}" gcloud auth application-default print-access-token >/dev/null 2>&1 \
-    && printf '  \033[32m✓\033[0m GCP ADC present (as %s)\n' "${RUNNER_USER}" \
-    || warn "GCP ADC missing for ${RUNNER_USER} — run: gcloud auth application-default login  (STEP 2b drops the auth step and relies on this)"
-  aws sts get-caller-identity >/dev/null 2>&1 \
-    && printf '  \033[32m✓\033[0m AWS identity resolves\n' \
-    || warn "AWS identity does not resolve — instance role or credentials needed"
+  if sudo -u "${RUNNER_USER}" gh auth status >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m gh authenticated (as %s)\n' "${RUNNER_USER}"
+  else warn "gh NOT authenticated for ${RUNNER_USER} — run: gh auth login  (needed for the slot clone)"; fi
+  if sudo -u "${RUNNER_USER}" gcloud auth application-default print-access-token >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m GCP ADC present (as %s)\n' "${RUNNER_USER}"
+  else warn "GCP ADC missing for ${RUNNER_USER} — run: gcloud auth application-default login  (STEP 2b drops the auth step and relies on this)"; fi
+  if aws sts get-caller-identity >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m AWS identity resolves\n'
+  else warn "AWS identity does not resolve — instance role or credentials needed"; fi
 }
 
 if [ "${CHECK_ONLY}" = true ]; then
@@ -207,7 +239,7 @@ cat <<'NEXT'
 [bootstrap] Host is provisioned. NEXT STEPS (not automated — they need secrets/interaction):
   1. sudo -u ubuntu gh auth login                              # slot clone + runner registration
   2. sudo -u ubuntu gcloud auth application-default login      # STEP 2b relies on runner-user ADC
-  3. sudo GH_PAT=<admin-pat> ./setup-glue-runners.sh install   # register both runner pools
+  3. sudo GH_TOKEN_SECRET=GH_PAT ./setup-glue-runners.sh install   # register both pools (no PAT on disk)
   4. ./setup-glue-runners.sh status                            # both pools Online, slot clone fresh
 
 If ANY of the above revealed a missing tool or assumption, ADD IT TO THIS SCRIPT NOW — that is the

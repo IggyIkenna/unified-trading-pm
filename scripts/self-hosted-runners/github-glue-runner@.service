@@ -26,6 +26,25 @@ Type=simple
 # `git config --global` in two movers is inert because every clone carries a local identity.
 User=ubuntu
 Slice=github-glue-runner.slice
+#
+# PATH IS SET EXPLICITLY — never rely on systemd's compiled-in default. MEASURED on the planning-VM
+# 2026-07-16 via `systemd-run --uid=ubuntu` (not assumed): a User=ubuntu unit gets
+#   /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
+# and does NOT source ~/.profile. GitHub Actions `run:` steps are non-interactive, NON-LOGIN bash, so
+# they inherit exactly this — an interactive `ssh ubuntu@host` proves nothing about what a job sees.
+# Two measured consequences that would each have silently broken the migration:
+#
+#   • uv lives in /home/ubuntu/.local/bin (on PATH only via ~/.profile) → invisible here, and 32 of
+#     the 38 movers invoke uv. Reusing the ubuntu-owned uv is deliberate (operator: use the tools
+#     already on the VM) — it is the same binary the AO uses, so no second copy can drift.
+#   • the system python3 has NO pip AND Ubuntu 24.04 ships /usr/lib/python3.12/EXTERNALLY-MANAGED
+#     (PEP 668), so the 8 movers running `python3 -m pip install "google-cloud-firestore>=2,<3"`
+#     would fail twice over. Hosted ubuntu-latest has neither restriction.
+#
+# Putting the slot venv FIRST fixes the pip half with zero workflow edits: its python HAS pip and is
+# not externally-managed, and STEP 2b pre-installs firestore so that line becomes a fast no-op. If
+# the venv is absent (pre-install), this entry is simply ignored and python3 falls back to /usr/bin.
+Environment=PATH=/opt/github-glue-runners/venv/bin:/home/ubuntu/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
 # GH_TOKEN (Administration:write on the repo) — 0600, root:root. Optionally GH_TOKEN_SECRET instead.
 EnvironmentFile=/etc/github-glue-runner.env
 WorkingDirectory=/opt/github-glue-runners/%i
