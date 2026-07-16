@@ -307,3 +307,36 @@ answered confirming **Option C** and explicitly rejecting Option B, with Option 
 todo `[x]`, set the issue doc `status: resolved` + `resolved_by`, added a Resolution section, and marked its P3
 follow-up todo as not-authorized-today. Updated this plan's todo 5 note to record the resolution — todo 5's own checkbox
 stays unflipped (the extractor work itself remains undone/deferred by design, not completed).
+
+### 2026-07-16 — slot 7 (Todo 5 re-dispatched — resolution re-verified, no code change; flags a backlog-hygiene gap)
+
+Dispatched task `l2_book_microstructure_capture-005` again (backlog id `-005`, todo 5). Re-verified the 2026-07-14
+resolution still holds before touching anything: read the live extractor at
+`features-service/features_service/cefi/book_microstructure_feature_extractor.py` directly — it is unchanged since
+`features-service@d794b8c1`, still reads MDPS's precomputed bar-column path
+(`extract_book_microstructure_from_candle_columns`, `formula_version=2`, docstring literally states "Replaces the
+retired snapshot path"), still has no `queue_position_bid`/`queue_position_ask`/deeper `depth_levels_*` fields. Nothing
+has drifted; Option C (confirmed 2026-07-14) still applies, Option B (parallel snapshot path) is still rejected. Did NOT
+write any extractor code — that would reverse the operator's confirmed decision.
+
+**Process finding (not a code gap):** todo 5's checkbox is _intentionally_ left `- [ ]` because the work is deferred,
+not because it's undone-but-actionable — but `regen_backlog_from_plan.py` derives a dispatchable backlog task from any
+unchecked checkbox with no way (from a worker slot) to distinguish "genuinely open" from "resolved-deferred pending a
+future authorization event". This is the **second** time this exact backlog task (`l2_book_microstructure_capture-005`)
+has been dispatched to a worker who then has to re-discover the 2026-07-14 resolution from scratch. Checked `RULES.md` §
+"Park a task" — the fix (`priority: 999` + `priority_override: true` + a gating prerequisite condition on the task's
+`data/config/backlog.yaml` entry) requires editing that file directly; it is **not** present in any
+`.tabs/*/agent-orchestrator` slot clone (only `backlog.test.yaml` ships in git — the live `backlog.yaml` is
+orchestrator-VM-local runtime state) and there is no `PATCH /api/backlog/{id}` surface to tune priority/prereqs remotely
+(checked `/openapi.json` — only `GET/DELETE/reopen/blockers` exist on `/api/backlog/{task_id}`). So this park is
+genuinely **out of worker-slot reach** and needs main/operator with orchestrator-VM access.
+
+**Recommendation for main/operator**: park `l2_book_microstructure_capture-005` (`priority: 999` +
+`priority_override: true` + a new `l2_book_microstructure_features_extractor_authorized` prerequisite seeded `false`)
+until Option A (the MDPS column-pipeline extension) is authorized as its own plan per the 2026-07-14 resolution — or add
+a `PATCH`-style backlog-tune endpoint so a worker slot can self-serve this pattern instead of re-dispatching into the
+same resolved-deferred todo repeatedly. No operator action needed on the underlying technical question — that part is
+already decided.
+
+Checkbox stays unflipped (unchanged from 2026-07-14 — still correctly reflects deferred-by-design, not completed). This
+is a docs-only progress-log update, ships via the `docs(plans):` carve-out (no code in this commit).
