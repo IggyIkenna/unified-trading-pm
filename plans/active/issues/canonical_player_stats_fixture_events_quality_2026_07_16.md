@@ -105,3 +105,36 @@ regression.
 **2026-07-16** — Both defects measured in full during cutover T2.4 (`~/tmp-cutover/t2_4_build_canon_keys.py` for the dup
 census; the fixture_events sample via the cutover schema probe). T2.4 union partially remediated the player_stats dup
 defect (4,015 cells). Filed for a dedicated follow-up; does not block the legacy-bucket delete.
+
+---
+
+## Defect (3) — the index's `instrument_count` semantic has DRIFTED across writer generations (added 2026-07-16, surfaced by OR-9)
+
+**Pre-existing, NOT cutover-introduced, does NOT block the legacy-bucket delete** (the delete gate is the object layer).
+
+The manifest writer defines `instrument_count` as the written **row count** — `_writer_captured.py:360`:
+`effective_count = int(row_count) if row_count is not None else len(df)`. The live index does not honour that uniformly.
+Measured on **untouched** canonical `instruments-store-sports-prd` cells (`~/tmp-or9/or9_instrument_count_semantic.py`,
+`_era.py`; index generation `1784207377339311`):
+
+| era  | cells sampled | `instrument_count == rows` | notes                                                               |
+| ---- | ------------: | -------------------------: | ------------------------------------------------------------------- |
+| 2019 |             6 |                    **0/6** | **6/6 carry `1`** — incl. one object with **24 rows / 12 fixtures** |
+| 2020 |            12 |                       7/12 | mixed                                                               |
+| 2025 |            15 |                      10/15 | row-count dominant                                                  |
+| 2026 |            15 |                      11/15 | row-count dominant                                                  |
+
+⇒ **2019-era rows carry `instrument_count=1` as a per-object marker, not a row count.** Consequences:
+
+1. Any consumer reading `instrument_count` as "rows" **silently mis-reads the entire 2019 era** (and any completeness or
+   row-count-based coverage check over it is wrong by construction, not by a little).
+2. **T2.4's 4,015 unioned `player_stats` cells** carry the matching staleness for whichever are post-2019: a union
+   changes the object's row count while the index row keeps the pre-union count.
+3. It is why **OR-9 deliberately did NOT "correct" the 122 cells it unioned** — rewriting a 2019-era `1` to a row count
+   would impose a semantic that generation never used and diverge those cells from every untouched sibling. Fixing
+   OR-9's 122 while leaving T2.4's 4,015 would be arbitrary; this needs one systemic ruling.
+
+**Proposed fix**: decide the ONE semantic (row count, per the writer), then backfill/normalise `instrument_count` across
+eras in a single pass — or, if the 2019 `1` is intentional, document it and fix the _consumers_. Either way the decision
+belongs with the same de-dup/schema-normalisation sweep as defects (1) and (2). **Do not** let a per-plan agent correct
+its own touched subset piecemeal.

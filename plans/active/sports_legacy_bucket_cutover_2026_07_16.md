@@ -85,13 +85,22 @@ everything so sports is in canonical buckets and paths."_
 
 ---
 
-> **🔴 DELETE STATUS 2026-07-16 (T4.1) — NEITHER legacy bucket is delete-eligible. BOTH are blocked on a row-gap
-> ruling.** `market-data-tick-sports` → **OR-5b** (49,517 residual unique objects). `instruments-store-sports` → **OR-9
-> (NEW)**: T4.1's object-layer gate **FAILED** — 2,078 objects hold **6,673 genuinely legacy-only entity keys**
-> (`fixture_stats` 6,379 · `footystats_odds` 152 · `fixtures_schedule` 121 · …) in entities **OR-1 never enumerated**.
-> OR-1 option D ruled only on the 5 largest entities by row count; the rest of class B silently inherited "superseded".
-> Phases 0-3 are complete and correct; T5.1-T5.4 have NOT run and MUST NOT until OR-9 is ruled. See the Progress Log's
-> Phase-4 entry for the full accounting (it closes exactly at 968,927).
+> **🟡 DELETE STATUS 2026-07-16 (post-OR-9) — `instruments-store-sports` IS NOW OBJECT-LAYER DELETE-ELIGIBLE (OR-9
+> RESOLVED + EXECUTED). `market-data-tick-sports` is still BLOCKED on OR-5b** (49,517 residual unique objects). **OR-9
+> is closed**: all 2,078 unaccounted objects now carry a written, measured disposition; the re-run T4.1 accounting
+> closes at **968,927 with UNACCOUNTED = 0**. 131 canonical cells were recovered (482 distinct legacy-only keys + 803
+> progressive rows); **not one legacy object was mutated or deleted**. See the Progress Log's OR-9 entry. **T4.1 STAYS
+> `- [ ]` — it gates BOTH buckets and the MDT half is still open (OR-5b).** T5.1-T5.4 have NOT run and still MUST NOT:
+> they also require the two `tofu apply`s (T1.3 MDPS FUSE-mount removal, T1.4 catalogue IAM repoint) and T5.2's final
+> writer re-check.
+>
+> **The headline correction (5th "inherited classification" reversal — the reason this leg re-measured instead of
+> executing the ruling as written): the "6,673 genuinely legacy-only keys / GENUINE loss — re-fetch" verdict was ~94%
+> WRONG.** Only **482 keys** were real recoverable data. **5,897 of the 6,379 `fixture_stats` keys carry NO STATISTICS
+> PAYLOAD AT ALL** — 1,648 of the 1,738 legacy objects are `[fixture_id, available_at]` **2-col** files, not the "4-col
+> nested" form OR-9 was written around, and a whole-corpus scan of **all 27,247** legacy `fixture_stats` objects proves
+> **no payload exists for any of those keys anywhere in legacy**. Deleting the bucket loses nothing for them; unioning
+> them would have written 21 NULL stat columns per row — the **banned empty-placeholder pattern**.
 
 ## THE HEADLINE — read this before touching anything
 
@@ -980,27 +989,35 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 
 ### PHASE 4 — VERIFY (object-layer proof; the manifest is NOT evidence)
 
-- [ ] [DATA] P0. **T4.1 — OBJECT-LAYER zero-unique proof. This, not L6, is the delete gate. 🔴 EXECUTED 2026-07-16 →
-      GATE FAILED. STAYS UNCHECKED. DO NOT DELETE `instruments-store-sports`.** The pass is DONE and its verdict is
-      **FAIL**, so this box cannot flip — flipping it would be exactly the false-progress this plan exists to prevent.
-      **Result**: 968,927 objects (= 969,321 − 398 v1_archive + 4 T0.2 snapshot backups), every one classified, and
-      **2,078 UNACCOUNTED** — objects whose canonical twin holds strictly fewer rows in entities **OR-1 never
-      enumerated**. Key-level containment cleared 244 of them by measurement (`injuries` 151 → 0 legacy-only keys, the
-      2× row ratio is legacy-side duplication; `fixtures_outcomes` 93 → legacy has no fixture-id column ⇒
-      unattributable) and left **~1,834 objects / 6,673 genuinely legacy-only entity keys** (`fixture_stats` 6,379 ·
-      `footystats_odds` 152 · `fixtures_schedule` 121 · `fixtures` 13 · `footystats_matches` 4 · `progressive_stats` 4 ·
-      2 one-offs) with **no written disposition → OR-9**. The 456,727 crc-differing objects were **re-measured, not
-      inherited** (865,696 footer reads, 0 errors): superseded is **444,996** (runbook said 443,508). **To re-open**:
-      rule OR-9, execute it, then re-run `~/tmp-cutover/t4_1_{inventory,classify,pairs,rowcheck,verdict}.py` and require
-      `UNACCOUNTED == 0`. Full accounting table → the Progress Log's Phase-4 entry. _Mechanism_: re-run the T2.2
-      inventory + classification over both legacy buckets. **Why the manifest cannot clear the delete**: no availability
-      index has a **path/uri/bucket column at all** (columns are date, venue, data_type, source, pipeline_mode,
-      league_id, capture_status, instrument_count, …) — the bucket binding is **positional** (the `_index` object
-      physically lives in its bucket) and paths are DERIVED at read time. Therefore **zero rows in either index mention
-      `v1_archive`, and no row ever could** — the 398 objects were invisible to L6 **by construction**. That is why
-      `L6-legacy-only = 0` coexisted with 398 real legacy-only parquets. _Gate_: unique == 0 for **both** buckets, or
-      every residual has a written, operator-accepted disposition. _ABORT_: unique > 0 without a disposition → **DO NOT
-      DELETE**.
+- [ ] [DATA] P0. **T4.1 — OBJECT-LAYER zero-unique proof. This, not L6, is the delete gate. 🟡 RE-RUN 2026-07-16
+      post-OR-9 → the INSTRUMENTS half now PASSES (UNACCOUNTED = 0); the box STAYS UNCHECKED because this gate covers
+      BOTH buckets and `market-data-tick-sports` is still open on OR-5b.** `instruments-store-sports` is now
+      object-layer delete-eligible: all 2,078 formerly-unaccounted objects carry a written, measured disposition and the
+      accounting closes at **968,927, delta +0** (`~/tmp-or9/or9_verdict.py`, re-runnable). OR-9 recovered **482
+      distinct legacy-only keys + 803 progressive rows into 131 canonical cells**, all re-verified by an INDEPENDENT
+      fresh-read pass (131/131 ok, 0 failed) in a process that never touched the writer; **zero legacy objects were
+      mutated or deleted** and the consolidated index is untouched (generation still `1784207377339311` from the T3.1
+      purge). **Still not a licence to delete**: T5.4 additionally requires the two `tofu apply`s (T1.3/T1.4) and T5.2's
+      final writer re-check. _Superseded verdict (2026-07-16, retained for provenance)_: the pass first reported
+      **FAIL** on 2,078 objects / "6,673 genuinely legacy-only keys"; OR-9's re-measure proved **~94% of that was not
+      recoverable data at all** (5,897 payload-free keys) and recovered the 482 that were. **Result**: 968,927 objects
+      (= 969,321 − 398 v1_archive + 4 T0.2 snapshot backups), every one classified, and **2,078 UNACCOUNTED** — objects
+      whose canonical twin holds strictly fewer rows in entities **OR-1 never enumerated**. Key-level containment
+      cleared 244 of them by measurement (`injuries` 151 → 0 legacy-only keys, the 2× row ratio is legacy-side
+      duplication; `fixtures_outcomes` 93 → legacy has no fixture-id column ⇒ unattributable) and left **~1,834 objects
+      / 6,673 genuinely legacy-only entity keys** (`fixture_stats` 6,379 · `footystats_odds` 152 · `fixtures_schedule`
+      121 · `fixtures` 13 · `footystats_matches` 4 · `progressive_stats` 4 · 2 one-offs) with **no written disposition →
+      OR-9**. The 456,727 crc-differing objects were **re-measured, not inherited** (865,696 footer reads, 0 errors):
+      superseded is **444,996** (runbook said 443,508). **To re-open**: rule OR-9, execute it, then re-run
+      `~/tmp-cutover/t4_1_{inventory,classify,pairs,rowcheck,verdict}.py` and require `UNACCOUNTED == 0`. Full
+      accounting table → the Progress Log's Phase-4 entry. _Mechanism_: re-run the T2.2 inventory + classification over
+      both legacy buckets. **Why the manifest cannot clear the delete**: no availability index has a **path/uri/bucket
+      column at all** (columns are date, venue, data_type, source, pipeline_mode, league_id, capture_status,
+      instrument_count, …) — the bucket binding is **positional** (the `_index` object physically lives in its bucket)
+      and paths are DERIVED at read time. Therefore **zero rows in either index mention `v1_archive`, and no row ever
+      could** — the 398 objects were invisible to L6 **by construction**. That is why `L6-legacy-only = 0` coexisted
+      with 398 real legacy-only parquets. _Gate_: unique == 0 for **both** buckets, or every residual has a written,
+      operator-accepted disposition. _ABORT_: unique > 0 without a disposition → **DO NOT DELETE**.
 - [x] ✅ [DATA] P0. **T4.2 — Prove the moved objects are READABLE at canonical paths (not merely present). DONE
       2026-07-16 — 33/33 PASS.** Sampled 3 moved cells from **every one of the 11 class-A entities** (33 > the 25 gate),
       re-derived each path from the UAC SSOT `candidate_parquet_paths(data_type, day, league, pipeline_mode=)` — **not**
@@ -1400,11 +1417,18 @@ blind merge is defensible. Deleting the bucket makes this irreversible.
   post-kickoff rows into T-0).
 - Other.
 
-**OR-9 (NEW, BLOCKING T5.4 for the INSTRUMENTS bucket — surfaced by T4.1 2026-07-16) — how do we dispose of the ~1,834
-legacy objects holding 6,673 genuinely legacy-only entity keys in entities OR-1 never ruled on?** T4.1's object-layer
-pass re-measured all 456,727 crc-differing objects (rather than inheriting the audit's 443,508-superseded claim) and
-found **2,078 objects whose canonical twin holds strictly fewer rows in an entity with NO written disposition**.
-Key-level containment then split them:
+**OR-9 — ✅ RESOLVED + EXECUTED 2026-07-16 (option A, per-entity by schema — but the entity split was RE-MEASURED and
+came out very differently from the option text below; see the Progress Log's OR-9 entry).** Outcome: **482 distinct
+legacy-only keys + 803 progressive rows recovered into canonical across 131 cells; 5,897 keys proven to be payload-free
+(nothing to lose); 1 object proven SYNTHETIC and abandoned; 1 proven regenerable. UNACCOUNTED = 0 →
+`instruments-store-sports` is object-layer delete-eligible.** The option text is retained below as the record of what
+was proposed before measurement.
+
+_Original ruling request (BLOCKING T5.4 for the INSTRUMENTS bucket — surfaced by T4.1 2026-07-16) — how do we dispose of
+the ~1,834 legacy objects holding 6,673 genuinely legacy-only entity keys in entities OR-1 never ruled on?_ T4.1's
+object-layer pass re-measured all 456,727 crc-differing objects (rather than inheriting the audit's 443,508-superseded
+claim) and found **2,078 objects whose canonical twin holds strictly fewer rows in an entity with NO written
+disposition**. Key-level containment then split them:
 
 - **DISPOSITIONED BY MEASUREMENT — no ruling needed** (244 objects): `injuries` (151 objs) → **0 legacy-only fixture
   keys**; the exact 2× row ratio is legacy-side duplication → NO ACTION, proven. `fixtures_outcomes` (93 objs) → legacy
@@ -1420,18 +1444,43 @@ count and the rest of class B silently inherited "superseded". The schema split 
 flattened** canonical, i.e. the `fixture_events` D(2) case; `footystats_odds` is an **identical 76-col** schema, i.e.
 the `player_stats` D(1) case.
 
-- **A: apply OR-1 option D per-entity by schema, mechanically [WORKER REC]** — D(1) **union** where the schema is
-  shared/subset and the key is clean (`footystats_odds` 152, `fixtures_schedule` 121, `fixtures` 13,
-  `footystats_matches` 4, `progressive_stats` 4 = **294 keys**, the T2.4 union method already proven at 388,825 rows);
-  D(2) **re-fetch list** for `fixture_stats` (6,379 keys — legacy is the nested raw form; flattening it into the 23-col
-  canonical schema locally would be fabrication, and api-football holds the truth → external-data-always-available);
-  adjudicate the 2 one-off objects (`sports_reference` mappings 51 rows, `instrument_availability` 1 row) individually
-  like T2.5 did. Delete only once the residual is zero.
+- **A: apply OR-1 option D per-entity by schema, mechanically [WORKER REC]** — ✅ **ADOPTED AND EXECUTED, but every
+  number in this option proved wrong on measurement.** D(1) **union** where the schema is shared/subset and the key is
+  clean (`footystats_odds` 152, `fixtures_schedule` 121, `fixtures` 13, `footystats_matches` 4, `progressive_stats` 4 =
+  **294 keys**, the T2.4 union method already proven at 388,825 rows) — **MEASURED: 124 distinct keys, not 294** (the
+  per-pair counts double-count; GLOBAL cross-partition containment is the honest number), and
+  `sports_reference`/`progressive_stats` were **NOT** "clean" (see below); D(2) **re-fetch list** for `fixture_stats`
+  (6,379 keys — legacy is the nested raw form; flattening it into the 23-col canonical schema locally would be
+  fabrication, and api-football holds the truth → external-data-always-available) — **MEASURED: FALSE on both halves.**
+  Only **90/1,738** objects are nested; the other **1,648 are 2-col `[fixture_id, available_at]` with ZERO payload**
+  (5,897 keys → nothing to re-fetch-because-lost; nothing to lose). And the nested form **IS** losslessly flattenable —
+  **PROVEN**, not argued: the UAC SSOT production normalizer
+  `external/api_football/normalize.py::normalize_api_football_fixture_stats` (the very function that built canonical's
+  23 columns) reproduces canonical's OWN rows **174/174** on the non-revised overlap, so applying it is derivation from
+  content, not fabrication → the 358 real keys were RECOVERED, not deferred to a re-fetch.
 - **B: re-fetch everything** (all 6,673 keys from api-football, incl. the 294 that are cleanly unionable) — simpler, one
-  mechanism, no union-schema risk; costs api quota and re-does data we already hold byte-perfect.
+  mechanism, no union-schema risk; costs api quota and re-does data we already hold byte-perfect. — **REJECTED**: 92% of
+  the "keys" have no payload to recover, so B would have spent quota re-fetching fixtures whose stats the provider very
+  likely never returned (the 2-col shape is what the writer emits on an EMPTY statistics block; **78% of the legacy
+  fixture universe — 39,116/50,414 — is payload-free**).
 - **C: accept the loss and delete now** — **contradicts the data-pipeline-correctness HARD RULE**; 6,673 keys is real
-  reference data (`fixture_stats` for 6,379 fixtures canonical demonstrably lacks). Not recommended.
+  reference data (`fixture_stats` for 6,379 fixtures canonical demonstrably lacks). Not recommended. — **REJECTED for
+  the 482 real keys** (they were recovered). Note the premise was itself wrong: 5,897 of the 6,379 `fixture_stats` keys
+  are **not** "real reference data canonical lacks" — they are fixture-id references with no observation attached.
 - Other.
+
+**The two catches that justify the re-measure discipline (either would have corrupted canonical):**
+
+1. **`sports_reference/mappings/season=2019/…/teams.parquet` — identical 7-col schema, 100% FABRICATED content.** Option
+   A's rule ("schema shared/subset + clean key → union") would have imported it. Measured: legacy is **640/640 synthetic
+   rows** (`name` = `t0..t639`, every `squad_size=25`, one `last_fetched_at`) vs canonical's **589 REAL teams** (Malmö,
+   Elfsborg, Häcken…). The "51 legacy-only rows" was an artifact of diffing a smoke-test file against real data. →
+   **ABANDON, never import.** _Schema cleanliness is not content truth._
+2. **`progressive_stats` has NO unique row key — a keyed dedupe would have DESTROYED real observations.** No candidate
+   key is unique on canonical's own data: 25 rows share `(fixture_id, timer_seconds=0, team='')` with **genuinely
+   different values** (repeated pre-match snapshots). Deduping on the "natural" key would have collapsed 25 real
+   observations into 1. → recovered **append-only** instead (canonical holds ZERO rows for the 4 affected fixtures, so
+   the append is collision-free and needs no dedupe decision).
 
 **OR-6 (BLOCKING Phase 2) — fix the MOVE vehicle, or drive the move from the object inventory?**
 `migrate_sports_canonical_v9.py` silently enumerates 4 of its 7 declared trees as empty (F-1), cannot see class B (F-2),
@@ -1463,7 +1512,112 @@ sports odds unfiltered.
 
 ## Progress Log
 
-### 🔴 PHASE 4 — T4.1 EXECUTED → **GATE FAILS. THE INSTRUMENTS DELETE IS BLOCKED** (2026-07-16, owner: Phase-4/5 sub-agent)
+### ✅ OR-9 RESOLVED + EXECUTED → **the INSTRUMENTS object-layer gate now PASSES, UNACCOUNTED = 0** (2026-07-16, owner: OR-9 sub-agent)
+
+**`instruments-store-sports-central-element-323112` is now object-layer delete-eligible.** T4.1 stays `- [ ]` (it gates
+BOTH buckets; MDT is still open on OR-5b), and the delete additionally still needs the two `tofu apply`s (T1.3/T1.4) +
+T5.2's final writer re-check. **Zero legacy objects were mutated or deleted; the consolidated index was not touched**
+(generation still `1784207377339311`, frozen at the T3.1 purge — R-11 honoured).
+
+**THE HEADLINE — the 5th consecutive "inherited classification" reversal, and the biggest so far. The ruling OR-9 was
+written to execute was ~94% wrong, and executing it as written would have CORRUPTED canonical.**
+
+OR-9's charter said: `fixture_stats` 6,379 keys are "legacy is the **4-col NESTED** form vs canonical 23-col flattened ⇒
+a union would corrupt the schema ⇒ **produce a re-fetch list**", and the other ~294 keys are "clean-schema ⇒ union".
+Re-measured at the object/key layer over the WHOLE population (not the sample the verdict came from):
+
+| the inherited claim                                               | what measurement showed                                                                                                                                                                             |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fixture_stats` legacy is the 4-col nested form                   | **1,648 of 1,738 objects are 2-col `[fixture_id, available_at]` — ZERO statistics.** Only **90** are nested.                                                                                        |
+| its 6,379 keys are "GENUINE loss — re-fetch"                      | **5,897 keys have NO payload anywhere in legacy** (whole-corpus scan, all **27,247** legacy `fixture_stats` objects). Nothing to lose, nothing to recover. Only **358** are real.                   |
+| the nested form can't be flattened without fabricating            | **It CAN — PROVEN.** The UAC SSOT production normalizer reproduces canonical's OWN rows **174/174**. Flattening is derivation, not fabrication → recovered rather than deferred.                    |
+| ~294 "clean-schema" keys are unionable                            | **124 distinct** (per-pair counts double-count; GLOBAL containment is honest). And 2 of the "clean" entities were traps ↓                                                                           |
+| `sports_reference` mappings: "identical 7-col schema ⇒ unionable" | **640/640 rows are SYNTHETIC** (`t0..t639`, uniform `squad_size=25`) vs canonical's **589 REAL teams**. A schema-driven union would have injected **627 fake teams** into canonical. → **ABANDON.** |
+| `progressive_stats`: "keyed + de-duped on write"                  | **No unique row key EXISTS** — 25 canonical rows share `(fixture_id, timer_seconds=0, team='')` with **different values**. A keyed dedupe would have **destroyed 24 real observations.** → append.  |
+
+**Why the 2-col discovery is decisive, not cosmetic**: a 2-col row unioned into canonical's 23-col schema becomes a row
+with `fixture_id` + 21 NULL stat columns — a record that LOOKS like a captured stats observation but holds none. That is
+precisely the **banned empty-placeholder pattern** (`honest-absence-downstream-handling.md`). The "recover the 6,673"
+instruction, executed literally, would have written 5,897 phantom observations into the canonical bucket the operator
+wants clean.
+
+_Likely (benign) explanation, worth knowing before spending API quota_: the 2-col shape is what the writer emits when
+the provider returns an **empty statistics block** — **78% of the legacy fixture universe (39,116/50,414) is
+payload-free**. So these are probably HONEST ABSENCES, not fetch failures. The re-fetch list therefore ships as
+_verification_, explicitly **not** as assumed recovery, and it does **not** block the delete.
+
+**What was recovered (131 canonical cells; every write backed up first, then verified by re-read):**
+
+| entity                   | objs | recovered                 | method                                                                                                                    |
+| ------------------------ | ---: | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `fixture_stats` (nested) |   90 | **358 keys** / 716 rows   | SSOT-flatten (`normalize_api_football_fixture_stats`) + keyed union on `(fixture_id, team_id)`, canonical wins            |
+| `footystats_odds`        |   26 | **75 distinct keys**      | keyed union on `fixture_id` (identical 76-col)                                                                            |
+| `fixtures_schedule`      |    7 | **34 keys**               | keyed union on `af_fixture_id` (legacy 23/25-col ⊂ canonical 43-col)                                                      |
+| `fixtures`               |    2 | **9 keys**                | keyed union at **canonical's OWN 55-col majority shape** (measured 311/600 canonical objects are 55-col vs 288 at 32-col) |
+| `footystats_matches`     |    2 | **2 keys**                | keyed union + the only manifest correction owed (below)                                                                   |
+| `progressive_stats`      |    4 | **4 fixtures / 803 rows** | **append-only** (no unique row key exists; canonical held ZERO rows for these fixtures ⇒ collision-free)                  |
+
+_Per-write gates, all PASS_: every legacy-only key present · every pre-existing canonical key survived ·
+`rows == unique row-keys` (a future re-fetch **UPSERTS**, cannot duplicate) · **0 null `available_at`** (measured 0
+nulls on every imported row ⇒ **no stamp was invented**; the dispatch's `stamp_available_at_*` premise did not apply
+here, same as T2.4 found for player_stats). **Race check**: 131 records collapse to **123 distinct canonical paths**
+(footystats `fetched_at_hour` snapshots share a twin) and the run was 12-way concurrent — verified explicitly that all 4
+multi-source objects hold the union of every source's keys, **0 lost updates**.
+
+**The 4 dispositions that are NO-ACTION, each PROVEN (not inherited):**
+
+1. **5,897 `fixture_stats` keys** — payload-free everywhere in legacy (whole-corpus scan). Deleting loses nothing.
+2. **`sports_reference` mappings (1 obj)** — 640/640 synthetic. Importing would contaminate canonical.
+3. **`instrument_availability` (1 obj, 1 row)** — DERIVED data, and canonical **holds the underlying fixture**
+   (`af_fixture_id=725592`, SKRA Częstochowa v Sandecja, `fixtures_schedule` 2022-03-11) ⇒ the enumerator regenerates
+   it. The legacy row has **no `available_at`**, so importing would have required fabricating one. → never import.
+4. **`injuries` 151 + `fixtures_outcomes` 93** — already dispositioned by T4.1's own measurement; re-confirmed here.
+
+**Manifest (per-VM shard `_index/per_vm/or9-recover-20260716.parquet`, VM_NAME=`or9-recover-20260716`) — 2 rows,
+DELIBERATELY, and this scope is itself a measured finding.** Written with explicit `.write()` **AND** `.close()`;
+read-back from GCS shows **2 rows** (not the silent-zero a `flush()`-only path produces), `captured` 2/2,
+`source=footystats` 2/2, **0 blank source, 0 `instrument_count==0`, 0 blank `available_at`**. **NOT consolidated — T6.1
+owns the merge** (consolidators still PAUSED). Scope rationale:
+
+- **2 `footystats_matches` cells** = the only rows owed: the index says **`empty_confirmed` while canonical demonstrably
+  holds rows** (a **pre-existing false absence** — canonical already held 1 and 5 rows BEFORE OR-9 added 2 more to
+  each). An index asserting absence over data that exists is exactly what T2.7 corrected. Dedup key reproduced EXACTLY
+  (`service_name='instruments-service'`, `venue=''`, + `league_id`) — verified against
+  `_BASE_DEDUP_COLS`/`_OPTIONAL_DEDUP_COLS` (`manifest_consolidator.py:522-535`) — so the merge **supersedes** the stale
+  row instead of double-representing the cell.
+- **122 cells: NO rows written, and this is the non-obvious call.** `instrument_count` **is** the written row count
+  (`_writer_captured.py:360` — `effective_count = row_count or len(df)`), so "OR-9's unions made 122 counts stale →
+  correct them" looks right. **Measured, it is wrong**: all 90 `fixture_stats` cells are **2019-era**, and 2019-era
+  cells carry `instrument_count=1` as an **ERA CONVENTION** — **6/6** untouched 2019 cells say `1`, including one with
+  **24 rows / 12 fixtures**. `ic==rows` only becomes the norm from 2020 (7/12) → 2025 (10/15) → 2026 (11/15). So `1` was
+  never these cells' row count and the union did not invalidate it; "correcting" them to the new count would impose a
+  semantic that generation never used and silently diverge them from every untouched sibling. → reported as a finding,
+  not unilaterally rewritten.
+- **7 `fixtures_schedule` cells: no rows** — not manifest data_types. Re-confirmed against the live index: **ZERO
+  `FIXTURES_SCHEDULE` rows across all 5,342,265**. T2.7's ruling stands (their population is an open P0 owned by
+  `sports_master.md:940`, coordinated with the writegate strict-mode flip); writing them would execute a fragment of
+  that P0 out of its coordination.
+
+**BIG FINDING (pre-existing, NOT cutover-introduced) → belongs with T2.9/T2.10's class**: **the index's
+`instrument_count` semantic has DRIFTED across writer generations** — 2019-era rows carry `1` (per-object marker), 2020+
+rows carry the row count. Any consumer reading `instrument_count` as "rows" is wrong for the 2019 era, and any
+row-count-based completeness check silently mis-reads that era. This also means **T2.4's 4,015 unioned player_stats
+cells carry the same staleness** for whichever of them are post-2019. Not fixed here (systemic, needs its own ruling —
+fixing OR-9's 122 while leaving T2.4's 4,015 would be arbitrary).
+
+_Deliverables_: re-fetch list `~/tmp-or9/or9_refetch_fixture_stats.json` (**5,897 fixture_ids / 1,627 cells, 2019-02-17
+… 2026-01-03**, classified _pre-existing coverage gap, not a cutover loss, NOT delete-blocking_) · pre-write backups
+`gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/or9_prewrite_bak/` (123 objects, one per
+distinct canonical path) · all evidence + re-runnable verifiers archived to `…/sports_cutover_2026_07_16/or9_evidence/`
+· verifiers
+`~/tmp-or9/or9_{schema_probe,global_containment,flatten_proof, flatten_proof_wide,payload_scan,key_probe,recover,write_shard,manifest_check,instrument_count_semantic,verdict}.py`.
+
+_Method note for whoever runs OR-5b_: the two measurements that flipped this leg were (1) **GLOBAL cross-partition key
+containment** (per-pair containment double-counts: 6,673 → 6,379 distinct; footystats_odds 152 → 75) and (2) **reading
+the PAYLOAD, not the schema or the row count**. A row count says "canonical has fewer rows"; it does not say whether the
+legacy rows contain an observation. Four audits in a row were wrong because they stopped at the row count.
+
+### 🔴 PHASE 4 — T4.1 EXECUTED → **GATE FAILS. THE INSTRUMENTS DELETE IS BLOCKED** (2026-07-16, owner: Phase-4/5 sub-agent) — ⚠️ SUPERSEDED by the OR-9 entry above (the 2,078 are now fully dispositioned; UNACCOUNTED = 0)
 
 **T4.1 stays `- [ ]`. T5.1-T5.4 NOT executed. `instruments-store-sports-central-element-323112` STILL EXISTS and must
 not be deleted until OR-9 is ruled.** The object layer found **2,078 legacy objects holding 6,673 genuinely legacy-only
