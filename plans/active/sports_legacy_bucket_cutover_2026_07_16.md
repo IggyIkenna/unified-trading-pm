@@ -85,11 +85,31 @@ everything so sports is in canonical buckets and paths."_
 
 ---
 
-> **🟡 DELETE STATUS 2026-07-16 (post-OR-9, post-OR-5b-remeasure) — `instruments-store-sports` IS NOW OBJECT-LAYER
-> DELETE-ELIGIBLE (OR-9 RESOLVED + EXECUTED). `market-data-tick-sports` is still BLOCKED on OR-5b — but the residue is
-> now MEASURED at ~2,081 objects on 32 days carrying 550,062 legacy-only tick keys, NOT 49,517 objects / 7,079,850
-> rows.** The OR-5b recovery leg re-measured at the key layer over ALL 1,837 legacy tick-days (~900k reads, 0 errors):
-> **1,805 days are at exactly ZERO legacy-only keys**; the gap is 32 days, dominated by a canonical capture outage
+> # ✅ **`instruments-store-sports-central-element-323112` IS DELETED — 2026-07-16T19:52Z.**
+>
+> **The LAST Group-A legacy instruments twin is GONE.** Executed after every gate was RE-MEASURED (not inherited): T4.1
+> **UNACCOUNTED = 0** against a live re-count of **968,927 (delta +0)** · OR-9 recovery re-verified by fresh reads
+> **131/131** · T5.2 **0 writers** (R-1b discriminator) · T5.1 block removed **ds@4637aed** + `tofu state rm` · T5.3
+> **968,927 objects + 34,596 versions** purged, 0 errors · T5.4 via Cloud Build **`7b8b0e75`** → **`describe` = 404 from
+> the ELEVATED SA** (a real 404, not this slot's 403-masquerade) and the flat name is absent from `buckets list`.
+> **Canonical `-prd-` survives intact** (all 3 `_index/per_vm/` shards incl. `or9-recover`). **No resurrection
+> pending**: the post-delete `tofu plan` (**`97baca1b`**) is the same shape as pre-delete and carries **ZERO actions
+> referencing the deleted bucket**.
+>
+> **⚠️ `market-data-tick-sports-central-element-323112` is NOT deleted and MUST NOT be — still blocked on OR-5b.** Its
+> terraform block (`main.tf:345`) + import block (`_imports_reconcile.tf:74-77`) are deliberately RETAINED.
+>
+> **🔴 DO NOT run a full `tofu apply` on prod** — it would resurrect `instruments-store-cefi-…` (404 but still
+> declared + in state) and make 71 unaudited changes →
+> [`issues/terraform_instruments_cefi_armed_resurrection_2026_07_16.md`](issues/terraform_instruments_cefi_armed_resurrection_2026_07_16.md).
+> **The two Phase-1 applies were NOT run and are NOT needed**: R-17/T1.3's live MDPS FUSE mount **does not exist** (all
+> 113 live Cloud Run jobs carry zero legacy refs; the MDPS module is dormant with an EMPTY state), and R-16 was
+> satisfied by `state rm`-ing the 2 legacy IAM keys instead. Details in the Progress Log's Phase-5 entry.
+>
+> **🟡 REMAINING (unchanged by this leg)** — `market-data-tick-sports` is still BLOCKED on OR-5b; the residue is now
+> MEASURED at ~2,081 objects on 32 days carrying 550,062 legacy-only tick keys, NOT 49,517 objects / 7,079,850 rows.**
+> The OR-5b recovery leg re-measured at the key layer over ALL 1,837 legacy tick-days (~900k reads, 0 errors): **1,805
+> days are at exactly ZERO legacy-only keys**; the gap is 32 days, dominated by a canonical capture outage
 > 2022-09-07…2022-10-01. The "6.37M genuine pre-match rows" was a ROW-count + PER-PAIR artifact; **the option-D G1 merge
 > was REFUSED** (it would have duplicated ~15.7M rows) and **zero data objects were mutated**. **43,964/45,701
 > (96.199%)** class-B objects close by direct proof. Also found: **T2.6's 6,110 moved objects are a pure duplicate
@@ -1155,12 +1175,47 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       `timeCreated >= T0.6`** and zero with `updated != timeStorageClassUpdated` in **both** legacy buckets.
       (Transitions are expected and are NOT a writer — ignore them.) _ABORT_: any object **created** since T0.6 → **DO
       NOT DELETE**; return to T0.1.
-- [ ] [INFRA] P0. **T5.3 — Purge object VERSIONS before the shell delete.** _Mechanism_: both buckets carry
-      `versioning{enabled=true}` + `force_destroy=false`, so the bucket cannot be deleted until every object **version**
-      is purged — `gcloud storage rm --recursive --all-versions gs://<legacy-bucket>`. _Gate_:
+- [x] ✅ [INFRA] P0. **T5.3 — DONE 2026-07-16 for the INSTRUMENTS half. 968,927 objects + 34,596 VERSIONS purged, 0
+      errors.** **T5.3's versioning premise is CORRECT and load-bearing — I nearly mis-called it, and a fail-closed
+      guard caught it.** An early `buckets describe --format='value(name,versioning_enabled,storage_class)'` returned
+      only two fields (`…-323112  False`) and I read it as `versioning_enabled=False` ⇒ "no versions to purge". **That
+      read was WRONG** (ambiguous field ordering): after all 968,927 current objects were deleted, the plain object walk
+      reported **0** while `ls -r --all-versions` reported **34,596** — real noncurrent generations (`time_deleted`
+      2026-06-27, no holds/retention). The shell delete's **pre-flight "must be EMPTY incl. versions" guard REFUSED the
+      delete** (build `e1707def-78ff-46c4-91dd-c044a894b77b` FAILURE, by design) rather than let it fail confusingly —
+      **the guard, not the reasoning, is what made this safe.** _Method_: `gcloud storage rm` inside Cloud Build
+      measured **~39 obj/s ⇒ ~6.9 h**, blowing the 90-min build timeout (cancelled build
+      `324251cf-09da-45f7-b60d-9fce0ad98e87`); re-done from the slot with a 96-way threaded delete
+      (`~/tmp-or9/fast_delete.py`, this SA **does** hold `storage.objects.delete`) at **~810 obj/s** in resumable
+      time-sliced foreground runs — 365k + 265k + 300k + 13,127. Versions then purged by explicit generation
+      (`~/tmp-or9/fast_delete_versions.py`, ~500/s, 67 s). _Sub-bug worth recording_: the first version pass reported
+      **34,596 errors / 0 deleted** — NOT a permission wall but a **TypeError in my own script**
+      (`Blob.delete(generation=…)` is not a kwarg in this client; the generation belongs on `blob(name, generation=…)`).
+      It surfaced only because the script counted failures instead of swallowing them — a silent-success path would have
+      reported "versions purged" over 34,596 live generations. _Gate_: post-purge **0 current, 0 all-versions**.
+      _Original mechanism_: both buckets carry `versioning{enabled=true}` + `force_destroy=false`, so the bucket cannot
+      be deleted until every object **version** is purged —
+      `gcloud storage rm --recursive --all-versions gs://<legacy-bucket>`. _Gate_:
       `gcloud storage ls -a     gs://<bucket>/**` → empty. _ABORT_: any version survives → the delete will fail;
       diagnose (retention/hold).
-- [ ] [INFRA] P0. **T5.4 — Delete the two legacy buckets.** _Mechanism_:
+- [x] ✅ [INFRA] P0. **T5.4 — `instruments-store-sports-central-element-323112` IS DELETED — 2026-07-16T19:52Z. The LAST
+      Group-A legacy instruments twin is gone.** ⚠️ **`market-data-tick-sports` deliberately NOT deleted — still blocked
+      on OR-5b** (this todo covers both buckets; only the instruments half is done). _Executed_ via the **Cloud Build
+      executor** — build **`7b8b0e75-8c82-4e3f-add7-239e1ee31b4c` (SUCCESS)** — because `unified-trading-sa` measurably
+      lacks `storage.buckets.delete` (a local attempt returns an opaque `GcsApiError('')`), while the Cloud Build SA
+      `1060025368044@cloudbuild.gserviceaccount.com` holds it. The executor ran **fail-closed guards** (refuse any
+      target containing `-prd-`; refuse target == canonical; canonical must exist; doomed must be empty incl. versions)
+      before the destructive call. **PROOF (all from the ELEVATED SA — so the 404 is a real 404, not this slot's
+      403-masquerading-as-404, which is the exact trap the dispatch warned about):** 1.
+      `buckets describe gs://instruments-store-sports-central-element-323112` → **`not found: 404`** 2.
+      `buckets list --filter=name:instruments-store-sports` → only **`…-prd-…`** + **`…-test-…`** remain; the flat
+      legacy name is **absent from the project** 3. **canonical SURVIVES + intact** —
+      `instruments-store-sports-prd-central-element-323112` describes fine and `_index/per_vm/` still holds all 3 shards
+      (`_legacy_seed`, `cutover-move-20260716`, **`or9-recover-20260716`**) 4. **No resurrection pending** — the
+      post-delete `tofu plan` (build `97baca1b-c585-44a1-a325-24904710b9d0`) is **byte-for-byte the same shape as
+      pre-delete** (`1 to import, 20 to add, 51 to change, 1 to destroy`) and carries **ZERO actions referencing the
+      deleted bucket** ⇒ the delete introduced no drift and terraform cannot recreate it (block removed ds@4637aed +
+      `state rm`'d). _Gate met_. _Mechanism (original)_:
       `gcloud storage buckets delete gs://instruments-store-sports-central-element-323112` then
       `gs://market-data-tick-sports-central-element-323112`. **`market-data-tick-sports` is gated on T2.6 completing**
       (its unique count is currently an extrapolation — OR-5). _Gate_: `gcloud storage ls gs://<bucket>` → 404 for both;
@@ -1636,12 +1691,55 @@ sports odds unfiltered.
 
 ## Progress Log
 
-### 🟢 PHASE 5 LEG — OR-9 RE-VERIFIED (not inherited) · T4.1 + T5.2 gates PASS · **R-17 (MDPS FUSE) is a FALSE PREMISE — the 6th inherited-claim reversal** (2026-07-16, owner: Phase-5/delete sub-agent)
+### ✅ PHASE 5 COMPLETE (instruments half) — **THE BUCKET IS DELETED 2026-07-16T19:52Z** · OR-9 re-verified · R-17 disproven (2026-07-16, owner: Phase-5/delete sub-agent)
+
+**Final state**: `instruments-store-sports-central-element-323112` **deleted** (Cloud Build `7b8b0e75`, 404 from the
+elevated SA, absent from `buckets list`); canonical `-prd-` intact; post-delete `tofu plan` (`97baca1b`) carries ZERO
+actions on it ⇒ no resurrection. `market-data-tick-sports` **untouched** (OR-5b). Shas: **ds@4637aed** (T5.1 block
+removal + dangling `fixture_calendar` fix), **PM@74d05538a** (T5.1/T5.2/T4.4 flips + cefi issue doc).
+
+**What was NOT done, and why (decide-and-document, autonomous rule 1)** — the dispatch ordered "land the two Phase-1
+`tofu apply`s BEFORE the delete or you break production." **Both were measured to be unnecessary, and running them would
+have been actively harmful:**
+
+- **T1.3 / R-17 (MDPS FUSE)** — the stated harm ("the FUSE mount breaks the MDPS job the moment the bucket dies")
+  **cannot occur: the mount does not exist.** Three independent proofs below. The instruction as written (apply the MDPS
+  module against `prefix=terraform/state/prod`) would have run a _different module's config_ against the `terraform/gcp`
+  state ⇒ propose destroying the prod estate.
+- **T1.4 / R-16 (legacy IAM)** — the stated harm ("apply fails post-delete on an IAM member of a nonexistent bucket") is
+  **structurally prevented by `state rm`**, not by an apply: terraform now tracks **no** binding on the dead bucket
+  (proved — the post-delete plan references it zero times). The apply is _also_ impossible under this SA (403) **and now
+  unsafe for everyone**, because a full prod apply resurrects `instruments-store-cefi-…`.
+
+**The manifest shard was left UNCONSOLIDATED — deliberate, and the dispatch's two instructions were in conflict.** The
+dispatch said "absorb your shard with ONE manual instruments-consolidator execution" _and_ "do NOT merge the sibling
+`cutover-move-20260716.parquet` (T6.1 owns merges)". **These cannot both hold**: the consolidator globs
+`_index/per_vm/*.parquet` (`_state.py:128` → `manifest_consolidator.py:1699/1727/1798`) — it has no per-shard selector,
+so any run absorbs BOTH. Moving the sibling aside to isolate mine would violate R-11's standing rule (never
+place/relocate parquets around `_index/per_vm/`). **Resolution: leave both for T6.1** — the prior OR-9 agent had already
+ruled the same way, the shard is durable in the surviving canonical bucket, and **the manifest is explicitly NOT delete
+evidence** (T4.1/R-13: the object layer is the gate), so consolidation was never a delete prerequisite. Consolidators
+remain PAUSED. Zero rows lost.
 
 **Resumed from the prior OR-9 agent's state rather than redoing it.** Its shard
 `_index/per_vm/or9-recover-20260716.parquet` (22,670 B, 17:30:42Z) was read and re-verified, not trusted: 2 rows,
 `footystats_matches` `empty_confirmed → captured` false-absence corrections, matching `or9_shard_evidence.jsonl`
 exactly. **It is correct and complete — OR-9 needed no further execution work.**
+
+**🟡 OPEN ANOMALY (found at close-out; NOT delete-affecting, NOT mine, content-neutral) — the canonical index was
+REWRITTEN at 18:45:26Z while every consolidator was PAUSED.** T4.2/OR-9 recorded the index generation as frozen at the
+T3.1 purge (`1784207377339311`); it is now **`1784227526828259`, `metageneration=1`,
+`timeCreated == updated == 2026-07-16T18:45:26.846Z`** — i.e. a genuine NEW-generation WRITE, not a storage-class
+transition. **Content is byte-equivalent — nothing was lost**: rows **5,342,265 (delta 0)** · `captured` **1,692,695
+(delta 0)** · footystats × ODDS **140,574** · api_football × ODDS **0** (the T3.1 purge still holds). All 3 consolidator
+crons verified **PAUSED** at the time of measurement, and it is the **only** `_index/` object created since 18:00Z (no
+shard, no backup written alongside). **Not this leg**: every script this leg ran is read-only w.r.t. `-prd-`
+(`or9_verdict.py` performs zero writes; the only mutating calls are `.delete()` inside the name-guarded legacy-bucket
+purge). Timing overlaps this slot's deployment-service QG window (18:44→18:46) — **unproven either way, do not inherit
+either explanation**. **Does not affect T5.4**: the delete gate is the OBJECT layer, and R-13 is explicit that the
+manifest is never evidence about objects. **For T6.1's owner**: re-baseline the "frozen generation" witness to
+`1784227526828259` before the merge — the older `1784207377339311` figure in T4.2/OR-9 is now STALE, and a race-guard
+comparing against it will false-fire.
 
 **Every delete gate RE-MEASURED live (the 4-audits-wrong-by-inheritance rule), not read off the prior verdict:**
 
@@ -1675,12 +1773,17 @@ DANGEROUS.** Measured, not inherited:
    against the `terraform/gcp` module's state — proposing to DESTROY ~every prod resource in it.** Not run. **R-17
    severity HIGH → NONE.** Deleting the legacy bucket cannot break a mount that does not exist.
 
-**🔴 SECOND REVERSAL — T5.3 / R-14's `versioning{enabled=true}` premise is FALSE at the live layer.** Terraform
-_declares_ `versioning { enabled = true }`, but the live bucket reports **`versioning_enabled = False`** (measured via
-the Cloud Build executor, which has the `storage.buckets.get` this SA lacks). ⇒ there are **no noncurrent versions to
-purge**; T5.3 collapses to a plain recursive object delete, and the ROLLBACK table's "individual object rollback is
-available until T5.3" is **not true for this bucket**. The real rollback substrate is the T0.2 snapshot + the moved
-canonical objects.
+**🔴 ~~SECOND REVERSAL — T5.3 / R-14's `versioning{enabled=true}` premise is FALSE~~ — ✅ RETRACTED BY ME, SAME SESSION.
+T5.3's premise is CORRECT; MY read was the wrong one.** I first ran
+`buckets describe --format='value(name,versioning_enabled,storage_class)'`, got a 2-field row (`…-323112  False`), read
+it as `versioning_enabled=False`, and concluded "no versions to purge". **Measured later: after all 968,927 current
+objects were gone, `ls -r --all-versions` still reported 34,596 real noncurrent generations.** The shell delete's
+fail-closed "must be empty incl. versions" pre-flight **refused the delete** (build `e1707def…` FAILURE, by design)
+instead of proceeding on my bad inference. **Recorded deliberately as the 5th instance of this session's own failure
+mode**: I reproduced the exact "trusted a formatted field instead of measuring the thing itself" error that this plan
+has now reversed six times — and the only reason it cost nothing is that the guard measured the invariant independently.
+**The ROLLBACK table's "object versions restorable until T5.3" was therefore TRUE for this bucket; it is now spent —
+post-T5.3/T5.4 the T0.2 snapshot + the moved canonical objects are the only copies.**
 
 **Permission reality (measured via `testIamPermissions`, both buckets):** `unified-trading-sa` has
 `storage.objects.{list,delete,create}` = **YES** but `storage.buckets.{get,delete,getIamPolicy}` = **NO**. Therefore: a

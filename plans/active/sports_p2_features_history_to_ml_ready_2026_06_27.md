@@ -46,6 +46,23 @@ drift_direction: advance-code
 
 # Sports P2c — derived features history to ML-ready
 
+> **🟡 2026-07-16 ~19:57Z — Todo 1 STRUCTURALLY BLOCKED by `sports_legacy_bucket_cutover_2026_07_16.md` (P0,
+> operator-authorized, in-flight). DO NOT launch new sports features/backfill VMs until that plan's Phase 6 (RESTORE)
+> resumes `uts-prod-manifest-consolidator-market-data-sports-cron`.** That cutover's Phase 0 froze (T0.6,
+> 2026-07-16T08:18:00Z) the 3 sports manifest consolidators — including `market-data-tick-sports-prd`'s — so its index
+> stays quiet through the cutover's Phase 3-5 (CLEAN/VERIFY/DELETE, currently in-flight; `market-data-tick-sports` leg
+> still open on OR-5b as of this writing). Any features-service VM computing sports features hits the "sports batch
+> startup gate" consolidator-staleness check (>120s budget) against that frozen index — a genuine, INTENTIONAL freeze,
+> not a consolidator outage — 3 retries then fail_fast. Confirmed live: 4 freshly-launched VMs (`fss-backfill-vm-1..4`,
+> started 2026-07-16 19:55-19:56Z, targeting odds/derived features ranges spanning 2017-2021) all hit
+> `heartbeat is ~41900s old (> 120s budget)` on `market-data-tick-sports-prd-central-element-323112` and will fail_fast
+> within ~4 min of launch — wasted VM spend, not real progress on Todo 1. **Operator explicitly authorised "stopping all
+> sports related crons and vms" for the cutover's duration** (see that plan's frontmatter summary) — new sports VM
+> launches right now work against that authorization. Resume Todo 1 dispatches only after
+> `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 confirms the market-data-sports consolidator scheduler is RESUMED
+> (`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron` → `state: ENABLED`). See
+> Progress Log entry same timestamp for full evidence.
+
 > **🟢 2026-07-14 20:xx Z: GW recompute COMPLETE + shape suspicion RESOLVED — per-league layout is CANONICAL, no redo.**
 > All 3 `fss-backfill-vm-1/2/3` exited rc=0 (19:03–19:05Z, 91/91 dates), self-deleted; manifest shows DERIVED/FIXTURE
 > captured on all 91 window days (1,672 per-league rows each, canonical league NAMES, 0 numeric). The
@@ -134,16 +151,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -160,6 +177,134 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-16 19:56Z — data_engineering slot-3 (Todo 1 dispatch — both tracked VMs found dead on the now-resolved consolidator bug; corrected a load-bearing wrong assumption from prior sessions; launched 4-VM parallel gap-fill covering full 2017-2026 span)
+
+Fresh-pulled all 24 slot repos clean. Operator message on this dispatch: "default fuller solution, do not idle" — went
+beyond a fast re-verify.
+
+**Both previously-tracked VMs (`features-sports-sports-20260715-004933`, `-091218`) are gone and both FAILED (rc=1)**,
+not completed — `gcloud compute instances list` shows zero `features-sports-*`/`fss-backfill-vm-*` VMs running. Root
+cause confirmed via `run.log`: both hit
+`Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112'` — the exact
+failure mode `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md` already root-caused and
+shipped a fix for (`unified-trading-library@c47273c1`, deployed ~2026-07-15 14:05Z). Both dead VMs launched BEFORE that
+deploy (00:49Z and 09:12Z on 07-15, image pulled at boot), so they ran the old, buggy image the whole time and paid for
+it at the tail: `-004933` (range 2018-07-09→2019-08-11) got through 397/399 days, dying on the LAST day (2019-08-11);
+`-091218` (range 2020-09-09→2020-10-05) completed through its last day too but died on the wrap-up health check, leaving
+only its FIRST day (2020-09-09) uncomputed. Confirmed the consolidator is genuinely healthy now (`gsutil stat` on the
+consolidated index, fresh) — a fresh VM launch now pulls the fixed image, so this should not recur.
+
+**Correcting a load-bearing wrong assumption several prior sessions made** ("scattered single-day gaps = honest absence,
+no fixtures that day"): did a full single-walk listing of `sports_features/by_date/` (3,254 unique dates present,
+2017-02-02→2026-07-23) and diffed against the full calendar 2017-02-02→2026-07-16 (3,452 days) — 205 missing, of which
+188 are isolated 1-2 day gaps and 2 are 3+ day blocks (`2017-02-19→21`, 3d; `2024-02-03→08`, 6d). Spot-checked 11 of the
+"single-day" gaps spread across 2017-2026 against the upstream `instruments-store-sports-prd` fixtures path: **10 of 11
+had real fixtures (3-40 leagues each)** — only the earliest (2017-02-03, inside the already-confirmed pre-coverage
+window) was genuine honest-absence. So the vast majority of these scattered gaps are real, uncomputed days, not
+honest-absence — the "single-day gaps are all honest-absence" framing several 2026-07-14/15 sessions used to justify "no
+new action" was not backed by an upstream check and was wrong more often than not.
+
+**Action taken**: launched
+`deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --start 2017-02-01 --end 2026-07-16 --vms 4`
+(default `--skip-existing`, `--tables` unset → all 3 feature groups per date, confirmed via `vm_fss_features.sh` startup
+banner: "Skip existing: true / Tables: all"). This is the SSOT-recommended year-chunked/resumable mechanic, parallelized
+4-way by the existing launcher rather than 190 individual single-day VMs — skip-existing makes the ~3,250 already-done
+days cheap existence-checks instead of full recompute, so this closes every real gap across the whole history in one
+dispatch, not just the 2 tiny tail gaps the dead VMs left behind. Confirmed no pre-existing `fss-backfill-vm-*` VM was
+running before launch (checked via `gcloud compute instances list`, no name-collision risk this dispatch). All 4 VMs
+(`fss-backfill-vm-1..4`, SPOT, e2-standard-4) confirmed `RUNNING` post-launch with fresh, correct startup logs:
+
+- `fss-backfill-vm-1`: 2017-02-01 → 2019-06-13 (863 days)
+- `fss-backfill-vm-2`: 2019-06-14 → 2021-10-23 (863 days)
+- `fss-backfill-vm-3`: 2021-10-24 → 2024-03-04 (863 days)
+- `fss-backfill-vm-4`: 2024-03-05 → 2026-07-16 (864 days)
+
+Checkbox NOT flipped (gate structurally unmet — these 4 VMs still need hours to run through their skip-checks + the
+genuine ~200-day compute). **Handoff for the next dispatch**: check
+`bash deployment-service/scripts/vm/launch-features-sports-parallel-backfill-vm.sh --status` (or
+`gcloud compute instances list --filter="name~fss-backfill-vm"` + per-VM `run.log` tail) before assuming these are done
+or dead; if any VM died prematurely, relaunch just its sub-range with `launch-features-vm.sh --feature-family sports`
+(note: that consolidated launcher has NO `--skip-existing` passthrough today — pass a NARROW date range matching only
+the actual gap, don't re-run its full original range without skip-existing, or it will recompute every already-done day
+in range).
+
+### 2026-07-16 20:02Z — data_engineering slot-6 (Todo 3 dispatch — CORRECTING the prior 19:56Z entry: the 4-VM relaunch hit an unrelated, operator-authorized bucket-cutover freeze and was crash-looping; VMs deleted, banner added, still BLOCKED-PREREQ)
+
+Fresh-pulled all 24 slot repos clean. Dispatched to Todo 3 (blocked on Todo 1); found the immediately-prior 19:56Z entry
+(same plan, slot-3) had just launched `fss-backfill-vm-1..4` believing the only relevant consolidator issue was the
+already-fixed `instruments-store-sports` staleness-detection bug (`c47273c1`). That fix is real and unrelated to what
+actually happened next.
+
+**Found all 4 VMs crash-looping, not making progress.** Each VM's `run.log` showed the whole `features-service` batch
+process restarting every ~2 min (3× `"Starting batch mode"` / `"[features-service] startup complete"` in the ~5 min
+since launch), each cycle hitting the same `sports batch startup gate` consolidator-staleness check for
+**`market-data-tick-sports-prd-central-element-323112`** (a DIFFERENT bucket from the one `c47273c1` fixed) — 3 retries
+(75s apart) then `recovery=fail_fast`, then the whole process apparently respawns and repeats. `gsutil stat` on that
+bucket's `_index/availability_index.parquet` showed `consolidator_run_at: 2026-07-15T22:51:17Z` — **~21h stale**, far
+beyond any of the per-AG in-flight horizons (defi 4200s/sports 2400s/default 3600s) documented in the resolved sibling
+issue `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`, so this is not that same "legit slow
+merge" false-positive class.
+
+**Root cause: this bucket's consolidator scheduler is DELIBERATELY paused**, not down. `gcloud scheduler jobs list`
+shows `uts-prod-manifest-consolidator-market-data-sports-cron` = `PAUSED`, alongside every other sports scheduler (21/21
+frozen). Read `plans/active/sports_legacy_bucket_cutover_2026_07_16.md` (P0, created TODAY, operator-authorized,
+currently in Phase 5/DELETE): its Phase 0 (T0.6, 2026-07-16T08:18:00Z) froze the 3 sports manifest consolidators —
+including this one — specifically so the index stays QUIET through Phases 3-5 (CLEAN/VERIFY/DELETE); Phase 6 (RESTORE)
+is what resumes them, and per that plan's own top banner the `market-data-tick-sports` leg is still open (blocked on its
+OR-5b). The operator's plan frontmatter literally "authorises stopping all sports related crons and vms" for the
+cutover's duration — the 19:56Z relaunch (reasonably, given it had no visibility into a plan created after its context)
+worked against that freeze.
+
+**Action taken**: deleted all 4 crash-looping VMs
+(`gcloud compute instances delete fss-backfill-vm-1..4 --zone=asia-northeast1-c --project=central-element-323112`,
+confirmed deleted) rather than let them keep burning SPOT e2-standard-4 compute indefinitely with zero chance of success
+until the OTHER plan's Phase 6 lands — relaunching is a single trivial command once unblocked, so nothing is lost by
+stopping now. Added a 🟡 cross-plan banner at the top of this plan pointing at the freeze + the resume condition, so the
+next Todo 1 dispatch doesn't repeat the same relaunch. No code changed this entry (plan-doc + a live-infra stop only);
+ships via the `docs(plans):` carve-out.
+
+**Todo 3 (my dispatched task) stays BLOCKED-PREREQ** — Todo 1 was already gated on it, and is now ALSO gated on a
+second, unrelated P0 migration. **Handoff for the next dispatch on either todo**: do NOT relaunch sports features VMs
+until
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron --location=asia-northeast1 --project=central-element-323112`
+reads `state: ENABLED` (i.e. `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 has run for this bucket) — check that
+plan's own Progress Log for its latest phase status first.
+
+### 2026-07-16 20:04Z — data_engineering slot-6 (Todo 1 dispatch, same session — re-verified freeze still live, deliberately NOT relaunching, skipped)
+
+Fresh-pulled all 24 slot repos clean (own prior entry above, ~2 min ago, was Todo 3 on this same plan). Dispatched to
+Todo 1 itself this time.
+
+Re-checked both facts from the prior entry rather than trusting them stale:
+`gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **zero rows** (the 4 VMs I
+deleted 2 min ago are confirmed gone, nothing else running);
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron` → **`PAUSED`**, unchanged. The
+`sports_legacy_bucket_cutover_2026_07_16.md` freeze is still in effect — launching a fresh VM fleet right now would just
+reproduce the exact crash-loop documented above, for the exact same root cause.
+
+**Deliberately did NOT launch a relaunch this dispatch.** Not re-running a manifest gap-scan either (single-walk
+discipline — the 19:56Z entry above already did a full walk 8 min ago and nothing legitimate can have changed given all
+writers are frozen). Checkbox NOT flipped (gate structurally unmet, and now doubly so). No code/infra action this entry
+beyond the two read-only re-checks above; ships via the `docs(plans):` carve-out.
+
+### 2026-07-16 (same evening) — data_engineering slot-2 (Todo 1 dispatch — re-verify only, freeze still live, skipped to let queue advance)
+
+Dispatched to Todo 1 (`sports_p2_features_history_to_ml_ready-001`). Local `gcloud` (snap) was broken in this sandbox
+(`snap-confine` capability error), so re-verified via the non-snap install at `~/google-cloud-sdk/bin/gcloud` instead of
+skipping the check:
+`gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-sports-cron --location=asia-northeast1 --project=central-element-323112`
+→ **`state: PAUSED`**, unchanged from the 20:02Z/20:04Z entries above.
+`gcloud compute instances list --filter="name~fss-backfill OR name~features-sports"` → **0 rows**, confirms no relaunch
+happened since. Cross-checked `sports_legacy_bucket_cutover_2026_07_16.md` directly: Phase 6 (RESTORE) todos T6.0-T6.8
+are ALL still `- [ ]` unstarted, and OR-5b (the `market-data-tick-sports` disposition ruling gating Phase 5/6 for that
+leg) is still open per its own Progress Log — so the freeze this plan's banner describes is corroborated from both
+sides, not just this plan's banner text. The freeze genuinely has not lifted; a 3rd consecutive re-verify-only entry
+with no state change adds nothing further, so **not relaunching**, checkbox stays `- [ ]`, and skipping this task
+(`/skip-current-task`) so the dispatcher can route to other queued work instead of a 4th idle re-check loop. Next
+dispatch on this todo should check `sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.1 first — once it flips, the
+scheduler `state` will read `ENABLED` and this todo unblocks immediately (single trivial relaunch command, nothing lost
+by waiting). No code/infra change this entry; ships via the `docs(plans):` carve-out.
 
 ### 2026-07-15 10:10Z — data_engineering slot-11 (Todo 1 dispatch — fast re-verify only, both tracked VMs healthy + progressing, known consolidator-staleness self-recovering, no new action needed)
 

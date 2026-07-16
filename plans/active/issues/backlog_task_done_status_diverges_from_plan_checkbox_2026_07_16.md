@@ -146,10 +146,12 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       and `regen_backlog_from_plan.py` dropping the `issues/` segment from `plan_ref`) that made this exact gate inert
       or fleet-wide-false-rejecting for the cross-repo / issue-doc-sourced cases — see Progress Log. (repo:
       agent-orchestrator) — agent-orchestrator@87d6fde + agent-orchestrator@666c860, infra slot-13, 2026-07-16.
-- [ ] [INFRA] P2. **One-off audit sweep**: cross-check every current `status: done` backlog task carrying a `plan_ref`
-      against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
-      this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
-      fixed. (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P2. **One-off audit sweep**: cross-checked every current `status: done` backlog task carrying a
+      `plan_ref` against that plan's live checkbox state — **7/7 (100%) were false-`done`**, not just this doc's
+      `-001`/`-002`. Built the missing correction path (`POST /api/backlog/{id}/reopen`, `agent-orchestrator@164378c`, 3
+      new tests, full QG green) since none existed, then called it for all 7; verified `GET /api/backlog?status=done`
+      now returns 0 tasks with a `plan_ref` and 3/7 already re-dispatched to live slots. Full per-task verdict +
+      evidence in the Progress Log. (repo: agent-orchestrator) — infra slot-15, 2026-07-16.
 - [x] ✅ [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
       `sports_p2_features_history_to_ml_ready-001` (Todo 1, "Compute features 2015→present") is actually complete before
       trusting any future `gate_on_depends` dispatch of `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 —
@@ -415,3 +417,90 @@ both bugs are in the exact file/mechanism (`verify.py`'s `check_plan_flip` machi
 hard-blocking, and leaving them unfixed would have made the hard-409 either (a) a no-op for the dominant cross-repo case
 or (b) a fleet-wide false-rejection footgun for every issue-doc-sourced task — either outcome undermines the very fix
 this task exists to ship, so both are in-scope here rather than a separate escalation. Calling `/done` now.
+
+### 2026-07-16T19:0xZ UTC — infra slot-15 (Todo 3 — audit sweep executed, code shipped)
+
+Fresh-pulled every slot repo to LDR HEAD before starting. Ran the audit: `GET /api/backlog?status=done` returned 7 tasks
+total, all 7 carrying a non-empty `plan_ref`. For each, resolved the plan file in the freshly-pulled PM sibling clone
+(`plans/active/<name>.md` or its `issues/` subpath, both searched), matched the task's `title` text to the corresponding
+checkbox line, and independently verified via `git show --stat <done_sha>` in whichever repo actually contains that SHA
+(not assumed — searched every repo in the slot for it, since `done_sha` for a code-repo task lives outside
+`unified-trading-pm`).
+
+**Result: 7/7 (100%) are confirmed false-`done`** — every single currently-`done` task with a `plan_ref` has its
+matching checkbox still `- [ ]` at LDR HEAD, and every cited `done_sha` is either an explicit "re-verify, declining, no
+action taken" Progress Log commit, a commit for a _different_ todo than the one it's attached to, or (in one case,
+`cefi_deribit_combo_and_okx_bare_venue_gaps-001`) a commit whose own message says "Neither entry alone fully wires
+capture" — i.e. explicitly partial, and the plan's own `🚧 PARTIAL PROGRESS` annotation on that exact todo agrees. None
+of the 7 are a live judgment call; all are unambiguous. Full list (task id → plan_ref → done_sha → verdict):
+
+1. `mvp_backfill_defi_onchain_v10-002` → `mvp_backfill_defi_onchain_v10_2026_06_27.md` L449 → `1cc8d9f3b` (PM repo,
+   "fresh gate re-check ... gate still not met") → MISMATCH.
+2. `sports_p2_features_history_to_ml_ready-001` → same plan L101 → `094756d64` (PM repo, "no new action needed") →
+   MISMATCH (this doc's original finding).
+3. `sports_p2_features_history_to_ml_ready-002` → same plan L109 → `0402f7a86` (PM repo, decline commit for a
+   _different_ todo, Todo 3) → MISMATCH (this doc's original finding).
+4. `cefi_deribit_combo_and_okx_bare_venue_gaps-001` → issue doc L161 → `f0dc61a22ec53405ab83d2bdc7336772421cc244`
+   (unified-api-contracts, partial scaffolding per its own commit message and the plan's own annotation) → MISMATCH.
+5. `l2_book_microstructure_capture-005` → `l2_book_microstructure_capture_2026_07_13.md` L173 →
+   `ef467572d2faef76402353f09777917086034b24` (market-tick-data-service, commit message says "Todo 4" — wrong todo,
+   wrong repo for Todo 5's features-service ask) → MISMATCH.
+6. `l2_book_microstructure_capture-007` → same plan L213 → `a24f09e095bf4c9925848b4e585550f39dde59c3` (commit message:
+   "verified done-condition false, file NOTIFY-OPERATOR finding" — explicitly NOT done) → MISMATCH.
+7. `cefi_deribit_combo_and_okx_bare_venue_gaps-008` → issue doc L1385 → `5a05b88` (deployment-service, unrelated VM
+   script fix; task title is "Operator decision needed... unified-api-contracts's...") → MISMATCH.
+
+No reopen/reset endpoint existed on `/api/backlog` (confirmed by reading `server/routes/backlog.py` — only
+`GET`/`reload`/`regen`/`DELETE`/`blockers` existed) and the live DB (`agent-orchestrator/data/state/state.db`, a
+root-clone runtime path outside any slot's git worktree) is out of a worker's write scope directly, so built the missing
+correction path rather than hand-editing the DB: `POST /api/backlog/{task_id}/reopen` (new endpoint,
+`server/routes/backlog.py` + `ReopenTaskRequest` model) resets `status=queued` via the existing
+`ss.release_task_to_queue` helper and clears `done_sha`/`done_at`/`done_evidence`/`done_verification_json`; refuses 409
+if the task is currently `dispatched` (same guard as `DELETE`). 3 new regression tests (`tests/test_backlog_reopen.py`:
+clears-and-requeues, missing-task-404s, refuses-dispatched). Full `quality-gates.sh` green (1357 passed, 1 skipped).
+Shipped via `quickmerge --agent --files`: `agent-orchestrator@164378c`.
+
+Root-clone deploy is on the existing `ao-self-pull.sh` cron (`*/15`, FF-pulls + restarts on HEAD change — confirmed from
+`/var/log/ao-self-pull.log`, not assumed) so the new endpoint needs that cycle before it's callable; armed a background
+watchdog (`run_in_background`, ≤20min bound) that waits for the root clone to reach `164378c`, then calls `/reopen` for
+all 7 confirmed task ids above with the audit reason, and writes the responses to `reopen_results.json`. Continuing to
+monitor rather than idle-waiting; will append the outcome + flip this todo once the watchdog reports back (or file a
+follow-up if the 20min window lapses without a deploy).
+
+### 2026-07-16T19:4xZ UTC — infra slot-15 (Todo 3 — reopen executed + verified, closing)
+
+Root clone reached `164378c` at 19:41:07Z (one `ao-self-pull` tick after ship, as expected) and the endpoint probed live
+at 19:42:05Z. Called `POST /api/backlog/{id}/reopen` for all 7 confirmed-mismatch task ids from the audit above — all 7
+returned `{"ok": true, "prior_status": "done", "new_status": "queued", ...}` with each task's actual prior `done_sha`
+echoed back (full log + responses in this task's `reopen_results.json`, not reproduced here). Verified against the live
+API immediately after: `GET /api/backlog?status=done` now returns **0** tasks carrying a `plan_ref` (down from 7) —
+confirms every reopened row actually left the `done` bucket, not just a 200 with no real effect. Cross-checked the full
+listing per task id: 4/7 sitting `queued`, 3/7 already re-`dispatched` to live slots
+(`mvp_backfill_defi_onchain_v10-002`→slot 2, `sports_p2_features_history_to_ml_ready-001`→slot 3,
+`cefi_deribit_combo_and_okx_bare_venue_gaps-001`→slot 5) — the fleet picked them back up within seconds of requeue, each
+now with `done_sha: null`, so a future `/done` on any of them goes through the fresh hard-409 gate (Todo 2) rather than
+repeating this exact failure mode. Audit sweep is complete: no other `status: done` + `plan_ref` task existed fleet-wide
+beyond the 7 found (0 remain, and the sweep re-ran against live state post-fix, not a stale snapshot). Closing this
+todo. (repo: agent-orchestrator) — infra slot-15, 2026-07-16.
+
+### 2026-07-16T19:5xZ UTC — infra slot-15 (adjacent finding + fix: this task's own `/done` self-blocked on the fresh gate)
+
+Calling `/done` for this task hit the very gate Todo 2 just shipped: 409 `cross_repo_pm_log_clean` against
+`plan_ref: "plans/active/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md"` (no `issues/`) even though
+the real file — and my genuine flip commit `unified-trading-pm@828c7ac` — live at
+`plans/active/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`. Root cause: this task's own
+`TaskRow`/`backlog.yaml` entry was created BEFORE the `regen_backlog_from_plan.py` `issues/`-segment fix landed
+(`agent-orchestrator@666c860`, Todo 2's follow-on), so it still carries the pre-fix, `issues/`-stripped `plan_ref`. That
+fix only corrects NEW parses — it does not retroactively correct already-existing rows — so `check_plan_flip`'s
+cross-repo git-log search (`_pm_log_touches_plan_ref`) was searching a path that doesn't exist and finding nothing, even
+though the flip is real. Given the fresh hard-409 gate is now LIVE fleet-wide, every other pre-fix issue-doc- sourced
+task carries the same stale `plan_ref` and would hit the identical false rejection on its own `/done` — a fleet-wide
+footgun, not a one-off. Fixed `check_plan_flip` (`server/verify.py`) to try both the literal `plan_ref` and its
+`issues/` variant (added `_plan_ref_candidates()`), in both the mode-1 file-in-worktree check and the mode-2 cross-repo
+git-log search, before concluding no flip happened. New regression test
+(`test_done_accepts_when_task_plan_ref_is_stale_missing_issues_segment`) reproduces this exact self-block. Full
+`quality-gates.sh` green (1358 passed, 1 skipped, up from 1357). Shipped via `quickmerge --agent --files`:
+`agent-orchestrator@7053dcf`. Per findings-triage (in-file → same-commit-adjacent scope): this bug is in the exact
+mechanism (`check_plan_flip`) my own task's `/done` call just exercised, and leaving it unfixed would silently
+false-reject every other pre-fix issue-doc-sourced task's legitimate `/done` — clearly in-scope here. Calling `/done`
+again now with the corrected gate in place.
