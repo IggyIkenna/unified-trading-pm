@@ -64,14 +64,24 @@ log() { printf '\033[36m[glue-runners]\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m[glue-runners] WARN:\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[31m[glue-runners] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
-# Read the token out of Secret Manager AS ${RUNNER_USER} — not as whoever is running install.
+# Read a Secret Manager secret AS ${RUNNER_USER} whenever we are root — the ONE way this script
+# touches Secret Manager, so the rule below cannot be applied in some paths and forgotten in others.
 #
-# LOAD-BEARING: install runs under sudo (root) but the WRAPPER runs as ${RUNNER_USER}, and gcloud ADC
-# is PER-USER. Probing as root would happily succeed against root's ADC and tell us nothing about the
-# account that actually has to resolve this secret 8 times a minute. So we probe as the real consumer.
-secret_token_as_runner_user() {
-  sudo -u "${RUNNER_USER}" gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
-    ${GCP_PROJECT:+--project="${GCP_PROJECT}"} 2>/dev/null || true
+# LOAD-BEARING, and it cuts BOTH ways (both halves measured on planning-VM 2026-07-16):
+#   • install runs under sudo but the WRAPPER runs as ${RUNNER_USER}. Probing as root would prove
+#     nothing about the account that actually resolves this secret on every runner start.
+#   • root on this box has NO ADC at all, so resolving as root simply FAILS — which is exactly how
+#     `status` came back "no admin token resolvable" while the runners were resolving it fine.
+# Either way the answer is the same: ask the account that owns the ADC.
+secret_access() {
+  local secret="$1" project="${2:-}"
+  if [ "$(id -u)" -eq 0 ]; then
+    sudo -u "${RUNNER_USER}" gcloud secrets versions access latest --secret="${secret}" \
+      ${project:+--project="${project}"} 2>/dev/null || true
+  else
+    gcloud secrets versions access latest --secret="${secret}" \
+      ${project:+--project="${project}"} 2>/dev/null || true
+  fi
 }
 
 # HTTP status of the registration-token POST — the honest probe for Administration:write, because it
@@ -104,8 +114,7 @@ resolve_admin_token() {
   # A legacy (GH_PAT-path) install put the literal token in the file; the secret path did not.
   if [ -z "${secret}" ] && [ -n "${literal}" ]; then printf '%s' "${literal}"; return 0; fi
   if [ -n "${secret}" ]; then
-    gcloud secrets versions access latest --secret="${secret}" \
-      ${project:+--project="${project}"} 2>/dev/null || true
+    secret_access "${secret}" "${project}"
   fi
 }
 
@@ -117,28 +126,100 @@ all_instances() {
   for i in $(seq 1 "${WRITER_COUNT}"); do echo "writer-${i}"; done
 }
 
+# The runner's PATH, read from the unit file so there is exactly ONE source of truth. Parsing it
+# (rather than duplicating the string here) means preflight can never green-light a PATH the runner
+# will not actually have.
+runner_path() {
+  local p
+  p="$(sed -n 's/^Environment=PATH=//p' "${HERE}/github-glue-runner@.service" | head -1)"
+  [ -n "${p}" ] || die "no 'Environment=PATH=' in ${HERE}/github-glue-runner@.service — refusing to guess the runner's PATH"
+  printf '%s' "${p}"
+}
+
+# Run a command EXACTLY as a job step will: as ${RUNNER_USER}, on the unit's PATH, with the env
+# SCRUBBED (`env -i`) so no inherited PATH can leak in and fake a pass.
+run_as_runner() {
+  local rp="$1" cmd="$2"
+  if [ "$(id -u)" -eq 0 ]; then
+    sudo -u "${RUNNER_USER}" env -i PATH="${rp}" HOME="/home/${RUNNER_USER}" bash -c "${cmd}" 2>/dev/null
+  else
+    env -i PATH="${rp}" HOME="${HOME:-/home/${RUNNER_USER}}" bash -c "${cmd}" 2>/dev/null
+  fi
+}
+
+probe_tool() { run_as_runner "$1" "command -v $2"; }
+
 # The MOVE set's tool inventory (measured 2026-07-16): gh 181 · jq 111 · python3 105 · uv 32 · aws 22
 # · gcloud 16 · pip 15 · npm 1. docker is NOT needed (its hits are a step *name* that dispatches to
 # Cloud Build, plus the Artifact Registry hostname in `gcloud artifacts docker images describe`).
 # Hosted ubuntu-latest ships all of this; this VM is the one that has to be checked.
+#
+# WHY THIS PROBES THE UNIT'S PATH AND NOT THE CALLER'S (learned the hard way, 2026-07-16): the first
+# version of this checked `command -v` in whatever shell invoked it. Run from an interactive/login
+# shell it reported uv ✓ — while the runner, which systemd starts WITHOUT ~/.profile, could not see
+# uv at all. A preflight that passes in a shell the runner never uses is worse than no preflight: it
+# is a confident green on a box that will fail 32 of the 38 movers.
 cmd_preflight() {
-  local missing=0 t
-  log "toolchain parity vs ubuntu-latest (what the MOVE set actually invokes):"
+  local missing=0 t rp resolved
+  rp="$(runner_path)"
+  log "toolchain parity vs ubuntu-latest, resolved as ${RUNNER_USER} on the RUNNER's PATH:"
+  printf '  PATH=%s\n' "${rp}"
   for t in gh jq python3 uv aws gcloud git; do
-    if command -v "${t}" >/dev/null 2>&1; then
-      printf '  \033[32m✓\033[0m %-8s %s\n' "${t}" "$(command -v "${t}")"
+    resolved="$(probe_tool "${rp}" "${t}")"
+    if [ -n "${resolved}" ]; then
+      printf '  \033[32m✓\033[0m %-8s %s\n' "${t}" "${resolved}"
     else
-      printf '  \033[31m✗\033[0m %-8s MISSING\n' "${t}"; missing=$((missing + 1))
+      printf '  \033[31m✗\033[0m %-8s MISSING on the runner PATH\n' "${t}"; missing=$((missing + 1))
     fi
   done
+
+  # pip is 15 uses across 12 movers and is the subtlest failure on this host (MEASURED 2026-07-16):
+  # Ubuntu 24.04's system python has NO pip AND ships /usr/lib/python3.12/EXTERNALLY-MANAGED, so the
+  # 8 movers running `python3 -m pip install "google-cloud-firestore>=2,<3"` fail twice over. Hosted
+  # ubuntu-latest has neither restriction. The slot venv, FIRST on the unit PATH, is what makes those
+  # movers work unmodified — its python has pip and is not externally-managed.
+  #
+  # This check is PHASE-AWARE on purpose: install BUILDS that venv, so demanding pip before install
+  # would block install for a reason install itself fixes. Before install the honest question is
+  # "can a venv be built here" (that is the real precondition — python3-venv is a separate package
+  # and its absence is invisible until the slot build); after install it is "does pip actually
+  # resolve on the runner's PATH".
+  if [ -x "${SLOT_VENV}/bin/python" ]; then
+    resolved="$(run_as_runner "${rp}" 'python3 -m pip --version 2>&1 | head -1')"
+    case "${resolved}" in
+      *"No module named pip"*)
+        printf '  \033[31m✗\033[0m %-8s slot venv exists but python3 has NO pip — 12 movers need it\n' "pip"
+        missing=$((missing + 1)) ;;
+      *) printf '  \033[32m✓\033[0m %-8s %s\n' "pip" "${resolved}" ;;
+    esac
+  else
+    # The probe dir is created INSIDE the runner shell, not out here: preflight may run as root, and
+    # a root-owned `mktemp -d` (0700) would make the venv fail with EACCES for ${RUNNER_USER} — a
+    # false NEGATIVE that looks exactly like a missing python3-venv. Same class of bug as probing on
+    # the wrong PATH, just pointing the other way.
+    # shellcheck disable=SC2016  # single quotes are REQUIRED: $d must expand in the runner's shell,
+    # not in this one — the temp dir has to be created by ${RUNNER_USER} for the probe to be honest.
+    if run_as_runner "${rp}" \
+         'd="$(mktemp -d)"; python3 -m venv "$d/v" >/dev/null 2>&1 && echo ok; rm -rf "$d"' \
+       | grep -q ok; then
+      printf '  \033[32m✓\033[0m %-8s (slot venv not built yet — install will create it and supply pip)\n' "pip"
+    else
+      printf '  \033[31m✗\033[0m %-8s python3 -m venv FAILS for %s — run bootstrap-ci-host.sh\n' "pip" "${RUNNER_USER}"
+      printf '           without it install dies at the slot venv, and 12 movers lose pip\n'
+      missing=$((missing + 1))
+    fi
+  fi
+
   # npm has exactly ONE use in the MOVE set — advisory, not fatal.
-  if command -v npm >/dev/null 2>&1; then
-    printf '  \033[32m✓\033[0m %-8s %s\n' npm "$(command -v npm)"
+  resolved="$(probe_tool "${rp}" npm)"
+  if [ -n "${resolved}" ]; then
+    printf '  \033[32m✓\033[0m %-8s %s\n' npm "${resolved}"
   else
     warn "npm missing — 1 MOVE workflow references it; check before flipping that one"
   fi
-  [ "${missing}" -eq 0 ] || die "${missing} required tool(s) missing — install them before flipping any runs-on"
-  log "preflight OK"
+
+  [ "${missing}" -eq 0 ] || die "${missing} required tool(s) missing on the RUNNER's PATH — fix by adding them to bootstrap-ci-host.sh and re-running it, NOT by hand-installing (a hand-fix leaves the failsafe lying)"
+  log "preflight OK — every tool resolves in the environment the runner will actually have"
 }
 
 cmd_install() {
@@ -159,7 +240,7 @@ cmd_install() {
   local admin_tok=""
   if [ -n "${GH_TOKEN_SECRET:-}" ]; then
     log "resolving admin token as ${RUNNER_USER} from Secret Manager: ${GH_TOKEN_SECRET}${GCP_PROJECT:+ (project ${GCP_PROJECT})}"
-    admin_tok="$(secret_token_as_runner_user)"
+    admin_tok="$(secret_access "${GH_TOKEN_SECRET}" "${GCP_PROJECT:-}")"
     [ -n "${admin_tok}" ] || die "cannot read secret '${GH_TOKEN_SECRET}' as ${RUNNER_USER}. gcloud ADC is per-user and the runners run as ${RUNNER_USER}, so it must work for THAT user (root's ADC is irrelevant). Check: sudo -u ${RUNNER_USER} gcloud secrets versions access latest --secret=${GH_TOKEN_SECRET}"
   else
     admin_tok="${GH_PAT}"
@@ -200,7 +281,16 @@ cmd_install() {
   "${first}/bin/installdependencies.sh" >/dev/null 2>&1 || die "installdependencies.sh failed"
 
   # 3) the slot: shared tool cache + dedicated venv + runner-OWNED clone
-  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_BASE}/toolcache"
+  #
+  # ${RUNNER_BASE} itself stays ROOT-owned so a runner cannot drop files at the top level; the runner
+  # user owns only the subdirs it must write into. Pre-create all three: both `python3 -m venv` and
+  # `git clone` CREATE their target directory, which needs write permission on the PARENT.
+  # MEASURED failure 2026-07-16 when the parent was root-owned 0755 and only the target was chowned:
+  #   Error: [Errno 13] Permission denied: '/opt/github-glue-runners/venv'
+  # venv and git clone both accept an existing EMPTY dir, so pre-creating is the tight fix (rather
+  # than handing the runner user ownership of ${RUNNER_BASE}).
+  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" \
+    "${RUNNER_BASE}/toolcache" "${SLOT_VENV}" "${SLOT_REPO}"
 
   if [ ! -x "${SLOT_VENV}/bin/python" ]; then
     log "creating the slot venv -> ${SLOT_VENV}"
@@ -219,6 +309,17 @@ cmd_install() {
       || die "gh repo clone failed — check that 'gh auth status' is green for ${RUNNER_USER}"
   fi
   chown -R "${RUNNER_USER}:${RUNNER_USER}" "${SLOT_REPO}" "${SLOT_VENV}"
+
+  # Seed the freshness stamp. Honest by construction: the clone was JUST made current, so install
+  # time is genuinely when it was last fresh. Two reasons this is not merely cosmetic:
+  #   • the refresh timer runs as ${RUNNER_USER} and rewrites this file, but CREATING a new file in
+  #     the root-owned ${RUNNER_BASE} is denied — MEASURED 2026-07-16, the first tick failed with
+  #     "refresh-slot-repo.sh: line 38: .../repo.refreshed-at: Permission denied". Pre-creating it
+  #     owned by the runner user works because rewriting an EXISTING file needs write on the FILE.
+  #   • without it, `status` reports the refresher broken for the first 10 minutes after install.
+  date -u +%s > "${RUNNER_BASE}/repo.refreshed-at"
+  chown "${RUNNER_USER}:${RUNNER_USER}" "${RUNNER_BASE}/repo.refreshed-at"
+  chmod 0644 "${RUNNER_BASE}/repo.refreshed-at"
 
   # 4) helper scripts
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/glue-runner-run.sh"   "${RUNNER_BASE}/glue-runner-run.sh"
@@ -260,12 +361,17 @@ cmd_status() {
   echo
   log "slot-refresh timer:"
   systemctl --no-pager list-timers 'github-glue-slot-refresh*' || true
-  local stamp="${RUNNER_BASE}/repo.refreshed-at"
-  if [ -f "${stamp}" ]; then
-    local age=$(( $(date -u +%s) - $(cat "${stamp}") ))
+  local stamp="${RUNNER_BASE}/repo.refreshed-at" stamp_val=""
+  [ -f "${stamp}" ] && stamp_val="$(tr -dc '0-9' < "${stamp}")"
+  # Guard the arithmetic: an empty/garbage stamp would make $(( now - "" )) a fatal syntax error
+  # under `set -e` and take the whole status report down over a cosmetic field.
+  if [ -n "${stamp_val}" ]; then
+    local age=$(( $(date -u +%s) - stamp_val ))
     printf '  slot clone last refreshed %ss ago' "${age}"
     [ "${age}" -gt 1800 ] && printf ' \033[31m(STALE — refresher broken?)\033[0m'
     printf '\n'
+  elif [ -f "${stamp}" ]; then
+    warn "${stamp} is empty/corrupt — treat the slot clone as UNVERIFIED"
   else
     warn "no ${stamp} — the slot clone has never been refreshed"
   fi

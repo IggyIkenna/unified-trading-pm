@@ -83,8 +83,28 @@ for f in "${WF_DIR}"/*.yml; do
     tmpl="1"
   fi
 
+  # NO-runs-on detection: a workflow whose jobs are ALL `uses:` (a pure reusable caller) has no
+  # runner of its own — the REUSABLE's runs-on decides, and a caller cannot override it. There is
+  # literally nothing to flip, so calling it MOVE is a lie that costs someone an afternoon.
+  #
+  # FOUND THE HARD WAY 2026-07-16: agent-audit.yml was picked as the D6 canary off a profile of LOC /
+  # triggers / capabilities that never asked "does this have a runs-on?". It doesn't — its one job is
+  # `uses: .../python-quality-gates-v2.yml@main`, i.e. it runs on whatever QG (a KEEP) specifies, and
+  # is pinned at @main so an LDR flip is inert twice over. Verdict KEEP-U: it can only move if the
+  # reusable it calls moves, which for quality-gates-v2 we have deliberately decided against.
+  no_runs_on=""
+  grep -qE '^[[:space:]]*runs-on:' "${f}" || no_runs_on="1"
+
+  # The ${LIST} expansions in the elif chain below are UNQUOTED ON PURPOSE: word-splitting is what
+  # turns each space-separated list into one candidate per line for `grep -qx`. Quoting them would
+  # emit a single line and silently match nothing — the "fix" would be the bug. The directive sits
+  # here because shellcheck only accepts one in front of a complete compound command (SC1123), not
+  # on an individual elif branch.
+  # shellcheck disable=SC2086
   if printf '%s' "${base}" | grep -qiE 'quality-gates' || has pull_request; then
     verdict="KEEP"; keep=$((keep+1))
+  elif [ -n "${no_runs_on}" ]; then
+    verdict="KEEP-U"; keep=$((keep+1)) # pure reusable CALLER — no runs-on of its own; the callee's runner wins
   elif [ -n "${heavy}" ]; then
     verdict="KEEP*"; keep=$((keep+1)) # kept because it builds locally (heavy compute)
   elif [ -n "${tmpl}" ]; then
@@ -106,6 +126,7 @@ echo
 printf 'MOVE (→ PM-local direct flip): %d   KEEP (→ GitHub-hosted): %d\n' "${move}" "${keep}"
 echo '  KEEP* = local build/heavy compute · KEEP-T = fleet template (multi-repo; only PM has runners → keep hosted)'
 echo '  KEEP-R = cross-repo reusable (caller-runner-scoped; flip hangs callers) · KEEP-M = failure-independence monitor'
+echo '  KEEP-U = pure reusable CALLER — no runs-on of its own, so there is nothing to flip (the callee picks the runner)'
 echo '  KEEP-D = shared reusable on a KEEP workflow'"'"'s critical path (e.g. the notify-slack alert carrier) — stay hosted'
 echo '  MOVE-C = moves off hosted by CONVERTING the reusable to a composite action (runs as a step on the caller) — do NOT flip runs-on'
 echo 'Flip only MOVE workflows: runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'
