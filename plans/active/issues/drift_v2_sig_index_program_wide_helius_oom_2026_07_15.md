@@ -215,7 +215,7 @@ fix below lands.
       launched by `launch-mtds-solana-drift-backfill-vm.sh`) sets `VM_TASK=solana-drift-backfill`, which
       `setup-data-pipeline-vm.sh` line ~1410 explicitly routes to `solana_defi_handler.py`'s legacy
       `_backfill_drift_s3_date`/`_backfill_drift_helius_date` — the same OBSOLETE path the codex doc names — via a
-      comment citing a DIFFERENT, older ruling ("Bug-D-prime fix 2026-05-31 … PerpFundingHandler has no _collect_drift
+      comment citing a DIFFERENT, older ruling ("Bug-D-prime fix 2026-05-31 … PerpFundingHandler has no \_collect_drift
       dispatch") that predates and is superseded by the 2026-06-01 Velocity API doc, but was never updated to reflect
       it. 4. **Cross-market mislabeling verdict**: not really an "accepted limitation" in the sense of a deliberate
       data-quality tradeoff someone signed off on — `data_quality="helius_v2_signatures_only"` is a self-documenting
