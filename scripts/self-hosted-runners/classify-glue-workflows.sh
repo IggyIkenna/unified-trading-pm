@@ -39,6 +39,16 @@ REUSABLE_CROSSREPO="image-build-validate.yml"
 #   - branch-health:               promotion-lag / drift / AR-lag monitor.
 KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml"
 
+# HOSTED DEPENDENCIES (KEEP-D): a shared reusable on a KEEP workflow's CRITICAL path. A reusable's runs-on is
+# independent of its caller, so a self-hosted reusable would break its HOSTED caller during a VM outage even though the
+# caller itself is hosted. notify-slack is the alert carrier for ALL the KEEP-M monitors (each `notify` job → it), so if
+# it moved, a down-VM would let the monitors DETECT a failure but be unable to PAGE — defeating the reason they stay
+# hosted. Alert-only frequency → cheap to keep hosted. Regenerate: for each KEEP workflow, list its `uses: ./…` reusables
+# and keep any that are on an alert/independence-critical path.
+#   NOTE: persist-cicd-event ALSO straddles (called by 5 KEEP + 17 MOVE incl. the 13k/mo ci-status-update) but it is the
+#   secondary event-LEDGER record, not the alert path → its home is an OPEN operator decision (see the plan). Left MOVE.
+KEEP_HOSTED_DEPS="notify-slack.yml"
+
 printf '%-40s %-6s %s\n' "WORKFLOW" "VERDICT" "TRIGGERS (on:)"
 printf '%-40s %-6s %s\n' "--------" "------" "--------------"
 move=0 keep=0
@@ -77,6 +87,8 @@ for f in "${WF_DIR}"/*.yml; do
     verdict="KEEP-R"; keep=$((keep+1)) # cross-repo reusable — flipping hangs the calling repos (only PM has glue runners)
   elif printf '%s\n' ${KEEP_MONITORS} | grep -qx "${base}"; then
     verdict="KEEP-M"; keep=$((keep+1)) # failure-independence monitor — must NOT run on the infra it watches
+  elif printf '%s\n' ${KEEP_HOSTED_DEPS} | grep -qx "${base}"; then
+    verdict="KEEP-D"; keep=$((keep+1)) # shared reusable on a KEEP workflow's critical path (alert carrier) — stay hosted
   else
     verdict="MOVE"; move=$((move+1))
   fi
@@ -86,4 +98,5 @@ echo
 printf 'MOVE (→ PM-local direct flip): %d   KEEP (→ GitHub-hosted): %d\n' "${move}" "${keep}"
 echo '  KEEP* = local build/heavy compute · KEEP-T = fleet template (multi-repo; only PM has runners → keep hosted)'
 echo '  KEEP-R = cross-repo reusable (caller-runner-scoped; flip hangs callers) · KEEP-M = failure-independence monitor'
+echo '  KEEP-D = shared reusable on a KEEP workflow'"'"'s critical path (e.g. the notify-slack alert carrier) — stay hosted'
 echo 'Flip only MOVE workflows: runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'

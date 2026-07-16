@@ -60,9 +60,9 @@ deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), r
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
-**40 MOVE / 16 KEEP** (46/10 → 44/12 → 40/16 — the review reclassified `image-build-validate`, then the operator kept
-the 4 CI-health watchers hosted on 2026-07-16). **Only flip the MOVE set.** The 16 KEEP fall in five classes, four of
-which would BREAK something if naively flipped:
+**39 MOVE / 17 KEEP** (46/10 → 44/12 → 40/16 → 39/17 — the review reclassified `image-build-validate`, the operator kept
+the 4 CI-health watchers hosted, then the final review caught the shared alert carrier `notify-slack`). **Only flip the
+MOVE set.** The 17 KEEP fall in six classes, five of which would BREAK something if naively flipped:
 
 - **`KEEP-T` (4): `main-backmerge-to-ldr`, `semver-agent`, `major-bump-issue-handler`, `request-major-bump`** — **fleet
   templates** (`scripts/workflow-templates/`) rolled to EVERY repo. Flip the template → hangs the other ~24 repos (only
@@ -79,6 +79,18 @@ which would BREAK something if naively flipped:
   GitHub-hosted is the right home. `ci-health` also **auto-recovers** stuck promote PRs / the v2-deadlock;
   `cloud-build-failure-watcher` is the ONLY detector for out-of-band Cloud Build failures; `overnight-dead-man-switch`
   watches the orchestrator that runs on this VM. Independence is exactly why these stay.
+- **`KEEP-D` (1): `notify-slack`** — the shared **alert carrier** the `KEEP-M` monitors call (`notify` job →
+  `uses: ./…/notify-slack.yml`). Hosted **for the WATCHERS' sake, not the movers'**: a reusable's `runs-on` is
+  independent of its caller, so if `notify-slack` were on the VM a VM outage would let the hosted monitors DETECT a
+  failure but be unable to PAGE (its `notify` job would have no runner) — re-breaking the independence the KEEP-M set
+  buys. (Movers don't need it hosted — if the VM is down a mover isn't running, so it has nothing to alert; but since
+  `notify-slack` is one reusable with one `runs-on` and the watchers require hosted, hosted wins for everyone. Movers
+  calling it need **no change** — GitHub runs that one job on a hosted runner inside the self-hosted workflow.)
+  **Measured cost of keeping it hosted: ~$1/mo** (117 Slack posts/30d in the alert ledger + a small deduped-but-billed
+  tail — `cloud-build-failure-watcher`'s standing condition is the bulk at ~51 billed/mo). Cheap insurance; cost is not
+  the deciding factor, independence is. ⚠️ **Open straddle: `persist-cicd-event`** — also called by 5 KEEP + 16 MOVE
+  workflows (incl. the 13k/mo `ci-status-update`); it's the secondary event-ledger record, not the alert path, so it's
+  left MOVE pending an operator call (see §"Open decisions").
 - **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for the
   light VM.
 - **`KEEP` (4): `quality-gates-v2` + `python-quality-gates-v2`** (heavy tests) **+ `plan-health-agent` +
@@ -127,36 +139,38 @@ which would BREAK something if naively flipped:
 ## MOVE / STAY manifest — the authoritative flip list (generated 2026-07-16 from `classify-glue-workflows.sh`)
 
 > The classifier is the SSOT — regenerate with `bash scripts/self-hosted-runners/classify-glue-workflows.sh`. This
-> pasted copy exists so "what moves / what stays" is unambiguous and conflict-free. **Split: 40 MOVE / 16 KEEP.**
+> pasted copy exists so "what moves / what stays" is unambiguous and conflict-free. **Split: 39 MOVE / 17 KEEP.**
 
-**STAY on GitHub-hosted (16) — do NOT flip `runs-on`:**
+**STAY on GitHub-hosted (17) — do NOT flip `runs-on`:**
 
-| Workflow                      | Class      | Why it stays hosted                                                                    |
-| ----------------------------- | ---------- | -------------------------------------------------------------------------------------- |
-| `quality-gates-v2`            | KEEP       | real test gate (pull_request/push) — CPU-heavy pytest                                  |
-| `python-quality-gates-v2`     | KEEP       | the reusable heavy QG (44 fleet callers) — stays hosted per the ADR                    |
-| `plan-health-agent`           | KEEP       | `pull_request`-triggered                                                               |
-| `conflict-resolution-merged`  | KEEP       | `pull_request`-triggered                                                               |
-| `build-smoke-all-repos`       | KEEP\*     | local docker buildx — too heavy for the light VM                                       |
-| `publish-package`             | KEEP\*     | local wheel build — heavy                                                              |
-| `main-backmerge-to-ldr`       | KEEP-T     | fleet template — flipping hangs ~24 repos; per-repo hand-edit banned                   |
-| `semver-agent`                | KEEP-T     | fleet template                                                                         |
-| `major-bump-issue-handler`    | KEEP-T     | fleet template                                                                         |
-| `request-major-bump`          | KEEP-T     | fleet template                                                                         |
-| `image-build-validate`        | **KEEP-R** | **cross-repo reusable — called by 24 repos; flip hangs their promote gate fleet-wide** |
-| `overnight-dead-man-switch`   | **KEEP-M** | **failure-independence — watches the orchestrator on THIS VM; must stay independent**  |
-| `ci-health`                   | **KEEP-M** | **fleet-wide failure detector + stuck-PR auto-recovery; independence from our infra**  |
-| `cloud-build-failure-watcher` | **KEEP-M** | **only detector for out-of-band Cloud Build failures**                                 |
-| `ldr-ci-monitor`              | **KEEP-M** | **per-repo "is LDR green?" signal**                                                    |
-| `branch-health`               | **KEEP-M** | **promotion-lag / drift / AR-lag monitor**                                             |
+| Workflow                      | Class      | Why it stays hosted                                                                                  |
+| ----------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| `quality-gates-v2`            | KEEP       | real test gate (pull_request/push) — CPU-heavy pytest                                                |
+| `python-quality-gates-v2`     | KEEP       | the reusable heavy QG (44 fleet callers) — stays hosted per the ADR                                  |
+| `plan-health-agent`           | KEEP       | `pull_request`-triggered                                                                             |
+| `conflict-resolution-merged`  | KEEP       | `pull_request`-triggered                                                                             |
+| `build-smoke-all-repos`       | KEEP\*     | local docker buildx — too heavy for the light VM                                                     |
+| `publish-package`             | KEEP\*     | local wheel build — heavy                                                                            |
+| `main-backmerge-to-ldr`       | KEEP-T     | fleet template — flipping hangs ~24 repos; per-repo hand-edit banned                                 |
+| `semver-agent`                | KEEP-T     | fleet template                                                                                       |
+| `major-bump-issue-handler`    | KEEP-T     | fleet template                                                                                       |
+| `request-major-bump`          | KEEP-T     | fleet template                                                                                       |
+| `image-build-validate`        | **KEEP-R** | **cross-repo reusable — called by 24 repos; flip hangs their promote gate fleet-wide**               |
+| `overnight-dead-man-switch`   | **KEEP-M** | **failure-independence — watches the orchestrator on THIS VM; must stay independent**                |
+| `ci-health`                   | **KEEP-M** | **fleet-wide failure detector + stuck-PR auto-recovery; independence from our infra**                |
+| `cloud-build-failure-watcher` | **KEEP-M** | **only detector for out-of-band Cloud Build failures**                                               |
+| `ldr-ci-monitor`              | **KEEP-M** | **per-repo "is LDR green?" signal**                                                                  |
+| `branch-health`               | **KEEP-M** | **promotion-lag / drift / AR-lag monitor**                                                           |
+| `notify-slack`                | **KEEP-D** | **the alert carrier the KEEP-M monitors call — must be hosted so they can page when the VM is down** |
 
-**MOVE to `[self-hosted, glue]` (40)** —
-`agent-audit · agent-runner · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-status-consolidator · ci-status-update · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · notify-slack · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
+**MOVE to `[self-hosted, glue]` (39)** —
+`agent-audit · agent-runner · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-status-consolidator · ci-status-update · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
 
-> ⚠️ `notify-slack`, `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are
-> `workflow_call` reusables but **PM-internal only** (0 cross-repo callers — verified), so safe to flip.
-> `overnight-agent-orchestrator` moves, but its watcher `overnight-dead-man-switch` stays hosted (KEEP-M) → a VM-down
-> orchestrator is still caught.
+> ⚠️ `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are `workflow_call`
+> reusables but **PM-internal only** (0 cross-repo callers — verified), so safe to flip. `overnight-agent-orchestrator`
+> moves, but its watcher `overnight-dead-man-switch` stays hosted (KEEP-M) → a VM-down orchestrator is still caught.
+> **Movers calling `notify-slack` need no change** — it keeps its own `runs-on: ubuntu-latest`, so GitHub runs that one
+> job on a hosted runner even inside a self-hosted workflow.
 
 ---
 
@@ -226,17 +240,17 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **40 MOVE / 16 KEEP** (see pre-flight
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **39 MOVE / 17 KEEP** (see pre-flight
       § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
       `publish-package`) + `KEEP-T` templates (4) + **`KEEP-R` cross-repo reusable `image-build-validate`** + **`KEEP-M`
       failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
-      `ldr-ci-monitor`, `branch-health`). Confirm the MOVE set carries no untrusted fork-PR code (private repo → none)
-      before flipping.
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **40 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
+      `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
+      untrusted fork-PR code (private repo → none) before flipping.
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **39 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
       `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
-      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M` set stays hosted). **Pace = canary → phased
-      groups (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
-      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~39 out in **small batches** (not
+      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M`/`KEEP-D` set stays hosted). **Pace = canary →
+      phased groups (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
+      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~38 out in **small batches** (not
       all at once). (Takes effect on push — do NOT push until the runners are live on the VM, else those workflows queue
       with no runner.)
   - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
@@ -281,9 +295,12 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
 - [x] ✅ [OPERATOR-DECISION] P2. **Failure-independence RESOLVED (operator 2026-07-16 — the review's #2).** The 4
       CI-health watchers (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) **STAY HOSTED**
       (`KEEP-M`) alongside `overnight-dead-man-switch` — GitHub-hosted is the right home for light monitors whose value
-      is independence from our infra. They cost a few $/mo total; keeping them hosted means a VM/pool outage never
-      blinds the fleet's failure detection + auto-recovery. Split → **40 MOVE / 16 KEEP**. (No runner-offline page
-      needed — the watchers ARE the independent signal.)
+      is independence from our infra. They cost a few
+      $/mo total; keeping them hosted means a VM/pool outage never
+      blinds the fleet's failure detection + auto-recovery. (No runner-offline page needed — the watchers ARE the
+      independent signal.) **Corollary (final review):** the watchers' shared alert carrier `notify-slack` must ALSO stay
+      hosted (`KEEP-D`) or they'd detect-but-not-page during a VM outage — measured cost ~$1/mo.
+      Split → **39 MOVE / 17 KEEP**.
 
 ### Phase 2 — Shrink the fleet-wide hosted QG (the real $ that stays on GitHub-hosted: A1 + A2 + A5)
 
@@ -413,3 +430,16 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   Split corrected to **46 MOVE (PM-local direct) / 10 KEEP**; classifier now flags `KEEP-T`/`KEEP*`. Also recorded: SSM
   deploy channel + verified admin PAT, A1/A2/2b code locations, A2 Firestore fingerprint fields, and the billing re-pull
   command for VERIFY.
+- 2026-07-16 (final review) — **`notify-slack` reclassified `KEEP-D` → split 39 MOVE / 17 KEEP (operator).** Caught the
+  last straddle: every `KEEP-M` monitor's alert lands via the shared reusable `notify-slack`, and a reusable's `runs-on`
+  is independent of its caller — so if `notify-slack` moved to the VM, a VM outage would let the hosted watchers DETECT
+  a failure but be unable to PAGE. It stays hosted **for the watchers' sake, not the movers'** (a mover on a down VM
+  isn't running, so its alert is moot; movers call the hosted carrier with no change — GitHub runs that one job on a
+  hosted runner inside the self-hosted workflow). **Measured its cost first** (operator: "actual figures, no guesses"):
+  billing has no per-workflow line and it's a nested reusable (0 own runs), so counted the alert ledger + billed
+  `send-notification` jobs →
+  **~$1/mo** (117 posts/30d + a small deduped-but-billed tail; `cloud-build-failure-watcher` ~51 billed is the
+  bulk). Two earlier intermediate numbers ($4/$22)
+  were artifacts of counting skipped `notify` jobs + API rate-limiting — corrected. Classifier now emits `KEEP-D`
+  (curated `KEEP_HOSTED_DEPS`). `persist-cicd-event` left MOVE (secondary ledger, not the alert path) — flagged as the
+  one open straddle.

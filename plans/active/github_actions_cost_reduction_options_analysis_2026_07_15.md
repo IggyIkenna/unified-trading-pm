@@ -177,7 +177,7 @@ registered fleet-wide** — confirmed.)
 | Disk     | 300 GB gp3                                                                                    | 232 GB used (**80%**)                     | 59 GB free ← tightest |
 | Running  | ~10 orchestrator Claude slots (`orch-agent-main` + `orch-slot-*`) — IO/network-bound, low CPU |                                           |                       |
 
-### The glue workload (moving PM's 40 glue workflows off GitHub-hosted; QG + the health watchers STAY hosted)
+### The glue workload (moving PM's 39 glue workflows off GitHub-hosted; QG + the health watchers + notify-slack STAY hosted)
 
 Measured from real run timings (1,000-run/13.4h sample + 30-day counts):
 
@@ -416,9 +416,10 @@ All decisions are now closed. Execution follows in the sibling plan.
 5. ✅ **Spending cap = LEAVE AS-IS** — a hard cap already exists; operator: do not touch it. (No soft-alert change
    made.)
 6. ✅ **Migration pace = canary → phased groups** — flip one low-risk workflow, verify green on `[self-hosted, glue]`,
-   then roll the 40 MOVE set out in small batches, not all at once (**40 MOVE / 16 KEEP** — see the sibling plan's
-   §"MOVE / STAY manifest"; 52/50 → 44/12 → 40/16 after the 2026-07-16 review reclassified `image-build-validate` as a
-   cross-repo reusable and the operator kept the 4 CI-health watchers hosted). Canary = `reconcile-release-tags`
+   then roll the 39 MOVE set out in small batches, not all at once (**39 MOVE / 17 KEEP** — see the sibling plan's
+   §"MOVE / STAY manifest"; 52/50 → 44/12 → 40/16 → 39/17 after the 2026-07-16 review reclassified
+   `image-build-validate` as a cross-repo reusable, the operator kept the 4 CI-health watchers hosted, and the final
+   review caught the shared alert carrier `notify-slack` (`KEEP-D`, ~$1/mo)). Canary = `reconcile-release-tags`
    (`branch-health` is now hosted).
 7. ✅ **A5 = measure per-repo, then collapse** the QG fan-out.
 8. ✅ **A1 = do it** (docs-only fast-path, fleet QG). **A8 = do it** (template timeout cap). **A3/A4 = deprioritized**
@@ -617,5 +618,15 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   `overnight-dead-man-switch`) — light monitors whose value is independence from our infra; GitHub-hosted is their right
   home. (2) `image-build-validate` **stays hosted** (`KEEP-R`) for now — the blocker is personal-account runner scoping
   (self-hosted runners are repo-scoped; no org pool), so serving its 24 callers would need per-repo registrations for
-  ~no money; revisit only if we convert to a GitHub Org. **Final split → 40 MOVE / 16 KEEP**; canary switched to
+  ~no money; revisit only if we convert to a GitHub Org. Split → 40 MOVE / 16 KEEP; canary switched to
   `reconcile-release-tags` (branch-health now hosted).
+- 2026-07-16 (final review) — **`notify-slack` → `KEEP-D`; final split 39 MOVE / 17 KEEP.** The shared alert carrier the
+  `KEEP-M` monitors call must stay hosted or a VM outage would let them detect-but-not-page (a reusable's `runs-on` is
+  independent of its caller). It's hosted **for the watchers, not the movers** (a mover on a down VM isn't running →
+  nothing to alert; movers call the hosted carrier unchanged — GitHub runs that job on a hosted runner inside a
+  self-hosted workflow). Cost **measured first** (no per-workflow billing + nested reusable → counted the alert ledger +
+  billed `send-notification` jobs):
+  **~$1/mo** (117 posts/30d + a small deduped-but-billed tail); two intermediate
+  figures ($4/$22) were skipped-job +
+  rate-limit artifacts, corrected. `persist-cicd-event` remains the one open straddle (left MOVE — secondary
+  event-ledger, not the alert path).
