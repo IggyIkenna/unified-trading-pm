@@ -135,11 +135,14 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       is accepted. No DB/YAML mutation performed (root-clone write is outside worker scope); this todo closes the "which
       of a/b/c" question raised at filing time — it is (a) verbatim, confirmed. (repo: agent-orchestrator) —
       data_engineering slot-13, 2026-07-16.
-- [ ] [INFRA] P1. **Upgrade `no_plan_flip` from warning to a hard 409** in `done_slot()`
-      (`server/routes/slots_worker.py`) whenever `plan_flip["applicable"]` is true — reject `/done` when the cited
-      commit doesn't touch the task's `plan_ref` checkbox, mirroring the existing strict-mode pattern used for the M9
-      `sha_unverifiable`/origin gate. Add a regression test asserting a `/done` citing an unrelated-but-valid SHA for a
-      path-shaped `plan_ref` task gets rejected. (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P1. **Upgraded `no_plan_flip` from warning to a hard 409** in `done_slot()`
+      (`server/routes/slots_worker.py`) — new `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP` config flag (default ON, mirrors the
+      `ORCHESTRATOR_DONE_REQUIRE_ORIGIN` strict-mode pattern) hard-rejects `/done` with a 409 whenever
+      `plan_flip["applicable"]` is true and the cited commit didn't touch the task's `plan_ref` checkbox; the legacy
+      warn-only M3 path is preserved as the env-gated fallback. Added 3 regression tests
+      (`tests/test_done_gate_plan_flip_hard_reject.py`): reject-on-unrelated-sha, accept-on-flip, and
+      legacy-path-when-env-disabled. Full `quality-gates.sh` green (1350 passed, 1 skipped). (repo: agent-orchestrator)
+      — agent-orchestrator@87d6fde, infra slot-13, 2026-07-16.
 - [ ] [INFRA] P2. **One-off audit sweep**: cross-check every current `status: done` backlog task carrying a `plan_ref`
       against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
       this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
@@ -203,6 +206,35 @@ So this todo's own stated precondition ("once the above is root-caused **and cor
 the actual gating fix and it's `[INFRA]`-tagged, outside this task's `data_engineering` assigned_role scope anyway. Not
 absorbing it unilaterally (single-agent, higher-blast-radius change to `/done` semantics). Declining again via
 `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:2xZ UTC — infra slot-13 (Todo 2 shipped — hard-409 live)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-001` (Todo 2, `[INFRA]`-tagged, in scope). Implemented
+the fix in `agent-orchestrator/server/routes/slots_worker.py::done_slot()`: the existing `no_plan_flip` warning block
+(previously append-only) now also raises `HTTPException(409)` — logging `slot_done_rejected_no_plan_flip` first — when a
+new config flag `done_require_plan_flip` (env `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP`, `BoolEnvTrue`, **default ON**) is
+set, mirroring the existing `done_require_origin`/`ORCHESTRATOR_DONE_REQUIRE_ORIGIN` warn-first-ratchet pattern used for
+the M9 origin gate. Chose default-ON (unlike M9's default-OFF) because this is a confirmed, already-exploited
+data-integrity hole (this doc's own `-001`/`-002` instances) rather than a speculative risk — env stays as the emergency
+off-switch, and the pre-existing warn-only M3 dual-flip-pattern escalation block is preserved as the fallback path when
+the flag is disabled. Added `server/config.py::done_require_plan_flip` field.
+
+Added `tests/test_done_gate_plan_flip_hard_reject.py` (3 tests, calling `slots_worker.done_slot()` directly against a
+real git repo + bare origin, mirroring `test_task_lifecycle_done_gate_resume.py`'s pattern): (1)
+`test_done_rejects_unrelated_sha_for_path_shaped_plan_ref` — a commit that touches an unrelated file gets a 409, task
+stays `dispatched`; (2) `test_done_accepts_when_commit_flips_the_plan_checkbox` — a commit that DOES flip the checkbox
+completes normally; (3) `test_done_gate_disabled_by_env_keeps_legacy_warning_path` —
+`ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP=false` falls back to the pre-existing warn-only behavior. Also tightened the
+now-inaccurate `DoneWarning` docstring (`server/models/worker_api.py`) which claimed "never blocks /done" — it already
+didn't, for the M9 origin gates, and now doesn't for `no_plan_flip` either.
+
+Ran `bash scripts/quality-gates.sh` (Pass 1, full, no skip flags) on committed HEAD: ruff lint/format clean,
+basedpyright 0 errors, pytest 1350 passed / 1 skipped (existing `test_task_lifecycle_done_gate_resume.py` suite + the 3
+new tests, no regressions). Shipped via `quickmerge.sh --agent --files`: landed on `live-defi-rollout` @
+`agent-orchestrator@87d6fde`. Todo 2 flipped `[x]` in this same turn. Todos 3 (one-off audit sweep of pre-existing
+false-`done` tasks) and the sibling plan's Todo 4 (re-verify `sports_p2_features_history_to_ml_ready-001`) remain open —
+the audit sweep (Todo 3) is a fleet-wide DB/YAML mutation task outside a single worker's normal write scope and is left
+for a follow-up dispatch.
 
 ### 2026-07-16T18:5xZ UTC — data_engineering slot-2 (Todo 4 re-dispatched a third time — precondition still unmet)
 
