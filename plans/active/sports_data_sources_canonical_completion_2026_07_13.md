@@ -4064,14 +4064,32 @@ it's new adapter work, not a data-audit residual).
       UNCHANGED, `attempted_failed` 587→225; snapshot
       `_index/snapshots/pre_league_map_incomplete_purge_20260716_004902/`; **post-verify 0 remain** (canonical +
       outstanding shards). (repo: instruments-service)
-- [ ] [DATA] P2. **Verify a66fc295 is DEPLOYED to the running `sports-fixtures-job` before the next daily T+1 run** —
-      the recurrence-stop fix landed 2026-07-16 00:15:06 UTC, but the daily job still re-minted 4 fresh blank-league
+- [x] ✅ [DATA] P2. **Verify a66fc295 is DEPLOYED to the running `sports-fixtures-job` before the next daily T+1 run** —
+      **VERIFIED DEPLOYED 2026-07-16** (no code change — verification of the already-shipped a66fc295). The
+      recurrence-stop fix landed 2026-07-16 00:15:06 UTC; the daily job re-minted 4 fresh blank-league
       `LEAGUE_MAP_INCOMPLETE` rows at 00:21:37 UTC (pre-fix image; the consolidator absorbed them into the canonical,
       where the purge above then removed them). Until the deployed job image includes a66fc295, each T+1 run re-mints ~4
       (one per per-fixture entity) for the prior date — bounded + self-healing once deployed. If a NEW-date orphan
       reappears in the manifest, re-run
       `scripts/backfill/api_football_league_map_incomplete_orphan_purge_2026_07_16.py --apply`. (repo:
       instruments-service)
+  - **DEPLOYMENT PROOF (3-link chain, verified via gcloud on `central-element-323112`):**
+    1. **Content in `main`**: `origin/main` HEAD is `f74f141` (`chore(promote): LDR → main (Option-B direct)`, 00:59:00
+       UTC). Because promotes are SQUASH commits, a66fc295's SHA is NOT an ancestor of main — so verified by CONTENT per
+       the workspace rule:
+       `git diff a66fc295:instruments_service/engine/orchestrator/sports_reference_fixtures.py origin/main:…` is
+       **EMPTY** (byte-identical); the 00:59 promote swept a66fc295 (landed 00:15) into main.
+    2. **`:latest` image rebuilt from the fixed main**: Artifact Registry
+       `…/unified-trading-system/instruments-service:latest` was pushed **2026-07-16T01:02:28 UTC**, digest
+       `sha256:938ac20e5a1df6255a28ecfe27a6838f6c2dbeb9380786a6ecd028f1b1856a44`, co-tagged `f74f141` + `0.90.0` — i.e.
+       built from the fix-carrying main HEAD.
+    3. **Job re-resolves `:latest` per-execution (no stale pin)**: the Cloud Run Job
+       `uts-prod-instruments-service-sports-fixtures` (asia-northeast1) spec stores only the `:latest` TAG with no
+       pinned `status.imageDigest`; the last execution `…-qxqvv` (created 00:55:45 UTC, i.e. BEFORE the 01:02 push)
+       records a concrete resolved digest `@sha256:d569a654…` (the pre-fix 23:03 image, tag `747ac09`) — proving Cloud
+       Run resolves the tag fresh at each execution-create. **The next daily T+1 run (≈2026-07-17 00:xx UTC) therefore
+       pulls `938ac20e` = the fix.** (The 00:55 run was the last pre-fix run; the fixed `:latest` wasn't pushed until
+       01:02, 7 min later — any residual it minted is bounded + already covered by the purge above.)
 
 - **2026-07-15 (LIKELY ROOT CAUSE of the CF11 oscillation found — a concurrent slot independently discovered and
   partially fixed a genuine silent-data-loss bug in the SAME code path this dispatch used).** Cross-referencing a
