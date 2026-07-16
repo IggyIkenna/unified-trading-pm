@@ -553,16 +553,45 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       objects), bare `day=2026-03-21/`, `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a
       canonical object at its derived path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands
       at a non-canonical path → STOP and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
-- [ ] [DATA] P0. **T2.4 — PHASE 2c: MOVE class B (13,222 objects where canonical has FEWER rows) — BLOCKED on OR-1.**
-      _Mechanism_: **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per
-      OR-1 ruling, either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path
-      (safest; preserves any canonical-only rows), or (b) **overwrite** canonical with legacy where legacy ⊇ canonical
-      (simpler; loses canonical-only rows if the containment does not actually hold). **Verify containment per cell
-      before overwriting either way.** Worst offenders: player_stats 111,827 rows, standings 91,380, fixture_events
-      69,444, teams 16,502, player_values 16,233 (e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical 38).
-      _Gate_: for all 13,222, canonical row count ≥ legacy row count post-move; total rows recovered ≥ 305,000; re-run
-      T2.2 → class B = 0. _ABORT_: any cell where legacy ⊄ canonical AND canonical ⊄ legacy (genuine divergence, not a
-      subset) → STOP and escalate; a blind overwrite loses canonical-only rows.
+- [x] ✅ [DATA] P0. **T2.4 — PHASE 2c: OR-1 OPTION D IN CANONICAL FORM (player_stats) — DONE 2026-07-16.** **388,825
+      genuine legacy-only player observations RECOVERED into canonical across 4,015 cells; 0 FAIL.** _Measured, not
+      assumed_ — census of all 22,686 legacy player_stats objects: **flattened+covered 17,979 objs (1,688,379 rows)** =
+      the union population; **nested-only+covered 4,691** (canonical already holds them flattened → redundant, skipped);
+      **nested-only+UNCOVERED 16** = the only class-A player_stats (raw stringified `players` payload → re-fetch list,
+      never a fabricated flatten). **Legacy-only computed by GLOBAL (fixture_id, player_id) containment** (the row-gap
+      doc's cross-partition method), NOT per-cell: 389,134 rows / **388,825 unique**. NOTE the row-gap doc's **111,827
+      was a 10-day SAMPLE extrapolation and under-counts the truth by ~3.5×** — the full pass is authoritative;
+      recovering all 388,825 is the non-descoped, data-pipeline-correctness outcome. **available_at: NO re-stamp
+      needed** — measured **0 null / 0 midnight** across every legacy-only row; legacy player_stats already carries
+      honest stamps satisfying UAC `(sports,PLAYER_STATS)="match_end_time"`, so the dispatch's LookaheadBiasError
+      premise ("legacy predates availability stamping") does NOT hold for player_stats (the 38-col legacy schema already
+      has `available_at`; a null gate is asserted on every write regardless). **Write**: per cell → back up canonical to
+      the archive bucket, union canonical ∪ legacy-only, **DEDUPE on (fixture_id, player_id) keep=first (canonical
+      wins)**, write at the CANONICAL path. Schema conformed by coercion (string keys / bool flags / UTC datetime /
+      numeric stats) because canonical stores all-null stat columns as arrow `null` type — forcing the unstable
+      per-object schema fails; coercion is value-preserving and reader-safe. **Per-cell GATE (all 4,015)**: re-read rows
+      == union rows, **rows == unique keys (upsert-safe)**, all legacy-only keys present, all original canonical keys
+      present, 0 null available_at. Independent spot check 20/20. **fixture_events**: RE-FETCH LIST only — **zero 5-col
+      degenerate stubs imported** (they are class-B, never moved); the 40 class-A fixture_events T2.3 moved are
+      10/11-col ATTRIBUTED forms (23,139 rows) whose schemas canonical ALREADY carries, so they are kept (genuine
+      legacy-only data preserved) and listed for schema-upgrade re-fetch. **standings / teams / player_values**: NO
+      ACTION (per ruling). Re-fetch lists: `t2_4_refetch_player_stats.json` (16 cells / 131 fixtures) +
+      `t2_4_refetch_fixture_events.json` (40 cells / 1,542 fixtures). **BIG FINDINGS (pre-existing canonical, NOT
+      cutover-introduced) → `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`**: canonical
+      player_stats carries **740,725 within-object duplicate rows (~26% of 2,882,420)** — vastly bigger than the cited
+      "72/36"; T2.4's dedupe FIXED the 4,015 touched cells, ~13,964 remain; and canonical fixture_events runs **4 schema
+      variants incl. ~30% degenerate 5-col**. Evidence `~/tmp-cutover/t2_4_union_evidence.jsonl` (17,979 rows) +
+      archived to `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/phase2_evidence/`; canonical
+      pre-write backups at `…/player_stats_prewrite_bak/`. Verifiers `~/tmp-cutover/t2_4_*.py`. _Original mechanism_:
+      **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per OR-1 ruling,
+      either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path (safest; preserves
+      any canonical-only rows), or (b) **overwrite** canonical with legacy where legacy ⊇ canonical (simpler; loses
+      canonical-only rows if the containment does not actually hold). **Verify containment per cell before overwriting
+      either way.** Worst offenders: player_stats 111,827 rows, standings 91,380, fixture_events 69,444, teams 16,502,
+      player_values 16,233 (e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical 38). _Gate_: for all 13,222,
+      canonical row count ≥ legacy row count post-move; total rows recovered ≥ 305,000; re-run T2.2 → class B = 0.
+      _ABORT_: any cell where legacy ⊄ canonical AND canonical ⊄ legacy (genuine divergence, not a subset) → STOP and
+      escalate; a blind overwrite loses canonical-only rows.
 - [ ] [DATA] P0. **T2.5 — Re-home the control-plane objects the vehicle skips by construction.** _Mechanism_: `_keep()`
       (`:167-173`) filters out `/_index/`, `/_vm_staging/`, and `_SKIP_PREFIXES` =
       `_audits/ _smoke_test/     _catalogue/ availability_index/` → **none** of the control-plane uniques move.
@@ -1240,3 +1269,32 @@ fixture_stats 38, footystats_predictions 31, fixture_lineups 16.
 **T2.3 — class-A move — DONE 2026-07-16.** 17,089/17,089 objects server-side-copied to canonical `pipeline_mode=<M>`
 paths, 0 FAILED, all crc32c-verified (byte-identical). Reader-resolution 11/11 via `candidate_parquet_paths()`. Legacy
 untouched. Evidence `~/tmp-cutover/t2_3_move_evidence.jsonl`.
+
+**T2.4 — OR-1 option D (player_stats) — DONE 2026-07-16. 388,825 genuine legacy-only player observations recovered into
+canonical across 4,015 cells, 0 FAIL, every cell verified upsert-safe (rows == unique (fixture_id, player_id)).** Key
+corrections to the plan's premises, all MEASURED:
+
+1. **The 111,827 figure is a sample under-count (~3.5×).** Full global-containment pass = **388,825 unique** legacy-only
+   (fixture_id, player_id). Recovered all of it (data-pipeline-correctness: no descope).
+2. **No available_at stamping was needed.** Legacy player_stats already carries honest `available_at` (0 null / 0
+   midnight measured across every legacy-only row) satisfying UAC `(sports,PLAYER_STATS)="match_end_time"`. The
+   dispatch's "legacy predates availability stamping" does not hold for this entity. A 0-null gate still fires on write.
+3. **Schema is NOT legacy≠canonical for the flattened population** — both are the same 38-col schema incl. available_at.
+   The real variance is that canonical stores all-null stat columns as arrow `null` type, so conforming to the
+   per-object canonical schema FAILS; the union coerces to stable types (value-preserving).
+4. **The 16 class-A player_stats are the only uncovered cells** and are the raw stringified-`players` form → re-fetch
+   list (no fabricated flatten). **fixture_events: zero 5-col stubs imported**; the 40 class-A objects moved in T2.3 are
+   10/11-col ATTRIBUTED forms whose schemas canonical already carries → kept + listed for schema-upgrade re-fetch.
+5. **BIG FINDINGS (pre-existing canonical, not cutover-introduced)** →
+   `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`: canonical player_stats holds **740,725
+   within-object duplicate rows (~26% of 2,882,420)**; T2.4 dedupe fixed the 4,015 touched cells, ~13,964 remain.
+   Canonical fixture_events runs 4 schema variants incl. **~30% degenerate 5-col**.
+
+Rollback substrate: every overwritten canonical object copied to
+`gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/player_stats_prewrite_bak/` first.
+
+_Environment note_: the workspace `unified-trading-library` checkout (78744291, a backmerge) currently **fails to
+import** — `kill_switch/bus.py:144` references `KillSwitchId.KILL_PER_TREASURY_SUB_ACCOUNT_DRIFT`, absent from the enum
+(clean tree; a committed inconsistency, appeared after T2.1/T2.3 ran with UTL fine). Phase-2 scratch tooling routed
+around it via `google.cloud.storage` directly (same pattern as `inventory.py`); no gsutil/gcloud subprocess for object
+ops. Flagged for whoever owns UTL — it breaks any `import unified_trading_library` in this workspace.
