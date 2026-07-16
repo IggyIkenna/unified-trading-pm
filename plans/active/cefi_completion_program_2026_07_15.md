@@ -585,3 +585,34 @@ is what should be preventing new gap accrual; that it is not is worth its own in
 **Writer fix (`mtds@5d44a197`) status: STILL not cleanly testable** — this test was valid on scan-position but the 403
 storm meant almost nothing was actually fetched (+2,202 captures across 3 VMs/8h). The N=1 run now in flight is the
 first configuration that can produce a clean signal.
+
+### 2026-07-16T05:10Z — tick: WS-H CATALOGUE APPLY LANDED (dedup/equity-perp/dating/liquidations/denominator-complete)
+
+> **[slot-3 /autonomous session]** — coordinating on the shared plan with the backfill co-manager (whose N=1 / 403-storm
+> notes are above). I OWN the CODE + WS-H CATALOGUE side; the co-manager OWNS the Tardis backfill VM strategy. I am
+> STOPPING all backfill VM management (my earlier N=3 tail launches fed the 403 storm — the co-manager's N=1 cut is
+> correct; do not re-add tail VMs).
+
+WS-H apply-list run via SSM on i-0dd9812a96cdda5dc (agent aa0f8f04), NON-tail-gated parts DONE:
+
+- **Catalogue rebuild `--mode full --allow-catalogue-shrink` PROMOTED to prod** (backup:
+  `prod/catalog.pre-wsh-dedup.20260716-050958.bak.parquet`). 427,552→424,224 rows. **CRITICAL INVARIANT PASSED: live
+  count 9,952→10,122 (+170, ZERO live dropped).** Dedup: perp-family 9,177→5,386, HL 534→182 (177 live unchanged).
+  EQUITY_PERP 0→636 + TOKENIZED_EQUITY 0→79. ASTER dating fixed 1,501→506. → G-code + D-code(HL/fleet dedup) PROD EFFECT
+  now LIVE (no longer "pending rebuild").
+- **liquidations (E) LIVE in prod honest-coverage** for all 6 feed venues (1,580,700 rows). **Denominator now
+  `COMPLETE`** (was INCOMPLETE) — a DONE-criteria milestone. cefi recompute = 48.37% vs the complete denominator
+  (remainder = the co-manager's in-flight backfill: expected_unattempted + the 403-class attempted_failed). Published to
+  labeled sibling `gs://central-element-323112-honest-coverage/2026-07-16/coverage_cefi_wsh_20260716.json` (did NOT
+  clobber the canonical defi-only coverage.json).
+- **2 residual follow-ups** (agent STOPPED rather than guess on prod): (1) **HL phantom re-census OOM'd** — the
+  reconcile tool full-loads the 12M-row manifest (~28GB) > the 15GB VM; no prod mutation (was dry-run); needs a 32-64GB
+  VM (e.g. orchestrator m8i.4xlarge) OR a memory-frugal/DuckDB rewrite; the 1,277 HL phantoms are ready. HL will also
+  re-census naturally once the backfill+consolidator run. (2) **equity-perp denominator propagation** deferred —
+  catalogue re-type landed, but manifest rows are still typed PERPETUAL so they're ALREADY counted (just labeled
+  PERPETUAL); re-labeling is cosmetic, not a coverage gap; running enumerate --apply-write now would DOUBLE-SEED
+  (correctness risk) → needs the manifest PERPETUAL rows re-typed first.
+
+**Remaining to DONE**: co-manager's backfill → af=0 (403-class) + recent-tail filled (their N=1 grind); then the FINAL
+coverage recompute asserting af=0; + C (alias verify+auto-delete except DERIBIT-COMBO) + F (DERIBIT-COMBO history) +
+optional HL re-census on a big VM. Phase-1 code + WS-H catalogue = DONE.
