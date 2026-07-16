@@ -513,12 +513,17 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 
 - [x] **DECIDED (operator 2026-07-16): direction A — reclassify TEAMS → per-league.** Read-side; matches the IS writer +
       UAC shard-atom SSOT.
-- [ ] [BACKEND] P1. `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date`; update codex
-      `sports-data-source-coverage-matrix.md:106` to per-league; add a unit test asserting the TEAMS response carries
-      `leagues`.
-- [ ] [BACKEND] P1. Verify the `per_league_trigger_date` branch surfaces sensible trigger dates per league in the UI
-      date drilldown (one TEAMS snapshot per season boundary), and that off-season dates read as legitimately empty
-      (honest-absence), not gaps.
+- [x] [BACKEND] P1. ✅ `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date` (routes TEAMS
+      through the per-league branch → `dt_entry["leagues"]` populated → UI league drilldown); updated codex
+      `sports-data-source-coverage-matrix.md` TEAMS row to per-league × trigger-date; updated the 3 tests that pinned
+      the old global axis + added `test_teams_per_league_axis.py` asserting the TEAMS response carries a populated
+      `per_league` map. — deployment-api@fb0eec8 + Evidence: `quality-gates.sh --no-fix` green (4539 passed);
+      `test_teams_per_league_axis.py` + `TestTriggerDateDenominator::test_teams_*` green.
+- [x] [BACKEND] P1. ✅ Verified: the `per_league_trigger_date` branch uses `sports_trigger_dates_for_league` (season
+      boundaries = season-start + transfer windows) per league — one TEAMS snapshot per season boundary. Off-season /
+      non-trigger dates read as legitimately empty (honest-absence): the P8 test asserts a league with expected trigger
+      dates but no captured rows (LA_LIGA) returns `found_shards=0` (not a gap), and EPL with both boundary dates
+      captured returns 2/2. — deployment-api@fb0eec8.
 - [ ] [UI] P1. Honest-absence affordance — for genuinely-global data_types (LEAGUES, VENUES) render an explicit "global
       reference entity — no per-league breakdown (axis: {axis})" row (the response already carries `axis`,
       `breakdowns_domain.py:759`) instead of silently omitting the Leagues section. `[UI]` + pw:L2.

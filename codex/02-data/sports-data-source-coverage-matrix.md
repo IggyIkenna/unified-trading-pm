@@ -103,7 +103,7 @@ dates resolved per league via `get_league_fixture_calendar(league_id, start, end
 | `PLAYER_STATS`    | per-league × per-fixture-date          | subset of (league, date) pairs with `FIXTURES` rows present    | Yes                                                                                              |
 | `INJURIES`        | per-league × daily                     | 95 leagues × active-season dates (daily refresh)               | Yes — no injuries on a date = empty_confirmed                                                    |
 | `LEAGUES`         | global × daily snapshot                | 1 shard/day (no league_id — this IS the league reference list) | N/A — daily snapshot; empty means API outage                                                     |
-| `TEAMS`           | global × daily snapshot                | 1 shard/day (no league_id — full team directory)               | N/A                                                                                              |
+| `TEAMS`           | per-league × trigger-date              | 95 leagues × trigger dates (season-start + transfer windows)   | Yes — off-season / non-trigger date per league = empty_confirmed                                 |
 | `STANDINGS`       | per-league × periodic (weekly cadence) | 95 leagues × cadence dates inside active season                | Yes — off-season = empty_confirmed                                                               |
 | `VENUES`          | global × season                        | 1 shard per season                                             | N/A                                                                                              |
 
