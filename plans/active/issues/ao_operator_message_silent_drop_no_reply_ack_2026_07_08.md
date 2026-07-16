@@ -167,9 +167,16 @@ can ship first, A can supersede.)
 - [x] [TEST] P1. Unit tests: drain→no-reply→next drain STILL returns the message; `/reply` stamps `answered_at`;
       redelivery cap fires; 641/643 silent-drop regression; migration backfill. 8 tests, full QG green. — ao@8076257
       (`tests/test_agent_message_redelivery.py`)
-- [ ] [BACKEND] P2. Verify the `send_to_role` tmux nudge reliably wakes a heads-down `/loop` (`tmux_spawn.nudge` →
-      `_nudge_message`); if flaky, make it idempotent + retried. (Existing `test_agent_nudge.py` covers the primitive +
-      endpoint + auto-nudge; no flakiness surfaced this pass — deeper hardening deferred.)
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@da053a9`.** Verified, and it was worse than this todo
+      assumed: `send_command` called `subprocess.run` twice with `capture_output=True`, **no `check=`, and never
+      inspected `returncode`** — so a failed `tmux send-keys` raised nothing and `nudge()` returned **True**, i.e. a
+      send that never landed reported as delivered. Now raises on a non-zero send AND on a non-zero `C-m` submit;
+      `nudge` retries (`nudge_attempts`, default 3). Retry follows ONLY a raised failure — a **successful** send is
+      never repeated, because re-typing a delivered wake into a live pane risks the agent acting twice (pinned by a
+      test; an unconditional retry loop would look tidier and be a bug). ~~Verify the `send_to_role` tmux nudge reliably
+      wakes a heads-down `/loop` (`tmux_spawn.nudge` →~~ `_nudge_message`); if flaky, make it idempotent + retried.
+      (Existing `test_agent_nudge.py` covers the primitive + endpoint + auto-nudge; no flakiness surfaced this pass —
+      deeper hardening deferred.)
 
 ## Immediate remediation (operator-gated — NOT part of the code fix)
 

@@ -27,7 +27,7 @@ related:
     ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
   ]
 created: 2026-07-07
-last_updated: 2026-07-07
+last_updated: 2026-07-16
 parent_epic: orchestrator_master
 priority: P0
 source: fleet-idle investigation 2026-07-07 (operator-reported no workers running)
@@ -143,13 +143,25 @@ drift_direction: advance-code
       `clear_slot_skips_for_task` primitive for plan-change clears + `/unskip-task`/`/clear-skips` APIs) per
       ../ao_dispatch_correctness_regen_reconcile_2026_07_07.md Progress Log; flipped 2026-07-12 per operator ruling
       (finding 218).
-- [ ] [CODE] P1. **AutoSpawn should not spawn the whole tick at the top task's tier when the queue is mixed-tier** —
-      spawn per-task-tier (or at least don't force Opus for a queue that is 29/30 Sonnet). Ref `_top_queued_task_params`
-      "known limitation".
-- [ ] [DESIGN] P2. **Monitor/main agent guard** — do not extrapolate a single task's gate to the whole backlog; re-check
-      `/api/backlog/{id}/blockers` before declaring "fleet deadlocked" and going passive.
-- [ ] [ADMIN] P2. **Operating guidance** — avoid a single high-priority Opus plan mixed with Sonnet plans in the same
-      queue (it drags every spawn to Opus until RC-4 is fixed); if a plan genuinely needs Opus, isolate it.
+- [x] [CODE] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@6ae43b5` (R2).** `_spawn_param_plan` yields one
+      `(model, effort, thinking, role)` entry per CLAIMABLE task; the i-th slot spawned takes the i-th entry, so 1 opus
+      P0 above 29 sonnet tasks now boots ONE opus worker, not the whole tick. `assigned_role` travels per-slot too (it
+      was a tick-wide value closed over by the slow section). The old "Known limitation" docstring is deleted;
+      `_top_queued_task_params` was DELETED rather than shimmed. ~~**AutoSpawn should not spawn the whole tick at the
+      top task's tier when the queue is mixed-tier**~~ — spawn per-task-tier (or at least don't force Opus for a queue
+      that is 29/30 Sonnet). Ref `_top_queued_task_params` "known limitation".
+- [x] [DESIGN] P2. ✅ **DONE 2026-07-16 (R3).** `agents/main.md` STEP 2.4 — never conclude "the fleet is deadlocked"
+      from ONE gated task; PROVE it per task via `GET /api/backlog/{task_id}/blockers` before stopping dispatch (≥1
+      `ready (no blockers)` ⇒ NOT deadlocked ⇒ the problem is spawn/dispatch-side). `agents/monitor.md` — alert on what
+      you MEASURED, never on what you infer; a fleet-stall belief is a HYPOTHESIS, not a breach, and must never be the
+      reason dispatch stops. ~~**Monitor/main agent guard**~~ — do not extrapolate a single task's gate to the whole
+      backlog; re-check `/api/backlog/{id}/blockers` before declaring "fleet deadlocked" and going passive.
+- [x] [ADMIN] P2. ✅ **DONE 2026-07-16 (R4).** `agents/main.md` STEP 2.6. Note the framing CHANGED with R2: per-slot
+      spawn params remove the COST blow-up (one opus plan no longer drags every worker up a tier), so the residual
+      guidance is about queue SHAPE, not cost — and it explicitly forbids the tempting wrong fix of re-tiering plans to
+      smooth the queue, which would trip the worker's own SSOT self-check on "Sonnet on opus-required". ~~**Operating
+      guidance**~~ — avoid a single high-priority Opus plan mixed with Sonnet plans in the same queue (it drags every
+      spawn to Opus until RC-4 is fixed); if a plan genuinely needs Opus, isolate it.
 
 ## Progress Log
 

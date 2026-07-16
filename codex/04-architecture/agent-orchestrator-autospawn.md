@@ -3,8 +3,9 @@ doc_type: codex-ssot
 title: Agent Orchestrator — AutoSpawn Architecture
 summary:
   AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass (queue
-  non-empty, no active worker, account headroom <95%, slot configured, not in cooldown); model-tier-aware opus routing,
-  anti-flap 1h backoff + Slack alert.
+  CLAIMABLE (not merely queued — R1 2026-07-16), no active worker, account headroom <95%, slot configured, not in
+  cooldown); per-slot spawn params from _spawn_param_plan (R2); model-tier-aware opus routing, anti-flap 1h backoff +
+  Slack alert.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -30,7 +31,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-06-29
+last_reviewed: 2026-07-16
 code_refs:
 ---
 
@@ -62,6 +63,41 @@ A worker is auto-spawned on slot N when **all 5 gates** are true on a given tick
 Headroom check: null `five_hour_pct` or `weekly_pct` is treated as 0 (fresh accounts with no usage data are assumed
 healthy — pessimistic only on observed data). This prevents false-blocking new accounts before their first `/usage`
 refresh.
+
+> **Gate 1 is CLAIMABLE, not merely queued (R1, 2026-07-16).** The table above describes the raw SQL shape; the live
+> gate asks whether a queued task is claimable by **any** worker slot — see § Spawn budget below. A queue of
+> un-claimable tasks reads as `queue_empty` for spawn purposes and correctly spawns nothing.
+
+---
+
+## Spawn budget — count work a slot can actually CLAIM (R1, 2026-07-16)
+
+**One claimable task warrants one spawn.** The budget is `len(dispatch.claimable_queued_task_ids(...))`
+(`autospawn._queued_undispatched_count` delegates to it), then capped by the fleet-worker headroom.
+
+**The rule that matters:** the budget and the dispatcher MUST answer the same question from the same place. They did
+not, and it cost the fleet its throughput. AutoSpawn applied 2 filters (queued+undispatched, prereqs-met) while
+`pick_next_task` applied 9, so the budget counted work dispatch would immediately reject. Every phantom bought a spawn:
+the worker booted on a real account, was handed nothing, parked, and the watchdog reaped it. Measured over 24h before
+the fix: **~1014 autospawns / 1184 boots / 954 worker-deaths → 217 dispatches / 101 tasks done**, with the spawn budget
+at 6 against 1 genuinely-claimable task.
+
+Both consumers now derive from one filter table (`dispatch._FILTERS`), each row declaring a `FilterScope`:
+
+| Scope        | Meaning                                                                                  | `pick_next_task` | Spawn budget                  |
+| ------------ | ---------------------------------------------------------------------------------------- | ---------------- | ----------------------------- |
+| `FLEET`      | same answer for every slot (prereqs, DEFER brief, repo/collision)                        | must pass        | must pass                     |
+| `SLOT`       | varies by slot; AutoSpawn **cannot** change it (`slot_skips`, affinity pin, review slot) | must pass        | passes if **any** slot passes |
+| `CAPABILITY` | varies by slot; AutoSpawn **can spawn one that passes** (model tier, craft role)         | must pass        | **ignored**                   |
+
+**`CAPABILITY` is the subtle one — do not "simplify" it away.** Filtering model tier or craft role into the budget looks
+symmetric and starves the fleet: an opus task is not un-claimable because every live slot is sonnet — the next spawn can
+BE opus. Zeroing the budget means the opus/infra worker never spawns and the task waits forever, which is worse than the
+over-count R1 fixed; for craft role it reintroduces the exact starvation `agent-orchestrator@8a423bb` fixed. Guarded by
+`tests/test_dispatch_filter_table.py`; `_Filter.scope` has no default, so a new rule cannot be added without classifying
+it.
+
+**Add an eligibility rule to `_FILTERS`, never as an inline check in a caller** — that asymmetry IS how R1 happened.
 
 ---
 
@@ -104,13 +140,22 @@ SSOT self-check would STOP ("Sonnet on opus-required" — CLAUDE.md HARD RULE) a
 Symptom: opus-required plans block slot after slot, no Opus worker ever appears, even with idle capacity. Four
 mechanisms now route the model end-to-end (`server/autospawn.py` + `server/dispatch.py`):
 
-1. **Tick spawn model — `_top_queued_task_params`.** Spawn `(model, effort, thinking, role)` come from the highest-rank
-   **prereq-MET** queued+undispatched task. The prereq filter stops a GATED opus dependent (a plan waiting on its
-   `gate_on_depends` upstreams — see `ci-cd`/regen docs) from driving every spawn Opus while it can never be served.
+1. **PER-SLOT spawn params — `_spawn_param_plan` (R2, 2026-07-16; was `_top_queued_task_params`, now DELETED).** The
+   plan yields one `(model, effort, thinking, role)` entry per CLAIMABLE task — same
+   `dispatch.claimable_queued_task_ids` SSOT the budget counts, so the plan and the budget cannot disagree about what is
+   servable — ordered starved-role-first then by dispatch's own tie-break `(tier, priority, plan_order, plan_ref)`. The
+   i-th slot spawned this tick takes the i-th entry, so the fleet comes up sized and crafted as the queue actually asks.
+   **Until 2026-07-16 the tick resolved ONE tuple and booted every slot at it** — a limitation the code documented in a
+   docstring and never fixed: 1 opus P0 above 29 sonnet tasks made every worker in the tick opus (burning opus quota on
+   work the plans intended to run cheap), and a mixed-ROLE queue booted everyone at the top task's craft, so the
+   dispatch role-gate stranded every other role behind a fleet that could not claim it. `assigned_role` now travels
+   per-slot through `to_spawn`; it used to be one tick-wide value closed over by the slow section, which is what made
+   the craft uniform.
 2. **Per-slot UPGRADE — `_slot_required_model`.** Before spawning slot N, scan its `current_task` PLUS any QUEUED
-   **affinity-high** task TARGETING slot N (prereqs met); if the highest such task outranks the tick model, spawn slot N
-   at that task's tier. Covers a task returned to the queue via `/reassign` — `current_task` is cleared but
-   `target_slot` + `affinity=high` remain — so the sole eligible runner doesn't respawn Sonnet and starve.
+   **affinity-high** task TARGETING slot N (prereqs met); if the highest such task outranks that slot's PLAN model,
+   spawn slot N at that task's tier. Covers a task returned to the queue via `/reassign` — `current_task` is cleared but
+   `target_slot` + `affinity=high` remain — so the sole eligible runner doesn't respawn Sonnet and starve. Runs AFTER
+   the plan pick, so a pinned slot still outranks its plan entry.
 3. **Dispatch model-tier gate — `dispatch.pick_next_task` (`_task_outranks_slot`).** A slot never CLAIMS a task whose
    model outranks its own. Opus tasks stay queued for an Opus spawn; because Sonnet slots never claim them, they are
    never plan-claim-pinned to a Sonnet slot → no affinity deadlock.
