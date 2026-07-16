@@ -27,6 +27,7 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 source: discovered while executing data_status_page_ux_and_canonicalisation_2026_07_16 P1-remaining INFRA
+depends_on: []
 ---
 
 # Honest-coverage nightly cron undersized + launcher SSOT drift
