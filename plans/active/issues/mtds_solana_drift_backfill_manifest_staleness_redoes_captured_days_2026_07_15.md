@@ -85,7 +85,15 @@ unattempted → fail OPEN → re-fetch. Hence the two-part fix.
 
 ## Todos
 
-- [ ] [CODE] P1. Ship the MTDS half (gate + fail-closed fallback + regression tests). Repo: market-tick-data-service.
+- [x] ✅ [CODE] P1. Ship the MTDS half (gate + fail-closed fallback + regression tests). Repo: market-tick-data-service.
+      — `market-tick-data-service@6d91aa33` (QG `--no-fix` green, sentinel == HEAD at ship). Gate wired at the TOP of
+      `_backfill_drift_s3_date`; `_drift_date_already_captured` (ManifestFreshnessCache normal path →
+      `last_refresh_failed` fallback) + `_drift_perp_funding_parquet_exists` (bounded ONE-day list, probe-failure ⇒
+      re-attempt) + `MANIFEST_FRESHNESS_STALE_FALLBACK` warning; 245 lines of regression tests. Shipped by the
+      coordinator after the authoring agent hit the weekly API limit mid-gate. **Merge note**: landing raced an upstream
+      edit to the same module (`_MAX_HELIUS_DAY_SIGS` ceiling from
+      `drift_v2_sig_index_program_wide_helius_oom_2026_07_15`); resolved by keeping BOTH sides (never take-mine),
+      verified by symbol presence + AST parse before re-gating.
 - [ ] [VERIFY] P1. Relaunch the Helius/S3 Drift backfill on the fixed code and prove via log that it SKIPS
       2025-01-09..2025-01-14 and starts at the first genuinely-uncaptured date (T+15min measured check, not liveness).
       NOTE 2026-07-16: an AO slot launched `backfill_drift_v2_historical` (17 markets, 2022-11-04→2026-07-16,
@@ -98,6 +106,20 @@ unattempted → fail OPEN → re-fetch. Hence the two-part fix.
       fix or file. Repo: market-tick-data-service.
 
 ## Progress log
+
+- 2026-07-16 (coordinator) — **Drift public-API coverage envelope MEASURED (answers "can the free API replace the Helius
+  sig-walk for history?"): PARTLY — yes to ~2026-03-31, no after.** Probed
+  `data.api.drift.trade/market/SOL-PERP/{fundingRates,trades}/{Y}/{M}/{D}?format=csv` live: real data every sampled date
+  from genesis **2022-11-04** (funding 1,088 B / trades 5,605 B) through **2026-03-29** (funding 6,977 B; trades ~2.8
+  MB/day at peak). From **2026-04-05 onward: HTTP 200 with ZERO bytes**, every sampled date through 2026-07-14, BOTH
+  data types — the archive lags real-time by ~3.5 months (cliff bisected to 2026-03-29 ✓ / 2026-04-05 ✗). Implication:
+  the FREE per-day CSV path can own history 2022-11-04→~2026-03-31 at zero credit cost (this is what the AO-launched
+  `backfill_drift_v2_historical` VM, 17 markets, is doing right now — zero Helius lines in its log); only the
+  ~2026-04-01→today tail needs Helius sig-walking or live capture. **Do not run both over the same range.** **Separate
+  live defect found while probing**: the funding endpoint `drift_adapter.py:12` documents —
+  `GET /fundingRates?marketName={SYMBOL}-PERP&limit=2400` — now returns **403 Forbidden**; only the per-day CSV form
+  works. That is the DRIFT `derivative_ticker` path just wired by
+  `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15` → filed as a todo there, not here.
 
 - 2026-07-15/16: Found during an operator status check. VM stopped protectively; UTL half shipped (`dfcb1181`); MTDS
   half authored (gate + 245 lines of regression tests) but its shipping agent hit the weekly API limit mid-gate — picked
