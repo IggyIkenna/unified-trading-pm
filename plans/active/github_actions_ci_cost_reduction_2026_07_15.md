@@ -318,11 +318,28 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
 > `github-token` is DEAD/401). Do NOT skip D2 — `jq`/`npm` on that box are still genuinely unknown, and toolchain parity
 > is the real migration risk.
 
-- [ ] [INFRA] P0. **D1 — teach `install` the Secret-Manager path (fixes MY blocker; do FIRST).** `cmd_install` currently
-      does `[ -n "${GH_PAT:-}" ] || die` and writes the literal token into `/etc/github-glue-runner.env` — contradicting
-      this plan's own "prefer `GH_TOKEN_SECRET` so no PAT sits on disk". Accept **either**: `GH_TOKEN_SECRET` (+
-      optional `GCP_PROJECT`) → write those to the env file and leave `GH_TOKEN` unset (the wrapper already resolves it
-      at runtime via the VM's ADC), **or** `GH_PAT` for the legacy path. Require exactly one. Update README + `--help`.
+- [x] ✅ [INFRA] P0. **D1 — `install` takes the Secret-Manager path — unified-trading-pm@e2121f719.** `cmd_install` now
+      requires **exactly one** of `GH_TOKEN_SECRET` (+ optional `GCP_PROJECT`) or `GH_PAT`, and **refuses both** (they
+      can disagree, and silently preferring one would mean the token you think registers runners isn't the one that
+      does). Secret path writes only the secret **NAME** to `/etc/github-glue-runner.env`, `GH_TOKEN` unset — the
+      wrapper already resolved it at runtime via ADC. README + a real `--help` added. **Two failure modes pre-empted,
+      both found while writing it:** (1) **ADC is PER-USER** and install runs as root while runners run as `ubuntu`, so
+      a root-only ADC would pass install then leave 8 units crash-looping → install resolves via `sudo -u ubuntu`, the
+      account that actually has to do it; (2) a token without `Administration:write` would fail at first start with an
+      opaque journal → install probes `registration-token` (expects 201) up front. `status`/`prune` resolve the same way
+      (explicit env → the name in the env file), so they survive a secret-path install; `status` degrades to omitting
+      the live listing rather than dying. **Free side effect:** everything reads the secret's `latest` **by name**, so
+      rotation needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL Secret
+      Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on the npm
+      branch); `quality-gates.sh --no-fix` **exit 0**.
+- [ ] [SECURITY] P0. **Rotate `GH_PAT` — agent-caused exposure 2026-07-16, operator decision pending.** While testing
+      D1's resolver, a harness assertion compared the token **by value** and printed it on mismatch, putting the live
+      `GH_PAT` (fine-grained, `Administration:write`, **never expires**) into the session transcript
+      (`~/.claude/projects/…/03a5cc50-*.jsonl`) + that conversation's API context. Nothing published publicly. **Fix
+      applied to the harness:** secrets are now asserted by PROPERTY (empty / non-empty / length), never by value — a
+      failing assertion can no longer leak. **Operator action:** add a new version to the `GH_PAT` secret; every
+      consumer reads `latest` by name so no redeploy is needed. Check other holders first (`deployment-api` and the
+      other GitHub tokens the operator flagged) for anything pinning a version.
 - [ ] [INFRA] P0. **D2 — `preflight` on the VM via SSM (gate: do not proceed on a failure).**
       `aws ssm send-command --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript`
       → `bash <pm-clone>/scripts/self-hosted-runners/setup-glue-runners.sh preflight`. Verifies
