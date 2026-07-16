@@ -927,6 +927,25 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       `upcoming_fixtures.py` + the `fixtures_schedule` split); build a read-only backend list (single-walk discipline) +
       the grouped UI. `[UI]` + pw:L2.
 
+### P9 — cross-agent verification (2026-07-16 pm, other agents' P3/P6 work)
+
+P3 (prediction browser: deployment-api@9238983 + deployment-ui@3bdb4e4 + uac@72fd959) and P6 phase-1 (catalogue
+explorer: deployment-api@abcce0b + @1e3c7b4) are **committed, on LDR, CI-green (`quality-gates-v2` success), plan todos
+flipped with evidence, and code is real** (not stubs) — the shipping process was followed correctly. TWO gaps found on a
+local real-GCS run (worth confirming — same "CI-green-with-mocks but slow/empty on real data" class as the Q1 symbol
+search):
+
+- [ ] [PERF] P2. _(P3/P6 endpoints — real-data verification)_ `GET /data-status/prediction-catalogue` (reads the
+      ~1.3M-row prediction `catalog.parquet`) and `GET /data-status/catalogue` (cefi per-venue walk) did **synchronous
+      heavy GCS reads that blocked a single-worker uvicorn event loop** (health + coverage-summary went unresponsive
+      after one call locally) and `/catalogue?asset_group=cefi` returned **`total_count:0` (empty)** on the one backend
+      that answered. Verify on real data / prod (multi-worker): (a) offload the heavy parquet read off the event loop
+      (thread/executor) + paginate/cache so the UI can't hang; (b) confirm `/catalogue` actually returns cefi
+      instruments (the availability-derived walk may be missing the latest-day). Not a proven prod bug — but unverified
+      against real data.
+- [ ] [UI] P2. _(P6 phase-1 UI — NOT done)_ The `InstrumentsModalStandard` "MVP only" toggle + per-row badge + CSV
+      threading (P6 phase-1 UI todo) is still OPEN — the P6 BACKEND landed but its UI half didn't. Finish it.
+
 ---
 
 ## Operator decisions — RESOLVED (2026-07-16)
