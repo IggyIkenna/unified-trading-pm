@@ -150,9 +150,17 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       unchanged (already SPOT). QG green, dry-run verified (`Machine: e2-highmem-8`), module import path confirmed.
 - [x] [DATA] P1.1. Reconcile the 2025-01-09 SOL-PERP shard — DONE (data_engineering slot-7, 2026-07-16). See Progress
       Log.
+- [ ] [INFRA] P1. Launch the re-routed `mtds-solana-drift-backfill` VM (Velocity path, `deployment-service@ee859e4`) at
+      scale over the real backfill gap (`2025-01-15`–`2025-12-23` per `mvp_backfill_defi_onchain_v10` G1.5) — reuse
+      `launch-mtds-solana-drift-backfill-vm.sh` (already registered in `VM_PREFIX_TO_BUCKET`, do not hand-roll a new
+      name), `e2-highmem-8`, SPOT default per CLAUDE.md. Both prereq todos (1, 2 above) are landed — this is the missing
+      "actually run it" step P1.2 below needs; without this todo P1.2's park-behind-prereq has no gate to open. On
+      completion: flip `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: true}`) so
+      P1.2 unparks. (repo: deployment-service)
 - [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
-      path once Velocity starts capturing at scale — NOT started. Both prerequisite todos are now landed: todo 1
-      (stop/do-not-relaunch, `deployment-service@46d6492`) and todo 2 (re-route launcher, `deployment-service@ee859e4`).
+      path once Velocity is capturing at scale — PARKED behind the `drift_velocity_backfill_running_at_scale`
+      prerequisite (currently `false`) gated on the `[INFRA] P1` launch-at-scale todo directly above; `priority: 999` +
+      `priority_override: true` set in `backlog.yaml` so it doesn't re-dispatch/churn per `BLK-b72a4b59` rider 3.
       (repos: market-tick-data-service, instruments-service)
 - [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
@@ -160,6 +168,25 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       superseded/moot. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-7: P1.2 parked behind a real prereq (`BLK-b72a4b59`)
+
+P1.2 auto-dispatched to me immediately after P1.1, but its stated precondition ("Velocity capturing at scale") wasn't
+met — a read-only GCE check (`compute_v1.AggregatedListInstancesRequest`, project `central-element-323112`) found ZERO
+instances matching `mtds-drift-sig-walker*` or `mtds-solana-drift-backfill*`; nothing was capturing anything. Filed
+`/blocked` `BLK-b72a4b59` rather than guess. Main ruled **A** (park behind a real prereq) with 3 riders:
+
+1. Confirm the plan has a todo to actually LAUNCH the re-routed Velocity backfill at scale — it did NOT (todos 1/2 above
+   are stop-fleet + re-route-launcher, i.e. wiring only, never an actual run). **Added** the `[INFRA] P1`
+   launch-at-scale todo directly above so P1.2's gate has something to open.
+2. Mark the stop-fleet todo done citing my GCE-check evidence — **already done concurrently** by infra slot-16
+   (`deployment-service@46d6492`, same zero-instance finding, independently confirmed) before I got to it.
+3. Name + wire a real prereq condition instead of letting P1.2 re-dispatch and churn. **Done**: created
+   `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: false}`), attached it to
+   `drift_helius_path_obsolete-005`'s `prereqs.prerequisites` in `backlog.yaml`, and set `priority: 999` +
+   `priority_override: true` on the same entry so it stays parked instead of re-dispatching. Whoever executes the new
+   `[INFRA] P1` todo flips the condition to `true` on completion, which unparks P1.2 for the next data_engineering
+   worker.
 
 ### 2026-07-16 — infra slot-16: stop/do-not-relaunch (todo 1)
 
@@ -238,6 +265,42 @@ let it OOM. Created this consolidation doc per main's step-5 instruction. Steps 
 reconcile manifest) are scoped as todos above, not executed this session — they involve stopping a live multi-VM SPOT
 fleet and infra changes better suited to a dedicated follow-up dispatch than folded into this single P0 verification
 task.
+
+### 2026-07-16T00:15-00:28Z — data_engineering slot-13 (dispatched to `mvp_backfill_defi_onchain_v10-003`): independently confirmed slot-7's P1.1 root-cause before seeing their fix, no duplicate work; P1.2 sole remaining blocker is a VM launch (infra-scoped)
+
+Dispatched to the main plan's `-003` ("Verify the DRIFT fleet drains") todo, not this doc directly. Independently traced
+the exact same defect slot-7 root-caused and fixed moments earlier: queried `_index/availability_index.parquet` with
+predicate pushdown (`venue=DRIFT, data_type=perp_funding, date=2025-01-09`) before fresh-pulling picked up slot-7's
+`record_captured()` fix, found the same stale `row_count=1209478`/ `source=hyperliquid` bogus captured row, and
+independently downloaded + verified the real GCS parquet directly (24 rows, matches). Fresh-pulled again before writing
+anything and found slot-7's fix (`per_vm/local-2742523-30b2.parquet`, `MANIFEST_PER_VM_SHARDS=true` reconciliation)
+already landed with a more thorough root-cause (the legacy single-blob CAS write path, not `record_captured()` itself) —
+dropped my own draft fix, no duplicate write.
+
+**Current blocker for P1.2 (and this doc's own gate) is now singular and infra-scoped**: `gcloud compute instances list`
+(project `central-element-323112`, 2026-07-16 00:28Z) shows zero `mtds-solana-drift-backfill` instances running — the
+last one (2026-07-15 23:11-23:34Z) predates both `deployment-service@46d6492` (fleet-stop/launcher-registry fix, 00:0xZ)
+and `@ee859e4` (re-route to Velocity, 00:12:35Z), so it ran the OLD Helius path and self-deleted before either fix
+existed. Nobody has launched `launch-mtds-solana-drift-backfill-vm.sh` since the re-route landed — the launcher is
+correctly wired (verified via `deployment-service@ee859e4`'s dry-run) but has not actually been invoked. This is a VM
+launch, which is `does_not` scope for `data_engineering` craft (`agents/data_engineering.md`) — deferring to an
+infra-craft dispatch or main, consistent with slot-7's same scope call on P1.2. Re-ran the aggregate gate one more time
+before this session's fresh-pull picked up slot-7's fix (2026-07-16 00:18Z): DRIFT `perp_funding`
+`captured=9, attempted_failed=72, expected_unattempted=51301` — `attempted_failed` grew 54→72 from the stale-code VM's
+last run (18 ceiling-exceeded days recorded honestly, not a new defect); did NOT re-run the full corpus-scale gate again
+after slot-7's fix landed minutes later, since (a) the consolidator is confirmed stale/behind right now (slot-7's own
+finding) so a fresh full read would not yet reflect their per-VM-shard fix, and (b) a third corpus-scale
+`measure_honest_coverage.py` run within 30 minutes is the exact over-watch pattern this task has been flagged for
+repeatedly.
+
+**Recommendation for the next dispatch (any craft, ideally infra)**: launch `launch-mtds-solana-drift-backfill-vm.sh`
+(already re-routed + e2-highmem-8 + SPOT) — that is now the ONLY remaining action item before P1.2's reconciliation and
+this task's own gate can move. No further data_engineering-craft investigation is warranted until that VM produces new
+manifest data to reconcile.
+
+No code changes this session (draft fix superseded before commit). This doc's own todos unchanged (P1.1 done, P1.2/P2
+still open, both correctly gated). No checkbox flip on the main plan's `-003` item — gate (item 4) still not met.
+`/skip-current-task`.
 
 ### 2026-07-16T00:1xZ — data_engineering slot-11 (dispatched to -004, the banner todo — declined, genuinely premature)
 
