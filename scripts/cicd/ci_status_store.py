@@ -68,7 +68,8 @@ def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
     Returns the status that SHOULD be persisted given the previously-stored status, the incoming
     status, and the branch that produced it. Identical semantics to the manifest writer:
 
-      * ``FAILING`` is ALWAYS persisted (a real regression must surface, even over MAIN_GREEN);
+      * ``FAILING`` is persisted (a real regression must surface, even over a green) — EXCEPT a
+        non-``main`` FAILING may not clobber ``MAIN_GREEN`` (see below);
       * a ``main``-branch signal is authoritative (it is the on-main truth — never downgraded);
       * otherwise keep the previously-stored status if the incoming rank is LOWER (no-downgrade:
         a re-run of staging/ldr v2 on an already-promoted repo must not flap MAIN_GREEN→STAGING_GREEN
@@ -76,6 +77,22 @@ def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
       * an equal-or-higher rank advances.
     """
     if new_status == "FAILING":
+        # A non-main red must NOT clobber the on-main truth. This carve-out used to be branch-
+        # agnostic, which made it a ONE-WAY RATCHET: a red from ANY branch could demote
+        # MAIN_GREEN, but the recovery could never climb back — an LDR/promote green maps to
+        # FEATURE_GREEN (rank 1) and the no-downgrade rule below correctly refuses it over
+        # MAIN_GREEN (rank 4), so ONLY a fresh push to main could restore it. Measured
+        # 2026-07-16: a 3.3% wall-clock flake on deployment-api's live-defi-rollout drove
+        # MAIN_GREEN → FAILING → SIT_VALIDATED and paged "CI REGRESSION ... (was MAIN_GREEN)"
+        # while main itself was never tested and was never red.
+        #
+        # MAIN_GREEN is not cosmetic: it is the dep-on-main promotion gate (staging-to-main
+        # STAGE 1.8), so a non-main flake could stall dependents until an unrelated main push.
+        # A non-main red is NOT lost — the QG slice failure pages directly (notify-qg-fail) and
+        # LDR redness has its own dedicated axis (ldr_ci_status / ldr_ci_monitor.py). This axis
+        # is the PROMOTION tier's truth, and only main can speak for main.
+        if branch != "main" and prev_status == "MAIN_GREEN":
+            return prev_status
         return new_status
     if branch == "main":
         return new_status
@@ -241,8 +258,10 @@ def set_status(
             # stale-rejected wholesale → the fingerprint never updates → permanent promote jam (same jam
             # CLASS as the no-downgrade rank bug). Advance ONLY the fingerprint; leave status / rank /
             # commit_ts untouched so the stale-ordering key does not regress for other writers.
-            if status == "SIT_VALIDATED" and prev_dict and (
-                sit_validated_tree is not None or sit_validated_workspace_digest is not None
+            if (
+                status == "SIT_VALIDATED"
+                and prev_dict
+                and (sit_validated_tree is not None or sit_validated_workspace_digest is not None)
             ):
                 merged: dict[str, object] = dict(prev_dict)
                 if sit_validated_tree is not None:
@@ -534,7 +553,10 @@ if __name__ == "__main__":
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
     _prev, _written = set_status(
-        _repo, _status, _branch, _sha,
+        _repo,
+        _status,
+        _branch,
+        _sha,
         codebase_health=_health,
         commit_ts=_commit_ts,
         sit_validated_tree=_sit_tree,

@@ -293,7 +293,13 @@ time". **Nobody had run it in the 8 days since it was filed.** Run now, workspac
 **Answer to Todo 3: the latent gap is NOT widespread.** One repo is over baseline; the rest are at or under. The
 zero-tolerance-gate failure class this doc worried about did not replicate fleet-wide.
 
-- [ ] [SCRIPT] P1. **`agent-orchestrator` is over its QG STEP 5.101 baseline (25) at a live count of 26** — a NEW
+- [x] [SCRIPT] P1. ✅ **FIXED 2026-07-16 — `agent-orchestrator@54c9e8d`; re-measured
+      `[OK] agent-orchestrator: 25 (== baseline)`, full QG PASSED.** The real site was
+      **`server/notifications/slack.py:405` (2026-07-14)**, NOT the `_git_alerts.py:364` the checker named — that line
+      is from 2026-06-11 and was an artefact of the positional tail-slice fallback (this repo's baseline has no
+      `commit:` anchor). Fixed by indexing `loss["sha"]` (fail-fast), not by a `noqa` and not by raising the baseline.
+      See the new P2 todo below — stamping AO's `commit:` anchor stops the next breach from mis-reporting the same way.
+      ~~**`agent-orchestrator` is over its QG STEP 5.101 baseline (25) at a live count of 26**~~ — a NEW
       empty-string-fallback site at `server/worker_liveness/_git_alerts.py:364`, measured 2026-07-16 by running
       `check_no_empty_string_fallback.py --scope agent-orchestrator` directly (not trusting a report). This means
       `agent-orchestrator`'s `quality-gates.sh` is **currently red for every push** — the same failure class as this
@@ -307,3 +313,13 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       instruments-service 366→361, **market-tick-data-service 199→62** (this doc's own subject repo — a 137-site
       improvement never banked), ml-service 8→6, trading-agent-service 2→1. Pure hygiene; each unbanked baseline leaves
       headroom for a real regression to slip in unnoticed, which is exactly how `agent-orchestrator` reached 26.
+
+- [ ] [SCRIPT] P2. **Stamp a `commit:` anchor into the `agent-orchestrator` baseline row** (and audit which other repos
+      lack one). Root cause of the 2026-07-16 mis-report: AO's row is bare `count: 25` with no `commit:`, so an
+      over-baseline failure cannot git-diff against a known-good point and falls back to a **positional tail-slice** —
+      it named a 2026-06-11 line as the culprit when the real one was 2026-07-14. This is the second recorded instance
+      of that exact confusion (see `instruments_service_empty_string_fallback_baseline_breach_2026_07_14`), so it is a
+      pattern, not bad luck: whoever hits the next breach will be sent to the wrong file unless the anchor exists.
+      Running `--update-baseline` on a green repo stamps the anchor and clamps the count DOWN (never up), so it is safe.
+      **Gate**: `no_empty_string_fallback_baseline.yaml`'s `agent-orchestrator` row carries a `commit:`; a
+      deliberately-introduced test site is reported at its real path, not a tail-slice guess.

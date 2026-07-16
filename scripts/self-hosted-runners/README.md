@@ -81,13 +81,35 @@ worker). `HOME` is deliberately **not** redirected: it would break `$HOME/.confi
 ```bash
 cd <pm-clone>/scripts/self-hosted-runners
 ./setup-glue-runners.sh preflight      # toolchain parity vs ubuntu-latest — do this FIRST
-sudo GH_PAT="<admin PAT with Administration:write on unified-trading-pm>" \
-     GLUE_COUNT=5 WRITER_COUNT=3 ./setup-glue-runners.sh install
+sudo GH_TOKEN_SECRET=GH_PAT GLUE_COUNT=5 WRITER_COUNT=3 ./setup-glue-runners.sh install
 ./setup-glue-runners.sh status         # expect 8 units active, both pools Online/idle, slot fresh
 ```
 
-The token can instead be fetched from GCP Secret Manager at runtime (no PAT on disk): set
-`GH_TOKEN_SECRET=<secret-name>` (+ `GCP_PROJECT`) in `/etc/github-glue-runner.env` and leave `GH_TOKEN` unset.
+### The admin token — exactly one source
+
+`install` requires **exactly one** of these and refuses if both are set (they can disagree, and silently preferring one
+would mean the token you _think_ registers runners isn't the one that does):
+
+| Source                   | Stored in `/etc/github-glue-runner.env` | Use                                                 |
+| ------------------------ | --------------------------------------- | --------------------------------------------------- |
+| `GH_TOKEN_SECRET=<name>` | the secret **name** only                | **preferred** — on this VM `GH_TOKEN_SECRET=GH_PAT` |
+| `GH_PAT=<token>`         | the literal token (0600 root)           | legacy; only for a host with no ADC                 |
+
+On the secret path no credential is ever written to disk: the wrapper resolves the token from Secret Manager at every
+start using the ADC of `ubuntu`. Pair with `GCP_PROJECT=<proj>` only if the secret isn't in the VM's default project.
+
+Two consequences worth knowing:
+
+- **Rotation is free.** Both the wrapper and `resolve_admin_token` access the secret's `latest` version by name, so
+  adding a new version rotates every runner with no redeploy and no edit to the env file.
+- **ADC is per-user, and `install` runs as root while the runners run as `ubuntu`.** A root-only ADC would let install
+  pass and then leave 8 units crash-looping. `install` therefore resolves the secret via `sudo -u ubuntu` — as the
+  account that actually has to do it — and probes `Administration:write` up front (a `registration-token` POST,
+  expecting 201) so a bad token fails in one HTTP call instead of in the journal.
+
+`status` and `prune` resolve a token the same way: explicit env first, else the secret name recorded in the env file.
+Since that file is `0600 root`, run them under `sudo` if you want the live-runner listing; without a token `status`
+degrades to omitting that section rather than failing.
 
 **Toolchain parity is the real migration risk**, not isolation. Hosted `ubuntu-latest` pre-seeds a large toolchain; this
 VM does not. `preflight` checks what the MOVE set actually invokes (`gh` 181 · `jq` 111 · `python3` 105 · `uv` 32 ·

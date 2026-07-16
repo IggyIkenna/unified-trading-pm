@@ -135,7 +135,19 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 0 — unblock the repo (P0, do FIRST)
 
-- [ ] [BACKEND] P0. **`agent-orchestrator` is over its QG STEP 5.101 baseline — every push is currently red.** Measured
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@54c9e8d`. Gate green:
+      `[OK] agent-orchestrator: 25 (== baseline)`; full `quality-gates.sh --no-fix` →
+      `✅ agent-orchestrator quality gate PASSED` (exit 0, sentinel==HEAD); landed on LDR.** **The checker named the
+      WRONG line** — it reported `_git_alerts.py:364`, which git-dates to **2026-06-11** (a month old). This repo's
+      baseline row carries **no `commit:` anchor**, so the checker fell back to what its own docstring calls "an
+      arbitrary positional tail-slice" — whichever site sorts last, not whichever is new (the failure mode named in
+      `instruments_service_empty_string_fallback_baseline_breach_2026_07_14`). Blaming all 26 sites against the
+      2026-07-08 seed gave exactly one newer: **`server/notifications/slack.py:405` (2026-07-14)** — 25 old + 1 new
+      = 26. Fixed by **indexing** (`loss["sha"]`), not `# noqa`: that line builds the `dedup_key` for the
+      **silent-data-loss canary**, `sha` is always set by its only producer (frozen `DiscardedCommit`, `sha: str`) so
+      the `""` default is unreachable, **and** on this key an `""` would collapse two distinct losses to one dedup_key
+      and **suppress a data-loss page** — silent corruption of the exact alert the canary exists to fire.
+      ~~**`agent-orchestrator` is over its QG STEP 5.101 baseline — every push is currently red.**~~ Measured
       2026-07-16: `check_no_empty_string_fallback.py --scope agent-orchestrator` → **26 sites > baseline 25**, new site
       at `server/worker_liveness/_git_alerts.py:364`. **This blocks Phase 1-3 from shipping at all**, so it goes first.
       Fix by rewriting the fallback to fail fast, or annotate `# noqa: qg-empty-fallback` with a one-line reason **if**
@@ -148,8 +160,22 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 1 — stop the burn (P0)
 
-- [ ] [BACKEND] P0. **R1 — eligibility-aware spawn budget.** Extract `pick_next_task`'s eligibility predicate into one
-      shared helper (single SSOT for "is this task claimable by any live slot?") and make
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@7baeedc`. QG green (own exit code 0): 1292 passed,
+      basedpyright 0 errors; landed on LDR.** Added `dispatch.claimable_queued_task_ids()` as the ONE SSOT for the
+      budget question ("could **any** worker slot take this?") vs `pick_next_task`'s per-slot question; both
+      `_has_queued_work` and `_queued_undispatched_count` delegate to it so the two can no longer drift. Also extracted
+      `_brief_is_deferred` (the DEFER prefix tuple had been inline — one definition now, not two). **Key design
+      decision, pinned by 2 tests: model tier and craft role are deliberately NOT filtered.** `pick_next_task` gates
+      them against the ASKING slot, but AutoSpawn CHOOSES them at spawn time — an opus task is not un-claimable just
+      because every live slot is sonnet, since the next spawn can BE opus. Filtering them in would zero the budget,
+      never spawn the opus/infra worker, and starve the work permanently — worse than the over-count, and for role it
+      would reintroduce the exact starvation `ao@8a423bb` fixed. Superset-on-doubt: an empty slot table skips the
+      per-slot filters rather than returning 0 (false starvation > stale over-count — the risk the verification agent
+      flagged). **R1 does NOT subsume R5**: a task pinned to a slot that exists but is dead still counts 1, because that
+      slot can be respawned onto it — the dead-slot spill is genuinely separate. 6 tests: skipped-by-every-slot → 0 vs
+      skipped-by-some → 1; tier guard; role guard; DEFER brief; repo collision (+ `parallel_safe` opt-out); affinity pin
+      to absent slot. ~~**R1 — eligibility-aware spawn budget.**~~ Extract `pick_next_task`'s eligibility predicate into
+      one shared helper (single SSOT for "is this task claimable by any live slot?") and make
       `_has_queued_work`/`_queued_undispatched_count` (`server/autospawn.py:317,340`) use it, so skip-exhausted /
       role-ineligible / collision-blocked / affinity-pinned tasks stop inflating the spawn budget. **Gate**: a task
       skipped by every eligible slot counts 0 toward the budget; existing autospawn tests stay green. Closes R1 + the

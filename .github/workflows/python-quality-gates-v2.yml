@@ -734,6 +734,7 @@ jobs:
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ github.token }}
           TRIGGER_BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE_REF: ${{ github.base_ref }}
           SLICES_RESULT: ${{ needs.qg-slices.result }}
@@ -770,6 +771,63 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\", \"codebase_health_b64\": \"${CH_B64:-}\"}}"
 
+  # ── SUPERSEDE CHECK — is this run's verdict still authoritative? ─────────────
+  # The caller template sets `concurrency.cancel-in-progress: github.event_name == 'push'`,
+  # so a newer push KILLS the in-flight run on the same ref. The killed run's roll-up reads
+  # 'cancelled' even when every slice had already PASSED — measured 2026-07-16 on
+  # instruments-service run 29488628505: the tests slice's own "Run quality gates" step
+  # succeeded at 09:54:39, the job was cancelled 7s later by the 09:54:44 push, and the
+  # superseding run 29488897064 then went green. That paged CRITICAL twice (the QG notify
+  # below + a ci_status MAIN_GREEN→FAILING regression) for a tree that was never broken.
+  #
+  # A superseded run's verdict is NOT authoritative: the newest run on the tip SHA owns it
+  # and pages on its own if genuinely red, so nothing is lost by staying quiet here. A run
+  # whose SHA is STILL the ref tip was cancelled for a REAL reason (timeout-minutes, OOM,
+  # manual cancel) and MUST still page — that is the distinction this job draws.
+  #
+  # Gated to the red path, so a green run never pays a runner start for it.
+  supersede-check:
+    name: supersede check
+    needs: [content-gate, qg-slices]
+    if: |
+      always() &&
+      needs.content-gate.outputs.cache_hit != 'true' &&
+      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      superseded: ${{ steps.check.outputs.superseded }}
+    steps:
+      - name: Compare this run's SHA against the current ref tip
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          # cancel-in-progress is push-only, so a PR / workflow_dispatch cancellation is
+          # always real — never suppress those.
+          if [ "${GITHUB_EVENT_NAME}" != "push" ]; then
+            echo "event=${GITHUB_EVENT_NAME} (not push) — cancellation is real, not a supersede."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          TIP="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_REF_NAME}" --jq .sha 2>/dev/null || true)"
+          # FAIL SAFE: if the tip cannot be resolved (rate limit, transient API error) we
+          # cannot PROVE supersession — page. A noisy page beats a silently swallowed red.
+          if [ -z "${TIP}" ]; then
+            echo "::warning::could not resolve tip of ${GITHUB_REF_NAME} — treating run as authoritative (will page)."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "${TIP}" != "${GITHUB_SHA}" ]; then
+            echo "SUPERSEDED — ${GITHUB_SHA} is no longer the tip of ${GITHUB_REF_NAME} (tip=${TIP})."
+            echo "The newer run on ${TIP} owns the verdict and pages if it is genuinely red. Staying quiet."
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "AUTHORITATIVE — ${GITHUB_SHA} is still the tip of ${GITHUB_REF_NAME}."
+            echo "This is a REAL failure/cancel (timeout-minutes, OOM, or manual cancel). Paging."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # ── SLACK NOTIFY — QG slice failure / cancellation ───────────────────────────
   # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
   # gains content dedup, alert ledger lifecycle, and re-nag eligibility.
@@ -780,11 +838,12 @@ jobs:
   # + codex/04-architecture/ci-alerting.md for the full dedup/cooldown contract.
   notify-qg-fail:
     name: Slack CRITICAL — QG Slice Failed
-    needs: [content-gate, qg-slices]
+    needs: [content-gate, qg-slices, supersede-check]
     if: |
       always() &&
       needs.content-gate.outputs.cache_hit != 'true' &&
-      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled')
+      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled') &&
+      needs.supersede-check.outputs.superseded != 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:

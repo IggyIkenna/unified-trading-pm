@@ -34,11 +34,31 @@ resolve_ci_status_map = _mod.resolve_ci_status_map
 # ── resolve_status — the pure CAS decision (Layer 2) ─────────────────────────────────────────────
 
 
-def test_failing_is_always_persisted_even_over_main_green():
-    # a real regression must surface even from the highest green tier, on any branch
-    assert resolve_status("MAIN_GREEN", "FAILING", "staging") == "FAILING"
+def test_failing_is_persisted_over_a_green():
+    # a real regression must surface even from a high green tier
     assert resolve_status("MAIN_GREEN", "FAILING", "main") == "FAILING"
     assert resolve_status("SIT_VALIDATED", "FAILING", "live-defi-rollout") == "FAILING"
+    assert resolve_status("STAGING_GREEN", "FAILING", "staging") == "FAILING"
+
+
+def test_non_main_failing_cannot_clobber_main_green():
+    """Only main speaks for main — the fix for a ONE-WAY ratchet (2026-07-16).
+
+    The FAILING carve-out used to be branch-agnostic ("...on any branch"), so a red from ANY
+    branch demoted MAIN_GREEN while the recovery could never climb back: a green from
+    LDR/staging maps to FEATURE_GREEN/STAGING_GREEN, which no-downgrade correctly refuses over
+    MAIN_GREEN, so only a fresh main push could undo it. Measured: a 3.3% wall-clock flake on
+    deployment-api's LDR drove MAIN_GREEN → FAILING → SIT_VALIDATED and paged "CI REGRESSION
+    ... (was MAIN_GREEN)" though main was never tested and never red. MAIN_GREEN is the
+    dep-on-main promotion gate (staging-to-main STAGE 1.8), so that stalls dependents.
+
+    The non-main red is NOT swallowed: the QG slice failure pages directly (notify-qg-fail) and
+    LDR redness has its own axis (ldr_ci_status / ldr_ci_monitor.py).
+    """
+    assert resolve_status("MAIN_GREEN", "FAILING", "live-defi-rollout") == "MAIN_GREEN"
+    assert resolve_status("MAIN_GREEN", "FAILING", "staging") == "MAIN_GREEN"
+    # ...but main itself still always speaks, including to say it is red:
+    assert resolve_status("MAIN_GREEN", "FAILING", "main") == "FAILING"
 
 
 def test_no_downgrade_keeps_higher_green_on_non_main_rerun():
@@ -167,8 +187,12 @@ def test_set_status_writes_fresh_repo(store: dict[str, dict[str, object]]):
 def test_sit_validated_tree_persists_and_carries_forward(store: dict[str, dict[str, object]]):
     # WS-L SIT-rehome: a SIT_VALIDATED write stores the LDR tree the cross-repo SIT validated.
     _, written = set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
-        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha1",
+        sit_validated_tree="treeAAA",
+        firestore_module_factory=_factory(store),
     )
     assert written == "SIT_VALIDATED"
     assert store["uac"]["sit_validated_tree"] == "treeAAA"
@@ -187,13 +211,22 @@ def test_sit_validated_tree_advances_even_on_stale_status_write(store: dict[str,
     # an OLDER committer-date, so its SIT_VALIDATED write is stale-rejected by is_stale_write. The tree
     # fingerprint MUST still advance (it is content-addressed + consumer-guarded), else permanent jam.
     set_status(
-        "uac", "MAIN_GREEN", "main", "m1", commit_ts="2026-06-27T11:00:00Z",
+        "uac",
+        "MAIN_GREEN",
+        "main",
+        "m1",
+        commit_ts="2026-06-27T11:00:00Z",
         firestore_module_factory=_factory(store),
     )
     # 2nd breaking change validated on LDR; its commit predates the main-merge ts → stale status write.
     _, written = set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2", commit_ts="2026-06-27T10:30:00Z",
-        sit_validated_tree="treeT2", firestore_module_factory=_factory(store),
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "ldr2",
+        commit_ts="2026-06-27T10:30:00Z",
+        sit_validated_tree="treeT2",
+        firestore_module_factory=_factory(store),
     )
     # Status write is stale-rejected → status stays MAIN_GREEN (no regression of the ordering key)…
     assert written == "MAIN_GREEN"
@@ -212,8 +245,12 @@ def test_sit_validated_tree_recordable_after_main_green_no_rank_jam(store: dict[
     assert store["uac"]["status"] == "MAIN_GREEN"
     # A NEW breaking change on LDR gets cross-repo SIT-validated at a NEW tree.
     _, written = set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2",
-        sit_validated_tree="treeBBB", firestore_module_factory=_factory(store),
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "ldr2",
+        sit_validated_tree="treeBBB",
+        firestore_module_factory=_factory(store),
     )
     # No-downgrade keeps the STATUS at MAIN_GREEN…
     assert written == "MAIN_GREEN"
@@ -224,8 +261,12 @@ def test_sit_validated_tree_recordable_after_main_green_no_rank_jam(store: dict[
 def test_sit_validated_tree_carried_forward_on_repeated_sit_validated(store: dict[str, dict[str, object]]):
     # A repeated SIT_VALIDATED with no tree arg carries the stored fingerprint forward (no accidental clear).
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "s1",
-        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "s1",
+        sit_validated_tree="treeAAA",
+        firestore_module_factory=_factory(store),
     )
     set_status("uac", "SIT_VALIDATED", "live-defi-rollout", "s2", firestore_module_factory=_factory(store))
     assert store["uac"]["sit_validated_tree"] == "treeAAA"
@@ -239,10 +280,22 @@ def test_set_status_no_downgrade_persists_prev(store: dict[str, dict[str, object
 
 
 def test_set_status_failing_overrides(store: dict[str, dict[str, object]]):
-    store["uac"] = {"status": "MAIN_GREEN", "rank": 4, "branch": "main", "sha": "old"}
+    store["uac"] = {"status": "SIT_VALIDATED", "rank": 3, "branch": "live-defi-rollout", "sha": "old"}
     prev, written = set_status("uac", "FAILING", "staging", "bad", firestore_module_factory=_factory(store))
-    assert (prev, written) == ("MAIN_GREEN", "FAILING")  # failure always surfaces
+    assert (prev, written) == ("SIT_VALIDATED", "FAILING")  # failure surfaces over a green
     assert store["uac"]["status"] == "FAILING"
+
+
+def test_set_status_non_main_failing_does_not_clobber_main_green(store: dict[str, dict[str, object]]):
+    # End-to-end of the ratchet fix — see resolve_status + test_non_main_failing_cannot_clobber_main_green.
+    # A non-main red leaves the on-main truth (and the dep-on-main promote gate) intact.
+    store["uac"] = {"status": "MAIN_GREEN", "rank": 4, "branch": "main", "sha": "old"}
+    prev, written = set_status("uac", "FAILING", "live-defi-rollout", "bad", firestore_module_factory=_factory(store))
+    assert (prev, written) == ("MAIN_GREEN", "MAIN_GREEN")
+    assert store["uac"]["status"] == "MAIN_GREEN"
+    # main itself still speaks for main:
+    prev, written = set_status("uac", "FAILING", "main", "bad2", firestore_module_factory=_factory(store))
+    assert (prev, written) == ("MAIN_GREEN", "FAILING")
 
 
 def test_set_status_writes_codebase_health(store: dict[str, dict[str, object]]):
@@ -292,8 +345,12 @@ def test_get_all_aggregates(store: dict[str, dict[str, object]]):
 def test_get_doc_returns_full_doc_with_sit_tree(store: dict[str, dict[str, object]]):
     # The LDR→main fleet promoter reads BOTH status AND sit_validated_tree for ONE repo (Firestore-live).
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldrsha",
-        sit_validated_tree="treeXYZ", firestore_module_factory=_factory(store),
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "ldrsha",
+        sit_validated_tree="treeXYZ",
+        firestore_module_factory=_factory(store),
     )
     set_status("utl", "MAIN_GREEN", "main", "b", firestore_module_factory=_factory(store))
     doc = get_doc("uac", firestore_module_factory=_factory(store))
@@ -427,7 +484,10 @@ def test_set_status_carries_commit_ts_forward(store: dict[str, dict[str, object]
 def test_sit_validated_workspace_digest_stored_with_sit_validated(store: dict[str, dict[str, object]]):
     # The combination digest is stored when status==SIT_VALIDATED and the digest arg is provided.
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha1",
         sit_validated_tree="treeAAA",
         sit_validated_workspace_digest="digest111",
         firestore_module_factory=_factory(store),
@@ -438,7 +498,10 @@ def test_sit_validated_workspace_digest_stored_with_sit_validated(store: dict[st
 def test_sit_validated_workspace_digest_carried_forward_on_non_sit_write(store: dict[str, dict[str, object]]):
     # A non-SIT write must carry the stored combination digest forward (same semantics as sit_validated_tree).
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha1",
         sit_validated_workspace_digest="digest111",
         firestore_module_factory=_factory(store),
     )
@@ -451,14 +514,20 @@ def test_sit_validated_workspace_digest_carried_forward_on_non_sit_write(store: 
 def test_sit_validated_workspace_digest_advances_on_new_sit_validated(store: dict[str, dict[str, object]]):
     # When a new SIT validation runs (new workspace combination), the digest must update.
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha1",
         sit_validated_workspace_digest="digest_D1",
         firestore_module_factory=_factory(store),
     )
     set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
     # UAC (a dep) changes LDR tree → workspace digest becomes D2; SIT re-runs → new stamp.
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha3",
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha3",
         sit_validated_workspace_digest="digest_D2",
         firestore_module_factory=_factory(store),
     )
@@ -469,11 +538,18 @@ def test_sit_validated_workspace_digest_advances_even_on_stale_status_write(stor
     # Mirror of the sit_validated_tree stale-write carve-out: a stale-rejected SIT_VALIDATED
     # write must STILL advance the combination digest (same jam-class as the tree fix).
     set_status(
-        "uac", "MAIN_GREEN", "main", "m1", commit_ts="2026-06-27T11:00:00Z",
+        "uac",
+        "MAIN_GREEN",
+        "main",
+        "m1",
+        commit_ts="2026-06-27T11:00:00Z",
         firestore_module_factory=_factory(store),
     )
     set_status(
-        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2",
+        "uac",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "ldr2",
         commit_ts="2026-06-27T10:30:00Z",  # OLDER → stale-rejected (status stays MAIN_GREEN)
         sit_validated_workspace_digest="digest_D2",
         firestore_module_factory=_factory(store),
@@ -487,7 +563,10 @@ def test_sit_validated_workspace_digest_combination_gate_logic(store: dict[str, 
     # a dependency (UAC) changes → current digest becomes d2 ≠ d1.
     # Step 1: SIT stamps R with d1 (tree matches, d1 was the workspace then).
     set_status(
-        "utl", "SIT_VALIDATED", "live-defi-rollout", "sha_R",
+        "utl",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha_R",
         sit_validated_tree="tree_R",
         sit_validated_workspace_digest="digest_d1",
         firestore_module_factory=_factory(store),
@@ -506,7 +585,10 @@ def test_sit_validated_workspace_digest_combination_gate_logic(store: dict[str, 
 
     # Step 4: SIT re-runs with new combination → stamps d2 on R.
     set_status(
-        "utl", "SIT_VALIDATED", "live-defi-rollout", "sha_R",
+        "utl",
+        "SIT_VALIDATED",
+        "live-defi-rollout",
+        "sha_R",
         sit_validated_tree="tree_R",
         sit_validated_workspace_digest=digest_d2,
         firestore_module_factory=_factory(store),
