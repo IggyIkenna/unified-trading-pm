@@ -26,10 +26,11 @@ related:
   - codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
 priority: P1
 resolved_by: agent-orchestrator@8a423bb
+superseded_by: ../../active/ao_dispatch_hardening_2026_07_16.md # 2026-07-16: the two open follow-up gaps (skip-exhaustion churn -> R1, dead-slot affinity spill -> R5) were re-verified STILL-BROKEN and absorbed by that plan. This pointer was MISSING at archival, which orphaned the work and caused it to be re-discovered + re-filed a day later as ao_skip_blind_spawn_budget_phantom_churn_2026_07_15. The headline fix (ao@8a423bb) stands and is live.
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-14
+last_updated: 2026-07-16
 ---
 
 # AutoSpawn role-blind spawn stranded infra/backend/cicd dispatchable work
@@ -75,12 +76,37 @@ all-`data_engineering` to a diversified fleet.
 
 ## Open follow-up gaps (NOT dispatched — operator decision)
 
-- [ ] [BACKEND] P2. **Skip-exhaustion churn** — `slot_skips` (TTL `slot_skip_ttl_hours=24h`) survives respawn, so a slot
-      that skips its role-matched tasks (as already-done / BLOCKED-PREREQ) boots straight back to "no dispatchable work"
-      → watchdog kill → respawn. `_has_queued_work` / spawn budget count these skip-exhausted tasks as spawnable, so the
-      fleet still churns on them. Make the spawn gate/budget slot-skip-aware (don't count a task no live+eligible slot
-      can take).
-- [ ] [BACKEND] P2. **High-affinity task pinned to a DEAD slot never spills** —
+> **✅ ACKED-INTO-PLAN 2026-07-16 — both follow-ups re-verified STILL-BROKEN and absorbed by
+> [`ao_dispatch_hardening_2026_07_16`](../../active/ao_dispatch_hardening_2026_07_16.md) as R1 and R5.** Archiving this
+> doc on 2026-07-14 with these two `- [ ]` live-code bugs still open, and **no `superseded_by` pointer**, orphaned the
+> work: it was not tracked forward, it was **independently re-discovered a day later** and re-filed as
+> `ao_skip_blind_spawn_budget_phantom_churn_2026_07_15` (P1, escalated with a live measurement). That duplicate-by-
+> rediscovery is the exact cost of archiving a doc whose todos aren't closed or forwarded — see the AO issue register in
+> [`epics/orchestrator_master.md`](../../epics/orchestrator_master.md).
+>
+> Both re-verified against code 2026-07-16 (this doc's headline fix, `agent-orchestrator@8a423bb`, IS genuinely live at
+> `server/autospawn.py:388-451` — the archival was right about that, only incomplete):
+>
+> - **Skip-exhaustion churn → R1.** Still broken: `rg slot_skip server/autospawn.py` → **0 hits**;
+>   `_queued_undispatched_count` (`autospawn.py:340-385`) has no skip/role/collision/affinity check, vs
+>   `dispatch.py:74,126` which does. Measured 2026-07-15: budget=6, claimable=1, 5 phantom.
+> - **Dead-slot affinity spill → R5.** Still broken: `dispatch.py:289-290` `if affinity == "high": return False` —
+>   unconditional, no liveness fallback (contrast the `low` branch at :291-294 and the medium timeout at :295-304, both
+>   of which DO fall back).
+>
+> The todos are struck below rather than deleted, so the provenance survives. **Do not fix from this doc** — the plan's
+> R1/R5 carry the sharper spec (shared eligibility predicate, per-item unit-test gates) and a dead-slot threshold
+> modelled on `failover.py`'s 600s pattern rather than a naive "slot missing → spill immediately", which would defeat
+> the session-continuity guarantee `affinity=high` exists to provide.
+
+- [x] [BACKEND] P2. ~~**Skip-exhaustion churn**~~ → **R1 of `ao_dispatch_hardening_2026_07_16`** (re-verified
+      STILL-BROKEN 2026-07-16). `slot_skips` (TTL `slot_skip_ttl_hours=24h`) survives respawn, so a slot that skips its
+      role-matched tasks (as already-done / BLOCKED-PREREQ) boots straight back to "no dispatchable work" → watchdog
+      kill → respawn. `_has_queued_work` / spawn budget count these skip-exhausted tasks as spawnable, so the fleet
+      still churns on them. Make the spawn gate/budget slot-skip-aware (don't count a task no live+eligible slot can
+      take).
+- [x] [BACKEND] P2. ~~**High-affinity task pinned to a DEAD slot never spills**~~ → **R5 of
+      `ao_dispatch_hardening_2026_07_16`** (re-verified STILL-BROKEN 2026-07-16) —
       [dispatch.py](../../../agent-orchestrator/server/dispatch.py) `_task_is_routable_to`: `affinity == "high"` returns
       False for every non-target slot, with no dead-target fallback. Two tasks were stranded this way
       (`mvp_backfill_defi_onchain_v10-002` → slot 15 dead; `bybit_futures_chain_write_shape_migration-007` → slot 14

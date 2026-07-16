@@ -43,7 +43,7 @@ thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
-last_updated: 2026-07-09
+last_updated: 2026-07-16
 supersedes:
 superseded_by:
 depends_on:
@@ -123,19 +123,21 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
       reading each one.
 - [ ] [SCRIPT] P1. **Once the mechanism is decided, execute it** and get `bash scripts/quality-gates.sh` exiting 0 on
       `market-tick-data-service`'s `live-defi-rollout` tip, restoring `.qg_last_passed_sha` to a current commit.
-- [ ] [VERIFY] P2. **Check whether other repos have the same latent gap** (zero-tolerance check with no
-      baseline-ratchet, silently accumulating pre-existing debt until it blocks a push) — this class of gate design
-      (hard `max allowed: 0` with no ratchet) is a repeatable failure mode, not unique to this one check. **Update
-      2026-07-08**: the baseline-ratchet mechanism (option (c) from Todo #1 above) has since been built —
-      `scripts/quality_gates/check_no_empty_string_fallback.py` (QG STEP 5.101) + per-repo
-      `scripts/quality_gates/no_empty_string_fallback_baseline.yaml`, seeded fleet-wide 2026-07-08.
+- [x] [VERIFY] P2. ✅ **RUN 2026-07-16 — fleet-wide sweep executed, results below.** **Check whether other repos have
+      the same latent gap** (zero-tolerance check with no baseline-ratchet, silently accumulating pre-existing debt
+      until it blocks a push) — this class of gate design (hard `max allowed: 0` with no ratchet) is a repeatable
+      failure mode, not unique to this one check. **Update 2026-07-08**: the baseline-ratchet mechanism (option (c) from
+      Todo #1 above) has since been built — `scripts/quality_gates/check_no_empty_string_fallback.py` (QG STEP 5.101) +
+      per-repo `scripts/quality_gates/no_empty_string_fallback_baseline.yaml`, seeded fleet-wide 2026-07-08.
       `instruments-service` is now independently confirmed to ALSO be over its own seeded baseline — see the new todo
       below; this repo's `quality-gates.sh` is currently red for every push, same failure class as this doc's original
       MTDS finding.
-- [ ] [SCRIPT] P1. **`instruments-service` is over its QG STEP 5.101 baseline (369) at a live count of 380** — 11
-      new-since-seed empty-string-fallback sites, verified 2026-07-08 by re-running
-      `check_no_empty_string_fallback.py --scope instruments-service` directly (not just trusting a report):
-      `scripts/rescan_sports_fixtures_canonical.py:492,495,496`,
+- [x] [SCRIPT] P1. ✅ **RESOLVED SINCE — re-measured 2026-07-16: `instruments-service` is now `361 < baseline 366`, i.e.
+      UNDER baseline and passing** (it now WARNs to ratchet DOWN, the healthy direction). The 11 sites were fixed in the
+      interim; this todo's premise no longer holds. Original finding retained for provenance. ~~**`instruments-service`
+      is over its QG STEP 5.101 baseline (369) at a live count of 380**~~ — 11 new-since-seed empty-string-fallback
+      sites, verified 2026-07-08 by re-running `check_no_empty_string_fallback.py --scope instruments-service` directly
+      (not just trusting a report): `scripts/rescan_sports_fixtures_canonical.py:492,495,496`,
       `scripts/retry_transient_cefi_failures_2026_06_28.py:148,149`,
       `scripts/run_fixture_completeness_audit_2026_06_25.py:237`,
       `scripts/type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py:95`,
@@ -275,3 +277,33 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
   `scripts/canonicalize_okx_margin_type_2026_07_09.py` are staged and ready but left uncommitted, same as the BINANCE/
   Deribit/Bybit-Kraken fixes above — the real, authorized, already-applied production data migration is NOT gated by
   this (GCS writes are independent of git), only the paperwork commit is.
+
+## Fleet-wide QG STEP 5.101 sweep — RUN 2026-07-16 (closes Todo 3)
+
+Todo 3 asked whether other repos carry the same latent gap, "in one pass instead of discovering them one push at a
+time". **Nobody had run it in the 8 days since it was filed.** Run now, workspace-wide, no `--scope`
+(`check_no_empty_string_fallback.py --workspace-root /active/unified-trading-system-repos`). 25 repos measured:
+
+| Verdict                                  | Count | Repos                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **FAIL** (over baseline — blocks pushes) | **1** | **`agent-orchestrator`: 26 > baseline 25**                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| OK (== baseline)                         | 19    | alerting-service, batch-live-reconciliation-service, client-reporting-api (230), deployment-api, deployment-ui, e2e-testing (221), execution-service (65), features-service (28), fund-administration-service, greeks-service, ibkr-gateway-infra, market-data-processing-service (66), strategy-service (166), system-integration-tests, unified-api-contracts (12), unified-trading-api (3), unified-trading-library (2), unified-trading-pm (319), unified-trading-system-ui |
+| WARN (under baseline — ratchet DOWN)     | 5     | deployment-service 89<91 · instruments-service 361<366 · market-tick-data-service **62<199** · ml-service 6<8 · trading-agent-service 1<2                                                                                                                                                                                                                                                                                                                                       |
+
+**Answer to Todo 3: the latent gap is NOT widespread.** One repo is over baseline; the rest are at or under. The
+zero-tolerance-gate failure class this doc worried about did not replicate fleet-wide.
+
+- [ ] [SCRIPT] P1. **`agent-orchestrator` is over its QG STEP 5.101 baseline (25) at a live count of 26** — a NEW
+      empty-string-fallback site at `server/worker_liveness/_git_alerts.py:364`, measured 2026-07-16 by running
+      `check_no_empty_string_fallback.py --scope agent-orchestrator` directly (not trusting a report). This means
+      `agent-orchestrator`'s `quality-gates.sh` is **currently red for every push** — the same failure class as this
+      doc's original MTDS finding, now recurring in the repo the AO remediation work is about to touch heavily. **Do NOT
+      fix by raising the baseline** (`write_baseline()` hard-clamps to `min(observed, prior)`; the ratchet only goes
+      DOWN — CLAUDE.md coding-standards HARD RULE). Real fix: rewrite the fallback to fail fast, or annotate
+      `# noqa: qg-empty-fallback` with a one-line reason **if** the empty string is genuinely a meaningful not-present
+      value there. The checker reports it as a "positional tail-slice — no baseline commit on record for this repo yet",
+      so confirm the site is genuinely new before annotating. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P3. **Ratchet 5 baselines DOWN** (`--update-baseline` per repo): deployment-service 91→89,
+      instruments-service 366→361, **market-tick-data-service 199→62** (this doc's own subject repo — a 137-site
+      improvement never banked), ml-service 8→6, trading-agent-service 2→1. Pure hygiene; each unbanked baseline leaves
+      headroom for a real regression to slip in unnoticed, which is exactly how `agent-orchestrator` reached 26.

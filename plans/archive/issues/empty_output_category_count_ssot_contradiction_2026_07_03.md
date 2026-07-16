@@ -5,7 +5,7 @@ summary:
   codex/04-architecture/shard-level-failure-isolation.md claims a "three-category empty-output decision tree" while
   codex/06-coding-standards/validation-and-errors.md (newer, operator directive 2026-05-07) documents FOUR categories
   (adds path D zero-activity-bar). Same decision, conflicting category counts — one doc must be corrected or scoped.
-status: open
+status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,7 @@ created: 2026-07-03
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-pm@4d42f50c2 (codex option A applied 2026-07-12) — verified 2026-07-16
 locked_by:
 source:
   [
@@ -72,6 +72,27 @@ reclassified" blanket ruling.
 
 ## Todos
 
-- [ ] [AGENT] P2. Read both docs in full + the 2026-05-07 directive provenance; determine whether path D applies to the
-      shard-loop decision; apply option A or B; update the loser's `authoritative_for` accordingly. **Gate**: the two
-      docs agree on the category count or explicitly scope their difference; no duplicate authoritative_for phrases.
+- [x] [AGENT] P2. ✅ **ALREADY DONE 2026-07-12 — verified 2026-07-16.** Option A was applied by
+      `unified-trading-pm@4d42f50c2`; this checkbox simply never got flipped. Read both docs in full + the 2026-05-07
+      directive provenance; determine whether path D applies to the shard-loop decision; apply option A or B; update the
+      loser's `authoritative_for` accordingly. **Gate**: the two docs agree on the category count or explicitly scope
+      their difference; no duplicate authoritative_for phrases.
+
+## Reconciliation 2026-07-16 — the fix shipped the same day this doc said it hadn't
+
+Verified against codex during the AO issue-doc reconciliation sweep. The remedy this doc recommends (**option A**) was
+**already applied on 2026-07-12** by `unified-trading-pm@4d42f50c2` (_"docs(plans): leftover queue closed — codex
+taxonomy/URDI/consolidator/ao-self-pull synced"_):
+
+- `codex/04-architecture/shard-level-failure-isolation.md` now carries an
+  `<!-- EMPTY_OUTPUT_CATEGORY_CORRECTION_2026_07_12 -->` banner, documents **4** categories (not 3), and its
+  `authoritative_for:` **no longer claims the empty-output decision-tree count at all**.
+- `codex/06-coding-standards/validation-and-errors.md:23-24` holds the sole
+  `authoritative_for: [..., four-category empty-output decision, ...]` claim.
+- **Gate satisfied**: the two docs agree on the category count (A honest-absence / B upstream-timestamp-bias / C
+  malformed-fields / D zero-activity-bar) and there is no duplicate `authoritative_for` phrase.
+
+**Why it stayed open**: this doc's own _"Verification note (2026-07-12)"_ says the fix was "NOT auto-applied … out of
+scope for this doc-reconciliation pass" and that status should stay `open`. That note was **wrong on the day it was
+written** — the codex edit landed the same day. An `open` doc guarding an already-shipped fix costs the next agent a
+full re-derivation. Flipped to `resolved` and archived; no code or codex change was needed.
