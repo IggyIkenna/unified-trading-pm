@@ -268,6 +268,61 @@ the crons resume.
 
 ## Status
 
-**OPEN — escalated to operator for resume-sequencing direction.** No cleanup performed; no collector un-paused; the
-mechanism is preserved. Resume is owned by `tradfi_v9_stage1_finish_2026_07_06.md` task `-003` (deferred behind the
-TradFi close-out gate) plus the orphaned-`defi-fwd-*` follow-up captured here.
+**PARTIALLY RESOLVED 2026-07-16 (later same day) — the TradFi close-out gate cleared (tasks 4+10 both landed), task
+`-003` was executed for real, and the RESUME genuinely restored the 3 `defi-fwd-*` live-poll crons but NOT the 11
+daily-batch `uts-prod-mtds-collect-*` crons.**
+
+### What actually happened when `-003` ran
+
+1. **Prereqs re-verified fresh**: tradfi manifest independently re-downloaded and read —
+   `total=5,553,198 rows, schema_version=9=100%, blank pipeline_mode=0, blank source=0`; fleet-drain sanity-checked
+   (zero `tradfi-bf-*` VMs running; `_index/per_vm/` has only one stale 2026-05-12 shard, confirming full consolidation,
+   no in-flight writer to race).
+2. **The 3 `defi-fwd-*` live-poll crons (dex-pools, dex-swaps, oracle-prices) — RESUMED AND VERIFIED GENUINELY LIVE.**
+   All 3 fired for real (one automatically on its own `*/5` cadence, the other two watched to terminal) and ALL THREE
+   completed with `exit_code=0` and wrote real fresh data for `day=2026-07-16`:
+   `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-16/pipeline_mode=live_onchain_subgraph/.../uniswap_v3_{ARBITRUM,BASE,ETHEREUM,POLYGON}_20260716_073253.parquet`
+   (dex-pools) and real Chainlink/Pyth oracle price rows across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON/SOLANA
+   (oracle-prices); dex-swaps also completed `exit_code=0` after processing its (heavier, longer-running) per-pool shard
+   set. **Near-real-time DeFi price capture is genuinely live again** — the orphaned-resume gap this doc flagged is
+   closed.
+3. **The 11 daily-batch `uts-prod-mtds-collect-*` crons — RESUMED, THEN RE-PAUSED after a confirmed, systemic code bug
+   (NOT the pause itself) blocked every one of them.** Force-ran `collect-oracle-prices` and `collect-gas-fees` for
+   real; both crashed identically: `ERROR Date range validation failed: Invalid date format ''`. Root cause: the shared
+   UTL `unified_trading_library/service_framework/_adapter.py::_build_io()` BATCH branch has no date-default fallback
+   (the LIVE branch — used by the `defi-fwd-*` crons above — does, which is exactly why those 3 succeeded and these 11
+   didn't). Confirmed via `deployment-service/terraform/gcp/defi_collection_scheduler.tf:170` that ALL 11 collector ops
+   share the identical no-date-args template, so this is fleet-wide across the whole DeFi daily-batch collector family,
+   not the 2 sampled. **This is the SAME already-escalated finding as
+   `group_c_cloud_run_job_failures_triage_2026_07_16.md` Cluster 5** (there confirmed for MTDS/strategy-service
+   `t1-recon` jobs) — now confirmed to ALSO break the DeFi collectors, raising that finding's urgency. Per the
+   don't-leave-broken-jobs-firing rule, all 11 `uts-prod-mtds-collect-*-cron` schedulers were re-paused immediately
+   after confirming. **Un-pausing these 11 is necessary but NOT sufficient — a code fix (owner decision already pending
+   in the Cluster 5 doc: MTDS-local CLI bridge vs. shared `_adapter.py` fix) is now the hard blocker**, not the
+   scheduler state. The ~38-49 day gap for oracle_prices/gas_fees/dex_swaps/liquidations/eigenlayer_rewards/evm_defi/
+   solana_defi (the types NOT covered by the live-poll crons) remains open.
+4. **NEW, separate finding surfaced by this same resume: all 26 AWS EventBridge consolidator rules also failed 100% of
+   the time** with an unrelated IAM `logs:CreateLogStream` AccessDeniedException on the `unified-trading-role-prod`
+   execution role — re-disabled; full write-up in
+   `plans/active/issues/aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`. Not DeFi-specific (hits every
+   asset_group's AWS-side consolidator), but discovered by this same resume session.
+5. **The rest of the 48-scheduler GCP runbook**: resumed + verified where targets still exist
+   (`instruments-service-daily-trigger`, `market-tick-daily-trigger` — both fired for real, reached SUCCEEDED);
+   `instruments-daily-backfill` and `market-tick-cefi-daily-download` resumed then re-paused (confirmed-broken orphaned
+   Cloud Run targets, 404/403 — pre-existing infra drift, unrelated to the drain); `uts-prod-mtds-paper-smoke-cron` +
+   `uts-prod-mtds-scenario-matrix-cron` resumed then re-paused (`ModuleNotFoundError: strategy_service` — a pre-existing
+   broken image, unrelated to the drain); the 7 `uts-prod-features-*-t1-schedule` jobs were left paused untouched —
+   their target Cloud Run Jobs
+   (`uts-prod-features-{calendar,commodity,cross-instrument,delta-one,multi-timeframe, sports,volatility}-service-t1-recon`)
+   do not exist at all (never deployed or since deleted); 2 of the original 48-list's tradfi-legacy
+   manifest-consolidator crons were found already retired (deleted, not just paused) during this session, consistent
+   with the same retirement already completed for the other 4 asset groups' legacy consolidators. Full accounting:
+   `tradfi_v9_stage1_finish_2026_07_06.md` task -003 Progress Log.
+
+### Bottom line (updated)
+
+**DeFi collection is genuinely live again for near-real-time price capture (the 3 `defi-fwd-*` crons) but NOT for
+daily-batch collection (the 11 `uts-prod-mtds-collect-*` crons)** — the latter is blocked on a confirmed, pre-existing
+UTL code bug, not the scheduler pause. This doc stays open (not fully resolved) pending that code fix; the resume
+runbook itself (task -003) is complete — it correctly resumed what was safe to resume and correctly re-paused/flagged
+what wasn't, rather than leaving broken jobs fail-looping in production.
