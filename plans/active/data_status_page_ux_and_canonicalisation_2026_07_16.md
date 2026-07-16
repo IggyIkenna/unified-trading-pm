@@ -702,11 +702,23 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       `backfill_defi_catalog_data_type_2026_06_21.py` for the pattern), fix the writer so no new `instrument-catalog`
       rows are emitted, then regen. Preserve shard-atom identity across MTDS/MDPS/features (data_type is a shard axis
       there).
-- [ ] [DATA] P1. _(Q3 — SPORTS invalid `source` values)_ The sports source breakdown carries `mdps_odds_horizon_bucket`
-      (8.1M) + `instruments_service` (3.7M) — NOT vendors (`source`=VENDOR-only, CLAUDE.md). `mdps_odds_horizon_bucket`
-      is an MDPS bucket (cross-service leakage into the IS sports availability index); `instruments_service` is
-      self-referential. Root-cause where these rows/sources enter the IS sports manifest + correct to the real vendor
-      (or exclude cross-service rows). _(Data-correctness — notify operator; likely an issue-doc.)_
+- [x] [DATA] P1. ✅ _(Q3 — SPORTS "invalid" `source` values)_ **NOT a bug — root-caused, no fix needed.**
+      `mdps_odds_horizon_bucket` and `instruments_service` are both REGISTERED non-vendor `source` identifiers in UAC's
+      crosscutting `SOURCE_PRIORITY`/`PipelineMode` registries (`_source_priority_data.py:77` +
+      `("reference","instruments"):["instruments_service"]`), used identically across every asset group — deliberate
+      2026-06-07 sports-manifest routing exception (MDPS's own odds-horizon-bucket product is intentionally written into
+      IS's canonical sports bucket) + the already-shipped 2026-07-13 orphan backfill (`instruments-service` migration
+      script, `market-data-processing-service@6907257`). Live GCS read of the canonical `instruments-store-sports-prd`
+      index (2026-07-16) shows `mdps_odds_horizon_bucket`=356,131 rows (350,809 of them the real `odds_horizon_bucket`
+      data_type — its actual purpose) and `instruments_service`=100,472 rows (100% genuinely self-referential/global
+      reference data_types: LEAGUES/VENUES/TRANSFERMARKT_LEAGUES/ SFI_LEAGUES/SFI_STANDINGS — the same "global reference
+      entity" pattern P8 already fixed). **The operator's cited counts (8.1M/3.7M) do not match any real bucket**
+      (canonical=356K/100K, orphan=124K/0) — off by ~23-37x, almost certainly the same stale-cached-rollup-blob class of
+      bug this plan's P7 already root-caused. Only real (small, optional, P3) finding: venue-casing dupes
+      (`MDPS_ODDS_HORIZON_BUCKET` vs `mdps_odds_horizon_bucket`, `ODDS_API` vs `odds_api`, etc.) — not a correctness
+      issue, just breakdown-UI cardinality noise. Full writeup + evidence: issue doc
+      `plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`. — no code shipped,
+      root-cause-only per operator's explicit "root-cause BEFORE any correction" instruction.
 - [ ] [UI] P3. _(Q4 — "unique instruments" label)_ The
       `2,970,327 unique instruments (catalogue-deduplicated, all asset     groups)` count is CORRECT (verified: Σ per-AG
       = total exactly; dominated by expired OPTION/COMBO strikes — cefi 263k+138k, tradfi 1.17M — and resolved
