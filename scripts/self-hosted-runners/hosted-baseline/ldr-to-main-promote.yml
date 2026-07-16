@@ -1,0 +1,264 @@
+name: ldr-to-main-promote
+
+# PM-ONLY LDR→main auto-drain bot (codified 2026-06-09; the LDR→main analogue of ldr-to-staging-promote).
+#
+# WHY: unified-trading-pm is Option-B main-direct with NO staging, so the ldr-to-staging / staging-to-main
+# drain does not apply. The ONLY path LDR→main is the PR quickmerge opens — a STANDING sweep whose head is
+# the live-defi-rollout branch ref. The moment that PR squash-merges, the sweep is gone, and any LATER
+# sanctioned direct push (docs(plans) flips, scripts/.github carve-out) piles up on LDR with no path to main
+# until the next quickmerge. This bot closes that gap: whenever PM's LDR has real content ahead of main and
+# no LDR→main PR is open, it opens one and enables v2-gated auto-merge — so direct pushes drain within the
+# operator's 1-hour SLA instead of relying on the next quickmerge.
+#
+# SAFETY: never force-pushes; opens a PR and enables auto-merge → quality-gates-v2 on the main PR is what
+# actually merges it (a red gate leaves the PR open + BLOCKED, surfaced by ci-failure-watcher). Idempotent:
+# reuses an existing open LDR→main PR (incl. quickmerge's) rather than opening a duplicate. `dry_run` lists
+# what WOULD promote.
+#
+# CONTENT, not commit-count: a squash-merge keeps LDR perpetually ahead_by=N/behind_by=0 even when content
+# matches, so the drift gate is the CHANGED-FILE count of compare/main...LDR (0 files → nothing to drain).
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md § "PM Option-B standing LDR→main PR".
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 min → drains within a ~30-min LDR→main SLA (tightened from */30 2026-06-10)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report the drift decision without opening a PR"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ldr-to-main-promote
+  cancel-in-progress: false
+
+jobs:
+  promote-ldr-to-main:
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.promote.outputs.action }}
+      pr: ${{ steps.promote.outputs.pr }}
+    steps:
+      # Token-pool split (sprawl consolidation 2026-06-27):
+      # checkout uses GITHUB_TOKEN (same-repo read + LDR push, which is unprotected).
+      # GitHub App token is reserved for cross-repo PR creation / auto-merge / dispatch
+      # (GITHUB_TOKEN cannot trigger downstream workflows on other repos).
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      # App token: used for cross-repo PR creation + enabling auto-merge + workflow dispatch.
+      # Separate 5000/hr pool; owner-scoped so it reaches all repos under IggyIkenna.
+      # App perms: Contents+PullRequests+Actions R/W.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+
+      - name: Drain LDR → main (content-gated, reuse open PR, self-recover v2-never-reported)
+        id: promote
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          ACTION="noop"; PR=""
+
+          # ── Provenance gate (D1 mirror, ldr_trunk_promotion_decoupling_2026_06_10): PM's LDR→main
+          # promotes only quickmerge-provenanced content. PM is checked out here (fetch-depth 0), so
+          # check the range directly. FAIL-OPEN on a checker error (never jam the PM main drain). PM
+          # content is mostly carve-outs (docs(plans)/scripts/.github), so this rarely fires.
+          git fetch -q --no-tags origin main live-defi-rollout 2>/dev/null || true
+          PROV_BLOCKED=0
+          # D1 squash-blind fix (provenance_gate_squash_perpetual_block_2026_06_17): SINCE-LAST-PROMOTE range —
+          # the head SHA of the last merged LDR→main drain PR, NOT raw main..LDR. A squash-promote never lands the
+          # promoted commit's SHA on main, so the raw range re-flags an already-drained trailer-less commit on EVERY
+          # drain forever (06a83fb6). Fail-safe: no merged drain yet / unreachable marker → origin/main..LDR fallback.
+          PROV_RANGE="$(python3 scripts/cicd/promote_provenance_range.py \
+            --repo "$REPO" --owner "$OWNER" --base-branch main --fetch-remote origin)" || PROV_RANGE=""
+          [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/main..origin/live-defi-rollout"
+          PROV_OUT="$(python3 scripts/cicd/check_strict_quickmerge.py --range "$PROV_RANGE" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
+          if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
+            PROV_BLOCKED=1
+            echo "⛔ provenance: PM LDR carries non-quickmerge CODE — LDR→main auto-merge will NOT be armed:"
+            printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
+            # Level-2 WARN to #ci-failures (drain-time detection; the block is the enforcement).
+            if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+              PROV_DETAIL="$(printf '%s' "$PROV_OUT" | grep -- '- ' | head -5 | sed 's/"/'"'"'/g')"
+              curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                -d "{\"text\":\":no_entry: *Provenance gate BLOCKED a promotion* — \`$OWNER/$REPO\` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n\`\`\`$PROV_DETAIL\`\`\`\"}" >/dev/null 2>&1 || true
+            fi
+          elif [ "${PROV_RC:-0}" -ne 0 ]; then
+            echo "WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. $PROV_OUT"
+          fi
+
+          # ── Reuse an existing open LDR→main PR (quickmerge's standing sweep or a prior bot run) ──
+          PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+            --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+            # ── No open PR → only open one if there is REAL content drift. TREE equality is the ──
+            # ── exact check (2026-06-12): compare/...files is computed from the MERGE-BASE, so   ──
+            # ── after a squash-merge it reports phantom changed-files forever even when the two  ──
+            # ── trees are byte-identical (the bug that empty-promote-looped ldr-to-staging 375×/ ──
+            # ── day). PM was shielded only because main-backmerge's merge-commit advances the    ──
+            # ── merge-base — make the gate exact, not incidentally-correct.                      ──
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
+            if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
+              echo "✅ main tree == LDR tree (content-identical; any ahead_by gap is squash-accounting noise) — nothing to drain"
+              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
+            if [ -z "$FILES" ] || [ "$FILES" = "0" ]; then
+              echo "✅ main is content-current with LDR (0 changed files) — nothing to drain"
+              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "DRY-RUN: would open LDR→main PR ($FILES changed file(s))"
+              { echo "action=would-open"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            BODY="PM Option-B auto-drain: live-defi-rollout → main ($FILES changed file(s)). Sweeps sanctioned direct pushes (docs(plans) flips, scripts/.github carve-out) to main. Merges when quality-gates-v2 passes. SSOT: ldr-to-main-promote.yml."
+            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+              --title "chore(promote): LDR → main (Option-B auto-drain)" \
+              --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
+            if [ -z "$PR_URL" ]; then
+              # Race: another run/quickmerge opened it between the list and the create.
+              PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
+            else
+              echo "  opened $PR_URL ($FILES changed file(s))"
+              if [ "$PROV_BLOCKED" = 1 ]; then
+                echo "  ⛔ provenance-blocked — NOT arming auto-merge (PR left open)"
+                gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — PM's LDR→main carries code that bypassed quickmerge. Auto-merge not armed; re-ship via \`quickmerge\` or revert on \`live-defi-rollout\`." 2>/dev/null || true
+                { echo "action=provenance_blocked"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
+                || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
+              { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # ── An open PR exists → ensure auto-merge is on, and self-recover the v2-never-reported ──
+          # ── deadlock (required check ABSENT on the current head → close+reopen re-fires v2).     ──
+          PR="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+          echo "  existing open LDR→main PR #$PR_NUM ($PR)"
+          if [ "$PROV_BLOCKED" = 1 ]; then
+            echo "  ⛔ provenance-blocked — leaving PR open, not arming auto-merge"
+            gh pr comment "$PR_NUM" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Option-B drain)** — non-quickmerge code on \`live-defi-rollout\`; auto-merge not armed until LDR is clean." 2>/dev/null || true
+            { echo "action=provenance_blocked"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+
+          MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+          if [ "$MSTATE" = "blocked" ]; then
+            HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
+            # Actions-API run lookup, NOT REST /check-runs and NOT GraphQL rollup (2026-06-10):
+            # fine-grained PATs can never hold a "Checks" permission (GitHub's picker doesn't
+            # offer one) → BOTH check-read paths 403, and the old `|| echo 0` made EVERY blocked
+            # PR read as v2-never-reported → spurious close+reopen churn. The Actions API works
+            # with the PAT ("Actions" permission), and "a v2 RUN exists for this head SHA" is the
+            # same signal. ERR ≠ 0: on query failure we fail-SAFE (leave the PR alone).
+            HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+              --json headSha --jq "[.[]|select(.headSha==\"$HEAD_SHA\")]|length" 2>/dev/null || echo "ERR")
+            if [ "$HAS_V2" = "ERR" ]; then
+              echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
+            fi
+            if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ] && [ "$DRY_RUN" != "true" ]; then
+              echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
+              gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \
+                && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+                && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+              ACTION="recovered"
+            else
+              echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
+              ACTION="blocked"
+            fi
+          elif [ "$MSTATE" = "dirty" ]; then
+            # ── L146 inline forward-drain reconcile (promotion_queue_conflict_wall_pileup_2026_06_17): ──
+            # main churns workspace-manifest.json `ci_status`/version-surface every few minutes (every
+            # repo's v2 result writes a [skip ci] commit to main), so the standing LDR→main PR perpetually
+            # re-`dirty`s on the manifest FASTER than it can merge. The main→LDR back-merge resolver
+            # (main-backmerge-to-ldr, Guard 2) fixes this — but it runs on a SEPARATE */20 tick, so the PR
+            # re-diverges within ~1-3 min of each back-merge → the drain never lands. Fix: run the SAME
+            # Guard-2 reconcile INLINE here on every */15 drain tick (collapse the race window to one run):
+            # merge origin/main into LDR, resolve the manifest conflict via reconcile_manifest_backmerge.py
+            # (CI fields → main; both-bumped version-surface → semver-max), push to LDR → the PR goes clean
+            # → arm auto-merge same run. Manifest-only conflicts are auto-resolved here; a non-manifest /
+            # genuine-conflict `dirty` is LEFT for the main-backmerge-to-ldr escalation (visible PR +
+            # orchestrator) — do not duplicate that path. Mirrors main-backmerge-to-ldr.yml lines ~114-156.
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: PR #$PR_NUM dirty — would inline-reconcile main→LDR (Guard 2)"
+              ACTION="would-reconcile"
+            else
+              git config user.name "ldr-to-main-promote[bot]"
+              git config user.email "ldr-to-main-promote[bot]@users.noreply.github.com"
+              git checkout -B _fwd_reconcile origin/live-defi-rollout --quiet
+              if git merge --no-ff --no-edit origin/main 2>/dev/null; then
+                # The `dirty` cleared between the API read and now (race) → clean merge → push + arm.
+                if git push origin "HEAD:live-defi-rollout" 2>/dev/null; then
+                  echo "  inline reconcile: clean merge of main→LDR pushed — PR will go clean"
+                  ACTION="reconciled"
+                else
+                  echo "  WARN: clean-merge push rejected (LDR moved) — next */15 tick retries"
+                  ACTION="reconcile_race"
+                fi
+              else
+                CONFLICTED="$(git diff --name-only --diff-filter=U | tr '\n' ' ' | sed 's/ *$//')"
+                if [ "$CONFLICTED" = "workspace-manifest.json" ] && [ -f scripts/cicd/reconcile_manifest_backmerge.py ]; then
+                  MB="$(git merge-base HEAD MERGE_HEAD)"
+                  git show "$MB:workspace-manifest.json" > /tmp/fwd_mb.json
+                  git show HEAD:workspace-manifest.json > /tmp/fwd_ours.json        # LDR side (--ours)
+                  git show MERGE_HEAD:workspace-manifest.json > /tmp/fwd_theirs.json # main side (--theirs)
+                  if python3 scripts/cicd/reconcile_manifest_backmerge.py \
+                       --base /tmp/fwd_mb.json --ours /tmp/fwd_ours.json --theirs /tmp/fwd_theirs.json \
+                       --out workspace-manifest.json; then
+                    git add workspace-manifest.json
+                    git commit --no-edit --quiet
+                    if git push origin "HEAD:live-defi-rollout" 2>/dev/null; then
+                      echo "  inline Guard-2 reconcile pushed to LDR → PR goes clean"
+                      ACTION="reconciled"
+                    else
+                      echo "  WARN: reconcile push rejected (LDR moved) — next */15 tick retries"
+                      git merge --abort 2>/dev/null || true
+                      ACTION="reconcile_race"
+                    fi
+                  else
+                    echo "  genuine non-CI manifest conflict — leaving to main-backmerge-to-ldr escalation"
+                    git merge --abort 2>/dev/null || true
+                    ACTION="conflict_escalated"
+                  fi
+                else
+                  echo "  PR #$PR_NUM dirty on non-manifest files ($CONFLICTED) — leaving to main-backmerge-to-ldr"
+                  git merge --abort 2>/dev/null || true
+                  ACTION="dirty_nonmanifest"
+                fi
+              fi
+              # Re-arm auto-merge (the PR head advanced if we pushed; harmless no-op otherwise).
+              gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+            fi
+          else
+            echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
+            ACTION="pending"
+          fi
+          { echo "action=$ACTION"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"

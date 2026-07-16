@@ -1,0 +1,98 @@
+name: Conflict Resolution Merged — Retry Promotion
+
+# Fires when an auto-resolve/* PR is merged.
+# If the PR body contains the AUTO_RETRY_PROMOTION marker, re-dispatches staging-validated
+# to retry the staging→main promotion that was blocked by the conflict.
+# See: wire-conflict-resolution-retry-promotion in cicd_audit_remediation_2026_03_13.md
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  retry-promotion:
+    name: Retry staging→main promotion after conflict resolution
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'auto-resolve/')
+
+    steps:
+      - name: Check for AUTO_RETRY_PROMOTION marker
+        id: check-marker
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if echo "$PR_BODY" | grep -q "AUTO_RETRY_PROMOTION: true"; then
+            echo "retry=true" >> "$GITHUB_OUTPUT"
+            echo "✓ AUTO_RETRY_PROMOTION marker found in PR #$PR_NUMBER — will retry promotion"
+          else
+            echo "retry=false" >> "$GITHUB_OUTPUT"
+            echo "No AUTO_RETRY_PROMOTION marker in PR #$PR_NUMBER — skipping"
+          fi
+
+      - name: Wait for GitHub state to settle
+        if: steps.check-marker.outputs.retry == 'true'
+        run: sleep 30
+
+      - name: Re-dispatch staging-validated to retry staging→main promotion
+        if: steps.check-marker.outputs.retry == 'true'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPO: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — cannot dispatch" && exit 0
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          # Extract repo name from auto-resolve/<source>-to-<target>-<sha> branch format
+          SOURCE_INFO="${HEAD_REF#auto-resolve/}"
+          echo "Dispatching staging-validated for conflict-resolved branch: $HEAD_REF"
+          curl -s -X POST \
+            -H "Authorization: token ${GH_PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"staging-validated\", \"client_payload\": {\"source\": \"conflict-resolution-merged\", \"branch\": \"${SOURCE_INFO}\", \"pr_title\": \"${PR_TITLE}\"}}" \
+            && echo "✓ staging-validated dispatched" \
+            || echo "⚠ dispatch failed (non-fatal — human can manually re-trigger staging-to-main)"
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — Conflict Resolution Merged
+    needs: [retry-promotion]
+    if: always() && needs.retry-promotion.result == 'success'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Conflict resolved — retrying staging→main promotion | PR #${{ github.event.pull_request.number }}: ${{
+        github.event.pull_request.title }} | ${{ github.event.pull_request.html_url }}"
+      severity: "INFO"
+      conclusion: ${{ needs.retry-promotion.result }}
+      recovery: true # genuine recovery — a blocking promotion conflict was resolved (keep; message says "resolved" lowercase, no marker)
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Conflict Resolution Merged Event
+    needs: [retry-promotion, notify]
+    if: always() && needs.retry-promotion.result == 'success'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.retry-promotion.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"pr_number": "${{ github.event.pull_request.number }}"}'

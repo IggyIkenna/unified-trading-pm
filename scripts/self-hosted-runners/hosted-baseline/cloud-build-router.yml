@@ -1,0 +1,1254 @@
+name: cloud-build-router
+
+# Routes qg-passed events from individual repos to the correct GCP Cloud Build project.
+# Triggered by repository_dispatch from any repo's quality-gates.yml on QG success.
+#
+# Routing logic:
+#   Single project: central-element-323112. Env isolation is by image tag +
+#   Cloud Run service name + bucket tier (NOT separate projects).
+#   feat/*   → tag: {semver}-{branch-slug}  (ENV=dev)
+#   staging  → tag: {semver}-staging         (ENV=staging)
+#   main     → tag: {semver}                 (ENV=prod)
+#   Auth: WIF (OIDC) preferred, GCP_SA_KEY fallback — see codex/07-security/gha-wif-migration.md
+#
+# Library repos: build Python wheel (not Docker image) and push to Artifact Registry.
+# Service/API/UI repos: build Docker image.
+#
+# Payload: { repo, branch, commit_sha, version, repo_type }
+#
+# Hardening (2026-03-13):
+#   - Task 1: Tier-ordered deployment validation (T0->T1->T2->services)
+#   - Task 2: Post-deploy health check with Telegram alert
+#   - Task 3: Post-deploy smoke test (/health + /readiness)
+#   - Task 4: Market hours / trading-active deployment guard
+#   - Task 5: Position reconciliation gate (pre/post deploy)
+#   - Task 6: Trading kill switch (halt/resume order flow)
+#   - Task 7: Regional fallback for Cloud Build
+#
+# Pipeline hardening (2026-03-13, second pass):
+#   - harden-market-hours-guard: IBKR time-based NYSE/TSE guard + order flow threshold
+#   - harden-tier-ordered-prod-deploy: Telegram alert when tier deps not deployed
+#   - harden-post-deploy-health-check: Separate 5-min health polling, gate deployed_versions
+#   - harden-post-deploy-smoke-test: Dedicated smoke test with response shape validation
+#   - harden-cloud-build-regional-fallback: Telegram alerts for fallback + both-regions-failed
+
+on:
+  repository_dispatch:
+    types: [qg-passed]
+
+permissions:
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
+
+# Per-repo concurrency (not the fleet-wide manifest-update group):
+# cloud-build-router is triggered by repository_dispatch (qg-passed) — one per repo per QG pass.
+# In a fleet fan-out, 2+ repos fire simultaneously. The manifest-update group only allows ONE
+# pending run fleet-wide, so intermediate payloads are silently evicted (the non-replayable
+# repository_dispatch payload is permanently lost for the cancelled run).
+# Scoping to the repo name means same-repo builds serialise (only one {repo}-build can be
+# in-flight or pending at a time), while different repos build concurrently — no eviction risk.
+# The deployed_versions manifest write is per-repo-key (no cross-repo merge conflict) and
+# already has a soft push (`|| true`) — no regression from decoupling the manifest-update group.
+# SSOT: cicd_consolidated_remaining_2026_06_24.md § WS-B #27 "cloud-build-router manifest-update eviction".
+concurrency:
+  group: cloud-build-router-${{ github.event.client_payload.repo || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  # Task 7: Configurable Cloud Build region with fallback
+  CLOUD_BUILD_REGION: asia-northeast1
+  CLOUD_BUILD_FALLBACK_REGION: asia-northeast1
+
+  # Task 4: Trading-critical repos that require deployment safety checks.
+  # These repos handle live order flow, risk calculations, or strategy execution.
+  TRADING_CRITICAL_REPOS: "execution-service,risk-and-exposure-service,strategy-service,trading-agent-service"
+
+jobs:
+  freeze-check:
+    uses: ./.github/workflows/change-freeze-check.yml
+    with:
+      check_type: PROD_DEPLOY
+    secrets: inherit
+
+  # When a change-freeze blocks this prod build, the qg-passed payload would
+  # otherwise be DROPPED (route-build is skipped and repository_dispatch payloads
+  # are not replayable) — leaving the repo without a prod image until a brand-new
+  # qg-passed fires. Persist the payload as an artifact so freeze-deferred-build-replay.yml
+  # can re-dispatch it once the freeze window lifts (defer-and-replay, not drop).
+  # SSOT: cicd_contract_hardening_2026_06_01 § "freeze defer-and-replay".
+  defer-on-freeze:
+    needs: freeze-check
+    # always() is REQUIRED: change-freeze-check EXITS 1 when it blocks, so without
+    # always() the implicit success() gate skips this job on the very runs we must
+    # capture (verified 2026-06-04: defer-on-freeze was silently skipped → no artifact).
+    if: always() && needs.freeze-check.outputs.blocked == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Persist deferred qg-passed payload
+        env:
+          CP_REPO: ${{ github.event.client_payload.repo }}
+          CP_BRANCH: ${{ github.event.client_payload.branch }}
+          CP_VERSION: ${{ github.event.client_payload.version }}
+          CP_SHA: ${{ github.event.client_payload.commit_sha }}
+          CP_TYPE: ${{ github.event.client_payload.repo_type }}
+          DEFER_REASON: ${{ needs.freeze-check.outputs.reason }}
+          DEFER_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p _deferred
+          # values passed via env (not GitHub-Actions expressions in the script body) — no code-injection via payload
+          python3 - > _deferred/payload.json <<'PYEOF'
+          import json, os
+          print(json.dumps({
+              "repo": os.environ["CP_REPO"],
+              "branch": os.environ["CP_BRANCH"],
+              "version": os.environ["CP_VERSION"],
+              "commit_sha": os.environ["CP_SHA"],
+              "repo_type": os.environ["CP_TYPE"],
+              "deferred_reason": os.environ.get("DEFER_REASON", ""),
+              "deferred_run_id": os.environ.get("DEFER_RUN_ID", ""),
+          }))
+          PYEOF
+          echo "Deferred (freeze-blocked) build payload:"
+          cat _deferred/payload.json
+      - name: Upload deferred-build artifact (drained by freeze-deferred-build-replay.yml)
+        uses: actions/upload-artifact@v7
+        with:
+          name:
+            deferred-build-${{ github.event.client_payload.repo }}-${{ github.event.client_payload.version }}-${{
+            github.run_id }}
+          path: _deferred/payload.json
+          retention-days: 7
+
+  route-build:
+    needs: freeze-check
+    if: needs.freeze-check.outputs.blocked != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.route.outputs.repo }}
+      repo_type: ${{ steps.route.outputs.repo_type }}
+      version: ${{ steps.route.outputs.version }}
+      branch: ${{ steps.route.outputs.branch }}
+      commit_sha: ${{ steps.route.outputs.commit_sha }}
+      env: ${{ steps.route.outputs.env }}
+      gcp_project: ${{ steps.route.outputs.gcp_project }}
+      is_trading_critical: ${{ steps.route.outputs.is_trading_critical }}
+      tier_check_passed: ${{ steps.tier-check.outputs.tier_check_passed }}
+      blocking_repos: ${{ steps.tier-check.outputs.blocking_repos }}
+      build_triggered: ${{ steps.docker-build.outputs.build_triggered }}
+      build_exit_code: ${{ steps.docker-build.outputs.build_exit_code }}
+      build_failure_reason: ${{ steps.docker-build.outputs.build_failure_reason }}
+      build_region: ${{ steps.docker-build.outputs.build_region }}
+      build_log_url: ${{ steps.docker-build.outputs.build_log_url }}
+      health_check_passed: ${{ steps.health-check.outputs.health_check_passed }}
+      health_check_service_url: ${{ steps.health-check.outputs.service_url }}
+      smoke_test_passed: ${{ steps.smoke-test.outputs.smoke_test_passed }}
+      kill_switch_halted: ${{ steps.kill-switch-halt.outputs.kill_switch_halted }}
+    steps:
+      - name: Checkout PM repo (for scripts and manifest)
+        uses: actions/checkout@v5
+
+      - name: Determine build target
+        id: route
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          BRANCH="${{ github.event.client_payload.branch }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          REPO_TYPE="${{ github.event.client_payload.repo_type }}"
+
+          # repo_type from the dispatch payload is UNRELIABLE — the semver-agent dispatch
+          # (semver-agent.yml.tmpl) omits repo_type, so it arrives empty. Derive it from
+          # workspace-manifest.json (the authoritative SSOT) when absent, so library repos
+          # (e.g. unified-api-contracts — builds a wheel, no Docker/Cloud Build) are correctly
+          # classified and the build/notify steps (guarded `repo_type != 'library'`) skip them.
+          # Without this an empty repo_type reads as non-library → the router tries to build a
+          # library via Cloud Build → "trigger not configured" → spurious WARNING (incident 2026-06-10).
+          if [ -z "$REPO_TYPE" ] || [ "$REPO_TYPE" = "null" ]; then
+            REPO_TYPE=$(jq -r --arg r "$REPO" '.repositories[$r].type // ""' workspace-manifest.json 2>/dev/null || echo "")
+            echo "repo_type was empty in payload → derived from manifest: '$REPO_TYPE'"
+          fi
+
+          echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
+
+          # Determine GCP project + image tag from branch
+          # Slugify branch: lowercase alphanumeric+hyphen, max 30 chars (enforce-branch-slug-convention)
+          BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's|[^a-z0-9-]|-|g' | cut -c1-30)
+
+          # Single GCP project (central-element-323112); env isolation is by image
+          # tag + Cloud Run service name + bucket tier, NOT by separate projects.
+          # (The former uts-{prod,staging,dev}-ikenna split was never provisioned;
+          #  see codex/05-infrastructure/bucket-isolation-model.md for the tier model.)
+          GCP_PROJECT="central-element-323112"
+          if [ "$BRANCH" = "main" ]; then
+            IMAGE_TAG="${VERSION}"
+            ENV="prod"
+          elif [ "$BRANCH" = "staging" ]; then
+            IMAGE_TAG="${VERSION}-staging"
+            ENV="staging"
+          else
+            IMAGE_TAG="${VERSION}-${BRANCH_SLUG}"
+            ENV="dev"
+          fi
+
+          # Check if repo is trading-critical (Task 4)
+          IS_TRADING_CRITICAL="false"
+          if echo ",${{ env.TRADING_CRITICAL_REPOS }}," | grep -q ",$REPO,"; then
+            IS_TRADING_CRITICAL="true"
+          fi
+
+          echo "gcp_project=$GCP_PROJECT" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "env=$ENV" >> "$GITHUB_OUTPUT"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "repo_type=$REPO_TYPE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+          echo "is_trading_critical=$IS_TRADING_CRITICAL" >> "$GITHUB_OUTPUT"
+
+          echo "Routing: $REPO ($REPO_TYPE) branch=$BRANCH -> $GCP_PROJECT tag=$IMAGE_TAG (trading_critical=$IS_TRADING_CRITICAL)"
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 1: Tier-ordered deployment validation (prod only)
+      # Before deploying, verify all dependency repos (lower tiers)
+      # are already deployed at the same or newer version.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Tier-ordered dependency check"
+        id: tier-check
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.repo_type != 'library'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          ENV="${{ steps.route.outputs.env }}"
+
+          echo "=== Tier-Ordered Deployment Validation ==="
+          echo "Repo: $REPO, Version: $VERSION, Env: $ENV"
+
+          # Read topological order from workspace-manifest.json
+          # Find the level of the current repo
+          REPO_LEVEL=$(jq -r --arg repo "$REPO" '
+            .topologicalOrder.levels[]
+            | select(.repos[] == $repo)
+            | .level
+          ' workspace-manifest.json 2>/dev/null || echo "")
+
+          if [ -z "$REPO_LEVEL" ]; then
+            echo "WARNING: Repo $REPO not found in topologicalOrder. Skipping tier check."
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Repo $REPO is at topological level $REPO_LEVEL"
+
+          # Get all repos at lower levels (dependencies)
+          LOWER_LEVEL_REPOS=$(jq -r --argjson level "$REPO_LEVEL" '
+            [.topologicalOrder.levels[]
+             | select(.level < $level)
+             | .repos[]]
+            | join(",")
+          ' workspace-manifest.json 2>/dev/null || echo "")
+
+          if [ -z "$LOWER_LEVEL_REPOS" ]; then
+            echo "No lower-level dependencies. Tier check passed."
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Lower-level repos: $LOWER_LEVEL_REPOS"
+
+          # Check deployed_versions for each lower-level non-library repo
+          BLOCKING_REPOS=""
+          IFS=',' read -ra DEP_REPOS <<< "$LOWER_LEVEL_REPOS"
+          for dep in "${DEP_REPOS[@]}"; do
+            # Skip libraries, infrastructure, devops, test-harness — they don't deploy as services
+            DEP_TYPE=$(jq -r --arg dep "$dep" '.repositories[$dep].type // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
+            if [ "$DEP_TYPE" = "library" ] || [ "$DEP_TYPE" = "infrastructure" ] || [ "$DEP_TYPE" = "devops" ] || [ "$DEP_TYPE" = "test-harness" ]; then
+              continue
+            fi
+
+            # Check if this dep has a deployed version in prod
+            DEPLOYED_VERSION=$(jq -r --arg dep "$dep" '.deployed_versions.prod[$dep].version // "none"' workspace-manifest.json 2>/dev/null || echo "none")
+            MANIFEST_VERSION=$(jq -r --arg dep "$dep" '.versions[$dep] // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
+
+            if [ "$DEPLOYED_VERSION" = "none" ] || [ "$DEPLOYED_VERSION" = "null" ]; then
+              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no prod deployment recorded"
+              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-deployed) "
+            else
+              echo "  OK: $dep deployed=$DEPLOYED_VERSION manifest=$MANIFEST_VERSION"
+            fi
+          done
+
+          if [ -n "$BLOCKING_REPOS" ]; then
+            echo ""
+            echo "TIER CHECK FAILED: The following lower-tier repos must be deployed first:"
+            echo "  $BLOCKING_REPOS"
+            echo ""
+            echo "Deploy these repos to prod before deploying $REPO."
+            echo "tier_check_passed=false" >> "$GITHUB_OUTPUT"
+            echo "blocking_repos=$BLOCKING_REPOS" >> "$GITHUB_OUTPUT"
+            # Non-fatal for now — log warning but allow build to proceed.
+            # Change exit 0 to exit 1 when ready to enforce as a hard gate.
+            echo "WARNING: Proceeding despite tier check failure (soft gate)."
+          else
+            echo "Tier check PASSED — all lower-tier service deps are deployed"
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Task 2 (hardening): Telegram alert when tier check blocks/warns — migrated to notify-tier-check job
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 4: Trading-active deployment guard (prod only)
+      # For trading-critical repos, check deployment_safety.trading_active
+      # in the manifest. If trading is active, require manual approval.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Trading-active safety guard"
+        id: trading-guard
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+
+          echo "=== Trading-Active Deployment Guard ==="
+          echo "Repo: $REPO (trading-critical)"
+
+          # Check deployment_safety.trading_active in manifest
+          TRADING_ACTIVE=$(jq -r '.deployment_safety.trading_active // false' workspace-manifest.json 2>/dev/null || echo "false")
+
+          echo "deployment_safety.trading_active = $TRADING_ACTIVE"
+
+          if [ "$TRADING_ACTIVE" = "true" ]; then
+            echo ""
+            echo "WARNING: Trading is currently ACTIVE."
+            echo "Deploying $REPO to prod while trading is active requires manual approval."
+            echo ""
+            echo "To proceed:"
+            echo "  1. Set deployment_safety.trading_active=false in workspace-manifest.json, OR"
+            echo "  2. Re-trigger this workflow with manual approval via workflow_dispatch"
+            echo ""
+            echo "trading_guard_passed=false" >> "$GITHUB_OUTPUT"
+            # Soft gate: warn but proceed. Change to exit 1 for hard gate.
+            echo "WARNING: Proceeding despite trading-active guard (soft gate)."
+          else
+            echo "Trading is not active. Deployment guard passed."
+            echo "trading_guard_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 1 (hardening): Market hours & order flow guard
+      # For trading-critical repos deploying to prod, check IBKR
+      # market hours (NYSE/TSE) and active order flow via /metrics.
+      # Bypass with force_deploy input or FORCE_DEPLOY env var.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Market hours & order flow guard"
+        id: market-hours-guard
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        env:
+          FORCE_DEPLOY: ${{ github.event.client_payload.force_deploy || 'false' }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+
+          echo "=== Market Hours & Order Flow Guard ==="
+          echo "Repo: $REPO (trading-critical, prod deploy)"
+
+          # Discover current Cloud Run URL for order flow check
+          SERVICE_URL=$(gcloud run services describe "$REPO" \
+            --project="$GCP_PROJECT" \
+            --region="${CLOUD_BUILD_REGION}" \
+            --format="value(status.url)" 2>/dev/null || echo "")
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "No existing deployment found for $REPO — skipping order flow check (first deploy)."
+            echo "market_hours_passed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Run the check-order-flow.sh script
+          set +e
+          if [ "$FORCE_DEPLOY" = "true" ]; then
+            bash scripts/deployment/check-order-flow.sh "$SERVICE_URL" --force
+          else
+            bash scripts/deployment/check-order-flow.sh "$SERVICE_URL"
+          fi
+          EXIT_CODE=$?
+          set -e
+
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "market_hours_passed=true" >> "$GITHUB_OUTPUT"
+          elif [ "$EXIT_CODE" -eq 2 ]; then
+            echo "WARNING: Could not reach service — proceeding (soft gate)."
+            echo "market_hours_passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "market_hours_passed=false" >> "$GITHUB_OUTPUT"
+            # Soft gate for now — log warning but allow build to proceed.
+            # Change to exit 1 for hard gate enforcement.
+            echo "WARNING: Market hours guard failed but proceeding (soft gate)."
+            echo "To enforce: change this step to exit 1 on failure."
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 6: Kill switch — halt order flow before deploying
+      # trading-critical repos to prod
+      # ──────────────────────────────────────────────────────────────
+      # SOFT gate (warn + continue) — the kill-switch belongs at the DEPLOY/ROLLOUT
+      # boundary, NOT image-build: pushing an image to the registry moves no orders.
+      # When there is no live trading runtime to halt (no execution-service
+      # `halt-order-flow` handler / pre-cutover), the cross-repo dispatch 404s; that
+      # must NOT block the prod image build (incident 2026-06-21: a hard-fail here +
+      # the orphaned dispatch condition kept :latest from auto-rebuilding for 10+ days,
+      # forcing a hand-built image). Mirrors the market-hours / position-snapshot soft
+      # gates in this same job. Uses GH_PAT — cross-repo repository_dispatch needs a
+      # PAT (the default GITHUB_TOKEN is scoped to this repo only → 404).
+      - name: "Pre-deploy: Halt order flow (trading-critical)"
+        id: kill-switch-halt
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -uo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+
+          echo "=== Kill Switch: Halt Order Flow ==="
+          echo "Deploying trading-critical repo: $REPO"
+
+          if bash scripts/deploy/trading-kill-switch.sh halt "$GH_TOKEN" "${{ github.repository_owner }}"; then
+            echo ""
+            echo "Waiting for order drain..."
+            bash scripts/deploy/trading-kill-switch.sh drain "$GH_TOKEN" "${{ github.repository_owner }}" 120 || \
+              echo "WARNING: drain incomplete (soft gate) — proceeding with image build."
+            echo "kill_switch_halted=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "WARNING: could not halt order flow (no live trading runtime / no handler) — soft gate, proceeding with image build. The image build pushes to the registry only; the real halt is enforced at deploy/rollout, not at build."
+            echo "kill_switch_halted=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 5: Position reconciliation — pre-deploy snapshot
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Position snapshot (execution/risk)"
+        id: position-snapshot
+        if: |
+          steps.route.outputs.env == 'prod' &&
+          (steps.route.outputs.repo == 'execution-service' || steps.route.outputs.repo == 'risk-and-exposure-service')
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+
+          echo "=== Position Reconciliation: Pre-Deploy Snapshot ==="
+
+          # Discover current Cloud Run URL
+          SERVICE_URL=$(gcloud run services describe "$REPO" \
+            --project="$GCP_PROJECT" \
+            --region="${CLOUD_BUILD_REGION}" \
+            --format="value(status.url)" 2>/dev/null || echo "")
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: Could not discover Cloud Run URL for $REPO. Skipping position snapshot."
+            echo "snapshot_taken=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Service URL: $SERVICE_URL"
+          bash scripts/deploy/position-reconciliation-check.sh snapshot "$SERVICE_URL" /tmp/positions_pre_deploy.json
+          echo "snapshot_taken=true" >> "$GITHUB_OUTPUT"
+          echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
+
+      # Auth is dual-path: WIF (keyless OIDC) preferred, SA-key fallback.
+      # Both are guarded for non-library routes (libraries build wheels, no GCP).
+      # WIF impersonates github-actions-deploy@central-element-323112; the
+      # workload_identity_provider/service_account secrets gate it. If WIF fails
+      # (e.g. pool not yet provisioned), it falls through to the GCP_SA_KEY path.
+      # SSOT: codex/07-security/gha-wif-migration.md
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        if: steps.route.outputs.repo_type != 'library'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.route.outputs.repo_type != 'library' && steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 7: Cloud Build with regional fallback
+      # ──────────────────────────────────────────────────────────────
+      - name: Trigger Cloud Build (Docker image — service/api/ui)
+        if: steps.route.outputs.repo_type != 'library'
+        id: docker-build
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          BRANCH="${{ steps.route.outputs.branch }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          ENV="${{ steps.route.outputs.env }}"
+          AR_HOST="asia-northeast1-docker.pkg.dev"
+          REGION="${CLOUD_BUILD_REGION}"
+
+          echo "Triggering Cloud Build in $GCP_PROJECT for $REPO:$IMAGE_TAG (region: $REGION)"
+
+          trigger_build_in_region() {
+            local region="$1"
+            echo "Attempting build trigger in region: $region"
+
+            local trigger_output=""
+            if gcloud builds triggers run "${REPO}-${ENV}" \
+              --project="$GCP_PROJECT" \
+              --region="$region" \
+              --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+              --format="value(metadata.build.id)" \
+              2>/tmp/build_trigger_err.txt; then
+              trigger_output=$(cat /tmp/build_trigger_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
+              if [ -n "$trigger_output" ]; then
+                echo "$trigger_output"
+                return 0
+              fi
+            else
+              local err_msg
+              err_msg=$(cat /tmp/build_trigger_err.txt 2>/dev/null || echo "unknown error")
+              echo "Trigger failed in $region: $err_msg" >&2
+
+              # Check for regional errors (quota, outage) — signal caller to try fallback
+              if echo "$err_msg" | grep -qiE "quota|capacity|unavailable|region|503|429"; then
+                return 2
+              fi
+              # PERMISSION_DENIED is a distinct class: the trigger EXISTS but the SA
+              # (github-actions-deploy via WIF) lacks cloudbuild.builds.editor. Surface it
+              # as exit 3 so the caller can set build_failure_reason=permission-denied rather
+              # than silently swallowing it as "not-configured" (2026-06-27 root-cause:
+              # instruments-service-prod trigger existed but SA lacked triggerRun IAM,
+              # causing stale :latest for 4+ days with no alert). For repos with a working
+              # direct push:main trigger the build still fires via that path — this flag
+              # just ensures the PERMISSION_DENIED class is observable.
+              if echo "$err_msg" | grep -qiE "PERMISSION_DENIED|does not have permission|permission denied"; then
+                echo "PERMISSION_DENIED: SA lacks cloudbuild.builds.editor (triggerRun) for $region" >&2
+                return 3
+              fi
+            fi
+            return 1
+          }
+
+          # Try primary region
+          BUILD_ID=""
+          ACTIVE_REGION="$REGION"
+          PERMISSION_DENIED_HIT="false"
+          set +e
+          BUILD_ID=$(trigger_build_in_region "$REGION")
+          TRIGGER_EXIT=$?
+          set -e
+
+          if [ "$TRIGGER_EXIT" -eq 3 ]; then
+            PERMISSION_DENIED_HIT="true"
+            echo "WARNING: PERMISSION_DENIED for $REPO trigger in $REGION — SA lacks cloudbuild.builds.editor."
+            echo "The build may still fire via a direct push:main trigger if one is configured."
+            echo "To fix durably: grant roles/cloudbuild.builds.editor to the GHA service account."
+            BUILD_ID=""
+          elif [ "$TRIGGER_EXIT" -eq 2 ]; then
+            # Task 7: Regional fallback on quota/outage
+            FALLBACK="${CLOUD_BUILD_FALLBACK_REGION}"
+            echo "Primary region $REGION failed with regional error. Falling back to $FALLBACK..."
+            ACTIVE_REGION="$FALLBACK"
+            set +e
+            BUILD_ID=$(trigger_build_in_region "$FALLBACK")
+            TRIGGER_EXIT=$?
+            set -e
+            if [ "$TRIGGER_EXIT" -eq 0 ] && [ -n "$BUILD_ID" ]; then
+              echo "Fallback region $FALLBACK succeeded"
+            else
+              echo "Fallback region $FALLBACK also failed"
+              BUILD_ID=""
+            fi
+          elif [ "$TRIGGER_EXIT" -ne 0 ]; then
+            echo "Named trigger not found or failed — no regional fallback applicable"
+            BUILD_ID=""
+          fi
+
+          if [ -z "$BUILD_ID" ]; then
+            if [ "$PERMISSION_DENIED_HIT" = "true" ]; then
+              echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              echo "build_failure_reason=permission-denied" >> "$GITHUB_OUTPUT"
+              echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+            else
+              echo "WARNING: Cloud Build trigger not yet configured for $REPO. Manual setup required."
+              echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
+              echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          echo "build_triggered=true" >> "$GITHUB_OUTPUT"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+          BUILD_URL="https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$GCP_PROJECT"
+          echo "build_log_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
+          echo "Cloud Build triggered: $BUILD_ID (region: $ACTIVE_REGION)"
+
+          # Poll for completion
+          # exit 0 = SUCCESS
+          # exit 1 = build FAILURE, TIMEOUT, CANCELLED, or INTERNAL_ERROR (Cloud Build status)
+          # exit 2 = poll exhaustion (our MAX_POLLS exceeded — build still running)
+          echo "Polling Cloud Build $BUILD_ID (up to 30 min)..."
+          POLL_COUNT=0
+          MAX_POLLS=60  # 60 x 30s = 30 min
+          STATUS=""
+          while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" \
+              --project="$GCP_PROJECT" \
+              --region="$ACTIVE_REGION" \
+              --format="value(status)" 2>/dev/null || echo "UNKNOWN")
+            case "$STATUS" in
+              SUCCESS)
+                echo "Cloud Build SUCCESS: $REPO $IMAGE_TAG"
+                echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED)
+                echo "Cloud Build $STATUS: $REPO $IMAGE_TAG"
+                echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=$STATUS" >> "$GITHUB_OUTPUT"
+                exit 1
+                ;;
+              WORKING|QUEUED)
+                echo "  Build $STATUS — waiting 30s... ($((POLL_COUNT+1))/$MAX_POLLS)"
+                ;;
+              *)
+                echo "  Build status: $STATUS — waiting 30s..."
+                ;;
+            esac
+            POLL_COUNT=$((POLL_COUNT+1))
+            sleep 30
+          done
+
+          # Poll exhaustion — build still running after MAX_POLLS attempts
+          echo "Cloud Build poll exhausted after $MAX_POLLS attempts (last status: $STATUS)"
+          echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
+          echo "build_failure_reason=POLL_EXHAUSTED" >> "$GITHUB_OUTPUT"
+          exit 2
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 3 (hardening): Post-deploy health check polling
+      # Polls /health endpoint for up to 5 min after Cloud Build
+      # success. Only proceeds to smoke test + deployed_versions
+      # update if health check passes.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Health check polling (5 min timeout)"
+        id: health-check
+        if: |
+          steps.route.outputs.repo_type != 'library' &&
+          steps.docker-build.outputs.build_exit_code == '0' &&
+          steps.docker-build.outputs.build_triggered == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          ENV="${{ steps.route.outputs.env }}"
+          REGION="${{ steps.docker-build.outputs.build_region }}"
+
+          echo "=== Post-Deploy Health Check (5 min timeout) ==="
+
+          # Discover Cloud Run service URL
+          SERVICE_URL=$(gcloud run services describe "$REPO" \
+            --project="$GCP_PROJECT" \
+            --region="${REGION:-$CLOUD_BUILD_REGION}" \
+            --format="value(status.url)" 2>/dev/null || echo "")
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: Could not discover Cloud Run URL for $REPO."
+            echo "Service may not be a Cloud Run service or may not be deployed yet."
+            echo "health_check_passed=skip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Service URL: $SERVICE_URL"
+          echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
+
+          # Poll /health — 10 attempts x 30s = 5 min
+          MAX_HEALTH_POLLS=10
+          HEALTH_POLL_INTERVAL=30
+          POLL=0
+          HEALTHY="false"
+
+          while [ "$POLL" -lt "$MAX_HEALTH_POLLS" ]; do
+            POLL=$((POLL + 1))
+            echo "  Health poll $POLL/$MAX_HEALTH_POLLS: GET ${SERVICE_URL}/health"
+
+            HTTP_CODE=$(curl -s -o /tmp/health_poll_response.json -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "${SERVICE_URL}/health" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "  /health returned 200 OK"
+              HEALTHY="true"
+              break
+            fi
+
+            echo "  /health returned HTTP $HTTP_CODE"
+            if [ "$POLL" -lt "$MAX_HEALTH_POLLS" ]; then
+              echo "  Retrying in ${HEALTH_POLL_INTERVAL}s..."
+              sleep "$HEALTH_POLL_INTERVAL"
+            fi
+          done
+
+          if [ "$HEALTHY" = "true" ]; then
+            echo "Health check PASSED after $POLL poll(s)"
+            echo "health_check_passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Health check FAILED after $MAX_HEALTH_POLLS polls (5 min timeout)"
+            echo "health_check_passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 4 (hardening): Post-deploy smoke test
+      # After health check passes, run full smoke test (/health +
+      # /readiness + response shape validation).
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Smoke test (/health + /readiness)"
+        id: smoke-test
+        if: |
+          steps.health-check.outputs.health_check_passed == 'true'
+        run: |
+          set -euo pipefail
+
+          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
+          REPO="${{ steps.route.outputs.repo }}"
+
+          echo "=== Post-Deploy Smoke Test ==="
+          echo "Repo: $REPO"
+          echo "Service: $SERVICE_URL"
+
+          # Run the smoke-test.sh script (5 retries, 30s apart)
+          if bash scripts/deployment/smoke-test.sh "$SERVICE_URL" 5 30; then
+            echo "smoke_test_passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "smoke_test_passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Task 3+4 (hardening): Telegram alerts for health check / smoke test failures — migrated to notify-* jobs
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 5: Position reconciliation — post-deploy comparison
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Position reconciliation compare"
+        if: |
+          steps.position-snapshot.outputs.snapshot_taken == 'true' &&
+          steps.docker-build.outputs.build_exit_code == '0'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
+
+          if [ -z "$SERVICE_URL" ]; then
+            SERVICE_URL="${{ steps.position-snapshot.outputs.service_url }}"
+          fi
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: No service URL available. Skipping position reconciliation."
+            exit 0
+          fi
+
+          echo "=== Position Reconciliation: Post-Deploy Compare ==="
+          bash scripts/deploy/position-reconciliation-check.sh compare "$SERVICE_URL" /tmp/positions_pre_deploy.json
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 6: Kill switch — resume order flow after successful deploy
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Resume order flow (trading-critical)"
+        if: |
+          steps.kill-switch-halt.outputs.kill_switch_halted == 'true' &&
+          steps.docker-build.outputs.build_exit_code == '0' &&
+          (steps.health-check.outputs.health_check_passed == 'true' || steps.health-check.outputs.health_check_passed == 'skip')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          echo "=== Kill Switch: Resume Order Flow ==="
+          echo "Repo: $REPO — build succeeded, health check passed"
+
+          bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
+
+      # Emergency resume if build failed but we halted order flow
+      - name: "Post-deploy: Emergency resume order flow (build failed)"
+        if: |
+          always() &&
+          steps.kill-switch-halt.outputs.kill_switch_halted == 'true' &&
+          steps.docker-build.outputs.build_exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          echo "=== EMERGENCY: Build failed after halt — resuming order flow ==="
+          echo "Repo: $REPO"
+
+          bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
+          # Telegram alert migrated to notify-emergency-resume job
+
+      - name: Update manifest on build success (gated on health + smoke)
+        if: |
+          steps.route.outputs.repo_type != 'library' &&
+          steps.docker-build.outputs.build_exit_code == '0' &&
+          steps.docker-build.outputs.build_triggered == 'true' &&
+          (steps.health-check.outputs.health_check_passed == 'true' || steps.health-check.outputs.health_check_passed == 'skip') &&
+          (steps.smoke-test.outputs.smoke_test_passed == 'true' || steps.smoke-test.outputs.smoke_test_passed == '')
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          BUILD_ID="${{ steps.docker-build.outputs.build_id }}"
+
+          # Write deployed_versions back to manifest (populate-deployed-versions)
+          cd "${GITHUB_WORKSPACE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg env "${ENV}" \
+             --arg repo "${REPO}" \
+             --arg version "${VERSION}" \
+             --arg tag "${IMAGE_TAG}" \
+             --arg ts "${DEPLOYED_AT}" \
+             --arg build_id "${BUILD_ID}" \
+             '(.deployed_versions[$env] //= {}) | .deployed_versions[$env][$repo] = {version: $version, image_tag: $tag, deployed_at: $ts, build_id: $build_id}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json \
+            && echo "deployed_versions[${ENV}][${REPO}] = ${VERSION}" \
+            || echo "WARNING: failed to update deployed_versions (non-fatal)"
+          if ! git diff --quiet workspace-manifest.json; then
+            git add workspace-manifest.json
+            git commit -m "chore: update deployed_versions[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
+            git push origin main || true
+          fi
+
+      # Telegram alerts migrated to separate notification jobs below
+
+      - name: Trigger Cloud Build (Python wheel — library)
+        if: steps.route.outputs.repo_type == 'library'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          ENV="${{ steps.route.outputs.env }}"
+
+          echo "Library repo: $REPO — would build Python wheel $VERSION for $GCP_PROJECT"
+          echo "NOTE: Wheel build via Cloud Build not yet provisioned. Track in Phase 5 implementation."
+          # Future: gcloud builds triggers run "${REPO}-wheel-${ENV}" --project="$GCP_PROJECT" ...
+
+      - name: Log routing decision
+        if: always()
+        run: |
+          echo "Build routing summary:"
+          echo "  repo:             ${{ steps.route.outputs.repo }}"
+          echo "  type:             ${{ steps.route.outputs.repo_type }}"
+          echo "  branch:           ${{ steps.route.outputs.branch }}"
+          echo "  gcp_project:      ${{ steps.route.outputs.gcp_project }}"
+          echo "  image_tag:        ${{ steps.route.outputs.image_tag }}"
+          echo "  env:              ${{ steps.route.outputs.env }}"
+          echo "  trading_critical: ${{ steps.route.outputs.is_trading_critical }}"
+          echo "  build_region:     ${{ steps.docker-build.outputs.build_region }}"
+          echo "  tier_check:       ${{ steps.tier-check.outputs.tier_check_passed }}"
+          echo "  market_hours:     ${{ steps.market-hours-guard.outputs.market_hours_passed }}"
+          echo "  health_check:     ${{ steps.health-check.outputs.health_check_passed }}"
+          echo "  smoke_test:       ${{ steps.smoke-test.outputs.smoke_test_passed }}"
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  # BUILD-ONLY PRE-CUTOVER gate (2026-06-24): the tier-order check flags every lower-tier dep whose
+  # `deployed_versions.prod[dep]` is unset — but PRE live-cutover NOTHING is deployed to prod by design
+  # (core service/trading repos are intentionally build-only: a `<repo>-build` trigger, no `<repo>-prod`
+  # deploy trigger). So "all deps (not-deployed)" is the EXPECTED steady state, not a tier-ORDER violation,
+  # and the page fired on EVERY prod build for every service = pure noise about a known intentional posture
+  # (e.g. deployment-service blocked by 13 not-deployed services). Gate it behind the SAME explicit opt-in
+  # repo variable as the "trigger not configured" page below (`CLOUD_BUILD_PROD_DEPLOY_EXPECTED`, default
+  # unset ⇒ no page). At live cutover the operator sets the variable `true`, which RE-ARMS this alert so a
+  # genuine out-of-order deploy (a dependency left behind while the fleet is actually deploying) pages again.
+  # This neither enables nor blocks any deploy — it only silences a noise alert about the pre-cutover state.
+  notify-tier-check:
+    name: Slack — Tier Check Warning
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.tier_check_passed == 'false' &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Tier-Ordered Deploy Warning | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | Blocking: ${{
+        needs.route-build.outputs.blocking_repos }}"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-health-check-failed:
+    name: Slack — Health Check FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.health_check_passed == 'false'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Post-Deploy Health Check FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
+        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
+        NOT updated."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-smoke-test-failed:
+    name: Slack — Smoke Test FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.smoke_test_passed == 'false'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
+        or response shape failed. deployed_versions NOT updated."
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-emergency-resume:
+    name: Slack — Emergency Order Flow Resume
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.kill_switch_halted == 'true' &&
+      needs.route-build.outputs.build_exit_code != '0'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "EMERGENCY: Order flow resumed after failed deploy | Repo: ${{ needs.route-build.outputs.repo }} | Build failed
+        but order flow was halted pre-deploy. Order flow has been automatically resumed. Investigate build failure
+        immediately."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-regional-fallback:
+    name: Slack — Regional Fallback Used
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.build_triggered == 'true' &&
+      needs.route-build.outputs.build_region != 'asia-northeast1'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build Regional Fallback | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | Primary region asia-northeast1 failed. Build ran in fallback region: ${{
+        needs.route-build.outputs.build_region }}"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-build-failed:
+    name: Slack — Build FAILED
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '1'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo }}
+        | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Region: ${{
+        needs.route-build.outputs.build_region }} | Log: ${{ needs.route-build.outputs.build_log_url }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-build-poll-exhausted:
+    name: Slack — Build Poll Exhausted
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '2'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
+        running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-build-not-configured:
+    name: Slack — Build Trigger Not Configured
+    needs: [route-build]
+    # PROD-only (2026-06-10): a missing PROD Cloud Build trigger genuinely blocks a release → alert.
+    # But staging/dev feature-build triggers are NOT yet provisioned fleet-wide (deployment infra is
+    # still being built out — Tier-D Cloud Run is open), so a missing staging trigger fired this WARNING
+    # on EVERY staging QG pass for every non-library service (alerting-service, etc.) = pure noise about a
+    # known-incomplete state. Gate to env=='prod' so the channel only pages when it's actionable; provision
+    # staging triggers separately via `gcloud builds triggers create github --name='<repo>-staging' ...`
+    # (NOT via `scripts/create-cloud-build-feature-triggers.sh` — that script creates feat/* feature-build
+    # triggers named `<repo>-feature-build`, not staging/prod-deploy triggers) when ready.
+    #
+    # BUILD-ONLY PRE-CUTOVER (2026-06-21, alerts-triage L150 / orchestrator_human_central_vm_split):
+    # the SAME reasoning now applies to PROD too. We are PRE live-cutover — core service/trading repos
+    # (strategy-service, instruments-service, …) are INTENTIONALLY build-only: they have a `<repo>-build`
+    # trigger but no `<repo>-prod` prod-DEPLOY trigger, by design (auto-deploying a trading service to prod
+    # on every main-merge is exactly what we do NOT want before going live). So the prod "not-configured"
+    # page fired on every main promotion for every such repo = pure noise about a known, intentional state.
+    # Gate the page behind the explicit opt-in repo variable `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` (default
+    # unset ⇒ build-only, no page). At live cutover the operator sets the variable `true` (and provisions
+    # the prod-deploy triggers via `gcloud builds triggers create github --name='<repo>-prod' ...`
+    # NOT via `scripts/create-cloud-build-feature-triggers.sh` which only creates feat/* feature-build
+    # triggers; see Slack message below for the correct trigger naming convention), which RE-ARMS this
+    # alert so a genuinely-missing prod trigger pages again. This neither enables nor blocks any prod
+    # deploy — it only silences a noise alert about the deliberate pre-cutover build-only posture.
+    if: |
+      always() &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true' &&
+      needs.route-build.outputs.env == 'prod' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build Trigger Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | Project: ${{ needs.route-build.outputs.gcp_project }} | Setup: provision the
+        `${{ needs.route-build.outputs.repo }}-prod` Cloud Build trigger (the router runs `<repo>-<env>`). NOTE:
+        `create-cloud-build-feature-triggers.sh` only creates `<repo>-feature-build` triggers for `feat/*`, NOT the
+        prod-deploy trigger — provision that separately at cutover."
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  # Alert when the GHA SA lacks permission to invoke a Cloud Build trigger (2026-06-27).
+  # Root cause of instruments-service stale :latest (2026-06-23 → 2026-06-27): the
+  # instruments-service-prod trigger existed but github-actions-deploy SA lacked
+  # roles/cloudbuild.builds.editor (triggerRun IAM). The router was silently swallowing
+  # PERMISSION_DENIED as "not-configured", so no alert fired and the image went stale.
+  # This ALWAYS-alerts (no CLOUD_BUILD_PROD_DEPLOY_EXPECTED gate) because a missing IAM
+  # binding is never an intentional pre-cutover state — it is always a config bug that
+  # must be fixed immediately (grant roles/cloudbuild.builds.editor to the GHA SA).
+  notify-permission-denied:
+    name: Slack — Build Trigger Permission Denied (SA missing IAM)
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'permission-denied'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build Trigger PERMISSION_DENIED | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | The `${{ needs.route-build.outputs.repo }}-${{ needs.route-build.outputs.env
+        }}` Cloud Build trigger EXISTS but the GHA service account (github-actions-deploy@central-element-323112) lacks
+        `roles/cloudbuild.builds.editor` (triggerRun IAM). FIX: `gcloud projects add-iam-policy-binding
+        central-element-323112
+        --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com
+        --role=roles/cloudbuild.builds.editor`. The image build may have fired via a direct push:main trigger if one is
+        configured — but this IAM gap must be closed to make the CI router path reliable."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  # Route instruments-service build failures to #data-pipeline-alerts (2026-06-26).
+  # instruments-service builds the image used by all Cloud Run data-pipeline jobs
+  # (sports-trigger-instruments, catalogue refresh, etc.). A build failure means jobs
+  # will run stale code — a data-pipeline correctness event, not just a CI event.
+  # Posts to #data-pipeline-alerts via the DATA_PIPELINE_ALERTS_SLACK_WEBHOOK SM secret
+  # (project central-element-323112). Both build FAILURE (exit_code=1) and poll
+  # exhaustion (exit_code=2) are routed. Success is quiet (no post to data-pipeline channel).
+  # The existing notify-build-failed job still posts to #ci-failures — this is additive.
+  notify-instruments-build-data-pipeline:
+    name: "#data-pipeline-alerts — instruments-service build failure"
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'instruments-service' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      (needs.route-build.outputs.build_exit_code == '1' || needs.route-build.outputs.build_exit_code == '2')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      # Auth to GCP to read DATA_PIPELINE_ALERTS_SLACK_WEBHOOK from Secret Manager.
+      # WIF preferred, SA key fallback — mirrors cloud-build-router's own auth pattern.
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Post to #data-pipeline-alerts
+        # Best-effort: a missing webhook or SM auth failure must NEVER fail the caller.
+        # All inputs are passed via environment variables (shell-set + GHA expressions) so
+        # the inline python3 heredoc reads them safely from os.environ without injection risk.
+        continue-on-error: true
+        env:
+          GCP_PROJECT: central-element-323112
+          REPO: ${{ needs.route-build.outputs.repo }}
+          ENV: ${{ needs.route-build.outputs.env }}
+          BRANCH: ${{ needs.route-build.outputs.branch }}
+          BUILD_EXIT_CODE: ${{ needs.route-build.outputs.build_exit_code }}
+          BUILD_FAILURE_REASON: ${{ needs.route-build.outputs.build_failure_reason }}
+          BUILD_LOG_URL: ${{ needs.route-build.outputs.build_log_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Fetch webhook URL from Secret Manager (best-effort — fail-open if SM unreadable).
+          WEBHOOK_URL=$(gcloud secrets versions access latest \
+            --secret="DATA_PIPELINE_ALERTS_SLACK_WEBHOOK" \
+            --project="${GCP_PROJECT}" 2>/dev/null || echo "")
+
+          if [ -z "${WEBHOOK_URL}" ]; then
+            echo "WARNING: DATA_PIPELINE_ALERTS_SLACK_WEBHOOK unreadable from SM — skipping #data-pipeline-alerts post (best-effort)"
+            exit 0
+          fi
+
+          case "${WEBHOOK_URL}" in
+            https://*) : ;;
+            *) echo "WARNING: fetched webhook is not an https URL — skipping (best-effort)"; exit 0 ;;
+          esac
+
+          # Determine severity and label from build exit code.
+          if [ "${BUILD_EXIT_CODE}" = "1" ]; then
+            SEVERITY=":rotating_light: *CRITICAL*"
+            REASON_LABEL="${BUILD_FAILURE_REASON:-FAILURE}"
+          else
+            SEVERITY=":warning: *WARNING*"
+            REASON_LABEL="POLL_EXHAUSTED (build may still be running)"
+          fi
+
+          # Export shell-computed values so the quoted heredoc python3 sees them.
+          export WEBHOOK_URL SEVERITY REASON_LABEL
+
+          python3 - <<'PYEOF'
+          import json, os, sys, urllib.request
+
+          webhook    = os.environ["WEBHOOK_URL"]
+          repo       = os.environ.get("REPO", "instruments-service")
+          env        = os.environ.get("ENV", "prod")
+          branch     = os.environ.get("BRANCH", "main")
+          severity   = os.environ.get("SEVERITY", ":rotating_light: *CRITICAL*")
+          reason     = os.environ.get("REASON_LABEL", "FAILURE")
+          log_url    = os.environ.get("BUILD_LOG_URL", "")
+          run_url    = os.environ.get("RUN_URL", "")
+
+          msg = (
+              f"{severity} — *instruments-service image build {reason}*\n"
+              f"Cloud Run data-pipeline jobs (sports-trigger-instruments, catalogue, etc.) "
+              f"will run a *stale image* until this build is resolved.\n"
+              f"• Repo: `{repo}` | Env: `{env}` | Branch: `{branch}`\n"
+              + (f"• Build log: <{log_url}|View Cloud Build log>\n" if log_url else "")
+              + (f"• CI run: <{run_url}|View GHA run>\n" if run_url else "")
+              + "• Action: re-push to main or re-run the `instruments-service-prod` Cloud Build trigger."
+          )
+
+          blocks = [
+              {"type": "section", "text": {"type": "mrkdwn", "text": msg}},
+          ]
+          if run_url:
+              blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text": f"<{run_url}|View CI run>"}]})
+
+          payload = json.dumps({
+              "text": f":rotating_light: instruments-service image build {reason} — data pipeline jobs at risk",
+              "blocks": blocks
+          }).encode()
+
+          req = urllib.request.Request(
+              webhook,
+              data=payload,
+              headers={"Content-Type": "application/json"},
+              method="POST"
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Posted to #data-pipeline-alerts (HTTP {resp.status})")
+          except Exception as e:
+              print(f"#data-pipeline-alerts post failed: {e}", file=sys.stderr)
+              sys.exit(1)
+          PYEOF
+
+  persist:
+    name: Persist — Cloud Build Event
+    needs: [route-build]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: ${{ needs.route-build.outputs.repo || 'unknown' }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.route-build.result }}
+      branch: ${{ needs.route-build.outputs.branch }}
+      commit_sha: ${{ needs.route-build.outputs.commit_sha }}
+      details_json:
+        '{"env": "${{ needs.route-build.outputs.env }}", "version": "${{ needs.route-build.outputs.version }}",
+        "build_region": "${{ needs.route-build.outputs.build_region }}"}'

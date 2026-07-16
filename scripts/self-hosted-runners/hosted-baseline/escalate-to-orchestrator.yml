@@ -1,0 +1,308 @@
+name: Escalate to Orchestrator
+
+# Hands a deterministic-CI/CD JUDGMENT wall (merge conflict / label mismatch / SIT failure) to the
+# agent-orchestrator, which spawns a worker on a free slot under a long-lived **setup-token** Max-plan
+# account ($0 API credits — NOT ANTHROPIC_API_KEY_CICD). The worker resolves the wall on
+# `live-defi-rollout`, pushes the fix, pings the authoring slot, then exits.
+#
+# This is the PM→orchestrator GHA dispatch that was the ONLY missing piece of the conflict-resolution
+# pivot: the orchestrator side already exists — `POST /api/escalate` (server/server.py),
+# server/escalation.py, agents/escalate.md (handles merge_conflict | label_mismatch | sit_failure).
+# It supersedes the in-GHA `ANTHROPIC_API_KEY_CICD` path in conflict-resolution-agent.yml.
+#
+# Callable three ways:
+#   1. workflow_call    — another PM workflow (conflict-resolution-agent.yml, ci-status-update.yml,
+#                         the stuck-PR watcher) invokes it as a reusable job.
+#   2. workflow_dispatch — an operator triggers it manually from the Actions tab.
+#   3. repository_dispatch (type: escalate-to-orchestrator) — a remote `curl` / cross-repo dispatch
+#                         supplies the same fields via client_payload.
+#
+# SSOT: plans/active/cicd_contract_hardening_2026_06_01.md § B (items B1/B2) +
+#       agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md § G9.
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        description: "Target repo the wall is in (e.g. market-tick-data-service)"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number the wall blocks (0 if not PR-scoped)"
+        required: true
+        type: number
+      wall_type:
+        description:
+          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
+          data_pipeline_failure"
+        required: true
+        type: string
+      context:
+        description: "Free-text context (conflict files / label-vs-API diff / failing SIT log tail)"
+        required: true
+        type: string
+      authoring_slot:
+        description: "Slot/operator that authored the PR (pinged once the wall is handled)"
+        required: false
+        type: string
+        default: "ci"
+      model:
+        description: "sonnet | opus (worker model tier)"
+        required: false
+        type: string
+        default: "sonnet"
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Target repo the wall is in"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number (0 if not PR-scoped)"
+        required: true
+        type: number
+      wall_type:
+        description:
+          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
+          data_pipeline_failure"
+        required: true
+        type: choice
+        options:
+          [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, main_ci_red, plan_health, data_pipeline_failure]
+      context:
+        description: "Free-text context for the worker"
+        required: true
+        type: string
+      authoring_slot:
+        description: "Authoring slot/operator"
+        required: false
+        type: string
+        default: "ci"
+      model:
+        description: "Worker model tier"
+        required: false
+        type: string
+        default: "sonnet"
+  repository_dispatch:
+    types: [escalate-to-orchestrator]
+
+permissions:
+  contents: read
+
+# Never cancel an in-flight dispatch; serialise per repo+PR so a re-fire doesn't double-spawn.
+concurrency:
+  group:
+    escalate-${{ inputs.repo || github.event.client_payload.repo }}-${{ inputs.pr_number ||
+    github.event.client_payload.pr_number }}
+  cancel-in-progress: false
+
+jobs:
+  escalate:
+    name: Dispatch judgment wall to orchestrator
+    runs-on: ubuntu-latest
+    outputs:
+      dispatched: ${{ steps.post.outputs.dispatched }}
+      escalation_id: ${{ steps.post.outputs.escalation_id }}
+      slot_id: ${{ steps.post.outputs.slot_id }}
+      orch_url: ${{ steps.post.outputs.orch_url }}
+      repo: ${{ steps.inputs.outputs.repo }}
+      pr_number: ${{ steps.inputs.outputs.pr_number }}
+      # outcome classifies a non-dispatch so the Slack notify can name the ACTUAL cause:
+      # `no_headroom` (orchestrator at capacity → the wall is PARKED) is the distinct, actionable
+      # alert the single-live-orchestrator case needs — there is no separate vm-planning VM to
+      # "restore"; vm-0 IS the orchestrator, and a flat 503 means it has no free slot, not that a
+      # host is down. `dispatched` / `no_escalation_id` / `no_headroom` is the closed set reaching notify.
+      outcome: ${{ steps.post.outputs.outcome }}
+    steps:
+      - name: Resolve inputs (workflow_call / dispatch / repository_dispatch)
+        id: inputs
+        env:
+          # workflow_call + workflow_dispatch populate inputs.*; repository_dispatch populates
+          # event.client_payload.*. `||` picks whichever trigger fired.
+          IN_REPO: ${{ inputs.repo || github.event.client_payload.repo }}
+          IN_PR: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
+          IN_WALL: ${{ inputs.wall_type || github.event.client_payload.wall_type }}
+          IN_CONTEXT: ${{ inputs.context || github.event.client_payload.context }}
+          IN_SLOT: ${{ inputs.authoring_slot || github.event.client_payload.authoring_slot || 'ci' }}
+          IN_MODEL: ${{ inputs.model || github.event.client_payload.model || 'sonnet' }}
+        run: |
+          set -euo pipefail
+          : "${IN_REPO:?repo is required}"
+          : "${IN_WALL:?wall_type is required}"
+          : "${IN_CONTEXT:?context is required}"
+
+          # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
+          case "$IN_WALL" in
+            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure) ;;
+            *)
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure)"
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "repo=$IN_REPO"
+            echo "pr_number=${IN_PR:-0}"
+            echo "wall_type=$IN_WALL"
+            echo "authoring_slot=$IN_SLOT"
+            echo "model=$IN_MODEL"
+          } >> "$GITHUB_OUTPUT"
+
+          # context can be multi-line — pass via a heredoc-delimited output.
+          {
+            echo "context<<ESC_CTX_EOF"
+            echo "$IN_CONTEXT"
+            echo "ESC_CTX_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: POST /api/escalate
+        id: post
+        env:
+          ORCH_SECRET: ${{ secrets.ORCHESTRATOR_INTERNAL_SECRET }}
+          ORCH_URL: ${{ vars.ORCHESTRATOR_URL || 'https://api.agent-orchestrator.odum-research.com' }}
+          REPO: ${{ steps.inputs.outputs.repo }}
+          PR_NUMBER: ${{ steps.inputs.outputs.pr_number }}
+          WALL_TYPE: ${{ steps.inputs.outputs.wall_type }}
+          AUTHORING_SLOT: ${{ steps.inputs.outputs.authoring_slot }}
+          MODEL: ${{ steps.inputs.outputs.model }}
+          CONTEXT: ${{ steps.inputs.outputs.context }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ORCH_SECRET:-}" ]; then
+            echo "::error::ORCHESTRATOR_INTERNAL_SECRET secret not set — cannot authenticate to the orchestrator"
+            exit 1
+          fi
+
+          # Build the body with jq so multi-line context is JSON-escaped safely.
+          BODY=$(jq -n \
+            --arg repo "$REPO" \
+            --argjson pr "${PR_NUMBER:-0}" \
+            --arg wall "$WALL_TYPE" \
+            --arg ctx "$CONTEXT" \
+            --arg slot "$AUTHORING_SLOT" \
+            --arg model "$MODEL" \
+            '{repo: $repo, pr_number: $pr, wall_type: $wall, context: $ctx, authoring_slot: $slot, model: $model}')
+
+          echo "Dispatching ${WALL_TYPE} for ${REPO}#${PR_NUMBER} to ${ORCH_URL}/api/escalate"
+
+          RESP=$(mktemp)
+          HTTP=$(curl -sS -o "$RESP" -w "%{http_code}" --max-time 30 \
+            -X POST "${ORCH_URL}/api/escalate" \
+            -H "Content-Type: application/json" \
+            -H "X-Orchestrator-Secret: ${ORCH_SECRET}" \
+            -d "$BODY" || echo "000")
+
+          echo "HTTP ${HTTP}"
+          cat "$RESP" || true
+          echo ""
+          echo "orch_url=${ORCH_URL}" >> "$GITHUB_OUTPUT"
+
+          case "$HTTP" in
+            200)
+              ESC_ID=$(jq -r '.escalation_id // ""' "$RESP" 2>/dev/null || echo "")
+              SLOT_ID=$(jq -r '.slot_id // ""' "$RESP" 2>/dev/null || echo "")
+              echo "escalation_id=${ESC_ID}" >> "$GITHUB_OUTPUT"
+              echo "slot_id=${SLOT_ID}" >> "$GITHUB_OUTPUT"
+              if [ -n "$ESC_ID" ]; then
+                echo "✅ Escalation dispatched (escalation_id=${ESC_ID}, slot=${SLOT_ID})."
+                echo "dispatched=true" >> "$GITHUB_OUTPUT"
+                echo "outcome=dispatched" >> "$GITHUB_OUTPUT"
+              else
+                # 200 but NO escalation_id → the orchestrator did NOT create a real escalation
+                # (e.g. stale deploy / unexpected body). Do NOT claim a worker is resolving the
+                # wall — that is the false-success this guard fixes. Treat as not-dispatched.
+                echo "::warning::Orchestrator returned 200 but NO escalation_id — escalation NOT confirmed; no worker spawned. Body above."
+                echo "dispatched=false" >> "$GITHUB_OUTPUT"
+                echo "outcome=no_escalation_id" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+            503)
+              # No free slot / no headroom setup-token account — capacity exhaustion on the single
+              # live orchestrator (vm-0). Soft-fail so a re-fire (or the next cron tick) retries; but
+              # tag outcome=no_headroom so the Slack notify raises a DISTINCT, actionable "wall PARKED
+              # — stand in a worker if it persists" alert. A repeated 503 across ticks is the exact
+              # silent-park that left a cascade stuck ~5h (2026-06-10) — it must read as headroom
+              # exhaustion, NOT a generic failure, and NOT "vm-planning is down" (no such VM).
+              echo "::warning::Orchestrator has no free slot / headroom account right now (503) — escalation NOT dispatched (wall PARKED). Retryable."
+              echo "dispatched=false" >> "$GITHUB_OUTPUT"
+              echo "outcome=no_headroom" >> "$GITHUB_OUTPUT"
+              ;;
+            401)
+              echo "::error::Orchestrator rejected the shared secret (401) — check ORCHESTRATOR_INTERNAL_SECRET."
+              exit 1
+              ;;
+            400)
+              echo "::error::Orchestrator rejected the request (400) — likely a bad wall_type. Body above."
+              exit 1
+              ;;
+            000)
+              echo "::error::Could not reach the orchestrator at ${ORCH_URL} (timeout / DNS / TLS)."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected HTTP ${HTTP} from /api/escalate. Body above."
+              exit 1
+              ;;
+          esac
+
+      - name: Mark PR escalated (idempotency) — ONLY on confirmed spawn
+        # This is the spawn-confirmed idempotency marker the stuck-PR watcher
+        # (ci_failure_watcher.py::_pr_has_escalation_label) gates on. It is applied HERE — not
+        # in the watcher — so it reflects an ACTUAL worker spawn (dispatched=true ⇒ 200 +
+        # escalation_id), not a mere dispatch-accept. A 503/no-slot leaves dispatched=false ⇒
+        # the PR stays UNLABELLED ⇒ the next */15m watcher tick re-dispatches until a slot frees.
+        # Cross-repo (target PR lives in another repo) ⇒ needs GH_PAT, not GITHUB_TOKEN.
+        if: steps.post.outputs.dispatched == 'true' && steps.inputs.outputs.pr_number != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.inputs.outputs.repo }}
+          PR_NUMBER: ${{ steps.inputs.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          gh label create escalation-dispatched --repo "${OWNER}/${REPO}" --force \
+            --color B60205 --description "Handed to the orchestrator for conflict resolution" || true
+          gh pr edit "${PR_NUMBER}" --repo "${OWNER}/${REPO}" --add-label escalation-dispatched
+          echo "Labelled ${OWNER}/${REPO}#${PR_NUMBER} escalation-dispatched (spawn confirmed)."
+
+  # ── SLACK NOTIFY ──────────────────────────────────────────────────────────
+  # Gated (alert_quality_audit_2026_06_18): page ONCE on the "handed off" transition, NOT every
+  # */15 re-dispatch tick. The cross-channel contract is: this GHA dispatch pages when a worker is
+  # confirmed-spawned (dispatched=true); the agent-orchestrator server (S4) owns the lifecycle pages
+  # (escalation RESOLVED / ABANDONED). The retryable non-dispatch outcomes (`no_headroom` 503 / a
+  # `no_escalation_id` soft-200) re-fire every tick — they MUST NOT re-page; they stay visible as
+  # the escalate step's `::warning::` job-log line, and a PERSISTENT park is the server's S4 page,
+  # not an every-tick GHA spam. A HARD failure (401/400/000/unexpected — escalate job `failure`) IS
+  # paged, but deduped per repo+PR so a standing auth/DNS problem pages once, not every tick.
+  notify:
+    name: Slack — Escalation Dispatch
+    needs: [escalate]
+    # Fire only on a genuine TRANSITION worth a page:
+    #   • dispatched=true  → "handed off" (one-time per PR; the escalation-dispatched label gates re-dispatch)
+    #   • escalate failed  → a hard, actionable error (401/400/timeout) — deduped below so it pages once
+    # The soft-retryable no_headroom / no_escalation_id ticks are intentionally NOT paged here.
+    if: ${{ needs.escalate.outputs.dispatched == 'true' || needs.escalate.result == 'failure' }}
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      # 2-way now: dispatched ✅ (handed off) | hard-failure ⚠️ (actionable error). The headroom /
+      # no-id soft cases no longer reach notify (they re-fire and would re-page each tick).
+      message:
+        ${{ needs.escalate.outputs.dispatched == 'true' && format('✅ Escalation `{0}` dispatched → a Max-plan worker
+        (slot {1}) is resolving {2}#{3} on live-defi-rollout. Verify the worker live on the orchestrator dashboard
+        (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) || format('⚠️
+        Escalation FAILED for {0}#{1} — the orchestrator dispatch errored (auth/DNS/TLS or a bad request; see the run
+        log). The wall is STILL OPEN and no worker was spawned. → <{2}|open dashboard>.', needs.escalate.outputs.repo,
+        needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
+      severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
+      conclusion: ${{ needs.escalate.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # A successful hand-off is a one-time transition (label-gated) → no dedup_key needed. A HARD
+      # failure can recur every tick if the orchestrator stays unreachable → dedup per repo+PR so a
+      # standing auth/DNS error pages ONCE per cooldown, not every */15 tick.
+      dedup_key:
+        ${{ needs.escalate.outputs.dispatched == 'true' && '' || format('escalation-dispatch-failed:{0}:{1}',
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number) }}
+      cooldown_min: 240
+    secrets: inherit

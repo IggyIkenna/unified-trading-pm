@@ -1,0 +1,124 @@
+name: Readiness Verifier
+
+# Daily automated check that declared CR/DR/BR states in codex match
+# automated verification results.  Alerts via Telegram on any mismatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Tier to verify (T0/T1/T2/T3/T4/T5/T6/infra/all)"
+        required: false
+        default: "all"
+      repo_filter:
+        description: "Single repo name to verify (optional)"
+        required: false
+  schedule:
+    - cron: "0 3 * * *" # 3:00 UTC daily
+
+env:
+  WORKSPACE_ROOT: ${{ github.workspace }}/..
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      # codex/ now lives inside unified-trading-pm — no separate clone needed.
+      # The check-repo-readiness.py invocations below pass --codex-path explicitly
+      # so the script does not look for a sibling unified-trading-codex/.
+
+      - name: Checkout workspace repos for the specified tier
+        # Best-effort + NON-FATAL: a clone failure must never red the whole
+        # verifier (Finding 1, plans/active/issues/ci_incident_findings_2026_06_09.md).
+        # There is no tier-bulk-clone script: setup-workspace-from-manifest.sh is
+        # per-<service> (clones that service's deps), and setup-workspace-root.sh
+        # only sets the workspace-root path. When a single repo_filter is given we
+        # clone its deps via the real (scripts/, not scripts/workspace/) script;
+        # tier-mode runs check-repo-readiness.py against repos already present
+        # (PM + the in-repo codex/). A dedicated tier-clone helper is a follow-up.
+        continue-on-error: true
+        run: |
+          if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
+            bash scripts/setup-workspace-from-manifest.sh \
+              "${{ github.event.inputs.repo_filter }}" --skip-install || true
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install uv and dependencies
+        run: |
+          pip install uv
+          python -m venv .venv
+          source .venv/bin/activate
+          uv pip install pyyaml
+
+      - name: Run readiness verifier
+        id: verify
+        run: |
+          source .venv/bin/activate
+          EXIT_CODE=0
+          if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
+            python scripts/check-repo-readiness.py \
+              --repo "${{ github.event.inputs.repo_filter }}" \
+              --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              --codex-path "${{ github.workspace }}/codex" \
+              2>&1 | tee readiness-report.txt || EXIT_CODE=$?
+          else
+            python scripts/check-repo-readiness.py \
+              --tier "${{ github.event.inputs.tier || 'all' }}" \
+              --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              --codex-path "${{ github.workspace }}/codex" \
+              2>&1 | tee readiness-report.txt || EXIT_CODE=$?
+          fi
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Add to Job Summary
+        if: always()
+        run: |
+          echo "## Readiness Verification Report" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat readiness-report.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — Readiness Verifier
+    needs: [verify-readiness]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: "Readiness Verifier | Tier: ${{ github.event.inputs.tier || 'all' }}"
+      severity: "INFO"
+      conclusion: ${{ needs.verify-readiness.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Readiness Verifier Event
+    needs: [verify-readiness, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.verify-readiness.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"tier": "${{ github.event.inputs.tier || ''all'' }}"}'

@@ -1,0 +1,94 @@
+name: Conflict Resolution Agent
+
+# A merge conflict blocked a promotion PR (feat→staging / staging→main / LDR→staging). This
+# workflow ESCALATES it to the agent-orchestrator instead of resolving it in-GHA.
+#
+# CUT OVER 2026-06-03: the in-GHA Anthropic-API path (ANTHROPIC_API_KEY_CICD + claude-code CLI)
+# is REMOVED. Conflict resolution is the HARD judgment task and must run on a long-lived
+# Max-plan setup-token worker, not pay-per-call API credits.
+#
+# 2026-06-27: dispatch logic extracted to agent-runner.yml (sprawl consolidation Task 5).
+# This file is now a thin input-resolution wrapper that calls the shared reusable workflow.
+# SSOT: codex/08-workflows/ci-cd-flow.md § "Convergence + conflict-resolution model".
+
+on:
+  repository_dispatch:
+    types: [merge-conflict-detected]
+  workflow_dispatch:
+    inputs:
+      repo_name:
+        description: "Repository name (e.g. market-tick-data-service)"
+        required: true
+      source_branch:
+        description: "Source branch (the incoming branch — e.g. staging, live-defi-rollout)"
+        required: true
+      target_branch:
+        description: "Target branch (the base — e.g. main, staging)"
+        required: true
+      original_pr_url:
+        description: "URL of the blocked PR (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group:
+    conflict-resolution-${{ github.event.client_payload.repo_name || inputs.repo_name }}-${{
+    github.event.client_payload.source_branch || inputs.source_branch }}
+  cancel-in-progress: false
+
+jobs:
+  # Resolve inputs and build the source-aware context string, then delegate to agent-runner.
+  resolve-and-escalate:
+    name: Resolve conflict inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      repo_name: ${{ steps.in.outputs.repo_name }}
+      pr_number: ${{ steps.in.outputs.pr_number }}
+      context: ${{ steps.in.outputs.context }}
+    steps:
+      - name: Resolve inputs (repository_dispatch / workflow_dispatch)
+        id: in
+        env:
+          REPO_NAME: ${{ github.event.client_payload.repo_name || inputs.repo_name }}
+          SOURCE_BRANCH: ${{ github.event.client_payload.source_branch || inputs.source_branch }}
+          TARGET_BRANCH: ${{ github.event.client_payload.target_branch || inputs.target_branch }}
+          PR_URL: ${{ github.event.client_payload.original_pr_url || inputs.original_pr_url }}
+        run: |
+          set -uo pipefail
+          : "${REPO_NAME:?repo_name required}"
+          : "${SOURCE_BRANCH:?source_branch required}"
+          : "${TARGET_BRANCH:?target_branch required}"
+          PR_NUMBER=$(printf '%s' "${PR_URL:-}" | sed -n 's#.*/pull/\([0-9][0-9]*\).*#\1#p')
+          PR_NUMBER="${PR_NUMBER:-0}"
+          # Source-aware context: dep-update/* → topic-branch playbook; otherwise LDR playbook.
+          # SSOT: codex/08-workflows/dep-update-conflict-resolution.md.
+          case "$SOURCE_BRANCH" in
+            dep-update/*)
+              CTX="Dep-update conflict: branch ${SOURCE_BRANCH} → ${TARGET_BRANCH} in ${REPO_NAME} (PR ${PR_NUMBER}) is CONFLICTING. Resolve ON THE DEP-UPDATE TOPIC BRANCH: rebase onto origin/staging, KEEP this branch's dependency floor bump + take staging for everything else, run uv lock, then git push --force-with-lease the dep-update branch. PLAYBOOK: codex/08-workflows/dep-update-conflict-resolution.md." ;;
+            *)
+              CTX="Merge conflict ${SOURCE_BRANCH} -> ${TARGET_BRANCH} in ${REPO_NAME} (PR ${PR_NUMBER}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." ;;
+          esac
+          {
+            echo "repo_name=${REPO_NAME}"
+            echo "pr_number=${PR_NUMBER}"
+            printf 'context=%s\n' "${CTX}"
+          } >> "$GITHUB_OUTPUT"
+
+  escalate:
+    name: Escalate to orchestrator via agent-runner
+    needs: [resolve-and-escalate]
+    uses: ./.github/workflows/agent-runner.yml
+    with:
+      repo_name: ${{ needs.resolve-and-escalate.outputs.repo_name }}
+      source_branch: ${{ github.event.client_payload.source_branch || inputs.source_branch || '' }}
+      target_branch: ${{ github.event.client_payload.target_branch || inputs.target_branch || '' }}
+      pr_number: ${{ needs.resolve-and-escalate.outputs.pr_number }}
+      wall_type: merge_conflict
+      context: ${{ needs.resolve-and-escalate.outputs.context }}
+      model: opus
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}

@@ -1,0 +1,270 @@
+name: Rules Alignment Agent
+
+# Triggers when plan files change on PM main. Claude reads the diff, checks if any new
+# architectural constraints in the changed plans are covered by cursor-rules/ .mdc files,
+# and creates missing rules. Keeps PM plans and cursor rules in sync automatically.
+#
+# Secrets required:
+#   ANTHROPIC_API_KEY  — Claude Code CLI invocation
+#   GH_PAT             — repo scope; used for quickmerge PR creation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plans/active/**"
+  workflow_dispatch:
+    inputs:
+      plan_file:
+        description:
+          "Specific plan file to check (relative path, e.g. plans/active/foo.md). Leave empty to check all recent
+          changes."
+        required: false
+        default: ""
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD || secrets.ANTHROPIC_API_KEY }}
+  PYTHON_VERSION: "3.13"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  align-rules:
+    name: Check and Align Cursor Rules with Plans
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      violations_found: ${{ steps.major-bump-audit.outputs.violations_found }}
+
+    steps:
+      # ── CHECKOUT ─────────────────────────────────────────────────────────────
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 2 # need HEAD~1 for diff
+
+      # ── CLAUDE API HEALTH PRECHECK ──────────────────────────────────────────
+      - name: Claude API health precheck
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_ORG: IggyIkenna
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          CALLING_WORKFLOW: rules-alignment-agent
+        run: |
+          source scripts/agents/claude-api-health-precheck.sh
+          check_claude_api_health
+
+      # ── SYSTEM DEPS ──────────────────────────────────────────────────────────
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      # ── GIT IDENTITY ─────────────────────────────────────────────────────────
+      - name: Configure git identity
+        run: |
+          git config --global user.email "rules-alignment-agent@ci.local"
+          git config --global user.name "Rules Alignment Agent"
+
+      # ── DIFF CHANGED PLANS ───────────────────────────────────────────────────
+      - name: Identify changed plan files
+        id: changed-plans
+        run: |
+          if [ -n "${{ inputs.plan_file }}" ]; then
+            CHANGED="${{ inputs.plan_file }}"
+          else
+            CHANGED=$(git diff HEAD~1 --name-only -- 'plans/active/' | tr '\n' ' ')
+          fi
+          echo "changed_plans=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Changed plan files: $CHANGED"
+
+      # ── LOAD MANDATORY RULES ──────────────────────────────────────────────────
+      - name: Load mandatory rules into env
+        run: |
+          if [ -f "cursor-configs/SUB_AGENT_MANDATORY_RULES.md" ]; then
+            {
+              echo "MANDATORY_RULES<<RULES_EOF"
+              cat "cursor-configs/SUB_AGENT_MANDATORY_RULES.md"
+              echo "RULES_EOF"
+            } >> "$GITHUB_ENV"
+          else
+            echo "ERROR: SUB_AGENT_MANDATORY_RULES.md not found — agent must not run without rules"
+            exit 1
+          fi
+
+      # ── AGENT RUN ────────────────────────────────────────────────────────────
+      - name: Run Claude rules alignment agent
+        if: steps.changed-plans.outputs.changed_plans != '' && env.ANTHROPIC_API_KEY != ''
+        env:
+          CHANGED_PLANS: ${{ steps.changed-plans.outputs.changed_plans }}
+        run: |
+          PROMPT="# ══════════════════════════════════════════════════════════════════
+          # MANDATORY RULES — READ BEFORE ANY ACTION
+          # ══════════════════════════════════════════════════════════════════
+
+          ${MANDATORY_RULES}
+
+          # ══════════════════════════════════════════════════════════════════
+          # TASK
+          # ══════════════════════════════════════════════════════════════════
+
+          You are running inside unified-trading-pm.
+
+          Your task: ensure cursor-rules/ has .mdc coverage for every new architectural constraint introduced by the recently changed plan files.
+
+          === CHANGED PLAN FILES ===
+          ${CHANGED_PLANS}
+
+          === STEPS ===
+          1. Run: git diff HEAD~1 -- plans/active/ and read the full diff
+          2. For each new constraint, decision, or architectural rule in the changed todos:
+             - Search cursor-rules/ for an existing .mdc that covers it
+             - If none found: create a minimal .mdc file in the appropriate cursor-rules/ subdirectory
+          3. .mdc format (follow exactly):
+             ---
+             description: \"<one line>\",
+             alwaysApply: false
+             priority: 50
+             tags: [<relevant tags>]
+             ---
+             # Rule Title
+             RULE: <actionable constraint>
+             WHY: <reason>
+             DO: <correct pattern>
+             NEVER: <what to avoid>
+          4. If you created or modified any .mdc files:
+             Run: bash scripts/quickmerge.sh \"chore: add cursor rules for new plan constraints\" --files \"<space-separated list of .mdc files>\"
+          5. If no gaps found: exit cleanly without committing.
+
+          Rules:
+          - Only create rules for actionable architectural constraints, not descriptive summaries
+          - Never duplicate coverage of patterns already in existing .mdc files
+          - Keep rule bodies concise (< 20 lines)
+          - Use the subdirectory that best fits the rule category (core/, workflow/, dependencies/, etc.)
+          - When new BR/DR gate criteria are introduced in plan changes, update
+            codex/10-audit/REPO_READINESS_CHECKLIST.yaml to cover the new criteria
+          - When new N/A declarations are introduced, ensure they are documented in the repo's
+            codex/10-audit/repos/{repo}.yaml"
+
+          claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
+            || echo "Claude agent exited non-zero — check logs"
+
+      - name: Check readiness checklist coverage
+        run: |
+          # For any plan change that introduces new readiness criteria:
+          # 1. Check if codex/10-audit/REPO_READINESS_CHECKLIST.yaml covers the new criteria
+          # 2. Check if cursor-rules/core/repo-readiness-checklist.mdc references the new criteria
+          # If not, the agent should update them in the same commit
+          echo "Readiness criteria alignment check: verify new plan criteria appear in codex YAML template"
+
+      - name: Audit major-bump policy compliance
+        id: major-bump-audit
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_ORG: IggyIkenna
+        run: |
+          set -euo pipefail
+
+          echo "=== Major Bump Policy Compliance Audit ==="
+          echo "Checking for unauthorized MAJOR version bumps in recent commits..."
+
+          VIOLATIONS=""
+          TODAY=$(date +%Y-%m-%d)
+
+          # Read all repos from PM manifest
+          REPOS=$(python3 -c "
+          import json
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+          for r in m.get('repos', []):
+              print(r.get('name', ''))
+          " 2>/dev/null || echo "")
+
+          for REPO in $REPOS; do
+            if [ -z "$REPO" ]; then continue; fi
+
+            # Get recent commits on staging (last 24h)
+            RECENT=$(gh api "repos/${GH_ORG}/${REPO}/commits?sha=staging&per_page=10" \
+              --jq '.[].commit | select(.message | test("bump version to [1-9][0-9]*\\.0\\.0")) | {sha: .tree.sha, message: .message, author: .author.name}' \
+              2>/dev/null || echo "")
+
+            if [ -n "$RECENT" ]; then
+              # Check if there's a corresponding "major-bump approved by" message
+              AUTHORIZED=$(echo "$RECENT" | python3 -c "
+          import json, sys
+          for line in sys.stdin:
+              line = line.strip()
+              if 'major-bump approved by' in line.lower():
+                  print('yes')
+                  break
+          " 2>/dev/null || echo "")
+
+              if [ -z "$AUTHORIZED" ]; then
+                VIOLATIONS="${VIOLATIONS}\n  - ${REPO}: MAJOR bump commit without approval token"
+              fi
+            fi
+          done
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo "WARNING: MAJOR BUMP POLICY VIOLATIONS DETECTED:"
+            printf "$VIOLATIONS\n"
+            # NOTE: Telegram notification handled by notify-violations job (reusable workflow).
+            echo "violations_found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No unauthorized MAJOR version bumps detected"
+            echo "violations_found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Advisory only — never fail the workflow
+          exit 0
+
+      - name: Skip — no plan changes or no API key
+        if: steps.changed-plans.outputs.changed_plans == '' || env.ANTHROPIC_API_KEY == ''
+        run: |
+          echo "Skipping: changed_plans='${{ steps.changed-plans.outputs.changed_plans }}' ANTHROPIC_API_KEY_set=$([ -n "$ANTHROPIC_API_KEY" ] && echo yes || echo no)"
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — Rules Alignment Agent
+    needs: [align-rules]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: "rules-alignment-agent (PM) | plans checked"
+      severity: "INFO"
+      conclusion: ${{ needs.align-rules.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-violations:
+    name: Slack — Major Bump Policy Violations
+    needs: [align-rules]
+    if: always() && needs.align-rules.outputs.violations_found == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Major bump policy violation detected — unauthorized MAJOR version bumps found in recent commits. Check
+        rules-alignment-agent logs."
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Rules Alignment Event
+    needs: [align-rules, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.align-rules.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "rules-alignment-agent"}'

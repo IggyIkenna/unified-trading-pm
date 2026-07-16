@@ -1,0 +1,155 @@
+# Build Smoke — verify all repos lint/build in GHA (NO full image build)
+#
+# Scope (operator decision 2026-06-21, option (ii)): libraries build a wheel; repos with a Dockerfile get a
+# Dockerfile LINT (`docker buildx build --check` — parses + validates the build graph incl. the FROM reference,
+# WITHOUT executing RUN/`uv sync` or pulling layers); repos with no Dockerfile + not a library are skipped.
+#   WHY NOT a full `docker build .`: the fleet's service images need sibling editable path-deps (UAC/UTL/…) in the
+#   build context, which Cloud Build supplies but a single-repo checkout does NOT (`uv sync --frozen` →
+#   "Distribution not found at file:///app/unified-api-contracts"). The REAL image gate is Cloud Build
+#   (`cloud-build-router.yml`) with the correct multi-repo context; this smoke is a cheap Dockerfile-correctness +
+#   wheel-buildability check (it would have caught the `${PROJECT_ID}`→`//` invalid-reference that reddened it).
+#
+# Parallel matrix: one job per repo. Trigger: workflow_dispatch (manual) or weekly schedule.
+
+name: Build Smoke (All Repos)
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Quick mode — test 1 repo per type only (~5 min)"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Weekly Sunday 6am UTC
+    - cron: "0 6 * * 0"
+
+concurrency:
+  group: build-smoke
+  cancel-in-progress: true
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.json }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Generate repo matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          QUICK="${{ github.event.inputs.quick || 'false' }}"
+
+          python3 << 'PYEOF'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path("workspace-manifest.json").read_text())
+          repos = manifest.get("repositories", manifest.get("repos", {}))
+          skip = {"unified-trading-pm"}
+          quick = os.environ.get("QUICK", "false").lower() == "true"
+
+          buildable = []
+          seen_types = set()
+          for name, info in sorted(repos.items()):
+            if name in skip or not isinstance(info, dict):
+              continue
+            rtype = info.get("type", "")
+            if quick and rtype in seen_types:
+              continue
+            if quick:
+              seen_types.add(rtype)
+            buildable.append({"repo": name, "type": rtype})
+
+          out = json.dumps({"include": buildable})
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"json<<EOF\n{out}\nEOF\n")
+          PYEOF
+
+  build:
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/${{ matrix.repo }}
+          token: ${{ secrets.GH_PAT }}
+          path: repo
+
+      # Service/API/UI Dockerfiles `FROM asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library@<digest>`
+      # — a PRIVATE Artifact Registry base. A bare `docker build .` (no PROJECT_ID, no GAR auth) fails at parse with
+      # `pkg.dev//unified-trading-library@…  invalid reference format` (empty ${PROJECT_ID} → `//`), which is exactly
+      # what reddened this smoke after the digest-pin migration. Authenticate + pass PROJECT_ID so the base image
+      # resolves + pulls. Libraries build a wheel (no base image) → skip GCP auth for them.
+      - name: GCP auth (private base-image pull — non-library repos)
+        if: matrix.type != 'library'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure docker for Artifact Registry
+        if: matrix.type != 'library'
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
+      - name: Smoke (wheel for libs · Dockerfile-lint for images · skip otherwise)
+        env:
+          PROJECT_ID: central-element-323112
+        run: |
+          set -e
+          cd repo
+          REPO="${{ matrix.repo }}"
+          TYPE="${{ matrix.type }}"
+
+          if [[ "$TYPE" == "library" ]]; then
+            echo "=== wheel build: $REPO ==="
+            pip install uv build -q
+            uv run python -m build --wheel --outdir dist/ 2>/dev/null || python -m build --wheel --outdir dist/
+            ls -la dist/*.whl
+            echo "✓ $REPO wheel built"
+          elif [[ -f Dockerfile ]]; then
+            # Dockerfile LINT (BuildKit --check): validates the build graph incl. FROM reference WITHOUT executing
+            # RUN/`uv sync` or pulling layers — no multi-repo context needed. Pass PROJECT_ID so the digest-pinned
+            # base resolves. ADVISORY: --check is opinionated and flags INTENTIONAL fleet patterns as warnings
+            # (FromPlatformFlagConstDisallowed = the deliberate `--platform=linux/amd64`; InvalidDefaultArgInFrom =
+            # the empty-default PROJECT_ID that Cloud Build always injects via --build-arg). Those are not breakage,
+            # so we PRINT all findings but FAIL only on a hard ERROR (unparseable Dockerfile / unknown instruction /
+            # unresolvable build graph). The real image gate is Cloud Build (cloud-build-router.yml).
+            echo "=== Dockerfile lint (buildx --check, advisory warnings): $REPO ==="
+            set +e
+            CHECK_OUT="$(docker buildx build --check --build-arg PROJECT_ID="$PROJECT_ID" . 2>&1)"
+            set -e
+            printf '%s\n' "$CHECK_OUT"
+            if printf '%s\n' "$CHECK_OUT" | grep -qiE '^ERROR:|: error:|failed to (solve|read|parse)'; then
+              echo "✗ $REPO Dockerfile has a HARD error (above)"; exit 1
+            fi
+            echo "✓ $REPO Dockerfile lint OK (warnings advisory)"
+          else
+            echo "=== $REPO ($TYPE): no Dockerfile + not a library — nothing to smoke, skipping ==="
+          fi
+
+  notify-failure:
+    name: Slack — Build Smoke Failure
+    needs: [build]
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Build Smoke FAILED — one or more repos failed to build. View: ${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit

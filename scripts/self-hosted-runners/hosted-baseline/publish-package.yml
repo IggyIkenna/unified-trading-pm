@@ -1,0 +1,191 @@
+name: publish-package
+
+# repository_dispatch-triggered workflow (type: publish-package): publishes Python library wheels to GCP Artifact Registry.
+#
+# Triggered by repository_dispatch from per-repo workflows on push to main.
+# AR repo: unified-libraries in central-element-323112/asia-northeast1
+#
+# Payload: { repo, version, commit_sha }
+#
+# Flow:
+#   1. Checkout the library repo at the given commit
+#   2. Build wheel using `python -m build`
+#   3. Authenticate to GCP Artifact Registry via SA key
+#   4. Upload wheel using `twine` to AR Python repository
+#   5. Update workspace-manifest.json with published version
+
+on:
+  repository_dispatch:
+    types: [publish-package]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-package-${{ github.event.client_payload.repo }}
+  cancel-in-progress: false
+
+env:
+  AR_REGION: asia-northeast1
+  AR_PROJECT: central-element-323112
+  AR_REPOSITORY: unified-libraries
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate payload
+        id: payload
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+
+          if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
+            echo "ERROR: Missing required payload fields (repo, version)"
+            echo "Received: repo=$REPO version=$VERSION commit_sha=$COMMIT_SHA"
+            exit 1
+          fi
+
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+
+          echo "Publishing $REPO v$VERSION (sha: ${COMMIT_SHA:-HEAD})"
+
+      - name: Checkout library repo
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/${{ steps.payload.outputs.repo }}
+          ref: ${{ steps.payload.outputs.commit_sha || 'main' }}
+          token: ${{ secrets.GH_PAT }}
+          path: library-source
+
+      - name: Checkout PM repo (for manifest update)
+        uses: actions/checkout@v5
+        with:
+          path: pm
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install build tools
+        run: |
+          pip install uv
+          uv pip install --system build twine keyring keyrings.google-artifactregistry-auth
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build wheel
+        working-directory: library-source
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+
+          echo "=== Building wheel for $REPO v$VERSION ==="
+
+          # Verify version in pyproject.toml matches expected version
+          TOML_VERSION=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || echo "unknown")
+          echo "pyproject.toml version: $TOML_VERSION"
+          echo "Expected version: $VERSION"
+
+          if [ "$TOML_VERSION" != "$VERSION" ]; then
+            echo "WARNING: Version mismatch — pyproject.toml=$TOML_VERSION, payload=$VERSION"
+            echo "Proceeding with pyproject.toml version ($TOML_VERSION)"
+          fi
+
+          python -m build --wheel --outdir dist/
+
+          echo "Built wheels:"
+          ls -la dist/*.whl
+
+      - name: Upload to Artifact Registry
+        working-directory: library-source
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+          AR_URL="https://${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}/"
+
+          echo "=== Uploading to Artifact Registry ==="
+          echo "AR URL: $AR_URL"
+
+          # twine uses keyring + keyrings.google-artifactregistry-auth for auth
+          python -m twine upload \
+            --repository-url "$AR_URL" \
+            dist/*.whl \
+            --verbose
+
+          echo "Successfully published $REPO v$VERSION to $AR_URL"
+
+      - name: Update manifest with published version
+        working-directory: pm
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+          PUBLISHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "=== Updating manifest: published_packages.$REPO ==="
+
+          jq --arg repo "$REPO" \
+             --arg version "$VERSION" \
+             --arg ts "$PUBLISHED_AT" \
+             '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json
+
+          if ! git diff --quiet workspace-manifest.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add workspace-manifest.json
+            git commit -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
+            git push origin main
+          fi
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — Publish Package
+    needs: [publish]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
+        Registry: asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries"
+      severity: "INFO"
+      conclusion: ${{ needs.publish.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Publish Package Event
+    needs: [publish, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: ${{ github.event.client_payload.repo }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.publish.result }}
+      branch: main
+      commit_sha: ${{ github.event.client_payload.commit_sha }}
+      details_json: '{"version": "${{ github.event.client_payload.version }}"}'

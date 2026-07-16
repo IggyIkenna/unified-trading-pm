@@ -1,0 +1,122 @@
+name: ci-health
+
+# Central, cross-repo CI health monitor (formerly ci-failure-watcher — renamed as part of
+# the sprawl consolidation, cicd_workflow_sprawl_consolidation_2026_06_27.md Task 2).
+# ci-status-reconciler was retired (Firestore-SSOT Phase-3); this workflow is the surviving
+# half: failure detection + auto-recovery + stuck-PR escalation.
+#
+# Two detectors (see scripts/repo-management/ci_failure_watcher.py):
+#   1. workflow failure -> recovery TRANSITIONS, for EVERY workflow on main+staging
+#      across the canonical fleet (not just per-repo Quality Gates).
+#   2. auto-merge-STUCK promotion PRs (a PR state, NOT a workflow_run failure, so the
+#      transition detector alone misses it).
+# On any failing-transition or stuck PR it pages #ci-failures via notify-slack.yml.
+#
+# NOTE: GitHub `schedule:` triggers only fire from the DEFAULT branch (main), so this
+# is only live once merged to main. Use `workflow_dispatch` to run on demand meanwhile.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 minutes
+  # Event-driven path (plan L1555): service repos dispatch `ci-failure-alert` when
+  # quality-gates-v2 fails (via the notify-ci-watcher job in quality-gates-v2.yml).
+  # This lets the watcher surface failures in seconds rather than up to 15 min. The
+  # cron remains as the backstop for failures in workflows that do NOT dispatch (e.g.
+  # backmerge, semver-agent) and for the v2-never-reported deadlock recovery (L1557 —
+  # addressed as a corollary: recovery now runs within seconds of a QG failure on a
+  # promotion PR, not on the next cron tick).
+  repository_dispatch:
+    types: [ci-failure-alert]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      alert: ${{ steps.scan.outputs.alert }}
+      severity: ${{ steps.scan.outputs.severity }}
+      report: ${{ steps.scan.outputs.report }}
+      # Phase 5: per-condition alert items (JSON array). The notify job fans each through
+      # notify-slack.yml with its OWN dedup_key + severity-scaled cooldown_min, so a still-open
+      # condition RE-NAGS on its own MTTR clock (the carrier re-arms each key independently) and a
+      # recovered/resolved bookend fires once. SSOT: alert_quality_overhaul_2026_06_18 § Phase 5.
+      alerts: ${{ steps.scan.outputs.alerts }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      # GitHub App installation token — draws from the App's OWN 5000 req/hr pool
+      # (separate from the shared user PAT). owner: IggyIkenna scopes it fleet-wide
+      # (cross-repo run/PR reads + the close/reopen/supersede/close-superseded writes
+      # + the escalate repository_dispatch, all of which an App token CAN trigger,
+      # unlike the repo-scoped GITHUB_TOKEN). App perms: Contents+PullRequests+Actions R/W.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+
+      - name: Authenticate to GCP (Firestore repo-state write — best-effort)
+        id: gcp_auth_watcher
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_watcher.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+
+      - name: Scan fleet for CI transitions + stuck promotion PRs
+        id: scan
+        env:
+          # Cross-repo run/PR reads + recovery writes via the App token (separate 5000/hr
+          # pool). owner-scoped, so fleet-wide — unlike the repo-scoped GITHUB_TOKEN.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band. Two
+        #   mechanisms by head kind: clean-message token-suppressed head → close+reopen
+        #   (re-fires pull_request → quality-gates-v2); CI-suppression-token head ([skip ci]
+        #   et al — bump/pin commits) → supersede with an empty clean commit via the git-data
+        #   API (close+reopen is equally suppressed there, and a workflow_dispatch green is
+        #   not associated with the PR so it never satisfies the required check — verified
+        #   2026-06-10). No worker needed either way. Runs BEFORE --escalate.
+        # --escalate: hand the remaining merge-conflict-stuck promotion PRs (a real conflict
+        #   wall a worker must rebase) to the orchestrator (repository_dispatch →
+        #   escalate-to-orchestrator.yml). Idempotent per PR label, so */15m never re-dispatches.
+        # --close-superseded: Level-3 cleanup (ldr_trunk_promotion_decoupling) — auto-close stale
+        #   LDR→staging/main promote PRs whose content is already in base (0 changed files in
+        #   base...live-defi-rollout). Content-equivalence, not SHA. Idempotent.
+        run: python3 scripts/repo-management/ci_failure_watcher.py --auto-recover --escalate --close-superseded
+
+  # Per-condition matrix notify (Phase 5). One Slack post per OPEN condition, each carrying its
+  # own dedup_key + severity-scaled cooldown_min — so the carrier re-nags a still-open condition
+  # on its MTTR clock instead of page-once. fail-fast:false so one bad item never drops the rest;
+  # the `!= '[]'` guard skips notify entirely when nothing is open.
+  notify:
+    needs: watch
+    if: needs.watch.outputs.alerts != '' && needs.watch.outputs.alerts != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        alert: ${{ fromJSON(needs.watch.outputs.alerts) }}
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ matrix.alert.message }}
+      severity: ${{ matrix.alert.severity }}
+      dedup_key: ${{ matrix.alert.key }}
+      cooldown_min: ${{ matrix.alert.cooldown_min }}
+      workflow_name: ci-failure-watcher
+      run_url: ${{ matrix.alert.url }}
+    secrets:
+      # Dedicated #ci-failures incoming webhook (falls back to general if unset).
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}

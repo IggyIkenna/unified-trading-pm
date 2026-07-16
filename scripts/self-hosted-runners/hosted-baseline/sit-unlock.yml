@@ -1,0 +1,238 @@
+name: sit-unlock
+
+# Triggered by system-integration-tests when the SIT completes.
+# sit-failed: clears staging_status.locked so engineers can push fixes (breaking_pending kept —
+#   the breaking set still needs a green SIT before promotion).
+# sit-passed (MISSING LINK FIX 2026-06-10): there was NO success consumer at all — a green SIT
+#   left staging locked forever ("SIT running" dangled until auto-clear/human). On sit-passed we
+#   unlock AND clear breaking_pending (the set is validated).
+
+on:
+  repository_dispatch:
+    types: [sit-failed, sit-passed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  unlock-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Unlock staging on SIT completion
+        env:
+          SIT_EVENT: ${{ github.event.action }}
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+
+          import os
+          event = os.environ.get("SIT_EVENT", "sit-failed")
+          manifest["staging_status"]["locked"] = False
+          manifest["staging_status"]["locked_since"] = None
+          manifest["staging_status"]["lock_version"] = None
+          if event == "sit-passed":
+              manifest["staging_status"]["locked_reason"] = "SIT passed — validated + unlocked"
+              manifest["staging_status"]["breaking_pending"] = []
+              manifest["staging_status"]["pending_repos"] = []
+              manifest["staging_status"]["sit_retry_count"] = 0
+          else:
+              manifest["staging_status"]["locked_reason"] = "SIT failed — open for fixes"
+          # Unlock → clear the starvation alarm so the next lock cycle can alert again (finding H3).
+          manifest["staging_status"]["locked_alert_sent"] = False
+
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
+
+          print("Staging unlocked after SIT failure. Engineers can push fixes.")
+          PYEOF
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (${{ github.event.action }}) [skip ci]"
+
+          # Retry-with-rebase: sit-gate/staging-to-main may push a concurrent manifest commit to
+          # main between our checkout and push (lock/unlock race). A bare `git push` then fails
+          # non-fast-forward and the unlock never lands → staging stays locked forever after a
+          # failed SIT run. Rebase our [skip ci] commit onto the latest main and retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
+
+      # FINAL CHAIN LINK (2026-06-10): a green SIT must also DRIVE the promotion — PM's
+      # staging-to-main.yml listens for `staging-validated`, which nothing sent on success
+      # (only manual workflow_dispatch runs ever promoted). sit-passed → validate → promote.
+      - name: Dispatch staging-validated (drives staging-to-main promotion)
+        if: github.event.action == 'sit-passed'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          gh api "repos/IggyIkenna/unified-trading-pm/dispatches" \
+            -X POST -f event_type="staging-validated" \
+            && echo "Dispatched staging-validated → staging-to-main promotes" \
+            || echo "::error::failed to dispatch staging-validated — staging→main will not auto-promote"
+
+      - name: Open SIT-failure GH Issue (add-sit-rollback)
+        if: github.event.action == 'sit-failed'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          # Extract lock_version from manifest (the version set when SIT started)
+          LOCK_VERSION=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          print(m.get('staging_status', {}).get('lock_version') or 'unknown')
+          " 2>/dev/null || echo "unknown")
+
+          # Find the last staging committer for assignment
+          LAST_AUTHOR=$(git log origin/staging --max-count=1 --pretty=format:"%an" 2>/dev/null || echo "")
+
+          BODY="## SIT Failed — Staging Unlocked
+
+          SIT failed at $(date -u +%Y-%m-%dT%H:%MZ).
+          Staging is now unlocked so engineers can push fixes.
+
+          **Lock version:** \`${LOCK_VERSION}\`
+
+          ### Next steps
+          1. Identify which commit(s) caused the SIT failure (check the SIT run above)
+          2. Push a fix commit to the feature branch → merge to staging
+          3. SIT will re-run automatically after the 10-min debounce
+
+          ### To revert staging to last known good
+          If a fix isn't available immediately:
+          \`\`\`bash
+          bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh \\
+            --admin-confirm --stag-branch --message \"revert: roll back staging after SIT failure\"
+          \`\`\`
+
+          ---
+          *Auto-opened by sit-unlock.yml on SIT failure.*"
+
+          ISSUE_URL=$(gh issue create \
+            --repo IggyIkenna/unified-trading-pm \
+            --title "SIT failed: staging needs fix or revert — ${LOCK_VERSION}" \
+            --label "sit-failure" \
+            --body "$BODY" \
+            2>/dev/null || echo "")
+
+          if [ -n "$ISSUE_URL" ]; then
+            echo "Created SIT failure issue: $ISSUE_URL"
+          else
+            echo "WARNING: Failed to create SIT failure issue (label may not exist or PAT missing)"
+            ISSUE_URL="N/A"
+          fi
+          # Telegram alert migrated to notify job
+
+      - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          OWNER="IggyIkenna"
+          REPOS=$(python3 -c "import json; m=json.load(open('workspace-manifest.json')); print('\n'.join(m.get('repositories',{}).keys()))")
+          FAILED=""
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            gh api "repos/$OWNER/$REPO/dispatches" \
+              -X POST \
+              -f event_type="staging-unlocked" \
+              2>/dev/null || FAILED="$FAILED $REPO"
+          done <<< "$REPOS"
+          if [ -n "$FAILED" ]; then
+            echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
+          fi
+          echo "Dispatched staging-unlocked to all repos"
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — SIT Unlock
+    needs: [unlock-staging]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      # Message MUST reflect whether the unlock PUSH actually landed. If unlock-staging failed
+      # (e.g. the 5× rebase-retry loop exhausted on a non-FF race), the lock is STILL set and the
+      # fleet is blocked — a "staging unlocked" message would be a dangerous lie. (incident 2026-06-02)
+      # Event-aware since 2026-06-10 (operator: "why don't I get a Slack alert when staging
+      # unlocks?"): the green-path unlock is the bookend that lets the channel distinguish a live
+      # SIT queue from a dangling lock — sit-gate posts the LOCK, this posts the UNLOCK, both ways.
+      message:
+        ${{ needs.unlock-staging.result != 'success' && '❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges
+        blocked. Manual fix — rerun gh workflow run sit-unlock.yml (or clear staging_status.locked in
+        workspace-manifest.json).' || github.event.action == 'sit-passed' && '✅ SIT PASSED — staging UNLOCKED,
+        breaking_pending cleared. Promotion queue flowing.' || 'SIT Failed — staging unlocked. Staging is open for fixes
+        (breaking_pending kept — the set still needs a green SIT to promote).' }}
+      severity:
+        ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' || 'CRITICAL' }}
+      # ci_failures cleanup (2026-07-13): the ICON must reflect what the alert REPORTS, not the
+      # unlock JOB's mechanical result. When SIT fails, the unlock job SUCCEEDS (it unlocks staging
+      # fine) — but passing that `success` rendered a green ✅ on a "SIT Failed" CRITICAL alert
+      # (✅ CRITICAL — result: OK, body "SIT Failed"). So: `failure` for BOTH the unlock-failed and
+      # the SIT-failed cases; `success` only on the genuine sit-passed green path. (The `persist`
+      # job below keeps unlock-staging.result — the LEDGER records the JOB outcome, not the alert
+      # subject.)
+      conclusion:
+        ${{ needs.unlock-staging.result != 'success' && 'failure' || github.event.action == 'sit-passed' && 'success' ||
+        'failure' }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — SIT Unlock Event
+    needs: [unlock-staging, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.unlock-staging.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "sit-failed-unlock"}'

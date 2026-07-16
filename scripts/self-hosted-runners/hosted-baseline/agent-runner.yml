@@ -1,0 +1,100 @@
+name: Agent Runner (reusable)
+
+# Reusable workflow — shared escalation dispatcher for merge-conflict and other
+# agent-dispatch triggers. Callers (conflict-resolution-agent.yml, etc.) use this
+# to avoid duplicating the idempotency-check + dispatch + label logic.
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md § "Conflict resolution model"
+#
+# 2026-06-27: extracted from conflict-resolution-agent.yml as part of the
+# sprawl consolidation (cicd_workflow_sprawl_consolidation_2026_06_27.md Task 5).
+
+on:
+  workflow_call:
+    inputs:
+      repo_name:
+        description: "Target repository name (e.g. market-tick-data-service)"
+        required: true
+        type: string
+      source_branch:
+        description: "Source branch (e.g. live-defi-rollout, staging)"
+        required: true
+        type: string
+      target_branch:
+        description: "Target branch (e.g. main, staging)"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number (0 if no PR — disables idempotency label check)"
+        required: false
+        default: "0"
+        type: string
+      wall_type:
+        description: "Escalation wall type (merge_conflict, sit_retry_cap, …)"
+        required: false
+        default: "merge_conflict"
+        type: string
+      context:
+        description: "Human-readable context string passed to the orchestrator agent"
+        required: true
+        type: string
+      model:
+        description: "Orchestrator model (opus | sonnet)"
+        required: false
+        default: "opus"
+        type: string
+    secrets:
+      GH_PAT:
+        required: true
+      ORCHESTRATOR_INTERNAL_SECRET:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Dispatch escalation to orchestrator
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Idempotency gate — skip if PR already escalated
+        id: idemp
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ inputs.repo_name }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          set -uo pipefail
+          SKIP=false
+          if [ "${PR_NUMBER:-0}" != "0" ]; then
+            LABELS=$(gh pr view "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --json labels \
+              --jq '.labels[].name' 2>/dev/null || echo "")
+            if printf '%s\n' "$LABELS" | grep -qx "escalation-dispatched"; then
+              echo "::notice::PR ${REPO_NAME}#${PR_NUMBER} already carries escalation-dispatched — skipping re-dispatch."
+              SKIP=true
+            fi
+          fi
+          echo "skip=${SKIP}" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch escalate-to-orchestrator
+        if: steps.idemp.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ inputs.repo_name }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          set -uo pipefail
+          gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=${{ inputs.repo_name }}" \
+            -f "client_payload[pr_number]=${{ inputs.pr_number }}" \
+            -f "client_payload[wall_type]=${{ inputs.wall_type }}" \
+            -f "client_payload[context]=${{ inputs.context }}" \
+            -f "client_payload[model]=${{ inputs.model }}"
+          echo "Escalated ${{ inputs.wall_type }} to orchestrator (${{ inputs.model }} worker)."
+          if [ "${PR_NUMBER:-0}" != "0" ]; then
+            gh label create escalation-dispatched --repo "IggyIkenna/${REPO_NAME}" --force \
+              --color B60205 --description "Handed to the orchestrator for conflict resolution" >/dev/null 2>&1 || true
+            gh pr edit "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --add-label escalation-dispatched >/dev/null 2>&1 || true
+          fi
