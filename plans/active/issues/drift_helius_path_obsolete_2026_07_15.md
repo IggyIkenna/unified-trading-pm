@@ -158,14 +158,21 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       completion: flip `drift_velocity_backfill_running_at_scale` (`POST /api/prerequisites/...` `{value: true}`) so
       P1.2 unparks. (repo: deployment-service) — done 2026-07-16 (infra slot-2). See Progress Log.
 - [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
-      path once Velocity is capturing at scale — PARKED behind the `drift_velocity_backfill_running_at_scale`
-      prerequisite (currently `false`) gated on the `[INFRA] P1` launch-at-scale todo directly above; `priority: 999` +
-      `priority_override: true` set in `backlog.yaml` so it doesn't re-dispatch/churn per `BLK-b72a4b59` rider 3.
-      (repos: market-tick-data-service, instruments-service)
+      path once Velocity is capturing at scale — UNPARKED as of 2026-07-16 (infra slot-2 flipped
+      `drift_velocity_backfill_running_at_scale` to `true` after confirming the launch-at-scale VM is genuinely on the
+      Velocity path and writing correct-partition rows); still not yet executed. `priority: 999` +
+      `priority_override: true` may still be set in `backlog.yaml` per `BLK-b72a4b59` rider 3 — verify at pickup whether
+      it needs clearing now that the gating condition is true. (repos: market-tick-data-service, instruments-service)
 - [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
-      superseded/moot. (repo: unified-trading-pm)
+      superseded/moot. **Still gated as of 2026-07-16 (data_engineering slot-10)**: (2) stop/do-not-relaunch and (3)
+      re-route launcher are landed; (4) reconcile-manifest (P1.2 above) is now UNPARKED (the launch-at-scale VM is
+      confirmed running on the Velocity path per infra slot-2's Progress Log entry) but has NOT yet actually executed
+      — no reconciled counts exist yet. Declining again this session for the same reason `slot-11` declined it earlier
+      (2026-07-16T00:1xZ): adding a "retired" banner before P1.2 has real reconciled counts would get ahead of the
+      actual system state, even though the remaining gap is now just "wait for P1.2 to run," not an open infra
+      question. Re-check once P1.2 lands. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -342,3 +349,33 @@ launcher), and 4 ([DATA] reconcile the manifest) all land. Checked this doc's ow
 still `[ ]` (none executed since slot-2's session created this doc). Adding the "retired, superseded" banner now would
 be false — the Helius fleet hasn't actually been stopped yet, so declaring the path "retired" in the plan/issue docs
 would misrepresent live system state. Declining — no action taken, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-16 — data_engineering slot-10 (dispatched to -004 again, re-confirmed still premature; merge-reconciled with slot-7's concurrent, more complete fix)
+
+Re-dispatched to `drift_helius_path_obsolete-004` after (2) and (3) landed (`deployment-service@46d6492`, `@ee859e4`).
+Fresh-pulled clean. Re-checked this doc's own todo list directly: (2)/(3) now `[x]`, but (4) (`P1.2` reconcile-manifest)
+is still `[ ]` and explicitly "NOT started" per its own text. Independently re-verified the live blocker both `slot-13`
+(00:15-00:28Z) and `slot-11` (00:1xZ) had already identified — queried GCE directly via UTL's
+`get_compute_engine_client(...).aggregated_list_instances` (`central-element-323112`, the sandboxed `gcloud` CLI here is
+snap-confined, same as prior sessions): **0** instances matching `drift` in the name, out of 13 total — the re-routed
+launcher (`launch-mtds-solana-drift-backfill-vm.sh`) has still not been invoked by anyone since it was wired 2026-07-16.
+Drafted a prose-only `[INFRA] P1` launch todo to formalize this, but on `quickmerge`'s pull-first rebase hit a **genuine
+same-file conflict**: `data_engineering slot-7` had landed the identical realization moments earlier — `/blocked`
+`BLK-b72a4b59`, ruled by main, resulting in an actual `[INFRA] P1` launch todo PLUS a real
+`drift_velocity_backfill_running_at_scale` prerequisite (`POST /api/prerequisites/...`) parking P1.2 in `backlog.yaml`
+(`priority: 999` + `priority_override: true`) instead of letting it keep re-dispatching. Their fix is strictly more
+complete than my prose-only version (a wired API prerequisite vs. just checkbox text), so resolved the conflict by
+keeping their `[INFRA] P1`/`[DATA] P1.2` block verbatim and dropping my duplicate, folding in only my independent
+zero-instance confirmation as a one-line addendum. P2 (this doc's own banner gate) remains genuinely unmet: (4) still
+hasn't landed, now properly tracked via the prerequisite instead of prose.
+
+**Second conflict, same file, on push** — while shipping the above, `quickmerge` (then a manual `git pull --rebase`)
+surfaced a further concurrent landing: `infra slot-2` had, in the interim, picked up the `[INFRA] P1` launch-at-scale
+todo directly (`deployment-service` VM launch, no code diff) and confirmed via `run.log` that the VM is genuinely
+resolving on the Velocity path (correct `pipeline_mode=batch_onchain_rpc` partitions, ~5-6s/day throughput vs. the
+abandoned Helius path's ~2-3h/day) — then flipped `drift_velocity_backfill_running_at_scale` to `true`, unparking
+P1.2. Re-resolved this second conflict by keeping their landed `[x]` P1 checkbox and updating my own P1.2/P2 prose to
+reflect reality: P1.2 is UNPARKED but has NOT yet actually executed (no reconciled manifest counts exist), so this
+doc's P2 banner gate is still not met — the remaining gap narrowed from "an open infra question" to "wait for P1.2 to
+run," but hasn't closed. No code changes this session (doc-only, twice conflict-resolved). Checkbox NOT flipped (gate
+still unmet). `/skip-current-task`.
