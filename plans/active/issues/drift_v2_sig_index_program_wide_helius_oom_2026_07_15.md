@@ -224,7 +224,13 @@ fix below lands.
       explicit operator/main ruling, not a unilateral P2-task fix. See the new P0 todo below + the banner at the top of
       this doc. NOTIFIED main via `POST /api/agents/by-role/main/message` this session.
 
-- [ ] [DATA] P0. **NEW 2026-07-15 (data_engineering slot-10), operator/main ruling needed**: decide whether to (a)
+- [x] ✅ [DATA] P0. **RULED 2026-07-15 (data_engineering slot-2): option A confirmed by main (`/blocked` `BLK-ba6c367c`,
+      consistent with `BLK-5d122841`/`BLK-6067d459`) — migrate to Velocity API.** Verify-first step done: ran the real
+      ingester against production, found + fixed a real `pipeline_mode` shard-atom-identity bug
+      (`market-tick-data-service@1bd507b4`), confirmed correct rows land at the correct path post-fix. Remaining
+      sequencing (stop the Helius fleet, wire the launcher, reconcile the manifest) is tracked in the new consolidated
+      doc per main's instruction: `issues/drift_helius_path_obsolete_2026_07_15.md` — see it for full detail, not
+      duplicated here. **NEW 2026-07-15 (data_engineering slot-10), operator/main ruling needed**: decide whether to (a)
       abandon the Helius sig-index/day-backfill path for DRIFT `perp_funding` entirely and switch to
       `backfill_drift_v2_historical.py` (Velocity Data API, per-market, already shipped `mtds@0f70f376`, zero Helius
       spend, documented "zero gap" coverage back to 2024-06-01 per `codex/04-architecture/drift-v2-data-sources.md`),
