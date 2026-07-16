@@ -341,9 +341,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 3,
-        "qg_red_reason": "ruff",
         "warn_file_count": 15,
+        "qg_red_reason": null,
+        "large_file_count": 3,
         "coverage_pct": 82.11
       }
     },
@@ -759,9 +759,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 91.21,
+        "qg_red_reason": "ruff",
         "large_file_count": 6,
-        "coverage_pct": 91.23,
-        "qg_red_reason": null,
         "warn_file_count": 7
       }
     },
@@ -851,7 +851,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1262,10 +1262,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 6,
-        "qg_red_reason": null,
         "warn_file_count": 21,
-        "coverage_pct": 87.78
+        "qg_red_reason": "ruff",
+        "large_file_count": 6,
+        "coverage_pct": 87.79
       }
     },
     "unified-trading-pm": {
@@ -1298,10 +1298,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 0,
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": 76.13,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 0
+        "coverage_pct": 75.96
       }
     },
     "unified-trading-api": {
