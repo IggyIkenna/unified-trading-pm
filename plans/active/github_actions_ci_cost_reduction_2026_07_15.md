@@ -63,19 +63,27 @@ drift_direction: advance-code
 1. **Read this pre-flight §** + § "MOVE / STAY manifest". The flip set is final — do not re-derive it; the SSOT is
    `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → **38 MOVE / 18 KEEP** (corrected from 39/17 on
    2026-07-16: `agent-audit` is **KEEP-U**, a pure reusable caller with no `runs-on`). **37** are flippable.
-2. **⛔ D1–D6 ARE DONE (2026-07-16) — the runners are LIVE. Do NOT re-run `install`, re-derive the toolchain, or re-pick
-   the canary.** Deployed state, all measured:
+2. **⛔ D1–D6 + BATCH 2 ARE DONE (2026-07-16) — the runners are LIVE and 10 of 38 movers are self-hosted. Do NOT re-run
+   `install`, re-derive the toolchain, or re-pick the canary/batch.** Deployed state, all measured:
    - **8 runners Online** on `i-0c9b283b31d6b5ca7` — `5× glue-*` (`self-hosted,glue`, JIT-ephemeral) + `3× writer-*`
      (`self-hosted,Linux,X64,glue-writer`, long-lived). Labels **disjoint** → writers cannot steal mover jobs.
    - **Deploy clone** = `/opt/glue-deploy/unified-trading-pm` (fresh; **never** an AO slot clone). Runner root =
      `/opt/github-glue-runners` (root-owned; `venv`/`repo`/`toolcache` runner-owned).
    - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET=GH_PAT` (the NAME); the wrapper
      resolves it per start via `ubuntu`'s ADC. Rotation needs no redeploy (everything reads `latest` by name).
-   - **1 of 38 flipped**: `workspace-quickmerge-validation` → `[self-hosted, glue]` **on LDR only**. `main` is UNTOUCHED
-     and still `ubuntu-latest`.
-3. **⏵ NEXT: the OPERATOR GATE.** D6 is green; the next batch is the **10** named in § "Flip groups" (5 simple + 5
-   complex) — **do not re-pick them**. Then the remaining **26**, then STEP 2b (ci-status-update trim) + STEP 2c
-   (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+   - **10 of 38 flipped** (canary + batch 2), **7/7 dispatched GREEN**, incl. BOTH cross-boundary tests (a self-hosted
+     caller's `notify-slack` and `persist-cicd-event` jobs ran on GitHub-HOSTED runners, as designed). 2 of the 9 are
+     flipped but deliberately un-dispatched (`digest-drift-sweep`, `conflict-resolution-agent` — a dispatch would cause
+     real fleet actions; they self-verify on their next natural trigger).
+   - **The tool cache is PER-RUNNER, not shared** — the shared one raced `setup-python` (delete-then-create). This is
+     the single most likely thing to be 'helpfully' re-optimised back. Do not.
+   - **The wrapper self-heals the JIT 409** left by a SIGTERM'd predecessor. Without it, one `systemctl restart` takes
+     the whole glue pool down permanently.
+3. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
+   `classify-glue-workflows.sh` vs `git grep -l 'self-hosted, glue' .github/workflows/`). The tail carries **no new
+   capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
+   AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
+   2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
 4. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
    exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
    then checks, so on a busy LDR it can never self-validate; workaround = chain
@@ -416,18 +424,18 @@ provable on LDR before `main` changes at all.
 `ci-status-consolidator`, `cold-storage-cleanup`, `staging-conflict-ldr-main-fallback`); `agent-audit` (`audit_only`)
 and `reconcile-staging-versions` are no-op-safe by design.
 
-| #   | Workflow                             | LOC | Group              | Capability it PROVES                                                  |
-| --- | ------------------------------------ | --- | ------------------ | --------------------------------------------------------------------- |
-| 0   | `workspace-quickmerge-validation`    | 71  | **CANARY ✅ DONE** | runner claims job · checkout · gh CLI · **JIT deregister** · artifact |
-| 2   | `ruleset-drift-alert`                | 73  | simple             | **slack (CROSS-BOUNDARY)** · `setup-python` → **tool-cache**          |
-| 3   | `conflict-resolution-agent`          | 94  | simple             | git-write · dispatch                                                  |
-| 4   | `reconcile-staging-versions`         | 145 | simple             | git-write (no-op safe)                                                |
-| 5   | `digest-drift-sweep`                 | 191 | simple             | **gcp-auth / runner-user ADC** · dispatch                             |
-| 6   | `reconcile-release-tags`             | 72  | complex            | firestore · pr-write · setup-python · gcp-auth                        |
-| 7   | `ci-status-consolidator`             | 97  | complex            | **firestore WRITE** · git-write (the manifest projection)             |
-| 8   | `readiness-verifier`                 | 124 | complex            | **persist-cicd-event (CROSS-BOUNDARY)** · slack                       |
-| 9   | `cold-storage-cleanup`               | 412 | complex            | **GCS — the ONLY gcs workflow in the MOVE set**                       |
-| 10  | `staging-conflict-ldr-main-fallback` | 188 | complex            | **app-token** · pr-write                                              |
+| #   | Workflow                             | LOC | Group                                                  | Capability it PROVES                                                  |
+| --- | ------------------------------------ | --- | ------------------------------------------------------ | --------------------------------------------------------------------- |
+| 0   | `workspace-quickmerge-validation`    | 71  | **CANARY ✅ DONE**                                     | runner claims job · checkout · gh CLI · **JIT deregister** · artifact |
+| 2   | `ruleset-drift-alert`                | 73  | ✅ VERIFIED — slack X-boundary ran on HOSTED           | **slack (CROSS-BOUNDARY)** · `setup-python` → **tool-cache**          |
+| 3   | `conflict-resolution-agent`          | 94  | ⚠️ FLIPPED, NOT DISPATCHED (would escalate to AO)      | git-write · dispatch                                                  |
+| 4   | `reconcile-staging-versions`         | 145 | ✅ VERIFIED — git-write                                | git-write (no-op safe)                                                |
+| 5   | `digest-drift-sweep`                 | 191 | ⚠️ FLIPPED, NOT DISPATCHED (would fan out to 16 repos) | **gcp-auth / runner-user ADC** · dispatch                             |
+| 6   | `reconcile-release-tags`             | 72  | ✅ VERIFIED — firestore/pr-write/setup-python/gcp-auth | firestore · pr-write · setup-python · gcp-auth                        |
+| 7   | `ci-status-consolidator`             | 97  | ✅ VERIFIED — firestore WRITE                          | **firestore WRITE** · git-write (the manifest projection)             |
+| 8   | `readiness-verifier`                 | 124 | ✅ VERIFIED — persist X-boundary ran on HOSTED         | **persist-cicd-event (CROSS-BOUNDARY)** · slack                       |
+| 9   | `cold-storage-cleanup`               | 412 | ✅ VERIFIED — GCS (dry_run)                            | **GCS — the ONLY gcs workflow in the MOVE set**                       |
+| 10  | `staging-conflict-ldr-main-fallback` | 188 | ✅ VERIFIED — app-token (dry_run)                      | **app-token** · pr-write                                              |
 
 > **⚠️ CANARY CORRECTED TWICE — and the second correction is a rule, not a one-off (2026-07-16).** `agent-audit` was
 > picked off a profile of LOC · triggers · job count · capabilities that never asked the one question this entire plan
@@ -474,6 +482,48 @@ already live. `ci-status-update` is the special one: **`[self-hosted, glue-write
 >   `ci-health`. **Confirm those same four before each batch lands on LDR — after that it is out of your hands.**
 > - If a batch genuinely must be held back, the flip cannot sit on LDR: either land it behind a `[hotfix]`-style gate,
 >   or don't push it until you are ready to have it on `main`.
+
+### ✅ BATCH 2 DONE 2026-07-16 — 9 flipped, 7/7 dispatched GREEN, 2 bugs found and fixed
+
+**Both CROSS-BOUNDARY tests PASS — the design's biggest risk is now measured, not argued.** `readiness-verifier` ran on
+`glue-…-4` and its two reusable jobs landed on **GitHub-hosted** runners:
+`Slack — send-notification -> success on GitHub Actions 1000329229` and
+`Persist — persist-event -> success on GitHub Actions 1000329231`. A self-hosted caller invoking a hosted reusable works
+exactly as KEEP-D/MOVE-C predicted. **The flips may continue.**
+
+**Two real bugs, both found by DISPATCHING rather than reading** — neither was visible in any static review:
+
+1. **The shared tool cache RACED (my optimisation, my bug).** One `RUNNER_TOOL_CACHE` shared by all 5 runners looked
+   like a free saving; `actions/setup-python` is **delete-then-create and not concurrency-safe**. Three jobs landed
+   within 7s (`15:03:02` ruleset-drift-alert ✓ · `15:03:07` readiness-verifier ✗ · `15:03:09` reconcile-release-tags ✓)
+   and the loser died on `cp: cannot create symbolic link '.../lib/libpython3.13.so': No such file or directory` — its
+   directory deleted mid-copy. It bought ~10s/job and an **intermittent, load-dependent failure** across the 5 movers
+   using setup-python: a flaky-CI generator that only appears under concurrency. **Now per-runner** (a sibling of
+   `_work`, or the JIT wipe would destroy it every job). Fixed in @<see git>.
+2. **`systemctl restart` killed the entire glue pool.** A JIT runner auto-deregisters on a clean exit, but SIGTERM
+   leaves an **OFFLINE registration holding the deterministic name**; `generate-jitconfig` then returns **HTTP 409
+   "Already exists"**, `curl -f` prints nothing, and `json_get` died with
+   `JSONDecodeError: Expecting value: line 1 column 1` — a crash loop whose traceback never names the cause. The canary
+   never hit it (clean exit); only a restart does. The wrapper now **self-heals**: it deletes a stale OFFLINE
+   registration for its own name, **refuses** to touch an ONLINE one (that would yank a live runner off a running job),
+   and surfaces the API's message instead of a JSON traceback. Verified on the box:
+   `deleting stale OFFLINE registration … left by a SIGTERM'd predecessor` → Connected → Listening, 5/5 up.
+
+**2 of the 9 are flipped but deliberately NOT dispatched** — a dispatch would have caused real fleet actions, and their
+capabilities are already covered by `reconcile-release-tags` (gcp-auth, dispatch):
+
+- **`digest-drift-sweep`** — only skips repos whose digest is current, and the fleet is currently stale (16 repos), so a
+  dispatch would fan out `dependency-update` to all 16. A fleet action, not a runner test. It self-verifies on its next
+  6-hourly tick.
+- **`conflict-resolution-agent`** — requires 3 inputs and escalates to the agent-orchestrator; a dispatch would spawn a
+  real AO worker chasing a fabricated conflict. It self-verifies on its next genuine `merge-conflict-detected`.
+
+**Also fixed:** `.github/actionlint.yaml` now declares `labels: [glue, glue-writer]`. Without it actionlint flagged
+`label "glue" is unknown` on every flipped workflow — noise the CANARY introduced and I missed, which would have grown
+to 38 findings. Verified it still flags a typo'd label, so this is a declaration, not a blanket suppression; QG now
+reports **actionlint clean across all 56 workflows**.
+
+**Running total: 10 of 38 movers self-hosted** (canary + 9). Remaining: **27** + `persist-cicd-event` (MOVE-C).
 
 ### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
 
