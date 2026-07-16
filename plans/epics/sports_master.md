@@ -757,10 +757,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-                              disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-                              (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-                              (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-                              use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+                                      disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                                      (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                                      (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                                      use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -885,13 +885,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-                          going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-                          if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-                          (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+                                  going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+                                  if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+                                  (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-                          (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-                          `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-                          CanonicalFixture fields)
+                                  (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+                                  `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+                                  CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -1320,16 +1320,54 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-                          `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-                          dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-                          `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-                          clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-                          coverage shows 0% until then, correctly).
+                                  `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+                                  dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+                                  `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+                                  clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+                                  coverage shows 0% until then, correctly).
 
-                          `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-                          trigger-date≪daily-calendar invariant. QG exit 0.
+                                  `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+                                  trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
+
+## Half-time odds (SFI `1h_*`) — capture gap closed 2026-07-16, backfill OUTSTANDING
+
+> **Context**: the operator asked for half-time odds. SFI's progressive endpoint has served the first-half market family
+> (`1h_result` / `1h_asian_handicap` / `1h_goalline` / `1h_asian_corner`) all along; `_extract_odds()` never read it, so
+> `ht_odds_*_implied` was structurally NULL in batch. **Code is shipped** (uac@96cdfc4f, instruments-service@1f7c51cf,
+> features-service@5a8684ed) — every SFI progressive fetch from 2026-07-16 forward captures h1 odds. **Every fixture
+> captured BEFORE that date lacks the `odds_h1_*` columns and must be re-fetched.** Source of record:
+> [`../active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](../active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md).
+>
+> **🟡 BLOCKED-ON-FREEZE**: sports is frozen mid-cutover (18 schedulers + 3 consolidators + meta-launcher PAUSED;
+> legacy-bucket delete gate open on OR-9/OR-5b). Do NOT launch this backfill until the cutover completes — it writes to
+> the same `progressive_stats` partitions the cutover is moving.
+
+- [ ] [SCRIPT] P1. **SFI `1h_*` odds backfill — re-fetch progressive for every captured fixture.** MEASURED SCOPE
+      (2026-07-16, against the live API — not estimated from constants): - **Date range**: `2020-01-01` (the
+      `("soccer_football_info","SFI_PROGRESSIVE_STATS")` floor in `league_data.py:161`) → present. ~6.55 years. -
+      **Leagues**: the **33** SFI-mapped leagues in UAC `SOCCER_FOOTBALL_INFO_IDS` (EPL, LA_LIGA, BUNDESLIGA(+_2),
+      SERIE_A(+_B), LIGUE_1(+_2), EREDIVISIE, PRIMEIRA_LIGA, MLS, BRASILEIRAO, J1_LEAGUE, K_LEAGUE_1, …). - **Volume**:
+      **~115,000 fixtures** = 1 progressive call each. Derived from a **10-day sample spanning weekend + midweek +
+      off-season** (mean 47.9 mapped fixtures/day, min 0 — Christmas/off-season, max 125). ⚠️ A weekend-only sample
+      gives 100.2/day → ~240k, a **2.1× overstatement**; use the mixed-day mean. - **Cost**: **$0 marginal API spend** —
+      RapidAPI Ultra is flat-rate (99,999 req/day, 4 req/s hard cap; the adapter self-throttles to 0.34s ≈ 3 req/s).
+      ~115k calls ≈ **1.1 day-equivalents of the daily quota** and **~10.6 h single-stream**. Compute: one small SPOT VM
+      for ~11-24 h (backfill ⇒ SPOT is the HARD RULE) ≈ a few dollars. **The only real budget is quota-days and
+      wall-clock, not money.** - **Idempotence**: re-fetch overwrites/merges the same `(fixture_id, timer_seconds)`
+      grain, so it is safe to resume after SPOT preemption. Reuse an existing `launch-sfi-*` launcher
+      (`launch-sfi-backfill-vm.sh`) — do NOT hand-roll a VM name; it must match a real `VM_PREFIX_TO_BUCKET` entry.
+- [ ] [QG] P1. **Verify the backfill**: `odds_h1_result_home` non-null on ≥90% of in-first-half snapshots (measured
+      90-97% live) and `ht_odds_home_implied` non-NaN for fixtures whose `ht_detection_method != "unavailable"`.
+- [ ] [CODE] P2. **HT-detection accuracy for the odds gate** — `_ht_odds_implied` samples the last snapshot before
+      `ht_start_seconds`. On the verification fixture `_detect_halftime` returned 40:00 vs a real HT of ~45:00+, so the
+      quote is sampled ~5 min early. This is the SAFE direction (strictly less information, no leakage) and is a
+      pre-existing property of `_detect_halftime`, not of the odds gate — but tightening detection would recover the
+      most-informed pre-HT quote. Depends on the backfill landing first (needs real `1h_*` data at scale to tune).
+- [ ] [CODE] P3. **Expose the other three `1h_*` markets as features** — `odds_h1_ah_*`, `odds_h1_goalline_*`,
+      `odds_h1_ac_*` are now CAPTURED and contract-declared but no calculator reads them (only `1h_result` is consumed,
+      via `ht_odds_*_implied`). Same latent-asset pattern as the full-time SFI odds columns (issue-doc loose end #6).
 
 ## Assigned active plans
 

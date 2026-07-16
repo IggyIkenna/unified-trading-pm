@@ -1288,3 +1288,53 @@ instrument universe) is simply enormous → narrow to ONE venue-week per VM so a
       long-lived, compare captured/hour (if timeouts are throttle-driven, low concurrency should beat high); (c) narrow
       scope to one venue-week per VM so a wave completes inside the preemption window. Until this is understood, adding
       VMs/streams/hours cannot close the 2.89M gap.
+
+### ⚠️ CORRECTION to the 16:15Z stall entry + THE REAL ARITHMETIC: N=1 cannot close 2.89M — 2026-07-16T16:30Z
+
+**Correcting my own entry (again — same error class as the January-zone and raw-eu mistakes: concluding from a window
+without checking what was actually IN it).** I wrote "5h15m of VMs produced +45 captured rows". Misleading: only **~88
+min of that 5h15m window had a VM running at all**. Timeline: `075338` died 11:14Z (DELETED by
+`ikenna@odum-research.com`, a peer lane — not a preemption), then **3h47m with NO VM**, then keeper relaunches at 15:01
+(died ~34min) and 15:35. Each VM also burns ~10-15min booting before it fetches. So the +45 came from roughly 45-60 min
+of actual fetching, not 5h15m of grinding.
+
+**The honest datapoint — the one long-lived VM:** `075338`, DEPLOYMENT_STARTED 08:00:38Z, last log 11:13:39Z = **3h13m
+uptime**, **600 `streaming success`**, cursor advanced 2026-02-01 → 2026-02-02. So a healthy, long-lived, 64-stream VM
+sustains **~186 successful shard-fetches/hour** — DESPITE its 953 ConnectionTimeouts (i.e. the timeouts degrade but do
+not stop it; my "the backfill is incapable of finishing (timeout storm)" framing over-blamed them).
+
+**The arithmetic that actually matters:**
+
+- gap = **2,892,108** eu cells
+- best observed throughput at N=1 = **~186 cells/hour**
+- 2,892,108 / 186 ≈ **15,550 hours ≈ 1.8 YEARS** of continuous single-VM running.
+
+Even if that estimate is off by 3x, the gap does not close in a tolerable window. **This is not a churn problem, not a
+timeout problem, and not a region problem — it is a hard throughput ceiling imposed by the N=1 Tardis cap.** The cap is
+not negotiable by us: N=3 was measured at ~94% 403s (mutual lockout), so the shared academic key genuinely permits ONE
+active IP. Region change is ruled out on operator's egress objection (2026-07-16): the data bucket is in
+asia-northeast1, so a US VM near Tardis/Wasabi us-east-1 would pay cross-region egress on EVERY byte written back — it
+merely relocates the long haul from download to upload, and bills for it.
+
+**Therefore this is an OPERATOR / COMMERCIAL decision, not an engineering one.** The realistic options:
+
+1. **Upgrade the Tardis licence** to a tier permitting more concurrent IPs/connections. This is the only option that
+   changes the throughput ceiling. Everything engineering can do inside N=1 has now been done (bundling, 128 streams,
+   START_DATE targeting, stall+preemption fixes) and it yields ~186/hour.
+2. **Narrow the MVP scope** — accept that the full 2026-02..07 tick history for all 15 venues × trades+book5 is not
+   obtainable at N=1, and define a smaller must-have set (e.g. the lead venues/instruments for the strategies that
+   actually need tick data) that IS closable in days.
+3. **Accept partial coverage + honest labelling** — leave the rest as `expected_unattempted` and let the honest-coverage
+   gate report the true number rather than pretending.
+
+**Recommendation: (2) then (1)** — scope the must-have set first (it may be small enough that N=1 closes it in days),
+and only pay for a licence upgrade if the must-have set is genuinely large. Do NOT keep burning SPOT VMs against the
+full 2.89M at ~186/hour; that is the definition of a flat metric.
+
+- [ ] [REVIEW] P0. **OPERATOR DECISION: the 2.89M cefi tick gap is not closable at N=1 (~186 cells/hour ≈ 1.8 years).**
+      Choose: (a) upgrade the Tardis licence concurrency (the only lever that raises the ceiling); (b) narrow the MVP
+      tick scope to a must-have venue/instrument set and close THAT; (c) accept + honestly label partial coverage.
+      Engineering inside N=1 is exhausted — bundling, 128 intra-VM streams, correct date targeting, stall/preemption
+      fixes are all shipped and the ceiling stands. Evidence: 075338 = 3h13m uptime → 600 successes (~186/hr) with 0
+      403s; N=3 = ~94% 403s so the cap cannot be lifted by us; US region ruled out on egress (bucket is
+      asia-northeast1).

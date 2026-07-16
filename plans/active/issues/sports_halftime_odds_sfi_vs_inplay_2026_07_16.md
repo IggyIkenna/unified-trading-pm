@@ -548,3 +548,78 @@ were never the defect — the **container** was. This is exactly why §5's B-REF
 **distinct population quarantined from the pre-match bucketing path**) is the right call, and MDPS@3bf56ff implements
 its first half: T-0 is now genuinely pre-match-only. The second half — giving the in-play population a home the HT
 horizon can read — remains open above. Zero deletions; zero manifest/index writes; scratch data removed.
+
+## Progress Log — 2026-07-16 (SFI `h1_*` capture-gap leg)
+
+**LOOSE ENDS #2/#3/#4 CLOSED IN CODE: the SFI first-half capture gap is fixed, `ht_odds_*_implied` now populates in
+BATCH, and the live mislabel is gone.** Shipped: **uac@96cdfc4f** · **instruments-service@1f7c51cf** ·
+**features-service@5a8684ed** (all three verified `merge-base --is-ancestor origin/live-defi-rollout`; QG `--no-fix`
+green per repo, features-service 17,569 passed).
+
+**TWO CLAIMS IN THIS DOC WERE WRONG — re-measured at the payload layer, per the never-inherit-a-classification rule:**
+
+1. **The API does NOT serve `h1_*`.** §4 cited `SFMatchProgressiveOddsRaw.h1_home_win / h1_draw / h1_away_win`
+   (`soccer_football_info/schemas.py:551`) as evidence of the provider contract. That model **mirrors the legacy
+   `sf_match_progressive_odds` BULK-DUMP TABLE**, not the RapidAPI response — the same trap as OR-5b's `updated`-vs-
+   `generation`: a plausible field list read as ground truth. Measured against the **live API** 2026-07-16
+   (`GET /matches/view/progressive/`), the real keys are nested on the `odds` object and spelled differently again:
+   **`1h_result` (1/X/2) · `1h_asian_handicap` (1/2/v) · `1h_goalline` (o/u/v) · `1h_asian_corner` (o/u/v)**. Note
+   `goalline`, not `over_under`. A **third** spelling (`h1_odds_1/x/2`) exists in `migrate_local_sfi_to_canonical.py`'s
+   dump mapping — **three inconsistent shapes in-repo, none of them the API's.** `SFMatchProgressiveOddsRaw` now carries
+   a warning naming the adapter as the authority on the real payload.
+2. **The HT-RESULT market is NOT "captured nowhere" for want of a provider** — it is served, richly. Measured on **8
+   fixtures / 2022→2026 / 4 leagues**: all four `1h_*` markets populate **~90-97% of a fixture's snapshots** (e.g.
+   200/212). We simply never read them. Re-fetchable exactly as §4 concluded — but the gap was **ours**, not SFI's.
+
+**THE DECISIVE NEW FINDING — `1h_result` SETTLES at halftime, so "half-time odds" cannot mean "odds AT half-time".**
+Measured per fixture, pre-HT vs post-HT distinct home prices: **11-26 distinct (live forecast) → 1-2 distinct
+(frozen)**. Once the half ends the quote freezes at a degenerate settled price that **encodes the realised HT
+scoreline** (a 1-1 first half pins the draw at ~1.055; one fixture sat at `{15.0, 1.055, 15.0}` unchanged from t=46:00
+to t=90:00). **Sampling `1h_result` at or after the break would leak the very result the feature predicts.** The genuine
+half-time-odds signal is therefore the **last quote strictly BEFORE halftime starts** — which is what shipped. This
+independently re-justifies `_apply_ht_odds_pit_gate`: that gate was right all along.
+
+### What shipped
+
+- **uac@96cdfc4f** — `CanonicalProgressiveStats` +12 `odds_h1_*` fields; `SPORTS_SFI_PROGRESSIVE_STATS` +12 ColumnSpecs
+  carrying the PIT semantics on the contract itself; `SFMatchProgressiveOddsRaw` docstring corrected.
+- **instruments-service@1f7c51cf** — `_extract_odds()` reads all four `1h_*` markets (null **and** the `"-"` string
+  sentinel → `None`, never a fabricated price). **Proven on a real payload**: h1 captured 200/212 rows, and
+  `odds_h1_result_home != odds_1x2_home` on **192/192** rows — the first-half price is genuinely distinct from the
+  full-time 1X2, not a copy of it.
+- **features-service@5a8684ed** — `sfi_progressive_calculator` +3 features (`ht_odds_{home,draw,away}_implied`) gated on
+  the already-derived `ht_start`. **Proven end-to-end in BATCH** on real fixture `27d6186eeb9c24aa` (Brazil Serie A,
+  2026-05-10): `ht_odds_home_implied = 0.900` from the last pre-HT quote (1.111), implied-prob sum **1.069** (6.9%
+  overround — a sane book, i.e. these are real traded prices), and **≠** the settled 15.0. Loose end #3 fixed: the live
+  orchestrator no longer relabels a full-time price as first-half — it now **prefers an explicitly first-half
+  container** and only maps a generic `home/draw/away` spelling inside a container that _declares_ itself first-half.
+
+### Bonus finding, fixed in the same commits — the stoppage-time timer bug
+
+`_parse_timer_to_seconds` only understood `"MM:SS"`. SFI also emits **`"MM:SS+MM:SS"` for stoppage time** — **31/212
+rows (15%)** on a real fixture — which fell through to `return 0`, **collapsing every stoppage snapshot onto the genuine
+`00:00` pre-kickoff row**. That is the run-up to the halftime whistle: the most PIT-valuable window for first-half odds,
+silently zeroed. Now parsed (`45:00+02:30` → 2850); unparseable → `None` and the row is dropped rather than fabricating
+a `0` that masquerades as pre-kickoff. Measured on a real payload: `timer_seconds==0` rows **32 → 1**. A **second copy**
+of the same buggy parser in `uac/external/soccer_football_info/normalize.py` was fixed too.
+
+### Backfill — scoped, not run
+
+Correctly OUT OF SCOPE while sports is frozen. Scoped as `- [ ]` todos on `plans/epics/sports_master.md` § "Half-time
+odds (SFI `1h_*`)": **2020-01-01→present × 33 SFI-mapped leagues ≈ 115,000 fixtures**, **$0 marginal API spend**
+(RapidAPI Ultra is flat-rate) ≈ **1.1 quota-days / ~10.6 h single-stream**, one SPOT VM. The volume is from a **10-day
+mixed weekend+midweek+off-season sample** (mean 47.9 fixtures/day, min 0, max 125); a **weekend-only sample reads
+100.2/day and would have overstated by 2.1×** — the same sampling-bias class this issue's own lesson warns about.
+
+### Still open (logged as todos, not silently dropped)
+
+Loose end **#1** (T-0 65% post-kickoff — owned by the stale-reinjection issue + the MDPS leg above; untouched here) ·
+**#5** (contract dtype drift / `ht_end_timer` 100% NULL) · **#6** (the full-time SFI odds columns still have no consumer
+— and the three non-`1h_result` first-half markets now join them: captured + contract-declared but unread, P3 todo).
+HT-detection accuracy is a new P2 todo: `_detect_halftime` returned 40:00 vs a real HT of ~45:00+ on the verification
+fixture, so the quote is sampled ~5 min early — the **safe** direction (strictly less information, no leakage), and a
+pre-existing property of `_detect_halftime` rather than of the odds gate.
+
+**The OR-5b(c) B-REFINED verdict is unaffected**: this closes the re-fetchable HT-RESULT gap, but the ~23,000
+per-bookmaker PIT-valid HT-break quotes in the legacy bucket remain non-reproducible from SFI and still ride the
+option-D recovery. Zero deletions; zero manifest/index writes; scratch data removed.

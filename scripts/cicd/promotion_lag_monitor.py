@@ -234,7 +234,12 @@ def _lag(
     if not isinstance(files, list):
         # `files` is inlined by the compare API only up to 300 files. Absent = a delta far too
         # big to be a squash artefact, so fall back to the raw window rather than go silent.
-        print(f"   … {repo} {base}...{head}: compare omitted `files` (>300?) — aging the raw commit window")
+        # stderr, NOT stdout: branch-health.yml does REPORT=$(… --slack) and posts stdout
+        # VERBATIM as the Slack message, so a diagnostic printed here lands in the alert body.
+        print(
+            f"   … {repo} {base}...{head}: compare omitted `files` (>300?) — aging the raw commit window",
+            file=sys.stderr,
+        )
         return _commit_window_age(cast("dict[str, object]", d), now, thresh_s, skip_ci_counts)
     if len(files) == 0:
         return None
@@ -325,7 +330,13 @@ def _content_delta_age(
     if not names:
         return None
     if len(names) > _MAX_DELTA_FILES:
-        print(f"   … {repo} {head}: sampling {_MAX_DELTA_FILES} of {len(names)} changed files for delta age")
+        # stderr, NOT stdout — branch-health.yml posts this script's stdout verbatim as the
+        # Slack message body (REPORT=$(… --slack)). Keep the cap disclosure in the workflow log
+        # (so the bound is never silent) without leaking it into the alert.
+        print(
+            f"   … {repo} {head}: sampling {_MAX_DELTA_FILES} of {len(names)} changed files for delta age",
+            file=sys.stderr,
+        )
         names = names[:_MAX_DELTA_FILES]
     seen: dict[str, tuple[dt.datetime, str]] = {}
     for fn in names:
