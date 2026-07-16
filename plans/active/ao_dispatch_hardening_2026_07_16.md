@@ -295,9 +295,17 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       pattern (`answered_at` column + redeliver-until-answered + cap) rather than inventing a second mechanism.
       **Gate**: unit tests mirroring `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops
       redelivery; cap flips to needs-operator.
-- [ ] [BACKEND] P1. **The stuck-agent alarm is wired to nothing.** `needs_operator_count` — the counter that fires when
-      an agent stops answering after `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly**
-      at `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@fa73b5d`. QG green (own exit 0): 1316 python passed, tsc
+      clean, 90 vitest passed (was 84).** `deliveryChip` now takes `needsOperatorCount` and renders a red **"needs
+      operator N"** chip that **OUTRANKS "queued"** — that precedence is the whole point and is pinned by a test: in the
+      realistic stuck case BOTH counts are non-zero (the capped message is still pending), so a naive
+      `pendingCount`-first check would render the benign amber "queued N" and the operator would never learn the agent
+      stopped answering. Also found: the TypeScript `AgentView` type **did not even declare the field the API was
+      already serving** — so the UI was structurally blind to it, not merely not-rendering it. TS strict caught the
+      `agentTypes` fixture the moment the field became required (fixed, not made optional). ~~**The stuck-agent alarm is
+      wired to nothing.**~~ `needs_operator_count` — the counter that fires when an agent stops answering after
+      `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly** at
+      `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
       `pending_count` is shown, `dashboard/src/layout.tsx:2523`), and no Slack wiring. A genuinely stuck agent is
       invisible short of a manual API query — which is precisely the operator's _"we think work is being done but it
       doesn't work at the capacity it was designed for"_. Surface it (dashboard badge + an alert route). **Gate**: a
