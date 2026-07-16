@@ -919,6 +919,24 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
     inside a DOUBLE-QUOTED argument — bash executed it as command substitution and stripped it from the message
     ("Verified the in the wait loop"). Same class as the `die "... \`gh auth status\`"` trap hit earlier this session.
     Code unaffected; noted so the pattern is recognised the third time.
+  - **✅ AUTONOMOUS REAL WORK CONFIRMED (operator asked "are they doing the ACTUAL work?" — fair, since every earlier
+    proof was a MANUAL dispatch and 4 of them used `dry_run=true`, i.e. they proved the workflows RUN, not that they DO
+    their job).** Checked the natural triggers on `main`: **4 of the 10 have since fired on their OWN cron** — a
+    scheduled run has no `dry_run` input, so these are real. All 4 landed on `glue-*`, succeeded, **ZERO-BILLED**:
+    `ci-status-consolidator` 16:39 · `reconcile-staging-versions` 16:56 · `staging-conflict-ldr-main-fallback` 17:10 ·
+    `reconcile-release-tags` 17:27. **The definitive one:** `ci-status-consolidator` (run 29516479439,
+    `glue-ip-172-31-5-118-1`) logged `DRY_RUN: false` and
+    `CHANGED deployment-api.ci_status: SIT_VALIDATED -> MAIN_GREEN`, then **committed `208439f92` to main** ("ci:
+    consolidate ci_status from Firestore", 1 file, +16/-16). `origin/main`'s manifest now reads
+    `deployment-api.ci_status = MAIN_GREEN` — the change is real and it stuck. It has done this twice post-flip (15:42,
+    16:39). So the full chain is proven end-to-end on the VM for $0: **cron → glue runner → GCP auth → Firestore read →
+    manifest projection → commit+push to main.** **The remaining 6 are NOT yet proven on their natural trigger — they
+    are simply not due:** `workspace-quickmerge-validation` + `digest-drift-sweep` (6-hourly, last fired BEFORE the
+    flip) · `readiness-verifier` (daily 03:00) · `ruleset-drift-alert` (Mondays 06:00) · `cold-storage-cleanup` (Sundays
+    02:00) · `conflict-resolution-agent` (`repository_dispatch` only — fires on a real merge conflict). Their mechanism
+    is identical to the proven 4, and all 6 passed a manual dispatch; but **do not claim they are proven autonomously
+    until their cron has actually fired** — re-check with:
+    `gh run list --workflow=<wf>.yml --branch main --event schedule --limit 1`.
   - **STOP POINT (operator): no further workflows flipped. 10 of 38 remain the total.** Next = operator gate for the
     remaining 27.
 
