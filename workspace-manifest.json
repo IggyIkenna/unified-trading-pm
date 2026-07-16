@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 15,
-        "coverage_pct": 82.12,
-        "qg_red_reason": null,
-        "large_file_count": 3
+        "warn_file_count": 16,
+        "large_file_count": 3,
+        "coverage_pct": 82.14,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -760,9 +760,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 8,
-        "coverage_pct": 91.24,
-        "qg_red_reason": null,
-        "large_file_count": 6
+        "large_file_count": 6,
+        "coverage_pct": 91.26,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1510,9 +1510,9 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 8,
-        "warn_file_count": 6,
         "coverage_pct": null,
+        "large_file_count": 9,
+        "warn_file_count": 5,
         "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
