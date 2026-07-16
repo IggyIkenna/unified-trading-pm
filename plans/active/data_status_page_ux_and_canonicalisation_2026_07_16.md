@@ -524,9 +524,13 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       non-trigger dates read as legitimately empty (honest-absence): the P8 test asserts a league with expected trigger
       dates but no captured rows (LA_LIGA) returns `found_shards=0` (not a gap), and EPL with both boundary dates
       captured returns 2/2. — deployment-api@fb0eec8.
-- [ ] [UI] P1. Honest-absence affordance — for genuinely-global data_types (LEAGUES, VENUES) render an explicit "global
-      reference entity — no per-league breakdown (axis: {axis})" row (the response already carries `axis`,
-      `breakdowns_domain.py:759`) instead of silently omitting the Leagues section. `[UI]` + pw:L2.
+- [x] [UI] P1. ✅ Honest-absence affordance — for genuinely-global sports data_types (LEAGUES=`global_periodic`,
+      VENUES=`global_season`) with no per-league map, `DataStatusTab.tsx` now renders an explicit "Global reference
+      entity — no per-league breakdown (axis: {axis})" row instead of silently omitting the Leagues section (uses
+      `subData.axis`). Extracted the pure predicate `showsGlobalReferenceAffordance(category, hasLeagues,     axis)`
+      into `data-status-helpers.ts`. TEAMS (now per-league, P8) renders the real drilldown + never hits this. —
+      deployment-ui@43818c9 + Evidence: `data-status-helpers.test.ts` "showsGlobalReferenceAffordance" 3 specs green +
+      full UI QG green (tsc/eslint/vitest 90/build). `[UI]` + pw:L2 (Vitest regression spec).
 - [ ] [UI] P2. Deep-drill parity — either generalize `build_fixture_breakdown` to all `per_league_per_fixture_date`
       sources behind a backend `supports_fixture_breakdown` capability flag, OR add a one-line UI note that per-fixture
       drill/download is FIXTURES-only.
