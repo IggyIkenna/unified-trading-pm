@@ -44,6 +44,8 @@ model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
+drift_direction: advance-code
+depends_on: []
 ---
 
 # deployment-ui capability bundle still shows DRIFT as a live venue
