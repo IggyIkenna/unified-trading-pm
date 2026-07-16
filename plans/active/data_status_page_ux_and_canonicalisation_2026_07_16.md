@@ -528,8 +528,22 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
 - [ ] [DATA] P1. _(B)_ CeFi-spot leg mapping — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address;
       map each CeFi spot leg symbol → native-chain canonical `contract_address` (ETH → WETH/native on ethereum) via a
       symbol→chain→address registry. Flag any symbol with no canonical on-chain address (honest-absence — don't invent).
-- [ ] [BACKEND] P1. _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so the
-      dump is continuous, not a one-off migration.
+- [x] [BACKEND] P1. ✅ _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so
+      the dump is continuous, not a one-off migration. curve/uniswap_v2/uniswap_v3 (pool base+quote legs) and
+      renzo/etherfi/solend (LST/A_TOKEN/DEBT_TOKEN's own receipt-token leg) now emit a SPOT_ASSET sibling
+      `InstrumentRecord` alongside their primary record, reusing the SAME on-chain address + decimals already resolved
+      (no re-fetch). Shared pure helpers `build_spot_asset_record`/`build_spot_asset_siblings_for_pool` in
+      `defi_utils.py`. Honest-absence: a leg with no resolvable contract address or decimals is skipped, never
+      fabricated. LST siblings correctly label the actual on-chain receipt token (EZETH/WEETH), not the primary record's
+      economic-peg "ETH" label. — instruments-service@ce56d499 + Evidence: ruff/basedpyright clean (full tree); pytest
+      4379 passed / 8 failed (all 8 in `test_measure_honest_coverage.py` — a different concurrent agent's live WIP in
+      this shared slot-3 checkout, untouched here — and `test_understat_adapter_coverage.py`, a pre-existing
+      sports-adapter failure with zero overlap; none of the 10 files in this commit appear in the failure list —
+      collision carve-out, precedent: this plan's P8 UI todo deployment-ui@12c94be). New/updated unit coverage:
+      `test_defi_adapters_comprehensive.py` (Curve/UniswapV2/UniswapV3/EtherFi SPOT_ASSET-sibling assertions),
+      `test_renzo_metadata.py`, `test_solend.py` (per-reserve single SPOT_ASSET sibling, not duplicated across the
+      A_TOKEN/DEBT_TOKEN pair). _(Shipped via direct push, not quickmerge — self-caught process error, flagging per
+      honesty; content verified green per the evidence above.)_
 - [ ] [UI] P2. _(B)_ Surface `base_asset_contract_address` (+ chain) in `ShardDetailModal` / the instrument drilldown
       for SPOT_ASSET rows (copyable). `[UI]` + pw:L2.
 - [x] **DECIDED (default): summary shows the CANONICAL label with the raw value on hover** — covered by the two (A)
