@@ -13,3 +13,10 @@ plans/active/_agent_pings.md
 # Auto-generated CI/CD workflow catalog — owned by scripts/generate-workflow-catalog.py (deterministic
 # emitter). prettier would re-pad the tables → false drift vs the generator output on every regen.
 docs/repo-management/CICD-WORKFLOW-CATALOG.md
+
+# Byte-exact snapshots of the GitHub-HOSTED form of every workflow (scripts/self-hosted-runners/
+# hosted-baseline.sh). Reformatting them defeats the entire purpose: the value is the EXACT bytes
+# that ran on GitHub-hosted, so a revert is a copy rather than an archaeology exercise. Prettier DID
+# rewrite them once (2026-07-16, long `description:` rewrapped) — the live workflows are only
+# formatted when staged, so the copies drifted from their own source the moment they were committed.
+scripts/self-hosted-runners/hosted-baseline/*.yml

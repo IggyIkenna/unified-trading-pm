@@ -158,6 +158,10 @@ plans/audit/results/divergence_*.csv
 # Mega-audit diagnostic outputs are checked-in artefacts consumed by downstream phases.
 !plans/audit/results/*.parquet
 *.tsv
+# ...except the hosted-baseline provenance manifest: it records WHICH commit each pristine workflow
+# was recovered from, which is the only thing that makes the backup auditable. Caught 2026-07-16 —
+# the global *.tsv rule above silently dropped it from the first snapshot commit.
+!scripts/self-hosted-runners/hosted-baseline/MANIFEST.tsv
 *.ods
 *.odt
 *.odp
