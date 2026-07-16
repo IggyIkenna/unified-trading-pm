@@ -741,3 +741,39 @@ to act on.
 Main already answered this exact question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" —
 not filing a duplicate `/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-16T18:2xZ UTC — data_engineering slot-13 (36th consecutive dispatch — restart FINALLY landed, but surfaced a new bug: `gate_on_depends` is now live and trusting a FALSE prereq-done state)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) and the
+"Features manifest clean over history" todo (line 109) both confirmed still `- [ ]` via direct grep after a clean
+fresh-pull to LDR HEAD `9d39ed2835ae` (2026-07-16T18:21:16Z, all 25 slot repos clean FF-pull, no conflicts).
+
+**The long-awaited restart has landed.** `GET /api/state` now shows `server_started: 2026-07-16T18:21:11Z` — the first
+change from `2026-07-15T07:30:19Z` since slot-11 first flagged the stale process at 2026-07-16T00:0xZ (~30 consecutive
+checks ago). `agent-orchestrator@2d6365f` (`gate_on_depends`'s `.md`-suffix fix) is finally in effect: this task's live
+backlog entry now carries
+`prereqs.completed_tasks: [sports_p2_features_history_to_ml_ready-001, sports_p2_features_history_to_ml_ready-002]`
+(previously always empty), and my own `/boot` dispatched with `dispatch_reason: "... prereqs met ..."` instead of the
+historical "no gate applied" reason.
+
+**But the gate is trusting a FALSE completion state.** Both prereq tasks read `status: done` via `GET /api/backlog` —
+`sports_p2_features_history_to_ml_ready-001` with `done_sha: 094756d64`, `-002` with `done_sha: 0402f7a86`. Checked both
+SHAs: `094756d64` is a "Todo 1 re-verify — ... no new action needed (slot-11)" decline commit; `0402f7a86` is a "Todo 3
+re-verify — still BLOCKED-PREREQ (slot-8)" decline commit for a different todo entirely. Neither is a completion commit,
+and — as this doc's own 30+ prior entries already established beyond doubt — the actual plan checkboxes for both source
+todos remain unflipped. So `gate_on_depends` just dispatched this task on a **false** "prereqs met" signal: the
+mechanism finally works, but the data it's trusting is wrong.
+
+**Filed a new issue doc** (not a duplicate of this one — this is a distinct, orchestrator-internal data-integrity bug,
+not a sports/features-service concern):
+`plans/active/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`, `assigned_role: infra`, with 2
+P1 root-cause/fix todos + 1 P2 todo to re-verify this exact gate once fixed. This is a "big finding" (cross-cutting SSOT
+contradiction between backlog `status` and the plan checkbox codex/ CLAUDE.md declare authoritative) per the
+findings-triage HARD RULE — filed rather than silently declining, since the false-positive risk isn't scoped to just
+this one task.
+
+**Todo 2 itself remains genuinely premature** — ground truth (the plan checkbox + this plan's own Progress Log, still
+~68%+ coverage not 100%) is unchanged regardless of the backlog's incorrect `done` marking; the affected-range boundary
+still isn't stable until the real 2015→present compute finishes. Declining — no sports/features code touched, Todo 2
+checkbox NOT flipped. `/skip-current-task`.
