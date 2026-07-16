@@ -503,12 +503,28 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       no objects"; canonical unchanged (no `sports_reference_v1_archive/` prefix ever appears in `-prd-`). _ABORT_: any
       object's fixture set fails re-verification against canonical → STOP; it was not superseded. **Confirm OR-3
       first.**
-- [ ] [DATA] P0. **T2.2 — Regenerate the object-layer inventory and emit an EXPLICIT copy list (do not trust the
-      vehicle's enumeration — F-1).** _Mechanism_: paginated `list_blobs` with a fields projection
-      (`name,size,crc32c,updated`), 12-way prefix-parallel over top-level prefixes (~2 min/bucket; the naive recursive
-      `ls` times out). Key = **cell-key normalisation**, NOT path equality: (1) delete the canonical-only
-      `/pipeline_mode=<x>/` segment, (2) normalise legacy `instrument_availability/by-date/day-<D>/` → hive
-      `by_date/day=<D>`. Derive from the UAC SSOT
+- [x] ✅ [DATA] P0. **T2.2 — Object-layer inventory + EXPLICIT copy list — DONE 2026-07-16.** Drove classification from
+      the frozen T0.2 inventory (buckets QUIET since 08:08 ⇒ inventory == live), NOT the F-1 vehicle. **Cell-key** =
+      strip `pipeline_mode=<x>/` + normalise `by-date/day-<D>`→`by_date/day=<D>` + drop `fetched_at_hour=<x>/` (snapshot
+      dim, the 7× trap) + normalise bare-top-level `day=…`→`instrument_availability/by_date/day=…`. **Reconciliation
+      closes EXACTLY**: control 118 + v1_archive 398 + data 968,805 = 969,321. **Class A (no canonical cell at any
+      pipeline_mode) = 17,105** vs runbook 17,111 — delta −6 FULLY EXPLAINED and MORE-correct: −4 = canonical's +4
+      pre-freeze growth (4 cells now covered), −2 = the 2 bare `day=2026-03-21/venue=BETFAIR/<hash>.parquet` objects are
+      crc32c+size-IDENTICAL dups of existing canonical `instrument_availability/…` objects (malformed-path dups, not
+      class A). **CRITICAL RECONCILIATION**: `instrument_availability` (the runbook's "119,858 must move") is NOT a
+      class-A tree — every IA cell has a canonical counterpart (Direction-1 live-verified); the 119,858 was the vehicle
+      **blind-spot** framing, not the object-layer class-A set. **Copy list** (`~/tmp-cutover/t2_3_copylist.jsonl`,
+      17,089 rows) = class A EXCLUDING player_stats: dst = legacy path with `pipeline_mode=<M>` inserted after `day=`, M
+      DERIVED per-entity from canonical's own usage (fixtures*/injuries/teams/fixture_*→batch_api_football;
+      footystats_*→batch_footystats). **16 class-A player_stats deferred to T2.4** (byte-copying legacy-schema
+      player_stats to canonical paths would collide with future fetches + lack available_at). **T2.2 SAMPLE GATE PASS
+      (live)**: Direction-1 (has-canonical match is real) 23/23 across every tree (IA, sports_reference/fixtures, v2,
+      odds-with-differing-hour, venues); Direction-2 (class-A miss is real: src present + dst absent + no canonical cell
+      at any pipeline_mode for that day) 11/11. Verifiers: `~/tmp-cutover/t2_2_{classify,copylist,verify}.py`. _Original
+      mechanism_: paginated `list_blobs` with a fields projection (`name,size,crc32c,updated`), 12-way prefix-parallel
+      over top-level prefixes (~2 min/bucket; the naive recursive `ls` times out). Key = **cell-key normalisation**, NOT
+      path equality: (1) delete the canonical-only `/pipeline_mode=<x>/` segment, (2) normalise legacy
+      `instrument_availability/by-date/day-<D>/` → hive `by_date/day=<D>`. Derive from the UAC SSOT
       `unified_api_contracts/canonical/domain/sports/gcs_paths.py::candidate_parquet_paths()` per
       `codex/02-data/sports-gcs-path-ssot.md`. **Two traps already found and corrected — do not re-introduce**: (a)
       `fetched_at_hour=` is a SNAPSHOT dimension, not identity — exact-key matching called 124,267 objects unique;
@@ -1202,3 +1218,14 @@ retains NO noncurrent versions on delete (`gcloud storage ls -a` under the prefi
 archive delete is PERMANENT and **T5.3's `--all-versions` purge is likely a no-op**; the runbook ROLLBACK "restore until
 T5.3" does not apply to legacy objects. Delete is safe on the proven- superseded verdict alone (0 unique rows lost),
 independent of any versioning rollback.
+
+**T2.2 — object-layer classification + class-A copy list — DONE 2026-07-16.** Reconciles EXACTLY (control 118 +
+v1_archive 398 + data 968,805 = 969,321). **Class A = 17,105** (runbook 17,111; −4 canonical pre-freeze growth, −2
+crc-identical bare-`day=`/BETFAIR dups correctly excluded — more-correct). **`instrument_availability` is NOT class A**
+(all cells canonical-covered; the "119,858 must move" was the F-1 vehicle blind-spot, not the object-layer set — this
+retires R-4's move-scope premise for IA). Copy list `~/tmp-cutover/t2_3_copylist.jsonl` = **17,089** rows (class A minus
+16 player_stats → T2.4); dst = `pipeline_mode=<M>` inserted after `day=`, M derived per-entity from canonical usage.
+SAMPLE GATE PASS live both directions (D1 has-canonical-real 23/23 all trees; D2 class-A-miss-real 11/11). Verifiers
+`~/tmp-cutover/t2_2_{shapes,classify,copylist,verify}.py`. Class-A entities: fixtures_outcomes 4966, fixtures_schedule
+4940, footystats_matches 2934, footystats_odds 2044, injuries 1650, fixtures 369, teams 61, fixture_events 40,
+fixture_stats 38, footystats_predictions 31, fixture_lineups 16.
