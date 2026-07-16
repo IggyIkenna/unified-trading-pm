@@ -262,12 +262,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       legacy-reading one-offs enumerated in T1.6. _Gate_: a NAMED principal + mechanism, and it is stopped/quiesced.
       _ABORT_: writer cannot be identified after audit-log + cohort attribution → **STOP the whole cutover** and
       escalate (OR-2). Deleting a bucket with an unidentified live writer is the resurrection-plus-data-loss case.
-- [ ] [INFRA] P0. **T0.2 — Snapshot EVERYTHING before any mutation (this is the rollback substrate).** _Mechanism_: for
-      each of the 4 buckets (2 legacy + 2 canonical) copy the control plane to a dated sibling —
-      `_index/availability_index.parquet` → `_index/availability_index.<UTC-ts>.precutover.bak.parquet`,
-      `availability_index/*.parquet`, `prod/catalog.parquet` → `prod/catalog.<UTC-ts>.precutover.bak.parquet`, plus
-      `_index/per_vm/*.parquet` copied **outside** `per_vm/`. Record a full object inventory of all 4 buckets (T2.2
-      lister) to `~/tmp-cutover/inventory_precutover_*.jsonl` and archive it to
+- [x] ✅ [INFRA] P0. **T0.2 — Snapshot EVERYTHING before any mutation (this is the rollback substrate). DONE
+      2026-07-16** — 19 control-plane backups across all 4 buckets, 0 failures, every backup crc32c-verified == source
+      (re-read proof, stronger than size>0). Inventory reproduces audited ground truth EXACTLY on both legacy buckets
+      (969,321 / 406,581, delta=+0, raw==uniq so zero double-listing — the prior +51 bug is gone); canonical prd +4
+      (0.0003%, far under the 0.5% ABORT — expected drift on the LIVE bucket). Pre-freeze index baselines recorded:
+      instruments-prd 5,465,414 rows / market-data-tick-prd 1,958,498 rows (T0.6/T6.1 reference). Snapshot TS
+      `20260716-080453`; archived to `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/`.
+      Verifier: `~/tmp-cutover/{inventory,snapshot}.py`. **HARD rule honoured**: per-VM shard backups written to
+      `_index/precutover_per_vm_bak/<TS>/` — OUTSIDE `_index/per_vm/`, so the consolidator glob cannot absorb them.
+      _Original mechanism (retained for reference)_: for each of the 4 buckets (2 legacy + 2 canonical) copy the control
+      plane to a dated sibling — `_index/availability_index.parquet` →
+      `_index/availability_index.<UTC-ts>.precutover.bak.parquet`, `availability_index/*.parquet`,
+      `prod/catalog.parquet` → `prod/catalog.<UTC-ts>.precutover.bak.parquet`, plus `_index/per_vm/*.parquet` copied
+      **outside** `per_vm/`. Record a full object inventory of all 4 buckets (T2.2 lister) to
+      `~/tmp-cutover/inventory_precutover_*.jsonl` and archive it to
       `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/`. _Gate_: every `.bak` object exists
       with size > 0; inventory row counts match the audited totals (969,321 / 1,398,521 / 406,581 / 491,576). _ABORT_:
       any count deviates > 0.5% from audit → re-audit before proceeding; the estate moved under us. **HARD: never write
@@ -948,4 +957,58 @@ _Findings that change later phases_:
    5.72 misses today.
 
 **Verifier**: `~/tmp-cutover/scan_writers.py` + `scan_<bucket>.jsonl` (read-only; re-runnable for T5.2). **⇒ Phase 0 is
-UNBLOCKED. T0.2 (snapshot) may proceed.** </content> </invoke>
+UNBLOCKED. T0.2 (snapshot) may proceed.**
+
+---
+
+**2026-07-16 — T0.2 EXECUTED (snapshot / rollback substrate). Read+copy only; zero deletes, zero live-object
+overwrites.**
+
+_Inventory method (new `~/tmp-cutover/inventory.py`, replaces the hardcoded-prefix `scan_writers.py` lister)_: DISCOVERS
+the prefix tree with delimiter listings rather than a hardcoded list — a hardcoded list cannot prove completeness on a
+bucket never audited, and its duplicate `_vm_staging/` entry is exactly what produced the prior +51 miscount.
+Completeness PROVEN, not assumed: both legacy buckets reproduce the audited ground truth **exactly** —
+`instruments-store-sports` raw=969,321 uniq=969,321 (delta +0); `market-data-tick-sports` raw=406,581 uniq=406,581
+(delta +0). raw==uniq everywhere ⇒ zero double-listing (the +51 bug is gone). Canonical prd: instruments 1,398,525 vs
+1,398,521 expected (**+4, 0.0003%**, far under the 0.5% ABORT — expected drift on the LIVE bucket, crons still running
+pre-freeze); market-data-tick 491,576 == 491,576 (delta +0).
+
+_Snapshot (`~/tmp-cutover/snapshot.py`, UTL `gcs_copy_object` server-side per
+`codex/05-infrastructure/gcs-object-operations.md`, never gsutil)_: TS `20260716-080453`. **19 control-plane backups, 0
+failures, every backup crc32c-verified == source** (re-read proof). Per bucket:
+
+- `instruments-store-sports` (legacy): `_index/availability_index.parquet` (38,763,246 B, crc +4T7mg==),
+  `availability_index/instruments-service.parquet`, + 2 per-VM shards (`_legacy_seed.parquet` 16.2 MB,
+  `fixtures-recovery-20260627-183725.parquet`). No prod/, no stall_state (ABSENT — matches ls).
+- `instruments-store-sports-prd` (canonical): availability_index (97,608,985 B, crc KrwkFw==), consolidator_stall_state,
+  expected_universe_ranges, latest.json, phantom_audit_latest, availability_index/instruments-service, prod/catalog
+  (435,970 B), per-VM `_legacy_seed`.
+- `market-data-tick-sports` (legacy): availability_index (2,356,512 B) + per-VM `_legacy_seed`.
+- `market-data-tick-sports-prd` (canonical): availability_index (47,184,905 B), stall_state, latest.json,
+  reprobe_audit_latest, per-VM `_legacy_seed` (45.2 MB).
+
+**HARD rule (R-11) honoured**: per-VM shard backups written to `_index/precutover_per_vm_bak/<TS>/` — a SIBLING of
+`per_vm/`, NOT under it, so the consolidator's `list_blobs(prefix="_index/per_vm/")` cannot absorb them as shard #3. The
+control-index `.bak` files use the proven `_index/…precutover.bak.parquet` sibling convention (6 such .bak already
+coexist there, none re-absorbed).
+
+_Consolidator reaping mechanism CONFIRMED (bears on the T0.5 drain gate)_:
+`unified_trading_library/manifest_consolidator.py:1745-1851` `_prune_consolidated_shards` DELETES per-VM shards once
+their mtime `<= cutoff` (the canonical's content-write marker) — proving they merged. `_legacy_seed.parquet` is NEVER
+pruned. `CONSOLIDATOR_PRUNE_SHARDS` default on; cap 2000/cycle. **⇒ "drained" for T0.5 = every non-seed shard under
+`_index/per_vm/` has been reaped (only `_legacy_seed` remains), which is the observable proof the merge absorbed it.**
+Current canonical prd state already shows exactly this: only `_legacy_seed.parquet` remains in
+`instruments-store-sports-prd/_index/per_vm/` and `stall_state={"streak":0,"baseline_shards":2}` / `latest.json` verdict
+`empty no_op`.
+
+_Pre-freeze index baselines (T0.6 / T6.1 reference)_: instruments-prd **5,465,414 rows**; market-data-tick-prd
+**1,958,498 rows**.
+
+_Archive_: inventories (gzipped), `inventory.py`, `snapshot.py`, `scan_writers.py`, `snapshot_ts.txt` →
+`gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/` (8 objects, verified listed).
+
+_Scheduler fleet cross-check (pre-freeze, all runbook-named jobs verified to EXIST)_: meta-launcher
+`uts-prod-sports-scheduler-cron` ENABLED; all 17 T0.4 writers ENABLED; 3 T0.6 consolidators ENABLED;
+`uts-staging-features-sports-t1-schedule` ENABLED + `uts-prod-features-sports-t1-schedule` PAUSED (the 2 dead ones);
+sports-ref-v3-{1,2,3}-start ENABLED. No job named in the runbook is missing ⇒ no inventory drift; freeze may proceed.
+**⇒ T0.2 GATE PASSES. Proceeding to T0.3 (freeze meta-launcher first).**
