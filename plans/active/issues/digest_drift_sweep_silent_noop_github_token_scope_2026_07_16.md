@@ -167,8 +167,12 @@ first**, for three reasons:
    `dependency-update` to all 16 simultaneously, each of which opens a digest-refresh commit to LDR and triggers that
    repo's CI. That is a real fleet event and wants to be a deliberate, watched one — not a 6-hourly cron's surprise.
    `force_all` is NOT needed to trigger this; the staleness alone does it.
-2. **`GH_PAT` is pending rotation** (operator, 2026-07-16). Wiring a new consumer of it right before a rotation risks
-   creating a second breakage at rotation time. Sequence the rotation first, or verify the new PAT covers this.
+2. **`GH_PAT` rotation is deliberately LAST — do NOT sequence it before this fix** (operator, 2026-07-16: rotation
+   happens after the CI-cost plan completes; assessed as no security risk). This is therefore **not** a blocker on
+   fixing the token. It inverts into a **forward dependency instead**: if this fix lands, `digest-drift-sweep` becomes a
+   new `GH_PAT` consumer needing cross-repo `contents: read` **and** `POST /dispatches` on all 16 repos — so the
+   eventual rotation must carry those scopes or it will silently re-break this sweep in exactly the same
+   green-but-doing-nothing way. Add it to the rotation checklist when that work starts.
 3. **The dispatch step has the same defect.** `:160-176` POSTs `/dispatches` with the same `$TOKEN`. Fixing only the
    fetch moves the failure from "silently reports not-found" to "loudly reports HTTP 403/404 at dispatch" — which is
    better, but is a second change, not a side effect of the first.
