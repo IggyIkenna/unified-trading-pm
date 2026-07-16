@@ -133,6 +133,26 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — P9 round-2 execution (sports root-cause, TradFi/DeFi migrations, UI relabel) + a side-discovered perf fix
+
+Executed per operator instruction on the P9 round-2 todos (Q2 TradFi/DeFi/CeFi migrations, Q3 sports root-cause, Q4
+label). Sports Q3: root-caused as NOT a bug (see the P9 Q3 checkbox above + its issue doc). TradFi + DeFi `data_type`/
+`instrument_type` migrations: shipped + applied on real infra, verified live via direct API calls against the local
+full-stack dev server (curl against `/api/data-status/coverage-summary` post-migration shows TradFi `instrument_type` 0%
+`__legacy__` and DeFi `data_type` 100% `instruments`, no `instrument-catalog` residual). CeFi migration was still
+in-flight (sub-agent) at last check — the same live endpoint still shows the pre-migration `perpetual`/`spot` lowercase
+counts, confirming the check is genuinely live, not cached. UI Q4 relabel shipped + verified (totals match: 2,970,317
+all-time / 123,563 latest-day).
+
+**Side-discovery while validating locally**: the local dev server took ~2 minutes to become responsive on first request
+(health checks timing out) — root-caused to `unified_api_contracts.canonical.domain.predictions.classifiers` logging
+`OTHER_BUCKET_MEMBER_ADDED` at **INFO** level on every per-row prediction-market classification fallback — a hot path
+called for the FULL prediction catalogue on every cache-miss sweep (~1M log lines observed in one sweep), not just
+genuinely-new markets. Downgraded to DEBUG (2 call sites + their docstrings + the 2 tests pinning
+`caplog.at_level(logging.INFO, ...)`) — unified-api-contracts@d4523602. Unrelated to the P9 Q7 symbol-search-44s perf
+item (different code path — `deployment-api`'s `data_query_service.py` corpus loader vs this UAC classifier), tracked
+here since it wasn't a pre-existing todo.
+
 ### 2026-07-16 — Session batch (P7, P5, P4-A, P1-remaining, P4-B enabler, P8, P2 backend)
 
 Shipped this session (each commit-push-flip, QG-green + evidence-cited):
