@@ -311,11 +311,22 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       doesn't work at the capacity it was designed for"_. Surface it (dashboard badge + an alert route). **Gate**: a
       capped-out agent is visible without anyone curling the API. Closes the `[~] Remaining` dashboard item in
       `issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`.
-- [ ] [BACKEND] P2. **Nudge is single-shot best-effort.** `server/tmux_spawn.py:1442-1455` `nudge()` makes one
-      `send_command` attempt and swallows the failure (`except Exception: ... return False`) — no retry, no idempotency,
-      no verification the pane received it. Delivery now survives this (the message redelivers on the next poll), so
-      this is a **latency** bug, not a loss bug — but a missed nudge on a heads-down `/loop` costs a full poll cycle.
-      Make it retried + idempotent. Closes that doc's last genuinely-open todo.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@da053a9`. QG green (own exit 0): 1323 passed,
+      basedpyright 0 errors.** Retried via new `nudge_attempts` (default 3) + `nudge_retry_backoff_s`. **Found a worse
+      bug than the todo knew**: `send_command` called `subprocess.run` twice with `capture_output=True`, **no `check=`,
+      and never inspected `returncode`** — so a failed `tmux send-keys` raised nothing and `nudge()` returned **True**:
+      a send that never landed, reported as delivered. Now raises on a non-zero send AND on a non-zero `C-m` submit
+      (text landed but never submitted → the agent sees a half-typed prompt and does nothing, which is worse than a
+      clean failure). All 5 call sites already handle the pre-existing missing-session `RuntimeError`, so no caller
+      contract changed. **Retry follows ONLY a raised failure** — that is the idempotency argument, and a test pins it:
+      `send_command` raises _before typing anything_, so nothing reached the pane and re-sending cannot double-deliver;
+      a **successful** send returns immediately and is never repeated, because re-typing a delivered wake into a live
+      agent's pane risks it **acting twice**. An unconditional retry loop would look tidier and would be a bug.
+      ~~**Nudge is single-shot best-effort.**~~ `server/tmux_spawn.py:1442-1455` `nudge()` makes one `send_command`
+      attempt and swallows the failure (`except Exception: ... return False`) — no retry, no idempotency, no
+      verification the pane received it. Delivery now survives this (the message redelivers on the next poll), so this
+      is a **latency** bug, not a loss bug — but a missed nudge on a heads-down `/loop` costs a full poll cycle. Make it
+      retried + idempotent. Closes that doc's last genuinely-open todo.
 
 ### Phase 3 — prove it (P0)
 
