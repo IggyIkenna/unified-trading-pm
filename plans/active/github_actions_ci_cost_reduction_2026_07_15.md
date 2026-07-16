@@ -53,6 +53,53 @@ drift_direction: advance-code
 
 ---
 
+## Execution pre-flight & runbook (READ FIRST — context not obvious from the todos)
+
+**State 2026-07-15:** decisions closed; runner infra authored + pushed (`scripts/self-hosted-runners/`); **NOTHING
+deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
+
+### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh`)
+
+- **46 = MOVE (PM-local DIRECT `.github/workflows/*.yml`)** → edit `runs-on` directly in PM. Safe — only PM, which has
+  the runners.
+- **10 = KEEP hosted**, of which two special classes you must NOT naively flip:
+  - **`KEEP-T` (4): `main-backmerge-to-ldr`, `semver-agent`, `major-bump-issue-handler`, `request-major-bump`** — these
+    are **fleet templates** (`scripts/workflow-templates/`) rolled to EVERY repo. **DO NOT flip the template** (only PM
+    has runners → hangs the other ~24 repos) and **DO NOT hand-edit PM's copy** (banned rule). Leave hosted (low value).
+  - **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for
+    the light VM.
+  - Plus `quality-gates-v2` + `python-quality-gates-v2` (heavy tests) + 2 `pull_request` bots.
+
+### Deploy mechanism (Track 1 step 1)
+
+- The planning-VM `i-0c9b283b31d6b5ca7` has **no inbound SSH/:8765** → drive it via **AWS SSM**
+  (`aws ssm send-command --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7 …`), the same channel as
+  `/check-agent-orchestrator`. Then `bash scripts/self-hosted-runners/setup-glue-runners.sh install`.
+- Registration token = an **admin PAT with `Administration:write` on unified-trading-pm**. The fleet `GH_PAT` (loaded by
+  `load-gh-token.sh`; Secret Manager `github-token`) was **verified** to register runners (JIT `generate-jitconfig`
+  returned ok=true 2026-07-15). Prefer the Secret-Manager path (`GH_TOKEN_SECRET`) so no PAT sits on disk.
+- Runner pinned **v2.335.1** + sha256 `4ef2f25285f0…` (in `setup-glue-runners.sh`). Then flip ONE canary
+  (`branch-health`) → verify green → phased groups.
+
+### Implementation specifics (so A1/A2/A5/2b aren't rediscovered)
+
+- **A2 dedup** keys off fingerprints `ci_status_store.py` **already stores** — `sit_validated_tree` /
+  `sit_validated_workspace_digest`; skip ONLY on an exact match to a GREEN record.
+- **A1 regex** = `\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$` (from `base-service.sh:596`); extend the committed-diff
+  check at `python-quality-gates-v2.yml` L170-202 / L585-607; `plans/**`+`codex/**` IN, lockfiles/YAML OUT.
+- **A2 dead cache** at `python-quality-gates-v2.yml:90-137` (probe) + `:647-653` (`if:false` save), hardcoded
+  `cache-hit=false` at L124.
+- **STEP 2b trim** — `ci-status-update.yml` does `google-github-actions/auth` (~L82) + runtime
+  `pip install google-cloud-firestore` (~L104) + `python3 scripts/cicd/ci_status_store.py …` (~L117). Trim: pre-install
+  the lib in the `ubuntu` runner's python env, drop the auth step (VM ADC), shallow `git fetch` not a fresh checkout.
+- **Re-measure (VERIFY)**: token via
+  `gcloud secrets versions access latest --secret=github-billing-token --project=central-element-323112`;
+  `curl …/users/IggyIkenna/settings/billing/usage?year=&month=`; per-workflow via
+  `/repos/…/actions/workflows/{id}/runs?created=>DATE` `total_count` × billable-jobs (the timing endpoint returns 0 on
+  this account — use the proxy). GitHub purges run history at ~90 days.
+
+---
+
 ## Why we are spending the money (evidence)
 
 Pulled from the **live GitHub Enhanced-Billing ledger** (not estimates) via the existing `github-billing-token`:
@@ -119,16 +166,17 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **50 MOVE / 6 KEEP** — KEEP =
-      `quality-gates-v2` + `python-quality-gates-v2` (CPU-bound tests, stay hosted), the two `pull_request` agent bots
-      (`plan-health-agent`, `conflict-resolution-merged`), and the two `KEEP*` **local builders**
-      `build-smoke-all-repos` (docker buildx) + `publish-package` (wheel). Confirm the MOVE set carries no untrusted
-      fork-PR code (private repo → none) before flipping.
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the MOVE set only (`ubuntu-latest` → `[self-hosted, glue]`), via the
-      template SSOT + `rollout-workflow-templates.sh`. **Pace = canary → phased groups (operator 2026-07-15):** flip ONE
-      low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a green self-hosted run, then roll
-      the remaining 50 MOVE workflows out in **small batches** (not all at once). (Takes effect on push — do NOT push
-      until the runners are live on the VM, else those workflows queue with no runner.)
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **46 MOVE / 10 KEEP** — KEEP =
+      `quality-gates-v2` + `python-quality-gates-v2` + 2 `pull_request` bots, **`KEEP*` builders**
+      `build-smoke-all-repos`/`publish-package`, and **`KEEP-T` fleet templates** `main-backmerge-to-ldr` /
+      `semver-agent` / `major-bump-issue-handler` / `request-major-bump` (see pre-flight §). Confirm the MOVE set
+      carries no untrusted fork-PR code (private repo → none) before flipping.
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **46 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
+      `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
+      touch `scripts/workflow-templates/`; the `KEEP-T` templates stay hosted). **Pace = canary → phased groups
+      (operator 2026-07-15):** flip ONE low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a
+      green self-hosted run, then roll the remaining ~45 out in **small batches** (not all at once). (Takes effect on
+      push — do NOT push until the runners are live on the VM, else those workflows queue with no runner.)
 - [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** A plain `runs-on`
       flip keeps the job's pointless per-run setup (fresh `actions/checkout` into `_work`, `google-github-actions/auth`,
       runtime `pip install google-cloud-firestore`) — ~15s on a warm VM for a 1-row write. Trim it so it uses the VM's
@@ -231,5 +279,12 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
 - 2026-07-15 — **Phase 1 STEP 1 cracked** (operator: B1 on the planning-VM). Authored the runner infra under
   `scripts/self-hosted-runners/` (setup/wrapper/systemd template+slice/classifier/runbook) — pinned runner v2.335.1 +
   sha256, JIT-ephemeral, repo-scoped to PM (all glue lives here), CPU-capped to protect the orchestrator, shellcheck
-  clean. `classify-glue-workflows.sh` → 52 MOVE / 4 KEEP. Files created LOCAL/uncommitted (operator: "no push"); deploy
-  on the VM + the runs-on flip are the next steps, gated on operator go.
+  clean. `classify-glue-workflows.sh` → 46 MOVE / 10 KEEP (refined 2026-07-15). Files pushed; deploy on the VM + the
+  runs-on flip are the next steps, gated on operator go.
+- 2026-07-15 — **Captured execution-critical context** (operator: don't lose it in compaction). Added a
+  pre-flight/runbook §. Key catch: 4 MOVE workflows are FLEET TEMPLATES
+  (`main-backmerge-to-ldr`/`semver-agent`/`major-bump-issue-handler`/`request-major-bump`) — flipping the template would
+  hang the other ~24 repos (no runner there) and hand-editing per-repo copies is banned → they stay hosted (`KEEP-T`).
+  Split corrected to **46 MOVE (PM-local direct) / 10 KEEP**; classifier now flags `KEEP-T`/`KEEP*`. Also recorded: SSM
+  deploy channel + verified admin PAT, A1/A2/2b code locations, A2 Firestore fingerprint fields, and the billing re-pull
+  command for VERIFY.
