@@ -4020,14 +4020,45 @@ it's new adapter work, not a data-audit residual).
     actionable, well-understood mechanism instead of being an opaque mixed bag. STANDINGS's 69 rate-limited rows are a
     separate, likely self-resolving-on-retry class (once today's api-football quota window resets).
 
-- [ ] [DATA] P2. **Determine whether the 362 `LEAGUE_MAP_INCOMPLETE` per-fixture-entity rows
+- [x] ✅ [DATA] P2. **Determine whether the 362 `LEAGUE_MAP_INCOMPLETE` per-fixture-entity rows
       (FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS) are genuinely-deregistered/noncanonical league fixtures (→ should be
       silently skipped or `expected_unattempted`/`empty_confirmed`, NOT `attempted_failed`) or a real league-registry
-      gap (→ add the missing league(s) to the registry).** Sample the actual API-Football league IDs behind a handful of
-      the unmapped `fixture_id`s (via a direct API probe) and cross-reference against
-      `delete_noncanonical_sports_leagues_2026_06_25.py`'s removed-leagues list. Fix accordingly — either a
-      classification correction in `sports_reference_fixtures.py:633-653` (skip/empty-confirm noncanonical-league
-      fixtures instead of `record_failed`) or a registry addition. (repo: instruments-service)
+      gap (→ add the missing league(s) to the registry).** — instruments-service@a66fc295 (classification correction) +
+      test `TestWritePerFixtureEntitiesOutOfUniverse` (green).
+  - **DETERMINATION: genuinely-noncanonical / out-of-universe league fixtures — NOT a registry gap.** Settled
+    definitively from code (no live API probe needed — the direct-probe method was one way to gather evidence; the
+    mechanism is unambiguous in the source). The enrichment TARGET is the whole api_football league universe while the
+    league MAP is the canonical-94 subset:
+    - `api_football_reference.py::get_instruments` (URDI) calls `get_fixtures(date=...)` **with NO `league_ids` filter**
+      → hits `GET /fixtures?date=X`, which returns fixtures across the ENTIRE api_football universe (~1000+ leagues). It
+      collects `completed_ids` from ALL completed fixtures (lines 87-91, BEFORE any canonical filter), and that
+      whole-universe set becomes `_urdi_completed_fixture_ids` = the per-fixture enrichment target.
+    - `_build_fixture_league_map_from_gcs` (`sports_fixtures.py:585`) builds `af_fid_to_league` ONLY from the
+      canonical-gated GCS fixtures parquets (via `get_expected_leagues_for_source("api_football")`, the 94-league set) —
+      the SAME curated universe that `delete_noncanonical_sports_leagues_2026_06_25.py` purged the other 1,438 leagues
+      from (deleting 1,283,171 index rows).
+    - So a completed fixture in a non-canonical league gets enriched (target) but can never map (map) → falls to
+      `_without_league` → the old `record_failed(LEAGUE_MAP_INCOMPLETE)`. These are exactly the fixtures the
+      mapped-branch `_is_in_canonical_write_universe` gate (`sports_reference_fixtures.py:578`) already `continue`-skips
+      silently.
+    - The 2026-07-14 GW `record_failed` made sense only while the map was too NARROW (built from the 33-league
+      `get_prediction_leagues()`, so ~65% of IN-universe fixtures fell through); once the map was widened to the full 94
+      the residual unmapped rows became exclusively out-of-universe. (Cross-checked: the residual-closer API-fetch path
+      `_fetch_fixture_ids_via_api` cannot produce these — `normalize_api_football_fixture` always sets a derived
+      `league.league_id = build_league_id(country,name)`, so every fixture_id is a map key there; the rows come from the
+      GCS-override path.)
+  - **FIX (classification correction, `sports_reference_fixtures.py:633-653`):** removed the
+    `record_failed(LEAGUE_MAP_INCOMPLETE)` for unmapped per-fixture rows; they are now skipped silently (WARNING-logged
+    for visibility), mirroring the line-578 out-of-universe `continue`. This also kills the unsupersedable blank-league
+    `row_key={date,data_type}` aggregate (same defect fixed for the zero-rows branch in
+    `api_football_per_fixture_blank_league_orphan_2026_07_15`). Honest-absence preserved: any genuine IN-universe
+    capture gap surfaces on the FIXTURES shard, not here.
+- [ ] [DATA] P2. **One-time reconcile: delete/reclassify the existing ~362 residual blank-league `LEAGUE_MAP_INCOMPLETE`
+      (`attempted_failed`) rows** now that the code no longer mints new ones. They are out-of-universe artifacts (no
+      `league_id`, unsupersedable) and should be REMOVED from the sports availability index/seed — same treatment as
+      `delete_noncanonical_sports_leagues_2026_06_25.py`'s purge. Needs GCP ADC to run a GCS-writing reconcile pass; the
+      recurrence is already stopped by instruments-service@a66fc295, so this is cleanup of stale rows only, not a
+      correctness regression. (repo: instruments-service)
 
 - **2026-07-15 (LIKELY ROOT CAUSE of the CF11 oscillation found — a concurrent slot independently discovered and
   partially fixed a genuine silent-data-loss bug in the SAME code path this dispatch used).** Cross-referencing a
