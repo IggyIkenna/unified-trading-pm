@@ -180,11 +180,29 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       role-ineligible / collision-blocked / affinity-pinned tasks stop inflating the spawn budget. **Gate**: a task
       skipped by every eligible slot counts 0 toward the budget; existing autospawn tests stay green. Closes R1 + the
       `Skip-exhaustion churn` carry-forward stranded in archived `ao_autospawn_role_blind_dispatch_starvation`.
-- [ ] [BACKEND] P0. **R6 — worker-role dispatch gate.** Gate `pick_next_task` (`server/dispatch.py:52`) so only slots
-      whose **agent** role is a worker receive a backlog `task_id` (join slot→`AgentRow.role`, or thread the role
-      through boot/heartbeat — pick whichever avoids a per-call join in the hot path). Keep the existing craft
-      `slot_role` check as-is; this is a distinct, upstream gate. **Gate**: regression test dispatching a backlog task
-      to a `review`-role and a `main`-role slot via BOTH `/boot` and `/heartbeat`, asserting no `task_id` is returned.
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@962e676`. QG green (own exit 0): 1302 passed,
+      basedpyright 0 errors.** Implemented as a **row in the `_FILTERS` table** (scope `SLOT`), so it lands in BOTH the
+      dispatcher and the spawn budget by construction; the budget's hand-written review exclusion was removed (one rule,
+      one place). **Did NOT implement the source doc's recommended fix** — it says "add a `slot_role`-based filter";
+      `slot_role` is a CRAFT tag that is empty for review/main **and for most ordinary generic workers**, so gating on
+      its falsiness would refuse dispatch to the majority of the normal fleet. Keyed on the explicit `review_slot_ids()`
+      config list instead; `test_generic_worker_with_no_slot_role_still_gets_tasks` pins that. **Covers 3 routes, not
+      the 2 the doc named**: `pick_next_task` is the single chokepoint for `/boot` (`slots_worker.py:204`), `/heartbeat`
+      (`:408`) **and `/done`** (`:957` — a worker takes its next task on completion, which the doc missed). No
+      route-level TestClient harness exists in this repo; adding one would exercise the same single call. **No
+      "main-role slot" exists to test** — main runs as its own tmux session (`MAIN_SESSION_NAME`), not a numbered slot,
+      so it never reaches a slot dispatch route. **Blast radius verified on the real fleet BEFORE shipping** (autonomous
+      rule 11): central VM has `ORCHESTRATOR_REVIEW_SLOTS` **unset** → `review_slot_ids()` = `{2}` in production; live
+      backlog shows tasks dispatched to slots **8/11/13/15 and none to slot 2**; `pick_next_task` only decides NEW
+      dispatches so no in-flight work is interrupted. **Test-fixture trap caught**: `conftest.py`'s autouse
+      `_default_review_slots_off` neutralises the production default, so tests MUST set `ORCHESTRATOR_REVIEW_SLOTS`
+      explicitly or they exercise an empty review set and pass while testing nothing — all 5 tests set it; removing the
+      gate fails 3 (the other 2 are negative controls). ~~**R6 — worker-role dispatch gate.**~~ Gate `pick_next_task`
+      (`server/dispatch.py:52`) so only slots whose **agent** role is a worker receive a backlog `task_id` (join
+      slot→`AgentRow.role`, or thread the role through boot/heartbeat — pick whichever avoids a per-call join in the hot
+      path). Keep the existing craft `slot_role` check as-is; this is a distinct, upstream gate. **Gate**: regression
+      test dispatching a backlog task to a `review`-role and a `main`-role slot via BOTH `/boot` and `/heartbeat`,
+      asserting no `task_id` is returned.
 
 - [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@bf9a61b`. QG green (own exit 0): 1297 passed,
       basedpyright 0 errors.** **R1 hardening — close the drift gap structurally** (operator question 2026-07-16: _"is
