@@ -9,7 +9,11 @@ summary:
   call the autonomous contract forbids an agent from making alone — normative/SSOT rule edits, archiving locked plans,
   where near-complete remnants fold, a cross-repo code defect, and a hard line-cap split — each with options and a
   marked worker recommendation for an asynchronous operator ruling.
-status: open
+status: resolved
+resolved_by:
+  "All sections ruled + applied 2026-07-15 in-session — §1 99331e940 · §2 2235cd79c · §4 deployment-ui@0bcd098 · §6
+  93cb228c5+98e8fd5ba · §7 ed58dd108+a9ca22690 · §8 d59b100b0 · §9 451a89e7c · §10 5bce62fc0. §3 self-resolved via the
+  §6 ruling. Corpus 143->100 active, 0 orphans, 0 files over the 5000-line ceiling, hygiene 0 hard failures."
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,7 +30,6 @@ parent_epic: plan_hygiene_master
 priority: P1
 source: [autonomous /plan-reconcile run 2026-07-15 (main session, Opus 4.8 1M)]
 assigned_vm: NA
-resolved_by:
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -44,7 +47,26 @@ locked_since:
 > (21% kill-rate). Auto-fix classes applied + committed separately. Everything below was parked as a judgment call per
 > the skill's autonomous contract.
 
-> **🟢 OPERATOR RULED 2026-07-15 (same session) — §2, §6, §7 answered and APPLIED. §1, §3, §4, §8 remain open.**
+> **✅ ALL SECTIONS RULED + APPLIED 2026-07-15 (same session). This doc is CLOSED — nothing is awaiting an operator.**
+>
+> | §             | Ruling                           | Applied                                                                                                                  |
+> | ------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+> | §1 CeFi       | A — record NON-DURABLE + re-open | `99331e940` — reclass recorded non-durable (66,007→112,727 af); capture defect re-opened as [DATA] P0 on the blocker doc |
+> | §2 CLAUDE.md  | A — edit the rule                | `2235cd79c` — Polygon.io→Massive corrected; chain-vs-vendor trap documented                                              |
+> | §3            | (self-resolved via §6, option B) | `93cb228c5` + `98e8fd5ba`                                                                                                |
+> | §4 UI staging | A — fix the UI properly          | `deployment-ui@0bcd098` — PromotionPipeline derives from ldr_main; pw:L2 spec PROVEN to catch the bug                    |
+> | §6 folds      | A — approve the whole table      | `93cb228c5` (14 folded + 2 flipped) → `98e8fd5ba` (13 shells archived)                                                   |
+> | §7 unlock 14  | A — unlock + verify              | `ed58dd108` (6) → `a9ca22690` (19 incl. codex-sync). 1 KEEP_ACTIVE correctly held                                        |
+> | §8 line-cap   | A — split by asset_group         | `d59b100b0` — M-1 5,366→4,121; 4 children; corpus at ZERO files over 5,000                                               |
+> | §9 ledger     | A — drop the number              | `451a89e7c` — AST-verified 39 at HEAD; count removed from both sites                                                     |
+> | §10 skips     | A — triage per-item              | `5bce62fc0` — F43 reconciled; populator's 2 silent bugs fixed + DO-NOT-APPLY warned; 5 of 10 needed no action            |
+>
+> **Corpus effect: 143 → 100 active plans; 0 orphans; 0 files over the 5,000-line ceiling; hygiene 0 hard failures.**
+>
+> Everything below is the ORIGINAL parked text, kept as the record of what was asked and why. Sections retain their
+> options for provenance — do not re-answer them.
+
+> **🟢 (superseded by the block above) OPERATOR RULED 2026-07-15 — §2, §6, §7 answered and APPLIED.**
 >
 > | §                            | Ruling                    | Applied                                                                                                                 |
 > | ---------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
