@@ -347,9 +347,18 @@ the exact pattern to clone (it already has a threshold input).
       `tests/unit/conftest.py`'s `_ensure_services_mocked` allowlist — the stub services package has `__path__=[]`, so a
       dotted import of an unregistered new module fails with "unknown location" under pytest. Added
       `catalogue_lifecycle` there.)_
-- [ ] [UI] P1. Two sibling cards next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard) with numeric
-      threshold inputs ("new if listed within N days", "expiring within M days") + client helpers in `client.ts`. Mirror
-      the fixtures card. `[UI]` + pw:L2 regression spec.
+- [x] [UI] P1. ✅ Two sibling cards `NewListingsCard`/`UpcomingExpiriesCard`
+      (`deployment-ui/src/components/     LifecycleCards.tsx`, shared internal `useLifecycleRows`/`LifecycleCard`)
+      mounted next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard); numeric threshold inputs ("new if
+      listed within N days" default 30, "expiring within M days" default 7) + `fetchNewListings`/`fetchUpcomingExpiries`
+      client helpers + `CatalogueLifecycleRow` interface in `client.ts` (mirrors `fetchUpcomingFixtures`). Added
+      mock-api.ts handlers for both routes (representative cefi/defi/tradfi rows) since neither was mocked before. —
+      deployment-ui@c6b1c09 + Evidence: `LifecycleCards.test.tsx` 6 specs green (renders rows, empty state,
+      threshold-change refetch with new param value, refresh button) + full UI QG green (tsc/eslint/vitest 88
+      tests/build). `[UI]` + pw:L2 (Vitest regression spec, per this plan's stated acceptance). _(Live Playwright MCP
+      browser check deferred — the shared `.playwright-mcp` browser was actively held by another concurrent agent in
+      this workspace at ship time; the mock-api handlers are committed and unit-verified, so the browser check is a
+      nice-to-have follow-up, not a blocker.)_
 - [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS`
       (`build_instrument_catalogue.py`) so expiry is stored separately from the overloaded `available_to`; then regen.
 - [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows where `available_from == pipeline-first-seen`
