@@ -517,6 +517,23 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   plan-reconcile: Phase-5 rollout todo at 302 is still `[ ]`/DEFERRED, not shipped); the optional self-healing
   observability layer and the operator-blocked K-repro also remain.
 
+### 2026-07-16 — 2-day health re-check + FLEET_WORKER_CAP right-sized for the 30 GB host (slot 16)
+
+- **Governor health re-check (2 days post-ship): clean.** Host stable (30.8 GB, no re-resize, 2-day uptime); reservation
+  mode still live (tmux + K=6); **ledger empty — no ghost reservations (the trap fix holds)**; both governor commits
+  (`aca6a2fcf`, `6402f6cd8`) intact on origin; trap fix present on slots 1/7/11/16; governor actively admitting
+  (`instruments-service reserved 3657MB (ADMIT) after 6s`). **OOM count = 0** over the 2 days.
+- **PSI confirmed the small-host caveat is real + recurring:** ~66 min cumulative _full_ memory stall over 2 days + 1.9
+  GB swap in use — no OOM (cgroup caps + 80 % valve held), but genuine intermittent pressure. Root cause is NOT the QG
+  governor (correctly bounded to the 21 GB budget / 3 cpu_slots) — it is the **ungoverned fleet-worker count**:
+  `ORCHESTRATOR_FLEET_WORKER_CAP=14` was sized for 61 GB; on 30 GB up to 14 Claude workers (~2.9 GB each) over-subscribe
+  RAM independent of the QG governor.
+- **Action (operator 2026-07-16, "for now, raise when I need more"):** lowered `ORCHESTRATOR_FLEET_WORKER_CAP` 14 → 8 in
+  the root `agent-orchestrator/.env.local` (durable, reversible). NB: `.env.local` is a systemd `EnvironmentFile` read
+  ONCE at process start (`get_config()` is a cached singleton, no hot-reload), so it applies on the next orchestrator
+  restart — NOT force-restarted (9 worker-agents active, no OOM urgency). This is the primary lever for todo 307; the
+  runtime abort-monitor (258) remains the QG-side complement.
+
 ## Deferred / open decisions
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
