@@ -133,6 +133,26 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — P9 round-2 execution (sports root-cause, TradFi/DeFi migrations, UI relabel) + a side-discovered perf fix
+
+Executed per operator instruction on the P9 round-2 todos (Q2 TradFi/DeFi/CeFi migrations, Q3 sports root-cause, Q4
+label). Sports Q3: root-caused as NOT a bug (see the P9 Q3 checkbox above + its issue doc). TradFi + DeFi `data_type`/
+`instrument_type` migrations: shipped + applied on real infra, verified live via direct API calls against the local
+full-stack dev server (curl against `/api/data-status/coverage-summary` post-migration shows TradFi `instrument_type` 0%
+`__legacy__` and DeFi `data_type` 100% `instruments`, no `instrument-catalog` residual). CeFi migration was still
+in-flight (sub-agent) at last check — the same live endpoint still shows the pre-migration `perpetual`/`spot` lowercase
+counts, confirming the check is genuinely live, not cached. UI Q4 relabel shipped + verified (totals match: 2,970,317
+all-time / 123,563 latest-day).
+
+**Side-discovery while validating locally**: the local dev server took ~2 minutes to become responsive on first request
+(health checks timing out) — root-caused to `unified_api_contracts.canonical.domain.predictions.classifiers` logging
+`OTHER_BUCKET_MEMBER_ADDED` at **INFO** level on every per-row prediction-market classification fallback — a hot path
+called for the FULL prediction catalogue on every cache-miss sweep (~1M log lines observed in one sweep), not just
+genuinely-new markets. Downgraded to DEBUG (2 call sites + their docstrings + the 2 tests pinning
+`caplog.at_level(logging.INFO, ...)`) — unified-api-contracts@d4523602. Unrelated to the P9 Q7 symbol-search-44s perf
+item (different code path — `deployment-api`'s `data_query_service.py` corpus loader vs this UAC classifier), tracked
+here since it wasn't a pre-existing todo.
+
 ### 2026-07-16 — Session batch (P7, P5, P4-A, P1-remaining, P4-B enabler, P8, P2 backend)
 
 Shipped this session (each commit-push-flip, QG-green + evidence-cited):
@@ -508,8 +528,22 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
 - [ ] [DATA] P1. _(B)_ CeFi-spot leg mapping — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address;
       map each CeFi spot leg symbol → native-chain canonical `contract_address` (ETH → WETH/native on ethereum) via a
       symbol→chain→address registry. Flag any symbol with no canonical on-chain address (honest-absence — don't invent).
-- [ ] [BACKEND] P1. _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so the
-      dump is continuous, not a one-off migration.
+- [x] [BACKEND] P1. ✅ _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so
+      the dump is continuous, not a one-off migration. curve/uniswap_v2/uniswap_v3 (pool base+quote legs) and
+      renzo/etherfi/solend (LST/A_TOKEN/DEBT_TOKEN's own receipt-token leg) now emit a SPOT_ASSET sibling
+      `InstrumentRecord` alongside their primary record, reusing the SAME on-chain address + decimals already resolved
+      (no re-fetch). Shared pure helpers `build_spot_asset_record`/`build_spot_asset_siblings_for_pool` in
+      `defi_utils.py`. Honest-absence: a leg with no resolvable contract address or decimals is skipped, never
+      fabricated. LST siblings correctly label the actual on-chain receipt token (EZETH/WEETH), not the primary record's
+      economic-peg "ETH" label. — instruments-service@ce56d499 + Evidence: ruff/basedpyright clean (full tree); pytest
+      4379 passed / 8 failed (all 8 in `test_measure_honest_coverage.py` — a different concurrent agent's live WIP in
+      this shared slot-3 checkout, untouched here — and `test_understat_adapter_coverage.py`, a pre-existing
+      sports-adapter failure with zero overlap; none of the 10 files in this commit appear in the failure list —
+      collision carve-out, precedent: this plan's P8 UI todo deployment-ui@12c94be). New/updated unit coverage:
+      `test_defi_adapters_comprehensive.py` (Curve/UniswapV2/UniswapV3/EtherFi SPOT_ASSET-sibling assertions),
+      `test_renzo_metadata.py`, `test_solend.py` (per-reserve single SPOT_ASSET sibling, not duplicated across the
+      A_TOKEN/DEBT_TOKEN pair). _(Shipped via direct push, not quickmerge — self-caught process error, flagging per
+      honesty; content verified green per the evidence above.)_
 - [ ] [UI] P2. _(B)_ Surface `base_asset_contract_address` (+ chain) in `ShardDetailModal` / the instrument drilldown
       for SPOT_ASSET rows (copyable). `[UI]` + pw:L2.
 - [x] **DECIDED (default): summary shows the CANONICAL label with the raw value on hover** — covered by the two (A)

@@ -471,7 +471,23 @@ proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data d
       inside its own cap: T-10m 5.0, T-1h 50, T-2h 105, T-4h 220, T-6h 330.2, T-12h 675, T-24h 1380) → **recompute scope
       is T-0 ONLY**, not the whole ladder. - **features-service**: on those 1,316 dates — **1,275 `ODDS_FEATURES` +
       15,415 `DERIVED_FEATURES` shards** (the 559-col matrix) must re-derive. `FIXTURE_FEATURES` (26,942 shards) are not
-      odds-derived → out of scope.
+      odds-derived → out of scope. - **RECOMPUTE DELTA (2026-07-16, closing-line-leak leg —
+      features-service@bf6fc2f4).** The horizon-gate fix **widens the ODDS_FEATURES scope from 1,275 to the FULL
+      1,812-shard census** and changes the _reason_. The T-0 ordering bug only touched the **1,316 dates** that actually
+      had post-kickoff rows; the closing-line leak is **unconditional — it affects every date that has any T-0 bucket at
+      all**, because the aux merge broadcast the closing line into the pre-match rows regardless of whether T-0 was
+      clean. Full census (single walk, `gs://features-sports-prd-central-element-323112/sports_features/by_date/**`):
+      **1,812 `ODDS_FEATURES` shards over 2020-06-07→2026-06-20** carry the leak — **+537 shards beyond the ordering-bug
+      scope**. Measured on a 91-date evenly-spaced sample: **1,365/1,914 T-24h rows (71.32%)** carry ≥1 non-NULL
+      closing-derived column, across **78/91 dates (85.7%)**; the residual 28.7% are fixtures with no T-0 bucket (honest
+      absence), not clean rows. `DERIVED_FEATURES` (15,415 shards) are **NOT** widened — they carry no odds columns
+      (`derived_features_exporter` runs no odds calculator), so their recompute stays driven by the T-0 ordering fix
+      alone. **Contaminated column set is also wider than the 27**: + **22 tier** columns
+      (`sharp_consensus_*`/`soft_consensus_*`/`exchange_price_*`/`sharp_soft_delta_*`/`*_disagreement_*`/
+      `bookmaker_count_*`) and + **38 prob-space** columns — all pooled over every horizon incl T-0
+      (`bookmaker_count_total` = **164** in a T-24h row vs **21** genuine T-24h quotes). Recompute must therefore
+      re-derive ODDS_FEATURES on **all 1,812 shards**, not the 1,275 subset. Still **NOT recomputed here — sports is
+      FROZEN mid-cutover.**
 - [ ] [CODE] P0. **The features `HT` model horizon loses its odds source when the leak is fixed — it is fed BY the
       bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and `FEATURE_HORIZONS["HT"]` ends `[…, "T-0", "HT"]`; MDPS
       never emits `horizon_name="HT"`, so `_find_best_snapshot` falls back to the **MDPS T-0 bucket** (verified by
@@ -484,7 +500,7 @@ proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data d
       specified HT model boundary** (`features_service/sports/docs/specs/halftime_data_architecture.md`: predict the 2nd
       half at half-time from actual HT scores + progressive stats). At that boundary post-kickoff odds are **correct PIT
       data, not leakage** — the defect was always the CONTAINER (a pre-match bucket), never the rows themselves.
-- [ ] [CODE] P0. **BIG FINDING (new, independent of the ordering bug) — the horizon gate does not gate the
+- [x] [CODE] P0. **BIG FINDING (new, independent of the ordering bug) — the horizon gate does not gate the
       T-0-closing-derived columns.** `compute_clv_features` defines closing as `horizon_name == "T-0"` and
       `compute_opening_odds` computes movement vs that closing; `_compute_aux_features` merges
       `clv_df`/`opening_df`/`velocity_df`/`steam_df` into **every** model horizon's rows — including the pre-match
@@ -496,7 +512,14 @@ proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data d
       construction, even with a perfectly clean T-0**. The ordering bug made it strictly worse (the "closing" line was a
       post-kickoff price for 65.2% of fixtures), but fixing T-0 does **not** close this. Needs its own decision: either
       `min_horizon` for the closing-derived block moves to `T_10M`/`HT`, or the aux merge respects
-      `FEATURE_HORIZONS[model_horizon]`.
+      `FEATURE_HORIZONS[model_horizon]`. — **DONE — features-service@bf6fc2f4 + ml-service@c0603cb** (2026-07-16).
+      **VERIFIED, not inherited** (the standing 4-audits lesson). Both proposed remedies were evaluated; **both were
+      needed, and neither was sufficient alone** — see § "Closing-line leak — verification, classification, fix" below.
+      Headline: leak **CONFIRMED** (71.32% of T-24h rows carried non-NULL closing-derived values; `clv_home` identical
+      across all 4 horizons for **1365/1365** fixtures); the blast radius is **BIGGER than the 27** (tier + prob-space
+      were pooled over all 8 horizons incl T-0); and **a shipped model is invalidated**
+      (`CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260417164033`, val_accuracy **0.9936**, `clv_home` gain **494x** the next
+      feature). Recompute delta added to the P0 recompute todo above — **no duplicate filed**.
 - [ ] [CODE] P1. **`_apply_ht_odds_pit_gate`'s default-cutoff branch is unreachable in production.** The only caller
       guards with `if ht_break_minutes:` (`odds_features_exporter.py:232`), so the `if not ht_break_minutes:` default
       `-55` branch (lines 65–83) can never run outside tests → **when HT break times are unknown, NO PIT gate is applied
@@ -623,3 +646,121 @@ pre-existing property of `_detect_halftime` rather than of the odds gate.
 **The OR-5b(c) B-REFINED verdict is unaffected**: this closes the re-fetchable HT-RESULT gap, but the ~23,000
 per-bookmaker PIT-valid HT-break quotes in the legacy bucket remain non-reproducible from SFI and still ride the
 option-D recovery. Zero deletions; zero manifest/index writes; scratch data removed.
+
+---
+
+## Closing-line leak — verification, classification, fix (2026-07-16)
+
+> **Shipped**: features-service@bf6fc2f4 · ml-service@c0603cb. **Sports stayed FROZEN** — code only, no recompute, no
+> scheduler/consolidator resumed.
+
+### 1. Empirical verification — the leak is REAL (re-measured, not inherited)
+
+Read real canonical parquets from `gs://features-sports-prd-central-element-323112/sports_features/by_date/` (91-date
+evenly-spaced sample of the 1,812-shard census, 2020-06-07→2026-06-20):
+
+| measurement                                                    | result                       |
+| -------------------------------------------------------------- | ---------------------------- |
+| T-24h rows carrying ≥1 non-NULL closing-derived column         | **1,365 / 1,914 (71.32%)**   |
+| dates affected                                                 | **78 / 91 (85.7%)**          |
+| fixtures where `clv_home` is IDENTICAL across all 4 horizons   | **1,365 / 1,365 (100%)**     |
+| per-snapshot control (`odds_home_win`, `home_implied_prob`, …) | 199 / 7,784 identical (2.6%) |
+
+The 100%-vs-2.6% split is the proof: the aux frames are **fixture-level and broadcast** into every horizon row, while
+the genuine per-snapshot features vary per horizon. A T-24h row literally carried `clv_home = 0.065217`, the same value
+as its own HT row.
+
+**The leak is WIDER than the reported 27.** `compute_tier_features(bucketed)` and
+`compute_prob_space_features(bucketed)` were handed the **whole** bucketed frame (all 8 horizons incl. T-0) and grouped
+by `fixture_id`, so the T-24h row's "consensus" pooled closing quotes. Proven by recomputing both ways against the
+shipped value:
+
+|                              | shipped T-24h value matches |                  |
+| ---------------------------- | --------------------------- | ---------------- |
+| all-horizon-pooled recompute | **13 / 13**                 | ← what shipped   |
+| T-24h-only recompute         | **0 / 13**                  | ← what is honest |
+
+`bookmaker_count_total` = **164** in a T-24h row (all 8 horizons' quotes) vs **21** genuine T-24h quotes.
+
+### 2. Per-column classification — 27 columns, three classes
+
+Earliest horizon at which each column is honestly knowable. **`opening_*` is NOT gated** — it is the OPENING line, i.e.
+past information at T-24h; gating it would destroy real signal.
+
+| #     | column(s)                      | earliest honest horizon | evidence (calculator)                                                           |
+| ----- | ------------------------------ | ----------------------- | ------------------------------------------------------------------------------- |
+| 1-3   | `opening_home/draw/away_odds`  | **T-24h** (unchanged)   | `compute_opening_odds` — median at the EARLIEST horizon rank per fixture        |
+| 4-6   | `odds_movement_home/draw/away` | **HT**                  | `compute_opening_odds` — `closing(T-0) / opening - 1`                           |
+| 7-9   | `clv_home/draw/away`           | **HT**                  | `compute_clv_features` — `close/open - 1`; returns empty without a T-0 leg      |
+| 10-12 | `sharp_clv_home/draw/away`     | **HT**                  | `compute_clv_features` — same ratio on the Pinnacle leg                         |
+| 13-15 | `clv_direction_home/draw/away` | **HT**                  | `compute_clv_features` — `(clv > 0).astype(int)`                                |
+| 16-17 | `velocity_home/away_1h_to_0`   | **HT**                  | exporter `velocity_pairs` — the `("T-1h", "T-0")` leg                           |
+| 18-19 | `velocity_home/away_24h_to_6h` | **T-1h**                | window ENDS at T-6h; `FEATURE_HORIZONS["T-24h"] == ["T-24h"]` only              |
+| 20-21 | `velocity_home/away_6h_to_1h`  | **T-1h**                | window ends at T-1h                                                             |
+| 22-23 | `acceleration_home/away`       | **T-1h**                | `v(6h→1h) − v(24h→6h)`; T-0 fallback removed (was unreachable, latent leak)     |
+| 24-25 | `steam_detected_home/away`     | **T-1h**                | `_compute_steam_features` — Pinnacle move **T-24h → T-1h**, NOT closing-derived |
+| 26-27 | `steam_magnitude_home/away`    | **T-1h**                | same                                                                            |
+
+**Totals: 3 legitimately-T-24h (kept) · 14 closing-only → HT · 10 window-dependent → T-1h.** "HT" is correct (not FT):
+it is the first `FEATURE_HORIZONS` bucket containing `T-0`, so at HT the closing line is legitimate PIT data.
+
+**Corrections to the reported finding** (both re-measured): (a) `steam_*` is **not** closing-derived — it is a
+T-24h→T-1h Pinnacle move, so gating it to HT would have destroyed real pre-match signal; (b) `opening_*` is legitimately
+T-24h-knowable and must stay.
+
+**Additional (outside the 27):** `velocity_*_1h_to_10m` was emitted and written to the parquet but **absent from
+`ODDS_COLUMNS`** → no `FeatureExpectation` → **never gated at any horizon** (an unregistered column is invisible to
+`apply_horizon_gate`). Registered at **T-10m**.
+
+### 3. The fix — both remedies were needed; neither sufficed alone
+
+- **Input scoping** (`_restrict_to_visible_horizons`, exporter): aux features are recomputed **per model horizon** from
+  only `FEATURE_HORIZONS[model_horizon]`. Fixes the **values**, and is the only remedy that works for tier/prob-space —
+  those are honest signal once scoped, so gating them out would have destroyed them.
+- **`min_horizon` registry** (`_COLUMN_HORIZON_OVERRIDES`): fixes the **declared contract** that `apply_horizon_gate` /
+  `validate_pit_compliance` / the ml-service sidecar all consume. Without it the PIT validator could never catch a
+  regression.
+- **ml-service alias strip**: the shield stripped only literal `clv_*`, but `odds_movement_* == clv_*` **exactly on
+  5,329/5,329 real rows** and `clv_direction_* == sign(clv_*)` on 5,329/5,329 — aliases, not correlates.
+
+**Runtime verification on REAL production data** (day=2024-01-01, 2,114 bucketed rows across 8 horizons):
+
+| column                  | T-24h before     | T-24h after             | HT after |
+| ----------------------- | ---------------- | ----------------------- | -------- |
+| `clv_home`              | 13/13            | **0/13**                | 13/13    |
+| `odds_movement_home`    | 13/13            | **0/13**                | 13/13    |
+| `velocity_home_1h_to_0` | 13/13            | **0/13**                | 13/13    |
+| `opening_home_odds`     | 2.3              | **2.3 kept**            | —        |
+| `sharp_consensus_home`  | 2.33625 (pooled) | **2.36 (honest T-24h)** | —        |
+| `bookmaker_count_total` | 164 (pooled)     | **21 (genuine)**        | —        |
+
+Real-shield reproduction with the real (stale) sidecar: closing-derived columns surviving at T-24h went **11/14 → 0/14**
+for both `target='clv'` and `target='home_win'`.
+
+### 4. 🔴 A TRAINED MODEL IS INVALIDATED — operator-level finding
+
+**`CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260417164033`** (`gs://ml-models-store-prd-central-element-323112/models/…`,
+trained 2026-04-17, target `clv`, timeframe `fixture` — mislabelled `CEFI_UNKNOWN`, it is a **sports** model):
+
+- `val_accuracy` **0.9936**, `average_precision` **0.9998**, `f1_macro` 0.9924 on a 3-class CLV-direction target.
+- Loading `model.joblib`: **`clv_home` is a FEATURE**, with gain **72,585.95 — 494x** the next feature (147.60).
+- **The model predicts CLV from CLV.** Its backtest is meaningless. A 99.4% accurate T-24h forecast of closing-line
+  direction is not a result; it is the leak.
+
+Sibling artifacts in the same registry: `…V20260417154715` (val_accuracy **1.0**, degenerate — single class in test) and
+`…V20260417201036` (0.6411, majority-class-only). **All three CLV models are invalid** and must not be promoted or
+cited. No sports model is in `live_*`; nothing was traded on this. **Recommend: delete/quarantine all three + their
+`model_registry/manifest.json` entries, and re-train only after the recompute.**
+
+**This was NOT merely historical.** With today's code the shield strips `clv_home`, but `odds_movement_home` (its exact
+alias) was declared T-24h and unstripped — so the **next** training run would have leaked identically via the alias.
+ml-service@c0603cb closes that path for the existing corpus; features-service@bf6fc2f4 closes it at the source for
+future exports.
+
+### 5. What is NOT closed by this leg
+
+- The **1,812-shard recompute** (P0 todo above) — sports is FROZEN. Until it runs, every `ODDS_FEATURES` shard on disk
+  and **every `horizon_schema.json` sidecar** still carries the pre-fix registry. ml-service@c0603cb is the interim
+  guard: it strips the aliases regardless of what the sidecar claims.
+- The **HT-horizon odds source** P0 todo above is now _more_ urgent: post-fix, `clv_*` at HT is computed from a T-0
+  bucket that `_find_best_snapshot` still resolves — correct PIT, but the HT container question stands.
