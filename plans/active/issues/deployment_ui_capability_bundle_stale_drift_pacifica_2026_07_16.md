@@ -159,4 +159,65 @@ already calls for.
 therefore blind to lowercase venue ids (`"drift"`) in generated JSON. Any future venue cull should grep
 case-insensitively AND sweep whole files, not just the matched pattern.
 
+## Third instance — `unified-api-contracts/openapi/*.json` (2026-07-16)
+
+Same class, third repo/location — found during a venue-context (not blanket `drift_|_drift`) case-insensitive sweep of
+`unified-api-contracts` + `unified-trading-library` dispatched after the operator flagged that the cull's closing greps
+were uppercase-biased. All the LIVE-CODE `"drift"` residue in UAC's own
+`unified_api_contracts/internal/architecture_v2/` subsystem (the strategy-archetype leg-spec / capability / collateral /
+jurisdiction / order-semantics registries — 7 Python source files: `collateral_registry.py`,
+`simulation_assumptions.py`, `jurisdiction_overlay.py`, `order_semantics.py`, `venue_tokens.py`,
+`archetype_leg_spec.py`, `archetype_leg_spec_seeds.py` — plus 2 test files, `test_collateral_registry_backfill.py` and
+`test_jurisdiction_overlay_backfill.py`) was hand-fixed + shipped this session (UAC commit — see this repo's own
+Progress Log / the dispatching session's final report for the exact sha). UAC's own
+`unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json` — which HAS an in-repo generator
+(`scripts/generate_archetype_capability_manifest.py`, round-trip parity checker) — was hand-edited (venue_ids +
+representative_slot_labels + notes) and verified round-trip clean via
+`python scripts/generate_archetype_capability_manifest.py` (`archetype_capability_manifest.json is up-to-date`).
+
+That leaves exactly the SAME stale-bundle class as the `deployment-ui` / `unified-trading-system-ui` instances above,
+this time inside UAC's own `openapi/` directory — **no in-repo generator found for any of the three**, so none were
+hand-patched:
+
+- `unified_api_contracts/openapi/capability-manifest.json` — `generated_from_commit: f0b66b26...` — verified via
+  `git merge-base --is-ancestor f0b66b26 <cull-commit>` to be an ANCESTOR, **821 commits behind current UAC HEAD**.
+  Carries a `venue:drift` node (`"label": "Drift"`) + a `collateral:drift` node, 22 edges touching them.
+- `unified_api_contracts/openapi/capability-verdict-matrix.json` — `generated_from_commit: 61ba5239...` — also a
+  verified ancestor, **100 commits behind current UAC HEAD**. ~70 `"venue": "drift"` rows across
+  `archetypes`/`verdicts`.
+- `unified_api_contracts/openapi/capability-unlock-report.json` — `manifest_commit: fd87026a...`, downstream of the same
+  stale `capability-manifest.json` — 3 `"to_node_id": "venue:drift"` edge references in its `impossible`/`roadmap`
+  sections.
+
+`grep -rln 'capability-manifest.json\|capability-verdict-matrix.json\|capability-unlock-report.json' scripts/` inside
+`unified-api-contracts` returns nothing — same "prior updates landed via an out-of-repo/ad-hoc regen process" situation
+as `deployment-ui`, not the same generator as UAC's OWN `archetype_capability_manifest.json` (that generator only
+serialises `ARCHETYPE_CAPABILITY_REGISTRY` back to UAC's own committed file — it does not touch `openapi/`). Filed here
+rather than hand-patched per the same blast-radius reasoning as the first two instances (referential-integrity risk
+across large generated files with no "every edge resolves to a node" test found in UAC either).
+
+**Also NOT fixed (downstream of UAC, out of this session's UAC/UTL-scoped dispatch, flagged for the operator):**
+`unified-trading-system-ui/lib/registry/ui-reference-data.json` `venue_set_variants` / `archetype_capability_registry`
+sections and `unified-trading-system-ui/tests/e2e/_shared/strategy-registry.ts` (`CARRY_STAKED_BASIS.instanceIds` still
+lists `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`) — both downstream mirrors of the UAC
+`archetype_capability_manifest.json` slot label this session just removed from the UAC source. Already independently
+discovered and documented in this session's sibling issue doc
+`architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` (UAC-source portion now resolved by this dispatch;
+the UI-mirror portion remains open there).
+
+**Fourth instance found, NOT applied — `unified-api-contracts/openapi/prospectus/*.md` (57 files)**: these carry a
+`[MACHINE-DERIVED]`/`[CODEX-DERIVED]` header and a real in-repo(-adjacent) generator —
+`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py` — unlike the three JSON bundles above. Ran it dry
+(`--uac-root <UAC> --output-dir <scratch>`) to check whether regenerating would cleanly drop the `DRIFT` residue
+(`CARRY_STAKED_BASIS.md`, `CARRY_STAKED_BASIS_DATED.md`, `CARRY_BASIS_PERP.md`, `CARRY_RECURSIVE_STAKED.md`,
+`YIELD_STAKING_SIMPLE.md` all still list DRIFT in venue-universe tables/mermaid diagrams post the UAC source fix). The
+dry-run diff shows the generator has drifted (no pun intended) from the committed files on MANY unrelated axes too —
+different venue-category classification (CEFI+DEFI vs DEFI-only), different execution-algorithm lists (including literal
+`Selector contradiction: ...` diagnostic strings not present in the committed copies), different markdown fence/table
+formatting, a different `generated_from_commit` baseline, and 2 archetypes (`CARRY_FUNDING_DISPERSION.md`,
+`TSMOM_BTC_CTA.md`) that don't exist in the committed set at all. This is the same "blind full regen risks silently
+changing more than the one thing you meant to fix" situation as the JSON bundles — NOT applied. Non-blocking for
+shipping (no `unified-api-contracts` quality-gate reads `openapi/prospectus/`), so left for whoever owns the
+prospectus-generator/committed-copy resync.
+
 ## Progress log
