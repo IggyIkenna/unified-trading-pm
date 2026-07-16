@@ -70,8 +70,10 @@ drift_direction: advance-code
      **`github-token` is DEAD (401)** — an earlier version of this plan named it and would have failed the deploy. D1
      fixes an install blocker (`GH_TOKEN_SECRET` path) · D2 preflight (⚠️ `jq`/`npm` on the box are still UNKNOWN — the
      real migration risk) · D3 scripts onto the VM · D4 install · D5 prove both pools Online · D6 canary.
-4. **Pacing after D6 (operator 2026-07-16): canary (1) → verify → next 10 → verify → remaining ~27.** Then STEP 2b
-   (ci-status-update trim) + STEP 2c (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+4. **Pacing after D6 (operator 2026-07-16): canary `agent-audit` (1) → verify → next 10 (5 simple + 5 complex) → verify
+   → remaining 27.** The exact 11 are named in § "Flip groups" — **do not re-pick them**; they were profiled from all 38
+   and chosen so the 10 cover EVERY capability class the remaining 27 use. Then STEP 2b (ci-status-update trim) + STEP
+   2c (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
 
 **Ordering hard rules:** runners must be live **before** any flip reaches `main` (schedule/dispatch workflows run the
 definition from the default branch — see the default-branch gotcha below), and **never flip** a `KEEP-*` workflow or
@@ -339,12 +341,56 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       **both pools Online** (5×`glue-*` + 3×`writer-*`), slot clone fresh, slice `MemoryCurrent` sane. Cross-check from
       here: `gh api /repos/IggyIkenna/unified-trading-pm/actions/runners` shows 8 online with the **disjoint** labels. A
       pool that registers but shows 0 Online = the wrapper is failing → `journalctl -u 'github-glue-runner@glue-1'`.
-- [ ] [VERIFY] P0. **D6 — CANARY `reconcile-release-tags`, WITHOUT touching `main`.** Flip its `runs-on` on **LDR
-      only**, then `gh workflow run reconcile-release-tags.yml --ref live-defi-rollout`. **Why this is safe:**
-      `workflow_dispatch` executes the definition **from the chosen ref**, so the self-hosted path is proven while
-      `main` still says `ubuntu-latest` — nothing scheduled changes behaviour until we promote deliberately. Verify: the
-      run lands on a `glue-*` runner, goes green, and the ephemeral runner **auto-deregisters** afterwards (proving the
-      JIT lifecycle, not just the job). **STOP HERE and report** — the operator gates the next phase.
+- [ ] [VERIFY] P0. **D6 — CANARY `agent-audit`, WITHOUT touching `main`.** ⚠️ **The canary is `agent-audit`, NOT
+      `reconcile-release-tags`** (corrected 2026-07-16 after profiling all 38 — see § "Flip groups" below):
+      `agent-audit` is the **smallest of the entire MOVE set** (50 LOC, 2 jobs), has `workflow_dispatch`, carries **ZERO
+      side-effecting capabilities** (pure gh/api glue), and is read-only by design (`audit_only` input). Blast radius ≈
+      nil — a failure means one audit tick didn't run. `reconcile-release-tags` looked small at 72 LOC but exercises
+      **firestore + pr-write + dispatch + setup-python + gcp-auth**; it is now in the COMPLEX group where it belongs.
+      Flip its `runs-on` on **LDR only**, then `gh workflow run agent-audit.yml --ref live-defi-rollout`. **Why this is
+      safe:** `workflow_dispatch` executes the definition **from the chosen ref**, so the self-hosted path is proven
+      while `main` still says `ubuntu-latest` — nothing scheduled changes behaviour until we promote deliberately.
+      Verify: the run lands on a `glue-*` runner, goes green, and the ephemeral runner **auto-deregisters** afterwards
+      (proving the JIT lifecycle, not merely a green job). **STOP HERE and report** — the operator gates the next phase.
+
+### Flip groups — canary (1) → 10 (5 simple + 5 complex) → remaining 27 (operator 2026-07-16)
+
+**Selection is EVIDENCE-BASED**, from profiling all 38 MOVE workflows by LOC · `workflow_dispatch` · job count ·
+capabilities exercised (firestore/slack/persist/gcs/git-write/pr-write/dispatch/setup-python/app-token/gcp-auth/
+upload-artifact). **The organising principle: the 10 cover EVERY capability class the remaining 27 use**, so once
+they're green the tail carries **no new risk** — only more volume. **All 11 have `workflow_dispatch`**, so every one is
+provable on LDR before `main` changes at all.
+
+⚠️ **A dispatch RUNS the workflow for real.** Use `dry_run: true` where it exists (`reconcile-release-tags`,
+`ci-status-consolidator`, `cold-storage-cleanup`, `staging-conflict-ldr-main-fallback`); `agent-audit` (`audit_only`)
+and `reconcile-staging-versions` are no-op-safe by design.
+
+| #   | Workflow                             | LOC | Group      | Capability it PROVES                                         |
+| --- | ------------------------------------ | --- | ---------- | ------------------------------------------------------------ |
+| 0   | `agent-audit`                        | 50  | **CANARY** | runner claims job · checkout · gh CLI · **JIT deregister**   |
+| 1   | `workspace-quickmerge-validation`    | 71  | simple     | `upload-artifact` from self-hosted                           |
+| 2   | `ruleset-drift-alert`                | 73  | simple     | **slack (CROSS-BOUNDARY)** · `setup-python` → **tool-cache** |
+| 3   | `conflict-resolution-agent`          | 94  | simple     | git-write · dispatch                                         |
+| 4   | `reconcile-staging-versions`         | 145 | simple     | git-write (no-op safe)                                       |
+| 5   | `digest-drift-sweep`                 | 191 | simple     | **gcp-auth / runner-user ADC** · dispatch                    |
+| 6   | `reconcile-release-tags`             | 72  | complex    | firestore · pr-write · setup-python · gcp-auth               |
+| 7   | `ci-status-consolidator`             | 97  | complex    | **firestore WRITE** · git-write (the manifest projection)    |
+| 8   | `readiness-verifier`                 | 124 | complex    | **persist-cicd-event (CROSS-BOUNDARY)** · slack              |
+| 9   | `cold-storage-cleanup`               | 412 | complex    | **GCS — the ONLY gcs workflow in the MOVE set**              |
+| 10  | `staging-conflict-ldr-main-fallback` | 188 | complex    | **app-token** · pr-write                                     |
+
+**The two CROSS-BOUNDARY tests (#2, #8) are the most important in the batch** — they probe the single biggest
+architectural risk in this design. Both are self-hosted CALLERS invoking a **hosted** reusable (`notify-slack` = KEEP-D;
+`persist-cicd-event` = MOVE-C, still hosted until converted). A reusable's `runs-on` is independent of its caller, so
+these prove the mixed hosted/self-hosted topology actually works — validating the KEEP-D decision **empirically rather
+than by argument**. Run them EARLY in the batch; if they fail, the KEEP-D/MOVE-C reasoning is wrong and the remaining
+flips must STOP.
+
+**Remaining 27** = everything else, including the 10 with **NO `workflow_dispatch`** (`ci-status-update`, `sit-gate`,
+`cloud-build-router`, `cloud-build-router-aws`, `update-repo-version`, `agent-runner`, `hotfix-mode`,
+`change-freeze-check`, `plan-notification`, `sit-unlock`) — these are **only** validatable AFTER promote to `main`
+(schedule/`repository_dispatch` run the definition from the default branch), so they go LAST and land with the watchdog
+already live. `ci-status-update` is the special one: **`[self-hosted, glue-writer]`** + the STEP 2b trim.
 
 ### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
 
@@ -835,3 +881,19 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   the JIT lifecycle rather than merely a green job. Post-D6 pacing per operator: **canary (1) → verify → next 10 →
   verify → remaining ~27**, each batch gated on green + billed-$0 + the queue watchdog staying quiet. `ci-status-update`
   is flagged in STEP 2 as the ONE exception to the uniform recipe (`glue-writer`, not `glue`).
+- 2026-07-16 — **Flip groups chosen from EVIDENCE, and the canary CHANGED (operator refinement).** Profiled all 38 MOVE
+  workflows by LOC · `workflow_dispatch` · job count · capabilities (firestore/slack/persist/gcs/git-write/pr-write/
+  dispatch/setup-python/app-token/gcp-auth/upload-artifact). **My original canary pick was WRONG**:
+  `reconcile-release-tags` is only 72 LOC but exercises **firestore + pr-write + dispatch + setup-python + gcp-auth** —
+  five capabilities incl. a PR write. It moves to COMPLEX (as the operator suggested). **New canary = `agent-audit`**:
+  smallest of all 38 (50 LOC, 2 jobs), `workflow_dispatch`, **ZERO side-effecting capabilities** (pure gh/api glue),
+  read-only by design (`audit_only`), blast radius ≈ nil. **Organising principle for the 10: cover every capability
+  class the remaining 27 use**, so the tail carries no NEW risk — only volume. All 11 have `workflow_dispatch` ⇒ every
+  one is provable on LDR before `main` changes. **The two CROSS-BOUNDARY tests are the batch's real payload**
+  (`ruleset-drift-alert` → hosted `notify-slack`; `readiness-verifier` → hosted `persist-cicd-event`): a self-hosted
+  caller invoking a HOSTED reusable is the biggest architectural risk in this design, and these validate the
+  KEEP-D/MOVE-C reasoning **empirically instead of by argument** — if they fail, the remaining flips STOP. **Safety
+  check done**: a dispatch RUNS the workflow for real, and the four destructive candidates all carry `dry_run` inputs —
+  including `cold-storage-cleanup`, the ONLY workflow in the entire MOVE set that deletes from GCS. The remaining 27
+  include **10 with NO `workflow_dispatch`** (`ci-status-update`, `sit-gate`, `cloud-build-router`, …) which are only
+  validatable AFTER promote — so they go last, landing with the watchdog already live.
