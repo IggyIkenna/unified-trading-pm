@@ -22,7 +22,7 @@ related:
   - github_billing_dashboard_access_2026_07_09.md
   - cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-15
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -58,17 +58,36 @@ drift_direction: advance-code
 **State 2026-07-15:** decisions closed; runner infra authored + pushed (`scripts/self-hosted-runners/`); **NOTHING
 deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
 
-### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh`)
+### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
-- **46 = MOVE (PM-local DIRECT `.github/workflows/*.yml`)** → edit `runs-on` directly in PM. Safe — only PM, which has
-  the runners.
-- **10 = KEEP hosted**, of which two special classes you must NOT naively flip:
-  - **`KEEP-T` (4): `main-backmerge-to-ldr`, `semver-agent`, `major-bump-issue-handler`, `request-major-bump`** — these
-    are **fleet templates** (`scripts/workflow-templates/`) rolled to EVERY repo. **DO NOT flip the template** (only PM
-    has runners → hangs the other ~24 repos) and **DO NOT hand-edit PM's copy** (banned rule). Leave hosted (low value).
-  - **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for
-    the light VM.
-  - Plus `quality-gates-v2` + `python-quality-gates-v2` (heavy tests) + 2 `pull_request` bots.
+**44 MOVE / 12 KEEP** (was 46/10 — corrected 2026-07-16 after the review; see below). **Only flip the MOVE set.** The 12
+KEEP fall in five classes, four of which would BREAK something if naively flipped:
+
+- **`KEEP-T` (4): `main-backmerge-to-ldr`, `semver-agent`, `major-bump-issue-handler`, `request-major-bump`** — **fleet
+  templates** (`scripts/workflow-templates/`) rolled to EVERY repo. Flip the template → hangs the other ~24 repos (only
+  PM has runners); hand-edit PM's copy → banned. Leave hosted.
+- **`KEEP-R` (1): `image-build-validate`** — a **cross-repo reusable** called by **24 repos'** `image-build-gate.yml`
+  (`uses: …/unified-trading-pm/.github/workflows/image-build-validate.yml`). A reusable's jobs run on the **caller's**
+  runners, and our `glue` runners are repo-scoped to PM → flipping it hangs the dual-cloud image-build gate in all 24
+  repos, **blocking every staging→main promote fleet-wide**. Same failure mode as KEEP-T; the classifier missed it until
+  the 2026-07-16 review (it's not in the template dir). Nearly free to leave hosted (only fires on promote PRs).
+- **`KEEP-M` (1): `overnight-dead-man-switch`** — a failure-independence monitor: it detects the overnight orchestrator
+  (which runs on THIS VM) failing. If it ran on the glue pool, a VM outage would silently kill both the orchestrator and
+  the switch that detects it. Must stay on infra independent of what it watches. (It also then acts as the **daily
+  backstop** that the VM/pool is alive — see the watcher note below.)
+- **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for the
+  light VM.
+- **`KEEP` (4): `quality-gates-v2` + `python-quality-gates-v2`** (heavy tests) **+ `plan-health-agent` +
+  `conflict-resolution-merged`** (`pull_request` bots).
+
+**⚠️ Watcher note (billing-first steer, operator 2026-07-16):** the four CI-health _watchers_ — `ci-health`,
+`cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health` — are in the **MOVE** set for now (immediate scope =
+reduce billing; VM-failure hardening deferred). They alert-only via Slack `#ci-failures` (+ `ci-health` auto-recovers
+stuck promote PRs / the v2-deadlock; `ldr-ci-monitor` writes Firestore `ldr_ci_status`). The residual risk: if the VM
+dies, their detection + `ci-health`'s auto-recovery go dark **silently** (the alerter is on the down box). Accepted for
+now because (a) it's low-probability and (b) the hosted `KEEP-M` dead-man-switch still catches a VM-down orchestrator
+daily. To buy back full failure-independence later, move any of these four into `KEEP_MONITORS` in the classifier (~a
+few $/mo each) — tracked as a todo below + a codex-doc todo.
 
 ### Deploy mechanism (Track 1 step 1)
 
@@ -95,14 +114,49 @@ deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), r
   check at `python-quality-gates-v2.yml` L170-202 / L585-607; `plans/**`+`codex/**` IN, lockfiles/YAML OUT.
 - **A2 dead cache** at `python-quality-gates-v2.yml:90-137` (probe) + `:647-653` (`if:false` save), hardcoded
   `cache-hit=false` at L124.
-- **STEP 2b trim** — `ci-status-update.yml` does `google-github-actions/auth` (~L82) + runtime
-  `pip install google-cloud-firestore` (~L104) + `python3 scripts/cicd/ci_status_store.py …` (~L117). Trim: pre-install
-  the lib in the `ubuntu` runner's python env, drop the auth step (VM ADC), shallow `git fetch` not a fresh checkout.
+- **STEP 2b trim** — `ci-status-update.yml` does `actions/checkout@v5` (~L54) + `google-github-actions/auth` (~L82) +
+  runtime `pip install google-cloud-firestore` (~L104) + `python3 scripts/cicd/ci_status_store.py …` (~L117). Trim: lib
+  pre-installed in the **runner slot's dedicated venv** (no per-run pip); drop the auth step (runner-user ADC);
+  **pre-stage `ci_status_store.py` in the runner slot → NO checkout at all** (it only writes 1 Firestore row from the
+  dispatch payload). Runner slot is a **separate folder/venv, isolated from AO**; **long-lived (non-ephemeral) pool**
+  for this high-freq writer (JIT churn would dominate a ~3s job).
 - **Re-measure (VERIFY)**: token via
   `gcloud secrets versions access latest --secret=github-billing-token --project=central-element-323112`;
   `curl …/users/IggyIkenna/settings/billing/usage?year=&month=`; per-workflow via
   `/repos/…/actions/workflows/{id}/runs?created=>DATE` `total_count` × billable-jobs (the timing endpoint returns 0 on
   this account — use the proxy). GitHub purges run history at ~90 days.
+
+---
+
+## MOVE / STAY manifest — the authoritative flip list (generated 2026-07-16 from `classify-glue-workflows.sh`)
+
+> The classifier is the SSOT — regenerate with `bash scripts/self-hosted-runners/classify-glue-workflows.sh`. This
+> pasted copy exists so "what moves / what stays" is unambiguous and conflict-free. **Split: 44 MOVE / 12 KEEP.**
+
+**STAY on GitHub-hosted (12) — do NOT flip `runs-on`:**
+
+| Workflow                     | Class      | Why it stays hosted                                                                    |
+| ---------------------------- | ---------- | -------------------------------------------------------------------------------------- |
+| `quality-gates-v2`           | KEEP       | real test gate (pull_request/push) — CPU-heavy pytest                                  |
+| `python-quality-gates-v2`    | KEEP       | the reusable heavy QG (44 fleet callers) — stays hosted per the ADR                    |
+| `plan-health-agent`          | KEEP       | `pull_request`-triggered                                                               |
+| `conflict-resolution-merged` | KEEP       | `pull_request`-triggered                                                               |
+| `build-smoke-all-repos`      | KEEP\*     | local docker buildx — too heavy for the light VM                                       |
+| `publish-package`            | KEEP\*     | local wheel build — heavy                                                              |
+| `main-backmerge-to-ldr`      | KEEP-T     | fleet template — flipping hangs ~24 repos; per-repo hand-edit banned                   |
+| `semver-agent`               | KEEP-T     | fleet template                                                                         |
+| `major-bump-issue-handler`   | KEEP-T     | fleet template                                                                         |
+| `request-major-bump`         | KEEP-T     | fleet template                                                                         |
+| `image-build-validate`       | **KEEP-R** | **cross-repo reusable — called by 24 repos; flip hangs their promote gate fleet-wide** |
+| `overnight-dead-man-switch`  | **KEEP-M** | **failure-independence — watches the orchestrator on THIS VM; must stay independent**  |
+
+**MOVE to `[self-hosted, glue]` (44)** —
+`agent-audit · agent-runner · branch-health · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-health · ci-status-consolidator · ci-status-update · cloud-build-failure-watcher · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-ci-monitor · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · notify-slack · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
+
+> ⚠️ Four of the 44 (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) are the
+> **failure-independence watchers** — moved now (billing-first), flagged for the hardening follow-up todo.
+> `notify-slack`, `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are
+> `workflow_call` reusables but **PM-internal only** (0 cross-repo callers — verified), so safe to flip.
 
 ---
 
@@ -172,27 +226,62 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **46 MOVE / 10 KEEP** — KEEP =
-      `quality-gates-v2` + `python-quality-gates-v2` + 2 `pull_request` bots, **`KEEP*` builders**
-      `build-smoke-all-repos`/`publish-package`, and **`KEEP-T` fleet templates** `main-backmerge-to-ldr` /
-      `semver-agent` / `major-bump-issue-handler` / `request-major-bump` (see pre-flight §). Confirm the MOVE set
-      carries no untrusted fork-PR code (private repo → none) before flipping.
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **46 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
+- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **44 MOVE / 12 KEEP** (see pre-flight
+      § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
+      `publish-package`) + `KEEP-T` templates (4) + **`KEEP-R` cross-repo reusable `image-build-validate`** + **`KEEP-M`
+      `overnight-dead-man-switch`**. Confirm the MOVE set carries no untrusted fork-PR code (private repo → none) before
+      flipping.
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **44 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
       `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
-      touch `scripts/workflow-templates/`; the `KEEP-T` templates stay hosted). **Pace = canary → phased groups
+      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R` set stays hosted). **Pace = canary → phased groups
       (operator 2026-07-15):** flip ONE low-risk workflow first (`branch-health` or `reconcile-release-tags`), confirm a
-      green self-hosted run, then roll the remaining ~45 out in **small batches** (not all at once). (Takes effect on
+      green self-hosted run, then roll the remaining ~43 out in **small batches** (not all at once). (Takes effect on
       push — do NOT push until the runners are live on the VM, else those workflows queue with no runner.)
-- [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** A plain `runs-on`
-      flip keeps the job's pointless per-run setup (fresh `actions/checkout` into `_work`, `google-github-actions/auth`,
-      runtime `pip install google-cloud-firestore`) — ~15s on a warm VM for a 1-row write. Trim it so it uses the VM's
-      warm state: **(1)** pre-install `google-cloud-firestore` in the runner's Python env; **(2)** drop the `auth` step
-      — the Firestore client picks up the VM's ADC; **(3)** reuse a warm checkout (shallow `git fetch` on the existing
-      clone, not a fresh clone). Result: `fetch + write` ≈ **~2-5s, near-zero boot churn**. Guard the trimmed steps to
-      self-hosted only (they'd fail on GitHub-hosted). Highest-frequency workflow (~13k/mo) so the trim matters most
-      here; apply the same pattern to any other high-freq mover that does redundant setup.
+  - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
+    `ci-status-update`, `cloud-build-router*`, `sit-gate`, `sit-unlock`, `hotfix-mode`, `update-repo-version` **cannot
+    be canaried on LDR** — `gh workflow run --ref` needs a `workflow_dispatch` trigger, and dispatch/schedule workflows
+    only execute their definition from the **default branch (main)**, so the flip is inert on LDR and goes fleet-live
+    the instant it hits main. To canary these: **(a)** temporarily add a `workflow_dispatch:` trigger, fire it on LDR,
+    remove it after (true pre-merge canary); or **(b)** promote that one flip to main alone with the runners already
+    live and a fast revert ready. Do the workflow_dispatch-capable canary (`branch-health`) FIRST regardless, to prove
+    the pool.
+- [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** Confirmed
+      structure: `ci-status-update.yml` `update-ci-status` job does `actions/checkout@v5` (L54) +
+      `google-github-actions/auth@v3` (L82) + `pip install google-cloud-firestore` (L104) — ~15s on a warm VM for a
+      1-row write. A plain `runs-on` flip keeps all three (the runner executes the YAML steps in an isolated `_work`,
+      not the VM's warm state). Trim so it uses the warm state: **(1)** the lib is **pre-installed in the runner slot's
+      dedicated venv** (see runner-isolation decision below) — no per-run `pip install`; **(2)** drop the `auth` step —
+      the Firestore client uses the runner user's ADC; **(3)** avoid a fresh clone. Note `ci_status_store.py` only
+      writes one Firestore row from the dispatch payload, so the cleanest form is **pre-stage the script in the runner
+      slot and do NO checkout at all** (lighter than a `git fetch`, and it sidesteps any clone-freshness question).
+      Result: **~2-5s, near-zero boot churn**. Guard the trimmed steps to self-hosted only. Highest-frequency mover
+      (~13k/mo); apply the same pattern to other high-freq movers with redundant setup.
+- [ ] [INFRA] P1. **Runner-slot ISOLATION + design (operator 2026-07-16 — resolves the review's #9/#10/#11).** The glue
+      runners live in a **totally separate slot: their own folder, their own environment/venv**, fully isolated from the
+      AO and its worker slots (no shared clone). So: the "warm checkout" is a **dedicated runner-owned clone**, NEVER an
+      AO slot clone (removes the live-worker race the review flagged); the pre-installed `google-cloud-firestore` (STEP
+      2b) lives in **that slot's dedicated venv**, not any AO/system Python. **Runner mode: use a LONG-LIVED
+      (non-ephemeral) pool for the high-frequency writer** (`ci-status-update`) with per-job `_work` cleanup — at ~2-5s
+      runtime the JIT re-registration overhead (generate-jitconfig + config + connect, several seconds) would otherwise
+      dominate and cap burst throughput; keep JIT-ephemeral for the low-frequency movers where clean-state-per-job is
+      cheap. Update `setup-glue-runners.sh` / `glue-runner-run.sh` to the dedicated-slot + long-lived-writer design
+      before deploy (currently they assume a single JIT-ephemeral pool).
 - [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
       VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
+- [ ] [DOCS] P2. **Codex: write down the self-hosted-glue security posture (operator 2026-07-16 — important, not
+      blocking).** On self-hosted runners the runner user carries the VM's **ambient cloud identity** (ADC + AWS-WIF) —
+      STEP 2b drops the per-job `auth` step _precisely because_ of this — so every glue job runs with the runner slot's
+      cloud creds, a wider blast radius than GitHub-hosted's scoped short-lived tokens. Mitigation posture to record: a
+      **dedicated low-privilege runner user + scoped service account** (separate from the orchestrator SA), the runner
+      in its own isolated slot (already decided); and **if the exposure ever becomes a real concern, move the runners to
+      a dedicated VM** (operator's stated fallback). Update `codex/05-infrastructure/` (runner conventions) +
+      `codex/07-security/`. Reduced severity given the slot-isolation; documented so the posture is explicit.
+- [ ] [INFRA] P3. **Failure-independence follow-up (the review's #2, deferred).** The 4 CI-health watchers (`ci-health`,
+      `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) currently MOVE (billing-first). Revisit: either
+      move any back into `KEEP_MONITORS` in the classifier to restore independence from a VM outage (~a few $/mo each),
+      OR add an **independent runner-pool-offline page** (hosted watchdog or external uptime check). Record the chosen
+      posture in `codex/04-architecture/ci-alerting.md`. (The hosted `KEEP-M` dead-man-switch is the interim daily
+      backstop.)
 
 ### Phase 2 — Shrink the fleet-wide hosted QG (the real $ that stays on GitHub-hosted: A1 + A2 + A5)
 
@@ -203,10 +292,22 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       (`python-quality-gates-v2.yml` L170-202 / L585-607) to the `base-service.sh:596` docs regex so a pure
       docs/plans/codex change skips the ~12-min pytest+typecheck legs (keep lint-codex). Scope: `plans/**`+`codex/**`
       IN, lockfiles/workflow-YAML OUT. Also gate `dispatch-cloud-build` on `docs_only!='true'`.
+  - **🔴 CORRECTNESS (do it PROPERLY — operator 2026-07-16, "this is the whole point of CI"):** the skip MUST still
+    **report the required `quality-gates-v2` status check as SUCCESS for the PR-head SHA** — a _green_ skip, NOT an
+    absent check. Branch protection hard-requires that context; if the fast-path makes it MISSING, the branch-protected
+    LDR→main promote PRs (the biggest beneficiary) go **permanently BLOCKED** (the same `[skip ci]`→missing-check hazard
+    in CLAUDE.md). Verify on a real docs-only promote PR that the required check goes green, not that it vanishes.
 - [ ] [INFRA] P1. **A2 — FIX the content-gate dedup properly (operator: fix now).** Rebuild the byte-identical-tree skip
       on the **Firestore tree-fingerprints** (replace the broken `actions/cache` at L90-137 / L647-653). **Correctness
       guard: skip ONLY when that exact tree previously passed GREEN** (never off a failed/unknown run); relies on QG
       determinism. Fleet-wide (does NOT touch SIT; never skips a changed tree).
+  - **🔴 CORRECTNESS (operator 2026-07-16, "make it proper"):** "same tree → same result" holds ONLY if the **gate
+    itself** is unchanged. The dedup key MUST therefore include the **gate/ruleset version** (the
+    `python-quality-gates-v2` workflow + base-script fingerprint / a `QG_GATE_VERSION` bump), not just the source-tree
+    hash — otherwise a gate-logic change over a byte-identical tree would skip a run the _new_ gate would fail. AND (as
+    with A1) the skip must still **post the required check as SUCCESS for the current SHA**, per-branch — a prior green
+    on branch X must not leave branch Y's required context absent. Test: change the gate over an identical tree →
+    confirm it does NOT skip.
 - [ ] [INFRA] P2. **A5 — collapse the fan-out (operator: measure-then-collapse).** Confirm the merged
       `typecheck`+`lint-codex` leg stays under the pytest leg on the slowest repo, then merge + fold the sub-minute jobs
       (content-sentinel/Slack/dispatch). Target ~30–40% fewer billed job-minutes/run, no coverage loss.
@@ -287,6 +388,16 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   sha256, JIT-ephemeral, repo-scoped to PM (all glue lives here), CPU-capped to protect the orchestrator, shellcheck
   clean. `classify-glue-workflows.sh` → 46 MOVE / 10 KEEP (refined 2026-07-15). Files pushed; deploy on the VM + the
   runs-on flip are the next steps, gated on operator go.
+- 2026-07-16 — **Review pass (operator: "grill the plan properly").** Findings folded in: (1) **fleet-breaker** —
+  `image-build-validate` was MOVE but is a cross-repo reusable called by 24 repos (flip hangs their promote gate) →
+  reclassified **KEEP-R**; classifier now detects cross-repo reusables + a **KEEP-M** failure-independence class
+  (`overnight-dead-man-switch`). **Split corrected 46/10 → 44/12**; added the explicit §"MOVE / STAY manifest". (2)
+  Canary caveat: dispatch-only movers (`ci-status-update` etc.) can't be `gh workflow run`-canaried → added the
+  workflow_dispatch/staged-main options to STEP 2. (3) A1/A2 correctness guards: the skip must still post the required
+  `quality-gates-v2` check GREEN (not absent) or promote PRs block; A2's key must include the gate version. (4) Runner
+  design finalized (operator): dedicated isolated slot/folder/venv, long-lived pool for the high-freq writer, no
+  AO-clone reuse, no per-run checkout for ci-status-update. (5) Added the ambient-creds security codex todo + the
+  4-watcher failure-independence follow-up. (6) A3 number corrected (~$78/mo, and $0/double-counted post-B1).
 - 2026-07-15 — **Captured execution-critical context** (operator: don't lose it in compaction). Added a
   pre-flight/runbook §. Key catch: 4 MOVE workflows are FLEET TEMPLATES
   (`main-backmerge-to-ldr`/`semver-agent`/`major-bump-issue-handler`/`request-major-bump`) — flipping the template would
