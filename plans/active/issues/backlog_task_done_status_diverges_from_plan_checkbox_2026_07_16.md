@@ -105,29 +105,45 @@ basis — a correctness regression hiding behind what looks like the fix finally
 
 ## Recommended decision
 
-Root-cause is not yet established from this task's scope (data_engineering / sports craft) — plausible candidates, in
-rough order of likelihood: (a) a slot called `/done` for `-001`/`-002` citing a fresh-pull HEAD SHA as "evidence"
-without actually completing/flipping the source todo (a `slot_done_no_plan_flip` warning-only violation that was never
-remediated); (b) task-ID reuse/collision across a plan regen — the same numeric slot (`-001`, `-002`) getting reassigned
-to a different semantic todo than an earlier `/done` was legitimately called against, while the DB's `status: done`
-carried forward against the new identity; (c) a manual/erroneous DB write. Recommend an `infra`-role investigation into
-`server/regen_backlog_from_plan.py` + the `/done` handler to determine which, then either (i) add a `/done`-time hard
-check that a path-shaped `plan_ref` task's cited commit actually touches + flips the plan checkbox before accepting
-`status: done` (upgrading the existing `no_plan_flip` warning to a blocking check for `gate_on_depends`-relevant tasks
-specifically), or (ii) a one-off audit sweep cross-checking every `status: done` backlog task with a `plan_ref` against
-that plan's live checkbox state and reopening any mismatches.
+**Root-cause CONFIRMED (not just plausible) by reading the `/done` handler directly**
+(`agent-orchestrator/server/routes/slots_worker.py:601-760`, `done_slot()`): `plan_flip = verify.check_plan_flip(...)`
+runs, and when the cited commit doesn't touch the plan checkbox it appends a `no_plan_flip` `DoneWarning` — but that
+warning is **never enforced**. The function only ever raises `HTTPException` for the B1 ownership/idempotency checks
+(already-done / not-holder, lines 644-689) and (under a strict env flag) the M9 origin-unreachable case; `no_plan_flip`
+falls straight through to `task_row.status = "done"` regardless. So ANY `/done` call whose cited SHA is a real,
+resolvable, reachable commit — even a routine "re-verify, declining, no action taken" Progress Log commit that
+explicitly did NOT touch the plan — is accepted as a completion. This is exactly what happened here: `094756d64` and
+`0402f7a86` are legitimate commits (they pass SHA verification) but are declining-commits, not completions, for the
+tasks they're attached to. A slot most likely called `/done` citing its post-fresh-pull HEAD SHA as "evidence" (an easy
+mistake — that SHA IS on `live-defi-rollout`, so it passes `verify.verify_done`) without registering that
+`check_plan_flip` would (correctly) find no flip and only warn, not block.
+
+Fix: upgrade `no_plan_flip` from warning-only to a **hard 409** (mirroring the existing
+`ORCHESTRATOR_DONE_REQUIRE_ORIGIN` strict-mode pattern already used for the M9 origin gate) whenever
+`plan_flip["applicable"]` is true — i.e. whenever the task carries a path-shaped `plan_ref` at all, not just for
+`gate_on_depends`-relevant tasks, since ANY task's false "done" can silently poison a downstream
+`prereqs.completed_tasks` gate today or in the future. Pair with a one-off audit sweep (recommended separately, Todo
+below) to catch and reopen any pre-existing false-`done` tasks created before the hard-check ships (this doc's
+`-001`/`-002` are confirmed instances; there may be others).
 
 ## Todos
 
-- [ ] [INFRA] P1. **Root-cause how `sports_p2_features_history_to_ml_ready-001`/`-002` got `status: done`** in the live
-      backlog DB while their source plan checkboxes (`plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`
-      lines 101, 109) remain `[ ]`. Check `/done` call history / activity feed around the `done_sha` commit timestamps
-      (`094756d64` ~2026-07-15T10:11:59Z, `0402f7a86` ~2026-07-15T09:5xZ) for which slot called `/done` and with what
-      evidence. (repo: agent-orchestrator)
-- [ ] [INFRA] P1. **Add a consistency check** (either at `/done`-accept time for `gate_on_depends`-relevant tasks, or a
-      standalone audit script) that flags/reopens a backlog task marked `status: done` when its `plan_ref`'s
-      corresponding checkbox is not actually `[x]` — this is the specific gap that let a false-positive prereq feed
-      `gate_on_depends`. (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P1. **Root-caused** how `sports_p2_features_history_to_ml_ready-001`/`-002` got `status: done` while
+      their source plan checkboxes remain `[ ]`: confirmed via direct code read that
+      `agent-orchestrator/server/routes/slots_worker.py`'s `done_slot()` treats `no_plan_flip` as a non-blocking
+      `DoneWarning` (see "Recommended decision" above) — any `/done` call with a real, reachable, but non-completing SHA
+      is accepted. No DB/YAML mutation performed (root-clone write is outside worker scope); this todo closes the "which
+      of a/b/c" question raised at filing time — it is (a) verbatim, confirmed. (repo: agent-orchestrator) —
+      data_engineering slot-13, 2026-07-16.
+- [ ] [INFRA] P1. **Upgrade `no_plan_flip` from warning to a hard 409** in `done_slot()`
+      (`server/routes/slots_worker.py`) whenever `plan_flip["applicable"]` is true — reject `/done` when the cited
+      commit doesn't touch the task's `plan_ref` checkbox, mirroring the existing strict-mode pattern used for the M9
+      `sha_unverifiable`/origin gate. Add a regression test asserting a `/done` citing an unrelated-but-valid SHA for a
+      path-shaped `plan_ref` task gets rejected. (repo: agent-orchestrator)
+- [ ] [INFRA] P2. **One-off audit sweep**: cross-check every current `status: done` backlog task carrying a `plan_ref`
+      against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
+      this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
+      fixed. (repo: agent-orchestrator)
 - [ ] [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
       `sports_p2_features_history_to_ml_ready-001` (Todo 1, "Compute features 2015→present") is actually complete before
       trusting any future `gate_on_depends` dispatch of `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 —
@@ -141,3 +157,18 @@ that plan's live checkbox state and reopening any mismatches.
 Discovered while working `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 (36th consecutive dispatch of that
 task). Filed this issue doc per findings-triage HARD RULE (SSOT contradiction / big finding). No code changed by this
 doc. See the sibling issue doc's Progress Log for the corresponding Todo 2 decline entry.
+
+### 2026-07-16T18:4xZ UTC — data_engineering slot-13 (root-caused, Todo 1 flipped)
+
+Prompted to "default fuller solution, do not idle" on a `/progress` check-in — went past filing-and-waiting to actually
+confirm root cause rather than leave it as guesswork. Read `agent-orchestrator/server/routes/slots_worker.py`'s
+`done_slot()` directly (lines 601-760): `no_plan_flip` is computed via `verify.check_plan_flip(...)` but only ever
+appended as a `DoneWarning` — the function's only `HTTPException` raises are the B1 already-done/not-holder checks and
+the strict-mode M9 origin gate. So a `/done` call citing ANY real, reachable SHA sails through to `status="done"` even
+when that SHA never touched the cited `plan_ref` checkbox. This is a confirmed code-level gap, not speculation: matches
+hypothesis (a) from this doc's original filing exactly. No DB write attempted (root-clone SQLite/YAML write is outside
+worker scope, confirmed no reopen/reset endpoint exists on `/api/backlog` either — checked `server/routes/backlog.py`).
+Flipped Todo 1 (root-cause) `[x]`; left Todos 2 (the actual code fix) and 3 (audit sweep) open for an `infra`-role
+follow-up, since shipping a fleet-wide `/done`-semantics change is a higher-blast-radius call than this task's remit
+justifies unilaterally. `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 itself remains genuinely blocked
+regardless (ground truth re-checked, unchanged) — see the sibling issue doc.
