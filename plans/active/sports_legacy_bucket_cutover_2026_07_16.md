@@ -130,6 +130,19 @@ column-union."_
 > **The operator's "MOVE any non already existent data" is object-existence phrasing. At the row layer, canonical is NOT
 > a superset of legacy.** Taking the phrase literally deletes 305,000+ rows. This needs an OPERATOR RULING (OR-1).
 
+> **🟡 F-2 INVESTIGATED 2026-07-16 (operator ruling: "investigate the row gap first") →
+> [`issues/sports_legacy_canonical_row_gap_2026_07_16.md`](issues/sports_legacy_canonical_row_gap_2026_07_16.md).**
+> **The class is REAL (not a path artifact) but the cause is NOT a lossy migration.** Nothing ever transformed legacy
+> rows into canonical rows: the v9 vehicle is a byte-identical `gcs_copy_object`; the 2026-04-28 v1→v9 plan is
+> `phase: pending_approval` (never ran, `entity=fixtures`-scoped only); canonical `fixture_events` carries
+> `player_id`/`team_id`/`time_elapsed` columns legacy **never had**. Measured: **62/62 canonical twins are written LATER
+> than legacy** (legacy 05-01…05-23, canonical 07-06…07-15) — the buckets are two INDEPENDENT capture generations.
+> **Canonical is NET RICHER: +27,764 rows over 3,051 paired objects (gains 29,650 / loses 1,886, 15:1)** — F-2 measured
+> only the losing 2%. The ~305k splits: **player_stats 111,827 (37%) = GENUINE complementary coverage (recover)**;
+> standings 91,380 + teams 16,502 + player_values 16,233 (~41%) = **snapshot skew with ZERO missing entities + one
+> cartesian-junk write (never merge)**; fixture_events 69,444 (23%) = **degenerate 5-col legacy schema, rows
+> unattributable**. **OR-1 → option D (partial/targeted), NOT A and NEVER B.**
+
 ### F-3 (BLOCKING, ordering) — the vehicle would re-import the v1_archive the v1_archive leg says must never enter canonical
 
 `SPORTS_REF_V1_ARCHIVE_PREFIX` is a member of `_INSTR_DATA_TREES` (`:113`) **and** is one of the three trees whose shape
@@ -678,12 +691,31 @@ row-superset of legacy: 13,222 canonical objects hold strictly fewer rows (playe
 fixture_events 69,444; teams 16,502; player_values 16,233 — e.g. `day=2019-08-12 season=2019`: legacy 640 vs canonical
 38). Both move vehicles use skip-if-exists → they skip **every one of them** → deleting legacy destroys 305,000+ rows.
 
-- **A: row-union legacy ∪ canonical per cell, write the union to the canonical path [WORKER REC]** — safest; preserves
-  canonical-only rows; costs a read-merge-write per cell (13,222 cells).
-- **B: overwrite canonical with legacy wherever legacy ⊇ canonical** — simpler/faster, but loses canonical-only rows
-  anywhere containment does not actually hold.
-- **C: treat "non already existent" literally — skip class B and accept the row loss** — matches the operator's words
-  but contradicts the data-pipeline-correctness HARD RULE.
+> **🟡 INVESTIGATED 2026-07-16 →
+> [`issues/sports_legacy_canonical_row_gap_2026_07_16.md`](issues/sports_legacy_canonical_row_gap_2026_07_16.md). The
+> framing above is CORRECTED by measurement**: canonical is not a row-superset of legacy — but legacy is not a superset
+> of canonical either, and **canonical is NET RICHER (+27,764 rows / 3,051 paired objects)**. The "305,000+ rows lost"
+> overstates the recoverable figure by ~2.7×: only **~111,827 (player_stats)** is genuine data. There was **no lossy
+> migration** — the buckets are independent capture generations (canonical written 6-10 weeks LATER, 62/62). **T2.4's
+> ABORT clause fires**: every sampled class is genuine divergence (legacy ⊄ canonical AND canonical ⊄ legacy), so no
+> containment-based move was ever viable. **New recommended option D below.**
+
+- **A: row-union legacy ∪ canonical per cell, write the union to the canonical path** — ~~[WORKER REC]~~ **NOW
+  REJECTED**: unions incompatible schemas (legacy `fixture_events` is 5-col vs canonical's 13-col), re-imports the
+  `player_values` cartesian corruption, and re-adds `standings` aggregate views canonical deliberately no longer carries
+  — 13,222 read-merge-writes to recover data that is ~59% junk.
+- **B: overwrite canonical with legacy wherever legacy ⊇ canonical** — **CATASTROPHIC, ruled out by measurement**:
+  containment does NOT hold in any sampled class, and canonical is net-richer by +27,764 rows. Overwrite replaces
+  canonical's 13-col `fixture_events` with a 5-col stub and its correct 38-row `player_values` with 640-row junk.
+- **C: treat "non already existent" literally — skip class B and accept the row loss** — loses the ~111,827-row
+  `player_stats` residue (real 38-col rows for fixtures canonical demonstrably lacks); contradicts the
+  data-pipeline-correctness HARD RULE.
+- **D: PARTIAL — targeted, schema-aware, per-entity union [WORKER REC]**: (1) **`player_stats` only** — union on the
+  shared 38-col schema keyed `(fixture_id, player_id)`, **de-duplicating on write** (canonical has a 2× duplication
+  defect); (2) **`fixture_events`** — do NOT union; enumerate the legacy-only `fixture_id`s and **re-fetch them from
+  api-football into the canonical 13-col schema** (external-data-always-available); (3) **`standings` / `teams` /
+  `player_values`** — **NO ACTION**, written disposition (snapshot skew, zero missing entities / cartesian junk).
+  Shrinks Phase 2c from 13,222 objects to a `player_stats`-scoped union + a `fixture_events` re-fetch list.
 - Other.
 
 **OR-2 (BLOCKING Phase 0) — the legacy bucket has a live writer we cannot identify.** 125 writes on 07-15 (real data
