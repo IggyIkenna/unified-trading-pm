@@ -288,7 +288,7 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   launchers). N>1 in the real gap measured ~94% 403s + **37,212 FALSE `attempted_failed` rows** (manifest corruption,
   not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1`
   bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93%
-  idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/PACIFICA/EXTENDED) are exempt. SSOTs:
+  idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs:
   `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
   `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);

@@ -210,8 +210,6 @@ baseline:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/curve.py:
     count: 3
-  instruments-service/instruments_service/reference_data/adapters/defi/drift.py:
-    count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/jito.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py:
@@ -310,8 +308,6 @@ baseline:
     count: 4
   market-tick-data-service/market_tick_data_service/adapters/_umi_extended.py:
     count: 1
-  market-tick-data-service/market_tick_data_service/adapters/_umi_pacifica.py:
-    count: 1
   market-tick-data-service/market_tick_data_service/adapters/coinbase_cde_batch.py:
     count: 1
   market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py:
@@ -350,8 +346,6 @@ baseline:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py:
     count: 4
-  market-tick-data-service/market_tick_data_service/cli/handlers/drift_v2_historical_handler.py:
-    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py:
     count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_collectors.py:
@@ -402,8 +396,6 @@ baseline:
     count: 11
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py:
     count: 2
-  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_drift.py:
-    count: 11
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_yield.py:
