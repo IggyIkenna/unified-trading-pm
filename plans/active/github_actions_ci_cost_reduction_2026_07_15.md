@@ -79,12 +79,39 @@ drift_direction: advance-code
      the single most likely thing to be 'helpfully' re-optimised back. Do not.
    - **The wrapper self-heals the JIT 409** left by a SIGTERM'd predecessor. Without it, one `systemctl restart` takes
      the whole glue pool down permanently.
-3. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
+3. **HOW TO TOUCH THE BOX AT ALL — read before any VM step.** There is **no inbound SSH** and no open `:8765`; **AWS SSM
+   is the only way in**. Use `scripts/self-hosted-runners/ssm-run.sh` (snippet on stdin) — it exists so you do not
+   re-discover its three gotchas: SSM runs your snippet under **dash** (so it injects a bash shebang), the payload must
+   travel as a **JSON param file** (inline quoting mangles anything real), and a mangled-to-empty payload still reports
+   **Success** (so read stdout, never just status). **SSM runs as ROOT, and gcloud ADC is PER-USER with root having
+   NONE** — anything touching GCP must `sudo -u ubuntu`.
+   ```bash
+   echo 'systemctl --no-pager list-units "github-glue-runner@*"' | bash scripts/self-hosted-runners/ssm-run.sh
+   ```
+4. **⛔ DEPLOY RULE — `git pull` the deploy clone, NEVER patch it.** The box's copy of these scripts comes from
+   `/opt/glue-deploy/unified-trading-pm`, a real git clone. Update it with
+   `sudo -u ubuntu git -C /opt/glue-deploy/unified-trading-pm fetch --depth 1 origin live-defi-rollout && … reset --hard FETCH_HEAD`,
+   then re-run `install`. **Copying a file straight onto the box (scp/base64/heredoc) creates a second source of truth
+   and WILL be silently reverted** — that exact mistake wiped the JIT-409 self-heal off the live wrapper on 2026-07-16
+   (I patched `/opt/github-glue-runners/` but not the clone; the next `install` copied the clone's older wrapper back
+   over it), leaving the box one `systemctl restart` from the pool-death bug. **Verify after every deploy:** the live
+   wrapper's sha must equal git's —
+   `git show origin/live-defi-rollout:scripts/self-hosted-runners/glue-runner-run.sh | sha256sum` vs
+   `sha256sum /opt/github-glue-runners/glue-runner-run.sh`.
+5. **THE REVERT PATH EXISTS — use it, don't hand-roll one.** `scripts/self-hosted-runners/hosted-baseline/` holds the
+   byte-exact **GitHub-hosted** form of all 56 workflows (the 10 flipped ones recovered from git history; `MANIFEST.tsv`
+   records provenance). `hosted-baseline.sh restore <wf>|--all` puts a workflow back — and it restores the
+   `setup-python` / `pip install` steps the flip DELETED, which reverting `runs-on` alone would not: that would give a
+   hosted job with no Python set up, broken in a NEW way. Run `hosted-baseline.sh verify` before trusting it, and
+   **re-run `snapshot` whenever an UNFLIPPED workflow is edited** (its baseline goes stale; verify catches it). The
+   baseline is `.prettierignore`d ON PURPOSE — prettier rewrote it once and destroyed the byte-exactness that is its
+   whole point.
+6. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
    `classify-glue-workflows.sh` vs `git grep -l 'self-hosted, glue' .github/workflows/`). The tail carries **no new
    capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
    AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
    2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
-4. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
+7. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
    exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
    then checks, so on a busy LDR it can never self-validate; workaround = chain
    `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
@@ -742,8 +769,11 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       `readiness-verifier`, `reconcile-release-tags`, `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted
       pre-seeds the tool cache, self-hosted resolves against `RUNNER_TOOL_CACHE` and on a miss downloads/builds a Python
       **per job** — won't break, but turns a ~5s job slow. Pre-seed the tool cache once at install.
-- [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
-      VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
+- [ ] [VERIFY] P1. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
+      what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped jobs
+      are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed minutes
+      (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
+      `MemoryCurrent` < 8G, orchestrator load unaffected).
 - [ ] [DOCS] P2. **Codex: write down the self-hosted-glue security posture (operator 2026-07-16 — important, not
       blocking).** On self-hosted runners the runner user carries the VM's **ambient cloud identity** (ADC + AWS-WIF) —
       STEP 2b drops the per-job `auth` step _precisely because_ of this — so every glue job runs with the runner slot's
@@ -1156,3 +1186,46 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   including `cold-storage-cleanup`, the ONLY workflow in the entire MOVE set that deletes from GCS. The remaining 27
   include **10 with NO `workflow_dispatch`** (`ci-status-update`, `sit-gate`, `cloud-build-router`, …) which are only
   validatable AFTER promote — so they go last, landing with the watchdog already live.
+- 2026-07-16 — **Batch-2 validation: 9/10 flipped workflows PROVEN on the glue pool, all ZERO-BILLED — and my first
+  measurement of that lied.** Operator asked to dispatch each flipped workflow rather than wait on crons. Turned out
+  almost nothing needed dispatching: the crons had already proven themselves. Evidence, per-JOB `runner_name` +
+  `/timing.billable`: `ci-status-consolidator` (schedule 17:38, glue-1) · `reconcile-staging-versions` (schedule 17:56,
+  glue-3) · `reconcile-release-tags` (schedule 18:20, glue-1) · `staging-conflict-ldr-main-fallback` (schedule 18:08,
+  glue-1) · `digest-drift-sweep` (schedule 18:23, glue-1) · `workspace-quickmerge-validation` (dispatch 14:03, glue-4) ·
+  `ruleset-drift-alert` (dispatch 15:36, glue-4) · `readiness-verifier` (dispatch 16:06, glue-5) ·
+  `cold-storage-cleanup` (dispatch 15:03, glue-4). Every one reports `billable: {}` = **zero hosted minutes**. **The
+  near-miss worth recording**: my first sweep printed a single `runner_name` column truncated to 26 chars, and the
+  unique-list sorts `GitHub Actions …` BEFORE `glue-…` (ASCII `G` < `g`), so every cross-boundary run — the ones with a
+  glue job AND a hosted reusable job — got cut off exactly at the comma and rendered as **purely hosted**. I was ~1
+  minute from reporting "5 workflows silently failed to move". Same class as the earlier `venv --help` / `bash -lc`
+  verifier lies: **the tool answered a different question than the one I asked**. Per-JOB output is now the only
+  acceptable evidence shape here — a run-level runner name is meaningless for a cross-boundary workflow BY DESIGN. **The
+  two cross-boundary tests re-confirmed on real runs**: `readiness-verifier` = `verify-readiness` on glue-5 +
+  `send-notification` AND `persist-event` on hosted — i.e. KEEP-D/MOVE-C behaving exactly as designed, hosted jobs being
+  correct rather than a regression.
+- 2026-07-16 — **10th workflow (`conflict-resolution-agent`) NOT proven — a zero-side-effect test was designed, then
+  BLOCKED on permissions; needs operator approval.** It is the only flipped workflow whose success path has a real,
+  expensive side effect: `escalate` → `agent-runner.yml` → `repository_dispatch escalate-to-orchestrator` → a REAL
+  **Opus** worker on a fabricated conflict. Only its `resolve-and-escalate` job is on glue; `agent-runner.yml` is
+  `runs-on: ubuntu-latest` (a KEEP reusable), so proving the flip only requires that job to START. Designed test:
+  dispatch **`--ref live-defi-rollout`** with **empty inputs** → the glue job starts, dies at its own
+  `: "${REPO_NAME:?}"` guard (conflict-resolution-agent.yml:65), `escalate` is skipped by `needs` (no `if:`, defaults to
+  `success()`) ⇒ **no worker spawned**; and LDR is chosen because `ci_failure_watcher.py:123` is
+  `WATCHED_BRANCHES = ["main","staging"]` ⇒ the deliberate red X **cannot page #ci-failures**. main==LDR is
+  byte-identical for `.github/workflows/`, so the LDR ref runs the same flipped definition. Rejected alternative:
+  tripping `agent-runner.yml`'s idempotency gate needs a REAL PR labelled `escalation-dispatched` — which would then
+  silently suppress a genuine future escalation. **Blocked by the Bash permission classifier; left for the operator to
+  approve rather than worked around.**
+- 2026-07-16 — **FINDING (P1, unrelated to this plan, cross-repo): `digest-drift-sweep` has been a SILENT NO-OP since
+  birth.** Reading its log to confirm a re-dispatch was safe (the fan-out to 16 repos was the risk) showed
+  `Dispatched: 0 / Already fresh: 0 / No ARG found: 16` on EVERY run back through Jul 14 — `Already fresh: 0` being the
+  tell. Root cause: `secrets.GITHUB_TOKEN` (:77) is scoped to PM only, so cross-repo `contents/Dockerfile` 404s;
+  `curl -sf … || echo ""` (:128-131) swallows it and the empty result is misreported as the benign _"Dockerfile not
+  found — may not be image-building"_ (:138-142). **Verified, not inferred**: the exact curl returns HTTP 200 + a valid
+  pin with a PAT, HTTP 404 without scope; all 16 repos DO carry `ARG BASE_IMAGE_DIGEST` and ALL are stale vs UTL
+  `:latest sha256:5122f7ab…`. Born broken in `0d5663d4d` (2026-06-19); `git log -S` proves it was never `GH_PAT` ⇒ ~27
+  days × 4/day ≈ **110 green runs that did nothing**. NOT caused by the flip (`23ce709cc` touched only `runs-on:`).
+  **Not fixed here — it is a fleet event, not a one-liner**: every repo being stale means the first correct sweep fans
+  `dependency-update` to all 16 at once, `GH_PAT` is pending rotation, and the dispatch POST (:160-176) has the same
+  defect. Issue doc: `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side
+  benefit for this plan: the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.

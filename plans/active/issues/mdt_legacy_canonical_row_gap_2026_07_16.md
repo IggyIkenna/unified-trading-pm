@@ -67,6 +67,64 @@ source:
 
 # MDT legacy↔canonical row gap — why canonical holds 6.7M fewer rows (OR-5b)
 
+> # 🔴 SUPERSEDED IN PART 2026-07-16 by the OR-5b(a) RECOVERY LEG — **THE HEADLINE OF THIS DOC IS AN ARTIFACT. DO NOT ACT ON IT.**
+>
+> **The recovery leg re-measured before writing, per the standing "never inherit a classification, re-measure at the
+> key/object layer" rule — and the premise collapsed.** Everything below the fold about the _method_ and the _derivation
+> map_ stands (both re-verified exhaustively). **The 6.37M "genuine pre-match density gap" does not exist.**
+>
+> **The one measurement no prior MDT audit ran: WHOLE-DAY, KEY-LEVEL containment over EVERY legacy tick-day.**
+> Exhaustive — all **1,837** legacy tick-days, ~900k object reads, **0 errors** (`~/tmp-or5b/or5b_delete_gate.py` →
+> `or5b_delete_gate.jsonl`):
+>
+> | Measure                                         | Value                                |
+> | ----------------------------------------------- | ------------------------------------ |
+> | legacy PRE-MATCH tick keys (all days)           | **42,108,211**                       |
+> | legacy IN-PLAY tick keys (all days)             | **2,542,764**                        |
+> | canonical tick keys                             | **44,091,464**                       |
+> | legacy PRE-MATCH keys **absent** from canonical | **524,486 (1.2456%)**                |
+> | legacy IN-PLAY keys **absent** from canonical   | **25,576 (1.0058%)**                 |
+> | **TOTAL genuine legacy-only keys**              | **550,062 (1.23%)**                  |
+> | **Days with ANY legacy-only key**               | **32 of 1,837 (1.74%)** — 1,805 at 0 |
+>
+> **Why this doc's 6.37M is wrong — two compounding measurement errors:**
+>
+> 1. **ROWS, not KEYS.** Legacy re-writes the same bookmaker quote at every fetch snapshot; canonical de-duplicated it.
+>    Measured on 2022-03-15: G1 holds **28,944 pre-match ROWS carrying only 14,104 distinct tick KEYS**, and canonical
+>    holds **14,904 keys — MORE**. This doc's artifact-check (iii) claimed to have cleared exactly this ("only 0.5% are
+>    redundant re-polls") — it did not.
+> 2. **PER-PAIR, not WHOLE-DAY.** Canonical spreads one legacy object's rows across many objects (2022-04-02: **313**
+>    canonical objects for the day), so a row living in a SIBLING canonical object was scored "legacy-only". Check (ii)
+>    declared this "CLEARED for (b) — one canonical object per cell"; it does not hold at the row layer.
+>
+> Over the exact 40 days in the claimed-worst window (2022-03-07…2022-04-21, where this doc says canonical holds
+> **7.8%** of legacy's rows): G1 pre-match keys **979,578**, absent from canonical **54 (0.0055%)**. Canonical holds
+> **more** distinct keys than legacy on nearly every one of those days.
+>
+> **The gap that IS real: 32 days, 550,062 keys — dominated by a contiguous canonical capture OUTAGE 2022-09-07 …
+> 2022-10-01** (21 days; e.g. 2022-10-01 legacy **104,868** keys vs canonical **8,849**). By year: 2022 = **549,330** ·
+> 2023 = **377** · 2025 = **355**.
+>
+> **⇒ Every OR-5b(a)/(b)/(c) recommendation below is void:**
+>
+> - **"Recover the 3,816 G1 objects" → REFUSED, and it was executed no further than a dry-run.** **3,472/3,816
+>   (90.985%)** of G1 sits on a day where canonical already holds every legacy tick key — there is nothing to recover.
+>   The dry-run measured the merge would have **ADDED ~15.7M rows that canonical already holds** — a mass duplication,
+>   not a recovery. **No merge was applied. Zero data objects were mutated.**
+> - **"G1 recovers 99.98% of the gap" → FALSE.** G1 does not even cover **3 of the 32** gap days (2023-07-29,
+>   2025-02-23, 2025-03-02). Only **344/3,816** G1 objects sit on a gap day at all.
+> - **"G3 ⊂ G2 ⊂ G1" → FALSE at the key layer.** Canonical (G3) holds **98.77%** of every legacy key and is a near
+>   strict SUPERSET, not the poorest generation.
+> - **The 45,701 class-B objects close ANYWAY — but by direct proof, not by the nesting claim: 43,964/45,701 (96.199%)**
+>   sit on a zero-gap day ⇒ provably redundant. The remaining **1,737** sit on the 32 gap days and are the only class-B
+>   objects carrying real data.
+>
+> **MDT delete-eligibility: 🔴 STILL NOT DELETE-ELIGIBLE** — but the residue is **~2,081 objects on 32 days** (1,737
+> class-B + 344 G1), not 49,517, and the payload is **550,062 keys**, not 7,079,850 rows. The correct remedy is a
+> **day-scoped recovery of 32 days**, NOT a G1 generation recovery. See the runbook's OR-5b block.
+>
+> ---
+>
 > **READ-ONLY investigation. Zero mutations** — no writes, no copies, no manifest changes, no bucket changes. Every
 > number below is measured live against the two buckets on 2026-07-16.
 
@@ -428,6 +486,66 @@ serves `h1_*` but `_extract_odds()` never reads it → a re-fetchable capture ga
 | 5   | **30/200 sampled canonical objects carry duplicate rows on the poll key** `(event, market, outcome, bm_time, price, fetch_utc)`. Independent of the cutover; a merge must de-duplicate on write or inherit it.                                                                                                           | New issue doc — data-correctness           |
 
 ## Progress Log
+
+**2026-07-16 (later) — OR-5b(a) RECOVERY LEG: the merge was REFUSED on measurement. Zero data objects mutated.** The leg
+was dispatched to execute the option-D G1 read-split-merge (3,816 objects → 6.37M pre-match rows + the in-play subset).
+Per the standing re-measure rule, every inherited claim was re-tested at the key/object layer BEFORE any write. Sequence
+and evidence (`~/tmp-or5b/`):
+
+1. **Live re-inventory of both MDT buckets** (`or5b_inventory.py`) — legacy **406,583** (the +2 vs the 07:44 baseline
+   are this morning's own T0.6 snapshot backups; legacy is dormant, 0 removals), canonical **497,692**. G1 re-listed
+   live: **3,816** objects / 227,673,166 B / created 2026-04-05…04-13 — matches this doc exactly.
+2. **Derivation map RE-VALIDATED exhaustively** (`or5b_g1_measure.py`, all 3,816 objects / **19,944,880 rows**, 0
+   errors): `source == ODDS_API` **100.0000%** · `venue := instrument_id[1].upper()` **100.0000%** ·
+   `league_id := instrument_id[3]` vs BOTH the path `league=` and the `league_id` column **100.0000%** · `date` column
+   == path `day=` **100.0000%** · **0 malformed instrument_ids**. **This doc's map is CORRECT and is confirmed** — the
+   "fabrication-required" premise is indeed disproven.
+3. **A rule this doc's map is MISSING — `.upper()`.** Canonical's `league_id` vocabulary carries BOTH `SOCCER_EPL` and
+   `soccer_epl`. With `.upper()`, **all 49,707** derived target cells already exist in canonical ⇒ **0 new objects**.
+   (This doc reports 99,414 cells / 87,194 existing / 12,220 new — exactly **2×** the measured 49,707, i.e. the fan-out
+   census double-counted every cell.)
+4. **🔴 BIG FINDING — T2.6's 6,110-object move is a pure DUPLICATE population** (`or5b_t26_dup_proof.py`, EXACT over all
+   6,110 pairs / 12,220 full reads / 0 errors): the 6,110 lowercase-`league_id` canonical objects are **exactly** T2.6's
+   dst set, and each is content-identical to canonical's pre-existing native UPPERCASE-`league_id` twin on the same
+   (day, venue, LEAGUE) — **6,110/6,110 = 100.0000% identical tick-key sets, 0 legacy-only ticks, 0 canonical-only
+   ticks**. T2.6's strip key was case-blind, so it classified already-present objects as "class A / no canonical
+   counterpart". T2.6 recovered **0 rows** and added 6,110 duplicate objects; T2.7's MDT shard describes them. Own issue
+   doc filed. **No deletion performed — this leg authorises none.**
+5. **Canonical target-cell schema census** (`or5b_schema_census.py`, all 49,707 cells, footer reads, 0 errors): **4**
+   schema families, all 23-col. The `bookmaker_key`/`fixture_id`/`available_at` trio this doc calls "3 columns legacy
+   lacks" exists in only **6,641/49,707 (13.4%)** — and those cells LACK `venue`/`instrument_type`/`data_source`, which
+   the other 43,066 HAVE. Two families, not a superset.
+6. **Column conventions measured, never invented** (`or5b_colvalues.py`): `bookmaker_key.upper() == path venue` and
+   `== instrument_id[1].upper()` on **10,744/10,744**; canonical's own `fixture_id` is **`''` on 100%** (0 nulls, 0 ==
+   event_id); `available_at − bm_time == 5.0s` on **10,744/10,744** (re-confirms T2.7). Family A `data_type` column =
+   `trades`; family B = `odds` (T2.9 drift, and it splits BY FAMILY).
+7. **THE DECISIVE CHECK — whole-day key containment** (`or5b_wholeday_check.py` → `or5b_delete_gate.py`). The per-cell
+   dry-run claimed ~1.65M rows to add over 40 days; against the **whole-day** canonical keyset those same G1 pre-match
+   keys were **99.9945% already present (54 absent of 979,578)**. Escalated to an exhaustive pass over **all 1,837
+   legacy tick-days**: **550,062 legacy-only keys (1.23%) on 32 days; 1,805 days at exactly ZERO.** See the banner.
+8. **Merge REFUSED.** Applying it would have written ~15.7M rows canonical already holds. `or5b_merge.py` exists and is
+   dry-run-clean (0 parked / 0 aborted / merge-not-overwrite proof per object) but was **never run with `--apply`**. The
+   in-play quarantine was never written.
+
+**Only GCS write performed by this leg** (additive, non-destructive, mandated): the canonical MDT index snapshot →
+`gs://market-data-tick-sports-prd-central-element-323112/_index/or5b_backups/20260716-164545/availability_index.20260716-164545.or5b_g1.bak.parquet`,
+crc32c `2KzY/w==` **verified == source** (47,184,905 B, src gen 1784189886055849). Placed under `_index/or5b_backups/` —
+never `_index/per_vm/` (R-11). **No per-VM manifest shard was written** (`or5b-g1-20260716` does not exist): a shard
+must describe real recovered cells, and there are none. **No data object was created, modified, or deleted.**
+
+**A mechanism correction for whoever executes the 32-day recovery — the in-play quarantine design in OR-5b(c) does NOT
+work as specified.** Measured, not assumed: `reprocess_sports_odds.py::_is_consumable_trades_blob` is
+`name.endswith("ticks.parquet") and "_migrated_" not in name` — it lists at
+`day={D}/pipeline_mode=batch_odds_api/asset_group=sports/` and **never inspects the `instrument_type=`/`data_type=`
+segments**. So a distinct `instrument_type`/`data_type` alone (the ruling's stated mechanism) would still be swept in
+and force-fed to T-0. A working quarantine needs BOTH axes: a **filename that is not `ticks.parquet`** (defeats the
+sports reprocessor) AND a **distinct `data_type=`** (defeats `orchestration_scanner._matches_data_type`, which is a
+`f"data_type={dt}/" in name` substring test). `pipeline_mode` must stay the true `batch_odds_api` — it is a closed UAC
+enum (`{mode}_{source}`, test-enforced); `batch_odds_api_inplay` would be fabricating a field. Residual hazard measured:
+a day holding a quarantine blob but no consumable blob would raise `RawOddsShapeUnrecognizedError` (a false
+`attempted_failed`) — over all 301 in-play days, **0 such days**. Note also that the sibling leg's fix has ALREADY
+landed in `bucket_assignment_adapter.py` (`n[vals < 0] = -1`, post-kickoff REJECTED, replacing the T-0 force-feed), so
+the code layer no longer force-feeds; the quarantine is defence-in-depth, not the sole guard.
 
 **2026-07-16** — Investigation executed read-only per operator rulings OR-5b(a)+(b). **Exact pass over all 45,701 unique
 pairs (91,402 full parquet reads, 0 errors)** — not a sample, per the OR-1 precedent's own critique of extrapolation.

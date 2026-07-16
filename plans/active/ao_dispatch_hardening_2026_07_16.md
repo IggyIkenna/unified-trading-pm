@@ -339,25 +339,71 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       `bash scripts/quality-gates.sh` on agent-orchestrator; ship via~~
       `quickmerge.sh "fix(dispatch): ..." --agent --files '<paths>'`. **Gate**: QG green + `Quickmerge:` trailer + LDR
       landed.
-- [ ] [OPERATOR] P0. 🟡 **UNBLOCKED + FIRST READING TAKEN 2026-07-16 15:08Z — NOT yet a verdict (needs a multi-hour
-      window).** Operator deployed; verified live: clone `behind = 0`, HEAD `96d005f`, and the code is **RUNNING**
-      (journal `15:01:03 WatchFiles detected changes in 'server/dispatch.py' … Reloading`, worker re-forked `15:01:12`,
-      `Application startup complete`). **Deploy is CLEAN**: zero errors, zero tracebacks, zero mentions of the new
-      symbols in any failure; the `slot_messages` migration ran once in prod and backfilled historical→terminal exactly
-      as designed (the flood risk did NOT materialise). **Baseline CONFIRMED from the live DB** (not just the doc's
-      claim) — prior 24h: `autospawn_succeeded` **954**, `slot_boot` 1330, `worker_kicked` 1174, `worker_polling_dead`
-      932, and `task_dispatched` **not even in the top 8** (<241). That is the pathology exactly. **Early signal that R1
-      is working in prod**: every tick since the reload reads
-      `checked=17 spawned=1 failed=0 skips={… 'queue_satisfied': 10–13}` — the budget is SATISFIED after ONE spawn, so
-      10–13 slots correctly stand down. Pre-fix the budget was 6 against 1 claimable task and it spawned into all of
-      them. **Why this is not the verdict**: the window is 7 minutes and a reload restarts every worker, so it is
-      dominated by fleet re-establishment, not steady state. 3 autospawns in 7.4 min extrapolates to ~24/h vs the
-      39.75/h baseline — directionally right, statistically meaningless. **Re-measure over ≥6h of normal operation**,
-      comparing `autospawn_succeeded : task_dispatched` against 954 : <241. Query: `activity_log` (NOT `activity`) on
-      `/var/lib/orchestrator/state.db`; the box has no `sqlite3` CLI — use `.venv/bin/python3`. **Runtime verification —
-      the real bar.** the 24h pre-fix baseline (**1014 autospawns / 954 deaths → 217 dispatches / 101 done**). **Gate**:
-      autospawn:dispatch ratio materially down + no idle-respawn loop on a fleet-skipped task. Code-shipped ≠ fixed —
-      this plan is not done until the burn is measured to have stopped.
+- [x] [OPERATOR] P0. ✅ **MEASURED 2026-07-16 17:35Z — VERDICT: R1 did NOT reduce the churn. Residual root-caused to ONE
+      dead slot and fixed in `agent-orchestrator@6c778e6`.** Deploy verified first (clone `behind=0`, code RUNNING,
+      reload clean, `slot_messages` migration ran once and backfilled exactly as designed — the flood risk did NOT
+      materialise), so this is a measurement of the fix, not of a stale box. - **Hourly series across the 15:01Z deploy
+      boundary — flat.** `autospawn_succeeded`: 13:00 **29** · 14:00 **27** ‖ _deploy_ ‖ 15:00 **27** · 16:00 **30**. No
+      step change. 24h totals: `slot_boot` 1292, `worker_kicked` 1136, `autospawn_succeeded` 915, `worker_polling_dead`
+      901 — and **`task_dispatched` 63**, i.e. ~14.5 spawns per dispatch. `task_dispatched` was **0 for the 3h
+      straight** after the deploy. - **I MISREAD MY OWN EVIDENCE and must not repeat it.** This todo previously recorded
+      `spawned=1 … queue_satisfied: 10–13` as an _"early signal that R1 is working — the budget is SATISFIED after ONE
+      spawn"_. **That reading was wrong: it is the signature of the residual BUG.** `queue_satisfied: 13` means 13 slots
+      were skipped because `len(to_spawn) >= spawn_budget` — i.e. `spawn_budget == 1`, every tick, forever, for a task
+      that then never dispatched. A number consistent with the fix was also consistent with the bug, and I reported the
+      flattering reading without testing the other one. - **Root cause (measured, live DB).** 20 backlog tasks / 13
+      queued; **12 of 13 are prereq-blocked** behind operator gates (`dvol-historical-pull-approved`,
+      `gw-enrichment-landed`, `sports-cf8-maintenance-window-scheduled`, `morpho_vm_complete_and_consolidator_fresh`,
+      `cefi-recapture-sweep-complete`, `overnight-cron-selffire-window-passed`) or an unfinished upstream task. The 13th
+      — `sports_travel_calculator_tz_aware_kickoff_crash-001` — reads **"ready (no blockers)"** and drove `budget=1`
+      every tick. **All 15 real worker slots had already skipped it** (35+ consecutive declines, each logged genuinely
+      BLOCKED-PREREQ on a parent-plan todo). **Slot 0 — unconfigured and paused since 2026-07-06 — had no skip**,
+      because nothing ever ran there to decline anything. The budget's SLOT scope is EXISTENTIAL and ranged over EVERY
+      slot, so dead slot 0 passed on the strength of never having skipped anything → task "claimable" → spawn a REAL
+      slot that had already skipped it → handed nothing → idled → watchdog reclaimed it → respawn. ~30/h against ZERO
+      dispatches. - **Fix `6c778e6`**: `claimable_queued_task_ids`' candidate set now gates on
+      `dispatch.slot_is_spawnable` (configured + not paused) — the SAME predicate `autospawn._should_spawn` uses, which
+      `_slot_is_configured` now delegates to, so they cannot drift. R1 made the budget eligibility-aware but left its
+      **candidate set** wrong: an existential check is only sound over slots that can actually receive the work.
+      Deliberately NOT a `_FILTERS` row (a filter is task-dependent and would also refuse tasks to a paused slot already
+      running a worker — 30 tests caught that overreach). QG exit 0, **1342 passed**, basedpyright 0 errors; 2 new
+      tests, bug-injection verified. - **Gate**: autospawn:dispatch ratio materially down + no idle-respawn loop on a
+      fleet-skipped task. Query: `activity_log` (NOT `activity`) on `/var/lib/orchestrator/state.db`; no `sqlite3` CLI
+      on the box — use `.venv/bin/python3`.
+- [x] [BACKEND] P0. ✅ **MEASURED 2026-07-16 18:08Z — `6c778e6` did NOT stop the churn. The gate above said "if it does
+      NOT, this phase reopens again"; it did not, and it has.** Deploy confirmed first (`SHA=6c778e6`, and
+      `slot_not_configured` rose 1→2 as the paused-slot exclusion took effect, so the new code was demonstrably
+      running). Ticks still read `spawned=1 … queue_satisfied: 9–13` — budget still 1. - **Second, INDEPENDENT break of
+      the same invariant.** `slot_skips` carry a **24h TTL**, so a fleet-wide skip decays UNEVENLY. Live at 18:08:
+      `slot 13/14/15/16 → skip 25–29h → EXPIRED → justify budget=1`;
+      `slot 2/3/5/6/7 → skip 4–18h → still VALID → cannot take the task`; **and AutoSpawn spawned 2, 3, 5, 6, 7.** -
+      **The budget is a COUNT** ("N tasks claimable by SOMEBODY") and cannot say WHICH slots. Nothing checked that the
+      slot being spawned was one of the slots that made the count non-zero. So the budget was satisfied by slot 13 while
+      the spawn landed on slot 2 — structurally unable to claim the only task that bought it. Boot → poll → nothing →
+      idle → watchdog reclaim → respawn. - **Fix `agent-orchestrator@f8ace1f`**: `dispatch.slot_has_claimable_task`
+      answers the per-slot question from the SAME `_FILTERS` table (FLEET+SLOT; CAPABILITY still ignored — AutoSpawn
+      picks model/role), and the tick asks it before spawning. Each expiring skip now costs exactly ONE spawn — the
+      retry the TTL exists for — instead of an unbounded loop, and the tick can reach a TRUE zero. `_apply_fleet_cap`
+      extracted from `_run_one_tick` to buy back the C901 budget: **the complexity cap is a real constraint and was not
+      raised.** QG exit 0, **1345 passed**. - **Testing lesson worth keeping**: the dispatch tests all passed with the
+      new gate DELETED — they prove the PREDICATE, not the CALL. A tick test now pins the wiring, verified by injection;
+      its failure output reproduces the live tick line exactly (`checked=2 spawned=1 skips={'queue_satisfied': 1}`).
+- [ ] [BACKEND] P0. **Runtime verdict for `f8ace1f` — third attempt at proving the churn stops.** **Gate**: `HEAD`
+      contains `f8ace1f` AND the tick reads `spawned=0` with `no_claimable_task_for_slot` as the ATTRIBUTED reason while
+      the queue is entirely prereq-blocked, AND `autospawn_succeeded`/h collapses from ~30 toward ~0. **Two fixes have
+      now each looked sufficient and each left the symptom fully intact.** Do not close this on code, tests, or a deploy
+      — only on the live rate. If it still spawns, the driver is again something else: re-measure which slots are
+      spawned vs which justify the budget (query in the Progress Log), do not re-reason from the code.
+- [ ] [BACKEND] P1. **Durable park for the fleet-skipped task — promoted from the deferred table by today's evidence.**
+      `f8ace1f` stops the phantom SPAWN; it does NOT stop the phantom OFFER.
+      `sports_travel_calculator_tz_aware_kickoff_crash-001` has been dispatched and correctly declined **35+ consecutive
+      times** (each burning a spawn, a boot, an analysis and a progress-log commit), and the 24h skip TTL guarantees it
+      is re-offered forever. The task is gated in PROSE ("After `sports_p2_features_history_to_ml_ready-002` Todo 1…")
+      on an upstream todo that is NOT modelled as a prerequisite — which is why AO reads it "ready (no blockers)". Park
+      it durably (`priority:999` + a real prereq) rather than re-litigating it daily. Owner note: the parking recipe was
+      attempted before and never stuck (slot 8's skip reason, 2026-07-14: _"Parking recipe … never durably applied —
+      priority_override:false, prereqs.prerequisites:[] confirmed"_), so find out WHY it did not stick first. Tracked in
+      `issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`.
 
 ### Phase 4 — close the paper trail (P2)
 

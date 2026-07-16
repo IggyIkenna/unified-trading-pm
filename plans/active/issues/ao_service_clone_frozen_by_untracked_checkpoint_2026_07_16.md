@@ -135,26 +135,30 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
       the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
 
       ```bash
-              cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
-              sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
-              sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
-              sudo -u ubuntu git fetch origin live-defi-rollout
-              sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
-              sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
-              grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
-              sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
-              systemctl is-active orchestrator.service
-              ```
+                  cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+                  sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
+                  sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
+                  sudo -u ubuntu git fetch origin live-defi-rollout
+                  sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
+                  sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
+                  grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
+                  sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
+                  systemctl is-active orchestrator.service
+                  ```
 
-              **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
-              `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
-              commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
-              session that found this.
+                  **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
+                  `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
+                  commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
+                  session that found this.
 
-- [ ] [INFRA] P1. **Then run Phase 3 of `ao_dispatch_hardening_2026_07_16`** — the runtime churn verification against
-      the 24h pre-fix baseline (**1014 autospawns / 954 worker-deaths → 217 dispatches / 101 done**). It was blocked on
-      this: the fixes were never running, so there was nothing to measure. Until it passes, the dispatch-hardening plan
-      is **code-shipped, not proven**, and its source issue docs stay open by design.
+- [x] [INFRA] P1. ✅ **RAN 2026-07-16 17:35Z — and it FAILED, which is exactly why it was worth running.** Unblocked by
+      this doc's fix (the code was finally live, so there was something real to measure). Result: **R1 did NOT reduce
+      the churn** — `autospawn_succeeded` per hour was 29 · 27 ‖ _deploy_ ‖ 27 · 30, i.e. flat across the boundary; 24h
+      totals 915 spawns vs **63** `task_dispatched`, with `task_dispatched` at **0 for 3h straight** post-deploy.
+      Root-caused to a phantom candidate slot (slot 0, unconfigured+paused since 2026-07-06, therefore holding no
+      slot_skips, kept a fleet-skipped task permanently "claimable") and fixed in `agent-orchestrator@6c778e6`. The
+      remaining pass-gate is tracked as the new P0 in `ao_dispatch_hardening_2026_07_16` Phase 3 — **not duplicated
+      here**. That plan stays code-shipped-not-proven until that P0's runtime verdict lands.
 
 - [ ] [INFRA] P2. **HANDED OFF 2026-07-16 — operator is routing the UI-surface + alerting work to a separate agent**
       ("this needs a proper UI surface and alerting system so it doesn't occur again"). Kept here as the requirement of

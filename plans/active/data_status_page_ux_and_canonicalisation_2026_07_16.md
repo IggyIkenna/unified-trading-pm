@@ -133,6 +133,57 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — Continuation session (Phase B: P3, P2 UI, P8 UI-P2, P3 UI, P6 backend+UI, P1 column-prune, P4-B) — `/autonomous` engaged
+
+Second continuation session (distinct from the "P9 round-2" thread above, which is a DIFFERENT concurrent Claude session
+— see collision note below). Worked through the plan's remaining Phase B todos via dispatched sub-agents, each
+commit-push-flip in its own turn:
+
+| Point                     | What shipped                                                                                                                                                                                                 | Commit(s)                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| P3 backend + UAC facade   | `read_prediction_catalogue` (cqg derived on-the-fly, NOT a stored column — see below) + `category_for_group`                                                                                                 | deployment-api@9238983, unified-api-contracts@72fd959d1          |
+| P2 UI                     | New-listings + upcoming-expiries lifecycle cards                                                                                                                                                             | deployment-ui@c6b1c09                                            |
+| P8 UI-P2                  | FIXTURES-only deep-drill note                                                                                                                                                                                | deployment-ui@b0525e5 (+ 12c94be, see incident)                  |
+| P3 UI                     | Prediction Catalogue browser (category → cqg → search)                                                                                                                                                       | deployment-ui@3bdb4e4                                            |
+| P6 backend phase-1        | `mvp_only`+`is_mvp` tag on instrument list/CSV + new `/catalogue`+`/download-catalogue-csv`                                                                                                                  | deployment-api@abcce0b, @1e3c7b4                                 |
+| P6 UI phase-1 (partial)   | MVP-only toggle + badge on `InstrumentsModalStandard`; Catalogue Explorer panel in flight                                                                                                                    | deployment-ui@90eba8c (Explorer panel pending)                   |
+| P1 DATA P2 (column-prune) | Metadata-deferred dictionary-encoded read (not row-group streaming) — 28.5% peak-RSS cut, 2 real correctness footguns found+fixed (categorical `.map()` sort order, `groupby(observed=False)` phantom cells) | instruments-service@6c9f604f                                     |
+| P4-B                      | Live SPOT_ASSET emission at discovery time shipped; defi/cefi `catalog.parquet` full-mode regen running on real infra (2370/2666 day-partitions); backfill script drafted, not yet run                       | instruments-service@ce56d499 (regen + backfill script in flight) |
+
+**Key finding (P3 backend, correcting the plan's literal wording)**: `canonical_question_group` is NOT a stored
+per-market column on `prod/catalog.parquet` (verified against `build_instrument_catalogue.py`'s `CATALOG_COLUMNS` — only
+a shard-tracking bundle row carries it). The service derives cqg per row via the SAME deterministic classifiers IS
+adapters use at capture time, cached per unique venue+raw_symbol.
+
+**Incident (documented separately, see `issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`
+2026-07-16 update)**: a P8 UI-P2 ship briefly swept another concurrent agent's uncommitted `FixturesBrowser` WIP into a
+commit via `quickmerge --files`'s whole-file staging — caught immediately, reverted (`deployment-ui@12c94be`), zero data
+loss. Subsequent UI ships (P3 UI, P6 UI) used a patch-isolation/stash-protect procedure to avoid recurrence — held up
+cleanly since.
+
+**Operating-context deviation from `AUTONOMOUS_AGENT_RULES.md` rule 4 ("assume no one else is working")**: confirmed,
+via `Co-Authored-By: Claude Opus 4.8` trailers on commits this session didn't make, that a SECOND independent Claude
+session is actively working this exact plan concurrently in this slot (see the "P9 round-2" Progress Log entry below —
+its own thread) — it shipped its own P2 UI work, the P9 operator-round-2 findings, a symbol-search fix, a rollup-cache
+staleness fix, and is mid-way through a `FixturesBrowser` feature (backend+UI) as of this writing. Rather than assume
+single-ownership, this session has been checking `git status`/mtimes before every shared-file edit and using the
+stash/patch-isolation procedure above. Both sessions' work is being reconciled onto the same plan file via careful
+`git pull --ff-only` immediately before every edit — no content has been lost so far.
+
+**Model-tier note**: `/autonomous` invoked 2026-07-16 — self-check flagged Sonnet-on-opus-required (this is a cross-repo
+main-orchestrator dispatch per `CLAUDE.md`'s model-tier rule). Operator explicitly confirmed continuing on Sonnet 5
+(already set via `/model sonnet` earlier this session) rather than switching — documented per rule 1/2
+(decide-and-document on an operator-answerable-but-already-answered question, not a silent violation).
+
+**Still open** (see current `- [ ]` checkboxes throughout): P4-B backfill script needs to actually RUN once the
+defi/cefi regens finish (script existing ≠ script run, per the plan's evidence discipline) + CeFi-spot leg mapping + the
+P4-B UI surface; P6 UI Catalogue Explorer panel (in flight); P1 INFRA tarball republish (BLOCKED — confirmed live
+foreign WIP in `deployment-service/terraform.tfvars`, re-checked multiple times this session, still dirty); P1's "verify
+tomorrow's 00:30 UTC cron" (cannot be checked before 2026-07-17 00:30 UTC — genuinely time-gated, not deferred); several
+P2/P9 DATA follow-ups explicitly marked lower-priority in their own sections. A fresh Playwright verification pass
+(read-only, avoiding collision with the in-flight Catalogue Explorer edit) is running against everything shipped in this
+table.
+
 ### 2026-07-16 — P9 round-2 execution (sports root-cause, TradFi/DeFi migrations, UI relabel) + a side-discovered perf fix
 
 Executed per operator instruction on the P9 round-2 todos (Q2 TradFi/DeFi/CeFi migrations, Q3 sports root-cause, Q4
@@ -313,16 +364,31 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
       `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
       another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
       `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
-- [ ] [DATA] P2. Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **TRACED-UNSAFE
-      as literally stated:** a naive drop of `instrument_id` from `_READ_COLUMNS` corrupts coverage — `_merge_manifests`
-      dedups the prd+oracle merge on `(date, venue, instrument_id, data_type)` and falls back to
-      `(date, venue, data_type)` without it, COLLAPSING distinct instruments into one row (the shard atom is
-      per-instrument, so the denominator + captured counts undercount and the "best status" wins → coverage overstated).
-      `_compute_coverage` + Layer-1 do NOT use `instrument_id` (verified), but the merge does. Correct fix = pyarrow
-      row-group streaming aggregation OR metadata-deferred primary read (secondaries are already re-read eu-only via
-      `_read_parquet_eu_only`, so their full `_read_parquet_safe` materialization is pure waste + the OOM driver) — a
-      real refactor with correctness surface + ~6 selection-test updates in `test_measure_honest_coverage.py`, NOT a
-      one-line column drop. Enables downsizing the cron VM back to 16GB. _(Defence-in-depth.)_
+- [x] [DATA] P2. ✅ Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **Approach
+      taken = metadata-deferred read (Option 2), NOT row-group streaming:** the availability-index parquet already
+      stores every `_READ_COLUMNS` column PLAIN_DICTIONARY-encoded per row-group (verified via pyarrow row-group
+      metadata on real prd buckets) — `pd.read_parquet(..., read_dictionary=<cols>)` (forwarded to
+      `pyarrow.parquet.read_table`) preserves that on-disk encoding as pandas `category` dtype instead of pandas'
+      default of expanding every row into a python-object string, at effectively zero correctness risk (same values,
+      only the dtype changes). Applied to `_read_parquet_safe` (all 4 fallback tiers) + `_read_parquet_eu_only`.
+      TRACED-UNSAFE concern from the original todo (naive `instrument_id` drop corrupting `_merge_manifests`'s shard-key
+      dedup) does not apply — `instrument_id` is still read, just compactly. Two correctness footguns found + fixed
+      empirically (not assumed) while implementing this: (a) `Series.map()` on a Categorical column returns a
+      Categorical whose sort order is category-discovery-order, not numeric order, which would make `_merge_manifests`
+      keep the WRONG "best status" per shard — fixed via `.astype("int64")` after the priority `.map()`; (b) pandas
+      `groupby` defaults to `observed=False`, synthesising a phantom empty group for every unobserved category
+      combination — fixed via `observed=True` on all 5 `_compute_coverage` groupby calls (no-op on legacy object-dtype
+      buckets). — instruments-service@6c9f604f + Evidence: real production A/B comparison against the sports-prd bucket
+      (1,958,498 raw rows — cefi/tradfi/defi/prediction were mid-write by a concurrent pipeline during this session,
+      sports was the only stable target) — byte-identical `_compute_coverage` output (every projection incl. Layer-1
+      missing/stray tuples) between the old object-dtype code path and the new category-dtype path; peak RSS 447.1MB →
+      319.8MB (-28.5%); retained merged-DataFrame memory 27.19MB → 0.93MB (~29x); read wall-time 413s → 218s (~1.9x
+      faster, bonus). 6 new unit tests added to `test_measure_honest_coverage.py` (real local-parquet dictionary
+      round-trip across 2 fallback tiers + the eu_only reader, a regression test for each of the 2 footguns, and a
+      categorical-vs-object-dtype equivalence test). Full `tests/unit/` suite green (4387 passed/3 skipped in one run
+      this session). Enables downsizing the cron VM back to 16GB — **not done here**, a separate operator/infra
+      decision; `deployment-service`'s launcher was not touched (noted in passing: that repo currently carries unrelated
+      live foreign WIP in `terraform.tfvars`, left alone).
 - [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
       distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
 
@@ -860,6 +926,25 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       instrument drilldown). The parquet exists (`sports_reference/by_date/day=/entity=fixtures/…`, already read by
       `upcoming_fixtures.py` + the `fixtures_schedule` split); build a read-only backend list (single-walk discipline) +
       the grouped UI. `[UI]` + pw:L2.
+
+### P9 — cross-agent verification (2026-07-16 pm, other agents' P3/P6 work)
+
+P3 (prediction browser: deployment-api@9238983 + deployment-ui@3bdb4e4 + uac@72fd959) and P6 phase-1 (catalogue
+explorer: deployment-api@abcce0b + @1e3c7b4) are **committed, on LDR, CI-green (`quality-gates-v2` success), plan todos
+flipped with evidence, and code is real** (not stubs) — the shipping process was followed correctly. TWO gaps found on a
+local real-GCS run (worth confirming — same "CI-green-with-mocks but slow/empty on real data" class as the Q1 symbol
+search):
+
+- [ ] [PERF] P2. _(P3/P6 endpoints — real-data verification)_ `GET /data-status/prediction-catalogue` (reads the
+      ~1.3M-row prediction `catalog.parquet`) and `GET /data-status/catalogue` (cefi per-venue walk) did **synchronous
+      heavy GCS reads that blocked a single-worker uvicorn event loop** (health + coverage-summary went unresponsive
+      after one call locally) and `/catalogue?asset_group=cefi` returned **`total_count:0` (empty)** on the one backend
+      that answered. Verify on real data / prod (multi-worker): (a) offload the heavy parquet read off the event loop
+      (thread/executor) + paginate/cache so the UI can't hang; (b) confirm `/catalogue` actually returns cefi
+      instruments (the availability-derived walk may be missing the latest-day). Not a proven prod bug — but unverified
+      against real data.
+- [ ] [UI] P2. _(P6 phase-1 UI — NOT done)_ The `InstrumentsModalStandard` "MVP only" toggle + per-row badge + CSV
+      threading (P6 phase-1 UI todo) is still OPEN — the P6 BACKEND landed but its UI half didn't. Finish it.
 
 ---
 
