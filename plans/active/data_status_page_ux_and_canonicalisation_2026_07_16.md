@@ -564,8 +564,18 @@ across chains) need the chain axis.
       ungated `extras["chains"]` sub-dimension leaked. UI grid needs no change — it renders the backend
       `extras["chains"]` verbatim, so gating the backend suppresses cefi chain sub-rows. — deployment-api@47a7f67 +
       Evidence: `test_v4_sub_dimensions_chain_gated_on_defi.py` (cefi→no chains, defi→chains) + quality-gates.sh green
-      (117s). _(Read-side display gate only; manifest query key unchanged. NOTE — the writer-side split rows
-      `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of P7's read-side scope; see Progress Log.)_
+      (117s) + **real-data browser validation 2026-07-16** (local deployment-api on real GCS + deployment-ui +
+      Playwright): the LIVE build (`/data-status/turbo?pipeline_mode=…` cache-bypass, and
+      `/data-status/coverage-summary`) returns `CEFI chains: None`. _(Read-side display gate only; manifest query key
+      unchanged. NOTE — the writer-side split rows `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of
+      P7's read-side scope; see Progress Log.)_
+- [ ] [BACKEND] P2. _(P7 follow-up — stale rollup cache)_ The TURBO "Data Coverage" grid serves a pre-built GCS rollup
+      blob (`data_status_rollup_worker.py` → `rollup_blob_path`, 1800s staleness) that was written BEFORE the P7 fix, so
+      it still carries `cefi.chains=['SOLANA','ZKSYNC']` (confirmed via Playwright against real data). The worker builds
+      the blob via `dss._get_manifest_status_sync` → the SAME gated `_build_v4_sub_dimensions`, so it SELF-HEALS on its
+      next scheduled run after the P7 fix deploys to prod. Verify the TURBO grid shows cefi venue-only after the next
+      rollup rebuild (or force it: `clear_rollup_cache()` / run `data_status_rollup_worker` post-deploy). No code change
+      — this is a cache-invalidation confirmation.
 - [x] [UI] P2. ✅ Resolved by the P5 gate. There were two overlapping "Instrument breakdown" affordances: (a) the nested
       link inside the hierarchical drilldown (`DataStatusTab.tsx:4092`), suppressed for IS cefi/tradfi/defi by the P5
       predicate; and (b) the Data Coverage grid's venue-detail "Instrument breakdown" link (`DataStatusTab.tsx:5582` →
