@@ -980,18 +980,50 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 
 ### PHASE 4 — VERIFY (object-layer proof; the manifest is NOT evidence)
 
-- [ ] [DATA] P0. **T4.1 — OBJECT-LAYER zero-unique proof. This, not L6, is the delete gate.** _Mechanism_: re-run the
-      T2.2 inventory + classification over both legacy buckets. **Why the manifest cannot clear the delete**: no
-      availability index has a **path/uri/bucket column at all** (columns are date, venue, data_type, source,
-      pipeline_mode, league_id, capture_status, instrument_count, …) — the bucket binding is **positional** (the
-      `_index` object physically lives in its bucket) and paths are DERIVED at read time. Therefore **zero rows in
-      either index mention `v1_archive`, and no row ever could** — the 398 objects were invisible to L6 **by
-      construction**. That is why `L6-legacy-only = 0` coexisted with 398 real legacy-only parquets. _Gate_: unique == 0
-      for **both** buckets, or every residual has a written, operator-accepted disposition. _ABORT_: unique > 0 without
-      a disposition → **DO NOT DELETE**.
-- [ ] [DATA] P0. **T4.2 — Prove the moved objects are READABLE at canonical paths (not merely present).** _Mechanism_:
-      sample ≥25 moved cells across every entity and both class A and class B; resolve each through the UAC SSOT
-      `candidate_parquet_paths()` and read it via the real consumer
+- [ ] [DATA] P0. **T4.1 — OBJECT-LAYER zero-unique proof. This, not L6, is the delete gate. 🔴 EXECUTED 2026-07-16 →
+      GATE FAILED. STAYS UNCHECKED. DO NOT DELETE `instruments-store-sports`.** The pass is DONE and its verdict is
+      **FAIL**, so this box cannot flip — flipping it would be exactly the false-progress this plan exists to prevent.
+      **Result**: 968,927 objects (= 969,321 − 398 v1_archive + 4 T0.2 snapshot backups), every one classified, and
+      **2,078 UNACCOUNTED** — objects whose canonical twin holds strictly fewer rows in entities **OR-1 never
+      enumerated**. Key-level containment cleared 244 of them by measurement (`injuries` 151 → 0 legacy-only keys, the
+      2× row ratio is legacy-side duplication; `fixtures_outcomes` 93 → legacy has no fixture-id column ⇒
+      unattributable) and left **~1,834 objects / 6,673 genuinely legacy-only entity keys** (`fixture_stats` 6,379 ·
+      `footystats_odds` 152 · `fixtures_schedule` 121 · `fixtures` 13 · `footystats_matches` 4 · `progressive_stats` 4 ·
+      2 one-offs) with **no written disposition → OR-9**. The 456,727 crc-differing objects were **re-measured, not
+      inherited** (865,696 footer reads, 0 errors): superseded is **444,996** (runbook said 443,508). **To re-open**:
+      rule OR-9, execute it, then re-run `~/tmp-cutover/t4_1_{inventory,classify,pairs,rowcheck,verdict}.py` and require
+      `UNACCOUNTED == 0`. Full accounting table → the Progress Log's Phase-4 entry. _Mechanism_: re-run the T2.2
+      inventory + classification over both legacy buckets. **Why the manifest cannot clear the delete**: no availability
+      index has a **path/uri/bucket column at all** (columns are date, venue, data_type, source, pipeline_mode,
+      league_id, capture_status, instrument_count, …) — the bucket binding is **positional** (the `_index` object
+      physically lives in its bucket) and paths are DERIVED at read time. Therefore **zero rows in either index mention
+      `v1_archive`, and no row ever could** — the 398 objects were invisible to L6 **by construction**. That is why
+      `L6-legacy-only = 0` coexisted with 398 real legacy-only parquets. _Gate_: unique == 0 for **both** buckets, or
+      every residual has a written, operator-accepted disposition. _ABORT_: unique > 0 without a disposition → **DO NOT
+      DELETE**.
+- [x] ✅ [DATA] P0. **T4.2 — Prove the moved objects are READABLE at canonical paths (not merely present). DONE
+      2026-07-16 — 33/33 PASS.** Sampled 3 moved cells from **every one of the 11 class-A entities** (33 > the 25 gate),
+      re-derived each path from the UAC SSOT `candidate_parquet_paths(data_type, day, league, pipeline_mode=)` — **not**
+      from the dst we wrote — and resolved the bucket through the real consumer
+      `features-service … resolve_instruments_bucket()` → `instruments-store-sports-prd-central-element-323112`
+      (asserted `-prd-`). **33/33 derived + parsed with row counts identical to the legacy source** (fixtures_outcomes
+      51==51, fixture_events 634==634, teams 606==606, …). _Test defect found + fixed, not a data defect_:
+      `candidate_parquet_paths` returns **globs** (`fetched_at_hour=*/`) for the snapshot-dimension entities, so a
+      literal `dst in cands` check false-FAILed all 3 footystats_odds samples; `fnmatch` is the correct comparison.
+      **T4.2b — upsert-safety PROVEN**: 12/12 union-written canonical cells have **rows == unique (fixture_id,
+      player_id), dups=0, 38 cols**; simulating the re-fetch collision (re-applying the legacy rows over canonical)
+      leaves the keyed row count **unchanged** (e.g. 131→131) where a naive non-keyed append would have gone 131→218 ⇒ a
+      re-fetch UPDATES, it cannot duplicate. _Sub-finding (benign, belongs to OR-9's record)_: 1/12 cells showed 2
+      legacy keys absent from canonical — both are `(fixture_id, NULL player_id)`, i.e. **unkeyable non-observations**
+      that T2.4's keyed union correctly did not carry (the OR-1 D(2) "unattributable" class), NOT a T2.4 miss. **Index
+      assertions (dispatch-mandated) all PASS**: canonical `_index/availability_index.parquet` = **5,342,265 rows ==
+      exactly 5,465,414 − 123,149 (delta 0)**; **`captured` = 1,692,695, delta 0 ⇒ no captured row lost**; footystats ×
+      ODDS still **140,574**; api_football × ODDS **0**; index generation frozen at the 13:09:37Z purge ⇒ still QUIET
+      (consolidators remain paused). Verifiers `~/tmp-cutover/t4_2_readable.py` + `t4_2b_upsert.py`. _Environment note
+      (do not chase)_: `gcsfs` **intermittently stalls** on this host (futex wait + a CLOSE-WAIT socket, zero
+      throughput, no timeout) — same hang T2.4 hit; `google.cloud.storage` direct reads route around it. _Original
+      mechanism_: sample ≥25 moved cells across every entity and both class A and class B; resolve each through the UAC
+      SSOT `candidate_parquet_paths()` and read it via the real consumer
       (`features-service/features_service/sports/data/gcs_paths.py:38-54`
       `resolve_instruments_bucket`/`resolve_tick_data_bucket`, `instruments-service/.../sports_dependency.py:103`).
       _Gate_: 25/25 resolve and parse with the expected row counts. _ABORT_: any moved object is unreachable via the

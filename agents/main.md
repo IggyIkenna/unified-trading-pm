@@ -197,6 +197,42 @@ STEP 2 — start the polling loop. Two options, pick by how long you'll be runni
 / long-haul: run CronCreate with a prompt that polls `$SERVER_URL/api/agents/$AGENT_ID/poll`, replies to messages,
 updates last_msg, then sweeps the blocked queue per STEP 2.5, at interval=60. Save the `cron_id` it returns.
 
+STEP 2.4 — **NEVER conclude "the fleet is deadlocked" from ONE gated task** (R3, `ao_dispatch_hardening_2026_07_16`;
+incident 2026-07-07).
+
+Seeing a genuine blocker on one task — a sports prereq, a collision, a gated dependency — does **not** mean the backlog
+is gated. The 2026-07-07 fleet stall was exactly this: one real gate was generalised to "everything is blocked", so
+dispatching and nudging stopped while most of the queue was ready and idle slots sat there. Nothing in the code was
+broken; the belief was. That is the most expensive kind of stall because the machinery reports itself healthy.
+
+**Before you stop dispatching / nudging / spawning for a "nothing is dispatchable" reason, PROVE it per task:**
+
+```bash
+# For each queued task — do NOT infer from one, and do NOT infer from a slot saying "no work for me".
+curl -sS $SERVER_URL/api/backlog/{task_id}/blockers   # → {"explanation": "..."} ; "ready (no blockers)" means READY
+```
+
+- **≥1 task returns `ready (no blockers)`** → the fleet is **NOT** deadlocked. The problem is dispatch/spawn-side (or
+  role/tier mix — see STEP 2.6), not the queue. Keep driving; investigate why a ready task is not being claimed.
+- **EVERY queued task names a real blocker** → only then is the queue genuinely gated. Say WHICH blocker on WHICH task
+  in your chat message, not "the fleet is blocked" — an unfalsifiable claim is what let this run for hours.
+- A slot reporting "no dispatchable work" is evidence about **that slot**, never about the queue. Slot-specific filters
+  (`slot_skips`, craft role, model tier, affinity pin) mean a task can be ready and simply not claimable by the slot in
+  front of you.
+
+STEP 2.6 — **Tier/role mix: prefer plans of one shape per queue window** (R4, `ao_dispatch_hardening_2026_07_16`).
+
+AutoSpawn now sizes each spawn from its OWN claimable task (`_spawn_param_plan`, per-slot as of `agent-orchestrator`
+2026-07-16), so a single high-priority Opus plan no longer drags every worker in the tick up to Opus. **That removes the
+cost blow-up, not the queue-shape sensitivity.** A queue whose top is one Opus P0 above 29 Sonnet tasks still spends its
+scarcest capacity on the Opus plan first.
+
+- Landing a genuinely Opus-tier plan alongside a Sonnet-majority queue is a known-degraded shape. Prefer to drain it, or
+  land it when the Sonnet bulk is done.
+- If you must mix, expect the Opus plan to take the early spawns; that is correct behaviour, not a stall — do **not**
+  "fix" it by re-tiering plans to make the queue uniform. `model_tier` is a plan's declared requirement, and downgrading
+  it to smooth the queue makes the worker's own SSOT self-check STOP on "Sonnet on opus-required".
+
 STEP 2.5 — blocked-queue sweep (every tick — you are the FIRST responder):
 
 ```bash

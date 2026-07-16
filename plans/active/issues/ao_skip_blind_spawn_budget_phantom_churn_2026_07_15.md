@@ -45,8 +45,8 @@ related:
     backlog_blocked_marker_stale_brief_redispatch_2026_07_08.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-15
-parent_epic: agent_operating_framework_master
+last_updated: 2026-07-16
+parent_epic: orchestrator_master # was: agent_operating_framework_master — repointed 2026-07-16 (ao_docs_reconciliation F5, "cross-epic dispatch-code ownership seam fuzzy"). Every other dispatch-code doc/plan homes at orchestrator_master (ao_dispatch_residuals, ao_fleet_stall_opus_spawn_and_skip_thrash, dispatcher_role_eligibility_gap_review_slots, ao_dispatch_hardening); this one was the outlier. orchestrator_master owns the AO RUNTIME (dispatch/autospawn/slots); agent_operating_framework_master owns how agents WORK (retrieval, role charters, plan format) — a skip-blind spawn budget is runtime.
 priority: P1
 source:
   - operator-reported 2026-07-15 (slot #14 booted, "no dispatchable task — all blocked behind prerequisites")
@@ -207,19 +207,37 @@ Durable (the park mechanism already works — `ao@8dd5763`; these APPLY it):
 
 ## Recommended prevention todos (for a backend_engineer session; NOT auto-dispatched)
 
-- [ ] [BACKEND] P1. **Skip/eligibility-aware spawn budget.** Make `_queued_undispatched_count` + `_has_queued_work`
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@7baeedc` (+ `bf9a61b` hardening).** Both functions now
+      delegate to ONE shared SSOT, `dispatch.claimable_queued_task_ids`, derived from a `_FILTERS` table whose rows
+      declare a `FilterScope` — so the budget and the dispatcher can no longer drift (sharing primitives alone was not
+      enough; each caller composed its own list). Model tier + craft role are deliberately EXCLUDED from the budget
+      (AutoSpawn chooses them at spawn time; filtering them in would starve the fleet — 4 tests pin it, 2 of them
+      pre-existing). ~~**Skip/eligibility-aware spawn budget.**~~ Make `_queued_undispatched_count` + `_has_queued_work`
       ([autospawn.py](../../../agent-orchestrator/server/autospawn.py)) count a queued task only if some live eligible
       slot could claim it (reuse the `pick_next_task` predicate: within-TTL `slot_skips` + role + collision + affinity),
       not `prereqs_met` alone. Add a regression test: N tasks, all skipped by every live slot within TTL → budget 0 → no
       spawn. Closes the OPEN `Skip-exhaustion churn` todo in
       `ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md`.
-- [ ] [BACKEND] P2. **Durable park for repeatedly-skipped-with-blocked-reason tasks** — auto-park at ≥N distinct
-      within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason, via the now-durable `priority_override`/false-prereq
-      recipe (park fix already shipped `ao@8dd5763`), with an unpark path when the condition clears. (The alternative is
-      purely operational: have the main agent apply that recipe — no new code, but relies on it actually being done.)
-- [ ] [ADMIN] P2. **Account-burn watch** — the churn pushed sub-c/sub-d past the 95% weekly spawn ceiling; confirm the
-      rotation recovers once the churn stops, and consider a fleet-cap floor tied to _claimable_ (not budget) work so an
-      un-claimable queue can't hold the pool at cap.
+- [ ] [BACKEND] P2. **Durable park for repeatedly-skipped-with-blocked-reason tasks** — **STILL OPEN, and R1 made it
+      MORE important, not less (note added 2026-07-16).** R1 fixed the churn half: a task every slot has skipped now
+      counts 0 toward the spawn budget, so the fleet stops respawning workers onto it. But that converts a LOUD failure
+      (visible spawn churn) into a SILENT one — the task simply never spawns anything and nobody is told it is stuck.
+      That is the same shape as `needs_operator_count` being computed and rendered nowhere. Durable park is the
+      visibility half: make the give-up explicit and operator-visible rather than merely quiet. Out of scope for
+      `ao_dispatch_hardening_2026_07_16` (that plan fixed dispatch correctness); this doc stays OPEN for it. Auto-park
+      at ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason, via the now-durable
+      `priority_override`/false-prereq recipe (park fix already shipped `ao@8dd5763`), with an unpark path when the
+      condition clears. (The alternative is purely operational: have the main agent apply that recipe — no new code, but
+      relies on it actually being done.)
+- [x] [ADMIN] P2. ✅ **DONE 2026-07-16 — both halves.** (a) **Rotation recovered**: all 4 accounts probed directly via
+      the live usage path 2026-07-16 ~08:12 UTC — sub-a 37%/7%, sub-b 25%/5%, sub-c 14%/3%, sub-d 0%/0% (5h/7d), all
+      HTTP 200 `allowed`, binding window `five_hour`. Nothing near the 95% ceiling; the burn was intermittent, driven by
+      the churn, and cleared when it stopped. (b) **Fleet-cap floor tied to CLAIMABLE work**: shipped as R1
+      (`agent-orchestrator@7baeedc`) — the spawn budget IS the claimable count now, so an un-claimable queue yields
+      budget 0 and cannot hold the pool at cap. The exact ask, implemented. ~~**Account-burn watch**~~ — the churn
+      pushed sub-c/sub-d past the 95% weekly spawn ceiling; confirm the rotation recovers once the churn stops, and
+      consider a fleet-cap floor tied to _claimable_ (not budget) work so an un-claimable queue can't hold the pool at
+      cap.
 
 ## Verification / scrutiny performed (what was checked, and the corrections it forced)
 

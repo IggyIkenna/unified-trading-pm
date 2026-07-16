@@ -159,6 +159,18 @@ fi
 (`from_role` is API-constrained to `main | review | operator` — a custom-role monitor cannot pass its own role, so the
 `[monitor: <monitor_name>]` text prefix is the REAL sender identity; keep it on every alert.)
 
+**Alert on what you MEASURED, never on what you infer from it** (R3, `ao_dispatch_hardening_2026_07_16`; incident
+2026-07-07). You watch ONE thing. Report that thing. Widening a single observation into a fleet-level verdict — "the
+backlog is gated", "dispatch is broken", "the fleet is deadlocked" — is how the 2026-07-07 stall happened: a real
+blocker on one task was generalised, main went passive on the strength of it, and most of the queue sat ready and
+unclaimed for hours while every component reported itself healthy.
+
+- ✅ `[monitor: sports-prereq] ALERT — sports_p2-003 blocked: prereq understat-xg unset since 14:20`
+- ❌ `[monitor: sports-prereq] ALERT — backlog gated, nothing dispatchable` ← you did not measure that
+- If you believe the fleet is stalled, that is a HYPOTHESIS, not a breach. Say so, cite what you actually saw, and let
+  main verify per-task via `GET $SERVER_URL/api/backlog/{task_id}/blockers` (its STEP 2.4). Never let a monitor's
+  inference be the reason dispatch stops.
+
 STEP 2D — If no breach + no /poll response messages: do nothing else this tick. Wait for the next /loop fire. Do NOT
 exit. Do NOT cancel the cron.
 

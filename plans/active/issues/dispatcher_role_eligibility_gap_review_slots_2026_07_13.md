@@ -77,11 +77,25 @@ checked. If `/heartbeat` and `/boot` do NOT share the eligibility helper, both c
 
 ## Todos
 
-- [ ] [BACKEND] P2. Locate the dispatcher's slot-eligibility/candidate-selection logic for backlog task assignment
-      (agent-orchestrator `server/`, likely near the heartbeat handler or a `dispatch`/`assign` helper) and add a
-      role-based filter so only `role == "worker"` slots are eligible for backlog `task_id` assignment.
-- [ ] [BACKEND] P3. Add a regression test dispatching a backlog task to a `review`-role (and `main`-role) slot via BOTH
-      `/heartbeat` and `/boot`, asserting no `task_id` is returned from either.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@962e676` (R6).** ⚠️ **NOT via this doc's own recommended
+      fix.** It proposed a `slot_role`-based filter; two independent code-verification agents established that would be
+      _actively dangerous_ — `slot_role` is a CRAFT tag, empty for review/main AND for **most ordinary generic
+      workers**, so gating on its falsiness would refuse dispatch to the majority of the normal fleet. Implemented
+      instead as a row in the shared `_FILTERS` table keyed on the explicit `review_slot_ids()` config list (scope
+      `SLOT`, so the spawn budget honours it too). ~~Locate the dispatcher's slot-eligibility/candidate-selection logic
+      for backlog task assignment~~ (agent-orchestrator `server/`, likely near the heartbeat handler or a
+      `dispatch`/`assign` helper) and add a role-based filter so only `role == "worker"` slots are eligible for backlog
+      `task_id` assignment.
+- [x] [BACKEND] P3. ✅ **DONE 2026-07-16 — `agent-orchestrator@962e676`, `tests/test_dispatch_review_slot_gate.py` (5
+      tests; removing the gate fails 3, the other 2 are negative controls).** Two corrections to this todo's premise:
+      (1) it names **2** routes — there are **3**; `pick_next_task` is the single chokepoint for `/boot`
+      (`slots_worker.py:204`), `/heartbeat` (`:408`) **and `/done`** (`:957`, where a worker takes its next task on
+      completion). (2) there is **no "main-role slot"** to test — main runs as its own tmux session
+      (`MAIN_SESSION_NAME`), not a numbered slot, so it never reaches a slot dispatch route. Also caught:
+      `conftest.py`'s autouse `_default_review_slots_off` disables review slots suite-wide, so a test that does not set
+      `ORCHESTRATOR_REVIEW_SLOTS` passes while testing NOTHING — all 5 set it explicitly. ~~Add a regression test
+      dispatching a backlog task to a `review`-role (and `main`-role) slot via BOTH~~ `/heartbeat` and `/boot`,
+      asserting no `task_id` is returned from either.
 
 ## Progress Log
 

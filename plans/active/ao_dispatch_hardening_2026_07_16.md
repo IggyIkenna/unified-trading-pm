@@ -223,11 +223,41 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 2 — restore designed capacity (P1)
 
-- [ ] [BACKEND] P1. **R2 — per-task tier/role spawn.** Resolve the spawn `(model, effort, thinking, role)` **per slot
-      being spawned** instead of once per tick (`server/autospawn.py:1646` + `_top_queued_task_params:388`), so a
-      mixed-tier queue stands up the right tier per slot. Delete the now-false "Known limitation" docstring at `:415`.
-      **Gate**: unit test — a queue holding one opus task + one sonnet task spawns one slot per tier in a single tick.
-- [ ] [BACKEND] P1. **R5 — high-affinity dead-slot spill.** In `_task_is_routable_to` (`server/dispatch.py:257`),
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@6ae43b5`. QG green (own exit 0): 1304 passed,
+      basedpyright 0 errors.** New `_spawn_param_plan` yields **one entry per CLAIMABLE task** (same
+      `claimable_queued_task_ids` SSOT the budget counts → plan and budget cannot disagree about what is servable),
+      ordered starved-role-first then by dispatch's own tie-break; the i-th slot spawned takes the i-th entry.
+      `assigned_role` now travels **per-slot** through `to_spawn` instead of being one tick-wide value closed over by
+      the slow section — that closure was why every worker in a tick came up at the top task's craft. The "Known
+      limitation" docstring is **deleted** (no longer true). **Generalises ao@8a423bb** from "narrow the pool to
+      starved" to "sort starved first" — equivalent at the head (a test asserts `plan[0]` still matches, so that fix's
+      guarantee is preserved) but the REST of the tick's spawns now serve the OTHER starved roles too.
+      **`_top_queued_task_params` DELETED, not shimmed** (CLAUDE.md: delete deprecated code) — basedpyright caught it
+      going unused the moment the tick stopped calling it. **Found + fixed a pre-existing latent test bug**: 4 tests
+      patched `_top_queued_task_params` with a **3-tuple** while it returned a **4-tuple**, so the tick's unpack raised
+      and was swallowed by its `except Exception` — those tests were passing on the sonnet FALLBACK, not on their patch;
+      they now patch `_spawn_param_plan` with the right shape. Proof: reverting to the one-tuple behaviour fails both
+      new tests; the 5 pre-existing spawn-param tests stay green throughout. ~~**R2 — per-task tier/role spawn.**~~
+      Resolve the spawn `(model, effort, thinking, role)` **per slot being spawned** instead of once per tick
+      (`server/autospawn.py:1646` + `_top_queued_task_params:388`), so a mixed-tier queue stands up the right tier per
+      slot. Delete the now-false "Known limitation" docstring at `:415`. **Gate**: unit test — a queue holding one opus
+      task + one sonnet task spawns one slot per tier in a single tick.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@860eaf7`. QG green (own exit 0): 1310 passed,
+      basedpyright 0 errors.** Replaced the unconditional `if affinity == "high": return False` with a liveness-aware
+      check. **Deliberately NOT "target missing → spill immediately"** (the naive fix the verification agent flagged):
+      that defeats the session-continuity guarantee `affinity=high` exists to provide. Gated on a TIME threshold — new
+      `high_affinity_spill_after_seconds` (default **600s**, matching `failover.py`'s offline threshold and the
+      medium-affinity `target_slot_timeout_seconds`, not an invented number). "Dead" is computed with the fleet's **own
+      SSOT** for slot silence (`worker_liveness_watchdog.effective_silence_seconds`) so it means the same thing to the
+      dispatcher as to the watchdog that reaps them — that helper is **promoted private→public** (basedpyright flagged
+      the cross-module private use rather than let it slide) and is NULL/stale-aware, so a zombie row with no activity
+      anchor reads as `inf` = dead, not "just pinged" (the 2026-06-08 incident where six slots were never freed).
+      **Composes with R1**: once the pin spills the task is claimable, so it correctly warrants a spawn — before, it was
+      un-claimable AND un-spillable, the worst combination. **Superseded an R1-era test expectation**: a pin to an
+      absent slot used to assert budget 0 ("routable to nobody"); R5 makes the right answer 1 (it spills) — the test is
+      rewritten as a worked example of the two fixes composing, with the history noted, not deleted. Proof: restoring
+      the unconditional pin fails 3 of 6 new tests; the 3 that still pass are the live-target guards, which must be
+      unaffected. ~~**R5 — high-affinity dead-slot spill.**~~ In `_task_is_routable_to` (`server/dispatch.py:257`),
       replace the unconditional `if affinity == "high": return False` (`:289`) with a liveness-aware check — a
       high-affinity task whose `target_slot` is dead/absent must spill to another eligible slot; a task whose target is
       alive must still NOT spill. **Gate**: two unit tests (dead target → spills; live target → does not).
@@ -239,28 +269,64 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 > **main/review/custom chat agents**. The parallel channel that **craft task workers** use was never touched and still
 > carries the identical bug the doc was written to kill.
 
-- [ ] [BACKEND] P1. **Task-worker messages can be silently, permanently lost.** `SlotMessageRow` / `enqueue_message` /
-      `take_pending_messages` (`server/state_store/activity.py:223-238`, posted via `POST /api/slots/{slot_id}/message`,
-      drained on the worker's next `/boot`/`/heartbeat`/`/progress`) stamps `delivered_at` **on take** with **no
-      `answered_at`, no reply-ack, no redelivery** — structurally the exact pre-fix shape of `agent_messages`. If a
-      worker's session dies, respawns, or `/compact`s between taking the message and acting on it, the message is gone
-      with **zero operator-visible signal**. Port the already-proven `agent_messages` pattern (`answered_at` column +
-      redeliver-until-answered + cap) rather than inventing a second mechanism. **Gate**: unit tests mirroring
-      `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops redelivery; cap flips to
-      needs-operator.
-- [ ] [BACKEND] P1. **The stuck-agent alarm is wired to nothing.** `needs_operator_count` — the counter that fires when
-      an agent stops answering after `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly**
-      at `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@d90f0f5`. QG green (own exit 0): 1316 passed,
+      basedpyright 0 errors.** **Deliberately did NOT port the sibling's redeliver-until-`/reply` design (which this
+      todo originally prescribed)** — a decision made after reading the code: task workers have **no reply endpoint**
+      (`agents/worker.md` only says "the progress response may include [messages] … read them and act"), so "unanswered"
+      is _unobservable_ for a worker, and redelivering until an ack that can never arrive would re-show the same
+      instruction on every heartbeat and risk **duplicate ACTIONS** — strictly worse than the drop being fixed. Instead
+      delivery is **session-scoped**: a message redelivers only when `delivered_to_session` != the slot's live
+      `claude_session_id` — a fresh uuid per spawn (context lost → the new session genuinely hasn't seen it) but
+      **preserved across a `--resume` account failover** (context intact → no spurious redelivery). That is also why it
+      keys on the session id and not `last_spawned_at`, which would churn on a resume that kept full context. Capped at
+      new `slot_message_max_redeliveries` (default 30, mirroring the agent channel) → terminal + counted by
+      `count_slot_messages_needing_operator`, i.e. **loud** instead of the silent drop on the FIRST death. Migration
+      carries the **one-time backfill** the `agent_messages` migration warned about (historical delivered rows →
+      terminal), without which every old message would mismatch the current session on the first post-deploy heartbeat
+      and flood every live worker — worse than the bug. **Known limit, documented not hidden**: a session that receives
+      a message, ignores it, and keeps running is not detected — that's worker behaviour, not delivery; closing it needs
+      a worker-side ack primitive + prompt contract. Proof: restoring the deliver-once semantics fails the
+      respawn-survival and cap tests. ~~**Task-worker messages can be silently, permanently lost.**~~ `SlotMessageRow` /
+      `enqueue_message` / `take_pending_messages` (`server/state_store/activity.py:223-238`, posted via
+      `POST /api/slots/{slot_id}/message`, drained on the worker's next `/boot`/`/heartbeat`/`/progress`) stamps
+      `delivered_at` **on take** with **no `answered_at`, no reply-ack, no redelivery** — structurally the exact pre-fix
+      shape of `agent_messages`. If a worker's session dies, respawns, or `/compact`s between taking the message and
+      acting on it, the message is gone with **zero operator-visible signal**. Port the already-proven `agent_messages`
+      pattern (`answered_at` column + redeliver-until-answered + cap) rather than inventing a second mechanism.
+      **Gate**: unit tests mirroring `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops
+      redelivery; cap flips to needs-operator.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@fa73b5d`. QG green (own exit 0): 1316 python passed, tsc
+      clean, 90 vitest passed (was 84).** `deliveryChip` now takes `needsOperatorCount` and renders a red **"needs
+      operator N"** chip that **OUTRANKS "queued"** — that precedence is the whole point and is pinned by a test: in the
+      realistic stuck case BOTH counts are non-zero (the capped message is still pending), so a naive
+      `pendingCount`-first check would render the benign amber "queued N" and the operator would never learn the agent
+      stopped answering. Also found: the TypeScript `AgentView` type **did not even declare the field the API was
+      already serving** — so the UI was structurally blind to it, not merely not-rendering it. TS strict caught the
+      `agentTypes` fixture the moment the field became required (fixed, not made optional). ~~**The stuck-agent alarm is
+      wired to nothing.**~~ `needs_operator_count` — the counter that fires when an agent stops answering after
+      `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly** at
+      `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
       `pending_count` is shown, `dashboard/src/layout.tsx:2523`), and no Slack wiring. A genuinely stuck agent is
       invisible short of a manual API query — which is precisely the operator's _"we think work is being done but it
       doesn't work at the capacity it was designed for"_. Surface it (dashboard badge + an alert route). **Gate**: a
       capped-out agent is visible without anyone curling the API. Closes the `[~] Remaining` dashboard item in
       `issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`.
-- [ ] [BACKEND] P2. **Nudge is single-shot best-effort.** `server/tmux_spawn.py:1442-1455` `nudge()` makes one
-      `send_command` attempt and swallows the failure (`except Exception: ... return False`) — no retry, no idempotency,
-      no verification the pane received it. Delivery now survives this (the message redelivers on the next poll), so
-      this is a **latency** bug, not a loss bug — but a missed nudge on a heads-down `/loop` costs a full poll cycle.
-      Make it retried + idempotent. Closes that doc's last genuinely-open todo.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@da053a9`. QG green (own exit 0): 1323 passed,
+      basedpyright 0 errors.** Retried via new `nudge_attempts` (default 3) + `nudge_retry_backoff_s`. **Found a worse
+      bug than the todo knew**: `send_command` called `subprocess.run` twice with `capture_output=True`, **no `check=`,
+      and never inspected `returncode`** — so a failed `tmux send-keys` raised nothing and `nudge()` returned **True**:
+      a send that never landed, reported as delivered. Now raises on a non-zero send AND on a non-zero `C-m` submit
+      (text landed but never submitted → the agent sees a half-typed prompt and does nothing, which is worse than a
+      clean failure). All 5 call sites already handle the pre-existing missing-session `RuntimeError`, so no caller
+      contract changed. **Retry follows ONLY a raised failure** — that is the idempotency argument, and a test pins it:
+      `send_command` raises _before typing anything_, so nothing reached the pane and re-sending cannot double-deliver;
+      a **successful** send returns immediately and is never repeated, because re-typing a delivered wake into a live
+      agent's pane risks it **acting twice**. An unconditional retry loop would look tidier and would be a bug.
+      ~~**Nudge is single-shot best-effort.**~~ `server/tmux_spawn.py:1442-1455` `nudge()` makes one `send_command`
+      attempt and swallows the failure (`except Exception: ... return False`) — no retry, no idempotency, no
+      verification the pane received it. Delivery now survives this (the message redelivers on the next poll), so this
+      is a **latency** bug, not a loss bug — but a missed nudge on a heads-down `/loop` costs a full poll cycle. Make it
+      retried + idempotent. Closes that doc's last genuinely-open todo.
 
 ### Phase 3 — prove it (P0)
 
