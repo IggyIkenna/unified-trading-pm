@@ -273,7 +273,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 74.71,
+        "coverage_pct": 74.72,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 4
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 8,
+        "coverage_pct": 91.24,
+        "qg_red_reason": null,
         "large_file_count": 6,
-        "coverage_pct": 91.26,
-        "qg_red_reason": null
+        "warn_file_count": 8
       }
     },
     "market-data-processing-service": {
@@ -789,7 +789,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -820,9 +820,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 88.61,
+        "qg_red_reason": null,
         "large_file_count": 1,
-        "coverage_pct": 88.56,
-        "qg_red_reason": "pytest",
         "warn_file_count": 6
       }
     },
@@ -1011,9 +1011,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 85.3,
-        "qg_red_reason": null,
-        "warn_file_count": 8,
-        "large_file_count": 3
+        "qg_red_reason": "pytest",
+        "large_file_count": 3,
+        "warn_file_count": 8
       }
     },
     "system-integration-tests": {
@@ -1262,9 +1262,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 87.78,
         "qg_red_reason": null,
         "large_file_count": 6,
-        "coverage_pct": 87.81,
         "warn_file_count": 21
       }
     },
@@ -1364,7 +1364,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1398,7 +1398,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
