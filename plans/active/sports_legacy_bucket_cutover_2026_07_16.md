@@ -620,14 +620,30 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
   `_legacy_seed.parquet` disposition unresolved → **do not delete the bucket** (1.76M rows). **HARD: never place any
   re-homed object under `_index/per_vm/`** unless it is genuinely a shard to be merged.
 
-- [ ] [DATA] P0. **T2.6 — Finish the exact row-count pass for `market-data-tick-sports` (the ~52,400 is an
-      EXTRAPOLATION, not a gate).** _Mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated
-      prefix-parallel lister (~2 min each); (2) key =
-      `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the MDT trap differs from the
-      instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS **and** mis-stamps
-      `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to `batch_odds_api`; a
-      `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique (rejected before
-      use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
+- [x] ✅ [DATA] P0. **T2.6 — EXACT row-count pass for `market-data-tick-sports` — DONE 2026-07-16. Extrapolation
+      replaced by measurement. ⚠️ MDT is NOT delete-eligible — 49,517 unique objects still need a disposition (OR-5b).**
+      _Classification closes EXACTLY to 406,581_: control-plane 55 + **class A 9,926** + duplicate (crc==) 287,634 +
+      crc-differing 108,966. Key strips BOTH `/pipeline_mode=<x>/` **and** `/data_source=<x>/` (the MDT trap; the
+      rejected data_source-strip-only key is not used). **Exact row-count over all 108,966 crc-differing pairs**
+      (217,932 footer reads, 0 errors — the pass that previously ran out of budget): **contentless (lr==0) = 0 ·
+      superseded (cr>=lr) = 63,265 · UNIQUE (cr<lr) = 45,701**, carrying **7,079,850 rows present ONLY in legacy**. ⇒
+      **EXACT MDT unique = 9,926 + 45,701 = 55,627 objects** (the ~52,400 estimate UNDER-counted by ~3,200; 9,926 vs
+      9,927 and 108,966 vs 108,970 are canonical-drift deltas). **MOVED**: the **6,110** class-A objects with the
+      documented mis-stamp (`pipeline_mode=batch_api_football` + `data_source=ODDS_API` + `data_type=trades`) →
+      canonical `pipeline_mode=batch_odds_api`, `data_source=` stripped (canonical's verified convention: 252,163 at
+      `(batch_odds_api, trades)`; `batch_api_football` does not exist for trades). **6,110/6,110 COPIED, 0 FAIL**, every
+      dst crc32c-verified == src. **NOT MOVED — needs an operator ruling (OR-5b)**: (a) **3,816** class-A objects in OLD
+      pre-canonical shapes (`day=/source=/league=`, `day=/venue=/league=`, `day=/source=`, `day=/venue=`) lacking
+      `asset_group`/`instrument_type`/`data_type` — **no canonical path is derivable without INVENTING those fields
+      (fabrication)**; (b) **45,701** class-B-equivalents holding **7,079,850 legacy-only rows** — the runbook says they
+      "inherit OR-1", but **OR-1 ruled only on instruments entities and never covered MDT tick data**, so there is no
+      ruling to inherit. Evidence `~/tmp-cutover/t2_6_{classA,crc_differ_pairs,rowcounts,move_evidence}.jsonl`.
+      _Original mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated prefix-parallel lister
+      (~2 min each); (2) key = `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the
+      MDT trap differs from the instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS
+      **and** mis-stamps `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to
+      `batch_odds_api`; a `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique
+      (rejected before use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
       `pyarrow.ParquetFile(fs.open(...)).metadata.num_rows` over gcsfs, 128 threads (measured 395 footer reads/s ⇒ ~9
       min for 218k reads); (4) classify `lr==0` contentless / `cr>=lr` superseded / `cr<lr` **unique**. Chunk + resume
       by appending `{l,c,lr,cr,lsz}` to `rowcounts.jsonl` and skipping names already present. Then MOVE the confirmed
@@ -994,6 +1010,38 @@ exact pass is ~9 min of compute (395 footer reads/s) plus ~4 min of listing.
 - **A: finish the exact row-count pass (T2.6) before deleting [WORKER REC]** — ~15 min for certainty.
 - **B: delete on the extrapolation** — risks losing up to ~42,500 objects' unique rows.
 - Other.
+
+> **✅ OR-5 RESOLVED = A. The exact pass is DONE (T2.6, 2026-07-16).** Measured: **55,627 unique objects** (9,926 class
+> A
+>
+> - 45,701 crc-differing with fewer canonical rows), not ~52,400 — the extrapolation under-counted by ~3,200. 6,110 of
+>   the class A are moved. **The residue is now OR-5b.**
+
+**OR-5b (NEW, BLOCKING T5.4 for MDT ONLY — surfaced by T2.6 2026-07-16) — how do we dispose of the 49,517 remaining
+unique `market-data-tick-sports` objects?** T2.6 made the count exact and moved the 6,110 derivable class-A objects, but
+two sub-classes have **no ruling to inherit** — the runbook says MDT class-B "inherits OR-1", yet **OR-1 ruled only on
+instruments entities (player_stats / fixture_events / standings / teams / player_values) and never covered MDT tick
+data**. `market-data-tick-sports` is NOT delete-eligible until both are dispositioned. (The instruments bucket is
+unaffected — it has its own completed disposition.)
+
+- **(a) 3,816 class-A objects in OLD pre-canonical shapes** — `day=/source=/league=`, `day=/venue=/league=`,
+  `day=/source=`, `day=/venue=` — lacking `asset_group` / `instrument_type` / `data_type`. **No canonical path is
+  derivable without inventing those segments**, which the never-fabricate rule forbids.
+  - **A: row-count them and, if their rows are contained in canonical, ABANDON with a written reason [WORKER REC]** —
+    mirrors the T2.5 method (prove-then-decide) and avoids fabricating path segments.
+  - **B: infer the missing segments** from the parquet contents (venue/league → asset_group/instrument_type/data_type)
+    and move — only if the inference is provably total, not heuristic.
+  - **C: park them under `_audits/` in canonical** as a retained archive, then delete the bucket.
+  - Other.
+- **(b) 45,701 class-B-equivalents holding 7,079,850 legacy-only rows** — canonical has the cell but strictly fewer
+  rows. This is the MDT analogue of the instruments row-gap that OR-1 investigated, but **it has never been
+  investigated**: we do not yet know how much is genuine complementary tick coverage vs snapshot skew / re-fetch
+  generations (the instruments answer was ~37% genuine, ~59% junk).
+  - **A: run the OR-1-style row-gap investigation on MDT first, then rule [WORKER REC]** — 7.08M rows is too large to
+    discard or blanket-merge unexamined; the instruments precedent proves the naive read is wrong ~59% of the time.
+  - **B: blanket union legacy ∪ canonical per cell** — risks re-importing the same junk/skew classes OR-1 rejected.
+  - **C: skip them and accept the row loss** — contradicts the data-pipeline-correctness HARD RULE without evidence.
+  - Other.
 
 **OR-6 (BLOCKING Phase 2) — fix the MOVE vehicle, or drive the move from the object inventory?**
 `migrate_sports_canonical_v9.py` silently enumerates 4 of its 7 declared trees as empty (F-1), cannot see class B (F-2),
