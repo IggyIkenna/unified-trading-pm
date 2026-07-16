@@ -88,13 +88,22 @@ MOVE set.** The 17 KEEP fall in six classes, five of which would BREAK something
   calling it need **no change** — GitHub runs that one job on a hosted runner inside the self-hosted workflow.)
   **Measured cost of keeping it hosted: ~$1/mo** (117 Slack posts/30d in the alert ledger + a small deduped-but-billed
   tail — `cloud-build-failure-watcher`'s standing condition is the bulk at ~51 billed/mo). Cheap insurance; cost is not
-  the deciding factor, independence is. ⚠️ **Open straddle: `persist-cicd-event`** — also called by 5 KEEP + 16 MOVE
-  workflows (incl. the 13k/mo `ci-status-update`); it's the secondary event-ledger record, not the alert path, so it's
-  left MOVE pending an operator call (see §"Open decisions").
+  the deciding factor, independence is.
 - **`KEEP*` (2): `build-smoke-all-repos` (docker buildx), `publish-package` (wheel)** — build locally, too heavy for the
   light VM.
 - **`KEEP` (4): `quality-gates-v2` + `python-quality-gates-v2`** (heavy tests) **+ `plan-health-agent` +
   `conflict-resolution-merged`** (`pull_request` bots).
+
+**The 39 MOVE = 38 by `runs-on` flip + 1 by conversion.** One mover is a special case:
+
+- **`MOVE-C` (1): `persist-cicd-event`** — the second straddle, RESOLVED via **option C (operator 2026-07-16): convert
+  it to a composite action** (not a `runs-on` flip). It's a high-frequency reusable (fires on ~EVERY run, unlike
+  alert-only `notify-slack`) that writes the CI/CD event-ledger row; called by **5 KEEP + 17 MOVE** workflows incl. the
+  13k/mo `ci-status-update`. One reusable = one `runs-on`, so a flip can't satisfy both sides (hosted callers would hang
+  on a down VM). Fix: rewrite it as `.github/actions/persist-event/action.yml` so it runs as **steps inside each
+  caller's own job** → on the caller's runner (movers → VM/$0, KEEP callers → hosted, no hang), which ALSO removes the
+  separate 1-min-minimum billed job (the A3/A4 saving). It leaves the workflow set once converted. **Do NOT flip its
+  `runs-on`** — convert it (STEP 2c).
 
 ### Deploy mechanism (Track 1 step 1)
 
@@ -163,14 +172,16 @@ MOVE set.** The 17 KEEP fall in six classes, five of which would BREAK something
 | `branch-health`               | **KEEP-M** | **promotion-lag / drift / AR-lag monitor**                                                           |
 | `notify-slack`                | **KEEP-D** | **the alert carrier the KEEP-M monitors call — must be hosted so they can page when the VM is down** |
 
-**MOVE to `[self-hosted, glue]` (39)** —
-`agent-audit · agent-runner · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-status-consolidator · ci-status-update · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · overnight-agent-orchestrator · persist-cicd-event · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
+**MOVE off hosted (39)** — 38 by `runs-on` flip to `[self-hosted, glue]`, plus **`persist-cicd-event` = `MOVE-C`**
+(convert to a composite action — do NOT flip its runs-on):
+`agent-audit · agent-runner · cascade-qg-ordering · cassette-drift-check · change-freeze-check · ci-status-consolidator · ci-status-update · cloud-build-router-aws · cloud-build-router · cold-storage-cleanup · conflict-resolution-agent · deterministic-promotion-conflict-resolve · digest-drift-sweep · escalate-to-orchestrator · fix-approval-timeout · freeze-deferred-build-replay · hotfix-mode · ldr-to-main-promote-fleet · ldr-to-main-promote · ldr-to-staging-promote · overnight-agent-orchestrator · persist-cicd-event ⟵MOVE-C · plan-notification · readiness-verifier · reconcile-release-tags · reconcile-staging-versions · removed-symbols-workspace-sweep · rules-alignment-agent · ruleset-drift-alert · secret-health-check · sit-debounce-trigger · sit-gate · sit-unlock · staging-conflict-ldr-main-fallback · staging-to-main · supersede-stale-dep-update-prs · update-repo-version · version-registry-update · workspace-quickmerge-validation`.
 
-> ⚠️ `persist-cicd-event`, `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are `workflow_call`
-> reusables but **PM-internal only** (0 cross-repo callers — verified), so safe to flip. `overnight-agent-orchestrator`
-> moves, but its watcher `overnight-dead-man-switch` stays hosted (KEEP-M) → a VM-down orchestrator is still caught.
-> **Movers calling `notify-slack` need no change** — it keeps its own `runs-on: ubuntu-latest`, so GitHub runs that one
-> job on a hosted runner even inside a self-hosted workflow.
+> ⚠️ `change-freeze-check`, `agent-runner`, `escalate-to-orchestrator` are `workflow_call` reusables but **PM-internal
+> only** (0 cross-repo callers — verified), so safe to flip. `persist-cicd-event` is a `workflow_call` reusable too but
+> is **`MOVE-C`** — convert to a composite action (STEP 2c), not a flip. `overnight-agent-orchestrator` moves, but its
+> watcher `overnight-dead-man-switch` stays hosted (KEEP-M) → a VM-down orchestrator is still caught. **Movers calling
+> `notify-slack` need no change** — it keeps its own `runs-on: ubuntu-latest`, so GitHub runs that one job on a hosted
+> runner even inside a self-hosted workflow.
 
 ---
 
@@ -246,13 +257,23 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
       untrusted fork-PR code (private repo → none) before flipping.
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **39 MOVE (PM-local direct) workflows only** (`ubuntu-latest` →
-      `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
-      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M`/`KEEP-D` set stays hosted). **Pace = canary →
-      phased groups (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
-      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~38 out in **small batches** (not
+- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **38 flip-MOVE (PM-local direct) workflows only** (`ubuntu-latest`
+      → `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
+      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M`/`KEEP-D` set stays hosted;
+      **`persist-cicd-event` is `MOVE-C` — converted in STEP 2c, NOT flipped**). **Pace = canary → phased groups
+      (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
+      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~37 out in **small batches** (not
       all at once). (Takes effect on push — do NOT push until the runners are live on the VM, else those workflows queue
       with no runner.)
+- [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C).**
+      Rewrite the reusable workflow as `.github/actions/persist-event/action.yml` (a composite action wrapping the same
+      build-JSON + GCS/S3/log-only write steps), then change all **22 callers** (5 KEEP + 17 MOVE) from
+      `jobs.<id>.uses: ./.github/workflows/persist-cicd-event.yml` (a job) to a **step**
+      `uses: ./.github/actions/persist-event` inside an existing job, and **delete** the old workflow. Effect: persist
+      runs on the **caller's** runner (movers → VM/$0, KEEP callers → hosted, no VM-outage hang) AND stops being a
+      separate 1-min-minimum billed job (the A3/A4 saving, fleet-wide, done properly). Keep it best-effort
+      (`continue-on-error`) exactly as today. Sequence: land with / after the STEP 2 flip (converting before the movers
+      are self-hosted gains nothing). Supersedes options-doc A3 (and the persist half of A4).
   - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
     `ci-status-update`, `cloud-build-router*`, `sit-gate`, `sit-unlock`, `hotfix-mode`, `update-repo-version` **cannot
     be canaried on LDR** — `gh workflow run --ref` needs a `workflow_dispatch` trigger, and dispatch/schedule workflows
@@ -443,3 +464,14 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   were artifacts of counting skipped `notify` jobs + API rate-limiting — corrected. Classifier now emits `KEEP-D`
   (curated `KEEP_HOSTED_DEPS`). `persist-cicd-event` left MOVE (secondary ledger, not the alert path) — flagged as the
   one open straddle.
+- 2026-07-16 (final review) — **`persist-cicd-event` straddle RESOLVED → option C (operator): convert to a composite
+  action.** Unlike `notify-slack`
+  (~$1/mo, alert-only), `persist` fires on ~every run (called by 5 KEEP + 17 MOVE incl.
+  the 13k/mo `ci-status-update`) so where it runs is real money (the A3/A4 dollars). A single reusable can't be
+  hosted-for-KEEP and on-VM-for-movers, and flipping it would hang the hosted callers on a VM outage. Converting it to
+  `.github/actions/persist-event` makes it run as steps **inside each caller's own job** → on the caller's runner (movers
+  → VM/$0,
+  KEEP → hosted, no hang) AND drops the separate billed job (the A3/A4 win). Classifier tags it **`MOVE-C`** (move by
+  conversion, do NOT flip; still counted in the 39 → 38 flip + 1 convert). Added **STEP 2c** (convert + rewire 22
+  callers + delete the old workflow), sequenced with the flip. Supersedes options-doc A3. `persist-cicd-event` was the
+  last open straddle — none remain.
