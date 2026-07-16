@@ -313,16 +313,31 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
       `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
       another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
       `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
-- [ ] [DATA] P2. Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **TRACED-UNSAFE
-      as literally stated:** a naive drop of `instrument_id` from `_READ_COLUMNS` corrupts coverage — `_merge_manifests`
-      dedups the prd+oracle merge on `(date, venue, instrument_id, data_type)` and falls back to
-      `(date, venue, data_type)` without it, COLLAPSING distinct instruments into one row (the shard atom is
-      per-instrument, so the denominator + captured counts undercount and the "best status" wins → coverage overstated).
-      `_compute_coverage` + Layer-1 do NOT use `instrument_id` (verified), but the merge does. Correct fix = pyarrow
-      row-group streaming aggregation OR metadata-deferred primary read (secondaries are already re-read eu-only via
-      `_read_parquet_eu_only`, so their full `_read_parquet_safe` materialization is pure waste + the OOM driver) — a
-      real refactor with correctness surface + ~6 selection-test updates in `test_measure_honest_coverage.py`, NOT a
-      one-line column drop. Enables downsizing the cron VM back to 16GB. _(Defence-in-depth.)_
+- [x] [DATA] P2. ✅ Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **Approach
+      taken = metadata-deferred read (Option 2), NOT row-group streaming:** the availability-index parquet already
+      stores every `_READ_COLUMNS` column PLAIN_DICTIONARY-encoded per row-group (verified via pyarrow row-group
+      metadata on real prd buckets) — `pd.read_parquet(..., read_dictionary=<cols>)` (forwarded to
+      `pyarrow.parquet.read_table`) preserves that on-disk encoding as pandas `category` dtype instead of pandas'
+      default of expanding every row into a python-object string, at effectively zero correctness risk (same values,
+      only the dtype changes). Applied to `_read_parquet_safe` (all 4 fallback tiers) + `_read_parquet_eu_only`.
+      TRACED-UNSAFE concern from the original todo (naive `instrument_id` drop corrupting `_merge_manifests`'s shard-key
+      dedup) does not apply — `instrument_id` is still read, just compactly. Two correctness footguns found + fixed
+      empirically (not assumed) while implementing this: (a) `Series.map()` on a Categorical column returns a
+      Categorical whose sort order is category-discovery-order, not numeric order, which would make `_merge_manifests`
+      keep the WRONG "best status" per shard — fixed via `.astype("int64")` after the priority `.map()`; (b) pandas
+      `groupby` defaults to `observed=False`, synthesising a phantom empty group for every unobserved category
+      combination — fixed via `observed=True` on all 5 `_compute_coverage` groupby calls (no-op on legacy object-dtype
+      buckets). — instruments-service@6c9f604f + Evidence: real production A/B comparison against the sports-prd bucket
+      (1,958,498 raw rows — cefi/tradfi/defi/prediction were mid-write by a concurrent pipeline during this session,
+      sports was the only stable target) — byte-identical `_compute_coverage` output (every projection incl. Layer-1
+      missing/stray tuples) between the old object-dtype code path and the new category-dtype path; peak RSS 447.1MB →
+      319.8MB (-28.5%); retained merged-DataFrame memory 27.19MB → 0.93MB (~29x); read wall-time 413s → 218s (~1.9x
+      faster, bonus). 6 new unit tests added to `test_measure_honest_coverage.py` (real local-parquet dictionary
+      round-trip across 2 fallback tiers + the eu_only reader, a regression test for each of the 2 footguns, and a
+      categorical-vs-object-dtype equivalence test). Full `tests/unit/` suite green (4387 passed/3 skipped in one run
+      this session). Enables downsizing the cron VM back to 16GB — **not done here**, a separate operator/infra
+      decision; `deployment-service`'s launcher was not touched (noted in passing: that repo currently carries unrelated
+      live foreign WIP in `terraform.tfvars`, left alone).
 - [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
       distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
 
