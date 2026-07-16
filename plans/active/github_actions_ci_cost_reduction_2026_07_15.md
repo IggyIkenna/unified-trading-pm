@@ -9,10 +9,13 @@ summary: >-
   the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
   fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
   fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
-  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). All off-VM
-  work is BUILT + shipped 2026-07-16 (two-pool runners, failsafe bootstrap, queue-starvation watchdog); target VM and
-  the GH_PAT token are VERIFIED. Nothing deployed, no runs-on flipped. Next action = the D1-D6 DEPLOY RUNBOOK, stopping
-  at the D6 canary; then flip 1 -> 10 -> remaining ~27.
+  2026-07-15/16. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). **DEPLOYED 2026-07-16: D1-D6 ALL
+  DONE.** 8 runners live on the orchestrator VM (5 JIT-ephemeral glue + 3 long-lived glue-writer, disjoint labels);
+  CANARY GREEN on LDR with billable={} (zero billed minutes) and the JIT deregister/re-register lifecycle proven from
+  the journal. 1 of 38 movers is flipped; main is UNTOUCHED. Counts corrected 39/17 -> 38/18 (agent-audit is KEEP-U: a
+  pure reusable caller with no runs-on). Next action = OPERATOR GATE, then the next 10 (5 simple + 5 complex), then the
+  remaining 26. Two P0s pending: rotate GH_PAT (agent-caused transcript exposure), and quickmerge's --agent sentinel
+  races its own rebase on a busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -57,23 +60,33 @@ drift_direction: advance-code
 
 ## ▶ START HERE (first action for a fresh session)
 
-1. **Read this pre-flight §** + § "MOVE / STAY manifest" (the flip set is final — do not re-derive it; the SSOT is
-   `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → 39 MOVE / 17 KEEP).
-2. **Everything buildable OFF the VM is DONE — do not rebuild it.** Two-pool runners (@c44ca1bd4), failsafe bootstrap
-   (@80f00684a, container-proven), queue-starvation watchdog (@6901779de, mutation-tested). **Read
-   `scripts/self-hosted-runners/README.md` — it is the operating SSOT.**
-3. **⏵ NEXT: work the § "DEPLOY RUNBOOK — D1…D6" todos IN ORDER, then STOP at D6 and report.** The operator gates each
-   phase. Two facts are VERIFIED — do not re-derive, do not second-guess:
-   - **Target VM** = `i-0c9b283b31d6b5ca7` (`agent-orchestrator-vm-1`, 13.113.200.22, m8i.2xlarge 8vCPU/32GiB), via
-     **AWS SSM** (no inbound SSH). **NOT** `i-0dd9812a96cdda5dc` (the human box).
-   - **Token** = GCP Secret Manager **`GH_PAT`** (probed 201 = `Administration:write`; fine-grained, never expires).
-     **`github-token` is DEAD (401)** — an earlier version of this plan named it and would have failed the deploy. D1
-     fixes an install blocker (`GH_TOKEN_SECRET` path) · D2 preflight (⚠️ `jq`/`npm` on the box are still UNKNOWN — the
-     real migration risk) · D3 scripts onto the VM · D4 install · D5 prove both pools Online · D6 canary.
-4. **Pacing after D6 (operator 2026-07-16): canary `agent-audit` (1) → verify → next 10 (5 simple + 5 complex) → verify
-   → remaining 27.** The exact 11 are named in § "Flip groups" — **do not re-pick them**; they were profiled from all 38
-   and chosen so the 10 cover EVERY capability class the remaining 27 use. Then STEP 2b (ci-status-update trim) + STEP
-   2c (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+1. **Read this pre-flight §** + § "MOVE / STAY manifest". The flip set is final — do not re-derive it; the SSOT is
+   `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → **38 MOVE / 18 KEEP** (corrected from 39/17 on
+   2026-07-16: `agent-audit` is **KEEP-U**, a pure reusable caller with no `runs-on`). **37** are flippable.
+2. **⛔ D1–D6 ARE DONE (2026-07-16) — the runners are LIVE. Do NOT re-run `install`, re-derive the toolchain, or re-pick
+   the canary.** Deployed state, all measured:
+   - **8 runners Online** on `i-0c9b283b31d6b5ca7` — `5× glue-*` (`self-hosted,glue`, JIT-ephemeral) + `3× writer-*`
+     (`self-hosted,Linux,X64,glue-writer`, long-lived). Labels **disjoint** → writers cannot steal mover jobs.
+   - **Deploy clone** = `/opt/glue-deploy/unified-trading-pm` (fresh; **never** an AO slot clone). Runner root =
+     `/opt/github-glue-runners` (root-owned; `venv`/`repo`/`toolcache` runner-owned).
+   - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET=GH_PAT` (the NAME); the wrapper
+     resolves it per start via `ubuntu`'s ADC. Rotation needs no redeploy (everything reads `latest` by name).
+   - **1 of 38 flipped**: `workspace-quickmerge-validation` → `[self-hosted, glue]` **on LDR only**. `main` is UNTOUCHED
+     and still `ubuntu-latest`.
+3. **⏵ NEXT: the OPERATOR GATE.** D6 is green; the next batch is the **10** named in § "Flip groups" (5 simple + 5
+   complex) — **do not re-pick them**. Then the remaining **26**, then STEP 2b (ci-status-update trim) + STEP 2c
+   (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+4. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
+   exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
+   then checks, so on a busy LDR it can never self-validate; workaround = chain
+   `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
+
+**THE LESSON THAT COST THE MOST — apply it to every remaining flip (2026-07-16):** every verifier written before the
+deploy reported **green on a box that would have failed**, always the same way — the right worry checked in the wrong
+environment. `python3 -m venv --help` passes where creating a venv fails; `bash -lc` finds `uv` in `~/.local/bin` where
+the runner (systemd, non-login) never will; `command -v` in the caller's shell says nothing about the job's shell.
+**Verify in the environment the runner actually has** (`env -i` + the unit's PATH, as `ubuntu`), and prefer _doing the
+real operation_ over asking whether it might work. `systemd-run --uid=ubuntu --setenv=PATH=…` is the honest probe.
 
 **Ordering hard rules:** runners must be live **before** any flip reaches `main` (schedule/dispatch workflows run the
 definition from the default branch — see the default-branch gotcha below), and **never flip** a `KEEP-*` workflow or
@@ -83,13 +96,12 @@ definition from the default branch — see the default-branch gotcha below), and
 
 ## Execution pre-flight & runbook (READ FIRST — context not obvious from the todos)
 
-**State 2026-07-16:** plan ACTIVE; all decisions closed; flip set final (39 MOVE / 17 KEEP). **Everything buildable
-off-VM is BUILT + shipped**: two-pool runners (@c44ca1bd4), failsafe bootstrap (@80f00684a, container-proven), queue
-watchdog (@6901779de, mutation-tested). **VERIFIED**: target VM `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`
-(m8i.2xlarge, running); token = SM **`GH_PAT`** (201; `github-token` is DEAD/401). **NOTHING deployed** — no `install`
-has run, no runner registered, `preflight` never executed on the box, **no `runs-on` flipped, no callers rewired.** Next
-action = **§ "DEPLOY RUNBOOK" D1** (fix the `GH_TOKEN_SECRET` install blocker), then D2…D6, **STOP at D6**. Work
-continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
+**State 2026-07-16 (post-deploy):** plan ACTIVE; flip set final at **38 MOVE / 18 KEEP** (37 flippable). **D1–D6
+COMPLETE — the runners are LIVE and the canary is GREEN.** `install` exit 0; 8/8 units active; both pools Online with
+disjoint labels; refresh timer green; `preflight` exit 0 **on the runner's real PATH**. Canary run `29504914995` on LDR:
+claimed by `glue-ip-172-31-5-118-4`, `success`, **`billable: {}`** (zero billed minutes — the thesis, measured), JIT
+deregister→restart→re-register proven from the journal. **`main` is UNTOUCHED** (1 flip, LDR only). Next action =
+**operator gate**, then the 10. Work continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
@@ -311,6 +323,21 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
       untrusted fork-PR code (private repo → none) before flipping.
 
+- [ ] [INFRA] P0. **`quickmerge.sh --agent` sentinel races its OWN rebase on a busy branch — found 2026-07-16, cost ~5
+      failed ship attempts.** STAGE 0.4 does `git pull --rebase`, which **rewrites the SHAs of your local commits**;
+      STAGE 3 (line ~1225) then demands the `.qg_last_passed_sha` sentinel be `==` HEAD, or an **ancestor** of it for
+      the content-scoped fallback. When the sentinel points at _your own_ commit, a rebase makes it neither — so on a
+      branch with pushes every ~1–3 min (LDR under the AO fleet) `--agent` can **never** validate a sentinel it just
+      wrote. The design implicitly assumes UNCOMMITTED work (sentinel = an upstream commit, which survives the rebase
+      because the dirty files are autostashed); pre-committed work — which the same script explicitly supports ("clean
+      tree with N unpushed commit(s) … shipping the committed work") — has no such luck. **Workaround used:** chain
+      `quality-gates.sh --no-fix && quickmerge.sh …` in ONE shell so no upstream commit can land between them — still a
+      race, just a narrow one. **Real fix (pick one):** (a) re-derive/refresh the sentinel AFTER STAGE 0.4's rebase
+      rather than before; (b) make the content-scoped fallback use the merge-base instead of requiring ancestry, so a
+      rebase of your own commits doesn't invalidate a QG that still covers the shipped files. Affects **every agent** on
+      LDR, not just this plan → escalate to the CI/CD owner or file
+      `plans/active/issues/quickmerge_agent_sentinel_race_2026_07_16.md`.
+
 ### ▶ DEPLOY RUNBOOK — D1…D6, strictly in order (operator-approved 2026-07-16)
 
 > Everything buildable off-VM is DONE. These are the on-VM steps. Target = `i-0c9b283b31d6b5ca7`
@@ -318,7 +345,7 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
 > `github-token` is DEAD/401). Do NOT skip D2 — `jq`/`npm` on that box are still genuinely unknown, and toolchain parity
 > is the real migration risk.
 
-- [x] ✅ [INFRA] P0. **D1 — `install` takes the Secret-Manager path — unified-trading-pm@e2121f719.** `cmd_install` now
+- [x] ✅ [INFRA] P0. **D1 — `install` takes the Secret-Manager path — unified-trading-pm@d287a91cf.** `cmd_install` now
       requires **exactly one** of `GH_TOKEN_SECRET` (+ optional `GCP_PROJECT`) or `GH_PAT`, and **refuses both** (they
       can disagree, and silently preferring one would mean the token you think registers runners isn't the one that
       does). Secret path writes only the secret **NAME** to `/etc/github-glue-runner.env`, `GH_TOKEN` unset — the
@@ -340,35 +367,41 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       failing assertion can no longer leak. **Operator action:** add a new version to the `GH_PAT` secret; every
       consumer reads `latest` by name so no redeploy is needed. Check other holders first (`deployment-api` and the
       other GitHub tokens the operator flagged) for anything pinning a version.
-- [ ] [INFRA] P0. **D2 — `preflight` on the VM via SSM (gate: do not proceed on a failure).**
-      `aws ssm send-command --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript`
-      → `bash <pm-clone>/scripts/self-hosted-runners/setup-glue-runners.sh preflight`. Verifies
-      `gh`/`jq`/`python3`/`uv`/`aws`/`gcloud`/`git` (fatal) + `npm` (advisory). **If anything is missing, fix it by
-      adding it to `bootstrap-ci-host.sh` and re-running — NOT by hand-installing on the box** (a hand-fix leaves the
-      failsafe lying, which is the exact drift the operator called out).
-- [ ] [INFRA] P0. **D3 — put the new scripts on the VM.** The VM's PM clone must contain the two-pool scripts
-      (@c44ca1bd4 + @80f00684a + @6901779de). FF-pull the VM's clone to current LDR via SSM; verify by sha, not by
-      assumption. **Never touch an AO slot clone** — use the AO's own PM checkout read-only, or clone fresh.
-- [ ] [INFRA] P0. **D4 — install both pools.**
-      `sudo GH_TOKEN_SECRET=GH_PAT GLUE_COUNT=5 WRITER_COUNT=3     ./setup-glue-runners.sh install`. Registers 5
-      JIT-ephemeral (`self-hosted,glue`) + 3 long-lived (`self-hosted,glue-writer`), builds the slot
-      (`repo`/`venv`/`toolcache`), installs the units + slice + refresh timer. **This is the first-ever end-to-end
-      exercise of the systemd path** — the container could not test it.
-- [ ] [VERIFY] P0. **D5 — prove the runners are actually live.** `./setup-glue-runners.sh status` → **8 units active**,
-      **both pools Online** (5×`glue-*` + 3×`writer-*`), slot clone fresh, slice `MemoryCurrent` sane. Cross-check from
-      here: `gh api /repos/IggyIkenna/unified-trading-pm/actions/runners` shows 8 online with the **disjoint** labels. A
-      pool that registers but shows 0 Online = the wrapper is failing → `journalctl -u 'github-glue-runner@glue-1'`.
-- [ ] [VERIFY] P0. **D6 — CANARY `agent-audit`, WITHOUT touching `main`.** ⚠️ **The canary is `agent-audit`, NOT
-      `reconcile-release-tags`** (corrected 2026-07-16 after profiling all 38 — see § "Flip groups" below):
-      `agent-audit` is the **smallest of the entire MOVE set** (50 LOC, 2 jobs), has `workflow_dispatch`, carries **ZERO
-      side-effecting capabilities** (pure gh/api glue), and is read-only by design (`audit_only` input). Blast radius ≈
-      nil — a failure means one audit tick didn't run. `reconcile-release-tags` looked small at 72 LOC but exercises
-      **firestore + pr-write + dispatch + setup-python + gcp-auth**; it is now in the COMPLEX group where it belongs.
-      Flip its `runs-on` on **LDR only**, then `gh workflow run agent-audit.yml --ref live-defi-rollout`. **Why this is
-      safe:** `workflow_dispatch` executes the definition **from the chosen ref**, so the self-hosted path is proven
-      while `main` still says `ubuntu-latest` — nothing scheduled changes behaviour until we promote deliberately.
-      Verify: the run lands on a `glue-*` runner, goes green, and the ephemeral runner **auto-deregisters** afterwards
-      (proving the JIT lifecycle, not merely a green job). **STOP HERE and report** — the operator gates the next phase.
+- [x] ✅ [INFRA] P0. **D2 — `preflight` GREEN on the VM (exit 0) — unified-trading-pm@940a5d673.** Ran via AWS SSM
+      against `i-0c9b283b31d6b5ca7`. **It only became meaningful after being rewritten**, and that is the headline of
+      this phase: the original checked `command -v` in _the caller's_ shell. Run from a login shell it reported **uv ✓**
+      — while the runner, which systemd starts WITHOUT `~/.profile`, could not see uv at all. A preflight that passes in
+      an environment the runner never uses is worse than none: a confident green on a box that fails 32 of the 38
+      movers. It now reads the runner's PATH **from the unit file** (one SSOT, no drift), probes as `ubuntu` with
+      `env -i` (scrubbed, so nothing inherited can fake a pass), and is **phase-aware** (before install: prove a venv
+      _can_ be built; after: prove pip _does_ resolve).
+- [x] ✅ [INFRA] P0. **D3 — scripts on the VM via a DEDICATED deploy clone — `/opt/glue-deploy/unified-trading-pm`.**
+      Deliberately **not** the VM's existing PM clone: that one is stale (`09b90024b`, no runner scripts), is shared
+      infra referenced by the 16 AO slot clones, and pulling it is a write to something I don't own. Fresh shallow clone
+      on LDR instead (the plan's own "or clone fresh"). **Ordering finding: D3 must precede D2** — `preflight` only
+      exists in the rewritten script, so the code must reach the box before the gate can run.
+- [x] ✅ [INFRA] P0. **D4 — both pools installed, `install` exit 0 — unified-trading-pm@940a5d673.** First-ever
+      end-to-end exercise of the systemd path; it failed **three times** first, all one root cause: creating a file
+      needs write on the **PARENT**, and `${RUNNER_BASE}` is root-owned while the runner is `ubuntu`. (1) slot venv →
+      `Permission denied: /opt/github-glue-runners/venv`; (2) the refresh timer's stamp → first tick failed; (3)
+      `status` reported "no admin token resolvable" because plain `gcloud` as root used _root's_ ADC, which does not
+      exist here — the same per-user-ADC rule I had encoded into `install` and then not applied to the next function.
+      Fixed by pre-creating `venv`/`repo`/`toolcache` runner-owned, seeding the stamp, and routing **all** Secret
+      Manager reads through one `secret_access()`. Base stays root-owned so a runner can't drop files at the top level.
+- [x] ✅ [VERIFY] P0. **D5 — 8/8 runners live, labels DISJOINT — verified from GitHub's API, not just locally.**
+      `5× glue-*` = `self-hosted,glue`; `3× writer-*` = `self-hosted,Linux,X64,glue-writer` (config.sh adds `Linux,X64`;
+      JIT does not — harmless, since matching is a subset test and the writers lack `glue`, so they **cannot** steal
+      mover jobs). All units active, refresh timer green, slice capped `MemoryMax=8G` / `CPUQuota=400%` away from the
+      AO.
+- [x] ✅ [VERIFY] P0. **D6 — CANARY GREEN on LDR, `main` untouched — run `29504914995`.** ⚠️ **The canary is
+      `workspace-quickmerge-validation`, NOT `agent-audit`** (corrected again — see the KEEP-U finding below).
+      Dispatched `--ref live-defi-rollout`; **`main` still says `ubuntu-latest`**, so nothing scheduled changed.
+      **Evidence, all four required proofs:** (1) claimed by `glue-ip-172-31-5-118-4`, labels `self-hosted,glue`; (2)
+      `completed success`; (3) **JIT lifecycle proven from the journal**, not inferred — `Running job: validate` →
+      `Succeeded` → `Deactivated successfully` (exited after ONE job) → `Scheduled restart, counter 1` →
+      `Connected to     GitHub` → `Listening for Jobs`; `glue-4 NRestarts=1` while `glue-1 NRestarts=0` (only the runner
+      that took the job cycled), `_work` wiped; (4) **`billable: {}` — EMPTY**, i.e. the project's whole thesis
+      measured: a hosted run bills a 1-minute minimum, this billed nothing.
 
 ### Flip groups — canary (1) → 10 (5 simple + 5 complex) → remaining 27 (operator 2026-07-16)
 
@@ -382,19 +415,36 @@ provable on LDR before `main` changes at all.
 `ci-status-consolidator`, `cold-storage-cleanup`, `staging-conflict-ldr-main-fallback`); `agent-audit` (`audit_only`)
 and `reconcile-staging-versions` are no-op-safe by design.
 
-| #   | Workflow                             | LOC | Group      | Capability it PROVES                                         |
-| --- | ------------------------------------ | --- | ---------- | ------------------------------------------------------------ |
-| 0   | `agent-audit`                        | 50  | **CANARY** | runner claims job · checkout · gh CLI · **JIT deregister**   |
-| 1   | `workspace-quickmerge-validation`    | 71  | simple     | `upload-artifact` from self-hosted                           |
-| 2   | `ruleset-drift-alert`                | 73  | simple     | **slack (CROSS-BOUNDARY)** · `setup-python` → **tool-cache** |
-| 3   | `conflict-resolution-agent`          | 94  | simple     | git-write · dispatch                                         |
-| 4   | `reconcile-staging-versions`         | 145 | simple     | git-write (no-op safe)                                       |
-| 5   | `digest-drift-sweep`                 | 191 | simple     | **gcp-auth / runner-user ADC** · dispatch                    |
-| 6   | `reconcile-release-tags`             | 72  | complex    | firestore · pr-write · setup-python · gcp-auth               |
-| 7   | `ci-status-consolidator`             | 97  | complex    | **firestore WRITE** · git-write (the manifest projection)    |
-| 8   | `readiness-verifier`                 | 124 | complex    | **persist-cicd-event (CROSS-BOUNDARY)** · slack              |
-| 9   | `cold-storage-cleanup`               | 412 | complex    | **GCS — the ONLY gcs workflow in the MOVE set**              |
-| 10  | `staging-conflict-ldr-main-fallback` | 188 | complex    | **app-token** · pr-write                                     |
+| #   | Workflow                             | LOC | Group              | Capability it PROVES                                                  |
+| --- | ------------------------------------ | --- | ------------------ | --------------------------------------------------------------------- |
+| 0   | `workspace-quickmerge-validation`    | 71  | **CANARY ✅ DONE** | runner claims job · checkout · gh CLI · **JIT deregister** · artifact |
+| 2   | `ruleset-drift-alert`                | 73  | simple             | **slack (CROSS-BOUNDARY)** · `setup-python` → **tool-cache**          |
+| 3   | `conflict-resolution-agent`          | 94  | simple             | git-write · dispatch                                                  |
+| 4   | `reconcile-staging-versions`         | 145 | simple             | git-write (no-op safe)                                                |
+| 5   | `digest-drift-sweep`                 | 191 | simple             | **gcp-auth / runner-user ADC** · dispatch                             |
+| 6   | `reconcile-release-tags`             | 72  | complex            | firestore · pr-write · setup-python · gcp-auth                        |
+| 7   | `ci-status-consolidator`             | 97  | complex            | **firestore WRITE** · git-write (the manifest projection)             |
+| 8   | `readiness-verifier`                 | 124 | complex            | **persist-cicd-event (CROSS-BOUNDARY)** · slack                       |
+| 9   | `cold-storage-cleanup`               | 412 | complex            | **GCS — the ONLY gcs workflow in the MOVE set**                       |
+| 10  | `staging-conflict-ldr-main-fallback` | 188 | complex            | **app-token** · pr-write                                              |
+
+> **⚠️ CANARY CORRECTED TWICE — and the second correction is a rule, not a one-off (2026-07-16).** `agent-audit` was
+> picked off a profile of LOC · triggers · job count · capabilities that never asked the one question this entire plan
+> depends on: **does the workflow have a `runs-on` to flip?** It does not. Its single job is
+> `uses: …/python-quality-gates-v2.yml@main` — a pure **reusable caller**, so the _callee_ picks the runner, that callee
+> is a **KEEP**, and it is pinned `@main` so an LDR flip is inert twice over. Flipping it would have been a no-op that
+> looked like progress. **Now machine-checked:** `classify-glue-workflows.sh` detects no-`runs-on` and returns
+> **`KEEP-U`** (pure reusable caller). **Counts corrected: 39 MOVE / 17 KEEP → 38 MOVE / 18 KEEP**, of which **37 are
+> flippable** (the 38th is `persist-cicd-event` = MOVE-C, converted not flipped). Verified: all 37 have a `runs-on`. The
+> canary became `workspace-quickmerge-validation` — the true smallest flippable+dispatchable mover (71 LOC,
+> `contents: read`, no external writes).
+
+> **🔎 Host-mutation finding (2026-07-16):** `workspace-quickmerge-validation` ran
+> `sudo apt-get update && apt-get install -y jq`. Harmless on a throwaway hosted VM; on self-hosted it mutates the
+> **live orchestrator box** every 6h and can go red on an apt lock alone — a failure with nothing to do with the job.
+> Now guarded (`command -v jq || install`), which is also strictly faster on hosted. **It is the ONLY workflow in the
+> MOVE set that does this** (swept all 38), so this is a fixed one-off, not a class — but the pattern to watch when
+> reading any remaining mover is "assumes a disposable VM".
 
 **The two CROSS-BOUNDARY tests (#2, #8) are the most important in the batch** — they probe the single biggest
 architectural risk in this design. Both are self-hosted CALLERS invoking a **hosted** reusable (`notify-slack` = KEEP-D;
