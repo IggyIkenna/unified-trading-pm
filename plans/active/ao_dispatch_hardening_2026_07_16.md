@@ -160,8 +160,22 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 1 — stop the burn (P0)
 
-- [ ] [BACKEND] P0. **R1 — eligibility-aware spawn budget.** Extract `pick_next_task`'s eligibility predicate into one
-      shared helper (single SSOT for "is this task claimable by any live slot?") and make
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-16 — `agent-orchestrator@7baeedc`. QG green (own exit code 0): 1292 passed,
+      basedpyright 0 errors; landed on LDR.** Added `dispatch.claimable_queued_task_ids()` as the ONE SSOT for the
+      budget question ("could **any** worker slot take this?") vs `pick_next_task`'s per-slot question; both
+      `_has_queued_work` and `_queued_undispatched_count` delegate to it so the two can no longer drift. Also extracted
+      `_brief_is_deferred` (the DEFER prefix tuple had been inline — one definition now, not two). **Key design
+      decision, pinned by 2 tests: model tier and craft role are deliberately NOT filtered.** `pick_next_task` gates
+      them against the ASKING slot, but AutoSpawn CHOOSES them at spawn time — an opus task is not un-claimable just
+      because every live slot is sonnet, since the next spawn can BE opus. Filtering them in would zero the budget,
+      never spawn the opus/infra worker, and starve the work permanently — worse than the over-count, and for role it
+      would reintroduce the exact starvation `ao@8a423bb` fixed. Superset-on-doubt: an empty slot table skips the
+      per-slot filters rather than returning 0 (false starvation > stale over-count — the risk the verification agent
+      flagged). **R1 does NOT subsume R5**: a task pinned to a slot that exists but is dead still counts 1, because that
+      slot can be respawned onto it — the dead-slot spill is genuinely separate. 6 tests: skipped-by-every-slot → 0 vs
+      skipped-by-some → 1; tier guard; role guard; DEFER brief; repo collision (+ `parallel_safe` opt-out); affinity pin
+      to absent slot. ~~**R1 — eligibility-aware spawn budget.**~~ Extract `pick_next_task`'s eligibility predicate into
+      one shared helper (single SSOT for "is this task claimable by any live slot?") and make
       `_has_queued_work`/`_queued_undispatched_count` (`server/autospawn.py:317,340`) use it, so skip-exhausted /
       role-ineligible / collision-blocked / affinity-pinned tasks stop inflating the spawn budget. **Gate**: a task
       skipped by every eligible slot counts 0 toward the budget; existing autospawn tests stay green. Closes R1 + the
