@@ -57,12 +57,16 @@ drift_direction: advance-code
 
 1. **Read this pre-flight §** + § "MOVE / STAY manifest" (the flip set is final — do not re-derive it; the SSOT is
    `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → 39 MOVE / 17 KEEP).
-2. **First real task = the runner-infra redesign** (Phase 1, "Runner-slot ISOLATION + design" todo):
-   `setup-glue-runners.sh`
-   - `glue-runner-run.sh` currently assume ONE JIT-ephemeral pool; they must become a **dedicated runner slot (own
-     folder + own venv, fully isolated from AO)** with a **long-lived (non-ephemeral) pool for the high-freq writer**
-     and JIT-ephemeral for the rest. **Do this BEFORE deploying** — the current scripts don't match the decided design.
-3. **Then deploy** the runners on the planning-VM via **AWS SSM** (§ "Deploy mechanism"), verify `status`.
+2. **First real task = the runner-infra redesign** (Phase 1, "Runner-slot design" + "Two-pool mechanics" todos).
+   `setup-glue-runners.sh` / `glue-runner-run.sh` currently assume ONE JIT-ephemeral pool; they must become **two
+   pools** — a **long-lived (non-ephemeral) `glue-writer` pool** for the high-freq writer (`ci-status-update`) and a
+   **JIT-ephemeral `glue` pool** for the other ~37 — living in their own folder + venv + clone under
+   `/opt/github-glue-runners`. **Isolation scope = folder/venv/clone ONLY** (operator 2026-07-16): `User=ubuntu`, VM's
+   existing creds + toolchain, **no dedicated OS user**. **Do this BEFORE deploying** — the current scripts don't match
+   the decided design, and the two-pool todo lists 4 gaps that each BREAK the long-lived pool (JIT is single-use by
+   construction · labels must be disjoint · `_work` cleanup stops · `prune` deregisters the writer).
+3. **Then deploy** the runners on the planning-VM via **AWS SSM** (§ "Deploy mechanism"), verify `status`. Verify `jq` +
+   `npm` exist on the box and pre-seed the `setup-python` tool cache (see the toolchain-parity todo).
 4. **Then canary** `reconcile-release-tags` (a MOVE workflow that HAS `workflow_dispatch`) → green on
    `[self-hosted, glue]`.
 5. **Then** phased-group flip of the remaining ~37, then STEP 2b (ci-status-update trim) + STEP 2c (persist composite
@@ -76,10 +80,11 @@ definition from the default branch — see the default-branch gotcha below), and
 
 ## Execution pre-flight & runbook (READ FIRST — context not obvious from the todos)
 
-**State 2026-07-16:** plan ACTIVE; all decisions closed; flip set final (39 MOVE / 17 KEEP); runner infra authored +
-pushed (`scripts/self-hosted-runners/`) but **NOT yet redesigned** for the dedicated-slot/long-lived-writer decision;
-**NOTHING deployed, no `runs-on` flipped, no callers rewired.** Work continues from **slot 1** (`.tabs/1/`), root left
-to the AO worker.
+**State 2026-07-16:** plan ACTIVE; all decisions closed (incl. the isolation-scope decision — folder/venv/clone only,
+`User=ubuntu`, VM's existing creds/toolchain); flip set final (39 MOVE / 17 KEEP); runner infra authored + pushed
+(`scripts/self-hosted-runners/`) but **NOT yet redesigned** for the two-pool (long-lived-writer + JIT-ephemeral-glue)
+design; **NOTHING deployed, no `runs-on` flipped, no callers rewired.** Work continues from **slot 1** (`.tabs/1/`),
+root left to the AO worker.
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
@@ -316,16 +321,54 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       slot and do NO checkout at all** (lighter than a `git fetch`, and it sidesteps any clone-freshness question).
       Result: **~2-5s, near-zero boot churn**. Guard the trimmed steps to self-hosted only. Highest-frequency mover
       (~13k/mo); apply the same pattern to other high-freq movers with redundant setup.
-- [ ] [INFRA] P1. **Runner-slot ISOLATION + design (operator 2026-07-16 — resolves the review's #9/#10/#11).** The glue
-      runners live in a **totally separate slot: their own folder, their own environment/venv**, fully isolated from the
-      AO and its worker slots (no shared clone). So: the "warm checkout" is a **dedicated runner-owned clone**, NEVER an
-      AO slot clone (removes the live-worker race the review flagged); the pre-installed `google-cloud-firestore` (STEP
-      2b) lives in **that slot's dedicated venv**, not any AO/system Python. **Runner mode: use a LONG-LIVED
-      (non-ephemeral) pool for the high-frequency writer** (`ci-status-update`) with per-job `_work` cleanup — at ~2-5s
-      runtime the JIT re-registration overhead (generate-jitconfig + config + connect, several seconds) would otherwise
-      dominate and cap burst throughput; keep JIT-ephemeral for the low-frequency movers where clean-state-per-job is
-      cheap. Update `setup-glue-runners.sh` / `glue-runner-run.sh` to the dedicated-slot + long-lived-writer design
-      before deploy (currently they assume a single JIT-ephemeral pool).
+- [ ] [INFRA] P1. **Runner-slot design (operator 2026-07-16 — resolves the review's #9/#10/#11).** The glue runners live
+      in their **own folder under `/opt/github-glue-runners`** with their **own venv** and their **own clone** of any
+      repo CI needs (NEVER an AO slot clone — removes the live-worker race the review flagged); the pre-installed
+      `google-cloud-firestore` (STEP 2b) lives in **that slot's venv**, not any AO/system Python. **Scope of isolation =
+      FOLDER/VENV/CLONE ONLY (operator 2026-07-16):** `User=ubuntu`, reusing the VM's existing GCP/AWS/GitHub creds and
+      existing toolchain — **no dedicated OS user, no separate SA.** Rationale (operator, accepted after challenge):
+      everything needing true clean-room isolation (QG, PR gates, image builds) is already GitHub-hosted and stays
+      there; the MOVE set is all first-party automation with **zero `pull_request` triggers**, all repos are private (no
+      fork PRs → no untrusted code path), and **the AO already runs as `ubuntu` with the same ambient creds**, so
+      glue-as- `ubuntu` barely moves the blast radius. VERIFIED not a hazard: the two MOVE workflows doing
+      `git config --global` (`deterministic-promotion-conflict-resolve` L95, `rules-alignment-agent` L69) cannot corrupt
+      AO commit attribution because every clone (slot + root) carries a **local** identity that overrides `--global`; a
+      `HOME` redirect was considered and REJECTED (it would break `$HOME/.config/gcloud` ADC resolution to fix a
+      non-problem). **Runner mode: LONG-LIVED (non-ephemeral) pool for the high-frequency writer** (`ci-status-update`)
+      with per-job `_work` cleanup — at ~2-5s runtime the JIT re-registration overhead (generate-jitconfig + config +
+      connect, several seconds) would otherwise dominate and cap burst throughput; keep JIT-ephemeral for the
+      low-frequency movers where clean-state-per-job is cheap. Update `setup-glue-runners.sh` / `glue-runner-run.sh` to
+      the two-pool design before deploy (currently they assume a single JIT-ephemeral pool).
+- [ ] [INFRA] P1. **Two-pool mechanics — the 4 correctness gaps the authored scripts have (found 2026-07-16 during the
+      redesign; each BREAKS the long-lived pool).** (a) **JIT ≠ long-lived**: `--jitconfig` is inherently single-use
+      (auto-deregisters after one job), so the writer pool must use
+      `config.sh --token <registration-token>     --unattended --replace` once at install then loop `run.sh` — a genuine
+      fork in the wrapper, not a flag; note the writer's `.credentials` DOES then sit on disk (feeds the security-codex
+      todo). (b) **Labels must be DISJOINT, not nested**: label matching is a subset test, so a writer labelled
+      `self-hosted,glue,writer` would still match `runs-on: [self-hosted, glue]` and steal movers' jobs → writer carries
+      **`self-hosted,glue-writer` WITHOUT the `glue` label**; consequence: `ci-status-update.yml` is the **one** MOVE
+      workflow not getting the uniform flip recipe. (c) **`_work` cleanup silently stops**: `glue-runner-run.sh:38`
+      wipes `_work/*` at wrapper start, correct only for one-process-one-job → a long-lived runner never cleans and
+      grows unbounded; use the runner's `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` post-job hook. (d) **`prune` would
+      deregister the writer**: `setup-glue-runners.sh:119-130` deletes any OFFLINE `glue-*` runner, but a long-lived
+      writer is _legitimately_ offline across reboot/redeploy → prune must target the **ephemeral prefix only**. Also
+      split `RUNNER_COUNT` into `WRITER_COUNT`/`GLUE_COUNT` (propose 3 writers + 5 ephemeral: 13k/mo ≈ 18/hr × ~3s is
+      trivial; the 3 is purely fleet-wide burst headroom, e.g. 24 repos firing at once).
+- [ ] [INFRA] P2. **Pre-staged clone needs a REFRESHER (gap found 2026-07-16 — not previously in this plan).** STEP 2b
+      pre-stages `ci_status_store.py` in the runner slot so the writer does **no checkout at all**. If that clone is
+      pinned at install time it silently drifts from `main` and the writer keeps writing Firestore rows with **stale
+      logic** — quiet wrongness, the bad kind. Add a systemd timer doing `git -C ${SLOT}/repo pull --ff-only` (+ a
+      staleness assertion the writer can fail loudly on).
+- [ ] [INFRA] P2. **Toolchain parity with `ubuntu-latest` (gap found 2026-07-16 — the real migration risk, not
+      isolation).** Hosted images pre-seed a large toolchain; the VM has gcloud/gh/python/uv. MOVE-set inventory: `gh`
+      181 · `jq` 111 · `python3` 105 · `uv` 32 · `aws` 22 · `gcloud` 16 · `pip` 15 · `npm` 1. **`docker` = FALSE ALARM**
+      (all 21 hits are a step _named_ `docker-build` that only dispatches to Cloud Build, plus the Artifact Registry
+      hostname in `gcloud artifacts docker images describe`) — nothing invokes the daemon, which independently confirms
+      the classifier's heavy-detection. **Verify `jq` + `npm` on the box at deploy.** Real friction =
+      **`actions/setup-python@v6` on 5 movers** (`cassette-drift-check`, `readiness-verifier`, `reconcile-release-tags`,
+      `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted pre-seeds the tool cache, self-hosted resolves
+      against `RUNNER_TOOL_CACHE` and on a miss downloads/builds a Python **per job** — won't break, but turns a ~5s job
+      slow. Pre-seed the tool cache once at install.
 - [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
       VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
 - [ ] [DOCS] P2. **Codex: write down the self-hosted-glue security posture (operator 2026-07-16 — important, not
@@ -342,8 +385,8 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       is independence from our infra. They cost a few
       $/mo total; keeping them hosted means a VM/pool outage never
       blinds the fleet's failure detection + auto-recovery. (No runner-offline page needed — the watchers ARE the
-      independent signal.) **Corollary (final review):** the watchers' shared alert carrier `notify-slack` must ALSO stay
-      hosted (`KEEP-D`) or they'd detect-but-not-page during a VM outage — measured cost ~$1/mo.
+      independent signal.) **Corollary (final review):** the watchers' shared alert carrier `notify-slack` must ALSO
+      stay hosted (`KEEP-D`) or they'd detect-but-not-page during a VM outage — measured cost ~$1/mo.
       Split → **39 MOVE / 17 KEEP**.
 
 ### Phase 2 — Shrink the fleet-wide hosted QG (the real $ that stays on GitHub-hosted: A1 + A2 + A5)
@@ -482,8 +525,8 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   hosted runner inside the self-hosted workflow). **Measured its cost first** (operator: "actual figures, no guesses"):
   billing has no per-workflow line and it's a nested reusable (0 own runs), so counted the alert ledger + billed
   `send-notification` jobs →
-  **~$1/mo** (117 posts/30d + a small deduped-but-billed tail; `cloud-build-failure-watcher` ~51 billed is the
-  bulk). Two earlier intermediate numbers ($4/$22)
+  **~$1/mo** (117 posts/30d + a small deduped-but-billed tail; `cloud-build-failure-watcher`
+  ~51 billed is the bulk). Two earlier intermediate numbers ($4/$22)
   were artifacts of counting skipped `notify` jobs + API rate-limiting — corrected. Classifier now emits `KEEP-D`
   (curated `KEEP_HOSTED_DEPS`). `persist-cicd-event` left MOVE (secondary ledger, not the alert path) — flagged as the
   one open straddle.
@@ -492,8 +535,8 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   (~$1/mo, alert-only), `persist` fires on ~every run (called by 5 KEEP + 17 MOVE incl.
   the 13k/mo `ci-status-update`) so where it runs is real money (the A3/A4 dollars). A single reusable can't be
   hosted-for-KEEP and on-VM-for-movers, and flipping it would hang the hosted callers on a VM outage. Converting it to
-  `.github/actions/persist-event` makes it run as steps **inside each caller's own job** → on the caller's runner (movers
-  → VM/$0,
+  `.github/actions/persist-event` makes it run as steps **inside each caller's own job** → on the caller's runner
+  (movers → VM/$0,
   KEEP → hosted, no hang) AND drops the separate billed job (the A3/A4 win). Classifier tags it **`MOVE-C`** (move by
   conversion, do NOT flip; still counted in the 39 → 38 flip + 1 convert). Added **STEP 2c** (convert + rewire 22
   callers + delete the old workflow), sequenced with the flip. Supersedes options-doc A3. `persist-cicd-event` was the
@@ -507,3 +550,36 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `setup-glue-runners.sh`/`glue-runner-run.sh` still assume one JIT-ephemeral pool and do NOT match the decided design —
   redesign BEFORE deploying; then SSM-deploy → canary `reconcile-release-tags` → phased flip → STEP 2b/2c → Phase 2/3.
   State at activation: **nothing deployed, no `runs-on` flipped, no callers rewired.**
+- 2026-07-16 — **Runner-infra redesign started (execution begins).** Read all four authored artefacts
+  (`setup-glue-runners.sh`, `glue-runner-run.sh`, `github-glue-runner@.service`, `github-glue-runner.slice`) against the
+  decided design and found **8 gaps**, 4 of which are correctness bugs that would each BREAK the long-lived pool — now
+  captured as the "Two-pool mechanics" todo: (a) JIT is single-use **by construction**, so "long-lived JIT" is not a
+  thing — the writer needs `config.sh --token` + a `run.sh` loop, a genuine fork in the wrapper; (b) runner labels match
+  by **subset**, so a writer labelled `self-hosted,glue,writer` would still match `[self-hosted, glue]` and steal
+  movers' jobs → pools must be **disjoint** (`glue-writer` WITHOUT `glue`), making `ci-status-update` the one MOVE
+  workflow off the uniform flip recipe; (c) `glue-runner-run.sh:38`'s `_work` wipe is correct only for
+  one-process-one-job → a long-lived runner never cleans (use `ACTIONS_RUNNER_HOOK_JOB_COMPLETED`); (d) `cmd_prune`
+  deletes OFFLINE `glue-*`, but a long-lived writer is _legitimately_ offline across reboot → prune must scope to the
+  ephemeral prefix. Plus: the slot's clone/venv don't exist yet, `RUNNER_COUNT` needs splitting, and the pre-staged
+  clone needs a **refresher** (new todo — a pinned clone silently drifts from `main` and the writer would emit Firestore
+  rows with stale logic).
+- 2026-07-16 — **Isolation scope DECIDED (operator) — folder/venv/clone only, `User=ubuntu`, VM's existing
+  creds/toolchain, no dedicated OS user/SA.** Operator challenged the isolation framing ("everything that needs total
+  isolation is already GitHub-hosted — why do we need so much isolation?") and was **right**: the self-hosted-runner
+  threat model is about public repos accepting fork PRs; here all repos are private, the MOVE set has **zero
+  `pull_request` triggers** by construction, and **the AO already runs as `ubuntu` with the same ambient creds**, so
+  glue-as-`ubuntu` barely moves the blast radius. Investigated and **withdrew** my own shared-`$HOME` objection:
+  `deterministic-promotion-conflict-resolve` (L95) and `rules-alignment-agent` (L69) do run `git config --global`, but
+  every clone (slot + root) carries a **local** identity that overrides it (verified: `harshkantariya [slot-1·laptop]` /
+  `[root·laptop]`), so AO commit attribution is immune; a `HOME` redirect was considered and **REJECTED** — it would
+  break `$HOME/.config/gcloud` ADC resolution to fix a non-problem. Decision drops the separate-user + ADC-provisioning
+  work entirely.
+- 2026-07-16 — **Toolchain parity identified as the REAL migration risk (not isolation)** — new todo. MOVE-set tool
+  inventory: `gh` 181 · `jq` 111 · `python3` 105 · `uv` 32 · `aws` 22 · `gcloud` 16 · `pip` 15 · `npm` 1. **`docker` is
+  a FALSE ALARM** — all 21 hits are a step _named_ `docker-build` (which only dispatches to Cloud Build) or the Artifact
+  Registry hostname inside `gcloud artifacts docker images describe`; nothing invokes the daemon, which **independently
+  confirms the classifier's heavy-detection** sent the real builders to KEEP. Real friction =
+  **`actions/setup-python@v6` on 5 movers** (`cassette-drift-check`, `readiness-verifier`, `reconcile-release-tags`,
+  `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted pre-seeds the tool cache, self-hosted
+  downloads/builds a Python per job on a miss — won't break, but slow → pre-seed `RUNNER_TOOL_CACHE` at install. Verify
+  `jq`/`npm` on the box at deploy.
