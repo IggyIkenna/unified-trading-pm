@@ -4,9 +4,10 @@ description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
   task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions AND done-but-unchecked todos,
   adversarially verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
-  evidence, supersession banners, status/frontmatter drift, dangling refs) and route judgment calls to the operator as
-  an interactive Q&A with options + a marked recommendation; in autonomous/AO mode raise those as AO operator
-  alerts/escalations and park them as BLOCKED-OPERATOR-DECISION instead of asking. Also runs a lifecycle + hygiene pass:
+  evidence, supersession banners, status/frontmatter drift, dangling refs) AND anything a source of truth can settle
+  (if a claim is countable, count it — do not escalate a provable fact), then route only genuine authority/preference
+  calls to the operator as a batched interactive Q&A with options + a marked recommendation. ASK > PARK: park as
+  BLOCKED-OPERATOR-DECISION only when nobody is reachable to answer. Also runs a lifecycle + hygiene pass:
   archive fully-done plans (verified, unlocked), flag near-complete plans (<=1 open todo) for consolidation, and leave
   the corpus canonical (prettier + run_hygiene_sweep.sh-green, within line-caps). Plan↔codex drift is in scope and
   plans→codex SSOT updates are applied ONLY after an explicit operator ruling. Trigger on /plan-reconcile, "reconcile
@@ -32,11 +33,58 @@ refs).
 
 - **Interactive (default, operator present)**: findings that need a ruling become a structured Q&A (see Phase 4);
   operator decisions are applied immediately.
-- **Autonomous / AO-dispatched** (`/plan-reconcile --autonomous`, or run under `/autonomous`, or dispatched to the AO
-  VM): NEVER pause for input. Apply only the auto-fix classes; park every judgment call as a `BLOCKED-OPERATOR-DECISION`
-  entry in the issue doc (Phase 5) with options + recommendation per the SUB_AGENT_MANDATORY_RULES escalation format,
-  and notify the operator. Inherits every safety rule (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under
-  `/autonomous`).
+- **Autonomous / AO-dispatched** (`/plan-reconcile --autonomous`, or dispatched to the AO VM with no operator on the
+  other end): NEVER pause for input. Apply the auto-fix classes; park every genuine judgment call as a
+  `BLOCKED-OPERATOR-DECISION` entry in the issue doc (Phase 5) with options + recommendation per the
+  SUB_AGENT_MANDATORY_RULES escalation format, and notify the operator. Inherits every safety rule
+  (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under `/autonomous`).
+
+### ASK > PARK when the operator is reachable (HARD — added 2026-07-15 from a real failure)
+
+**Parking is for an operator who is genuinely gone, not for a mode flag.** `/autonomous` means "don't BLOCK on them",
+not "never speak to them". If the operator is in the session — and especially the moment they reply to anything —
+**switch to interactive and ASK the batched Q&A** (Phase 4). Re-evaluate this every turn; the mode is a property of
+_operator reachability_, not of how the run was invoked.
+
+_(The failure: a run under `/autonomous` parked 8 decisions into an issue doc while the operator was actively replying
+in-session. They then answered all of them in two rounds, in minutes. The park cost a full round-trip AND is what let
+findings hide — a doc someone must go read is where a missed item survives; a question they answer is not.)_
+
+**Parking is strictly worse than asking** — it defers the work, and it hides misses (see Phase 5.9(a)). Park only when
+nobody is there to answer.
+
+### Calibration: 9/9 [WORKER REC] ratified — the bar for "needs a ruling" is EVIDENCE, not vibes
+
+On 2026-07-15 the operator ratified the marked `[WORKER REC]` on **9 of 9** escalations (3 async + 6 interactive), with
+zero overrides. Read that correctly — it does NOT mean "auto-apply everything you'd recommend". It means the routing
+test was wrong. **The test is not "does this feel like a judgment call?" — it is:**
+
+> **Can the evidence make exactly one answer provably right?** If YES → resolve it, cite the proof, report it. If NO →
+> ask (interactive) / park (nobody home).
+
+**AUTO-RESOLVE (do not ask) when the answer is provable from code / git / filesystem / AST:**
+
+- a factual number, name or status contradicted by the source of truth — _e.g. "is the ledger EventType set 37 or 39?"
+  is `ast.parse` + `len(members)`. That was escalated; it should have been a one-command fix. If a claim is countable,
+  COUNT IT._
+- a ref whose target provably moved (the file is at the new path — `os.path.exists` says so)
+- a stale date/banner contradicted by a newer dated banner in the same doc
+- a checkbox whose commit is reachable on `origin/live-defi-rollout` (the existing HARD-evidence bar)
+- Guardrail: "provable" means you RAN the check this turn and can paste the output. A confident inference is not a
+  proof.
+
+**STILL ASK / PARK — these are not correctness, they are authority or preference, and evidence cannot settle them:**
+
+- **Blast radius**: any edit to a normative/SSOT doc (`codex/**`, `CLAUDE.md`) — the gate exists because the change
+  reaches every agent, NOT because the evidence is weak. Strong evidence does not buy the authority.
+- **An explicit human signal**: `locked_by:` is a person saying "not yours" — `[unlock-plan]` is theirs to give.
+- **Preference with no ground truth**: where live work LIVES (fold targets), how to split a plan, priority tiering.
+  Multiple answers are defensible; the operator's model of the roadmap decides.
+- **Standing hard-stops**: funds isolation, kill-switch, wallet keys, `1.0.0`, the May-23 critical path.
+
+**Batching (this worked — keep it):** ≤4 questions per round, ordered P0→P1, each carrying both quotes + locations, why
+they conflict, which side is authoritative and why, and options with the recommendation marked FIRST. Recurring classes
+get ONE class-level question with per-item exceptions (the 16-row fold table was approved as a single question).
 
 ## Phase 0 — deterministic inventory (cheap, no agents)
 
@@ -165,19 +213,25 @@ the same way: the refuter attacks the evidence chain (sha actually reachable? ar
   specific recommended target named**, never auto-fold (moving live todos between plans without a ruling is
   review-blocking). Once the remnant is folded by ruling, the emptied shell archives as a fully-done plan.
 
-**Operator ruling required (Q&A in interactive mode; park + alert in autonomous mode):** SSOT-ownership disputes; two
-ACTIVE docs giving opposing directives; epic vs plan disagreeing about scope or sequencing; conflicting numbers where
-neither side has hard evidence; **ANY resolution that edits a codex SSOT doc** (plans→codex updates are in scope for
-this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT); **near-complete-plan
-consolidation** (which sibling/epic the remnant folds into); **archiving a `locked_by:` plan** (even fully-done);
-splitting a plan over its line-cap (a normal plan >1000, or ANY file — master/epic included — over the absolute 5000
-ceiling); anything touching a `locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive
-format — batched questions ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question
-with per-item exceptions; every question carries: the two quotes + locations, why they conflict, which doc looks
-authoritative and why, and options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES
-escalation format). In autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations**
-(orchestrator dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds
-with everything else and applies the ruled items on the next pass.
+| Claim provably wrong vs the source of truth | **AUTO-RESOLVE — do not escalate.** If a number/name/status is countable
+or checkable (AST, `git cat-file`, `os.path.exists`, a newer dated banner in the same doc), RUN the check and fix it,
+citing the command + output as evidence. Prefer deleting a derivable restated fact over correcting it — a hardcoded
+count re-stales on the next bump. See Modes § "Calibration" |
+
+**Operator ruling required (Q&A in interactive mode; park + alert ONLY if nobody is reachable — see Modes § ASK >
+PARK):** SSOT-ownership disputes; two ACTIVE docs giving opposing directives; epic vs plan disagreeing about scope or
+sequencing; conflicting numbers **that no source of truth can settle** (if one side is checkable, it is NOT a ruling —
+go check it); neither side has hard evidence; **ANY resolution that edits a codex SSOT doc** (plans→codex updates are in
+scope for this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT);
+**near-complete-plan consolidation** (which sibling/epic the remnant folds into); **archiving a `locked_by:` plan**
+(even fully-done); splitting a plan over its line-cap (a normal plan >1000, or ANY file — master/epic included — over
+the absolute 5000 ceiling); anything touching a `locked_by:` plan, kill-switch, funds isolation, or the May-23 critical
+path. Interactive format — batched questions ordered P0→P1 hitting the chat box directly; recurring classes get ONE
+class-level question with per-item exceptions; every question carries: the two quotes + locations, why they conflict,
+which doc looks authoritative and why, and options A/B/C with the recommendation marked (never open-ended —
+SUB_AGENT_MANDATORY_RULES escalation format). In autonomous/AO mode the same structured questions are raised as **AO
+operator alerts/escalations** (orchestrator dashboard escalation with the options block) so the operator can rule
+asynchronously; the worker proceeds with everything else and applies the ruled items on the next pass.
 
 ## Phase 5 — apply + commit
 
