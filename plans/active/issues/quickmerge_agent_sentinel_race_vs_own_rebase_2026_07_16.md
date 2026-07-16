@@ -156,7 +156,54 @@ bash scripts/quickmerge.sh "msg" --agent --files '<files>'
 Observed 2026-07-16, five consecutive times, HEAD walking `e524bc944 → 748e52f4c → 5fb85f72e → 20a77504a` — one rewrite
 per attempt.
 
-## Current workaround (imperfect — narrows the window, does not close it)
+## Observed BOTH ways on the same branch, minutes apart (2026-07-16, while writing this doc)
+
+The analysis above is not inferred — both paths were exercised back-to-back on LDR under identical traffic (peer pushes
+every ~2 min). The only variable was **committed vs uncommitted**.
+
+**PRE-COMMITTED → fails.** quickmerge printed the mechanism itself, in two consecutive lines:
+
+```
+[unified-trading-pm] ✅ rebased local commits onto latest — now current      <- STAGE 0.4 rewrote MY commit
+[unified-trading-pm] ❌ Pass 1 quality-gates.sh sentinel invalid for current state.   <- STAGE 3 rejects it
+```
+
+Confirmed by hand at the moment of failure:
+
+```
+sentinel : 619530d9c
+HEAD     : e20b1c720
+ahead=1 behind=0
+sentinel is ancestor of HEAD? NO      <- rebased away; both STAGE 3 arms are now unsatisfiable
+```
+
+**UNCOMMITTED → passes, despite a peer pushing during the very same run:**
+
+```
+[unified-trading-pm] ✅ CONTENT sentinel verified — HEAD fast-forwarded 409135ffb→d1c76acac but the
+--files set is byte-identical between them, so Pass-1 QG still covers exactly these files
+```
+
+Same branch, same push cadence, opposite result. The sentinel pointed at an **upstream** commit, so the pull was a
+**fast-forward** (not a rebase of my own commits), ancestry held, and the content fallback worked exactly as designed.
+**This is the proof that the fallback logic is sound and only the ancestry precondition is wrong** — which is why fix B
+(relax ancestry, scoped via `ORIG_HEAD`) is the minimal correct change rather than a rewrite.
+
+### Bonus: a SECOND busy-branch failure one layer down
+
+Once the sentinel passed, quickmerge's own STAGE 5 commit was rejected by the `check-branch-drift` **pre-commit hook**
+("You are 1 commit(s) behind origin/live-defi-rollout") — a peer had pushed between STAGE 0.4 and STAGE 5. So even after
+the sentinel is fixed, quickmerge can still lose to a push inside its own run. Worth fixing in the same pass: re-check
+drift (or pull) immediately before the STAGE 5 commit, rather than relying on the STAGE 0.4 snapshot.
+
+## Workaround that actually works: DON'T pre-commit (use the path the design supports)
+
+`git reset --soft HEAD~1` (never `--hard` — that destroys work and is BANNED), leave the change staged, gate it, and let
+quickmerge do the commit via `--files`. The sentinel then names an upstream commit that the pull can only fast-forward
+past, so the CONTENT fallback passes. This is what finally shipped this doc, and it is strictly more reliable than
+racing the clock. Cost: quickmerge authors the commit message, so pass the full message as `$1` (it is multi-line safe).
+
+## Weaker workaround (what was used for the earlier ships — narrows the window, does not close it)
 
 Chain the gate and the ship in **one shell** so no upstream push can land between them:
 
