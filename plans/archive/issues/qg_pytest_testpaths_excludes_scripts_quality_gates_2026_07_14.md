@@ -7,7 +7,7 @@ summary: >
   scripts (e.g. `scripts/quality_gates/test_check_no_empty_string_fallback.py`, 17 tests, verified passing only via a
   manual `pytest` invocation while shipping the git-diff-detection fix for that checker). Pre-existing, not introduced
   by this session's work — filed per the findings-triage rule ("pre-existing is not a triage criterion").
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -27,7 +27,7 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@297695d47 (+ 190636c04) — all 5 todos code-verified 2026-07-16
 source: [pyproject.toml, scripts/quality_gates/test_check_no_empty_string_fallback.py]
 ---
 
@@ -201,3 +201,17 @@ items, `tests/integration/test_pm_scripts_integration.py`) — the actual widene
 pass (output only goes to a temp log, `cat`'d to terminal on failure only) and was genuinely green the whole time
 (confirmed via temporary debug instrumentation in `base-service.sh`, fully reverted before shipping — `git diff` on that
 file is clean). `unified-trading-pm@297695d47`, PR #1015.
+
+## Reconciliation 2026-07-16 — status field was wrong; doc is done
+
+Independently re-verified every todo against code during the AO issue-doc reconciliation sweep (all 5 `- [x]` claims
+checked, not trusted): `PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"`
+(`scripts/quality-gates.sh:23`, `unified-trading-pm@297695d47`); the stale assertion is now
+`assert isinstance(baseline, dict)` (`scripts/quality_gates/test_check_banned_placeholder_methods.py:76`); the e2e
+driver rename landed (`scripts/prediction/prediction_pipeline_e2e_check.py` exists, `test_prediction_pipeline_e2e.py`
+gone, `unified-trading-pm@190636c04`); the UCL mapping is present
+(`unified_api_contracts/external/polymarket/sports_mappings.py:153-154`). Live re-run of the wired suite: **255 passed**
+(doc claimed 254 — one test added since). Both cited SHAs are real commits.
+
+**The doc was `status: open` with 0 open todos** — a false-open claim, the mirror of the false-resolved class this sweep
+exists to catch. Flipped to `resolved` and archived. No code change was needed; the work was already done.

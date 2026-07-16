@@ -12,7 +12,7 @@ summary:
   The correct data already exists beside them: the Velocity per-day CSV path writes 24 real hourly rows/day
   (batch_onchain_rpc/SOL-PERP.parquet, funding_rate=0.002007041 …, per-market, ~7 KB). Recommendation: delete the helius
   shards, retire the Helius perp_funding path, let the Velocity API own history."
-status: open
+status: superseded
 nature: record
 asset_group: [defi]
 stage: [data]
@@ -40,7 +40,27 @@ depends_on: []
 last_updated: 2026-07-16T07:55Z
 ---
 
+> 🔴 **SUPERSEDED (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole system it's pointless —
+> Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code, adaptors, manifest, gcs,
+> everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
+> (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
+> listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
+> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> banner).
+
 # DRIFT Helius perp_funding shards are zero-valued signature noise (2026-07-16)
+
+> **🟢 SUPERSEDED 2026-07-16 (operator kill ruling, later same day)** — operator ruled to kill DRIFT (and all other
+> Solana perp DEXes except Jupiter) entirely: "kill drift entirely... uac, code, adaptors, manifest, gcs, everything."
+> The `[SCRIPT]` P0 purge todo directly below (enumerate + delete the `drift_helius_*.parquet` shards) is now moot on
+> its own terms — those shards died with the whole DRIFT venue in the broader purge, not as a standalone reclass.
+> Evidence: 10 `drift_helius_*.parquet` objects found + deleted under
+> `pipeline_mode=batch_hyperliquid/asset_group=defi/venue=DRIFT/` as part of the venue-wide raw-tick delete. The
+> `[CODE]` P0/P1 todos below (retire the Helius write path, fix the partition bug) are superseded too — the whole
+> `solana_defi_drift_helius.py` adapter is gone per the sibling CODE-track removal, not merely the write-path fixed. See
+> `plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` for the full purge record (counts, evidence,
+> scripts). The `[DATA] P1` on-chain-decoder-gap todo below and its own `perp_funding`/`perp_trades` data are likewise
+> moot — DRIFT has no MVP data path anymore.
 
 > Found while answering the operator's question "does Drift's public API give us what we need for full history?". The
 > answer turned out to be yes — and in proving it, the Helius shards were shown to contain no funding data at all.

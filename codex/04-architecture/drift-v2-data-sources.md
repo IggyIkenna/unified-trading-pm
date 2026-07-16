@@ -4,17 +4,28 @@ title: Drift V2 Data Sources — Velocity Data API as Canonical Historical + Liv
 summary:
   Velocity Data API (data.api.drift.trade) as the canonical Drift V2 perp-DEX historical + live ingestion path —
   per-market funding/trades endpoints, UAC schema mapping, replacing the Helius sig-walker.
-status: current
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [defi, drift, mtds, solana, backfill, pipeline-mode]
-related: [instruments-service-as-ssot-for-mtds.md, solana-defi-coverage.md, ../02-data/defi-data-types-catalog.md, ../02-data/honest-absence-downstream-handling.md]
+related:
+  [
+    instruments-service-as-ssot-for-mtds.md,
+    solana-defi-coverage.md,
+    ../02-data/defi-data-types-catalog.md,
+    ../02-data/honest-absence-downstream-handling.md,
+  ]
 created: 2026-06-01
 authoritative_for: [Drift V2 Velocity Data API ingestion path]
-referenced_by: [codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/04-architecture/solana-defi-coverage.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
+referenced_by:
+  [
+    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    codex/04-architecture/solana-defi-coverage.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+  ]
 owner: defi-adapters
 last_reviewed: 2026-06-01
 code_refs:
@@ -22,6 +33,21 @@ type: architecture
 ---
 
 # Drift V2 Data Sources — Velocity Data API as Canonical
+
+> 🔴 **SUPERSEDED (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole system it's pointless —
+> Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code, adaptors, manifest, gcs,
+> everything. no instruments no mvp nothing." The entire Drift V2 / Velocity Data API ingestion path this doc describes
+> has been **deleted**: MTDS `drift_adapter.py`, `cli/handlers/drift_v2_historical_handler.py`,
+> `cli/handlers/drift_v2_onchain_decoder.py`, `cli/handlers/solana_defi_drift*.py`,
+> `live/connectors/drift_solana_ws.py`, `scripts/backfill_drift_v2_historical.py`,
+> `scripts/build_drift_v2_sig_index.py`; instruments-service `reference_data/adapters/defi/drift.py`; UAC's
+> `SOLANA_DEFI_PROTOCOLS["drift"]` entry, `DRIFT-SOLANA` venue registration, and all related registries. Drift was
+> hacked
+> ~$280M on 2026-04-01 (Lazarus-attributed), offline 3 months, then rebranded + relaunched as Velocity DEX
+> 2026-07-01 under an entirely new on-chain program — now a ~2-week-old private beta with ~$0
+> listed TVL. Operator dropped ALL Solana perp DEXes; Jupiter is the only one kept conceptually but is NOT currently
+> integrated. **This entire document is now HISTORICAL RECORD ONLY** — do not use it to re-wire Drift ingestion. SSOT
+> for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
 
 > **SSOT for Drift V2 perpetual DEX data ingestion.** Created 2026-06-01 from
 > `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1 (Drift V2 historical ingester shipped at

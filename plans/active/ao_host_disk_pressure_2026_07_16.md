@@ -1,0 +1,192 @@
+---
+doc_type: plan
+title:
+  AO host disk pressure — a second, independent cause of "worker left the task half-finished" (guard works, growth
+  outpaces it)
+summary: |
+  The central orchestrator VM's root disk cycles 65%->95% every 6-18h, self-healing via vm-disk-guard.sh each time but
+  never settling durably below ~60%. When it tops out, a worker's pytest/QG dies mid-task with
+  "OSError: could not create numbered dir ... after 10 tries" — externally indistinguishable from the agent giving up,
+  which is exactly the operator's "it finished some tasks and left others undone" symptom. This is INDEPENDENT of the
+  AO dispatch bugs: fixing autospawn/dispatch would not have fixed it. Hardlink dedup is confirmed working (inode
+  links=81), so dedup is not the gap — growth rate is. One remediation from the 2026-07-13 recurrence was never actually
+  installed in production, which is the immediate lever.
+status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: [infra, disk-pressure, slot-worktrees, uv-cache, vm-disk-guard, fleet-capacity, agent-orchestrator]
+related:
+  [
+    issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
+    qg_host_adaptive_resource_governor_2026_07_14.md,
+    ao_dispatch_hardening_2026_07_16.md,
+    ../epics/orchestrator_master.md,
+  ]
+created: 2026-07-16
+last_updated: 2026-07-16
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 1.6
+assigned_role: infra
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
+  - "operator 2026-07-16 — 'our current immediate scope is to make the AO work properly ... it finished some tasks and
+    left others undone'; two human plans ruling — dispatch + infra, run in parallel"
+  - "issues/slot_venv_duplication_disk_pressure_2026_06_29.md (2026-07-13 recurrence — 2.0 MB free / 100% used mid-QG)"
+  - "AO issue-doc sweep 2026-07-16 — live SSM measurement of the real orchestrator VM (i-0c9b283b31d6b5ca7)"
+---
+
+# AO host disk pressure — the other half of "half-finished tasks"
+
+> **Human plan — I execute it** (`assigned_vm: NA`). **Infra** craft, deliberately split from the backend-craft
+> [`ao_dispatch_hardening_2026_07_16`](ao_dispatch_hardening_2026_07_16.md) so the two run in **parallel** (one plan =
+> one agent = one craft). Ships via `quickmerge.sh --agent --files`.
+
+## Why this is a separate root cause, not a footnote
+
+The operator's symptoms have **two independent mechanisms**, and only one of them is a dispatch bug:
+
+| Mechanism                                   | Symptom it produces                          | Owner                   |
+| ------------------------------------------- | -------------------------------------------- | ----------------------- |
+| R1 skip-blind spawn budget (`autospawn.py`) | workers idle in the loop **burning credits** | `ao_dispatch_hardening` |
+| **Disk pressure killing workers mid-task**  | tasks **left half-finished**                 | **this plan**           |
+
+Shipping the dispatch fixes alone would have left the second one live — we'd have watched tasks keep half-finishing and
+concluded AO was still broken. The tell from the 2026-07-13 recurrence:
+
+```
+OSError: could not create numbered dir ... after 10 tries
+```
+
+That is a worker's `pytest`/`quality-gates.sh` step dying because the disk is full. From outside the box it looks
+**identical to "the agent gave up"** — there is no signal that distinguishes them unless someone thinks to check
+`df -h`. That ambiguity is why this went a month without being named as a cause.
+
+## Measured live state (2026-07-16, real orchestrator VM via read-only AWS SSM)
+
+Host: `agent-orchestrator-vm-1` / `i-0c9b283b31d6b5ca7` / `13.113.200.22` / ap-northeast-1 — **the actual host**, not a
+dev box.
+
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       290G  203G   88G  70% /
+```
+
+`vm-disk-guard.sh` **is installed and firing** (`0 */6 * * *` + `@reboot`), and it **works every single time**:
+
+```
+2026-07-15T18:00:01Z  / at 81% (>= 80%) — vacuuming regenerable caches — done: 81% -> 71%
+2026-07-16T06:00:01Z  / at 85% (>= 80%) — vacuuming regenerable caches — done: 85% -> 65%
+2026-07-16T12:00:01Z  / at 70% (< 80%) — nothing to do
+```
+
+Observed guard cycles over 3 days: `95%→76%`, `90%→81%`, `86%→61%`, `81%→71%`, `90%→67%`, `81%→71%`, `85%→65%`.
+
+**Read this carefully — the guard is not broken.** It fires, it succeeds, it reclaims 15–30 points every time. The
+problem is the host **climbs back to 80–95% within 6–18h**, so between guard firings there is a window where a worker
+can hit a full disk. Per-slot `.tabs` on the real VM: largest 18G (slot 4), 16G (slot 2), 9.9G (slot 5) — **no slot near
+the pre-fix 27–29G outliers**, so the C1–C5 hardlink dedup fix genuinely worked (confirmed empirically: a shared
+`_duckdb...so` at **inode 4620498, links=81**). Dedup is not the gap. **Growth rate vs guard cadence is the gap.**
+
+## What the docs claim vs what the VM says (both measured 2026-07-16)
+
+| Claim (in docs)                                                               | Measured on the real VM                                |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `install-prune-uv-cache-cron.sh` remediation (from the 2026-07-13 doc)        | `crontab -l \| grep -i prune-uv` → **NONE_FOUND**      |
+| `slot_venv…` banner: "RAM+CPU reservation governor live on the current fleet" | `qg-host-governor.sh --status` → **`MODE=token  K=2`** |
+
+Both are the same class the 2026-07-16 sweep found repeatedly across the AO corpus: **code shipped, doc marked done,
+deployment never verified.** Each took one command to check.
+
+> **Scope note — the governor is NOT this plan's work.** `MODE=token` is not a bug: the reservation ledger is **Phase 3
+> of [`qg_host_adaptive_resource_governor_2026_07_14`](qg_host_adaptive_resource_governor_2026_07_14.md)** (active, P1,
+> infra) and simply has not shipped yet. That plan owns it; this plan does **not** duplicate it — it only corrects the
+> `slot_venv…` banner that over-claims it as live, and records the measured `K=2` drift on the owning plan. Also note
+> the governor gates **RAM/CPU admission, not disk** — anyone assuming it covers the disk axis is wrong.
+
+## Todos
+
+### Phase 1 — install the lever that already exists (P1)
+
+- [ ] [INFRA] P1. **Install `install-prune-uv-cache-cron.sh` on the central orchestrator VM.** It was authored as the
+      2026-07-13 recurrence's remediation and **never installed in production** (verified 2026-07-16:
+      `crontab -l | grep -i prune-uv` → NONE_FOUND on `i-0c9b283b31d6b5ca7`). This is the cheapest lever available — the
+      uv-cache is 11G on that host and is regenerable. **Gate**: `crontab -l` on the VM shows the job; a subsequent run
+      is visible in its log; `df -h /` measured before/after.
+- [ ] [INFRA] P1. **Decide + apply the `vm-disk-guard.sh` threshold/cadence.** Current `80%` / `0 */6 * * *` lets the
+      host reach **95%** between firings (measured). Either tighten the threshold (e.g. 70%) or shorten the cadence
+      (e.g. every 2h), whichever the measured growth curve supports — the 3-day log above is the data. **Gate**: over a
+      following 3-day window, peak `/` usage stays under a stated ceiling; cite the guard log.
+
+### Phase 2 — close the ambiguity that hid this for a month (P1)
+
+- [ ] [INFRA] P1. **Make a disk-induced worker death distinguishable from an agent giving up.** Today both look
+      identical from the orchestrator's side, which is precisely why this went unnamed as a cause for a month. Emit a
+      loud, attributable signal when a slot's disk is the reason a task died (e.g. a pre-flight `df` check at
+      boot/heartbeat that flags the slot, or classify the `could not create numbered dir` / `No space left on device`
+      signature into a distinct terminal reason rather than a generic failure). **Gate**: a simulated full-disk worker
+      failure surfaces as a disk cause, not as a silent give-up.
+- [ ] [INFRA] P2. **Reconcile the two coexisting uv caches.** The dev host runs BOTH `/active/uv-cache` (the live
+      hardlink source) and `/active/unified-trading-system-repos/.uv-cache` — a drift from the documented single-cache
+      convention. Harmless for dedup today (same filesystem, so hardlinks still work) but it means the documented SSOT
+      path is not the one actually in use, which will mislead the next person who reasons about cache size. **Gate**:
+      one cache, or the convention doc updated to match reality — not both claiming to be the source.
+
+### Phase 3 — correct the record (P2)
+
+- [ ] [REVIEW] P2. **Fix the `slot_venv_duplication_disk_pressure_2026_06_29` banner's over-claim** that the RAM+CPU
+      reservation governor is "live on the current fleet" — measured `MODE=token K=2` on the real orchestrator VM. Note
+      the governor is a **RAM/CPU admission** mechanism and does **not** cover the disk axis at all, so it must not be
+      cited as a disk mitigation. **Gate**: the banner states measured runtime, not intended runtime.
+- [ ] [REVIEW] P2. **Record the measured governor drift on its owning plan**
+      (`qg_host_adaptive_resource_governor_2026_07_14`): live `qg-host-governor.sh --status` on `i-0c9b283b31d6b5ca7`
+      returns **`MODE=token K=2`**, while that plan's own text says bootstrap sets **K=6**. Either the bootstrap did not
+      take on this host or something reset it — worth one check by the plan's owner. Annotate, **do not fix from here**
+      (that plan owns the governor; duplicating its work is the anti-pattern this whole sweep exists to stop). **Gate**:
+      annotation lands on that plan; no governor code touched by this plan.
+- [ ] [REVIEW] P2. Flip the `slot_venv_duplication_disk_pressure_2026_06_29` open todo — its ask ("re-verify the
+      2026-07-13 recurrence; determine whether fleet growth has outpaced hardlink-dedup") **was answered on 2026-07-16**
+      by the live SSM measurement recorded above. Answer: **dedup holds (links=81, no 27–29G outliers); the guard works
+      every cycle; growth rate between firings is the residual gap.** Note the doc is `locked_by: live-defi-rollout`, so
+      it cannot be archived without an `[unlock-plan]` — flip the todo, leave the lock. **Gate**: the doc's open todo
+      carries the measurement, not a question.
+
+## Out of scope (named owners — nothing goes dark)
+
+- **The RAM+CPU reservation governor itself** → `qg_host_adaptive_resource_governor_2026_07_14` (active, P1, infra).
+  This plan annotates, never duplicates.
+- **AO dispatch/autospawn/messaging** → `ao_dispatch_hardening_2026_07_16` (the parallel backend-craft plan).
+- **Long-lived VM log backup** → `issues/long_lived_vm_logs_not_backed_up_2026_07_02` (verified accurate +
+  operator-parked 2026-07-16; not a disk-capacity issue).
+
+## Codex SSOTs
+
+- `codex/05-infrastructure/per-tab-worktrees.md` — the per-slot clone model + hardlink/uv-cache convention.
+- `codex/05-infrastructure/vm-launcher-runbook.md` — VM lifecycle + guard cron placement.
+- `codex/06-coding-standards/quality-gates.md` — the QG host-governor contract (RAM/CPU, not disk).
+- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for the Phase 1 gates.
+
+## Progress Log
+
+- **2026-07-16** — Created from the 20-doc AO issue-doc sweep (7 parallel code-verification agents). Disk pressure was
+  re-measured **live on the real orchestrator VM** via read-only AWS SSM, not inferred from the dev host — the
+  distinction matters, because the dev host and the fleet host have different disks and only the fleet host's numbers
+  bear on the operator's symptom. Key correction to the prevailing story: **hardlink dedup is NOT the gap** (empirically
+  confirmed working, inode links=81, no slot near the pre-fix outliers) and **the guard is NOT broken** (fires on
+  schedule, reclaims 15–30 points every cycle). The gap is growth rate between firings, plus one remediation
+  (`install-prune-uv-cache-cron.sh`) that was authored and **never installed**. Operator ruling 2026-07-16: two human
+  plans, dispatch + infra, run in parallel. Deliberately scoped OUT the governor (owned by
+  `qg_host_adaptive_resource_governor_2026_07_14`) after checking that plan first — creating a second governor plan
+  would have been the exact duplicate-by-rediscovery failure this sweep documented.

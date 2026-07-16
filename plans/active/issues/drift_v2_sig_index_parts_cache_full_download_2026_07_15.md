@@ -15,7 +15,7 @@ summary: >
   resume) pays this full ~40-minute, ~110GB-egress cost before ANY day-processing can resume, since the metadata cache
   is in-process-memory only (`self._drift_v2_parts_meta_cache`, reset on every new process). Genuine parquet footer
   reads need only the last few KB of each file (footer length + footer) via an HTTP byte-range GET, not the full object.
-status: open
+status: superseded
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -36,6 +36,14 @@ depends_on: []
 last_updated: 2026-07-15
 locked_since:
 ---
+
+> 🔴 **SUPERSEDED (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole system it's pointless —
+> Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code, adaptors, manifest, gcs,
+> everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
+> (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
+> listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
+> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> banner).
 
 # Drift V2 sig-index parts-cache full-download inefficiency (2026-07-15)
 

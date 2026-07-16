@@ -22,7 +22,7 @@ related:
     scripts/quality-gates-base/qg-host-governor.sh,
   ]
 created: "2026-07-14"
-last_updated: "2026-07-14"
+last_updated: 2026-07-16
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -521,3 +521,28 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
 - `cpu_weight` per-repo refinement (Phase 3 CPU gate) deferred to v2 unless the count-based slot proves too coarse.
+
+## Measured runtime drift — annotated 2026-07-16 (from the AO issue-doc sweep; NOT this plan's work to re-derive)
+
+Live read-only AWS SSM query of the **real central orchestrator VM** (`agent-orchestrator-vm-1` /
+`i-0c9b283b31d6b5ca7`), 2026-07-16:
+
+```
+$ qg-host-governor.sh --status
+MODE=token  K=2
+```
+
+Two things worth one check by this plan's owner:
+
+1. **`MODE=token`** — expected while the reservation ledger (Phase 3) has not shipped; recorded here only so nobody
+   re-derives it. **No action implied.**
+2. **`K=2`, but this plan's own text says bootstrap sets `K=6`** (the "K=1 pin is already gone" todo). Either the
+   bootstrap did not take on this host, or something reset it after boot. Worth verifying — a silently-K=2 host is
+   running at a third of the intended concurrency, which is a real (if quiet) throughput tax on every ship from that VM.
+
+**Provenance / scope**: surfaced by the 2026-07-16 AO issue-doc reconciliation sweep while verifying
+`issues/slot_venv_duplication_disk_pressure_2026_06_29.md`, whose banner over-claims this governor as "live on the
+current fleet". That banner is corrected by the sibling plan
+[`ao_host_disk_pressure_2026_07_16`](ao_host_disk_pressure_2026_07_16.md) (Phase 3), which deliberately does **not**
+touch governor code — this plan owns it. Also recorded there: the governor gates **RAM/CPU admission, not disk**, so it
+must not be cited as a disk-pressure mitigation.

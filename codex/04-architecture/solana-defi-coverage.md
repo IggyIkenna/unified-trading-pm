@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 summary:
-  Solana DeFi reference-data adapter coverage in instruments-service — perp-DEX (Drift only; Mango/Zeta/Flash removed
-  2026-07-15), spot AMM/CLOB (Meteora/Phoenix/Jupiter/Lifinity), Pyth oracle, Jito restaking; venue registry + program
-  IDs + deploy-date floors (MTDS market-data wiring tracked separately).
+  Solana DeFi reference-data adapter coverage in instruments-service — Plan B (perp-DEX) is EMPTY as of 2026-07-16
+  (Drift + Pacifica removed, operator ruling, Jupiter not integrated), spot AMM/CLOB (Meteora/Phoenix/Jupiter/
+  Lifinity), Pyth oracle, Jito restaking; venue registry + program IDs + deploy-date floors (MTDS market-data wiring
+  tracked separately).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -26,36 +27,70 @@ type: architecture
 
 # Solana DeFi Coverage — Perp DEX + AMM/CLOB/Oracle Adapters
 
+> 🔴 **TOMBSTONE (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole system it's pointless —
+> Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code, adaptors, manifest, gcs,
+> everything. no instruments no mvp nothing." **Context**: Drift was hacked
+> ~$280M on 2026-04-01 (Lazarus-attributed),
+> offline 3 months, then rebranded + relaunched as **Velocity DEX** 2026-07-01 under an entirely new on-chain program —
+> now a ~2-week-old private beta with ~$0
+> listed TVL. Operator decision: drop DRIFT-SOLANA (and its Velocity rebrand) + PACIFICA-SOLANA entirely — **Plan B
+> (perp DEX) is now EMPTY**; there is no supported Solana perp DEX in this codebase. Jupiter ($716M TVL, the Solana perp
+> leader) is the operator's stated long-term intent but is **NOT currently integrated** — do not add it based on this
+> ruling; that is a distinct, separately-scoped future task. Removed from UAC (`unified-api-contracts@7628dd30`), UTL
+> (`unified-trading-library@8f6b0a9f`), and instruments-service (`instruments-service@4d65d468` + `@b37e9d82`) —
+> adapters deleted (`reference_data/adapters/defi/drift.py`, `reference_data/adapters/cefi/pacifica.py`), factory
+> registrations removed, orchestrator venue lists pruned, tests pruned, expected*universe goldens updated. MTDS-side
+> removal (adapters/drift_adapter.py, adapters/\_umi_pacifica.py, cli/handlers/solana_defi_drift\*.py,
+> cli/handlers/drift_v2*\*.py, live/connectors/drift_solana_ws.py, live/connectors/pacifica_solana_perp_ws.py) tracked
+> under a sibling task. GCS/manifest data purge is a separate sibling task
+> (`unified-trading-pm/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this
+> banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it
+> to justify re-adding these venues.** `codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in
+> full.
+
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
 > `plans/active/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
 > `plans/active/solana_amm_coverage_expansion_2026_05_13.md` (Plan C).
 
 ## Overview
 
-The `arbitrage_price_dispersion` DeFi archetype requires:
+The `arbitrage_price_dispersion` DeFi archetype originally called for:
 
-1. **Perp DEX hedge legs** (Plan B) — Solana perpetual DEX venue(s): DRIFT (MANGO/ZETA/FLASH removed 2026-07-15, see
-   below).
-2. **Spot AMM/CLOB venues** (Plan C) — Meteora DLMM, Phoenix CLOB, Jupiter aggregator, Lifinity PMM.
-3. **Oracle price feeds** (Plan C) — Pyth Network Hermes batch API for 10 major Solana pairs.
+1. **Perp DEX hedge legs** (Plan B) — **NOW EMPTY** (see tombstone banner above). DRIFT was the sole remaining Plan B
+   venue (MANGO/ZETA/FLASH removed 2026-07-15, see below); removed entirely 2026-07-16 (operator ruling). Solana perp
+   hedge legs are unavailable until/unless Jupiter perps integration is scoped as new work.
+2. **Spot AMM/CLOB venues** (Plan C) — Meteora DLMM, Phoenix CLOB, Jupiter aggregator, Lifinity PMM. **Unaffected** by
+   the 2026-07-16 ruling (these are spot/aggregator venues, not perp DEXes).
+3. **Oracle price feeds** (Plan C) — Pyth Network Hermes batch API for 10 major Solana pairs. **Unaffected.**
 
 All adapters live in `instruments-service/instruments_service/reference_data/adapters/defi/`.
 
 ## Venue Registry — Plan B: Perp DEX (InstrumentType=PERPETUAL)
 
-| Venue        | UAC Key                          | Program ID                                    | API Endpoint                   | Deploy Date     | Adapter                  |
-| ------------ | -------------------------------- | --------------------------------------------- | ------------------------------ | --------------- | ------------------------ |
-| DRIFT-SOLANA | `SOLANA_DEFI_PROTOCOLS["drift"]` | `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH` | `https://data.api.drift.trade` | 2022-11-04 (V2) | `adapters/defi/drift.py` |
+**EMPTY as of 2026-07-16** (operator ruling: all Solana perp DEXes dropped except Jupiter, not integrated). DRIFT-SOLANA
+was the sole entry; historical record:
+
+| Venue            | UAC Key                              | Program ID                                        | API Endpoint                       | Deploy Date         | Adapter                      | Status                 |
+| ---------------- | ------------------------------------ | ------------------------------------------------- | ---------------------------------- | ------------------- | ---------------------------- | ---------------------- |
+| ~~DRIFT-SOLANA~~ | ~~`SOLANA_DEFI_PROTOCOLS["drift"]`~~ | ~~`dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH`~~ | ~~`https://data.api.drift.trade`~~ | ~~2022-11-04 (V2)~~ | ~~`adapters/defi/drift.py`~~ | **REMOVED 2026-07-16** |
 
 > **MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — REMOVED 2026-07-15 (operator ruling).** All 3 venues were half-onboarded
 > (an instruments-service reference-data adapter + factory registration + tests existed, but zero MTDS market-data
 > capture was ever wired and none was in `VENUES_BY_ASSET_GROUP`). Operator ruling deleted the whole vertical slice
 > rather than completing onboarding: all 3 adapters' declared API hosts are dead (`api.mngo.cloud`/`api.flash.trade`
 > NXDOMAIN, `dex.zeta.markets/api` returns HTML not JSON, verified 2026-07-15) and DeFiLlama TVL is
-> ~$0 (Mango V4 Perps $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
+> ~$0 (Mango V4 Perps
+> $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
 > `unified-trading-pm/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
 > for the full evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an
 > actual MTDS capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
+>
+> **DRIFT-SOLANA — REMOVED 2026-07-16 (operator ruling).** Drift was hacked
+> ~$280M on 2026-04-01 (Lazarus-attributed),
+> offline 3 months, then rebranded + relaunched as Velocity DEX 2026-07-01 under an entirely new on-chain program — now
+> a ~2-week-old private beta with ~$0
+> listed TVL. Operator dropped ALL Solana perp DEXes; Jupiter is the only one kept conceptually but is NOT integrated.
+> **Do not re-add without an explicit new operator decision.**
 
 ## Venue Registry — Plan C: Spot AMM/CLOB (InstrumentType=SPOT)
 
@@ -231,14 +266,17 @@ Until MTDS restaking source wiring is complete, restaking APY is not captured in
 
 ## Venue naming convention
 
-**Canonical format**: `{PROTOCOL}-SOLANA` (e.g., `MARINADE-SOLANA`, `DRIFT-SOLANA`, `JITO-SOLANA`, `ORCA-SOLANA`).
+**Canonical format**: `{PROTOCOL}-SOLANA` (e.g., `MARINADE-SOLANA`, `KAMINO-SOLANA`, `JITO-SOLANA`, `ORCA-SOLANA`).
+(`DRIFT-SOLANA` was the historical example here until removed entirely 2026-07-16 -- operator ruling, see tombstone
+banner above.)
 
 **Two authoritative sources confirm this:**
 
 1. **UAC `registry/capability_declarations/_defi.py:687`** (inline comment):
-   `venue: Canonical venue name (e.g. "AAVE_V3-ETHEREUM", "DRIFT-SOLANA")`
+   `venue: Canonical venue name (e.g. "AAVE_V3-ETHEREUM", "KAMINO-SOLANA")` (updated 2026-07-16 in the UAC source
+   itself, same ruling)
 2. **All Solana adapter `get_instruments()` implementations** return `f"{PROTOCOL}-{self._chain}"`, e.g.
-   `return f"DRIFT-{self._chain}"` → `DRIFT-SOLANA`.
+   `return f"KAMINO-{self._chain}"` → `KAMINO-SOLANA`.
 
 **Legacy bare-name rows** (`MARINADE`, `DRIFT`, `JITO`, `RAYDIUM`, `ORCA`, `KAMINO`, `SOLEND`, `MARGINFI`) are migration
 artifacts from an adapter version that predated the `{PROTOCOL}-{CHAIN}` pattern. They are being resolved by

@@ -1,27 +1,46 @@
 ---
 doc_type: plan
 title:
-  AO dispatch hardening — eligibility-aware spawn budget, per-task tier spawn, dead-slot spill, worker-role gate
-  (R1/R2/R5/R6)
+  AO dispatch + messaging hardening — eligibility-aware spawn budget, per-task tier spawn, dead-slot spill, worker-role
+  gate (R1/R2/R5/R6) + the task-worker message channel and the invisible stuck-agent alarm
 summary: |
   Fix the four code-confirmed dispatch/autospawn residuals that keep the AO fleet running below designed capacity —
   dead slots respawned onto un-claimable work (credit burn), mixed-tier queues starved, high-affinity tasks stranded on
   dead slots, and review/main slots claiming worker tasks. All four live in two files (server/autospawn.py +
-  server/dispatch.py) so they share one plan and one QG sweep. Human-executed — AO itself is too degraded to be trusted
-  to dispatch its own fix.
+  server/dispatch.py) so they share one plan and one QG sweep. The 2026-07-16 issue-doc sweep added three more, none of
+  which any issue doc covered: the SlotMessageRow task-worker message channel still silently drops messages (the
+  agent_messages fix never reached it), needs_operator_count is computed but rendered nowhere so a stuck agent is
+  invisible, and agent-orchestrator is over its own QG baseline so every push is currently red. Human-executed — AO
+  itself is too degraded to be trusted to dispatch its own fix.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, dispatch, autospawn, spawn-budget, role-gate, affinity, credit-burn, fleet-capacity]
+tags:
+  [
+    agent-orchestrator,
+    dispatch,
+    autospawn,
+    spawn-budget,
+    role-gate,
+    affinity,
+    credit-burn,
+    fleet-capacity,
+    messaging,
+    redelivery,
+    observability,
+  ]
 related:
   [
     issues/ao_dispatch_residuals_2026_07_15.md,
     issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
     issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
+    issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
+    issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    ao_host_disk_pressure_2026_07_16.md,
     ../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
     ../epics/orchestrator_master.md,
   ]
@@ -32,8 +51,8 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P0
 estimate_class: refactor
-estimate_baseline_ai_days: 4
-estimate_calibrated_ai_days: 1.6
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 2.4
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:
@@ -92,7 +111,40 @@ is intermittent, the code defect is permanent.)
   lives on `AgentRow.role` (`server/orm.py:290`, values `main`/`review`/`custom`), which `dispatch.py` never joins. Both
   `/boot` and `/heartbeat` call `pick_next_task` (`slots_worker.py:204,408,957`) → one shared fix covers both.
 
+## ⚠️ Do NOT implement the source docs' literal remedies (code-verified 2026-07-16)
+
+Three of this plan's own source docs prescribe fixes that current code contradicts. Read this before touching R6 or R7.
+
+- **R6 — `dispatcher_role_eligibility_gap_review_slots` says "add a `slot_role`-based filter". That fix is actively
+  dangerous.** `slot_role` is a **craft** field (`data_engineering`, `infra`…), populated only inside `render_worker()`
+  (`server/prompts.py:206`). Review/main go through `render()` and never get one — so the filter no-ops for exactly the
+  slots it targets. **Worse**: `server/dispatch.py:95-96` notes `slot_role` is `None` for **most ordinary worker slots
+  too** (generic, no craft tag), so refusing dispatch on a falsy `slot_role` would **break the majority of normal worker
+  dispatch, fleet-wide**. Two independent verification agents reached this from different angles. The gate MUST key off
+  a genuine agent-identity signal (`AgentRow.role`, `server/orm.py:290`), never the craft field.
+- **R7 — `ao_dispatch_residuals`' "larger fix" (content-hash task IDs) is out of scope and stays out.** Blast radius:
+  `existing_ids` bookkeeping, `slot_skips` (keyed by task_id), dashboard/API id refs, `done_sha` history. And **the
+  dangerous half of R7 is already fixed** — `agent-orchestrator@4695db6` added `TaskRow.brief_hash` + reset-on-mismatch,
+  killing the silent-non-dispatch case. What remains needs an external race and explains **none** of the operator's
+  symptoms. R7 goes DOWN the list, not up.
+- **R3/R4 are pure prompt/doc text — zero code-regression risk** (`agents/main.md`, `agents/monitor.md`,
+  `agents/RULES.md`; verified: zero occurrences of any deadlock-recheck or tier-isolation guidance). Cheap; kept in
+  Phase 5.
+
 ## Todos
+
+### Phase 0 — unblock the repo (P0, do FIRST)
+
+- [ ] [BACKEND] P0. **`agent-orchestrator` is over its QG STEP 5.101 baseline — every push is currently red.** Measured
+      2026-07-16: `check_no_empty_string_fallback.py --scope agent-orchestrator` → **26 sites > baseline 25**, new site
+      at `server/worker_liveness/_git_alerts.py:364`. **This blocks Phase 1-3 from shipping at all**, so it goes first.
+      Fix by rewriting the fallback to fail fast, or annotate `# noqa: qg-empty-fallback` with a one-line reason **if**
+      the empty string is genuinely a meaningful not-present value there. **Do NOT raise the baseline** —
+      `write_baseline()` hard-clamps to `min(observed, prior)` and CLAUDE.md's ratchet HARD RULE says baselines only go
+      DOWN. The checker flags it as a "positional tail-slice — no baseline commit on record for this repo yet", so
+      confirm the site is genuinely new before annotating. **Gate**: `bash scripts/quality-gates.sh --no-fix` on
+      agent-orchestrator reaches STEP 5.101 green. (Tracked as the owning todo on
+      `issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`; flip it there too.)
 
 ### Phase 1 — stop the burn (P0)
 
@@ -118,6 +170,36 @@ is intermittent, the code defect is permanent.)
       replace the unconditional `if affinity == "high": return False` (`:289`) with a liveness-aware check — a
       high-affinity task whose `target_slot` is dead/absent must spill to another eligible slot; a task whose target is
       alive must still NOT spill. **Gate**: two unit tests (dead target → spills; live target → does not).
+
+### Phase 2b — the worker message channel + the invisible alarm (P1, NEW 2026-07-16)
+
+> Surfaced by the AO issue-doc sweep; **no issue doc covers either**. `ao_operator_message_silent_drop_no_reply_ack`
+> fixed the `agent_messages` channel (all 10 of its todos verified genuinely in code) — but it fixed it only for
+> **main/review/custom chat agents**. The parallel channel that **craft task workers** use was never touched and still
+> carries the identical bug the doc was written to kill.
+
+- [ ] [BACKEND] P1. **Task-worker messages can be silently, permanently lost.** `SlotMessageRow` / `enqueue_message` /
+      `take_pending_messages` (`server/state_store/activity.py:223-238`, posted via `POST /api/slots/{slot_id}/message`,
+      drained on the worker's next `/boot`/`/heartbeat`/`/progress`) stamps `delivered_at` **on take** with **no
+      `answered_at`, no reply-ack, no redelivery** — structurally the exact pre-fix shape of `agent_messages`. If a
+      worker's session dies, respawns, or `/compact`s between taking the message and acting on it, the message is gone
+      with **zero operator-visible signal**. Port the already-proven `agent_messages` pattern (`answered_at` column +
+      redeliver-until-answered + cap) rather than inventing a second mechanism. **Gate**: unit tests mirroring
+      `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops redelivery; cap flips to
+      needs-operator.
+- [ ] [BACKEND] P1. **The stuck-agent alarm is wired to nothing.** `needs_operator_count` — the counter that fires when
+      an agent stops answering after `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly**
+      at `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
+      `pending_count` is shown, `dashboard/src/layout.tsx:2523`), and no Slack wiring. A genuinely stuck agent is
+      invisible short of a manual API query — which is precisely the operator's _"we think work is being done but it
+      doesn't work at the capacity it was designed for"_. Surface it (dashboard badge + an alert route). **Gate**: a
+      capped-out agent is visible without anyone curling the API. Closes the `[~] Remaining` dashboard item in
+      `issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`.
+- [ ] [BACKEND] P2. **Nudge is single-shot best-effort.** `server/tmux_spawn.py:1442-1455` `nudge()` makes one
+      `send_command` attempt and swallows the failure (`except Exception: ... return False`) — no retry, no idempotency,
+      no verification the pane received it. Delivery now survives this (the message redelivers on the next poll), so
+      this is a **latency** bug, not a loss bug — but a missed nudge on a heads-down `/loop` costs a full poll cycle.
+      Make it retried + idempotent. Closes that doc's last genuinely-open todo.
 
 ### Phase 3 — prove it (P0)
 
@@ -159,8 +241,13 @@ is intermittent, the code defect is permanent.)
 - **R7** — narrower code gap; fold into Phase 4's close-out decision.
 - **Recovery-audit Layer-1 producer rewire** — operator ruling B, DEFERRED behind this plan.
   `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`.
-- **`ao_operator_message_silent_drop`'s P2 nudge idempotency** — adjacent (tmux nudge), separate mechanism; left in its
-  own doc.
+- ~~**`ao_operator_message_silent_drop`'s P2 nudge idempotency**~~ — **PULLED IN** as Phase 2b (2026-07-16): the sweep
+  showed the same doc hides a bigger, uncovered bug (the `SlotMessageRow` task-worker channel), and both are the same
+  mechanism family, so they ship together.
+- **Host disk pressure + the qg-host-governor mode drift** — split into a sibling **infra**-craft plan so the two can
+  run in parallel: [`ao_host_disk_pressure_2026_07_16`](ao_host_disk_pressure_2026_07_16.md). It is a genuinely
+  **independent second cause** of the operator's "tasks left half-finished" symptom (a full disk kills a worker's
+  pytest/QG mid-task, indistinguishable from the agent giving up) — fixing dispatch alone would NOT have fixed it.
 
 ## Codex SSOTs
 
@@ -175,3 +262,13 @@ is intermittent, the code defect is permanent.)
   re-verified against current HEAD before authoring (anchors above); `rg slot_skip server/autospawn.py` → 0 hits
   confirms R1's skip-blindness firsthand. Operator chose: one human plan, all four in one pass. Home =
   `orchestrator_master` (matches all 3 archived dispatch-family plans + 3 of 4 source issue docs).
+- **2026-07-16 (expanded)** — Reconciled against the full 20-doc AO issue-doc sweep (7 parallel code-verification
+  agents, every todo re-checked against code with `file:line` evidence rather than trusted). Three additions, none of
+  which any issue doc covered: **Phase 0** (agent-orchestrator is at 26 > QG baseline 25 — every push red, so it must
+  land first), and **Phase 2b** (the `SlotMessageRow` task-worker channel still silently drops messages;
+  `needs_operator_count` computed but rendered nowhere). Added the **do-not-implement** section: two independent agents
+  confirmed `dispatcher_role_eligibility`'s own recommended `slot_role` fix would break the **majority of normal worker
+  dispatch fleet-wide**, and R7's content-hash rewrite is high-blast-radius with its dangerous half already fixed at
+  `agent-orchestrator@4695db6`. Operator ruling 2026-07-16: **two human plans** — this one (backend craft) plus a
+  sibling infra plan for host disk/governor, so they run in parallel. Estimate 4→6 baseline days for the three new
+  items.

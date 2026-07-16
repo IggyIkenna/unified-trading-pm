@@ -40,7 +40,7 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-08
+last_updated: 2026-07-16
 ---
 
 ## What I found
@@ -73,7 +73,21 @@ baseline). Verified: `check_no_empty_string_fallback.py --scope unified-trading-
 
 ## Todos
 
-- [ ] [VERIFY] P3. Re-run `check_no_empty_string_fallback.py` workspace-wide (no `--scope`) against every repo's seeding
-      commit the same way this issue did, to close out
-      `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` Todo 3 ("check whether other repos have the
-      same latent gap") in one pass instead of discovering them one push at a time. (repo: unified-trading-pm)
+- [x] [VERIFY] P3. ✅ **STRUCK 2026-07-16 — DUPLICATE, not done.** This todo restates work already owned by
+      [`mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
+      **Todo 3** (`[VERIFY] P2. Check whether other repos have the same latent gap`), which is `status: open`, P1, and
+      unlocked. Carrying the same ask under a `resolved` doc is the dual-tracking anti-pattern
+      [`codex/11-project-management/issue-doc-lifecycle.md`](../../../codex/11-project-management/issue-doc-lifecycle.md)
+      bans. **The work is NOT done** — it is tracked in exactly one place now (the mtds doc), where the 2026-07-16
+      fleet-wide measurement has been recorded. ~~Re-run `check_no_empty_string_fallback.py` workspace-wide (no
+      `--scope`) against every repo's seeding commit the same way this issue did.~~ (repo: unified-trading-pm)
+
+## Reconciliation 2026-07-16 — named problem genuinely fixed; residual todo was a duplicate
+
+Re-verified during the AO issue-doc reconciliation sweep. This doc's **own named problem is genuinely fixed and holds
+live**: `scripts/validation/validate-strategy-manifest.py:276` carries the `# noqa: qg-empty-fallback` annotation
+(`unified-trading-pm@f6430bf1a`), and a live re-run returns `[OK] unified-trading-pm: 319 (== baseline)`.
+
+Its one remaining `- [ ]` was a **duplicate** of the mtds doc's Todo 3 — an open todo under a `resolved` doc, the
+dual-tracking anti-pattern. Struck (not silently deleted) with a pointer to the single owner, and the fleet-wide
+measurement this todo asked for has been **run and recorded on that owner doc**. This doc is now genuinely closed.

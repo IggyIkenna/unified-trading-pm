@@ -651,15 +651,78 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       class-B-equivalents inherit OR-1. _Gate_: exact unique count (not extrapolated); classification closes to 406,581.
       _ABORT_: pass incomplete → **`market-data-tick-sports` is NOT delete-eligible** (OR-5). MDT legacy is dormant (all
       writes 2026-06-27), so there is no race.
-- [ ] [DATA] P0. **T2.7 — Write the moved cells' manifest rows via a per-VM shard. ⛔ NOT DONE — STOPPED DELIBERATELY, 3
-      blockers need a decision (2026-07-16). This is the ONLY Phase-2 item outstanding.** Groundwork COMPLETE and
-      measured, so the next owner starts from facts, not discovery: **(1) SCOPE measured**: the shard must carry
-      **17,089 instruments cells** (the T2.3 class-A moves) + **6,110 MDT cells** (the T2.6 class-A moves) = 23,199
-      rows, in **TWO** shards (one per canonical bucket). The T2.4 player_stats cells need NO new rows — those cells
-      already exist in the canonical index (only their row counts changed). **Verified against the live index**: of the
-      17,089 moved instruments atoms `(date, data_type, league_id)`, **17,088 have NO canonical index row at all** and
-      exactly **1** has an `empty_confirmed` row that the move now contradicts (must flip to `captured`). Every moved
-      entity maps cleanly to a `data_type` (0 unmapped). **(2) SSOT resolved (do not re-derive)**: `pipeline_mode` = UAC
+- [x] ✅ [DATA] P0. **T2.7 — Write the moved cells' manifest rows via a per-VM shard — DONE 2026-07-16. All 3 blockers
+      RESOLVED by measurement (none needed an operator); TWO shards written + read-back-verified; NOT consolidated (by
+      design — see below).** **Shards** (both `_index/per_vm/cutover-move-20260716.parquet`): **instruments 7,183 rows**
+      (`instruments-store-sports-prd`, `service_name=instruments-service`) + **MDT 6,110 rows**
+      (`market-data-tick-sports-prd`, `service_name=migrate-sports-canonical`) = **13,293 rows**, describing **92,722 +
+      251,409 = 344,131** real data rows. **Per-shard GATE (read back from GCS, never the writer's own return)**: 100%
+      `capture_status=captured`; **0 blank-`source`**; **0 phantom `instrument_count=0`** (instruments 1..2,270; MDT
+      2..210); **0 blank `available_at`**; 0 FAIL, 0 zero-row objects. Both ABORT conditions clear. Mechanism: explicit
+      `.write()` **AND** `.close()` (the `_close_drain` lifecycle-final force — the `flush()`-only debounce is what
+      silently stranded a prior agent's shard at ZERO rows). Verifier `~/tmp-cutover/t2_7_write_shard.py`; evidence
+      `~/tmp-cutover/t2_7_{instruments,mdt}_evidence.jsonl`. **BLOCKER (a) — `setup_events()`: RESOLVED (mechanical)**,
+      `setup_events(svc, mode="local")` before the writer. **BLOCKER (b) — `MANIFEST_WRITE_SCHEMA_MISSING`: RESOLVED =
+      WARN-AND-PROCEED, proven from the code, not assumed.** `_writer_validation.py:220-235` — a
+      `SchemaContractNotFoundError` emits the WARN event then does a bare `return`; `_writer_captured.py:352-358` then
+      stages the captured row anyway, with the explicit comment _"We reach here in three cases: (a) contract found and
+      df conformed, (b) contract not registered yet (warn event already emitted), (c) warn-only mode and df violated.
+      All three should reflect the on-disk state truthfully — the parquet exists, so the manifest records `captured`."_
+      It is **NOT** a downgrade and **NOT** the phantom pattern (every row here is backed by a crc32c-verified object).
+      ⚠️ **Correction for future owners: `_resolve_strict_validation(None)` returns `True` in this workspace** (env
+      `MANIFEST_STRICT_SCHEMA_VALIDATION` unset) — the docstring's "warn-only default" is STALE. Missing-contract still
+      warns-and-proceeds; a _mismatch_ now RAISES. **BLOCKER (c) — ODDS: RESOLVED = WRITE THEM. The blocker's premise is
+      DEAD (stale-by-reversal).** _"ODDS retired to MTDS-only"_ came from `sports_fixtures.py:59`'s comment citing
+      UAC@8fb1f54f (2026-06-25) — but **the operator REVERSED #6 on 2026-06-27** (`unified-api-contracts@c75101be`
+      _"restore ODDS: footystats … (#6 REVERSED)"_), and `@57bcc7c5` (2026-07-15) completed the reversal, restoring
+      `SOURCE_PRIORITY[("sports","ODDS")]` + `AVAILABILITY_AT_SEMANTICS`, with the ruling **pinned by test**:
+      _"footystats PREDICTIVE pre-match ODDS = IS reference data"_. Live-verified:
+      `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"]=="footystats"`, `SOURCE_PRIORITY[("sports","ODDS")]==["footystats"]`,
+      `is_valid_manifest_source("sports","ODDS","footystats")` is **True** (and `…,"api_football")` is **False**). Codex
+      agrees (`sports-data-source-coverage-matrix.md:262-277`: _"keep both in their current homes. NO migration"_ — ODDS
+      under IS at exactly the path T2.3 moved these objects to). **No contradiction with T3.1**: T3.1 purges
+      `api_football × ODDS` (impossible-by-construction); these 2,044 rows are `source=footystats` — the ONLY valid ODDS
+      source — which T3.1 explicitly PRESERVES. Corroborating: the 1 contradicted index row the move invalidates is
+      itself `(2026-05-01, ODDS, LIGUE_1) empty_confirmed` — leaving it would be the index LYING about data that now
+      demonstrably exists. **SCOPE CORRECTION (measured; the shard is 7,183 not 17,089 instruments rows) —
+      `fixtures_schedule` + `fixtures_outcomes` (9,906 objects) are DELIBERATELY EXCLUDED: they are NOT manifest
+      data_types.** The canonical index carries **33 distinct data_types and ZERO `FIXTURES_SCHEDULE` /
+      `FIXTURES_OUTCOMES` rows** — while canonical holds **81,787 + 81,293 = 163,080** live-written objects of exactly
+      those entities. The live writer (`sports_fixtures.py:347-384`) `_gated_sink_write`s the entity-split parquets but
+      never `record_captured`s them — the manifest tracks only the parent `FIXTURES` (332,962 rows). Their manifest
+      population is an **open, unstarted P0 owned by another plan** — `plans/epics/sports_master.md:940` _"One-shot
+      manifest migration: existing `entity=fixtures` rows split into `entity=fixtures_schedule` +
+      `entity=fixtures_outcomes`"_ via `migrate_fixtures_split.py` — and `:943` requires it ship **same-day as the
+      writegate strict-mode-flip-on-FIXTURES to avoid a mid-migration hard-fail**. Writing 9,906 rows here would
+      unilaterally execute a fragment of that P0, out of its required coordination, creating a partial novel population
+      while canonical's own 163,080 identical objects have none. Per findings-triage (_"fits another plan → annotate it,
+      don't fix"_) they are excluded; **no data is at risk** — the objects are moved + crc-verified, and the delete gate
+      is the OBJECT layer (T4.1), never the manifest. This also EXPLAINS blocker (b)'s `FIXTURES_SCHEDULE` warning: it
+      was a TRUE signal (no contract, because it is not a manifest data_type), not noise. **MDT specifics**: the 6,110
+      moved objects are a legacy schema generation **lacking `available_at`** (their native canonical twins carry it) →
+      `record_captured`'s `assert_available_at_present` raised `LookaheadBiasError` (the dispatch's premise, false for
+      player_stats per T2.4, is **TRUE here**). Resolved via the **sanctioned** helper
+      `unified_trading_library.availability_stamping.stamp_available_at_odds_snapshot(df, source="odds_api")` =
+      `bm_time + emission_latency_ms_for_source("odds_api")`, **empirically verified against native canonical objects:
+      `available_at − bm_time == 5.0s uniformly`** — reproducing the live convention exactly, never inventing a value.
+      `service_name=migrate-sports-canonical` is deliberate: the consolidator dedup key is
+      `(date, venue, data_type, service_name)` + optional dims and **excludes `source`/`pipeline_mode`**, so these rows
+      share a key with — and at T6.1 will SUPERSEDE and CORRECT — the **5,584** rows that same prior migration wrote for
+      these very objects under the mis-stamp `(api_football, batch_api_football)`. Expected T6.1 delta: instruments
+      **+7,182 new / 1 flipped** `empty_confirmed`→`captured`; MDT **+526 new / 5,584 corrected** (NOT +6,110). **NOT
+      CONSOLIDATED — deliberate, and the dispatch's "run one consolidator now" instruction is REFUSED as unsafe.** This
+      plan already ruled it (_"the merge is T6.1 by design"_); it is now also PROVEN harmful: this shard adds 2,044
+      `footystats × ODDS` rows, so a merge now makes footystats × ODDS **142,618**, breaking **T3.1's gate (b)
+      (`== 140,574 UNTOUCHED`)** and (c) (`total dropped by exactly 123,149`), and violating T0.6's QUIET-index
+      invariant — i.e. it would ABORT Phase 3, which this dispatch explicitly does not own. Both `_index/per_vm/` dirs
+      now hold exactly `_legacy_seed.parquet` + `cutover-move-20260716.parquet`; nothing else was placed there (R-11).
+      _Groundwork retained from the prior owner (still accurate)_: **(1) SCOPE measured**: the shard must carry **17,089
+      instruments cells** (the T2.3 class-A moves) + **6,110 MDT cells** (the T2.6 class-A moves) = 23,199 rows, in
+      **TWO** shards (one per canonical bucket). The T2.4 player_stats cells need NO new rows — those cells already
+      exist in the canonical index (only their row counts changed). **Verified against the live index**: of the 17,089
+      moved instruments atoms `(date, data_type, league_id)`, **17,088 have NO canonical index row at all** and exactly
+      **1** has an `empty_confirmed` row that the move now contradicts (must flip to `captured`). Every moved entity
+      maps cleanly to a `data_type` (0 unmapped). **(2) SSOT resolved (do not re-derive)**: `pipeline_mode` = UAC
       `pipeline_mode_for_sports_entity(entity)`; `source` = that value with the `batch_` prefix stripped
       (`instruments-service/.../sports_fixtures.py::_sports_ref_source`; `_SPORTS_REF_SOURCE_OVERRIDE` is currently
       EMPTY). Independently corroborated: this matches canonical's ACTUAL per-entity usage measured in T2.2. Sports
@@ -694,6 +757,40 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       consolidator restart it merges and the index gains exactly the moved-cell count. _ABORT_: any row would be written
       with `source=''` or a phantom `instrument_count=0` → STOP; that is the pattern that created the 468 phantom
       residual.
+
+- [ ] [BACKEND] P1. **T2.8 — Delete the stale "ODDS retired to MTDS-only" comment that cost a full Phase-2 stop.**
+      _Mechanism_: `instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:59` reads
+      _"footystats_odds was removed 2026-06-25 (ODDS retired to MTDS-only; UAC@8fb1f54f)"_. That decision (#6) was
+      **REVERSED by the operator on 2026-06-27** (`unified-api-contracts@c75101be`) and the reversal completed at
+      `@57bcc7c5` (2026-07-15), which restored `SOURCE_PRIORITY[("sports","ODDS")]` + `AVAILABILITY_AT_SEMANTICS` and
+      pinned _"footystats PREDICTIVE pre-match ODDS = IS reference data"_ by test. The comment describes a dead decision
+      as live and **directly caused T2.7's blocker (c)** — a prior agent stopped Phase 2 on it. Replace with the current
+      state (ODDS is IS-owned footystats reference data; `_SPORTS_REF_SOURCE_OVERRIDE` is empty because the path key
+      `footystats_odds` already strips to the correct source `footystats`, not because ODDS was removed). _Gate_:
+      comment matches the live registries; `quality-gates.sh` green. _ABORT_: none (comment-only).
+- [ ] [DATA] P0. **T2.9 — MDT `(sports, odds, trades)` schema contract is DRIFTED from reality (BIG FINDING, T2.7).**
+      _Mechanism_: the registered contract requires
+      `ts_event, fixture_id, market_type, outcome, odds_decimal, broker,     client, data_source`; the REAL canonical
+      data carries `bm_time, market_key, outcome_name, price, fetch_utc, …`. **Canonical's OWN native live-written
+      objects FAIL the same contract** (verified directly, not inferred) — so this is contract-vs-reality drift, not a
+      defect in the moved objects. With `_resolve_strict_validation(None)==True`, any caller that validates these cells
+      RAISES. Decide: fix the contract to match the real schema, or fix the writers to emit the contracted schema. T2.7
+      wrote its 6,110 rows in documented warn-only mode (mismatch LOGGED, row truthfully reflects a crc32c-verified
+      object) rather than let a stale contract assert a false absence. _Gate_: contract and real data agree on ≥1 native
+      canonical object. _ABORT_: none (analysis).
+- [ ] [DATA] P0. **T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index (BIG
+      FINDING, T2.7). Same class as T3.1's 123,149 `api_football × ODDS`, other bucket, no todo owns it.** _Mechanism_:
+      canonical MDT holds **ZERO** `batch_api_football` trades objects (only `batch_odds_api` 252,163 + `live_odds_api`
+      8), yet the index carries 47,253 `api_football × trades` rows with `capture_status=captured` and **nonzero**
+      `instrument_count` — i.e. the index claims captured data no object backs. **5,584 of them are superseded/corrected
+      in place by T2.7's MDT shard at T6.1** (same dedup key, corrected `source`/`pipeline_mode`); the remaining
+      **~41,669 need a purge decision** mirroring T3.1's predicate (`source=='api_football' AND data_type=='trades'`,
+      source filter MANDATORY — `odds_api × trades` 362,746 must survive UNTOUCHED). Related: UAC declares **no
+      `('sports','trades')` availability semantic** though `cefi`/`tradfi`/`prediction` all map
+      `trades →     tick_timestamp`; registering it blind would switch the availability gate ON for the LIVE MDT sports
+      fleet — the exact hazard `57bcc7c5` refused for `PLAYER_STATS` and filed for a ruling. **Feeds OR-5b.** _Gate_: a
+      written disposition for all 47,253. _ABORT_: purging without the `source` filter → destroys the real `odds_api`
+      population → STOP.
 
 ### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
 
@@ -1106,6 +1203,48 @@ sports odds unfiltered.
 ---
 
 ## Progress Log
+
+**2026-07-16 (T2.7 — Phase 2 CLOSED)** — Wrote both per-VM manifest shards; **Phase 2 is now complete end-to-end**. All
+three of the prior owner's blockers were resolved **by measurement, none needed an operator**: (a) `setup_events()` was
+mechanical; (b) `MANIFEST_WRITE_SCHEMA_MISSING` is warn-and-proceed **proven from the code path** (bare `return`, then
+the row is staged anyway — the writer's own comment says all three cases "reflect the on-disk state truthfully"); (c)
+the ODDS blocker rested on a **stale code comment** — decision #6 ("ODDS retired to MTDS-only", UAC@8fb1f54f 2026-06-25)
+was **REVERSED by the operator two days later** (`@c75101be` 2026-06-27) and fully restored at `@57bcc7c5` (2026-07-15)
+with _"footystats PREDICTIVE pre-match ODDS = IS reference data"_ pinned by test. **A stale comment cost a full stop —
+see the new T2.8.** Shards: instruments **7,183** + MDT **6,110** = **13,293 rows** describing **344,131** real data
+rows; read-back-verified from GCS; 0 blank-source, 0 phantom zero-counts, 0 blank available_at, 0 FAIL.
+
+Four things future owners must NOT re-derive:
+
+- **The shard is 7,183 instruments rows, not 17,089.** `fixtures_schedule`/`fixtures_outcomes` (9,906) are **not
+  manifest data_types** — canonical has **163,080 such objects and the index has ZERO rows for them** across 33
+  data_types. Their manifest population is `sports_master.md:940`'s open P0 (`migrate_fixtures_split.py`), which `:943`
+  requires ship same-day as the writegate strict-flip. Excluded per findings-triage ("fits another plan → annotate,
+  don't fix"). No data risk: objects are moved + crc-verified and the delete gate is the OBJECT layer.
+- **The merge is T6.1, NOT now** — and this is now PROVEN, not just asserted: the shard adds 2,044 `footystats × ODDS`
+  rows, so consolidating in Phase 2 makes footystats × ODDS **142,618** and **fails T3.1's gate (b)
+  (`== 140,574 UNTOUCHED`)**. The dispatch's "run one consolidator execution now" was **refused** on that evidence.
+- **Expected T6.1 deltas are NOT the raw row counts**: the consolidator dedup key is
+  `(date, venue, data_type, service_name)` + optional dims and **excludes `source`/`pipeline_mode`**. Instruments
+  **+7,182 new / 1 flipped** (`empty_confirmed`→`captured`); MDT **+526 new / 5,584 CORRECTED** in place.
+- **`_resolve_strict_validation(None)` is `True` here** (env unset) — the ManifestWriter docstring's "warn-only default"
+  is stale. Missing-contract warns-and-proceeds; a _mismatch_ RAISES.
+
+**BIG FINDINGS (pre-existing, NOT cutover-introduced) → new todos T2.8/T2.9/T2.10; OR-5b materially strengthened:** (1)
+the MDT `(sports, odds, trades)` schema contract is **DRIFTED from reality** — canonical's OWN native live-written
+objects fail it identically; (2) the MDT index carries **47,253 phantom `api_football × trades` `captured` rows** with
+**ZERO** backing objects (canonical has 0 `batch_api_football` trades objects; only `batch_odds_api` 252,163 +
+`live_odds_api` 8) — the same mis-stamp class as T3.1's 123,149 `api_football × ODDS`, but in the OTHER bucket and
+covered by **no todo**; (3) UAC declares **no `('sports','trades')` availability semantic** while `cefi`/`tradfi`/
+`prediction` all map `trades → tick_timestamp` — a registry hole of the same class 57bcc7c5 quarantined for
+`PLAYER_STATS` and filed for a ruling. **Operator notification: these are data-correctness findings on a LIVE surface;
+they are recorded here rather than acted on, because registering the semantic blind would switch the availability gate
+ON for the live MDT sports fleet — exactly the hazard 57bcc7c5 refused to take unilaterally.**
+
+Housekeeping: an unrelated **20-hour hung read-only process** (PID 2008863, `gcs_read_object_with_generation` on the
+canonical IS index, started ~2026-07-15T16:11Z) was observed and **left alone** (not this slot's; read-only, cannot
+write). Both smoke shards (`cutover-smoke*-DELETEME`) were deleted immediately after use — `_index/per_vm/` in both
+canonical buckets holds exactly `_legacy_seed.parquet` + `cutover-move-20260716.parquet` (R-11 honoured).
 
 **2026-07-16** — Plan authored from the 5-leg read-only audit (code / infra / objects / manifests / v1_archive). All
 five legs were read-only; zero mutations. Synthesis added five findings no single leg owned (F-1…F-5), each verified by
