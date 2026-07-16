@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: GitHub Actions cost reduction — full options analysis & decision menu (DRAFT / suggestions)
+title: GitHub Actions cost reduction — full options analysis & decision record
 summary: >-
   Companion decision-menu to github_actions_ci_cost_reduction_2026_07_15.md. Four parallel investigations (service
   fold-in, GitHub-native YAML levers, runner infrastructure, drastic redesigns) evaluated every realistic way to cut the
@@ -8,8 +8,9 @@ summary: >-
   are the WORST on savings-per-risk; the real money is in (A) no-new-infra GitHub-native fixes — two of which are latent
   BUGS already half-built and silently disabled — and (B) choosing where the fleet glue executes (self-hosted runner vs
   fold into the existing deployment-api service vs a third-party runner in our own AWS). deployment-api already has most
-  building blocks. THESE ARE SUGGESTIONS FOR REVIEW, NOT FINAL DECISIONS.
-status: draft
+  building blocks. ALL DECISIONS ARE NOW CLOSED (2026-07-15/16) — this doc is the DECISION RECORD + evidence base;
+  execution lives in the sibling plan, which is ACTIVE.
+status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,9 +25,8 @@ tags:
     deployment-api,
     workflows,
     spend-reduction,
-    draft,
-    suggestions,
     options-analysis,
+    decision-record,
   ]
 related:
   - github_actions_ci_cost_reduction_2026_07_15.md
@@ -54,13 +54,13 @@ source:
 drift_direction: advance-code
 ---
 
-# GitHub Actions cost reduction — full options analysis (DRAFT)
+# GitHub Actions cost reduction — full options analysis & decision record
 
-> **⚠️ THESE ARE SUGGESTIONS, NOT FINAL DECISIONS.** `status: draft`, **human-only** (`assigned_vm: NA`) — not ingested,
-> not dispatched. This is the **decision menu**: it lays out every option we evaluated so the operator can choose the
-> path. The chosen path's execution items live in the sibling plan
-> [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md) — this doc does not
-> duplicate them; it frames the wider set of choices around them. Nothing here is approved to execute.
+> **🟢 DECISION RECORD — all decisions CLOSED (2026-07-15/16).** The earlier "suggestions, not decisions" framing is
+> withdrawn; see § "Decisions — MADE". This doc is the **evidence base + the record of what we chose and why** (incl.
+> the options we rejected and the audit numbers). **It is NOT the execution vehicle** — every actionable item lives in
+> the sibling plan [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md),
+> which is **ACTIVE**. `assigned_vm: NA` → never auto-dispatched. Read this for _why_; execute from the sibling.
 
 ## Corrected baseline (measured this session)
 
@@ -378,24 +378,21 @@ The safe order is: **(1) unconditional Set A now** (A1, A2-delete, A5, A6/A7, A8
 B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherwise). Re-measure Set A alone against the
 30-day baseline before committing to how far Set B needs to go.
 
-## Recommended sequencing (proposal — not approved)
+## Recommended sequencing — ⛔ SUPERSEDED (2026-07-16), do NOT execute from here
 
-- [ ] [MEASURE] P1. Phase 0 of the sibling plan: pull the full 30-day per-workflow attribution so every $ below is
-      exact.
-- [ ] [INFRA] P1. **Set A quick wins first** — they need no infra and include the two bug-fixes (A1 docs-only fast-path,
-      A2 dead cache) + A3 fold-persist (~$78/mo, and $0 once self-hosted — do not double-count) + A6 dead
-      `staging-to-main` cron. Highest bang-for-buck, low risk.
-- [ ] [OPERATOR-DECISION] P1. **Choose the Set B target architecture** — B1 (self-host on the VM) vs B2 (fold into
-      deployment-api) vs B3 (RunsOn in our AWS). Recommendation: **B1 now** for speed, **B2 for `ci-status-update`
-      next** (building blocks already exist), revisit B3 only if autoscaling contention shows up.
-- [ ] [INFRA] P2. Execute the chosen Set B path via the workflow-template SSOT + `rollout-workflow-templates.sh` (never
-      hand-edit per-repo copies); keep promotion/backmerge bots (git+PR ops) on Actions for now — moving those is a
-      separate, larger effort.
-- [ ] [INFRA] P2. Set A cleanup tail (A4, A5 job consolidation; A7 cron relax; A8 runaway cap) + turn on **soft** budget
-      alerts.
-- [ ] [VERIFY] P3. Re-pull the ledger 2 weeks post-rollout; compare to baseline. Target: **fleet
-      ~$1,000/mo →
-      ~$250–400/mo**, structurally flat as activity grows.
+> This section was the pre-decision proposal. **It is superseded by the sibling plan's todos**
+> ([`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md), now ACTIVE) —
+> execute from there, not here. It is kept only as a record of the original proposal. Specifically, three items here are
+> now **factually wrong** and must not be followed:
+>
+> - _"Choose the Set B target architecture"_ → **decided: B1** (self-host on the planning-VM); B2 dropped, B3 parked.
+> - _"Execute the chosen Set B path via the workflow-template SSOT + `rollout-workflow-templates.sh`"_ → **WRONG.** The
+>   flip edits PM's `.github/workflows/*.yml` **directly**; the 4 fleet **templates stay hosted (`KEEP-T`)** — flipping
+>   a template would hang the other ~24 repos. Never roll this out via templates.
+> - _"A3 fold-persist"_ → **superseded by option C** (convert `persist-cicd-event` to a composite action — sibling STEP
+>   2c).
+>
+> Phase-0 measurement is **done** (see § "Audit results"); the ledger re-pull lives in the sibling's VERIFY todos.
 
 ## Decisions — MADE (operator, 2026-07-15)
 
@@ -640,3 +637,9 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   per-caller fold) and covers the persist half of A4. Classifier tags it `MOVE-C` (convert, do NOT flip); sibling plan
   gets **STEP 2c**. **No open straddles or classification questions remain — the flip set is final at 39 MOVE (38 flip +
   1 convert) / 17 KEEP.**
+- 2026-07-16 — **Flipped `status: draft` → `active` (operator: "make this plan active and start working on it").** This
+  doc is now the **DECISION RECORD** (all decisions closed; the "suggestions, not decisions" banner withdrawn);
+  execution lives in the sibling plan, also ACTIVE. Marked § "Recommended sequencing" **⛔ SUPERSEDED** — it was the
+  pre-decision proposal and three of its items are now factually wrong (Set-B choice is decided = B1; the "roll out via
+  `rollout-workflow-templates.sh`" instruction is WRONG — the flip edits PM's workflows directly and the templates STAY
+  hosted; A3 is superseded by option C). Both plans keep `assigned_vm: NA` → operator-driven, never auto-dispatched.

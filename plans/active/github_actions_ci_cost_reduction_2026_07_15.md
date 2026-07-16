@@ -1,23 +1,23 @@
 ---
 doc_type: plan
-title:
-  GitHub Actions CI/CD cost reduction — self-host the glue, kill the minute-minimum tax, fix cron cadence (DRAFT /
-  suggestions)
+title: GitHub Actions CI/CD cost reduction — self-host the glue, kill the minute-minimum tax, fix cron cadence
 summary: >-
   PM is ~48% of a ~$1,000/mo GitHub Actions bill despite a code freeze because it is the fleet CI/CD control tower —
   ~79% of its runs are automation (status routing, deploy dispatch, promotion/health crons), only ~8% are doc commits.
   All repos are private (every minute billed) and there are ZERO self-hosted runners, so the biggest untapped lever is
-  moving lightweight glue off $0.008/min GitHub-hosted runners onto compute we already run 24/7. This plan proposes a
-  tiered fix — self-host the switchboard+crons, collapse the quality-gates job fan-out that pays a 1-min minimum per
-  sub-second job, and fix cron cadence. Decisions closed 2026-07-15 (B1 on the planning-VM; ci-status-update trimmed to
-  use the VM's warm state; serverless B2 dropped; promote bots kept). Execution in progress.
-status: draft
+  moving lightweight glue off $0.006/min GitHub-hosted runners onto compute we already run 24/7. Tiered fix — self-host
+  the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
+  fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
+  fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
+  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). Nothing
+  deployed yet; next action = runner-infra redesign then deploy.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction, draft, suggestions]
+tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction]
 related:
   - github_billing_dashboard_access_2026_07_09.md
   - cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
@@ -43,20 +43,43 @@ source:
 drift_direction: advance-code
 ---
 
-# GitHub Actions CI/CD cost reduction — proposal (DRAFT)
+# GitHub Actions CI/CD cost reduction
 
-> **⚠️ THESE ARE SUGGESTIONS, NOT FINAL DECISIONS.** This plan is `status: draft` and **human-only** (`assigned_vm: NA`,
-> `execution_scope: local-only`) — it will **not** be ingested or dispatched to any agent. It exists to lay out the
-> options and evidence so the operator can decide **which, if any,** of these changes to make and in what order. No
-> workflow, runner, or infra change below is approved to execute. Flip individual items to real todos (and the plan to
-> `active`) only after an explicit operator ruling on the open questions in § "Decisions needed".
+> **🟢 ACTIVE (operator 2026-07-16) — approved to execute.** All decisions are closed and the flip set is FINAL (**39
+> MOVE / 17 KEEP**); the earlier "suggestions, not decisions" framing is withdrawn. Still **operator-driven**:
+> `assigned_vm: NA` + `execution_scope: local-only` → this plan is **never auto-dispatched** to agent-orchestrator
+> workers; a human/interactive session executes it. **Nothing is deployed yet** — no runners on the VM, no `runs-on`
+> flipped, no callers rewired.
+
+---
+
+## ▶ START HERE (first action for a fresh session)
+
+1. **Read this pre-flight §** + § "MOVE / STAY manifest" (the flip set is final — do not re-derive it; the SSOT is
+   `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → 39 MOVE / 17 KEEP).
+2. **First real task = the runner-infra redesign** (Phase 1, "Runner-slot ISOLATION + design" todo):
+   `setup-glue-runners.sh`
+   - `glue-runner-run.sh` currently assume ONE JIT-ephemeral pool; they must become a **dedicated runner slot (own
+     folder + own venv, fully isolated from AO)** with a **long-lived (non-ephemeral) pool for the high-freq writer**
+     and JIT-ephemeral for the rest. **Do this BEFORE deploying** — the current scripts don't match the decided design.
+3. **Then deploy** the runners on the planning-VM via **AWS SSM** (§ "Deploy mechanism"), verify `status`.
+4. **Then canary** `reconcile-release-tags` (a MOVE workflow that HAS `workflow_dispatch`) → green on
+   `[self-hosted, glue]`.
+5. **Then** phased-group flip of the remaining ~37, then STEP 2b (ci-status-update trim) + STEP 2c (persist composite
+   action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+
+**Ordering hard rules:** runners must be live **before** any flip reaches `main` (schedule/dispatch workflows run the
+definition from the default branch — see the default-branch gotcha below), and **never flip** a `KEEP-*` workflow or
+`persist-cicd-event` (`MOVE-C` → convert, don't flip).
 
 ---
 
 ## Execution pre-flight & runbook (READ FIRST — context not obvious from the todos)
 
-**State 2026-07-15:** decisions closed; runner infra authored + pushed (`scripts/self-hosted-runners/`); **NOTHING
-deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
+**State 2026-07-16:** plan ACTIVE; all decisions closed; flip set final (39 MOVE / 17 KEEP); runner infra authored +
+pushed (`scripts/self-hosted-runners/`) but **NOT yet redesigned** for the dedicated-slot/long-lived-writer decision;
+**NOTHING deployed, no `runs-on` flipped, no callers rewired.** Work continues from **slot 1** (`.tabs/1/`), root left
+to the AO worker.
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
@@ -475,3 +498,12 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   conversion, do NOT flip; still counted in the 39 → 38 flip + 1 convert). Added **STEP 2c** (convert + rewire 22
   callers + delete the old workflow), sequenced with the flip. Supersedes options-doc A3. `persist-cicd-event` was the
   last open straddle — none remain.
+- 2026-07-16 — **PLAN ACTIVATED (operator: "make this plan active and start working on it").** `status: draft` →
+  `active`; DRAFT/"suggestions" banner + tags withdrawn; title cleaned; summary corrected ($0.008 → **$0.006/min** and
+  the final 39/17 shape). **Kept `assigned_vm: NA` + `execution_scope: local-only` deliberately** — this is
+  operator-driven work executed interactively, NOT auto-dispatched to agent-orchestrator workers (fleet-wide CI changes
+  must not be picked up by a background agent). Added a **▶ START HERE** section at the top: the first real task is the
+  **runner-infra redesign** (dedicated slot/folder/venv + long-lived pool for the high-freq writer) because the authored
+  `setup-glue-runners.sh`/`glue-runner-run.sh` still assume one JIT-ephemeral pool and do NOT match the decided design —
+  redesign BEFORE deploying; then SSM-deploy → canary `reconcile-release-tags` → phased flip → STEP 2b/2c → Phase 2/3.
+  State at activation: **nothing deployed, no `runs-on` flipped, no callers rewired.**
