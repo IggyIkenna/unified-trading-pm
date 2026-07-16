@@ -536,16 +536,23 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       close exactly (495,082 + 0 + 443,508 + 30,731 = 969,321). _ABORT_: arithmetic does not close, or the ≥10-pair
       sample shows any false "unique" → the mapping is wrong; **STOP** (this is the path-shape trap that has already
       produced three false conclusions).
-- [ ] [DATA] P0. **T2.3 — PHASE 2b: MOVE class A (17,111 objects = 17,509 − 398 archive) to canonical paths.**
-      _Mechanism_: drive from the T2.2 copy list, not `_list_tree`. Copy legacy → canonical **at the canonical path**
-      (insert `pipeline_mode=batch_<source>` between `day=` and `entity=`; normalise the `by-date/day-<D>` dash form)
-      via UTL `gcs_copy_object` (server-side, idempotent, skip-if-exists). Cover the FULL span **2018-01-02 …
-      2026-12-06** — if using the v9 migrator as the primitive, `--start-date 2018-01-01 --end-date 2026-12-31`
-      explicitly (defaults `2019-01-01`/`2026-06-01` silently truncate BOTH ends — F-4). Cover the trees `_list_tree`
-      cannot see (F-1): `instrument_availability/` (119,858 objects), bare `day=2026-03-21/`,
-      `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a canonical object at its derived
-      path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands at a non-canonical path → STOP
-      and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
+- [x] ✅ [DATA] P0. **T2.3 — PHASE 2b: MOVE class A — DONE 2026-07-16.** Moved **17,089** objects (class A minus 16
+      player_stats → T2.4) legacy→canonical via server-side `gcs_copy_object` at the T2.2-derived `pipeline_mode=<M>`
+      paths, driven from `~/tmp-cutover/t2_3_copylist.jsonl` (NOT `_list_tree`). **Per-object gate**: 17,089/17,089
+      COPIED, 0 FAILED, every dst crc32c-verified == src crc32c (byte-identical rewrite — stronger than a row-count
+      match, no parquet read). **Reader-resolution gate**: 11/11 sampled moved objects across every class-A entity are
+      both LIVE-present AND resolvable by the UAC SSOT `candidate_parquet_paths()` (guards the "wrong path = invisible"
+      ABORT). COPY only — legacy untouched (delete is Phase 5). Full class-A==0 re-inventory deferred to the combined
+      T4.1 pass (after T2.4/T2.5 also land). Evidence `~/tmp-cutover/t2_3_move_evidence.jsonl` (17,089 rows); verifiers
+      `~/tmp-cutover/t2_3_{move,reader_check}.py`. _Original mechanism_: drive from the T2.2 copy list, not
+      `_list_tree`. Copy legacy → canonical **at the canonical path** (insert `pipeline_mode=batch_<source>` between
+      `day=` and `entity=`; normalise the `by-date/day-<D>` dash form) via UTL `gcs_copy_object` (server-side,
+      idempotent, skip-if-exists). Cover the FULL span **2018-01-02 … 2026-12-06** — if using the v9 migrator as the
+      primitive, `--start-date 2018-01-01 --end-date 2026-12-31` explicitly (defaults `2019-01-01`/`2026-06-01` silently
+      truncate BOTH ends — F-4). Cover the trees `_list_tree` cannot see (F-1): `instrument_availability/` (119,858
+      objects), bare `day=2026-03-21/`, `sports_reference/mappings/season=*/`. _Gate_: every class-A source object has a
+      canonical object at its derived path with a matching row count; re-run T2.2 → class A = 0. _ABORT_: any copy lands
+      at a non-canonical path → STOP and re-derive; a wrong-path copy is invisible to every reader and to the manifest.
 - [ ] [DATA] P0. **T2.4 — PHASE 2c: MOVE class B (13,222 objects where canonical has FEWER rows) — BLOCKED on OR-1.**
       _Mechanism_: **skip-if-exists CANNOT do this (F-2)** — the canonical object exists, so both vehicles skip it. Per
       OR-1 ruling, either (a) **row-union** legacy ∪ canonical per cell and write the union to the canonical path
@@ -1229,3 +1236,7 @@ SAMPLE GATE PASS live both directions (D1 has-canonical-real 23/23 all trees; D2
 `~/tmp-cutover/t2_2_{shapes,classify,copylist,verify}.py`. Class-A entities: fixtures_outcomes 4966, fixtures_schedule
 4940, footystats_matches 2934, footystats_odds 2044, injuries 1650, fixtures 369, teams 61, fixture_events 40,
 fixture_stats 38, footystats_predictions 31, fixture_lineups 16.
+
+**T2.3 — class-A move — DONE 2026-07-16.** 17,089/17,089 objects server-side-copied to canonical `pipeline_mode=<M>`
+paths, 0 FAILED, all crc32c-verified (byte-identical). Reader-resolution 11/11 via `candidate_parquet_paths()`. Legacy
+untouched. Evidence `~/tmp-cutover/t2_3_move_evidence.jsonl`.
