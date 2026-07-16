@@ -44,6 +44,7 @@ drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
 resolved_by:
+depends_on: []
 ---
 
 # quickmerge `--agent` races its own rebase and invalidates its own QG sentinel
