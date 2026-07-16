@@ -154,10 +154,15 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 - [ ] [UI] P1. Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
       sub-filter → paginated searchable human-readable table (label = `raw_symbol` slug fallback, venue chip, resolution
       date). `[UI]` + pw:L2.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — human-readable label: ship v1 on the Polymarket `raw_symbol` slug, OR
-      first add a `question`/`title` column to the polymarket/kalshi adapters + `CATALOG_COLUMNS` + regen (multi-hour)
-      so the label is the real question text. **Recommend: slug for v1, title column as a follow-up.** Never fabricate a
-      title.
+- [x] **DECIDED (operator 2026-07-16): slug for v1 + document the follow-up.** Ship v1 labels from the `raw_symbol` slug
+      (e.g. `bitcoin-up-or-down-june-24-2026`) / `base_asset` (= first 50 chars of the raw `question` text for OTHER) /
+      Polymarket `event_title`; derive the CATEGORY from `canonical_question_group` (the canonical thematic label —
+      already a stored column + a `prediction_canonical_question_group` cluster data_type). Confirmed: the
+      human-readable form is parseable from what already exists (`PREDICTION_INSTRUMENTS.md:217,230,247-266` — "all
+      fields come from the real InstrumentRecord, never a title field"). Never fabricate a title.
+- [ ] [DATA] P3. _(follow-up)_ Add a real `question`/`title` column to the polymarket/kalshi adapters +
+      `CATALOG_COLUMNS` + a catalogue regen so the label is the true question text rather than the slug (upstream title
+      exists at adapter parse time — `event_title` 100% hit for Polymarket sports — and is dropped before roll-up).
 
 ## P4 — Instrument Coverage Summary: canonical labels + SPOT_ASSET
 
@@ -175,14 +180,28 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
       across those services, not just IS.
 - [ ] [DATA] P2. Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA (the
       LENDING vs A_TOKEN/DEBT_TOKEN mix is canonical-but-mid-migration, not drift).
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — SPOT_ASSET is **already** a canonical `InstrumentType`
-      (`_instrument_enums.py:59`), keyed by `base_asset_contract_address` (an InstrumentRecord attribute), mapped to
-      `LedgerAssetClass.SPOT_TOKEN`, with a `spot_assets` data-type family — but **no live adapter emits it**. Decision:
-      which chains/tokens should emit SPOT_ASSET records (raw fungible on-chain asset → contract address for
-      wallet/chain position monitoring), and is populating it in scope now? If yes → scope an instruments-service
-      adapter task + surface `base_asset_contract_address` in `ShardDetailModal`.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — should the summary show canonical labels only, or raw value + a
-      canonical badge so manifest drift stays visible for remediation?
+- [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg.** Scope: one SPOT_ASSET record
+      per unique (chain, token → `contract_address`) across the DeFi + spot-CeFi universe, so **every base AND quote leg
+      of a `SPOT_PAIR`/`POOL` (and LST/A_TOKEN/DEBT_TOKEN underlyings) resolves to a SPOT_ASSET with a contract
+      address** — the wallet/chain position-monitoring identity. Decomposed into the todos below.
+- [ ] [DATA] P1. **SPOT_ASSET backfill/migration** — derive the unique token set from the per-date instruments-store
+      rows (where the DeFi adapters already stamp addresses — `uniswap_v2/v3.py`, `curve.py`, `renzo.py`, `etherfi.py`,
+      `solend.py` set base/quote/LST contract addresses on the record) and emit one SPOT_ASSET record per token with its
+      `base_asset_contract_address`. NOTE: the rolled-up `catalog.parquet` `CATALOG_COLUMNS` (build_instrument_catalogue
+      .py:264-303) does **NOT** carry contract addresses today — so either read the per-date rows for the backfill
+      and/or add address columns to `CATALOG_COLUMNS` (recommended, so SPOT_ASSET has a durable home). Verify
+      LST/A_TOKEN/ DEBT_TOKEN addresses are present in the fetched records and reuse them.
+- [ ] [DATA] P1. **CeFi-spot leg mapping** — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address; map
+      each CeFi spot leg's symbol → native-chain canonical `contract_address` (e.g. ETH → WETH/native on ethereum) via a
+      symbol→chain→address registry so CeFi SPOT_PAIR legs also resolve to a SPOT_ASSET. Flag any symbol with no
+      canonical on-chain address (honest-absence — don't invent one).
+- [ ] [BACKEND] P1. **Make SPOT_ASSET emission normal at discovery time** — during token-pair discovery (future
+      backfills + live), also emit the per-leg SPOT_ASSET records so the dump is continuous, not a one-off migration.
+- [ ] [UI] P2. Surface `base_asset_contract_address` (+ chain) in `ShardDetailModal` / the instrument drilldown for
+      SPOT_ASSET rows so an operator can copy the contract address.
+- [x] **DECIDED (default, operator did not override): summary shows the CANONICAL label with the raw value on hover** —
+      canonical labels for readability, raw kept visible (tooltip) so manifest drift stays diagnosable. Covered by the
+      P4 UI label-fix + alias-map todos above.
 
 ## P5 — Remove the redundant hierarchical-drilldown button (instruments-service only)
 
@@ -207,9 +226,11 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 - [ ] [UI] P2. `InstrumentsModalStandard` — add an "MVP only" toggle (mirror `VenueCoverageTable` pills) + MVP badge per
       row + thread `mvp_only`/`search` into the CSV URL. New "Catalogue Explorer" panel driven by
       `/data-status/catalogue`. `[UI]` + pw:L2.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — "catalogue" vs "availability": do you want instruments that EXIST in
-      the instruments-service catalogue (needs a new deployment-api→IS read path or a manifest-backed projection) or
-      instruments CAPTURED on a day (availability parquets, what every current surface reads)?
+- [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 = availability-derived (the two backend/UI todos above),
+      labelled "captured instruments (availability-derived)". Phase 2 (below) = the true-catalogue projection.
+- [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
+      manifest-backed catalogue projection so the explorer can list instruments that EXIST in the catalogue (not just
+      captured). Respect the T4 tier rule (integrate by contract/projection, not a direct service→service import).
 
 ## P7 — Data Coverage breakdown: CSV, "instruments breakdown" button, CeFi chain-axis drift
 
@@ -224,14 +245,18 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 
-- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION (data-correctness) — TEAMS is classed `global_trigger_date` in
-      deployment-api `SPORTS_DATA_TYPE_META` + codex, but the IS writer emits **per-league** TEAMS rows AND both the UAC
-      `SHARD_AXIS_MATRIX` and `gcs_paths` classify TEAMS **per-league** (a 4-way drift). The UAC shard-atom SSOT
-      mandates **direction A: reclassify TEAMS → per-league** in deployment-api (read-side only, restores shard-atom
-      identity). Confirm direction A vs "writer stops emitting league_id" (a much larger, SSOT-contradicting change).
-- [ ] [BACKEND] P1. (on direction A) `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date`
-      (mirrors PLAYER_VALUES); update codex `sports-data-source-coverage-matrix.md:106` to per-league; add a unit test
-      asserting the TEAMS response carries `leagues`.
+- [x] **DECIDED (operator 2026-07-16): direction A — reclassify TEAMS → per-league.** Read-side change; matches the IS
+      writer + UAC shard-atom SSOT.
+- [ ] [BACKEND] P1. `sports_helpers.py` TEAMS axis `global_trigger_date` → `per_league_trigger_date` (mirrors
+      PLAYER_VALUES); update codex `sports-data-source-coverage-matrix.md:106` to per-league; add a unit test asserting
+      the TEAMS response carries `leagues`.
+- [ ] [BACKEND] P1. **Seasonal TEAMS is accounted for by the DATE axis** (operator question 2026-07-16): the writer keys
+      TEAMS as `row_key={date, data_type:TEAMS, league_id}` (`sports_reference_core.py:335`) captured on trigger dates
+      (season-start + transfer windows). So each season's roster is a distinct snapshot under the same `league_id`, and
+      the drilldown becomes `data_type=TEAMS → league_id → date` — per-season change surfaces as the date axis, no extra
+      dimension needed. Verify the `per_league_trigger_date` branch surfaces sensible trigger dates per league in the UI
+      date drilldown (e.g. one TEAMS snapshot per season boundary), and that off-season dates read as legitimately empty
+      (honest-absence), not gaps.
 - [ ] [UI] P1. Honest-absence affordance — for genuinely-global data_types (LEAGUES, VENUES) render an explicit "global
       reference entity — no per-league breakdown (axis: {axis})" row instead of silently omitting the Leagues section
       (the response already carries `axis`). `[UI]` + pw:L2.
@@ -242,14 +267,16 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ---
 
-## Operator decisions outstanding (blocking the tagged todos above)
+## Operator decisions — RESOLVED (2026-07-16)
 
-1. **P8 / P0 — TEAMS axis direction** (data-correctness): confirm direction A (reclassify per-league). Code evidence
-   points decisively at A.
-2. **P4 — SPOT_ASSET adoption**: populate now (which chains/tokens emit it) or defer? And: canonical-labels-only vs
-   raw+badge in the summary.
-3. **P3 — prediction label**: slug for v1 (recommended) vs real question-title column first.
-4. **P6 — catalogue vs availability**: which data source for the explorer.
+1. **P8 — TEAMS axis**: ✅ direction A (reclassify per-league). Seasonal change is captured by the trigger-date axis
+   under each league (verify todo added).
+2. **P4 — SPOT_ASSET**: ✅ populate for every base+quote token leg across DeFi + spot-CeFi (backfill/migration + live
+   discovery-time emission + CeFi symbol→chain→address mapping + verify LST/A_TOKEN/DEBT_TOKEN addresses). Summary
+   labels = canonical with raw on hover.
+3. **P3 — prediction label**: ✅ slug for v1 (category from `canonical_question_group`), real title column as a
+   follow-up.
+4. **P6 — catalogue explorer**: ✅ both, phased (availability-derived now, true-catalogue projection follow-up).
 
 ## Full audit artefacts
 
