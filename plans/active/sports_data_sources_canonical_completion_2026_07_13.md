@@ -4053,12 +4053,25 @@ it's new adapter work, not a data-audit residual).
     `row_key={date,data_type}` aggregate (same defect fixed for the zero-rows branch in
     `api_football_per_fixture_blank_league_orphan_2026_07_15`). Honest-absence preserved: any genuine IN-universe
     capture gap surfaces on the FIXTURES shard, not here.
-- [ ] [DATA] P2. **One-time reconcile: delete/reclassify the existing ~362 residual blank-league `LEAGUE_MAP_INCOMPLETE`
-      (`attempted_failed`) rows** now that the code no longer mints new ones. They are out-of-universe artifacts (no
-      `league_id`, unsupersedable) and should be REMOVED from the sports availability index/seed — same treatment as
-      `delete_noncanonical_sports_leagues_2026_06_25.py`'s purge. Needs GCP ADC to run a GCS-writing reconcile pass; the
-      recurrence is already stopped by instruments-service@a66fc295, so this is cleanup of stale rows only, not a
-      correctness regression. (repo: instruments-service)
+- [x] ✅ [DATA] P2. **One-time reconcile: delete the existing ~362 residual blank-league `LEAGUE_MAP_INCOMPLETE`
+      (`attempted_failed`) rows** — instruments-service@29c566f0
+      (`scripts/backfill/api_football_league_map_incomplete_orphan_purge_2026_07_16.py --apply`). Out-of-universe
+      artifacts (no `league_id`, unsupersedable) REMOVED from the sports availability index — same treatment as
+      `delete_noncanonical_sports_leagues_2026_06_25.py`'s purge (consolidator-safe: snapshot → drain outstanding shards
+      → `merge_canonical_with_outstanding_shards` re-check → guarded write with captured/empty-unchanged invariants).
+      **Applied to prod 2026-07-16**: **362 deleted** (FIXTURE_EVENTS 92 / FIXTURE_LINEUPS 91 / FIXTURE_STATS 91 /
+      PLAYER_STATS 88; event-dates 2022-07-30..2026-07-15), `captured` (1,692,689) + `empty_confirmed` (3,466,591)
+      UNCHANGED, `attempted_failed` 587→225; snapshot
+      `_index/snapshots/pre_league_map_incomplete_purge_20260716_004902/`; **post-verify 0 remain** (canonical +
+      outstanding shards). (repo: instruments-service)
+- [ ] [DATA] P2. **Verify a66fc295 is DEPLOYED to the running `sports-fixtures-job` before the next daily T+1 run** —
+      the recurrence-stop fix landed 2026-07-16 00:15:06 UTC, but the daily job still re-minted 4 fresh blank-league
+      `LEAGUE_MAP_INCOMPLETE` rows at 00:21:37 UTC (pre-fix image; the consolidator absorbed them into the canonical,
+      where the purge above then removed them). Until the deployed job image includes a66fc295, each T+1 run re-mints ~4
+      (one per per-fixture entity) for the prior date — bounded + self-healing once deployed. If a NEW-date orphan
+      reappears in the manifest, re-run
+      `scripts/backfill/api_football_league_map_incomplete_orphan_purge_2026_07_16.py --apply`. (repo:
+      instruments-service)
 
 - **2026-07-15 (LIKELY ROOT CAUSE of the CF11 oscillation found — a concurrent slot independently discovered and
   partially fixed a genuine silent-data-loss bug in the SAME code path this dispatch used).** Cross-referencing a
