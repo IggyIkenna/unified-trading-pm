@@ -550,9 +550,12 @@ down**. "The box doesn't have that version" was a **bootstrap gap**, not a reaso
 - The 3 flipped setup-python movers **drop the step entirely**.
 
 **Result, measured:** runner `python3` → `/opt/github-glue-runners/venv/bin/python3` **Python 3.13.13**, pip 26.1.2,
-SATISFIES `requires-python`, firestore pre-installed (STEP 2b). `readiness-verifier` **93s → 64s (−31%)**; the
-`Set up Python` step is gone from the step list; ~400MB of downloaded Python reclaimed; **the tool-cache race class is
-eliminated at the root rather than mitigated.**
+SATISFIES `requires-python`, firestore pre-installed (STEP 2b). `readiness-verifier`'s `Set up Python` step (**7s/run**)
+is gone from the step list — **note the honest number:** an earlier draft of this plan claimed **93s → 64s (−31%)** from
+wall-clock. That was WRONG: a later run took 83s, and step-level timing shows the job's steps are only ~6-16s of a
+64-93s run (the rest is queue + job setup, which this change does not touch). The real saving is **~7s/run**, and speed
+was never the point; ~400MB of downloaded Python reclaimed; **the tool-cache race class is eliminated at the root rather
+than mitigated.**
 
 ⚠️ **Coupling now recorded in each workflow: these are self-hosted-ONLY.** Restoring `runs-on: ubuntu-latest` on any of
 them REQUIRES restoring `setup-python` with it, or they get the hosted image's default python.
@@ -860,6 +863,48 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   overlaps)
 
 ## Progress Log
+
+- 2026-07-16 — **Hosted baseline + full VM pre-seeding (operator-directed). STOPPED at the operator's gate — no further
+  workflows flipped.** Two operator asks, both done:
+  1. **BACKUP ALL 56 WORKFLOWS** (`scripts/self-hosted-runners/hosted-baseline.sh` + `hosted-baseline/`): the migration
+     was a **one-way door** without this — flipping deleted work the VM does (setup-python, pip installs), so reverting
+     `runs-on` ALONE would give a hosted job with no Python set up: broken in a NEW way. `snapshot` recovers the 10
+     already-flipped workflows from **git history** (parent of the first commit introducing `self-hosted, glue`, which
+     predates every change this epic made to each), and copies the other 46 live. **Verified, not assumed:**
+     setup-python RECOVERED in all 3 files I had deleted it from; the original UNGUARDED `apt-get install jq` recovered;
+     0 baselines carry the flip marker; 56/56 valid YAML; **round-trip tested** (restore → `ubuntu-latest` **with** its
+     setup-python, actionlint-clean → `git checkout` back). **My own `verify` then caught two defects in the backup I
+     had just pushed:** (a) the prek **prettier hook rewrote the baseline** at commit time, destroying the
+     byte-exactness that is its entire point (live workflows are only formatted when STAGED, so several had never been
+     through prettier while my copies went through immediately) → `.prettierignore` now exempts it, re-snapshotted,
+     46/46 byte-identical; (b) `.gitignore`'s global `*.tsv` **silently swallowed MANIFEST.tsv**, the provenance record
+     that makes the backup auditable → scoped negation. Neither was visible without running `verify` against the pushed
+     result.
+  2. **PRE-SEED EVERY MOVER DEP** — operator: _"if all the workflows will do setup-python then whats the use of long
+     lived vm"_. Surveyed all 38 movers: `google-cloud-firestore` ×9 · `pyyaml` ×3 · `pydantic` ×1 · `uv` ×2 ·
+     `claude-code` npm ×1 · `jq` ×1. New SSOT `slot-venv-requirements.txt` (every entry cites its consumers; versions
+     pin the same RANGES the workflows asked for, so pre-installing changes **availability, not resolution**);
+     `setup-glue-runners.sh` installs from it; `bootstrap-ci-host.sh` gains `install_repo_python` (Python 3.13 via uv —
+     **not** deadsnakes: 3.13 is not in noble's apt and a PPA on the live orchestrator is not a trade worth making) and
+     `install_claude_code`. The 3 flipped workflows with installs dropped them; **all 3 dispatched GREEN with zero
+     installs**. Slot venv verified on the box: firestore 2.28.0 · pydantic 2.13.4 · PyYAML 6.0.3 · uv 0.11.29.
+  - **Recorded as a hazard, not a win:** the slot venv is **SHARED, MUTABLE state** — all 8 runners resolve `python3` to
+    it, so a job that `pip install`s mutates it for every other job. `readiness-verifier`'s `pip install uv` silently
+    added uv 0.11.29 to it during a test dispatch. It _worked_, which is the problem: an accumulated dep is invisible,
+    unversioned and unreviewable, and a conflicting version would break unrelated jobs with no trace.
+  - **HONEST NUMBERS — an earlier entry overclaimed and is corrected here.** I wrote "93s → 64s (−31%)" from wall-clock;
+    a later run took **83s**, and step-level timing shows the steps are only **~6-16s of a 64-93s run** (the rest is
+    queue + job setup, which none of this touches). Real per-run saving: **`Set up Python` 7s + installs ~3s ≈ 10s of
+    step time**. **Speed was never the point** — the real wins are correctness and posture: the tool-cache race class is
+    eliminated at the root, ~400MB/runner of duplicate interpreters is gone, and no job mutates the shared host via
+    `npm -g`/`apt`.
+  - **Coupling now explicit in every touched workflow:** these are **self-hosted-ONLY**. Restoring
+    `runs-on: ubuntu-latest` REQUIRES restoring the setup-python / install steps with it — `hosted-baseline/` is the
+    exact source for that.
+  - Evidence: baseline `hosted-baseline.sh verify` OK (56/56); dispatches `reconcile-release-tags` /
+    `ci-status-consolidator` / `readiness-verifier` all `success` on `glue-*` with 0 install steps; pool 8/8 online.
+  - **STOP POINT (operator): no further workflows flipped. 10 of 38 remain the total.** Next = operator gate for the
+    remaining 27.
 
 - 2026-07-15 — Plan drafted from the live billing investigation (this session). Evidence: Enhanced-Billing ledger
   Jun/Jul 2026 + PM 1000-run/13.5h Actions run-mix sample. Status draft, human-only, suggestions-not-final. Awaiting

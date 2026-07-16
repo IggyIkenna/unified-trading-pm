@@ -1,0 +1,802 @@
+name: update-repo-version
+
+# Receives repository_dispatch from individual repos after their version-bump.
+# Actions:
+#   (a) Updates workspace-manifest.json with the new repo version
+#       - branch=main → updates versions map (stable)
+#       - branch=staging → updates staging_versions map (converging)
+#   (b) Bumps PM's own pyproject.toml patch version (so PM version tracks manifest changes)
+#   (c) Dispatches dependency-update events to all downstream repos that depend on the bumped repo
+#       - Includes bump_type so downstream can route: MAJOR → PR to staging; MINOR/PATCH → direct commit
+#       - On MAJOR bump from staging: sets staging_status.locked = true
+#
+# Requires: GH_PAT secret in PM repo and all dispatching repos — full-repo PAT for cross-repo dispatch.
+
+on:
+  repository_dispatch:
+    types: [version-bump]
+
+permissions:
+  contents: write
+
+# Dedicated concurrency group — NOT shared with manifest-update (ci-status-update, sit-gate,
+# cloud-build-router, etc.). The manifest-update group's cancel-in-progress:false semantics
+# keep only ONE pending slot across ALL members: a high-frequency ci-status-update firing while
+# update-repo-version is already running would evict a queued version-bump run → silent loss
+# (DEFECT-1 eviction class; observed live: 6 cancelled runs 2026-06-09, digest fan-out never
+# dispatched). version-bump uses its own group so competing manifest writers don't evict it.
+# Concurrent bumps from different repos are still serialized (one pending slot within this
+# group); the manifest push step retries up to 5× with rebase to handle concurrent manifest
+# commits from the remaining manifest-update members.
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.update.outputs.skip }}
+      repo: ${{ steps.update.outputs.repo }}
+      version: ${{ steps.update.outputs.version }}
+      branch: ${{ steps.update.outputs.branch }}
+      bump_type: ${{ steps.update.outputs.bump_type }}
+      loop_breaker_triggered: ${{ steps.dispatch.outputs.loop_breaker_triggered }}
+      fanout_unresolvable: ${{ steps.resolve-gate.outputs.retries_exhausted }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      # Loss-proof receipt record: write a "dispatch-received" entry to the audit log
+      # immediately after checkout — before any processing — so the record persists even
+      # if the run fails or is evicted mid-step (the commit step below writes "processed").
+      # A gap between "received" and "processed" in the audit log flags a lost bump for
+      # manual recovery. This step runs unconditionally (no `if:` gate).
+      - name: Log dispatch-received (loss-proof receipt)
+        run: |
+          bash scripts/agents/log-manifest-mutation.sh \
+            "update-repo-version/received" \
+            "${{ github.event.client_payload.repo }}=${{ github.event.client_payload.version }} (branch=${{ github.event.client_payload.branch || 'main' }}, run=${{ github.run_id }})"
+
+      # uv is needed to re-lock uv.lock after the PM pyproject version bump (lock-drift fix).
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+
+      - name: Update manifest, bump PM version, compute dependents
+        id: update
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          BRANCH="${{ github.event.client_payload.branch }}"
+          BRANCH="${BRANCH:-main}"  # default to main if not provided
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          IS_BREAKING="${{ github.event.client_payload.is_breaking }}"
+          IS_BREAKING="${IS_BREAKING:-false}"
+
+          # DEFECT-2 (cicd_consolidated_remaining_2026_06_24):
+          # fanout_retry > 0 marks a resolvability-gate re-dispatch of the SAME event
+          # (see the "Resolvability gate" step below). bump_type, when present in the
+          # payload, is the ORIGINAL run's verdict riding the retry — the manifest already
+          # records the new version on a retry, so recomputing below would yield "patch".
+          FANOUT_RETRY="${{ github.event.client_payload.fanout_retry }}"
+          if ! [[ "$FANOUT_RETRY" =~ ^[0-9]+$ ]]; then FANOUT_RETRY=0; fi
+          BUMP_TYPE_OVERRIDE="${{ github.event.client_payload.bump_type }}"
+
+          if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
+            echo "Missing repo or version in client_payload. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Updating workspace-manifest.json: $REPO → $VERSION (branch=${BRANCH})"
+
+          # (a) Update the bumped repo's version entry
+          if ! grep -q "\"${REPO}\"" workspace-manifest.json; then
+            echo "Repo $REPO not found in workspace-manifest.json — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Update the correct version section based on branch.
+          # NOTE: the heredoc terminator MUST be a bare `PYEOF` on its own line —
+          # `PYEOF || exit 1` is NOT a valid heredoc terminator (bash then swallows
+          # every subsequent line up to the next bare `PYEOF`, feeding malformed
+          # input to python so it silently no-ops and /tmp/bump_type.txt is never
+          # written). Use `if ! python3 - <<PYEOF ... PYEOF; then ...; fi` instead.
+          if ! python3 - <<PYEOF
+          import json
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repo = "${REPO}"
+          version = "${VERSION}"
+          branch = "${BRANCH}"
+          commit_sha = "${COMMIT_SHA}"
+          is_breaking = "${IS_BREAKING}" == "true"
+          version_parts = version.split(".")
+          major = int(version_parts[0])
+          bump_type = "major" if major > 0 else "patch"  # simplified; will be overridden below
+
+          # Determine bump_type by comparing with current version
+          if branch == "staging":
+              current = manifest.get("staging_versions", {}).get(repo) or manifest.get("versions", {}).get(repo, "0.0.0")
+          else:
+              current = manifest.get("versions", {}).get(repo, "0.0.0")
+
+          cur_parts = current.split(".")
+          cur_major, cur_minor, cur_patch = int(cur_parts[0]), int(cur_parts[1]), int(cur_parts[2])
+          new_major, new_minor, new_patch = int(version_parts[0]), int(version_parts[1]), int(version_parts[2])
+
+          if new_major > cur_major:
+              bump_type = "major"
+          elif new_minor > cur_minor:
+              bump_type = "minor"
+          else:
+              bump_type = "patch"
+
+          # DEFECT-2 resolvability-gate retry override: a fan-out retry re-dispatch carries
+          # the ORIGINAL bump_type. On the retry, current == version (the original run already
+          # wrote the manifest), so the comparison above degrades to "patch" — a MAJOR retry
+          # would then mis-route consumers to the direct-commit path and skip the lock/cascade.
+          bump_override = "${BUMP_TYPE_OVERRIDE}"
+          if bump_override in ("major", "minor", "patch"):
+              bump_type = bump_override
+
+          # Update the appropriate section
+          if branch == "staging":
+              if "staging_versions" not in manifest:
+                  manifest["staging_versions"] = {}
+              manifest["staging_versions"][repo] = version
+              # Record enriched commit info (version+sha+branch) for human-readable manifest (enrich-staging-commits-with-semver)
+              if commit_sha or version:
+                  if "staging_commits" not in manifest:
+                      manifest["staging_commits"] = {}
+                  import os as _os2
+                  branch_val = branch
+                  manifest["staging_commits"][repo] = {
+                      "version": version,
+                      "sha": commit_sha or "",
+                      "branch": branch_val,
+                  }
+              # Lock staging on major bump OR breaking change (pre-1.0.0 breaking = MINOR bump)
+              if bump_type == "major" or is_breaking:
+                  import datetime
+                  if "staging_status" not in manifest:
+                      manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}
+                  manifest["staging_status"]["locked"] = True
+                  manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
+                  if is_breaking and bump_type != "major":
+                      manifest["staging_status"]["locked_reason"] = f"Breaking MINOR bump cascade: {repo}={version} (pre-1.0.0)"
+                  else:
+                      manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"
+                  manifest["staging_status"]["lock_version"] = version
+                  # Fresh lock cycle → re-arm the starvation alarm (finding H3).
+                  manifest["staging_status"]["locked_alert_sent"] = False
+                  # Content-based breaking-gate (2026-06-08): record which repos are REAL
+                  # breaking changes so SIT fires ONLY for them. Non-breaking pending repos
+                  # drain LDR->staging->main on QG alone (no SIT, no lock). is_breaking is now
+                  # the AST public-surface verdict from semver-agent (scripts/cicd/detect_breaking_change.py),
+                  # not the 0.x-minor version-phase heuristic.
+                  bp = set(manifest["staging_status"].get("breaking_pending") or [])
+                  bp.add(repo)
+                  manifest["staging_status"]["breaking_pending"] = sorted(bp)
+                  print(f"STAGING LOCKED: {'breaking ' if is_breaking else ''}{bump_type} bump {repo}={version}")
+          else:
+              manifest["versions"][repo] = version
+
+          # Always write bump_type and is_breaking to temp files for the shell to read
+          with open("/tmp/bump_type.txt", "w") as f:
+              f.write(bump_type)
+          with open("/tmp/is_breaking.txt", "w") as f:
+              f.write("true" if is_breaking else "false")
+
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
+
+          print(f"Updated {repo} → {version} (branch={branch}, bump_type={bump_type})")
+          PYEOF
+          then
+            echo "FATAL: manifest-mutation python step failed"
+            exit 1
+          fi
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
+
+          # Read the bump_type/is_breaking the python step wrote. These MUST exist now
+          # (the python step succeeded above); guard defensively so set -u can never trip.
+          if [ ! -f /tmp/bump_type.txt ]; then
+            echo "FATAL: /tmp/bump_type.txt missing after manifest-mutation step"
+            exit 1
+          fi
+          BUMP_TYPE=$(cat /tmp/bump_type.txt)
+          BUMP_TYPE="${BUMP_TYPE:-patch}"
+          IS_BREAKING=$(cat /tmp/is_breaking.txt 2>/dev/null || echo "false")
+          IS_BREAKING="${IS_BREAKING:-false}"
+
+          # (b) Bump PM's own patch version. Phase-2/D13: when PM is version_source=git-tag its
+          # pyproject has NO committed version line — read CURRENT from the git tag (then mint a tag,
+          # not a pyproject sed). Legacy (static) repos keep the pyproject grep.
+          PM_VSRC=$(python3 -c "import json;print(json.load(open('workspace-manifest.json'))['repositories'].get('unified-trading-pm',{}).get('version_source',''))" 2>/dev/null || echo "")
+          if [ "$PM_VSRC" = "git-tag" ]; then
+            git fetch origin --tags --force --quiet 2>/dev/null || true
+            CURRENT=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null | sed 's/^v//' || true)
+            [ -z "${CURRENT:-}" ] && CURRENT=$(python3 -c "import json;print(json.load(open('workspace-manifest.json'))['versions'].get('unified-trading-pm',''))" 2>/dev/null || true)
+          else
+            CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || true)
+          fi
+          if [ -z "${CURRENT:-}" ]; then
+            echo "FATAL: could not parse current PM version (git-tag describe or pyproject)"
+            exit 1
+          fi
+          # DEFECT-2: a resolvability-gate RETRY run must not mint another PM version —
+          # the ORIGINAL run already bumped PM + wrote the manifest (idempotent retry).
+          # NOTE: the else-body keeps its original column because the python3 -c string
+          # below must stay at column 0 after YAML block-strip (python -c rejects indent).
+          if [ "$FANOUT_RETRY" -gt 0 ]; then
+            NEW_PM_VERSION="$CURRENT"
+            echo "fanout_retry=${FANOUT_RETRY} — skipping PM self-bump (already done by the original run)"
+          else
+          IFS='.' read -r PMAJOR PMINOR PPATCH <<< "$CURRENT"
+          NEW_PPATCH=$((PPATCH + 1))
+          NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
+          if [ "$PM_VSRC" = "git-tag" ]; then
+            # git-tag mode: MINT the new version as an annotated git tag at HEAD (no pyproject sed, no
+            # uv lock — the version line no longer exists). The tag push fires version-registry-notify
+            # → PM registry. The manifest versions{} projection is still updated below (both modes).
+            git tag -a "v${NEW_PM_VERSION}" -m "PM self-bump v${NEW_PM_VERSION} (fleet version-bump dispatch)" 2>/dev/null \
+              && git push origin "v${NEW_PM_VERSION}" 2>/dev/null \
+              && echo "PM minted tag v${NEW_PM_VERSION}" || echo "WARN: PM tag v${NEW_PM_VERSION} mint/push issue (registry reconcile recovers)"
+          else
+            sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
+            # Re-lock uv.lock so the project's own version line in the lock tracks the
+            # pyproject bump — otherwise `uv lock --check` (the QG lock-sync gate) fails
+            # on the very next PM PR with "uv.lock out of sync with pyproject.toml" (the
+            # recurring lock-drift class; incident 2026-06-07: PM 1.2.4→1.2.8 drift).
+            # Best-effort: uv is installed via the official action below; if it is somehow
+            # unavailable, do not fail the manifest update (a follow-up relock recovers it).
+            if command -v uv >/dev/null 2>&1; then
+              uv lock || echo "WARN: uv lock failed — uv.lock may drift; relock manually"
+            else
+              echo "WARN: uv not on PATH — skipping uv lock (uv.lock may drift)"
+            fi
+          fi
+
+          # Also update PM's own version entry in the manifest (atomic write: tmp + rename)
+          python3 -c "
+          import json, os
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+          m['versions']['unified-trading-pm'] = '${NEW_PM_VERSION}'
+          tmp_path = 'workspace-manifest.json.tmp'
+          with open(tmp_path, 'w') as f:
+              json.dump(m, f, indent=2, ensure_ascii=False)
+              f.write('\n')
+          os.replace(tmp_path, 'workspace-manifest.json')
+          "
+
+          echo "PM version: $CURRENT → $NEW_PM_VERSION"
+          fi
+
+          # (c) Find all direct dependents and build their new constraint (include bump_type)
+          python3 - > /tmp/dependents.txt <<PYEOF
+          import json, sys
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          repo = "${REPO}"
+          version = "${VERSION}"
+          bump_type = "${BUMP_TYPE}"
+          parts = version.split(".")
+          major = int(parts[0])
+          minor = int(parts[1])
+          for name, data in m.get("repositories", {}).items():
+              for dep in data.get("dependencies", []):
+                  dep_name = dep.get("name") if isinstance(dep, dict) else dep
+                  if dep_name == repo:
+                      constraint = f">={major}.{minor}.0,<{major+1}.0.0"
+                      print(json.dumps({"repo": name, "dep_name": repo, "dep_version": version, "constraint": constraint, "bump_type": bump_type}))
+          PYEOF
+
+          echo "Dependents of $REPO (bump_type=$BUMP_TYPE):"
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            dep_repo=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin)['repo'])")
+            echo "  - $dep_repo"
+          done < /tmp/dependents.txt
+
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "bump_type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
+          echo "is_breaking=$IS_BREAKING" >> "$GITHUB_OUTPUT"
+          echo "pm_version=$NEW_PM_VERSION" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Log manifest mutation (audit trail)
+        if: steps.update.outputs.skip != 'true'
+        run: |
+          bash scripts/agents/log-manifest-mutation.sh \
+            "update-repo-version" \
+            "${{ steps.update.outputs.repo }}=${{ steps.update.outputs.version }} (branch=${{ steps.update.outputs.branch }}, bump=${{ steps.update.outputs.bump_type }})"
+
+      - name: Commit manifest and PM version bump
+        if: steps.update.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json pyproject.toml uv.lock plans/audit/manifest-mutations.jsonl 2>/dev/null; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json pyproject.toml
+          # Stage the re-locked uv.lock alongside the pyproject bump so they never drift.
+          git add uv.lock 2>/dev/null || true
+          git add plans/audit/manifest-mutations.jsonl 2>/dev/null || true
+          git commit -m "chore(manifest): update ${{ steps.update.outputs.repo }} to ${{ steps.update.outputs.version }}, bump PM to ${{ steps.update.outputs.pm_version }} [skip ci]"
+          # Retry-with-rebase (2026-06-10): staging-to-main runs in its OWN concurrency group now,
+          # so its manifest commit can land between our checkout and push — a bare push then fails
+          # non-fast-forward and the version-bump manifest write is lost (the dispatch is not
+          # replayable). Same proven loop as staging-to-main's manifest push.
+          #
+          # 2026-06-26: register the manifest merge drivers so the rebase AUTO-RESOLVES the
+          # deterministic conflict classes (manifest version keys -> max-semver, breaking_pending
+          # -> union, audit jsonl -> union, pyproject -> higher semver). Before this, a concurrent
+          # manifest commit on main made `git pull --rebase` conflict on workspace-manifest.json +
+          # manifest-mutations.jsonl and die FATAL on attempt 1 (bash -e), losing the bump.
+          bash scripts/cicd/setup_manifest_merge_drivers.sh "$PWD"
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest version update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            if git pull --rebase --autostash origin main; then
+              # Driver-resolved rebase: pyproject may now be the higher (theirs) semver while uv.lock
+              # was kept-ours. Reconcile the lock to the merged pyproject and amend so the lock-sync
+              # QG gate stays green; no-op when the versions already agree.
+              if command -v uv >/dev/null 2>&1; then
+                uv lock >/dev/null 2>&1 || true
+                if ! git diff --quiet uv.lock 2>/dev/null; then
+                  git add uv.lock && git commit --amend --no-edit
+                fi
+              fi
+            else
+              # A genuine (non-deterministic) conflict the drivers won't touch. Abort cleanly so we
+              # never push a half-rebased tree, then retry from a clean state on the next attempt.
+              echo "Rebase hit a genuine conflict (attempt ${attempt}); aborting rebase."
+              git rebase --abort 2>/dev/null || true
+            fi
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest version update after 5 attempts."
+              exit 1
+            fi
+          done
+
+      # ── Real-time unlock trigger (2026-06-10) ──
+      # Wake sit-debounce-trigger.yml (repository_dispatch: [staging-changed]) the MOMENT a repo's
+      # staging_versions entry is recorded. This trigger was DEAD CODE — nothing dispatched
+      # staging-changed to PM — so the debounce / SIT-trigger / dangling-lock auto-clear ran ONLY on
+      # the GitHub-throttled ~75-min */5 cron, and a staging cascade lock dangled ~1.5h (2026-06-10).
+      # Fired AFTER the manifest push so sit-debounce reads the fresh staging_versions. Loop-free:
+      # sit-debounce dispatches staging-changed onward to system-integration-tests (SIT), never
+      # version-bump back here (and update-repo-version only listens for version-bump).
+      - name: Notify sit-debounce of staging change (real-time unlock trigger)
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.branch == 'staging'
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.update.outputs.repo }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then
+            echo "GH_PAT not set — skipping staging-changed dispatch (cron fallback remains)."
+            exit 0
+          fi
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"staging-changed\", \"client_payload\": {\"reason\": \"staging-version-recorded\", \"repo\": \"$REPO\", \"version\": \"$VERSION\"}}") || HTTP="000"
+          if [ "$HTTP" = "204" ]; then
+            echo "  staging-changed dispatched to PM (sit-debounce real-time wake)"
+          else
+            echo "::warning::staging-changed dispatch failed (HTTP $HTTP) — sit-debounce falls back to the cron"
+          fi
+
+      - name: Validate manifest DAG (cycle guard — add-cascade-cycle-guard)
+        if: steps.update.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          echo "Running DAG cycle check for repo: ${{ steps.update.outputs.repo }}"
+          python3 scripts/validate-manifest-dag.py \
+            --manifest workspace-manifest.json \
+            --triggering-repo "${{ steps.update.outputs.repo }}"
+          echo "DAG cycle check passed — safe to dispatch cascade"
+
+      # ── Base-image digest resolution (FROM-digest ratchet, 2026-06-10) ──
+      # When the bumped repo is the base image (unified-trading-library), resolve the freshly-built
+      # :latest digest and attach it to the dependency-update fan-out so each consumer's
+      # update-dependency-version.yml rewrites its checked-in `ARG BASE_IMAGE_DIGEST=` default
+      # (idempotent sed; digest-only change produces a digest-refresh PR). Non-fatal end-to-end:
+      # missing GCP secrets or a registry miss → empty digest → consumers skip the digest step.
+      # Edge not covered here (tracked in dependency_promotion plan): an image rebuild WITHOUT a
+      # version bump never enters this path — that is the */6h registry-poller follow-up.
+      - name: Authenticate to GCP via WIF (digest resolution)
+        id: digest-auth-wif
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (digest resolution fallback)
+        id: digest-auth-key
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          steps.digest-auth-wif.outcome != 'success'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK (digest resolution)
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Resolve base-image digest
+        id: base-digest
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}"
+          IMAGE="asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest"
+          DIGEST=$(gcloud artifacts docker images describe "$IMAGE" --format='value(image_summary.digest)' 2>/dev/null || echo "")
+          if echo "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "Resolved base-image digest: $DIGEST"
+            echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          else
+            # GCP auth succeeded but registry read failed — fail loud so the build surfaces the gap
+            # instead of silently propagating an empty digest to consumers (fix-a: stale-digest RCA).
+            echo "ERROR: Could not resolve a valid digest (got: '$DIGEST'). GCP auth OK but registry read failed." >&2
+            echo "Check that the UTL image exists in ${IMAGE} and that the SA has Artifact Registry Reader." >&2
+            exit 1
+          fi
+
+      # ── DEFECT-2: dependency-FIRST ordering for the consumer fan-out ──
+      # (plan cicd_consolidated_remaining_2026_06_24.md, Phase 3.5)
+      # Consumers resolve a fanned-out pin via python-quality-gates-v2 clone_repo():
+      #   (1) in-range release TAG → (2) the consumer's BRANCH NAME on the dep repo
+      #   (= the dep's `staging` for the direct-commit pin path) → (3) the PR BASE tier
+      #   (staging/main) → (4) manifest released-version tag → (5) main.
+      # NO workflow creates release tags today, so a FRESH bump is resolvable IFF the
+      # dep's {branch} pyproject.toml already carries `version = "{VERSION}"` (paths 2/3).
+      # semver-agent pushes the chore(release) commit to the dep's staging BEFORE
+      # dispatching version-bump here, so attempt 1 normally succeeds — this gate closes
+      # the race where that push lags/regresses and the fan-out pins consumers to an
+      # unresolvable version (incident shape: assert_dep_in_range "resolved X < floor Y",
+      # exec-service PR #232). Bounded poll: 10 × 30s (≤5 min — deliberately under the
+      # 10-min spec because this run HOLDS the version-bump concurrency group; a long
+      # hold risks evicting sibling version-bump runs from the single pending slot = lost
+      # baselines, the DEFECT-1 eviction class). On timeout we do NOT dispatch blindly:
+      # re-dispatch the SAME version-bump event with fanout_retry+1 (max 3 — the
+      # chain-depth loop-breaker idiom), each retry run re-polling ≈5 min more. Retries
+      # exhausted → CRITICAL Slack via notify-fanout-unresolvable below.
+      - name: Resolvability gate — dep promoted before consumer fan-out (DEFECT-2)
+        id: resolve-gate
+        if: steps.update.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.update.outputs.repo }}
+          VERSION: ${{ steps.update.outputs.version }}
+          BRANCH: ${{ steps.update.outputs.branch }}
+          BUMP_TYPE: ${{ steps.update.outputs.bump_type }}
+          IS_BREAKING: ${{ steps.update.outputs.is_breaking }}
+        run: |
+          set -euo pipefail
+
+          echo "retries_exhausted=false" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${TOKEN:-}" ]; then
+            # No PAT → the dispatch step no-ops anyway; don't block on an unpollable gate.
+            echo "GH_PAT not set — skipping resolvability gate (dispatch step will no-op too)."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Nothing to fan out and no cascade → vacuously resolvable (skip the poll).
+          DEPENDENT_COUNT=$(grep -c . /tmp/dependents.txt 2>/dev/null || true)
+          DEPENDENT_COUNT="${DEPENDENT_COUNT:-0}"
+          if [ "$DEPENDENT_COUNT" -eq 0 ] && [ "$BUMP_TYPE" != "major" ] && [ "$IS_BREAKING" != "true" ]; then
+            echo "No dependents and no cascade — resolvability gate not needed."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          check_resolvable() {
+            # (a) exact release tag v{VERSION} — clone_repo()'s FIRST resolution path.
+            local code
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$OWNER/$REPO/git/ref/tags/v$VERSION" || echo "000")
+            if [ "$code" = "200" ]; then
+              echo "  tag v$VERSION exists on $REPO"
+              return 0
+            fi
+            # (b) the dep's {BRANCH} pyproject carries the version — the branch-name /
+            #     base-ref-tier resolution paths (canonical location for a fresh staging bump).
+            local pyproject
+            pyproject=$(curl -s -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/vnd.github.raw" \
+              "https://api.github.com/repos/$OWNER/$REPO/contents/pyproject.toml?ref=$BRANCH" || echo "")
+            if printf '%s\n' "$pyproject" | grep -qF "version = \"$VERSION\""; then
+              echo "  $REPO@$BRANCH pyproject.toml carries version $VERSION"
+              return 0
+            fi
+            return 1
+          }
+
+          RESOLVED=false
+          for ATTEMPT in $(seq 1 10); do
+            echo "Resolvability check $ATTEMPT/10: $REPO=$VERSION (branch=$BRANCH)"
+            if check_resolvable; then RESOLVED=true; break; fi
+            [ "$ATTEMPT" -lt 10 ] && sleep 30
+          done
+
+          if [ "$RESOLVED" = "true" ]; then
+            echo "Dependency $REPO=$VERSION is resolvable — proceeding with consumer fan-out."
+            echo "resolvable=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "resolvable=false" >> "$GITHUB_OUTPUT"
+
+          FANOUT_RETRY="${{ github.event.client_payload.fanout_retry }}"
+          if ! [[ "$FANOUT_RETRY" =~ ^[0-9]+$ ]]; then FANOUT_RETRY=0; fi
+          NEXT_RETRY=$((FANOUT_RETRY + 1))
+          MAX_FANOUT_RETRY=3
+
+          if [ "$FANOUT_RETRY" -ge "$MAX_FANOUT_RETRY" ]; then
+            echo "::error::Resolvability gate EXHAUSTED (${FANOUT_RETRY} retries): $REPO=$VERSION is still not resolvable (no tag v$VERSION; $BRANCH pyproject lacks it). Consumer fan-out HALTED — check the dep's chore(release) push (semver-agent apply step)."
+            echo "retries_exhausted=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "::warning::$REPO=$VERSION not yet resolvable after ~5 min — re-dispatching version-bump with fanout_retry=$NEXT_RETRY (max $MAX_FANOUT_RETRY); consumer fan-out deferred to the retry run."
+          CHAIN_DEPTH="${{ github.event.client_payload.chain_depth }}"
+          if [ -z "$CHAIN_DEPTH" ] || [ "$CHAIN_DEPTH" = "null" ]; then
+            CHAIN_DEPTH="${{ github.event.client_payload.cascade_depth }}"
+          fi
+          if ! [[ "$CHAIN_DEPTH" =~ ^[0-9]+$ ]]; then CHAIN_DEPTH=0; fi
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          # Same logical event → chain_depth preserved (loop protection here is fanout_retry).
+          # bump_type rides the payload so the retry run doesn't recompute it as "patch".
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"$REPO\", \"version\": \"$VERSION\", \"branch\": \"$BRANCH\", \"commit_sha\": \"$COMMIT_SHA\", \"is_breaking\": \"$IS_BREAKING\", \"bump_type\": \"$BUMP_TYPE\", \"chain_depth\": $CHAIN_DEPTH, \"fanout_retry\": $NEXT_RETRY}}") || HTTP="000"
+          if [ "$HTTP" = "204" ]; then
+            echo "  ✅ retry dispatched (fanout_retry=$NEXT_RETRY)"
+          else
+            echo "::error::retry dispatch failed (HTTP $HTTP) — fan-out for $REPO=$VERSION is LOST without a manual re-dispatch."
+            echo "retries_exhausted=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch dependency-update to downstream repos
+        id: dispatch
+        # DEFECT-2: gated on the dep being resolvable where consumers resolve it — on a
+        # gate timeout the fan-out is deferred to the fanout_retry re-dispatch, never blind.
+        if: steps.update.outputs.skip != 'true' && steps.resolve-gate.outputs.resolvable == 'true'
+        env:
+          BASE_IMAGE_DIGEST: ${{ steps.base-digest.outputs.digest }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${{ github.repository_owner }}"
+          TOKEN="${{ secrets.GH_PAT }}"
+
+          if [ -z "$TOKEN" ]; then
+            echo "GH_PAT not set — skipping downstream dispatch."
+            exit 0
+          fi
+
+          # ── Chain depth loop breaker (harden-version-bump-loop-breaker) ──
+          # Accept chain_depth from dispatch payload (preferred) or fall back to
+          # legacy cascade_depth for backward compatibility. Default 0 for initial trigger.
+          CHAIN_DEPTH="${{ github.event.client_payload.chain_depth }}"
+          if [ -z "$CHAIN_DEPTH" ] || [ "$CHAIN_DEPTH" = "null" ]; then
+            CHAIN_DEPTH="${{ github.event.client_payload.cascade_depth }}"
+          fi
+          CHAIN_DEPTH="${CHAIN_DEPTH:-0}"
+          NEXT_DEPTH=$((CHAIN_DEPTH + 1))
+          MAX_CHAIN_DEPTH=3
+
+          echo "Chain depth: $CHAIN_DEPTH (max: $MAX_CHAIN_DEPTH)"
+
+          if [ "$CHAIN_DEPTH" -ge "$MAX_CHAIN_DEPTH" ]; then
+            echo "HALT: chain_depth ($CHAIN_DEPTH) >= max ($MAX_CHAIN_DEPTH). Possible infinite dispatch loop detected."
+            echo "Skipping downstream dispatch to prevent runaway cascade."
+            echo "chain_depth=$CHAIN_DEPTH next_depth=$NEXT_DEPTH repo=${{ steps.update.outputs.repo }} version=${{ steps.update.outputs.version }}"
+
+            # NOTE: Telegram notification handled by notify-loop-breaker job (reusable workflow).
+            echo "loop_breaker_triggered=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          IS_BREAKING="${{ steps.update.outputs.is_breaking }}"
+          IS_BREAKING="${IS_BREAKING:-false}"
+
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+
+            DEPENDENT_REPO=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['repo'])")
+            DEP_NAME=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dep_name'])")
+            DEP_VERSION=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dep_version'])")
+            CONSTRAINT=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['constraint'])")
+            BUMP_TYPE=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('bump_type', 'patch'))")
+
+            echo "Dispatching dependency-update to $DEPENDENT_REPO: $DEP_NAME=$DEP_VERSION (constraint: $CONSTRAINT, is_breaking: $IS_BREAKING, chain_depth: $NEXT_DEPTH)"
+
+            # Attach base_image_digest only when resolved (UTL bumps with GCP auth available);
+            # consumers validate the sha256 format and skip the digest step when absent.
+            DIGEST_FIELD=""
+            if [ -n "${BASE_IMAGE_DIGEST:-}" ]; then
+              DIGEST_FIELD=", \"base_image_digest\": \"$BASE_IMAGE_DIGEST\""
+            fi
+
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$OWNER/$DEPENDENT_REPO/dispatches" \
+              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\", \"is_breaking\": \"$IS_BREAKING\", \"chain_depth\": $NEXT_DEPTH, \"cascade_depth\": $NEXT_DEPTH$DIGEST_FIELD}}")
+
+            if [ "$HTTP_STATUS" = "204" ]; then
+              echo "  ✅ Dispatched to $DEPENDENT_REPO (chain_depth=$NEXT_DEPTH)"
+            else
+              echo "  ⚠️  HTTP $HTTP_STATUS for $DEPENDENT_REPO (repo may not have receiver workflow yet)"
+            fi
+
+            # On breaking change: invalidate downstream ci_status → STAGING_PENDING
+            if [ "$IS_BREAKING" = "true" ]; then
+              echo "  Breaking cascade: setting $DEPENDENT_REPO ci_status → STAGING_PENDING"
+              BREAKING_REPO="$DEPENDENT_REPO" BREAKING_DEP="$DEP_NAME" BREAKING_VER="$DEP_VERSION" \
+              python3 -c "
+              import json, os
+              rn = os.environ['BREAKING_REPO']
+              dn = os.environ['BREAKING_DEP']
+              dv = os.environ['BREAKING_VER']
+              m = json.load(open('workspace-manifest.json'))
+              repos = m.get('repositories', {})
+              if rn in repos:
+                  old_st = repos[rn].get('ci_status', 'NOT_CONFIGURED')
+                  repos[rn]['ci_status'] = 'STAGING_PENDING'
+                  repos[rn]['breaking_cascade_source'] = f'{dn}={dv}'
+                  print(f'  ci_status: {rn} {old_st} -> STAGING_PENDING (breaking cascade from {dn}={dv})')
+              tmp = 'workspace-manifest.json.tmp'
+              fh = open(tmp, 'w')
+              json.dump(m, fh, indent=2, ensure_ascii=False)
+              fh.write(chr(10))
+              fh.close()
+              os.replace(tmp, 'workspace-manifest.json')
+              " || echo "  Failed to update ci_status for $DEPENDENT_REPO"
+            fi
+          done < /tmp/dependents.txt
+
+      # ── Phase 2 (dependency_promotion_…_2026_06_09): a MAJOR / breaking bump triggers the
+      #    full dep-order QG cascade (cascade-qg-ordering.yml runs QG across transitively-affected
+      #    repos in topological level order, fail-fast). minor/patch bumps are absorbed by the
+      #    consumer's range pin → NO cascade, NO consumer rebuild (the `if` below excludes them).
+      # DEFECT-2: also gated on resolvability — the cascade's per-repo QGs clone the dep
+      # exactly like consumer QGs do, so firing it against an unresolvable dep guarantees
+      # a spurious red cascade (+ a spurious escalate-to-orchestrator). On a gate timeout
+      # the cascade fires from the fanout_retry re-dispatch run instead (bump_type rides
+      # the retry payload, so the major/breaking routing is preserved).
+      - name: Trigger dep-order QG cascade on MAJOR / breaking bump (Phase 2)
+        if:
+          steps.update.outputs.skip != 'true' && steps.resolve-gate.outputs.resolvable == 'true' &&
+          (steps.update.outputs.bump_type == 'major' || steps.update.outputs.is_breaking == 'true')
+        env:
+          OWNER: ${{ github.repository_owner }}
+          TOKEN: ${{ secrets.GH_PAT }}
+          SRC_REPO: ${{ steps.update.outputs.repo }}
+          SRC_VER: ${{ steps.update.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TOKEN" ]; then echo "GH_PAT not set — skipping cascade trigger."; exit 0; fi
+          echo "MAJOR/breaking bump ${SRC_REPO}=${SRC_VER} → dispatching cascade-qg-trigger (full dep-order QG cascade)"
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"cascade-qg-trigger\", \"client_payload\": {\"source_repo\": \"${SRC_REPO}\", \"source_version\": \"${SRC_VER}\"}}")
+          if [ "$HTTP" = "204" ]; then echo "  ✅ cascade-qg-trigger dispatched"; else echo "  ⚠️  HTTP $HTTP dispatching cascade-qg-trigger"; fi
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  notify:
+    name: Slack — Version Update
+    needs: [update-manifest]
+    if: always() && needs.update-manifest.outputs.skip != 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      # Truthful body: a failed update-manifest must NOT read as a clean "Version update".
+      message:
+        "${{ needs.update-manifest.result == 'success' && format('Version update: {0} v{1} (branch {2}, bump {3})',
+        needs.update-manifest.outputs.repo, needs.update-manifest.outputs.version, needs.update-manifest.outputs.branch,
+        needs.update-manifest.outputs.bump_type) || format('Version update FAILED for {0} v{1} (branch {2}, bump {3}) —
+        job result {4}', needs.update-manifest.outputs.repo, needs.update-manifest.outputs.version,
+        needs.update-manifest.outputs.branch, needs.update-manifest.outputs.bump_type, needs.update-manifest.result) }}"
+      # notify-slack truthful-classifies (failure → CRITICAL); keep INFO only on success.
+      severity: ${{ needs.update-manifest.result == 'success' && 'INFO' || 'CRITICAL' }}
+      conclusion: ${{ needs.update-manifest.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-loop-breaker:
+    name: Slack — Version Bump Loop Breaker
+    needs: [update-manifest]
+    if: always() && needs.update-manifest.outputs.loop_breaker_triggered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Version Bump Loop Breaker Triggered | Repo: ${{ needs.update-manifest.outputs.repo }} v${{
+        needs.update-manifest.outputs.version }} | Downstream dispatches HALTED to prevent infinite loop. Investigate:
+        are downstream repos missing [skip ci] on dependency updates?"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-fanout-unresolvable:
+    name: Slack — Dep Fan-out Unresolvable
+    needs: [update-manifest]
+    if: always() && needs.update-manifest.outputs.fanout_unresolvable == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Dependency fan-out HALTED (resolvability gate, DEFECT-2) | ${{ needs.update-manifest.outputs.repo }} v${{
+        needs.update-manifest.outputs.version }} (branch ${{ needs.update-manifest.outputs.branch }}, bump ${{
+        needs.update-manifest.outputs.bump_type }}) is NOT resolvable where consumers resolve it (no v-tag; branch
+        pyproject lacks the version) after the bounded poll + retries. Consumer dep-update dispatches were NOT sent.
+        Check the dep's chore(release) push (semver-agent apply step), then re-dispatch version-bump manually."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Version Update Event
+    needs: [update-manifest, notify]
+    if: always() && needs.update-manifest.outputs.skip != 'true'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: ${{ needs.update-manifest.outputs.repo || 'unified-trading-pm' }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.update-manifest.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"version": "${{ needs.update-manifest.outputs.version }}", "bump_type": "${{
+        needs.update-manifest.outputs.bump_type }}"}'

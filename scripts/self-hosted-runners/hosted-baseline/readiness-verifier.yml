@@ -25,10 +25,7 @@ concurrency:
 
 jobs:
   verify-readiness:
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
@@ -57,23 +54,22 @@ jobs:
               "${{ github.event.inputs.repo_filter }}" --skip-install || true
           fi
 
-      # No actions/setup-python: this runs on the self-hosted glue pool, whose python3 IS the slot
-      # venv on 3.13 (first on the unit PATH) — the version pyproject requires. Re-adding it would
-      # re-download a Python that is already resident, on a box we pay for 24/7. Provisioning lives
-      # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
-      # THERE, not here. NOTE: this workflow is now self-hosted-ONLY — restoring runs-on:
-      # ubuntu-latest requires restoring setup-python with it.
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
 
-      # No "Install uv and dependencies" step: this job's python3 IS the runner's slot venv, which
-      # already provides pyyaml and uv (scripts/self-hosted-runners/slot-venv-requirements.txt).
-      # It previously built a PRIVATE .venv and pip-installed into it every run — on a long-lived VM
-      # that is pure overhead, and the two `source .venv/bin/activate` lines below went with it.
-      # Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring this step AND those
-      # activate lines (see scripts/self-hosted-runners/hosted-baseline/readiness-verifier.yml).
+      - name: Install uv and dependencies
+        run: |
+          pip install uv
+          python -m venv .venv
+          source .venv/bin/activate
+          uv pip install pyyaml
 
       - name: Run readiness verifier
         id: verify
         run: |
+          source .venv/bin/activate
           EXIT_CODE=0
           if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
             python scripts/check-repo-readiness.py \

@@ -1,0 +1,864 @@
+name: python-quality-gates-v2
+
+# Reusable workflow — called by all Python service repos.
+# V2: escape GitHub ghost-cache bug on the "quality-gates" check context (Option D).
+#
+# ── PARALLEL SLICING (latency reduction 2026-06-10) ──────────────────────────
+# The ONE monolithic ~12-min serial `quality-gates.sh` step is fanned into a
+# MATRIX of parallel slice legs (tests / typecheck / lint-codex), each invoking
+# `quality-gates.sh --no-fix` with QG_SLICE=<leg>. Wall-time → max(slice) not
+# sum(slices); since pytest (~715s) dominates, the gate drops to ~the pytest leg.
+# The base scripts (base-service.sh / base-library.sh) partition the gate with
+# ZERO overlap + ZERO lost coverage via the QG_SLICE selector — every check the
+# monolith ran runs in exactly one leg. SSOT:
+# plans/active/cicd_v2_latency_reduction_2026_06_10.md +
+# codex/06-coding-standards/quality-gates.md § "Parallel slice jobs".
+#
+# ── REQUIRED-CHECK CONTEXT (do NOT break) ────────────────────────────────────
+# Branch protection requires the context `Quality Gates (<repo>) / quality-gates-v2`
+# = `<caller job name> / <reusable job key>`. The matrix legs emit
+# `Quality Gates (<repo>) / qg-slices (tests)` etc. — NOT the required context.
+# The `quality-gates-v2` AGGREGATION job `needs:` all matrix legs and reports the
+# required context (green iff EVERY leg passed). It must keep job key
+# `quality-gates-v2` + carry the `metadata_only` output. SSOT:
+# scripts/repo-management/pin_branch_protection_rulesets.py (context derivation).
+#
+# ── SENTINEL ─────────────────────────────────────────────────────────────────
+# Sliced runs are PARTIAL by definition → they never write the QG sentinel
+# (.qg_last_passed_sha / .qg_content_sentinel) — that local-only quickmerge
+# fast-path is unaffected by CI (CI never reads the sentinel; the base-script
+# QG_SLICE guard forces no-write). SSOT comments in base-service.sh § QG_SLICE.
+#
+# Loaded at whatever ref is in the caller's `uses:` line (managed by
+# rollout-quality-gates-ci-workflows.py which pins it to active_feature_branch).
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version
+        type: string
+        default: "3.13.9"
+      dep_repos:
+        description:
+          Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-api-contracts")
+        type: string
+        default: ""
+    outputs:
+      metadata_only:
+        description:
+          "true when this run fast-pathed a metadata-only commit (chore(release) version bump OR chore(deps) pin)"
+        value: ${{ jobs.quality-gates-v2.outputs.metadata_only }}
+    secrets:
+      GH_PAT:
+        required: false
+      GCP_PROJECT_ID:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: false
+      SLACK_CI_WEBHOOK_URL:
+        required: false
+
+jobs:
+  # ── CONTENT-SENTINEL GATE (redundant-rerun short-circuit, 2026-06-10) ─────────
+  # v2 fires on BOTH push AND pull_request to main+staging, so ONE change runs the
+  # full gate up to 4× on BYTE-IDENTICAL content (PR-v2 then post-merge-push-v2, at
+  # each of staging + main — a promote re-SHAs the commit but the TREE content is
+  # unchanged). This job computes the git TREE hash (content-addressed → survives
+  # squash/promote re-SHA, unlike the commit SHA) keyed with the workflow file's own
+  # hash, and looks it up in the GHA cache. A HIT ⟹ quality-gates-v2 ALREADY passed
+  # for this exact tree content → short-circuit: the matrix legs skip their gate work
+  # (report GREEN in seconds) and the required context still reports (PR not BLOCKED).
+  # The marker is written by the aggregate job ONLY on a full green (all legs pass).
+  #
+  # CORRECTNESS BOUND: the key is the repo TREE (which INCLUDES pyproject.toml + uv.lock
+  # → the dep RANGE pins). It deliberately does NOT hash the deps' resolved CONTENT, so
+  # it is sound exactly for the redundant-rerun case it targets: the SAME repo tree being
+  # re-gated across push/PR + staging/main promotions, where the deps at each tier are the
+  # same pinned versions. A real code change ⟹ different tree ⟹ MISS ⟹ full run. We never
+  # skip when content differs. (A dep bumping WITHIN range is a separate `chore(deps)` commit
+  # that changes uv.lock ⟹ different tree ⟹ MISS.)
+  #
+  # FAIL-SAFE: a cache MISS (incl. GHA's cross-branch cache-scope limits — a cache saved on
+  # `staging` is not always readable from a `main` job, only same-branch + default-branch +
+  # PR-base fallbacks) simply runs the FULL gate. The short-circuit can NEVER produce a false
+  # green or a blocked PR — worst case is "no speedup". The marker saved on the DEFAULT branch
+  # (`main`) is readable fleet-wide, so once a tree is green on main any later run of that exact
+  # tree hits — covering the dominant redundant cases (main re-fires + promotions landing
+  # byte-identical content on main). SSOT: plans/active/cicd_v2_latency_reduction_2026_06_10.md
+  # Phase 3.
+  content-gate:
+    name: content sentinel
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      # 'true' when this exact tree-content already passed v2 (skip the gate work).
+      cache_hit: ${{ steps.probe.outputs.cache-hit }}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Compute content cache key (tree hash + workflow hash)
+        id: hash
+        shell: bash
+        run: |
+          set -euo pipefail
+          TREE="$(git rev-parse HEAD^{tree})"
+          # Fold the per-repo workflow file hash into the key so that re-rolling the gate
+          # template (a new gate that checks something new) invalidates the green marker →
+          # forces a re-run even on unchanged repo content. (The base scripts live in cloned
+          # PM, not here; the workflow file hash bumps whenever the template is re-rolled.)
+          WF_HASH="$(sha256sum .github/workflows/quality-gates-v2.yml 2>/dev/null | awk '{print $1}' || echo nowf)"
+          KEY="qg-green-v1-${GITHUB_REPOSITORY//\//_}-${TREE}-${WF_HASH}"
+          echo "cache_key=${KEY}" >> "$GITHUB_OUTPUT"
+          echo "content cache key: ${KEY}"
+      - name: Probe green marker cache (lookup-only)
+        id: probe
+        shell: bash
+        run: |
+          # actions/cache sub-actions (restore/save) fail at "Set up job" for PR/dispatch
+          # events in reusable workflow context (broken ~2026-06-26 22:30 UTC).  Removed
+          # both sub-action steps; always treat as cache MISS → run the full gate.
+          echo "cache-hit=false" >> "$GITHUB_OUTPUT"
+      - name: Report decision
+        shell: bash
+        run: |
+          if [ "${{ steps.probe.outputs.cache-hit }}" = "true" ]; then
+            echo "✅ content-sentinel HIT — quality-gates-v2 already green for this tree; legs short-circuit to GREEN."
+          else
+            echo "content-sentinel MISS — running the full gate."
+          fi
+
+  # ── MATRIX SLICE LEGS (parallel) ────────────────────────────────────────────
+  # Each leg does the cheap shared setup (~50s, runs in parallel across legs) +
+  # its ONE slice of the gate. tests is the long pole; typecheck + lint-codex
+  # finish well inside it. A metadata-only commit short-circuits every leg to GREEN.
+  # A content-sentinel HIT (content-gate) skips every leg's gate work too.
+  qg-slices:
+    name: QG slice
+    needs: content-gate
+    # SPEND: on a content-sentinel HIT, SKIP the slice jobs entirely (no runners allocated) —
+    # this exact tree already passed v2, so re-running the gate work is wasted. Saves ~3
+    # runner-starts per redundant v2 (push+PR×main/staging fire v2 up to 4× per change, most
+    # byte-identical). The aggregate + ci-status steps below treat the resulting 'skipped' as
+    # GREEN when cache_hit=true. A MISS (real change) runs every slice as before. metadata_only
+    # is handled per-slice (step-level) on a miss, so it still runs the cheap fast-path.
+    if: needs.content-gate.outputs.cache_hit != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        slice: [tests, typecheck, lint-codex]
+    runs-on: ubuntu-latest
+    # 135m covers the slowest repo's tests leg + margin; the non-tests legs finish
+    # far sooner. A hung/runaway leg is killed cleanly (failure()||cancelled() notify fires).
+    timeout-minutes: 135
+    env:
+      CLOUD_MOCK_MODE: "true"
+      CLOUD_PROVIDER: "local"
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'test-project' }}
+      # Short-circuit flag — when the content-sentinel hit, the gate steps below skip.
+      QG_CONTENT_HIT: ${{ needs.content-gate.outputs.cache_hit }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
+          fetch-depth: 2
+
+      - name: Detect metadata-only commit (fast-path)
+        # A bot metadata commit whose entire diff is pyproject.toml / uv.lock needs NO gate work:
+        #   chore(release): bump version to X   (semver-agent — version line)
+        #   chore(deps): pin X to Y             (dependency-update minor/patch — dep pin line)
+        # Short-circuit every leg to GREEN in seconds (the commit only needs a check to ride the
+        # staging→main promotion PR whose HEAD is this commit). SSOT: plan
+        # semver_version_bump_skip_ci_promotion_block.
+        id: vcheck
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+            echo "base commit unavailable (shallow / multi-commit push) → full QG"
+            exit 0
+          fi
+          MSG="$(git log -1 --format=%s HEAD)"
+          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
+          META=false
+          case "${MSG}" in
+            "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
+          esac
+          EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
+          if [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; then
+            echo "metadata_only=true" >> "$GITHUB_OUTPUT"
+            echo "✓ metadata-only commit — skipping heavy gates, reporting GREEN: ${MSG}"
+          else
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+            echo "not metadata-only (msg='${MSG}', changed='$(printf '%s' "${CHANGED:-none}" | tr '\n' ' ')') → full QG"
+          fi
+
+      - name: Set up Python
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install uv
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        shell: bash
+        # Pinned for uv.lock determinism — an unpinned uv reformats the lock (revision bump)
+        # even with identical deps, so CI's `uv lock --check` would false-fail.
+        # SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+        run: pip install "uv==0.10.8"
+
+      - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
+        id: tools-cache
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/act-tools
+          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
+
+      - name: Install ripgrep
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          RG_VER="14.1.1"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+            | tar -xz --strip-components=1 -C ~/.local/act-tools/bin "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
+
+      - name: Install shellcheck
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          SC_VER="v0.10.0"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
+            | tar -xJ --strip-components=1 -C ~/.local/act-tools/bin "shellcheck-${SC_VER}/shellcheck"
+
+      - name: Install bats-core
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          /tmp/bats-core/install.sh ~/.local/act-tools
+
+      - name: Install actionlint
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          AL_VER="1.7.4"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
+            | tar -xz -C ~/.local/act-tools/bin actionlint
+
+      - name: Add tools to PATH
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        shell: bash
+        run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Clone unified-trading-pm and dependencies
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+          # The PR's TARGET tier (staging/main) — empty on a push event. A consumer PR into
+          # `staging` must resolve its deps from the deps' `staging` (same promotion tier).
+          DEP_BASE_REF: ${{ github.base_ref }}
+          DEP_REPOS: ${{ inputs.dep_repos }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+        run: |
+          BRANCH="${DEP_BRANCH:-main}"
+          BASE_REF="${DEP_BASE_REF:-}"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+
+          # Version-aware clone: read pyproject.toml constraint for each dep,
+          # find the latest git tag matching the constraint, and clone at that tag.
+          get_version_tag() {
+            local name="$1"
+            local constraint
+            constraint=$(python3 -c "
+          import re, sys
+          try:
+              with open('pyproject.toml') as f:
+                  content = f.read()
+              m = re.search(r'\"${name}([^\"]+)\"', content.replace('$name', '${name}'))
+              if m:
+                  spec = m.group(1)
+                  ub = re.search(r'<(\d+\.\d+\.\d+)', spec)
+                  if ub:
+                      print(ub.group(1))
+          except Exception:
+              pass
+          " 2>/dev/null || echo "")
+
+            if [ -n "$constraint" ]; then
+              local tag
+              tag=$(git ls-remote --tags "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" 2>/dev/null \
+                | grep -oE 'refs/tags/v?[0-9]+\.[0-9]+\.[0-9]+$' \
+                | sed 's|refs/tags/||' \
+                | sort -V \
+                | python3 -c "
+          import sys
+          # stdlib tuple-compare (NOT packaging.version) — the upstream tag list is pre-filtered
+          # to plain 3-part semver 'v?X.Y.Z' (grep on refs/tags above) and the constraint is also
+          # X.Y.Z, so a numeric-tuple comparison is PROVABLY identical to packaging.version.Version
+          # on this input domain (verified: 0 mismatches). Using stdlib removes the silent-degradation
+          # bug where 'from packaging.version import Version' failed before 'uv sync' was run (packaging
+          # not yet installed) → the whole block errored → empty tag → wrong fallback clone (phantom
+          # version). SSOT: ci_local_qg_parity_2026_06_08.md + staging_clean_start_and_stale_pr_hygiene.
+          def _v(s):
+              return tuple(int(x) for x in s.split('.'))
+          upper = _v('${constraint}')
+          tags = []
+          for line in sys.stdin:
+              t = line.strip()
+              try:
+                  v = _v(t.lstrip('v'))
+                  if v < upper:
+                      tags.append((v, t))
+              except Exception:
+                  pass
+          if tags:
+              tags.sort(key=lambda x: x[0])
+              print(tags[-1][1])
+          " 2>/dev/null || echo "")
+              if [ -n "$tag" ]; then
+                echo "$tag"
+                return
+              fi
+            fi
+            echo ""
+          }
+
+          clone_repo() {
+            local name="$1"
+            # CONTENT-FIRST (operator decision 2026-06-11): clone the dep's CURRENT integration-branch
+            # (live-defi-rollout) HEAD — that is the SSOT content local QG resolves against (editable
+            # siblings live on LDR). A version-aware TAG is STALE during a promotion window (the dep's
+            # source/LDR is ahead of its latest tag), so CI's basedpyright/tests saw stale deps = the
+            # recurring "dep-resolution skew" (PM's count inflated past the ceiling even though local is
+            # 1454; UTL's tradfi source-priority test resolving an old UAC). Range/breaking is enforced
+            # content-based downstream (detect_breaking_change AST differ) + versions bump idempotently
+            # at staging, so current content is what CI should typecheck/test against — matching local.
+            # The version-aware tag + branch/base/manifest/main chain remain as fallbacks if LDR is absent.
+            # RETRY the primary LDR clone before falling back (2026-06-30, cicd_mvp_ldr_to_main_pipeline):
+            # a TRANSIENT failure (network / GH App-token rate-limit) must NOT drop straight to the
+            # version-aware TAG below — that tag is STALE during a promotion window and is the documented
+            # cause of the recurring dep-resolution-skew flake (e.g. UTL's tradfi source-priority test
+            # resolving an OLD UAC → false pytest FAILING that re-stales tier-0 ci_status overnight). 3
+            # attempts with backoff; clean the partial dir between tries so the next `git clone` can't
+            # collide on an existing destination.
+            for _ldr_attempt in 1 2 3; do
+              if git clone -b live-defi-rollout --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null; then
+                echo "Cloning $name at live-defi-rollout HEAD (content-current — matches local editable siblings)"
+                return
+              fi
+              echo "WARN: live-defi-rollout clone attempt ${_ldr_attempt}/3 failed for $name"
+              rm -rf "../${name}" 2>/dev/null || true
+              [ "$_ldr_attempt" -lt 3 ] && sleep $(( _ldr_attempt * 3 ))
+            done
+            echo "WARN: live-defi-rollout clone failed for $name after 3 attempts — falling back to version-aware tag/branch chain (may be stale during a promotion window)"
+            local tag
+            tag=$(get_version_tag "$name")
+            if [ -n "$tag" ]; then
+              echo "Cloning $name at tag $tag (version-aware)"
+              git clone -b "$tag" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: Tag clone failed for $name@$tag — falling back to branch clone"
+            fi
+            echo "Cloning $name at branch $BRANCH (fallback)"
+            git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+            if [ -n "$BASE_REF" ] && [ "$BASE_REF" != "$BRANCH" ]; then
+              echo "WARN: Branch '$BRANCH' clone failed for $name — trying PR base tier '$BASE_REF' (same-tier dep resolution)"
+              git clone -b "$BASE_REF" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: base-tier '$BASE_REF' clone failed for $name — trying manifest released version"
+            fi
+            local mf mver
+            mf="../unified-trading-pm/workspace-manifest.json"; [ -f "$mf" ] || mf="workspace-manifest.json"
+            mver=$(python3 -c "import json,sys; print(json.load(open('$mf')).get('versions',{}).get('$name','') or '')" 2>/dev/null || echo "")
+            if [ -n "$mver" ]; then
+              echo "WARN: Branch '$BRANCH' clone failed for $name — trying manifest released version v$mver (explicit)"
+              git clone -b "v$mver" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: manifest version tag v$mver clone failed for $name — trying main"
+            else
+              echo "WARN: Branch '$BRANCH' clone failed for $name — no manifest version; trying main"
+            fi
+            git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+            echo "WARN: 'main' clone failed for $name (repo may have no main branch) — falling back to its default branch"
+            git clone "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"
+          }
+          if [ "${GITHUB_REPOSITORY}" = "${OWNER}/unified-trading-pm" ]; then
+            echo "Running in unified-trading-pm — skipping self-clone (checkout already placed it)"
+          else
+            clone_repo unified-trading-pm
+          fi
+          assert_dep_in_range() {
+            # Defense-in-depth: after cloning a dep, FAIL LOUD if the cloned version does NOT
+            # satisfy this repo's full constraint RANGE (>=floor,<upper). STDLIB ONLY (runs
+            # before uv sync, so packaging is not installed — tuple compare).
+            local name="$1"
+            [ -f "../${name}/pyproject.toml" ] || return 0
+            local verdict
+            verdict=$(DEP_NAME="$name" DEP_PYPROJECT="../${name}/pyproject.toml" python3 -c "
+          import os, re
+          def _v(s):
+              return tuple(int(re.match(r'[0-9]+', p).group()) for p in s.split('.') if re.match(r'[0-9]+', p))
+          def _lt(a, b):
+              ta, tb = _v(a), _v(b); n = max(len(ta), len(tb))
+              return ta + (0,)*(n-len(ta)) < tb + (0,)*(n-len(tb))
+          name = os.environ['DEP_NAME']
+          consumer = open('pyproject.toml').read()
+          m = re.search(r'\"' + re.escape(name) + r'([^\"]*)\"', consumer)
+          if not m:
+              print('OK no-constraint'); raise SystemExit
+          spec = m.group(1)
+          lb = re.search(r'>=\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
+          ub = re.search(r'<\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
+          dm = re.search(r'^version\s*=\s*\"([^\"]+)\"', open(os.environ['DEP_PYPROJECT']).read(), re.M)
+          if not dm:
+              print('OK no-dep-version'); raise SystemExit
+          ver = dm.group(1)
+          if lb and _lt(ver, lb.group(1)):
+              print(f'FAIL resolved {ver} < floor {lb.group(1)} (pin {spec.strip()})'); raise SystemExit
+          if ub and not _lt(ver, ub.group(1)):
+              print(f'FAIL resolved {ver} >= upper {ub.group(1)} (pin {spec.strip()})'); raise SystemExit
+          print(f'OK {ver} satisfies {spec.strip()}')
+          " 2>/dev/null || echo "OK parse-error")
+            case "$verdict" in
+              FAIL*)
+                # NON-BLOCKING (operator decision 2026-06-11): a version-aware clone landing OUTSIDE the
+                # pinned range is NOT a build failure. Typecheck needs the dep's CONTENT (the cloned HEAD),
+                # not an exact pinned version — clone_repo already fell back to the branch/main HEAD, so the
+                # real code is present and is installed below. Range + breaking are enforced CONTENT-based
+                # (detect_breaking_change AST public-surface differ) and versions are bumped idempotently by
+                # semver at the staging layer, so a version-only pyproject diff is NOT a content difference
+                # and must not red the fleet during a promotion window (the recurring "dep-resolution skew"
+                # that false-failed PM/UTL/e2e mid-promotion). WARN (audited in the run) + continue. Versions
+                # still resolved above (clone is version-aware for tag preference + image naming) — only the
+                # range GATE is downgraded. SSOT: ci-cd-flow.md content-sync model + check_dep_content_sync +
+                # quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md.
+                echo "::warning::dependency ${name}: ${verdict#FAIL } — clone resolved outside the pinned range (NON-BLOCKING; typecheck uses the cloned HEAD content; range enforced content-based downstream)"
+                ;;
+              *) echo "dep ${name}: ${verdict}" ;;
+            esac
+          }
+          for repo in $DEP_REPOS; do
+            # A dep_repos entry naming the calling repo itself would target ../<self> —
+            # which IS $GITHUB_WORKSPACE. The clone fails on the non-empty dir and the
+            # retry's `rm -rf` deletes the job's own checkout (fatal: unable to get
+            # current working directory). The checkout already placed self — skip it.
+            if [ "$repo" = "${GITHUB_REPOSITORY#*/}" ]; then
+              echo "Skipping self-clone of $repo (already checked out as the workspace)"
+              continue
+            fi
+            clone_repo "$repo"
+            assert_dep_in_range "$repo"
+          done
+
+      - name: Install dependencies
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        shell: bash
+        env:
+          DEP_REPOS: ${{ inputs.dep_repos }}
+        run: |
+          uv venv .venv
+          # 1.5b frozen-lock: install the COMMITTED lock EXACTLY (no re-resolve) — local==CI parity.
+          # --frozen NOT --locked: --locked hard-fails on the semver-agent CI-side `version =` bump.
+          uv sync --frozen
+          # Install test-only sibling deps that were cloned (DEP_REPOS) but are NOT in
+          # [project.dependencies], so `uv sync` skips them — e.g. deployment-api for
+          # deployment-service, or UTL/UAC for unified-trading-pm (declares no UTL/UAC project dep,
+          # so this loop is its ONLY install path). The `uv pip show` guard makes this a strict NO-OP
+          # for every normal pyproject dep; it only installs a genuinely-missing cloned peer.
+          #
+          # `--python .venv/bin/python` is MANDATORY (2026-06-17 fix for the flaky basedpyright
+          # Unknown-type CASCADE that reds the typecheck slice fleet-wide): a bare `uv pip install -e`
+          # does NOT reliably target `.venv` — on a runner with a pyenv/global interpreter, uv resolves
+          # to the GLOBAL env, so the editable sibling dep lands OUTSIDE `.venv`. basedpyright (which
+          # reads `venv=".venv"`) then sees the workspace lib UNRESOLVED → every type degrades to
+          # Unknown/Any → ~thousands of spurious reportUnknown*/reportAny errors → typecheck red.
+          # Flaky (green only when uv happened to pick `.venv`). Forcing the interpreter makes the
+          # install deterministic into `.venv`. Mirrors the LOCAL fix at base-service.sh:316-327.
+          # SSOT: plans/active/ci_local_qg_parity_2026_06_08.md + promotion_queue_conflict_wall_pileup_2026_06_17.md.
+          _qg_venv_py=".venv/bin/python"; [ -x "$_qg_venv_py" ] || _qg_venv_py="$(command -v python3)"
+          for dep in $DEP_REPOS; do
+            if [ -d "../$dep" ] && ! uv pip show "$dep" >/dev/null 2>&1; then
+              echo "Installing test-only sibling dep not in pyproject: ../$dep (into $_qg_venv_py)"
+              uv pip install -e "../$dep" --python "$_qg_venv_py" || echo "WARN: editable install of ../$dep failed (non-fatal)"
+            fi
+          done
+          # Visibility (no more SILENT Unknown-cascade): warn loudly if a cloned sibling dep still
+          # isn't resolved in .venv (the cascade root) — surfaces it above any downstream reportUnknown
+          # noise. WARN not error: the `--python` targeting above is the deterministic cure; a hard exit
+          # here would risk a fleet-wide false-fail on a repo/package name-normalisation edge.
+          for dep in $DEP_REPOS; do
+            [ -d "../$dep" ] || continue
+            uv pip show "$dep" >/dev/null 2>&1 || echo "::warning::workspace dep '$dep' not resolved in .venv after install — basedpyright may Unknown-cascade (check .venv targeting, base-service.sh:316-327)."
+          done
+
+      - name: Run quality gates (slice ${{ matrix.slice }})
+        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        shell: bash
+        env:
+          QG_SLICE: ${{ matrix.slice }}
+        run: |
+          export PATH="$(pwd)/.venv/bin:$PATH"
+          set -o pipefail
+          # cloud-providers.yaml SSOT for tests: PM (always cloned to ../unified-trading-pm)
+          # ships a HARDCODED test SSOT so EVERY repo's tests resolve buckets without a per-repo
+          # fixture. Only set when present + unset.
+          if [ -z "${UNIFIED_TRADING_CLOUD_PROVIDERS_YAML:-}" ]; then
+            _cp_yaml="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/unified-trading-pm/scripts/quality-gates-base/ci-test-cloud-providers.yaml"
+            [ -f "$_cp_yaml" ] && export UNIFIED_TRADING_CLOUD_PROVIDERS_YAML="$_cp_yaml" \
+              && echo "ci: UNIFIED_TRADING_CLOUD_PROVIDERS_YAML -> $_cp_yaml (PM CI test SSOT)"
+          fi
+          echo "── QG_SLICE=${QG_SLICE} ──"
+          bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
+
+      - name: Upload coverage.xml for codebase-health (tests slice; best-effort)
+        # The aggregation job parses this into the deployment-ui Repo-CI Cov% column. ALWAYS
+        # best-effort — never fail/red the slice (continue-on-error + if-no-files-found: ignore).
+        if: always() && matrix.slice == 'tests'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebase-health-coverage
+          path: coverage.xml
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Create slice-failed marker (best-effort, non-fatal)
+        # Allows the agg-job to surface the specific failing step (pytest / basedpyright / ruff)
+        # in qg_red_reason rather than the generic "qg". continue-on-error keeps it non-fatal.
+        if: failure()
+        continue-on-error: true
+        shell: bash
+        run: echo "${{ matrix.slice }} failed" > /tmp/qg-slice-failed.txt
+
+      - name: Upload slice-failed marker (best-effort, non-fatal)
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: qg-slice-failed-${{ matrix.slice }}
+          path: /tmp/qg-slice-failed.txt
+          retention-days: 1
+
+  # ── AGGREGATION JOB — the REQUIRED check context ────────────────────────────
+  # Job key `quality-gates-v2` ⟹ context `Quality Gates (<repo>) / quality-gates-v2`
+  # (branch-protection required check). Succeeds iff EVERY matrix leg passed; carries
+  # the metadata_only output (re-detected here so the caller can skip the cloud-build
+  # dispatch). Cheap: a depth-2 checkout + the result roll-up, no gate work.
+  quality-gates-v2:
+    # CRITICAL: the `name:` MUST stay literally `quality-gates-v2` (NOT a friendly label
+    # like "aggregate") — the required check context is `<caller job name> / <THIS job's
+    # display name>` = `Quality Gates (<repo>) / quality-gates-v2`. Setting name: aggregate
+    # would emit `… / aggregate` and the required context would NEVER report → every PR
+    # permanently BLOCKED. Verified live: the display name is what the check context uses.
+    name: quality-gates-v2
+    needs: [content-gate, qg-slices]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect metadata-only commit (mirror of slice fast-path, for caller output)
+        id: vcheck
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          MSG="$(git log -1 --format=%s HEAD)"
+          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
+          META=false
+          case "${MSG}" in
+            "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
+          esac
+          EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
+          if [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; then
+            echo "metadata_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Aggregate slice results (gate the required context)
+        shell: bash
+        env:
+          SLICES_RESULT: ${{ needs.qg-slices.result }}
+          CACHE_HIT: ${{ needs.content-gate.outputs.cache_hit }}
+        run: |
+          # needs.<matrix-job>.result is the ROLL-UP of all legs: 'success' only if EVERY
+          # leg succeeded; 'failure'/'cancelled' if any leg failed/was cancelled (we set
+          # fail-fast: false so legs run independently, but the roll-up still reds on any fail).
+          echo "qg-slices roll-up result: ${SLICES_RESULT} (content cache_hit=${CACHE_HIT})"
+          # CONTENT-SENTINEL HIT: the slice jobs are SKIPPED entirely (no runners spun) because
+          # this exact tree-content already passed a full v2 — so SLICES_RESULT='skipped' here is
+          # GREEN, certified by the cache marker (only ever written on a real full-gate pass).
+          # This is what lets the hit save 3 runner-starts/run instead of spin-and-skip.
+          if [ "${CACHE_HIT}" = "true" ]; then
+            echo "✅ content-sentinel HIT — slices skipped; this tree already passed v2. GREEN."
+            exit 0
+          fi
+          if [ "${SLICES_RESULT}" = "success" ]; then
+            echo "✅ All quality-gates-v2 slices passed."
+            exit 0
+          fi
+          echo "::error::quality-gates-v2 FAILED — one or more slices (tests/typecheck/lint-codex) did not pass (roll-up=${SLICES_RESULT})."
+          exit 1
+
+      # ── Write the green marker so the NEXT byte-identical run (a push/PR re-fire
+      # or a staging/main promotion of this same tree) short-circuits to GREEN.
+      # ONLY on a real gate-run green (a MISS that actually ran the slices + passed,
+      # and not a metadata-only fast-path) — never re-save on a content HIT (the
+      # marker already exists) so the marker always certifies a real full-gate pass.
+      - name: Create green marker file
+        if:
+          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
+          steps.vcheck.outputs.metadata_only != 'true'
+        shell: bash
+        run: |
+          git rev-parse HEAD^{tree} > .qg_ci_green_marker
+          echo "marker: $(cat .qg_ci_green_marker)"
+      - name: Save green marker cache
+        # actions/cache/save sub-action removed (broken for PR/dispatch events in reusable
+        # workflow context ~2026-06-26 22:30 UTC).  Cache saving disabled; gate always runs
+        # the full test matrix (no ghost-cache skip).  Re-enable once GHA sub-action is fixed.
+        if: false
+        shell: bash
+        run: echo "cache save disabled"
+
+      # ── CODEBASE-HEALTH (Repo-CI Cov% / QG-reason / File-debt columns) ───────────
+      # Compute per-repo metrics on the agg-job checkout + the tests-slice coverage artifact,
+      # then the dispatch step below forwards them to ci-status-update (manifest + Firestore
+      # ci_status/{repo}.codebase_health), which deployment-api reads. BOTH steps are
+      # continue-on-error → a hiccup can NEVER red the required quality-gates-v2 context.
+      - name: Download coverage.xml for codebase-health (best-effort)
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: codebase-health-coverage
+      - name: Download slice-failed markers (best-effort, non-fatal)
+        # Each failing slice uploads qg-slice-failed-<slice>; pattern-download lands them under
+        # /tmp/qg-slice-failed/qg-slice-failed-<slice>/ so the compute step checks isdir().
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: qg-slice-failed-*
+          path: /tmp/qg-slice-failed
+      - name: Compute codebase-health metrics (best-effort, non-fatal)
+        id: codebase_health
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          SLICES_RESULT: ${{ needs.qg-slices.result }}
+        run: |
+          # file-debt: count source .py by line (mirror the gate's >900 hard / 700-899 warn
+          # zones + dir exclusions). coverage: parse the tests-slice coverage.xml if present.
+          # reason: null when green; on failure try per-slice markers first (pytest/basedpyright/ruff),
+          # fall back to generic "qg" when markers are absent (cancel/timeout/artifact error).
+          python3 - <<'PYEOF' > .qg_codebase_health.json || echo '{}' > .qg_codebase_health.json
+          import json, os, re
+          _SKIP = {".venv", ".venv-workspace", "build", ".git", "tests", "scripts", "node_modules", "dist"}
+          large = warn = 0
+          for root, dirs, files in os.walk("."):
+              dirs[:] = [d for d in dirs if d not in _SKIP and not d.endswith(".egg-info")]
+              if "site-packages" in root:
+                  continue
+              for f in files:
+                  if not f.endswith(".py"):
+                      continue
+                  try:
+                      n = open(os.path.join(root, f), "rb").read().count(b"\n")
+                  except OSError:
+                      continue
+                  if n > 900:
+                      large += 1
+                  elif n >= 700:
+                      warn += 1
+          cov = None
+          if os.path.exists("coverage.xml"):
+              try:
+                  m = re.search(r'line-rate="([0-9.]+)"', open("coverage.xml", encoding="utf-8").read(4000))
+                  if m:
+                      cov = round(float(m.group(1)) * 100, 2)
+              except (OSError, ValueError):
+                  pass
+          # green = slices passed ('success') OR content-cache hit ('skipped', tree already green);
+          # on failure try per-slice markers to surface the exact step, fall back to generic "qg".
+          _SLICE_REASON = {"tests": "pytest", "typecheck": "basedpyright", "lint-codex": "ruff"}
+          reason = None
+          _base = "/tmp/qg-slice-failed"
+          if os.path.isdir(_base):
+              for _slice in ("tests", "typecheck", "lint-codex"):
+                  if os.path.isdir(os.path.join(_base, f"qg-slice-failed-{_slice}")):
+                      reason = _SLICE_REASON[_slice]
+                      break
+          if reason is None and os.environ.get("SLICES_RESULT") in ("failure", "cancelled", "timed_out"):
+              reason = "qg"
+          print(json.dumps({"coverage_pct": cov, "qg_red_reason": reason, "large_file_count": large, "warn_file_count": warn}))
+          PYEOF
+          echo "codebase-health: $(cat .qg_codebase_health.json)"
+          CH_B64=$(base64 -w0 < .qg_codebase_health.json 2>/dev/null || base64 < .qg_codebase_health.json | tr -d '\n')
+          echo "ch_b64=${CH_B64}" >> "$GITHUB_OUTPUT"
+
+      - name: Record CI status (branch-aware lifecycle)
+        if: always()
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE_REF: ${{ github.base_ref }}
+          SLICES_RESULT: ${{ needs.qg-slices.result }}
+          CACHE_HIT: ${{ needs.content-gate.outputs.cache_hit }}
+          CH_B64: ${{ steps.codebase_health.outputs.ch_b64 }}
+        run: |
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
+          # Branch→status mapping mirrors the ci_status lifecycle in ci-status-update.yml:
+          #   main → MAIN_GREEN ; staging → STAGING_GREEN ; other → FEATURE_GREEN ; any fail → FAILING
+          # A1 (ldr_trunk_promotion_decoupling): a green PR *into* staging INHERITS STAGING_GREEN
+          # — the promote PR's v2 IS the staging gate (same tree, base_ref=staging dep resolution),
+          # so STAGING_GREEN no longer needs the redundant push:[staging] run (which A3 will drop).
+          # Only staging is inherited here (NOT main) — MAIN_GREEN stays a real on-main push, so we
+          # never prematurely mark a repo as on-main from an unmerged staging→main PR.
+          EFFECTIVE_BRANCH="$TRIGGER_BRANCH"
+          [ "$BASE_REF" = "staging" ] && EFFECTIVE_BRANCH="staging"
+          # A content-sentinel HIT skips the slices (SLICES_RESULT='skipped') but the tree is
+          # GREEN (already passed v2). Treat success OR cache-hit as passing for ci_status.
+          PASSED=false
+          { [ "${SLICES_RESULT}" = "success" ] || [ "${CACHE_HIT}" = "true" ]; } && PASSED=true
+          if [ "${PASSED}" != "true" ]; then
+            STATUS="FAILING"
+          elif [ "$EFFECTIVE_BRANCH" = "main" ]; then
+            STATUS="MAIN_GREEN"
+          elif [ "$EFFECTIVE_BRANCH" = "staging" ]; then
+            STATUS="STAGING_GREEN"
+          else
+            STATUS="FEATURE_GREEN"
+          fi
+          echo "Recording ci_status=${STATUS} for ${GITHUB_REPOSITORY#*/} (trigger=${TRIGGER_BRANCH} base=${BASE_REF:-none} effective=${EFFECTIVE_BRANCH})"
+          curl -s -X POST \
+            -H "Authorization: token ${GH_PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\", \"codebase_health_b64\": \"${CH_B64:-}\"}}"
+
+  # ── SUPERSEDE CHECK — is this run's verdict still authoritative? ─────────────
+  # The caller template sets `concurrency.cancel-in-progress: github.event_name == 'push'`,
+  # so a newer push KILLS the in-flight run on the same ref. The killed run's roll-up reads
+  # 'cancelled' even when every slice had already PASSED — measured 2026-07-16 on
+  # instruments-service run 29488628505: the tests slice's own "Run quality gates" step
+  # succeeded at 09:54:39, the job was cancelled 7s later by the 09:54:44 push, and the
+  # superseding run 29488897064 then went green. That paged CRITICAL twice (the QG notify
+  # below + a ci_status MAIN_GREEN→FAILING regression) for a tree that was never broken.
+  #
+  # A superseded run's verdict is NOT authoritative: the newest run on the tip SHA owns it
+  # and pages on its own if genuinely red, so nothing is lost by staying quiet here. A run
+  # whose SHA is STILL the ref tip was cancelled for a REAL reason (timeout-minutes, OOM,
+  # manual cancel) and MUST still page — that is the distinction this job draws.
+  #
+  # Gated to the red path, so a green run never pays a runner start for it.
+  supersede-check:
+    name: supersede check
+    needs: [content-gate, qg-slices]
+    if: |
+      always() &&
+      needs.content-gate.outputs.cache_hit != 'true' &&
+      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      superseded: ${{ steps.check.outputs.superseded }}
+    steps:
+      - name: Compare this run's SHA against the current ref tip
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          # cancel-in-progress is push-only, so a PR / workflow_dispatch cancellation is
+          # always real — never suppress those.
+          if [ "${GITHUB_EVENT_NAME}" != "push" ]; then
+            echo "event=${GITHUB_EVENT_NAME} (not push) — cancellation is real, not a supersede."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          TIP="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_REF_NAME}" --jq .sha 2>/dev/null || true)"
+          # FAIL SAFE: if the tip cannot be resolved (rate limit, transient API error) we
+          # cannot PROVE supersession — page. A noisy page beats a silently swallowed red.
+          if [ -z "${TIP}" ]; then
+            echo "::warning::could not resolve tip of ${GITHUB_REF_NAME} — treating run as authoritative (will page)."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ "${TIP}" != "${GITHUB_SHA}" ]; then
+            echo "SUPERSEDED — ${GITHUB_SHA} is no longer the tip of ${GITHUB_REF_NAME} (tip=${TIP})."
+            echo "The newer run on ${TIP} owns the verdict and pages if it is genuinely red. Staying quiet."
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "AUTHORITATIVE — ${GITHUB_SHA} is still the tip of ${GITHUB_REF_NAME}."
+            echo "This is a REAL failure/cancel (timeout-minutes, OOM, or manual cancel). Paging."
+            echo "superseded=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── SLACK NOTIFY — QG slice failure / cancellation ───────────────────────────
+  # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
+  # gains content dedup, alert ledger lifecycle, and re-nag eligibility.
+  # Replaces the per-leg inline curl that fired once per failing slice per run.
+  # dedup_key = qg-fail:{repo}:{ref_name} (ci_failures_channel_cleanup WS-3, 2026-07-13):
+  # keyed by REPO+BRANCH so a still-red branch pages once per red-period, not per failing
+  # push; a genuinely new failure after cooldown_min re-alerts. See the `with:` block below
+  # + codex/04-architecture/ci-alerting.md for the full dedup/cooldown contract.
+  notify-qg-fail:
+    name: Slack CRITICAL — QG Slice Failed
+    needs: [content-gate, qg-slices, supersede-check]
+    if: |
+      always() &&
+      needs.content-gate.outputs.cache_hit != 'true' &&
+      (needs.qg-slices.result == 'failure' || needs.qg-slices.result == 'cancelled') &&
+      needs.supersede-check.outputs.superseded != 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "${{ needs.qg-slices.result == 'cancelled' && ':warning: *QG slice CANCELLED / TIMED-OUT* (timeout-minutes hit,
+        OOM, or cancel)' || ':x: *QG slice(s) FAILED*' }} | *${{ github.event.repository.name }}* | ${{
+        github.event_name == 'pull_request' && format('PR #{0} `{1}` → `{2}`', github.event.pull_request.number,
+        github.head_ref, github.base_ref) || format('push to `{0}`', github.ref_name) }} | <${{ github.server_url }}/${{
+        github.repository }}/actions/runs/${{ github.run_id }}|sha `${{ github.sha }}`>"
+      severity: CRITICAL
+      workflow_name: python-quality-gates-v2
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # ci_failures_channel_cleanup WS-3 (D2): dedup by REPO+BRANCH, not by SHA. The SHA made
+      # every failing commit a unique key, so a still-red branch paged on EVERY failing push
+      # (105/wk). Keyed by ref_name, a red branch pages once per red-period; a genuinely new
+      # failure after the cooldown still re-alerts. ci-status-update stays the went-red SSOT.
+      dedup_key: "qg-fail:${{ github.event.repository.name }}:${{ github.ref_name }}"
+      cooldown_min: 120
+    secrets: inherit

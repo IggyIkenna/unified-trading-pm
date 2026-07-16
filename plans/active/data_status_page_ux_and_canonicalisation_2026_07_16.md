@@ -565,14 +565,31 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
 - **Acceptance:** an MVP-only toggle + per-row is_mvp badge on the instrument list; "Download CSV" == the on-screen
   filtered (search+mvp) view; a per-AG explorer lists instruments with id-substring search + MVP filter + CSV. pw:L2.
 
-- [ ] [BACKEND] P1. _(phase 1)_ Add `mvp_only` + a per-row `is_mvp` tag to `list_instruments_for_shard` (call UAC
-      `is_mvp(...)` mirroring `filter_to_mvp` — read `base_asset`/`league_id`/`market_group`/`source`), and add
-      `search` + `mvp_only` to `build_csv_export` so CSV == filtered list. Thread the params through the routes
-      (`_query_meta.py`, `_downloads.py`).
-- [ ] [BACKEND] P2. _(phase 1)_ New `GET /data-status/catalogue` (+ `.csv` twin) parameterised by pinned axes + search +
-      mvp_only → de-duped instrument list with `is_mvp` + `capture_status`. Build on `read_availability_index` / one
-      bounded single-day `_shard_prefix` walk (single-walk discipline). Label "captured instruments
-      (availability-derived)".
+- [x] [BACKEND] P1. ✅ _(phase 1)_ Added `mvp_only` + a per-row `is_mvp` tag to `list_instruments_for_shard` (calls UAC
+      `is_mvp(...)`, mirroring `filter_to_mvp`), and `search` + `mvp_only` to `build_csv_export` so CSV == filtered list
+      (both read the SAME cached `_list_instruments_full` tag — structurally cannot drift). Threaded through
+      `_query_meta.py` (`/instruments-for-shard`) + `_downloads.py` (`/download-csv`). TRACE-FIRST finding: confirmed
+      against the LIVE availability_index.parquet schema (cefi/tradfi/prediction) that `base_asset`/`market_group` are
+      NOT real manifest columns (42/41 cols, neither present) — `filter_to_mvp`'s read of those has been a silent no-op
+      in production wherever the MVP rule demands them (CeFi base_ccys / TradFi underliers / Prediction market_groups
+      are all non-empty). Not fabricated here: `base_asset` is sourced from the instruments-service bundle parquet's own
+      column (genuine, varies per-instrument) when available; `league_id`/`source` from the existing manifest join (real
+      v9 columns); `market_group` stays honestly `None` (no real source at this leaf). Pre-existing gap, out of this
+      unit's scope — flagged for follow-up. — deployment-api@abcce0b + Evidence: `TestMvpOnlyAndIsMvpTag` (4 tests:
+      is_mvp tag present, base_asset→base_ccy plumbing from bundle parquet, mvp_only narrows total_count, CSV/list
+      row-count parity) in `test_data_status_drilldown.py`; full `quality-gates.sh` green (4561 passed; 1 unrelated
+      pre-existing failure in `test_route_deployments_inventory_aws.py::test_inventory_route_includes_aws_items`, zero
+      import/code overlap).
+- [x] [BACKEND] P2. ✅ _(phase 1)_ New `GET /data-status/catalogue` (+ `/download-catalogue-csv` twin) in a new
+      `_catalogue.py` submodule, parameterised by pinned `(service, asset_group)` + optional venue/instrument_type/
+      data_type + search + mvp_only → de-duped (latest-written_at-wins) instrument list with `is_mvp` +
+      `capture_status`. Built ONLY on `_read_availability_index` (single-walk discipline — no whole-corpus GCS walk).
+      Labeled `"captured instruments (availability-derived)"` in every response. Refactored
+      `_coverage_scope.py::filter_to_mvp` to extract a shared `is_mvp_for_manifest_row` predicate (pure refactor, no
+      behaviour change) so the coverage grid's `scope=mvp` toggle and this new explorer can't drift on axis sourcing. —
+      deployment-api@1e3c7b4 + Evidence: `test_route_data_status_catalogue.py` (6 tests: de-dupe, mvp_only filter,
+      search substring, venue narrow, manifest-read-failure→500, CSV/JSON row-count parity); full `quality-gates.sh`
+      green (same run as P1, no incremental failures).
 - [ ] [UI] P2. _(phase 1)_ `InstrumentsModalStandard` (`DataStatusDrilldown.tsx:481`) — add an "MVP only" toggle (mirror
       `VenueCoverageTable` pills) + MVP badge per row + thread `mvp_only`/`search` into the CSV URL. New "Catalogue
       Explorer" panel driven by `/data-status/catalogue`. `[UI]` + pw:L2.

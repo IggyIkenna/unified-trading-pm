@@ -1,0 +1,191 @@
+# digest-drift-sweep.yml — periodic sweep that refreshes stale BASE_IMAGE_DIGEST pins fleet-wide.
+#
+# Runs every 6 hours (and on manual dispatch). For each image-building service repo, fetches the
+# repo's Dockerfile via GitHub API, compares its ARG BASE_IMAGE_DIGEST against the current UTL
+# :latest digest, and dispatches `dependency-update` (base_image_digest only — dep-version is
+# in-range so consumers set skip=true but the digest-refresh step still rides and commits the
+# refreshed pin to LDR). This covers:
+#   (b) UAC/other-base-layer republishes that don't ride a UTL version-bump
+#   (c) new repos not yet in the UTL dep-graph (no prior dependency-update dispatch received)
+# SSOT: plans/active/build_operability_smoke_all_repos_2026_06_19.md Phase 5 fix-c.
+
+name: digest-drift-sweep
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: "Dispatch to ALL repos even if digest is already current"
+        required: false
+        default: "false"
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via WIF
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Resolve current UTL :latest digest
+        id: current-digest
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}"
+          IMAGE="asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest"
+          DIGEST=$(gcloud artifacts docker images describe "$IMAGE" --format='value(image_summary.digest)' 2>/dev/null || echo "")
+          if ! echo "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "ERROR: Could not resolve a valid digest (got: '$DIGEST')" >&2
+            exit 1
+          fi
+          echo "Current UTL digest: $DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Sweep stale repos and dispatch digest refresh
+        if: steps.current-digest.outputs.digest != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_DIGEST: ${{ steps.current-digest.outputs.digest }}
+          FORCE_ALL: ${{ inputs.force_all || 'false' }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          # All image-building service repos that use the UTL base image with ARG BASE_IMAGE_DIGEST.
+          # List derived from workspace-manifest.json image-building repos + QG STEP 5.79 converted set.
+          # Add new repos here when they adopt the FROM-digest ratchet.
+          IMAGE_REPOS=(
+            "agent-orchestrator"
+            "alerting-service"
+            "batch-live-reconciliation-service"
+            "client-reporting-api"
+            "deployment-api"
+            "deployment-service"
+            "execution-service"
+            "features-service"
+            "fund-administration-service"
+            "greeks-service"
+            "instruments-service"
+            "market-data-processing-service"
+            "market-tick-data-service"
+            "ml-service"
+            "strategy-service"
+            "trading-agent-service"
+          )
+
+          # Resolve current UTL version from PM manifest (used as a stable non-breaking dep_version
+          # for the dispatch payload so consumers set skip=true but digest-refresh still runs).
+          UTL_VERSION=$(python3 -c "
+          import json
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+          print(m.get('versions', {}).get('unified-trading-library', '0.1.0'))
+          " 2>/dev/null || echo "0.1.0")
+          echo "UTL version for dispatch payload: $UTL_VERSION"
+          echo "Current digest: $CURRENT_DIGEST"
+
+          TOKEN="${GITHUB_TOKEN}"
+          DISPATCHED=0
+          ALREADY_FRESH=0
+          SKIPPED_NO_ARG=0
+          ERRORS=0
+
+          for REPO in "${IMAGE_REPOS[@]}"; do
+            # Fetch Dockerfile content from default branch (live-defi-rollout or main).
+            # Try LDR first (it's the live tip), fall back to main.
+            DOCKERFILE_CONTENT=""
+            for BRANCH in "live-defi-rollout" "main"; do
+              CONTENT=$(curl -sf \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Accept: application/vnd.github.raw+json" \
+                "https://api.github.com/repos/$OWNER/$REPO/contents/Dockerfile?ref=$BRANCH" 2>/dev/null || echo "")
+              if [ -n "$CONTENT" ]; then
+                DOCKERFILE_CONTENT="$CONTENT"
+                break
+              fi
+            done
+
+            if [ -z "$DOCKERFILE_CONTENT" ]; then
+              echo "  $REPO: Dockerfile not found — skipping (repo may not be image-building)"
+              SKIPPED_NO_ARG=$((SKIPPED_NO_ARG + 1))
+              continue
+            fi
+
+            # Extract pinned digest from the Dockerfile
+            PINNED_DIGEST=$(echo "$DOCKERFILE_CONTENT" | grep -oE '^ARG BASE_IMAGE_DIGEST=sha256:[0-9a-f]{64}' | grep -oE 'sha256:[0-9a-f]{64}' || echo "")
+
+            if [ -z "$PINNED_DIGEST" ]; then
+              echo "  $REPO: no ARG BASE_IMAGE_DIGEST found — not yet converted to FROM-digest ratchet; skipping"
+              SKIPPED_NO_ARG=$((SKIPPED_NO_ARG + 1))
+              continue
+            fi
+
+            if [ "$PINNED_DIGEST" = "$CURRENT_DIGEST" ] && [ "$FORCE_ALL" != "true" ]; then
+              echo "  $REPO: digest current ($PINNED_DIGEST) — no dispatch needed"
+              ALREADY_FRESH=$((ALREADY_FRESH + 1))
+              continue
+            fi
+
+            echo "  $REPO: STALE ($PINNED_DIGEST → $CURRENT_DIGEST) — dispatching digest refresh"
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$OWNER/$REPO/dispatches" \
+              -d "{
+                \"event_type\": \"dependency-update\",
+                \"client_payload\": {
+                  \"dep_name\": \"unified-trading-library\",
+                  \"dep_version\": \"$UTL_VERSION\",
+                  \"constraint\": \">=0.1.0,<1.0.0\",
+                  \"bump_type\": \"patch\",
+                  \"is_breaking\": \"false\",
+                  \"chain_depth\": 1,
+                  \"cascade_depth\": 1,
+                  \"base_image_digest\": \"$CURRENT_DIGEST\"
+                }
+              }")
+            if [ "$HTTP_STATUS" = "204" ]; then
+              echo "    ✅ Dispatched to $REPO"
+              DISPATCHED=$((DISPATCHED + 1))
+            else
+              echo "    ⚠️  HTTP $HTTP_STATUS for $REPO — may not have update-dependency-version.yml yet"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          echo ""
+          echo "=== Digest drift sweep complete ==="
+          echo "  Dispatched:    $DISPATCHED"
+          echo "  Already fresh: $ALREADY_FRESH"
+          echo "  No ARG found:  $SKIPPED_NO_ARG"
+          echo "  Errors:        $ERRORS"
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "WARNING: $ERRORS dispatch(es) failed — check that repos have update-dependency-version.yml workflow" >&2
+          fi

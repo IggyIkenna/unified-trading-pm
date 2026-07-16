@@ -1,0 +1,1658 @@
+name: staging-to-main
+
+# Triggered by system-integration-tests dispatching 'staging-validated' after SIT passes.
+# Merges staging → main in topological order for all repos that have staging changes,
+# then clears staging_status.locked and promotes staging_versions → versions.
+#
+# Flow:
+#   SIT passes → dispatches staging-validated → this workflow runs →
+#   each repo: merge staging → main (via gh pr create --base main --head staging) →
+#   PM manifest: staging_versions → versions, staging_status.locked = false →
+#   PM commits manifest update [skip ci]
+#
+# Requires: GH_PAT with repo + workflow scope (to push to protected main branches).
+
+on:
+  repository_dispatch:
+    types: [staging-validated]
+  # Drain-tick (added 2026-06-15): the ONLY promotion drain that previously lacked a
+  # schedule. `staging-validated` is dispatched only by sit-unlock.yml / conflict-resolution-merged.yml
+  # — i.e. AFTER SIT, which (per content-based breaking detection, 2026-06-08) fires ONLY for
+  # breaking_pending repos. So NON-breaking content (the 99% case — Tier-C `chore(promote)` drains
+  # whose underlying feat/fix semver bumps via the now-live `push:[staging]` trigger → fills
+  # staging_commits) had NO trigger to promote it, and main starved for days while staging
+  # accumulated hundreds of commits. This */15 tick fires the (idempotent, self-gated: readiness +
+  # SHA-pinning re-SIT + dep-order gates) promote so populated staging_commits drain to main on the
+  # same cadence as ldr-to-staging-promote (*/15) / ldr-to-main-promote (*/15) / main-backmerge (*/20).
+  # Empty staging_commits → idempotent skip (cheap). Concurrency group below prevents overlap.
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual promotion (e.g. hotfix fast-track)"
+        required: false
+        default: "manual hotfix fast-track"
+      start_from_repo:
+        description: "Resume from this repo (skip repos before it in topo order). Leave empty for full run."
+        required: false
+        default: ""
+      resume_from_repo:
+        description: "Alias for start_from_repo — resume promotion from this repo, skipping already-promoted repos."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  # OWN group, deliberately NOT the shared `manifest-update` group (changed 2026-06-10).
+  # GitHub keeps at most ONE queued run per concurrency group — each new arrival cancels the
+  # previously-queued run. ci-status-update fires on every fleet v2 completion (near-continuous
+  # in work hours), so a queued promote was displaced before it could start (4× on 2026-06-10,
+  # incl. two manual rescue dispatches; the repository_dispatch payload is NOT replayable) →
+  # staging lock held for hours, every repo's →staging promotion blocked behind it.
+  # Manifest write-safety does NOT need the shared group here: the promote's manifest commit
+  # uses the 5-attempt rebase-retry push below ("Retry-with-rebase"), and the other manifest
+  # writers carry the same retry pattern. Self-contention is safe: every promote run re-derives
+  # the pending set from the manifest (full sweep), so a displaced QUEUED promote's work is
+  # covered by the survivor.
+  group: staging-to-main
+  cancel-in-progress: false
+
+jobs:
+  promote-staging-to-main:
+    runs-on: ubuntu-latest
+    # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate's Firestore
+    # ci_status overlay (_fs_overlay → ci_status_store.resolve_ci_status_map) needs this project env
+    # AND the SDK installed below; without them it silently fell back to the STALE manifest cache
+    # (observed live: "ModuleNotFoundError: No module named 'google' — using manifest fallback cache").
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      # Cure B (cicd_consolidated_remaining_2026_06_24.md): version-line auto-resolve in
+      # the dirty-conflict branch below. Kill-switch — set repo/org variable
+      # CURE_B_VERSION_AUTORESOLVE=false to disable instantly (default on).
+      CURE_B_VERSION_AUTORESOLVE: ${{ vars.CURE_B_VERSION_AUTORESOLVE || 'true' }}
+      # Bug 2 (cicd_consolidated_remaining_2026_06_24.md § WS-B): auto-collapse a content-lossless
+      # `dirty` divergence that Cure-B's rebase can't resolve. OPT-IN (default OFF) — set repo/org
+      # variable STAGING_TO_MAIN_AUTOCOLLAPSE=true to enable (roll out one repo at a time). The
+      # AUTOCOLLAPSE_MAX_PER_RUN cap bounds blast radius so a logic bug can't fan out fleet-wide.
+      STAGING_TO_MAIN_AUTOCOLLAPSE: ${{ vars.STAGING_TO_MAIN_AUTOCOLLAPSE || 'false' }}
+      AUTOCOLLAPSE_MAX_PER_RUN: ${{ vars.AUTOCOLLAPSE_MAX_PER_RUN || '3' }}
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+      failed: ${{ steps.promote.outputs.failed }}
+      promoted_count: ${{ steps.promote.outputs.promoted_count }}
+      failed_count: ${{ steps.promote.outputs.failed_count }}
+      # Quarantine-cap outputs (steps.quarantine): partition the promote step's FAILED list into
+      # (a) genuinely-actionable failures NOT yet quarantined → drive the CRITICAL alert, and
+      # (b) repos newly hitting PROMOTION_MAX_ATTEMPTS → one-shot WARNING + single escalation.
+      unquarantined_failed_count: ${{ steps.quarantine.outputs.unquarantined_failed_count }}
+      unquarantined_failed: ${{ steps.quarantine.outputs.unquarantined_failed }}
+      newly_quarantined: ${{ steps.quarantine.outputs.newly_quarantined }}
+      quarantine_threshold: ${{ steps.quarantine.outputs.quarantine_threshold }}
+    steps:
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      # Gap 8: authenticate + install the Firestore SDK so the dep-order gate's overlay reads the
+      # LIVE (authoritative) ci_status, not the committed stale manifest cache. Best-effort: if auth
+      # or the SDK is unavailable the gate falls back to the manifest exactly as before (no regression).
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_promote
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_promote.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+
+      # codex/ is folded into PM at codex/ — no separate checkout needed; the
+      # readiness gate below reads from PM's local codex/ directory.
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # CONTENT-AHEAD PROBE (bug #11, 2026-06-23) — non-bumping staging→main drain.
+      # The version-bump signals (staging_commits / staging_versions != versions) MISS
+      # non-bumping QG-green content (chore/docs/refactor/test merges that reach staging
+      # via the LDR→staging Tier-C drain but never bump a version). Such content was
+      # INVISIBLE to this workflow → stranded on staging while main starved (15 repos on
+      # 2026-06-23). This computes the content-ahead set via TREE-SHA equality — the
+      # reliable content fingerprint; compare/.files is squash-merge-base-inflated (see
+      # the quarantine step's _tree_sha, L857) — and exports CONTENT_AHEAD_REPOS for the
+      # idempotency gate + STAGE 1.8 + the promote loop. Content-ahead repos flow through
+      # the SAME dep-order gate + quarantine + cure-B path; the version-promote/cascade
+      # guards on old != new so a content-only (no-bump) promote merges to main WITHOUT a
+      # spurious dependency-update cascade or version churn. Tree-SHA equality also makes
+      # the probe self-idempotent (once content is on main, staging tree == main tree → no
+      # longer a candidate). SSOT: cicd_consolidated_remaining_2026_06_24.md § bug #11.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Content-ahead probe (bug #11 — non-bumping staging→main drain)
+        id: content_ahead
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, os, subprocess, concurrent.futures as cf
+
+          def _write_env(ahead: list[str]) -> None:
+              gh_env = os.environ.get("GITHUB_ENV", "")
+              if gh_env:
+                  with open(gh_env, "a") as ef:
+                      ef.write(f"CONTENT_AHEAD_REPOS={' '.join(ahead)}\n")
+
+          # Defensive: any unexpected failure here must DEGRADE to the prior version-only behaviour
+          # (empty content-ahead set), NEVER block the whole promotion run. A crash would otherwise
+          # fail the job → zero promotions. On error: emit ::warning, write an empty set, exit 0.
+          try:
+              owner = os.environ["OWNER"]
+              with open("workspace-manifest.json") as f:
+                  manifest = json.load(f)
+
+              # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main.
+              # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+              MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
+              repos = [
+                  r for r in manifest.get("repositories", {})
+                  if not r.startswith("_") and r not in MAIN_DIRECT_REPOS
+              ]
+
+              def _tree_sha(repo: str, ref: str) -> str | None:
+                  p = subprocess.run(
+                      ["gh", "api", f"repos/{owner}/{repo}/commits/{ref}", "--jq", ".commit.tree.sha"],
+                      capture_output=True, text=True,
+                  )
+                  out = p.stdout.strip()
+                  return out if p.returncode == 0 and out else None
+
+              def _content_ahead(repo: str) -> str | None:
+                  # staging tree != main tree → real content delta (squash-count-proof).
+                  # staging missing → not promotable; main missing → cannot assert → skip.
+                  st, mn = _tree_sha(repo, "staging"), _tree_sha(repo, "main")
+                  if st is None or mn is None:
+                      return None
+                  return repo if st != mn else None
+
+              ahead: list[str] = []
+              with cf.ThreadPoolExecutor(max_workers=8) as ex:
+                  for r in ex.map(_content_ahead, repos):
+                      if r:
+                          ahead.append(r)
+              ahead.sort()
+              _write_env(ahead)
+              print(f"CONTENT_AHEAD_REPOS ({len(ahead)}): {' '.join(ahead) if ahead else '(none)'}")
+          except Exception as exc:  # noqa: BLE001 — degrade to version-only, never block the run.
+              print(f"::warning::Content-ahead probe failed ({type(exc).__name__}: {exc}) — "
+                    "falling back to version-only promotion (non-bumping content will not drain this run).")
+              _write_env([])
+          PYEOF
+
+      - name: Idempotency check — skip if staging already promoted (add-staging-to-main-idempotency)
+        id: idempotency
+        run: |
+          set -euo pipefail
+          # M6: writes idempotent_skip=true/false directly to $GITHUB_OUTPUT. The prior `$?`-based
+          # mechanism was dead — the heredoc Python exits 0 on BOTH skip and proceed (under `set -e`
+          # a non-zero proceed-exit would fail the step), so `$?` was always 0 and no later step read
+          # the flag → a re-dispatch re-merged staging→main, re-appended main_commits.history, and
+          # re-cleared the lock (could stomp a concurrent sit-gate lock). Now every mutating step below
+          # gates on `steps.idempotency.outputs.idempotent_skip != 'true'`.
+          python3 - << 'PYEOF'
+          import json, os
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging_commits = {k: v for k, v in manifest.get("staging_commits", {}).items() if not k.startswith("_")}
+
+          # bug #11 (2026-06-23): the promote loop's candidate set is version-delta ∪ content-ahead,
+          # so the run has work whenever EITHER exists — never skip purely on empty staging_commits
+          # (which misses non-bumping content entirely). Skip ONLY when both are empty. Tree-SHA makes
+          # the content-ahead probe self-idempotent, so a re-run with content already on main sees
+          # CONTENT_AHEAD_REPOS shrink to empty → skips correctly (no duplicate-promotion guard needed).
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          version_delta = [
+              r for r, sv in staging_versions.items()
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable_versions.get(r)
+          ]
+          content_ahead = [r for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split() if r]
+
+          skip = False
+          if not version_delta and not content_ahead:
+              print(
+                  "Nothing to promote — no version delta and no content-ahead "
+                  f"(staging_commits={len(staging_commits)}). Skipping."
+              )
+              skip = True
+          else:
+              print(
+                  f"Proceeding with promotion: {len(version_delta)} version-delta, "
+                  f"{len(content_ahead)} content-ahead, {len(staging_commits)} staging_commits."
+              )
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
+              gh.write(f"idempotent_skip={'true' if skip else 'false'}\n")
+          PYEOF
+
+      - name: Readiness gate — block if any promoted repo has explicit fail
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        # Blocks promotion only on EXPLICIT fail status in codex readiness YAML.
+        # not_assessed = advisory (promotion proceeds). fail = hard block.
+        # Gate checks: cr4_quality_gate and dr4_sit_pass sections.
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import pathlib
+          import sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging = manifest.get("staging_versions", {})
+          stable = manifest.get("versions", {})
+
+          # Main-direct repos have NO staging branch (Option-B): their staging_versions can
+          # drift from versions purely because nothing ever promotes them through staging, so
+          # they would be perpetually "pending" and counted as a FAILED promotion every run
+          # (false-CRITICAL Slack alert). Exclude them from the promotion set — mirrors
+          # promotion_lag_monitor.py's `repo == "unified-trading-pm" and "staging" in label`
+          # skip. agent-orchestrator joins this set ONLY until its `staging` branch + quickmerge
+          # land (CLAUDE.md § agent-orchestrator branch model); drop it here once it does.
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
+
+          # Repos being promoted in this run
+          promoting = [
+              r for r, sv in staging.items()
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable.get(r)
+          ]
+
+          codex = pathlib.Path("codex/10-audit/repos")
+          blocked: list[str] = []
+          warnings: list[str] = []
+
+          # Minimal line-by-line gate: no yaml dep required
+          GATE_SECTIONS = {"cr4_quality_gate", "dr4_sit_pass"}
+
+          for repo in promoting:
+              yaml_file = codex / f"{repo}.yaml"
+              if not yaml_file.exists():
+                  warnings.append(f"  WARN {repo}: no codex YAML — gate skipped")
+                  continue
+
+              lines = yaml_file.read_text().splitlines()
+              active_section: str | None = None
+
+              for line in lines:
+                  stripped = line.strip()
+                  # Detect entry into a gate section
+                  for section in GATE_SECTIONS:
+                      if stripped.startswith(f"{section}:"):
+                          active_section = section
+                          break
+                  # If we're in a gate section, look for explicit fail
+                  if active_section and stripped.startswith("status:"):
+                      val = stripped.split(":", 1)[1].strip().strip("\"'")
+                      if val == "fail":
+                          blocked.append(f"  BLOCK {repo}: {active_section}=fail")
+                      active_section = None  # only check first status line per section
+
+          print("=== Readiness Gate ===")
+          print(f"Repos being promoted: {len(promoting)}")
+          for r in promoting:
+              print(f"  {r}")
+          print()
+
+          if warnings:
+              for w in warnings:
+                  print(w)
+              print()
+
+          if blocked:
+              print("BLOCKED — explicit readiness failures (fix in codex/10-audit/repos/{{repo}}.yaml):")
+              for b in blocked:
+                  print(b)
+              print()
+              print("To override: set cr4_quality_gate.status or dr4_sit_pass.status to 'partial' or 'not_assessed'.")
+              sys.exit(1)
+
+          print("OK: No explicit readiness failures. Promotion proceeding.")
+          PYEOF
+
+      - name: SHA verification — ensure staging HEADs match tested SHA set (fix-sha-pinning-toctou)
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        # Guards against [skip ci] or other commits landing in staging AFTER the debounce
+        # but BEFORE staging-validated was dispatched. Such commits would be promoted untested.
+        # Only [skip ci] descendants are allowed; non-skip-ci untested commits trigger SIT re-run.
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging_commits = manifest.get("staging_commits", {})
+          staging_versions = manifest.get("staging_versions", {})
+          owner = os.environ["OWNER"]
+
+          def get_staging_head(repo: str) -> str:
+              result = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/{repo}/git/ref/heads/staging", "--jq", ".object.sha"],
+                  capture_output=True, text=True
+              )
+              return result.stdout.strip() if result.returncode == 0 else ""
+
+          def get_commit_messages_between(repo: str, base_sha: str, head_sha: str) -> list[str]:
+              if base_sha == head_sha:
+                  return []
+              result = subprocess.run(
+                  ["gh", "api",
+                   f"repos/{owner}/{repo}/compare/{base_sha}...{head_sha}",
+                   "--jq", ".commits[].commit.message"],
+                  capture_output=True, text=True
+              )
+              if result.returncode != 0:
+                  return []
+              return [line.strip() for line in result.stdout.strip().splitlines() if line.strip()]
+
+          blocked: list[str] = []
+          for repo, tested_sha in staging_commits.items():
+              if repo.startswith("_") or not tested_sha:
+                  continue
+              if repo not in staging_versions:
+                  continue
+
+              current_sha = get_staging_head(repo)
+              if not current_sha:
+                  print(f"  WARN {repo}: staging branch not found — skipping SHA check")
+                  continue
+
+              if current_sha == tested_sha:
+                  print(f"  OK   {repo}: SHA matches ({current_sha[:8]})")
+                  continue
+
+              msgs = get_commit_messages_between(repo, tested_sha, current_sha)
+              non_skip = [m for m in msgs if "[skip ci]" not in m]
+              if not non_skip:
+                  print(f"  SAFE {repo}: {len(msgs)} [skip ci]-only commit(s) since tested SHA — safe to promote")
+              else:
+                  print(f"  FAIL {repo}: {len(non_skip)} UNTESTED non-[skip ci] commit(s):")
+                  for m in non_skip[:3]:
+                      print(f"       {m[:80]}")
+                  blocked.append(repo)
+
+          if blocked:
+              print(f"\nSHA PINNING VIOLATION: repos with untested commits: {blocked}")
+              print("Exiting 1 — will re-trigger SIT in next step.")
+              sys.exit(1)
+
+          print("\nSHA pinning: all staging HEADs are within tested set or [skip ci]-only descendants.")
+          PYEOF
+
+      - name: Re-trigger SIT if SHA verification failed
+        if: failure() && steps.idempotency.outputs.idempotent_skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          # Telegram alert migrated to notify-sha-failure job
+          OWNER="${{ github.repository_owner }}"
+          echo "SHA pinning violation — re-triggering SIT for untested staging commits."
+          curl -s -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/system-integration-tests/dispatches" \
+            -d '{"event_type": "staging-changed", "client_payload": {"reason": "sha-pinning-retest"}}' \
+            || true
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # STAGE 1.8: DEP-ORDER GATE (staging → main) — PROMOTE-READY / SKIP-BLOCKED
+      # Complement to quickmerge.sh STAGE 1.7 (LDR→staging dep-order gate).
+      # Prevents the UTL-before-UAC main race: before promoting repo X to main,
+      # every dep D must already be on main (ci_status = MAIN_GREEN or SIT_VALIDATED).
+      #
+      # ci_status on-main signal: python-quality-gates-v2.yml emits MAIN_GREEN when
+      # a QG push run passes on the `main` branch (landed with this commit).
+      # SIT_VALIDATED is also accepted as "dep is on main" because the promotion
+      # lifecycle resets ci_status from SIT_VALIDATED→FEATURE_GREEN only AFTER the
+      # dep is already merged to main — so SIT_VALIDATED is always a valid on-main
+      # signal during the promotion window.
+      #
+      # BACKLOG-DRAIN SEMANTICS (fixed 2026-06-06): this gate is NOT all-or-nothing.
+      # Instead of failing the whole run when *some* pending repos have a dep not
+      # yet on main, it computes the READY set (pending repos whose deps are ALL
+      # MAIN_GREEN/SIT_VALIDATED, or have no deps / no manifest entry) and promotes
+      # ONLY those this run, SKIPPING (with a warning) the blocked ones. Each promoted
+      # tier becomes MAIN_GREEN, unblocking the next tier on a subsequent run — so
+      # successive runs drain a multi-tier backlog bottom-up. The run SUCCEEDS as long
+      # as it promoted the ready subset (or exits 0 cleanly when nothing is ready).
+      # The READY set is exported as READY_REPOS (space-separated) for the promote
+      # loop + manifest-promotion + cascade steps, which all filter to it.
+      #
+      # Safe-defaults (match STAGE 1.7 from quickmerge.sh) — treated as READY:
+      #   - manifest file missing       → all pending READY (no gate data available)
+      #   - repo not in manifest        → READY  (repo has no recorded deps)
+      #   - dep not in manifest         → that dep ignored (not tracked; can't assert)
+      #   - dep ci_status unset/None    → that dep ignored (treat as external)
+      # A gate error (e.g. Python crash) logs a warning and falls back to "all pending
+      # READY" — consistent with how the existing readiness gate treats missing codex
+      # YAML (advisory-only); never hard-fail the whole drain.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: STAGE 1.8 — Dep-order gate (staging → main) — promote-ready / skip-blocked
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import sys
+          sys.path.insert(0, "scripts/cicd")
+
+          MANIFEST = "workspace-manifest.json"
+
+          # Statuses that mean dep IS on main (PASS)
+          ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
+
+          # Phase 2: Firestore-authoritative ci_status overlay. Gap 8 (2026-06-16): make a failed
+          # overlay LOUD — a silent fallback to the stale manifest cache is how mis-gating hid.
+          def _fs_overlay(manifest):
+              try:
+                  from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
+                  ci_map = resolve_ci_status_map(manifest)
+                  repos_obj = manifest.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+                  print("STAGE 1.8: Firestore ci_status overlay applied (live, authoritative).")
+              except ModuleNotFoundError as exc:
+                  # The SDK is missing — a CI-config regression, NOT graceful degradation. The
+                  # gate is now deciding on the stale committed cache. Make it visible.
+                  print(f"::warning::STAGE 1.8: Firestore SDK unavailable ({exc}) — dep-order gate "
+                        "falling back to STALE manifest ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # noqa: BLE001 — Firestore genuinely degraded: warn + fall back.
+                  print(f"::warning::STAGE 1.8: Firestore ci_status read failed ({type(exc).__name__}: "
+                        f"{exc}) — falling back to manifest cache.")
+
+          def export_ready(repos):
+              """Write the READY set to GITHUB_ENV so downstream steps filter to it.
+
+              Always also writes READY_REPOS_COMPUTED=1 — the explicit signal that the
+              gate ran and the READY set is authoritative (even when EMPTY = nothing
+              ready this run). Downstream steps apply the filter whenever this flag is
+              set, so an empty ready set correctly promotes NOTHING (rather than being
+              mistaken for the fallback "no filter / promote all" path, which leaves the
+              flag unset).
+              """
+              github_env = os.environ.get("GITHUB_ENV", "")
+              value = " ".join(repos)
+              if github_env:
+                  with open(github_env, "a") as ef:
+                      ef.write(f"READY_REPOS={value}\n")
+                      ef.write("READY_REPOS_COMPUTED=1\n")
+              print(f"\nREADY_REPOS={value}")
+              print("READY_REPOS_COMPUTED=1")
+
+          try:
+              with open(MANIFEST) as f:
+                  manifest = json.load(f)
+          except Exception as e:
+              print(f"STAGE 1.8: manifest read error ({e}) — gate skipped (safe-default: all pending READY)")
+              # Cannot read manifest → cannot derive a ready subset; let downstream
+              # re-derive the full pending set (READY_REPOS unset = no filter).
+              sys.exit(0)
+
+          _fs_overlay(manifest)
+
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          repos_data = manifest.get("repositories", {})
+
+          # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main —
+          # excluding them keeps them out of the dep-order READY set + the false-failure path
+          # (mirrors the readiness gate + promotion_lag_monitor.py PM-staging skip).
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
+
+          # Collect repos being promoted in this run: version-delta (staging_versions differs from
+          # stable) ∪ content-ahead (bug #11 — non-bumping content; tree-SHA differs). Both flow
+          # through this dep-order gate (operator decision 2026-06-23: respect dep-order uniformly).
+          promoting = [
+              r for r, sv in staging_versions.items()
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable_versions.get(r)
+          ]
+          for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split():
+              if r and r not in MAIN_DIRECT_REPOS and r not in promoting:
+                  promoting.append(r)
+
+          if not promoting:
+              print("STAGE 1.8: no repos being promoted — gate skipped (nothing ready this run)")
+              export_ready([])
+              sys.exit(0)
+
+          print("STAGE 1.8: Dep-Order Gate (staging → main) — promote-ready / skip-blocked")
+          print(f"  Evaluating {len(promoting)} pending repo(s) for dep-on-main readiness")
+
+          ready: list[str] = []
+          skipped: list[str] = []
+
+          for repo in promoting:
+              repo_info = repos_data.get(repo)
+              if repo_info is None:
+                  print(f"  ✅ READY (no manifest entry): {repo}")
+                  ready.append(repo)
+                  continue
+
+              deps = repo_info.get("dependencies", [])
+              if not deps:
+                  print(f"  ✅ READY (no deps): {repo}")
+                  ready.append(repo)
+                  continue
+
+              repo_blocked: list[str] = []
+              for dep in deps:
+                  dep_name = dep.get("name", dep) if isinstance(dep, dict) else str(dep)
+                  if not dep_name or dep_name not in repos_data:
+                      # Dep not in manifest → safe-default pass (ignore this dep)
+                      continue
+                  dep_status = repos_data[dep_name].get("ci_status") or ""
+                  if not dep_status:
+                      # ci_status not set → safe-default pass (treat as external / not tracked)
+                      continue
+                  if dep_status not in ON_MAIN_STATUSES:
+                      repo_blocked.append(f"{dep_name}:{dep_status}")
+
+              if repo_blocked:
+                  skipped.append(repo)
+                  for entry in repo_blocked:
+                      dep_name_only, dep_status_only = entry.split(":", 1)
+                      print(
+                          f"  ⚠️  SKIPPED (dep not on main yet — will promote next run): "
+                          f"{repo} → dep {dep_name_only} is {dep_status_only}"
+                      )
+                      print(
+                          f"      Once {dep_name_only} promotes to main and its QG-on-main emits "
+                          f"MAIN_GREEN, a subsequent run will promote {repo} (bottom-up drain)."
+                      )
+              else:
+                  print(f"  ✅ READY: {repo} — all deps on main")
+                  ready.append(repo)
+
+          print()
+          print("══════════════════════════════════════════════════════════════")
+          print("STAGE 1.8 summary (backlog-drain):")
+          print(f"  READY this run ({len(ready)}): {' '.join(ready) if ready else '(none)'}")
+          print(f"  SKIPPED (blocked, retry next run) ({len(skipped)}): {' '.join(skipped) if skipped else '(none)'}")
+          print("  ci_status lifecycle: FEATURE_GREEN → STAGING_GREEN → SIT_VALIDATED → MAIN_GREEN")
+          print("  Required for staging→main: dep at MAIN_GREEN or SIT_VALIDATED")
+          print("══════════════════════════════════════════════════════════════")
+
+          export_ready(ready)
+
+          if not ready:
+              print(
+                  "\nSTAGE 1.8: nothing ready to promote this run — all pending repos are "
+                  "blocked on a dep not yet on main. Exiting 0 (NOT a failure); a subsequent "
+                  "run drains the next tier once its deps reach main."
+              )
+          else:
+              print(f"\nSTAGE 1.8: ✅ promoting {len(ready)} ready repo(s) this run.")
+          # Always exit 0 — blocked repos are SKIPPED, never a hard failure.
+          sys.exit(0)
+          PYEOF
+
+      - name: Merge staging → main for ready (dep-on-main) repos with staging changes
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        id: promote
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          START_FROM_REPO: ${{ inputs.resume_from_repo || inputs.start_from_repo || '' }}
+          # READY_REPOS is the dep-order-ready subset exported by STAGE 1.8 (space-separated).
+          # READY_REPOS_COMPUTED=1 is the authoritative-set signal: when set, filter to
+          # READY_REPOS (even if EMPTY = nothing ready this run → promote nothing). When
+          # UNSET, STAGE 1.8 fell back (e.g. manifest read error) → do NOT filter; promote
+          # the full pending set (legacy behaviour).
+          READY_REPOS: ${{ env.READY_REPOS }}
+          READY_REPOS_COMPUTED: ${{ env.READY_REPOS_COMPUTED }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${{ github.repository_owner }}"
+          MANIFEST="workspace-manifest.json"
+
+          # Get topological order (all tiers, T0 first), restricted to the dep-order-READY
+          # subset (READY_REPOS from STAGE 1.8). Blocked repos are skipped this run and
+          # drain on a subsequent run once their deps reach main.
+          REPOS=$(READY_REPOS="${READY_REPOS:-}" READY_REPOS_COMPUTED="${READY_REPOS_COMPUTED:-}" MANIFEST="${MANIFEST}" python3 - <<'PYEOF'
+          import json, os
+          with open(os.environ["MANIFEST"]) as f:
+              m = json.load(f)
+
+          staging_versions = m.get("staging_versions", {})
+          stable_versions = m.get("versions", {})
+          topo = m.get("topologicalOrder", {}).get("levels", [])
+
+          ready_raw = os.environ.get("READY_REPOS", "")
+          ready_set = {r for r in ready_raw.split() if r}
+          # Apply the filter whenever STAGE 1.8 produced an authoritative set
+          # (READY_REPOS_COMPUTED=1) — even if that set is EMPTY (nothing ready this
+          # run → promote nothing). Only the fallback path (flag unset) promotes all
+          # pending without a filter.
+          apply_filter = os.environ.get("READY_REPOS_COMPUTED", "") == "1"
+
+          # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main.
+          # Excluding them at the set-build is the authoritative fix for the false-CRITICAL
+          # "Partial Staging Promotion Failure | Failed: unified-trading-pm" alert: PM has no
+          # staging branch, so a `gh pr create --base main --head staging` cannot succeed and the
+          # repo was counted as FAILED every run. (Mirrors the readiness gate + STAGE 1.8 +
+          # promotion_lag_monitor.py.)
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in m.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
+
+          # Gap 7 (2026-06-16): quarantine is NO LONGER a permanent skip. A quarantined repo is
+          # RE-PROBED — let through this run — once its re-probe is DUE (next_probe_after elapsed,
+          # or absent = due). The `changed & ready_set` filter below still enforces dep-order
+          # (deps-on-main), and the merge loop tests real mergeability: a clean re-probe promotes →
+          # the counter step auto-clears the quarantine; a still-conflicting re-probe stays
+          # quarantined and the counter step pushes next_probe_after out (bounded exponential
+          # backoff → no every-run noise; the alert partition already excludes quarantined repos so
+          # no re-alert). This breaks the old skip→never-promoted→never-cleared DEADLOCK that left
+          # cleanly-mergeable repos stuck forever (issue: ci_pipeline_self_healing §Gap 7).
+          import datetime as _dt
+          _now = _dt.datetime.utcnow().isoformat() + "Z"
+          quarantine = {
+              r: q for r, q in m.get("promotion_quarantine", {}).items()
+              if not r.startswith("_") and isinstance(q, dict)
+          }
+
+          # Candidate set = version-delta (staging_versions != versions) ∪ content-ahead (bug #11,
+          # 2026-06-23 — non-bumping content; tree-SHA differs, exported as CONTENT_AHEAD_REPOS).
+          content_ahead = {r for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split() if r}
+          candidates = set()
+          for repo, sv in staging_versions.items():
+              if repo.startswith("_") or repo in MAIN_DIRECT_REPOS:
+                  continue
+              if sv != stable_versions.get(repo):
+                  candidates.add(repo)
+          for repo in content_ahead:
+              if repo not in MAIN_DIRECT_REPOS:
+                  candidates.add(repo)
+
+          # Apply quarantine re-probe gating uniformly to the candidate set.
+          changed = set()
+          for repo in candidates:
+              if repo in quarantine:
+                  npa = quarantine[repo].get("next_probe_after")
+                  if npa and str(npa) > _now:
+                      print(f"# QUARANTINED (skipped — next re-probe at {npa}): {repo}", file=__import__("sys").stderr)
+                      continue
+                  # Probe is due → fall through; dep-order is still enforced by `& ready_set`.
+                  print(f"# QUARANTINE RE-PROBE (Gap 7): {repo} — probe due, testing promotability", file=__import__("sys").stderr)
+              changed.add(repo)
+
+          if apply_filter:
+              changed = changed & ready_set
+
+          # Emit in topological order
+          for level in topo:
+              for repo in level.get("repos", []):
+                  if repo in changed:
+                      print(repo)
+          PYEOF
+          )
+
+          if [ -z "$REPOS" ]; then
+            echo "No repos with staging changes found. staging_status may already be clear."
+            exit 0
+          fi
+
+          echo "Repos to promote (staging → main):"
+          echo "$REPOS" | while read -r r; do echo "  $r"; done
+
+          # Resume support: skip repos before start_from_repo
+          SKIP_MODE="false"
+          if [ -n "$START_FROM_REPO" ]; then
+            SKIP_MODE="true"
+            echo ""
+            echo "RESUME MODE: skipping repos before '$START_FROM_REPO'"
+          fi
+
+          PROMOTED=""
+          FAILED=""
+          SKIPPED=""
+          TOTAL_COUNT=0
+          PROMOTED_COUNT=0
+          FAILED_COUNT=0
+          COLLAPSE_COUNT=0  # bug-2 auto-collapses this run (bounded by AUTOCOLLAPSE_MAX_PER_RUN)
+
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            TOTAL_COUNT=$((TOTAL_COUNT + 1))
+
+            # Resume: skip until we reach start_from_repo
+            if [ "$SKIP_MODE" = "true" ]; then
+              if [ "$REPO" = "$START_FROM_REPO" ]; then
+                SKIP_MODE="false"
+                echo "  Resuming from $REPO"
+              else
+                echo "  SKIP (resume): $REPO"
+                SKIPPED="$SKIPPED $REPO"
+                continue
+              fi
+            fi
+
+            echo ""
+            echo "=== Promoting $REPO ($((PROMOTED_COUNT + FAILED_COUNT + 1))/$TOTAL_COUNT) ==="
+
+            # Check if staging branch exists
+            STAGING_EXISTS=$(gh api "repos/$OWNER/$REPO/branches/staging" --jq '.name' 2>/dev/null || true)
+            if [ -z "$STAGING_EXISTS" ]; then
+              echo "  SKIP: staging branch not found in $REPO"
+              continue
+            fi
+
+            # Check if main and staging differ
+            COMPARE=$(gh api "repos/$OWNER/$REPO/compare/main...staging" --jq '.ahead_by' 2>/dev/null || echo "0")
+            if [ "$COMPARE" = "0" ]; then
+              echo "  SKIP: staging is already merged to main in $REPO (ahead_by=0)"
+              PROMOTED="$PROMOTED $REPO"
+              PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              continue
+            fi
+
+            # Create the staging → main PR (idempotent — `gh pr create` no-ops if one is already
+            # open), then resolve a SINGLE unified merge path for BOTH the freshly-created and the
+            # pre-existing PR.
+            #
+            # ── Durability fix (2026-06-22, cure-B hardening) ─────────────────────────────────────
+            # The prior code had TWO divergent paths: the new-PR path blind-armed `--auto --rebase`
+            # and counted the repo PROMOTED *without ever checking mergeable_state*, while cure B
+            # (version-line auto-resolve) lived ONLY on the existing-PR path. Consequences that made
+            # the drain "keep needing a manual fix":
+            #   1. A version-line conflict on a FRESH PR was never auto-resolved on the run it was
+            #      born — it had to survive to a LATER run (~hours, given GitHub throttles the */15
+            #      schedule) before cure B ever saw it.
+            #   2. The fresh conflicting PR was falsely counted PROMOTED → manifest-vs-reality skew.
+            # Unifying the path makes cure B fire PROACTIVELY, same-run, for EVERY conflicting promote
+            # (new or existing). A reliable same-run staging→main also stops the Class-D LDR→main
+            # fallback from firing → less dual-lineage re-seeding (the treadmill's other half).
+            # SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md § Durability.
+            BODY="Automated: SIT validated staging. Promoting staging → main. Triggered by: staging-validated dispatch from system-integration-tests. Staging lock will be cleared after all repos are promoted."
+            gh pr create \
+              --repo "$OWNER/$REPO" \
+              --title "chore(release): promote staging to main" \
+              --body "$BODY" \
+              --base main \
+              --head staging \
+              >/dev/null 2>&1 || true
+
+            # Resolve the open staging→main PR number (newly created OR already-open).
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head staging --state open \
+              --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+              echo "  ERROR: no open staging→main PR for $REPO (create failed for a non-conflict reason) — NOT recording as promoted"
+              FAILED="$FAILED $REPO"
+              FAILED_COUNT=$((FAILED_COUNT + 1))
+              continue
+            fi
+            PR_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+            echo "  staging→main PR #$PR_NUM ($PR_URL)"
+
+            # Poll mergeable_state — GitHub computes it asynchronously, so it reads null/unknown for
+            # a few seconds after `gh pr create` (this is exactly why the old new-PR path could not
+            # see a conflict: it never waited for, or read, this field).
+            MERGEABLE_STATE=""
+            for _i in 1 2 3 4 5 6; do
+              MERGEABLE_STATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+              [ -n "$MERGEABLE_STATE" ] && [ "$MERGEABLE_STATE" != "null" ] && [ "$MERGEABLE_STATE" != "unknown" ] && break
+              sleep 5
+            done
+
+            if [ "$MERGEABLE_STATE" = "dirty" ]; then
+              # "dirty" = content conflict (GitHub REST). The version is bumped one-commit-per-bump
+              # and main's version line is also written by the LDR→main drain lineage, so staging→main
+              # recurs `dirty` ONLY on pyproject.toml `version =`. Cure B resolves that deterministically
+              # (higher semver wins) BEFORE escalating. Genuine (non-version) conflicts + any operational
+              # error STILL escalate to the conflict-resolution-agent (AO picks those up). Kill-switch:
+              # CURE_B_VERSION_AUTORESOLVE=false.
+              echo "  CONFLICT detected on PR #$PR_NUM"
+              AR_VERDICT="DISABLED"
+              if [ "${CURE_B_VERSION_AUTORESOLVE:-true}" = "true" ]; then
+                AR_VERDICT=$(bash scripts/cicd/auto_resolve_version_promote.sh "$OWNER" "$REPO" "$PR_NUM" 2>&1 | tail -1)
+              fi
+              if echo "$AR_VERDICT" | grep -q "^AUTO_RESOLVED"; then
+                echo "  Cure-B auto-resolved version-line conflict for $REPO -> $AR_VERDICT"
+                PROMOTED="$PROMOTED $REPO"
+                PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              else
+                # Bug-2 auto-collapse (OPT-IN default OFF; AUTOCOLLAPSE_MAX_PER_RUN cap): Cure-B's
+                # per-commit rebase couldn't resolve this `dirty` PR, but the NET tree delta may be
+                # <= the bumped `version =` line (a divergent squash-history defeats the rebase).
+                # Rebuild the promotion as ONE clean commit on top of main via an UNPROTECTED branch
+                # -> v2-gated PR; NEVER force-pushes a protected branch. NOT_LOSSLESS / ERROR fall
+                # through to the escalation below unchanged (fail safe).
+                COLLAPSE_VERDICT="SKIPPED"
+                if [ "${STAGING_TO_MAIN_AUTOCOLLAPSE:-false}" = "true" ] && [ "$COLLAPSE_COUNT" -lt "${AUTOCOLLAPSE_MAX_PER_RUN:-3}" ]; then
+                  COLLAPSE_VERDICT=$(bash scripts/cicd/auto_collapse_lossless_promote.sh "$OWNER" "$REPO" "$PR_NUM" 2>&1 | tail -1)
+                fi
+                if echo "$COLLAPSE_VERDICT" | grep -q "^COLLAPSED"; then
+                  echo "  Bug-2 auto-collapsed content-lossless divergence for $REPO -> $COLLAPSE_VERDICT"
+                  COLLAPSE_COUNT=$((COLLAPSE_COUNT + 1))
+                  PROMOTED="$PROMOTED $REPO"
+                  PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                else
+                  echo "  Conflict not version-line-only ($AR_VERDICT); not auto-collapsible ($COLLAPSE_VERDICT) — escalating to conflict-resolution-agent"
+                  # NOTE: Telegram notification handled by conflict-resolution-agent's notify-working job.
+                  curl -s -X POST \
+                    "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                    -H "Authorization: Bearer $GH_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL}\"}}" \
+                    && echo "  Dispatched conflict-resolution-agent for $REPO" \
+                    || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
+                  FAILED="$FAILED $REPO"
+                  FAILED_COUNT=$((FAILED_COUNT + 1))
+                fi
+              fi
+            else
+              # Not a content conflict (clean / blocked-on-checks / behind / unstable / has_hooks /
+              # unknown): arm auto-merge so the PR lands once required checks pass. `--rebase` is the
+              # canonical promote method (replays staging's bump commits → linear main history); fall
+              # back to squash/merge only where the repo disallows rebase. A repo is counted PROMOTED
+              # only when the merge is armed or landed — never on a bare unmerged PR (manifest-vs-reality
+              # divergence guard, incident 2026-06-10: greeks-service recorded 0.3.0 / main 0.2.0).
+              echo "  PR #$PR_NUM mergeable_state=${MERGEABLE_STATE:-unknown} — arming auto-merge"
+              if gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                 || gh pr merge "$PR_URL" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null \
+                 || gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null; then
+                echo "  auto-merge armed on PR #$PR_NUM for $REPO"
+                PROMOTED="$PROMOTED $REPO"
+                PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              else
+                echo "  auto-merge arm refused on PR #$PR_NUM — will retry on next run"
+                FAILED="$FAILED $REPO"
+                FAILED_COUNT=$((FAILED_COUNT + 1))
+              fi
+            fi
+
+            # NOTE: Partial failure Telegram notification handled by the
+            # notify-partial-failure job (reusable workflow). No inline curl needed here.
+
+          done <<< "$REPOS"
+
+          # Write promotion progress to outputs for downstream steps
+          echo "promoted=$PROMOTED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "promoted_count=$PROMOTED_COUNT" >> "$GITHUB_OUTPUT"
+          echo "failed_count=$FAILED_COUNT" >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "=== Promotion Summary ==="
+          echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
+          echo "Failed ($FAILED_COUNT):$FAILED"
+          if [ -n "$SKIPPED" ]; then
+            echo "Skipped (resume):$SKIPPED"
+          fi
+
+          if [ -n "$FAILED" ]; then
+            echo ""
+            echo "WARNING: Failed to create PRs for:$FAILED"
+            echo "These repos may need manual merge conflict resolution."
+            echo "To resume: re-run with start_from_repo set to the first failed repo."
+          fi
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # QUARANTINE CAP — bound the retry/alert cost of a permanently-stuck repo.
+      #
+      # Problem: the promote step `continue`s past a failed repo (never blocks the queue) and
+      # supports `start_from_repo` resume, but NOTHING stopped a repo that fails EVERY run from
+      # (a) being retried forever AND (b) re-firing the CRITICAL "Partial Staging Promotion
+      # Failure" Slack alert on every run.
+      #
+      # Fix: track CONSECUTIVE promotion failures per repo in the manifest
+      # (`promotion_failures: {repo: count}`). Each run: increment for every repo in the promote
+      # step's FAILED list, reset to 0 for every repo that PROMOTED successfully (auto-clear). On
+      # hitting PROMOTION_MAX_ATTEMPTS (env, default 3) a repo is QUARANTINED
+      # (`promotion_quarantine: {repo: {since, attempts, escalated}}`): the promote-loop builder
+      # SKIPS it on this + every future run (drains the queue, never blocks the rest), it is
+      # escalated to the orchestrator ONCE (idempotent via the per-repo `escalated` flag), and
+      # the recurring CRITICAL alert is DOWNGRADED to a SINGLE one-shot WARNING. Quarantine +
+      # counter auto-clear on the repo's next successful promotion.
+      #
+      # Output partition for the notify jobs:
+      #   unquarantined_failed[_count] = FAILED repos NOT (yet) quarantined → CRITICAL (genuine).
+      #   newly_quarantined            = repos that crossed the threshold THIS run → one WARNING.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Quarantine cap — bound consecutive-failure retries + alerts
+        if: always() && steps.idempotency.outputs.idempotent_skip != 'true'
+        id: quarantine
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FAILED: ${{ steps.promote.outputs.failed }}
+          # Threshold = consecutive failed promotions before a repo is quarantined (skipped +
+          # escalated-once + alert-downgraded). Documented default 3; override via repo/org var.
+          PROMOTION_MAX_ATTEMPTS: ${{ vars.PROMOTION_MAX_ATTEMPTS || '3' }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, os, subprocess, datetime, sys
+
+          MAX = int(os.environ.get("PROMOTION_MAX_ATTEMPTS", "3") or "3")
+          owner = os.environ.get("OWNER", "IggyIkenna")
+          token = os.environ.get("GH_TOKEN", "")
+          promoted = [r for r in os.environ.get("PROMOTED", "").split() if r]
+          failed = [r for r in os.environ.get("FAILED", "").split() if r]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          failures = manifest.get("promotion_failures") or {}
+          quarantine = manifest.get("promotion_quarantine") or {}
+          now = datetime.datetime.utcnow().isoformat() + "Z"
+
+          # AUTO-CLEAR: a successful promotion clears both the consecutive-failure counter and any
+          # standing quarantine for that repo (it's healthy again).
+          for repo in promoted:
+              if repo in failures:
+                  print(f"  reset counter (promoted): {repo} ({failures[repo]} → 0)")
+                  failures.pop(repo, None)
+              if repo in quarantine:
+                  print(f"  CLEARED quarantine (promoted): {repo}")
+                  quarantine.pop(repo, None)
+
+          # AUTO-CLEAR (content-identical): a repo whose staging→main content-delta is now 0
+          # (staging TREE == main TREE) has NOTHING left to promote — the promote-loop builder SKIPS
+          # it (ahead_by may be >0 from squash-accounting, but no file delta), so it never enters
+          # `promoted` and its quarantine/counter would otherwise NEVER clear: the stale "N fails
+          # quarantined" the operator saw while staging==main==LDR (deployment-api + blrs). Tree-SHA is
+          # the reliable content fingerprint (compare/...files is inflated by a stale squash
+          # merge-base). L305, promotion_queue_conflict_wall_pileup_2026_06_17.
+          def _tree_sha(repo: str, ref: str) -> str | None:
+              probe = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/{repo}/commits/{ref}", "--jq", ".commit.tree.sha"],
+                  capture_output=True, text=True,
+              )
+              out = probe.stdout.strip()
+              return out if probe.returncode == 0 and out else None
+
+          for repo in {*quarantine.keys(), *failures.keys()}:
+              if repo in promoted or repo in failed:
+                  continue  # the promoted/failed paths already own these
+              st_tree, mn_tree = _tree_sha(repo, "staging"), _tree_sha(repo, "main")
+              if st_tree is not None and mn_tree is not None and st_tree == mn_tree:
+                  if repo in failures:
+                      print(f"  reset counter (content-identical staging==main): {repo}")
+                      failures.pop(repo, None)
+                  if repo in quarantine:
+                      print(f"  CLEARED quarantine (content-identical staging==main, nothing to promote): {repo}")
+                      quarantine.pop(repo, None)
+
+          newly_quarantined: list[str] = []
+
+          def _next_probe(attempts: int) -> str:
+              # Gap 7: bounded exponential backoff from the quarantine threshold — 60m, 120m, 240m,
+              # capped at 360m. A cleanly-mergeable repo recovers within ≤1h (first re-probe); a
+              # genuinely-broken one re-probes ever-less-often instead of every 15-min run.
+              mins = min(60 * (2 ** max(0, attempts - MAX)), 360)
+              return (datetime.datetime.utcnow() + datetime.timedelta(minutes=mins)).isoformat() + "Z"
+
+          # INCREMENT consecutive failures; cross-threshold → quarantine + escalate-once.
+          for repo in failed:
+              prev = int(failures.get(repo, 0))
+              cur = prev + 1
+              failures[repo] = cur
+              print(f"  consecutive promotion failures: {repo} = {cur}/{MAX}")
+              if repo in quarantine:
+                  # Gap 7: a DUE re-probe (let through by the builder) failed again → keep it
+                  # quarantined and push the next probe out (backoff). Do NOT re-escalate /
+                  # double-count / re-alert (the alert partition already excludes quarantined repos).
+                  quarantine[repo]["attempts"] = cur
+                  quarantine[repo]["next_probe_after"] = _next_probe(cur)
+                  print(f"  re-probe failed: {repo} stays quarantined; next probe at {quarantine[repo]['next_probe_after']}")
+              elif cur >= MAX:
+                  quarantine[repo] = {
+                      "since": now, "attempts": cur, "escalated": False,
+                      "next_probe_after": _next_probe(cur),
+                  }
+                  newly_quarantined.append(repo)
+                  print(f"  *** QUARANTINED {repo} after {cur} consecutive failed promotions ***")
+
+          # ESCALATE-ONCE: fire escalate-to-orchestrator (repository_dispatch to PM) for any
+          # quarantined repo whose `escalated` flag is still False. Set the flag ONLY on a dispatch
+          # accepted by GitHub so a transient API failure retries next run (mirrors the watcher's
+          # retry-until-spawn idempotency, but flag lives in the manifest since the workflow is the
+          # actor here, not the stateless watcher).
+          for repo, q in quarantine.items():
+              if q.get("escalated"):
+                  continue
+              context = (
+                  f"staging→main promotion for {repo} has FAILED "
+                  f"{q.get('attempts', MAX)} consecutive runs and is now QUARANTINED. Gap 7 "
+                  f"auto-recovery WILL re-probe it (next probe ~{q.get('next_probe_after', 'soon')}): "
+                  f"if staging→main now merges clean it self-promotes and the quarantine clears with "
+                  f"NO action. Escalating only because a re-probe means it is NOT yet clean — most "
+                  f"likely a real content merge conflict (staging diverged from main) or a "
+                  f"stuck/failing required check. Resolve it: if `main ⊆ live-defi-rollout` (main "
+                  f"behind_by=0), force-sync main=LDR (admin-force-sync-all-to-main.sh, content-"
+                  f"lossless) to collapse the divergence; otherwise resolve the conflict on staging. "
+                  f"The next due re-probe then auto-clears the quarantine — do NOT hand-edit the "
+                  f"manifest unless the re-probe is demonstrably broken."
+              )
+              payload = json.dumps({
+                  "event_type": "escalate-to-orchestrator",
+                  "client_payload": {
+                      "repo": repo,
+                      "pr_number": 0,
+                      "wall_type": "sit_failure",
+                      "context": context,
+                      "authoring_slot": "ci",
+                  },
+              })
+              if not token:
+                  print(f"  ! no GH_TOKEN — cannot escalate quarantine for {repo} (retry next run)")
+                  continue
+              proc = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/unified-trading-pm/dispatches", "--input", "-"],
+                  input=payload, capture_output=True, text=True,
+              )
+              if proc.returncode == 0:
+                  q["escalated"] = True
+                  print(f"  -> escalated quarantine for {repo} to orchestrator (once)")
+              else:
+                  print(f"  ! escalate dispatch failed for {repo}: {proc.stderr.strip()[:160]} (retry next run)")
+
+          manifest["promotion_failures"] = failures
+          manifest["promotion_quarantine"] = quarantine
+
+          tmp = "workspace-manifest.json.tmp"
+          with open(tmp, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          os.replace(tmp, "workspace-manifest.json")
+
+          # Partition the FAILED list for the notify jobs:
+          #   - newly_quarantined → one-shot WARNING (this run only).
+          #   - already-quarantined failures → suppressed entirely (alerted once when they crossed).
+          #   - everything else → genuine actionable failure → CRITICAL.
+          quarantined_set = set(quarantine)
+          unquarantined_failed = [r for r in failed if r not in quarantined_set]
+
+          gh_out = os.environ.get("GITHUB_OUTPUT", "")
+          if gh_out:
+              with open(gh_out, "a") as out:
+                  out.write(f"unquarantined_failed={' '.join(unquarantined_failed)}\n")
+                  out.write(f"unquarantined_failed_count={len(unquarantined_failed)}\n")
+                  out.write(f"newly_quarantined={' '.join(newly_quarantined)}\n")
+                  out.write(f"quarantine_threshold={MAX}\n")
+
+          print()
+          print("=== Quarantine summary ===")
+          print(f"  threshold (PROMOTION_MAX_ATTEMPTS): {MAX}")
+          print(f"  consecutive-failure counters: {failures}")
+          print(f"  quarantined repos: {sorted(quarantined_set)}")
+          print(f"  newly quarantined this run: {newly_quarantined}")
+          print(f"  genuine (unquarantined) failures → CRITICAL: {unquarantined_failed}")
+          PYEOF
+
+      - name: Record promotion progress in manifest
+        if: always() && steps.idempotency.outputs.idempotent_skip != 'true'
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FAILED: ${{ steps.promote.outputs.failed }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, datetime, os
+
+          promoted_str = os.environ.get("PROMOTED", "").strip()
+          failed_str = os.environ.get("FAILED", "").strip()
+
+          promoted_list = [r for r in promoted_str.split() if r]
+          failed_list = [r for r in failed_str.split() if r]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          # Record promotion progress under staging_status so a resume run
+          # can read which repos have already been promoted
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+
+          manifest["staging_status"]["promoted_repos"] = promoted_list
+          manifest["staging_status"]["failed_repos"] = failed_list
+          manifest["staging_status"]["promotion_updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"Recorded promotion progress: {len(promoted_list)} promoted, {len(failed_list)} failed")
+          PYEOF
+
+      # Partial promotion failure Telegram alert migrated to notify-partial-failure job
+
+      - name: Promote staging_versions → versions (ONLY actually-promoted repos), clear staging lock
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        # BACKLOG-DRAIN (2026-06-06): operate ONLY on the repos that actually merged to
+        # main this run (steps.promote.outputs.promoted). Repos that were SKIPPED by the
+        # STAGE 1.8 dep-order gate (or FAILED to merge) keep their staging_versions /
+        # staging_commits entries so the next SIT→staging-validated cycle re-fires and
+        # drains them once their deps reach main (bottom-up). Promoting/clearing ALL of
+        # staging_versions here (the old behaviour) would falsely mark blocked repos as
+        # on-main and wipe their pending state → they'd never drain.
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, datetime, os, sys
+          sys.path.insert(0, "scripts/cicd")
+
+          def _fs_overlay(m):
+              try:
+                  from ci_status_store import resolve_ci_status_map
+                  ci_map = resolve_ci_status_map(m)
+                  repos_obj = m.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+              except ModuleNotFoundError as exc:
+                  print(f"::warning::Firestore SDK unavailable ({exc}) — using STALE manifest "
+                        "ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # noqa: BLE001
+                  print(f"::warning::Firestore ci_status read failed ({type(exc).__name__}: {exc}) "
+                        "— falling back to manifest cache.")
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+          _fs_overlay(manifest)
+
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+
+          # The repos that actually merged to main this run (space-separated).
+          promoted_repos = [r for r in os.environ.get("PROMOTED", "").split() if r]
+          promoted_set = set(promoted_repos)
+          print(f"Repos actually promoted this run ({len(promoted_set)}): {sorted(promoted_set)}")
+
+          # Capture old→new version pairs for the cascade step (ONLY promoted repos),
+          # BEFORE mutating staging_versions, so cascade computes bump_type correctly.
+          promoted_map = {}
+          for repo in promoted_repos:
+              if repo.startswith("_") or repo not in staging_versions:
+                  continue
+              new_version = staging_versions[repo]
+              old_version = stable_versions.get(repo, "0.0.0")
+              # bug #11 (2026-06-23): a content-only (non-bumping) promote has old == new — its content
+              # merged to main but there is NO version change. It must NOT enter the cascade (a spurious
+              # dependency-update would needlessly churn every dependent) nor re-publish an unchanged
+              # version. The content reaching main is the entire point; the version stays put.
+              if old_version == new_version:
+                  print(f"  content-only promote (no version change): {repo} stays {new_version} — no cascade")
+                  continue
+              promoted_map[repo] = {"old": old_version, "new": new_version}
+
+          # Write to GITHUB_ENV for the cascade step (JSON, single line)
+          github_env = os.environ.get("GITHUB_ENV", "")
+          if github_env:
+              import json as _json
+              with open(github_env, "a") as ef:
+                  ef.write("PROMOTED_JSON<<PROMOTED_EOF\n")
+                  ef.write(_json.dumps(promoted_map))
+                  ef.write("\nPROMOTED_EOF\n")
+
+          # Promote ONLY the actually-promoted staging versions to the stable versions map.
+          promoted = []
+          for repo in promoted_repos:
+              if repo.startswith("_") or repo not in staging_versions:
+                  continue
+              version = staging_versions[repo]
+              manifest["versions"][repo] = version
+              promoted.append(f"  {repo}={version}")
+
+          # Append ONLY the promoted repos' staging_commits to main_commits.history (last 5).
+          staging_commits = manifest.get("staging_commits", {})
+          promoted_commits = {
+              k: v for k, v in staging_commits.items()
+              if not k.startswith("_") and k in promoted_set
+          }
+          if promoted_commits:
+              entry = {
+                  "promoted_at": datetime.datetime.utcnow().isoformat() + "Z",
+                  "commits": promoted_commits,
+              }
+              if "main_commits" not in manifest:
+                  manifest["main_commits"] = {"history": []}
+              history = manifest["main_commits"].get("history", [])
+              history.insert(0, entry)
+              if len(history) > 5:
+                  history = history[:5]
+              manifest["main_commits"]["history"] = history
+
+          # Remove ONLY promoted repos from staging_versions; KEEP blocked/failed repos
+          # so the next SIT cycle re-fires and drains them (preserve the _note + others).
+          new_staging_versions = {
+              repo: ver for repo, ver in staging_versions.items()
+              if repo.startswith("_") or repo not in promoted_set
+          }
+          manifest["staging_versions"] = new_staging_versions
+
+          # Remove ONLY promoted repos from staging_commits; KEEP the rest (+ _note).
+          new_staging_commits = {
+              repo: sha for repo, sha in staging_commits.items()
+              if repo.startswith("_") or repo not in promoted_set
+          }
+          manifest["staging_commits"] = new_staging_commits
+
+          # Reset ci_status for PROMOTED repos: SIT_VALIDATED/STAGING_GREEN → FEATURE_GREEN
+          # (main is the new baseline; the on-main QG run then emits MAIN_GREEN, which is
+          # what unblocks dependents on a subsequent drain run). Blocked repos are left
+          # untouched so STAGE 1.8 re-evaluates them next run.
+          repos_data = manifest.get("repositories", {})
+          for repo in promoted:
+              repo_name = repo.strip().split("=")[0]  # promoted list has "repo=version" format
+              if repo_name in repos_data:
+                  old_ci = repos_data[repo_name].get("ci_status", "")
+                  if old_ci in ("SIT_VALIDATED", "STAGING_GREEN"):
+                      repos_data[repo_name]["ci_status"] = "FEATURE_GREEN"
+                      print(f"  ci_status reset: {repo_name} {old_ci} → FEATURE_GREEN")
+
+          # Are there still pending repos (blocked/failed) awaiting a future drain run?
+          remaining_pending = [
+              r for r, sv in manifest["staging_versions"].items()
+              if not r.startswith("_") and sv != manifest["versions"].get(r)
+          ]
+
+          # Clear staging lock (guard against missing field). Clearing the lock is correct
+          # even when repos remain pending: this promotion run is done; the next
+          # sit-debounce tick sees the remaining staging_versions and re-locks + re-runs
+          # SIT, which re-dispatches staging-validated to drain the next ready tier.
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}
+          manifest["staging_status"]["locked"] = False
+          manifest["staging_status"]["locked_since"] = None
+          manifest["staging_status"]["locked_reason"] = None
+          manifest["staging_status"]["lock_version"] = None
+          # Unlock → clear the starvation alarm so the next lock cycle can alert again (finding H3).
+          manifest["staging_status"]["locked_alert_sent"] = False
+          # Clear per-run promotion progress tracking.
+          manifest["staging_status"].pop("promoted_repos", None)
+          manifest["staging_status"].pop("failed_repos", None)
+          manifest["staging_status"].pop("promotion_updated_at", None)
+          if remaining_pending:
+              print(f"  NOTE: {len(remaining_pending)} repo(s) still pending (drain next run): {sorted(remaining_pending)}")
+
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
+
+          print(f"Promoted {len(promoted)} repos to stable versions:")
+          for p in promoted:
+              print(p)
+          _hist_len = len(manifest.get("main_commits", {}).get("history", []))
+          print(f"main_commits.history length: {_hist_len} (appended {len(promoted_commits)} promoted commit(s))")
+          print("staging_status.locked = false")
+          PYEOF
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
+
+      - name: Commit manifest update
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No manifest changes. Nothing to commit."
+            exit 0
+          fi
+
+          COMMIT_MSG="chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
+          git add workspace-manifest.json
+          git commit -m "$COMMIT_MSG"
+
+          # Retry-with-re-derive (ROOT FIX — bug #11 manifest-commit race, 2026-06-25):
+          # On push rejection we UN-COMMIT our change, fetch fresh origin/main, then apply
+          # our semantic mutations on top of the fresh base and re-commit — instead of
+          # git-rebasing (which creates a textual JSON conflict because both sides rewrote
+          # the same workspace-manifest.json).
+          #
+          # Semantic-merge rules (start from fresh origin/main, apply our changes):
+          #   versions           — set promoted-repo entries to our staging→stable values
+          #   staging_versions   — fresh main's map, with promoted repos removed
+          #   staging_commits    — fresh main's map, with promoted repos removed
+          #   staging_status     — ours (we own the lock-clear + progress fields)
+          #   main_commits       — ours (we prepended the promotion history entry)
+          #   promotion_failures/quarantine — ours (additive; updated this run)
+          #   repositories[promo].ci_status — reset to FEATURE_GREEN for promoted repos
+          #   everything else    — fresh main's value (preserves concurrent writes by
+          #                        ci-status-update, cloud-build-router, semver-agent, etc.)
+          # The result is conflict-free by construction: no textual overlap with the
+          # concurrent writer's commit.
+          # SSOT: cicd_consolidated_remaining_2026_06_24.md WS-B "Commit manifest update race ROOT fix"
+          PUSHED=false
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              PUSHED=true
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); re-deriving onto fresh origin/main."
+
+            # Un-commit (keep our mutated workspace-manifest.json in the working tree).
+            git reset HEAD^
+            git fetch origin main
+
+            python3 - <<'PYEOF_REDERIVE'
+          import json, subprocess, sys, os
+          promoted_set = {r for r in os.environ.get("PROMOTED", "").split() if r}
+          proc = subprocess.run(
+              ["git", "show", "origin/main:workspace-manifest.json"],
+              capture_output=True, text=True, check=False,
+          )
+          if proc.returncode != 0:
+              # Cannot reach fresh main — keep our local version; next attempt may succeed.
+              print(f"::warning::Re-derive: cannot read origin/main:workspace-manifest.json "
+                    f"({proc.stderr.strip()!r}) — keeping local version unchanged")
+              sys.exit(0)
+          fresh = json.loads(proc.stdout)
+          with open("workspace-manifest.json") as f:
+              ours = json.load(f)
+          # Start from fresh main; apply our mutations selectively.
+          merged = dict(fresh)
+          # (1) versions: set promoted-repo entries to our computed staging versions
+          for repo in promoted_set:
+              our_ver = ours.get("versions", {}).get(repo)
+              if our_ver is not None:
+                  merged.setdefault("versions", {})[repo] = our_ver
+          # (2)/(3) staging_versions/commits: fresh main's, minus promoted repos
+          for key in ("staging_versions", "staging_commits"):
+              fresh_map = fresh.get(key, {})
+              merged[key] = {k: v for k, v in fresh_map.items()
+                             if k.startswith("_") or k not in promoted_set}
+          # (4) staging_status: ours (we own the lock-clear + progress tracking)
+          merged["staging_status"] = ours.get("staging_status", {})
+          # (5) main_commits: ours (we prepended the promotion history entry)
+          merged["main_commits"] = ours.get("main_commits", {})
+          # (6) promotion_failures/quarantine: ours (additive; updated this run)
+          for key in ("promotion_failures", "promotion_quarantine"):
+              if key in ours:
+                  merged[key] = ours[key]
+          # (7) ci_status reset: FEATURE_GREEN for promoted repos (SIT_VALIDATED/STAGING_GREEN only)
+          for repo in promoted_set:
+              repo_obj = merged.get("repositories", {}).get(repo)
+              if isinstance(repo_obj, dict) and repo_obj.get("ci_status") in ("SIT_VALIDATED", "STAGING_GREEN"):
+                  repo_obj["ci_status"] = "FEATURE_GREEN"
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(merged, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          print(f"Re-derived manifest onto fresh origin/main "
+                f"(promoted={sorted(promoted_set)}, attempt={os.environ.get('ATTEMPT', '?')}).")
+          PYEOF_REDERIVE
+
+            git add workspace-manifest.json
+            git commit -m "$COMMIT_MSG"
+          done
+          if [ "${PUSHED}" != "true" ]; then
+            echo "::warning::staging-to-main: manifest bookkeeping not pushed after 8 re-derive attempts; it self-reconciles on the next run. NOT failing the run (content promotion already landed)."
+          fi
+
+      - name: Dispatch dependency-update cascade for promoted repos
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        # Fires dependency-update events to all direct downstream dependents of each promoted repo.
+        # version-bump.yml on each repo skips staging→main merge commits (chore(release): prefix),
+        # so this step ensures the cascade fires even when version-bump.yml cannot detect the bump.
+        # bump_type is computed from the old stable version vs new promoted version (not always patch).
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          # Exported into the env so the python heredoc below can read os.environ["OWNER"/"TOKEN"];
+          # plain shell vars are NOT inherited by the heredoc → previously KeyError: 'OWNER' on
+          # every promotion (cicd P1 #257 — surfaced by the GH013-fix e2e).
+          OWNER: ${{ github.repository_owner }}
+          TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TOKEN:-}" ]; then
+            echo "GH_PAT not set — skipping cascade dispatch."
+            exit 0
+          fi
+
+          if [ -z "${PROMOTED_JSON:-}" ] || [ "${PROMOTED_JSON}" = "{}" ]; then
+            echo "PROMOTED_JSON empty (nothing was promoted or no staging_versions existed). Skipping cascade."
+            exit 0
+          fi
+
+          python3 - <<'PYEOF'
+          import json, os, subprocess, sys
+
+          promoted = json.loads(os.environ["PROMOTED_JSON"])
+          owner = os.environ["OWNER"]
+          token = os.environ["TOKEN"]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repos_data = manifest.get("repositories", {})
+
+          def compute_bump_type(old: str, new: str) -> str:
+              try:
+                  om, omin, op = (int(x) for x in old.split("."))
+                  nm, nmin, np = (int(x) for x in new.split("."))
+              except ValueError:
+                  return "patch"
+              if nm > om:
+                  return "major"
+              if nmin > omin:
+                  return "minor"
+              return "patch"
+
+          def find_dependents(repo_name: str) -> list[str]:
+              deps = []
+              for name, data in repos_data.items():
+                  for dep in data.get("dependencies", []):
+                      dep_name = dep.get("name") if isinstance(dep, dict) else dep
+                      if dep_name == repo_name:
+                          deps.append(name)
+              return deps
+
+          dispatched_total = 0
+          failed_total = 0
+
+          for repo, info in promoted.items():
+              old_v = info.get("old") or "0.0.0"
+              new_v = info["new"]
+              bump_type = compute_bump_type(old_v, new_v)
+
+              parts = new_v.split(".")
+              major = int(parts[0])
+              minor = int(parts[1])
+              constraint = f">={major}.{minor}.0,<{major+1}.0.0"
+
+              dependents = find_dependents(repo)
+              if not dependents:
+                  print(f"  {repo} {old_v}→{new_v} ({bump_type}): no dependents")
+                  continue
+
+              print(f"  {repo} {old_v}→{new_v} ({bump_type}): cascading to {len(dependents)} dependent(s)")
+
+              for dep_repo in dependents:
+                  payload = json.dumps({
+                      "event_type": "dependency-update",
+                      "client_payload": {
+                          "dep_name": repo,
+                          "dep_version": new_v,
+                          "constraint": constraint,
+                          "bump_type": bump_type,
+                      }
+                  })
+                  result = subprocess.run(
+                      ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                       "-X", "POST",
+                       "-H", f"Authorization: Bearer {token}",
+                       "-H", "Accept: application/vnd.github+json",
+                       f"https://api.github.com/repos/{owner}/{dep_repo}/dispatches",
+                       "-d", payload],
+                      capture_output=True, text=True
+                  )
+                  http_status = result.stdout.strip()
+                  if http_status == "204":
+                      print(f"    ✅ {dep_repo}")
+                      dispatched_total += 1
+                  else:
+                      print(f"    ⚠️  {dep_repo} HTTP {http_status}")
+                      failed_total += 1
+
+          print(f"\nCascade complete: {dispatched_total} dispatched, {failed_total} failed")
+          if failed_total > 0:
+              sys.exit(1)
+          PYEOF
+
+      - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          OWNER="IggyIkenna"
+          REPOS=$(python3 -c "import json; m=json.load(open('workspace-manifest.json')); print('\n'.join(m.get('repositories',{}).keys()))")
+          FAILED=""
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            gh api "repos/$OWNER/$REPO/dispatches" \
+              -X POST \
+              -f event_type="staging-unlocked" \
+              2>/dev/null || FAILED="$FAILED $REPO"
+          done <<< "$REPOS"
+          if [ -n "$FAILED" ]; then
+            echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
+          fi
+          echo "Dispatched staging-unlocked to all repos"
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  notify-partial-failure:
+    name: Slack — Partial Promotion Failure
+    needs: [promote-staging-to-main]
+    # CRITICAL only on GENUINE, NOT-yet-quarantined failures (steps.quarantine partitions the
+    # promote step's FAILED list). A repo that has hit PROMOTION_MAX_ATTEMPTS is escalated +
+    # downgraded to the one-shot WARNING below — it no longer re-fires this CRITICAL every run.
+    # Falls back to the raw failed_count when the quarantine step produced no output (e.g. it
+    # didn't run / errored before writing) so a real failure is never silently swallowed.
+    if:
+      always() && ((needs.promote-staging-to-main.outputs.unquarantined_failed_count != '0' &&
+      needs.promote-staging-to-main.outputs.unquarantined_failed_count != '') ||
+      (needs.promote-staging-to-main.outputs.unquarantined_failed_count == '' &&
+      needs.promote-staging-to-main.outputs.failed_count != '0' && needs.promote-staging-to-main.outputs.failed_count !=
+      ''))
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Partial Staging Promotion Failure | Promoted: ${{ needs.promote-staging-to-main.outputs.promoted_count }} |
+        Failed (unquarantined): ${{ needs.promote-staging-to-main.outputs.unquarantined_failed_count ||
+        needs.promote-staging-to-main.outputs.failed_count }} | Failed repos: ${{
+        needs.promote-staging-to-main.outputs.unquarantined_failed || needs.promote-staging-to-main.outputs.failed }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-quarantine:
+    name: Slack — Repo Quarantined
+    needs: [promote-staging-to-main]
+    # ONE-SHOT WARNING the run a repo crosses PROMOTION_MAX_ATTEMPTS. It is now SKIPPED on every
+    # future run (queue unblocked) + escalated once to the orchestrator — so the recurring
+    # CRITICAL is replaced by this single, actionable WARNING. Fires only when at least one repo
+    # was newly quarantined this run.
+    if:
+      always() && needs.promote-staging-to-main.outputs.newly_quarantined != '' &&
+      needs.promote-staging-to-main.outputs.newly_quarantined != ' '
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Repo quarantined after ${{ needs.promote-staging-to-main.outputs.quarantine_threshold }} failed staging→main
+        promotions, needs attention | Quarantined: ${{ needs.promote-staging-to-main.outputs.newly_quarantined }} |
+        Skipped on future runs (queue unblocked) + escalated to orchestrator once. Auto-clears on next successful
+        promotion."
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-promotion-complete:
+    name: Slack — Staging Promotion
+    needs: [promote-staging-to-main]
+    # Posts whenever there are NO genuine (unquarantined) failures. The message + severity must be
+    # TRUTHFUL to the job RESULT — a job can fail (a step erroring BEFORE failed_count is set) even
+    # with failed_count empty, so a hardcoded "complete" / INFO would read as success on a failed
+    # run (the exact 2026-06-07 bug). notify-slack.yml also truthful-classifies severity from
+    # `conclusion`, but we make the BODY honest too. Uses the SAME partition as the CRITICAL job
+    # (unquarantined first, raw failed_count fallback) so the two are mutually exclusive: a
+    # quarantine-only run (no genuine failures) reports complete here, the WARNING fires separately.
+    if:
+      always() && ((needs.promote-staging-to-main.outputs.unquarantined_failed_count == '0') ||
+      (needs.promote-staging-to-main.outputs.unquarantined_failed_count == '' &&
+      (needs.promote-staging-to-main.outputs.failed_count == '0' || needs.promote-staging-to-main.outputs.failed_count
+      == '')))
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "${{ needs.promote-staging-to-main.result == 'success' && 'Staging → main promotion complete' || format('Staging
+        → main promotion did NOT complete cleanly (job result {0}) — investigate the run',
+        needs.promote-staging-to-main.result) }}"
+      # INFO on a genuine success; notify-slack up-ranks to CRITICAL/WARNING automatically
+      # when conclusion is failure/cancelled, so a failed run never pages at INFO.
+      severity: ${{ needs.promote-staging-to-main.result == 'success' && 'INFO' || 'CRITICAL' }}
+      conclusion: ${{ needs.promote-staging-to-main.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Staging Promotion Event
+    needs: [promote-staging-to-main, notify-partial-failure, notify-quarantine, notify-promotion-complete]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.promote-staging-to-main.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"promoted": "${{ needs.promote-staging-to-main.outputs.promoted_count }}", "failed": "${{
+        needs.promote-staging-to-main.outputs.failed_count }}"}'

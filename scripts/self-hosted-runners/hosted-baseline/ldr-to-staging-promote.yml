@@ -1,0 +1,570 @@
+name: ldr-to-staging-promote
+
+# TIER C — auto LDR→staging promotion bot (cicd_contract_hardening_2026_06_01 § SIT Tiers A–E, audit j3).
+#
+# WHY: commits land on `live-defi-rollout` (the gateless integration trunk) continuously, but nothing
+# advances `staging` from LDR — quickmerge only opens a staging PR for the NEW unit it commits and
+# early-exits "nothing to commit" on a clean tree, so already-committed LDR backlog never drains.
+# Result: the recurring multi-hundred-commit "staging behind LDR" drift. This bot closes that gap:
+# it opens a LDR→staging PR per repo with drift and enables v2-gated auto-merge, so the backlog
+# drains continuously and safely.
+#
+# GATES (all fail-OPEN on missing signal — block only on an explicit negative):
+#   Tier A (per-repo, scripts/cicd/tier_c_promotion_gate.py): repo's LDR CI not red (ci_status != FAILING).
+#   Dep-order (per-repo, same script): every tracked dep already on staging (ci_status ≥ STAGING_GREEN) —
+#     the LDR→staging mirror of quickmerge STAGE 1.7 / staging-to-main STAGE 1.8.
+#   Tier B (workflow-level): the full-workspace SIT (system-integration-tests) is not in an explicit
+#     failure state. Unknown/absent → pass (safe-default).
+#
+# SAFETY: never force-pushes; opens a PR and enables auto-merge → the repo's quality-gates-v2 required
+# check is what actually merges it. A merge conflict dispatches the conflict-resolution-agent (same as
+# staging-to-main). `dry_run` input lists what WOULD promote without opening PRs.
+#
+# Triggers: manual dispatch + repository_dispatch (Tier-A/B green signal). The */15 SCHEDULE is STOPPED
+# under fleet-wide staging-dormant (WS-L) — re-add the cron to resume the auto-drain (see below).
+
+on:
+  # WS-L (2026-06-28): the */15 schedule is STOPPED. The fleet promotes LDR→main DIRECT
+  # (staging_dormant_mode), so this LDR→staging drain skips EVERY repo — a pure no-op that was billing
+  # ~2,000-2,900 GHA-minutes/month on a private repo for zero value. KEPT REVERSIBLE: re-add this cron
+  # (or use workflow_dispatch / repository_dispatch) when a repo is routed THROUGH staging (a
+  # breaking/major bump / operator decision). SSOT: plans/active/cicd_retire_staging_branch_2026_06_27.md.
+  # schedule:
+  #   - cron: "2,17,32,47 * * * *" # every 15 min (offset). Re-enable to resume the auto-drain.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List repos that WOULD promote (gate decisions) without opening PRs"
+        type: boolean
+        required: false
+        default: false
+      only_repo:
+        description: "Limit to a single repo (leave empty for the full fleet sweep)"
+        required: false
+        default: ""
+  repository_dispatch:
+    types: [tier-ab-green]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ldr-to-staging-promote
+  cancel-in-progress: false
+
+jobs:
+  promote-ldr-to-staging:
+    runs-on: ubuntu-latest
+    # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate
+    # (tier_c_promotion_gate._overlay_firestore_ci_status) needs this project env + the SDK
+    # installed below, else it silently decides on the STALE manifest ci_status cache.
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+      blocked: ${{ steps.promote.outputs.blocked }}
+      conflicted: ${{ steps.promote.outputs.conflicted }}
+      promoted_count: ${{ steps.promote.outputs.promoted_count }}
+      blocked_count: ${{ steps.promote.outputs.blocked_count }}
+      conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
+    steps:
+      # Token-pool split (sprawl consolidation 2026-06-27):
+      # checkout uses GITHUB_TOKEN (same-repo read; this workflow creates PRs via `gh pr`
+      # with the App token env var, not via checkout-token git push).
+      # GitHub App token is reserved for cross-repo PR creation / auto-merge / dispatch.
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      # App token: cross-repo fleet PR creation + auto-merge + workflow dispatch.
+      # Separate 5000/hr pool; owner-scoped. App perms: Contents+PullRequests+Actions R/W.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+
+      # Gap 8: auth + Firestore SDK so the dep-order gate reads LIVE ci_status, not the stale
+      # committed cache. Best-effort — falls back to the manifest exactly as before if unavailable.
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_drain
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_drain.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+
+      # ── WS-L: close ORPHANED LDR→staging drains for main-direct (dormant) repos ──
+      # The promote step below SKIPS main-direct repos (staging_dormant_mode / promotion_model=ldr_main),
+      # so it never PROCESSES them — which means a repo that went dormant WHILE it had an open LDR→staging
+      # drain PR leaves that PR ORPHANED: no merge path, never re-touched → stuck BLOCKED forever in the
+      # /repos "Stuck — triage queue". This step closes them at the source (same `_main_direct` predicate
+      # as the skip), making "clears blockages AT THE SOURCE" actually true. Idempotent; honours dry_run.
+      - name: Close orphaned LDR→staging drains for dormant repos
+        id: close_dormant_orphans
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          DORMANT=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          dormant = bool(m.get("staging_dormant_mode"))
+          for k, v in m.get("repositories", {}).items():
+              if k.startswith("_"):
+                  continue
+              if dormant or (isinstance(v, dict) and v.get("promotion_model") == "ldr_main"):
+                  print(k)
+          PYEOF
+          )
+          CLOSED=0
+          for REPO in $DORMANT; do
+            PRS=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+              --state open --json number --jq '.[].number' 2>/dev/null || true)
+            for PR in $PRS; do
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "DRY_RUN: would close $REPO#$PR (orphaned dormant drain)"
+                continue
+              fi
+              if gh pr close "$PR" --repo "$OWNER/$REPO" --comment \
+                "Closed by ldr-to-staging drain: $REPO is staging-dormant (promotion_model=ldr_main / staging_dormant_mode) — the LDR→staging drain is bypassed; content promotes LDR→main DIRECT. Orphaned drain PR with no merge path, cleared at source. Reversible: unset ldr_main / staging_dormant_mode to resume the through-staging path." 2>/dev/null; then
+                echo "  closed orphaned dormant drain $REPO#$PR"
+                CLOSED=$((CLOSED+1))
+              fi
+            done
+          done
+          echo "Closed $CLOSED orphaned dormant drain PR(s)."
+
+      # ── Tier B gate: full-workspace SIT not in explicit failure ───────────
+      - name: Tier B gate — full-workspace SIT not red
+        id: tier_b
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          # Read the most recent COMPLETED full-workspace SIT run. Fail-open: any error,
+          # unknown workflow, or no completed run → pass with a note (never block on absent signal).
+          SIT_CONCL=""
+          for WF in full-workspace-sit.yml workspace-sit.yml sit.yml; do
+            SIT_CONCL=$(gh run list --repo "$OWNER/system-integration-tests" --workflow "$WF" \
+              --status completed --limit 1 --json conclusion --jq '.[0].conclusion' 2>/dev/null || true)
+            [ -n "$SIT_CONCL" ] && [ "$SIT_CONCL" != "null" ] && { echo "SIT workflow: $WF"; break; }
+          done
+          if [ "$SIT_CONCL" = "failure" ]; then
+            echo "❌ Tier B BLOCK: latest full-workspace SIT conclusion = failure. Fix SIT before LDR→staging promotion."
+            echo "tier_b_pass=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "✅ Tier B pass (SIT conclusion='${SIT_CONCL:-unknown}'; unknown/success → safe-default pass)"
+          echo "tier_b_pass=true" >> "$GITHUB_OUTPUT"
+
+      - name: Promote LDR → staging (dep-order + Tier-A gated, per repo, topo order)
+        id: promote
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          ONLY_REPO: ${{ inputs.only_repo || '' }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          MANIFEST="workspace-manifest.json"
+
+          # Topological order (T0 first) — promote deps before dependents.
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          # WS-L: SKIP the LDR→staging drain for MAIN-DIRECT repos — the fleet-wide staging_dormant_mode
+          # toggle, OR a per-repo promotion_model=ldr_main. They promote LDR→main directly, so creating an
+          # LDR→staging drain PR for them just jams (stuck drain + CodeBuild action_required + PAT churn).
+          # This clears those blockages AT THE SOURCE. Reversible: flip staging_dormant_mode off / unset
+          # ldr_main and the drain resumes for that repo (the through-staging path for major/breaking/operator).
+          dormant = bool(m.get("staging_dormant_mode"))
+          def _main_direct(cfg):
+              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") == "ldr_main")
+          repos = {
+              k for k, v in m.get("repositories", {}).items()
+              if not k.startswith("_") and not _main_direct(v)
+          }
+          topo = m.get("topologicalOrder", {}).get("levels", [])
+          emitted = set()
+          for level in topo:
+              for repo in level.get("repos", []):
+                  if repo in repos and repo not in emitted:
+                      print(repo)
+                      emitted.add(repo)
+          # Any repo missing from topo levels still gets a chance (appended last).
+          for repo in sorted(repos - emitted):
+              print(repo)
+          PYEOF
+          )
+
+          # ── D4 (ldr_trunk_promotion_decoupling_2026_06_10): process repos in BOUNDED PARALLEL.
+          # Safe because the dep-order gate (tier_c_promotion_gate) reads each dep's *prior-run*
+          # ci_status (a PR's STAGING_GREEN only lands after it merges, minutes later) — so intra-run
+          # ordering never changes a gate verdict and NO tier barrier is needed. Each repo runs in a
+          # backgrounded subshell, buffers its log to $LOG_DIR/<repo>.log, and writes ONE result token
+          # to $RESULT_DIR/<repo> (subshells can't mutate parent vars). After the barrier we replay logs
+          # in topo order and aggregate the tokens into the counters. Cap bounds API/clone load.
+          RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
+          MAXJOBS=8
+
+          process_repo() {
+            REPO="$1"
+            _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
+
+            # ── Mode-B fix (cicd_consolidated_remaining_2026_06_24) ──────────────────────────────
+            # The --squash fallback below USED to title the merge commit a flat `chore(promote)`. When LDR is
+            # merge-laden (backmerge bot) `--rebase` won't arm, so the drain squashes — collapsing every
+            # underlying feat:/fix:/feat!: into that one `chore` subject. semver-agent reads the staging commit's
+            # conventional type → sees `chore` → NO bump → the version-driven staging→main promoter
+            # (`promoting=[r for r,sv in staging_versions if sv!=versions[r]]`) never carries the repo → ≈15 repos
+            # froze on staging for days. Fix: derive the AGGREGATE conventional type from the commits the squash
+            # will collapse and title the squash subject accordingly, so the semver signal survives the squash.
+            # Fail-safe: defaults to `chore` (no bump) only when no feat/fix/breaking is found (a genuinely
+            # non-bumping drain stays non-bumping); over-detection (e.g. an already-promoted feat in range) →
+            # an extra harmless monotonic bump, never a starve.
+            # Derive ONLY the semver BUMP SIGNAL (feat=MINOR / fix=PATCH / chore=none) — NEVER emit the
+            # `!` breaking-override. `feat!`/`fix!` headlines still map to feat/fix (the `!?` in the
+            # patterns), but the `!` is DROPPED. Breaking is the AST public-surface differ's verdict
+            # (scripts/cicd/detect_breaking_change.py — the SoT; CLAUDE.md "feat! is an explicit HUMAN
+            # override"), which runs on the staging PR independently, so a genuine breaking change is
+            # still caught + SIT-gated. An AUTOMATED drain must NOT force a breaking SIT cascade.
+            # WHY (incident 2026-06-21, UAC froze the whole fleet): the prior `_bk`→`feat!` branch was
+            # SELF-PERPETUATING — the backmerge re-includes a prior `feat!: LDR → staging (auto-drain)`
+            # commit in the next drain's PR range, so the `!:` test re-matched the drain's OWN earlier
+            # subject → every drain re-flagged breaking → the repo stuck in staging_status.breaking_pending
+            # → UTL held at STAGING_GREEN → the dep-order gate skipped all 18 dependents (promotion lag).
+            _squash_subject() {
+              local _pr="$1" _t="chore" _h
+              _h="$(gh pr view "$_pr" --repo "$OWNER/$REPO" --json commits --jq '.commits[].messageHeadline' 2>/dev/null || true)"
+              if printf '%s\n' "$_h" | grep -qE '^feat(\([^)]+\))?!?:'; then _t="feat"
+              elif printf '%s\n' "$_h" | grep -qE '^fix(\([^)]+\))?!?:'; then _t="fix"
+              fi
+              printf '%s: LDR → staging (Tier C auto-drain)' "$_t"
+            }
+
+            if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then return 0; fi
+
+            # Skip repos without a staging branch (e.g. agent-orchestrator on the main-direct path).
+            if ! gh api "repos/$OWNER/$REPO/branches/staging" --jq '.name' >/dev/null 2>&1; then
+              echo "SKIP $REPO: no staging branch"; return 0
+            fi
+
+            # Is live-defi-rollout ahead of staging? (commits on LDR not yet on staging)
+            AHEAD=$(gh api "repos/$OWNER/$REPO/compare/staging...live-defi-rollout" --jq '.ahead_by' 2>/dev/null || echo "0")
+            if [ "$AHEAD" = "0" ] || [ -z "$AHEAD" ]; then
+              echo "SKIP $REPO: staging already current with LDR (ahead_by=0)"; return 0
+            fi
+
+            # ── TREE-equality gate (2026-06-12 incident fix) ── ahead_by alone is the squash-accounting
+            # trap: a squash-merge never lands LDR's commits on staging, so ahead_by NEVER returns to 0
+            # and the merge-base compare reports the same phantom changed-files forever. Result on
+            # 2026-06-11: 375 EMPTY promote squashes + ~450 full quality-gates-v2 runs on features-service
+            # alone in ONE DAY (fleet QGv2 2,857 runs that day ≈ $230 — the #1 Actions spend driver and a
+            # proximate cause of the billing wall). Identical tree SHAs == byte-identical content
+            # regardless of squash history — the exact "content, not commit-count" signal. On tree-equal,
+            # also close any phantom open drain PR (an armed one would still squash an empty commit).
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            STG_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_STG")
+            if [ "$LDR_TREE" = "$STG_TREE" ]; then
+              echo "SKIP $REPO: staging tree == LDR tree (content-identical; ahead_by=$AHEAD is squash-accounting noise)"
+              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "  DRY-RUN: would close phantom drain PR #$PHANTOM_PR (zero content delta)"
+                else
+                  echo "  closing phantom drain PR #$PHANTOM_PR (zero content delta)"
+                  gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
+                    --comment "Closed by Tier-C drain: staging tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
+                fi
+              fi
+              return 0
+            fi
+
+            # ── RUNAWAY BREAKER (2026-06-12, generic) ── the tree gate above kills the known
+            # squash-accounting loop, but ANY future malfunction that re-promotes a repo in a tight
+            # loop (whatever the cause) shows up the same way: an absurd count of merged drain PRs.
+            # Healthy ceiling is 24 merges/6h (every */15 tick promoting — already implausible);
+            # ≥30/6h is always a malfunction, never throughput (a 70s loop hits 30 in ~35 min).
+            # 6h window (not 24h) so a past incident ages out and doesn't block a repo's REAL
+            # promotion the next morning. Refuse + page CRITICAL instead of burning QGv2 runs.
+            MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+              --state merged --limit 100 --json mergedAt,title \
+              --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
+            if [ "${MERGED_6H:-0}" -ge 30 ]; then
+              echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} drain PRs merged in 6h (cap 30) — refusing to promote this repo; CRITICAL page"
+              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
+                curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                  -d "{\"text\":\":rotating_light: *RUNAWAY PROMOTE BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→staging drain merges in 6h (healthy max 24). Tier-C drain is malfunctioning on this repo (promote loop). Repo promotion REFUSED until the count ages out or the cause is fixed. Check \`main-backmerge-to-ldr.yml\` (backmerge bot) — a mis-firing backmerge can cause a loop. SSOT: ldr-to-staging-promote.yml runaway breaker.\"}" >/dev/null 2>&1 || true
+              fi
+              _done BLOCKED; return 0
+            fi
+
+            # ── Per-repo gate (Tier A + dep-order) ──
+            if GATE_OUT=$(python3 scripts/cicd/tier_c_promotion_gate.py "$REPO" --manifest "$MANIFEST"); then
+              echo "GATE PASS  $REPO (+$AHEAD): $GATE_OUT"
+            else
+              echo "GATE BLOCK $REPO (+$AHEAD): $GATE_OUT"
+              # ── Stale-FAILING ci_status self-heal (2026-06-16) ── A Tier-A "LDR CI is FAILING"
+              # block whose ci_status is STALE relative to the CURRENT LDR HEAD (no quality-gates-v2
+              # run exists for HEAD's sha) is a DEADLOCK: ci_status only resets to green when a v2 run
+              # passes, and the drain PR is what triggers that v2 — but the drain is blocked by the very
+              # status. (Observed 2026-06-16: a fixed-on-LDR repo whose ci_status was set FAILING by a
+              # prior dep-update v2 failure could never promote — no v2 ever re-ran on the fixed HEAD.)
+              # Break it: when the block is Tier-A AND no v2 run exists for the current LDR HEAD,
+              # re-dispatch v2 on live-defi-rollout HEAD to refresh ci_status; the next drain tick
+              # re-evaluates with a fresh status. A genuinely-red CURRENT head keeps a real failing run
+              # (HAS_V2>=1) → no re-dispatch → stays blocked (correct). Mirrors the open-PR stale-check
+              # recovery below. Fail-quiet (best-effort; a missing signal must never jam the loop).
+              if printf '%s' "$GATE_OUT" | grep -q 'Tier A'; then
+                HEAD_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+                # Exclude action_required/cancelled: those are NOT a real report (action_required = a PR-event
+                # workflow-approval gate, seen on agent-orchestrator/e2e-testing 2026-06-21) — counting them as
+                # "v2 present" masked the missing-check signal so the bot never re-dispatched → PR stuck forever.
+                HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha,conclusion -q "[.[] | select(.headSha == \"$HEAD_SHA\" and .conclusion != \"action_required\" and .conclusion != \"cancelled\")] | length" 2>/dev/null || echo "0")
+                if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" -eq 0 ]; then
+                  echo "  ↻ Tier-A FAILING is STALE for $REPO (no quality-gates-v2 on current LDR HEAD ${HEAD_SHA:0:8}) — re-dispatching v2 to refresh ci_status; next drain tick re-evaluates"
+                  gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null || true
+                fi
+              fi
+              _done BLOCKED; return 0
+            fi
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would open LDR→staging PR for $REPO (+$AHEAD commits)"; _done PROMOTED; return 0
+            fi
+
+            # Open (or reuse) the LDR→staging PR and enable v2-gated auto-merge.
+            BODY="Tier C auto-promotion: draining live-defi-rollout → staging (+${AHEAD} commits). Dep-order + Tier-A gated. Merges when quality-gates-v2 passes on the merge result. SSOT: ldr-to-staging-promote.yml."
+            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+              --title "chore(promote): LDR → staging (Tier C auto-drain)" \
+              --body "$BODY" --base staging --head live-defi-rollout 2>/dev/null || true)
+
+            if [ -n "$PR_URL" ]; then
+              echo "  PR: $PR_URL"
+              # ── Provenance gate (D1, ldr_trunk_promotion_decoupling_2026_06_10): the promote bot
+              # promotes ONLY quickmerge-provenanced content. Fetch the target repo's staging + LDR
+              # into a temp repo and run PM's check_strict_quickmerge.py over the promote range; on a
+              # CLEAR violation (a non-carve-out CODE commit lacking the `Quickmerge:` trailer) do NOT
+              # arm auto-merge — leave the PR open + comment. FAIL-OPEN on a fetch/checker error (the
+              # drain's gates fail-open on a missing signal; a checker bug must never jam promotion).
+              PROV_TMP="$(mktemp -d)"
+              if git -C "$PROV_TMP" init -q && git -C "$PROV_TMP" fetch -q --no-tags \
+                   "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
+                   "+refs/heads/staging:refs/remotes/origin/staging" \
+                   "+refs/heads/main:refs/remotes/origin/main" \
+                   "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
+                # D1 squash-blind fix (provenance_gate_squash_perpetual_block_2026_06_17): run the checker over the
+                # SINCE-LAST-PROMOTE range — the head SHA of the last merged LDR→staging drain PR, NOT raw
+                # staging..LDR. A squash-promote never lands the promoted commit's SHA on staging, so the raw range
+                # re-flags an already-drained trailer-less commit on EVERY drain forever (14b11e2). Fail-safe: no
+                # merged drain yet / unreachable marker → falls back to origin/staging..LDR (widen, never narrow).
+                PROV_RANGE="$( python3 "$GITHUB_WORKSPACE/scripts/cicd/promote_provenance_range.py" \
+                  --repo "$REPO" --owner "$OWNER" --base-branch staging --cwd "$PROV_TMP" \
+                  --fetch-remote "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" )" \
+                  || PROV_RANGE=""
+                [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/staging..origin/live-defi-rollout"
+                PROV_OUT="$( cd "$PROV_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/check_strict_quickmerge.py" \
+                  --range "$PROV_RANGE" --block 2>&1 )" && PROV_RC=0 || PROV_RC=$?
+                if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
+                  echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
+                  printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
+                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Tier-C drain)** — this LDR→staging promote carries code that bypassed quickmerge (no \`Quickmerge:\` trailer, not a carve-out). Auto-merge is **not** armed. Re-ship the change via \`quickmerge --agent --files '<paths>'\` (or revert it on \`live-defi-rollout\`); the next drain tick promotes once LDR is clean." 2>/dev/null || true
+                  # Level-2 WARN: surface the bypass to #ci-failures so we understand WHY/WHO (drain-time
+                  # detection ≤15min; the block above is the enforcement). Best-effort, never fails the drain.
+                  if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+                    PROV_DETAIL="$(printf '%s' "$PROV_OUT" | grep -- '- ' | head -5 | sed 's/"/'"'"'/g')"
+                    curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                      -d "{\"text\":\":no_entry: *Provenance gate BLOCKED a promotion* — \`$REPO\` LDR→staging carries code that bypassed quickmerge (auto-merge NOT armed; PR left open). Re-ship via quickmerge or revert on live-defi-rollout.\n\`\`\`$PROV_DETAIL\`\`\`\n$PR_URL\"}" >/dev/null 2>&1 || true
+                  fi
+                  rm -rf "$PROV_TMP"; _done BLOCKED; return 0
+                elif [ "${PROV_RC:-0}" -ne 0 ]; then
+                  echo "  WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. Output: $PROV_OUT"
+                else
+                  echo "  ✅ provenance: promote-range is quickmerge-clean (or carve-outs only)"
+                fi
+              else
+                echo "  WARN: provenance fetch failed for $REPO — failing OPEN (arming anyway)"
+              fi
+              rm -rf "$PROV_TMP"
+              # --rebase fails to ARM when LDR is merge-laden ("This branch can't be rebased": backmerge
+              # bot / resolved backmerges) → auto-merge silently never arms → promote PR piles up. Fall
+              # back to --squash (always armable) with an EXPLICIT sanitized subject/body so no inherited
+              # LDR commit-message [skip ci] poisons the staging push (closes hardening @4941).
+              gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                || gh pr merge "$PR_URL" --auto --squash \
+                     --subject "$(_squash_subject "$PR_URL")" \
+                     --body "Tier C automated drain — squash fallback (LDR not rebaseable); sanitized body. Subject conventional-type derived from the squashed commits (Mode-B semver-signal preservation)." \
+                     --repo "$OWNER/$REPO" 2>/dev/null \
+                || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
+              _done PROMOTED; return 0
+            fi
+
+            # No PR created → either one already exists or a conflict. Inspect mergeable_state.
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+              --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ]; then
+              MSTATE=""
+              for _i in 1 2 3; do
+                MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+                [ -n "$MSTATE" ] && [ "$MSTATE" != "null" ] && break
+                sleep 5
+              done
+              if [ "$MSTATE" = "dirty" ]; then
+                CONFLICT_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+                echo "  CONFLICT on PR #$PR_NUM ($CONFLICT_URL) — dispatching deterministic resolver (take-LDR; escalates to the VM conflict-agent only if genuinely ambiguous)"
+                # Operator principle 2026-06-03: deterministic common-case (LDR→staging staleness = take-LDR,
+                # no agent/credits); the resolver escalates to merge-conflict-detected (VM worker) only when the
+                # target carries genuine unique non-merge content. SSOT: deterministic-promotion-conflict-resolve.yml.
+                curl -s -X POST \
+                  "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                  -H "Authorization: Bearer $GH_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"event_type\":\"promotion-conflict\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"staging\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
+                  && echo "    dispatched (deterministic resolver)" || echo "    WARN: dispatch failed"
+                _done CONFLICTED; return 0
+              elif [ "$MSTATE" = "blocked" ]; then
+                # Stale-check guard (2026-06-05): tab-mirror FF's live-defi-rollout using GITHUB_TOKEN,
+                # and GitHub suppresses workflow triggers on GITHUB_TOKEN pushes (recursion prevention) →
+                # NO pull_request:synchronize on this promotion PR when LDR advances → quality-gates-v2
+                # freezes on the pre-advance SHA → the PR sits BLOCKED on a stale check forever (observed:
+                # batch-live-reconciliation #16, execution-service #211 — both needed a manual close+reopen).
+                # CONSERVATIVE re-trigger: only if v2 is ABSENT on the CURRENT head SHA (the stale-trigger
+                # signature). If v2 IS present on head (genuine gate failure, or a run in progress), leave it.
+                HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
+                # Actions-API run lookup, NOT REST /check-runs and NOT GraphQL rollup (2026-06-10):
+                # fine-grained PATs can never hold "Checks" (GitHub offers no such permission) →
+                # both check-read paths 403, and the old `|| echo 0` made every blocked PR read as
+                # stale → spurious close+reopen churn. The Actions API works with the PAT; "a v2
+                # RUN exists for this head SHA" is the same stale-check signal. ERR ≠ 0: on query
+                # failure leave the PR alone (fail-safe), never recover blind.
+                # action_required/cancelled excluded (see note above): a PR-event approval-gated run is not a report —
+                # treating it as "present" wedged the blocked PR; excluding it lets the close+reopen/dispatch recovery fire.
+                HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha,conclusion --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion!=\"action_required\" and .conclusion!=\"cancelled\")]|length" 2>/dev/null || echo "ERR")
+                if [ "$HAS_V2" = "ERR" ]; then
+                  echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
+                fi
+                if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
+                  echo "  STALE-CHECK on PR #$PR_NUM — quality-gates-v2 absent on current head ${HEAD_SHA:0:8} (GITHUB_TOKEN-push didn't fire synchronize); re-triggering"
+                  # PRIMARY recovery (2026-06-11): force-dispatch v2 directly. workflow_dispatch is NOT
+                  # subject to the GITHUB_TOKEN trigger-suppression that orphaned the check, and produces a
+                  # v2 run on live-defi-rollout HEAD (== this PR's head) whose check the PR's required-check
+                  # rollup picks up BY SHA — same mechanism ci-failure-watcher --auto-recover uses. This is
+                  # lighter + more reliable than close+reopen (no PR-state churn, no reopen race). Keep
+                  # close+reopen below as the fallback if the dispatch can't be issued.
+                  if gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null; then
+                    echo "    force-dispatched quality-gates-v2 on live-defi-rollout HEAD (${HEAD_SHA:0:8}); auto-merge completes when it reports green"
+                    _done PROMOTED; return 0
+                  fi
+                  echo "    workflow_dispatch unavailable — falling back to close+reopen"
+                  if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
+                    sleep 3
+                    gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+                      && { gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                           || gh pr merge "$PR_NUM" --auto --squash \
+                                --subject "$(_squash_subject "$PR_NUM")" \
+                                --body "Tier C automated drain — squash fallback (subject conventional-type derived from squashed commits, Mode-B)." \
+                                --repo "$OWNER/$REPO" 2>/dev/null; } || true
+                    echo "    re-triggered (fresh pull_request event → v2 on current head)"
+                    _done PROMOTED; return 0
+                  else
+                    echo "    WARN: close failed — leaving PR #$PR_NUM blocked"
+                    _done BLOCKED; return 0
+                  fi
+                else
+                  echo "  $REPO: existing PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving for the per-repo fix"
+                  _done BLOCKED; return 0
+                fi
+              else
+                # Existing CLEAN (non-dirty/non-blocked) PR. Do NOT assume auto-merge is already
+                # armed (the 2026-06-10 stall: the first arm at PR creation can silently fail, then
+                # every later tick saw CLEAN and did nothing → CLEAN-but-unarmed forever). RE-ARM
+                # idempotently each tick: `gh pr merge --auto` is a no-op when already armed, and arms
+                # it when not. --rebase first (preserves commits), --squash fallback (always armable).
+                echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE — (re)arming auto-merge idempotently"
+                gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                  || gh pr merge "$PR_NUM" --auto --squash \
+                       --subject "$(_squash_subject "$PR_NUM")" \
+                       --body "Tier C automated drain — squash fallback (subject conventional-type derived from squashed commits, Mode-B)." \
+                       --repo "$OWNER/$REPO" 2>/dev/null \
+                  || echo "    WARN: auto-merge arm failed for #$PR_NUM — merge manually"
+                _done PROMOTED; return 0
+              fi
+            else
+              echo "  WARN $REPO: PR creation failed and no open PR found"; return 0
+            fi
+          }
+
+          # ── Bounded-parallel driver: launch up to MAXJOBS repos at once; `wait -n` frees a slot as
+          # each finishes. Each repo's logs buffer to its own file (no interleave); result tokens land
+          # in $RESULT_DIR. set -e is relaxed around the backgrounded jobs (each handles its own errors).
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            process_repo "$REPO" > "$LOG_DIR/$REPO.log" 2>&1 &
+            while [ "$(jobs -rp | wc -l)" -ge "$MAXJOBS" ]; do wait -n 2>/dev/null || true; done
+          done <<< "$REPOS"
+          wait 2>/dev/null || true
+
+          # ── Barrier passed. Replay per-repo logs in topo order, then aggregate result tokens. ──
+          PROMOTED=""; BLOCKED=""; CONFLICTED=""
+          PROMOTED_COUNT=0; BLOCKED_COUNT=0; CONFLICTED_COUNT=0
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            [ -f "$LOG_DIR/$REPO.log" ] && cat "$LOG_DIR/$REPO.log"
+            [ -f "$RESULT_DIR/$REPO" ] || continue
+            case "$(cat "$RESULT_DIR/$REPO")" in
+              PROMOTED)   PROMOTED="$PROMOTED $REPO";     PROMOTED_COUNT=$((PROMOTED_COUNT + 1)) ;;
+              BLOCKED)    BLOCKED="$BLOCKED $REPO";       BLOCKED_COUNT=$((BLOCKED_COUNT + 1)) ;;
+              CONFLICTED) CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1)) ;;
+            esac
+          done <<< "$REPOS"
+          rm -rf "$RESULT_DIR" "$LOG_DIR"
+
+          {
+            echo "promoted=$PROMOTED"
+            echo "blocked=$BLOCKED"
+            echo "conflicted=$CONFLICTED"
+            echo "promoted_count=$PROMOTED_COUNT"
+            echo "blocked_count=$BLOCKED_COUNT"
+            echo "conflicted_count=$CONFLICTED_COUNT"
+          } >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "=== Tier C Promotion Summary ==="
+          echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
+          echo "Dep-order/Tier-A blocked ($BLOCKED_COUNT):$BLOCKED"
+          echo "Conflicted ($CONFLICTED_COUNT):$CONFLICTED"
+
+  notify:
+    name: Slack — Tier C LDR→staging promotion
+    needs: [promote-ldr-to-staging]
+    if:
+      always() && needs.promote-ldr-to-staging.outputs.conflicted_count != '0' &&
+      needs.promote-ldr-to-staging.outputs.conflicted_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Tier C LDR→staging: ${{ needs.promote-ldr-to-staging.outputs.promoted_count }} promoted, ${{
+        needs.promote-ldr-to-staging.outputs.blocked_count }} dep-order-blocked, ${{
+        needs.promote-ldr-to-staging.outputs.conflicted_count }} CONFLICTED (conflict-resolution-agent dispatched): ${{
+        needs.promote-ldr-to-staging.outputs.conflicted }}"
+      severity: "WARNING"
+      conclusion: ${{ needs.promote-ldr-to-staging.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit

@@ -1,0 +1,53 @@
+# SSOT for what the glue slot venv PROVIDES — install with setup-glue-runners.sh.
+#
+# Epic: deployment_and_user_management_master (CI/CD cost reduction — B1 self-hosted glue runners)
+# Lifecycle: permanent   Delete-when: the glue host is retired (B2/B3)
+#
+# ┌─ WHY (operator 2026-07-16) ────────────────────────────────────────────────────────────────────┐
+# │ "all the tools that we need for all the workflows should be download just like python ... so    │
+# │  that we are not doing similar install or download on the long-living vm and take the benefit   │
+# │  of the vm properly and fully."                                                                  │
+# │                                                                                                  │
+# │ This venv IS the runner's python3 (first on the unit PATH — see github-glue-runner@.service).   │
+# │ Anything listed here is ALREADY THERE when a job starts, so the workflow does not install it.   │
+# └────────────────────────────────────────────────────────────────────────────────────────────────┘
+#
+# TWO RULES, both learned the hard way:
+#
+#  1. EVERY ENTRY CITES ITS CONSUMERS. A dep with no named workflow is dead weight nobody dares
+#     delete. Regenerate the evidence with:
+#       MOVE=$(bash classify-glue-workflows.sh | awk '$2=="MOVE"{print $1}')
+#       for f in $MOVE; do grep -nE '(pip|uv pip|python3? -m pip) install' "../../.github/workflows/$f"; done
+#
+#  2. THIS VENV IS SHARED, MUTABLE STATE. All 8 runners resolve python3 to it, so a workflow that
+#     `pip install`s at runtime MUTATES it for every other job. That already happened: readiness-
+#     verifier's `pip install uv` silently added uv 0.11.29 to this venv during a test dispatch
+#     (2026-07-16). It "worked", which is the problem — an accumulated dep is invisible, unversioned
+#     and unreviewable, and a workflow installing a CONFLICTING version would break unrelated jobs
+#     with no trace. Declare deps HERE; do not let jobs install them.
+#
+# Version policy: pin the same RANGES the workflows asked for, so pre-installing changes availability
+# and NOT resolution. If a workflow wanted "google-cloud-firestore>=2,<3", this file must not silently
+# hand it 4.x.
+
+# google-cloud-firestore — the ci_status Firestore-SSOT writes. The single most-used dep: 9 movers.
+#   cascade-qg-ordering · ci-status-consolidator · ci-status-update (~13k/mo — STEP 2b's whole point,
+#   this is what makes the writer's per-run pip install a ~0ms no-op) · ldr-to-main-promote-fleet ·
+#   ldr-to-staging-promote · reconcile-release-tags · sit-gate · staging-to-main ·
+#   version-registry-update
+google-cloud-firestore>=2,<3
+
+# pyyaml — workflow/manifest parsing.
+#   readiness-verifier (`uv pip install pyyaml`) · removed-symbols-workspace-sweep (`pip install
+#   pyyaml`) · cassette-drift-check (fallback `uv pip install pydantic pyyaml --system`)
+pyyaml
+
+# pydantic — cassette-drift-check's fallback path when `uv pip install -e .` fails.
+pydantic
+
+# uv — several movers run `pip install uv` to bootstrap it. uv is ALREADY on the runner PATH
+#   (/home/ubuntu/.local/bin/uv, the AO's own toolchain), so those installs are redundant on this
+#   host; it is listed here so that `python3 -m uv`/in-venv resolution also works and the workflows
+#   can drop the install step entirely rather than reaching outside the venv.
+#   readiness-verifier · cassette-drift-check
+uv

@@ -1,0 +1,357 @@
+name: sit-gate
+
+# Triggered by system-integration-tests at the START of a SIT run.
+# Sets staging_status.locked=true and records the exact commit SHAs being tested.
+# Payload: { repos: ["repo1", "repo2", ...], commit_shas: {"repo1": "abc123", ...} }
+
+on:
+  repository_dispatch:
+    types: [sit-lock]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  lock-staging:
+    runs-on: ubuntu-latest
+    # Gap 8 completion (2026-06-16): the ci_status overlay needs the project env + the SDK installed
+    # below, else resolve_ci_status_map silently falls back to the STALE manifest cache.
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth_sitgate
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_sitgate.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+
+      - name: Verify all pending repos are STAGING_GREEN
+        id: ci_check
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json, os, sys
+          sys.path.insert(0, "scripts/cicd")
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          # Phase 2: Firestore-authoritative ci_status (manifest fallback when Firestore unavailable).
+          try:
+              from ci_status_store import resolve_ci_status_map
+              _ci_map = resolve_ci_status_map(manifest, project_id=os.environ.get("GCP_PROJECT_ID"))
+          except Exception as _exc:  # Gap 8: loud — a silent fallback to stale cache is how mis-gating hid.
+              print(f"::warning::sit-gate: Firestore ci_status unavailable ({type(_exc).__name__}: {_exc}) "
+                    "— using STALE manifest cache (install google-cloud-firestore if this is a CI-config gap).")
+              _repos_d = manifest.get("repositories", {})
+              _ci_map = {k: v.get("ci_status", "") for k, v in _repos_d.items() if isinstance(v, dict)}
+
+          repos = manifest.get("repositories", {})
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+
+          # Option-B repos (promote LDR→main directly, no staging branch) carry a vestigial
+          # staging_versions entry that never reconciles to versions — exclude them so they do
+          # not become a permanent phantom in pending_repos that blocks the lock from clearing.
+          # agent-orchestrator is mid-migration (no quickmerge/version-reconciliation flow yet,
+          # G6 plan) so its staging_versions (0.8.1) never reconciles to stable (0.8.0) → same
+          # phantom class; exclude until its SIT migration lands. (Incident 2026-06-08: AO
+          # phantom-held the staging lock ~80m, wedging every →staging promotion PR.)
+          staging_excluded = {"unified-trading-pm", "agent-orchestrator"}
+          # Repos that have staging changes
+          pending = [r for r, sv in staging_versions.items()
+                     if not r.startswith("_") and r not in staging_excluded
+                     and sv != stable_versions.get(r)]
+
+          # Check ci_status for each pending repo. A repo is SIT-ready when its ci_status is AT OR
+          # ABOVE STAGING_GREEN in the lifecycle hierarchy (STAGING_GREEN | SIT_VALIDATED |
+          # MAIN_GREEN). The ci_status no-downgrade guard (ci-status-update.yml) DELIBERATELY keeps
+          # an on-main repo at MAIN_GREEN even when it has fresh staging changes — a green staging v2
+          # cannot knock MAIN_GREEN(rank 4) down to STAGING_GREEN(rank 2). So requiring EXACTLY
+          # STAGING_GREEN here made sit-gate's precheck UNSATISFIABLE for any MAIN_GREEN pending repo
+          # → SIT never ran → the breaking-cascade lock never cleared → the whole staging→main drain
+          # dammed (incident 2026-06-07: uac=0.2.0 / utl=0.4.0 / features=0.1.0 cascade stuck with
+          # every pending repo MAIN_GREEN). Accept rank >= STAGING_GREEN. A repo that genuinely
+          # failed its staging v2 is written FAILING (FAILING is never suppressed by no-downgrade),
+          # so this does not let a red staging in.
+          SIT_READY = {"STAGING_GREEN", "SIT_VALIDATED", "MAIN_GREEN"}
+          not_green = []
+          for repo in pending:
+              ci = _ci_map.get(repo, "NOT_CONFIGURED")
+              if ci not in SIT_READY:
+                  not_green.append(f"  {repo}: ci_status={ci} (need >= STAGING_GREEN)")
+
+          if not_green:
+              print("BLOCKED: SIT cannot run — not all pending repos are SIT-ready (>= STAGING_GREEN):")
+              for line in not_green:
+                  print(line)
+              print(f"\n{len(not_green)}/{len(pending)} repos not ready. SIT blocked.")
+              sys.exit(1)
+
+          print(f"All {len(pending)} pending repos are SIT-ready (>= STAGING_GREEN). SIT can proceed.")
+          PYEOF
+
+      - name: Lock staging and record commit SHAs
+        env:
+          # Pass the toJson payload via ENV, never inlined into the Python heredoc: toJson() emits
+          # MULTI-LINE pretty JSON, and a single-quoted Python string literal cannot span lines →
+          # "SyntaxError: unterminated string literal". This step was LATENT-buggy — it was never
+          # reached until the sit-gate precheck (above) was fixed 2026-06-07 to accept MAIN_GREEN
+          # pending repos (the precheck always failed first, so this never ran). Env-var indirection
+          # is heredoc-safe and also avoids any expression-injection surface.
+          COMMIT_SHAS_JSON: ${{ toJson(github.event.client_payload.commit_shas) }}
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json, datetime, os
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          # Lock staging
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+          manifest["staging_status"]["locked"] = True
+          manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
+          manifest["staging_status"]["locked_reason"] = "SIT running"
+          manifest["staging_status"]["lock_version"] = None
+          # Fresh lock cycle → re-arm the starvation alarm (finding H3: sit-starvation-detector sets
+          # locked_alert_sent=True and never resets it, so the dangling-lock alert fires once then is
+          # suppressed fleet-wide forever).
+          manifest["staging_status"]["locked_alert_sent"] = False
+
+          # Populate pending_repos from staging_versions that differ from stable versions.
+          # Exclude Option-B repos (LDR→main directly, no staging branch) — their vestigial
+          # staging_versions entry never reconciles and would phantom-block the lock-clear.
+          # agent-orchestrator: mid-migration phantom (staging 0.8.1 vs stable 0.8.0), same class.
+          staging_excluded = {"unified-trading-pm", "agent-orchestrator"}
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          pending = [r for r, sv in staging_versions.items()
+                     if not r.startswith("_") and r not in staging_excluded
+                     and sv != stable_versions.get(r)]
+          manifest["staging_status"]["pending_repos"] = pending
+          print(f"Pending repos for this SIT run: {pending}")
+
+          # Record commit SHAs from payload (read from env — heredoc-safe vs multi-line toJson).
+          # toJson(null) renders the literal "null"; guard for None / non-dict too.
+          payload_shas_raw = os.environ.get("COMMIT_SHAS_JSON", "") or "{}"
+          try:
+              payload_shas = json.loads(payload_shas_raw)
+              if not isinstance(payload_shas, dict):
+                  payload_shas = {}
+          except Exception:
+              payload_shas = {}
+
+          if "staging_commits" not in manifest:
+              manifest["staging_commits"] = {"_note": "Exact commit SHAs under test in the current SIT run."}
+
+          # Merge payload SHAs into staging_commits (preserve _note)
+          for repo, sha in payload_shas.items():
+              manifest["staging_commits"][repo] = sha
+
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          os.replace(tmp_path, "workspace-manifest.json")
+
+          print(f"Staging locked. Recorded {len(payload_shas)} commit SHAs.")
+          for repo, sha in payload_shas.items():
+              print(f"  {repo}: {sha}")
+          PYEOF
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): SIT lock — staging_status.locked=true, commit SHAs recorded [skip ci]"
+
+          # Retry-with-rebase: a concurrent sit-unlock/staging-to-main manifest commit can land on
+          # main between our checkout and push. A bare `git push` then fails non-fast-forward and
+          # the lock never records → the SIT promotion gate silently no-ops. Rebase + retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
+
+      # MISSING LINK FIX (2026-06-10): sit-gate previously locked staging ("SIT running") but
+      # NEVER dispatched the SIT itself — full-workspace-sit only ran on its nightly schedule, so
+      # every lock dangled until a failure event / auto-clear / human (root cause of the chronic
+      # "staging is always locked"). Lock → RUN the thing the lock is waiting for.
+      #
+      # 2026-06-27 (Tier-E): game-day + synthetic smokes dispatched alongside full-workspace-sit.
+      # Both are best-effort (cascade not gated on them — handlers may not exist in all envs).
+      - name: Dispatch full-workspace-sit + game-day + synthetic smokes
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          # Primary: hard-fail if the main SIT cannot be dispatched (lock would dangle otherwise).
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="full-workspace-sit" \
+            && echo "Dispatched full-workspace-sit" \
+            || { echo "::error::failed to dispatch full-workspace-sit — staging lock will dangle"; exit 1; }
+
+          # Tier-E additions: game-day + synthetic smokes (best-effort; cascade is NOT gated).
+          set +e
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="game-day-sit" \
+            && echo "Dispatched game-day-sit" \
+            || echo "::warning::game-day-sit dispatch skipped (handler may not exist yet — best-effort)"
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="synthetic-smokes" \
+            && echo "Dispatched synthetic-smokes" \
+            || echo "::warning::synthetic-smokes dispatch skipped (handler may not exist yet — best-effort)"
+          exit 0
+
+      - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          OWNER="IggyIkenna"
+          REPOS=$(python3 -c "import json; m=json.load(open('workspace-manifest.json')); print('\n'.join(m.get('repositories',{}).keys()))")
+          FAILED=""
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            gh api "repos/$OWNER/$REPO/dispatches" \
+              -X POST \
+              -f event_type="staging-locked" \
+              2>/dev/null || FAILED="$FAILED $REPO"
+          done <<< "$REPOS"
+          if [ -n "$FAILED" ]; then
+            echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
+          fi
+          echo "Dispatched staging-locked to all repos"
+
+  # ── NOTIFICATION (reusable workflow) ─────────────────────────────────────────
+  notify:
+    name: Slack — SIT Gate
+    needs: [lock-staging]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "SIT gate: staging locked. Commit SHAs recorded. Dispatched full-workspace-sit + game-day + synthetic-smokes.
+        Dispatched staging-locked to all repos."
+      severity: "INFO"
+      conclusion: ${{ needs.lock-staging.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — SIT Gate Event
+    needs: [lock-staging, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.lock-staging.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "sit-lock"}'
+
+  # ── SIT-HARNESS LINT (non-blocking) ──────────────────────────────────────────
+  # Task 7 (sprawl consolidation 2026-06-27): decouple harness hygiene from cascade validity.
+  # This job runs IN PARALLEL with lock-staging — it NEVER gates the SIT cascade.
+  # On issues: files a fix-task (escalate-to-orchestrator) and exits green (continue-on-error).
+  # SSOT: codex/08-workflows/ci-cd-flow.md § "SIT-harness lint decoupling"
+  harness-lint:
+    name: SIT-harness lint (non-blocking — files fix-task on issues)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 4
+    steps:
+      - name: Check SIT harness workflow health
+        id: lint
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -uo pipefail
+          ISSUES=""
+
+          # Verify the primary SIT trigger workflow exists in system-integration-tests.
+          for wf in full-workspace-sit.yml; do
+            STATUS=$(gh api \
+              "repos/IggyIkenna/system-integration-tests/contents/.github/workflows/${wf}" \
+              --jq '.name' 2>/dev/null || echo "MISSING")
+            if [ "${STATUS}" = "MISSING" ]; then
+              ISSUES="${ISSUES}missing-workflow:${wf};"
+            fi
+          done
+
+          # Three consecutive SIT failures = persistent harness issue (not a per-repo CI failure).
+          RECENT_FAILURES=$(gh run list \
+            --repo IggyIkenna/system-integration-tests \
+            --workflow full-workspace-sit.yml --limit 3 --json conclusion \
+            --jq '[.[] | select(.conclusion == "failure")] | length' 2>/dev/null || echo "0")
+          if [ "${RECENT_FAILURES:-0}" -ge 3 ]; then
+            ISSUES="${ISSUES}consistent-harness-failures:${RECENT_FAILURES}/3-recent-runs;"
+          fi
+
+          if [ -n "${ISSUES}" ]; then
+            echo "::warning::Harness lint issues (non-blocking — cascade continues): ${ISSUES}"
+            echo "lint_failed=true" >> "$GITHUB_OUTPUT"
+            echo "issues=${ISSUES}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Harness lint: clean."
+            echo "lint_failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: File fix-task to orchestrator (only when lint issues found)
+        if: steps.lint.outputs.lint_failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          CTX="SIT harness lint issues (cascade was NOT blocked — this is a background fix-task): ${{ steps.lint.outputs.issues }} Investigate system-integration-tests harness config. Do NOT interrupt the in-flight SIT run. Playbook: codex/08-workflows/ci-cd-flow.md"
+          gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=system-integration-tests" \
+            -f 'client_payload[pr_number]=0' \
+            -f 'client_payload[wall_type]=harness_lint' \
+            -f "client_payload[context]=${CTX}" \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 \
+            && echo "Fix-task dispatched to orchestrator (sonnet worker)." \
+            || echo "::warning::Fix-task dispatch failed (best-effort)."
+          exit 0

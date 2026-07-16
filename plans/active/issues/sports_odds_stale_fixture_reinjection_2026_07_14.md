@@ -169,6 +169,18 @@ T-24h/T-1h):
 
 ## Todos
 
+> **PARTIAL FIX LANDED 2026-07-16 — `MDPS@3bf56ff` (lookahead-leak leg).** The `bm_minutes < 0 → T-0` half of the P1
+> locus below is **fixed**: post-kickoff rows are now REJECTED (`-1`) in both `assign_horizon_bucket` (which hardcoded
+> `return N_BUCKETS - 1` before any staleness check) and `assign_horizon_buckets_vectorised` (where the override ran
+> AFTER the staleness rejection and resurrected already-dropped rows). This kills the **A-League zombie class** (frozen
+> in-play/past boards at `bm=-113` / `minutes_to_kickoff=-135,488` that "land T-0/HT forever") — they no longer reach
+> any bucket. **What REMAINS open in P1**: the `staleness_seconds` (`fetch_utc − bm_time`) cap and the
+> `kickoff_utc`-vs-fetch-day check. Those still matter for the **Russia Premier League zombie class**, which is
+> **pre-kickoff-positive** (`bm≈1423 ≈ T-24h`) and therefore **untouched by the post-kickoff fix** — a 3.5-year-stale
+> board whose `bm_minutes` happens to sit near a target still re-buckets under every fetch day. Full-census evidence +
+> blast radius (T-0 = 39.83% post-kickoff, 146,738/368,366 rows; all 7 other timeframes PROVEN CLEAN at 0/4,151,352):
+> `./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` § Progress Log 2026-07-16.
+
 - [ ] [CODE] P1. **Stop stale/zombie ticks at bucket assignment (fix locus: MDPS, not MTDS raw ingestion — see
       refinement above).** Primary fix in
       `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`: drop rows whose

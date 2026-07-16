@@ -419,14 +419,14 @@ effort recovering them_, but _whether to actively drop them mid-flight_.
 
 ## Loose ends / follow-ups (not fixed here — read-only investigation)
 
-| #   | Finding                                                                                                                                                                                                 | Triage                                                                                   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 1   | **T-0 is 65% post-kickoff prices** (to −71 min) — `nearest_idx[vals<0]=N_BUCKETS-1` runs AFTER the staleness rejection and resurrects dropped rows. **Live lookahead leakage into a training feature.** | **BIG FINDING → operator; fold into `sports_odds_stale_fixture_reinjection_2026_07_14`** |
-| 2   | **`ht_odds_home_implied` has a consumer but no producer** — reads `first_half_*` from the dormant `CanonicalProgressiveOdds`; structurally NULL in batch.                                               | New issue / feature-gap todo — sports_master                                             |
-| 3   | **Live HT odds are semantically mislabelled** — `orchestrator.py:114` maps generic `home`/`draw`/`away` into `first_half_*_odds`, presenting a full-time price as a first-half price.                   | **Data-correctness → own issue doc**                                                     |
-| 4   | **SFI serves `h1_*` first-half markets we never capture** — `_extract_odds()` reads only 1X2/OU/AH/corner. The HT-RESULT market is a **re-fetchable capture gap**, not a deletion loss.                 | Capture-gap todo — sports_master (P1)                                                    |
-| 5   | **SFI contract dtype drift** — `timer_seconds`/`ht_*`/odds declared int64/float64, land as **strings**; **`ht_end_timer` 100% NULL** though `detect_halftime_window()` sets it.                         | Feeds the sports contract-drift lane (T2.9)                                              |
-| 6   | **`sfi_progressive_stats` odds columns appear to have no downstream consumer** — a populated, live, 30s in-play price series (incl. the HT break) that no feature reads.                                | **Opportunity → operator; sports_master**                                                |
+| #   | Finding                                                                                                                                                                                                                                                                                                                                                                 | Triage                                                                        |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | ~~**T-0 is 65% post-kickoff prices** (to −71 min) — `nearest_idx[vals<0]=N_BUCKETS-1` runs AFTER the staleness rejection and resurrects dropped rows. **Live lookahead leakage into a training feature.**~~ **FIXED — MDPS@3bf56ff** (2026-07-16). Full-census re-measure: **39.83%**, not 65%; worst **−374.6 min**. See Progress Log 2026-07-16 (lookahead-leak fix). | **BIG FINDING → operator; fixed in MDPS; recompute + HT-horizon todos below** |
+| 2   | **`ht_odds_home_implied` has a consumer but no producer** — reads `first_half_*` from the dormant `CanonicalProgressiveOdds`; structurally NULL in batch.                                                                                                                                                                                                               | New issue / feature-gap todo — sports_master                                  |
+| 3   | **Live HT odds are semantically mislabelled** — `orchestrator.py:114` maps generic `home`/`draw`/`away` into `first_half_*_odds`, presenting a full-time price as a first-half price.                                                                                                                                                                                   | **Data-correctness → own issue doc**                                          |
+| 4   | **SFI serves `h1_*` first-half markets we never capture** — `_extract_odds()` reads only 1X2/OU/AH/corner. The HT-RESULT market is a **re-fetchable capture gap**, not a deletion loss.                                                                                                                                                                                 | Capture-gap todo — sports_master (P1)                                         |
+| 5   | **SFI contract dtype drift** — `timer_seconds`/`ht_*`/odds declared int64/float64, land as **strings**; **`ht_end_timer` 100% NULL** though `detect_halftime_window()` sets it.                                                                                                                                                                                         | Feeds the sports contract-drift lane (T2.9)                                   |
+| 6   | **`sfi_progressive_stats` odds columns appear to have no downstream consumer** — a populated, live, 30s in-play price series (incl. the HT break) that no feature reads.                                                                                                                                                                                                | **Opportunity → operator; sports_master**                                     |
 
 ## Progress Log
 
@@ -449,3 +449,102 @@ already-required option-D G1 read-split-merge (marginal cost ≈ 0) into a **dis
 pre-match bucketing path**, because merging them into `data_type=odds` would sweep them into T-0 and deepen the existing
 65% contamination. Options A and C are superseded: A's "pre-match-only property" is already false; C's mechanism is now
 proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data deleted.
+
+---
+
+## Todos (opened 2026-07-16 by the lookahead-leak fix leg)
+
+- [x] [CODE] P0. **Fix the bucketing ordering so post-kickoff rows stay rejected** —
+      `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`. **DONE — MDPS@3bf56ff**:
+      `bm_minutes_to_kickoff < 0` now returns `-1` (REJECT) in BOTH `assign_horizon_bucket` (scalar — it hardcoded
+      `return N_BUCKETS - 1` before any staleness check) and `assign_horizon_buckets_vectorised`; all three rejection
+      classes (staleness / post-kickoff / NaN) write the same terminal `-1`, so ordering can no longer resurrect a
+      dropped row. A wholly in-play shard records `empty_confirmed` (honest absence), never a false `attempted_failed`.
+      Evidence: QG green (1978 passed, 1 skipped); 21 new regression tests in `TestPostKickoffRowsRejected`; measured
+      OLD admitted 5/5 post-kickoff values into T-0, NEW admits 0/5, pre-match assignment byte-identical.
+- [ ] [DATA] P0. **RECOMPUTE the canonical T-0 lineage + its features descendants (sports is FROZEN — do NOT run this
+      until the cutover completes).** Measured scope, full census, zero misses: - **MDPS canonical**:
+      `data_type=odds_horizon_bucket`, `timeframe=T-0` — **11,373 shards / 368,366 rows** (2020-06-06→2026-06-19, 38
+      leagues). **146,738 rows (39.83%) are post-kickoff** and disappear on re-derive; **7,101/11,373 shards (62.4%)**
+      carry ≥1. Affects **17,899/27,465 fixtures (65.2%)** across **1,316/1,795 days**. The other 7 timeframes are
+      **PROVEN CLEAN — 0/4,151,352 rows** post-kickoff across 97,631 shards (each timeframe's worst value sits exactly
+      inside its own cap: T-10m 5.0, T-1h 50, T-2h 105, T-4h 220, T-6h 330.2, T-12h 675, T-24h 1380) → **recompute scope
+      is T-0 ONLY**, not the whole ladder. - **features-service**: on those 1,316 dates — **1,275 `ODDS_FEATURES` +
+      15,415 `DERIVED_FEATURES` shards** (the 559-col matrix) must re-derive. `FIXTURE_FEATURES` (26,942 shards) are not
+      odds-derived → out of scope.
+- [ ] [CODE] P0. **The features `HT` model horizon loses its odds source when the leak is fixed — it is fed BY the
+      bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and `FEATURE_HORIZONS["HT"]` ends `[…, "T-0", "HT"]`; MDPS
+      never emits `horizon_name="HT"`, so `_find_best_snapshot` falls back to the **MDPS T-0 bucket** (verified by
+      running the real code). T-0 was the only bucket carrying `bm<0` **because the bug put them there** — so the HT
+      horizon was silently living off the leak. Post-fix, `_find_best_snapshot` still returns T-0, now pre-match-only →
+      **HT feature rows become kickoff prices mislabelled `horizon="HT"`** (conservative — no lookahead — but
+      semantically wrong). Correct fix = point the HT horizon at the **quarantined in-play population** from OR-5b(c)
+      B-REFINED, or drop the HT odds horizon until that population exists. **This invalidates the "there is no HT
+      horizon" framing in §3 of this doc — true of MDPS's `TIER1_HORIZONS`, FALSE of features-service, which has a real,
+      specified HT model boundary** (`features_service/sports/docs/specs/halftime_data_architecture.md`: predict the 2nd
+      half at half-time from actual HT scores + progressive stats). At that boundary post-kickoff odds are **correct PIT
+      data, not leakage** — the defect was always the CONTAINER (a pre-match bucket), never the rows themselves.
+- [ ] [CODE] P0. **BIG FINDING (new, independent of the ordering bug) — the horizon gate does not gate the
+      T-0-closing-derived columns.** `compute_clv_features` defines closing as `horizon_name == "T-0"` and
+      `compute_opening_odds` computes movement vs that closing; `_compute_aux_features` merges
+      `clv_df`/`opening_df`/`velocity_df`/`steam_df` into **every** model horizon's rows — including the pre-match
+      T-24h/T-1h/T-10m — which already contradicts the exporter's own stated design
+      (`FEATURE_HORIZONS["T-24h"] = ["T-24h"]`, _"Model 2A (T-24h) only sees T-24h snapshot features"_). Measured: **all
+      27** T-0-closing-derived columns (`clv_*`, `sharp_clv_*`, `clv_direction_*`, `odds_movement_*`, `opening_*`,
+      `velocity_*`, `steam_*`) declare `min_horizon = FeatureHorizon.T_24H` and **survive `apply_horizon_gate` at EVERY
+      horizon, T-24h included (27/27)**. So a T-24h pre-match model can see the closing (kickoff) line — **lookahead by
+      construction, even with a perfectly clean T-0**. The ordering bug made it strictly worse (the "closing" line was a
+      post-kickoff price for 65.2% of fixtures), but fixing T-0 does **not** close this. Needs its own decision: either
+      `min_horizon` for the closing-derived block moves to `T_10M`/`HT`, or the aux merge respects
+      `FEATURE_HORIZONS[model_horizon]`.
+- [ ] [CODE] P1. **`_apply_ht_odds_pit_gate`'s default-cutoff branch is unreachable in production.** The only caller
+      guards with `if ht_break_minutes:` (`odds_features_exporter.py:232`), so the `if not ht_break_minutes:` default
+      `-55` branch (lines 65–83) can never run outside tests → **when HT break times are unknown, NO PIT gate is applied
+      at all** and post-kickoff odds flow into HT features ungated (measured: 12,463 T-0 rows at `bm < -55`, 1,406 at
+      `bm < -110`, worst −374.6 = 6.2h after kickoff / well after full time). Either call the gate unconditionally
+      (letting it apply its documented default) or delete the dead branch.
+
+## Progress Log — 2026-07-16 (lookahead-leak fix leg)
+
+**SHIPPED: MDPS@3bf56ff** — the ordering bug is fixed and regression-tested; the blast radius is measured by **full
+census, not sampling**.
+
+**The fix.** Post-kickoff rows are now REJECTED, not bucketed. The scalar `assign_horizon_bucket` was the worse of the
+two — it `return N_BUCKETS - 1`'d on `bm < 0` **before even computing** the staleness diff. Both paths now agree
+row-for-row (test-enforced). Direct push under the dirty-deps carve-out (precedent `instruments-service@a771e3e2`):
+quickmerge pre-flight blocked solely by **LIVE foreign WIP** in `unified-api-contracts` (`sports/progressive.py`,
+`soccer_football_info/schemas.py`, `_sports_contracts.py` — mtime <30s, another agent's `h1_*`/HT-capture leg, i.e.
+loose-end #4 of this doc). Those files were not staged or touched.
+
+**RE-MEASURED, did not inherit — and the inherited number was wrong.** Per the standing lesson (4 audits in a row got
+this class wrong), the 65% figure was re-derived rather than carried: it rested on 6 sampled files / 282 rows. **Full
+census of all 11,373 captured T-0 shards (zero misses, zero read failures)**: **368,366 rows, 146,738 post-kickoff =
+39.83%** — not 65%. The 65% survives only as a _fixture_-level statistic (17,899/27,465 fixtures = 65.2% have ≥1
+contaminated T-0 row), which is what the small sample was accidentally measuring. Worst row is **−374.6 min**,
+materially worse than the −71.1 previously reported. Band split of the 146,738: **134,275 (36.45%)** in `[-55, 0)`
+(HT-break window — would PASS the default HT PIT gate); **12,463 (3.38%)** at `bm < -55` (2nd half / post-match — would
+be REJECTED); **1,406 (0.38%)** at `bm < -110`.
+
+**Falsified "T-0 only" instead of assuming it.** Censused all 7 other timeframes — **0 post-kickoff rows in 4,151,352
+rows / 97,631 shards**, and every timeframe's extreme value sits exactly inside its own staleness cap (T-10m 5.0 = 10−5,
+T-1h 50 = 60−10, T-2h 105, T-4h 220, T-6h 330.2, T-12h 675, T-24h 1380 = 1440−60). The caps always worked; the override
+breached **only** T-0. Recompute scope is therefore **T-0 alone** — a 1/8 slice of the ladder, not the whole thing.
+
+**Does it reach features/ML? YES — by two distinct paths, and the second is the bigger finding.** (1) The features
+**`HT` model horizon is fed by the MDPS T-0 bucket** via `_find_best_snapshot` fallback (verified by executing the real
+code) — so the HT horizon was living off the bug, and the fix silently degrades it to pre-match prices mislabelled `HT`
+(conservative, but wrong → P0 todo). (2) **The CLV/closing block leaks into the pre-match models**:
+`compute_clv_features` defines closing as `horizon_name == "T-0"`, and `_compute_aux_features` merges those columns into
+**every** horizon's rows; **all 27** closing-derived columns survive `apply_horizon_gate` at **T-24h (27/27)**. So the
+contaminated "closing line" reached `clv_*` / `odds_movement_*` / `velocity_*_1h_to_0` on **pre-match T-24h/T-1h/T-10m
+rows** for 65.2% of fixtures. Features recompute scope: **1,275 `ODDS_FEATURES` + 15,415 `DERIVED_FEATURES` shards over
+1,316 dates** (`FIXTURE_FEATURES` are not odds-derived → excluded). **Not recomputed here — sports is FROZEN
+mid-cutover; filed as the P0 recompute todo above.**
+
+**Correction to this doc's own §3 framing.** "There is no HT horizon, so a post-kickoff row in T-0 is pure lookahead
+into a pre-match feature" is **half right**. It is true of MDPS (`TIER1_HORIZONS` = 8 pre-match buckets) and **false of
+features-service**, which has a specified HT model boundary where post-kickoff odds are _correct_ PIT data. The rows
+were never the defect — the **container** was. This is exactly why §5's B-REFINED verdict (recover in-play rows into a
+**distinct population quarantined from the pre-match bucketing path**) is the right call, and MDPS@3bf56ff implements
+its first half: T-0 is now genuinely pre-match-only. The second half — giving the in-play population a home the HT
+horizon can read — remains open above. Zero deletions; zero manifest/index writes; scratch data removed.

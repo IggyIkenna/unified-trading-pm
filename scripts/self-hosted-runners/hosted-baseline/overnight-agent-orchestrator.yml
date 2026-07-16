@@ -1,0 +1,300 @@
+name: Overnight Agent Orchestrator
+
+# Nightly (01:00 UTC) autonomous agent run across all repos in tier order.
+# T0 (libraries) → T1 (contracts) → T2 (interfaces) → T3 (domain client) → Slack summary.
+# Each tier runs all repos in parallel. Cross-tier ordering enforced by GHA job dependencies.
+#
+# Secrets required:
+#   GH_PAT                — dispatch workflow_dispatch + poll run status across repos
+#   SLACK_CI_WEBHOOK_URL  — morning summary + failure notifications → #ci-failures
+#
+# NOTE: Claude API health precheck is NOT added here because this workflow is a
+# dispatcher — it dispatches agent-audit.yml to per-repo workflows. Each per-repo
+# agent-audit.yml SHOULD include the claude-api-health-precheck step itself.
+# The T0 job includes it as a gate before dispatching to catch degradation early.
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      tiers:
+        description: "Tiers to run (only '0' / 'all' supported after T1/T2/T3 fold-in)"
+        required: false
+        default: "all"
+      dry_run:
+        description: "Dispatch workflows but don't wait for results"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+      agent_ref:
+        description: "Branch to dispatch agent-audit.yml from (default: main)"
+        required: false
+        default: "main"
+
+concurrency:
+  group: overnight-orchestrator
+  cancel-in-progress: true
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  GH_ORG: IggyIkenna
+  POLL_INTERVAL: 30
+  POLL_TIMEOUT: 3600 # 1 hour max per tier
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
+
+jobs:
+  # ── CHANGE FREEZE CHECK ──────────────────────────────────────────────────────
+  freeze-check:
+    uses: ./.github/workflows/change-freeze-check.yml
+    with:
+      check_type: AUTONOMOUS
+    secrets: inherit
+
+  # ── TIER 0: Core Libraries ────────────────────────────────────────────────────
+  t0:
+    name: Tier 0 — Core Libraries
+    needs: freeze-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      needs.freeze-check.outputs.blocked != 'true' &&
+      (inputs.tiers == 'all' || contains(inputs.tiers, '0') || github.event_name == 'schedule')
+    outputs:
+      results: ${{ steps.poll.outputs.results }}
+
+    steps:
+      - name: Checkout PM for health check script
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: scripts/agents/
+
+      - name: Claude API health precheck
+        env:
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          CALLING_WORKFLOW: overnight-agent-orchestrator
+        run: |
+          source scripts/agents/claude-api-health-precheck.sh
+          check_claude_api_health
+
+      # codex/ is folded into unified-trading-pm at codex/. Tier agents read
+      # codex/10-audit/repos/{repo}.yaml from the PM working tree on each
+      # target repo (tier agents already clone PM as a sibling).
+
+      - name: Prepare readiness context for tier agents
+        id: readiness-ctx
+        run: |
+          CONTEXT_FILE=$(mktemp)
+          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
+          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
+          - Do NOT edit pyproject.toml to increase the MAJOR component
+          - Do NOT dispatch version-bump events with a higher MAJOR version
+          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
+          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
+
+          READINESS CONTEXT FOR THIS TIER:
+          - Readiness SSOT: unified-trading-pm/codex/10-audit/repos/{repo}.yaml for each repo
+          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
+          - After any quickmerge, update unified-trading-pm/codex/10-audit/repos/{repo}.yaml:
+            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
+            Commit the update to unified-trading-pm with:
+            git -C ../unified-trading-pm add codex/10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-pm commit -m "chore: update {repo} readiness to CR5"
+          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
+            Before any bump proposal, read this file and classify the actual change.
+          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
+          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
+          READINESS_CONTEXT
+          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
+
+      - name: Dispatch agent-audit.yml to T0 repos
+        id: dispatch
+        env:
+          REPOS: >-
+            unified-api-contracts unified-trading-library
+          # Stagger dispatches to avoid GH API burst limits (1000 queue / 500 concurrent per org)
+          DISPATCH_DELAY_SECONDS: "3"
+        run: |
+          echo "Dispatching to T0 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
+          RUN_IDS=""
+          COUNT=0
+          for repo in $REPOS; do
+            COUNT=$((COUNT + 1))
+            echo "  → $GH_ORG/$repo (#$COUNT)"
+            gh workflow run agent-audit.yml \
+              --repo "$GH_ORG/$repo" \
+              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo (workflow may not exist yet)"
+            # Stagger to avoid burst throttling
+            sleep "$DISPATCH_DELAY_SECONDS"
+          done
+          echo "T0 dispatches sent ($COUNT repos). Waiting 15s for runs to register..."
+          sleep 15
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+
+      - name: Poll T0 runs until complete
+        id: poll
+        if: inputs.dry_run != 'true'
+        env:
+          REPOS: ${{ steps.dispatch.outputs.repos }}
+        run: |
+          RESULTS=""
+          for repo in $REPOS; do
+            echo "Polling $GH_ORG/$repo..."
+            START=$(date +%s)
+            STATUS="unknown"
+            while true; do
+              ELAPSED=$(( $(date +%s) - START ))
+              if [ "$ELAPSED" -gt "$POLL_TIMEOUT" ]; then
+                STATUS="timeout"
+                break
+              fi
+              RUN_STATUS=$(gh run list \
+                --repo "$GH_ORG/$repo" \
+                --workflow agent-audit.yml \
+                --limit 1 \
+                --json status,conclusion \
+                --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
+              RUN_STATUS_PART="${RUN_STATUS%%/*}"
+              RUN_CONCLUSION="${RUN_STATUS##*/}"
+              if [ "$RUN_STATUS_PART" = "completed" ]; then
+                STATUS="$RUN_CONCLUSION"
+                break
+              fi
+              echo "  $repo: $RUN_STATUS — waiting ${POLL_INTERVAL}s..."
+              sleep "$POLL_INTERVAL"
+            done
+            echo "  $repo: $STATUS"
+            RESULTS="${RESULTS} ${repo}:${STATUS}"
+          done
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          # Fail tier if any repo failed
+          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T0 FAILED: $RESULTS"; exit 1; } || echo "T0 PASSED"
+
+  # ── T0 ESCALATION: Fire immediately if T0 fails ────────────────────────────
+  t0-escalation-notify:
+    name: T0 Failure Escalation — Slack #ci-failures
+    needs: [t0]
+    if: always() && needs.t0.result == 'failure'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "T0 FAILURE — Overnight Audit. Core libraries failing: ${{ needs.t0.outputs.results }}. T1-T3 results are
+        unreliable. Immediate action required."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+
+  t0-escalation-persist:
+    name: T0 Failure Escalation — Persist
+    needs: [t0, t0-escalation-notify]
+    if: always() && needs.t0.result == 'failure'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: "failure"
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "t0_escalation", "t0_results": "${{ needs.t0.outputs.results }}"}'
+
+  t0-escalation-issue:
+    name: T0 Failure Escalation — GH Issue
+    runs-on: ubuntu-latest
+    needs: [t0]
+    if: always() && needs.t0.result == 'failure'
+
+    steps:
+      - name: Open GH Issue for tracking
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          T0_DETAILS: ${{ needs.t0.outputs.results }}
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M UTC")
+
+          ISSUE_URL=$(gh issue create \
+            --repo IggyIkenna/unified-trading-pm \
+            --title "Overnight T0 failure: ${DATE}" \
+            --label "critical-audit-failure" \
+            --body "## T0 Core Library Failure
+
+          Overnight audit detected T0 failures at ${DATE}.
+
+          **Failing repos/results:** \`${T0_DETAILS}\`
+
+          ### Action required
+          1. Check the failing repos' quality-gates output in the run link below
+          2. Fix the root cause in the failing repo(s)
+          3. Run overnight orchestrator again manually after fixing
+
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            2>/dev/null || echo "")
+
+          echo "T0 escalation complete. Issue: ${ISSUE_URL:-N/A}"
+
+  # ── SLACK MORNING SUMMARY → #ci-failures ────────────────────────────────────
+  # Tiers T1/T2/T3 were removed when their member repos were folded into
+  # unified-api-contracts (UAC) + unified-trading-library (UTL). Only T0
+  # remains as the "core libraries" tier.
+  notify-summary:
+    name: Slack Morning Summary — Determine conclusion
+    runs-on: ubuntu-latest
+    needs: [t0]
+    if: always()
+    outputs:
+      overall_conclusion: ${{ steps.conclusion.outputs.conclusion }}
+      summary_message: ${{ steps.conclusion.outputs.message }}
+    steps:
+      - name: Compute summary
+        id: conclusion
+        env:
+          T0_RESULT: ${{ needs.t0.result }}
+        run: |
+          # Determine overall conclusion
+          if [ "$T0_RESULT" = "success" ]; then
+            CONCLUSION="success"
+          else
+            CONCLUSION="failure"
+          fi
+
+          MESSAGE="Overnight QG Report — T0 (core libraries): ${T0_RESULT}"
+
+          echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
+          echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+  notify-slack-summary:
+    name: Slack Morning Summary — Send
+    needs: [t0, notify-summary]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.notify-summary.outputs.summary_message }}
+      severity: "INFO"
+      conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+
+  notify-persist:
+    name: Slack Morning Summary — Persist
+    needs: [t0, notify-summary, notify-slack-summary]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"t0": "${{ needs.t0.result }}"}'

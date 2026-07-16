@@ -36,10 +36,7 @@ concurrency:
 
 jobs:
   consolidate:
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     # Only meaningful once the Firestore dual-write is live (the SSOT this projects).
     if: vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'
     steps:
@@ -63,13 +60,8 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: |
           set -euo pipefail
-          # No pip install: google-cloud-firestore is pre-seeded in the runner's slot venv, which IS
-          # this job's python3 (scripts/self-hosted-runners/slot-venv-requirements.txt). ASSERT it
-          # rather than install it — a miss here is a VM provisioning bug to fix in
-          # setup-glue-runners.sh, not something to paper over on every run. Graceful skip kept
-          # exactly as before (exit 0, manifest untouched).
-          python3 -c 'import google.cloud.firestore' 2>/dev/null \
-            || { echo "firestore SDK missing from the runner slot venv — run setup-glue-runners.sh install; skipping (manifest untouched)"; exit 0; }
+          python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
+            || { echo "firestore SDK install failed — skipping (manifest untouched)"; exit 0; }
           ARGS=""
           [ "${DRY_RUN}" = "true" ] && ARGS="--dry-run"
           python3 scripts/cicd/ci_status_consolidator.py ${ARGS}

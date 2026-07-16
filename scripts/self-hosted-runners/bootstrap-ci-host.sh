@@ -184,6 +184,30 @@ install_node() {
   apt-get install -y -qq nodejs npm || warn "nodejs/npm install failed — only 1 mover needs it; continuing"
 }
 
+# ── 6b. claude-code CLI — rules-alignment-agent runs `npm install -g @anthropic-ai/claude-code` ──
+# Pre-installed for the same reason as Python: a long-lived VM that re-downloads its toolchain per
+# job is a hosted runner with extra steps (operator 2026-07-16). An `npm install -g` on every run
+# also MUTATES a shared host — the same class as the `sudo apt-get` we guarded in
+# workspace-quickmerge-validation, and it can fail on a transient registry blip for a workflow that
+# has nothing to do with npm.
+#
+# NOTE (measured on planning-VM 2026-07-16): this box ALREADY carries two claude installs at
+# different versions — npm-global /usr/bin/claude 2.1.145 and ubuntu's ~/.local/bin/claude 2.1.202.
+# The runner PATH puts ~/.local/bin FIRST, so a job gets 2.1.202. That drift predates this epic and
+# is left alone deliberately: the AO depends on its own copy, and unifying them is not this plan's
+# call to make. Recorded so the next person is not surprised by `claude --version` disagreeing with
+# `npm ls -g`.
+install_claude_code() {
+  if sudo -u "${RUNNER_USER}" bash -lc 'command -v claude' >/dev/null 2>&1; then
+    log "claude-code present for ${RUNNER_USER} ($(sudo -u "${RUNNER_USER}" bash -lc 'claude --version' 2>/dev/null | head -1))"
+    return
+  fi
+  have npm || { warn "npm absent — skipping claude-code (1 mover needs it)"; return; }
+  log "installing @anthropic-ai/claude-code globally (1 mover: rules-alignment-agent)"
+  npm install -g @anthropic-ai/claude-code \
+    || warn "claude-code install failed — only rules-alignment-agent needs it; continuing"
+}
+
 # ── 7. verify ──────────────────────────────────────────────────────────────────────────────────
 verify() {
   local missing=0 t
@@ -240,6 +264,13 @@ verify() {
 
   if have npm; then printf '  \033[32m✓\033[0m %-10s %s\n' "npm" "$(command -v npm)"
   else warn "npm missing — 1 MOVE workflow references it"; fi
+  # Advisory, not fatal: exactly one mover needs it, and a bare box is legitimately without it until
+  # install_claude_code runs.
+  if sudo -u "${RUNNER_USER}" bash -lc 'command -v claude' >/dev/null 2>&1; then
+    printf '  \033[32m✓\033[0m %-10s %s (as %s)\n' "claude" "$(sudo -u "${RUNNER_USER}" bash -lc 'claude --version' 2>/dev/null | head -1)" "${RUNNER_USER}"
+  else
+    warn "claude-code missing for ${RUNNER_USER} — rules-alignment-agent would npm-install it per run"
+  fi
   [ "${missing}" -eq 0 ] || die "${missing} required tool(s) missing"
   log "toolchain OK"
 
@@ -269,6 +300,7 @@ install_aws
 install_uv
 install_repo_python
 install_node
+install_claude_code
 verify
 
 cat <<'NEXT'

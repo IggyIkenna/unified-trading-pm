@@ -1,0 +1,632 @@
+name: Semver Agent
+
+# Computes the next semver for this repo based on diff analysis since last staging_versions
+# baseline, then dispatches a version-bump event to unified-trading-pm with the computed version.
+#
+# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the staging branch.
+# This ensures semver bumps are computed AFTER SIT validates staging and the code
+# is promoted from staging — not prematurely at feature-branch time.
+#
+# Pipeline position:
+#   feature branch → staging → [this workflow] → label check → bump → SIT → main
+#
+# If commit label disagrees with API diff, posts FAILING commit status on staging HEAD to block staging-to-main.yml
+#
+# Placeholders replaced by rollout-agent-workflows.sh:
+#   unified-trading-pm  — e.g. market-tick-data-service
+#   unified_trading_pm    — e.g. market_tick_data_service (underscore form)
+#
+# Pre-1.0.0 semver rules:
+#   feat!: / BREAKING CHANGE: → MINOR bump (never auto-cross to 1.0.0)
+#   feat:                      → MINOR bump
+#   fix:                       → PATCH bump
+#   chore:/docs:/etc.          → no bump (skip)
+#
+# Post-1.0.0 semver rules:
+#   feat!: / removed public export → MAJOR bump (opens GitHub Issue for approval, no auto-dispatch)
+#   feat: / new public export      → MINOR bump
+#   fix: / internal change         → PATCH bump
+#
+# Dispatch payload to unified-trading-pm:
+#   { repo, version, branch, commit_sha, is_breaking }
+#
+# Secrets required:
+#   GH_PAT  — cross-repo dispatch and issue creation
+
+on:
+  workflow_run:
+    # The required check is `quality-gates-v2` (v1 "Quality Gates" retired 2026-05-29). PM is Option-B
+    # (no `staging` branch — it promotes LDR→main directly + bumps its own version via the manifest
+    # `staging_versions → versions` promote path / `update-repo-version.yml`), so this trigger is vestigial
+    # for PM's own bump; the name is kept correct + matching the SSOT `.tmpl` for consistency / no dead ref.
+    workflows: ["quality-gates-v2"]
+    types: [completed]
+    branches: [staging]
+  # Mirror the SSOT .tmpl fix: the LDR-trunk decoupling dropped push:[staging]
+  # quality-gates-v2, orphaning the workflow_run trigger fleet-wide. Also fire on
+  # a direct push to staging so promotion resumes. Vestigial for PM (Option-B, no
+  # staging branch) but kept matching the template for drift-cleanliness.
+  push:
+    branches: [staging]
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  SERVICE_NAME: "unified-trading-pm"
+  SOURCE_DIR: "unified_trading_pm"
+  GH_ORG: IggyIkenna
+  # Slack #ci-failures webhook — used by the bump-rate circuit breaker + the
+  # version-bump dispatch failure path to page CRITICAL (same channel/pattern as
+  # the notify-slack reusable and request-major-bump.yml).
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semver:
+    name: Semver Agent — unified-trading-pm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run when Quality Gates passed (workflow_run path) — never on failure;
+    # the push:[staging] path is implicitly gated (staging only advances on a green promote).
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
+    outputs:
+      critical_msg: ${{ steps.circuit_breaker.outputs.critical_msg || steps.compute.outputs.critical_msg }}
+      critical_dedup_key:
+        ${{ steps.circuit_breaker.outputs.critical_dedup_key || steps.compute.outputs.critical_dedup_key }}
+
+    steps:
+      - name: Claude API health precheck (RETIRED — no-op)
+        run: |
+          # RETIRED 2026-06-07. semver-agent does NOT call the Claude API — it dispatches a
+          # version-bump event and escalates (when needed) to an agent-orchestrator VM worker on
+          # Claude Code session auth (setup-tokens). The old gate on `claude-api-health-monitor.yml`
+          # (now deleted) was vestigial and FALSE-DAMMED the cascade during credit outages. The
+          # real out-of-capacity signal is agent-orchestrator's all-accounts-unusable alert
+          # (notify_all_accounts_unusable → #agent-orchestrator-alerts).
+          echo "Claude API health precheck retired (no-op) — Claude API unused; proceeding."
+
+      - name: Checkout repo at staging commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      # codex/ is folded into PM at codex/ — no separate clone needed; the readiness
+      # checklist is read from the PM working tree below.
+
+      # ── BUMP-RATE CIRCUIT BREAKER (incident 2026-06-10: instruments-service runaway
+      # 0.3.0→0.30.0 at 1 bump/min). A dead baseline writer (PM update-repo-version)
+      # freezes staging_versions → the range-based chore-skip never fires → every
+      # QG-green re-bumps forever. A runaway must SELF-HALT, not wait for a human to
+      # notice version 0.30.0. "Pending bump" = a `chore(release): bump version to X`
+      # commit on staging in the last hour (the bump exists but its release never
+      # completed — a healthy cycle records the baseline + promotes before the next).
+      # ≥3 pending bumps (or ≥3 consecutive at the staging tip, clock-skew independent)
+      # → REFUSE to compute/dispatch another bump + page CRITICAL + fail the run loudly.
+      # PM Option-B has no staging branch (trigger vestigial) — the fetch fall-back to
+      # HEAD keeps this step a no-op-safe match with the SSOT .tmpl.
+      # Plan: plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md §15.
+      - name: Bump-rate circuit breaker (≥3 pending bumps on staging)
+        id: circuit_breaker
+        run: |
+          set -euo pipefail
+
+          # Scan the LIVE staging tip, not the (possibly stale) workflow_run head_sha —
+          # during a runaway, newer bump commits land between trigger and execution.
+          git fetch origin staging --quiet 2>/dev/null || true
+          SCAN_REF=$(git rev-parse --verify --quiet origin/staging || echo "HEAD")
+
+          RECENT_BUMPS=$(git log --since="1 hour ago" --format=%s "$SCAN_REF" 2>/dev/null \
+            | grep -cE '^chore\(release\): bump version to ' || true)
+          RECENT_BUMPS="${RECENT_BUMPS:-0}"
+
+          CONSECUTIVE=0
+          while IFS= read -r msg; do
+            case "$msg" in
+              "chore(release): bump version to "*) CONSECUTIVE=$((CONSECUTIVE + 1)) ;;
+              *) break ;;
+            esac
+          done < <(git log -10 --format=%s "$SCAN_REF" 2>/dev/null || true)
+
+          # Adjacent re-bump PAIRS in the last-hour window — a bump whose
+          # immediately-newer neighbour is ALSO a bump (no content commit between)
+          # is the genuine runaway signature. A healthy high-velocity repo bumps
+          # ONCE per LDR->staging drain (each bump preceded by a real feat:/fix:
+          # drain commit) => strictly-climbing versions, ZERO adjacent pairs. The
+          # raw RECENT_BUMPS>=3/hr count false-tripped on that interleaved climb
+          # (deployment-service 0.15->0.16->0.17, 2026-06-21). Climbing-aware.
+          REBUMP_PAIRS=0
+          PREV_WAS_BUMP=0
+          while IFS= read -r msg; do
+            case "$msg" in
+              "chore(release): bump version to "*)
+                [ "$PREV_WAS_BUMP" -eq 1 ] && REBUMP_PAIRS=$((REBUMP_PAIRS + 1))
+                PREV_WAS_BUMP=1 ;;
+              *) PREV_WAS_BUMP=0 ;;
+            esac
+          done < <(git log --since="1 hour ago" --format=%s "$SCAN_REF" 2>/dev/null || true)
+
+          echo "Pending-bump scan on ${SCAN_REF}: ${RECENT_BUMPS} bump(s)/hr; ${CONSECUTIVE} consecutive at tip; ${REBUMP_PAIRS} adjacent re-bump pair(s)"
+
+          if [ "$REBUMP_PAIRS" -ge 2 ] || [ "$CONSECUTIVE" -ge 3 ] || [ "$RECENT_BUMPS" -ge 6 ]; then
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            TEXT=":rotating_light: *CRITICAL — semver-agent BUMP-RATE CIRCUIT BREAKER tripped* | unified-trading-pm | runaway re-bump signature on staging: ${REBUMP_PAIRS} adjacent re-bump pair(s) / ${CONSECUTIVE} consecutive at tip / ${RECENT_BUMPS} bump(s)/hr (trip: pairs>=2 OR consecutive>=3 OR rate>=6). A bump with NO content commit between it and the prior bump => the baseline never recorded. Check the PM baseline writer (update-repo-version.yml) health + staging_versions[unified-trading-pm]. REFUSING to dispatch another bump. ${RUN_URL}"
+            # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+            # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+            echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+            echo "critical_dedup_key=semver-circuit-breaker:unified-trading-pm" >> "$GITHUB_OUTPUT"
+            echo "::error::Bump-rate circuit breaker: ${REBUMP_PAIRS} adjacent re-bump pair(s) / ${CONSECUTIVE} consecutive at staging tip / ${RECENT_BUMPS} bumps/hr (trip: pairs>=2 OR consecutive>=3 OR rate>=6). Refusing to dispatch another bump."
+            exit 1
+          fi
+
+          echo "Circuit breaker clear — proceeding."
+
+      - name: Compute next semver via diff analysis
+        id: compute
+        run: |
+          set -euo pipefail
+
+          echo "=== Semver Agent: unified-trading-pm ==="
+          echo "Triggered by Quality Gates passing on staging (SHA: ${{ github.event.workflow_run.head_sha || github.sha }})"
+
+          # ── semver_policy check: read from PM manifest ──
+          PM_MANIFEST_POLICY=$(gh api "repos/${GH_ORG}/unified-trading-pm/contents/workspace-manifest.json" \
+            --jq '.content' | base64 -d 2>/dev/null || echo "")
+
+          SEMVER_POLICY="agent"
+          if [ -n "$PM_MANIFEST_POLICY" ]; then
+            SEMVER_POLICY=$(echo "$PM_MANIFEST_POLICY" | python3 -c "
+          import json, sys
+          m = json.load(sys.stdin)
+          repos = m.get('repositories', {})
+          repo = repos.get('unified-trading-pm', {})
+          print(repo.get('semver_policy', 'agent'))
+          " 2>/dev/null || echo "agent")
+          fi
+
+          echo "semver_policy for unified-trading-pm: $SEMVER_POLICY"
+
+          if [ "$SEMVER_POLICY" = "always_patch" ]; then
+            echo "semver_policy=always_patch: skipping label mismatch check, applying patch bump directly."
+            CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml 2>/dev/null || echo "")
+            if [ -z "$CURRENT" ]; then
+              echo "No version found in pyproject.toml — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            echo "Version: $CURRENT → $NEW_VERSION (always_patch policy)"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+            echo "bump_reason=always_patch policy (no label check)" >> "$GITHUB_OUTPUT"
+            SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+            OWNER="${{ github.repository_owner }}"
+            gh api POST "/repos/${OWNER}/unified-trading-pm/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="always_patch policy: patch bump applied, label check skipped." || true
+            # Baseline-writer SPOF hardening: retry 3× with backoff + CRITICAL page on
+            # final failure (mirrors the main dispatch step; incident 2026-06-10).
+            HTTP_STATUS=""
+            DISPATCH_OK="false"
+            for ATTEMPT in 1 2 3; do
+              HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
+                -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+                -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"unified-trading-pm\", \"version\": \"${NEW_VERSION}\", \"branch\": \"staging\", \"commit_sha\": \"${SHA}\", \"is_breaking\": \"false\"}}") || HTTP_STATUS="000"
+              if [ "$HTTP_STATUS" = "204" ]; then
+                DISPATCH_OK="true"
+                echo "Dispatched successfully to unified-trading-pm (always_patch, attempt ${ATTEMPT})"
+                break
+              fi
+              echo "WARNING: HTTP ${HTTP_STATUS} dispatching version-bump (always_patch, attempt ${ATTEMPT}/3)"
+              cat /tmp/dispatch_response.json 2>/dev/null || true
+              [ "$ATTEMPT" -lt 3 ] && sleep $((ATTEMPT * 10))
+            done
+            if [ "$DISPATCH_OK" != "true" ]; then
+              RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              TEXT=":rotating_light: *CRITICAL — semver-agent version-bump dispatch FAILED* | unified-trading-pm v${NEW_VERSION} (always_patch) | dispatch to unified-trading-pm returned HTTP ${HTTP_STATUS} after 3 attempts. The PM staging_versions baseline will NOT record ${NEW_VERSION} → re-bump-loop fuel. Re-dispatch manually + check update-repo-version.yml health. ${RUN_URL}"
+              # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+              # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+              echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+              echo "critical_dedup_key=semver-dispatch-fail:unified-trading-pm:${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+              echo "::error::version-bump dispatch FAILED after 3 attempts (always_patch, last HTTP ${HTTP_STATUS}) — baseline NOT recorded for ${NEW_VERSION}."
+              exit 1
+            fi
+            exit 0
+          fi
+
+          # ── Step 1: Read staging_versions baseline from PM workspace-manifest.json ──
+          echo ""
+          echo "--- Step 1: Reading staging_versions baseline from PM ---"
+
+          PM_MANIFEST=$(gh api "repos/${GH_ORG}/unified-trading-pm/contents/workspace-manifest.json" \
+            --jq '.content' | base64 -d 2>/dev/null || echo "")
+
+          if [ -n "$PM_MANIFEST" ]; then
+            BASELINE=$(echo "$PM_MANIFEST" | python3 -c "
+          import json, sys
+          m = json.load(sys.stdin)
+          staging = m.get('staging_versions', {})
+          v = staging.get('unified-trading-pm', '')
+          print(v if v else '0.0.0')
+          " 2>/dev/null || echo "0.0.0")
+          else
+            echo "WARNING: Could not fetch PM manifest — defaulting baseline to 0.0.0"
+            BASELINE="0.0.0"
+          fi
+
+          echo "Baseline staging version for unified-trading-pm: $BASELINE"
+
+          # ── Step 2: Determine commit range for diff ──
+          echo ""
+          echo "--- Step 2: Determining commit range ---"
+
+          if [ "$BASELINE" = "0.0.0" ]; then
+            COMMITS=$(git log --oneline 2>/dev/null || echo "")
+            echo "No prior staging version — scanning all commits"
+          else
+            BASELINE_SHA=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "")
+            if [ -n "$BASELINE_SHA" ]; then
+              COMMITS=$(git log --oneline "${BASELINE_SHA}..HEAD" 2>/dev/null || echo "")
+              echo "Scanning commits from $BASELINE_SHA (version $BASELINE) to HEAD"
+            else
+              COMMITS=$(git log --oneline 2>/dev/null || echo "")
+              echo "WARNING: Could not find commit for baseline $BASELINE — scanning all commits"
+            fi
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits to analyze. Nothing to bump."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Commits to analyze:"
+          echo "$COMMITS"
+
+          # ── Step 3: Classify diff using per-repo semver rules ──
+          echo ""
+          echo "--- Step 3: Classifying diff ---"
+
+          CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml 2>/dev/null || echo "")
+          if [ -z "$CURRENT" ]; then
+            echo "No version found in pyproject.toml — skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Current version: $CURRENT"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          BUMP=""
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qE "^[a-f0-9]+ [a-z]+!(\(.+\))?:"; then
+              BUMP="breaking"
+              break
+            elif echo "$msg" | grep -qE "^[a-f0-9]+ feat(\(.+\))?:"; then
+              [ "$BUMP" != "breaking" ] && BUMP="minor"
+            elif echo "$msg" | grep -qE "^[a-f0-9]+ fix(\(.+\))?:"; then
+              [ "$BUMP" != "breaking" ] && [ "$BUMP" != "minor" ] && BUMP="patch"
+            fi
+          done <<< "$COMMITS"
+
+          # File-level diff analysis for public API changes
+          if [ "$BASELINE" = "0.0.0" ]; then
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              DIFF_BASE="HEAD~1"
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            else
+              DIFF_BASE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+              CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+            fi
+          else
+            BASELINE_SHA_FOR_DIFF=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "HEAD~1")
+            DIFF_BASE="${BASELINE_SHA_FOR_DIFF}"
+            CHANGED_FILES=$(git diff --name-only "${BASELINE_SHA_FOR_DIFF}..HEAD" 2>/dev/null || echo "")
+          fi
+
+          # ── Content-based public-surface breaking detection (SSOT differ) ──
+          # Replaces the crude `git diff __init__.py | grep '^-'` text heuristic that
+          # flagged ANY removed line (reformatting / import-reordering / docstring edits)
+          # as breaking — the false-positive source of spurious cascade locks.
+          # The differ (scripts/cicd/detect_breaking_change.py) does an AST diff of the
+          # PUBLIC API/schema surface: removed export, removed/renamed symbol, incompatible
+          # signature change, removed/renamed/retyped schema field, or removed HTTP route =
+          # breaking; added-optional / additive / docstring / reformat = NOT breaking.
+          if [ "$BUMP" != "breaking" ]; then
+            DIFFER="scripts/cicd/detect_breaking_change.py"
+            if [ ! -f "$DIFFER" ]; then
+              # Non-PM repos: fetch the SSOT differ from unified-trading-pm at runtime
+              gh api "repos/${GH_ORG}/unified-trading-pm/contents/scripts/cicd/detect_breaking_change.py" \
+                --jq '.content' 2>/dev/null | base64 -d > /tmp/detect_breaking_change.py \
+                && DIFFER="/tmp/detect_breaking_change.py"
+            fi
+            SURFACE=$(python3 "$DIFFER" --source-dir "${SOURCE_DIR}" --base-ref "$DIFF_BASE" --head-ref HEAD --json 2>/dev/null \
+              || echo '{"is_breaking": false, "reasons": ["differ-unavailable"]}')
+            echo "Public-surface diff verdict: $SURFACE"
+            if echo "$SURFACE" | python3 -c "import json,sys; sys.exit(0 if json.load(sys.stdin).get('is_breaking') else 1)" 2>/dev/null; then
+              echo "Public API/schema surface changed incompatibly → breaking"
+              BUMP="breaking"
+            elif [ -z "$BUMP" ]; then
+              # surface added new exports but no feat:/fix: commit → treat as minor (additive API)
+              if echo "$SURFACE" | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('new_export_count',0) > d.get('old_export_count',0) else 1)" 2>/dev/null; then
+                BUMP="minor"
+              fi
+            fi
+          fi
+
+          if [ -z "$BUMP" ]; then
+            echo "No feat:/fix:/breaking commits or API changes found. Skipping version bump."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Resolved bump category: $BUMP"
+
+          # ── Label vs API diff mismatch check ──
+          SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          OWNER="${{ github.repository_owner }}"
+
+          # Determine what the commit message signals
+          EXPECTED_FROM_LABEL="none"
+          LATEST_MSG=$(echo "$COMMITS" | head -1)
+          if echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ [a-z]+!(\(.+\))?:" || echo "$LATEST_MSG" | grep -qi "BREAKING CHANGE"; then
+            EXPECTED_FROM_LABEL="breaking"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ feat(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="minor"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ fix(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="patch"
+          fi
+
+          echo "Expected from commit label: $EXPECTED_FROM_LABEL"
+          echo "Resolved from API diff:     $BUMP"
+
+          if [ "$EXPECTED_FROM_LABEL" != "none" ] && [ "$EXPECTED_FROM_LABEL" != "$BUMP" ]; then
+            echo "MISMATCH: commit label says $EXPECTED_FROM_LABEL but API diff resolves $BUMP"
+            echo "Posting FAILING commit status to block staging-to-main promotion."
+            gh api POST "/repos/${OWNER}/unified-trading-pm/statuses/${SHA}" \
+              --field state=failure \
+              --field context="semver-agent/label-check" \
+              --field description="Label mismatch: commit says ${EXPECTED_FROM_LABEL}, API diff says ${BUMP}. Fix commit message and re-push to staging." || true
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            echo "Label matches API diff (or label is chore/docs/none — no bump needed): $BUMP bump confirmed."
+            gh api POST "/repos/${OWNER}/unified-trading-pm/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="Label matches API diff: ${BUMP} bump confirmed." || true
+          fi
+
+          # ── Step 4: Apply pre-1.0.0 override and compute new version ──
+          echo ""
+          echo "--- Step 4: Applying semver rules ---"
+
+          BUMP_REASON=""
+          case "$BUMP" in
+            breaking)
+              if [ "$MAJOR" = "0" ]; then
+                MINOR=$((MINOR + 1)); PATCH=0
+                BUMP_REASON="feat!: on pre-1.0.0 repo (downgraded to MINOR per pre-stable override)"
+                echo "Pre-1.0.0 override: breaking → MINOR ($CURRENT → ${MAJOR}.${MINOR}.${PATCH})"
+              else
+                MAJOR_NEW=$((MAJOR + 1))
+                BUMP_REASON="feat!: or removed public export/route (MAJOR required on post-1.0.0 repo)"
+                echo "Post-1.0.0 MAJOR bump: $CURRENT → ${MAJOR_NEW}.0.0"
+                echo "bump=major_blocked" >> "$GITHUB_OUTPUT"
+                echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
+                echo "next_version=${MAJOR_NEW}.0.0" >> "$GITHUB_OUTPUT"
+                echo "bump_reason=$BUMP_REASON" >> "$GITHUB_OUTPUT"
+                echo "skip=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+            minor)
+              MINOR=$((MINOR + 1)); PATCH=0
+              BUMP_REASON="feat: or new public export added" ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              BUMP_REASON="fix: or internal change" ;;
+          esac
+
+          # Apply 0.0.0 baseline rule
+          if [ "$BASELINE" = "0.0.0" ] && [ "$CURRENT" = "0.0.0" ]; then
+            case "$BUMP" in
+              breaking|minor) NEW_VERSION="0.1.0" ;;
+              patch)          NEW_VERSION="0.0.1" ;;
+            esac
+            echo "0.0.0 baseline rule: first bump → $NEW_VERSION"
+          else
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "Version: $CURRENT → $NEW_VERSION (bump=$BUMP, reason=$BUMP_REASON)"
+
+          # Track whether this is a breaking change (feat!, removed exports, removed routes)
+          IS_BREAKING="false"
+          if [ "$BUMP" = "breaking" ]; then
+            IS_BREAKING="true"
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "bump_reason=$BUMP_REASON" >> "$GITHUB_OUTPUT"
+          echo "is_breaking=$IS_BREAKING" >> "$GITHUB_OUTPUT"
+
+      - name: Open GitHub Issue for MAJOR bump approval (post-1.0.0)
+        if: steps.compute.outputs.bump == 'major_blocked'
+        run: |
+          set -euo pipefail
+
+          CURRENT="${{ steps.compute.outputs.current_version }}"
+          NEXT="${{ steps.compute.outputs.next_version }}"
+          BUMP_REASON="${{ steps.compute.outputs.bump_reason }}"
+
+          echo "Opening MAJOR bump approval issue for unified-trading-pm ($CURRENT → $NEXT)"
+
+          CHECKLIST_FILE="codex/10-audit/repos/unified-trading-pm.yaml"
+          if [ -f "$CHECKLIST_FILE" ]; then
+            CHECKLIST_BODY=$(head -80 "$CHECKLIST_FILE")
+          else
+            CHECKLIST_BODY="Readiness checklist not found at: 10-audit/repos/unified-trading-pm.yaml"
+          fi
+
+          ISSUE_BODY="## Major Version Bump Approval Required
+
+          **Repo:** \`unified-trading-pm\`
+          **Current version:** \`$CURRENT\`
+          **Proposed version:** \`$NEXT\`
+          **Reason:** $BUMP_REASON
+          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${{ github.event.workflow_run.head_sha || github.sha }}\`)
+
+          ---
+
+          ## v1.0.0 Readiness Checklist
+
+          A major bump requires ALL of the following gates to be verified before approval (BR8):
+
+          - [ ] **CR5** — Merged to \`main\`, CI green on feature branch
+          - [ ] **DR3** — Feature environment deployed, \`/health\` returns 200
+          - [ ] **DR4** — Staging SIT passed (system-integration-tests green)
+          - [ ] **BR2** — Circuit breaker validated (services only)
+          - [ ] **BR3** — UEI events fire correctly
+          - [ ] **BR4** — Performance targets met
+          - [ ] **BR8** — User explicitly approves this major bump
+
+          ---
+
+          ## Current Readiness State (from codex/10-audit/)
+
+          \`\`\`yaml
+          $CHECKLIST_BODY
+          \`\`\`
+
+          ---
+
+          ## How to Proceed
+
+          Once ALL checklist items are verified, re-run quickmerge with the \`--user-approved\` flag:
+
+          \`\`\`bash
+          bash scripts/quickmerge.sh \"feat!: ...\" --to-staging --user-approved
+          \`\`\`
+
+          > **Note:** \`--user-approved\` is NEVER set by \`--agent\` automatically."
+
+          gh issue create \
+            --repo "${GH_ORG}/unified-trading-pm" \
+            --title "[MAJOR BUMP REQUIRED] unified-trading-pm: $BUMP_REASON" \
+            --body "$ISSUE_BODY" \
+            --label "major-bump-pending" \
+            || echo "WARNING: Issue creation failed (label may not exist) — continuing"
+
+          echo "Issue created. Skipping version-bump dispatch until user approves."
+
+      - name: Dispatch version-bump to unified-trading-pm
+        if: steps.compute.outputs.skip != 'true' && steps.compute.outputs.bump != 'major_blocked'
+        run: |
+          set -euo pipefail
+
+          REPO="unified-trading-pm"
+          VERSION="${{ steps.compute.outputs.new_version }}"
+          BRANCH="staging"
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          OWNER="${{ github.repository_owner }}"
+
+          IS_BREAKING="${{ steps.compute.outputs.is_breaking }}"
+          echo "Dispatching version-bump: repo=$REPO version=$VERSION branch=$BRANCH commit_sha=$COMMIT_SHA is_breaking=$IS_BREAKING"
+
+          # Baseline-writer SPOF hardening (incident 2026-06-10): a lost version-bump
+          # dispatch freezes the PM staging_versions baseline → fuels the re-bump loop.
+          # Retry up to 3× with backoff; on final failure page CRITICAL (the silent
+          # single-shot failure was the SPOF). Plan: semver_version_bump_skip_ci_promotion_block §15.
+          HTTP_STATUS=""
+          DISPATCH_OK="false"
+          for ATTEMPT in 1 2 3; do
+            HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+              -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"${REPO}\", \"version\": \"${VERSION}\", \"branch\": \"${BRANCH}\", \"commit_sha\": \"${COMMIT_SHA}\", \"is_breaking\": \"${IS_BREAKING}\"}}") || HTTP_STATUS="000"
+            if [ "$HTTP_STATUS" = "204" ]; then
+              DISPATCH_OK="true"
+              echo "Dispatched successfully to unified-trading-pm (attempt ${ATTEMPT})"
+              break
+            fi
+            echo "WARNING: HTTP ${HTTP_STATUS} dispatching version-bump (attempt ${ATTEMPT}/3)"
+            cat /tmp/dispatch_response.json 2>/dev/null || true
+            [ "$ATTEMPT" -lt 3 ] && sleep $((ATTEMPT * 10))
+          done
+
+          if [ "$DISPATCH_OK" != "true" ]; then
+            RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            TEXT=":rotating_light: *CRITICAL — semver-agent version-bump dispatch FAILED* | unified-trading-pm v${VERSION} | dispatch to unified-trading-pm returned HTTP ${HTTP_STATUS} after 3 attempts. The PM staging_versions baseline will NOT record ${VERSION} → every future QG-green on staging may re-bump (runaway-loop fuel, incident 2026-06-10). Re-dispatch manually + check update-repo-version.yml health. ${RUN_URL}"
+            # Route through notify-slack.yml for dedup + ledger + re-nag eligibility
+            # (alert_quality_audit_2026_06_18 item 015 — replaces former inline curl).
+            echo "critical_msg=${TEXT}" >> "$GITHUB_OUTPUT"
+            echo "critical_dedup_key=semver-dispatch-fail:unified-trading-pm:${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "::error::version-bump dispatch to unified-trading-pm FAILED after 3 attempts (last HTTP ${HTTP_STATUS}) — baseline NOT recorded for ${VERSION}."
+            exit 1
+          fi
+
+  # ── SLACK NOTIFY — CRITICAL failures (circuit-breaker / dispatch-fail) ─────
+  # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
+  # gains content dedup (same critical_dedup_key within cooldown_min suppressed),
+  # alert ledger (deployment-ui Alerts page lifecycle), and re-nag eligibility.
+  # Replaces the former inline curl that bypassed the carrier entirely.
+  notify-critical:
+    name: Slack CRITICAL — Semver Agent
+    needs: [semver]
+    if: always() && needs.semver.result == 'failure' && needs.semver.outputs.critical_msg != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.semver.outputs.critical_msg }}
+      severity: CRITICAL
+      workflow_name: semver-agent
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.semver.outputs.critical_dedup_key }}
+      cooldown_min: 60
+    secrets: inherit
+
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Slack — Semver Agent
+    needs: [semver]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: "semver-agent | unified-trading-pm | branch: staging | triggered by QG pass on staging (pre-SIT)"
+      severity: "INFO"
+      conclusion: ${{ needs.semver.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — Semver Agent Event
+    needs: [semver, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: "unified-trading-pm"
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.semver.result }}
+      branch: staging
+      commit_sha: ${{ github.event.workflow_run.head_sha || github.sha }}
+      details_json: '{"event": "semver-agent"}'
