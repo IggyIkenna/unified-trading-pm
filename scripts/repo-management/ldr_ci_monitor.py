@@ -284,6 +284,21 @@ def attribute_red(repo: str, red_sha: str, limit: int) -> str:
     Fail-open: ANY gh/parse error returns "" (the page still fires, just without attribution).
     """
     green = last_green_sha(repo, limit)
+    # SAME-SHA case: this repo's tip did NOT move between the last green and this red, so no LDR
+    # commit of its own can have introduced it — a DEPENDENCY changed underneath (CI resolves dep
+    # repos from THEIR LDR, so a dep landing reds a consumer whose own code is untouched). Falling
+    # through to the tip-commit fallback below actively LIES here. Measured 2026-07-16:
+    # market-data-processing-service ran c99adfc4 GREEN (run 29408655322) and, 22h later, RED
+    # (29484794768) on that byte-identical sha; the page named the innocent uts-backmerge-bot
+    # merge commit, while the real cause was a unified-api-contracts registry landing. Naming the
+    # right SUSPECT SET beats naming a precise wrong commit.
+    if green and red_sha and green == red_sha:
+        return (
+            f"      ↳ no LDR commits between the last GREEN and this RED — both are `{red_sha[:8]}`, "
+            f"so {repo}'s own code did NOT change.\n"
+            f"      ↳ a DEPENDENCY landed on its LDR (CI resolves deps from their LDR). "
+            f"Check recent dep-repo commits, NOT this repo's history."
+        )
     commits: list[dict] = []
     if green and red_sha and green != red_sha:
         cmp_data = gh_json(["api", f"repos/{ORG}/{repo}/compare/{green}...{red_sha}"])
@@ -472,6 +487,20 @@ def main() -> int:
         fired = 0
         skipped = 0
         for repo in repos:
+            # RED repos are re-dispatched even on an UNCHANGED tip. The skip below assumes a
+            # repo's own tip is the only input to its CI result — false for this fleet: CI
+            # resolves dep repos from THEIR LDR, so a dep landing can flip a consumer red (or
+            # green again) while its own tip never moves. Skipping a red repo therefore LATCHES
+            # it red forever: no tip movement → no new run → the conclusion the next tick reads
+            # never changes → the RED→GREEN recovery page can never fire. Measured 2026-07-16:
+            # MDPS sat RED on a UAC registry change with its tip parked at c99adfc4 since
+            # 2026-07-15, and its own history held nothing to re-run. Cost stays bounded — this
+            # re-fires ONLY the already-red repos (normally 0-2/tick), while the green majority
+            # still skips, so the 2026-06-11 billing-wall fix is preserved.
+            if new_levels.get(repo) == RED:
+                if dispatch_ldr_run(repo):
+                    fired += 1
+                continue
             cur = current_ldr_sha(repo)
             last = most_recent_dispatch_sha(repo, args.limit)
             if cur and last and cur == last:

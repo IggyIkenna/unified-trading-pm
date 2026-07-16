@@ -106,6 +106,34 @@ def test_load_missing_is_noop(tmp_path: Path) -> None:
     assert plm._ETAG_CACHE == {}
 
 
+# ── _gh_json mock ───────────────────────────────────────────────────────────────
+# _lag makes TWO kinds of call now: the `compare/base...head` (net diff + window) and, per
+# net-changed file, a `commits?sha=&path=` LAST-TOUCH lookup — the content-delta age that
+# replaced the squash-ghost window aging. Dispatch on the path so each returns its own shape.
+
+
+def _touch(date: str, msg: str = "feat: shipped", sha: str = "s1", parents: int = 1) -> dict:
+    """One `commits?path=` entry — the commit that last touched a file."""
+    return {
+        "sha": sha,
+        "commit": {"message": msg, "author": {"date": date}},
+        "parents": [{"sha": f"p{i}"} for i in range(parents)],
+    }
+
+
+def _gh(compare: dict, touches: list | None = None):
+    """side_effect for _gh_json: compare path → `compare`; last-touch path → `touches`."""
+
+    def _dispatch(path: str):
+        if "/compare/" in path:
+            return compare
+        if "/commits?" in path:
+            return touches if touches is not None else []
+        return None
+
+    return _dispatch
+
+
 # ── squash-skew content gate ────────────────────────────────────────────────────
 
 
@@ -129,7 +157,7 @@ def test_lag_fires_on_real_content() -> None:
         "files": [{"filename": "a.py"}],  # genuine unpromoted content
         "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
     }
-    with patch.object(plm, "_gh_json", return_value=real):
+    with patch.object(plm, "_gh_json", side_effect=_gh(real, [_touch(old)])):
         res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
     assert res is not None and res[0] == 1
 
@@ -161,7 +189,7 @@ def test_lag_fires_on_stale_staging() -> None:
         "base_commit": {"commit": {"committer": {"date": "2026-06-15T05:00:00Z"}}},  # staging 4h stale
         "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
     }
-    with patch.object(plm, "_gh_json", return_value=stuck):
+    with patch.object(plm, "_gh_json", side_effect=_gh(stuck, [_touch(old)])):
         res = plm._lag("r", "staging", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
     assert res is not None and res[0] == 1
 
@@ -176,7 +204,7 @@ def test_staging_window_guard_does_not_apply_to_main() -> None:
         "base_commit": {"commit": {"committer": {"date": "2026-06-15T08:55:00Z"}}},  # main 5m ago (skip-ci write)
         "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
     }
-    with patch.object(plm, "_gh_json", return_value=real_main):
+    with patch.object(plm, "_gh_json", side_effect=_gh(real_main, [_touch(old)])):
         res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
     assert res is not None and res[0] == 1
 
@@ -200,13 +228,16 @@ def test_lag_excludes_backmerge_merge_commits() -> None:
             },
         ],
     }
-    with patch.object(plm, "_gh_json", return_value=only_backmerge):
+    backmerge_touch = [
+        _touch("2026-06-01T00:00:00Z", msg="Merge remote-tracking branch 'origin/main' into _backmerge", parents=2)
+    ]
+    with patch.object(plm, "_gh_json", side_effect=_gh(only_backmerge, backmerge_touch)):
         assert plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False) is None
 
 
 def test_lag_ages_only_non_merge_after_excluding_backmerge() -> None:
-    # Ancient backmerge merge (excluded) + a 3h-old genuine forward commit → age is the 3h one,
-    # NOT the ~14-day merge; n_commits counts only the non-merge.
+    # The ancient backmerge merge in `commits` is squash-skew noise. Age comes from the file's
+    # LAST-TOUCH (a 3h-old genuine forward commit), NOT the ~14-day window tail.
     now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
     mix = {
         "files": [{"filename": "a.py"}],
@@ -216,18 +247,39 @@ def test_lag_ages_only_non_merge_after_excluding_backmerge() -> None:
                     "message": "Merge remote-tracking branch 'origin/main' into _backmerge",
                     "author": {"date": "2026-06-01T00:00:00Z"},
                 },
-                "parents": [{"sha": "p1"}, {"sha": "p2"}],  # ancient merge — excluded
+                "parents": [{"sha": "p1"}, {"sha": "p2"}],  # ancient merge — never aged over
             },
             {
                 "commit": {"message": "feat: real forward content", "author": {"date": "2026-06-15T06:00:00Z"}},
-                "parents": [{"sha": "q1"}],  # 3h-old non-merge — counted
+                "parents": [{"sha": "q1"}],  # 3h-old non-merge — the real delta
             },
         ],
     }
-    with patch.object(plm, "_gh_json", return_value=mix):
+    touches = [_touch("2026-06-15T06:00:00Z", msg="feat: real forward content", sha="q0")]
+    with patch.object(plm, "_gh_json", side_effect=_gh(mix, touches)):
         res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
-    assert res is not None and res[0] == 1  # only the non-merge counted
+    assert res is not None and res[0] == 1  # only the real delta counted
     assert 10000 < res[1] < 11000  # age ~3h (10800s), not ~14 days
+
+
+def test_lag_age_ignores_squash_ghost_window_entirely() -> None:
+    """The 2026-07-16 regression, pinned: a 20-day squash ghost must not set the age.
+
+    unified-trading-library reported "144 commit(s), oldest 28403m old" while its real net diff
+    was last touched 25 MINUTES earlier — the age came from a ghost the squash never replayed, so
+    it could never fall under the threshold and the pair paged forever. Age MUST come from the
+    file's last-touch, so a fresh delta under a huge ghost window reports NO lag.
+    """
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    ghosty = {
+        "files": [{"filename": "a.py"}],  # real content, but freshly pushed
+        "commits": [  # a 20-day squash-ghost tail that will never get younger
+            {"commit": {"message": "feat: long promoted", "author": {"date": "2026-05-26T09:00:00Z"}}, "parents": [{}]},
+        ],
+    }
+    fresh = [_touch("2026-06-15T08:35:00Z", msg="feat: just pushed")]  # 25m old
+    with patch.object(plm, "_gh_json", side_effect=_gh(ghosty, fresh)):
+        assert plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False) is None
 
 
 def test_lag_counts_merge_in_backmerge_direction() -> None:
@@ -243,7 +295,8 @@ def test_lag_counts_merge_in_backmerge_direction() -> None:
             },
         ],
     }
-    with patch.object(plm, "_gh_json", return_value=old_merge):
+    merge_touch = [_touch("2026-06-11T07:00:00Z", msg="Merge feature", parents=2)]
+    with patch.object(plm, "_gh_json", side_effect=_gh(old_merge, merge_touch)):
         res = plm._lag("r", "live-defi-rollout", "main", now, 3600.0, skip_ci_counts=True)
     assert res is not None and res[0] == 1
 

@@ -54,8 +54,15 @@ import re
 import subprocess
 import sys
 from typing import cast
+from urllib.parse import quote
 
 OWNER = "IggyIkenna"
+
+# Cap on per-file last-touch lookups in _content_delta_age. The oldest last-touch over a
+# 25-file sample is a sound floor for "how long has the delta been waiting" — and the age
+# only has to beat a 60m threshold, not be exact. Bounded so a huge delta cannot fan out
+# into hundreds of PAT calls per tick. A cap HIT is logged, never silent.
+_MAX_DELTA_FILES = 25
 
 # ETag cache for conditional requests: api-path -> (etag, body_text). GitHub does
 # NOT count a `304 Not Modified` against the rate limit, and most branch-pairs are
@@ -224,7 +231,12 @@ def _lag(
     # content already promoted, so there is NOTHING to page on regardless of how old the oldest
     # squashed commit is. Gate on real content here, mirroring the dashboard's files_changed gate.
     files = cast("dict[str, object]", d).get("files")
-    if isinstance(files, list) and len(files) == 0:
+    if not isinstance(files, list):
+        # `files` is inlined by the compare API only up to 300 files. Absent = a delta far too
+        # big to be a squash artefact, so fall back to the raw window rather than go silent.
+        print(f"   … {repo} {base}...{head}: compare omitted `files` (>300?) — aging the raw commit window")
+        return _commit_window_age(cast("dict[str, object]", d), now, thresh_s, skip_ci_counts)
+    if len(files) == 0:
         return None
     # Squash-WINDOW guard (forward LDR→staging ONLY): the Tier-C drain squash-merges the WHOLE
     # marker..LDR range atomically every ~15 min, so the net diff (`files`) is non-empty only
@@ -249,7 +261,99 @@ def _lag(
                 base_when = None
             if base_when is not None and (now - base_when).total_seconds() < thresh_s:
                 return None  # staging advanced within threshold → drain live → transient in-flight delta
-    commits = cast("list[object]", cast("dict[str, object]", d).get("commits") or [])
+    return _content_delta_age(repo, head, files, now, thresh_s, skip_ci_counts)
+
+
+def _excluded_from_forward(commit: dict[str, object], parents_n: int, skip_ci_counts: bool) -> bool:
+    """True when a commit is not forward-promotable content (see _lag's two exclusions)."""
+    if skip_ci_counts:
+        return False
+    if "[skip ci]" in str(commit.get("message") or ""):
+        return True  # automation commit not meant to promote forward
+    return parents_n > 1  # a merge commit is never forward-promotable content
+
+
+def _last_touch(repo: str, head: str, fn: str, skip_ci_counts: bool) -> tuple[str, dt.datetime, str] | None:
+    """Return (sha, when, subject) of the commit that LAST touched `fn` on `head`."""
+    q = f"repos/{OWNER}/{repo}/commits?sha={quote(head, safe='')}&path={quote(fn, safe='')}&per_page=1"
+    d = _gh_json(q)
+    if not isinstance(d, list) or not d or not isinstance(d[0], dict):
+        return None
+    cd = cast("dict[str, object]", d[0])
+    commit = cast("dict[str, object]", cd.get("commit") or {})
+    sha = str(cd.get("sha") or "")
+    parents = cast("list[object]", cd.get("parents") or [])
+    if not sha or _excluded_from_forward(commit, len(parents), skip_ci_counts):
+        return None
+    author = cast("dict[str, object]", commit.get("author") or {})
+    ds = str(author.get("date") or "")
+    if not ds:
+        return None
+    try:
+        when = dt.datetime.fromisoformat(ds.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    full = str(commit.get("message") or "")
+    return sha, when, (full.splitlines()[0] if full else "")
+
+
+def _content_delta_age(
+    repo: str, head: str, files: list[object], now: dt.datetime, thresh_s: float, skip_ci_counts: bool
+) -> tuple[int, float, str] | None:
+    """Age the REAL content delta, not the squash-skew commit window.
+
+    `compare(base...head).commits` spans the ENTIRE squash window: an LDR→main promote is a
+    SQUASH, so the original LDR shas are never replayed onto main and stay "ahead" forever even
+    though their content IS promoted. Aging over that window dates a GHOST — and a ghost never
+    gets younger, so the `age < thresh_s` test below could never clear and the pair paged every
+    cooldown, permanently. Measured 2026-07-16: unified-trading-library reported "144 commits,
+    oldest 28403m old" (20 days) when its real net diff was 7 files last touched 25 MINUTES
+    earlier; 7 of 8 alert lines were this artefact, and the noise buried the one true finding
+    (mtds main→LDR, genuinely stuck 18.5h behind a CONFLICTING PR).
+
+    The honest question is not "how old is the oldest commit still listed as ahead" but "how
+    long has the still-unpromoted CONTENT been waiting" — so age the commits that last touched
+    each file in the NET diff (`files`), which by construction excludes promoted ghosts.
+
+    SSOT this restores: codex/08-workflows/ci-cd-flow.md ("trust a content/path check, not
+    `ahead_by`") + codex/03-observability/monitoring-control-plane.md ("content delta = changed
+    -file count, NEVER squash-skewed commit counts").
+    """
+    names = [
+        fn for f in files if isinstance(f, dict) and (fn := str(cast("dict[str, object]", f).get("filename") or ""))
+    ]
+    if not names:
+        return None
+    if len(names) > _MAX_DELTA_FILES:
+        print(f"   … {repo} {head}: sampling {_MAX_DELTA_FILES} of {len(names)} changed files for delta age")
+        names = names[:_MAX_DELTA_FILES]
+    seen: dict[str, tuple[dt.datetime, str]] = {}
+    for fn in names:
+        lt = _last_touch(repo, head, fn, skip_ci_counts)
+        if lt is not None:
+            sha, when, subject = lt
+            seen[sha] = (when, subject)
+    # Every last-touch excluded (all [skip ci] / merge commits) → no promotable delta.
+    if not seen:
+        return None
+    oldest_sha = min(seen, key=lambda s: seen[s][0])
+    when, omsg = seen[oldest_sha]
+    age = (now - when).total_seconds()
+    if age < thresh_s:
+        return None
+    return len(seen), age, omsg
+
+
+def _commit_window_age(
+    d: dict[str, object], now: dt.datetime, thresh_s: float, skip_ci_counts: bool
+) -> tuple[int, float, str] | None:
+    """Age over the raw compare window — ONLY for a diff too large for `files` to be inlined.
+
+    Squash-ghost-prone by construction (see _content_delta_age), so it is deliberately NOT the
+    default path: a >300-file delta is never a ghost artefact, it is a genuinely enormous
+    un-promoted change, and paging on it beats going silent.
+    """
+    commits = cast("list[object]", d.get("commits") or [])
     relevant: list[tuple[dt.datetime, str]] = []
     for c in commits:
         if not isinstance(c, dict):
