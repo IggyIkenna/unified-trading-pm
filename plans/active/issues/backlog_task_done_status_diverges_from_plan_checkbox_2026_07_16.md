@@ -249,3 +249,24 @@ This todo's own precondition ("once the above is root-caused **and corrected**")
 `[INFRA]`-scoped and outside this task's `data_engineering` assigned_role, and per the single-task/no-fan-out rule I'm
 not absorbing it unilaterally in this session. Declining again via `/skip-current-task` — will be actionable once Todo 2
 ships.
+
+### 2026-07-16T19:0xZ UTC — data_engineering slot-3 (Todo 4 re-dispatched a fifth time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 3.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99` — same as the slot-2/slot-5 checks, confirming no
+fix has landed since, `unified-trading-pm` HEAD `d01105238bb0b890b8d5d8e5a53a007d5c5ab308`):
+
+- **Todo 2 (the code fix) still not shipped**: read `agent-orchestrator/server/routes/slots_worker.py` `done_slot()`
+  directly at this HEAD (lines 700-730) — `no_plan_flip` is still only appended to `warnings: list[DoneWarning]` (line
+  712); the function's only `HTTPException` raises remain the B1 already-done/not-holder checks and the strict-mode M9
+  origin/`sha_unverifiable` gates. No hard-409 branch exists for `no_plan_flip` yet. Checked `GET /api/backlog`: task
+  `backlog_task_done_status_diverges_from_plan_checkbox-001` (the actual fix) is `status: dispatched` — actively being
+  worked by another slot, not stuck/idle, just not yet shipped.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped, actively dispatched to another slot, and outside this task's `data_engineering` assigned_role.
+Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
