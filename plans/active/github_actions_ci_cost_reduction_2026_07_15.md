@@ -769,8 +769,11 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       `readiness-verifier`, `reconcile-release-tags`, `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted
       pre-seeds the tool cache, self-hosted resolves against `RUNNER_TOOL_CACHE` and on a miss downloads/builds a Python
       **per job** — won't break, but turns a ~5s job slow. Pre-seed the tool cache once at install.
-- [ ] [VERIFY] P1. After 3–5 days, re-measure PM's billed minutes (ledger); confirm the moved workflows bill ~$0 and the
-      VM absorbed the load without contention (slice `MemoryCurrent` < 8G, orchestrator load unaffected).
+- [ ] [VERIFY] P1. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
+      what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped jobs
+      are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed minutes
+      (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
+      `MemoryCurrent` < 8G, orchestrator load unaffected).
 - [ ] [DOCS] P2. **Codex: write down the self-hosted-glue security posture (operator 2026-07-16 — important, not
       blocking).** On self-hosted runners the runner user carries the VM's **ambient cloud identity** (ADC + AWS-WIF) —
       STEP 2b drops the per-job `auth` step _precisely because_ of this — so every glue job runs with the runner slot's
