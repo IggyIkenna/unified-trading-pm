@@ -40,7 +40,7 @@ related:
     issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
     issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
     issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
-    ao_host_disk_and_governor_reliability_2026_07_16.md,
+    ao_host_disk_pressure_2026_07_16.md,
     ../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
     ../epics/orchestrator_master.md,
   ]
@@ -245,11 +245,9 @@ Three of this plan's own source docs prescribe fixes that current code contradic
   showed the same doc hides a bigger, uncovered bug (the `SlotMessageRow` task-worker channel), and both are the same
   mechanism family, so they ship together.
 - **Host disk pressure + the qg-host-governor mode drift** — split into a sibling **infra**-craft plan so the two can
-  run in parallel:
-  [`ao_host_disk_and_governor_reliability_2026_07_16`](ao_host_disk_and_governor_reliability_2026_07_16.md). It is a
-  genuinely **independent second cause** of the operator's "tasks left half-finished" symptom (a full disk kills a
-  worker's pytest/QG mid-task, indistinguishable from the agent giving up) — fixing dispatch alone would NOT have fixed
-  it.
+  run in parallel: [`ao_host_disk_pressure_2026_07_16`](ao_host_disk_pressure_2026_07_16.md). It is a genuinely
+  **independent second cause** of the operator's "tasks left half-finished" symptom (a full disk kills a worker's
+  pytest/QG mid-task, indistinguishable from the agent giving up) — fixing dispatch alone would NOT have fixed it.
 
 ## Codex SSOTs
 
