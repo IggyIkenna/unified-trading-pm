@@ -891,3 +891,54 @@ still-pending corpus-mutation numbers:
 remaining action is the already-designed, already-gated `--apply` of
 `purge_stale_shape_cefi_expected_unattempted_ 2026_07_15.py` (workstream C above). Did not run it. Did not touch VMs,
 codex/, or any code.
+
+### ✅ WRITER FIX VERIFIED IN PROD + I over-stated the eu-atom blocker (correction) — 2026-07-16T08:15Z
+
+**Correction to my own earlier framing.** I told the operator (and journaled) that the stale per-venue eu ATOM was "the
+real blocker preventing coverage from EVER moving via fetching — the two sides speak different atoms." **That was WRONG,
+verified against the live manifest:**
+
+BINANCE-FUTURES/trades, canonical(`:`)-vs-raw crosstab:
+
+| status               | raw    | canonical   |
+| -------------------- | ------ | ----------- |
+| expected_unattempted | **25** | **141,708** |
+| captured             | 14,300 | 0           |
+
+The **eu side is 99.98% canonical** — my earlier "eu is lowercase-raw `hotusdt`" claim was a `head(3)` sampling artifact
+that surfaced 25 stale rows out of 141k. The real mismatch was eu-canonical **vs captured-raw**, and captured-raw is the
+WRITER's output, not an enumerator two-shape problem. The eu-atom shape debris (verified by the eu-atom investigation)
+is only **~49,732 rows** total (mostly legacy `CRYPTOFACILITIES`/`OKEX` venue-name debris + 4,951 bundle-grain dupes),
+already diagnosed, with a snapshot-first purge script
+(`instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py`, `--apply` operator-gated). It
+is a small cleanup, NOT the 2.77M blocker. Retracting the "no fetching can move coverage until this lands" claim.
+
+**The writer fix (`mtds@5d44a197`) IS working in production — FIRST hard verification.** KRAKEN-FUTURES captured rows,
+canonical-vs-raw by write date:
+
+| write date     | raw     | canonical |
+| -------------- | ------- | --------- |
+| ≤ 2026-07-15   | 241,969 | **0**     |
+| **2026-07-16** | 7       | **538**   |
+
+2026-07-16 is the first date in the entire corpus with canonical captured `instrument_id`s — written by the current
+fixed VM (`cefi-queue-heavy-binancefutu-x15-20260716-075338`, tarball ⊃ mtds@5d44a197). Three prior eu-tests were
+invalid (January eu=0 zone ×2, preemption); THIS is the clean signal the fix eluded. Canonical captures now match the
+canonical eu atom, so they WILL close eu cells as the backfill proceeds through the gap.
+
+**Corrected forward model:**
+
+1. The running fixed VM writes canonical captures → these close canonical eu cells → coverage moves (directionally
+   proven; too few rows yet to move the aggregate, but the mechanism is now verified end-to-end).
+2. The ~3.13M HISTORICAL raw captured rows (pre-fix) are the real bulk-uncredited set — they become creditable via
+   EITHER the operator-gated relabel `--apply` (82.7% resolvable; instruments-service@f021cb2b dry-run) OR natural
+   re-fetch by the backfill (which now writes canonical). Relabel is far cheaper than re-fetch.
+3. The ~50k eu-shape debris: the operator-gated purge script. None of these three is "coverage can't move" — they are
+   cleanup + a relabel-vs-refetch cost decision.
+
+**sentinels.py Tier-3** (the third divergent canonicalizer): already fixed `market-tick-data-service@bbf6649c`
+(confirmed ancestor of HEAD) per the eu-atom investigation.
+
+**Net**: the eu-atom todo is NOT new code — it's the two already-gated operator decisions (purge + relabel). The writer
+fix is verified. What remains genuinely open is operator sign-off on relabel/purge, and letting the fixed backfill grind
+(which now genuinely closes cells).
