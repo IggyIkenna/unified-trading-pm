@@ -60,6 +60,9 @@ TARBALL="actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${TARBALL}"
 SLOT_REPO="${RUNNER_BASE}/repo"
 SLOT_VENV="${RUNNER_BASE}/venv"
+# Must satisfy pyproject's requires-python (>=3.13,<3.14). The slot venv IS the runner's python3
+# (first on the unit PATH), which is what lets the movers drop actions/setup-python entirely.
+SLOT_PY="${SLOT_PY:-3.13}"
 
 log() { printf '\033[36m[glue-runners]\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m[glue-runners] WARN:\033[0m %s\n' "$*" >&2; }
@@ -186,6 +189,17 @@ cmd_preflight() {
   # and its absence is invisible until the slot build); after install it is "does pip actually
   # resolve on the runner's PATH".
   if [ -x "${SLOT_VENV}/bin/python" ]; then
+    # The version is a CONTRACT, not a detail: this python3 IS what the movers run, and the repo
+    # declares requires-python >=3.13,<3.14. A 3.12 here is exactly the state that forced every
+    # mover to carry actions/setup-python and re-download Python per job.
+    resolved="$(run_as_runner "${rp}" 'python3 --version 2>&1')"
+    if run_as_runner "${rp}" 'python3 -c "import sys; sys.exit(0 if (3,13) <= sys.version_info[:2] < (3,14) else 1)" && echo ok' | grep -q ok; then
+      printf '  \033[32m✓\033[0m %-8s %s (satisfies requires-python >=3.13,<3.14)\n' "py-ver" "${resolved}"
+    else
+      printf '  \033[31m✗\033[0m %-8s %s does NOT satisfy requires-python >=3.13,<3.14\n' "py-ver" "${resolved}"
+      printf '           the slot venv IS the runner python3 — rebuild it: setup-glue-runners.sh install\n'
+      missing=$((missing + 1))
+    fi
     resolved="$(run_as_runner "${rp}" 'python3 -m pip --version 2>&1 | head -1')"
     case "${resolved}" in
       *"No module named pip"*)
@@ -296,10 +310,35 @@ cmd_install() {
     install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_BASE}/${inst}/toolcache"
   done
 
-  if [ ! -x "${SLOT_VENV}/bin/python" ]; then
-    log "creating the slot venv -> ${SLOT_VENV}"
-    sudo -u "${RUNNER_USER}" python3 -m venv "${SLOT_VENV}"
+  # THE SLOT VENV IS THE RUNNER'S `python3` — it is FIRST on the unit PATH. So it must satisfy the
+  # REPO's requires-python, not whatever the distro happens to ship.
+  #
+  # WHY THIS IS BUILT ON uv's 3.13 AND NOT `python3 -m venv` (operator 2026-07-16, and the sharpest
+  # correction of this whole deploy): the system python3 here is 3.12.3 while pyproject declares
+  # >=3.13,<3.14. Building the venv on the distro python is exactly WHY 5 movers still needed
+  # actions/setup-python — every job downloaded a THIRD copy of Python onto a box that ALREADY had
+  # the right one (uv keeps 3.13 under ~/.local/share/uv/python; the AO uses it). That is the
+  # ephemeral-hosted model rebuilt on hardware we already pay for 24/7 — it keeps only the
+  # downsides, and it is what made the shared tool cache race in the first place.
+  #
+  # uv, not apt/deadsnakes: 3.13 is NOT in noble's apt, and adding a third-party PPA to the live
+  # orchestrator VM is not a trade worth making. uv is already the repo's Python toolchain (32 movers
+  # invoke it) and fetches the SAME python-build-standalone builds actions/setup-python uses.
+  # `--seed` is LOAD-BEARING: a bare `uv venv` has NO pip, and 8 movers run `python3 -m pip install`.
+  local rp; rp="$(runner_path)"
+  if ! "${SLOT_VENV}/bin/python" -c 'import sys; sys.exit(0 if (3,13) <= sys.version_info[:2] < (3,14) else 1)' 2>/dev/null; then
+    log "building the slot venv on Python ${SLOT_PY} (repo requires >=3.13,<3.14) -> ${SLOT_VENV}"
+    run_as_runner "${rp}" "uv python install ${SLOT_PY}" >/dev/null 2>&1 || true
+    rm -rf "${SLOT_VENV:?}"/* "${SLOT_VENV:?}"/.[!.]* 2>/dev/null || true
+    run_as_runner "${rp}" "uv venv --python ${SLOT_PY} --seed '${SLOT_VENV}'" >/dev/null 2>&1 \
+      || die "uv venv --python ${SLOT_PY} --seed failed. Is uv on the runner PATH and can it fetch ${SLOT_PY}? Check: sudo -u ${RUNNER_USER} uv python install ${SLOT_PY}"
   fi
+  local slot_py_ver
+  slot_py_ver="$("${SLOT_VENV}/bin/python" --version 2>&1)"
+  "${SLOT_VENV}/bin/python" -c 'import sys; sys.exit(0 if (3,13) <= sys.version_info[:2] < (3,14) else 1)' \
+    || die "slot venv is ${slot_py_ver} — the repo requires >=3.13,<3.14 and this venv IS the runner's python3"
+  log "slot venv OK — ${slot_py_ver} (satisfies requires-python; movers need no actions/setup-python)"
+
   # STEP 2b: pre-install so ci-status-update never pays a per-run `pip install google-cloud-firestore`.
   log "installing slot venv deps (google-cloud-firestore)"
   sudo -u "${RUNNER_USER}" "${SLOT_VENV}/bin/pip" install --quiet --upgrade google-cloud-firestore \
