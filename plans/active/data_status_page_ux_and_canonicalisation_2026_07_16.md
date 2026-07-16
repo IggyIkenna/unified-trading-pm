@@ -412,9 +412,22 @@ canonical grouping already exists. Build a browse-the-live-catalogue surface, de
       unified-api-contracts@72fd959 + Evidence:
       `test_prediction_cross_venue_mapping.py::test_category_for_group_composes_across_all_categories` (crypto/
       financial/sports/weather/entertainment/politics/other) green + `quality-gates.sh --no-fix` green (188s).
-- [ ] [UI] P1. Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
+- [x] [UI] P1. ✅ Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
       sub-filter → paginated searchable table (label = fallback chain above, venue chip, resolution date). `[UI]` +
-      pw:L2.
+      pw:L2. — `PredictionCatalogueCard` (`src/components/PredictionCatalogue.tsx`), mirrors `LifecycleCards.tsx`'s
+      `useX(...)` + loading/error/empty pattern; `fetchPredictionCatalogue` +
+      `PredictionCatalogueRow`/`PredictionCatalogueResult` added to `client.ts`; representative mock rows (one per
+      `PredictionMarketCategory`) added to `mock-api.ts`; mounted in `DataStatusTab.tsx` alongside its sibling lifecycle
+      cards (`serviceName === "instruments-service"`). cqg sub-filter narrows to the selected category via a
+      client-accumulated `cqg -> category` map built from rows seen so far (`cqg_counts` itself is NOT category-scoped
+      server-side — see `deployment-api/services/prediction_catalogue.py`). MVP badge renders per-row (next to the
+      category chip), not on the `<select>` itself — deviation from the literal wording, since MVP is a per-market
+      attribute, not a per-category one. — deployment-ui@3bdb4e4 + Evidence: `PredictionCatalogue.test.tsx` 6 specs
+      green (initial load, empty state, category-select narrows via new fetch call, debounced search triggers refetch,
+      pagination Next/Prev, refresh) + `quality-gates.sh` full gate green (196s: tsc/eslint/89 unit tests/74.62%
+      coverage/build all passed). `pw:L2` satisfied via Vitest per this plan's accepted pattern (live Playwright MCP
+      browser was contended — multiple long-running `.playwright-mcp` Chrome processes from other concurrent sessions —
+      not exercised live, same as the P2 UI unit).
 - [x] **DECIDED (operator 2026-07-16): slug for v1 + document the follow-up.** Category from `canonical_question_group`;
       human label from the slug/base_asset/event_title fallback chain. Confirmed parseable from existing fields
       (`PREDICTION_INSTRUMENTS.md:217,230,247-266`). Never fabricate a title.
