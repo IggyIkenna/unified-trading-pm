@@ -293,3 +293,22 @@ pick up — out of scope for this IAM-gap fix.
   EventBridge rules, and verified via `aws batch describe-jobs` + `aws logs get-log-events` that the IAM gap is fully
   closed (zero new AccessDenied among 85 post-fix failures; 77+ genuine SUCCEEDED runs with real log content). Status →
   resolved.
+
+## Correction 2026-07-16 — rules RE-DISABLED (AWS is not a live target)
+
+Operator challenge ("what are the AWS consolidators doing — we don't even have AWS bucket data yet") prompted a
+data-presence check that reversed the re-enable decision:
+
+- **AWS is not a live write target.** Live collection (incl. the DeFi collectors restored this session) writes ONLY to
+  GCS — collector logs show `gs://…` sinks, no `s3://`. On AWS S3 (account 427895769566): most asset groups' buckets are
+  EMPTY (instruments-store-{cefi,tradfi,sports,pred}, features-*); the DeFi buckets that DO hold data (`dex-pools-prd`
+  ~39k, `evm-defi-prd` ~30k, `instruments-store-defi-prd` ~54k, `market-data-tick-defi-prd`) are **frozen at ~2024-08**
+  (`by_date/day=` partitions stop there) — a stale historical mirror, not live dual-write.
+- **Therefore the 26 `uts-prod-consolidator-*` EventBridge rules consolidate stale-or-empty buckets** — running 26 AWS
+  Batch jobs per cron cycle for zero live value. Re-enabling them (as part of the blanket 48-GCP/26-AWS drain-resume
+  runbook) was over-eager: the runbook assumed the resumed fleet had live data to process, which is true for GCP but not
+  AWS.
+- **Action:** re-DISABLED all 26 rules (verified 0 ENABLED). **The IAM fix is KEPT** (the role genuinely lacked
+  `logs:CreateLogStream`/`PutLogEvents`; it's correct and needed if/when AWS ever becomes a live target). Re-enabling is
+  one command (`aws events enable-rule`) whenever a real dual-cloud AWS write path is stood up.
+- `status` reverts to a documented DEFERRED-until-AWS-is-live posture (IAM gap closed; scheduling intentionally off).
