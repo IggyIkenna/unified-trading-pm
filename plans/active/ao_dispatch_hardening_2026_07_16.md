@@ -223,10 +223,25 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ### Phase 2 — restore designed capacity (P1)
 
-- [ ] [BACKEND] P1. **R2 — per-task tier/role spawn.** Resolve the spawn `(model, effort, thinking, role)` **per slot
-      being spawned** instead of once per tick (`server/autospawn.py:1646` + `_top_queued_task_params:388`), so a
-      mixed-tier queue stands up the right tier per slot. Delete the now-false "Known limitation" docstring at `:415`.
-      **Gate**: unit test — a queue holding one opus task + one sonnet task spawns one slot per tier in a single tick.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@6ae43b5`. QG green (own exit 0): 1304 passed,
+      basedpyright 0 errors.** New `_spawn_param_plan` yields **one entry per CLAIMABLE task** (same
+      `claimable_queued_task_ids` SSOT the budget counts → plan and budget cannot disagree about what is servable),
+      ordered starved-role-first then by dispatch's own tie-break; the i-th slot spawned takes the i-th entry.
+      `assigned_role` now travels **per-slot** through `to_spawn` instead of being one tick-wide value closed over by
+      the slow section — that closure was why every worker in a tick came up at the top task's craft. The "Known
+      limitation" docstring is **deleted** (no longer true). **Generalises ao@8a423bb** from "narrow the pool to
+      starved" to "sort starved first" — equivalent at the head (a test asserts `plan[0]` still matches, so that fix's
+      guarantee is preserved) but the REST of the tick's spawns now serve the OTHER starved roles too.
+      **`_top_queued_task_params` DELETED, not shimmed** (CLAUDE.md: delete deprecated code) — basedpyright caught it
+      going unused the moment the tick stopped calling it. **Found + fixed a pre-existing latent test bug**: 4 tests
+      patched `_top_queued_task_params` with a **3-tuple** while it returned a **4-tuple**, so the tick's unpack raised
+      and was swallowed by its `except Exception` — those tests were passing on the sonnet FALLBACK, not on their patch;
+      they now patch `_spawn_param_plan` with the right shape. Proof: reverting to the one-tuple behaviour fails both
+      new tests; the 5 pre-existing spawn-param tests stay green throughout. ~~**R2 — per-task tier/role spawn.**~~
+      Resolve the spawn `(model, effort, thinking, role)` **per slot being spawned** instead of once per tick
+      (`server/autospawn.py:1646` + `_top_queued_task_params:388`), so a mixed-tier queue stands up the right tier per
+      slot. Delete the now-false "Known limitation" docstring at `:415`. **Gate**: unit test — a queue holding one opus
+      task + one sonnet task spawns one slot per tier in a single tick.
 - [ ] [BACKEND] P1. **R5 — high-affinity dead-slot spill.** In `_task_is_routable_to` (`server/dispatch.py:257`),
       replace the unconditional `if affinity == "high": return False` (`:289`) with a liveness-aware check — a
       high-affinity task whose `target_slot` is dead/absent must spill to another eligible slot; a task whose target is
