@@ -45,9 +45,12 @@ Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse
 
 - per-doc: path, size, `status`, `assigned_vm`, `parent_epic`, `depends_on`, `supersedes`, `superseded_by`, `related`,
   `locked_by`, `title`;
-- mechanical flags: dangling `depends_on`/`related`/`supersedes` refs; `superseded_by` set while `status: active`;
-  terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]` while
-  `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
+- mechanical flags: dangling `depends_on`/`related`/`supersedes` refs; **`depends_on` CYCLES** (A→B→A) and
+  self-dependency (A→A) — a cycle gates archival forever, so neither plan can ever close (walk the live subgraph; a
+  `depends_on` pointing at an ARCHIVED plan is NOT a finding — it means the prerequisite is done and the dependent is
+  unblocked); **git conflict markers** (`<<<<<<<`/`=======`/`>>>>>>>`) left in a doc; `superseded_by` set while
+  `status: active`; terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]`
+  while `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
   candidate); **body over the line-cap** — normal plans 500 soft / 1000 hard (per `run_hygiene_sweep.sh`), but
   **long-lived master plans + epics (`plans/epics/*.md`, `*_master*`, living-inventory/hub plans) are EXEMPT from the
   500/1000 caps** (they are intentionally long), with a **strict 5000-line ABSOLUTE ceiling on ANY file regardless of
