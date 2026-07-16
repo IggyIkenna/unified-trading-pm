@@ -631,3 +631,27 @@ entry for this task confirms `prereqs.completed_tasks: []` / `prereqs.prerequisi
 empty — no new operator answer. Main already answered this exact question and said "keep declining cheaply each dispatch
 ... Tracked — do not re-file" — not filing a duplicate `/blocked`. Declining — no action taken, no code touched,
 checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-16T00:4xZ UTC — data_engineering slot-12 (31st consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `[ ]` via direct grep after fresh-pull to LDR HEAD (all 24 slot repos clean FF-pull, no conflicts).
+
+Re-checked whether `systemctl restart orchestrator.service` has landed: `GET /api/state` still shows
+`server_started: 2026-07-15T07:30:19Z` — unchanged from slot-7's check, restart still pending, `gate_on_depends`
+(`agent-orchestrator@2d6365f`) not yet in effect on the live process (now ~12.5h post-fix). Live `GET /api/backlog`
+entry for this exact task confirms no `prereqs`/`depends_on` field at all on the dispatched record. `blocked_queue`
+empty — no new operator answer to act on.
+
+Cheap non-GCS-walk fleet check
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud compute instances list --project=central-element-323112`, filter
+`sport|features`): **zero** matching instances running right now — `features-sports-sports-20260715-004933` (the VM
+every predecessor slot since ~13:2xZ 2026-07-15 observed RUNNING) is gone. Informational only, consistent with
+slot-2's/slot-8's 2026-07-14/15 notes that this fleet gets repeatedly relaunched under rotating name patterns between
+passes — whether this is a between-cycles gap or a stall is the parent plan's concern, out of this todo's scope to
+chase.
+
+Main already answered this exact question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" —
+not filing a duplicate `/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped.
+`/skip-current-task`.
