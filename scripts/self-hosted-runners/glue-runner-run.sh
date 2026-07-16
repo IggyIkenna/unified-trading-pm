@@ -59,11 +59,26 @@ cd "${RUNNER_DIR}"
 # hooks, so export it here rather than re-deriving it from RUNNER_WORKSPACE (fragile).
 export GLUE_RUNNER_DIR="${RUNNER_DIR}"
 
-# Shared tool cache across ALL runner dirs (both pools). actions/setup-python resolves against this;
-# on a hosted image it is pre-seeded, on self-hosted a MISS means it downloads+builds a Python for
-# that job. Sharing one dir means only the FIRST job pays; every later job across every runner hits
-# cache. (5 movers use actions/setup-python@v6.)
-export RUNNER_TOOL_CACHE="${RUNNER_BASE}/toolcache"
+# PER-RUNNER tool cache — NOT shared across runners. actions/setup-python resolves against this; on a
+# hosted image it is pre-seeded, on self-hosted a MISS means it downloads a Python for that job.
+#
+# THIS WAS SHARED (${RUNNER_BASE}/toolcache) AND IT RACED — MEASURED 2026-07-16, batch-2 flip:
+# three setup-python jobs landed within 7s of each other on different runners, all writing the same
+# cache dir. actions/setup-python is DELETE-THEN-CREATE, not concurrency-safe:
+#   15:03:02 ruleset-drift-alert     setup-python -> success
+#   15:03:07 readiness-verifier      setup-python -> FAILURE
+#   15:03:09 reconcile-release-tags  setup-python -> success
+# readiness-verifier was mid-"Copy Python binaries" when reconcile-release-tags hit its own
+# "Deleting Python 3.13.14 (x64)" and removed the directory under it:
+#   cp: cannot create symbolic link '.../toolcache/Python/3.13.14/x64/lib/libpython3.13.so':
+#       No such file or directory
+# The shared cache saved ~10s per job and bought an intermittent, load-dependent CI failure — a
+# flaky-test generator across the 5 movers that use setup-python. Not a trade worth making.
+#
+# Per-runner it is: each runner pays the download ONCE (~10s, first job only) and hits cache after.
+# NOTE the placement — a SIBLING of _work, never inside it: the JIT wrapper wipes _work every cycle,
+# so a cache under _work would be destroyed after every single job and re-downloaded every time.
+export RUNNER_TOOL_CACHE="${RUNNER_DIR}/toolcache"
 
 # JSON via python3, not jq — python3 is guaranteed on the box, jq is not (verify-at-deploy item).
 json_get() { python3 -c "import sys, json; print(json.load(sys.stdin)['$1'])"; }
@@ -73,14 +88,66 @@ if [ "${POOL}" = "glue" ]; then
   # One job per process. Safe to wipe here precisely BECAUSE this runs once per job.
   rm -rf _work/* _diag/*.log 2>/dev/null || true
 
+  # SELF-HEAL a stale registration holding OUR name, or we cannot start at all.
+  #
+  # A JIT runner auto-deregisters on a CLEAN exit (job done → process exits). But SIGTERM — i.e.
+  # `systemctl restart/stop`, a redeploy, or a reboot — kills it mid-"Listening for Jobs", and the
+  # registration survives as OFFLINE, still holding this runner's deterministic name. The next start
+  # then asks for a JIT config for a name that exists and gets:
+  #     HTTP 409  {"message":"Already exists - A runner with the name ... already exists."}
+  # `curl -fsS` treats 409 as failure and prints NOTHING, so json_get received "" and died with
+  #     json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+  # — a crash loop whose traceback names JSON and never mentions the actual cause. MEASURED
+  # 2026-07-16: one `systemctl restart` of the pool took all 5 glue runners down permanently; the
+  # writers were unaffected (they register once via config.sh and never re-register).
+  #
+  # Only OFFLINE registrations are deleted. An ONLINE one with our name means another process is
+  # genuinely serving as this runner — deleting that would yank a live runner out from under a
+  # running job, so we fail loudly instead. (Same guard as setup-glue-runners.sh `prune`.)
+  STALE="$(curl -fsS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+    "${API}/actions/runners?per_page=100" 2>/dev/null \
+    | python3 -c "
+import sys, json
+try:
+    runners = json.load(sys.stdin).get('runners', [])
+except Exception:
+    sys.exit(0)
+for r in runners:
+    if r['name'] == '${RUNNER_NAME}':
+        print('%s %s' % (r['id'], r['status']))
+        break
+" || true)"
+  if [ -n "${STALE}" ]; then
+    STALE_ID="${STALE%% *}"; STALE_STATUS="${STALE##* }"
+    if [ "${STALE_STATUS}" = "offline" ]; then
+      echo "[glue-runner] deleting stale OFFLINE registration ${RUNNER_NAME} (id=${STALE_ID}) — left by a SIGTERM'd predecessor"
+      curl -fsS -X DELETE -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+        "${API}/actions/runners/${STALE_ID}" || true
+    else
+      echo "[glue-runner] FATAL: ${RUNNER_NAME} is already registered and ${STALE_STATUS} (id=${STALE_ID})." >&2
+      echo "[glue-runner] Another process is serving as this runner. Refusing to delete a live registration." >&2
+      exit 3
+    fi
+  fi
+
   LABELS_JSON='["self-hosted","glue"]'
-  JIT="$(curl -fsS -X POST \
+  # Capture the body AND the status: a bare `curl -f | json_get` turns every API error into an
+  # opaque JSONDecodeError. We want the API's own message in the journal.
+  JIT_BODY="$(curl -sS -X POST \
     -H "Authorization: Bearer ${GH_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     "${API}/actions/runners/generate-jitconfig" \
     -d "{\"name\":\"${RUNNER_NAME}\",\"runner_group_id\":1,\"labels\":${LABELS_JSON},\"work_folder\":\"_work\"}" \
-    | json_get encoded_jit_config)"
+    -w '\n%{http_code}' 2>/dev/null)"
+  JIT_CODE="${JIT_BODY##*$'\n'}"
+  JIT_JSON="${JIT_BODY%$'\n'*}"
+  if [ "${JIT_CODE}" != "201" ]; then
+    echo "[glue-runner] FATAL: generate-jitconfig for ${RUNNER_NAME} returned HTTP ${JIT_CODE}, want 201" >&2
+    echo "[glue-runner] API said: ${JIT_JSON}" >&2
+    exit 4
+  fi
+  JIT="$(printf '%s' "${JIT_JSON}" | json_get encoded_jit_config)"
 
   # Run exactly one job, then exit 0 → systemd restarts us and we re-register.
   exec ./run.sh --jitconfig "${JIT}"
