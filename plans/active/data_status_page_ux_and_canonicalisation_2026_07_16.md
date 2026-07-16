@@ -253,15 +253,22 @@ the exact pattern to clone (it already has a threshold input).
 - **Acceptance:** two endpoints honour mock mode; two cards with numeric threshold inputs render next to Upcoming
   fixtures; a pw:L2 spec drives a threshold change and asserts the list refetches.
 
-- [ ] [BACKEND] P1. New service `deployment-api/deployment_api/services/catalogue_lifecycle.py` (mirror
-      `upcoming_fixtures.py`): `list_new_listings(max_age_days, asset_group?, venue?)`
-      (`available_from >= today - max_age_days`, newest-first) +
-      `list_upcoming_expiries(within_days, asset_group?,     venue?)` (`instrument_type ∈ {FUTURE,OPTION,COMBO}` AND
-      `available_to ∈ [today, today+within_days]`, soonest-first). Read-only, 5-min TTL, shard-isolated (a
-      missing/failed AG parquet is skipped, never a cross-AG raise).
-- [ ] [BACKEND] P1. Routes `GET /instruments/new-listings?max_age_days=<1..365>&asset_group=&venue=` +
-      `GET /instruments/upcoming-expiries?within_days=<1..365>&asset_group=&venue=` (mirror `routes/fixtures.py`; honour
-      `_cfg.is_mock_mode()`). Register beside the fixtures router.
+- [x] [BACKEND] P1. ✅ New service `deployment_api/services/catalogue_lifecycle.py` (mirrors `upcoming_fixtures.py`:
+      5-min TTL, shard-isolated per-AG `prod/catalog.parquet` reads, prediction = own bucket kind):
+      `list_new_listings(max_age_days, asset_group?, venue?)` (`available_from ∈ [today - max_age_days, today]`,
+      newest-first) + `list_upcoming_expiries(within_days, asset_group?, venue?)`
+      (`instrument_type ∈     {FUTURE,OPTION,COMBO}` AND `available_to ∈ [today, today+within_days]`, soonest-first). A
+      missing/failed AG parquet is skipped, never a cross-AG raise. — deployment-api@25865c0 + Evidence:
+      `test_catalogue_lifecycle.py` 3 specs green (window filter, type+forward-window expiry filter, shard-isolation) +
+      `quality-gates.sh --no-fix` green (exit 0; 1 unrelated pre-existing xdist-flaky `hung_provider` test, passes in
+      isolation).
+- [x] [BACKEND] P1. ✅ Routes `GET /api/instruments/new-listings?max_age_days=<1..365>&asset_group=&venue=` +
+      `GET /api/instruments/upcoming-expiries?within_days=<1..365>&asset_group=&venue=`
+      (`routes/catalogue_lifecycle.py`, mirrors `routes/fixtures.py`; honours `_cfg.is_mock_mode()`); registered beside
+      the fixtures router in `main.py`. — deployment-api@25865c0. _(NOTE: new real service modules must be registered in
+      `tests/unit/conftest.py`'s `_ensure_services_mocked` allowlist — the stub services package has `__path__=[]`, so a
+      dotted import of an unregistered new module fails with "unknown location" under pytest. Added
+      `catalogue_lifecycle` there.)_
 - [ ] [UI] P1. Two sibling cards next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard) with numeric
       threshold inputs ("new if listed within N days", "expiring within M days") + client helpers in `client.ts`. Mirror
       the fixtures card. `[UI]` + pw:L2 regression spec.
