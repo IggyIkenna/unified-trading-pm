@@ -242,7 +242,22 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       (`server/autospawn.py:1646` + `_top_queued_task_params:388`), so a mixed-tier queue stands up the right tier per
       slot. Delete the now-false "Known limitation" docstring at `:415`. **Gate**: unit test — a queue holding one opus
       task + one sonnet task spawns one slot per tier in a single tick.
-- [ ] [BACKEND] P1. **R5 — high-affinity dead-slot spill.** In `_task_is_routable_to` (`server/dispatch.py:257`),
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@860eaf7`. QG green (own exit 0): 1310 passed,
+      basedpyright 0 errors.** Replaced the unconditional `if affinity == "high": return False` with a liveness-aware
+      check. **Deliberately NOT "target missing → spill immediately"** (the naive fix the verification agent flagged):
+      that defeats the session-continuity guarantee `affinity=high` exists to provide. Gated on a TIME threshold — new
+      `high_affinity_spill_after_seconds` (default **600s**, matching `failover.py`'s offline threshold and the
+      medium-affinity `target_slot_timeout_seconds`, not an invented number). "Dead" is computed with the fleet's **own
+      SSOT** for slot silence (`worker_liveness_watchdog.effective_silence_seconds`) so it means the same thing to the
+      dispatcher as to the watchdog that reaps them — that helper is **promoted private→public** (basedpyright flagged
+      the cross-module private use rather than let it slide) and is NULL/stale-aware, so a zombie row with no activity
+      anchor reads as `inf` = dead, not "just pinged" (the 2026-06-08 incident where six slots were never freed).
+      **Composes with R1**: once the pin spills the task is claimable, so it correctly warrants a spawn — before, it was
+      un-claimable AND un-spillable, the worst combination. **Superseded an R1-era test expectation**: a pin to an
+      absent slot used to assert budget 0 ("routable to nobody"); R5 makes the right answer 1 (it spills) — the test is
+      rewritten as a worked example of the two fixes composing, with the history noted, not deleted. Proof: restoring
+      the unconditional pin fails 3 of 6 new tests; the 3 that still pass are the live-target guards, which must be
+      unaffected. ~~**R5 — high-affinity dead-slot spill.**~~ In `_task_is_routable_to` (`server/dispatch.py:257`),
       replace the unconditional `if affinity == "high": return False` (`:289`) with a liveness-aware check — a
       high-affinity task whose `target_slot` is dead/absent must spill to another eligible slot; a task whose target is
       alive must still NOT spill. **Gate**: two unit tests (dead target → spills; live target → does not).
