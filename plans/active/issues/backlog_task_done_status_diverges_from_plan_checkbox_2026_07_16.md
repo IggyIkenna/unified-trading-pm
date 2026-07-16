@@ -48,6 +48,7 @@ drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
 resolved_by:
+depends_on: []
 ---
 
 # Backlog `status: done` diverges from the plan checkbox it's derived from
