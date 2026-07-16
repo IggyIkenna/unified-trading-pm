@@ -660,9 +660,25 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       into `data-status-helpers.ts`. TEAMS (now per-league, P8) renders the real drilldown + never hits this. —
       deployment-ui@43818c9 + Evidence: `data-status-helpers.test.ts` "showsGlobalReferenceAffordance" 3 specs green +
       full UI QG green (tsc/eslint/vitest 90/build). `[UI]` + pw:L2 (Vitest regression spec).
-- [ ] [UI] P2. Deep-drill parity — either generalize `build_fixture_breakdown` to all `per_league_per_fixture_date`
-      sources behind a backend `supports_fixture_breakdown` capability flag, OR add a one-line UI note that per-fixture
-      drill/download is FIXTURES-only.
+- [x] [UI] P2. ✅ Chose the simpler option (b): a one-line honest UI note. New pure predicate
+      `showsFixturesOnlyDrillNote(category, dataTypeName)` (`data-status-helpers.ts`) renders "Per-fixture drill-down
+      and downloads are available for FIXTURES only." for every non-FIXTURES sports data_type (STANDINGS, TEAMS,
+      LEAGUES, PLAYER_VALUES, …), placed right after the existing per-league/global-reference-affordance rendering in
+      `DataStatusTab.tsx` so it doesn't clutter FIXTURES' own view. — deployment-ui@b0525e5 + Evidence:
+      `data-status-helpers.test.ts` "showsFixturesOnlyDrillNote" 3 specs green (non-FIXTURES sports → true, FIXTURES →
+      false, non-sports categories → false) + full UI QG green (tsc/eslint/vitest 89 tests/build). `[UI]` + pw:L2
+      (Vitest regression spec, per this plan's stated acceptance). _(Incident + corrective fix: deployment-ui@12c94be —
+      a CONCURRENT agent in this same slot/working-directory had live uncommitted work
+      (`FixturesBrowser.tsx`/`.test.tsx` + a `client.ts`/`DataStatusTab.tsx` wiring + a `mock-api.ts` addition) mixed
+      into the same files. `git add -p` correctly isolated this commit's staged diff to only the 2 intended hunks, but
+      quickmerge's `--files` step does a full-file `git add`, which re-swept the other agent's unstaged
+      `FixturesBrowser` import/mount + an unrelated label-wording hunk into the b0525e5 commit — `FixturesBrowser.tsx`
+      itself was never committed, so `live-defi-rollout` briefly carried a dangling import. Caught immediately via
+      `git ls-tree` + reverted in a same-session forward-fix commit (12c94be, tsc/eslint/full-QG re-verified green); the
+      other agent's WIP files are untouched/intact in the working tree — only their 2-line `DataStatusTab.tsx` wiring +
+      the label-wording tweak will need re-applying on their end. Flagged to the operator; see also the pre-existing
+      `plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md` for this slot's
+      recurring two-agent-collision pattern.)_
 
 ---
 
