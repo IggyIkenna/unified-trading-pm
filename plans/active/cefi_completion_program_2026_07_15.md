@@ -1128,3 +1128,32 @@ armed through the deploy window.
 "idempotent shards re-run on preemption" premise is now TRUE for the cefi/tardis family — Agent A wrote the exact
 replacement wording + a `vm-launcher-runbook.md` note + an optional `DP-VM-007` registry row into the
 unified-trading-pm@49a9ce243 Progress Log for the operator to apply.
+
+### 2026-07-16T10:15Z — [slot-3] C (alias cleanup) ATTEMPTED → verified-correct but DEFERRED (consolidator clobber)
+
+- C purge (agent a423dff1): DuckDB row-filter → generation-match CAS write of `availability_index.parquet`, removing the
+  13 pure-stray alias venues = **567,212 rows** (OKEX-SWAP 119,389 · CRYPTOFACILITIES 122,845 · BITFINEX 105,662 ·
+  BINANCE 80,265 · OKEX-FUTURES 52,246 · COINBASE 35,807 · BITFINEX-DERIVATIVES 27,730 · OKEX 18,727 · KRAKEN 2,504 ·
+  BITGET 1,177 · COINBASE-INTERNATIONAL 745 · LIGHTER 109 · UNKNOWN 6). **TOTAL_CAPTURED invariant held bit-for-bit
+  (3,142,947→3,142,947), every canonical venue captured count UNCHANGED, exclusions intact (DERIBIT-COMBO, bare-OKX
+  fold-target, KALSHI/POLYMARKET, blank-venue).** Backups:
+  `_index/backups/availability_index.pre-alias-purge- 20260716T100230Z.parquet` + the legacy seed.
+- **DEFERRED (not durable)**: the write was CLOBBERED within ~4 min by an in-flight consolidator cycle (lost-update —
+  the deployed consolidator image likely predates the 2026-07-08 CAS-retry fix, running ~8-min overlapping cycles under
+  the co-manager's active backfill load). Per the safety protocol, did NOT unilaterally pause shared prod consolidation
+  infra during the active backfill. No data lost; manifest restored. **The purge script is READY** — run it in a
+  quiescent window: pause `uts-prod-manifest-consolidator-market-data-cefi` (+ `-legacy`) → drain the in-flight run →
+  fresh backup → re-run the DuckDB-filter CAS write → verify sticks → resume. Re-seeding is CLEARED
+  (enumerator/writer/catalogue carry only canonical venues — no alias re-seed).
+- **FINDING C-1 (data-correctness — follow-up)**: **BYBIT-FUTURES is NOT a stray** — 45 real `live_bybit` GCS objects
+  ({BTC,ETH,SOL}USDT, 2026-06-23→27) MIS-CLASSIFIED as `attempted_failed`; canonical BYBIT has 0 captured for those
+  days. → real unmigrated live perp data; needs MIGRATION (rename objects → canonical BYBIT + reclassify rows to
+  captured), NOT deletion. Excluded from the purge. Data-mis-attribution gap.
+- **FINDING C-2 (infra — flag)**: the cefi manifest consolidator has a lost-update bug (clobbers valid CAS writes under
+  load) — deployed image predates the 2026-07-08 fix; can silently lose ANY out-of-band manifest correction. Worth a
+  redeploy.
+- **FINDING C-3 (blank-venue)**: the 28 blank-venue captured rows = an MDPS venue-attribution anomaly on 2026-04-14 (a
+  day-summary write that lost its venue tag; real per-venue data IS captured under the real venues). Not a Tardis alias
+  → separate MDPS re-attribution fix. Kept (not deleted).
+- C status: purge VERIFIED-SAFE + READY; durable execution gated on a consolidator-quiescent window (aligns with the
+  final af=0 recompute timing). BYBIT-FUTURES migration + consolidator redeploy = follow-ups.
