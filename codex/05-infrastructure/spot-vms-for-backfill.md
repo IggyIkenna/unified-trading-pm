@@ -48,6 +48,20 @@ execution:
 > (`--provisioning-model=SPOT`). Spot is ~60–91% cheaper than on-demand. Backfill is idempotent (per-shard manifest
 > resume via `VM_NAME` + `MANIFEST_PER_VM_SHARDS=true`), so a preempted shard re-runs cleanly — there is no correctness
 > cost to preemption, only a restart. **On-demand for backfill is now a bug**, not a default.
+>
+> **"Re-runs cleanly" requires a relauncher — it is NOT automatic (corrected 2026-07-16, operator-approved).** The claim
+> above was FALSE for the cefi/tardis launcher family until 2026-07-16: `--instance-termination-action=DELETE` +
+> `--no-restart-on-failure` meant a preempted backfill VM was deleted and **nothing re-ran it** — the shard was
+> idempotent in principle, but no actor invoked the re-run, so waves silently vanished (measured: 2 VMs preempted ~6 min
+> into real work, 2026-07-15T22:05Z, with `exit_code_fleet_monitor` logging a `→ SPOT relaunch` that did not exist).
+> **Now true for launchers that call `lc_write_launch_params()` at create time** (currently
+> `launch-cefi-sharded-backfill.sh` + its AWS twin): the `exit_code_fleet_monitor` PREEMPTED verdict dispatches
+> `RelaunchPreemptedVm` (`deployment-service/scripts/recovery/relaunch_backfill_vm.py`), which replays the captured
+> launch env through the launcher's own `tardis_concurrency_guard` (so a relaunch can never breach the concurrency cap).
+> A launcher that does NOT call `lc_write_launch_params()` still gets a best-effort relaunch attempt (ambient env only),
+> **not** an exact-params replay — if you add a new backfill launcher, call `lc_write_launch_params()` or your preempted
+> waves will not resume with their real scope. Shipped `deployment-service@02be72e6`; design + measured evidence:
+> `plans/active/cefi_completion_program_2026_07_15.md` (2026-07-16).
 
 ## Why (the trigger)
 
