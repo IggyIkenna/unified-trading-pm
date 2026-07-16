@@ -40,7 +40,7 @@ code_refs:
 > only, `URDI_SUPPORTED_VENUES` UAC-derived, UTL startup venue validation reads UAC directly) shipped 2026-07-03.
 > Execution record: `plans/.../instrument_universe_registry_consolidation_2026_06_29.md`. Move 3 (one expected-universe
 > entry point) remains tracked under
-> [`plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md`](../../plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md).
+> [`plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md`](../../plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md).
 
 ## Problem — the universe is assembled across mirrored layers
 
@@ -100,7 +100,7 @@ honest-coverage Layer-1 EXPECTED matrix  (denominator now provably == UAC)
    different per-AG grains (cefi lifecycle, defi chain-genesis, tradfi calendar, sports per-league) live behind it as
    per-AG strategy objects sharing one interface. This is a unified _interface_, not a collapse of the per-AG logic.
    **Execution note:** this third move is tracked under
-   [`plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md`](../../plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md)
+   [`plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md`](../../plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md)
    (the honest-coverage Layer-1 effort that owns `check_enumeration_completeness.py`), not the consolidation plan — they
    share the same surface, so they were merged 2026-06-29.
 

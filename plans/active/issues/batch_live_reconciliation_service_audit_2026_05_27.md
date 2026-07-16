@@ -316,11 +316,12 @@ code into BLRS — unless the operator wants centralisation (D1-(B)). The live m
   `ReconciliationSnapshot`, `v2/recon_freshness.py` (freshness feed to risk-service), and a full reconciliation API
   (`api/reconciliation_routes.py`). **⚠️ CAVEAT added 2026-07-14, doc-reconciliation verify-rerun-2 finding 19**: this
   document's premise treats `core/reconciliation_engine.py` as reliable, functioning live-recon machinery (underpinning
-  D1 below + the "live safety reflex" note at §7.2). `active/canonical_id_p0_strategy_reconciliation_2026_07_08.md`
-  (status: complete) later found `_find_exchange_qty` (lines 175-180 at the time) compared the internal canonical
-  `instrument_id` against the raw ccxt-native symbol — a mismatch that silently defaulted every CCXT-venue position to
-  `exchange_qty=Decimal("0")`, defeating the venue↔internal match for every CCXT venue until fixed 2026-07-08. This
-  reliability defect predates and is not caveated anywhere in this still-open audit.
+  D1 below + the "live safety reflex" note at §7.2).
+  `archive/2026_07/canonical_id_p0_strategy_reconciliation_2026_07_08.md` (status: complete) later found
+  `_find_exchange_qty` (lines 175-180 at the time) compared the internal canonical `instrument_id` against the raw
+  ccxt-native symbol — a mismatch that silently defaulted every CCXT-venue position to `exchange_qty=Decimal("0")`,
+  defeating the venue↔internal match for every CCXT venue until fixed 2026-07-08. This reliability defect predates and
+  is not caveated anywhere in this still-open audit.
 - **execution-service**: `preflight/recon_freeze.py` (order-block on freeze), `services/{yield,funding}_recon_engine.py`
   (live venue accrual/funding recon), `services/account_history_client.py`.
 - **alerting-service**: `gateway/recovery_verifier.py` (the recovery callback codex attributes to BLRS — actually a

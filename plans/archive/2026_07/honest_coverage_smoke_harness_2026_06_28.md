@@ -5,7 +5,7 @@ summary:
   Build a harness that walks the availability manifest to classify every AG×venue×data_type×instrument shard as RUNNABLE
   (continuous window) / INSUFFICIENT-HISTORY (partial → must FAIL) / HONEST-EMPTY (no data → handled), with
   product-shaped required windows, so we can smoke-test MDPS+features over the span each path actually needs.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [data, backtest]
@@ -196,10 +196,10 @@ GCP `central-element-323112`, EPL 2025-26 sports slice:
 | understat    | XG          | INSUFFICIENT_HISTORY | 304          | 5     |
 
 All 4 EPL-2025 sports shards classify INSUFFICIENT*HISTORY today — NOT because of a manifest gap, but because
-`resolve_required_window(sports, *, league_id="EPL",
-season_year=2025)`returns the \_full* ~304-day season window (Aug 2025 → May 2026); days between today (Dec 2025) and season-end (May 2026) read as missing-rows since the season is ~3 months in. **Finding: no`seasonal_continuous`
-shard can classify RUNNABLE during its own season\*\* — a semantic gap between the plan's "golden 91-day window" framing
-and the live classifier's full-season window resolution.
+`resolve_required_window(sports, *, league_id="EPL", season_year=2025)`returns the \_full* ~304-day season window (Aug
+2025 → May 2026); days between today (Dec 2025) and season-end (May 2026) read as missing-rows since the season is ~3
+months in. **Finding: no`seasonal_continuous` shard can classify RUNNABLE during its own season\*\* — a semantic gap
+between the plan's "golden 91-day window" framing and the live classifier's full-season window resolution.
 
 Cross-AG findings + the 4-AG prereq DAG (cefi/defi/prediction phantom-reconciliation + tradfi Plan 5) filed in
 `plans/active/issues/verify_p1_prereq_dag_2026_06_29.md` with 3 classifier-semantic options + 5 follow-up todos for the

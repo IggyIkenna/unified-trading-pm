@@ -493,9 +493,9 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
    unchecked — corrected 2026-07-12, finding 105, §A2 B-queue ruling: this §3 entry was never back-edited after the
    flip; see this doc's own Progress Log, operator decision #3 and the Orchestration-state / Follow-up-verification
    entries below, which already document the dispatch + completion)
-   `plans/active/coinbase_bare_name_migration_2026_07_06.md` Full 7-step (S0–S7) multi-repo migration plan (44 UAC + 5
-   IS + 4 MTDS + cross-repo callers). **Now `status: active`, dispatched for execution 2026-07-10, all S0–S7 steps
-   `[x]`** (per the plan's own frontmatter + banner as of 2026-07-12).
+   `plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md` Full 7-step (S0–S7) multi-repo migration plan (44
+   UAC + 5 IS + 4 MTDS + cross-repo callers). **Now `status: active`, dispatched for execution 2026-07-10, all S0–S7
+   steps `[x]`** (per the plan's own frontmatter + banner as of 2026-07-12).
 
 ---
 
@@ -690,11 +690,11 @@ The 15 genuinely resolved (flipped `unified-trading-pm@8f15f8233`):
 - `plans/active/issues/uac_ws_cassette_coexistence_20_missing_map_entries_and_cassettes_2026_07_07.md`
 - `plans/archive/2026_07/canonical_id_p1_onchain_perp_perp_shorthand_2026_07_08.md`
 - `plans/active/issues/features_read_book_columns_not_snapshots_2026_06_28.md`
-- `plans/active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`
-- `plans/active/foundation_gates_and_capture_to_100_2026_07_06.md`
+- `plans/archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md`
+- `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md`
 - `plans/active/mdps_features_full_month_benchmark_binance_2026_06_28.md`
-- `plans/active/instruments_catalogue_incremental_rollup_2026_06_29.md` (1 residual `[ ]` is an operator-declined
-  optional band-aid, not real work)
+- `plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md` (1 residual `[ ]` is an
+  operator-declined optional band-aid, not real work)
 - `plans/active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md`
 - `plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md`
 - `plans/active/sports_features_readiness_for_predictions_2026_06_20.md`
@@ -891,10 +891,10 @@ the source docs if this list is used for dispatch planning.
 - **OKX-SPOT + Kraken marker**: landed (`instruments-service@c0f5529c` for OKX-SPOT fold-invert (was:
   `instruments-service@300b0767` — corrected 2026-07-14, doc-reconciliation finding 133: that SHA is a factual
   misattribution, it is actually the COINBASE `_CEFI_VENUE_FOLD` invert
-  (`plans/active/coinbase_bare_name_migration_2026_07_06.md:339-347`, `scripts/check_enumeration_completeness.py` only,
-  no OKX-SPOT mention); the real "stop folding OKX-SPOT to bare OKX" fix landed as `c0f5529c` (2026-07-10 12:43 UTC),
-  with a same-day follow-on `60c2e3b6`); Kraken marker part was mid-quickmerge waiting on a background QG run when the
-  agent's window closed — verify it shipped, re-dispatch if not).
+  (`plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md:339-347`,
+  `scripts/check_enumeration_completeness.py` only, no OKX-SPOT mention); the real "stop folding OKX-SPOT to bare OKX"
+  fix landed as `c0f5529c` (2026-07-10 12:43 UTC), with a same-day follow-on `60c2e3b6`); Kraken marker part was
+  mid-quickmerge waiting on a background QG run when the agent's window closed — verify it shipped, re-dispatch if not).
 - **DeFi backlog apply**: correctly did NOT execute the stale command — found the same 46× v1→v2 scale explosion this
   doc's Progress Log already recorded; superseded by the operator decision + real launch this session (see above).
 - **Archetype registry CEFI cells**: DONE, `unified-api-contracts@7f20bdee`, two-sided-audit contradiction count 2→0,
@@ -930,7 +930,7 @@ the source docs if this list is used for dispatch planning.
 **Follow-up verification, 2026-07-10 (later): all 3 previously-open items confirmed SHIPPED** — re-checked directly
 against git history (not re-trusting the earlier "code-complete, blocked" self-report): (1) Coinbase-migration S2
 dead-branch removal landed as `instruments-service@db33ded7` (slot 9, reconciled with a concurrent slot-3 attempt per
-operator direction — see `plans/active/coinbase_bare_name_migration_2026_07_06.md` line ~424 for the full ship
+operator direction — see `plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md` line ~424 for the full ship
 narrative); (2) `mvp_mode` universal build landed as `market-tick-data-service@e7581b8b` (committed 2026-07-10
 16:32:27+01:00, root-caused one level higher than filed — `TickDataHandler.process()` parsed `--mvp-mode` but never read
 it, blocking every asset group's batch path, not just TradFi's); (3) Kraken FI*/FF* marker fix confirmed shipped in both

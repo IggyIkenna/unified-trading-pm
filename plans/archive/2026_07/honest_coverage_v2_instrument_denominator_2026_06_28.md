@@ -7,7 +7,7 @@ summary:
   (day-by-day + shard-breakdown), drill-down/roll-up across asset_group → venue → instrument_type → data_type → day. Fix
   the measurability bugs first (stale-bucket read, prd/non-prd split, instrument_type normalization, VENUE_FETCH_FAILED
   swallowing 79% of failure causes, untyped empty_confirmed) so v2 reports real numbers.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -41,8 +41,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 7
 estimate_calibrated_ai_days: 5.6
 last_updated: 2026-06-28
-locked_by: live-defi-rollout
-locked_since: 2026-06-28
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -235,57 +235,57 @@ filter = UAC `mvp_scope.py`**.
       **61.77%** (2,886/4,672)
 
       **Phase 1+2 v2 live re-measure 2026-06-29 04:59 UTC** (schema_version=2, instrument_id dedup, prd+oracle merge,
-                  Layer-1 enumeration-completeness check running):
-                  - Layer-2 (download): cefi 37.83% (2,855,844/7,548,448) | defi 57.48% (2,471,687/4,299,821) |
-                    tradfi 88.81% (341,060/384,039) | sports 100.00% (32,389/32,389) | prediction 18.96% (6,927/36,534)
-                    _(Note: cefi lower than 74.55% baseline due to instrument_id shard-level dedup revealing more EU skeleton rows)_
-                  - Layer-1 (denominator) **v1 (pre-bugfix)**: cefi 14.9% (EXPECTED=121) | defi **WRONG: 100% (EXPECTED=0, Bug 1:
-                    raw dict has no defi keys)** | tradfi 18.8% (EXPECTED=101) | sports 0.0% (EXPECTED=46) | prediction 50.0%
-                    (EXPECTED=2). **Bug 2**: EXPECTED==0 falsely reported 100% — this fix was the primary reason for the follow-up
-                    commit instruments-service@875c47b.
+                      Layer-1 enumeration-completeness check running):
+                      - Layer-2 (download): cefi 37.83% (2,855,844/7,548,448) | defi 57.48% (2,471,687/4,299,821) |
+                        tradfi 88.81% (341,060/384,039) | sports 100.00% (32,389/32,389) | prediction 18.96% (6,927/36,534)
+                        _(Note: cefi lower than 74.55% baseline due to instrument_id shard-level dedup revealing more EU skeleton rows)_
+                      - Layer-1 (denominator) **v1 (pre-bugfix)**: cefi 14.9% (EXPECTED=121) | defi **WRONG: 100% (EXPECTED=0, Bug 1:
+                        raw dict has no defi keys)** | tradfi 18.8% (EXPECTED=101) | sports 0.0% (EXPECTED=46) | prediction 50.0%
+                        (EXPECTED=2). **Bug 2**: EXPECTED==0 falsely reported 100% — this fix was the primary reason for the follow-up
+                        commit instruments-service@875c47b.
 
-                  **Phase 1+2 v2 post-bugfix re-measure 2026-06-29 05:18 UTC** (Bug1=UAC functions for defi, Bug2=UNDEFINED guard):
-                  - Layer-2 (download): cefi 37.85% (2,857,273/7,549,878) | defi 57.55% (2,478,060/4,306,192) |
-                    tradfi 88.81% (341,060/384,039) | sports 100.00% (38,182/38,182) | prediction 20.56% (7,661/37,268)
-                  - Layer-1 (denominator): cefi INCOMPLETE 14.9% (EXPECTED=121, ENUMERATED=193, missing=103, stray=175) |
-                    defi INCOMPLETE **0.0% (EXPECTED=3,581, ENUMERATED=255, missing=3,581, stray=255)** — Bug1 fixed, EXPECTED now
-                    correct via UAC protocol functions | tradfi INCOMPLETE 18.8% (EXPECTED=101, missing=82, stray=76) |
-                    sports INCOMPLETE 0.0% (EXPECTED=152, ENUMERATED=32, missing=152, stray=32) | prediction INCOMPLETE 12.5%
-                    (EXPECTED=8, missing=7, stray=24)
-                  - Layer-1 finding (all AGs): stray tuples confirm instrument_type in manifest is UPPERCASE (PERPETUAL/SPOT_PAIR/
-                    LENDING) vs UAC lowercase; writer normalization (MTDS@4c2a13b6) landed but backfill of existing rows not yet
-                    applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
-                    after instrument_type backfill.
-                  - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
+                      **Phase 1+2 v2 post-bugfix re-measure 2026-06-29 05:18 UTC** (Bug1=UAC functions for defi, Bug2=UNDEFINED guard):
+                      - Layer-2 (download): cefi 37.85% (2,857,273/7,549,878) | defi 57.55% (2,478,060/4,306,192) |
+                        tradfi 88.81% (341,060/384,039) | sports 100.00% (38,182/38,182) | prediction 20.56% (7,661/37,268)
+                      - Layer-1 (denominator): cefi INCOMPLETE 14.9% (EXPECTED=121, ENUMERATED=193, missing=103, stray=175) |
+                        defi INCOMPLETE **0.0% (EXPECTED=3,581, ENUMERATED=255, missing=3,581, stray=255)** — Bug1 fixed, EXPECTED now
+                        correct via UAC protocol functions | tradfi INCOMPLETE 18.8% (EXPECTED=101, missing=82, stray=76) |
+                        sports INCOMPLETE 0.0% (EXPECTED=152, ENUMERATED=32, missing=152, stray=32) | prediction INCOMPLETE 12.5%
+                        (EXPECTED=8, missing=7, stray=24)
+                      - Layer-1 finding (all AGs): stray tuples confirm instrument_type in manifest is UPPERCASE (PERPETUAL/SPOT_PAIR/
+                        LENDING) vs UAC lowercase; writer normalization (MTDS@4c2a13b6) landed but backfill of existing rows not yet
+                        applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
+                        after instrument_type backfill.
+                      - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
 
-                  **Phase 1+2 v3 post-Bug3 (VOCABULARY/GRAIN ALIGNMENT) re-measure 2026-06-29 06:00 UTC** —
-                  instruments-service@051e5a8. Bug 3: EXPECTED (UAC vocab) and ENUMERATED (manifest written vocab) were intersected
-                  WITHOUT alignment → the prior 0%/14.9% were largely casing/vocab/format ARTIFACTS. Fix: intersect on a CANONICAL
-                  comparison key (case-fold + UAC `_INSTRUMENT_TYPE_ALIASES` + `bundle_instrument_type_for_leaf` + defi
-                  `VenueMapping._canonicalise_defi_protocol_spelling`+chain-strip) PLUS a (venue,itype) validity gate (cefi via
-                  `venue_instrument_type_to_tardis`, defi via `PROTOCOL_CAPABILITIES.instrument_types`, tradfi via the codified
-                  `_VENUE_INSTRUMENT_TYPE` map) to stop cross-product over-generation, PLUS sports re-grained to the writer
-                  `instrument_type=odds` surface (the reference-data `league` surface lives in a different bucket → out of scope).
-                  Added `--diagnose-layer1` mode (per-AG EXPECTED-only/ENUMERATED-only/matched samples in
-                  `layer_1.by_asset_group[ag].diagnostics`).
-                  - Layer-2 (download): cefi 37.86% | defi 57.67% | tradfi 88.81% | sports 100.00% | prediction 22.46%
-                  - Layer-1 (denominator, ALIGNED): cefi **65.91%** (29/44, missing=15, stray=118) | defi **69.44%** (75/108,
-                    missing=33, stray=131) | tradfi **51.43%** (18/35, missing=17, stray=52) | sports **30.77%** (8/26, missing=18,
-                    stray=24) | prediction **66.67%** (4/6, missing=2, stray=17). All INCOMPLETE; residual holes/strays are REAL
-                    (verified via `--diagnose-layer1`):
-                    - cefi: holes = OKX/KRAKEN-FUTURES perps captured under venue-suffix variants (OKX-SWAP) + BYBIT spot under
-                      BYBIT-SPOT; strays = ASTER ohlcv_1m/liquidations (writer captures, MVP gate excludes).
-                    - defi: holes = genuinely-absent protocols (EIGENLAYER/EULER_V2/BENQI/CONVEX/ACROSS); strays = writer itypes UAC
-                      doesn't sanction (`a_token`, `liquidation`) + `swaps_ohlcv_*` data_types not in pool capabilities.
-                    - tradfi: holes = YAHOO_FINANCE (un-gated, real) + CBOE/index ohlcv; strays = CME/ICE futures_chain trades/tbbo/
-                      mbp_10/ohlcv_24h (real captured data_types UAC's tradfi matrix omits).
-                    - sports: matched = (venue, odds, trades) for all 8 MVP venues; holes = bookmaker snapshot data_types
-                      (markets/odds_snapshot/odds_movement/outcomes/settlements) not yet captured; strays = non-MVP bookmaker venues
-                      (BETMGM/BOVADA/…) the writer captures beyond the UAC sports venue set.
-                    - prediction: hole = MARKET_LIFECYCLE (real — absent from manifest); strays = POLYMARKET per-underlying-asset
-                      partitions (btc/eth/…) + KALSHI book_snapshot_5 (real writer grain UAC doesn't enumerate).
-                  - VERDICT per AG: all aligned, residual holes are REAL (not dialect artifacts). CK3 certification is the Opus
-                    orchestrator's call from this evidence (NOT flipped here).
+                      **Phase 1+2 v3 post-Bug3 (VOCABULARY/GRAIN ALIGNMENT) re-measure 2026-06-29 06:00 UTC** —
+                      instruments-service@051e5a8. Bug 3: EXPECTED (UAC vocab) and ENUMERATED (manifest written vocab) were intersected
+                      WITHOUT alignment → the prior 0%/14.9% were largely casing/vocab/format ARTIFACTS. Fix: intersect on a CANONICAL
+                      comparison key (case-fold + UAC `_INSTRUMENT_TYPE_ALIASES` + `bundle_instrument_type_for_leaf` + defi
+                      `VenueMapping._canonicalise_defi_protocol_spelling`+chain-strip) PLUS a (venue,itype) validity gate (cefi via
+                      `venue_instrument_type_to_tardis`, defi via `PROTOCOL_CAPABILITIES.instrument_types`, tradfi via the codified
+                      `_VENUE_INSTRUMENT_TYPE` map) to stop cross-product over-generation, PLUS sports re-grained to the writer
+                      `instrument_type=odds` surface (the reference-data `league` surface lives in a different bucket → out of scope).
+                      Added `--diagnose-layer1` mode (per-AG EXPECTED-only/ENUMERATED-only/matched samples in
+                      `layer_1.by_asset_group[ag].diagnostics`).
+                      - Layer-2 (download): cefi 37.86% | defi 57.67% | tradfi 88.81% | sports 100.00% | prediction 22.46%
+                      - Layer-1 (denominator, ALIGNED): cefi **65.91%** (29/44, missing=15, stray=118) | defi **69.44%** (75/108,
+                        missing=33, stray=131) | tradfi **51.43%** (18/35, missing=17, stray=52) | sports **30.77%** (8/26, missing=18,
+                        stray=24) | prediction **66.67%** (4/6, missing=2, stray=17). All INCOMPLETE; residual holes/strays are REAL
+                        (verified via `--diagnose-layer1`):
+                        - cefi: holes = OKX/KRAKEN-FUTURES perps captured under venue-suffix variants (OKX-SWAP) + BYBIT spot under
+                          BYBIT-SPOT; strays = ASTER ohlcv_1m/liquidations (writer captures, MVP gate excludes).
+                        - defi: holes = genuinely-absent protocols (EIGENLAYER/EULER_V2/BENQI/CONVEX/ACROSS); strays = writer itypes UAC
+                          doesn't sanction (`a_token`, `liquidation`) + `swaps_ohlcv_*` data_types not in pool capabilities.
+                        - tradfi: holes = YAHOO_FINANCE (un-gated, real) + CBOE/index ohlcv; strays = CME/ICE futures_chain trades/tbbo/
+                          mbp_10/ohlcv_24h (real captured data_types UAC's tradfi matrix omits).
+                        - sports: matched = (venue, odds, trades) for all 8 MVP venues; holes = bookmaker snapshot data_types
+                          (markets/odds_snapshot/odds_movement/outcomes/settlements) not yet captured; strays = non-MVP bookmaker venues
+                          (BETMGM/BOVADA/…) the writer captures beyond the UAC sports venue set.
+                        - prediction: hole = MARKET_LIFECYCLE (real — absent from manifest); strays = POLYMARKET per-underlying-asset
+                          partitions (btc/eth/…) + KALSHI book_snapshot_5 (real writer grain UAC doesn't enumerate).
+                      - VERDICT per AG: all aligned, residual holes are REAL (not dialect artifacts). CK3 certification is the Opus
+                        orchestrator's call from this evidence (NOT flipped here).
 
 ---
 

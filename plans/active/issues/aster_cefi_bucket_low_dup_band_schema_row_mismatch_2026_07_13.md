@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [migration, data-correctness, cefi, defi, aster, schema-drift, big-finding]
 related:
   [
-    plans/active/aster_cefi_data_defi_bucket_migration_2026_07_13.md,
+    plans/archive/2026_07/aster_cefi_data_defi_bucket_migration_2026_07_13.md,
     plans/active/issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md,
   ]
 created: 2026-07-13

@@ -174,7 +174,7 @@ approve / defer per category rather than per-venue.
       for `COINBASE` drops to 0 (repo: unified-api-contracts + fan-out).
 - [x] ✅ [PLAN] P2. **Draft the COINBASE-bare-name migration plan (prerequisite for the CODE task above)** — DONE
       2026-07-06 by slot-10 (data_engineering). Plan drafted at
-      `plans/active/coinbase_bare_name_migration_2026_07_06.md` (status: draft, assigned_vm: NA, assigned_role:
+      `plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md` (status: draft, assigned_vm: NA, assigned_role:
       data_engineering per BLK-22e5f8a5 answered by main; execution-service callers documented as out-of-scope with a
       follow-on task pointer). Covers all four required sections: (1) full enumeration — 44 UAC bare-COINBASE lines
       across 22 files + 5 IS + 4 MTDS + 12 execution-service (out-of-scope) + cross-repo (UTL/features/MDPS/

@@ -48,8 +48,8 @@ related_plans:
     ../active/instruments_service_docs_consolidation_2026_07_08.md,
     ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
-    ../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
-    ../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
+    ../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     ../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md,
     ../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
@@ -83,7 +83,7 @@ locked_since: 2026-05-08
 >   — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation (absorbed
 >   `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
 > - **I-3 ·
->   [`instruments_catalogue_incremental_rollup_2026_06_29`](../active/instruments_catalogue_incremental_rollup_2026_06_29.md)**
+>   [`instruments_catalogue_incremental_rollup_2026_06_29`](../archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md)**
 >   — incremental (trailing-window + frozen-tail) catalogue rollup replacing the full-history re-aggregation that now
 >   exceeds the Cloud-Run 3600s task timeout (2026-06-29 `DP_CATALOG_NOT_RUNNING`); prototype-measured ~0.9 min vs 137
 >   min. Successor to `proper_instrument_catalogue_lifecycle_rollup` (the full-rebuild originator). **2026-07-12
@@ -500,10 +500,10 @@ new epic, per operator decision to use the existing fixed 20-epic registry.
   of the 125 files) surfaced during this fix's own verification, needing an operator decision before any further
   Kraken-Futures remediation or backfill.
 - ✅
-  [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../active/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
+  [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../archive/2026_07/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
   — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
 - ✅
-  [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../active/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
+  [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
   — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch. Caveat
   (2026-07-11): the DONE verdict covered the builder/adapter layer; MTDS live WS connectors were retrofitted separately
   after silently dropping mismatched ticks in prod (fixed 2026-07-10 — see

@@ -13,7 +13,7 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer]
 tags: [quality-gates, codex-compliance, ratchet, pip-audit, repo-blocker]
-related: [plans/active/utl_reuse_phase6_venue_health_retry_2026_07_13.md]
+related: [plans/archive/2026_07/utl_reuse_phase6_venue_health_retry_2026_07_13.md]
 created: 2026-07-13
 last_updated: 2026-07-13
 parent_epic: infrastructure_master

@@ -5,7 +5,7 @@ summary:
   Reconcile codex + every active plan to the canonical MVP v10 scope + the budget constraints, resolve the remaining
   flagged items (MANIFEST_ALLOW_STALE_FALLBACK, a163/G1.2, Kalshi launcher, HL/ASTER docs), and archive superseded
   plans.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,8 +27,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:

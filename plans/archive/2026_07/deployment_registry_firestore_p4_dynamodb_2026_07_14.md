@@ -6,7 +6,7 @@ summary:
   the active cloud (GCP to Firestore, AWS to DynamoDB) the same way resolve_bucket_name selects GCS vs S3 — so the
   eventual AWS migration is a backend swap, not a rewrite. Wire and contract-test it now against DynamoDB Local;
   provision the table via terraform but leave it inactive until the AWS cutover flips the cloud selector.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [meta]
 stage: [meta]

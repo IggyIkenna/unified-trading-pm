@@ -144,8 +144,9 @@ stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wr
 
 The deployment-registry `DeploymentRegistryStore` (UTL `cloud_interface`) has a DynamoDB backend implementing the SAME
 Protocol as the GCP Firestore backend — provisioned now (Phase 4 of
-`plans/active/deployment_registry_firestore_p4_dynamodb_2026_07_14.md`) but **inactive**: the store factory selects the
-backend from the active cloud (mirrors `resolve_bucket_name`'s GCS/S3 selection) and defaults to Firestore on GCP.
+`plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md`) but **inactive**: the store factory
+selects the backend from the active cloud (mirrors `resolve_bucket_name`'s GCS/S3 selection) and defaults to Firestore
+on GCP.
 
 - **Table**: `unified-trading-{environment}-deployments` (terraform
   `deployment-service/terraform/aws/deployment_registry_dynamodb.tf`) — partition key `deployment_id`, GSI

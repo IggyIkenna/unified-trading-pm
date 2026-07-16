@@ -7,7 +7,7 @@ summary: >-
   ~100-120K objects, ~65-70% with no canonical twin anywhere. Migrate with canonical InstrumentKey renaming, fix the
   write-path bucket-selection bug, verify parity, only then delete the DeFi-bucket-resident originals as a separate
   gated step.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cefi, defi]
 stage: [data]
@@ -38,8 +38,8 @@ source:
     discovered while diagnosing why defi__dex_swaps was unqueryable; confirmed via a dedicated classification sub-agent
     (object-count + symbol-name diffing across 20+ sample days, codebase grep of VENUE_TO_ASSET_GROUP).",
   ]
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 ---
@@ -318,26 +318,26 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       ASTER originals no longer exist anywhere; the CeFi bucket is the sole canonical copy for all 948 days.**
 
       Full history of this gate (preserved below): originally — only after Phase 2's parity verification is fully
-          green: delete the DeFi-bucket-resident ASTER `asset_group=cefi` originals (version-aware, matching the same rigor as
-          `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`'s Phase-7 decommission gate — snapshot first,
-          verify canonical ≥ legacy via live-object counts, never a naive `ls`). This is explicitly NOT bundled with the
-          migration apply step — do not delete until an operator confirms the parity verification evidence. **⚠️ 2026-07-13
-          (slot 14): parity verification is NOT green for the `high_dup` band (2024-01→2025-06) — see
-          [`aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md).
-          The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
-          originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
-          regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
-          issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).** **✅
-          2026-07-13 (slot 6): operator decision resolved (Option A, BLK-4032eac4) — `high_dup` band re-migrated with the
-          new `--force` flag on `migrate_aster_cefi_defi_bucket_2026_07_13.py`, making the 23-column DeFi-bucket shape
-          authoritative at the CeFi-bucket canonical target for 2024-01-01→2025-06-15. Result:
-          `{'force_overwritten': 39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`, 0 errors.
-          **Post-force parity re-verification DONE and GREEN**: existence 40,406/40,406 present (0 missing); spot-check
-          20/20 row_count_matches, 20/20 byte_identical (vs the pre-force 5/15 and 0/15). Full evidence in
-          `aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md` P2. **This gate is now UNBLOCKED for the
-          `high_dup` band** — parity is fully green for all three bands (`zero_dup`, `high_dup`, `low_dup`). The DeFi-bucket
-          originals are still NOT deleted by this todo; deletion remains a separate, explicitly operator-gated step (this
-          todo itself), now unblocked to proceed whenever an operator wants to schedule it.**
+              green: delete the DeFi-bucket-resident ASTER `asset_group=cefi` originals (version-aware, matching the same rigor as
+              `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`'s Phase-7 decommission gate — snapshot first,
+              verify canonical ≥ legacy via live-object counts, never a naive `ls`). This is explicitly NOT bundled with the
+              migration apply step — do not delete until an operator confirms the parity verification evidence. **⚠️ 2026-07-13
+              (slot 14): parity verification is NOT green for the `high_dup` band (2024-01→2025-06) — see
+              [`aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md).
+              The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
+              originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
+              regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
+              issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).** **✅
+              2026-07-13 (slot 6): operator decision resolved (Option A, BLK-4032eac4) — `high_dup` band re-migrated with the
+              new `--force` flag on `migrate_aster_cefi_defi_bucket_2026_07_13.py`, making the 23-column DeFi-bucket shape
+              authoritative at the CeFi-bucket canonical target for 2024-01-01→2025-06-15. Result:
+              `{'force_overwritten': 39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`, 0 errors.
+              **Post-force parity re-verification DONE and GREEN**: existence 40,406/40,406 present (0 missing); spot-check
+              20/20 row_count_matches, 20/20 byte_identical (vs the pre-force 5/15 and 0/15). Full evidence in
+              `aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md` P2. **This gate is now UNBLOCKED for the
+              `high_dup` band** — parity is fully green for all three bands (`zero_dup`, `high_dup`, `low_dup`). The DeFi-bucket
+              originals are still NOT deleted by this todo; deletion remains a separate, explicitly operator-gated step (this
+              todo itself), now unblocked to proceed whenever an operator wants to schedule it.**
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 

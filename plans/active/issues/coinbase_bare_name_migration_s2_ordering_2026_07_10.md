@@ -28,7 +28,7 @@ parent_epic: instruments_master
 priority: P2
 source:
   orchestrator task `coinbase_bare_name_migration-002` (slot 9, data_engineering), dispatched 2026-07-10 from
-  `plans/active/coinbase_bare_name_migration_2026_07_06.md` Step S2
+  `plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md` Step S2
 assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code

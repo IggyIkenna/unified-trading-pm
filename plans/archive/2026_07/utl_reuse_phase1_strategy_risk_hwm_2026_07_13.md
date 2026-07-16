@@ -5,7 +5,7 @@ summary:
   Compose (not delete) strategy-service's 3 risk-computation engines with UTL's rule-aggregation gate — dedupe the twin
   threshold/equity helper, migrate the legacy portfolio-gate branch to UTL RiskRules, route comparison checks through
   UTL rules.
-status: active
+status: complete # (was: active) 2026-07-15 plan-reconcile §7-residual: operator ruling A (archival + codex-sync); verified 0 open todos, evidence spot-checked
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,8 +26,8 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
-locked_by: live-defi-rollout
-locked_since: "2026-07-13"
+locked_by: # cleared 2026-07-15 — operator [unlock-plan] (plan-reconcile §7)
+locked_since:
 supersedes:
 superseded_by:
 depends_on: [utl_reuse_phase0_guardrails_2026_07_13]
