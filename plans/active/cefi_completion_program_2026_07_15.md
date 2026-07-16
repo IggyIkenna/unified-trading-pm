@@ -756,3 +756,20 @@ it would burn money for nothing.
       relauncher lands, `exit_code_fleet_monitor` must emit a data-pipeline-alerts notification on
       `TerminationVerdict.PREEMPTED` for backfill VMs (not the current silent INFO log that falsely claims "SPOT
       relaunch"). Fix the misleading log line either way.
+
+### Guard race closed (RUNNING-only count let 2 VMs run) + ramped to 128/32 — 2026-07-16T07:55Z
+
+**Self-inflicted cap-1 violation, caught + fixed.** While bumping concurrency to 128, the keeper's relaunch and my
+manual launch fired 40s apart into an empty-fleet window (`cefi-queue-heavy-...-075253` @00:57:25 + `...-075338`
+@00:58:05). BOTH passed `tardis_concurrency_guard` because `tardis_running_vm_count` filtered `status=RUNNING` only —
+the first VM was still `PROVISIONING` (already holding the IP slot) and thus uncounted. Two VMs ran = the exact 403
+storm the cap exists to prevent. **Root-fixed**: the guard now counts `RUNNING OR PROVISIONING OR STAGING`
+(deployment-service, QG-green, quickmerged) — a coming-up VM is now visible to a concurrent launch. Killed the 64-stream
+duplicate, kept the 128/32 VM. **Process fix**: stopped the racing keeper and re-armed a SINGLE-authority keeper v2
+(128/32, same widened status check, sole launcher for this fleet — no manual launches alongside it). Lesson: two
+independent things launching into the same cap need the guard to see about-to-exist VMs, not just running ones — and
+only ONE automation should own a capped singleton.
+
+**Current fleet**: `cefi-queue-heavy-binancefutu-x15-20260716-075338` (SPOT, 128 trade / 32 book5 streams VERIFIED,
+lease-ON, 2026-02-01→yesterday, START_DATE-scoped). Probe watching for the throughput ceiling / CPU clustering / 403
+onset at 128.
