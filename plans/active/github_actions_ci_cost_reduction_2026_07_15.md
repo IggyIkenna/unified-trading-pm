@@ -460,6 +460,21 @@ flips must STOP.
 (schedule/`repository_dispatch` run the definition from the default branch), so they go LAST and land with the watchdog
 already live. `ci-status-update` is the special one: **`[self-hosted, glue-writer]`** + the STEP 2b trim.
 
+> **⚠️ "CANARY ON LDR WITHOUT TOUCHING `main`" IS A COUNTDOWN, NOT A GATE — MEASURED 2026-07-16.** The D6 canary was
+> flipped on LDR only, and the standing **`ldr-to-main-promote.yml` (`schedule`, v2-gated auto-merge) promoted it to
+> `main` on its own** ~25 min later, with no human action. Observed promote runs: 12:49 → 13:37 → 14:28 UTC (nominally
+> `*/15`; GitHub throttles `schedule:` ≈37%, so **assume 15–45 min**). This is the pipeline working exactly as designed
+> (CLAUDE.md § "LDR is the SSOT; default promote is LDR→`main` DIRECT") — but it means **every batch goes fleet-live
+> within ~45 min of landing on LDR, whether or not you have finished verifying it.** Consequences for the next 10:
+>
+> - **Do NOT plan to "hold" a batch on LDR.** The `--ref live-defi-rollout` dispatch buys you ONE verification cycle,
+>   not an open-ended soak. Verify **immediately** after the dispatch, not "later today".
+> - **This was safe for the canary only because the preconditions were already met**: runners live (8/8), the workflow
+>   proven green on the pool, read-only (`contents: read`), and the VM-death watchdog live on `main` via hosted
+>   `ci-health`. **Confirm those same four before each batch lands on LDR — after that it is out of your hands.**
+> - If a batch genuinely must be held back, the flip cannot sit on LDR: either land it behind a `[hotfix]`-style gate,
+>   or don't push it until you are ready to have it on `main`.
+
 ### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
 
 - [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **38 flip-MOVE (PM-local direct) workflows only** (`ubuntu-latest`
