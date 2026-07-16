@@ -72,6 +72,19 @@ machine sizing for Deribit bundling.
 - [ ] [VERIFY] P0. Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
 - [ ] [MONITOR] P1. If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
 - [ ] [OPS] P1. Close issue when DERIBIT options_chain af=0 in prd manifest
+- [ ] [DATA] P0. **`futures_chain` retry path must STOP attempting a structurally-absent channel** (re-opened
+      2026-07-15, plan-reconcile §1, operator ruling A — this doc now owns it).
+      `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` recorded 66,007 `attempted_failed` cells
+      reclassed to `empty_confirmed`/`EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` on 2026-07-12, treating it as settled.
+      It is **NOT durable**: this doc's own 2026-07-15 triage reads **112,727 / 112,727 attempted_failed (100.0%, 0
+      captured)** — the population GREW past the 66,007 that were reclassed, so each retry is re-stamping
+      `attempted_failed` over the reclass. The structural finding stands (no CeFi Tardis venue exposes a `futures_chain`
+      channel — verified via `GET /v1/exchanges/<exch>`), which is exactly why re-reclassifying is the wrong fix: it
+      would be overwritten again. Gate the shards at the WRITER so a structurally-absent channel is never attempted
+      (`expected_unattempted`, not attempt-then-fail-then-repair). Data-pipeline-correctness HARD RULE — an honest
+      manifest must not carry `empty_confirmed` for cells the pipeline is actively re-failing. Likely shares a root
+      cause with the `options_chain` items above (same `cefi-deribit-<year>-light` VM class bundles options_chain +
+      derivative_ticker + futures_chain).
 
 ## 2026-07-15 corroboration — still unresolved 12 days later, `futures_chain` shows the identical pattern
 

@@ -65,6 +65,22 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
 > `empty_confirmed`/`EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` accordingly. The "Backfill relaunch required" framing in
 > the todos below is SUPERSEDED for the `futures_chain` structural portion — it remains accurate for the genuine
 > `derivative_ticker`/other gaps.
+>
+> **🔴 [2026-07-15 correction, plan-reconcile §1, operator ruling A] — THAT RECLASS IS NON-DURABLE. Do not read the
+> paragraph above as a settled end-state.** The STRUCTURAL half stands (no CeFi Tardis venue exposes a `futures_chain`
+> channel — that finding is unchanged). The RECLASS half did not hold: per
+> `plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (manifest triage ~2026-07-15), cefi
+> `futures_chain` reads **112,727 / 112,727 `attempted_failed` — exactly 100.0%, 0 captured**. The population did not
+> merely survive the reclass, it GREW (66,007 → 112,727): something is still attempting a channel that structurally
+> cannot be captured, and each retry re-stamps `attempted_failed` over the `empty_confirmed` reclass.
+>
+> The live defect is therefore **not** "reclassify the cells again" — a re-reclass would be overwritten the same way. It
+> is: **the retry path must stop attempting a structurally-absent channel** (gate it at the writer so the shards are
+> never attempted, rather than repairing the manifest after the fact). That capture defect is **OPEN** and owned by
+> `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`, which already scopes the shared
+> `cefi-deribit-<year>-light` reprobe-VM class bundling `options_chain + derivative_ticker + futures_chain`. Per the
+> data-pipeline-correctness HARD RULE this is a heartbeat item, not bookkeeping — an honest manifest must not claim
+> `empty_confirmed` for cells the pipeline is actively re-failing.
 
 - [x] [VERIFY] P0. Query the CeFi manifest for DERIBIT `options_chain` + `futures_chain` bundle roots across the
       genesis→today window; record per-day `captured` vs `attempted_failed` vs `expected_unattempted` distribution.
