@@ -169,6 +169,48 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | Prediction catalogue browser (backend + UI)      | P3       | full feature — `read_prediction_catalogue` + UAC facade + UI surface.              |
 | Catalogue explorer (MVP filter, CSV, search)     | P6       | full feature — phase 1 availability-derived + phase 2 true-catalogue projection.   |
 
+### 2026-07-16 — Phase A browser-validation of P5/P7/P4-A/P8 (INCONCLUSIVE — mock-fixture gaps, not code bugs)
+
+Continuation session drove `deployment-ui` locally in mock mode (`VITE_MOCK_API=true`, dedicated port 5199) with the
+Playwright MCP to visually confirm the already-unit-tested P5/P7/P4-A/P8 changes. Result: **static code review + the
+cited unit tests all confirm correct behavior, but the local mock fixtures can't fully exercise 3 of the 4 checks** —
+this is a pre-existing gap in `deployment-ui/src/lib/mock-api.ts`, not a defect in the shipped commits:
+
+- **P5/P7 (Instrument Coverage Summary drilldown suppression + chain-axis gate):** `/api/data-status/coverage-summary`'s
+  mock handler (`mock-api.ts:3758-3795`) is hardcoded to return a single `PREDICTION` entry regardless of the requested
+  service, and `/api/config/shard-axis-matrix` (`mock-api.ts:3334-3349`) declares `shard_axes` only for
+  `market-tick-data-service.prediction` — no `instruments-service` key at all. So cefi/tradfi/defi never render as cards
+  in that panel in mock mode, and `isHierarchicalDrilldownRedundant` can't be exercised either way. What DID verify: the
+  separate TURBO "Data Coverage" grid (a different, richer mock) correctly shows CeFi venues only
+  (BINANCE-SPOT/BINANCE-FUTURES/DERIBIT, no SOLANA/ZKSYNC rows), and PREDICTION correctly retains its drilldown.
+- **P4-A (canonical instrument_type labels):** `BreakdownsAccordion` only mounts when `breakdown_axes` is non-empty for
+  the asset group; since the mock shard-axis-matrix has no `instruments-service` entry at all, the accordion never
+  renders on this page in mock mode — INCONCLUSIVE. Static review of `data-status-helpers.ts:106-134` +
+  `BreakdownsAccordion.tsx:96-104` reads correct (alias map, hover tooltip, `(unlabeled)` vs `(legacy — pre-job_id)`
+  scoping) and matches the cited passing Vitest specs.
+- **P8 (TEAMS per-league drilldown + global-reference affordance):** `_mkSportsByDataType()` (`mock-api.ts:340-450`)
+  only defines FIXTURES/LEAGUES/FIXTURE_EVENTS — no TEAMS/STANDINGS/VENUES fixtures exist, so the TEAMS-reclassification
+  claim is INCONCLUSIVE (nothing to compare). What DID verify (PASS): LEAGUES renders the "Global reference entity — no
+  per-league breakdown (axis: global_periodic)" affordance, and FIXTURES shows a real per-league drilldown.
+
+Screenshots: `01-instrument-coverage-summary.png`, `02-sports-breakdown-leagues-affordance.png`,
+`03-cefi-breakdown-venues-only.png` (session scratchpad, not repo-committed). Zero console errors.
+
+**Why not fixed now:** enriching `mock-api.ts` with instruments-service shard-axis-matrix entries + cefi/tradfi/defi
+coverage-summary rows + TEAMS/STANDINGS/VENUES sports fixtures is itself a non-trivial, correctness-sensitive addition
+(wrong mock shapes would give false confidence) and out of this plan's scope. The stronger, lower-risk verification path
+is the LIVE Cloud Run deployment once `deployment-ui`'s LDR→main promote (currently gated on a fresh SIT-validation
+cycle for the tree that includes today's P5/P7/P4-A/P1/P4-B/P8/P2-backend commits — `full-workspace-sit` ran green
+09:50-09:57 UTC, `ldr-to-main-promote-fleet` ticks hourly-ish) catches up and redeploys — real production data has
+cefi/defi/tradfi variety and TEAMS data, so it would resolve all three INCONCLUSIVE checks in one pass.
+
+- [ ] [DATA] P3. _(new, low-priority)_ Enrich `deployment-ui/src/lib/mock-api.ts` so `instruments-service` data-status
+      mock fixtures cover: (a) `shard_axes` entries for cefi/tradfi/defi/sports in `/api/config/shard-axis-matrix`, (b)
+      per-asset-group entries (not just PREDICTION) in `/api/data-status/coverage-summary` with a mix of canonical +
+      legacy-lowercase `instrument_type` values (to exercise `BreakdownsAccordion`), (c) TEAMS/STANDINGS/VENUES sports
+      `data_type` fixtures. Unlocks fully self-contained Playwright verification of this page without needing a live
+      deployment. Not required for this plan's P5/P7/P4-A/P8 acceptance (already unit-tested) — tracked as a follow-up.
+
 ### 2026-07-16 — P7 CeFi chain-axis gate (backend P1) shipped
 
 - **Root cause (trace-first, live-verified against the cefi availability index):** the cefi manifest
