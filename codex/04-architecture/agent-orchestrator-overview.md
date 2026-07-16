@@ -752,10 +752,15 @@ the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a 
 `cicd`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now `register_agent`
 at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back to the live
 `SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). The `escalate` kind was **renamed →
-`cicd`** (charter: resolves `#ci-failures` Slack alerts); the `recovery_audit` kind was **removed end-to-end**
-(`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no `agent_kind` refs); `usage_reporter` is deleted
-(usage stays on the httpx `UsagePoller`); `monitor` is the manual external-watch (custom-role) pattern. `health.py`'s
-reaper is lifecycle-aware. SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`,
+`cicd`** (charter: resolves `#ci-failures` Slack alerts); the `recovery_audit` kind was **removed end-to-end from this
+AO fleet roster** (`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no `agent_kind` refs) — **scoped to
+AO plumbing only: the Layer-1 recovery-audit-signoff FUNCTION is NOT retired** (its consuming half — alerting-service
+signoff ingest + DISPUTE→SAFE_MODE, strategy-service, DART verdict feed — is live but producer-less/mock-fed since this
+deletion; the producer is to be re-homed as a standalone agent, DEFERRED per operator 2026-07-16; see
+`recovery-defence-in-depth-layers.md` § Layer 1 + `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`);
+`usage_reporter` is deleted (usage stays on the httpx `UsagePoller`); `monitor` is the manual external-watch
+(custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
+`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`,
 `plans/archive/2026_06/ao_agent_legibility_backend_2026_06_26.md` (kind roster · per-kind source/task/role contract ·
 `plan_ref` field · activity noise-set · `assigned_role`→boot-prompt+model role-dispatch).
 

@@ -8,7 +8,7 @@ summary:
   `.git/index.lock`) shows the worktree is genuinely clean and up to date with origin/live-defi-rollout every single
   time. This is a false positive in the orchestrator's dirty-repo detector for this slot/repo, not a real
   uncommitted-work violation.
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -26,6 +26,11 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: infra
 drift_direction: advance-code
 resolved_by:
+  "agent-orchestrator@f3b803371 + unified-trading-pm@0c08a0afe (dirty_files_sample diagnosability fix + tests).
+  Code-verified 2026-07-16: sole todo [x]; the stale-cache hypothesis is refuted in current code (classify_repo runs a
+  fresh git status each call; _propagate_not_clean_since uses only this tick's state). Root cause of the original 260min
+  false report was never reproduced (different slot/host, ~14h gap) — a recurrence is now diagnosable via
+  dirty_files_sample. Closed as ACKED-INTO-CODE; reopen only on a live recurrence."
 locked_by:
 source: [slot-5 session 2026-07-13, agt-507f36]
 related: []

@@ -17,7 +17,7 @@ summary: |
   documented mechanism for parking a recurring/unresolvable-without-operator-input task (attach a false condition +
   drop priority) does not hold, so redispatch churn on gated tasks continues despite correct use of the sanctioned
   tuning path — wasting agent-slot cycles on tasks known to be blocked pending an operator ruling.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,6 +43,10 @@ assigned_role: data_engineering
 drift_direction: advance-code
 source: main-agent-observed-2026-07-12
 resolved_by:
+  "Defect A (doc): unified-trading-pm@f1585fb59 (RULES.md prereqs.conditions→prereqs.prerequisites); Defect B (code):
+  agent-orchestrator@8dd5763 (BacklogTask.priority_override + _reconcile_task_fields skip + 3 regression tests); P2
+  verification step: unified-trading-pm@39c9854ea. Code-verified 2026-07-16 (all 4 todos [x]; status flip was the only
+  gap)."
 locked_by:
 depends_on: []
 ---
