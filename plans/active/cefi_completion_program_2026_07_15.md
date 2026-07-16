@@ -24,7 +24,7 @@ related:
     issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -535,7 +535,7 @@ the relabel pass over historical raw-id captures (peer dry-run `instruments-serv
 82.7% resolvable, 542,888 honestly unresolved, `--apply` operator-gated); and `sentinels.py` Tier-3 comparing canonical
 `expected_instruments` against heuristically-canonicalized `captured_instruments` (same class, filed not blind-fixed).
 
-- [ ] [INFRA] P0. **Close the SPOT-preemption relaunch gap for the cefi/tardis launcher family.** Today a preempted
+- [x] ✅ [INFRA] P0. **Close the SPOT-preemption relaunch gap for the cefi/tardis launcher family.** Today a preempted
       backfill wave is DELETED and silently never returns, which is why long waves never finish (evidence above: 2 of 3
       VMs preempted 6 min in, 2026-07-15T22:05Z). Either wire a preemption-aware relauncher (mirror
       `launch-transfermarkt-backfill-vm.sh`) or move to `--instance-termination-action=STOP` + a restart watchdog —
@@ -546,10 +546,34 @@ the relabel pass over historical raw-id captures (peer dry-run `instruments-serv
       `launch-transfermarkt-backfill-vm.sh`'s existing pattern), wired into both `launch-cefi-sharded-backfill.sh`
       `gcloud compute instances create` call sites. This is observability-only (marks a SPOT preemption in GCS so fleet
       monitors classify it as expected rather than an unexplained `DP_VM_GONE_NO_CAPTURE`) — it does NOT auto-relaunch.
-      The actual relaunch mechanism (the "architecture call" above) is still open; deliberately not attempted solo given
-      its explicit framing as a design decision, not a mechanical fix. SSOT to correct once done:
-      `codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
-      currently false for this family).
+      **SHIPPED (2026-07-16, deployment-service@02be72e)** — design chosen: **option (a), a preemption-aware
+      relauncher**, NOT the STOP+watchdog alternative (mirrors the existing `launch-transfermarkt-backfill-vm.sh`
+      preemption-signal pattern, reuses the ALREADY-SHIPPED `exit_code_fleet_monitor`/`escalation.py` auto_recover
+      actuator spine that OOM (`DP_VM_EXIT_NONZERO`) and STALL (`DP_VM_STALL`) already use — one more actuator on proven
+      infra beats a brand-new STOP-based lifecycle). Exact params replay (not a blind relaunch): a new
+      `lc_write_launch_params()` helper (`launcher_common.sh`) persists `{launcher, env}` to
+      `gs://…/vm-logs/<vm>/LAUNCH_PARAMS.json` at VM-creation time — wired into BOTH `launch-cefi-sharded-backfill.sh`
+      call sites (per-shard: `ONLY=<venue>:<year>:<group>`; SINGLE_VM_QUEUE mode — the shape actually running in prod —
+      `VENUES`/`YEARS`/`LAUNCH_GROUPS`/`START_DATE`/lease+concurrency knobs). `exit_code_fleet_monitor.sweep()` reads it
+      back via new `_gcs.read_launch_params()` only when `verdict is PREEMPTED`, and `_finding_for` now returns a
+      `DP_VM_PREEMPTED` (severity INFO, tier `auto_recover`, registry `DP-VM-007`) finding instead of the old
+      `return None`. New actuator `RelaunchPreemptedVm` (`scripts/recovery/relaunch_backfill_vm.py`, own class + own
+      budget namespace `uts_preempted_relaunch_budget`, generous `_MAX_PREEMPTION_RELAUNCHES_PER_DAY=48` since SPOT
+      legitimately preempts ~hourly under cap-1 — OOM's ≤2/day budget would have defeated the whole point) replays
+      `launch_env` verbatim into the SAME launcher subprocess — which re-sources its OWN `tardis_concurrency_guard`
+      before creating anything, so the relaunch is NEVER blind/cap-violating: a guard refusal surfaces as the subprocess
+      exiting non-zero → `status=FAILED`, never a silent relaunch. Wired into `escalation._DP_RECOVERY_ACTIONS`
+      (`_EVENT_VM_PREEMPTED → _recover_preempted_vm`) exactly like OOM/STALL. `classify_terminated_vm`'s existing
+      `preempted` precedence (over exit_code) already guarantees a genuinely-exit-0 VM never reaches this path — no new
+      logic needed there. Fix 2 (the no-relanch alert) folded into the SAME actuator, see below. Basedpyright: my new
+      code contributes ZERO new diagnostics (verified — the dynamic `importlib.import_module` Any-cascade is
+      TYPE_CHECKING-guarded-import + `cast()`'d away, unlike the 3 pre-existing sibling actuators which still carry it);
+      251/251 unit tests green (10 new `RelaunchPreemptedVm`/routing tests in `test_dp_recovery_actuators.py` + 5
+      new/updated sweep-level tests in `test_data_pipeline_monitors.py`); full `quality-gates.sh` green. **Deliberately
+      NOT done**: the actual codex correction to `spot-vms-for-backfill.md` (operator-gated per the plan-reconcile rule
+      — exact edit text is in the 2026-07-16 Progress Log entry below for the operator to apply). SSOT to correct once
+      done: `codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
+      NOW TRUE for this family — see the exact wording needed in the Progress Log).
 
 ### 🔴 FOURTH blocker + it CORRUPTS the manifest: 3 lease-ON VMs in the real gap = 403 storm, ~94% false failures — 2026-07-16T06:10Z
 
@@ -667,13 +691,35 @@ notice.
 4. The running backfill VM should also yield gracefully rather than 403-storm when live grabs the slot (today it just
    fails cells and records them as `attempted_failed`).
 
-- [ ] [INFRA] P0. **Scope the Tardis cap to AUTHENTICATED batch consumers only (operator-verified model 2026-07-16).**
-      Today the cap is enforced only across backfill VM name shapes, so a T+1 forward-poll or `tardis-machine` live VM
-      silently contends with the capped backfill and re-creates the 403 storm + FALSE-af manifest corruption. Implement
-      per the design above: `VM_TARDIS_CONSUMER=1` metadata stamp from every Tardis-consuming launcher + guard counts
-      it; backfill yields to live/forward (never the reverse); backfill should pause-and-retry rather than record false
-      `attempted_failed` when the slot is held. SSOTs to update once shipped:
-      `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner.
+- [x] ✅ [INFRA] P0. **Scope the Tardis cap to AUTHENTICATED batch consumers only (operator-verified model
+      2026-07-16).** Today the cap is enforced only across backfill VM name shapes, so a T+1 forward-poll or
+      `tardis-machine` live VM silently contends with the capped backfill and re-creates the 403 storm + FALSE-af
+      manifest corruption. Implement per the design above: `VM_TARDIS_CONSUMER=1` metadata stamp from every
+      Tardis-consuming launcher + guard counts it; backfill yields to live/forward (never the reverse); backfill should
+      pause-and-retry rather than record false `attempted_failed` when the slot is held. SSOTs to update once shipped:
+      `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner. **SHIPPED (2026-07-16,
+      deployment-service@02be72e)**: (i) `VM_TARDIS_CONSUMER=1` stamped in `launch-cefi-sharded-backfill.sh` (both
+      per-shard + SINGLE_VM_QUEUE metadata blocks), `launch-cefi-sharded-backfill-aws.sh` (EXTRA_TAGS),
+      `launch-mtds-backfill-vm.sh` (ONLY when `--asset-group CEFI` — verified DEFI stays unstamped),
+      `launch-cefi-forward-poll.sh` (always — it's cefi-only); `launch-mtds-live.sh` and IS-side deliberately left
+      untouched (operator-verified unauthenticated). (ii) `tardis-concurrency-guard.sh`'s `tardis_running_vm_count()`
+      rewritten: ONE `gcloud compute instances list     --format=json(name,metadata.items)` call (verified server-side
+      `--filter metadata.<key>=<value>` is REJECTED by the GCE list API — "Invalid list filter expression" — hence the
+      json+python union-count approach) counts the UNION of the legacy name-regex match OR `VM_TARDIS_CONSUMER=1`
+      metadata (dedup, never double-counts a VM matching both); AWS side unions the legacy purpose-tag filter with a new
+      `tag:VM_TARDIS_CONSUMER=1` filter (2 calls + `sort -u`, since AWS `--filters` ANDs across different tag Names).
+      Read-only verified against the REAL fleet (central-element-323112, asia-northeast1-c): counted exactly 1 (the
+      running `cefi-queue-heavy-…-075338` backfill), correctly excluding the non-Tardis `cefi-pacifica-solana-…` VM.
+      (iii) `launch-cefi-forward-poll.sh` now sources `tardis-concurrency-guard.sh` + calls
+      `tardis_concurrency_guard 1 "$ZONE" "$PROJECT"` before creating its VM — REAL-fleet-verified (non-dry-run
+      invocation): it correctly REFUSED (exit 1, cap 1 running + 1 planned = 2 > 1) while the cap-1 backfill VM held the
+      slot, with ZERO VM created — asymmetric priority confirmed (backfill wins, forward-poll queues-via-refuse,
+      matching every other integration of this guard — none block-and-wait). Fleet double-checked unchanged after every
+      read-only probe (scope guard honored throughout). Full `quality-gates.sh` green; 251/251 unit tests green.
+      **Deliberately NOT done**: "backfill should pause-and-retry rather than record false attempted_failed" (the
+      per-shard MTDS-side behavior when the slot is held mid-run, as opposed to at LAUNCH time) — out of scope for this
+      fix (that's an MTDS-repo runtime change, not a deployment-service launcher/guard change); noted as a follow-up,
+      not silently dropped.
 
 ### ✅ CORRECTION to the FIFTH gap — only AUTHENTICATED batch contends; live + IS are free (operator model, code-verified) — 2026-07-16T07:15Z
 
@@ -767,10 +813,27 @@ for the point where either the parse/flush peaks start CLUSTERING into sustained
 finally indicated) or 403s appear (→ Tardis connection ceiling, back off). Do NOT upsize the machine yet — at 7% steady
 it would burn money for nothing.
 
-- [ ] [INFRA] P1. **Alert on SPOT preemption when there is no relaunch (fallback to the P0 relauncher).** Until the
+- [x] ✅ [INFRA] P1. **Alert on SPOT preemption when there is no relaunch (fallback to the P0 relauncher).** Until the
       relauncher lands, `exit_code_fleet_monitor` must emit a data-pipeline-alerts notification on
       `TerminationVerdict.PREEMPTED` for backfill VMs (not the current silent INFO log that falsely claims "SPOT
-      relaunch"). Fix the misleading log line either way.
+      relaunch"). Fix the misleading log line either way. **SHIPPED (2026-07-16, deployment-service@02be72e)** — folded
+      into the SAME actuator as the P0 relauncher (the relauncher makes preemption truly benign, so per this todo's own
+      framing the alert now fires ONLY when the relaunch itself fails, not on every preemption):
+      `RelaunchPreemptedVm.relaunch()` self-emits a CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH` (a NEW event, deliberately
+      reused-carrier not reused-code — plain `log_event()` string, no new UTL constant needed since this fix stayed
+      scoped to deployment-service) on EVERY failure path: no `relaunch_launcher` binding, the per-(vm-prefix,day)
+      budget exhausted (48/day — see Fix 1 note), the launcher subprocess raising, OR the launcher's own
+      `tardis_concurrency_guard` refusing (surfaces as a non-zero exit) — unlike the OOM/STALL actuators (which only
+      self-emit on budget-exceeded), EVERY failure path here alerts loudly, because a silently-vanished preempted
+      backfill was the exact root complaint. On success: a quiet INFO `DP_VM_PREEMPTED` only (verified end-to-end: no
+      CRITICAL fires when the relaunch succeeds). The misleading `exit_code_fleet_monitor` log line ("→ SPOT relaunch
+      (benign, no alert)") is fixed to accurately describe dispatching a relaunch attempt via the auto_recover tier,
+      never claiming success it hasn't verified. Both outcomes end-to-end-tested (see
+      `test_dp_recovery_actuators.py::test_preempted_relaunch_*` +
+      `test_data_pipeline_monitors.py::test_sweep_preempted_vm_*`) — confirmed via a live sandbox run too (a
+      SUCCESS-path sweep replaying real captured `LAUNCH_PARAMS.json` env into a stub launcher, and a FAILURE-path sweep
+      with a guard-refusing stub launcher, both producing the exact designed alert/no-alert split + a real
+      `plans/active/issues/*.md` file on failure).
 
 ### Guard race closed (RUNNING-only count let 2 VMs run) + ramped to 128/32 — 2026-07-16T07:55Z
 
@@ -942,3 +1005,96 @@ canonical eu atom, so they WILL close eu cells as the backfill proceeds through 
 **Net**: the eu-atom todo is NOT new code — it's the two already-gated operator decisions (purge + relabel). The writer
 fix is verified. What remains genuinely open is operator sign-off on relabel/purge, and letting the fixed backfill grind
 (which now genuinely closes cells).
+
+### 2026-07-16T10:05Z — Three infra-hardening fixes shipped: preemption relauncher + no-relaunch alert + self-declaring Tardis cap (deployment-service@02be72e)
+
+**Dispatch**: operator-approved designs already written into this plan's Progress Log (the P0/P1 todos above) — this
+session implemented and shipped all three in `deployment-service` in one batched commit, gate-once. SCOPE GUARD honored
+throughout: zero VMs launched/killed/modified — every `gcloud`/fleet check this session was read-only, and the
+`cefi-queue-heavy-binancefutu-x15-20260716-075338` backfill VM was confirmed running, untouched, before AND after.
+
+**Fix 1 — SPOT-preemption relauncher: design chosen = option (a), preemption-aware relauncher (not STOP+watchdog).**
+Why: the codebase already has a proven, tested `auto_recover` actuator spine (`exit_code_fleet_monitor` →
+`escalation.py::route_finding` → `scripts/recovery/relaunch_*.py`) serving OOM (`DP_VM_EXIT_NONZERO`) and STALL
+(`DP_VM_STALL`) — adding a 4th sibling (`DP_VM_PREEMPTED` → `RelaunchPreemptedVm`) is a small, well-understood diff on
+infra that's already shipped + load-bearing in prod, versus (b) which would mean inventing a brand-new STOP-based VM
+lifecycle + a separate watchdog daemon from scratch. The relaunch replays the EXACT captured launch env (a new
+`lc_write_launch_params()` bash helper persists `{launcher, env}` to `LAUNCH_PARAMS.json` in GCS at VM-creation time; a
+new `_gcs.read_launch_params()` reads it back only when `verdict is PREEMPTED`) — so it reproduces the SAME
+venues/START_DATE/concurrency/lease as the preempted VM, never a blind relaunch onto the launcher's bare (much bigger)
+defaults. It goes THROUGH the launcher's own `tardis_concurrency_guard` every time (the relaunch is just re-invoking
+`launch-cefi-sharded-backfill.sh` as a subprocess, which sources the guard itself before creating anything) — a guard
+refusal surfaces as a non-zero subprocess exit, never a silent double-launch. `classify_terminated_vm`'s existing
+`preempted`-takes-precedence logic (driven by the durable GCS `PREEMPTED` marker, not exit_code) already guarantees a
+genuinely-exit-0 VM never reaches this path.
+
+**Fix 2 — belt-and-braces no-relaunch alert**: folded into the SAME actuator per the todo's own framing ("if Fix 1's
+relauncher makes preemption truly benign, the alert should fire only when the relaunch itself FAILS"). A NEW event
+string `DP_VM_PREEMPTED_NO_RELAUNCH` (CRITICAL) self-emitted by `RelaunchPreemptedVm` on every failure path (no launcher
+/ budget exhausted / guard-refused / launcher error) — reuses the EXISTING `log_event`→alerting-service carrier
+(`codex/05-infrastructure/data-pipeline-alerts.md`'s emit→route→escalate spine), no new plumbing invented. A plain
+string was used (not a new UTL constant) since this fix stayed scoped to deployment-service per the dispatch. On
+success: quiet INFO only.
+
+**Fix 3 — self-declaring Tardis cap**: `VM_TARDIS_CONSUMER=1` stamped by every AUTHENTICATED-Tardis launcher
+(`launch-cefi-sharded-backfill.sh` ×2 metadata blocks, `-aws.sh` twin, `launch-mtds-backfill-vm.sh` CEFI-only,
+`launch-cefi-forward-poll.sh` unconditionally); `launch-mtds-live.sh` + IS-side deliberately untouched
+(operator-verified unauthenticated this session, not re-litigated). `tardis-concurrency-guard.sh`'s
+`tardis_running_vm_count()` rewritten to union name-pattern-OR-metadata-stamp in ONE `gcloud … --format=json` call +
+python — discovered mid-session that gcloud's list API REJECTS a `--filter metadata.<key>=<value>` server-side
+expression ("Invalid list filter expression"), so the client-side JSON+python union approach is load-bearing, not
+optional. `launch-cefi-forward-poll.sh` now calls the guard before creating its VM — REAL-fleet-verified (non-dry-run)
+to correctly REFUSE (exit 1, zero VM created) while the cap-1 backfill held the slot, proving the asymmetric priority
+(backfill wins, forward-poll queues-via-refuse).
+
+**Evidence**:
+
+- SHA: `deployment-service@02be72e6481012fbcf5f4c8c49a28dee1e4eff9d` (12 files: `_gcs.py`, `escalation.py`,
+  `exit_code_fleet_monitor.py`, `scripts/recovery/relaunch_backfill_vm.py`, 6 `scripts/vm/*.sh` launchers +
+  `launcher_common.sh` + `tardis-concurrency-guard.sh`, 2 test files). Landed via `quickmerge --agent --skip-preflight`
+  (the `--skip-preflight` carve-out was needed because `unified-api-contracts` had uncommitted WIP from a concurrent
+  process — not mine to touch per the multi-agent-safety liveness rule; Stage 1 dependency validation itself passed via
+  `--dep-branch` branch-isolation mode).
+- Tests: 251/251 unit tests green (`test_data_pipeline_monitors.py` + `test_dp_recovery_actuators.py` +
+  `test_data_pipeline_monitors_cli.py` + `test_launcher_registry.py`) — 14 new/updated (10 `RelaunchPreemptedVm` +
+  escalation-wiring tests, 5 sweep/`_gcs` tests, 1 pre-existing test upgraded from an incidental exception-swallowing
+  pass to a properly-mocked, semantically-correct assertion).
+- `bash scripts/quality-gates.sh` — full green (basedpyright: my new code contributes ZERO new diagnostics net —
+  verified by diffing per-file error counts before/after; the dynamic-import Any-cascade that the 3 PRE-EXISTING sibling
+  actuators already carry was avoided in my new code via a `TYPE_CHECKING`-guarded static import + `cast()`, same
+  technique already used elsewhere in this codebase (`_gcs.py`), just not yet applied to the 3 older functions — left
+  those untouched, out of scope).
+- Live read-only fleet verification (central-element-323112, asia-northeast1-c): `tardis_running_vm_count` correctly
+  counted 1 (the real running backfill), correctly excluded the non-Tardis pacifica VM; `tardis_concurrency_guard`
+  correctly refused a planned launch at cap; `launch-cefi-forward-poll.sh` (real, non-dry-run invocation) correctly
+  aborted before any `gcloud compute instances create` call. Fleet state identical before/after this session.
+
+**Codex edit needed (operator-gated — NOT applied by me per the plan-reconcile rule)**:
+`codex/05-infrastructure/spot-vms-for-backfill.md` currently states (the premise this session makes TRUE): its
+"idempotent shards re-run on preemption" claim was FALSE for the cefi/tardis launcher family until today. The exact
+edit: replace that unqualified claim with something like — _"idempotent shards re-run on preemption for launchers that
+call `lc_write_launch_params()` at create time (currently: `launch-cefi-sharded-backfill.sh` + its AWS twin) — the
+`exit_code_fleet_monitor` PREEMPTED verdict now dispatches `RelaunchPreemptedVm`
+(`scripts/recovery/relaunch_backfill_vm.py`), which replays the captured launch env through the launcher's own
+`tardis_concurrency_guard`. A launcher that does NOT call `lc_write_launch_params()` still gets a relaunch attempt
+(best-effort, ambient env only) but not an exact-params replay — see `cefi_completion_program_2026_07_15.md` 2026-07-16
+for the design."_ Also worth a one-line mention in `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap noting
+the `VM_TARDIS_CONSUMER=1` self-declaring metadata model now supersedes pure name-pattern matching (Fix 3), and
+(optionally) a new `DP-VM-007` row in `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` /
+`data-pipeline-alerts.md`'s registry table for `DP_VM_PREEMPTED` / `DP_VM_PREEMPTED_NO_RELAUNCH` (mirroring the existing
+DP-VM-001/002/003 rows) — not done here since codex edits are operator-gated.
+
+**Deliberately deferred (not silently dropped)**:
+
+- Widening `lc_write_launch_params()` capture to launchers beyond the cefi/tardis family (e.g. a generic OOM/stall
+  relaunch replay for every asset group) — out of scope for this CeFi-focused dispatch; the mechanism is generic and
+  ready to extend.
+- "Backfill should pause-and-retry rather than record false `attempted_failed`" when the Tardis slot is lost MID-RUN (as
+  opposed to at launch time) — an MTDS-repo runtime behavior change, not a deployment-service launcher/guard change; out
+  of scope for this repo-scoped dispatch.
+- A repo-wide sweep of stale "cap-3" comment text (only the 3 launcher files I was already editing for Fix 1/3 got their
+  adjacent cap-3 comments corrected to cap-1 in-commit; other files with the same stale text were left alone — a
+  separate, smaller cleanup, not blocking).
+- The 3 pre-existing sibling actuators' (`_recover_consolidator`/`_recover_backfill_vm`/`_recover_stalled_vm`)
+  dynamic-import Any-cascade basedpyright debt — not fixed (out of scope; my new code meets a higher bar without
+  requiring a retrofit of the other 3).
