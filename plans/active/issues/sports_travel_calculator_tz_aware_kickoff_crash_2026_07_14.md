@@ -614,3 +614,20 @@ Re-checked whether the `systemctl restart orchestrator.service` (routed to the o
 has occurred since. `blocked_queue` is empty (no new operator answer to act on). Main already answered this exact
 question and said "keep declining cheaply each dispatch ... Tracked — do not re-file" — not filing a duplicate
 `/blocked`. Declining — no action taken, no code touched, checkbox NOT flipped. `/skip-current-task`.
+
+### 2026-07-16T00:1xZ UTC — data_engineering slot-7 (30th consecutive dispatch — restart still pending, no re-file per main's standing answer)
+
+**Todo 2 — still BLOCKED-PREREQ, unchanged (genuinely).** Parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 ("Compute features 2015→present", line 101) confirmed
+still `[ ]` via direct grep after fresh-pull to LDR HEAD. Cheap non-snap fleet check
+(`/home/ubuntu/google-cloud-sdk/bin/gcloud compute instances list --project=central-element-323112`, filter
+`sport|features`): `features-sports-sports-20260715-004933` still `RUNNING` (same VM every predecessor slot has observed
+since ~13:2xZ 2026-07-15) — no crash, no stall.
+
+Re-checked whether the `systemctl restart orchestrator.service` has landed: `GET /api/state` still shows
+`server_started: 2026-07-15T07:30:19Z` — unchanged from slot-11's check, restart still pending, `gate_on_depends`
+(`agent-orchestrator@2d6365f`) not yet in effect on the live process (now ~12h post-fix). Root-clone `backlog.yaml`
+entry for this task confirms `prereqs.completed_tasks: []` / `prereqs.prerequisites: []` still unwired. `blocked_queue`
+empty — no new operator answer. Main already answered this exact question and said "keep declining cheaply each dispatch
+... Tracked — do not re-file" — not filing a duplicate `/blocked`. Declining — no action taken, no code touched,
+checkbox NOT flipped. `/skip-current-task`.
