@@ -198,13 +198,33 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
 - **Acceptance:** tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND `partial: false`
   (`gcloud storage cat gs://central-element-323112-honest-coverage/<YYYY-MM-DD>/coverage.json`).
 
-- [ ] [INFRA] P1. Republish the code tarballs
-      (`deployment-service/scripts/vm/lib/create-code-tarballs.sh --include instruments-service deployment-service`) so
-      the **nightly** cron VM runs the new writer (partial-stamping) AND launches `e2-highmem-4`; verify tomorrow's
-      00:30 UTC run writes a full 5-AG file with `partial: false`.
-- [ ] [DATA] P2. Column-prune the writer read — drop `instrument_id` from `_read_parquet_safe`'s `_READ_COLUMNS` where
-      the coverage compute doesn't need it (or stream row-groups via pyarrow) so the read stops scaling toward OOM
-      regardless of VM RAM. Verify the `by_venue_instrument_type*` breakdowns still populate. _(Defence-in-depth.)_
+- [x] [INFRA] P1. ✅ Nightly cron now launches `e2-highmem-4` (32GB). **BIG FINDING (issue doc):** the plan's INFRA P0
+      fix targeted the WRONG launcher — the live cron is `Cloud Scheduler honest-coverage-daily (00:30 UTC)` →
+      `Cloud Run Job honest-coverage-daily-launcher` → fetches `gs://…/vm/launch-measure-honest-coverage-vm.sh` (NOT
+      `launch-honest-coverage-vm.sh` which P0 `9d97eb2` fixed). That real launcher was downsized to `e2-standard-4`
+      (16GB) on 2026-06-16 citing a column-prune that was never shipped → the nightly wrote 1-AG partial `coverage.json`
+      for weeks (07-12 `[defi]`, 07-13 `[cefi]`, 07-15 `[defi]`; full-5 files were off-schedule manual runs). Reverted
+      to the proven 32GB + uploaded to the cron's GCS path. — deployment-service@4f10b9b + Evidence:
+      `gcloud storage cat gs://deployment-scripts-central-element-323112/vm/launch-measure-honest-coverage-vm.sh` shows
+      `--machine-type=e2-highmem-4` (Update Time 2026-07-16T08:36Z); tonight's 00:30 UTC run will use 32GB. Issue doc:
+      `plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`. _(Tarball
+      republish for partial-stamping is BLOCKED — see follow-up below; NOT required for a full 5-AG run at 32GB.)_
+- [ ] [INFRA] P2. _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
+      partial-stamping (`instruments-service@a29e483`) — CURRENTLY BLOCKED: `create-code-tarballs.sh` rebuilds
+      fleet-wide core tarballs (UAC 922M/UTL 1.2G/MTDS 1.3G) and errors on the foreign uncommitted
+      `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
+      another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
+      `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
+- [ ] [DATA] P2. Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **TRACED-UNSAFE
+      as literally stated:** a naive drop of `instrument_id` from `_READ_COLUMNS` corrupts coverage — `_merge_manifests`
+      dedups the prd+oracle merge on `(date, venue, instrument_id, data_type)` and falls back to
+      `(date, venue, data_type)` without it, COLLAPSING distinct instruments into one row (the shard atom is
+      per-instrument, so the denominator + captured counts undercount and the "best status" wins → coverage overstated).
+      `_compute_coverage` + Layer-1 do NOT use `instrument_id` (verified), but the merge does. Correct fix = pyarrow
+      row-group streaming aggregation OR metadata-deferred primary read (secondaries are already re-read eu-only via
+      `_read_parquet_eu_only`, so their full `_read_parquet_safe` materialization is pure waste + the OOM driver) — a
+      real refactor with correctness surface + ~6 selection-test updates in `test_measure_honest_coverage.py`, NOT a
+      one-line column drop. Enables downsizing the cron VM back to 16GB. _(Defence-in-depth.)_
 - [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
       distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
 
