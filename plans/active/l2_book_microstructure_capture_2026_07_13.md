@@ -222,7 +222,16 @@ sequential: true
       (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything
       myself (needs operator context on the correct deployment target + whether this is an intentional pause).
       **Checkbox NOT flipped** pending that finding's resolution; the engine-registration guard itself is trivially
-      satisfied (not touched), but that's not what this todo's done-condition actually gates on.
+      satisfied (not touched), but that's not what this todo's done-condition actually gates on. **RE-VERIFIED STILL
+      DORMANT (2026-07-16, slot-7):** re-dispatched 2 days after the issue doc's "intentional pause" resolution
+      (`BLK-55d45a68`) — checked whether the pause had lifted before assuming it still applied. Bounded
+      `read_availability_index` query over `2026-06-30..2026-07-16` on the CeFi tick bucket: 502,153 rows, **0** with a
+      `live_*` pipeline_mode (all `batch_tardis`/`batch_aster`/`batch_hyperliquid`/`batch_extended`/`batch_deribit`).
+      Bounded GCS prefix check on `day=2026-07-15` and `day=2026-07-16`: no `pipeline_mode=live_*` directory either day.
+      `gcloud compute instances list` (project-wide): the identified relaunch target (`mtds-live-cefi-consolidated*`,
+      per the issue doc's "Relaunch targets identified") has never been launched, in any state. Nothing has changed
+      since 2026-07-14 — the intentional pause is still in effect, done-condition still false. **Checkbox NOT flipped**
+      (still correct). No infra touched (read-only check).
 
 ## Progress Log
 
@@ -340,3 +349,26 @@ already decided.
 
 Checkbox stays unflipped (unchanged from 2026-07-14 — still correctly reflects deferred-by-design, not completed). This
 is a docs-only progress-log update, ships via the `docs(plans):` carve-out (no code in this commit).
+
+### 2026-07-16 — slot 7 (Todo 7 re-dispatched — pause re-verified still in effect; second repeat-dispatch this session)
+
+`/done`-ing todo 5 (above) immediately handed out `l2_book_microstructure_capture-007` as `next_task` — the SAME
+resolved-deferred pattern as todo 5, now on its second occurrence in one session. Todo 7's own done-condition ("the feed
+is honestly live for the capable venues") was found false on 2026-07-14 (slot-11) and traced to an intentional CeFi
+live-capture pause (issue doc `cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`, `BLK-55d45a68`). Rather
+than assume the 2-day-old resolution still held, re-checked fresh: bounded manifest query (`2026-06-30..2026-07-16`,
+CeFi tick bucket) shows 0 `live_*` rows out of 502,153; bounded GCS prefix checks on `day=2026-07-15`/`07-16` show no
+`live_*` directory; the identified relaunch VM (`mtds-live-cefi-consolidated*`) has never been launched in any state.
+**Nothing has changed** — pause still in effect, done-condition still false, checkbox correctly stays unflipped. Full
+detail in the todo's own checkbox note above.
+
+**Backlog-hygiene pattern now confirmed twice in one plan**: both todo 5 and todo 7 are resolved-deferred-pending-an-
+external-event todos whose checkboxes are correctly left unflipped, but `regen_backlog_from_plan.py` re-derives a
+dispatchable task from them every cycle regardless, and no worker-slot-reachable mechanism exists to park either one
+(see todo 5's note above — no `PATCH /api/backlog/{id}`, no `backlog.yaml` in any slot clone). Recommend main/operator
+treat this as one backlog-hygiene fix covering both `l2_book_microstructure_capture-005` and `-007` rather than two
+one-off findings — the same park recipe (RULES.md § "Park a task") applies to both, gated respectively on "Option A
+MDPS-extension authorized" (todo 5) and "a fresh CeFi live manifest row lands" (todo 7, naturally self-clearing once the
+migration completes — c.f. `codex/02-data/honest-absence-downstream-handling.md` § "Reference incidents").
+
+Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit).
