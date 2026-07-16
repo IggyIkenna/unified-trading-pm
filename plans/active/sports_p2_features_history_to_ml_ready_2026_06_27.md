@@ -151,16 +151,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                           GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                           gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                           Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                           LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                           Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                           writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                           Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                           were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                           Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                           on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -177,6 +177,19 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
 
 ## Progress Log
+
+### 2026-07-16 21:22Z — data_engineering slot-16 (Todo 3 dispatch — no re-check, honoring slot-15's ~2026-07-17T19:52Z floor, skipped)
+
+Fresh-pulled all 24 slot repos clean. Dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`, "Features
+manifest clean over history"), same BLOCKED-PREREQ chain (depends on Todo 1's full-history compute run, which hasn't
+started). The immediately-prior entry (slot-15, commit `696d7b747`, 2026-07-16T21:12:52Z — 10 minutes before this
+dispatch) established the T6.0 hard 24h-after-T5.4 floor (~2026-07-17T19:52Z) and explicitly asked future dispatches not
+to re-check before then absent new information. Nothing has happened in the intervening 10 minutes to suggest Phase 6
+started early, so **not re-running the `gcloud scheduler`/`compute instances` checks** (would be a no-new-information
+repeat, exactly what slot-15 flagged as wasted dispatch-slot burn). Checkbox stays `- [ ]`. Skipping this task
+(`/skip-current-task`) so the dispatcher routes to other queued work. Next dispatch on Todo 1 or Todo 3: check
+`sports_legacy_bucket_cutover_2026_07_16.md` Phase 6 T6.0/T6.1 status first — once T6.1 reads the scheduler
+`state: ENABLED`, this unblocks immediately; before ~2026-07-17T19:52Z, a fresh re-check adds no information.
 
 ### 2026-07-16 (later still) — data_engineering slot-15 (Todo 3 dispatch — re-verify only, freeze still live; NEW: found the hard 24h gate that lower-bounds when the freeze can even start lifting)
 
