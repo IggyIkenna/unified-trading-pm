@@ -1186,3 +1186,46 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   including `cold-storage-cleanup`, the ONLY workflow in the entire MOVE set that deletes from GCS. The remaining 27
   include **10 with NO `workflow_dispatch`** (`ci-status-update`, `sit-gate`, `cloud-build-router`, …) which are only
   validatable AFTER promote — so they go last, landing with the watchdog already live.
+- 2026-07-16 — **Batch-2 validation: 9/10 flipped workflows PROVEN on the glue pool, all ZERO-BILLED — and my first
+  measurement of that lied.** Operator asked to dispatch each flipped workflow rather than wait on crons. Turned out
+  almost nothing needed dispatching: the crons had already proven themselves. Evidence, per-JOB `runner_name` +
+  `/timing.billable`: `ci-status-consolidator` (schedule 17:38, glue-1) · `reconcile-staging-versions` (schedule 17:56,
+  glue-3) · `reconcile-release-tags` (schedule 18:20, glue-1) · `staging-conflict-ldr-main-fallback` (schedule 18:08,
+  glue-1) · `digest-drift-sweep` (schedule 18:23, glue-1) · `workspace-quickmerge-validation` (dispatch 14:03, glue-4) ·
+  `ruleset-drift-alert` (dispatch 15:36, glue-4) · `readiness-verifier` (dispatch 16:06, glue-5) ·
+  `cold-storage-cleanup` (dispatch 15:03, glue-4). Every one reports `billable: {}` = **zero hosted minutes**. **The
+  near-miss worth recording**: my first sweep printed a single `runner_name` column truncated to 26 chars, and the
+  unique-list sorts `GitHub Actions …` BEFORE `glue-…` (ASCII `G` < `g`), so every cross-boundary run — the ones with a
+  glue job AND a hosted reusable job — got cut off exactly at the comma and rendered as **purely hosted**. I was ~1
+  minute from reporting "5 workflows silently failed to move". Same class as the earlier `venv --help` / `bash -lc`
+  verifier lies: **the tool answered a different question than the one I asked**. Per-JOB output is now the only
+  acceptable evidence shape here — a run-level runner name is meaningless for a cross-boundary workflow BY DESIGN. **The
+  two cross-boundary tests re-confirmed on real runs**: `readiness-verifier` = `verify-readiness` on glue-5 +
+  `send-notification` AND `persist-event` on hosted — i.e. KEEP-D/MOVE-C behaving exactly as designed, hosted jobs being
+  correct rather than a regression.
+- 2026-07-16 — **10th workflow (`conflict-resolution-agent`) NOT proven — a zero-side-effect test was designed, then
+  BLOCKED on permissions; needs operator approval.** It is the only flipped workflow whose success path has a real,
+  expensive side effect: `escalate` → `agent-runner.yml` → `repository_dispatch escalate-to-orchestrator` → a REAL
+  **Opus** worker on a fabricated conflict. Only its `resolve-and-escalate` job is on glue; `agent-runner.yml` is
+  `runs-on: ubuntu-latest` (a KEEP reusable), so proving the flip only requires that job to START. Designed test:
+  dispatch **`--ref live-defi-rollout`** with **empty inputs** → the glue job starts, dies at its own
+  `: "${REPO_NAME:?}"` guard (conflict-resolution-agent.yml:65), `escalate` is skipped by `needs` (no `if:`, defaults to
+  `success()`) ⇒ **no worker spawned**; and LDR is chosen because `ci_failure_watcher.py:123` is
+  `WATCHED_BRANCHES = ["main","staging"]` ⇒ the deliberate red X **cannot page #ci-failures**. main==LDR is
+  byte-identical for `.github/workflows/`, so the LDR ref runs the same flipped definition. Rejected alternative:
+  tripping `agent-runner.yml`'s idempotency gate needs a REAL PR labelled `escalation-dispatched` — which would then
+  silently suppress a genuine future escalation. **Blocked by the Bash permission classifier; left for the operator to
+  approve rather than worked around.**
+- 2026-07-16 — **FINDING (P1, unrelated to this plan, cross-repo): `digest-drift-sweep` has been a SILENT NO-OP since
+  birth.** Reading its log to confirm a re-dispatch was safe (the fan-out to 16 repos was the risk) showed
+  `Dispatched: 0 / Already fresh: 0 / No ARG found: 16` on EVERY run back through Jul 14 — `Already fresh: 0` being the
+  tell. Root cause: `secrets.GITHUB_TOKEN` (:77) is scoped to PM only, so cross-repo `contents/Dockerfile` 404s;
+  `curl -sf … || echo ""` (:128-131) swallows it and the empty result is misreported as the benign _"Dockerfile not
+  found — may not be image-building"_ (:138-142). **Verified, not inferred**: the exact curl returns HTTP 200 + a valid
+  pin with a PAT, HTTP 404 without scope; all 16 repos DO carry `ARG BASE_IMAGE_DIGEST` and ALL are stale vs UTL
+  `:latest sha256:5122f7ab…`. Born broken in `0d5663d4d` (2026-06-19); `git log -S` proves it was never `GH_PAT` ⇒ ~27
+  days × 4/day ≈ **110 green runs that did nothing**. NOT caused by the flip (`23ce709cc` touched only `runs-on:`).
+  **Not fixed here — it is a fleet event, not a one-liner**: every repo being stale means the first correct sweep fans
+  `dependency-update` to all 16 at once, `GH_PAT` is pending rotation, and the dispatch POST (:160-176) has the same
+  defect. Issue doc: `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side
+  benefit for this plan: the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
