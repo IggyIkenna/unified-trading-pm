@@ -620,14 +620,30 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
   `_legacy_seed.parquet` disposition unresolved → **do not delete the bucket** (1.76M rows). **HARD: never place any
   re-homed object under `_index/per_vm/`** unless it is genuinely a shard to be merged.
 
-- [ ] [DATA] P0. **T2.6 — Finish the exact row-count pass for `market-data-tick-sports` (the ~52,400 is an
-      EXTRAPOLATION, not a gate).** _Mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated
-      prefix-parallel lister (~2 min each); (2) key =
-      `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the MDT trap differs from the
-      instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS **and** mis-stamps
-      `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to `batch_odds_api`; a
-      `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique (rejected before
-      use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
+- [x] ✅ [DATA] P0. **T2.6 — EXACT row-count pass for `market-data-tick-sports` — DONE 2026-07-16. Extrapolation
+      replaced by measurement. ⚠️ MDT is NOT delete-eligible — 49,517 unique objects still need a disposition (OR-5b).**
+      _Classification closes EXACTLY to 406,581_: control-plane 55 + **class A 9,926** + duplicate (crc==) 287,634 +
+      crc-differing 108,966. Key strips BOTH `/pipeline_mode=<x>/` **and** `/data_source=<x>/` (the MDT trap; the
+      rejected data_source-strip-only key is not used). **Exact row-count over all 108,966 crc-differing pairs**
+      (217,932 footer reads, 0 errors — the pass that previously ran out of budget): **contentless (lr==0) = 0 ·
+      superseded (cr>=lr) = 63,265 · UNIQUE (cr<lr) = 45,701**, carrying **7,079,850 rows present ONLY in legacy**. ⇒
+      **EXACT MDT unique = 9,926 + 45,701 = 55,627 objects** (the ~52,400 estimate UNDER-counted by ~3,200; 9,926 vs
+      9,927 and 108,966 vs 108,970 are canonical-drift deltas). **MOVED**: the **6,110** class-A objects with the
+      documented mis-stamp (`pipeline_mode=batch_api_football` + `data_source=ODDS_API` + `data_type=trades`) →
+      canonical `pipeline_mode=batch_odds_api`, `data_source=` stripped (canonical's verified convention: 252,163 at
+      `(batch_odds_api, trades)`; `batch_api_football` does not exist for trades). **6,110/6,110 COPIED, 0 FAIL**, every
+      dst crc32c-verified == src. **NOT MOVED — needs an operator ruling (OR-5b)**: (a) **3,816** class-A objects in OLD
+      pre-canonical shapes (`day=/source=/league=`, `day=/venue=/league=`, `day=/source=`, `day=/venue=`) lacking
+      `asset_group`/`instrument_type`/`data_type` — **no canonical path is derivable without INVENTING those fields
+      (fabrication)**; (b) **45,701** class-B-equivalents holding **7,079,850 legacy-only rows** — the runbook says they
+      "inherit OR-1", but **OR-1 ruled only on instruments entities and never covered MDT tick data**, so there is no
+      ruling to inherit. Evidence `~/tmp-cutover/t2_6_{classA,crc_differ_pairs,rowcounts,move_evidence}.jsonl`.
+      _Original mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated prefix-parallel lister
+      (~2 min each); (2) key = `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the
+      MDT trap differs from the instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS
+      **and** mis-stamps `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to
+      `batch_odds_api`; a `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique
+      (rejected before use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
       `pyarrow.ParquetFile(fs.open(...)).metadata.num_rows` over gcsfs, 128 threads (measured 395 footer reads/s ⇒ ~9
       min for 218k reads); (4) classify `lr==0` contentless / `cr>=lr` superseded / `cr<lr` **unique**. Chunk + resume
       by appending `{l,c,lr,cr,lsz}` to `rowcounts.jsonl` and skipping names already present. Then MOVE the confirmed
@@ -635,15 +651,49 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       class-B-equivalents inherit OR-1. _Gate_: exact unique count (not extrapolated); classification closes to 406,581.
       _ABORT_: pass incomplete → **`market-data-tick-sports` is NOT delete-eligible** (OR-5). MDT legacy is dormant (all
       writes 2026-06-27), so there is no race.
-- [ ] [DATA] P0. **T2.7 — Write the moved cells' manifest rows via a per-VM shard (never a direct index write).**
-      _Mechanism_: the canonical index gains rows only through `_index/per_vm/<VM_NAME>.parquet` + the consolidator's
-      additive merge (proven: 123,149 rows in the consolidated index, 0 in any shard). Emit one shard
-      `VM_NAME=sports-legacy-cutover-20260716` with `MANIFEST_PER_VM_SHARDS=true`, `record_captured(source=…)` for every
-      moved cell (`source=` is crosscutting and REQUIRED), correct source-aware `pipeline_mode`. **Never fake
-      `record_captured` for a cell with no backing object** (`codex/02-data/honest-absence-downstream-handling.md`).
-      _Gate_: shard exists; after the Phase-6 consolidator restart it merges and the index gains exactly the moved-cell
-      count. _ABORT_: any row would be written with `source=''` or a phantom `instrument_count=0` → STOP; that is the
-      pattern that created the 468 phantom residual.
+- [ ] [DATA] P0. **T2.7 — Write the moved cells' manifest rows via a per-VM shard. ⛔ NOT DONE — STOPPED DELIBERATELY, 3
+      blockers need a decision (2026-07-16). This is the ONLY Phase-2 item outstanding.** Groundwork COMPLETE and
+      measured, so the next owner starts from facts, not discovery: **(1) SCOPE measured**: the shard must carry
+      **17,089 instruments cells** (the T2.3 class-A moves) + **6,110 MDT cells** (the T2.6 class-A moves) = 23,199
+      rows, in **TWO** shards (one per canonical bucket). The T2.4 player_stats cells need NO new rows — those cells
+      already exist in the canonical index (only their row counts changed). **Verified against the live index**: of the
+      17,089 moved instruments atoms `(date, data_type, league_id)`, **17,088 have NO canonical index row at all** and
+      exactly **1** has an `empty_confirmed` row that the move now contradicts (must flip to `captured`). Every moved
+      entity maps cleanly to a `data_type` (0 unmapped). **(2) SSOT resolved (do not re-derive)**: `pipeline_mode` = UAC
+      `pipeline_mode_for_sports_entity(entity)`; `source` = that value with the `batch_` prefix stripped
+      (`instruments-service/.../sports_fixtures.py::_sports_ref_source`; `_SPORTS_REF_SOURCE_OVERRIDE` is currently
+      EMPTY). Independently corroborated: this matches canonical's ACTUAL per-entity usage measured in T2.2. Sports
+      `row_key` pattern (from the live writer, `engine/orchestrator/process_write.py:243`) =
+      `{"date": d, "data_type": DT, "league_id": L}` + `asset_group="sports"`, `instrument_type=""`. Writer:
+      `ManifestWriter("instruments-service", catalogue_bucket=<prd>, per_vm_shards=True)` →
+      `_index/per_vm/{VM_NAME}.parquet`; **explicit `.write()` AND `.close()`** (`close()` = the LIFECYCLE-final
+      `_close_drain` that forces the per-VM rewrite — a `flush()`-only path debounces and can strand the shard, which is
+      how a prior agent silently wrote ZERO rows). **(3) BLOCKERS (each needs a decision — none is a rerun-and-hope)**:
+      **(a)** `record_captured` fails with `RuntimeError: Event logging not initialized. Call setup_events() first.` —
+      the writer's validation path emits `log_event(...)`. Mechanical; call `setup_events()` in the one-off first.
+      **(b)** The smoke test surfaced **`MANIFEST_WRITE_SCHEMA_MISSING`** for `FIXTURES_SCHEDULE` — the write-gate found
+      **no registered schema contract** for that data_type. Must be settled BEFORE writing 23,199 rows: is this a
+      warn-and-proceed, or does the gate refuse/downgrade the row? Writing rows the gate silently downgrades is exactly
+      the pattern that produced the 468 phantom residual. Note the moved corpus is schema-HETEROGENEOUS by design (e.g.
+      `fixture_events` 10/11-col af_/named forms, `*_unmapped` entities), so per-df validation must be proven across
+      **every** class-A entity, not just one. **(c)** **ODDS retired to MTDS-only 2026-06-25** (`UAC@8fb1f54f`; recorded
+      in `_SPORTS_REF_SOURCE_OVERRIDE`'s comment: _"footystats_odds was removed 2026-06-25 (ODDS retired to
+      MTDS-only)"_). The T2.3 move landed **2,044 `footystats_odds`** class-A objects in the INSTRUMENTS bucket. Writing
+      `ODDS` manifest rows into the instruments index would re-introduce an ODDS population there **while T3.1 is
+      purging 123,149 api_football × ODDS rows from that same index** — a direct contradiction. Decide: write ODDS rows,
+      or omit them (data preserved on disk either way; the manifest row is the question). _Sequencing (already correct,
+      do not "fix")_: the 3 consolidators are PAUSED since T0.6 and Phase 3 REQUIRES the index stay QUIET, so the shard
+      must NOT be consolidated in Phase 2 — the merge is **T6.1** by design. The dispatch's "manifest rows written +
+      consolidated" therefore cannot fully close inside Phase 2; the Phase-2 deliverable is the WRITTEN,
+      read-back-verified shard. _Original mechanism_: the canonical index gains rows only through
+      `_index/per_vm/<VM_NAME>.parquet` + the consolidator's additive merge (proven: 123,149 rows in the consolidated
+      index, 0 in any shard). Emit one shard `VM_NAME=sports-legacy-cutover-20260716` with
+      `MANIFEST_PER_VM_SHARDS=true`, `record_captured(source=…)` for every moved cell (`source=` is crosscutting and
+      REQUIRED), correct source-aware `pipeline_mode`. **Never fake `record_captured` for a cell with no backing
+      object** (`codex/02-data/honest-absence-downstream-handling.md`). _Gate_: shard exists; after the Phase-6
+      consolidator restart it merges and the index gains exactly the moved-cell count. _ABORT_: any row would be written
+      with `source=''` or a phantom `instrument_count=0` → STOP; that is the pattern that created the 468 phantom
+      residual.
 
 ### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
 
@@ -995,6 +1045,38 @@ exact pass is ~9 min of compute (395 footer reads/s) plus ~4 min of listing.
 - **B: delete on the extrapolation** — risks losing up to ~42,500 objects' unique rows.
 - Other.
 
+> **✅ OR-5 RESOLVED = A. The exact pass is DONE (T2.6, 2026-07-16).** Measured: **55,627 unique objects** (9,926 class
+> A
+>
+> - 45,701 crc-differing with fewer canonical rows), not ~52,400 — the extrapolation under-counted by ~3,200. 6,110 of
+>   the class A are moved. **The residue is now OR-5b.**
+
+**OR-5b (NEW, BLOCKING T5.4 for MDT ONLY — surfaced by T2.6 2026-07-16) — how do we dispose of the 49,517 remaining
+unique `market-data-tick-sports` objects?** T2.6 made the count exact and moved the 6,110 derivable class-A objects, but
+two sub-classes have **no ruling to inherit** — the runbook says MDT class-B "inherits OR-1", yet **OR-1 ruled only on
+instruments entities (player_stats / fixture_events / standings / teams / player_values) and never covered MDT tick
+data**. `market-data-tick-sports` is NOT delete-eligible until both are dispositioned. (The instruments bucket is
+unaffected — it has its own completed disposition.)
+
+- **(a) 3,816 class-A objects in OLD pre-canonical shapes** — `day=/source=/league=`, `day=/venue=/league=`,
+  `day=/source=`, `day=/venue=` — lacking `asset_group` / `instrument_type` / `data_type`. **No canonical path is
+  derivable without inventing those segments**, which the never-fabricate rule forbids.
+  - **A: row-count them and, if their rows are contained in canonical, ABANDON with a written reason [WORKER REC]** —
+    mirrors the T2.5 method (prove-then-decide) and avoids fabricating path segments.
+  - **B: infer the missing segments** from the parquet contents (venue/league → asset_group/instrument_type/data_type)
+    and move — only if the inference is provably total, not heuristic.
+  - **C: park them under `_audits/` in canonical** as a retained archive, then delete the bucket.
+  - Other.
+- **(b) 45,701 class-B-equivalents holding 7,079,850 legacy-only rows** — canonical has the cell but strictly fewer
+  rows. This is the MDT analogue of the instruments row-gap that OR-1 investigated, but **it has never been
+  investigated**: we do not yet know how much is genuine complementary tick coverage vs snapshot skew / re-fetch
+  generations (the instruments answer was ~37% genuine, ~59% junk).
+  - **A: run the OR-1-style row-gap investigation on MDT first, then rule [WORKER REC]** — 7.08M rows is too large to
+    discard or blanket-merge unexamined; the instruments precedent proves the naive read is wrong ~59% of the time.
+  - **B: blanket union legacy ∪ canonical per cell** — risks re-importing the same junk/skew classes OR-1 rejected.
+  - **C: skip them and accept the row loss** — contradicts the data-pipeline-correctness HARD RULE without evidence.
+  - Other.
+
 **OR-6 (BLOCKING Phase 2) — fix the MOVE vehicle, or drive the move from the object inventory?**
 `migrate_sports_canonical_v9.py` silently enumerates 4 of its 7 declared trees as empty (F-1), cannot see class B (F-2),
 would re-import v1_archive (F-3), and truncates the day window by default (F-4). It reports success while undercounting.
@@ -1308,8 +1390,37 @@ corrections to the plan's premises, all MEASURED:
 Rollback substrate: every overwritten canonical object copied to
 `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/player_stats_prewrite_bak/` first.
 
-_Environment note_: the workspace `unified-trading-library` checkout (78744291, a backmerge) currently **fails to
-import** — `kill_switch/bus.py:144` references `KillSwitchId.KILL_PER_TREASURY_SUB_ACCOUNT_DRIFT`, absent from the enum
-(clean tree; a committed inconsistency, appeared after T2.1/T2.3 ran with UTL fine). Phase-2 scratch tooling routed
-around it via `google.cloud.storage` directly (same pattern as `inventory.py`); no gsutil/gcloud subprocess for object
-ops. Flagged for whoever owns UTL — it breaks any `import unified_trading_library` in this workspace.
+_Environment note (RESOLVED — do not chase)_: mid-phase, `import unified_trading_library` failed with
+`KillSwitchId.KILL_PER_TREASURY_SUB_ACCOUNT_DRIFT` missing (`kill_switch/bus.py:144`). This was **TRANSIENT** — the
+workspace UTL clone was caught mid-pull/rebase by another slot; re-tested later it imports cleanly in ALL 5 venvs. It is
+NOT a committed defect and needs no fix. T2.4's scratch tooling had already routed around it via `google.cloud.storage`
+directly (same pattern as `inventory.py`); no gsutil/gcloud subprocess was used for object ops.
+
+---
+
+### PHASE 2 STATUS (2026-07-16) — T2.1-T2.6 COMPLETE + VERIFIED · **T2.7 OUTSTANDING (deliberate stop)**
+
+| todo | state | headline                                                                                           |
+| ---- | ----- | -------------------------------------------------------------------------------------------------- |
+| T2.1 | ✅    | 398/398 v1_archive deleted; object-layer gate live-count == 0; canonical never contaminated        |
+| T2.2 | ✅    | class A = 17,105 (reconciles to 969,321 exactly); copy list 17,089; live sample gate 23/23 + 11/11 |
+| T2.3 | ✅    | 17,089/17,089 moved, crc-verified, reader-resolvable 11/11                                         |
+| T2.4 | ✅    | **388,825** genuine legacy-only player observations recovered, 4,015 cells, 0 FAIL, upsert-safe    |
+| T2.5 | ✅    | control-plane adjudicated; **OR-4 = ABANDON, PROVEN**                                              |
+| T2.6 | ✅    | MDT exact: **55,627** unique (not ~52,400); 6,110 class-A moved; **OR-5b raised**                  |
+| T2.7 | ⛔    | NOT DONE — 3 decision blockers (schema-missing gate, ODDS-retired-to-MTDS, setup_events)           |
+
+**Phase-2 gate = NOT yet passed** (T2.7 outstanding). **Phase 3 is nevertheless UNBLOCKED and safe to start**: the index
+has been QUIET since T0.6 and T2.7 deliberately does not consolidate (the merge is T6.1 by design), so nothing Phase 2
+did disturbs the T3.1 purge window.
+
+**Two rulings now block the DELETE (not Phase 3):**
+
+1. **OR-5b (NEW)** — the 49,517 residual `market-data-tick-sports` unique objects (3,816 non-derivable class-A + 45,701
+   class-B holding 7,079,850 legacy-only rows). **`market-data-tick-sports` is NOT delete-eligible.** OR-1 never covered
+   MDT tick data, so there is no ruling to inherit.
+2. **T2.7's blocker (c)** — whether ODDS manifest rows belong in the instruments index at all, given ODDS was retired to
+   MTDS-only on 2026-06-25 and T3.1 is concurrently purging 123,149 api_football × ODDS rows from that index.
+
+**`instruments-store-sports` object-layer status**: every class-A object is moved and verified; the only thing standing
+between it and T4.1's zero-unique proof is T2.7's manifest rows (a manifest concern, not an object concern).

@@ -109,6 +109,15 @@ an entry in `venue_instrument_discovery_overrides` narrows it). Dates below the 
 | CBOE           | **2020-06-01** | VX-futures (XCBF.PITCH) captured-history floor              |
 | KRX            | **2019-01-02** | Yahoo daily backfill floor (history confirmed back to 2019) |
 
+**The TradFi OHLCV backfill launchers ENFORCE these floors** (2026-07-16): `ohlcv_clamp_floor_to_venue` in
+`deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh` raises each launcher's `--start-floor` to the venue's
+`get_instrument_discovery_start()` (monotone max — a stricter wrapper floor like CBOE's `2026-01-01` is preserved), so
+no year-shard entirely below the floor is ever launched and a below-floor `--year` errors cleanly instead of spawning a
+0-row VM that fires a false-CRITICAL `DP_VM_GONE_NO_CAPTURE` (the 2019 CME OHLCV incident). Backstop: if a below-floor
+date is still processed (`--force-window` / non-launcher caller), MTDS `_emit_pre_coverage_expected_empties`
+(orchestrator `preflight.py`) records `EXPECTED_PRE_SOURCE_COVERAGE_START` sentinels + a `HONEST_ABSENCE` run.log signal
+so the exit-code fleet monitor classifies the run benign, not silent-zero.
+
 `venue_instrument_discovery_overrides` narrows the discovery floor ABOVE the market-data floor where the
 instrument-discovery API has narrower coverage (e.g. HYPERLIQUID market-data S3 from 2023-04-15 but discovery snapshots
 only from 2023-11-01 — without the override the gap renders as `attempted_failed` phantoms). CeFi venues likewise have

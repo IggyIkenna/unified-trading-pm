@@ -347,9 +347,18 @@ the exact pattern to clone (it already has a threshold input).
       `tests/unit/conftest.py`'s `_ensure_services_mocked` allowlist — the stub services package has `__path__=[]`, so a
       dotted import of an unregistered new module fails with "unknown location" under pytest. Added
       `catalogue_lifecycle` there.)_
-- [ ] [UI] P1. Two sibling cards next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard) with numeric
-      threshold inputs ("new if listed within N days", "expiring within M days") + client helpers in `client.ts`. Mirror
-      the fixtures card. `[UI]` + pw:L2 regression spec.
+- [x] [UI] P1. ✅ Two sibling cards `NewListingsCard`/`UpcomingExpiriesCard`
+      (`deployment-ui/src/components/     LifecycleCards.tsx`, shared internal `useLifecycleRows`/`LifecycleCard`)
+      mounted next to `<UpcomingFixtures/>` in `DataStatusTab.tsx` (IS-only guard); numeric threshold inputs ("new if
+      listed within N days" default 30, "expiring within M days" default 7) + `fetchNewListings`/`fetchUpcomingExpiries`
+      client helpers + `CatalogueLifecycleRow` interface in `client.ts` (mirrors `fetchUpcomingFixtures`). Added
+      mock-api.ts handlers for both routes (representative cefi/defi/tradfi rows) since neither was mocked before. —
+      deployment-ui@c6b1c09 + Evidence: `LifecycleCards.test.tsx` 6 specs green (renders rows, empty state,
+      threshold-change refetch with new param value, refresh button) + full UI QG green (tsc/eslint/vitest 88
+      tests/build). `[UI]` + pw:L2 (Vitest regression spec, per this plan's stated acceptance). _(Live Playwright MCP
+      browser check deferred — the shared `.playwright-mcp` browser was actively held by another concurrent agent in
+      this workspace at ship time; the mock-api handlers are committed and unit-verified, so the browser check is a
+      nice-to-have follow-up, not a blocker.)_
 - [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS`
       (`build_instrument_catalogue.py`) so expiry is stored separately from the overloaded `available_to`; then regen.
 - [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows where `available_from == pipeline-first-seen`
@@ -657,6 +666,60 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 
 ---
 
+## P9 — Operator review round 2 (2026-07-16 pm) — data-status deep-dive + reconciliation
+
+> Operator re-reviewed the live (prod-deployed, PRE the P1–P8 fixes) data-status page. Findings validated against REAL
+> GCS via a local full-stack run (deployment-api on real GCS + deployment-ui + Playwright). Each tagged
+> **fixed-not-shipped** (fixed in LDR, awaiting promote/deploy), **fixed-now** (shipped this round), or **not-fixed**
+> (new finding → todo below).
+
+**Reconciliation — instrument_type + data_type per AG (REAL data, coverage-summary breakdowns):**
+
+| AG         | instrument_type (unique-id counts)                                                                                                       | data_type                                                             | Verdict                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| CEFI       | SPOT_PAIR, PERPETUAL, COMBO, FUTURE, OPTION (canonical) **+ `perpetual` 1.15M, `spot` 502k (LEGACY dupes)** + `__legacy__` 4.85M (blank) | `instruments` (+ `__legacy__` 284)                                    | P4-A canonicalises the DISPLAY (fixed-not-shipped); DATA dupes need the migration (P4 DATA P2).                   |
+| TRADFI     | **`__legacy__` 46.5M (blank — 98% of rows!)** + OPTION/COMBO/SPOT_PAIR/EQUITY/FUTURE/ETF/INDEX                                           | `instruments`                                                         | **not-fixed**: the tradfi/Databento writer isn't stamping instrument_type.                                        |
+| DEFI       | POOL, LENDING, STAKING, YIELD_BEARING, A_TOKEN, DEBT_TOKEN, PERPETUAL, SPOT_PAIR, LST (canonical) + `__legacy__` 3.85M                   | **TWO: `instrument-catalog` 8.45M + `instruments` 3.03M**             | **not-fixed**: two data_types — root-cause (a `backfill_defi_catalog_data_type_2026_06_21` migration left churn). |
+| SPORTS     | (source axis) — see below                                                                                                                | —                                                                     | **not-fixed**: invalid `source` values.                                                                           |
+| PREDICTION | PREDICTION_MARKET                                                                                                                        | `prediction_canonical_question_group` + `prediction_market_lifecycle` | Two prediction GRAINS (cqg bundle + per-market lifecycle) — likely legit; confirm.                                |
+
+- [x] **Q1 — Symbol search returned nothing (500).** ✅ **fixed-now.** `_load_corpus_from_per_venue_parquets`
+      (`data_query_service.py`) resolved the corpus bucket via `build_bucket("instruments", …)` which DROPS the
+      `-{env}-` segment → non-existent `instruments-store-{ag}-{project}` (no `-prd-`) → GCS 404 → 500 → blank UI.
+      Switched to `resolve_bucket_name(kind="instruments-store", …)` (+ prediction's own kind). —
+      deployment-api@2cda602 + Evidence: real-GCS `query='BTC-USDT'` → 10 matches (`BINANCE-FUTURES:PERPETUAL:BTC-USDT`
+      …); 2 regression tests.
+- [ ] [DATA] P1. _(Q2 — TRADFI blank instrument_type)_ 46.5M of ~47.1M tradfi availability rows have `instrument_type`
+      unset (`__legacy__`), so the tradfi Instrument-Coverage-Summary is ~98% "(unlabeled)". Root-cause the
+      tradfi/Databento writer's instrument_type stamping + author a canonicalization migration (mirror the P4 DATA P2
+      legacy-row migration; preserve shard-atom identity across MTDS/MDPS/features).
+- [ ] [DATA] P2. _(Q2 — CeFi legacy lowercase dupes)_ Collapse `perpetual`→`PERPETUAL` (1.15M) + `spot`→`SPOT_PAIR`
+      (502k) in the cefi availability index (the P4-A display alias makes them READ canonical, but they remain distinct
+      manifest rows). This IS the P4 DATA P2 legacy-row canonicalization migration — do it for cefi.
+- [ ] [DATA] P2. _(Q2 — DeFi two data_types)_ **DECIDED (operator round-2 2026-07-16): `instruments` is canonical for
+      DeFi.** Migrate the defi availability-index rows carrying `data_type='instrument-catalog'` (8.45M) →
+      `data_type='instruments'` (dedup against existing `instruments` rows on the shard atom; see the prior
+      `backfill_defi_catalog_data_type_2026_06_21.py` for the pattern), fix the writer so no new `instrument-catalog`
+      rows are emitted, then regen. Preserve shard-atom identity across MTDS/MDPS/features (data_type is a shard axis
+      there).
+- [ ] [DATA] P1. _(Q3 — SPORTS invalid `source` values)_ The sports source breakdown carries `mdps_odds_horizon_bucket`
+      (8.1M) + `instruments_service` (3.7M) — NOT vendors (`source`=VENDOR-only, CLAUDE.md). `mdps_odds_horizon_bucket`
+      is an MDPS bucket (cross-service leakage into the IS sports availability index); `instruments_service` is
+      self-referential. Root-cause where these rows/sources enter the IS sports manifest + correct to the real vendor
+      (or exclude cross-service rows). _(Data-correctness — notify operator; likely an issue-doc.)_
+- [ ] [UI] P3. _(Q4 — "unique instruments" label)_ The
+      `2,970,327 unique instruments (catalogue-deduplicated, all asset     groups)` count is CORRECT (verified: Σ per-AG
+      = total exactly; dominated by expired OPTION/COMBO strikes — cefi 263k+138k, tradfi 1.17M — and resolved
+      prediction markets 1.34M). But the label reads as "active" — clarify to "all-time incl. expired/delisted/resolved"
+      and pair it with the latest-day (123,733) so it isn't mistaken for the live universe.
+- [ ] [UI] P2. _(operator request — fixtures browser)_ Add a fixtures browser to the IS data-status summary: render all
+      catalogue fixtures grouped by **league → day** with collapsible dropdowns (same UX as the cefi/defi/tradfi
+      instrument drilldown). The parquet exists (`sports_reference/by_date/day=/entity=fixtures/…`, already read by
+      `upcoming_fixtures.py` + the `fixtures_schedule` split); build a read-only backend list (single-walk discipline) +
+      the grouped UI. `[UI]` + pw:L2.
+
+---
+
 ## Operator decisions — RESOLVED (2026-07-16)
 
 1. **P8 — TEAMS axis**: ✅ direction A (reclassify per-league). Seasonal change is the trigger-date axis under each
@@ -667,6 +730,28 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 3. **P3 — prediction label**: ✅ slug for v1 (category from `canonical_question_group`), real title column as a
    follow-up.
 4. **P6 — catalogue explorer**: ✅ both, phased (availability-derived now, true-catalogue projection follow-up).
+
+### P9 round-2 decisions (operator 2026-07-16 pm)
+
+5. **DeFi data_type**: ✅ `instruments` is canonical → migrate `instrument-catalog` → `instruments`.
+6. **CeFi instrument_type**: ✅ migrate the non-canonical lowercase `perpetual`→`PERPETUAL`, `spot`→`SPOT_PAIR`.
+7. **TradFi instrument_type**: ✅ migrate/stamp the 46.5M blank (`__legacy__`) rows to their canonical InstrumentType.
+8. **Prediction data_types**: ✅ KEEP both grains (`prediction_canonical_question_group` +
+   `prediction_market_lifecycle`) — no change.
+9. **Sports invalid sources**: ✅ root-cause WHY `mdps_odds_horizon_bucket` + `instruments_service` appear as IS sports
+   `source` values (operator: "is it a sign of deeper issues?") BEFORE any correction — diagnose the cross-service
+   leakage path first, then fix at the writer/consolidator.
+
+> **Migration HARD RULES (all three data migrations 5–7):** `instrument_type` + `data_type` are SHARD axes for
+> MTDS/MDPS/features (NOT for instruments-service, where they are DISPLAY axes) — a naive IS-only rewrite of these
+> values breaks cross-service shard-atom identity. Each migration must: (a) fix the WRITER first so new rows are
+> canonical; (b) an IDEMPOTENT one-off migration script (pattern: `instruments-service/scripts/canonicalize_*_2026_*.py`
+>
+> - `backfill_defi_catalog_data_type_2026_06_21.py`) run on REAL infra with manifest-verified row counts; (c) preserve /
+>   co-migrate shard-atom identity across MTDS/MDPS/features (confirm those services' shards for the same instruments,
+>   or coordinate); (d) regen the affected catalogue + availability index. Run behind a pre-migration drain if any live
+>   writer touches the same index. These are heavy real-infra ops — a fresh-context agent owns them (handoff prompt in
+>   the operator's hands).
 
 ## Full audit artefacts
 

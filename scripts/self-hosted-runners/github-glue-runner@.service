@@ -1,26 +1,36 @@
-# github-glue-runner@.service — systemd template unit; one instance per runner (glue-1 .. glue-N).
+# github-glue-runner@.service — systemd template unit; one instance per runner.
 #
 # Epic: deployment_and_user_management_master (CI/CD cost reduction — B1)
 # Lifecycle: permanent   Delete-when: glue host retired (B2/B3)
 #
-# Enable N runners with:  systemctl enable --now github-glue-runner@{1..8}
+# The instance name (%i) encodes POOL and INDEX — the wrapper forks on it:
+#   github-glue-runner@glue-N     JIT-ephemeral, labels self-hosted,glue         (the ~37 movers)
+#   github-glue-runner@writer-N   long-lived,    labels self-hosted,glue-writer  (ci-status-update)
+#
+# Enable with:  systemctl enable --now github-glue-runner@glue-{1..5} github-glue-runner@writer-{1..3}
 [Unit]
-Description=GitHub Actions ephemeral glue runner %i (IggyIkenna/unified-trading-pm)
+Description=GitHub Actions glue runner %i (IggyIkenna/unified-trading-pm)
 After=network-online.target
 Wants=network-online.target
-# Never give up restarting (ephemeral runners exit after every single job by design).
+# Never give up restarting (the glue-* pool exits after every single job by design).
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-# Non-root; the toolchain (gcloud/gh/python/uv) is provisioned for this user on the VM.
+# ISOLATION SCOPE = folder/venv/clone only (operator 2026-07-16). User stays `ubuntu` so the runners
+# inherit the VM's existing GCP/AWS/GitHub creds + toolchain. Deliberate: everything needing true
+# clean-room isolation (QG, PR gates, image builds) is GitHub-hosted and stays there; the MOVE set is
+# first-party automation with zero pull_request triggers, all repos are private (no fork PRs → no
+# untrusted-code path), and the AO already runs as `ubuntu` with the same ambient creds.
+# HOME is deliberately NOT redirected — it would break $HOME/.config/gcloud ADC resolution, and the
+# `git config --global` in two movers is inert because every clone carries a local identity.
 User=ubuntu
 Slice=github-glue-runner.slice
 # GH_TOKEN (Administration:write on the repo) — 0600, root:root. Optionally GH_TOKEN_SECRET instead.
 EnvironmentFile=/etc/github-glue-runner.env
-WorkingDirectory=/opt/github-glue-runners/glue-%i
+WorkingDirectory=/opt/github-glue-runners/%i
 ExecStart=/opt/github-glue-runners/glue-runner-run.sh %i
-# One job per process; restart to re-register for the next.
+# glue-*: one job per process, restart to re-register. writer-*: restart only on crash.
 Restart=always
 RestartSec=5
 # Be a polite neighbour to the orchestrator.

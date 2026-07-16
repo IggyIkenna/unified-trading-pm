@@ -112,9 +112,14 @@ flows to `main` via the standing fleet promote; the image needs no action.
 - [x] P3. ✅ Delete the stale `unified-trading-system/agent-orchestrator` AR package (3 tags, 1 digest) — pure cost/
       hygiene; nothing breaks if kept. **EXECUTED 2026-07-13 per operator ruling — see teardown checklist below
       (Evidence: cloudbuild=d571bed5-a3d8-4828-86ed-954ff2f3308e SUCCESS, verify NOT_FOUND).**
-- [ ] P3. Decide whether AO should get a real `agent-orchestrator-staging` Cloud Build trigger so the dual-cloud
-      image-build gate stops soft-passing on the GCP side (only worth it if the operator wants image-buildability
-      enforced for AO PRs; the AWS/ECR side has `buildspec.aws.yaml`).
+- [x] P3. ✅ **DECIDED 2026-07-16 — WON'T DO (operator ruling).** _"We don't need a cloud run image for this right now,
+      we have deployed this service and it is running since 2 months without it, so no need for image building for this
+      one for now."_ Consistent with the determination above: AO is **not container-deployed** (EC2 systemd
+      `orchestrator.service` + git self-pull, live ~2 months with no image), so an `agent-orchestrator-staging` Cloud
+      Build trigger would only buy GCP-side image-buildability enforcement on AO PRs for an artifact **nothing
+      consumes**. The dual-cloud image-build gate continues to **soft-pass on the GCP side by design** (not a defect —
+      see `codex/05-infrastructure/dual-cloud-image-builds.md`); the AWS/ECR side retains `buildspec.aws.yaml`. Revisit
+      ONLY if AO ever becomes container-deployed.
 - [x] P3. ✅ Tear down the HISTORICAL europe-west4 Cloud Run service `agent-orchestrator-staging` (min-instances 0, runs
       the superseded `cloud-run-source-deploy:uat` image) — codex already marks it "not running today". **SERVICE
       DELETED 2026-07-13 per operator ruling after a verified zero-traffic-in-30d gate — see teardown checklist below.
@@ -213,5 +218,22 @@ spec:
       europe-west4 `cloud-run-source-deploy/agent-orchestrator:uat` image and the central-VM AO runtime were NOT
       touched.
 
-Teardown COMPLETE 2026-07-13. Remaining open item: only the P3 Cloud Build trigger decision (item 2 above — not in this
-ruling).
+Teardown COMPLETE 2026-07-13. **ALL ITEMS NOW CLOSED** — the last open item (the P3 `agent-orchestrator-staging` Cloud
+Build trigger decision) was ruled **WON'T DO** by the operator on 2026-07-16 (see Follow-up candidates item 2). This doc
+has **no remaining open surface**.
+
+## Reconciliation 2026-07-16
+
+Re-verified independently (operator-requested one-by-one issue reconciliation — not agent-relayed). All five
+load-bearing claims re-checked against live GCP + the workspace on 2026-07-16 and every one holds:
+
+| Claim                              | Check                                            | Result                                 |
+| ---------------------------------- | ------------------------------------------------ | -------------------------------------- |
+| AR package deleted                 | `gcloud artifacts packages describe`             | NOT_FOUND ✅                           |
+| europe-west4 Cloud Run torn down   | `gcloud run services describe`                   | "Cannot find service" ✅               |
+| No orchestrator Cloud Run anywhere | `gcloud run services list`                       | none ✅                                |
+| Deletion build SUCCESS             | `gcloud builds describe d571bed5…`               | SUCCESS, 2026-07-13T23:26:55Z ✅       |
+| Zero workspace consumers           | `rg 'unified-trading-system/agent-orchestrator'` | 0 code hits (only this doc matches) ✅ |
+
+Archival CONFIRMED correct. The one previously-dangling P3 todo is now decided (WON'T DO), so nothing from this doc is
+carried anywhere else.
