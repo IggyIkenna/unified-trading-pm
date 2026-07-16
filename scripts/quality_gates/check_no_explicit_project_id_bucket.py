@@ -43,14 +43,37 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
+import re
 import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+#: Frozen allowlist of PRE-EXISTING legacy-template-literal occurrences (out-of-scope
+#: asset groups: tradfi/calendar/onchain/features-sports SSOT-registry + config
+#: defaults). Seeded 2026-07-16 when the literal-scan was added (T1.2 of the sports
+#: legacy bucket cutover) because >5 pre-existing occurrences surfaced across repos not
+#: in the cutover's delete scope. This is a RATCHET that only goes DOWN: new
+#: occurrences fail; fixing a baselined one and pruning its entry is the only edit.
+#: Tracked for pay-down in ``plans/active/issues/legacy_bucket_template_literals_2026_07_16.md``.
+BASELINE_FILENAME: Final[str] = "check_no_explicit_project_id_bucket_baseline.json"
+
 #: Bucket-builder functions that accept an SSOT-bypassing ``project_id``.
 BUILDER_NAMES: Final[frozenset[str]] = frozenset({"get_bucket_name", "get_write_bucket_name"})
+
+#: Legacy no-env bucket-name TEMPLATE literals (``.format(project_id=...)`` style).
+#: A module-level string literal like ``"instruments-store-sports-{project_id}"`` +
+#: ``.format()`` bypasses the ``get_bucket_name`` AST match above entirely — the
+#: builder-call check never sees it — so it silently reconstructs the legacy no-env
+#: bucket that is DELETED at each asset_group cutover (the exact blind spot that let
+#: deployment-service ``data_status_sports.py`` read the legacy sports bucket). The
+#: canonical env-tiered form carries an env segment (``…-sports-prd-{project_id}``),
+#: whose ``-prd-`` between the group and ``{project_id}`` makes it NOT match this regex.
+LEGACY_BUCKET_TEMPLATE_RE: Final[re.Pattern[str]] = re.compile(
+    r"^(instruments-store|market-data-tick|features)-[a-z]+-\{project_id\}$"
+)
 
 #: Asset-group-split bucket domains (env-tiered + decommissioned at AG cutover).
 ASSET_GROUP_DOMAINS: Final[frozenset[str]] = frozenset(
@@ -113,6 +136,17 @@ class Finding:
     line: int
     func: str
     snippet: str
+    literal: str = ""
+
+    @property
+    def baseline_key(self) -> str:
+        """Line-agnostic identity for the ratchet baseline: repo/file + literal value.
+
+        Deliberately excludes the line number so unrelated edits above a baselined
+        occurrence don't spuriously un-baseline it. Keyed on the matched literal so a
+        DIFFERENT legacy template added to the same file is NOT silently suppressed.
+        """
+        return f"{self.repo}/{self.file}\t{self.literal}"
 
 
 def _iter_py_files(root: Path) -> Iterator[Path]:
@@ -158,21 +192,42 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
     lines = src.splitlines()
     findings: list[Finding] = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
+        # (1) SSOT-bypassing builder CALL with an explicit project_id.
+        if isinstance(node, ast.Call):
+            func = node.func
+            fname = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else None
+            if fname not in BUILDER_NAMES:
+                continue
+            domain = _first_arg_domain(node)
+            if domain is None or domain not in ASSET_GROUP_DOMAINS:
+                continue
+            if not _has_project_id(node):
+                continue
+            snippet = _line(lines, node.lineno)
+            if WHITELIST_MARKER in snippet:
+                continue
+            findings.append(Finding(repo=repo, file=rel, line=node.lineno, func=fname, snippet=snippet))
             continue
-        func = node.func
-        fname = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else None
-        if fname not in BUILDER_NAMES:
-            continue
-        domain = _first_arg_domain(node)
-        if domain is None or domain not in ASSET_GROUP_DOMAINS:
-            continue
-        if not _has_project_id(node):
-            continue
-        snippet = _line(lines, node.lineno)
-        if WHITELIST_MARKER in snippet:
-            continue
-        findings.append(Finding(repo=repo, file=rel, line=node.lineno, func=fname, snippet=snippet))
+        # (2) Legacy no-env bucket-name TEMPLATE literal (``.format()`` style) — a raw
+        #     string constant that reconstructs the deleted no-env bucket, bypassing (1).
+        if (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and LEGACY_BUCKET_TEMPLATE_RE.match(node.value)
+        ):
+            snippet = _line(lines, node.lineno)
+            if WHITELIST_MARKER in snippet:
+                continue
+            findings.append(
+                Finding(
+                    repo=repo,
+                    file=rel,
+                    line=node.lineno,
+                    func="<legacy-template-literal>",
+                    snippet=snippet,
+                    literal=node.value,
+                )
+            )
     return findings
 
 
@@ -194,6 +249,24 @@ def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | N
     return out
 
 
+def _load_baseline(path: Path) -> set[str]:
+    """Load the frozen allowlist of pre-existing legacy-template-literal occurrences.
+
+    Returns a set of ``Finding.baseline_key`` strings. Absent file → empty set.
+    """
+    if not path.is_file():
+        return set()
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict) or "allow" not in raw:
+        return set()
+    allow = raw["allow"]
+    keys: set[str] = set()
+    for entry in allow:
+        if isinstance(entry, dict) and "file" in entry and "literal" in entry:
+            keys.add(f"{entry['file']}\t{entry['literal']}")
+    return keys
+
+
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ban explicit project_id= on asset-group bucket builders (QG STEP 5.72)."
@@ -201,38 +274,71 @@ def main(argv: Iterable[str] | None = None) -> int:
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--scope", default=None, help="Single repo dir name to scope to (per-repo QG mode).")
     parser.add_argument("--source-dir", default=None, help="Package sub-dir within the scoped repo.")
+    parser.add_argument(
+        "--baseline",
+        default=None,
+        type=Path,
+        help="Path to the frozen pre-existing-occurrence allowlist JSON (default: sibling of this script).",
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     workspace_root: Path = args.workspace_root.resolve()
+    baseline_path: Path = args.baseline if args.baseline is not None else Path(__file__).parent / BASELINE_FILENAME
+    baseline: set[str] = _load_baseline(baseline_path)
     scopes = _resolve_scopes(workspace_root, args.scope, args.source_dir)
     if not scopes:
         print("[check_no_explicit_project_id_bucket] no source trees to scan — skipping.")
         return 0
 
-    errors: list[Finding] = []
+    all_findings: list[Finding] = []
     for repo_name, scan_root in scopes:
         repo_root = workspace_root / repo_name
         for py in _iter_py_files(scan_root):
-            errors.extend(_scan_file(py, repo_name, repo_root))
+            all_findings.extend(_scan_file(py, repo_name, repo_root))
+
+    # A builder-call finding (func != literal marker) is NEVER baselineable — the
+    # original strict check has zero pre-existing occurrences. Only legacy-template
+    # LITERALS carry a baseline (pre-existing out-of-scope tech debt).
+    errors: list[Finding] = []
+    suppressed = 0
+    for f in all_findings:
+        if f.func == "<legacy-template-literal>" and f.baseline_key in baseline:
+            suppressed += 1
+            continue
+        errors.append(f)
 
     for f in errors:
+        if f.func == "<legacy-template-literal>":
+            headline = (
+                f"[ERROR] {f.repo}/{f.file}:{f.line}  legacy no-env bucket-name template literal  — "
+                f"a raw '<kind>-<group>-{{project_id}}'.format(...) string rebuilds the legacy no-env "
+                f"bucket that is DELETED at cutover, bypassing the builder-call check."
+            )
+        else:
+            headline = (
+                f"[ERROR] {f.repo}/{f.file}:{f.line}  {f.func}(<asset-group domain>, ..., project_id=...)  — "
+                f"explicit project_id bypasses the cloud-providers.yaml SSOT → legacy no-env bucket."
+            )
         print(
-            f"[ERROR] {f.repo}/{f.file}:{f.line}  {f.func}(<asset-group domain>, ..., project_id=...)  — "
-            f"explicit project_id bypasses the cloud-providers.yaml SSOT → legacy no-env bucket.\n"
+            f"{headline}\n"
             f"         {f.snippet}\n"
-            f"         Drop the project_id arg (delegates to the yaml SSOT → env-tiered -prd- canonical) OR use "
-            f"resolve_bucket_name(cloud=..., kind=..., asset_group=...). If genuinely reading the legacy bucket "
-            f"to migrate it, add inline marker '# {WHITELIST_MARKER}'.",
+            f"         Use resolve_bucket_name(cloud=..., kind=..., asset_group=...) (or drop the project_id arg so "
+            f"the builder delegates to the yaml SSOT → env-tiered -prd- canonical). If genuinely reading the legacy "
+            f"bucket to migrate it, add inline marker '# {WHITELIST_MARKER}'.",
             file=sys.stderr,
         )
 
     if errors:
         print(
-            f"\n[check_no_explicit_project_id_bucket] FAIL — {len(errors)} explicit-project_id occurrence(s).",
+            f"\n[check_no_explicit_project_id_bucket] FAIL — {len(errors)} non-baselined occurrence(s) "
+            f"({suppressed} pre-existing occurrence(s) suppressed by the frozen baseline).",
             file=sys.stderr,
         )
         return 1
-    print("[check_no_explicit_project_id_bucket] OK — 0 explicit-project_id asset-group bucket builders.")
+    print(
+        f"[check_no_explicit_project_id_bucket] OK — 0 non-baselined occurrences "
+        f"({suppressed} pre-existing suppressed by the frozen baseline)."
+    )
     return 0
 
 

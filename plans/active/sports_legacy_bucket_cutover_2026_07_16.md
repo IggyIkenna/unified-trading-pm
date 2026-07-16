@@ -350,8 +350,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 
 ### PHASE 1 — CODE (repoints + lifecycle marks; lands and applies BEFORE any delete)
 
-- [ ] [BACKEND] P0. **T1.1 — Fix the one LIVE code path that reads the legacy bucket, and its path shape, together.**
-      _Mechanism_: `deployment-service/deployment_service/cli/utils/data_status_sports.py:25` hardcodes
+- [x] ✅ [BACKEND] P0. **T1.1 — Fix the one LIVE code path that reads the legacy bucket, and its path shape, together.
+      DONE 2026-07-16 — deployment-service@a535e3c.** `data_status_sports.py` bucket now
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (→ canonical `-prd-`; dropped
+      `DeploymentConfig`/`project_id` plumbing). Path shape: added a `_FIXTURES_CANONICAL_PREFIX` pipeline_mode-aware
+      probe (`…/pipeline_mode=batch_api_football/entity=fixtures/`) as the PRIMARY candidate, KEPT the bare
+      `entity=fixtures` + `entity=fixtures_schedule` + oldest-legacy as fallbacks — mirroring UAC
+      `candidate_parquet_paths()` which itself probes BOTH the pipeline_mode-aware AND bare shapes (canonical genuinely
+      holds `entity=fixtures/` for 2018-2025 AND `pipeline_mode=…/entity=fixtures_schedule/` post-2026-07-14). Both
+      `_load_fixture_counts_for_date` + `_check_league_status` updated. **Runtime-verified against canonical -prd-**:
+      `data-status --service instruments-service --sports-league-breakdown` returns a non-empty league breakdown for
+      2026-07-13→14 (6 leagues, 100%) AND historical 2023-08-12 (23 leagues, 100%). QG green (deployment-service, 87s).
+      _Decision (documented, autonomous rule 1)_: kept the bare `entity=fixtures` probe rather than delete it (the plan
+      called it "pre-canonical") — empirically canonical HAS data at that shape and the UAC SSOT probes it, so removing
+      it would UNDER-report; the pipeline_mode probe is added, not swapped. _Mechanism_:
+      `deployment-service/deployment_service/cli/utils/data_status_sports.py:25` hardcodes
       `_SPORTS_BUCKET_TEMPLATE = "instruments-store-sports-{project_id}"` (used `:139`) — LIVE via
       `cli/commands/data_status.py:25` import → invoked `:362`. Replace with
       `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` and drop the `project_id`
@@ -361,15 +374,42 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       _Gate_: `cd deployment-service && bash scripts/quality-gates.sh --no-fix` green;
       `data-status --asset-group sports` returns a non-empty league breakdown against canonical. _ABORT_: breakdown
       empty post-fix → the path shape is still wrong; do not proceed to delete (this reader is a Phase-4 witness).
-- [ ] [BACKEND] P1. **T1.2 — Close the QG blind spot that let T1.1 exist.** _Mechanism_:
+- [x] ✅ [BACKEND] P1. **T1.2 — Close the QG blind spot that let T1.1 exist. DONE 2026-07-16 —
+      unified-trading-pm@0114f846e (PR #1082).** Extended `check_no_explicit_project_id_bucket.py` (STEP 5.72/5.93) to
+      ALSO flag `ast.Constant` string literals matching
+      `^(instruments-store|market-data-tick|features)-[a-z]+-\{project_id\}$` (the `.format()`-template class the
+      builder-CALL check never saw — exactly the T1.1 bug). **Proved fleet-wide (autonomous rule 11)**: injected
+      reverted-T1.1 literal (`instruments-store-sports-{project_id}` / `market-data-tick-sports-{project_id}`) → FAILs;
+      canonical `-prd-` form → NOT flagged; current tree → OK. The fleet-wide run surfaced **21 pre-existing occurrences
+      (15 unique)** in SSOT-registry / config-default / dependency-checker files, ALL for OUT-OF-SCOPE asset groups
+      (tradfi/calendar/onchain/features-store/features-sports — none is
+      `instruments-store-sports`/`market-data-tick-sports`). Per the T1.2 ABORT branch (">5 pre-existing → baseline +
+      issue doc, don't block the cutover on unrelated repos") they are frozen in
+      `check_no_explicit_project_id_bucket_baseline.json` (a `(repo/file, literal)` ratchet that only goes DOWN) +
+      tracked in `issues/legacy_bucket_template_literals_2026_07_16.md`. No base-service.sh wiring change needed
+      (baseline is the sibling default). QG green (PM). _Mechanism_:
       `scripts/quality_gates/check_no_explicit_project_id_bucket.py` (STEP 5.72) AST-matches
       `get_bucket_name()`/`get_write_bucket_name()` CALLS carrying an explicit `project_id`; a module-level
       string-literal template + `.format()` matches neither → undetected. Extend the gate to flag module-level string
       literals matching `^(instruments-store|market-data-tick|features)-[a-z]+-\{project_id\}$` outside
       `scripts/`/`tests/`. _Gate_: gate FAILS on a reverted T1.1, passes on the fixed tree. _ABORT_: >5 pre-existing
       violations surface → baseline them and file an issue doc; do not block the cutover on unrelated repos.
-- [ ] [INFRA] P0. **T1.3 — Remove the 2 MDPS Cloud Run gcsfuse mounts on the legacy buckets (DELETE, do not repoint).**
-      _Mechanism_: `deployment-service/terraform/services/market-data-processing-service/gcp/main.tf` — `:223`
+- [x] ✅ [INFRA] P0. **T1.3 — Remove the 2 MDPS Cloud Run gcsfuse mounts on the legacy buckets (DELETE, do not repoint).
+      CODE DONE 2026-07-16 — deployment-service@a535e3c. ⚠️ `tofu apply` PENDING — Phase-5 prerequisite (see below).**
+      Deleted both `gcs_volumes` entries in `terraform/services/market-data-processing-service/gcp/main.tf`
+      (`instruments-store-sports` read_only=true + `market-data-tick-sports` read_only=FALSE), replaced with
+      REMOVED-comments matching the 2026-07-12 prediction precedent. `tofu validate` → Success. **⚠️ HARD Phase-5
+      PREREQUISITE (NOT yet applied):** the running MDPS Cloud Run service still has these FUSE mounts until a
+      `tofu apply`. The service + mounts live in terraform state **prefix `terraform/state/prod`** (module
+      `terraform/services/market-data-processing-service/gcp/`, NOT the `dev` default the backend block hardcodes —
+      bootstrap_gcp.sh overrides `--env prod`). The apply was NOT run from this Phase-1 sub-agent: it is a live prod
+      Cloud-Run mutation that must be applied against the CORRECT prod state (I could not safely derive the full prod
+      var-set for two modules + risked concurrent-drift pickup / wrong-state apply — HARD RULE: live-infra-state
+      ambiguity → STOP, don't blind-apply). **Phase-5 owner MUST, immediately BEFORE the physical bucket delete:**
+      re-init the MDPS module backend to `prefix=terraform/state/prod`, `tofu apply` (expect: in-place update of the
+      MDPS Cloud Run service removing 2 volumes, NO bucket create/destroy), then verify the MDPS job EXECUTES GREEN
+      (T1.3 ABORT: MDPS fails to start → restore the mount + re-scope, do NOT proceed to delete). _Mechanism_:
+      `deployment-service/terraform/services/market-data-processing-service/gcp/main.tf` — `:223`
       `{ name="instruments-store-sports", bucket="instruments-store-sports-${var.project_id}", read_only=true }` and
       `:230` `{ name="market-data-tick-sports", bucket="market-data-tick-sports-${var.project_id}", read_only=false }`.
       **`:230` is a live WRITE mount** — deleting the bucket makes the MDPS job **fail to START** (gcsfuse cannot mount
@@ -378,16 +418,36 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       needs no FUSE mount). _Gate_: `tofu plan` shows only the 2 volume removals; `tofu apply`; MDPS job executes green
       post-apply. _ABORT_: MDPS fails to start after apply → it had a real FUSE dependency → restore the mount and
       re-scope; **do not proceed to Phase 5.**
-- [ ] [INFRA] P0. **T1.4 — Canonicalise the 3 hardcoded legacy IAM grants (one-line each).** _Mechanism_:
-      `terraform/gcp/instrument_catalogue_scheduler.tf:34` + `:52` and `terraform/gcp/catalogue_regen_scheduler.tf:49`
-      carry legacy literals inside `google_storage_bucket_iam_member` `for_each` tosets → swap to
-      `instruments-store-sports-prd-central-element-323112` / `market-data-tick-sports-prd-central-element-323112`. The
-      prediction siblings in the same tosets are already `-pred-prd-` (`:36-39`, `:52-56`) — match that pattern. Left
-      unfixed, `tofu apply` **fails** post-delete (IAM member on a nonexistent bucket). _Gate_: `tofu plan` shows 3 IAM
-      member replacements, no bucket diff; apply green. _ABORT_: plan wants to create/destroy a bucket → STOP (see
-      T1.5).
-- [ ] [INFRA] P1. **T1.5 — Refresh the stale docstrings/comments + the SSOT-contradicting TF header.** _Mechanism_:
-      doc-only, zero runtime impact —
+- [x] ✅ [INFRA] P0. **T1.4 — Canonicalise the 3 hardcoded legacy IAM grants (one-line each). CODE DONE 2026-07-16 —
+      deployment-service@a535e3c. ⚠️ `tofu apply` PENDING — Phase-5 prerequisite (same prod-state note as T1.3).**
+      Repointed all 3 legacy literals to `-prd-`: `instrument_catalogue_scheduler.tf` (`instruments-store-sports` +
+      `market-data-tick-sports` readers) and `catalogue_regen_scheduler.tf` (`instruments-store-sports` reader),
+      matching the sibling `-pred-prd-` pattern. `tofu validate` → Success; `tofu fmt` clean. **⚠️ NOT yet applied** —
+      these IAM members are in terraform state **prefix `terraform/state/prod`** (module `terraform/gcp/`; confirmed the
+      catalogue IAM resources are in the prod state, absent from dev). A `-refresh=false` targeted plan was unreliable
+      (no state-knowledge) and applying against the wrong (dev) prefix would create duplicate/wrong IAM. **Phase-5 owner
+      MUST** `tofu apply` the `terraform/gcp` module against `prefix=terraform/state/prod` before the delete (expect: 3
+      IAM member destroy-old-legacy + create-new-`-prd-`, NO bucket diff — T1.4 ABORT: plan wants to create/destroy a
+      bucket → STOP). Left unapplied at delete time, `tofu apply` FAILS on an IAM member of a nonexistent bucket.
+      _Mechanism_: `terraform/gcp/instrument_catalogue_scheduler.tf:34` + `:52` and
+      `terraform/gcp/catalogue_regen_scheduler.tf:49` carry legacy literals inside `google_storage_bucket_iam_member`
+      `for_each` tosets → swap to `instruments-store-sports-prd-central-element-323112` /
+      `market-data-tick-sports-prd-central-element-323112`. The prediction siblings in the same tosets are already
+      `-pred-prd-` (`:36-39`, `:52-56`) — match that pattern. Left unfixed, `tofu apply` **fails** post-delete (IAM
+      member on a nonexistent bucket). _Gate_: `tofu plan` shows 3 IAM member replacements, no bucket diff; apply green.
+      _ABORT_: plan wants to create/destroy a bucket → STOP (see T1.5).
+- [x] ✅ [INFRA] P1. **T1.5 — Refresh the stale docstrings/comments + the SSOT-contradicting TF header. DONE 2026-07-16
+      — deployment-service@a535e3c + deployment-api@1390340 + deployment-ui@c425f00.** Canonicalised: deployment-api
+      docstrings (`upcoming_fixtures.py`, `data_query_service.py`, `_csv_export.py`), deployment-ui `client.ts` JSDoc,
+      the 3 vm-script comments/heredocs (`launch-sfi-forward-poll.sh`, `launch-api-football-backfill-vm.sh`,
+      `launch-sports-manifest-rescan-vm.sh` — all pure comments/error-text; the VM resolves the bucket at runtime, so no
+      functional change, T1.6-parked scripts untouched functionally), and the `terraform/gcp/main.tf:6-8` Group-A header
+      (rewritten to state ALL buckets are env-tiered per the 2026-05-11 reversal; warns never to re-introduce a no-env
+      Group-A bucket). **GATE MET**: `rg 'sports-central-element-323112'` over live code/config → the ONLY remaining hit
+      is `_imports_reconcile.tf` (Phase-5, the terraform import ID for the delete — correctly deferred). Residual `.md`
+      hits are `HANDOFF_features_sports_phase_4_to_8_2026_05_06.md` (a historical handoff record, out of scope) +
+      `DOC_INDEX.generated.md` (gitignored generated index). QG green on all 3 repos. _Mechanism_: doc-only, zero
+      runtime impact —
       `deployment-api/deployment_api/services/{upcoming_fixtures.py:4,     data_query_service.py:441, data_status_drilldown/_csv_export.py:263}`
       docstrings say legacy while the code (`:68`, `:448`, `:294`) already calls `resolve_bucket_name`;
       `deployment-ui/src/api/client.ts:2640` JSDoc;
@@ -397,12 +457,17 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       2026-05-11 / Phase 0e (`cloud-providers.yaml:136-140`). Leaving it invites a future agent to re-add a no-env
       Group-A bucket. _Gate_: `rg -c 'sports-central-element-323112'` over non-`scripts/` trees → 0 outside the T1.6
       one-off corpus. _ABORT_: none (doc-only).
-- [ ] [INFRA] P1. **T1.6 — Lifecycle-mark the ONE unmarked one-off; leave the other 26 parked.** _Mechanism_:
-      `market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical_v9.py` is the **sole** file in
-      the 27-file legacy-sports script corpus without a marker — **CORRECTION (verified 2026-07-16)**: it _does_ now
-      carry `# Epic: sports_master` / `# Lifecycle: oneoff` / `# Delete-when: after E8 legacy-sports-bucket deletion …`
-      at `:2-4`, so the code leg's finding is **already remediated**; this todo is a re-verify, not an edit. The other
-      ~26 (`instruments-service/scripts/**`, `features-service/scripts/sports/migrate_gcs_entity_filenames.sh:18`,
+- [x] ✅ [INFRA] P1. **T1.6 — Lifecycle-mark the ONE unmarked one-off; leave the other 26 parked. DONE 2026-07-16 —
+      re-verify only, no edit.** Confirmed `migrate_sports_canonical_v9.py:2-4` already carries all 3 markers
+      (`# Epic: sports_master` / `# Lifecycle: oneoff` / `# Delete-when: after E8 legacy-sports-bucket deletion …`) —
+      the code leg's finding was already remediated. The other ~26 legacy-reader one-offs (incl. the 3 vm scripts whose
+      COMMENTS T1.5 refreshed) remain functionally parked (legacy-by-design; deletion is T6.8). No file change.
+      _Mechanism_: `market-tick-data-service/market_tick_data_service/scripts/migrate_sports_canonical_v9.py` is the
+      **sole** file in the 27-file legacy-sports script corpus without a marker — **CORRECTION (verified 2026-07-16)**:
+      it _does_ now carry `# Epic: sports_master` / `# Lifecycle: oneoff` /
+      `# Delete-when: after E8 legacy-sports-bucket deletion …` at `:2-4`, so the code leg's finding is **already
+      remediated**; this todo is a re-verify, not an edit. The other ~26 (`instruments-service/scripts/**`,
+      `features-service/scripts/sports/migrate_gcs_entity_filenames.sh:18`,
       `market-tick-data-service/scripts/patch_l6_legacy_manifest_mtds_2026_06_29.py:70`) hardcode legacy **by design**
       (they are legacy readers; repointing them to canonical would defeat their purpose) and are correctly parked.
       _Gate_: `rg -L 'Lifecycle:' <the 27 files>` → empty. _ABORT_: none. **Do NOT delete any of them in this phase** —
@@ -1074,3 +1139,36 @@ with `timeCreated >= 08:08:43Z` (genuine writes; immune to the 90-day OLM `updat
 **⇒ PHASE 0 COMPLETE. gate_pass=true: all writers PAUSED (verified), per_vm drained, consolidators PAUSED, snapshots
 verified (19/19 crc-matched), legacy buckets QUIET. Phase 1 (code repoints) / Phase 2 (move) may proceed — strictly
 sequential, next phase owner.**
+
+---
+
+### PHASE 1 COMPLETE — CODE (2026-07-16, next-phase owner: Phase 2 MOVE)
+
+All six T1 items **shipped + verified**. Shas: **T1.1** deployment-service@a535e3c · **T1.2**
+unified-trading-pm@0114f846e (PR #1082, auto-merge) · **T1.3/T1.4** deployment-service@a535e3c (terraform CODE) ·
+**T1.5** deployment-service@a535e3c
+
+- deployment-api@1390340 + deployment-ui@c425f00 · **T1.6** re-verify (no edit). QG green on all 4 repos
+  (deployment-service 87s, deployment-api 135s, deployment-ui 76s [Node22], unified-trading-pm).
+
+* **T1.1** runtime-verified against canonical `-prd-` (non-empty league breakdown for post-cutover AND historical
+  dates). The reader now probes the pipeline_mode-aware canonical path first, with bare `entity=fixtures` +
+  `fixtures_schedule` + legacy as fallbacks (mirrors UAC `candidate_parquet_paths()`).
+* **T1.2** gate proven fleet-wide (fails on reverted-T1.1, ignores `-prd-`); 21 pre-existing out-of-scope occurrences
+  baselined + issue-doc'd (`issues/legacy_bucket_template_literals_2026_07_16.md`). None is in the cutover delete scope.
+* **T1.5** gate met: no `sports-central-element-323112` in live code/config except the Phase-5 `_imports_reconcile.tf`.
+
+> **⚠️⚠️ HARD HANDOFF TO PHASE-5 OWNER — TWO `tofu apply`s ARE A PREREQUISITE OF THE BUCKET DELETE (NOT yet run):** T1.3
+> (MDPS FUSE-mount removal) and T1.4 (catalogue IAM `-prd-` repoint) shipped as CODE only. Both live in terraform state
+> **`prefix=terraform/state/prod`** (T1.3 module `terraform/services/market-data-processing-service/gcp/`; T1.4 module
+> `terraform/gcp/`). This Phase-1 sub-agent did NOT apply them: a live prod Cloud-Run/IAM mutation applied against the
+> wrong state (the backend block defaults to `dev`, which does NOT hold these resources) would create duplicate/wrong
+> infra — HARD RULE: live-infra-state ambiguity → STOP. **Before the physical bucket delete, the Phase-5 owner MUST:**
+> (1) `tofu apply` both modules against `prefix=terraform/state/prod`; (2) confirm T1.3 diff = MDPS Cloud Run in-place
+> volume removal (NO bucket create/destroy) + T1.4 diff = 3 IAM destroy-legacy/create-`-prd-` (NO bucket diff); (3)
+> verify the MDPS job EXECUTES GREEN post-apply (T1.3 ABORT: MDPS fails to start → restore mount, do NOT delete).
+> `tofu validate` on both modules = Success (2026-07-16). Leaving either unapplied at delete time = MDPS fails to START
+> (deleted FUSE bucket) and `tofu apply` FAILS (IAM member on a nonexistent bucket).
+
+_Note (disk hygiene)_: freed ~1.2G of orphaned bare-`/tmp` tmpfs temp (`cf_audit_*`, stale loose parquets, 1-2 days old,
+no live process) that was ENOSPC-failing QG runs; foreign session scratchpads left untouched.

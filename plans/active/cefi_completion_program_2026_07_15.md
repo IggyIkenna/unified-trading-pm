@@ -141,7 +141,22 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
       CRYPTOFACILITIES, and the lowercase-itype strays (`spot`/`spot_pair`/`perpetual`): (1) verify every aliased
       shard's data already exists under the canonical venue+UPPERCASE itype; (2) migrate any genuinely-unique data; (3)
       **auto-delete** the alias manifest rows + GCS objects; (4) re-consolidate the index. Evidence: pre/post row
-      counts + GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.**
+      counts + GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.** **TOOL ALREADY
+      BUILT — this is the `expected_unattempted`-side portion of C**:
+      `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` (snapshot-first,
+      dry-run-default, STOP-ON-SURPRISE `[5000,250000]`, post-apply verify gate). Freshly re-confirmed 2026-07-16T09:21Z
+      (dry-run re-run, read-only): **49,732** stale-shape eu rows live right now (42,993 legacy pre-`enumerator_run_id`
+      debris under retired venue strings CRYPTOFACILITIES/OKEX*/BITFINEX-DERIVATIVES/etc + lowercase-raw ids,
+      ~4,951-5,700 bundle-grain old-shape duplicates for DERIBIT/OKX-FUTURES `futures_chain`/`options_chain` left over
+      from the pre-`a2468dd9` enumerator run) — essentially unchanged from the 07-15T22:2xZ measurement (49,720),
+      confirming (a) nothing new is accumulating and (b) `--apply` has NOT been run yet. **Still BLOCKED-OPERATOR** —
+      sign-off already requested via `/blocked` in
+      `issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (do not duplicate the ask;
+      this todo's C is the same gated mutation). Exact command once approved:
+      `cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false .venv/bin/python scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`.
+      See 2026-07-16T09:xxZ Progress Log entry below for the full re-verification + why a bare enumerator re-run cannot
+      self-heal this (append-only writer + per-key consolidator dedup never collapses two DIFFERENT `instrument_id`
+      values for what should be the same cell).
 
 ### Phase 4 — close + prove
 
@@ -797,3 +812,133 @@ onset at 128.
   earlier WS-H run is now moot.)
 - G-code net: EQUITY_PERP-typing SUPERSEDED by the tag approach; the dedup + ASTER-dating parts of G/D remain landed +
   correct. Design principle codified: instrument_type = mechanics only; underlying-asset-class = a tag/mapping.
+
+### Two-atom `expected_unattempted` diagnosis — INDEPENDENTLY RE-VERIFIED, already fully code-fixed, still BLOCKED-OPERATOR on the corpus mutation — 2026-07-16T09:3xZ
+
+**Dispatched to diagnose the "eu rows carry two atom shapes" finding fresh** (operator-cited BINANCE-FUTURES `hotusdt`
+lowercase-raw + empty `instrument_type` vs KRAKEN-FUTURES canonical `KRAKEN-FUTURES:PERPETUAL:PIXEL-USD@LIN`). Read the
+live prd `_index/availability_index.parquet` directly (pandas+pyarrow, IS `.venv`, column-projected + filtered — never a
+whole-corpus load) across BINANCE-FUTURES/BITGET-FUTURES/KRAKEN-FUTURES/OKX-SPOT/DERIBIT, cross-tabbed by `written_at`.
+**Confirmed the two-shape claim is real, not a misread**, and it decomposes into exactly the same two classes a prior
+session (`backend_engineer`, slot-6, 2026-07-15T22:2xZ) already root-caused and fixed in
+`issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (final P0 + P1 todos, both checked
+`[x]`) — this session found nothing new on the code side, only reconfirmed the diagnosis live + refreshed the
+still-pending corpus-mutation numbers:
+
+1. **Class A — legacy pre-`enumerator_run_id` debris (42,993 rows, confirmed exact match to the prior session's
+   count).** `written_at` 2026-04-22..2026-06-28 (mostly 2026-06-23/24), under RETIRED venue-name strings
+   (`CRYPTOFACILITIES`=31,498 which is Kraken Futures' old exchange name, plus `BITFINEX`/`BITFINEX-DERIVATIVES`/
+   `OKEX`/`OKEX-SWAP`/`OKEX-FUTURES`/bare `KRAKEN`/`BINANCE`/`BYBIT-SPOT`/`UPBIT` — NONE of which appear in
+   `unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP["cefi"]` today, confirmed by direct
+   grep) plus a smaller current-venue-name residual (`BINANCE-FUTURES` 910, `DERIBIT` 276, `KRAKEN-FUTURES` 80,
+   `BITGET-FUTURES` 4, `HYPERLIQUID` 26, `OKX-SWAP` 29). **Code-verified this is NOT reproducible by the current
+   enumerator**: `_enumerate_v2_cefi` (current HEAD) only iterates `VENUES_BY_ASSET_GROUP["cefi"]`'s CURRENT venue
+   strings and always sets `instrument_type=instr.instrument_type` (non-blank, from the catalogue) +
+   `instrument_id=instr.instrument_id` (canonical, per the catalogue's own docstring "canonical instrument identifier")
+   for every `expected_unattempted` emission site — it structurally cannot emit `instrument_type=''` +
+   lowercase-raw-symbol. This is pure dead debris under venue strings the pipeline no longer even visits.
+2. **Class B — bundle-grain old/new shape DUPLICATION (DERIBIT + OKX-FUTURES `futures_chain`/`options_chain`).**
+   Full-corpus scan: **4,951 OLD-shape rows** (`instrument_id=<underlying>`, `underlying=''` — e.g. DERIBIT trades rows
+   `instrument_id=ETH/BTC/SOL`), ALL `written_at=2026-07-15T01:32:56Z` (the enumerator run BEFORE the bundle-grain fix),
+   sitting alongside **5,022 NEW-shape rows** (`instrument_id=''`, `underlying=<U>` — the MTDS-writer-matching shape),
+   `written_at=2026-07-15/16T01:32-ish` (the run AFTER `instruments-service@a2468dd9`, "fix(cefi-eu): canonicalize
+   bundle-grain instrument_id/underlying shard atom", 2026-07-15T22:22:33Z, confirmed already an ancestor of HEAD).
+   Timeline confirms: the OLD-shape rows are a fresh same-week duplicate left behind by a pre-fix run, not decades-old
+   debris — the fix landed correctly (verified live: `is_bundle` branch at `enumerate_expected_universe.py:1117-1123`
+   already sets `seed_instrument_id=""`/`seed_underlying=instr.underlying or instr.instrument_id` for
+   `GRAIN_BUNDLE_BY_UNDERLYING` types) but the manifest is append/upsert-only so the pre-fix rows were never removed.
+3. **Why a bare re-run cannot self-heal either class**: read `codex/05-infrastructure/manifest-consolidator-ssot.md` —
+   the DuckDB consolidator's dedup key is `(date, venue, data_type, service_name)` + optional dims PRESENT IN THE UNION
+   SCHEMA (instrument_type/instrument_id included for per-instrument enumerator shards), last-write-wins by `written_at`
+   DESC. Two rows with DIFFERENT `instrument_id` values are DIFFERENT keys — the consolidator legitimately keeps BOTH
+   forever. Confirmed empirically: the 2026-07-16T01:32 (post-fix) run added the correct bundle rows ALONGSIDE the
+   2026-07-15T01:32 (pre-fix) rows rather than replacing them, and the April-June Class-A debris is still present after
+   TWO subsequent full enumerator runs (07-15 and 07-16) that both wrote correct canonical rows for the same venues.
+   **Re-materialization only ADDS the missing correct atom; it never SUBTRACTS a superseded/dead one** — the fix
+   mechanism is necessarily a targeted DELETE, not a re-enumerate.
+4. **This exact mechanism already exists, shipped, dry-run-verified, and is BLOCKED-OPERATOR only on `--apply`**:
+   `instruments-service@7f1aed10` — `scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py`. Re-ran its
+   dry-run fresh (2026-07-16T09:21Z, read-only): **49,732** total stale-shape eu rows in the live index right now
+   (within its own STOP-ON-SURPRISE bound `[5000,250000]`) — 12 more than the 49,720 measured 07-15T22:2xZ, i.e.
+   essentially flat over ~11h, confirming this is a small, stable, non-growing residual (NOT the 2.77M-scale gap the
+   program's earlier framing implied — that separate, much larger number was the CAPTURED-side raw-vs-canonical
+   mismatch, already fixed for future writes by `mtds@5d44a197`/`90ecde17`, tracked in the same issue doc's earlier
+   todos). `--apply` was intentionally **NOT run this session** — a prior session already framed this exact mutation as
+   an "OPERATOR DECISION" and filed a `/blocked` sign-off request; re-running it myself would duplicate/bypass a
+   standing gate rather than resolve it. Nothing indicates the sign-off has been actioned yet.
+5. **Sentinels.py Tier-3 question (task item 5) — SAME ROOT CLASS, DIFFERENT MECHANISM, ALREADY FIXED.** Verified live:
+   `sentinels.py::_emit_tier3_for_dt` compares `expected_instruments` (canonical, from `CeFiCatalogReader` /
+   `get_expected_instruments_for_venue`) against `captured_instruments`. Traced
+   `preflight.py::_canonicalize_captured_ instrument_id` end-to-end: its packed-symbol branch only strips the QUOTE
+   suffix, never a venue-specific PREFIX, so `_canonicalize_captured_instrument_id("KRAKEN-FUTURES", "PI_ETHUSD")` →
+   `"PI_ETH-PERP"` (confirmed by reading the function body), which can never equal the catalogue's
+   `KRAKEN-FUTURES:PERPETUAL:ETH-USD@LIN` — reproducing the plan's claim exactly. This is the SAME DISEASE as the
+   eu-manifest two-atom issue (independent, divergent canonicalizer implementations for what must be one shard atom —
+   now a confirmed THIRD implementation alongside the enumerator's and
+   `venue_fetch.py::_canonicalize_manifest_instrument_id`'s) but a SEPARATE INSTANCE, not literally caused by the same
+   stale manifest rows (it is a live runtime comparison bug, not historical residue). **Already fixed**:
+   `market-tick-data-service@bbf6649c` (confirmed ancestor of current MTDS HEAD) adds the canonical
+   `_canonicalize_manifest_instrument_id` output ALONGSIDE the legacy heuristic's output into
+   `captured_per_instrument_shards` for Tardis venues (`venue_fetch.py:471-478`) — cheap, correct regardless of which
+   shape `expected_instruments` takes on a given call, with its own dedicated unit tests. No further action needed here.
+6. **Side observation (not this task's scope, flagging only)**: spot-checked recent `captured` rows for
+   KRAKEN-FUTURES/book_snapshot_5 — of 590 rows written since 2026-07-15, only 237 are canonical-shaped, 353 are STILL
+   raw (`PI_ETHUSD` etc., written as late as 2026-07-15T14:56Z). Consistent with the plan's own already-tracked
+   deployment-lag finding (pre-fix Tardis VM tarballs still in the field as of the last observation) — not a new defect,
+   not re-investigated further here.
+
+**Net**: no new code fix required (the enumerator + sentinels.py fixes are both already shipped and correct); the
+remaining action is the already-designed, already-gated `--apply` of
+`purge_stale_shape_cefi_expected_unattempted_ 2026_07_15.py` (workstream C above). Did not run it. Did not touch VMs,
+codex/, or any code.
+
+### ✅ WRITER FIX VERIFIED IN PROD + I over-stated the eu-atom blocker (correction) — 2026-07-16T08:15Z
+
+**Correction to my own earlier framing.** I told the operator (and journaled) that the stale per-venue eu ATOM was "the
+real blocker preventing coverage from EVER moving via fetching — the two sides speak different atoms." **That was WRONG,
+verified against the live manifest:**
+
+BINANCE-FUTURES/trades, canonical(`:`)-vs-raw crosstab:
+
+| status               | raw    | canonical   |
+| -------------------- | ------ | ----------- |
+| expected_unattempted | **25** | **141,708** |
+| captured             | 14,300 | 0           |
+
+The **eu side is 99.98% canonical** — my earlier "eu is lowercase-raw `hotusdt`" claim was a `head(3)` sampling artifact
+that surfaced 25 stale rows out of 141k. The real mismatch was eu-canonical **vs captured-raw**, and captured-raw is the
+WRITER's output, not an enumerator two-shape problem. The eu-atom shape debris (verified by the eu-atom investigation)
+is only **~49,732 rows** total (mostly legacy `CRYPTOFACILITIES`/`OKEX` venue-name debris + 4,951 bundle-grain dupes),
+already diagnosed, with a snapshot-first purge script
+(`instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py`, `--apply` operator-gated). It
+is a small cleanup, NOT the 2.77M blocker. Retracting the "no fetching can move coverage until this lands" claim.
+
+**The writer fix (`mtds@5d44a197`) IS working in production — FIRST hard verification.** KRAKEN-FUTURES captured rows,
+canonical-vs-raw by write date:
+
+| write date     | raw     | canonical |
+| -------------- | ------- | --------- |
+| ≤ 2026-07-15   | 241,969 | **0**     |
+| **2026-07-16** | 7       | **538**   |
+
+2026-07-16 is the first date in the entire corpus with canonical captured `instrument_id`s — written by the current
+fixed VM (`cefi-queue-heavy-binancefutu-x15-20260716-075338`, tarball ⊃ mtds@5d44a197). Three prior eu-tests were
+invalid (January eu=0 zone ×2, preemption); THIS is the clean signal the fix eluded. Canonical captures now match the
+canonical eu atom, so they WILL close eu cells as the backfill proceeds through the gap.
+
+**Corrected forward model:**
+
+1. The running fixed VM writes canonical captures → these close canonical eu cells → coverage moves (directionally
+   proven; too few rows yet to move the aggregate, but the mechanism is now verified end-to-end).
+2. The ~3.13M HISTORICAL raw captured rows (pre-fix) are the real bulk-uncredited set — they become creditable via
+   EITHER the operator-gated relabel `--apply` (82.7% resolvable; instruments-service@f021cb2b dry-run) OR natural
+   re-fetch by the backfill (which now writes canonical). Relabel is far cheaper than re-fetch.
+3. The ~50k eu-shape debris: the operator-gated purge script. None of these three is "coverage can't move" — they are
+   cleanup + a relabel-vs-refetch cost decision.
+
+**sentinels.py Tier-3** (the third divergent canonicalizer): already fixed `market-tick-data-service@bbf6649c`
+(confirmed ancestor of HEAD) per the eu-atom investigation.
+
+**Net**: the eu-atom todo is NOT new code — it's the two already-gated operator decisions (purge + relabel). The writer
+fix is verified. What remains genuinely open is operator sign-off on relabel/purge, and letting the fixed backfill grind
+(which now genuinely closes cells).
