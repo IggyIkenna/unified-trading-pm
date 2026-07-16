@@ -43,6 +43,7 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
 assigned_role: data-pipeline
 drift_direction: none
+depends_on: []
 ---
 
 # Out-of-window exclusion is already correct — write-path traced, no fix needed
