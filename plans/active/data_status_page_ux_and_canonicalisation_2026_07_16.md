@@ -133,6 +133,30 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — P7 CeFi chain-axis gate (backend P1) shipped
+
+- **Root cause (trace-first, live-verified against the cefi availability index):** the cefi manifest
+  (`gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet`) holds BOTH the canonical
+  combined form (`venue=PACIFICA-SOLANA`, empty chain) AND residual split rows (`venue=PACIFICA, chain=SOLANA` /
+  `venue=LIGHTER, chain=ZKSYNC`) — 4617 chain-nonempty rows, whose ONLY distinct chains are `SOLANA` + `ZKSYNC`. The
+  Instrument-Coverage-Summary's `extras["chains"]` sub-dimension (`_build_v4_sub_dimensions`) built a chains breakdown
+  from ANY populated `chain` column, so cefi manufactured `SOLANA`/`ZKSYNC` chain sub-rows. `_build_breakdowns` was
+  already clean (UAC `BREAKDOWN_AXES[(is,cefi)] = (instrument_type, data_type)`, no chain).
+- **Fix:** gated the `extras["chains"]` sub-dimension on `cat == 'defi'` (read-side display gate; manifest query key
+  unchanged). UI grid renders `extras["chains"]` verbatim → no UI change needed. `deployment-api@47a7f67`.
+- **DEFERRED finding (manifest-level drift, out of P7 read-side scope):** the split rows `venue=PACIFICA chain=SOLANA` /
+  `venue=LIGHTER chain=ZKSYNC` are a WRITER-side shard-atom drift — cefi keys on `venue` alone, so a chain should never
+  be stamped. These split rows ALSO duplicate the venue axis (`PACIFICA` vs `PACIFICA-SOLANA` render as two venues).
+  This is a data-correctness finding requiring a manifest canonicalization migration (collapse
+  `venue=PACIFICA,chain=SOLANA` → `venue=PACIFICA-SOLANA,chain=""`), tracked as P7-followup below — NOT fixed by the
+  read-side gate.
+
+- [ ] [DATA] P2. _(P7 follow-up — manifest drift)_ Canonicalize the cefi split rows: collapse
+      `venue={PROTOCOL}, chain={CHAIN}` → `venue={PROTOCOL}-{CHAIN}, chain=""` for `PACIFICA-SOLANA`/`LIGHTER-ZKSYNC` in
+      the cefi availability index (one-off migration, pattern `scripts/canonicalize_*_2026_*.py`, run on real infra) so
+      the venue axis stops showing `PACIFICA` + `PACIFICA-SOLANA` as two venues. Also root-cause the writer path that
+      stamped `chain` for a cefi venue (should key on `venue` alone per the UAC shard-atom matrix).
+
 ### 2026-07-16 — P1 Honest Coverage FIXED (immediate + durable), verified live
 
 - **Root cause (live-verified):** the Honest Coverage card is a verbatim mirror of
@@ -404,8 +428,16 @@ across chains) need the chain axis.
   shard-level CSV (`download-shard-csv`) present + consistent across AGs; the "instruments breakdown" button is
   removed/merged. pw:L2.
 
-- [ ] [BACKEND] P1. Trace the venue→chain derivation and gate it on `asset_group == 'defi'` (cefi = venue-only). Fix in
-      the backend breakdown builder + the UI grid renderer as needed.
+- [x] [BACKEND] P1. ✅ Gate the venue→chain derivation on `asset_group == 'defi'` (cefi = venue-only) —
+      `_build_v4_sub_dimensions` chains breakdown now fires only for `cat == 'defi'` (`breakdowns_domain.py`).
+      Trace-first confirmed the leak: the live cefi manifest holds residual split rows (`venue=PACIFICA chain=SOLANA` /
+      `venue=LIGHTER chain=ZKSYNC` — 4617 chain-nonempty rows, only distinct cefi chains `SOLANA`/`ZKSYNC`);
+      `_build_breakdowns` already uses the UAC axis matrix (cefi = instrument_type/data_type, no chain) so only the
+      ungated `extras["chains"]` sub-dimension leaked. UI grid needs no change — it renders the backend
+      `extras["chains"]` verbatim, so gating the backend suppresses cefi chain sub-rows. — deployment-api@47a7f67 +
+      Evidence: `test_v4_sub_dimensions_chain_gated_on_defi.py` (cefi→no chains, defi→chains) + quality-gates.sh green
+      (117s). _(Read-side display gate only; manifest query key unchanged. NOTE — the writer-side split rows
+      `venue=PACIFICA chain=SOLANA` are a separate manifest drift, out of P7's read-side scope; see Progress Log.)_
 - [ ] [UI] P2. Resolve the "instruments breakdown" button per the P5 decision; confirm shard-level CSV consistency.
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
