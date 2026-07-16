@@ -129,11 +129,15 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       `mtds-solana-drift-backfill` — protective, stops the OOM path + Helius API spend. Verify via
       `gcloud compute     instances list` (project `central-element-323112`) before/after. (repo: deployment-service /
       GCP console)
-- [ ] [INFRA] P0. Re-route `mtds-solana-drift-backfill`'s launcher (`launch-mtds-solana-drift-backfill-vm.sh`, already
-      registered in `VM_PREFIX_TO_BUCKET` — reuse it, do not hand-roll a new name) to invoke
+- [x] ✅ [INFRA] P0. Re-route `mtds-solana-drift-backfill`'s launcher (`launch-mtds-solana-drift-backfill-vm.sh`,
+      already registered in `VM_PREFIX_TO_BUCKET` — reuse it, do not hand-roll a new name) to invoke
       `backfill_drift_v2_historical.py` instead of the legacy `solana_defi_handler.py` Helius path (`VM_TASK` routing
       lives in `setup-data-pipeline-vm.sh` ~line 1410/1243). **Provision e2-highmem-8, not the default e2-standard-4**,
-      per the manifest-index-OOM caveat above. Backfill VMs default SPOT per CLAUDE.md. (repo: deployment-service)
+      per the manifest-index-OOM caveat above. Backfill VMs default SPOT per CLAUDE.md. (repo: deployment-service) —
+      `deployment-service@ee859e4`: `setup-data-pipeline-vm.sh`'s `solana-drift-backfill` VM_TASK branch now invokes
+      `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets --data-types --start --end`
+      (VM_DATA_TYPES defaults `funding;trades`); launcher `MACHINE_TYPE` default changed to `e2-highmem-8`. SPOT default
+      unchanged (already SPOT). QG green, dry-run verified (`Machine: e2-highmem-8`), module import path confirmed.
 - [ ] [DATA] P1. Reconcile DRIFT `perp_funding`/`perp_trades` manifest cells: (a) the 2025-01-09 SOL-PERP shard this
       session wrote to GCS but whose `record_captured()` may not have durably persisted (killed mid-close on both
       verify-first runs — check `read_availability_index` for this shard and re-run to completion on a properly-sized VM
