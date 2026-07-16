@@ -153,9 +153,31 @@ RENAG_FAIL_WINDOW_HOURS = 6.0
 # reaches FLAP_TRANSITION_THRESHOLD the workflow is "flapping" — per-flip alerts are
 # downgraded from CRITICAL/RENAG_WORKFLOW_FAIL_MIN to WARNING/RENAG_FLAPPING_MIN so the
 # channel is not flooded, while a distinct "flapping" alert key still surfaces the pattern.
-FLAP_DETECT_RUNS = 5          # inspect this many recent completed runs per workflow
+FLAP_DETECT_RUNS = 5  # inspect this many recent completed runs per workflow
 FLAP_TRANSITION_THRESHOLD = 3  # ≥ this many fail↔success flips in that window = "flapping"
-RENAG_FLAPPING_MIN = 240       # re-nag cooldown for flapping workflows (4 h)
+RENAG_FLAPPING_MIN = 240  # re-nag cooldown for flapping workflows (4 h)
+# ── Self-hosted glue-runner starvation (CI cost reduction B1) ─────────────────────
+# Once PM's glue workflows run on the self-hosted pools, a dead VM becomes SILENT: GitHub keeps
+# ACCEPTING the dispatches, the jobs just sit `queued`, and NOTHING here would notice — the other
+# detectors watch for FAILURES, and a queued job is not a failure until GitHub kills it at 24 h.
+# That window loses ci_status transitions → stale Firestore → blocked promotes (MAIN_GREEN is the
+# dep-on-main gate staging-to-main.yml STAGE 1.8 reads).
+#
+# NOTE this is a CORRECTNESS alarm, not a cost one: queue time is FREE (GitHub bills execution
+# minutes on HOSTED runners, and a self-hosted-labelled job never lands on billed hardware), so a
+# dead VM is the cheapest possible state. The urgency is data loss at 24 h, nothing else.
+#
+# This detector lives HERE rather than in its own workflow on purpose: ci-health is already
+# KEEP-M hosted (it must NOT run on the box it watches) and already crons */15, so the check is a
+# step in an ALREADY-BILLED job (~$0). A standalone watchdog would cost ~$52/mo at */5 or ~$17/mo
+# at */15 (per-job 1-min minimum) — a third of the saving this whole plan exists to capture.
+# SSOT: plans/active/github_actions_ci_cost_reduction_2026_07_15.md.
+GLUE_QUEUED_ALERT_MIN = 10  # operator 2026-07-16: a glue job queued longer than this pages
+RENAG_GLUE_STARVED_MIN = 15  # operator 2026-07-16: page LOUDLY every 15 min until it is fixed
+# The two pools' distinguishing labels. DISJOINT by design — `glue-writer` deliberately does NOT
+# carry `glue`, because runner label matching is a subset test and a writer carrying both would
+# also match `runs-on: [self-hosted, glue]` and steal the movers' jobs.
+_GLUE_LABELS = frozenset({"glue", "glue-writer"})
 # A head commit carrying either marker tells GitHub Actions to skip push+pull_request runs for
 # that SHA — so close+reopen never re-fires v2; the recovery must be a workflow_dispatch instead.
 # GitHub's full CI-suppression token set (substring match ANYWHERE in the message — even a
@@ -806,6 +828,118 @@ def detect_billing_block(repos: list[str], now: _dt.datetime, fresh_hours: float
     return None
 
 
+def _glue_runner_counts() -> dict[str, tuple[int, int]]:
+    """``{label: (online, idle)}`` for each glue pool label. Best-effort → zeros on any gh error.
+
+    NOTE the two GitHub payloads disagree on shape and it is easy to get wrong: the *runners* API
+    returns ``labels`` as a list of OBJECTS (``{id, name, type}``), while the *jobs* API returns
+    ``labels`` as a list of plain STRINGS. This reads the object form; ``detect_glue_starvation``
+    reads the string form.
+    """
+    # fromkeys shares ONE value object across keys — safe here only because tuples are immutable.
+    counts: dict[str, tuple[int, int]] = dict.fromkeys(sorted(_GLUE_LABELS), (0, 0))
+    payload = gh_json(["api", f"/repos/{ORG}/{_PM_DISPATCH_REPO}/actions/runners"])
+    if not isinstance(payload, dict):
+        return counts
+    runners = payload.get("runners")
+    if not isinstance(runners, list):
+        return counts
+    for label in list(counts):
+        online = 0
+        idle = 0
+        for runner in runners:
+            if not isinstance(runner, dict):
+                continue
+            names = {str(item.get("name")) for item in (runner.get("labels") or []) if isinstance(item, dict)}
+            if label not in names:
+                continue
+            if runner.get("status") == "online":
+                online += 1
+                if not runner.get("busy"):
+                    idle += 1
+        counts[label] = (online, idle)
+    return counts
+
+
+def detect_glue_starvation(now: _dt.datetime, queued_minutes: int = GLUE_QUEUED_ALERT_MIN) -> dict | None:
+    """Detect self-hosted glue jobs QUEUED and not draining (the VM is down, or the pool is wedged).
+
+    A single global condition (one alert, not one per job) — the whole pool shares one fate. Returns
+    None when nothing is starved, which is the overwhelmingly common case and costs exactly ONE gh
+    call: the per-run job lookups only happen once something is already queued past the threshold.
+
+    Detects on QUEUED-AGE rather than "0 runners online" deliberately, so it also catches a WEDGED
+    pool (runners online but not picking work) — a dead VM is only one of the ways this breaks. The
+    runner counts go into the message so whoever gets paged can tell the two apart immediately.
+
+    Scoped to ``unified-trading-pm``: it is the only repo with glue runners (a personal account has
+    no org-level runners, so they are repo-scoped there). Jobs are confirmed by LABEL before paging —
+    a HOSTED job queueing on GitHub's own capacity is not our outage and must never page.
+    """
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{_PM_DISPATCH_REPO}",
+            "--status",
+            "queued",
+            "--limit",
+            "50",
+            "--json",
+            "databaseId,createdAt,workflowName,url",
+        ]
+    )
+    if not isinstance(runs, list):
+        return None
+    cutoff = now - _dt.timedelta(minutes=queued_minutes)
+    stale = [r for r in runs if isinstance(r, dict) and r.get("createdAt") and _parse_ts(r["createdAt"]) < cutoff]
+    if not stale:
+        return None
+
+    starved: list[dict] = []
+    for run in stale:
+        payload = gh_json(["api", f"/repos/{ORG}/{_PM_DISPATCH_REPO}/actions/runs/{run['databaseId']}/jobs"])
+        if not isinstance(payload, dict):
+            continue
+        jobs = payload.get("jobs")
+        if not isinstance(jobs, list):
+            continue
+        for job in jobs:
+            if not isinstance(job, dict) or job.get("status") != "queued":
+                continue
+            # jobs API: labels are plain strings (cf. the runners API's objects).
+            labels = {str(x) for x in (job.get("labels") or [])}
+            if labels & _GLUE_LABELS:
+                starved.append(
+                    {
+                        "workflow": run.get("workflowName") or "?",
+                        "url": run.get("url") or "",
+                        "age_min": int((now - _parse_ts(run["createdAt"])).total_seconds() // 60),
+                    }
+                )
+                break  # one starved job is enough to indict the run
+    if not starved:
+        return None
+
+    counts = _glue_runner_counts()
+    total_online = sum(online for online, _ in counts.values())
+    if total_online == 0:
+        diagnosis = "0 runners ONLINE → the glue VM is down or the runner service is stopped."
+    else:
+        diagnosis = "runners ARE online but jobs are not draining → the pool is wedged or saturated."
+    return {
+        "count": len(starved),
+        "oldest_min": max(s["age_min"] for s in starved),
+        "url": next((s["url"] for s in starved if s["url"]), ""),
+        "workflows": ", ".join(sorted({str(s["workflow"]) for s in starved})[:5]),
+        "runner_state": " · ".join(
+            f"{label} {online} online/{idle} idle" for label, (online, idle) in sorted(counts.items())
+        ),
+        "diagnosis": diagnosis,
+    }
+
+
 def _log_failed_excerpt(repo: str, run_id: int, *, max_lines: int = 10, max_chars: int = 500) -> str:
     """Best-effort tail of a run's failed-step logs — the actionable error lines.
 
@@ -969,6 +1103,7 @@ def build_alert_items(
     resolved: list[dict] | None = None,
     billing: dict | None = None,
     stale_quarantine: list[dict] | None = None,
+    glue_starvation: dict | None = None,
 ) -> list[dict]:
     """Per-condition alert items for the carrier's matrix notify (Phase 5 re-nag).
 
@@ -1113,6 +1248,31 @@ def build_alert_items(
                     f"has been quarantined since {q['since']} after {q['attempts']} consecutive "
                     f"promotion failures. Check `workspace-manifest.json::promotion_quarantine` — "
                     f"the quarantine auto-clears on next successful promotion."
+                ),
+            }
+        )
+    if glue_starvation:
+        # One line for the whole pool — every starved job shares one root cause, so per-job items
+        # would be pure noise. CRITICAL + a 15-min re-nag: silent until GitHub kills the jobs at 24h,
+        # and by then the ci_status transitions are gone.
+        items.append(
+            {
+                "key": "glue-runners-starved",
+                "severity": "CRITICAL",
+                "cooldown_min": RENAG_GLUE_STARVED_MIN,
+                "url": glue_starvation.get("url") or "",
+                "message": (
+                    f":rotating_light: *Self-hosted GLUE runners are NOT draining* — "
+                    f"{glue_starvation.get('count')} job(s) queued in `{_PM_DISPATCH_REPO}`, oldest "
+                    f"*{glue_starvation.get('oldest_min')}m*. {glue_starvation.get('diagnosis')} "
+                    f"Runners: {glue_starvation.get('runner_state')}. "
+                    f"Waiting: {glue_starvation.get('workflows')}. "
+                    f"GitHub KILLS a queued job at *24h* → ci_status transitions LOST → stale "
+                    f"Firestore → blocked promotes (MAIN_GREEN is the dep-on-main gate). "
+                    f"FIX: start the VM, then `systemctl restart 'github-glue-runner@glue-*'` / "
+                    f"`@writer-*`; verify `setup-glue-runners.sh status`. ROLLBACK: flip the "
+                    f"affected `runs-on` back to `ubuntu-latest`. "
+                    f"<{glue_starvation.get('url')}|queued run>"
                 ),
             }
         )
@@ -1536,6 +1696,12 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=25, help="Recent runs to inspect per repo/branch.")
     parser.add_argument("--stuck-minutes", type=int, default=30, help="Age before an un-mergeable PR is 'stuck'.")
     parser.add_argument(
+        "--glue-queued-minutes",
+        type=int,
+        default=GLUE_QUEUED_ALERT_MIN,
+        help="Age before a QUEUED self-hosted glue job pages (the VM is down or the pool is wedged).",
+    )
+    parser.add_argument(
         "--fresh-hours",
         type=float,
         default=2.0,
@@ -1604,6 +1770,10 @@ def main() -> int:
     # is surfaced as ONE alert above the per-workflow failures it would otherwise spam.
     billing = detect_billing_block(repos, now, args.fresh_hours)
     stale_quarantine = detect_stale_quarantine(now)
+    # Self-hosted glue pools (unified-trading-pm only). Costs ONE gh call when nothing is queued,
+    # which is the normal state. MUST stay in this hosted watcher: a check for "is the glue VM
+    # dead?" that itself ran on the glue VM would queue behind the very outage it exists to report.
+    glue_starvation = detect_glue_starvation(now, args.glue_queued_minutes)
 
     transitions: list[dict] = []
     currently_failing: list[dict] = []
@@ -1614,15 +1784,25 @@ def main() -> int:
         for branch in WATCHED_BRANCHES:
             transitions.extend(
                 detect_transitions(
-                    repo, branch, args.limit, now, args.fresh_hours,
-                    args.flap_detect_runs, args.flap_threshold,
+                    repo,
+                    branch,
+                    args.limit,
+                    now,
+                    args.fresh_hours,
+                    args.flap_detect_runs,
+                    args.flap_threshold,
                 )
             )
             # Phase 5: current-failing set (not just flips) so a still-red workflow re-nags.
             currently_failing.extend(
                 detect_currently_failing(
-                    repo, branch, args.limit, now, args.fail_window_hours,
-                    args.flap_detect_runs, args.flap_threshold,
+                    repo,
+                    branch,
+                    args.limit,
+                    now,
+                    args.fail_window_hours,
+                    args.flap_detect_runs,
+                    args.flap_threshold,
                 )
             )
         stuck.extend(detect_stuck_prs(repo, args.stuck_minutes, now))
@@ -1647,7 +1827,9 @@ def main() -> int:
     # the CURRENT-failing set (re-nag every tick via the carrier cooldown), not the one-shot
     # flip; recovered/resolved bookends come from the flip/terminal detectors.
     recovered = [t for t in transitions if t.get("kind") == "recovered"]
-    alert_items = build_alert_items(currently_failing, recovered, stuck_to_page, resolved, billing, stale_quarantine)
+    alert_items = build_alert_items(
+        currently_failing, recovered, stuck_to_page, resolved, billing, stale_quarantine, glue_starvation
+    )
     write_github_output(alert, severity, report, alert_items)
 
     # Firestore write-through — best-effort; never blocks the watcher on SDK/credential absence.
