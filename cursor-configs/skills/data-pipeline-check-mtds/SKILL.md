@@ -76,6 +76,33 @@ gcloud storage buckets create "gs://market-data-tick-${mtds_ag}-test-${PROJECT_I
 
 ## 3. Phase 1 — batch force + skip matrix
 
+> **⛔ TARDIS CELLS ARE SERIAL — N=1, NEVER ONE-VM-PER-SHARD (HARD RULE, operator 2026-07-16).** Every `cefi` cell whose
+> venue is Tardis-sourced (all the standard CEXes — BINANCE-\*, BYBIT, OKX-\*, DERIBIT, KRAKEN-\*, BITGET-\*,
+> BITFINEX-\*, COINBASE-SPOT, UPBIT; NOT the native-REST venues HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / PACIFICA-SOLANA /
+> EXTENDED-STARKNET) shares ONE academic key that permits ONE active IP. **One VM per shard = one IP per shard = a
+> mutual-403 storm**, and this skill has already caused it: three
+> `mtds-backfill-cefi-pipelinecheck-20260712-1015{56,57,58}` VMs were launched inside the same second and preempted.
+> Measured cost of N=3 in the real gap (2026-07-16): ~94% of requests 403'd (10,300x403/912 ok; 15,034x403/**0** ok),
+> **+37,212 FALSE `attempted_failed` manifest rows in 8h** — i.e. the storm does not merely waste time, it CORRUPTS the
+> manifest with failures the venue never actually returned — and coverage went BACKWARD 52.13 → 48.38. At N=1: **zero**
+> 403s.
+>
+> Therefore, in this phase:
+>
+> - **Run Tardis cells STRICTLY ONE AT A TIME** (the shared guard `tardis-concurrency-guard.sh` now enforces
+>   `TARDIS_MAX_CONCURRENT_VMS=1` and is wired into `launch-mtds-backfill-vm.sh`, so a second concurrent cefi VM is
+>   REFUSED — do not `FORCE=1` past it, wait for the running one).
+> - **Prefer bundling over serialising where the check allows it**: `launch-mtds-backfill-vm.sh` accepts multi-valued
+>   `--venues "A B C" --data-types "trades book_snapshot_5"`, so one VM can carry many Tardis shards on the single IP.
+>   Scale that VM with `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16 / 4; the
+>   box is typically ~93% idle at those — measured cpu 104%/1600%, rss 7.8GB/128GB) — **never with more VMs**.
+> - Non-Tardis cells (native-REST venues above, and non-cefi asset_groups: defi / sports / prediction / tradfi) are
+>   UNAFFECTED — they use different keys/paths, do not count against the cap, and may still run in parallel.
+> - If a run trips the guard, that is the guard WORKING. Serialise; do not override.
+>
+> SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap ·
+> `plans/active/cefi_completion_program_2026_07_15.md` (the measured N=3-vs-N=1 evidence).
+
 For each MVP `(asset_group, venue, data_type)` cell for `--day` (MVP scope from
 `unified_api_contracts.canonical.crosscutting.mvp_scope.is_mvp()`; enumerate the Sports `league_id` axis as its own
 cells, never collapsed):
