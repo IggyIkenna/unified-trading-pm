@@ -26,13 +26,7 @@ assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans:
-  [
-    ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    ../active/uac_coverage_90pct_2026_06_10.md,
-  ]
+related_plans: []
 last_updated: 2026-07-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -105,17 +99,8 @@ Full archaeology of pre-May-23 5 deliverables:
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: client_isolation_and_governance_master` in their frontmatter. Workers pick up in
-priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-## Assigned active plans
-
-_1 active plans declare `parent_epic: client_isolation_and_governance_master` in their frontmatter. Workers pick up in
-priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-## P0 — must complete before next foundation gate
-
-_(no plans currently assigned at this priority — per_client_isolation archived 2026-05-22)_
+_(no active plans currently declare `parent_epic: client_isolation_and_governance_master`. Audit-pool wrapper plans for
+this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
 
 ## Deferred from `per_client_isolation_and_venue_fanout_topology_2026_05_20` (archived 2026-05-22)
 

@@ -20,7 +20,7 @@ assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 co_operators: [ikenna, harsh]
 codex_ssots: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/agent-orchestrator-overview.md]
-related_plans: [../active/escalation_pipeline_mvp_2026_06_25.md]
+related_plans: []
 last_updated: 2026-07-12 # (was: 2026-06-25; corrected 2026-07-14 per verify-rerun-2 finding 61 — body banner (lines 29-32) + git log show the last substantive edit was 2026-07-12, not 2026-06-25)
 locked_by: NA
 locked_since: NA
@@ -131,3 +131,8 @@ Generalize the blocked loop into a role-agnostic, stateful, scoped-link escalati
   `agent_operating_framework_master` because it is genuinely distinct (role-agnostic pipeline + DR substrate) and
   composes with `observability_master`. Three gaps scoped (scoped-link / alert-state / role-generalization). E1 (MVP)
   proposed as the first child plan, human-driven (`assigned_vm: NA`), depends on the broker (W9). E2/E3 deferred.
+
+## Assigned active plans
+
+_(no active plans currently declare `parent_epic: escalation_and_disaster_recovery_master`. Audit-pool wrapper plans for
+this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_

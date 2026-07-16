@@ -38,23 +38,16 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_07/mvp_catalogue_finalization_v10_2026_06_27.md,
-    ../archive/2026_05/d1_is_hardening_2026_05_20.md,
-    ../archive/2026_05/expected_universe_v2_design_2026_05_08.md,
-    ../archive/2026_05/trigger_based_reference_data_2026_04_13.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    ../active/instruments_service_docs_consolidation_2026_07_08.md,
-    ../active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
-    ../archive/2026_07/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
-    ../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
-    ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
-    ../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md,
-    ../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
-    ../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
-  ]
+  - ../active/canonical_id_builder_retrofit_checklist_2026_07_08.md
+  - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
+  - ../active/infra_capture_and_devops_leftovers_2026_07_06.md
+  - ../active/instruments_completion_tracker_2026_07_06.md
+  - ../active/instruments_foundation_completeness_2026_06_24.md
+  - ../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
+  - ../active/mvp_scope_catalogue_tagging_2026_06_08.md
+  - ../active/prediction_canonical_identity_migration_2026_07_08.md
+  - ../active/prediction_capture_incident_remediation_2026_07_06.md
+  - ../active/tradfi_v9_stage1_finish_2026_07_06.md
 last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -439,111 +432,59 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+_10 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-> **2026-07-12 correction (was: "3 active plans" above, uncorrected since the 2026-05-21 auto-populate run; findings
-> 101/106/111/117, §A2 B-queue ruling):** the auto-populated count/roster below is stale and was never re-run after
-> 2026-05-21. As of 2026-07-12, `rg -l '^parent_epic: instruments_master' active/*.md` (excluding `active/issues/`) plus
-> a `status: active` filter shows **15** active plans declaring this `parent_epic` (vs. the 3 listed below) — including,
-> among others, `coinbase_bare_name_migration_2026_07_06`, `tradfi_v9_stage1_finish_2026_07_06`,
-> `instruments_completion_tracker_2026_07_06`, `layer1_remeasure_and_certify_2026_07_06`, and
-> `mvp_catalogue_finalization_v10_2026_06_27` — none of which are listed in the roster below. This is an annotation, not
-> a re-run of the auto-populate script (out of scope for this fix); re-running
-> `scripts/plans/populate_epic_bodies_2026_05_21.py` is the correct follow-up to regenerate the roster itself.
 
 ## P0 — must complete before next foundation gate
 
-### [`workspace_qg_sweep_2026_05_23`](../archive/2026_05/workspace_qg_sweep_2026_05_23.md) — instruments-service cluster
+### [`instruments_completion_tracker_2026_07_06`](../active/instruments_completion_tracker_2026_07_06.md)
 
-**status**: 🟠 ACTIVE (was: — the plan itself carries `status: complete`; corrected 2026-07-12, finding 96, §A2 B-queue
-ruling; this child plan lives under `archive/2026_05/` and its own frontmatter shows it already shipped) — QG sweep for
-instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0. PREREQ: UTL QG green (vm-cross-cutting).
-See plan for full dep-chain. [vm: vm-cefi]
+**status**: active · **estimate**: 1 cal AI-days (class: infra) **title**: Instruments Completion Tracker — denominator
+→ numerator (cefi-first, operator-driven)
 
-### [`instruments_foundation_completeness_2026_06_24`](../active/instruments_foundation_completeness_2026_06_24.md) — survivor **I-1**
+### [`instruments_foundation_completeness_2026_06_24`](../active/instruments_foundation_completeness_2026_06_24.md)
 
-**status**: 🟠 ACTIVE (52 open) — gated rebuild every asset group + the folded foundation/catalogue/tradfi-universe/
-DeFi-LST residuals. The live home for instruments-foundation work post-consolidation. [vm: vm-cross-cutting] (label
-stale — the child plan's own frontmatter carries no `assigned_vm` field at all; annotated 2026-07-12, finding 123, §A2
-B-queue ruling)
+**status**: active · **estimate**: 19 cal AI-days (class: design) **title**: Instruments Foundation & Catalogue
+Completeness — gated rebuild, every asset group
 
-### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md) — survivor **I-2**
+### [`prediction_capture_incident_remediation_2026_07_06`](../active/prediction_capture_incident_remediation_2026_07_06.md)
 
-**status**: 🟠 ACTIVE (57 open) — (corrected 2026-07-15, plan-reconcile: direct checkbox count in the child plan itself
-is 57 open / 57 done, not the previously-stated 60) IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding
-code remediation. The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting]
-(label stale — same as above; finding 123, §A2 B-queue ruling)
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
 
-### 🔴 2026-07-08 canonical instrument_id audit + remediation
+### [`tradfi_v9_stage1_finish_2026_07_06`](../active/tradfi_v9_stage1_finish_2026_07_06.md)
 
-**status**: 🔴 NEW — cross-repo audit
-([`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md)) found 5
-real P0 live-correctness bugs (data collision, silently-defeated reconciliation, silent empty-query bugs, live≠batch id
-divergence) plus ~40 P1/P2 format/key-vs-field findings across every asset group. Operator decided: canonicalize
-everywhere, ground-up (UAC → instruments-service → MTDS → strategy-service → deployment), live breakage explicitly
-authorized (nothing trading live yet). Tracked here + cross-referenced from `batch_live_symmetry_master`
-(live≠batch/reconciliation findings) and `client_isolation_and_governance_master` (UAC-schema governance angle) — not a
-new epic, per operator decision to use the existing fixed 20-epic registry.
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi v9 Stage-1 finish — post-apply chain
+to all-5-AGs-canonical (AO Plan 2)
 
-- [`instrument_id_format_canonicalization_2026_07_08`](../active/issues/instrument_id_format_canonicalization_2026_07_08.md)
-  — the decided target-state format (`VENUE:TYPE:BASE[_QUOTE]@LIN|@INV-YYYYMMDD[-STRIKE-C|P]`, no trailing `@VENUE`).
-- ✅
-  [`instruments_service_docs_consolidation_2026_07_08`](../active/instruments_service_docs_consolidation_2026_07_08.md)
-  — DONE, `instruments-service@10ad69a4` — 18→7 docs (real count was 18, not 17).
-- ✅
-  [`canonical_id_p0_kraken_futures_collision_2026_07_08`](../archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md)
-  — DONE, `market-tick-data-service@3d7491b1` — real data collision, 5 real instruments on one key, fixed. Caveat
-  (2026-07-14, finding 150): DONE covers the ticker-collision remediation only (125/125 files, verified); the plan's own
-  frontmatter is `status: active` and still carries an unresolved `- [ ] [DATA] P2` todo (was: presented above as a flat
-  DONE with no caveat) — a separate `FI_`/`FF_` contract-subtype same-(ticker,expiry) collision (13 pairs, ETH/XBT, 45
-  of the 125 files) surfaced during this fix's own verification, needing an operator decision before any further
-  Kraken-Futures remediation or backfill.
-- ✅
-  [`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08`](../archive/2026_07/canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md)
-  — DONE, `instruments-service@4b4185b6` — 24 adapters (23 named + 1 the audit missed) fixed.
-- ✅
-  [`canonical_id_p0_ccxt_live_batch_divergence_2026_07_08`](../archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md)
-  — DONE, `instruments-service@8544273d` — all 13 canonical CeFi venues verified converged live=batch. Caveat
-  (2026-07-11): the DONE verdict covered the builder/adapter layer; MTDS live WS connectors were retrofitted separately
-  after silently dropping mismatched ticks in prod (fixed 2026-07-10 — see
-  `plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` §MTDS-WS). Synced per
-  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 93).
-- [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
-  — P1, CBOE/VX combo-leg decomposition now wired (was: "just not wired up for CBOE/VX spreads" — corrected 2026-07-14,
-  findings 123 + 146): `_parse_cboe_spread_legs()`, human-name translation, venue-prefix drop, and `SPOT_PAIR`→`COMBO`
-  type fix all shipped `instruments-service` 2026-07-09, quality-gates green, real prod-bucket dry-run verified. Plan
-  itself remains `status: active` — 3 unrelated follow-on P1-P3 todos filed the same day (TradFi single-leg
-  `@LIN`/`@INV` extension, Deribit combo hard-cap extension, UAC `build_leg()` venue-omission mode) are still open.
+## P1 — important; post-current-gate
 
-## P1 — done/archived (historical — pre-consolidation)
+### [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
 
-- ✅ [`d1_is_hardening_2026_05_20`](../archive/2026_05/d1_is_hardening_2026_05_20.md) — DONE 12/12 (archived).
-- ✅ [`expected_universe_v2_design_2026_05_08`](../archive/2026_05/expected_universe_v2_design_2026_05_08.md) — DONE 5/5
-  (archived).
-- ✅ [`trigger_based_reference_data_2026_04_13`](../archive/2026_05/trigger_based_reference_data_2026_04_13.md) — DONE
-  20/20 (archived).
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
+
+### [`infra_capture_and_devops_leftovers_2026_07_06`](../active/infra_capture_and_devops_leftovers_2026_07_06.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers
+(Stage 5 infra) — AO Plan 6
+
+### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md)
+
+**status**: active · **estimate**: 6.4 cal AI-days (class: infra) **title**: Instruments ↔ MTDS subset + consistency
+remediation
+
+### [`mvp_scope_catalogue_tagging_2026_06_08`](../active/mvp_scope_catalogue_tagging_2026_06_08.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: design)
 
 ## P2 — useful; opportunistic
 
-### 🔴 2026-07-08 CLI-arg audit + sports manifest findings
+### [`canonical_id_builder_retrofit_checklist_2026_07_08`](../active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
 
-**status**: 🔴 NEW — from a dedicated CLI-argument audit run while confirming `--venues` was a safe replacement for a
-just-removed dead single-venue-fetch function (removed clean, `instruments-service`, all other CLI args confirmed
-working end-to-end).
+**status**: active · **estimate**: 2 cal AI-days (class: refactor)
 
-- [`instruments_service_run_tag_flag_not_applied_2026_07_08`](../active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md)
-  — `--run-tag`'s help text promises a GCS output-prefix tag; `apply_run_tag()` is never called, the value never reaches
-  any output path.
-- [`sports_dependency_check_manifest_vs_gcs_path_2026_07_08`](../active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md)
-  — sports fixture-dependency check does per-date live GCS probes instead of a manifest slice; measured 60-130x slower
-  for the one function originally measured (~11-25 min vs. ~11s), but (corrected 2026-07-15, plan-reconcile: the issue
-  doc's own 2026-07-08 follow-up sweep across 5 files) real total sports-backfill overhead is roughly 2-4x larger — tens
-  of minutes to ~1-2 hours across a full-year backfill, not a single fixable hot path.
-- [`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08`](../active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
-  — from the operator-requested MVP-catalogue-code audit: TradFi's `mvp_mode` fetch-time filter is unreachable dead code
-  (zero real callers pass `mvp_mode=True` anywhere); production always downloads the full 93-instrument universe
-  unfiltered, regardless of the curated TradFi MVP rule.
+### [`prediction_canonical_identity_migration_2026_07_08`](../active/prediction_canonical_identity_migration_2026_07_08.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 

@@ -50,33 +50,10 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    ../active/defi_governance_params_refresh_2026_06_20.md,
-    ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
-    ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
-    ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
-    ../active/defi_manifest_canonicalisation_2026_06_01.md,
-    ../active/data_source_provenance_all_asset_groups_2026_06_01.md,
-    ../active/master_to_live_defi_2026_05_23.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/audit03_drift_remediation_backlog_2026_05_22.plan.md,
-    ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
-    ../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md,
-    ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md,
-    ../active/cross_cutting_may_23_deliverables_2026_05_08.md,
-    ../active/d8_perf_upgrade_2026_05_20.md,
-    ../active/defi_catalogue_chain_primitives_2026_05_10.md,
-    ../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md,
-    ../active/features_tick_observation_audit_2026_05_18.md,
-    ../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md,
-    ../active/missing_question_docs_disposition_2026_05_10.md,
-    ../active/mock_data_pipeline_benchmarking_2026_05_10.md,
-    ../active/post_freeze_roadmap_2026_05_16_to_05_23.md,
-    ../active/ruff_workspace_cleanup_2026_05_12.md,
-    ../active/simulation_scenarios_post_cutover_2026_06_01.md,
-    ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md,
-  ]
+  - ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
+  - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
+  - ../active/mtds_defi_dex_zero_capture_protocols_2026_07_14.md
+  - ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -440,9 +417,11 @@ routing table above — do NOT pick work from them directly.
       assertions = 40 tests): all in ARCHETYPE_ENGINE_REGISTRY; factory builds; empty-features no-crash; full-features
       returns list; self_check APPROVED.
 - [x] ✅ [AGENT] P0. features-service (onchain family) Docker image rebuild — Cloud Build emits new `:latest` tag with
-      Phase changes. DONE (2026-05-15): features-service@`7929e80c` — add $SHORT_SHA tag to cloudbuild.yaml build step
-      (root cause: `images:` section expected $SHORT_SHA but build only created $VERSION + :latest tags); Cloud Build
-      `070d32cb` SUCCEEDED — image pushed with :latest + :7929e80c tags.
+      Phase changes. DONE (2026-05-15): features-service@`7929e80c` — add
+      $SHORT_SHA tag to cloudbuild.yaml build step
+      (root cause: `images:` section expected $SHORT_SHA but build
+      only created $VERSION + :latest tags); Cloud Build `070d32cb` SUCCEEDED — image pushed with :latest + :7929e80c
+      tags.
 
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
@@ -628,10 +607,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-      ```
+                  gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                  ```
 
-      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                  [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1175,16 +1154,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-      VM ran current code without a refresh.
+                  `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                  (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                  VM ran current code without a refresh.
 
-      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                  Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                  (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                  `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                  Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                  (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1706,58 +1685,24 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_Active plans declaring `parent_epic: defi_master`. Workers pick up in priority order (P0 first). The 2026-06-20
-restructure seeded the four new child plans below (extracted from this epic's frozen inline body); the rest are the
-pre-existing `parent_epic: defi_master` set. Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py` — it
-keeps the list in sync from frontmatter._
-
-**Delegated (DeFi work tracked under DeFi service-epic / owner plans, listed for visibility — NOT direct `parent_epic`
-children):** [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md)
-(manifest / coverage / launch-dates / LIGHTER funding / single-walk) ·
-[`data_source_provenance_all_asset_groups_2026_06_01`](../active/data_source_provenance_all_asset_groups_2026_06_01.md)
-(DeFi `source=` stamping) ·
-[`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
-(`available_at` stamping).
+_4 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`defi_governance_params_refresh_2026_06_20`](../archive/2026_06/defi_governance_params_refresh_2026_06_20.md) — ✅ COMPLETE (was: framed here as active P0 foundation-gate item)
-
-**status**: complete · nature: record (moved to `archive/2026_06/`; all 6 P0/P1 phases shipped — mtds / features-service
-/ strategy-service / unified-api-contracts, QG green each repo). Aave/Compound/Morpho governance-param event listener →
-time-versioned `governance_params` parquet → features-onchain APR-calc + strategy-sizing asof-read migration + new UAC
-`GOVERNANCE_PARAMS_CHANGED` event. The Cat-B fallback removal gate in `defi_onchain_derivable_values_and_date_drift` is
-now UNBLOCKED (Phase 3 shipped, features-service@live-defi-rollout). Do NOT dispatch from here. [SYNCED 2026-07-14,
-finding 45 — other `../active/defi_governance_params_refresh_2026_06_20.md` links elsewhere in this epic (frontmatter
-`related`/`related_plans` lists, historical EXTRACTED banners) are non-dispatch pointers, left as-is.]
-
 ### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design). `derive_protocol_launch_dates.py` SSOT + pre-commit
-citation gate; Cat-A audit (token decimals / chain genesis / factory addresses); Cat-B fallback removal (blocked on the
-governance plan Phase 2); Cat-C fixture modernization; PM CI lint for new hardcoded addresses/block-numbers (coordinate
-with PM CI-gate owner); Fork-1 P1 residuals (Pyth-Hermes coverage SSOT, local-fallback drift sweep).
-
-### [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md)
-
-**status**: ✅ complete (2026-07-12 correction; was: "active" — stale, the plan's own frontmatter reads
-`status: complete` and it already lives under `archive/2026_06/`; this P0 dispatch-table row was never updated after
-archival. Finding #40, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
-§A2 B-queue ruling) · **estimate**: 3.2 cal AI-days (class: refactor). DEX-swaps subgraph schema rewrite
-(PancakeSwap/SushiSwap/Aerodrome/Camelot) + Compound V3 Messari rewrite (Bug 2) + Hyperliquid historical-OHLCV stub +
-Extended-Starknet unblocking + CLOB asset_group classification (operator decision). LIGHTER funding / per-chain
-launch-dates / Solana LST are pointed at `defi_manifest_canonicalisation`, NOT duplicated here.
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: DeFi hardcoded on-chain-derivable values +
+UAC date-drift elimination (derive-SSOT + CI citation gate)
 
 ### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
 
-**status**: active · **estimate**: 4 cal AI-days (class: infra). DeFi full-batch E2E validation + per-handler coverage +
-Phase-D historical carry tracer (2022→today × 7 archetypes) + Lighter/Pacifica backfill final-state verify + SolidlyCL
-golden-swap on-chain validation (P2, execution-service).
+**status**: active · **estimate**: 4 cal AI-days (class: infra)
 
-### [`defi_protocol_outage_detector_2026_05_20`](../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md)
+### [`mvp_backfill_defi_onchain_v10_2026_06_27`](../active/mvp_backfill_defi_onchain_v10_2026_06_27.md)
 
-**status**: ✅ ARCHIVED 2026-05-21 — Phases 0-6 done (Aave/Compound/Hyperliquid shipped, mtds@c9ff1f7 + uac@cc6a629);
-Phase 7.A (Curve) DEFERRED-POST-CUTOVER
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: MVP backfill — DeFi all on-chain data_types
+(SPOT-only, per-protocol genesis, reconcile-then-fill)
 
 ## P1 — important; post-current-gate
 
@@ -1765,88 +1710,14 @@ _(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-### [`api_keys_wallets_accounts_readiness_2026_05_10`](../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
+### [`mtds_defi_dex_zero_capture_protocols_2026_07_14`](../active/mtds_defi_dex_zero_capture_protocols_2026_07_14.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — Cloud-KMS path GREEN; May-23 credential gate met. Post-cutover deferred: AWS IAM
-roles, Fireblocks/Copper/CEFFU, Kalshi+CoinGecko credentials, GitHub WIF upgrade, Telegram per-env tokens, credential
-probe 100% pass. · **estimate**: 64.5 cal AI-days (class: design)
-
-### [`code_freeze_migrate_backfill_sequencing_2026_05_10`](../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phase 1 code-complete + Phase 2 dry-run + Phase 2.6 detailed playbook shipped.
-Phase 2.6 execution DEFERRED-SERVICE-REPOS; Phase 3 QG sweep + Phase 4.DEFAULT-REMOVAL + Phase 12 ratchet
-BLOCKED-OPERATOR. · **estimate**: 162.0 cal AI-days (class: infra)
-
-### [`codex_vs_citadel_infrastructure_audit_2026_05_10`](../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md)
-
-**status**: active · **estimate**: 15.6 cal AI-days (class: research)
-
-### [`cross_cutting_may_23_deliverables_2026_05_08`](../active/cross_cutting_may_23_deliverables_2026_05_08.md)
-
-**status**: active · **estimate**: 30.9 cal AI-days (class: design)
-
-### [`d8_perf_upgrade_2026_05_20`](../active/d8_perf_upgrade_2026_05_20.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D8 — Performance upgrade plan (hot-path
-identification from A1)
-
-### [`defi_catalogue_chain_primitives_2026_05_10`](../active/defi_catalogue_chain_primitives_2026_05_10.md)
-
-**status**: active · **estimate**: 205.5 cal AI-days (class: design)
-
-### [`features_tick_observation_audit_2026_05_18`](../active/features_tick_observation_audit_2026_05_18.md)
-
-**status**: active · **estimate**: 2.0 cal AI-days (class: brand-new)
-
-### [`hard_schema_phase1_field_flip_migration_2026_05_19`](../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 — Phases A-D+F shipped; Phase E (subclass design) DEFERRED-POST-CUTOVER in archived
-plan (DO NOT move without operator ack)
-
-### [`missing_question_docs_disposition_2026_05_10`](../active/missing_question_docs_disposition_2026_05_10.md)
-
-**status**: active · **estimate**: 0.9 cal AI-days (class: design)
-
-### [`mock_data_pipeline_benchmarking_2026_05_10`](../active/mock_data_pipeline_benchmarking_2026_05_10.md)
-
-**status**: active · **estimate**: 7.0 cal AI-days (class: design)
-
-### [`post_freeze_roadmap_2026_05_16_to_05_23`](../active/post_freeze_roadmap_2026_05_16_to_05_23.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: design)
-
-### [`ruff_workspace_cleanup_2026_05_12`](../active/ruff_workspace_cleanup_2026_05_12.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
-
-### [`simulation_scenarios_post_cutover_2026_06_01`](../active/simulation_scenarios_post_cutover_2026_06_01.md)
-
-**status**: scheduled · **estimate**: 15.2 cal AI-days (class: infra)
-
-### [`simulation_scenarios_topology_price_shocks_2026_05_09`](../active/simulation_scenarios_topology_price_shocks_2026_05_09.md)
-
-**status**: active · **estimate**: 20.1 cal AI-days (class: design)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: MTDS dex_pools/dex_swaps
+zero-forward-capture fix — uniswap_v2, uniswap_v4, trader_joe_v2, velodrome_v2
 
 ## P3 — backlog; revisit quarterly
 
-> **MIGRATED FROM:** `api_keys_wallets_accounts_readiness_2026_05_10.md` (archived 2026-05-23) — Cloud-KMS signing,
-> venue auth, wallet provisioning shipped. Remaining items are post-cutover integrations + credential extensions.
-
-- [ ] [OPERATOR+AGENT] P2. **AWS SNS/SQS + EventBridge mirroring (1.F)** — create AWS SNS topic per service + SQS
-      subscriber queue + EventBridge rule that mirrors GCP Pub/Sub events for dual-cloud event delivery. Coordinate with
-      infrastructure_master UCI MessageBus abstraction.
-- [ ] [AGENT] P2. **Cross-cloud Workload Identity Federation (1.H)** — GCP SA assumes AWS IAM role via OIDC WIF;
-      eliminates long-lived AWS access keys in service containers. Requires AWS account `427895769566` IAM config.
-- [ ] [OPERATOR+AGENT] P3. **CEFFU integration (3.B)** — CEFFU KYB + production env + signing integration. Deferred
-      until Binance institutional KYB flow completes. 3.B.3 adapter scaffold already shipped (dormant).
-- [ ] [OPERATOR+AGENT] P2. **Tune `ltv_safety_margin` + `margin_safety_factor` (R-17)** — post 7-day live soak, review
-      actual LTV utilisation vs conservative defaults; recalibrate to tighten safety margins if liquidation headroom is
-      excessive. Reference: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
-- [ ] [OPERATOR] P2. **DeFi-data credentials (5.C)** — provision CoinGecko Pro + Helius paid-tier API keys into Secret
-      Manager (`COINGECKO_API_KEY`, `HELIUS_API_KEY`). Unblocks DeFi on-chain analytics adapters marked
-      BLOCKED-CREDENTIALS. Ping operator for account signup approval.
-- [ ] [OPERATOR+AGENT] P3. **Firebase SA JSON storage (6.B)** — store Firebase service-account JSON in Secret Manager
-      rather than GHA secrets; wire hot-reload via `ApiKeyReloader` pattern. Post-cutover scope.
+_(no plans currently assigned at this priority)_
 
 ## Cross-references
 

@@ -35,18 +35,9 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
-    ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md,
-    ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    ../active/tradfi_massive_dual_source_2026_05_28.md,
-    ../active/tradfi_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
-    ../archive/2026_05/cme_polymarket_arb_2026_05_08.md,
-    ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md,
-    ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
-  ]
+  - ../active/tradfi_massive_dual_source_2026_05_28.md
+  - ../active/tradfi_multisource_backfill_2026_06_22.md
+  - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -791,86 +782,31 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_6 docs declare `parent_epic: tradfi_master` in their frontmatter (3 plans in `plans/active/*.md` + 3 issue docs in
-`plans/active/issues/*.md`, re-verified 2026-07-12; note: 2 of the original 3 children —
-`tradfi_cme_event_contract_backfill_2026_06_20` + `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27` — were archived in the
-2026-06-30 consolidation; the live set has grown). **[2026-07-12 correction]** the count (6) was already correct as of
-2026-06-30, but the P0/P1/P2 tables below only enumerated 2 of the 6 — `tradfi_multisource_backfill_2026_06_22` and the
-3 issue docs were missing (issue docs are outside `populate_epic_bodies_2026_05_21.py`'s scan scope, which only reads
-`plans/active/*.md` top-level); all 6 are now listed below. Corrected per plan-reconciliation finding 306,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. Workers
-pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py` for the 3
-plan rows; the 3 issue-doc rows are hand-maintained (out of script scope)._
-
-**Delegated (owned by another epic but in tradfi's data path)**:
-[`tradfi_manifest_canonicalisation_2026_06_01`](../active/tradfi_manifest_canonicalisation_2026_06_01.md) declares
-`parent_epic: mtds_mdps_master` (L3 manifest-canonicalisation owner for tradfi) — it owns the instrument/MTDS/MDPS
-data-clean + phantom-audit residual; do NOT duplicate that work into tradfi children.
+_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)
-
-**status**: ✅ ARCHIVED 2026-06-30 (consolidation) · **estimate**: 2.4 cal AI-days (class: infra) · **title**: CME
-event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips. Extracted 2026-06-20 from the inline epic
-body (net-new + unowned); unblocks the archived CME↔Polymarket arb sub-plan's Phases 1-5.
-
 ### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
 
-**status**: active · **estimate**: 4 cal AI-days (class: brand-new) · **title**: S&P ML + price-arb backtest readiness
-(ES/VIX feature runs + data-clean slice). Extracted 2026-06-20 — the TradFi-data slice of the two folded May-23
-deliverables; the backtest-harness fidelity + cutover gating stay in master Group F.
-
-### [`tradfi_backfill_oom_remediation_2026_06_24`](../active/issues/tradfi_backfill_oom_remediation_2026_06_24.md) (issue doc)
-
-**status**: open · **[2026-07-12 added]** — was missing from this roster despite declaring `parent_epic: tradfi_master`
-(issue docs aren't scanned by `populate_epic_bodies_2026_05_21.py`, which only reads `plans/active/*.md` top-level, so
-this and the other 2 issue-doc rows below were added by hand). Corrected per plan-reconciliation finding 306,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
-
-### [`tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07`](../active/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md) (issue doc)
-
-**status**: resolved · **[2026-07-12 added]** — see note on the row above; this one's own frontmatter already reads
-`status: resolved`, listed here only for roster completeness (not actionable).
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: TradFi S&P ML + price-arb backtest
+readiness (ES feature runs + data-clean slice)
 
 ## P1 — important; post-current-gate
 
 ### [`tradfi_massive_dual_source_2026_05_28`](../active/tradfi_massive_dual_source_2026_05_28.md)
 
-**status**: active · **estimate**: 7 cal AI-days (class: infra) · **title**: TradFi dual-source — Massive alongside
-Databento with co-mingled source column. Pre-existing active child (not re-extracted in the 2026-06-20 restructure).
+**status**: active · **estimate**: 7 cal AI-days (class: infra) **title**: TradFi dual-source — Massive alongside
+Databento with co-mingled source column
 
 ### [`tradfi_multisource_backfill_2026_06_22`](../active/tradfi_multisource_backfill_2026_06_22.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) · **[2026-07-12 added]** — was missing from this
-roster despite declaring `parent_epic: tradfi_master` + `status: active` in its own frontmatter (created 2026-06-22,
-after this section's 2026-06-30 verification claimed completeness). Corrected per plan-reconciliation finding 306,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
-
-### [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md)
-
-**status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 3.2 cal AI-days (class: infra) **title**: TradFi MVP — OHLCV-only
-Databento backfill (drop L1-L3 to post-cutover)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi backfill multi-source — FX→yahoo,
+CBOE cash-index no-provider, ICE source-ask
 
 ## P2 — useful; opportunistic
 
-### [`tradfi_eu_not_draining_source_axis_drift_2026_06_24`](../active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md) (issue doc)
-
-**status**: open · **[2026-07-12 added]** — was missing from this roster despite declaring `parent_epic: tradfi_master`
-(issue docs aren't scanned by `populate_epic_bodies_2026_05_21.py`, added by hand). Corrected per plan-reconciliation
-finding 306, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket
-ruling.
-
-### [`cme_polymarket_arb_2026_05_08`](../archive/2026_05/cme_polymarket_arb_2026_05_08.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 · **estimate**: 15 cal AI-days (class: brand-new)
-
-**Deferred (MIGRATED FROM archived plan)**:
-
-- Phase 5 full archetype onboarding: `cme_polymarket_event_arb` paper-trade → live via standard promote checklist
-  (post-cutover)
-- OPTION row re-classification: manifest re-classification of `instrument_type=OPTION` rows for 9 EC\* roots — blocked
-  on IS Phase 3
+_(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 

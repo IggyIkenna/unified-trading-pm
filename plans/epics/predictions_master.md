@@ -33,15 +33,9 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
-    ../archive/2026_07/predictions_lookahead_and_reader_migration_2026_06_20.md,
-    ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    ../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
-    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
-  ]
+  - ../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md
+  - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
+  - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
 last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -903,58 +897,35 @@ features predict.
 
 ## Assigned active plans
 
-_Active plans declaring `parent_epic: predictions_master`. Workers pick up in priority order (P0 first). Auto-populated
-by `scripts/plans/populate_epic_bodies_2026_05_21.py` — the list below was seeded by the 2026-06-20 restructure and the
-script keeps it in sync from frontmatter._
-
-**Delegated (predictions work tracked under service-epic plans, listed for visibility — NOT direct `parent_epic`
-children):**
-[`prediction_manifest_canonicalisation_2026_06_01`](../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md)
-(SUPERSEDED — corrected 2026-07-15, plan-reconcile: folded into `data_completion_to_100_all_ag_2026_06_21` M-1 per
-mtds_mdps_master.md's 2026-07-13 CONSOLIDATION EXECUTED banner; was: manifest / parquet canonicalisation +
-writer-rebundling) ·
-[`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
-(lifecycle-bounded adapter `available_at` stamping).
+_3 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
-
-**status**: active · **estimate**: 4 cal AI-days (class: brand-new). Synthetic `OTHER` canonical-question-group bucket
-end-to-end (UAC seeding + classifier event + manifest coverage) + deployment-ui 3-level
-`asset_group → canonical_question_group → cadence` drilldown + per-shard parquet download + data-status predictions
-panel + the "out of scope" VERIFY gates + the P2 prediction sentinel fan-out for empty CQG rows.
-
-### [`predictions_lookahead_and_reader_migration_2026_06_20`](../archive/2026_07/predictions_lookahead_and_reader_migration_2026_06_20.md)
-
-**status**: active · **estimate**: 3 cal AI-days (class: brand-new). Reader callsite migration to
-`prediction_canonical_question_group`; per-market `LookaheadBiasError` feature-compute enforcement; strategy archetype
-configs reference `canonical_question_group`; 1-group × 1-day E2E smoke; predictions feature_groups → UAC
-`FEATURE_REQUIRED_INPUTS`.
-
 ### [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research). Predictions ML half of `sports_predictions_e2e` —
-Model 2A walk-forward + acceptance metrics + Group-F AUC≥0.55/calib≤5% gate + FSS `arb_calculator` + model-registry
-persistence + MTDS completion-% slice. **GATED ON `sports_master:Group E`** (FSS ≥95% non-NULL).
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Predictions ML Model 2A walk-forward +
+arb_calculator (sports_predictions_e2e predictions half)
+
+### [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: Predictions synthetic OTHER
+canonical-question-group bucket + deployment-ui 3-level drilldown
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority — P1 items live within the P0 child plans above.)_
+_(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
-_(the prediction sentinel fan-out for empty CQG rows is tracked as a P2 todo inside
-[`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md).)_
+### [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md)
 
-> **🟡 STALE INDEX (annotated 2026-07-12, finding 232, §A2 B-queue ruling)** — (was: the paragraph above presented as
-> the entirety of P2 work).
-> [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md)
-> (Kalshi + Polymarket perps + live CLOB depth/quotes + funding/basis/dispersion arb; ~8 AI-days, class: brand-new;
-> `status: active`, created 2026-06-20) declares `parent_epic: predictions_master` + `priority: P2` in its own
-> frontmatter but is absent from every P0/P1/P2 section in this epic and from the epic's own `related`/`related_plans`
-> frontmatter list. Durable fix is re-running `scripts/plans/populate_epic_bodies_2026_05_21.py` (out of scope for this
-> doc-reconciliation pass — named-files-only edit).
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures +
+live CLOB depth/quotes (funding/basis/dispersion arb)
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_
 
 ## Archived plans
 

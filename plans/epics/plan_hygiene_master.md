@@ -23,6 +23,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -192,3 +193,27 @@ single-walk discipline) consistently aligned. Residual items:
 - Phase 5 P2 (hook documentation in codex): shipped — `codex/11-project-management/active-plan-inventory-tracker.md` §
   "Pre-push hygiene hooks" (corrected 2026-07-15, plan-reconcile: this summary was stale against the Phase 5 P2 todo
   already checked off above).
+
+## Assigned active plans
+
+_1 active plans declare `parent_epic: plan_hygiene_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+
+## P0 — must complete before next foundation gate
+
+_(no plans currently assigned at this priority)_
+
+## P1 — important; post-current-gate
+
+### [`codex_vs_repo_docs_ssot_audit_2026_06_01`](../active/codex_vs_repo_docs_ssot_audit_2026_06_01.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: refactor) **title**: Codex-vs-repo-docs SSOT audit +
+consolidation (all active repos)
+
+## P2 — useful; opportunistic
+
+_(no plans currently assigned at this priority)_
+
+## P3 — backlog; revisit quarterly
+
+_(no plans currently assigned at this priority)_

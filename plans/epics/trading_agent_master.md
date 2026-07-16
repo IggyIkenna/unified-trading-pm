@@ -21,7 +21,7 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md] # was: ../active/trading_agent_service_architecture_unlock_2026_05_22.md -- corrected 2026-07-14, verify-rerun-2 finding 230, same dangling-ref fix as `related:` above
+related_plans: []
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -38,35 +38,5 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_0 active plans declare `parent_epic: trading_agent_master` in their frontmatter (was: stale auto-gen count of "1" — the
-only plan declaring it, `trading_agent_service_architecture_unlock_2026_05_22`, is `status: complete` /
-`✅ ARCHIVED 2026-05-23`, see P0 below). Workers pick up in priority order (P0 first) once a new child plan is filed.
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`. **Sync 2026-07-12** (finding 334, §A2 B-queue
-ruling): corrected the count so a dispatcher scanning epic summaries doesn't read "1 active" as live work when the epic
-currently has zero._
-
-## P0 — must complete before next foundation gate
-
-### [`trading_agent_service_architecture_unlock_2026_05_22`](../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Phases 1-8 complete: directive pipeline + event contracts + UAC schema + codex SSOT
-shipped. Phase 7 CI wired locally (GH_PAT rotation BLOCKED-OPERATOR). · **estimate**: 3.2 cal AI-days (class: refactor)
-
-**Deferred (MIGRATED FROM archived plan)** — P3 backlog, post-cutover:
-
-- No-op directive emission (Phase 6): real allocator logic; previously pointed at SUPERSEDED epic Phase 10.7
-- STUB ML/LLM subscribers (Phase 6): real derivations → `ml_repo_consolidation` + Allocator service
-- `performance_features` passthrough (Phase 3): rolling sharpe/drawdown/attribution → Allocator service
-- Phase 7 CI (GH_PAT rotation): `BLOCKED-OPERATOR` — unit tests + scaffold ship; CI triggers on PAT rotation
-
-## P1 — important; post-current-gate
-
-_(no plans currently assigned at this priority)_
-
-## P2 — useful; opportunistic
-
-_(no plans currently assigned at this priority)_
-
-## P3 — backlog; revisit quarterly
-
-_(no plans currently assigned at this priority)_
+_(no active plans currently declare `parent_epic: trading_agent_master`. Audit-pool wrapper plans for this epic land
+here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_

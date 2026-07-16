@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
-# Epic: infrastructure_master
-# Lifecycle: oneoff
-# Delete-when: after prod-run + orphan-sweep=0
+# Epic: plan_hygiene_master
+# Lifecycle: permanent
+# Delete-when: NA
+# (Was: Lifecycle: oneoff / Delete-when: after prod-run + orphan-sweep=0 — wrong on both counts.
+#  The epic roster is a DERIVED projection of every plan's parent_epic frontmatter, so it must be
+#  re-runnable forever, not once: plans are added / archived / re-homed continuously, and each such
+#  change re-stales every roster. Re-homed to plan_hygiene_master, which owns roster/orphan hygiene.
+#  Corrected 2026-07-15, plan-reconcile §10.)
 """
 Epic body populator — 2026-05-21.
 
-⚠️  DO NOT `--apply` WITHOUT AN OPERATOR RULING (added 2026-07-15, plan-reconcile §10).
-    This script was a SILENT NO-OP from 2026-05-21 until 2026-07-15 (hardcoded macOS WORKSPACE
-    path + a drifted hardcoded epic registry — both fixed below). Because it did not work, several
-    epic rosters were HAND-CURATED instead, under operator rulings — e.g. orchestrator_master was
-    regenerated 2026-07-12 per plan-reconciliation findings 216/323 (§A2), and carries annotations
-    this generator CANNOT reproduce (which children are `status: resolved` and correctly excluded,
-    when each was added, why a count changed).
+THE EPIC ROSTER IS DERIVED, NOT HAND-MAINTAINED. Every epic's "Assigned active plans" section is a
+projection of one fact each plan already declares — its `parent_epic:` frontmatter. Hand-editing
+that list is the same defect class as restating any derivable fact in prose: it goes stale the
+moment a plan is added, archived or re-homed. Run this instead.
 
-    A trial `--apply` on 2026-07-15 replaced those rosters and cost -1,719 lines of operator-ruled
-    curation across 23 epics; it was reverted. The generator is strictly LESS informative than the
-    hand-curated rosters it overwrites. `--dry-run` is safe and useful (it prints the true per-epic
-    plan census — that is how the "3 active plans vs 19 actual" staleness was measured). Treat
-    `--apply` as a destructive migration needing a ruling, not routine hygiene.
+History worth knowing (2026-07-15): this script silently did NOTHING from 2026-05-21 to 2026-07-15
+— it hardcoded `WORKSPACE = /Users/<operator>/…/.tabs/1` (an absolute path into the RETIRED .tabs/N
+worktree model), so it found 0 plans, SKIPped every epic, and still printed "COMPLETE". Because it
+appeared broken, humans hand-curated the rosters and annotated them with things like "these 2
+children are `status: resolved` and correctly excluded" — annotations that only existed because the
+generator did not filter by status. All three defects are fixed (portable path / derived epic
+registry / status filter), so those workarounds are now redundant: a correct generator makes the
+hand-annotation unnecessary rather than the other way round.
 
-Scans every active plan in plans/active/*.md for `parent_epic:` frontmatter, groups by epic, and:
+Portability: the workspace root resolves from THIS file's location, so any machine with the repos
+cloned as siblings can run it — no operator path, no tab structure.
+
+Scans every ACTIVE plan in plans/active/*.md for `parent_epic:` frontmatter, groups by epic, and:
 
   1. Updates each epic's `related_plans:` frontmatter list with the full set of plans pointing at it.
   2. For each epic, replaces the "## Assigned active plans" section in the body with a freshly-generated
@@ -171,6 +179,18 @@ def load_plan_refs() -> dict[str, list[PlanRef]]:
         # status can be multi-line (e.g. status: |\n  ACKED — ...) — handle that
         if "\n" in status or len(status) > 40:
             status = "active"
+        # An inline provenance comment is legal (`status: complete # (was: active) …`) — the value
+        # is the first token, not the whole line.
+        status = status.split("#")[0].strip()
+        # The section this feeds is literally "Assigned ACTIVE plans", so only `status: active`
+        # belongs in it. Without this filter the roster listed every file in plans/active/ —
+        # drafts (NOT ingested by AO), paused, and complete-but-not-yet-archived — which is what
+        # forced humans to hand-annotate "these N are resolved and correctly excluded" on top of
+        # the generated list. Deriving the filter removes the reason to hand-maintain it at all.
+        # (Fixed 2026-07-15, plan-reconcile §10 — operator: "i dont see why we would hand maintain
+        # this stuff".)
+        if status != "active":
+            continue
         estimate_class = fm.get("estimate_class", "")
         estimate_days = fm.get("estimate_calibrated_ai_days", "") or fm.get("estimate_baseline_ai_days", "")
         by_epic[epic].append(
@@ -254,14 +274,36 @@ def update_related_plans_frontmatter(epic_path: Path, plans: list[PlanRef], appl
     body = text[end:]
 
     new_related = "\n".join(f"  - {p.relative_path}" for p in sorted(plans, key=lambda x: x.slug))
-    if not new_related:
-        new_related = "  []"
-        new_value = "[]"
-    else:
-        new_value = "\n" + new_related
+    # NOTE the leading space in " []": `related_plans:[]` (no space) is NOT valid YAML — this value is
+    # concatenated straight onto the key below. Latent since 2026-05-21 and only reachable for an epic
+    # with ZERO assigned plans; it stayed invisible while the script was a no-op, then broke exactly
+    # the 5 zero-plan epics on the first real run. (Fixed 2026-07-15, plan-reconcile §10.)
+    new_value = " []" if not new_related else "\n" + new_related
 
-    # Find existing related_plans: block and replace
-    pattern = re.compile(r"^related_plans\s*:\s*(\[\s*\]|\n(?:  - .+\n)*)", re.MULTILINE)
+    # Replace the WHOLE existing related_plans value, whatever shape it is.
+    #
+    # The old regex only matched an EMPTY flow list (`related_plans: []`) or a BLOCK list
+    # (`related_plans:\n  - a\n  - b`). It did NOT match a POPULATED, prettier-wrapped flow list:
+    #
+    #     related_plans:
+    #       [
+    #         ../archive/2026_05/a.md,
+    #         ../archive/2026_05/b.md,
+    #       ]
+    #
+    # …which is the shape prettier actually produces, and which most epics carry. On those it
+    # matched only the bare key, substituted the new block items, and left the original `[...]`
+    # stranded underneath — yielding a block-sequence immediately followed by a flow-sequence, i.e.
+    # UNPARSEABLE YAML. A trial run corrupted the frontmatter of 21 of 23 epics that way.
+    #
+    # Correct approach: don't try to enumerate value shapes — consume from `related_plans:` up to
+    # the next TOP-LEVEL key (a line starting in column 0 with `key:`) or end of frontmatter, and
+    # replace that entire span. Emits a block list, which prettier is free to reflow.
+    # (Fixed 2026-07-15, plan-reconcile §10.)
+    pattern = re.compile(
+        r"^related_plans\s*:.*?(?=^[A-Za-z_][A-Za-z0-9_]*\s*:|\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
     if pattern.search(frontmatter):
         new_fm = pattern.sub(f"related_plans:{new_value}\n", frontmatter, count=1)
     else:

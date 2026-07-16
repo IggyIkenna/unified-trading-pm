@@ -30,11 +30,7 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans:
-  [
-    plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-    plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md,
-  ]
+related_plans: []
 last_updated: 2026-07-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -143,67 +139,8 @@ the codex doc at HEAD.
 
 ## Assigned active plans
 
-**Corrected 2026-07-12** (was: _"2 active plans declare `parent_epic: global_ledger_pnl_attribution_master`. Workers
-pick up in priority order (P0 first)."_) — finding 315,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling: 0 of the 2 plans listed
-below are actually active — both `global_ledger_pnl_attribution_discovery_2026_05_21` and
-`global_ledger_pnl_attribution_migration_2026_06_01` are ✅ ARCHIVED / `status: complete` (verified in their own
-frontmatter). The actual current active child is
-[`global_ledger_epic_reaudit_2026_07_12`](../archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md) (status:
-complete, was: "status: active" — corrected 2026-07-14, doc-reconciliation finding 72: the child plan's own frontmatter
-flipped `active` → `complete` on 2026-07-13, per its own Progress Log; this epic was never re-synced after the child
-closed — `parent_epic: global_ledger_pnl_attribution_master`, created 2026-07-12 per finding-366 operator ruling — full
-epic re-audit, its findings folded into the "Codex SSOTs" section above and the correction callout below).
-
-### P0 — Discovery + target-state spec
-
-#### [`global_ledger_pnl_attribution_discovery_2026_05_21`](../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL. Operator [ack] pending on Phase 3/5/6 (**ACK'd later
-the same day** — `unified-trading-pm@351a47b61`; corrected 2026-07-12); codex SSOT docs deferred post-cutover (all 4
-exist + current as of 2026-07-04; corrected 2026-07-12). · **estimate**: 3.6 cal AI-days (class: design)
-
-### P1 — Implementation (gated on P0 operator [ack])
-
-#### [`global_ledger_pnl_attribution_migration_2026_06_01`](../archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md)
-
-**status**: ✅ ARCHIVED 2026-05-23 — Stub plan; all 27 items DEFERRED-OPERATOR-DECISION (gated on discovery plan Phase
-3/5/6 operator [ack] — was: "3/4/5", numbering corrected 2026-07-12; start window 2026-06-01). **CORRECTED 2026-07-12**:
-this plan itself remains untouched at 0/27 (correctly frozen), but the SAME Phase 7/8 scope shipped through a separate
-plan — see the "Archived plans" section below + the re-audit callout above the Status line.
-
-### P2 — Continuous-verification + reconciliation
-
-- [ ] [CODE] P2. **Own-greeks vs venue-greeks sanity check — CeFi (Deribit)** (**MIGRATED FROM:**
-      `pricing_ledger_carry_rates_mtds_2026_06_01`): Where venue greeks exist (Deribit via
-      `unified_api_contracts.normalize_utils.options.DeribitOptionsGreeks`), `greeks-service` computes own greeks AND
-      cross-checks against venue-provided. Divergence beyond ε → emit `GREEKS_VENUE_DIVERGENCE` alert via
-      alerting-service. Own-computed greeks are authoritative for PricingLedger; venue greeks are the validation
-      reference. Tardis-historical Deribit greeks used same way in batch mode. Gate: greeks-service Pub/Sub
-      subscription + IS API integration + PricingLedger write-back (Phase 3 items — now all shipped at
-      `greeks-service@b0b702d`). (**MIGRATED FROM:** `pricing_ledger_carry_rates_mtds_2026_06_01`) **VERIFIED
-      2026-07-12** (re-audit): sha confirmed ancestor of `origin/live-defi-rollout`; at HEAD (`ac4ed0f`) the Pub/Sub
-      subscriber (`greeks_service/inputs/mark_update_sub.py`) + IS reader + PricingLedger writer
-      (`greeks_service/outputs/pricing_ledger_writer.py`) + handler remain wired live in `__main__.py` — only touched
-      since by an unrelated basedpyright-strict typecheck fix (`f41a12d`), no regression/removal. BACKED.
-
-### P3 — Post-cutover enrichments
-
-- [ ] [CODE] P3. **Live (non-paper) PassiveLedger per-event divergence-check listener** — forward-carried residual from
-      the 2026-07-12 re-audit (`plans/archive/2026_07/global_ledger_epic_reaudit_2026_07_12.md`). The
-      paper/backtest-mode PassiveLedger synthesiser shipped
-      (`strategy-service/strategy_service/engine/backtest/paper_run_passive.py` via
-      `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`), but the LIVE listener this epic's own "VM
-      assignment notes" describe (on-chain/venue-emission-triggered, running inside `StrategySupervisor` per-client
-      subprocess, comparing observed emissions against the synthesised expectation) was NOT found in strategy-service at
-      HEAD — genuinely unshipped. Owning repo: strategy-service. No estimate assigned yet (pending operator scoping).
-- [ ] [CODE] P3. **TreasuryLedger SSOT partition (`ledger_type=treasury/client_id={cid}/`, writer =
-      fund-administration-service)** — forward-carried residual from the 2026-07-12 re-audit. The operator ACK'd this
-      exact design 2026-05-23 (`unified-trading-pm@351a47b61`,
-      `plans/archive/2026_05/pricing_ledger_carry_rates_mtds_2026_06_01.md` § Operator decisions, "Phase 4/6
-      TreasuryLedger split"), but it is unimplemented at HEAD — zero code hits for `ledger_type=treasury` across UTL /
-      strategy-service / execution-service / fund-administration-service / client-reporting-api (the shipped
-      `ledger_type=transfer` run tape is a different, run-scoped construct). Owning repo: fund-administration-service.
+_(no active plans currently declare `parent_epic: global_ledger_pnl_attribution_master`. Audit-pool wrapper plans for
+this epic land here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
 
 ## Archived plans
 

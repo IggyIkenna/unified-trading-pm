@@ -34,17 +34,13 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  [
-    ../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
-    ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md,
-    ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md,
-    ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md,
-    ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md,
-    ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
-    ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md,
-    ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md,
-    ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
-  ]
+  - ../active/data_completion_cefi_2026_07_15.md
+  - ../active/data_completion_defi_2026_07_15.md
+  - ../active/data_completion_prediction_2026_07_15.md
+  - ../active/data_completion_tradfi_2026_07_15.md
+  - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+  - ../active/migration_verification_orphan_safety_2026_06_10.md
+  - ../active/mtds_available_at_cross_asset_backfill_2026_07_13.md
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -119,63 +115,45 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: manifest_master` in their frontmatter (updated 2026-07-15, plan-reconcile §8: +4 —
-the per-asset-group children split out of M-1 (`data_completion_{cefi,tradfi,prediction,defi}_2026_07_15`) when M-1
-breached the absolute 5000-line ceiling, listed under P0 below so they are not inventory orphans. Previously: added
-`mtds_available_at_cross_asset_backfill_2026_07_13` — its own frontmatter declares `parent_epic: manifest_master` but it
-is not yet reflected in the P0-P3 roster below; against `plans/active/*.md` top-level frontmatter — the same scan scope
-as `scripts/plans/populate_epic_bodies_2026_05_21.py`; the script itself could not be re-run in place, it has a
-hardcoded macOS workspace path, so this refresh reproduces its scan logic by hand). Was: "7 active plans... verified
-2026-06-30" with every P0-P3 entry below shown ✅ ARCHIVED — stale; the 6 archived-since-2026-05-21/23 entries
-previously listed here have been removed from the live roster (each plan's own file, at `plans/archive/2026_05/...` or
-`plans/archive/...plan.md`, remains the historical record; only `bucket_name_ssot_canonicalisation_2026_05_10` is
-additionally duplicated in the "Archived plans" section below, unchanged). Corrected per plan-reconciliation finding
-130, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
-Note: a broader grep for `parent_epic:.*manifest_master` also matches per-todo-item inline tags inside AG-specific
-canonicalisation plans whose own document-level frontmatter `parent_epic` is `mtds_mdps_master` (e.g.
-`defi_manifest_canonicalisation_2026_06_01.md`) — those are NOT document-level manifest_master children and are
-correctly excluded here. Workers pick up in priority order (P0 first)._
+_7 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`master_data_canonicalisation_migration_catalogue_2026_06_07`](../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
-
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) · **title**: MASTER COORDINATOR — data + manifest +
-schema migration + IS catalogue + pipeline_mode standardisation
-
-### [`migration_verification_orphan_safety_2026_06_10`](../active/migration_verification_orphan_safety_2026_06_10.md)
-
-**status**: active · **estimate**: 6.6 cal AI-days (class: design) · **title**: Migration verification & orphan-safety
-harness (CF-15…CF-21)
-
-<!-- The 4 below were split out of M-1 (data_completion_to_100_all_ag_2026_06_21) on 2026-07-15 per operator ruling
-     (plan-reconcile §8) when M-1 breached the absolute 5000-line ceiling. Each carries M-1's per-asset-group scope
-     VERBATIM and is independently ownable; M-1 stays the coordinator hub for cross-cutting scope. Listed here so they
-     are not inventory ORPHANS (a plan no master/epic references). -->
-
 ### [`data_completion_cefi_2026_07_15`](../active/data_completion_cefi_2026_07_15.md)
 
-**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — CeFi manifest
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — CeFi manifest
 canonicalisation + backfill (split from M-1)
 
-### [`data_completion_tradfi_2026_07_15`](../active/data_completion_tradfi_2026_07_15.md)
+### [`data_completion_defi_2026_07_15`](../active/data_completion_defi_2026_07_15.md)
 
-**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — TradFi manifest
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — DeFi manifest
 canonicalisation + backfill (split from M-1)
 
 ### [`data_completion_prediction_2026_07_15`](../active/data_completion_prediction_2026_07_15.md)
 
-**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — Prediction
-manifest canonicalisation + backfill (split from M-1)
-
-### [`data_completion_defi_2026_07_15`](../active/data_completion_defi_2026_07_15.md)
-
-**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — DeFi manifest
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — Prediction manifest
 canonicalisation + backfill (split from M-1)
+
+### [`data_completion_tradfi_2026_07_15`](../active/data_completion_tradfi_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — TradFi manifest
+canonicalisation + backfill (split from M-1)
+
+### [`master_data_canonicalisation_migration_catalogue_2026_06_07`](../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: design)
+
+### [`migration_verification_orphan_safety_2026_06_10`](../active/migration_verification_orphan_safety_2026_06_10.md)
+
+**status**: active · **estimate**: 6.6 cal AI-days (class: design)
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`mtds_available_at_cross_asset_backfill_2026_07_13`](../active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Cross-asset-group available_at manifest
+backfill (market-data-tick — prediction, tradfi, defi)
 
 ## P2 — useful; opportunistic
 
