@@ -1237,7 +1237,13 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       rows); **no `Container terminated on signal 9`** (the instruments-sports merge is the known heavy case —
       60-80s/2.09M rows/37 shards, 900s bump at `manifest_consolidator_scheduler.tf:88-92`); no stale-index loud-fail.
       Let them run **≥3 clean ticks before any writer resumes** so the index is a known-good baseline. _ABORT_: row
-      count drops or OOM-kill → restore the T0.2 `.bak`; do not resume writers onto a corrupt index.
+      count drops or OOM-kill → restore the T0.2 `.bak`; do not resume writers onto a corrupt index. **Downstream
+      unblock (added 2026-07-16 21:32Z, slot-13)**: `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
+      (compute sports features 2015→present) is dispatcher-gated on backlog condition
+      `sports-cutover-phase6-consolidator-resumed` (created to stop wasted re-dispatch during the freeze — see that
+      plan's Progress Log). The moment `-market-data-sports-cron` reads `state: ENABLED` and passes this gate's checks,
+      flip it:
+      `curl -X POST $SERVER_URL/api/prerequisites/sports-cutover-phase6-consolidator-resumed -d '{"value": true}'`.
 - [ ] [INFRA] P0. **T6.2 — Restore the shared/uncertain writer (11) then features (10).** _Mechanism_: un-pause
       `uts-prod-market-tick-data-fast-t1-schedule` — verify against T4.5's measured asset-group list that its target is
       `market-data-tick-sports-prd-*` and **not** a legacy name. Then `features-service-sports-daily-trigger` → the

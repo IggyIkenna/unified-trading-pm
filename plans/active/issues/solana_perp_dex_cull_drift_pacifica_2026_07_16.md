@@ -16,7 +16,7 @@ status: open
 nature: record
 asset_group: [defi, cefi]
 stage: [data]
-repos: [market-tick-data-service, deployment-service, unified-trading-pm]
+repos: [market-tick-data-service, deployment-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
 tags:
   [
@@ -74,6 +74,101 @@ CODE/registry/codex** (UAC venue registries `defi_venues.py` / `venue_adapter_ke
 / `drift_v2_onchain_decoder.py`, external mock dirs `unified_api_contracts/external/{drift,pacifica}/` — confirmed via
 live `git status` at task start, all dirty/uncommitted, sibling actively mid-edit throughout this session). No repo
 source file was touched by this task.
+
+**strategy-service (10th repo, added 2026-07-16 late in the day — caught by a fleet-wide closing grep after the other 9
+repos shipped)**: this is the one place the cull changes **STRATEGY BEHAVIOUR**, not just dead code/data. See §
+"strategy-service — live strategy behaviour change" below.
+
+## strategy-service — live strategy behaviour change (2026-07-16)
+
+Unlike the other 9 repos, strategy-service's DRIFT/PACIFICA-SOLANA references were **live code paths actively used by
+the `CARRY_STAKED_BASIS` / `CARRY_BASIS_PERP` / `CARRY_STAKED_BASIS_DATED` archetype engines** — removing the venue
+changes what these strategies can actually do, not just what they're allowed to reference.
+
+**What changed (venue-set before/after)**:
+
+| Constant / table                                                                         | Before                                                  | After                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `catalog_staked_basis.py::_STAKED_BASIS_SOL_PERP_VENUES`                                 | `("HYPERLIQUID", "DRIFT")`                              | `("HYPERLIQUID",)`                                                                                                                                           |
+| `catalog_staked_basis.py::_VENUE_ALIAS_TO_CANONICAL`                                     | `{"GMX": (...), "DRIFT": ("DRIFT-SOLANA",)}`            | `{"GMX": (...)}`                                                                                                                                             |
+| `catalog_staked_basis.py::_DERIVATIVE_TICKER_EMBEDS_FUNDING`                             | `{HYPERLIQUID, ASTER, PACIFICA-SOLANA, LIGHTER-ZKSYNC}` | `{HYPERLIQUID, ASTER, LIGHTER-ZKSYNC}`                                                                                                                       |
+| `build_carry_staked_basis()` SOL-side slots (jito-drift, marinade-drift × 4 spot venues) | 8 slots                                                 | **0 slots** (no live venue accepts JitoSOL/mSOL as LST_AS_MARGIN collateral)                                                                                 |
+| `build_carry_staked_basis()` total catalog slots                                         | 14                                                      | **6** (ETH-side only: DERIBIT/stETH + BYBIT/stETH × 3 spot venues)                                                                                           |
+| `build_carry_staked_basis_dated()` — hardcoded `jito-drift-sol-q1` slot                  | present (ungated, unconditional)                        | **removed outright** (no fallback venue for Solana dated futures)                                                                                            |
+| `archetype_slots_defi.py::SOL_BASIS` (CARRY_BASIS_PERP)                                  | `perp_venue: drift`                                     | `perp_venue: hyperliquid` — **fully functional**, no LST-margin requirement                                                                                  |
+| `archetype_slots_defi.py::SOL_STAKED_BASIS` (CARRY_STAKED_BASIS)                         | `perp_venue: drift` (LST_AS_MARGIN, f=1.0)              | `perp_venue: hyperliquid` — engine's `USDC_MARGIN_BUFFERED` fallback fires (f=0.8 default, less capital-efficient but genuinely functional, NOT a dead slot) |
+| `paper_run_handler.py::PAPER_RUN_SPEC_INDICES`                                           | `(0, 6)` — spec[6] was the SOL/DRIFT slot               | `(0, 5)` — both ETH-side now (index 6 would have raised `ValueError: out of range`)                                                                          |
+
+**Proof of no silent empty-universe / no-hedge degrade**: verified directly (not assumed) that (a) `HYPERLIQUID` does
+NOT accept JitoSOL/mSOL as collateral (`accepted_perp_collateral("HYPERLIQUID") == ["USDC"]`), so simply keeping
+HYPERLIQUID in the SOL perp-venue tuple does NOT restore SOL-side catalog slots — this is documented honestly in the
+`build_carry_staked_basis()` / `_resolve_start_token()` docstrings rather than left as a silent zero; (b) the ETH side
+of `CARRY_STAKED_BASIS` remains fully live (6 slots, DERIBIT + BYBIT), proving the archetype degrades a leg (loses SOL),
+not the whole archetype, per the operator's framing; (c) for the single-slot `archetype_slots_defi.py` table (a
+DIFFERENT, non-matrix-gated construction path from the auto-generated catalog), `SOL_STAKED_BASIS` migrated to
+HYPERLIQUID DOES produce a genuinely functional slot because `staked_basis.py::_derive_structure()` has a newer
+`USDC_MARGIN_BUFFERED` fallback (added 2026-06-17, independent of this cull) that the auto-generated catalog's
+`_resolve_start_token()` does not implement — confirmed live via
+`_derive_structure(_BasisConfig("marinade","SOL","mSOL","hyperliquid","SOL-PERP","jupiter","USDC"), Decimal("0.20"))` →
+`_DerivedStructure(structure='USDC_MARGIN_BUFFERED', perp_margin_token='USDC', ...)`, not `None`.
+
+**Pre-existing catalog/engine gap surfaced (not fixed, flagged for follow-up)**: `catalog_staked_basis.py`'s
+`_resolve_start_token()` (used by the auto-generated `build_carry_staked_basis()`) only implements the LST_AS_MARGIN
+eligibility check — it does NOT implement the engine's newer `USDC_MARGIN_BUFFERED` fallback. This means the
+auto-generated catalog under-emits relative to what the engine can actually run (the single hardcoded `SOL_STAKED_BASIS`
+slot works via the fallback; the auto-generated catalog's SOL bundle does not, because it never reaches the fallback
+check). This mismatch predates this task (the fallback was added 2026-06-17, the catalog gate was never updated to
+match) — this cull just made it visible by removing the one SOL venue that happened to satisfy the STRICTER gate. Not
+fixed here (real scope creep beyond "kill the venue"); worth a follow-up plan if the operator wants the ~8
+auto-generated SOL-side USDC_MARGIN_BUFFERED slots restored.
+
+**Tests**: 84 RED tests found on task start (`test_target_universe.py` + 83 more across ~26 files — far more than the 1
+initially flagged; a fleet-wide sweep of the whole repo, not just the named files, was required), plus 2 more
+(`test_paper_universe.py`) and 1 more (`test_archetype_slot_resolver.py`'s HYPERLIQUID re-point) surfaced only by a full
+`tests/` sweep after the scoped sweep looked clean. All fixed to match the new reality — no test deleted to force a
+pass; every removed test case (pure DRIFT-behaviour duplicates with a still-live equivalent, e.g.
+`TestLstAsMarginUnchanged::test_drift_*` in `test_carry_staked_basis_usdc_margin_buffered.py` duplicating
+`test_bybit_emits_lst_as_margin_full_size`) carries an explanatory comment. Full `strategy-service` suite green
+post-fix: **5056 passed, 354 skipped, 0 failed** (`pytest tests/`). One unrelated pre-existing failure
+(`test_carry_recursive_staked_emits_atomic_on_chain_loop`, `BucketNamingError: GCP_PROJECT_ID not set`) reproduces
+identically on a clean pre-task HEAD when run in file-isolation — an environment/fixture-ordering artifact of a
+DIFFERENT engine (`CarryRecursiveStakedEngine`, no DRIFT reference), not touched by this task, and it passes as part of
+the full suite.
+
+**Vacuous-test trap caught by coordinator review (real correctness bug, not just a rename)**: the first-pass
+substitution in `test_carry_staked_basis_audit03.py` left the shared `_jito_drift_params()` fixture defaulting to
+`perp_venue="DRIFT"` for the F-09 stake_fraction-rejection tests
+(`test_stake_fraction_half_rejected`/`_zero_rejected`/`_above_one_rejected`). Since DRIFT is now fully absent from UAC
+(`accepted_perp_collateral("DRIFT") == []`), `_derive_structure` resolves every DRIFT-based config to INELIGIBLE
+(`None`) — so these 3 tests were passing because the VENUE was rejected before `_resolve_setup` ever reached the
+stake_fraction check, not because the stake_fraction rule fired. **The F-09 stake_fraction enforcement rule was
+effectively untested** despite green CI. A 4th instance of the identical bug pattern was found independently
+(`TestF10FeesTermInNetCarry::test_high_fees_block_entry` — `_preflight` calls `_resolve_setup` first and returns `None`
+immediately on venue ineligibility, before net_carry is ever computed, so this test was also vacuously "passing" for the
+wrong reason). Per the coordinator's explicit guidance: **re-pointed rather than deleted** — verified live that
+LST_AS_MARGIN is genuinely still reachable (BYBIT accepts `stETH`/`wstETH`, OKX accepts `wstETH`, both confirmed via
+`accepted_perp_collateral()`), so the shared fixture (renamed `_bybit_lido_params`) now defaults to LIDO/stETH/ETH/BYBIT
+— a real LST-margined venue — restoring genuine F-09/F-10 enforcement coverage. The one caller that specifically needs
+Solana-chain-gate semantics (`test_jito_solana_chain_allowed`, chain gate is independent of perp-venue collateral
+eligibility and `_derive_structure` is mocked there) explicitly overrides back to
+`staking_protocol=JITO, native_asset=SOL, lst_asset=JitoSOL` to preserve its Solana-specific test intent. Verified
+directly (not just green-trusted): `_derive_structure(BYBIT config) → LST_AS_MARGIN` (non-None, haircut 0.10) vs
+`_derive_structure(DRIFT config) → None` — confirming the fixed tests now genuinely reach and exercise the rule under
+test.
+
+**Codex updated**: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (SUPERSEDED banner + stale
+venue_universe/matrix references), `carry-staked-basis-dated.md` (SUPERSEDED banner, dated slot removed),
+`../families/carry-and-yield.md` (active slot_labels list), `../category-instrument-coverage.md` (Solana coverage rows
+marked REMOVED). `mvp-universe-per-asset-group.md` had no DRIFT references (checked, clean).
+
+**Considered and explicitly kept (not a miss)**:
+`strategy_service/engine/strategies/v2/migration/legacy_strategy_mapping.yaml` still has `perp_venue: drift` rows under
+`DEFI_SOL_BASIS_DRIFT_SCE_1H` / `DEFI_SOL_STAKED_BASIS_DRIFT_SCE_1H` — left AS-IS. This is a static historical audit
+table mapping already-archived `_archived_pre_v2` legacy strategy modules to their v2 equivalents (not live code, not
+runtime-validated against UAC — `test_legacy_mapping_yaml_loader.py` confirms the loader does zero venue-matrix
+validation). Changing it would misrepresent the historical fact of what that legacy (dead) strategy actually ran on.
+`strategy_service/scripts/phase_d_gate.py`'s "pre-Pacifica-launch" comment is similarly a historical explanatory note
+(why `ARBITRAGE_PRICE_DISPERSION` may legitimately be data-sparse), not a functional PACIFICA reference — left as-is.
 
 ## Naming gotcha (measured live, not assumed — the reason a naive purge would silently miss rows)
 
@@ -337,6 +432,74 @@ surface safely purged, exactly as this task ultimately did.
   `instruments-store-cefi-prd-.../prod/catalog.20260716-124430.driftpacificacull.bak.parquet`.
 - This issue doc: `unified-trading-pm@<see git log>` (`docs(plans):` commit, rebase-autostash per the coordinator's
   instruction since PM is busy with concurrent sibling commits).
+
+## COMPLETION RECORD — cull verified done (coordinator, 2026-07-16)
+
+**Ruling executed in full**: DRIFT-SOLANA + PACIFICA-SOLANA (the only Solana perp DEXes; MANGO/ZETA/FLASH died earlier
+the same day) removed from code, registries, schemas, manifests, catalogues, GCS, launchers, UI and docs. Jupiter left
+as a clean slate (not integrated — deliberately NOT added).
+
+**Shipped — 13 repos, 24 commits:**
+
+| repo                      | shas                                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| unified-api-contracts     | `7628dd30` (all registries) · `cb486e42` (orphaned Drift types) · `c5867215` (scenario_overlay schema) · `78334504` (_DEFI_PERP + chain map) · `b0ba2d6d` (TIF test) · `d996e4fe` (**architecture_v2**: 2nd collateral registry, leg specs+seeds, jurisdiction overlay, order semantics, venue tokens, simulation assumptions) |
+| unified-trading-library   | `8f6b0a9f` (+follow-up: kill_switch/treasury/custody/withdrawal dead paths) · `69b12982` (venue fee schedule + defi venue list) · `81927d55` (availability stamping + ledger tests)                                                                                                                                            |
+| market-tick-data-service  | `2e674d1f` (55 files, −11,178 lines) · `788daa2e` (purge script) · `5a163d02`/`56efdd7d` (pre-cull Kalshi fixes)                                                                                                                                                                                                               |
+| instruments-service       | `4d65d468` · `b37e9d82`                                                                                                                                                                                                                                                                                                        |
+| deployment-service        | `9b13679` (VM prefixes + launcher registry) · `194deeb` (shell launchers, 2 more py registries, dispatch branches)                                                                                                                                                                                                             |
+| execution-service         | `e003cda4`                                                                                                                                                                                                                                                                                                                     |
+| strategy-service          | `989557e4` (hedge venue set → `("HYPERLIQUID",)`, F-09 fixture re-point) · `a3883b73`                                                                                                                                                                                                                                          |
+| e2e-testing               | `76a1071`                                                                                                                                                                                                                                                                                                                      |
+| unified-trading-system-ui | `08998a92` · `70ca4b8c` (KillSwitchId mirror) · `15270ed6` (TreasurySource mirror)                                                                                                                                                                                                                                             |
+| deployment-ui             | `26b7159` (operator-facing treasury dropdown, `pw:L2 ✓`)                                                                                                                                                                                                                                                                       |
+| unified-trading-pm        | `f3518eec9` (codex tombstones + 5 issue docs superseded) · `6c5cfa812` (adapter baseline + cursor-configs) · `9730ec264`/`5b97d3672` (journals)                                                                                                                                                                                |
+
+**Data purged** (`9730ec264`): 447,200 manifest rows (DEFI 430,248 + CEFI 16,952), 94 catalogue rows, 25,286 GCS
+objects, 2 per-VM shards — across BOTH asset groups. Snapshots taken; both consolidator crons paused→resumed with
+verified green cycles; both writer VMs (`mtds-solana-drift-backfill`, `cefi-pacifica-solana-*`) TERMINATED.
+
+**KEPT + verified (the guard that mattered):** DRIFT/JUP/PACIFICA **tokens** — 40,693 manifest rows on other venues
+(Binance-Futures/Bybit/Hyperliquid/Extended/Kamino/Lighter) plus `cefi_instrument_universe.py` rows plus the **Solana
+asset-list `"DRIFT"` token in `utl/config_interface/domain_configs.py:170`** (the coordinator nearly deleted this
+mid-sweep — logged as a near-miss). Non-perp Solana venues (JITO/KAMINO/ORCA/RAYDIUM/MARINADE/SANCTUM/SOLBLAZE/
+MARGINFI/SOLEND) and all non-Solana perps (HYPERLIQUID/GMX/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET) untouched. Jupiter
+(swap aggregator) untouched.
+
+**Bugs the cull EXPOSED (each fixed, none pre-existing to the ruling):**
+
+1. **Vacuous tests** — strategy-service's 11 F-09 stake-fraction tests went green _for the wrong reason_ once DRIFT
+   became INELIGIBLE (`accepted_perp_collateral('DRIFT') == []` → every case returns None). Re-pointed the fixture to
+   BYBIT (a real LST-margined venue: stETH/wstETH), proven live, so the risk rule is exercised again. Deleting them — or
+   forcing HYPERLIQUID (USDC-margined → SPLIT_STAKE, f=0.5 legitimately allowed) — would both have been wrong.
+2. **Schema/code divergence** — `scenario_overlay.schema.json` advertised a `KillSwitchId` the enum no longer had.
+3. **Operator-facing dead option** — deployment-ui's Treasury dropdown offered `SUB_ACCOUNT_DRIFT`; selecting it would
+   have failed. Every remaining option re-verified against UAC's live enum.
+4. **Two collateral registries** — the cull cleaned `registry/venue_collateral.py` but
+   `architecture_v2/ collateral_registry.py` kept a live `venue_id="drift"` entry (mSOL/JitoSOL @20%), which is why a
+   dead-venue test stayed green.
+5. **Cross-repo break** — UAC's enum removal broke UTL's treasury/custody/withdrawal imports (found + fixed in-band).
+6. **KAMINO mislabel** — the MTDS gate caught a KEPT venue's `pipeline_mode` changing; verified against prod GCS that
+   the cull FIXED a `batch_hyperliquid` mislabel (real data is `batch_onchain_subgraph`) — the test had pinned the bug.
+
+**Process lessons (worth honouring next venue cull):**
+
+- **The closing grep caught a missed surface SEVEN times** — deployment-service, its shell scripts, execution-service,
+  2-of-4 python registries, strategy-service, e2e-testing, deployment-ui. Every time the coordinator would have declared
+  done. Re-run it fleet-wide; never trust the last agent's "zero".
+- **Grep case-insensitively.** Uppercase-biased patterns (`DRIFT-SOLANA`, `SUB_ACCOUNT_DRIFT`) were blind to lowercase
+  `"drift"` venue ids in UAC/UTL/JSON — that blindness hid an entire `architecture_v2` module footprint for hours.
+- **Sweep whole FILES, not the matched pattern.** Two separate files were "fixed" and still dirty (a second
+  `_WIRED_VENUES` line; a second enum mirror in the same JSON).
+- **Provider-first ordering** for coupled invariants (UAC-key ⊆ IS-adapter; launcher_registry ↔ VM_PREFIX_TO_BUCKET);
+  both red-lit a consumer when done backwards. quickmerge's dirty-dep pre-flight is correct — fix the order, not the
+  guard.
+- **Generated bundles**: do NOT hand-patch. Two filed instead (see
+  `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`).
+
+**Open (tracked, not blocking):** the stale generated capability bundles (`capability-manifest.json`,
+`capability-verdict-matrix.json`, `ui-reference-data.json`'s ~40 archetype lines) — need the resync tooling, filed.
+Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) are outputs, not config.
 
 ## Progress log
 
