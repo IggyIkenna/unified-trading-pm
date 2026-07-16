@@ -306,7 +306,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL — no-service-to-service-deps HARD RULE).",
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -342,9 +342,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 3,
-        "coverage_pct": 82.1,
+        "qg_red_reason": "ruff",
         "warn_file_count": 15,
-        "qg_red_reason": null
+        "coverage_pct": 82.11
       }
     },
     "deployment-service": {
@@ -1263,9 +1263,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 6,
-        "coverage_pct": 87.73,
+        "qg_red_reason": null,
         "warn_file_count": 21,
-        "qg_red_reason": null
+        "coverage_pct": 87.78
       }
     },
     "unified-trading-pm": {
@@ -1415,9 +1415,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 13,
-        "coverage_pct": 75.1,
         "qg_red_reason": null,
-        "warn_file_count": 8
+        "warn_file_count": 8,
+        "coverage_pct": 74.73
       }
     },
     "e2e-testing": {
