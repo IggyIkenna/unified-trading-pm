@@ -9,9 +9,10 @@ summary: >-
   the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
   fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
   fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
-  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). Runner
-  infra REDESIGNED + shipped 2026-07-16 (two pools: long-lived writer + JIT-ephemeral glue) but verified off-VM only;
-  nothing deployed, no runs-on flipped. Next action = SSM deploy to the planning-VM (preflight first).
+  2026-07-15/16 and the flip set is final. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). All off-VM
+  work is BUILT + shipped 2026-07-16 (two-pool runners, failsafe bootstrap, queue-starvation watchdog); target VM and
+  the GH_PAT token are VERIFIED. Nothing deployed, no runs-on flipped. Next action = the D1-D6 DEPLOY RUNBOOK, stopping
+  at the D6 canary; then flip 1 -> 10 -> remaining ~27.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -58,19 +59,19 @@ drift_direction: advance-code
 
 1. **Read this pre-flight §** + § "MOVE / STAY manifest" (the flip set is final — do not re-derive it; the SSOT is
    `bash scripts/self-hosted-runners/classify-glue-workflows.sh` → 39 MOVE / 17 KEEP).
-2. ~~Runner-infra redesign~~ — ✅ **DONE 2026-07-16 (unified-trading-pm@c44ca1bd4).** Two pools: **long-lived
-   `glue-writer`** (labels `self-hosted,glue-writer`) for `ci-status-update`, **JIT-ephemeral `glue`** (labels
-   `self-hosted,glue`) for the other ~37, slot at `/opt/github-glue-runners/{repo,venv,toolcache}`, `User=ubuntu`
-   reusing the VM's creds+toolchain. Verified off-VM only (`bash -n`/shellcheck clean, prune + pool-fork unit-tested,
-   classifier unchanged 39/17, QG EXIT=0). **Read `scripts/self-hosted-runners/README.md` — it is the operating SSOT.**
-3. **⏵ NEXT: deploy** on the planning-VM `i-0c9b283b31d6b5ca7` via **AWS SSM** (§ "Deploy mechanism"). Order:
-   **`./setup-glue-runners.sh preflight` FIRST** (toolchain parity — `jq`/`npm` presence is still UNKNOWN on the box and
-   is the real migration risk), then `sudo GH_PAT=… GLUE_COUNT=5 WRITER_COUNT=3 ./setup-glue-runners.sh install`, then
-   `status` → expect 8 units active, **both pools Online**, slot clone fresh. Nothing on the VM has been touched yet.
-4. **Then canary** `reconcile-release-tags` (a MOVE workflow that HAS `workflow_dispatch`) → green on
-   `[self-hosted, glue]`.
-5. **Then** phased-group flip of the remaining ~37, then STEP 2b (ci-status-update trim) + STEP 2c (persist composite
-   action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+2. **Everything buildable OFF the VM is DONE — do not rebuild it.** Two-pool runners (@c44ca1bd4), failsafe bootstrap
+   (@80f00684a, container-proven), queue-starvation watchdog (@6901779de, mutation-tested). **Read
+   `scripts/self-hosted-runners/README.md` — it is the operating SSOT.**
+3. **⏵ NEXT: work the § "DEPLOY RUNBOOK — D1…D6" todos IN ORDER, then STOP at D6 and report.** The operator gates each
+   phase. Two facts are VERIFIED — do not re-derive, do not second-guess:
+   - **Target VM** = `i-0c9b283b31d6b5ca7` (`agent-orchestrator-vm-1`, 13.113.200.22, m8i.2xlarge 8vCPU/32GiB), via
+     **AWS SSM** (no inbound SSH). **NOT** `i-0dd9812a96cdda5dc` (the human box).
+   - **Token** = GCP Secret Manager **`GH_PAT`** (probed 201 = `Administration:write`; fine-grained, never expires).
+     **`github-token` is DEAD (401)** — an earlier version of this plan named it and would have failed the deploy. D1
+     fixes an install blocker (`GH_TOKEN_SECRET` path) · D2 preflight (⚠️ `jq`/`npm` on the box are still UNKNOWN — the
+     real migration risk) · D3 scripts onto the VM · D4 install · D5 prove both pools Online · D6 canary.
+4. **Pacing after D6 (operator 2026-07-16): canary (1) → verify → next 10 → verify → remaining ~27.** Then STEP 2b
+   (ci-status-update trim) + STEP 2c (persist composite action), then Phase 2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
 
 **Ordering hard rules:** runners must be live **before** any flip reaches `main` (schedule/dispatch workflows run the
 definition from the default branch — see the default-branch gotcha below), and **never flip** a `KEEP-*` workflow or
@@ -80,12 +81,13 @@ definition from the default branch — see the default-branch gotcha below), and
 
 ## Execution pre-flight & runbook (READ FIRST — context not obvious from the todos)
 
-**State 2026-07-16:** plan ACTIVE; all decisions closed (incl. the isolation-scope decision — folder/venv/clone only,
-`User=ubuntu`, VM's existing creds/toolchain); flip set final (39 MOVE / 17 KEEP); **runner infra REDESIGNED + shipped**
-(`scripts/self-hosted-runners/`, unified-trading-pm@c44ca1bd4 — two pools, slot, refresh timer, preflight), verified
-**off-VM only**. **NOTHING deployed** (no `install` has run, no runner registered, `preflight` never executed on the
-box), **no `runs-on` flipped, no callers rewired.** Next action = SSM deploy. Work continues from **slot 1**
-(`.tabs/1/`), root left to the AO worker.
+**State 2026-07-16:** plan ACTIVE; all decisions closed; flip set final (39 MOVE / 17 KEEP). **Everything buildable
+off-VM is BUILT + shipped**: two-pool runners (@c44ca1bd4), failsafe bootstrap (@80f00684a, container-proven), queue
+watchdog (@6901779de, mutation-tested). **VERIFIED**: target VM `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`
+(m8i.2xlarge, running); token = SM **`GH_PAT`** (201; `github-token` is DEAD/401). **NOTHING deployed** — no `install`
+has run, no runner registered, `preflight` never executed on the box, **no `runs-on` flipped, no callers rewired.** Next
+action = **§ "DEPLOY RUNBOOK" D1** (fix the `GH_TOKEN_SECRET` install blocker), then D2…D6, **STOP at D6**. Work
+continues from **slot 1** (`.tabs/1/`), root left to the AO worker.
 
 ### The flip set — CRITICAL split (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` is the SSOT; full list in §"MOVE / STAY manifest")
 
@@ -306,14 +308,54 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
       untrusted fork-PR code (private repo → none) before flipping.
+
+### ▶ DEPLOY RUNBOOK — D1…D6, strictly in order (operator-approved 2026-07-16)
+
+> Everything buildable off-VM is DONE. These are the on-VM steps. Target = `i-0c9b283b31d6b5ca7`
+> (`agent-orchestrator-vm-1`, VERIFIED) via **AWS SSM** (no inbound SSH). Token = **`GH_PAT`** (VERIFIED 201; the old
+> `github-token` is DEAD/401). Do NOT skip D2 — `jq`/`npm` on that box are still genuinely unknown, and toolchain parity
+> is the real migration risk.
+
+- [ ] [INFRA] P0. **D1 — teach `install` the Secret-Manager path (fixes MY blocker; do FIRST).** `cmd_install` currently
+      does `[ -n "${GH_PAT:-}" ] || die` and writes the literal token into `/etc/github-glue-runner.env` — contradicting
+      this plan's own "prefer `GH_TOKEN_SECRET` so no PAT sits on disk". Accept **either**: `GH_TOKEN_SECRET` (+
+      optional `GCP_PROJECT`) → write those to the env file and leave `GH_TOKEN` unset (the wrapper already resolves it
+      at runtime via the VM's ADC), **or** `GH_PAT` for the legacy path. Require exactly one. Update README + `--help`.
+- [ ] [INFRA] P0. **D2 — `preflight` on the VM via SSM (gate: do not proceed on a failure).**
+      `aws ssm send-command --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript`
+      → `bash <pm-clone>/scripts/self-hosted-runners/setup-glue-runners.sh preflight`. Verifies
+      `gh`/`jq`/`python3`/`uv`/`aws`/`gcloud`/`git` (fatal) + `npm` (advisory). **If anything is missing, fix it by
+      adding it to `bootstrap-ci-host.sh` and re-running — NOT by hand-installing on the box** (a hand-fix leaves the
+      failsafe lying, which is the exact drift the operator called out).
+- [ ] [INFRA] P0. **D3 — put the new scripts on the VM.** The VM's PM clone must contain the two-pool scripts
+      (@c44ca1bd4 + @80f00684a + @6901779de). FF-pull the VM's clone to current LDR via SSM; verify by sha, not by
+      assumption. **Never touch an AO slot clone** — use the AO's own PM checkout read-only, or clone fresh.
+- [ ] [INFRA] P0. **D4 — install both pools.**
+      `sudo GH_TOKEN_SECRET=GH_PAT GLUE_COUNT=5 WRITER_COUNT=3     ./setup-glue-runners.sh install`. Registers 5
+      JIT-ephemeral (`self-hosted,glue`) + 3 long-lived (`self-hosted,glue-writer`), builds the slot
+      (`repo`/`venv`/`toolcache`), installs the units + slice + refresh timer. **This is the first-ever end-to-end
+      exercise of the systemd path** — the container could not test it.
+- [ ] [VERIFY] P0. **D5 — prove the runners are actually live.** `./setup-glue-runners.sh status` → **8 units active**,
+      **both pools Online** (5×`glue-*` + 3×`writer-*`), slot clone fresh, slice `MemoryCurrent` sane. Cross-check from
+      here: `gh api /repos/IggyIkenna/unified-trading-pm/actions/runners` shows 8 online with the **disjoint** labels. A
+      pool that registers but shows 0 Online = the wrapper is failing → `journalctl -u 'github-glue-runner@glue-1'`.
+- [ ] [VERIFY] P0. **D6 — CANARY `reconcile-release-tags`, WITHOUT touching `main`.** Flip its `runs-on` on **LDR
+      only**, then `gh workflow run reconcile-release-tags.yml --ref live-defi-rollout`. **Why this is safe:**
+      `workflow_dispatch` executes the definition **from the chosen ref**, so the self-hosted path is proven while
+      `main` still says `ubuntu-latest` — nothing scheduled changes behaviour until we promote deliberately. Verify: the
+      run lands on a `glue-*` runner, goes green, and the ephemeral runner **auto-deregisters** afterwards (proving the
+      JIT lifecycle, not just the job). **STOP HERE and report** — the operator gates the next phase.
+
+### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
+
 - [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **38 flip-MOVE (PM-local direct) workflows only** (`ubuntu-latest`
       → `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
       touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M`/`KEEP-D` set stays hosted;
-      **`persist-cicd-event` is `MOVE-C` — converted in STEP 2c, NOT flipped**). **Pace = canary → phased groups
-      (operator 2026-07-15):** flip ONE low-risk MOVE workflow first (`reconcile-release-tags` — has
-      `workflow_dispatch`), confirm a green self-hosted run, then roll the remaining ~37 out in **small batches** (not
-      all at once). (Takes effect on push — do NOT push until the runners are live on the VM, else those workflows queue
-      with no runner.)
+      **`persist-cicd-event` is `MOVE-C` — converted in STEP 2c, NOT flipped**; **`ci-status-update` takes
+      `[self-hosted, glue-writer]`, NOT `glue` — the one exception to the uniform recipe**). **Pace (operator
+      2026-07-16): D6 canary (1) → verify → next 10 → verify → remaining ~27.** Each batch: flip on LDR, promote,
+      confirm green + billed-$0 on the moved set, and confirm the queue watchdog stayed quiet before the next batch.
+      (Takes effect on push — do NOT push until the runners are live, else those workflows queue with no runner.)
 - [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C).**
       Rewrite the reusable workflow as `.github/actions/persist-event/action.yml` (a composite action wrapping the same
       build-JSON + GCS/S3/log-only write steps), then change all **22 callers** (5 KEEP + 17 MOVE) from
@@ -777,3 +819,19 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   the literal token to `/etc/github-glue-runner.env`, which contradicts this plan's own stated preference for the
   Secret-Manager path (`GH_TOKEN_SECRET`) "so no PAT sits on disk". The runtime wrapper already resolves
   `GH_TOKEN_SECRET` via ADC — only `install` lacks the path. Fix before deploying.
+- 2026-07-16 — **Deploy runbook D1…D6 authored + operator pacing fixed (1 → 10 → remainder).** The plan had the canary
+  intent but none of the on-VM mechanics, so a fresh session would have had to re-derive them — and would have hit the
+  dead-token and install blockers live. Now explicit and ordered: **D1** fix `cmd_install` to accept `GH_TOKEN_SECRET`
+  (my blocker — it hard-requires `GH_PAT` and writes the token to disk, contradicting this plan's own preference) ·
+  **D2** SSM `preflight` (**gate** — `jq`/`npm` on the box are still UNKNOWN and toolchain parity is the real migration
+  risk; a miss gets fixed IN `bootstrap-ci-host.sh` and re-run, **never** hand-installed, or the failsafe starts lying)
+  · **D3** scripts onto the VM (verify by sha; never touch an AO slot clone) · **D4** install both pools — **the
+  first-ever end-to-end exercise of the systemd path**, which the container structurally could not test · **D5** prove 8
+  units + both pools Online + disjoint labels, cross-checked from the GitHub API rather than trusting `status` alone ·
+  **D6** canary. **D6's key property: it proves the self-hosted path WITHOUT touching `main`** — `workflow_dispatch`
+  executes the definition from the CHOSEN ref, so flipping `reconcile-release-tags` on LDR and dispatching
+  `--ref live-defi-rollout` exercises the runners while `main` still says `ubuntu-latest`; nothing scheduled changes
+  behaviour until we promote deliberately. D6 also asserts the ephemeral runner **auto-deregisters** afterwards, proving
+  the JIT lifecycle rather than merely a green job. Post-D6 pacing per operator: **canary (1) → verify → next 10 →
+  verify → remaining ~27**, each batch gated on green + billed-$0 + the queue watchdog staying quiet. `ci-status-update`
+  is flagged in STEP 2 as the ONE exception to the uniform recipe (`glue-writer`, not `glue`).
