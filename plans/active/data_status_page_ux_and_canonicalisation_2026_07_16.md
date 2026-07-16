@@ -696,9 +696,12 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 - [ ] [DATA] P2. _(Q2 — CeFi legacy lowercase dupes)_ Collapse `perpetual`→`PERPETUAL` (1.15M) + `spot`→`SPOT_PAIR`
       (502k) in the cefi availability index (the P4-A display alias makes them READ canonical, but they remain distinct
       manifest rows). This IS the P4 DATA P2 legacy-row canonicalization migration — do it for cefi.
-- [ ] [DATA] P2. _(Q2 — DeFi two data_types)_ Determine canonical between `instrument-catalog` (8.45M) and `instruments`
-      (3.03M) on the defi availability index; if one is a legacy/partial-migration artifact (see
-      `backfill_defi_catalog_data_type_2026_06_21.py`), migrate to the single canonical data_type + regen.
+- [ ] [DATA] P2. _(Q2 — DeFi two data_types)_ **DECIDED (operator round-2 2026-07-16): `instruments` is canonical for
+      DeFi.** Migrate the defi availability-index rows carrying `data_type='instrument-catalog'` (8.45M) →
+      `data_type='instruments'` (dedup against existing `instruments` rows on the shard atom; see the prior
+      `backfill_defi_catalog_data_type_2026_06_21.py` for the pattern), fix the writer so no new `instrument-catalog`
+      rows are emitted, then regen. Preserve shard-atom identity across MTDS/MDPS/features (data_type is a shard axis
+      there).
 - [ ] [DATA] P1. _(Q3 — SPORTS invalid `source` values)_ The sports source breakdown carries `mdps_odds_horizon_bucket`
       (8.1M) + `instruments_service` (3.7M) — NOT vendors (`source`=VENDOR-only, CLAUDE.md). `mdps_odds_horizon_bucket`
       is an MDPS bucket (cross-service leakage into the IS sports availability index); `instruments_service` is
@@ -727,6 +730,28 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 3. **P3 — prediction label**: ✅ slug for v1 (category from `canonical_question_group`), real title column as a
    follow-up.
 4. **P6 — catalogue explorer**: ✅ both, phased (availability-derived now, true-catalogue projection follow-up).
+
+### P9 round-2 decisions (operator 2026-07-16 pm)
+
+5. **DeFi data_type**: ✅ `instruments` is canonical → migrate `instrument-catalog` → `instruments`.
+6. **CeFi instrument_type**: ✅ migrate the non-canonical lowercase `perpetual`→`PERPETUAL`, `spot`→`SPOT_PAIR`.
+7. **TradFi instrument_type**: ✅ migrate/stamp the 46.5M blank (`__legacy__`) rows to their canonical InstrumentType.
+8. **Prediction data_types**: ✅ KEEP both grains (`prediction_canonical_question_group` +
+   `prediction_market_lifecycle`) — no change.
+9. **Sports invalid sources**: ✅ root-cause WHY `mdps_odds_horizon_bucket` + `instruments_service` appear as IS sports
+   `source` values (operator: "is it a sign of deeper issues?") BEFORE any correction — diagnose the cross-service
+   leakage path first, then fix at the writer/consolidator.
+
+> **Migration HARD RULES (all three data migrations 5–7):** `instrument_type` + `data_type` are SHARD axes for
+> MTDS/MDPS/features (NOT for instruments-service, where they are DISPLAY axes) — a naive IS-only rewrite of these
+> values breaks cross-service shard-atom identity. Each migration must: (a) fix the WRITER first so new rows are
+> canonical; (b) an IDEMPOTENT one-off migration script (pattern: `instruments-service/scripts/canonicalize_*_2026_*.py`
+>
+> - `backfill_defi_catalog_data_type_2026_06_21.py`) run on REAL infra with manifest-verified row counts; (c) preserve /
+>   co-migrate shard-atom identity across MTDS/MDPS/features (confirm those services' shards for the same instruments,
+>   or coordinate); (d) regen the affected catalogue + availability index. Run behind a pre-migration drain if any live
+>   writer touches the same index. These are heavy real-infra ops — a fresh-context agent owns them (handoff prompt in
+>   the operator's hands).
 
 ## Full audit artefacts
 
