@@ -80,6 +80,12 @@ deployed, no `runs-on` flipped.** Work continues from **slot 1** (`.tabs/1/`), r
   returned ok=true 2026-07-15). Prefer the Secret-Manager path (`GH_TOKEN_SECRET`) so no PAT sits on disk.
 - Runner pinned **v2.335.1** + sha256 `4ef2f25285f0…` (in `setup-glue-runners.sh`). Then flip ONE canary
   (`branch-health`) → verify green → phased groups.
+- **⚠️ Default-branch timing (easy to miss):** `schedule` and `repository_dispatch` workflows run the definition on the
+  **default branch (`main`)** — so a `runs-on` flip on LDR does **nothing** until it promotes to `main`. To test the
+  canary on the branch before it lands, trigger via `gh workflow run <wf> --ref live-defi-rollout`
+  (`workflow_dispatch`), the same canary pattern `ldr-to-main-promote-fleet` documents. **Deploy the runners BEFORE the
+  flip reaches `main`**, else every scheduled glue workflow on `main` queues with no runner (fleet-wide stall). Runners
+  are repo-scoped (not branch-scoped), so once registered they serve any branch's jobs.
 
 ### Implementation specifics (so A1/A2/A5/2b aren't rediscovered)
 
