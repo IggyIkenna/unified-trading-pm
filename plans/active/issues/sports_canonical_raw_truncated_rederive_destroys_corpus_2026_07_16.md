@@ -65,6 +65,36 @@ source:
 
 # Sports canonical raw is truncated — `--force` re-derive destroys the corpus
 
+> # 🔴 CAUSE CORRECTED 2026-07-16 by [`sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md) — **the SYMPTOM below is real and every number reproduces; the DIAGNOSIS and fix direction (a) are wrong.**
+>
+> **Canonical raw is NOT truncated. It is SPLIT, and MDPS only reads one half.** The OR-5b G1 recovery leg re-measured
+> `day=2022-04-16` and reproduced this doc's 5,626-vs-79,773 exactly — then found the missing **79,773 rows already
+> inside the canonical bucket**, at
+> `raw_tick_data/by_date/day=2022-04-16/pipeline_mode=batch_footystats/asset_group=sports/venue=ODDS_API/instrument_type=/data_type=odds/league=*/ticks_migrated_20260505T160406Z.parquet`
+> (17 objects). `reprocess_sports_odds.py` cannot see them: it lists only `pipeline_mode={batch_odds_api,live_odds_api}`
+> and its `_is_consumable_trades_blob` excludes `_migrated_`. **The 207 "truncated copies" are a different population,
+> not a truncation of the same one.**
+>
+> - **16,969** canonical `_migrated_` objects across **1,815** days are **100% `venue=ODDS_API` + `data_type=odds`** yet
+>   **100% stamped `pipeline_mode=batch_footystats`** — **zero are footystats data** (an SSOT violation of
+>   `{mode}_{source}`, `codex/02-data/pipeline-mode-partition.md`).
+> - **30/30** sampled legacy G1 objects are **row-identical and tick-key-identical** to their canonical migrated twin (0
+>   legacy-only, 0 canon-only keys; `source == ODDS_API` both sides). Canonical migrated (1,815 days) is a **SUPERSET**
+>   of legacy G1 (386 days).
+> - The migrated schema carries **every adapter-required column** and differs from the consumable shape by exactly one
+>   column (`data_source`). It is fully consumable — not the coarse `ODDS_API:SPORT:*` meta shape.
+>
+> **⇒ Fix direction (a) below — "recover the raw first via the OR-5b(b) option-D G1 read-split-merge" — is REFUSED.**
+> The legacy bucket holds nothing unique on those days; that merge would write ~15.7M duplicate rows. **The features
+> recompute is unblocked by a ~4-line MDPS change** (add the `batch_footystats` prefix, union the `_migrated_`
+> population, delete the false "redundant" comment at `reprocess_sports_odds.py:117-120`) — **no GCS migration, no
+> legacy recovery.** Fix direction (b) — the per-date loss guard — **stands and is still P0**.
+>
+> **What survives unchanged**: the destructive `--force` behaviour, the 4,741-row loss measurement, the falsification
+> that the old corpus is correctly bucketed, the features-layer pathology, and the ban on historical `--force` until the
+> guard lands. **`market-data-tick-sports` remains NOT delete-eligible** — but on a **32-day / 550,062-key** residue
+> (canonical capture outage 2022-09-07…2022-10-01), not on this doc's raw-truncation reasoning.
+
 > **NOTIFY-OPERATOR (data-correctness, cross-repo, blocks the cutover's delete-gate reasoning).** Nothing is currently
 > lost: the one day damaged during the pilot was restored byte-exact from GCS soft-delete and re-verified (121 shards /
 > 5,369 rows / 311 post-kickoff — identical to the pre-pilot census). This issue exists to stop the NEXT agent running
