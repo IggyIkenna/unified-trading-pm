@@ -147,11 +147,16 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       against that plan's live checkbox state; reopen (`status` back to `queued`, clear `done_sha`) any mismatch found —
       this doc's `-001`/`-002` are the two confirmed instances, there may be more fleet-wide from before this bug is
       fixed. (repo: agent-orchestrator)
-- [ ] [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
+- [x] ✅ [DATA] P2. **Once the above is root-caused and corrected**, re-verify whether
       `sports_p2_features_history_to_ml_ready-001` (Todo 1, "Compute features 2015→present") is actually complete before
       trusting any future `gate_on_depends` dispatch of `sports_travel_calculator_tz_aware_kickoff_crash-001` Todo 2 —
-      as of this doc's creation it is still genuinely in-progress per the plan's own Progress Log (~68%+ coverage, not
-      100%). (repo: features-service, plan: sports_p2_features_history_to_ml_ready_2026_06_27.md)
+      **re-verified NOT complete**: `sports_p2_features_history_to_ml_ready_2026_06_27.md` line 101 is still `- [ ]` at
+      LDR HEAD `6a076159a`, and the plan's own Progress Log's most recent bucket-coverage reading is ~55.4% (2,332/4,210
+      days) — genuinely in-progress, nowhere near the ≥95% completeness gate. The backlog's `status: done`/`done_sha` on
+      `-001` (and `-002`) is confirmed STALE/WRONG and must not be trusted by any `gate_on_depends` dispatch until Todo
+      3's audit sweep reopens it. Not reopening it myself — that DB/YAML mutation is `[INFRA]`-scoped (Todo 3) and
+      outside this `data_engineering` task's remit. (repo: features-service, plan:
+      sports_p2_features_history_to_ml_ready_2026_06_27.md) — data_engineering slot-6, 2026-07-16.
 
 ## Progress Log
 
@@ -323,3 +328,46 @@ confirming no fix has landed since):
 This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
 `[INFRA]`-scoped, actively dispatched to another slot, and outside this task's `data_engineering` assigned_role.
 Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:2xZ UTC — data_engineering slot-6 (Todo 4 re-dispatched a seventh time — precondition still unmet)
+
+Same task (`backlog_task_done_status_diverges_from_plan_checkbox-003`) dispatched again, this time to slot 6.
+Independently re-verified both preconditions from a fresh boot (fresh-pulled all 24 repos in this slot to LDR HEAD;
+`agent-orchestrator` HEAD `cb0fe676b756b2b0491d96422ce43ffef131bc99` — same as the slot-2/slot-5/slot-3/slot-7 checks,
+confirming no fix has landed since; `unified-trading-pm` HEAD `350fb86efcfe166525a8e68368ff853b9be65a17`):
+
+- **Todo 2 (the code fix) still not shipped**: `GET /api/backlog` shows
+  `backlog_task_done_status_diverges_from_plan_checkbox-001` (the fix) and `-002` (the audit sweep) both
+  `status: dispatched` (no `done_sha`) — actively being worked, not stuck/idle, just not yet shipped. Confirmed via
+  direct read of `agent-orchestrator/server/routes/slots_worker.py` at this HEAD: `no_plan_flip` is still only appended
+  to `warnings: list[DoneWarning]` (line 712); no hard-409 branch exists yet.
+- **Ground truth on `sports_p2_features_history_to_ml_ready_2026_06_27.md`**: lines 101
+  (`Compute features 2015→present`, task -001) and 109 (`Features manifest clean over history`, task -002) both still
+  `- [ ]` at this LDR HEAD — unchanged from every prior check today.
+
+This todo's own precondition ("once the above is root-caused **and corrected**") remains unmet — Todo 2 is still
+`[INFRA]`-scoped, actively dispatched to another slot (not stalled), and outside this task's `data_engineering`
+assigned_role. Declining again via `/skip-current-task` — will be actionable once Todo 2 ships.
+
+### 2026-07-16T19:2xZ UTC — data_engineering slot-6 (Todo 2 landed mid-session — precondition now met, Todo 4 done)
+
+While preparing to push the above decline entry, `git push` was rejected as non-fast-forward (branch drift, 1 commit
+behind). Ran `git pull --rebase --autostash origin live-defi-rollout` (never force-push) and the incoming commit was
+`6a076159a` — "docs(plans): flip Todo 2 — no_plan_flip hard-409 shipped (agent-orchestrator@87d6fde)" from slot-13:
+`no_plan_flip` is now a hard 409 (env flag `ORCHESTRATOR_DONE_REQUIRE_PLAN_FLIP`, default ON), with 3 regression tests,
+full QG green. So Todo 1 (root-caused) and Todo 2 (corrected) are BOTH now `[x]` — this task's own stated precondition
+is met for the first time across its 7 dispatches today.
+
+Did the actual re-verify (this task's real deliverable): re-checked
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` at the new LDR HEAD — line 101 ("Compute features 2015→present",
+task -001) is still `- [ ]`. Checked the plan's own Progress Log for the latest bucket-coverage reading rather than
+re-walking the corpus (single-walk discipline): most recent entries read ~55.4-56.1% (2,332-2,363/4,210 days) — well
+below the ≥95% completeness gate, genuinely incomplete. So `sports_p2_features_history_to_ml_ready-001` is confirmed NOT
+complete, meaning the backlog's `status: done`/`done_sha=094756d64` on it is stale/wrong, same for `-002`
+(`done_sha=0402f7a86`, line 109 also still `- [ ]`) — `GET /api/backlog` confirms `-002` (the audit sweep, Todo 3) is
+still `status: dispatched`, so reopening these two false-done tasks is pending that INFRA-scoped sweep, not this task.
+
+Flipped Todo 4 `[x]` with this finding recorded inline. Not reopening `-001`/`-002` myself (DB/YAML mutation is Todo 3's
+`[INFRA]` scope, outside this `data_engineering` task's remit and outside worker scope per RULES.md §4 — no
+`/api/backlog` reopen endpoint exists anyway, confirmed by the original filing). Shipping this doc via quickmerge and
+calling `/done`.
