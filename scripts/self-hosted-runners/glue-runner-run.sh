@@ -119,13 +119,39 @@ for r in runners:
 " || true)"
   if [ -n "${STALE}" ]; then
     STALE_ID="${STALE%% *}"; STALE_STATUS="${STALE##* }"
-    if [ "${STALE_STATUS}" = "offline" ]; then
+    # An ONLINE registration under OUR name, at the moment WE are starting, is our own predecessor's
+    # GHOST: GitHub takes ~30-60s to mark a SIGTERM'd runner offline, and systemd has already fully
+    # stopped that process before starting us. So WAIT for it rather than either (a) deleting a
+    # possibly-live registration or (b) hard-failing.
+    #
+    # MEASURED 2026-07-16: the first version exit-3'd here with "Another process is serving as this
+    # runner" — which is FALSE and would mislead whoever reads the journal. It did self-recover via
+    # Restart=always once GitHub caught up, but only after ~30-40s of the pool crash-looping every
+    # 5s. Waiting turns that into one clean start, and keeps the real protection: we never delete a
+    # registration that is still genuinely serving.
+    if [ "${STALE_STATUS}" != "offline" ]; then
+      echo "[glue-runner] ${RUNNER_NAME} still registered as ${STALE_STATUS} (id=${STALE_ID}) — our SIGTERM'd predecessor's ghost; waiting for GitHub to mark it offline"
+      for _ in $(seq 1 30); do   # ~90s: comfortably past GitHub's ~30-60s offline detection
+        sleep 3
+        STALE_STATUS="$(curl -fsS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+          "${API}/actions/runners/${STALE_ID}" 2>/dev/null \
+          | python3 -c "import sys,json;
+try: print(json.load(sys.stdin)['status'])
+except Exception: print('gone')" 2>/dev/null || echo gone)"
+        [ "${STALE_STATUS}" = "offline" ] || [ "${STALE_STATUS}" = "gone" ] && break
+      done
+    fi
+    if [ "${STALE_STATUS}" = "gone" ]; then
+      echo "[glue-runner] registration ${STALE_ID} disappeared on its own (clean deregister) — nothing to do"
+    elif [ "${STALE_STATUS}" = "offline" ]; then
       echo "[glue-runner] deleting stale OFFLINE registration ${RUNNER_NAME} (id=${STALE_ID}) — left by a SIGTERM'd predecessor"
       curl -fsS -X DELETE -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
         "${API}/actions/runners/${STALE_ID}" || true
     else
-      echo "[glue-runner] FATAL: ${RUNNER_NAME} is already registered and ${STALE_STATUS} (id=${STALE_ID})." >&2
-      echo "[glue-runner] Another process is serving as this runner. Refusing to delete a live registration." >&2
+      # Still not offline after ~90s: this is NOT the normal ghost. Something else genuinely holds
+      # our name. Fail loudly rather than yank it — systemd will retry.
+      echo "[glue-runner] FATAL: ${RUNNER_NAME} is STILL ${STALE_STATUS} (id=${STALE_ID}) after ~90s." >&2
+      echo "[glue-runner] That is not a restart ghost — something else is serving as this runner. Refusing to delete it." >&2
       exit 3
     fi
   fi

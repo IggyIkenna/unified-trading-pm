@@ -903,6 +903,22 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
     exact source for that.
   - Evidence: baseline `hosted-baseline.sh verify` OK (56/56); dispatches `reconcile-release-tags` /
     `ci-status-consolidator` / `readiness-verifier` all `success` on `glue-*` with 0 install steps; pool 8/8 online.
+  - **Two MORE of my own bugs, both caught by verifying the box against git rather than trusting my own deploy:** (a)
+    **DEPLOY DRIFT — the box silently lost the JIT-409 self-heal.** I had base64-patched that fix straight into
+    `/opt/github-glue-runners/` but NOT into the deploy clone, so the next `install` copied the clone's older wrapper
+    back over it and reverted the fix. The box was one `systemctl restart` from the pool-death bug again. **Rule now:
+    the deploy clone is a git clone — `git fetch && reset --hard` it, NEVER patch it.** base64-to-the-box creates a
+    second source of truth and this is exactly how it bites. (b) **The self-heal's guard was too strict.** It refused to
+    touch an ONLINE registration under our own name — but right after a restart that IS our SIGTERM'd predecessor
+    (GitHub takes ~30-60s to mark a disconnected runner offline). It exit-3'd with _"Another process is serving as this
+    runner"_, which is FALSE and would mislead whoever reads the journal at 3am. It self-recovered via `Restart=always`,
+    but only after ~30-40s of the whole pool crash-looping every 5s. Now it WAITS (~90s bounded) for the ghost, then
+    deletes; still fails loudly if the name is held past that, since then it is genuinely not a ghost. **Measured
+    before/after: 0 units running at t+20s → 8/8 running, 8/8 ONLINE, all 5 glue `Listening for Jobs`.**
+  - **A third, cosmetic:** the commit message for that fix contains backticked shell (`[ a ] || [ b ] && break`) passed
+    inside a DOUBLE-QUOTED argument — bash executed it as command substitution and stripped it from the message
+    ("Verified the in the wait loop"). Same class as the `die "... \`gh auth status\`"` trap hit earlier this session.
+    Code unaffected; noted so the pattern is recognised the third time.
   - **STOP POINT (operator): no further workflows flipped. 10 of 38 remain the total.** Next = operator gate for the
     remaining 27.
 
