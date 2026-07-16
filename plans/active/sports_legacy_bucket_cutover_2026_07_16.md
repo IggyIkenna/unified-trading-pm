@@ -637,13 +637,23 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       `asset_group`/`instrument_type`/`data_type` — **no canonical path is derivable without INVENTING those fields
       (fabrication)**; (b) **45,701** class-B-equivalents holding **7,079,850 legacy-only rows** — the runbook says they
       "inherit OR-1", but **OR-1 ruled only on instruments entities and never covered MDT tick data**, so there is no
-      ruling to inherit. Evidence `~/tmp-cutover/t2_6_{classA,crc_differ_pairs,rowcounts,move_evidence}.jsonl`.
-      _Original mechanism_: resume method — (1) re-list both MDT buckets with the T2.2 paginated prefix-parallel lister
-      (~2 min each); (2) key = `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the
-      MDT trap differs from the instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS
-      **and** mis-stamps `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to
-      `batch_odds_api`; a `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique
-      (rejected before use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
+      ruling to inherit. Evidence `~/tmp-cutover/t2_6_{classA,crc_differ_pairs,rowcounts,move_evidence}.jsonl`. **⚠️
+      BOTH residues are now INVESTIGATED (2026-07-16) →
+      `plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`** — (b) is **89.5% GENUINE** (the OR-1 trap does
+      NOT reproduce; canonical is NET POORER by 6,721,872 rows, losing 20:1) and (a) is **3,816/3,816 DERIVABLE, 0
+      park-only** (the "fabrication-required" premise is disproven — the path's `source=` is the VENDOR; the venue is a
+      row COLUMN and `instrument_id` is UAC's `build_instrument_id` key). **Scope collapse**: legacy holds three
+      strictly-nested generations `G3 ⊂ G2 ⊂ G1`, so recovering the **3,816** (a) objects recovers **99.98%** of (b)'s
+      6.37M-row pre-match gap and the **45,701 become NO-ACTION by proof**. **PROVENANCE CORRECTION to this todo's own
+      premise**: the audit's _"all 406,581 created 2026-06-27 in ONE bulk op"_ is **FALSE** — that date is the
+      **COLDLINE storage-class lifecycle transition** (`updated`/`sc_upd`), not a write; legacy trades `created` =
+      **2026-05-19 (231,532) + 2026-05-22 (44,893)**, and the (a) objects **2026-04-05…04-13**. _Original mechanism_:
+      resume method — (1) re-list both MDT buckets with the T2.2 paginated prefix-parallel lister (~2 min each); (2) key
+      = `re.sub('/pipeline_mode=[^/]+/','/', re.sub('/data_source=[^/]+/','/', name))` — **the MDT trap differs from the
+      instruments trap**: legacy carries a `/data_source=ODDS_API/` segment canonical LACKS **and** mis-stamps
+      `pipeline_mode=batch_api_football` on ODDS_API tick data where canonical corrects it to `batch_odds_api`; a
+      `data_source`-strip-only key falsely reported 297,212/297,211 raw_tick_data objects as unique (rejected before
+      use; sample-verified 12 pairs → 11/12 resolve); (3) row-count the 108,970 crc-differing pairs via
       `pyarrow.ParquetFile(fs.open(...)).metadata.num_rows` over gcsfs, 128 threads (measured 395 footer reads/s ⇒ ~9
       min for 218k reads); (4) classify `lr==0` contentless / `cr>=lr` superseded / `cr<lr` **unique**. Chunk + resume
       by appending `{l,c,lr,cr,lsz}` to `rowcounts.jsonl` and skipping names already present. Then MOVE the confirmed
@@ -1279,6 +1289,51 @@ unaffected — it has its own completed disposition.)
   - **C: skip them and accept the row loss** — contradicts the data-pipeline-correctness HARD RULE without evidence.
   - Other.
 
+> **🔬 INVESTIGATED 2026-07-16 (operator rulings OR-5b(a) "derive from content, else park" + OR-5b(b) "investigate
+> first, like OR-1") → `plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`. Read it before ruling — it
+> changes both sub-questions' premises.** Exact pass over **all 45,701** pairs (91,402 full reads, 0 errors), not a
+> sample.
+>
+> - **The OR-1 trap does NOT reproduce — the naive read is RIGHT here.** NET balance over **every** paired object:
+>   canonical is **NET POORER by 6,721,872 rows**, losing **20:1** (OR-1 was +27,764, gaining 15:1). All three classic
+>   artifacts (key mapping / 1:N split / snapshot-dedup skew) tested and **CLEARED**. **`market-data-tick-sports` is NOT
+>   delete-eligible.**
+> - **(b) verdict — 89.5% GENUINE, 0% junk, 0% fabricated.** Of the 7,079,850: **6,372,806 (89.5%)** are real, distinct
+>   pre-match bookmaker quotes canonical never captured (**0** price disagreements on 15,456 shared updates; canonical ⊆
+>   legacy in 44,670/45,701 pairs); **746,928 (10.5%)** are post-kickoff/in-play (policy-ambiguous, mechanism unproven →
+>   **new OR-5b(c)**). The genuine gap is confined to **2022-03-07…2023-04-30** (99.98%), where canonical holds just
+>   **7.8%** of legacy's rows.
+> - **THE SCOPE COLLAPSE — legacy holds THREE strictly-nested generations `G3 ⊂ G2 ⊂ G1`** (G1 = the 3,816 old-shape
+>   objects, created 2026-04-05…04-13; G2 = the May `batch_api_football` corpus; G3 = canonical, June). Proven both
+>   directions (`G2 − G1` = 0 over 973 cells; from the (b) side **38,197/38,197 = 100.000%, 150/150 objects**). **The
+>   3,816 are the MASTER SUPERSET.** ⇒ **recover the 3,816 and you recover 99.98% of the 6.37M gap; the 45,701 are then
+>   provably redundant → NO ACTION.** Remedy shrinks ~12×.
+> - **(a) premise is FALSE — 3,816 DERIVABLE / 0 park-only.** The path's `source=ODDS_API` is the **VENDOR**, not the
+>   venue; the venue is a **column in the rows**, and `instrument_id` is UAC's own `build_instrument_id` key encoding
+>   **both** missing dimensions. `league_id := instrument_id.split(':')[3]` agrees **100.0000%** with BOTH the path's
+>   `league=` segment AND the `league_id` column (499,742 rows); `venue := instrument_id[1].upper()` **100.0000%**
+>   (1,065,227 rows); `source == ODDS_API` on **3,816/3,816**. **Nothing needs fabricating → adopt (a) = B.** ⚠️ It is a
+>   **1:N read-split-merge** (99,414 target cells, mean 26.1/object), NOT a `gcs_copy_object` move.
+> - **Recommended: (a) = B · (b) = D (recover G1, close the 45,701 by proof) · new (c) = A.** MERGE never overwrite —
+>   canonical holds **8,929** quotes and 3 columns legacy lacks.
+> - **Audit correction (R-20 class)**: _"all 406,581 created 2026-06-27 in ONE bulk op"_ is **false** — that is the
+>   **COLDLINE lifecycle transition** (`updated`). Legacy trades `created` = **2026-05-19 / 2026-05-22**.
+> - **T2.10 cross-check: LARGELY DISJOINT — no double-counting.** Phantom atoms ∩ OR-5b(b) atoms = **3,354 (7.1%)**
+>   only; T2.10 is an INDEX-layer mis-stamp, OR-5b(b) an OBJECT-layer capture gap. T2.10's purge predicate stands.
+
+**OR-5b(c) (NEW — raised by the OR-5b investigation 2026-07-16, BLOCKING T5.4 for MDT alongside (a)/(b)) — what is the
+disposition of the 746,928 post-kickoff / in-play rows?** They are REAL observations, uniform across all 7 years (unlike
+the dated pre-match gap). Canonical holds 1.07% in-play vs legacy's 5.59%; 92/112 sampled canonical objects hold zero.
+**No filter exists in the current adapter** — the mechanism is genuinely unknown, so neither a silent discard nor a
+blind merge is defensible. Deleting the bucket makes this irreversible.
+
+- **A: recover pre-match only; document the 746,928 as a deliberate written exclusion [WORKER REC]** — preserves
+  canonical's apparent pre-match-only property and the lookahead-bias guarantee that may rest on it.
+- **B: recover them into a distinct population** (own `instrument_type`/`data_type`) so pre-match consumers are
+  unaffected but the observations survive.
+- **C: prove the mechanism first** (deliberate policy vs June-campaign artifact), then rule.
+- Other.
+
 **OR-6 (BLOCKING Phase 2) — fix the MOVE vehicle, or drive the move from the object inventory?**
 `migrate_sports_canonical_v9.py` silently enumerates 4 of its 7 declared trees as empty (F-1), cannot see class B (F-2),
 would re-import v1_archive (F-3), and truncates the day window by default (F-4). It reports success while undercounting.
@@ -1747,9 +1802,16 @@ Progress Log entry at the top. The index was verified still QUIET at purge time 
 
 **Two rulings now block the DELETE (not Phase 3):**
 
-1. **OR-5b (NEW)** — the 49,517 residual `market-data-tick-sports` unique objects (3,816 non-derivable class-A + 45,701
-   class-B holding 7,079,850 legacy-only rows). **`market-data-tick-sports` is NOT delete-eligible.** OR-1 never covered
-   MDT tick data, so there is no ruling to inherit.
+1. **OR-5b (NEW)** — the 49,517 residual `market-data-tick-sports` unique objects (3,816 class-A + 45,701 class-B
+   holding 7,079,850 legacy-only rows). **`market-data-tick-sports` is NOT delete-eligible.** OR-1 never covered MDT
+   tick data, so there is no ruling to inherit. **✅ INVESTIGATED 2026-07-16 (both sub-questions) →
+   `plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`** — exact pass over all 45,701 pairs, 0 errors.
+   **The OR-1 trap does NOT reproduce**: canonical is **NET POORER by 6,721,872 rows** (losing 20:1; OR-1 gained 15:1),
+   and the gap is **89.5% GENUINE / 0% junk / 0% fabricated**. **The delete stays BLOCKED** — but the remedy collapses
+   ~12×: legacy holds three strictly-nested generations `G3 ⊂ G2 ⊂ G1`, so recovering the **3,816** (a) objects (0.23
+   GB, proven **3,816/3,816 derivable, 0 park-only**) recovers **99.98%** of the 6.37M-row pre-match gap and renders the
+   45,701 **NO-ACTION by proof**. Recommended: **(a) = B · (b) = D · new (c) = A**. A third ruling is now open —
+   **OR-5b(c)**, the 746,928 in-play rows.
 2. ~~**T2.7's blocker (c)**~~ **✅ RESOLVED — was never a real conflict (T2.7 2026-07-16, re-confirmed by T3.1/T3.3
    2026-07-16).** The "ODDS retired to MTDS-only 2026-06-25" premise is **dead by operator reversal** (#6 REVERSED
    2026-06-27 `UAC@c75101be`, completed `@57bcc7c5`: _footystats pre-match ODDS = IS reference data_) and survived only
