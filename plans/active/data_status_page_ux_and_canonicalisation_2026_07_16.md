@@ -375,13 +375,34 @@ canonical grouping already exists. Build a browse-the-live-catalogue surface, de
 - **Acceptance:** category `<select>` → cqg sub-filter → a paginated, searchable table of human-readable markets with
   venue chip + resolution/close date; pw:L2 asserts category change narrows the list.
 
-- [ ] [BACKEND] P1. `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)` —
-      widen the existing `manifest_source.py` `prod/catalog.parquet` read to project
-      `cqg/underlying/raw_symbol/base_asset/venue/timing`; return facet counts per category + per cqg. Route
-      `GET /data-status/prediction-catalogue`.
-- [ ] [BACKEND] P1. UAC facade — add `PredictionMarketCategory` + `category_for_group(cqg)` to the
-      `unified_api_contracts.predictions` public facade (compose the existing `underlying_for_group` +
-      `_category_for_underlying`; no deep-path import).
+- [x] [BACKEND] P1. ✅ `read_prediction_catalogue(category?, canonical_question_group?, venue?, search?, limit, offset)`
+      — new `deployment_api/services/prediction_catalogue.py`, widening the same prediction `prod/catalog.parquet` read
+      `manifest_source.read_unique_instrument_count` uses, to project
+      `underlying/raw_symbol/base_asset/venue/instrument_type/available_from/available_to/data_type/mvp` (schema-aware).
+      **Deviation from the literal plan wording:** `canonical_question_group` is NOT a per-market column on
+      `catalog.parquet` (verified against `build_instrument_catalogue.py`'s `CATALOG_COLUMNS` — only a separate
+      shard-tracking bundle row carries it, `data_type=prediction_canonical_question_group`/`instrument_id=cqg`; real
+      per-market cqg only lives in the availability MANIFEST, a different parquet). So the service DERIVES cqg per row
+      via the SAME deterministic classifiers the IS adapters call at capture time
+      (`classify_kalshi_to_canonical_group`/`classify_polymarket_to_canonical_group`, cached per unique
+      venue+raw_symbol), then composes `category_for_group(cqg)` (cached per unique cqg) — bundle-grain rows are
+      excluded (never a browsable market). Facet counts (`category_counts`/`cqg_counts`) computed over the
+      venue+search-filtered set so the UI `<select>` always renders every bucket. Honest label fallback `raw_symbol` →
+      `base_asset` (50 chars) → `event_title` (schema-checked, absent today) → `instrument_id`. Route
+      `GET /api/data-status/prediction-catalogue` (`routes/prediction_catalogue.py`, mirrors
+      `routes/catalogue_lifecycle.py`, mock-mode aware, registered in `main.py`). — deployment-api@9238983 + Evidence:
+      `test_prediction_catalogue.py` 4 specs green (category facet+filter, cqg sub-filter, search+pagination,
+      label-fallback/bundle-exclusion/honest-empty-on-read-failure) + `quality-gates.sh --no-fix` green (4549 passed; 5
+      pre-existing baseline codex-compliance violations within tolerance, 0 new).
+- [x] [BACKEND] P1. ✅ UAC facade — added `PredictionMarketCategory` + `category_for_group(cqg)` to the
+      `unified_api_contracts.predictions` public facade (composes the existing `underlying_for_group` +
+      `_category_for_underlying`). **Lives in `cross_venue_mapping.py`, not `two_axis.py`** as the plan suggested — a
+      circular-import check confirmed `cross_venue_mapping.py` already imports `underlying_for_group` FROM `two_axis.py`
+      and already has `_category_for_underlying` + `PredictionMarketCategory` imported, so composing there needs no new
+      dependency edge (`two_axis.py` importing FROM `cross_venue_mapping.py` would have cycled). —
+      unified-api-contracts@72fd959 + Evidence:
+      `test_prediction_cross_venue_mapping.py::test_category_for_group_composes_across_all_categories` (crypto/
+      financial/sports/weather/entertainment/politics/other) green + `quality-gates.sh --no-fix` green (188s).
 - [ ] [UI] P1. Prediction "Catalogue" surface — category `<select>` (crypto/politics/sports/… with MVP badge) → cqg
       sub-filter → paginated searchable table (label = fallback chain above, venue chip, resolution date). `[UI]` +
       pw:L2.
