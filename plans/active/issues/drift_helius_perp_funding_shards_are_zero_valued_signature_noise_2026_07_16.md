@@ -121,6 +121,31 @@ are (a) not funding data and (b) not SOL-PERP's transactions.
       `fundingRates?     marketName=` endpoint now 403 — see
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15`).
 
+## Drift public-API migration — MEASURED 2026-07-16 (answers "how do we fill the 3.5-month gap?")
+
+Drift retired its free data surface in stages; the gap is **structural, not a lag — waiting will never fill it**:
+
+| host                                                          | probed state 2026-07-16                                                                                                                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data.api.drift.trade/market/{M}/{dt}/{Y}/{M}/{D}?format=csv` | ALIVE but archive **FROZEN ~2026-03-31** (2026-04-05+ → HTTP 200, 0 bytes; market-wide: BTC/ETH/SOL all empty)                                                                                                |
+| `data.api.drift.trade/fundingRates?marketName=…`              | **403** (the endpoint `drift_adapter.py:12` still uses)                                                                                                                                                       |
+| `data.api.drift.trade/` `/docs` `/health`                     | **403** (CloudFront serves data paths only — no discoverable index)                                                                                                                                           |
+| `drift-historical-data-v2.s3.eu-west-1.amazonaws.com`         | ALIVE but **FROZEN at 2025-01-08** — SOL-PERP `fundingRateRecords` = 793 keys, 2022-11-04→2025-01-08, `IsTruncated=false`. Layout is `{dt}/{year}/{YYYYMMDD}`, data_types `fundingRateRecords`/`tradeRecords` |
+| `dlob.drift.trade` (in UAC config)                            | **NXDOMAIN** — retired                                                                                                                                                                                        |
+| `api.drift.trade`                                             | **NXDOMAIN**                                                                                                                                                                                                  |
+| **`mainnet-beta.api.drift.trade`**                            | **ALIVE + HEALTHY** — `/health` → `{"success":true}` — but `/fundingRates` and `/markets` → **401 Unauthorized** (server: envoy/CloudFront)                                                                   |
+
+**Conclusion: Drift moved to an AUTHENTICATED API.** The free chain (S3 → Velocity archive) ends at 2026-03-31, which is
+exactly where our DRIFT data stops. Verified independently: **zero DRIFT objects of ANY data_type** exist in the defi
+bucket for 2026-04-15 → 2026-07-15.
+
+**OPERATOR RULING 2026-07-16 — take path (b): decode on-chain properly.** Rejected (a) "get a Drift API key" as the
+primary path (vendor dependency; their next migration breaks us again). The decoder is ALSO the correct version of what
+the Helius path pretended to do. Note this REVERSES the earlier "retire, don't redesign" advice in a specific way:
+retire the Helius path for HISTORY (Velocity covers 2022-11→2026-03 correctly and for free), but build a REAL on-chain
+event decoder for the 2026-04→forward window — the operator's original design instinct ("grab at once and filter, keep
+per-instrument-per-day writes") was right for exactly this window.
+
 ## Progress log
 
 - 2026-07-16: Filed. Operator asked whether Drift's public API covers full history; proving it out surfaced that the
