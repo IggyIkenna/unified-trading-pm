@@ -129,22 +129,77 @@ durable fix. This is not new scope; it's an existing, tracked constraint that no
       `mtds-solana-drift-backfill` — protective, stops the OOM path + Helius API spend. Verify via
       `gcloud compute     instances list` (project `central-element-323112`) before/after. (repo: deployment-service /
       GCP console)
-- [ ] [INFRA] P0. Re-route `mtds-solana-drift-backfill`'s launcher (`launch-mtds-solana-drift-backfill-vm.sh`, already
-      registered in `VM_PREFIX_TO_BUCKET` — reuse it, do not hand-roll a new name) to invoke
+- [x] ✅ [INFRA] P0. Re-route `mtds-solana-drift-backfill`'s launcher (`launch-mtds-solana-drift-backfill-vm.sh`,
+      already registered in `VM_PREFIX_TO_BUCKET` — reuse it, do not hand-roll a new name) to invoke
       `backfill_drift_v2_historical.py` instead of the legacy `solana_defi_handler.py` Helius path (`VM_TASK` routing
       lives in `setup-data-pipeline-vm.sh` ~line 1410/1243). **Provision e2-highmem-8, not the default e2-standard-4**,
-      per the manifest-index-OOM caveat above. Backfill VMs default SPOT per CLAUDE.md. (repo: deployment-service)
-- [ ] [DATA] P1. Reconcile DRIFT `perp_funding`/`perp_trades` manifest cells: (a) the 2025-01-09 SOL-PERP shard this
-      session wrote to GCS but whose `record_captured()` may not have durably persisted (killed mid-close on both
-      verify-first runs — check `read_availability_index` for this shard and re-run to completion on a properly-sized VM
-      if the entry is missing); (b) the broader `attempted_failed`/`expected_unattempted` cells currently under the old
-      Helius path once Velocity starts capturing at scale. (repos: market-tick-data-service, instruments-service)
+      per the manifest-index-OOM caveat above. Backfill VMs default SPOT per CLAUDE.md. (repo: deployment-service) —
+      `deployment-service@ee859e4`: `setup-data-pipeline-vm.sh`'s `solana-drift-backfill` VM_TASK branch now invokes
+      `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets --data-types --start --end`
+      (VM_DATA_TYPES defaults `funding;trades`); launcher `MACHINE_TYPE` default changed to `e2-highmem-8`. SPOT default
+      unchanged (already SPOT). QG green, dry-run verified (`Machine: e2-highmem-8`), module import path confirmed.
+- [x] [DATA] P1.1. Reconcile the 2025-01-09 SOL-PERP shard — DONE (data_engineering slot-7, 2026-07-16). See Progress
+      Log.
+- [ ] [DATA] P1.2. Reconcile the broader `attempted_failed`/`expected_unattempted` cells currently under the old Helius
+      path once Velocity starts capturing at scale — NOT started, blocked on `[INFRA] P0` todo 1 above (stop/do-not-
+      relaunch the Helius fleet) still being open; todo 2 (re-route launcher) already landed
+      (`deployment-service@ee859e4`). (repos: market-tick-data-service, instruments-service)
 - [ ] [DATA] P2. Once (2)-(4) land, add a banner to `drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md` and
       `mvp_backfill_defi_onchain_v10_2026_06_27.md` noting the Helius sig-walker path is retired in favor of Velocity,
       and close out that doc's remaining `[INFRA] P2` (zombie-VM monitoring) and `[DATA] P3` (relaunch) todos as
       superseded/moot. (repo: unified-trading-pm)
 
 ## Progress Log
+
+### 2026-07-16 — data_engineering slot-7: reconciled the 2025-01-09 SOL-PERP shard (P1.1)
+
+Picked up the P1 reconcile todo. Verified ground truth by reading the two real GCS parquet files directly (single-file
+`pyarrow.parquet.ParquetFile.metadata.num_rows` reads, not a corpus walk):
+`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2025-01-09/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type={perp_funding,perp_trades}/SOL-PERP.parquet`
+— `perp_funding`=24 rows, `perp_trades`=17223 rows. Both files exist, correctly partitioned, sizes plausible (20KB /
+2.7MB), `last_modified` 2026-07-15 (the prior session's verify-first run) — confirms the **data write** side was durable
+all along.
+
+The **manifest** side was NOT reconciled, confirming the caveat this doc flagged: reading
+`read_availability_index(bucket, columns=[...], filters=[("date","==","2025-01-09")])` (the safe, OOM-proof slim
+filtered path — measured ~5MB per the `_read_index.py` docstring) required `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`
+(the documented DeFi-launcher mitigation from `manifest_index_read_oom_canonical_cache_2026_06_24.md` Option C) because
+the consolidated blob for this bucket is genuinely stale right now (measured age 194.7s then 279.8s ~85s later —
+climbing in real time, i.e. the consolidator is actually behind/down for this bucket, not just transiently past the 120s
+default threshold — a live data point for that separately-owned P2 issue, not duplicated here). Even with that env var,
+the manifest showed:
+
+- `perp_funding`: ONE `captured` row, but `row_count=1209478` — not this shard's real content (a 20KB/24-row file cannot
+  hold 1.2M records); a bogus/stale entry.
+- `perp_trades`: **no `captured` row at all** — only the unrelated `expected_unattempted` catalogue placeholders for
+  other DRIFT data_types on this date.
+
+**Root cause of why the fix didn't durably land last session**: `record_captured()`/`close()` on this shared interactive
+host defaults to the LEGACY single-blob CAS write (`manifest_per_vm_shards` defaults `False` —
+`config_interface/cloud_config.py:688`), which read-merge-uploads the WHOLE consolidated index — the actual OOM trigger,
+not `record_captured()` itself. **Fix applied**: set `MANIFEST_PER_VM_SHARDS=true` (the same flag production backfill
+VMs already set per CLAUDE.md) so the writer targets the small per-VM shard object instead. Re-ran the reconciliation as
+a standalone script calling `DefiManifestRecorder.record_captured()` with the exact production call shape from
+`drift_v2_historical_handler.py:412-420` (`venue=DRIFT, chain=SOLANA, pipeline_mode=BATCH_ONCHAIN_RPC`, no
+`instrument_type`/`instrument_id` — matches the existing venue/chain-grain recording, not a new gap) and the
+GCS-verified row counts (24 / 17223). Ran under an RSS monitor with an 8GB kill-switch as a precaution; actual peak RSS
+was ~2MB, completed in 5s — confirms the risk was specifically the legacy full-index CAS path, not the manifest write
+itself. **Durably verified**: read the resulting per-VM shard object directly
+(`_index/per_vm/local-2742523-30b2.parquet`) and confirmed both rows present — `perp_funding captured row_count=24`,
+`perp_trades captured row_count=17223`, `attempted_at=2026-07-16T00:08:0{2,6}`. This entry will merge into the
+consolidated index on the manifest consolidator's next successful run for this bucket (separately tracked as
+stale/behind above); any full (unfiltered) `read_availability_index` call already unions per-VM shards over the
+consolidated blob per its own docstring, so downstream full-read consumers see the correct values now, independent of
+consolidator catch-up.
+
+**Operational note for future DeFi manifest reconciliation on this shared interactive host**: prefer
+`MANIFEST_PER_VM_SHARDS=true` + `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` for both reads and writes — avoids both the
+full-corpus slow-path read AND the legacy single-blob CAS write, which is what actually OOM'd the prior session (not
+`record_captured()` in the abstract).
+
+P1.2 (the broader Helius-path cell reconciliation) is NOT started — it explicitly depends on Velocity "capturing at
+scale", which presumes the `[INFRA] P0` fleet-stop todo above has landed; that is infra-scoped, outside this craft's
+remit.
 
 ### 2026-07-15 — data_engineering slot-2: ruling obtained, verify-first done, pipeline_mode bug found + fixed
 
