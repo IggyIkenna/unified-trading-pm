@@ -106,14 +106,14 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       report per-(venue, data_type, year) distribution so the operator can review what's being seeded.
 
       2026-07-03 run `enum-universe-defi-20260703-154354` (scan-only, cap 50M): **1,380,376 candidates**, report CSV
-                      `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
-                      (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
-                      YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
-                      reason EXPECTED wildcard), NOT download work.
+                          `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
+                          (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
+                          YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
+                          reason EXPECTED wildcard), NOT download work.
 
-                      Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
-                      data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
-                      transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
+                          Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
+                          data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
+                          transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
 
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-07-10 (operator, fresh review at real v2 scale): Option A — apply the full
       63,876,053 rows in one run**, same "honest by default" principle as the original 2026-07-03 decision, now at the
@@ -291,3 +291,42 @@ above are otherwise fully reproducible via the shipped CLI.
   (the scale is materially unchanged — 64.39M vs the approved 63.88M — so this is a resumption, not a new-scale decision
   requiring fresh sign-off). Dispatched via the same registered `launch-expected-universe-v2-vm.sh` launcher,
   year-chunked, SPOT-provisioned, one VM per year, chained.
+- 2026-07-16 (data_engineering slot-15): **the "minor secondary finding" LST unmapped-instrument-type note above (line
+  ~192) under-scoped its own blast radius — same bug class, but MUCH bigger than "tens of thousands" once a
+  `--data-types` override targets a NEWLY-added protocol-specific data_type.** Found while executing
+  `drift_helius_path_obsolete-006` (materializing DRIFT `perp_trades` expected_unattempted rows,
+  `plans/active/issues/drift_helius_path_obsolete_2026_07_15.md` P1.3): running
+  `enumerate_expected_universe.py --asset-group defi --data-types perp_trades --catalog-path <full catalog>` (scan-only,
+  no cap) produced **7,357,031 candidate rows** — not the expected ~51k (perp_funding's order of magnitude). Root cause:
+  `A_TOKEN`/`DEBT_TOKEN` instrument_type tokens (AAVE_V3, MORPHO, FLUID, SPARK, VENUS, SOLEND — the lending-position
+  catalogue rows) are unmapped in `unified_api_contracts.registry.market_data_categories._INSTRUMENT_TYPE_ALIASES` (same
+  `G1-ENUM: unmapped instrument_type=... — falling back to all data_types` warning as the LST case), so
+  `_row_data_types` falls back to the CLI's `--data-types` override list verbatim — for a protocol-specific override
+  like `perp_trades` (valid ONLY for DRIFT), every unmapped-type instrument across the WHOLE defi catalogue gets falsely
+  stamped with it too. The LST-only estimate ("tens of thousands") was correct for the DEFAULT (unrestricted)
+  data_types_list, where the fallback's "ALL" happens to overlap heavily with what's actually valid; it breaks down
+  badly once the override is a single NEW protocol-specific data_type, since then "fall back to ALL" means "fall back to
+  this one wrong type" for every unmapped instrument. **Did not fix the shared alias table this session** —
+  `valid_data_types_for_instrument_type` /`valid_data_types_for_venue_instrument_type` is also consumed by
+  `possible_manifest.is_valid_shard_key` (orphan-sweep
+  - phantom-reconciler), and a narrower alias (`a_token`/`debt_token` → `lending`, whose current `PROTOCOL_CAPABILITIES`
+    data_types are `{lending_indices, liquidations, risk_params}` for AAVE_V3/FLUID/SOLEND/SPARK/VENUS, plus
+    `liquidation_events`/`position_data` for MORPHO) would EXCLUDE `oracle_prices`, which the separate LEGACY
+    `venue_mapping.DataTypeConfig.instrument_data_types` table (`"A_TOKEN": ["lending_indices", "oracle_prices"]`)
+    already declares valid for these same tokens — two registries disagree, and narrowing on the wrong one would newly
+    misclassify real captured `oracle_prices` cells for these instruments as orphan candidates. That reconciliation is a
+    genuine SSOT-contradiction call (cross-repo, orphan-sweep-adjacent) needing an explicit decision, not a fix bundled
+    into a P1.3 materialization task. **Workaround used for my own task** (did not touch this shared registry): filtered
+    the enumerator's own `v2_absent` candidate list to `venue == "DRIFT"` in a standalone one-off script (reusing
+    `enumerate_v2`/`_write_absent_rows` verbatim, same pattern as this doc's own "diagnostic script … reuses the
+    production enumerator functions verbatim" precedent above) before the real write — 250,937 DRIFT-only rows written
+    (`_index/per_vm/enum-drift-perp-trades-materialize-1784165794.parquet`, durably verified by direct read-back), zero
+    rows touched for the other 63 non-DRIFT venues that the unfiltered override would have hit.
+  * [ ] [DATA] P2. Reconcile `unified_api_contracts.registry.market_data_categories._INSTRUMENT_TYPE_ALIASES` (defi
+        branch) against the legacy `unified_api_contracts.registry.venue_mapping.DataTypeConfig.instrument_data_types`
+        table for `A_TOKEN`/`DEBT_TOKEN` (and re-check `LST`/`YIELD_BEARING` while there — same unmapped-fallback
+        class): decide which table is the SSOT for these tokens' valid data_types (they currently disagree on
+        `oracle_prices`), then add the missing `_INSTRUMENT_TYPE_ALIASES` entries so
+        `valid_data_types_for_instrument_type` stops returning `None` for them. Needed before any future
+        `--data-types <protocol-specific-type>` enumerator run touching defi lending/LST tokens, and closes a latent
+        `is_valid_shard_key` orphan-sweep misclassification risk (repo: unified-api-contracts).
