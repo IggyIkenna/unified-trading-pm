@@ -133,6 +133,42 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16 — Session batch (P7, P5, P4-A, P1-remaining, P4-B enabler, P8, P2 backend)
+
+Shipped this session (each commit-push-flip, QG-green + evidence-cited):
+
+| Point        | What shipped                                                                     | Commit(s)                    |
+| ------------ | -------------------------------------------------------------------------------- | ---------------------------- |
+| P7 backend   | cefi chains sub-dimension gated on `defi` only                                   | deployment-api@47a7f67       |
+| P7 UI-P2     | "instruments breakdown" button — resolved by P5 (grid link is the single one)    | deployment-ui@953fa81        |
+| P5 UI        | redundant IS cefi/tradfi/defi drilldown suppressed (axis-comparison)             | deployment-ui@953fa81        |
+| P4-A UI      | axis-aware value labels + canonical instrument_type aliases (raw on hover)       | deployment-ui@7853409        |
+| P1 INFRA     | nightly cron launcher 16GB→32GB (real launcher + GCS upload) + issue doc         | deployment-service@4f10b9b   |
+| P4-B enabler | 4 on-chain contract-address columns added to CATALOG_COLUMNS + projection        | instruments-service@77f0fdaa |
+| P8 backend   | TEAMS `global_trigger_date`→`per_league_trigger_date` + codex matrix + tests     | deployment-api@fb0eec8       |
+| P8 UI        | global-reference honest-absence affordance (LEAGUES/VENUES)                      | deployment-ui@43818c9        |
+| P2 backend   | `catalogue_lifecycle` service + `/instruments/new-listings`+`/upcoming-expiries` | deployment-api@25865c0       |
+
+**Big finding (issue doc):** the nightly honest-coverage cron ran on 16GB for weeks (launcher SSOT drift + a false
+"column-prune shipped" commit) → 1-AG partial `coverage.json`. Fixed the real cron launcher + logged the drift in
+`plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`.
+
+**Traced-unsafe correction:** P1 DATA P2 "drop `instrument_id`" corrupts the coverage denominator (breaks the prd+oracle
+merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred read).
+
+## Deferred work after 2026-07-16 (session handoff — all tracked as open `- [ ]` todos above)
+
+| Deferred item                                    | Point    | Why deferred / next step                                                           |
+| ------------------------------------------------ | -------- | ---------------------------------------------------------------------------------- |
+| Two lifecycle cards + client helpers + pw:L2     | P2 UI    | UI card work (mirror `<UpcomingFixtures/>`); backend API is live @25865c0.         |
+| `expiry` column + new-listings false-pos guard   | P2 DATA  | clean-long-term catalogue schema + provenance quantify.                            |
+| catalogue regen + SPOT_ASSET backfill + CeFi map | P4-B     | real-infra: regen `catalog.parquet`, emit SPOT_ASSET per token leg, live emission. |
+| deep-drill parity (fixture breakdown generalize) | P8 UI-P2 | minor: backend `supports_fixture_breakdown` flag OR a FIXTURES-only UI note.       |
+| column-prune (streaming/metadata-deferred read)  | P1 DATA2 | lets the cron drop to 16GB; naive drop is traced-unsafe.                           |
+| tarball republish (partial-stamping to nightly)  | P1 INFRA | BLOCKED on the foreign dirty terraform.tfvars — run from a clean tree.             |
+| Prediction catalogue browser (backend + UI)      | P3       | full feature — `read_prediction_catalogue` + UAC facade + UI surface.              |
+| Catalogue explorer (MVP filter, CSV, search)     | P6       | full feature — phase 1 availability-derived + phase 2 true-catalogue projection.   |
+
 ### 2026-07-16 — P7 CeFi chain-axis gate (backend P1) shipped
 
 - **Root cause (trace-first, live-verified against the cefi availability index):** the cefi manifest
