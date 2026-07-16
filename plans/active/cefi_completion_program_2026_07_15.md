@@ -616,3 +616,46 @@ WS-H apply-list run via SSM on i-0dd9812a96cdda5dc (agent aa0f8f04), NON-tail-ga
 **Remaining to DONE**: co-manager's backfill → af=0 (403-class) + recent-tail filled (their N=1 grind); then the FINAL
 coverage recompute asserting af=0; + C (alias verify+auto-delete except DERIBIT-COMBO) + F (DERIBIT-COMBO history) +
 optional HL re-census on a big VM. Phase-1 code + WS-H catalogue = DONE.
+
+### 🔴 FIFTH gap — the Tardis cap is BLIND to forward-poll / T+1-cron / live VMs — 2026-07-16T07:00Z
+
+Operator question: _"what about for the t+1 backfill schedulers that fill yesterday, the live tardis markets vms
+(presumably again needs to be one vm)"_ — **correct, and it is currently unenforced.**
+
+The guard's `TARDIS_VM_NAME_PATTERN` is `^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`. It does
+NOT match:
+
+| launcher                           | VM name shape              | Tardis exposure                                                                                                                                                                               | counted? |
+| ---------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `launch-cefi-forward-poll.sh`      | `cefi-fwd-<ts>`            | **YES** — reads `tardis-machine-api-key` from Secret Manager                                                                                                                                  | ❌ NO    |
+| `launch-cefi-fwd-daily-cron-vm.sh` | `cefi-fwd-daily-cron-<ts>` | indirect — `VM_OPERATION=cron-trigger` that fires the forward-poll                                                                                                                            | ❌ NO    |
+| `launch-mtds-live.sh`              | `mtds-live-*`              | **CONDITIONAL** — `--live-source native\|tardis-machine`; it already passes `TARDIS_CONCURRENCY_LEASE` + cites the lockout issue, so the exposure is known — but it is NOT wired to the guard | ❌ NO    |
+
+**Why we have not been bitten yet — verified, not assumed**: `gcloud compute instances list` shows **zero** `cefi-fwd-*`
+and zero `mtds-live-*` running right now. THAT is why the solo N=1 backfill VM measures ZERO 403s. The instant the T+1
+forward-poll cron fires (or a `tardis-machine` live VM starts), it takes the single IP slot and the backfill silently
+reverts to the 403 storm — including its FALSE `attempted_failed` manifest corruption — with nothing in the guard to
+notice.
+
+**Design note for the fix (deliberately NOT half-shipped — a naive pattern widen would over-block):**
+
+1. **Priority is asymmetric — live/forward MUST win, backfill MUST yield.** So: COUNT fwd/live VMs in
+   `tardis_running_vm_count` (making a backfill launch refuse while they run), but do NOT wire the guard INTO
+   `launch-mtds-live.sh` / `launch-cefi-forward-poll.sh` — live must always be able to start.
+2. **Match precisely.** `^cefi-fwd-[0-9]` catches the forward-poll without false-positiving the `cefi-fwd-daily-cron-`
+   trigger (which holds no Tardis connection itself).
+3. **Live is CONDITIONAL, so a name-only match over-blocks**: a `native`-source live VM does NOT touch Tardis and must
+   not stall the backfill. The count needs the instance's `--live-source`/metadata, not just its name — i.e. read
+   `TARDIS_*` metadata (or a new `VM_TARDIS_CONSUMER=1` stamp set by the launchers) rather than pattern-matching alone.
+   **Recommendation: have every Tardis-consuming launcher stamp `VM_TARDIS_CONSUMER=1` into VM metadata and have the
+   guard count THAT** — self-declaring beats a name regex that must be kept in sync with 83 launchers forever.
+4. The running backfill VM should also yield gracefully rather than 403-storm when live grabs the slot (today it just
+   fails cells and records them as `attempted_failed`).
+
+- [ ] [INFRA] P0. **Make the Tardis cap see forward-poll / T+1-cron / live VMs.** Today the cap is enforced only across
+      backfill VM name shapes, so a T+1 forward-poll or `tardis-machine` live VM silently contends with the capped
+      backfill and re-creates the 403 storm + FALSE-af manifest corruption. Implement per the design above:
+      `VM_TARDIS_CONSUMER=1` metadata stamp from every Tardis-consuming launcher + guard counts it; backfill yields to
+      live/forward (never the reverse); backfill should pause-and-retry rather than record false `attempted_failed` when
+      the slot is held. SSOTs to update once shipped: `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap +
+      the CLAUDE.md one-liner.
