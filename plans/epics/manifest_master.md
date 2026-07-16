@@ -119,7 +119,9 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-07-15, plan-reconcile: added
+_7 active plans declare `parent_epic: manifest_master` in their frontmatter (updated 2026-07-15, plan-reconcile §8: +4 —
+the per-asset-group children split out of M-1 (`data_completion_{cefi,tradfi,prediction,defi}_2026_07_15`) when M-1
+breached the absolute 5000-line ceiling, listed under P0 below so they are not inventory orphans. Previously: added
 `mtds_available_at_cross_asset_backfill_2026_07_13` — its own frontmatter declares `parent_epic: manifest_master` but it
 is not yet reflected in the P0-P3 roster below; against `plans/active/*.md` top-level frontmatter — the same scan scope
 as `scripts/plans/populate_epic_bodies_2026_05_21.py`; the script itself could not be re-run in place, it has a
@@ -145,6 +147,31 @@ schema migration + IS catalogue + pipeline_mode standardisation
 
 **status**: active · **estimate**: 6.6 cal AI-days (class: design) · **title**: Migration verification & orphan-safety
 harness (CF-15…CF-21)
+
+<!-- The 4 below were split out of M-1 (data_completion_to_100_all_ag_2026_06_21) on 2026-07-15 per operator ruling
+     (plan-reconcile §8) when M-1 breached the absolute 5000-line ceiling. Each carries M-1's per-asset-group scope
+     VERBATIM and is independently ownable; M-1 stays the coordinator hub for cross-cutting scope. Listed here so they
+     are not inventory ORPHANS (a plan no master/epic references). -->
+
+### [`data_completion_cefi_2026_07_15`](../active/data_completion_cefi_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — CeFi manifest
+canonicalisation + backfill (split from M-1)
+
+### [`data_completion_tradfi_2026_07_15`](../active/data_completion_tradfi_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — TradFi manifest
+canonicalisation + backfill (split from M-1)
+
+### [`data_completion_prediction_2026_07_15`](../active/data_completion_prediction_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — Prediction
+manifest canonicalisation + backfill (split from M-1)
+
+### [`data_completion_defi_2026_07_15`](../active/data_completion_defi_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) · **title**: Data completion to 100% — DeFi manifest
+canonicalisation + backfill (split from M-1)
 
 ## P1 — important; post-current-gate
 
