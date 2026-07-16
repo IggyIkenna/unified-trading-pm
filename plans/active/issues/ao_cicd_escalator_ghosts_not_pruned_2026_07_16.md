@@ -21,8 +21,10 @@ summary: |
   sessionless, which all 11 measured ghosts were. The sessionless case had NO fast path at all. The reaper now splits
   its grace in two — terminal-lifecycle (one_shot/scheduled) sessionless agents reap on
   `one_shot_stale_grace_minutes` (default 15), persistent cloud agents keep the 6h — making the outcome
-  order-independent regardless of which daemon wins or how the row reached the sessionless state.
-status: open
+  order-independent regardless of which daemon wins or how the row reached the sessionless state. VERIFIED LIVE
+  2026-07-16 16:03 UTC: sessionless ghost count 11 -> 0 on the central VM, 13 rows archived `lifecycle-complete`, with
+  no hand DB edit.
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -62,8 +64,10 @@ source:
 
 # Dead cicd escalator agents are not pruned — they linger "active" for up to 6h
 
-> **🟡 REOPENED 2026-07-16 — `a21ccba` was necessary but NOT sufficient; second fix `a22c0d7` shipped, awaiting runtime
-> verification.**
+> **✅ RESOLVED 2026-07-16 — in TWO parts (`a21ccba` + `a22c0d7`), the second VERIFIED LIVE at 16:03:20 UTC: sessionless
+> ghost count on the central VM went `11 → 0`, 13 rows archived `lifecycle-complete`, no hand DB edit.** `a21ccba` alone
+> was necessary but NOT sufficient — it was reopened when the operator saw the ghosts still listed while it was already
+> live and running.
 >
 > **Part 1 — `agent-orchestrator@a21ccba`** (verified correct, deployed, live): the TmuxPruner archives
 > one_shot/scheduled agents on session death, so a finished cicd escalator is reaped within one prune tick (~60s) of its
@@ -211,8 +215,8 @@ recency never crosses the grace. `lifecycle=None` keeps the conservative 6h. A f
 (`agents.py`), and `archive_agent` touches the RECORD only — it never kills a session or releases a task. Blast radius
 checked: only `health.py:300` reads the archived state, and `prune_finished_agents` retains 7 days.
 
-**This is the reaper-side change the original doc rejected** ("would falsely reap a one_shot craft worker that
-momentarily registers without a session while booting"). That objection holds against an _immediate_ reap; it does not
+**This is the reaper-side change the original doc rejected** ("would falsely reap a one*shot craft worker that
+momentarily registers without a session while booting"). That objection holds against an \_immediate* reap; it does not
 hold against a _15-minute_ one — a boot window is seconds, and restore-on-ping covers the residual.
 
 ## Verification
@@ -244,10 +248,12 @@ under the old semantics and dies under the new.
       `a21ccba` cannot reach a row whose `tmux_session` is already NULL. Split the reaper's grace so terminal-lifecycle
       sessionless agents reap on `one_shot_stale_grace_minutes` (default 15) while persistent agents keep 6h. QG exit 0
       (1340 passed, basedpyright 0 errors); bug-injection verified.
-- [ ] [BACKEND] P1. **Runtime verdict — prove the 11 ghosts actually drain on the live VM.** Code-shipped is not fixed
-      (the standing lesson of the 2026-07-16 audit). **Gate**: on the central VM, `HEAD` contains `a22c0d7` AND the
-      sessionless-one_shot count goes to 0 within ~15 min of the reload, with `exit_reason='lifecycle-complete'` on
-      those rows. Query in the Progress Log below. Flip this doc to `status: resolved` only then.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 16:03:20 UTC — MEASURED on the central VM, not inferred.** Runtime verdict for
+      `a22c0d7`: `sha=a22c0d7 deployed=yes ghosts=0 drained_30m=13`. The sessionless one_shot/scheduled count went **11
+      → 0**, and 13 rows carry `exit_reason='lifecycle-complete'` within the 30 min window (the 11 ghosts + 2 that
+      finished normally). Deploy needed no human step: the `slot-cron-ff-pull` (5-min cadence) pulled LDR and the
+      service's `--reload --reload-dir server` restarted uvicorn on its own — the same path that carried `a21ccba`.
+      **The backend drained them; no row was touched by hand.**
 - [ ] [BACKEND] P3. **Optional cleanup — retire the misleading "stays active" assertion.**
       `test_multi_instance_cicd_not_deduped_as_singleton` still documents the pre-fix end-state in its docstring. Its
       PRIMARY assertion (`not superseded-cicd`) is a real reaper contract and must stay; only the incidental "stays
@@ -273,8 +279,14 @@ under the old semantics and dies under the new.
   `sudo -u ubuntu` gave the true `YES-DEPLOYED`. Probes must distinguish "the check failed" from "the answer is no". (2)
   The QG's own exit code (`0`) is the verdict, never `tail`'s — the first run showed a green vitest tail while the gate
   had exited 1 on RUF002.
-- **Runtime verdict query** (for the open P1 todo — no `sqlite3` CLI on the VM, use the venv python; the table is
-  `agents`; DB `/var/lib/orchestrator/state.db`; read via `file:…?mode=ro`):
+- **2026-07-16 16:03:20 UTC — RUNTIME VERDICT: PASS.** `sha=a22c0d7 deployed=yes ghosts=0 drained_30m=13`. Polled the
+  live VM on a progress metric (deployed sha + ghost count) rather than a fixed sleep. The `slot-cron-ff-pull` +
+  `--reload` carried the fix to the box with no human step, and the first reaper tick after the reload archived all 11
+  at once (every one was already far past the 15-min grace). Doc flipped to `resolved`. **Standing caution**: `a21ccba`
+  looked complete by every static signal — correct code, green gate, deployed, load-bearing tests — and still left the
+  operator's symptom fully intact. Only the live count settled it.
+- **Runtime verdict query** (kept for reuse — no `sqlite3` CLI on the VM, use the venv python; the table is `agents`; DB
+  `/var/lib/orchestrator/state.db`; read via `file:…?mode=ro`):
 
   ```sql
   SELECT COUNT(*) FROM agents
