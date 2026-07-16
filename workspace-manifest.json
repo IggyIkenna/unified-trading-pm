@@ -342,7 +342,7 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 15,
-        "qg_red_reason": null,
+        "qg_red_reason": "pytest",
         "large_file_count": 3,
         "coverage_pct": 82.11
       }
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.21,
-        "qg_red_reason": "ruff",
-        "large_file_count": 6,
-        "warn_file_count": 7
+        "warn_file_count": 7,
+        "qg_red_reason": null,
+        "coverage_pct": 91.23,
+        "large_file_count": 6
       }
     },
     "market-data-processing-service": {
@@ -851,7 +851,7 @@
           "required": true
         }
       ],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1414,10 +1414,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 13,
-        "qg_red_reason": null,
         "warn_file_count": 8,
-        "coverage_pct": 74.73
+        "qg_red_reason": null,
+        "coverage_pct": 74.74,
+        "large_file_count": 13
       }
     },
     "e2e-testing": {
