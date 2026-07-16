@@ -269,15 +269,32 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 > **main/review/custom chat agents**. The parallel channel that **craft task workers** use was never touched and still
 > carries the identical bug the doc was written to kill.
 
-- [ ] [BACKEND] P1. **Task-worker messages can be silently, permanently lost.** `SlotMessageRow` / `enqueue_message` /
-      `take_pending_messages` (`server/state_store/activity.py:223-238`, posted via `POST /api/slots/{slot_id}/message`,
-      drained on the worker's next `/boot`/`/heartbeat`/`/progress`) stamps `delivered_at` **on take** with **no
-      `answered_at`, no reply-ack, no redelivery** — structurally the exact pre-fix shape of `agent_messages`. If a
-      worker's session dies, respawns, or `/compact`s between taking the message and acting on it, the message is gone
-      with **zero operator-visible signal**. Port the already-proven `agent_messages` pattern (`answered_at` column +
-      redeliver-until-answered + cap) rather than inventing a second mechanism. **Gate**: unit tests mirroring
-      `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops redelivery; cap flips to
-      needs-operator.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-16 — `agent-orchestrator@d90f0f5`. QG green (own exit 0): 1316 passed,
+      basedpyright 0 errors.** **Deliberately did NOT port the sibling's redeliver-until-`/reply` design (which this
+      todo originally prescribed)** — a decision made after reading the code: task workers have **no reply endpoint**
+      (`agents/worker.md` only says "the progress response may include [messages] … read them and act"), so "unanswered"
+      is _unobservable_ for a worker, and redelivering until an ack that can never arrive would re-show the same
+      instruction on every heartbeat and risk **duplicate ACTIONS** — strictly worse than the drop being fixed. Instead
+      delivery is **session-scoped**: a message redelivers only when `delivered_to_session` != the slot's live
+      `claude_session_id` — a fresh uuid per spawn (context lost → the new session genuinely hasn't seen it) but
+      **preserved across a `--resume` account failover** (context intact → no spurious redelivery). That is also why it
+      keys on the session id and not `last_spawned_at`, which would churn on a resume that kept full context. Capped at
+      new `slot_message_max_redeliveries` (default 30, mirroring the agent channel) → terminal + counted by
+      `count_slot_messages_needing_operator`, i.e. **loud** instead of the silent drop on the FIRST death. Migration
+      carries the **one-time backfill** the `agent_messages` migration warned about (historical delivered rows →
+      terminal), without which every old message would mismatch the current session on the first post-deploy heartbeat
+      and flood every live worker — worse than the bug. **Known limit, documented not hidden**: a session that receives
+      a message, ignores it, and keeps running is not detected — that's worker behaviour, not delivery; closing it needs
+      a worker-side ack primitive + prompt contract. Proof: restoring the deliver-once semantics fails the
+      respawn-survival and cap tests. ~~**Task-worker messages can be silently, permanently lost.**~~ `SlotMessageRow` /
+      `enqueue_message` / `take_pending_messages` (`server/state_store/activity.py:223-238`, posted via
+      `POST /api/slots/{slot_id}/message`, drained on the worker's next `/boot`/`/heartbeat`/`/progress`) stamps
+      `delivered_at` **on take** with **no `answered_at`, no reply-ack, no redelivery** — structurally the exact pre-fix
+      shape of `agent_messages`. If a worker's session dies, respawns, or `/compact`s between taking the message and
+      acting on it, the message is gone with **zero operator-visible signal**. Port the already-proven `agent_messages`
+      pattern (`answered_at` column + redeliver-until-answered + cap) rather than inventing a second mechanism.
+      **Gate**: unit tests mirroring `tests/test_agent_message_redelivery.py` — take→no-ack→redelivered; ack stops
+      redelivery; cap flips to needs-operator.
 - [ ] [BACKEND] P1. **The stuck-agent alarm is wired to nothing.** `needs_operator_count` — the counter that fires when
       an agent stops answering after `agent_message_max_redeliveries` (default 30, ≈30 min) — is **computed correctly**
       at `server/routes/agents.py:226-231` and **rendered nowhere**: zero occurrences in the dashboard `.tsx` (only
