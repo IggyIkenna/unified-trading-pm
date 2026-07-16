@@ -263,6 +263,18 @@ concurrently with, not strictly after, the spine + Data-Eng pilot; this section 
 - A plan-level `worked_by`/`executor` claim field (in-flight state stays in the backend `.agent-claim` — C7).
 - Cursor `.mdc` dedup + archive backfill + the controlled tag-vocabulary content pass (later passes — D-deferred).
 
+## AO issue register → see `orchestrator_master`
+
+The 2026-07-16 AO issue-doc reconciliation sweep enumerates **every** AO issue doc (both epics, plus archived docs that
+still carry open todos) in ONE register, deliberately not split across the two epics:
+[`orchestrator_master.md` § AO issue register](orchestrator_master.md#ao-issue-register--2026-07-16-reconciliation-sweep).
+Five docs under **this** epic appear there (`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`,
+`ao_recovery_audit_layer1_deleted_2026_07_15`, `ao_docs_reconciliation_2026_07_15`,
+`empty_output_category_count_ssot_contradiction_2026_07_03`, `ao_autospawn_role_blind_dispatch_starvation_2026_07_14` —
+the last archived-yet-still-carrying-open-todos), alongside the four PM-QG hygiene docs that sit under this epic by
+`parent_epic` but are not AO-runtime concerns. **Do not fork a second register here** — one list, one place, or the
+enumeration rots again (which is the exact failure the sweep exists to fix).
+
 ## P0 — must complete first
 
 ### W1 — Strict per-plan VM matching (dispatch correctness)

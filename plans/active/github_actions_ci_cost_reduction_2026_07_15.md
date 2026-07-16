@@ -384,25 +384,40 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       checkout at all**. If that clone is pinned at install time it silently drifts from `main` and the writer keeps
       writing Firestore rows with **stale logic** — quiet wrongness, the bad kind. Add a systemd timer doing
       `git -C ${SLOT}/repo pull --ff-only` (+ a staleness assertion the writer can fail loudly on).
-- [ ] [INFRA] P0. **Queue-starvation watchdog — BLOCKS THE FLIP (operator 2026-07-16).** After the move a dead VM is
-      **SILENT**: dispatches are still accepted, jobs sit `queued`, and **nothing pages** — verified by grep, all 5
-      KEEP-M monitors (`ci-health`, `branch-health`, `ldr-ci-monitor`, `cloud-build-failure-watcher`) have **ZERO**
-      references to queued/runner state; they detect _failures_, and a queued job isn't a failure until GitHub kills it
-      at **24h**. That window = lost `ci_status` transitions → stale Firestore → blocked promotes (`MAIN_GREEN` is the
-      dep-on-main gate `staging-to-main.yml` STAGE 1.8 reads). **Not a billing risk** (queue time is free — see the
-      Progress Log), purely correctness. **Operator requirement: queued >10 min → page LOUDLY every 15 min until
-      fixed.** **Design (decided — do NOT build a standalone workflow):** fold the detector into **`ci-health`**, which
-      is already `KEEP-M` hosted (correct independence — it must not run on the box it watches), already crons
-      **`*/15`** (exactly the requested cadence), and already matrix-fans `alerts` through `notify-slack` with per-item
-      `dedup_key`+`cooldown_min` (the re-nag machinery EXISTS). **Cost is the reason:** a standalone `*/5` watchdog =
-      **~$52/mo** and `*/15` = **~$17/mo** (1-min minimum × runs), which would eat a third of the saving we're chasing;
-      a **step inside `ci-health`'s already-billed `watch` job = ~$0**, and the `notify` job only bills when firing.
-      Implementation: new `RENAG_GLUE_STARVED_MIN = 15`; an IO detector; emit an item from the **pure** `build_alerts()`
-      (`{key, severity, cooldown_min, message, url}`) → `scripts/repo-management/ci_failure_watcher.py`. Detect on
-      **queued >10 min** (not "0 runners online") so it also catches a **wedged** pool, and put runner state in the
-      message so the responder can tell "VM down" from "pool wedged". `severity: CRITICAL`, stable `key`, recovery
-      bookend on a distinct short-cooldown key. **`ci-health` must stay KEEP-M forever** — flipping it would make the
-      watchdog queue behind the very outage it exists to report.
+- [x] [INFRA] P0. ✅ **Queue-starvation watchdog — BUILT** (unified-trading-pm@6901779de, PR #1086 auto-merge).
+      `detect_glue_starvation()` + `_glue_runner_counts()` + a `glue-runners-starved` item from the **pure**
+      `build_alert_items()` → `scripts/repo-management/ci_failure_watcher.py`, i.e. **inside `ci-health`'s
+      already-billed `watch` job — no new workflow, no new job, ~$0** (vs ~$52/mo standalone `*/5`). `CRITICAL` +
+      `RENAG_GLUE_STARVED_MIN = 15` → the carrier re-nags every 15 min while it re-detects, exactly as asked; new
+      `--glue-queued-minutes` (default 10) makes the threshold tunable. Detects on **queued-age**, so it catches a
+      **wedged** pool too, and the message separates the faults ("0 runners ONLINE → VM down" vs "runners ARE online but
+      not draining → wedged") and carries stakes + fix + rollback. **Costs ONE gh call when nothing is queued** (the
+      normal case) — per-run job lookups only fire once something is already stale. **Evidence:** 13 new tests, 181/181
+      watcher tests green, `quality-gates.sh --no-fix` EXIT=0. **Mutation-tested, not just green**: removing the
+      glue-label guard fails `test_hosted_job_queued_does_not_page`; ignoring job status fails
+      `test_running_job_is_not_starved` — so the two guards are provably load-bearing. The false-positive guard matters
+      most: a HOSTED job queueing on GitHub's own capacity is **not** our outage, and paging on it would train the
+      operator to ignore the alarm that exists to say the VM died. QG caught 3 real lint errors of mine (C420/E501/N802)
+      — fixed. **NOT yet verified against a live outage** (no runners exist yet); the deploy proves it end-to-end.
+      Original todo text retained below. **Queue-starvation watchdog — BLOCKS THE FLIP (operator 2026-07-16).** After
+      the move a dead VM is **SILENT**: dispatches are still accepted, jobs sit `queued`, and **nothing pages** —
+      verified by grep, all 5 KEEP-M monitors (`ci-health`, `branch-health`, `ldr-ci-monitor`,
+      `cloud-build-failure-watcher`) have **ZERO** references to queued/runner state; they detect _failures_, and a
+      queued job isn't a failure until GitHub kills it at **24h**. That window = lost `ci_status` transitions → stale
+      Firestore → blocked promotes (`MAIN_GREEN` is the dep-on-main gate `staging-to-main.yml` STAGE 1.8 reads). **Not a
+      billing risk** (queue time is free — see the Progress Log), purely correctness. **Operator requirement: queued >10
+      min → page LOUDLY every 15 min until fixed.** **Design (decided — do NOT build a standalone workflow):** fold the
+      detector into **`ci-health`**, which is already `KEEP-M` hosted (correct independence — it must not run on the box
+      it watches), already crons **`*/15`** (exactly the requested cadence), and already matrix-fans `alerts` through
+      `notify-slack` with per-item `dedup_key`+`cooldown_min` (the re-nag machinery EXISTS). **Cost is the reason:** a
+      standalone `*/5` watchdog = **~$52/mo** and `*/15` = **~$17/mo** (1-min minimum × runs), which would eat a third
+      of the saving we're chasing; a **step inside `ci-health`'s already-billed `watch` job = ~$0**, and the `notify`
+      job only bills when firing. Implementation: new `RENAG_GLUE_STARVED_MIN = 15`; an IO detector; emit an item from
+      the **pure** `build_alerts()` (`{key, severity, cooldown_min, message, url}`) →
+      `scripts/repo-management/ci_failure_watcher.py`. Detect on **queued >10 min** (not "0 runners online") so it also
+      catches a **wedged** pool, and put runner state in the message so the responder can tell "VM down" from "pool
+      wedged". `severity: CRITICAL`, stable `key`, recovery bookend on a distinct short-cooldown key. **`ci-health` must
+      stay KEEP-M forever** — flipping it would make the watchdog queue behind the very outage it exists to report.
 - [x] [INFRA] P1. ✅ **Failsafe CI-host bootstrap AUTHORED + container-PROVEN** (unified-trading-pm@80f00684a).
       `scripts/self-hosted-runners/bootstrap-ci-host.sh` takes a bare Ubuntu box to CI-ready assuming NOTHING present:
       base OS deps → `gh` (official apt repo) → `gcloud` → `aws` v2 → `uv` (installed **for the runner user**, not root
@@ -711,3 +726,17 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   scope: the container proves the tool-install class ONLY** — IMDS/instance-role, GCP ADC, **systemd (so
   `setup-glue-runners.sh install` remains untested end-to-end)**, and real runner registration are all structurally
   untestable this way and stay open.
+- 2026-07-16 — **Queue-starvation watchdog SHIPPED** — unified-trading-pm@6901779de (PR #1086, auto-merge). Landed
+  exactly where the design said and NOT as a standalone workflow: `detect_glue_starvation()` + `_glue_runner_counts()` +
+  a `glue-runners-starved` item from the pure `build_alert_items()`, all inside `ci-health`'s already-billed `watch` job
+  → **~$0** instead of ~$52/mo. The re-nag needed no new machinery — `RENAG_GLUE_STARVED_MIN = 15` rides the carrier's
+  existing per-key `cooldown_min`, so the watcher stays stateless and the ledger paces the 15-min re-page.
+  **Mutation-tested rather than merely green** (13 new tests + 181/181 watcher suite, QG EXIT=0): removing the
+  glue-label guard fails `test_hosted_job_queued_does_not_page`, and ignoring job status fails
+  `test_running_job_is_not_starved` — both guards are provably doing work. The label guard is the one that matters: a
+  HOSTED job queueing on GitHub's own capacity is not our outage, and paging on it would train the operator to ignore
+  the alarm that exists to say the VM died. **Two API-shape traps found while writing it** (recorded inline): the
+  _runners_ API returns `labels` as OBJECTS `{id,name,type}` while the _jobs_ API returns plain STRINGS — mixing them up
+  silently yields zero matches and an alarm that never fires. QG caught 3 real lint errors of mine (C420 dict
+  comprehension, E501, N802) — fixed. **Still unproven against a live outage** (no runners exist yet) — the deploy is
+  what proves it end-to-end.
