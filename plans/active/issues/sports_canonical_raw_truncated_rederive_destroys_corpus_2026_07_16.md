@@ -225,5 +225,17 @@ Only T-0 was contaminated. The other seven are real, correctly-bucketed, irrepla
       days that needed it — `market-tick-data-service@75f226e8`. **The MDT delete gate is UNAFFECTED**: it still rests
       on the genuine 32-day / 550,062-key residue (canonical capture outage 2022-09-07…2022-10-01), which this merge
       does not touch. MDT remains NOT delete-eligible.
+- [x] [CODE] P0. ✅ **(c) Same guard for the features recompute — DONE 2026-07-17, `features-service@3c15f3ff`.**
+      `features_service/sports/data/loss_guard.py` (pure `evaluate_loss_guard`) + `cli/handlers/_loss_guard_gate.py`,
+      wired into `_run_feature_group` before any GCS write; 15 unit tests incl. this doc's measured `day=2024-01-01`
+      52→3 regression. **Fixture-SET containment per horizon** (not the `event_id` COUNT this doc originally proposed —
+      a count-based guard waves through a same-count fixture SWAP, and would abort every date on the correct HT
+      honest-absence drop). Proven live: `day=2024-01-01` → `LOSS_GUARD_BLOCKED ... fixtures 13 -> 1`, shard untouched.
+      **Executed at scale**: 1,861 dates → 1,524 purged, **337 aborted (18.1%), 800 fixtures protected from deletion**,
+      0 failures. This doc's core thesis is **CONFIRMED at scale, not refuted**: on 337 dates the upstream is still
+      thinner than its own descendant, in 49 contiguous winter-clustered windows — a second starvation mechanism the
+      199-day `batch_footystats` merge did not touch. Full evidence:
+      `./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` § "ODDS_FEATURES recompute EXECUTED". **Fix (b) below (the
+      MDPS `reprocess_sports_odds.py` guard) is still OPEN and still P0** — this closes the FEATURES path only.
 - [ ] [DOCS] P1. **Correct the cutover runbook's canonical-is-a-superset premise** for raw odds on early dates, and
       cross-reference this issue from the delete-gate section.
