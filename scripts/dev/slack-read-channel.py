@@ -38,7 +38,8 @@ tok = subprocess.run(
         "access",
         "latest",
         "--secret=SLACK_ALERTS_READER_BOT_TOKEN",
-        "--project=central-element-323112",
+        # project comes from the active gcloud config — every host this runs on
+        # (operator machines, slots, VMs) is configured for the prod project.
     ],
     capture_output=True,
     text=True,
@@ -51,7 +52,7 @@ def api(method: str, **params):
         f"https://slack.com/api/{method}?{urllib.parse.urlencode(params)}",
         headers={"Authorization": f"Bearer {tok}"},
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
+    with urllib.request.urlopen(req, timeout=30) as r:  # nosec B310 — scheme is fixed https
         data = json.load(r)
     if not data.get("ok"):
         sys.exit(f"Slack API {method} error: {data.get('error')}")
@@ -61,8 +62,8 @@ def api(method: str, **params):
 chans, cursor = {}, ""
 while True:
     d = api("conversations.list", limit=200, types="public_channel,private_channel", cursor=cursor)
-    chans.update({c["name"]: c["id"] for c in d.get("channels", [])})
-    cursor = (d.get("response_metadata") or {}).get("next_cursor", "")
+    chans.update({c["name"]: c["id"] for c in d["channels"]})
+    cursor = (d.get("response_metadata") or {}).get("next_cursor") or ""
     if not cursor:
         break
 if CHANNEL not in chans:
@@ -72,10 +73,10 @@ oldest = time.time() - HOURS * 3600
 msgs, cursor = [], ""
 while True:
     d = api("conversations.history", channel=chans[CHANNEL], oldest=f"{oldest:.6f}", limit=200, cursor=cursor)
-    msgs.extend(d.get("messages", []))
+    msgs.extend(d["messages"])
     if not d.get("has_more"):
         break
-    cursor = (d.get("response_metadata") or {}).get("next_cursor", "")
+    cursor = (d.get("response_metadata") or {}).get("next_cursor") or ""
 msgs.sort(key=lambda m: float(m["ts"]))
 
 out = f"slack-{CHANNEL}-{int(HOURS)}h.json"
@@ -88,18 +89,16 @@ if JSON_ONLY:
 
 def render(m) -> str:
     parts = []
-    for b in m.get("blocks", []) or []:
+    for b in m.get("blocks") or []:
         if b.get("type") == "section":
             t = b.get("text") or {}
             if t.get("text"):
                 parts.append(t["text"])
-            parts.extend(f["text"] for f in b.get("fields", []) or [] if f.get("text"))
+            parts.extend(f["text"] for f in b.get("fields") or [] if f.get("text"))
         elif b.get("type") == "context":
-            parts.extend(e["text"] for e in b.get("elements", []) or [] if e.get("text"))
+            parts.extend(e["text"] for e in b.get("elements") or [] if e.get("text"))
     if not parts:
-        parts = [m.get("text") or ""] + [
-            a.get("text") or a.get("fallback") or "" for a in m.get("attachments", []) or []
-        ]
+        parts = [m.get("text") or ""] + [a.get("text") or a.get("fallback") or "" for a in m.get("attachments") or []]
     return " ⏐ ".join(" ".join(p.split()) for p in parts if p.strip())
 
 
