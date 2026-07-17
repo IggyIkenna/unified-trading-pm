@@ -20,3 +20,13 @@ docs/repo-management/CICD-WORKFLOW-CATALOG.md
 # rewrite them once (2026-07-16, long `description:` rewrapped) — the live workflows are only
 # formatted when staged, so the copies drifted from their own source the moment they were committed.
 scripts/self-hosted-runners/hosted-baseline/*.yml
+
+# Canonical form is OWNED by scripts/quality_gates/check_workspace_manifest_canonical.py
+# (json.dumps(obj, indent=2, ensure_ascii=False) + "\n" — always fully expanded arrays, no
+# per-line "fill"), matching the ~17 internal Python writers (update-repo-version /
+# staging-to-main / sit-unlock / merge-driver / consolidator / monitors). Prettier's own
+# array-fill heuristic (collapse onto one line when it fits printWidth) produces a DIFFERENT,
+# incompatible byte form for short arrays and is idempotent on it — once prettier touches this
+# file the two writers fight forever. Confirmed 2026-07-17: a tree-wide `prettier --write` swept
+# this file in via the generic **/*.json glob and broke manifest-canonical QG.
+workspace-manifest.json
