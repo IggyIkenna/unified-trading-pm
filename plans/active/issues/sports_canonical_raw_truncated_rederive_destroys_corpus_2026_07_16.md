@@ -84,11 +84,20 @@ source:
 > the guard is what makes running it safe. **Fix direction (a) remains REFUSED** (the legacy bucket holds nothing unique
 > on those days).
 >
-> **The second starvation mechanism is now IDENTIFIED** (this doc predicted it existed; `(c)` measured 337 dates of it;
-> `(b)`'s grain work found the cause) — an empty-but-present `fixture_id` column collapses the adapter's dedup key. See
-> the P0 todo in
-> [`./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md) § "Diagnose
-> the upstream thinning on the 337 guard-aborted dates".
+> **The second starvation mechanism is IDENTIFIED and now FIXED — `market-data-processing-service@9f2560b7`
+> (2026-07-17).** (This doc predicted it existed; `(c)` measured 337 dates of it; `(b)`'s grain work found the cause.)
+> An empty-but-present `fixture_id` column collapsed the adapter's dedup key onto `('', bookmaker_key, horizon_idx)`,
+> keeping ONE row per (bookmaker, horizon) per league-day. Identity is now coalesced explicitly (blank == ABSENT) and an
+> unresolvable identity fails LOUD. **Measured full-census (2,221 dates, real reader + real adapter): 448 dates carry
+> the signature, 423 change on re-derive, 60,517 → 1,173,798 rows (94.8% of the derive was being destroyed), and 0/1,934
+> dates lose an observation — the fix is provably ADDS-ONLY.** So this doc's thesis ("every layer is richer than its own
+> upstream") is now explained on BOTH sides: the 199-day `batch_footystats` merge fixed the raw-population half, and
+> @9f2560b7 fixes the derive half. **The `--force` hazard these dates posed is retired**: the (b) guard now PASSES them
+> (`2023-01-08` 514 → 514, was 514 → 61; census `2023-01-05..20` 16/16 pass, was 15/16 blocked). **The DATA recompute is
+> still OPEN** (423 dates) — see the P0 recompute todo in
+> [`./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md) §
+> "Fixture-identity collapse — FIXED". **New, unexpected**: the signature reaches the corpus edge (last collapsed date
+> **2026-06-20**), so the ODDS_API writer still emits a blank `fixture_id` — a P1 todo in that doc.
 >
 > _(Superseded banner retained for provenance:)_
 >

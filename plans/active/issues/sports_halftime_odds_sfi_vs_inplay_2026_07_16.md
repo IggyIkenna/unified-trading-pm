@@ -915,43 +915,84 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
       see § "ODDS_FEATURES recompute EXECUTED" below — **1,021 → 177 passed / 94.0% → 80.0%, a CORRECT drop** (removing
       fabricated signal), gate NO both sides. The `MANIFEST_CONSOLIDATED_STALENESS_SEC` concern did not materialise —
       sports was RESTORED live 2026-07-17 (consolidators `*/1`), so the startup gate passed unmodified.
-- [ ] [DATA] P0. **Diagnose the upstream thinning on the 337 guard-aborted dates, then re-run the recompute on them.**
-      They are the ONLY dates still carrying the closing-line leak. They are **not scattered — 49 contiguous windows
-      with a hard WINTER signature**: `2021-01-01..2021-02-20` (49d) · `2022-01-01..2022-03-05` (60d) ·
-      `2022-12-23..2023-02-27` (61d) · `2024-01-01..2024-02-02` (31d) · `2024-02-09..2024-02-23` (14d) ·
-      `2025-02-02..2025-02-15` (14d), by year 2021:49 · 2022:147 · 2023:78 · 2024:45 · 2025:17 · 2026:1. On those dates
-      the corpus holds **10,642 fixtures** and the re-derive reaches only **9,842** → the guard protected **800
-      fixtures** from deletion. Note the era overlaps the 199-day `batch_footystats` merge window
-      (`market-tick-data-service@75f226e8`, 2022:112 · 2023:48 · 2024:34) — so that merge fixed a _neighbouring_ slice
-      but NOT these; a second, distinct starvation mechanism is live and unidentified. This is exactly the "nothing yet
-      proves they cannot starve by another [mechanism]" caveat in
-      `./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`. Do NOT lower the guard to force these
-      through — fix the upstream, then re-run `drive.sh`-equivalent on the 337. > **🔴 MECHANISM IDENTIFIED 2026-07-17
-      (measured, by the fix-(b) leg — NOT yet fixed; this todo stays OPEN).** > **An empty-but-present `fixture_id`
-      column silently collapses the MDPS adapter's dedup key.** > `pivot_mtds_to_wide` renames `event_id`→`fixture_id`
-      ONLY when `fixture_id` is absent. On the affected dates the > raw carries BOTH — `event_id` populated and
-      `fixture_id` present but **blank on 100% of rows** — so no rename > fires, and `_get_dedup_columns` then returns
-      `['fixture_id', 'bookmaker_key']`. Dedup therefore runs on > `('', bookmaker_key, horizon_idx)` and **keeps ONE
-      row per (bookmaker, horizon) for the whole league-day**, > destroying every other fixture. > **Measured live**
-      (`market-data-processing-service/.venv`, real reads + real adapter, zero inherited numbers): > `day=2024-01-15`
-      raw holds **5 distinct `event_id`** across 3,759 rows with `fixture_id` non-empty on **0/3,759**; > the adapter
-      derives **166 rows / ~21 per horizon** = ~21 bookmakers × **1** collapsed fixture (vs ~5×21×8 ≈ 840 > expected —
-      **~80% destroyed**). Every probed shard on such a date has `event_id` nunique == **1**. Contrast >
-      `day=2022-04-16`, where raw has `event_id` only → rename fires → **68 fixtures** preserved / 5,635 rows / grid >
-      `T-12h=896 · T-6h=898 · T-4h=896 · T-2h=884 · T-10m=870 · T-24h=894` (matches the corpus EXACTLY). > **Corpus
-      generation split** (the diagnostic signature — grep it to enumerate the affected dates): > `fixture_id`
-      populated + no `event_id` column = HEALTHY; `event_id` populated + blank `fixture_id` = COLLAPSED. > Probed
-      collapsed: `2024-01-15`, `2025-02-05` — **both inside the 337 winter windows**. Probed healthy: > `2022-04-16`,
-      `2023-05-10`, `2024-11-09`, `2025-04-12` — all outside. > **Why the features guard fired**: the MDPS corpus on
-      these dates is ALREADY collapsed (the bug bit at original > derive time), so `odds_features` (13 fixtures) is
-      richer than the MDPS upstream it reads (1) — exactly the > "richer than its own upstream" reading, but caused
-      HERE, not by raw truncation. > **Fix direction**: make the fixture identity resolution explicit rather than
-      rename-dependent — coalesce > `event_id`/`fixture_id` treating blank as absent (fix-(b)'s `_resolve_fixture_ids`
-      in > `app/adapters/sports/odds_loss_guard.py` is a working reference), and make `_get_dedup_columns` refuse a
-      dedup > key whose every value is blank rather than silently collapsing. **NOT fixed here** — it changes derive
-      output on > every affected date (large blast radius) and belongs to this todo's owner, not the guard leg. The
-      fix-(b) guard > does NOT protect these dates: old and new both collapse identically, so the derive looks
-      faithful. > _Provenance: fix-(b) leg 2026-07-17, `market-data-processing-service@6d20fb18`._
+- [~] [DATA] P0. ✅ **MECHANISM DIAGNOSED + FIXED 2026-07-17 — `market-data-processing-service@9f2560b7`. The recompute
+  half is SPLIT OUT into its own todo below (deliberately NOT run in this leg).** The blank-`fixture_id` collapse is
+  fixed at the adapter: identity is now COALESCED (blank == absent) into an authoritative `fixture_id` before anything
+  keys on it, an unresolvable identity fails LOUD (`MalformedTickFieldError` → `attempted_failed`, never a silent
+  collapse or a false `empty_confirmed`), and `odds_loss_guard` now **sources** `resolve_fixture_ids` from the adapter
+  instead of carrying a second copy — so guard and derive cannot drift on what a fixture IS. **11 new regression tests**
+  (`TestFixtureIdentityResolution`, incl. the pinned `2024-01-15` 1→5-fixture case); QG green (**2040 passed**, 1
+  skipped; sentinel == HEAD). Evidence + the two inherited numbers this leg **falsified**: see § "Fixture-identity
+  collapse — FIXED" below. Headline: **448** dates carry the signature (**not** the 337 — that was the features-side
+  symptom), **423** change on re-derive, **94.8%** of the derive was being destroyed on them (60,517 → 1,173,798 rows),
+  **adds-only PROVEN** (0/1,934 dates lose an observation), and the (b) guard now **passes** the exact date it blocked
+  pre-fix (`2023-01-08`, 514 → 514, was 514 → 61). Original scope text retained: They are the ONLY dates still carrying
+  the closing-line leak. They are **not scattered — 49 contiguous windows with a hard WINTER signature**:
+  `2021-01-01..2021-02-20` (49d) · `2022-01-01..2022-03-05` (60d) · `2022-12-23..2023-02-27` (61d) ·
+  `2024-01-01..2024-02-02` (31d) · `2024-02-09..2024-02-23` (14d) · `2025-02-02..2025-02-15` (14d), by year 2021:49 ·
+  2022:147 · 2023:78 · 2024:45 · 2025:17 · 2026:1. On those dates the corpus holds **10,642 fixtures** and the re-derive
+  reaches only **9,842** → the guard protected **800 fixtures** from deletion. Note the era overlaps the 199-day
+  `batch_footystats` merge window (`market-tick-data-service@75f226e8`, 2022:112 · 2023:48 · 2024:34) — so that merge
+  fixed a _neighbouring_ slice but NOT these; a second, distinct starvation mechanism is live and unidentified. This is
+  exactly the "nothing yet proves they cannot starve by another [mechanism]" caveat in
+  `./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`. Do NOT lower the guard to force these
+  through — fix the upstream, then re-run `drive.sh`-equivalent on the 337. > **🟢 MECHANISM IDENTIFIED 2026-07-17 (by
+  the fix-(b) leg) — FIXED 2026-07-17 `market-data-processing-service@9f2560b7`.** > **An empty-but-present `fixture_id`
+  column silently collapses the MDPS adapter's dedup key.** > `pivot_mtds_to_wide` renames `event_id`→`fixture_id` ONLY
+  when `fixture_id` is absent. On the affected dates the > raw carries BOTH — `event_id` populated and `fixture_id`
+  present but **blank on 100% of rows** — so no rename > fires, and `_get_dedup_columns` then returns
+  `['fixture_id', 'bookmaker_key']`. Dedup therefore runs on > `('', bookmaker_key, horizon_idx)` and **keeps ONE row
+  per (bookmaker, horizon) for the whole league-day**, > destroying every other fixture. > **Measured live**
+  (`market-data-processing-service/.venv`, real reads + real adapter, zero inherited numbers): > `day=2024-01-15` raw
+  holds **5 distinct `event_id`** across 3,759 rows with `fixture_id` non-empty on **0/3,759**; > the adapter derives
+  **166 rows / ~21 per horizon** = ~21 bookmakers × **1** collapsed fixture (vs ~5×21×8 ≈ 840 > expected — **~80%
+  destroyed**). Every probed shard on such a date has `event_id` nunique == **1**. Contrast > `day=2022-04-16`, where
+  raw has `event_id` only → rename fires → **68 fixtures** preserved / 5,635 rows / grid >
+  `T-12h=896 · T-6h=898 · T-4h=896 · T-2h=884 · T-10m=870 · T-24h=894` (matches the corpus EXACTLY). > **Corpus
+  generation split** (the diagnostic signature — grep it to enumerate the affected dates): > `fixture_id` populated + no
+  `event_id` column = HEALTHY; `event_id` populated + blank `fixture_id` = COLLAPSED. > Probed collapsed: `2024-01-15`,
+  `2025-02-05` — **both inside the 337 winter windows**. Probed healthy: > `2022-04-16`, `2023-05-10`, `2024-11-09`,
+  `2025-04-12` — all outside. > **Why the features guard fired**: the MDPS corpus on these dates is ALREADY collapsed
+  (the bug bit at original > derive time), so `odds_features` (13 fixtures) is richer than the MDPS upstream it reads
+  (1) — exactly the > "richer than its own upstream" reading, but caused HERE, not by raw truncation. > **Fix
+  direction**: make the fixture identity resolution explicit rather than rename-dependent — coalesce >
+  `event_id`/`fixture_id` treating blank as absent (fix-(b)'s `_resolve_fixture_ids` in >
+  `app/adapters/sports/odds_loss_guard.py` is a working reference), and make `_get_dedup_columns` refuse a dedup > key
+  whose every value is blank rather than silently collapsing. ~~**NOT fixed here**~~ — **FIXED 2026-07-17,
+  MDPS@9f2560b7** (both prescribed changes landed; the resolver is now SHARED with the guard rather than duplicated). >
+  The fix-(b) guard > does NOT protect these dates: old and new both collapse identically, so the derive looks faithful
+  — **still true, and still the reason the fix had to come from the derive side.** > _Provenance: fix-(b) leg
+  2026-07-17, `market-data-processing-service@6d20fb18`; fix + blast radius 2026-07-17,
+  `market-data-processing-service@9f2560b7`._
+- [ ] [DATA] P0. **RECOMPUTE the 423 collapse-affected dates through MDPS, then re-run `ODDS_FEATURES` on them.** Split
+      out of the todo above (the fix — MDPS@9f2560b7 — is that todo's deliverable; this is the DATA leg it unblocks).
+      **It now runs GUARDED**: the (b) loss guard (`market-data-processing-service@6d20fb18`) is unmodified and
+      demonstrably passes the post-fix derive (`2023-01-08` 514 → 514; census `2023-01-05..20` **16/16 pass, 0
+      blocked**, where pre-fix it blocked **15/16**), so a `--force` over these dates can only add. Do NOT lower the
+      guard; a block on any date = STOP-and-diagnose (a THIRD starvation mechanism), not a nuisance. **Scope (measured,
+      full census — `~/tmp-collapse/blast_radius.jsonl` methodology, real reader + real adapter):** - **MDPS
+      `odds_horizon_bucket`**: **423 dates** whose derive changes (of 448 signature dates; the other 25 are
+      single-fixture days where the collapse is a no-op). Range **2020-06-06 … 2026-06-20**; by year 2020:78 · 2021:50 ·
+      2022:60 · 2023:52 · 2024:51 · 2025:47 · 2026:110. Expected write: **60,517 → 1,173,798 rows** (+1,113,281
+      observations; ~2,800 rows/date avg). **Cost**: measured 27.0s for 16 dates at `--workers 4` dry-run (≈1.7s/date
+      derive+guard); with real per-shard uploads (~71 shards/date) budget **~1-2 h** for all 423 at `--workers 4`.
+      Command: `reprocess_sports_odds.py --start-date <D> --end-date <D> --force --workers 4` (resumable per date;
+      verify each date logs `LOSS_GUARD_PASS`). - **features-service**: re-run `ODDS_FEATURES` (+ `DERIVED_FEATURES`) on
+      the **423 dates** AFTER the MDPS leg lands — they read the bucketed layer, so they must not be recomputed against
+      the collapsed upstream. This also clears the **337 guard-aborted dates**' residual closing-line leak (the 337 ⊂
+      the collapse-affected era), which is the last 18.1% of the leak purge. Feature-side guard =
+      `features-service@3c15f3ff` (fixture-SET containment). - **Sequencing**: MDPS first → verify → features. **Sports
+      must not be mid-freeze/cutover when this runs**; confirm the bucket cutover's state before starting (this issue's
+      own banner + the cutover runbook).
+- [ ] [DATA] P1. **The blank-`fixture_id` raw generation is STILL BEING WRITTEN — fix the upstream writer.** The
+      collapse signature reaches the **corpus edge** (last collapsed date **2026-06-20**; 2026-04: 28 dates · 2026-05:
+      28 · 2026-06: 8 — only **9** healthy dates in all of 2026), so the current ODDS_API capture path emits
+      `fixture_id=""` alongside a populated `event_id`. MDPS@9f2560b7 makes the DERIVE immune (identity is coalesced),
+      so this is no longer data-destroying — but the raw is still carrying a blank column that means "absent", which is
+      the exact trap that cost this corpus ~1.1M observations. Either populate `fixture_id` at write time or drop the
+      column rather than writing it blank (a blank-but-present column is a placeholder that looks populated —
+      `codex/02-data/honest-absence-downstream-handling.md`). Owner: MTDS (the ODDS_API writer). Measured by the
+      2026-07-17 blast-radius census (2,221 dates, 0 gaps).
 - [ ] [DATA] P1. **Re-calibrate the `verify_ml_readiness.py` 95% non-NULL threshold against the HONEST matrix.** The
       gate now fails 1,683/1,860 dates at ~69-80% non-NULL — **not a regression**: the threshold was calibrated when the
       closing line was broadcast into every T-24h row, i.e. against a leaking matrix, so 95% was only ever reachable
@@ -1082,3 +1123,111 @@ calibrated against a leaking matrix and is now structurally unmeetable; re-basin
 - **`fss-backfill-vm-3` died without its EXIT trap firing** (SPOT preemption): its `EXIT_STATUS` still reads `RUNNING`
   while the instance is gone, so its chunk `2017-04-22..2018-06-16` is silently incomplete. Not this leg's lane —
   flagged for the campaign owner.
+
+---
+
+## Fixture-identity collapse — FIXED (2026-07-17)
+
+> **Shipped**: `market-data-processing-service@9f2560b7` (verified `merge-base --is-ancestor origin/live-defi-rollout`).
+> QG `--no-fix` green — **2040 passed / 1 skipped**, sentinel `.qg_last_passed_sha` == HEAD (verified by CONTENT, not
+> exit code). **Zero mutations to the corpus**: every measurement below is a read or a `--dry-run`; the recompute is
+> deliberately NOT run (scoped as its own P0 todo above).
+
+### 1. REPRODUCED first — the report was not taken on trust
+
+Real reader (`reprocess_sports_odds._read_raw_odds`) + real adapter
+(`SportsBucketAssignmentAdapter.process_to_bucketed_df`), never a re-implementation. The signature is exactly as
+diagnosed, on 2/2 collapsed and 4/4 healthy dates:
+
+| day            | raw rows | `event_id`        | `fixture_id`         | signature | derive (pre-fix)          |
+| -------------- | -------- | ----------------- | -------------------- | --------- | ------------------------- |
+| **2024-01-15** | 3,759    | 5 distinct, 100%  | present, **0/3,759** | COLLAPSED | **166 rows / 1 phantom**  |
+| **2025-02-05** | 3,246    | 4 distinct, 100%  | present, **0/3,246** | COLLAPSED | **181 rows / 1 phantom**  |
+| 2022-04-16     | 83,916   | 68 distinct, 100% | **ABSENT**           | HEALTHY   | 5,635 rows / 68 fixtures  |
+| 2023-05-10     | 10,199   | 11 distinct, 100% | **ABSENT**           | HEALTHY   | 1,515 rows / 11 fixtures  |
+| 2024-11-09     | 147,110  | 91 distinct, 100% | **ABSENT**           | HEALTHY   | 14,077 rows / 91 fixtures |
+| 2025-04-12     | 168,653  | 97 distinct, 100% | **ABSENT**           | HEALTHY   | 14,255 rows / 97 fixtures |
+
+`fixture_id` on the collapsed generation is **literally the empty string** (`object` dtype, `nunique=1`, value `''`) —
+not NaN, not whitespace. That is why `"fixture_id" not in df.columns` never fired.
+
+### 2. Two inherited numbers CORRECTED (re-measured, per the standing never-inherit rule)
+
+1. **"~840 expected / ~80% destroyed" on `2024-01-15` was an ESTIMATE** (`5 × 21 × 8`). Measured post-fix: the derive
+   yields **746 rows**, not ~840 — not every (fixture × bookmaker × horizon) cell exists (staleness caps + missing
+   snapshots). The real destruction on that date is **166/746 = 77.7% destroyed**. Corpus-wide the figure is **worse**
+   than the doc's ~80%: **94.8%**.
+2. **"337 dates" is the FEATURES-side symptom, not the MDPS blast radius.** Measured directly on MDPS: **448 dates**
+   carry the collapsed signature and **423** change on re-derive. The two sets overlap but are not the same population
+   (the 337 were winter-clustered; the 448 span **every year 2020→2026** and are heaviest in **2026: 110**).
+
+### 3. THE FIX
+
+`bucket_assignment_adapter.py` — identity is resolved EXPLICITLY, never inferred from a column's presence:
+
+- `FIXTURE_ID_COL_CANDIDATES = ("event_id", "fixture_id")` + `resolve_fixture_ids()` — coalesce, **blank == ABSENT**,
+  values normalised to `str`. This is the (b) guard's `_resolve_fixture_ids`, **moved to the adapter** (the authority on
+  its own dedup grain) rather than copied — `odds_loss_guard` now imports it, so the two **cannot** disagree about what
+  an entity is. Same sourcing pattern as `POST_KICKOFF_CONTAMINATED_HORIZONS`. A regression test pins the identity
+  (`odds_loss_guard.resolve_fixture_ids is resolve_fixture_ids`).
+- `_materialise_fixture_identity()` runs in `pivot_mtds_to_wide` **and** `_prepare_tick_data` (the already-wide path
+  skips the pivot and previously reached dedup with a blank key). Idempotent; drops the redundant `event_id` so both raw
+  generations converge on ONE output shape. Column POSITION is preserved (rename-then-overwrite when `fixture_id` is
+  absent), so healthy dates keep a byte-identical shape.
+- **Fails LOUD, never collapses**: identity unresolvable on every row → `MalformedTickFieldError` (→ `attempted_failed`,
+  a diagnosable source-format problem — never a false `empty_confirmed`). Partial → the unkeyable rows are dropped with
+  a loud `logger.warning` (they would otherwise merge into one phantom fixture). **Measured: 0/1,934 dates hit either
+  path** — the real corpus always resolves.
+- `_get_dedup_columns` **refuses** an all-blank `fixture_id` (raises) rather than dropping the column — dropping it
+  would silently fall back to `(bookmaker, horizon)`, i.e. the identical collapse by another route.
+
+### 4. BLAST RADIUS — full corpus, both adapters run for real
+
+The **real pre-fix adapter** (loaded from `git show HEAD:…`) and the **real post-fix adapter** were run over **every
+date 2020-06-01 … 2026-06-30 — 2,221 dates, zero gaps**, comparing observation SETS per horizon on the shared resolver.
+(283 dates have no raw; 4 dates — `2026-06-21..24` — raise the reader's own pre-existing `RawOddsShapeUnrecognizedError`
+(meta-snapshot-only blobs), unrelated to this fix.)
+
+| measure                           | value                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| dates with raw data               | **1,934**                                                                                         |
+| COLLAPSED signature               | **448** (23.2%)                                                                                   |
+| derive CHANGES                    | **423** (all 423 are collapsed-signature)                                                         |
+| collapsed-signature but NO change | 25 — **all single-fixture days** (collapse is a no-op there: exactly what the mechanism predicts) |
+| HEALTHY (`event_id` only)         | 1,486 — **0 changed**                                                                             |
+| rows on collapsed dates           | **60,517 → 1,173,798** (**94.8% was destroyed**)                                                  |
+| observations gained               | **+1,113,281**                                                                                    |
+
+**ADDS-ONLY — PROVEN, not argued:**
+
+| assertion                         | measured      |
+| --------------------------------- | ------------- |
+| dates losing ≥1 observation       | **0** / 1,934 |
+| dates where `new_rows < old_rows` | **0** / 1,934 |
+| dates losing ≥1 fixture           | **0** / 1,934 |
+| healthy dates changed at all      | **0** / 1,486 |
+
+### 5. The (b) guard PASSES the post-fix re-derive — on the date it blocked
+
+The strongest available proof: the (b) leg recorded `LOSS_GUARD_BLOCKED day=2023-01-08 … observations 514 -> 61` (2,019
+lost). Post-fix, through the **real production CLI** (`--force --dry-run`, guard runs identically in dry-run):
+
+```
+LOSS_GUARD_PASS 2023-01-08 [no_loss] — Every retained horizon reproduces its observations (514 -> 514); justified drops: none.
+  2023-01-08: 48915 rows → 3734 bucketed (8 horizons, 18 bookmakers)
+```
+
+And the (b) leg's own 16-date census `2023-01-05..20`, which blocked **15/16** pre-fix, is now **16/16 PASS, 0 blocked**
+— observations only ever rise or hold:
+`72→83 · 141→160 · 84→179 · 102→117 · 514→514 · 86→168 · 18→18 · 440→440 · 111→119 · 46→48 · 149→282 · 568→621 · 45→48 · 118→148 · 986→991 · 196→217`.
+The two dates the (b) leg cited to justify set-vs-count containment (`2023-01-17` 46→47 losing 40; `2023-01-19` 45→45
+losing 4) now read `no_loss`.
+
+### 6. 🔴 NOTIFY-OPERATOR — the collapse is LIVE, not historical
+
+The signature reaches the **corpus edge**: **2026-04: 28 dates · 2026-05: 28 · 2026-06: 8**, last collapsed date
+**2026-06-20**, against only **9** healthy dates in all of 2026. `2026-05-17` derived **184 rows where the raw supports
+16,938** (98.9% destroyed). So the ODDS_API writer is **still emitting a blank `fixture_id`**, and every recent derive —
+including anything the rolling `mdps_odds_horizon_scheduler` recon window touched while sports was live — collapsed the
+day to ~one fixture per bookmaker. MDPS@9f2560b7 makes the derive immune from now on; the **writer** is a separate P1
+todo above. **This also means the recompute is not purely historical clean-up — it is repairing live data.**
