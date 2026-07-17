@@ -16,9 +16,10 @@ summary: >-
   removed); the old reusable's DELETION is staged behind observing green ci-status-update runs on main — until it lands,
   `git revert a6057ea36` is a one-command rollback.** D1 (2b↔2c checkout collision) RESOLVED by operator delegation —
   checkout kept, @main pin rejected. A2 SHIPPED + PROVEN 2026-07-17 (Firestore content-sentinel dedup, fleet-live;
-  two-dispatch proof on alerting-service: MISS+save then 22s HIT+skip with the required check green). Next = A1 → A5 +
-  the amended STEP 2b trim; D2-D4 are open operator decisions. One P0 pending: quickmerge's --agent sentinel races its
-  own rebase on a busy branch.
+  two-dispatch proof on alerting-service: MISS+save then 22s HIT+skip with the required check green). A1 SHIPPED
+  2026-07-17 (docs-only fast-path; tests+typecheck short-circuit, lint-codex always full). Next = A5 + the amended STEP
+  2b trim; D2-D4 are open operator decisions. One P0 pending: quickmerge's --agent sentinel races its own rebase on a
+  busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -880,15 +881,23 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 > These three touch the shared reusable `python-quality-gates-v2.yml` (44 callers, all ~25 repos) → fleet-wide savings.
 > QG is the ADR-sensitive gate — no coverage loss, green-only guards.
 
-- [ ] [INFRA] P1. **A1 — docs-only fast-path (operator: do it).** Extend the committed-diff check
-      (`python-quality-gates-v2.yml` L170-202 / L585-607) to the `base-service.sh:596` docs regex so a pure
-      docs/plans/codex change skips the ~12-min pytest+typecheck legs (keep lint-codex). Scope: `plans/**`+`codex/**`
-      IN, lockfiles/workflow-YAML OUT. Also gate `dispatch-cloud-build` on `docs_only!='true'`.
-  - **🔴 CORRECTNESS (do it PROPERLY — operator 2026-07-16, "this is the whole point of CI"):** the skip MUST still
-    **report the required `quality-gates-v2` status check as SUCCESS for the PR-head SHA** — a _green_ skip, NOT an
-    absent check. Branch protection hard-requires that context; if the fast-path makes it MISSING, the branch-protected
-    LDR→main promote PRs (the biggest beneficiary) go **permanently BLOCKED** (the same `[skip ci]`→missing-check hazard
-    in CLAUDE.md). Verify on a real docs-only promote PR that the required check goes green, not that it vanishes.
+- [x] ✅ [INFRA] P1. **A1 — SHIPPED (2026-07-17).** `unified-trading-pm@e5b22fddc` (PR #1124 merged → backmerged →
+      fleet-live via the LDR reusable pin). The slice `vcheck` now computes **`docs_only`** alongside `metadata_only`:
+      changeset from the push diff (`git diff --no-renames` so a code→doc rename lists the deleted code path) or, on
+      **pull_request events, the PR files API** incl. `previous_filename` (verified live in PR #1124's own run:
+      "pull_request changeset: 22 file(s) via files API → docs_only=false → full gate"); doc-ness by the SAME extension
+      allow-list the LOCAL gate uses (`base-service.sh` § DOCS-ONLY: `.md/.mdc/.rst/.txt/.svg/...` — any non-doc
+      extension, incl. `.yml`/`.lock`/`.toml`, forces the full gate). On docs_only: the **tests + typecheck slices
+      short-circuit to GREEN in seconds; lint-codex ALWAYS runs in full** (it is the slice that validates plans/codex —
+      the three 2026-07-17 broken-frontmatter incidents are exactly what it guards). Consolidated per-slice verdict
+      `skip_slice` = metadata_only OR (docs_only AND slice≠lint-codex). **Green skip, not absent check**: the aggregate
+      job's roll-up logic is untouched (slices report job-success), so the required `quality-gates-v2` context posts
+      SUCCESS — the same battle-tested wiring A2's proof exercised. **docs_only runs do NOT save A2 green markers** (a
+      marker must certify a real full-gate pass). `docs_only` exposed as a caller output; `dispatch-cloud-build` gated
+      on it in the PM caller + the canonical template (fleet template ROLLOUT DEFERRED — batch with A5's template edits;
+      ~24 full gate runs to deliver a 1-min/docs-push saving is a bad trade standalone; fleet copies' behavior meanwhile
+      unchanged). Fail-safe: API error / no diff base / empty changeset ⟹ docs_only=false ⟹ full gate. Live proof of the
+      docs-only path = the very next docs-only PR (this flip commit): evidence appended below on landing.
 - [x] ✅ [INFRA] P1. **A2 — SHIPPED + PROVEN LIVE (2026-07-17).** `unified-trading-pm@c535ec087` (PR #1122 merged → main
       run 29584743727 green → backmerged; **fleet-live: LDR reusable blob `625ba14e9`**). Rebuilt the
       byte-identical-tree skip on **Firestore `qg_green_markers/{key}`** (probe in `content-gate`, green-only save in
@@ -995,6 +1004,20 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
 
 ## Progress Log
 
+- 2026-07-17 (PM, later) — **A1 shipped** (`e5b22fddc`, PR #1124; evidence in the ✅ A1 todo). Session context worth
+  keeping:
+  1. **Three broken-frontmatter issue docs landed on LDR within ~50 min from TWO hosts** (`slot-3·laptop` ×2 commit
+     `4a7816269`; `main·planning` ×1 commit `a9f628652`), each reddening lint-codex on EVERY PR into PM main until
+     repaired here (`663ecb850`, `84ffc3bc6`). The commit-time prek gate is being bypassed / failing open on multiple
+     machines — evidence + fix directions in
+     `plans/active/issues/prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md` (operator-parked 2026-07-17:
+     "dont worry about that one for now").
+  2. **Quickmerge sentinel observation (adds to the pending P0)**: with Pass-1 QG RED on a foreign doc, a re-run
+     accepted the prior green SHA sentinel and shipped (M1 warning fired: "prettier reformatted --files AFTER the Pass-1
+     sentinel was certified"). Shipped files were themselves clean (validated individually), but the sentinel's
+     blast-radius logic let a red TREE ship — same family as the "sentinel races its own rebase" P0 above.
+  3. **A1×A2 interplay decided**: docs-only runs are excluded from marker save; a docs-only tree still gets its A2 probe
+     (a HIT skips even lint-codex — sound: the marker certifies the identical tree passed the FULL gate before).
 - 2026-07-17 (PM) — **A2 shipped + proven live** (`c535ec087` → PR #1122 → main run 29584743727 → backmerge → LDR;
   evidence in the ✅ A2 todo). Hard-won specifics for A1/A5 and anyone touching this mechanism:
   1. **`google-github-actions/auth@v3` with `token_format: access_token` mints via the IAM Credentials API — the SA
@@ -1627,13 +1650,13 @@ prove on ONE caller → only then fan out._
 
 ### Not done — blocked on nobody, real work
 
-| #   | Item                                                       | State                                                                                                                                                                                                |
-| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ~~A2 — content-gate dedup~~                                | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip).                                           |
-| 2   | **A1 — docs-only fast-path**                               | **RECOMMENDED NEXT.** P1: **same load-bearing mechanism A2 just proved live** — a _green_ skip that still POSTS the required check (the aggregate-treats-skip-as-green wiring is now battle-tested). |
-| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                                                           |
-| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                                                             |
-| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                                                                      |
+| #   | Item                                                       | State                                                                                                                                                      |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ~~A2 — content-gate dedup~~                                | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip). |
+| 2   | ~~A1 — docs-only fast-path~~                               | ✅ **SHIPPED 2026-07-17** — see the A1 todo's evidence block (e5b22fddc, PR #1124; fleet template rollout deferred to batch with A5).                      |
+| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                 |
+| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                   |
+| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                            |
 
 ### Cannot be done yet — waiting, NOT neglected
 
