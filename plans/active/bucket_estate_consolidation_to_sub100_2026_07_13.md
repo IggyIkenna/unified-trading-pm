@@ -213,6 +213,110 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       list, mirroring the terraform-state/deployment-orchestration/build-metadata entries already there —
       deployment-service@2246e11. Full QG green (`bash scripts/quality-gates.sh --no-fix`).
 
+- [x] ✅ [CODE] P1. **Asset-group parity sweep — 12 producer-less feature buckets deleted + the class gated shut**
+      (operator-raised 2026-07-17: "why do these intuitively exist, is there even code paths to them"). Root cause:
+      `cloud-providers.yaml` declares feature kinds as per-asset-group dicts, and BOTH provisioning surfaces
+      (`setup-buckets.py`, `terraform/gcp/canonical_buckets.tf`'s `for_each`) enumerate the YAML keys — never the code.
+      Nothing tied the two together, so invented combinations became live orphan buckets that look identical to
+      real-but-empty ones. The retired `bucket_config.yaml` `validation.invalid_combinations` block had hand-encoded one
+      fragment of the rule ("No volatility for DEFI") and was deleted as dead config in item 8 above — this restores it
+      as a derived gate.
+
+      > **⚠️ CORRECTION MID-TASK — READ THIS BEFORE TRUSTING ANY "orphan asset_group" CLAIM.** This sweep FIRST ran with
+                      > `scripts/<family>/smoke_matrix.py`'s `SUPPORTED_ASSET_GROUPS` as its authority and, on that basis, wrongly
+                      > deleted `features-xinstrument-defi` (both clouds). **That constant is the SMOKE-TEST COVERAGE list, not the
+                      > family's capability** — note `ALL_ASSET_GROUPS` declared beside it. cross-instrument's CLI accepts DEFI and
+                      > `cli/handlers/batch_handler.py::_ingest_delta_one` explicitly serves "CEFI/TRADFI/DEFI"; the bucket was empty
+                      > because DeFi cross-instrument had never been RUN, which is NOT evidence it cannot be. Caught by
+                      > `tests/cross_instrument/unit/test_service_startup.py` failing in QG. **Fully restored**: buckets recreated on
+                      > GCP + AWS with sibling-matching settings (asia-northeast1/ap-northeast-1, STANDARD, uniform access, AES256,
+                      > COLDLINE@60d lifecycle — verified identical to `features-xinstrument-cefi-*`), yaml keys restored in all 5
+                      > copies, test re-passes. Nothing was lost (empty). The gate was then REBUILT on the correct authority: the
+                      > family's **CLI `asset_group_choices`** — precisely the set the family can be invoked for, hence the set
+                      > `resolve_bucket` is called with. NOTE the 2026-07-10 `features-mtf` PREDICTION/SPORTS removal (item above) made
+                      > the SAME mistake, citing the same constant — its outcome was later confirmed correct by operator ruling, but its
+                      > reasoning was unsound and left a real week-long bug (see below).
+
+                      **6 orphan keys × 2 clouds = 12 buckets DELETED** (each re-verified empty immediately before delete +
+                      404-verified after, per the W1 estate-cleanup protocol; per-bucket log:
+                      gs://deployment-scripts-central-element-323112/migration-bundle/staging/asset_group_parity_deletion_log_2026_07_17.tsv
+                      — note that log records the pre-correction 14; `features-xinstrument-defi` GCP+AWS were subsequently restored):
+                      `features-volatility-{defi,pred,sports}` (operator ruling: no DeFi options, no sports options),
+                      `features-xinstrument-sports`, `features-delta-one-sports`, `features-onchain-cefi`. The last two were NOT in the
+                      operator's list — the sweep found them. `features-mtf-defi` was checked and KEPT (MTF genuinely supports DEFI;
+                      empty only because DeFi MTF has never run).
+                      **+2 more: the 2026-07-10 sweep's unfinished AWS side.** That sweep deleted `features-mtf-{pred,sports}` on GCP
+                      but left the AWS twins (`features-mtf-pred-427895769566`, `features-mtf-sports-427895769566`) alive with no yaml
+                      key — i.e. unregistered and invisible, the exact state this plan exists to eliminate. Both confirmed empty and
+                      deleted under the same operator ruling (no MTF for prediction markets; SPORTS was never a CLI choice). **The AWS
+                      per-AG features estate now matches `aws.storage` in cloud-providers.yaml EXACTLY** (set-diff verified, zero
+                      residue) — the strongest end-state check available, and the reason the AWS twins surfaced at all.
+                      **CLI choices corrected at source** (the accepted-but-unserveable surface is what justified provisioning these in
+                      the first place): `volatility/cli/parser.py` ASSET_GROUP_CHOICES dropped DEFI (operator ruling — it accepted DEFI
+                      despite there being no DeFi options); `multi_timeframe/cli/main.py` dropped PREDICTION (operator ruling). The
+                      latter fixes a **live latent bug**: the 2026-07-10 sweep deleted `features-mtf-pred` + its yaml key but left the
+                      CLI advertising `--asset-group PREDICTION`, so that shard had been dying mid-run on `BucketNamingError` for a
+                      week. The corrected gate surfaced it on its first run — exactly the MISSING direction it exists to catch.
+                      **`features-onchain-cefi` was operator-ruled** (only non-empty one: 2 regenerable consolidator `_index/` artifacts,
+                      no payload; unreachable 3 ways — `onchain/config.py:22` hardcodes `_ONCHAIN_ASSET_GROUP="defi"` and
+                      `get_output_bucket()` ignores its asset_group arg, deployment-api scopes the service to `frozenset({"DEFI"})`,
+                      openapi.json documents "only ships defi"); its live Cloud Run job + cron
+                      (`uts-prod-manifest-consolidator-features-onchain-cefi[-cron]`) were consolidating a bucket no producer ever wrote
+                      to — both deleted via gcloud + the TF `manifest_consolidator_buckets_extended` entry removed (gas-fees precedent),
+                      catalog regenerated 24→23. **Second-SSOT drift fixed**: all 3 `dependency_checker.py` `OUTPUT_BUCKETS`/`_TEST`
+                      ClassVars were hardcoded duplicates of the bucket-name SSOT that nothing read — which is why their errors survived
+                      (delta_one named `features-delta-one-prediction-{pid}`, a bucket that has NEVER existed — real name is `-pred-`;
+                      onchain named the legacy flat bucket + offered CEFI/TRADFI for a DeFi-only family; volatility carried a dead DEFI
+                      entry + `_TEST` twins naming `-test-` buckets absent from the estate). All deleted; volatility now delegates to
+                      `VolatilityServiceConfig.get_output_bucket()` (what every production writer already used) and its now-inert
+                      `project_id` param was removed rather than left silently ignored. **Gate**: QG STEP 5.104
+                      `features-service/scripts/quality_gates/check_asset_group_parity.py` — AST-reads each family's **CLI
+                      `asset_group_choices`** (NOT the smoke matrix; the docstring's Authority section carries the full warning + the
+                      cross-instrument worked example so nobody re-points it), resolves the constant refs (`CATEGORIES`,
+                      `ASSET_GROUP_CHOICES`) and the one constant-authority family (onchain pins `_ONCHAIN_ASSET_GROUP="defi"` and takes
+                      no CLI choice), checks the UAC-packaged yaml the resolver actually resolves through, and fails BOTH directions —
+                      EXTRA key = orphan bucket, MISSING key = runtime `BucketNamingError`. Proven four ways: exit 0 on the corrected
+                      tree; exit 1 catching all 14 violations on the pre-fix yaml (`git show HEAD:configs/cloud-providers.yaml`); exit 1
+                      on a kind deleted from BOTH clouds (a silent-pass hole found + closed during review — `declared is None` used to
+                      `continue`); exit 2 on unreadable inputs (never a silent pass).
+                      **Two pre-existing features-service test failures fixed to reach a genuinely green tree** (both proven
+                      pre-existing by stashing this session's changes and re-running; both were the same shape as the bug above — a
+                      stale assumption nobody rechecked): (1) `tests/sports/.../test_run_new_calculators_coverage_gate.py` asserted
+                      transfermarkt PLAYER_VALUES coverage starts 2019-01-01 and probed 2018-06-01 expecting `out_of_coverage`; the real
+                      registered start is 2018-01-01, so the gate correctly ran the calculator. Code was right, test was stale —
+                      rewritten to DERIVE the pre-launch date from the UAC window (public `unified_api_contracts.sports` surface, not a
+                      deep `canonical.*` path) + added the missing in-coverage boundary case. (2)
+                      `tests/multi_timeframe/unit/test_orchestrator.py` — a UNIT test issuing REAL GCS uploads to
+                      `features-mtf-cefi-test-project`: `run_batch`'s `_write_batch_manifest` constructs its own `ManifestWriter`,
+                      bypassing the injected storage mock, and its `except (ValueError, OSError, RuntimeError, KeyError, TypeError)`
+                      doesn't cover `google.api_core.exceptions.NotFound`, so the 404 escaped whenever ADC creds were present (hence
+                      "flaky"; green in CI). Patched module-wide per the onchain precedent; suite 55s → 20s with the network calls gone.
+                      **SHIPPED 2026-07-17** — `unified-api-contracts@ee8ea8f0` (packaged yaml, the copy the resolver actually resolves
+                      through) · `unified-trading-library@449d4142` (fixture + the probe-asset_group refactor) ·
+                      `deployment-service@c8f96e6` (yaml + the onchain-cefi consolidator TF entry) · `deployment-api@911e889` (catalog
+                      24→23, `--check` clean) · `unified-trading-pm@cba911b42` (PM yaml + ci-test mirror + the bandit-timeout fix) ·
+                      `features-service@d98a1fdc` (via quickmerge — `Quickmerge: agent` trailer verified present, so it will not
+                      provenance-block the LDR→main promote; 19 files, zero foreign files swept in).
+                      Evidence: yaml byte-identical across all 4 full copies + the UTL fixture; **features-service QG: ALL QUALITY
+                      GATES PASSED — 17558 passed / 209 skipped, STEP 5.104 green**; **UTL QG: ALL QUALITY GATES PASSED** (827
+                      bucket-naming tests; green only AFTER the bandit fix below — it had been failing on a phantom finding).
+                      Live-estate verification: 8 orphan buckets deleted + 404-verified, per-bucket log at
+                      gs://deployment-scripts-central-element-323112/migration-bundle/staging/asset_group_parity_deletion_log_2026_07_17.tsv
+                      (the log honestly records the mid-task RESTORE of features-xinstrument-defi as well as the deletes); **the AWS
+                      per-asset-group features estate now set-diffs EXACTLY against `aws.storage` — zero residue.**
+                      **Bonus fix shipped in the same pass (`unified-trading-pm@cba911b42`)**: `base-library.sh` / `base-service.sh` ran
+                      bandit under `run_timeout 30`, but a full clean UTL scan measures ~52s (Medium 0 / High 0, exit 0). The kill lands
+                      in the `||` branch and the gate prints "❌ bandit issues" + V++ — a TIMEOUT reported as a SECURITY FINDING. Any
+                      cache-miss run on a loaded host failed the repo for a vulnerability that does not exist; UTL's gates were red for
+                      this reason alone, fleet-wide, for any library repo. Raised to 180s with the failure mode documented so the next
+                      reader does not chase a phantom vuln.
+                      **2 issues filed (`unified-trading-pm@4a7816269`)**: [[promotion_lag_alert_hides_provenance_block_2026_07_17]]
+                      (the "PROMOTION LAG" alert is really a provenance hold — the bot is right, the alert wording sends responders at
+                      green CI; offender market-tick-data-service@d302f07a) and
+                      [[slot_branch_realign_discards_uncommitted_worktree_2026_07_17]] (the resolved slot-11 fix is keyed on AHEAD
+                      COMMITS, so a dirty tree with 0 ahead commits gets no guard at all — mechanism marked NOT PROVEN, reproduce first;
+                      agent-orchestrator deliberately not modified). Residual cosmetic drift → its own P2 todo below.
+
 ## Wave 3 — structural folds to <100 (design first; env-tiered from birth per ruling)
 
 - [x] ✅ [INFRA] P1. **Fold design doc** (its own deliverable; READ task_template before authoring the successor
@@ -232,6 +336,21 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [ ] [DATA] P2. Execute the folds per design (likely 2-3 split plans for parallelism — features / ml / stores), each
       with the DeFi-migration playbook: parity verify → reader cutover → redeploy+verify-exercised → delete + TF/yaml
       removal in the same change. Target end-state ≈100 total (≈80 excluding GCP-system).
+- [ ] [CONFIG] P2. **Residual asset-group-parity drift the 2026-07-17 sweep found but left** (all cosmetic/waste, none
+      blocking; the GCP live path is fully reconciled): (a)
+      `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf:35` + `terraform/aws/main.tf:74` still
+      declare `features-onchain-cefi` against the LEGACY `unified-trading-features-onchain-cefi-*` AWS names — same
+      producer-less finding as the GCP side, but it points at legacy buckets that still exist, so it wastes a
+      consolidator rather than 404-ing; fold into the dev/stg-tier retirement (item above) rather than a standalone
+      apply. (b) PM catalogue placeholders naming deleted buckets:
+      `configs/data-catalogue.features-volatility-service.yaml:102` (`features-volatility-defi-test-project`),
+      `configs/data-catalogue.features-onchain-service.yaml:35`, `configs/checklist.prerequisites.yaml:173,400`,
+      `configs/services/features-volatility-service/batch.env:12`
+      (`PROTOCOL_DATA_SINK_BUCKET_DEFI=uts-prod-features-volatility-defi` — a `uts-prod-*` shape matching no live
+      bucket, so likely dead already: confirm before editing). (c) legacy one-off migration scripts still listing the 7
+      deleted names (`deployment-service/scripts/archive-flat-buckets.sh`,
+      `scripts/aws/migrate-bucket-names-unified-to-canonical.sh`) — these are historical records of an executed
+      migration; decide delete-vs-annotate per the one-off lifecycle rule rather than editing in place.
 - [ ] [DOCS] P2. **Post-phase codex audit**: give the bucket-SSOT rule a live codex home (audit found
       `bucket-naming-and-config.md` superseded pointing at a CLAUDE.md section that no longer exists + CLAUDE.md
       pointing at an archived plan — fix both); update `bucket-isolation-model.md`, `gcs-lifecycle-policies.md`,
