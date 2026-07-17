@@ -557,3 +557,67 @@ git-log search, before concluding no flip happened. New regression test
 mechanism (`check_plan_flip`) my own task's `/done` call just exercised, and leaving it unfixed would silently
 false-reject every other pre-fix issue-doc-sourced task's legitimate `/done` — clearly in-scope here. Calling `/done`
 again now with the corrected gate in place.
+
+### 2026-07-17T UTC — backend_engineer slot-13 (the real fix — file touch vs checkbox flip, all todos now closed)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-001` (the P0 `[BACKEND]` todo added by main-agent's
+2026-07-17 issue-doc-status-sweep audit, which REOPENED this doc after finding the four earlier commits guard the wrong
+thing — `l2_book_microstructure_capture-005`/`-007` reproduced the exact bug live post-fix). Fresh-pulled both repos to
+LDR HEAD before starting; re-confirmed the target checkbox was still `- [ ]` (it was) before touching anything.
+
+Root cause confirmed by direct read of `server/verify.py::check_plan_flip` at HEAD: both the mode-1 (single-repo) and
+mode-2 (cross-repo) branches computed `found_in_commit` from ONLY "does the commit's file list / recent PM git-log
+contain `plan_ref`" — never inspecting what actually changed in that file. A `docs(plans): ... declining` commit that
+appends a Progress Log paragraph (touching the file) while deliberately leaving the target `- [ ]` line untouched
+satisfies both checks trivially. This is the SAME bug in the cross-repo path too — `_pm_log_touches_plan_ref` returns
+the most recent commit touching the path within 10 minutes, with no check on what that commit actually did to the
+checkbox.
+
+Fix (`agent-orchestrator@86b8b8b`): added `_diff_flips_checkbox(repo_dir, sha, path, brief)` — runs
+`git show --unified=0 --format= <sha> -- <path>` and requires BOTH (a) a removed line matching `- [ ] <brief>` exactly
+(brief = `BacklogTask.brief`, the identical single-line text `regen_backlog_from_plan.py`'s `_UNCHECKED_RE` parses the
+task from, so no new matching key was needed) AND (b) an added `- [x] ...` line anywhere in that file's diff. Wired into
+both `check_plan_flip` modes: mode 1 diffs the worker's own reported `sha` directly; mode 2 diffs whichever commit
+`_pm_log_touches_plan_ref` matched (tracked the winning `plan_ref` candidate through the loop, since mode 2 already
+tries both the literal and `issues/`-variant paths per the prior fix). Both new call-site params (`sha`, `brief`) are
+threaded from `done_slot()` (`task_def.brief`, `req.sha`) — the only production call site. Fails closed
+(`found_in_commit=False`) whenever `brief`/`sha` is empty or the diff never shows the exact unchecked line being
+removed, matching this doc's own "fail toward rejecting, not silently accepting" posture.
+
+Updated the 4 pre-existing fixtures in `tests/test_done_gate_plan_flip_hard_reject.py` whose `brief="x"` never matched
+their plan file's real checkbox text (harmless under the old file-touch-only check; the new diff-match needs a real
+brief to compare against) to `brief="[INFRA] P1. do the thing"`, matching the fixtures' own plan content. Added 2
+bug-injection regression tests reproducing the live incident directly: a synthetic decline commit that touches the plan
+file without flipping the checkbox is now REJECTED with 409
+(`test_done_rejects_when_commit_touches_plan_file_but_leaves_checkbox_unflipped` for single-repo,
+`test_done_rejects_cross_repo_when_pm_commit_touches_file_but_leaves_checkbox_unflipped` for cross-repo) — both fail
+against the pre-fix code and pass against the fix, satisfying this todo's bug-injection gate requirement. Full
+`quality-gates.sh` green (1365 passed, 1 skipped, up from 1358 — ruff/basedpyright clean). Shipped via
+`quickmerge --agent --files`: `agent-orchestrator@86b8b8b`.
+
+Corollary decided (per the todo's own ask): this fix closes the false-`done` mechanism at its source — `/done` now
+hard-rejects a file-touched-but-not-flipped commit BEFORE any `done_sha` is recorded, so Todo 3's one-off reopen sweep
+does not need to become a periodic job for THIS defect class. A structurally different divergence mechanism could still
+exist and would need its own detection, but none is currently known. The todo's "no NEW false-`done` row in a live 24h
+window" clause is a post-deploy observation an operator/review-agent audit should make once the fix has been live for
+24h — a single dispatch cannot itself observe 24h of live traffic, so it is not claimed as verified here.
+
+Flipped the todo `[x]` with full evidence inline. All todos in this doc are now checked. Per this doc's own established
+precedent (the 2026-07-17 status-sweep commit `unified-trading-pm@df2311afe` explicitly audited 5 similarly-ticked docs
+independently before flipping `status: resolved` — this exact doc was the one REOPENED from that sweep because a
+self-declared "corrected" claim turned out to be wrong), leaving `status: open` / `resolved_by:` empty for an
+independent skeptical audit rather than self-declaring resolution — the same discipline that caught the gap this todo
+fixes should be applied before closing the loop on it.
+
+**Adjacent finding + fix, before calling `/done`** (`agent-orchestrator@d716fd0`): while about to commit this exact
+Progress Log paragraph as a SEPARATE PM commit (after the checkbox-flip commit `unified-trading-pm@9f813f98a`), realized
+my own new mode-2 cross-repo logic would self-block on it — `_pm_log_touches_plan_ref` (as shipped in `86b8b8b`) only
+returned the SINGLE MOST RECENT commit touching `plan_ref` within the 10-minute window, and `_diff_flips_checkbox` would
+then diff THIS trailing prose-only commit (which doesn't touch the checkbox line at all) instead of the real flip
+commit, wrongly reporting `found_in_commit=False`. This is exactly the routine multi-commit-per-session pattern this
+whole doc's incident is about, now hitting my own fix. Renamed `_pm_log_touches_plan_ref` to
+`_pm_log_commits_touching_plan_ref`, returning ALL matching commits (most-recent-first) instead of just the top one;
+`check_plan_flip`'s mode 2 now walks the full list and accepts as soon as any commit's diff flips the checkbox. Added
+`test_done_accepts_cross_repo_flip_followed_by_a_trailing_prose_only_commit` reproducing this exact self-block. Full
+`quality-gates.sh` green (1366 passed, 1 skipped). Shipped via `quickmerge --agent --files`:
+`agent-orchestrator@d716fd0`. Calling `/done` now.
