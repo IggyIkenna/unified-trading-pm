@@ -376,7 +376,7 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | #   | Remaining item (open `- [ ]` todo)                            | Point         | Pri | Why deferred / next step                                                                                   |
 | --- | ------------------------------------------------------------- | ------------- | --- | ---------------------------------------------------------------------------------------------------------- |
 | 1   | Enrich `mock-api.ts` IS data-status fixtures                  | P5/P7 mock    | P3  | lets local mock-mode render cefi/tradfi/defi cards; LIVE deploy already exercises P4-A/P5/P7.              |
-| 2   | Canonicalise cefi manifest split rows                         | P7 follow-up  | P2  | manifest-drift cleanup on the cefi split rows (display already correct).                                   |
+| 2   | ~~Canonicalise cefi manifest split rows~~                     | P7 follow-up  | P2  | ✅ **DONE 2026-07-17** — were PHANTOM pointers (0 objects at split venue); 80,615→79,943 @e6c31507.        |
 | 3   | Republish instruments-service tarball                         | P1 follow-up  | P2  | so the nightly writer carries the partial-stamping fix — run from a clean tree (tfvars was dirty).         |
 | 4   | ~~`resolved_date`/`requested_date` on `get_honest_coverage`~~ | P1 stretch    | P3  | ✅ **DONE 2026-07-17** — deployment-api@4e996f8 (additive fields + 4 new specs).                           |
 | 5   | Distinct `expiry` column in `CATALOG_COLUMNS`                 | P2 clean-LT   | P2  | long-term catalogue schema (expiry currently inferred).                                                    |
@@ -449,11 +449,40 @@ cefi/defi/tradfi variety and TEAMS data, so it would resolve all three INCONCLUS
   `venue=PACIFICA,chain=SOLANA` → `venue=PACIFICA-SOLANA,chain=""`), tracked as P7-followup below — NOT fixed by the
   read-side gate.
 
-- [ ] [DATA] P2. _(P7 follow-up — manifest drift)_ Canonicalize the cefi split rows: collapse
-      `venue={PROTOCOL}, chain={CHAIN}` → `venue={PROTOCOL}-{CHAIN}, chain=""` for `PACIFICA-SOLANA`/`LIGHTER-ZKSYNC` in
-      the cefi availability index (one-off migration, pattern `scripts/canonicalize_*_2026_*.py`, run on real infra) so
-      the venue axis stops showing `PACIFICA` + `PACIFICA-SOLANA` as two venues. Also root-cause the writer path that
-      stamped `chain` for a cefi venue (should key on `venue` alone per the UAC shard-atom matrix).
+- [x] [DATA] P2. ✅ _(P7 follow-up — manifest drift)_ Canonicalized the cefi split rows —
+      `scripts/canonicalize_cefi_split_venue_chain_2026_07_17.py`, **applied + independently verified on real prod
+      infra**. **This turned out to be more than a cosmetic venue-axis fix: the split rows were PHANTOM POINTERS.**
+      Traced the real by_date layout (`…/day=<D>/pipeline_mode=<M>/asset_group=cefi/venue=<V>/instruments.parquet`) and
+      checked GCS directly: the objects live under the GLUED venue (`venue=LIGHTER-ZKSYNC`), while `venue=LIGHTER` /
+      `venue=PACIFICA` hold **zero objects**. The script's own pre-write guard proved this at full scale —
+      **1,078/1,078** captured split rows have a real object at the CANONICAL venue (a 60-row sample found **0/60** at
+      the split venue). So each split row claimed a capture at a path that does not exist, and 493 of them were
+      `captured` rows whose canonical twin was **absent entirely** — i.e. the migration REPAIRS the manifest↔object
+      correspondence rather than just merging two venue labels. **Writer root-cause — already fixed upstream for BOTH
+      venues (verified by reading code + the live registry, so this cannot recur; no writer change was needed):** (a)
+      `writers._canonical_manifest_venue_chain` short-circuits
+      `if VENUE_TO_ASSET_GROUP.get(venue_str) == "cefi": return venue_str, ""` — live registry resolves `LIGHTER-ZKSYNC`
+      → `'cefi'`, so the DeFi `PROTOCOL-CHAIN` split no longer fires; (b) `PACIFICA-SOLANA` → `None` (removed from the
+      registry entirely, operator 2026-07-16 Solana-perp-DEX ruling), so nothing enumerates it and that writer path is
+      dead. The 4,617 rows were pure history. **Safety design**: explicit `_SPLIT_PAIRS` allowlist (not a generic "any
+      cefi row with a chain" rule, which could silently rewrite an unexpected row); dedup on the manifest's REAL
+      composite identity (`manifest_writer._ROW_KEY_COLUMNS` — `chain` is itself a key member, which is _why_ collapsing
+      collides), winner = **capture_status FIRST, recency second** (a newer `empty_confirmed` must never evict older
+      `captured` evidence — the footgun the defi data_type migration's dry-run caught); aborts rather than promoting a
+      capture claim onto a path with no object. — instruments-service@e6c31507 + **Evidence (real infra, independently
+      re-read — not the script's own log)**: `80,615 → 79,943` rows (−672 = exactly the modelled collisions); residual
+      split rows / `LIGHTER` / `PACIFICA` / chain-nonempty all **0** (was 4,617 / 2,413 / 2,204 / 4,617);
+      `LIGHTER-ZKSYNC` 1,424→**3,643**, `PACIFICA-SOLANA` 1,426→**3,152** (venue axis no longer double-counts).
+      **Out-of-scope guard: all 27 other cefi venues byte-identical.** `capture_status` deltas match the model exactly
+      (captured −585, empty_confirmed −87, expected_unattempted/attempted_failed **unchanged**), and every collision was
+      status-identical (captured→captured 585, empty→empty 87) so no evidence was traded away. **Decisive no-loss
+      proof:** LIGHTER-ZKSYNC captured rows `910 → 716` while **distinct captured dates `716 → 716`**; PACIFICA-SOLANA
+      `802 → 411` rows with **distinct dates `411 → 411`** — the dedup removed only same-key duplicates; every distinct
+      captured date survived. Rollback snapshot:
+      `gs://instruments-store-cefi-prd-central-element-323112/_index/snapshots/pre_cefi_split_venue_chain_canon_2026_07_17_20260717-105532.bak.parquet`.
+      Unit: `tests/unit/migrations/test_canonicalize_cefi_split_venue_chain.py` 9 passed (collapse; allowlist-only;
+      collision dedup; **captured-beats-newer-empty**; gap-filling row kept; idempotent re-run; **None-vs-`""` chain
+      normalisation** — without it the row-key compare silently misses and the duplicate venue survives).
 
 ### 2026-07-16 — P1 Honest Coverage FIXED (immediate + durable), verified live
 
@@ -945,27 +974,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
