@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [agent-orchestrator, backlog, regen, task-id, id-collision, brief-hash, audit-history, dispatch]
 related:
   [
-    ../ao_dispatch_hardening_2026_07_16.md,
+    ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
     backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
     ../../archive/issues/backlog_regen_id_reuse_stale_status_2026_07_15.md,

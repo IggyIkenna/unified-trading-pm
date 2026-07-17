@@ -299,3 +299,62 @@ fault was entirely ours.
 - [ ] [PM] P0. **Re-open the CeFi Completion Program archival** —
       `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` closed on the "N=1 ceiling ≈ 1.8 years" verdict,
       which is now void.
+
+---
+
+## ⚠️ CORRECTION — the "32.9 MB/s ceiling" was a WARM-CACHE artifact; the real cold ceiling is 21.3 MB/s and we are ~14x under it — 2026-07-17T13:55Z
+
+**Every throughput target quoted earlier in this doc (5-7 / 25.7 / 32.9 MB/s) is WRONG.** Those runs re-fetched the SAME
+Feb-15 files two or three times, so the objects were **warm**. A backfill fetches **cold** objects by definition.
+
+Controlled warm-vs-cold, identical files, identical competition (MTDS running 31 conns during BOTH):
+
+| run                                       | result                                |
+| ----------------------------------------- | ------------------------------------- |
+| 11 big files, 2026-02-02, **first** fetch | 391.8 MB / 198.2s = **2.0 MB/s**      |
+| **same 11 files**, refetched (warm)       | 391.8 MB / 8.5s = **46.2 MB/s** (23x) |
+
+So warmth is worth ~23x, it is **per-object**, and it is **unreachable for a backfill** (each object is fetched once;
+there is no prewarming trick for a first read).
+
+### The real cold ceiling, at OUR concurrency setting
+
+| test (all authenticated, never-fetched, on the VM, MTDS competing)     | aggregate                                  | per-stream    |
+| ---------------------------------------------------------------------- | ------------------------------------------ | ------------- |
+| **32 concurrent cold files** (2026-02-04) — matches our concurrency=32 | **21.3 MB/s** (31/32 ok, 419.2 MB / 19.7s) | **0.69 MB/s** |
+| 11 concurrent cold, small files (2026-02-03)                           | 9.2 MB/s                                   | 0.84 MB/s     |
+| 11 concurrent cold, big files (2026-02-02)                             | 2.0 MB/s                                   | 0.18 MB/s     |
+
+**21.3 MB/s is the honest ceiling** for a cold authenticated backfill at 32-wide. (The 2.0 MB/s reading was
+big-file-skewed — its wall clock is dominated by the largest object; do not cite it as "the cold ceiling" either.)
+
+### What MTDS actually does — and why
+
+Measured on `cefi-queue-heavy-binancefutu-x17-20260717-131916`, START_DATE=2026-02-02 (authenticated,
+`free_day_shards=0` throughout), 20-min window: **437 shards / 1841 MB / 1227s = 1.50 MB/s**, ~30 connections held open.
+
+|                                  | per-stream      | streams actually transferring | aggregate     |
+| -------------------------------- | --------------- | ----------------------------- | ------------- |
+| `curl`, cold, 32-wide            | 0.69 MB/s       | 31                            | **21.3 MB/s** |
+| **MTDS**, cold, "concurrency=32" | ~0.05 MB/s/conn | **~3-4**                      | **1.50 MB/s** |
+
+Our streams are not slow — **only ~3-4 of ~30 connections are transferring at any instant**. We are **work-starved**,
+not network-bound, not vendor-throttled, not cache-limited. Cause = the **date-serial `gather()` barrier**
+(`orchestrator/__init__.py:705`): `process_ticks(date)` fans out across venues, `await asyncio.gather(*tasks)`, then the
+next date — so in-flight work is capped by whatever a single date needs, and the slots drain while the barrier waits on
+the slowest venue.
+
+**Corrected scoreboard (all same-metric, authenticated, cold):**
+
+- DNS-starvation fix: **REAL** — timeouts 337 -> 26-41, no cpu=0% freeze, shards/hr **167 -> ~1,280-1,580 (~8-9x)**.
+- MB/s: **0.45 -> 1.50 (~3.3x)** — real, but **~14x short of the 21.3 MB/s cold ceiling**.
+- The barrier, not DNS, is now the dominant bottleneck, and it is worth roughly **14x**.
+
+### Todos (supersede the throughput items above)
+
+- [ ] [CODE] P0. **Kill the date-serial barrier** — feed the download semaphore from a flat (venue x date x data_type)
+      work queue so 32 slots stay full across date boundaries, instead of draining one sparse date behind
+      `asyncio.gather`. Measured value: ~14x (1.5 -> up to ~21 MB/s). This is the highest-value fix on the board.
+- [ ] [DOC] P1. Purge the warm-cache numbers from this doc's earlier sections and from `tardis_base_client.py`'s
+      comments — anything citing 25.7/32.9/125/223 MB/s as a ceiling is measuring a cache hit. **Never baseline Tardis
+      against a re-fetched object or a 1st-of-month URL.**

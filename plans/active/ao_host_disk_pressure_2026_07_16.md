@@ -22,7 +22,7 @@ related:
   [
     issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
     qg_host_adaptive_resource_governor_2026_07_14.md,
-    ao_dispatch_hardening_2026_07_16.md,
+    ../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ../epics/orchestrator_master.md,
   ]
 created: 2026-07-16
@@ -51,8 +51,8 @@ source:
 # AO host disk pressure — the other half of "half-finished tasks"
 
 > **Human plan — I execute it** (`assigned_vm: NA`). **Infra** craft, deliberately split from the backend-craft
-> [`ao_dispatch_hardening_2026_07_16`](ao_dispatch_hardening_2026_07_16.md) so the two run in **parallel** (one plan =
-> one agent = one craft). Ships via `quickmerge.sh --agent --files`.
+> [`ao_dispatch_hardening_2026_07_16`](../archive/2026_07/ao_dispatch_hardening_2026_07_16.md) so the two run in
+> **parallel** (one plan = one agent = one craft). Ships via `quickmerge.sh --agent --files`.
 
 ## Why this is a separate root cause, not a footnote
 
@@ -148,12 +148,23 @@ deployment never verified.** Each took one command to check.
       the guard vacuums IDLE-slot `.venv`s and clean off-slot worktrees, so firing more often means more `uv sync`
       rebuilds and slower worker boots — a real cost. A shorter cadence catches the SAME 80% level _sooner_ without
       firing more often: worst-case blind climb drops from +19 to **+6.4 points**. Replayed against the log: the 90%
-      excursion would have fired at ~84%, the 85% one at ~81%. **Gate**: over the next 3 days the guard log should show
-      no reading ≥ 88% and no "nothing to do" above ~76%. ~~**Decide + apply the `vm-disk-guard.sh`
-      threshold/cadence.**~~ Current `80%` / `0 */6 * * *` lets the host reach **95%** between firings (measured).
-      Either tighten the threshold (e.g. 70%) or shorten the cadence (e.g. every 2h), whichever the measured growth
-      curve supports — the 3-day log above is the data. **Gate**: over a following 3-day window, peak `/` usage stays
-      under a stated ceiling; cite the guard log.
+      excursion would have fired at ~84%, the 85% one at ~81%. **Gate — CORRECTED 2026-07-17, the original was
+      unsatisfiable by construction and I wrote it.** ~~over the next 3 days the guard log should show no reading ≥ 88%
+      and no "nothing to do" above ~76%.~~ The second clause **can never pass**: this todo deliberately chose CADENCE
+      over THRESHOLD, so the trigger stays at **80%** — every reading in 76–80% therefore logs "nothing to do above 76%"
+      while the guard is behaving exactly as designed. A gate that fails when the mechanism works is a broken gate; it
+      would have told the next reader the disk fix failed when it hadn't. **The real gate**: (1) no reading ≥ **88%**,
+      and (2) every reading ≥ **80%** is followed by a vacuum within ONE cadence (2h). **Measured 2026-07-17T13:30Z, day
+      1 of 3 — both holding**: cadence confirmed `0 */2 * * *` in `crontab -l`; 12 consecutive readings 07-16T12:00 →
+      07-17T12:00 ran **70→78%**, max **78%**, none ≥88, none ≥80 (so clause 2 was not exercised); `df` read **82%** at
+      13:30Z with the 14:00Z firing due — the first real test of clause 2. Growth measured **~0.55 points/hour**, well
+      under the **~3.2/h** worst case that motivated the change, so 2h has ample margin. Note the guard has not actually
+      fired since 07-16T06:00 (85%→65%) because it stayed under 80% at every checkpoint — the host ratchets, which is
+      this plan's thesis, not a regression. ~~**Decide + apply the `vm-disk-guard.sh` threshold/cadence.**~~ Current
+      `80%` / `0 */6 * * *` lets the host reach **95%** between firings (measured). Either tighten the threshold (e.g.
+      70%) or shorten the cadence (e.g. every 2h), whichever the measured growth curve supports — the 3-day log above is
+      the data. **Gate**: over a following 3-day window, peak `/` usage stays under a stated ceiling; cite the guard
+      log.
 
 ### Phase 2 — close the ambiguity that hid this for a month (P1)
 

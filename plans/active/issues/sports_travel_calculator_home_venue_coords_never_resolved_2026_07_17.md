@@ -149,13 +149,37 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
 
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause `_get_team_home_venue_coords` / `_compute_cumulative_travel` returning `(0.0, …)` almost
-      universally** — instrument a debug run against one real `(date, league)` batch's actual `fixtures_history`
+- [x] ✅ [DATA] P1. **Root-cause `_get_team_home_venue_coords` / `_compute_cumulative_travel` returning `(0.0, …)`
+      almost universally** — instrument a debug run against one real `(date, league)` batch's actual `fixtures_history`
       (`completed`) and `venues` DataFrames (not just the output parquet) to see exactly which branch fails: empty
       `completed`, empty `home_fixtures` after the `home_team_id` filter, or an unsuccessful `venue_id` join against
       `venues`. Check `_filter_completed_before`'s scoping
       (`features_service/sports/exporters/     derived_features_helpers.py:365`) and the caller's `completed`
-      construction (`derived_new_calculators.py:80-134`) as the leading candidates. (repo: features-service)
+      construction (`derived_new_calculators.py:80-134`) as the leading candidates. (repo: features-service) — **Found
+      the `completed` was empty, not just the home_team_id filter**: `read_historical_fixtures()`
+      (`features_service/sports/data/gcs_reader.py:644`) is what supplies the `historical` fixtures that
+      `derived_features_exporter.export_derived_features()` combines with today's fixtures to build `fixtures_all` →
+      `completed` (`_filter_completed_before`). Its internal `_list_historical_fixture_blob_paths` matched blob paths
+      against a literal `"/entity=fixtures/fixtures.parquet"` substring, but every real `FIXTURES` shard uses the
+      per-league subpartition layout (`entity=fixtures/league={L}/fixtures.parquet` —
+      `unified_api_contracts.canonical.domain.sports.gcs_paths.SportsPathLayout.PER_DAY_PER_LEAGUE`), which that
+      substring never matches — **`read_historical_fixtures` always returned 0 rows, for every date, always**. This
+      means `completed`/`fixtures_history` was unconditionally empty in production regardless of the
+      `home_team_id`/`team_id` dtype question — so slot-8's str/int fix (`features-service@6efefde2`, Todo 2 below),
+      while a real and necessary correctness fix, would have been **inert in production** without this one also landing:
+      `_get_team_home_venue_coords`'s `if fixtures_history.empty: return None` short-circuits before the `home_team_id`
+      comparison ever runs. Confirmed empirically: called
+      `read_historical_fixtures('2024-06-01',     lookback_days=400)` directly against real GCS pre-fix → 0 rows; same
+      call post-fix → 1,385 real rows with real `kickoff_utc`/`home_team_id`/`venue_id` values. The unscoped
+      `list_blobs(bucket, prefix="sports_reference/by_date/     day=")` walk (no year/date bound) also timed out at
+      corpus scale on its own (a whole-corpus GCS walk on every call) — fixed both issues together in
+      `features-service@9923b0d8` (shipped same dispatch as this investigation): matched the real per-league (and
+      bare-legacy) path shape, and rescoped the listing to iterate per spanned calendar year instead of one unbounded
+      walk. Verified end-to-end against real GCS post-both-fixes (this fix + slot-8's `6efefde2`, both now on
+      `live-defi-rollout`): `away_travel_distance_km` populated ~67% of a 21-fixture sample with real varying km values
+      (257-2715km range), `home_travel_distance_km` populated ~81% (mostly legitimate 0.0 for true home fixtures), and
+      at least one genuine nonzero `home_cumulative_travel_30d` observed in-sample — the full mechanism now works
+      end-to-end, not just in isolated unit tests. (repo: features-service)
 - [x] ✅ [DATA] P1. **Fix the root cause** found above, restoring genuine (non-zero, non-hardcoded) travel-distance and
       cumulative-travel computation for fixtures where the data genuinely exists — and make the genuinely-missing case
       (no data available) surface as an honest NaN, not a silent `0.0`, per
@@ -181,6 +205,46 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
       produces real, varying travel data before closing this out. (repo: features-service)
 
 ## Progress Log
+
+### 2026-07-17T13:5xZ — data_engineering slot-4 (filed this issue doc; found + fixed a SECOND, independent root cause that slot-7/slot-8's team_id fix does not cover; reconciled + shipped alongside their concurrent fix)
+
+Filed this issue doc originally (see `created`/`source` above) while verifying the sibling
+`sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md`'s Todo 2. Picked up Todo 1 (root-cause) myself on the
+very next dispatch of this doc.
+
+**Found a second, independent root cause** that slot-7/slot-8's `home_team_id` str/int fix (`features-service@6efefde2`)
+does not touch: `read_historical_fixtures()` (`features_service/sports/data/gcs_reader.py:644`) — the function that
+supplies `completed`/`fixtures_history` to `compute_travel_batch` in the real production pipeline
+(`derived_features_exporter.export_derived_features()` → `run_new_calculators()` → `_run_phase4_history_calculators()`)
+— **always returned 0 rows, for every date**, because its internal `_list_historical_fixture_blob_paths` matched blob
+paths against a literal `"/entity=fixtures/fixtures.parquet"` substring that never matches the real
+per-league-subpartitioned layout every FIXTURES shard actually uses (`entity=fixtures/league={L}/fixtures.parquet`).
+Confirmed directly against real GCS: pre-fix, `read_historical_fixtures` returned 0 rows for a real date with a 400-day
+lookback; post-fix, 1,385 real rows. The unscoped `list_blobs(prefix="sports_reference/by_date/day=")` walk (no date
+bound at all) also timed out on its own at corpus scale — a genuine whole-corpus GCS walk on every single call.
+
+**This means slot-8's team_id fix alone would have been inert in production**: with `fixtures_history` always empty,
+`_get_team_home_venue_coords`'s `if fixtures_history.empty: return None` short-circuits before the `home_team_id`
+comparison this fix corrects ever runs. Both fixes are independently necessary and complementary, not redundant — I
+confirmed this isn't a hypothetical concern by testing the exact sequence (path bug present + team_id bug present → 0
+rows; path bug fixed + team_id bug still present → real rows but still-wrong 0.0 travel distances; both fixed → real
+nonzero travel distances end-to-end against live GCS data).
+
+Fixed in `features-service@9923b0d8`: corrected the path-matching (per-league + bare-legacy layout support) and rescoped
+the listing to iterate per spanned calendar year instead of one unbounded whole-corpus walk. Full `quality-gates.sh`
+green (17,647 passed, sentinel-verified). Hit `BEHIND_DIVERGED_CONFLICT` on first `quickmerge` attempt — slot-8's
+`6efefde2` had landed on `travel_calculator.py`/its test file concurrently; reconciled by rebasing and taking slot-8's
+version of those two files verbatim (their fix is objectively superior — honest NaN instead of a silent 0.0 for the
+genuinely-unresolvable case — so no value in shipping a competing/lesser version), keeping only my non-overlapping
+`gcs_reader.py` + new test file changes. Re-ran full QG on the reconciled HEAD (clean), shipped via quickmerge. Verified
+end-to-end post-both-fixes against real GCS: `away_travel_distance_km` populated ~67% of a 21-fixture sample with real
+varying km values (257–2715km), `home_travel_distance_km` populated ~81% (mostly legitimate 0.0 for true home fixtures),
+at least one genuine nonzero `home_cumulative_travel_30d` observed.
+
+Flipped Todo 1 above with this finding. Todo 2 (the team_id fix itself) was already closed by slot-8 — not re-flipping,
+already `[x]`. Todo 3 (the actual gap-fill re-run) is genuinely not attempted this dispatch — per slot-8's cost analysis
+above (~140+ VM-hours, operator-decision scale), consistent with the sibling elo issue doc's gap-fill precedent.
+`/done`.
 
 ### 2026-07-17T13:2xZ — data_engineering slot-7 (dispatched Todo 3 gap-fill; found the fix already shipped by a peer)
 
