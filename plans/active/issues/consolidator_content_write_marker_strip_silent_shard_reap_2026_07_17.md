@@ -8,9 +8,13 @@ summary:
   mtime — which advances the prune cutoff PAST pending per-VM shards. The next consolidator run deletes those shards
   without merging them and reports success=True / exit(0) / rows_in=0. Fired for real on 2026-07-17 and destroyed 7,185
   sports manifest rows (recovered in-band from a pre-merge download). Affects EVERY asset_group, not just sports.
-# open, NOT resolved: the code fix is shipped (UTL@1e995f75) but the DEPLOYED consolidator still runs the pre-fix
-# MTDS image, and instruments-store-cefi-prd is armed until it ships. Flip to resolved only after § Rollout step 6.
-status: open
+# RESOLVED 2026-07-17 04:30Z: rollout steps 3-7 complete. GCP = LIVE + PROVEN (24/24 consolidator jobs on
+# sha256:57fc72e1; the fixed _get_content_write_mtime verified by running python inside that exact image).
+# instruments-store-cefi-prd DISARMED 03:54Z (marker re-stamp, 3 cycles pruned=0, rows delta 0); all 10 GCP prd
+# buckets carry a marker, 0 armed. AWS: the same verified image is pushed to ECR (:latest == sha256:57fc72e1);
+# Batch-Fargate pickup is structurally certain (job defs reference :latest by TAG) but UNOBSERVED from this host
+# (uts-orchestrator-epic-role lacks batch:* / events:* / s3:GetObject) — see § Rollout residual.
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -39,10 +43,15 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
-  code fix shipped unified-trading-library@1e995f75 (2026-07-17) + regression tests measured
-  failing-before/passing-after; NOT yet live in prod — gated on the MTDS BASE_IMAGE_DIGEST bump + rebuild (see §
-  Rollout). Residual live exposure — instruments-store-cefi-prd is armed until the image ships.
+resolved_by: >-
+  code fix unified-trading-library@1e995f75 (regression tests measured failing-before/passing-after) + FULL PROD ROLLOUT
+  2026-07-17 — UTL base image sha256:61445152 (cloudbuild=74a5e3df, from 61bf7444 contains 1e995f75) → MTDS pin bump
+  market-tick-data-service@22cb4d5f → MTDS image sha256:57fc72e1 (cloudbuild=f54235dc) → promote PR #598 merged
+  04:27:08Z → 24/24 GCP consolidator jobs verified running sha256:57fc72e1, with the fixed code proven by executing
+  python INSIDE that image → ECR latest mirrored to the identical sha256:57fc72e1 (04:29:43Z). Live exposure closed
+  earlier at 03:54:34Z by the option-A marker re-stamp on instruments-store-cefi-prd (corrected stamp
+  2026-07-14T04:00:00Z — the doc's original 2026-05-12T18:00Z value was measurably wrong). Residual — AWS Batch
+  execution pickup unobserved from this host (IAM), not unverified-by-choice.
 source:
   [
     sports legacy bucket cutover Phase 6 / T6.1 execution 2026-07-17,
@@ -224,11 +233,11 @@ gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet 
 
 **Result across all 10 GCP prd consolidator buckets: 9 carry a genuine marker; 1 does NOT.**
 
-| bucket                                              | `consolidator_content_write_at` | state               |
-| --------------------------------------------------- | ------------------------------- | ------------------- |
-| **instruments-store-cefi-prd**                      | **ABSENT (no custom_fields)**   | 🔴 **REAPER ARMED** |
-| instruments-store-{tradfi,defi,sports,pred}-prd     | present (genuine)               | healthy             |
-| market-data-tick-{cefi,tradfi,defi,sports,pred}-prd | present (genuine)               | healthy             |
+| bucket                                              | `consolidator_content_write_at` | state                                                   |
+| --------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| **instruments-store-cefi-prd**                      | **ABSENT (no custom_fields)**   | 🔴 **REAPER ARMED** → ✅ **DISARMED 03:54:34Z** (below) |
+| instruments-store-{tradfi,defi,sports,pred}-prd     | present (genuine)               | healthy (re-checked 04:30Z — still genuine)             |
+| market-data-tick-{cefi,tradfi,defi,sports,pred}-prd | present (genuine)               | healthy (re-checked 04:30Z — still genuine)             |
 
 **🔴 `instruments-store-cefi-prd-central-element-323112` is armed RIGHT NOW** (on the pre-fix image still deployed). Its
 canonical has **no custom metadata at all** — neither marker — while the `*/1` cron's idle `_touch` bumps `update_time`
@@ -287,33 +296,115 @@ all running the **`market-tick-data-service:latest` image with UTL installed as 
 rule (`codex/08-workflows/ci-cd-flow.md`), **a UTL fix does NOT reach them until the MTDS `BASE_IMAGE_DIGEST` is bumped
 and MTDS is rebuilt.** Exact chain (mirrors the 2026-07-13 prune-race rollout precedent: UTL@97212d3b → MTDS@b11199cb):
 
-| #   | Step                                                                                 | State (2026-07-17 03:35Z)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| --- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | UTL fix on LDR                                                                       | ✅ `unified-trading-library@1e995f75`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 2   | UTL promote PR LDR→main, v2-gated auto-merge                                         | ✅ **DONE — PR #586 MERGED 2026-07-17T03:40:09Z** (fleet promoter manually triggered, run 29552660105). **Verified by CONTENT** — not squash-inflated `ahead_by`: `gh api …/compare/main...live-defi-rollout` → **`files: 0`**, and `manifest_consolidator.py@main` carries the `UNPROVABLE` contract (4 hits). Only these 2 files rode along.                                                                                                                                                                                                        |
-| 3   | UTL base image republished from a build whose commit contains the fix → new digest   | ⬜ **REQUIRES AN EXPLICIT BUILD — it is NOT automatic.** Measured 2026-07-17: **zero** Cloud Builds fired after the 03:40Z merge (most recent was 01:13Z), and no UTL push-trigger is listed. `image-build-gate.yml` is a **PR gate** (calls PM's reusable `image-build-validate.yml`) — a validator, **not a publisher**. Run UTL's `cloudbuild.yaml` from `main` (it publishes the base image to `asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library`); ancestry-verify the build's commit carries the fix. |
-| 4   | MTDS `Dockerfile` `ARG BASE_IMAGE_DIGEST` bump → quickmerge to LDR → promote to main | ⬜ pending (3). Currently pinned at **`sha256:d15fb29b17abac54f6224f275de237557bc2b5f0acc921059f9ec363fab8e3c4`** (`market-tick-data-service/Dockerfile:115`). Precedent: MTDS@b11199cb.                                                                                                                                                                                                                                                                                                                                                              |
-| 5   | MTDS image rebuilt; `:latest` → new digest                                           | ⬜ pending (4). Cite `Evidence: cloudbuild=<id>` resolving SUCCESS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 6   | GCP Cloud Run jobs re-resolve `:latest`                                              | ⬜ automatic — the `*/1` cron pulls on each execution start. Verify an execution's image digest + `succeededCount=1`.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 7   | AWS ECR `market-tick-data-service:latest` rebuilt + pushed                           | ⬜ Batch job defs reference `:latest` by TAG → Fargate pulls at each per-minute task start (automatic pickup). Note the 2026-07-13 finding that ECR had gone **6 weeks stale** — verify the push explicitly, don't assume.                                                                                                                                                                                                                                                                                                                            |
+| #   | Step                                                                                 | State (2026-07-17 04:30Z — ROLLOUT COMPLETE)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | UTL fix on LDR                                                                       | ✅ `unified-trading-library@1e995f75`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2   | UTL promote PR LDR→main, v2-gated auto-merge                                         | ✅ **DONE — PR #586 MERGED 2026-07-17T03:40:09Z** (fleet promoter manually triggered, run 29552660105). **Verified by CONTENT** — not squash-inflated `ahead_by`: `gh api …/compare/main...live-defi-rollout` → **`files: 0`**, and `manifest_consolidator.py@main` carries the `UNPROVABLE` contract (4 hits). Only these 2 files rode along.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 3   | UTL base image republished from a build whose commit contains the fix → new digest   | ✅ **DONE — and it WAS automatic; the earlier "NOT automatic" finding was a FALSE PROBE (wrong region).** Cloud Build here is **REGIONAL (`asia-northeast1`)**; `gcloud builds list` / `triggers list` **without `--region` query the GLOBAL scope and return a misleading empty/stale list**. Trigger **`unified-trading-library-live-defi-rollout` (493290ef)** fires on **LDR** (not main). `Evidence: cloudbuild=74a5e3df-a137-4c66-a69f-e2400fd564dc` SUCCESS (03:40:29→03:46:56Z) from commit **61bf7444** → published base digest **`sha256:61445152e3587bd9c65279d076f24cfc4a5880136811d0e70e27b50f38f455f9`** (tag `0.55.0,latest`). Ancestry+CONTENT verified: `git merge-base --is-ancestor 1e995f75 61bf7444` = YES; `manifest_consolidator.py@61bf7444` has 4 `UNPROVABLE` hits + 0 fallback-loop hits. (Build `a8cf56e4` at 03:31Z had already built the fix commit `1e995f7` directly.) |
+| 4   | MTDS `Dockerfile` `ARG BASE_IMAGE_DIGEST` bump → quickmerge to LDR → promote to main | ✅ **DONE — `market-tick-data-service@22cb4d5f`** (`Dockerfile:115` `sha256:d15fb29b…` → **`sha256:61445152…`**). QG `--no-fix` green (sentinel == HEAD), quickmerge `--agent --files 'Dockerfile'`. **The bump is REQUIRED**: MTDS `cloudbuild.yaml`'s `docker build` does NOT pass `--build-arg BASE_IMAGE_DIGEST` (the pre-pull step only _reads_ the pin), so the Dockerfile ARG default governs the base.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 5   | MTDS image rebuilt; `:latest` → new digest + promote to main                         | ✅ **DONE.** MTDS LDR trigger (`46d60bf7`) auto-fired: `Evidence: cloudbuild=f54235dc-941b-47c5-9814-343a019001a3` **SUCCESS** (04:06:37→04:15:30Z), `source.gitSource.revision = 22cb4d5ff0088722ce355f8395fbc33ca8b56ec7` (exact bump commit — ancestry by CONTENT, not tag inference). `:latest` **CHANGED `sha256:5f056140` → `sha256:57fc72e1…`**. **Layer proof**: all 16 layers of UTL base `61445152` are the exact ordered prefix of MTDS `57fc72e1`; control — old MTDS `5f056140` had old base `d15fb29b` as prefix. Promote PR **#598 MERGED 04:27:08Z** (auto-merge fired on its own once v2 passed — no gate bypassed); `compare/main...LDR` → **`files: 0`**.                                                                                                                                                                                                                           |
+| 6   | GCP Cloud Run jobs re-resolve `:latest`                                              | ✅ **DONE — VERIFIED LIVE.** Cloud Run resolves the tag to a digest at **execution-creation** time (job spec still says `:latest`; execution `…-instruments-cefi-swrnl` created 04:17:01Z shows `image: …market-tick-data-service@sha256:57fc72e1…`). **Fleet sweep: 24/24 `uts-prod-manifest-consolidator-*` jobs' latest execution runs `sha256:57fc72e1` — 0 on the old digest.** No repin needed. **DIRECT CODE PROOF inside the running image**: `docker run --entrypoint python …@sha256:57fc72e1 -c "inspect.getsource(m._get_content_write_mtime)"` → 2 `UNPROVABLE` mentions, **no** `run_at`/`blob.updated` fallback, reads the marker key.                                                                                                                                                                                                                                                  |
+| 7   | AWS ECR `market-tick-data-service:latest` rebuilt + pushed                           | ✅ **PUSHED** — ECR `:latest` was **stale at `sha256:4e60180c` (2026-07-13T21:03:35Z)**, i.e. the 26 Batch-Fargate consolidators were still on pre-marker-strip-fix code. **Mirrored the VERIFIED GCP image rather than rebuilding** (pull GAR `@sha256:57fc72e1` → retag → push), so **ECR digest == GCP digest == `sha256:57fc72e1`** (byte-identical to the image proven live on GCP; strictly better than the 2026-07-13 rebuild which diverged). Pushed **04:29:43Z**; old `4e60180c` now untagged. **Batch pickup NOT OBSERVED from here** — see the residual note below.                                                                                                                                                                                                                                                                                                                        |
 
-**Until step 6, the pre-fix reaper is still deployed fleet-wide**, and 🔴 `instruments-store-cefi-prd` is armed (see the
-sweep above). **Interim mitigations** (in priority order):
+**Steps 3-7 executed 2026-07-17 04:00-04:30Z — the pre-fix reaper is NO LONGER deployed on GCP** (24/24 jobs on
+`sha256:57fc72e1`, code-proven inside the image). The interim mitigation below was ALSO applied first, before the image
+shipped, and is retained because it is what closed the live exposure window.
 
-- **(A) RECOMMENDED — disarm cefi by re-stamping a genuine, deliberately-OLD marker.** Setting
-  `consolidator_content_write_at` to a timestamp just AFTER the legacy seed's mtime (seed = `2026-05-12T17:06:19Z`, so
-  e.g. `2026-05-12T18:00:00Z`) makes the cutoff go **backward**, which is the safe direction: any future shard
-  (`mtime > cutoff`) is classified CHANGED → merges → re-stamps a real marker; the prune cutoff (`2026-05-12T17:59:55Z`)
-  covers nothing but the prune-exempt seed, so `pruned=0`. It does NOT re-merge the seed (its mtime sorts below the
-  cutoff → "unchanged"), so there is no deletion-resurrection risk. **NOT DONE — deliberately**: the dispatch for this
-  session says _"you may ship CODE but do NOT pause/mutate the running fleet"_, and this is a prod-fleet mutation.
-  Operator decision.
-- **(B) Do nothing until the image ships.** Tolerable _only_ while cefi's `per_vm/` stays empty of real shards — i.e. do
-  NOT run the cefi instruments enumerator, and do NOT freeze/repair/resume ANY bucket, until step 6 lands.
-- **(C) Rush steps 3-5** (manual UTL base-image republish + MTDS pin bump + rebuild) to close it in ~1h.
+### ✅ Option (A) APPLIED 2026-07-17 03:54:34Z — cefi disarmed (with a CORRECTED stamp value)
 
-**Do NOT rewrite any bucket's `_index/availability_index.parquet` out-of-band until step 6 lands** — that is the action
-that arms the trap, and the runbooks' freeze→repair→resume shape is exactly its trigger.
+`instruments-store-cefi-prd`'s canonical had **no custom metadata at all** — neither marker. Metadata-only
+`blob.patch()` via the sanctioned client (`get_storage_client()` + the same `._client` native access the consolidator
+itself uses); **deliberately NOT a content rewrite**, since a content rewrite is the very act that strips the marker.
+Verified: `generation` UNCHANGED (`1784260426780854` before and after ⇒ rows untouched), `metageneration` 1→2.
+
+> **⚠️ The stamp value named in option A as originally filed (`2026-05-12T18:00:00Z`) was WRONG and would have caused
+> the exact deletion-resurrection it claims to avoid.** The doc took the legacy seed's mtime from
+> `gcloud storage ls -l`, which prints **`creation_time`** (`2026-05-12T17:06:19Z`). The consolidator reads
+> **`blob.updated`** (`_list_per_vm_shards_with_mtime` + `_prune_consolidated_shards`), which for cefi's seed is
+> **`2026-07-14T03:17:52Z`** — a **COLDLINE lifecycle storage-class transition** bumped it (`storage_class: COLDLINE`,
+> `storage_class_update_time: 2026-07-14T03:17:52`, `metageneration: 2`) with **no content rewrite and no metadata
+> strip**. Stamping `2026-05-12T18:00Z` would have left the seed **ABOVE** the cutoff → classified CHANGED → **re-merged
+> → resurrection of rows a purge legitimately deleted**. A pre-flight guard caught this before `--apply`.
+>
+> **Applied value: `2026-07-14T04:00:00+00:00`** — just after the seed's REAL effective mtime, honouring option A's
+> stated INTENT (cutoff moves backward; seed stays "unchanged"; future shards merge; `pruned=0`) rather than its literal
+> number.
+
+**Why this disarms the still-deployed PRE-FIX image**: pre-fix `_get_content_write_mtime` reads
+`consolidator_content_write_at` **FIRST** (`git 1e995f75^`:
+`for key in (_CONSOLIDATOR_CONTENT_WRITE_AT_KEY, _CONSOLIDATOR_RUN_AT_KEY)`), so a present marker short-circuits the
+`blob.updated` fallback — the fabricated cutoff becomes structurally unreachable.
+
+**Measured proof (3 post-stamp cycles, 03:55:44 / 03:56:32 / 03:57:39Z)**: every cycle
+`success=True shards=1 rows_in=0 pruned_shards=0`; the **marker SURVIVED all 3 cycles** (re-read
+`2026-07-14T04:00:00+00:00` at every tick — the idle touch's tier-1 `copy_blob`-to-self preserves custom metadata);
+index rows **80,578 → 80,578 (delta 0)**.
+
+**Why cefi had NEITHER marker (mechanism now fully explained)**: `_touch_canonical_mtime` tier-1 is a server-side
+`copy_blob`-to-self, which **copies the source's metadata verbatim** — so it faithfully propagated the stripped (empty)
+metadata forward every minute while bumping `update_time` (`creation_time == update_time`, `metageneration: 1` on each
+new generation). Tier-2 (the only path that stamps `consolidator_run_at`) never ran because tier-1 succeeded. Hence the
+fabricated cutoff tracked ~now permanently, exactly as the sweep described.
+
+**Post-rollout marker re-check (04:30Z) — all 10 GCP prd buckets carry a marker, 0 armed**: the 9 others are genuine and
+actively advancing (e.g. `market-data-tick-defi` `02:40:45Z → 03:15:48Z` across the session = a real merge re-stamping;
+`instruments-store-sports` `2026-07-17T03:15:45Z`, genuine post-restore). Note the prediction buckets are named
+`*-pred-prd-*`, **not** `*-prediction-prd-*` (a `*-prediction-*` probe returns a misleading 404).
+
+**Do NOT rewrite any bucket's `_index/availability_index.parquet` out-of-band without carrying the custom metadata
+forward.** With the fix live this is now COST (one full merge) rather than LOSS — but it is still the polite contract.
+
+## Rollout residual — AWS Batch pickup is UNOBSERVED (not unverified-by-choice)
+
+The ECR push is confirmed by `aws ecr describe-images` (`:latest` = `sha256:57fc72e1`, pushed 04:29:43Z; the stale
+`sha256:4e60180c` from 2026-07-13 is now untagged). **What could NOT be checked from this host**: every AWS control
+surface needed to watch a Batch task is denied under `uts-orchestrator-epic-role` — measured 2026-07-17:
+
+| probe                                | result                                                      |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `aws ecr describe-images`            | ✅ OK (used for the push + verification)                    |
+| `aws batch describe-job-definitions` | ❌ `AccessDeniedException` (`batch:DescribeJobDefinitions`) |
+| `aws batch list-jobs`                | ❌ `AccessDeniedException` (`batch:ListJobs`)               |
+| `aws events list-rules`              | ❌ `AccessDeniedException` (`events:ListRules`)             |
+| `aws s3api head-object` (manifest)   | ❌ `403 Forbidden`                                          |
+
+**Structural (code-level, NOT live) basis for expecting automatic pickup**:
+`deployment-service/terraform/aws/manifest_consolidator_scheduler.tf:47` sets
+`mtds_ecr_image = "…/market-tick-data-service:latest"` — referenced **by TAG** at `:253` + `:316` (both job-definition
+modules), so Fargate re-resolves the tag at each per-minute task start. This mirrors the 2026-07-13 precedent, which
+accepted the identical caveat ("pickup is structurally certain but unobserved from here"). **No claim is made that an
+AWS Batch execution has been observed running `sha256:57fc72e1`.** Confirm from a Batch-read-capable role/console, or
+grant `uts-orchestrator-epic-role` `batch:ListJobs` + `batch:DescribeJobDefinitions` + `s3:GetObject`/`ListBucket` on
+the manifest buckets to close this observability gap permanently (tracked in
+`aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`).
+
+## Measured lessons — two FALSE PROBES corrupted this doc's own findings
+
+Both were "the tool answered a different question than the one asked", and both produced confident, wrong conclusions
+that a later measurement overturned. Worth generalising:
+
+1. **`metadata` vs `custom_fields`** (already recorded above) —
+   `gcloud storage objects describe --format="value(metadata…)"` returned a false "all 10 buckets MISSING the marker".
+2. **GLOBAL vs REGIONAL Cloud Build** (new, 2026-07-17) — `gcloud builds list` / `gcloud builds triggers list` **without
+   `--region`** query the GLOBAL scope: the trigger list came back **EMPTY** and the newest build looked like `01:13Z`.
+   That produced the (wrong) conclusion "the UTL base-image republish is NOT automatic; `image-build-gate.yml` is only a
+   PR validator". **Measured with `--region asia-northeast1`: 30+ triggers exist**, including
+   `unified-trading-library-live-defi-rollout` (`493290ef`) which fires on **LDR pushes**, and it had **already
+   republished the base image at 03:46:56Z** (build `74a5e3df`) — before anyone asked it to. **Always pass
+   `--region asia-northeast1` to `gcloud builds *` in this project.** The republish trigger is on **LDR, not main** — so
+   a UTL fix reaches the base image on the quickmerge, not on the promote.
+3. **`gcloud storage ls -l` prints `creation_time`, NOT `blob.updated`** (new, 2026-07-17) — the consolidator's
+   changed-shard + prune logic reads `blob.updated`. These differ whenever anything touches an object without rewriting
+   it; here a **COLDLINE lifecycle transition** moved cefi's legacy seed's effective mtime forward by **2 months**
+   (`2026-05-12T17:06:19Z` creation vs `2026-07-14T03:17:52Z` updated). This is what made option A's literal stamp value
+   wrong. **A GCS lifecycle storage-class transition silently advances `blob.updated` with no write, no content change,
+   and no metadata strip.**
+   - **Latent trap this implies** (no bucket is currently in this state — all 10 markers are ≥ their seed's `updated`):
+     if a bucket's last real merge predates a seed's storage-class transition, the seed sorts **above** the cutoff → is
+     classified CHANGED → **re-merged → resurrection of purged rows**. The `None`-marker (UNPROVABLE) branch is already
+     immune (it explicitly excludes `_LEGACY_SEED_PATH`, `manifest_consolidator.py:783`), and the prune is immune
+     (`:1856` skips the seed unconditionally) — the exposure is only the _incremental changed-shard_ path on a long-idle
+     bucket. Flagged here rather than fixed: it is speculative, unobserved, and out of this issue's scope.
 
 ## Provenance
 

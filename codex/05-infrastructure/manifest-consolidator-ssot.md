@@ -261,6 +261,27 @@ metadata-replace + mtime-bump semantics) + `::test_get_content_write_mtime_never
 > (`gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet --format="value(custom_fields.consolidator_content_write_at)"`
 > — note `custom_fields`, NOT `metadata`, in current gcloud) while per-VM shards can land.
 
+> **A shard's mtime is `blob.updated`, NOT `creation_time` — and a lifecycle transition moves it (2026-07-17).** Both
+> `_list_per_vm_shards_with_mtime` and `_prune_consolidated_shards` read **`blob.updated`**. `gcloud storage ls -l`
+> prints **`creation_time`**, so the two disagree whenever anything touches an object without rewriting it — most
+> notably a **GCS lifecycle storage-class transition** (STANDARD→COLDLINE), which advances `blob.updated` with **no
+> write, no content change and no metadata strip**. Measured: `instruments-store-cefi-prd`'s
+> `_index/per_vm/_legacy_seed.parquet` has `creation_time=2026-05-12T17:06:19Z` but `update_time=2026-07-14T03:17:52Z`
+> (`storage_class: COLDLINE`, `metageneration: 2`) — a 2-month gap. **Reading the wrong one when reasoning about a
+> cutoff is a data-loss-grade error**: it made the marker-strip issue doc's interim mitigation name a stamp value that
+> would have re-merged the frozen legacy seed and resurrected purged rows (caught by a pre-flight guard). Take a shard's
+> effective mtime from `gcloud storage objects describe … --format="value(update_time)"`, never from `ls -l`.
+
+> **`gcloud builds` is REGIONAL here — always pass `--region asia-northeast1` (2026-07-17).** A region-less
+> `gcloud builds list` / `builds triggers list` queries the GLOBAL scope and returns an empty/stale answer that reads
+> exactly like "no trigger exists / nothing built" — this produced a false "the UTL base-image republish is not
+> automatic" finding. The base image IS republished automatically by the `unified-trading-library-live-defi-rollout`
+> trigger, which fires on **LDR pushes (not main)**: a UTL fix reaches the base image on the quickmerge, so the MTDS
+> `BASE_IMAGE_DIGEST` bump + rebuild is the only manual link in the chain (MTDS's `cloudbuild.yaml` does NOT pass
+> `--build-arg BASE_IMAGE_DIGEST`, so the `Dockerfile` ARG default governs the base). Cloud Run jobs resolve `:latest` →
+> digest at **execution-creation** time, so no job repin is needed after a rebuild (verified 2026-07-17: 24/24
+> consolidator jobs moved to the new digest on their next `*/1` execution with zero intervention).
+
 **schema_version preservation (ties to invariant #5)**: `union_by_name` keeps each source row's `schema_version` — the
 merge never downgrades. A NULL `schema_version` in the consolidated output means the SOURCE shard omitted the column
 (observed: the cefi instruments-service enumeration shards `slot4-cefi-c*-20260523`, a reduced 14-col schema also
