@@ -369,6 +369,61 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — FIX D3 MDPS HALF SHIPPED: the audited cefi silent data-loss is CLOSED on the MDPS side —
+  `market-data-processing-service@0035f79`.** Full `bash scripts/quality-gates.sh` GREEN **at the commit SHA**: "ALL
+  QUALITY GATES PASSED (218s)", exit 0, **ZERO red (❌) checks in the output** (read the output, not just the exit code
+  — this gate can print a ❌ while still exiting 0), 2008 passed / 1 skipped, coverage 85.42%, `.qg_last_passed_sha` ==
+  HEAD. 26 new tests in `tests/unit/test_cefi_wire_bridge.py`. Three surfaces changed: NEW
+  `app/utils/cefi_wire_bridge.py` (thin catalogue loader → UAC `CeFiWireCanonicalMap.from_rows`, process-cached with a
+  loaded-flag, 4 columns only, `instrument_id` never `canonical_instrument_id`), `path_parsing.py` (cefi-gated
+  accepted-stems set via the new `blob_matches_canonical_instrument_id_stems`), and `canonical_writer_shaping.py`
+  (rename + cefi branch). **No service↔service import** — the catalogue is read as parquet DATA; MDPS depends only on
+  UAC/UTL.
+  - **The bug, closed and asserted**:
+    `blob_matches_any_instrument_id('…/venue=BITFINEX-FUTURES/ instrument_type=perpetual/data_type=trades/ADAF0:USTF0.parquet', ['BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN'])`
+    now returns **True** (was `False` → silently dropped, no error/no log). Canonical-named objects match too
+    (mixed-corpus both-ways); wrong-venue and wrong-itype → `False`. **3-tuple majors guarded**: BYBIT `BTCUSDT`
+    SPOT_PAIR vs PERPETUAL resolve to their correctly-typed ids and do NOT cross-match — the program's #1 regression
+    guard.
+  - **Open-q #17 RESOLVED (verified, not assumed)**: grep for `_renormalize_legacy_tradfi_instrument_ids` across the
+    whole workspace found **no external importer** — only in-repo MDPS (`canonical_writer.py` + 2 test modules) and
+    plan/archive docs. Rename to `_renormalize_legacy_instrument_ids` executed with **no shim**
+    (delete-deprecated-code).
+  - **Open-q #16 CONFIRMED**: the scanner is a long-lived worker (`orchestration_workers.py`), so the one-time
+    ~424,699-row catalogue download amortizes; the process cache makes it once-per-process.
+  - **DECISION — fail-SOFT (`None`), diverging from the blueprint's "fail-loud in prod" for THIS surface.** Scoped
+    rationale: MDPS's map consumers are READ-side resolution aids, so a `None` degrades them to exact pre-bridge
+    behaviour — no corruption, no invented ids — whereas the writer's builder (FIX 0) fails LOUD because a
+    silently-empty map there disables decomposition corpus-wide and keys new writes off debris. Raising here would also
+    take down the DEFAULT full-shard path, which never uses the map. Every failure logs WARNING so an unexpectedly
+    absent prod catalogue is visible, never silent. An EMPTY forward map is likewise reported as unavailable rather than
+    handed over as a map that resolves nothing.
+  - **FINDING (fixed in-commit) — circular import**: `app.core.__init__` imports the orchestration service → adapters →
+    `app.utils`, so a module-scope `from app.core.bucket_arg_typing import …` inside `app/utils/cefi_wire_bridge.py` is
+    a genuine cycle. QG caught it (2 test modules `ImportError`'d on a partially-initialized module). Fixed with a
+    function-level import (`noqa: PLC0415`) on the once-per-process catalogue-load path. **`app.utils` must not import
+    `app.core` at module scope** — worth knowing for the features-service D-features bridge, which will hit the same
+    class of layering trap.
+  - **FINDING (fixed in-commit) — two tests were passing for the wrong reason**: `test_noop_for_non_tradfi` and
+    `test_renormalize_skips_non_tradfi_and_already_canonical` asserted CEFI was a renormalizer no-op. That premise is
+    now false (CEFI has a branch); they would have kept passing only because the map is `None` under test. Re-pointed at
+    genuinely-unhandled asset groups (SPORTS / DEFI) so they still assert the real invariant.
+  - **SHIP PATH — dirty-deps carve-out direct push** (quickmerge pre-flight `❌ 2 dep(s) have uncommitted changes`):
+    `unified-trading-library` (2 files) + `unified-api-contracts` (2 files incl. `registry/market_data_categories.py`,
+    which is where `VENUE_TO_ASSET_GROUP` lives) carried **live foreign WIP** from parallel agents. Polled dep
+    cleanliness ~17 min on a progress metric; it oscillated 2→1→2 then went **flat** → STALL, so per async-wait
+    discipline I stopped waiting rather than burn ticks. Their WIP was left **completely untouched** (never staged,
+    never committed, never stashed). `git show --stat HEAD` verified only my 7 paths landed. The
+    `check_strict_quickmerge` pre-push guard warned (WARN-only) and names dirty-deps as a sanctioned carve-out.
+  - **NOT VERIFIED / gaps**: (1) the bridge's real GCS catalogue read was **never executed against live prod** — every
+    test monkeypatches the map, so `_download_catalog_frame` / `resolve_bucket_name(kind="instruments-store")` are
+    unproven against the real bucket + the real column set (blueprint test #5, the optional ADC single-object
+    integration proof, was NOT run). (2) The ~424,699-row peak-RSS question (open-q #15) is unmeasured for MDPS. (3) A
+    5000-tick aggregation test (`test_writer_schema_preservation`) hit a 60s pytest-timeout on ONE run under host load
+    average **293** with 10 concurrent QGs; it passed on the clean re-runs and provably never touches this change (no
+    writer/renormalizer/bridge/GCS in its path) — flagging it as a **load-induced flake to watch**, not a fix.
+  - ⬜ **MTDS reader half of D3 remains OPEN** (parallel agent) — the FIX D3 box stays unticked until it lands.
+
 - **2026-07-17 (slot-3) — PHASE-0b MTDS WRITE SIDE SHIPPED: FIX 0 (MTDS half) + D1 + D1-live + D2 —
   `market-tick-data-service@d302f07a`.** Full `bash scripts/quality-gates.sh` GREEN: **"ALL QUALITY GATES PASSED
   (450s)", exit 0, ZERO red (❌) checks, 6046 passed / 17 skipped, `.qg_last_passed_sha` == HEAD**. 62 new tests across
