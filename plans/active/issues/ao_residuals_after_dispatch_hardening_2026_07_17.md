@@ -70,7 +70,7 @@ source:
 | `escalation_pipeline_mvp` un-pause                   | [`escalation_pipeline_mvp_2026_06_25`](../escalation_pipeline_mvp_2026_06_25.md) (`status: paused`, operator ruling)                                                                      |
 | Recovery-audit Layer-1 producer rewire               | [`ao_recovery_audit_layer1_deleted_2026_07_15`](ao_recovery_audit_layer1_deleted_2026_07_15.md)                                                                                           |
 | Staleness UI + alerting; audit hosts for freeze      | [`ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16`](ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md) — **another agent owns the UI half** (operator, 2026-07-16) |
-| uv-cache reconcile; 30G reclaim; `UV_CACHE_DIR`      | [`ao_host_disk_pressure_2026_07_16`](../ao_host_disk_pressure_2026_07_16.md) — closed + its own Deferred table                                                                            |
+| uv-cache reconcile; 30G reclaim; `UV_CACHE_DIR`      | [`ao_host_disk_pressure_2026_07_16`](../../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) — closed + its own Deferred table                                                         |
 | Deep `plan-reconciler`; capability_wizard            | their own issue docs (unchanged by the parent's archival)                                                                                                                                 |
 
 ## Todos

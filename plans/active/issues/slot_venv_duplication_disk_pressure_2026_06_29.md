@@ -24,7 +24,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-17
 locked_since: 2026-05-21
 ---
 
@@ -280,8 +280,13 @@ slot shells — so the string-strip layout derivation above is the reliable, hos
    `UV_LINK_MODE=hardlink` makes uv **warn and fall back to copy loudly** — never a silent regression. Quick check:
    `df --output=target . .uv-cache` (both rows should match).
 
-Optional: if you run `uv` by hand a lot _outside_ QG, add `export UV_CACHE_DIR="<workspace-root>/.uv-cache"` to your
-shell rc. Not needed for the QG path (it sets it itself).
+~~Optional: if you run `uv` by hand a lot _outside_ QG, add `export UV_CACHE_DIR="<workspace-root>/.uv-cache"` to your
+shell rc. Not needed for the QG path (it sets it itself).~~ **CLOSED 2026-07-17 — no longer a per-person optional**:
+`scripts/dev/install-uv-cache-shell-env.sh` (`pm@86dea79d5`) installs the export block idempotently into the operator's
+shell rc, same `${VAR:-...}` derivation as base-service.sh. Installed + verified on the planning VM
+(`i-0c9b283b31d6b5ca7`: interactive `uv cache dir` → `/home/ubuntu/unified-trading-system-repos/.uv-cache`) and the hk
+dev host (→ `/active/unified-trading-system-repos/.uv-cache`, which was the live B2 case — hand-run `uv` had been
+writing to `/home/hk/.cache/uv`, cross-filesystem on the 84%-full `/`). Run once per remaining host.
 
 ## Verification plan (single-slot proof before fleet rollout)
 
@@ -493,10 +498,22 @@ slots × more materialised venvs) past what the 2026-06-29 hardlink-dedup fix al
 > `quality-gates-base/base-service.sh` and `tmux_spawn.py`; `vm-disk-guard.sh` no longer nukes the active shared cache)
 > — so this is a **re-verification**, not a re-fix.
 
-- [ ] [INFRA] P2. Re-verify the 2026-07-13 disk-pressure recurrence (slot 7 hit **2.0 MB free / 100% used** mid-QG, past
-      this doc's post-fix 53%-used baseline). Confirm `vm-disk-guard.sh`'s idle-slot reinstall + `uv cache prune` are
-      still running on schedule, then determine whether fleet growth (more live slots × materialised venvs) has outpaced
-      what hardlink-dedup alone absorbs; if so propose the next lever (concurrent-QG cap, prune cadence, or a per-slot
-      venv budget). **Gate**: a measured `df -h /home` trend + a stated verdict — _guard-running-but-outgrown_ vs
-      _guard-not-running_. Provenance: this doc's 2026-07-13 entry. **Also flagged independently by
-      `ao_docs_reconciliation_2026_07_15.md` (disk/venv row) — close both together, don't double-book.**
+- [x] [INFRA] P2. ✅ **DONE — measured live on the real orchestrator VM (`i-0c9b283b31d6b5ca7`) via read-only AWS SSM,
+      2026-07-16 + re-measured 2026-07-17. Verdict: _guard-running-but-outgrown_, now remediated.** (1) **Dedup holds**
+      — shared `_duckdb…so` at inode 4620498 with **links=81**; largest slot 18G vs the pre-fix 27–29G outliers, so
+      fleet growth has NOT outpaced hardlink-dedup. (2) **Guard runs on schedule and works every cycle** — 7 firings/3
+      days, each reclaiming 15–30 points (`95%→76%`, `86%→61%`, `85%→65%`, …). (3) The residual gap was **growth rate
+      between firings** (max +19 points/6h → a 79% "nothing to do" reading flew blind to 85%): remediated by
+      `ao_host_disk_pressure_2026_07_16` — guard cadence `0 */6` → `0 */2` plus the `install-prune-uv-cache-cron.sh`
+      install (it had never actually been installed; also fixed its cron-PATH bug, `pm@88310f87a`). Post-remediation
+      proof 2026-07-17T14:00Z: guard read **83% → vacuumed → 51%** within the same firing; disk at 58% with 124G free.
+      Closed together with the `ao_docs_reconciliation_2026_07_15.md` disk/venv row (annotated there — no double-book).
+      Provenance: this doc's 2026-07-13 entry; execution + evidence in
+      `../../archive/2026_07/ao_host_disk_pressure_2026_07_16.md`.
+- [ ] [INFRA] P3. **Reclaim the stale 30G `/active/uv-cache` on the hk dev host** (operator ruling 2026-07-17: **keep
+      for now** — parked, not forgotten; migrated here from `ao_host_disk_pressure_2026_07_16`'s Deferred table on its
+      archival). It is the FORMER pre-convention cache: dead since 2026-07-08, zero references (QG derives
+      `<workspace-root>/.uv-cache` instead). Deletion is safe for the 81 hardlinked venvs — hardlinks are equal
+      citizens, the venv's copy survives; only `links=1` blobs actually free space, so real reclaim < 30G. `/active` is
+      at 53% (104G free), so nothing forces it. **Gate**: operator says go → `rm -rf /active/uv-cache` + note the
+      measured freed GB here. BLOCKED-OPERATOR-DECISION.

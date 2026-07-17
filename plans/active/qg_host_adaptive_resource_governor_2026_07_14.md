@@ -511,11 +511,13 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
   a design decision), the daily baseline-freshness loop (214), and 220 (K-repro re-verify, operator-deferred). Genuine
   features, left scoped rather than rushed into the shared QG gate.
 - **Net:** the core governor is shipped, validated (live host resize + 93-min soak + cross-host admission test),
-  documented (codex 🟢), and live on the current fleet (reservation mode durably set via `.env.local` + tmux global
-  env); the bootstrap-default flip (so future re-bootstrapped VMs come up on the governor) is validated + ready but
-  blocked on a fleet provisioning gap (slots 16/1/7 missing `agent-orchestrator/.venv`) (corrected 2026-07-15,
-  plan-reconcile: Phase-5 rollout todo at 302 is still `[ ]`/DEFERRED, not shipped); the optional self-healing
-  observability layer and the operator-blocked K-repro also remain.
+  documented (codex 🟢), and live on the slot-16 host (reservation mode durably set via `.env.local` + tmux global env)
+  — **"live on the current fleet" was an over-claim, corrected 2026-07-17**: the central orchestrator VM
+  (`i-0c9b283b31d6b5ca7`) measured `MODE=token K=2` on 2026-07-16 (see § Measured runtime drift below); the
+  bootstrap-default flip (so future re-bootstrapped VMs come up on the governor) is validated + ready but blocked on a
+  fleet provisioning gap (slots 16/1/7 missing `agent-orchestrator/.venv`) (corrected 2026-07-15, plan-reconcile:
+  Phase-5 rollout todo at 302 is still `[ ]`/DEFERRED, not shipped); the optional self-healing observability layer and
+  the operator-blocked K-repro also remain.
 
 ### 2026-07-16 — 2-day health re-check + FLEET_WORKER_CAP right-sized for the 30 GB host (slot 16)
 
@@ -558,8 +560,9 @@ Two things worth one check by this plan's owner:
    running at a third of the intended concurrency, which is a real (if quiet) throughput tax on every ship from that VM.
 
 **Provenance / scope**: surfaced by the 2026-07-16 AO issue-doc reconciliation sweep while verifying
-`issues/slot_venv_duplication_disk_pressure_2026_06_29.md`, whose banner over-claims this governor as "live on the
-current fleet". That banner is corrected by the sibling plan
-[`ao_host_disk_pressure_2026_07_16`](ao_host_disk_pressure_2026_07_16.md) (Phase 3), which deliberately does **not**
-touch governor code — this plan owns it. Also recorded there: the governor gates **RAM/CPU admission, not disk**, so it
-must not be cited as a disk-pressure mitigation.
+`issues/slot_venv_duplication_disk_pressure_2026_06_29.md`. **Attribution corrected 2026-07-17**: that issue doc's
+banner never mentioned the governor at all (`git log -S 'governor'` over its full history: zero hits) — the "live on the
+current fleet" over-claim was THIS plan's own "Net:" summary above, now corrected in place. The sibling plan
+[`ao_host_disk_pressure_2026_07_16`](../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) (Phase 3, archived
+2026-07-17) recorded the drift here and deliberately did **not** touch governor code — this plan owns it. Also recorded
+there: the governor gates **RAM/CPU admission, not disk**, so it must not be cited as a disk-pressure mitigation.
