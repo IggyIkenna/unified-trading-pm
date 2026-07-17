@@ -184,4 +184,10 @@ jobs:
       conclusion: ""
       workflow_name: "Change Freeze Check"
       run_url: ""
+      # One advisory per window per check-type, not one per deferred attempt (measured
+      # 2026-07-17: 4 identical WARNINGs in a single 5-min US-open window). 30 min covers
+      # every configured window; the reason string names the window either way, and the
+      # per-key dedup marker (notify-slack 2026-07-17 fix) makes this actually stick.
+      dedup_key: "freeze-block-${{ inputs.check_type }}"
+      cooldown_min: 30
     secrets: inherit
