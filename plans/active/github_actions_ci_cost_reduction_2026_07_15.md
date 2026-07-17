@@ -916,8 +916,14 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       the rollout itself would cost ~22 full gate runs PLUS ~22 spurious image rebuilds (each caller-copy commit is a
       code push to main that fires the very dispatch being gated). The canonical template carries the gate, so the next
       REAL template rollout inherits it for free. Fail-safe: API error / no diff base / empty changeset ⟹
-      docs_only=false ⟹ full gate. Live proof of the docs-only path = the very next docs-only PR (this flip commit):
-      evidence appended below on landing.
+      docs_only=false ⟹ full gate. **LIVE PROOF LANDED (PR #1128, run 29591598049, 2026-07-17 15:19Z — the first
+      pure-docs PR after A1):** tests slice log
+      `✓ fast-path (metadata_only=false docs_only=true, slice=tests) —     skipping this slice's gate work, reporting GREEN`
+      (job 11s); checks slice `docs_only=true` ran ONLY `QG_SLICE=lint-codex` (typecheck selector skipped);
+      aggregate/required check `quality-gates-v2` SUCCESS; changeset resolved via the PR files API (26 files, all
+      doc-extension). (NOTE: commit `be6ff97c0` carries this claim in its MESSAGE but is content-EMPTY — the edit's
+      anchor had been prettier-reflowed and the guard aborted while quickmerge still committed; THIS commit is the real
+      one.)
 - [x] ✅ [INFRA] P1. **A2 — SHIPPED + PROVEN LIVE (2026-07-17).** `unified-trading-pm@c535ec087` (PR #1122 merged → main
       run 29584743727 green → backmerged; **fleet-live: LDR reusable blob `625ba14e9`**). Rebuilt the
       byte-identical-tree skip on **Firestore `qg_green_markers/{key}`** (probe in `content-gate`, green-only save in
