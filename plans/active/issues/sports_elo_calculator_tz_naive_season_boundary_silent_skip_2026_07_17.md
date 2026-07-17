@@ -173,31 +173,31 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       data-correctness HARD RULE's infra-cost-decision requirement. (repo: features-service)
 
       **AUTHORIZED by main via `BLK-a3149ab4` (2026-07-17T13:25Z) — launch spot fleet.** Main's final answer: "A —
-                                      LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
-                                      `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
-                                      wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
-                                      22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
-                                      is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
-                                      NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
-                                      reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
-                                      (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
+                                          LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
+                                          `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
+                                          wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
+                                          22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
+                                          is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
+                                          NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
+                                          reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
+                                          (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
 
-                                      **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
-                                      travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
-                                      european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
-                                      and a separate travel-only fleet (see
-                                      `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
-                                      REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
-                                      risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
-                                      @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
-                                      (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
-                                      the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
-                                      captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
-                                      footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
-                                      `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
-                                      2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
-                                      floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
-                                      anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
+                                          **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
+                                          travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
+                                          european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
+                                          and a separate travel-only fleet (see
+                                          `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
+                                          REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
+                                          risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
+                                          @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
+                                          (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
+                                          the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
+                                          captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
+                                          footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
+                                          `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
+                                          2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
+                                          floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
+                                          anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
 
 - [x] ✅ [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
@@ -495,13 +495,21 @@ after filing; next dispatch (whenever it lands, ideally post-park) should check 
 (`scripts/sports/audit_elo_flat_1500_2026_07_17.py`) expecting the affected-shard count to drop to ~0, before flipping
 this checkbox.
 
-> **⛔ MAIN RULING (2026-07-17 ~14:33Z, agt-46dce4) — fleet-wait: DO NOT re-block on the redispatch cadence.** This gap-fill is
-> covered by the AUTHORIZED consolidated 10-VM full-corpus fleet (`features-sports-*`, launched 13:56-13:59Z, ~11h ETA to
-> ~2026-07-18T01:00Z, SPOT, `launch-features-vm.sh`). If you are re-dispatched this task before the fleet completes: do ONE cheap
-> `gcloud compute instances list | grep features-sports` (or /api state) fleet-status check → if RUNNING, `skip-current-task` fast.
-> **Do NOT file a /blocked question about the redispatch cadence** — main has already ruled it accepted/harmless (BLK-ab91ffa0,
-> BLK-e1428c18) and OWNS flipping `sports-gap-fill-fleet-20260717-complete=true` (EVIDENCE-VERIFIED: manifest coverage on affected
-> dates, ruling out an auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification +
-> checkbox-flip. Just skip-fast until then. Systemic fix filed:
+> **⛔ MAIN RULING (2026-07-17 ~14:33Z, agt-46dce4) — fleet-wait: DO NOT re-block on the redispatch cadence.** This
+> gap-fill is covered by the AUTHORIZED consolidated 10-VM full-corpus fleet (`features-sports-*`, launched
+> 13:56-13:59Z, ~11h ETA to ~2026-07-18T01:00Z, SPOT, `launch-features-vm.sh`). If you are re-dispatched this task
+> before the fleet completes: do ONE cheap `gcloud compute instances list | grep features-sports` (or /api state)
+> fleet-status check → if RUNNING, `skip-current-task` fast. **Do NOT file a /blocked question about the redispatch
+> cadence** — main has already ruled it accepted/harmless (BLK-ab91ffa0, BLK-e1428c18) and OWNS flipping
+> `sports-gap-fill-fleet-20260717-complete=true` (EVIDENCE-VERIFIED: manifest coverage on affected dates, ruling out an
+> auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification + checkbox-flip.
+> Just skip-fast until then. Systemic fix filed:
 > `plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md`.
 
+### 2026-07-17T~15:2xZ — data_engineering slot-4 (re-dispatched this sibling todo; reusing this same session's just-completed fleet check, not re-querying)
+
+Re-dispatched (same consolidated fleet as the travel-calculator sibling doc, dispatched to this slot moments earlier in
+the same session). Reusing that check rather than re-querying GCP a second time in a row (would itself be the
+over-watching pattern main's ruling warns against): all 10 `features-sports-sports-20260717-*` VMs confirmed `RUNNING`
+via Compute Engine REST at ~15:2xZ this session; `sports-gap-fill-fleet-20260717-complete` DB-verified still `false` at
+the same timestamp. No new state. `/skip-current-task` per the standing ruling.
