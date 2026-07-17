@@ -21,6 +21,27 @@ summary: >
   This exact plan has an unusually long, well-documented Progress Log (36 consecutive dispatches of the gated child
   task, every single one independently re-verifying Todo 1 as `[ ]` via direct grep) — so this is not a one-off misread,
   it's a confirmed, sustained ground truth that contradicts the backlog's `status=done`.
+
+
+  **REOPENED / ROOT CAUSE FOUND 2026-07-17 — the shipped fix does not close this, and the bug is LIVE RIGHT NOW.** An
+  independent skeptical audit (run before flipping this doc to `resolved`) found the fix guards the wrong thing.
+  `/done`'s `no_plan_flip` check WAS correctly upgraded from warning to a hard-409 (`slots_worker.py:709`, gated by
+  `done_require_plan_flip`, default True) and the `/reopen` correction path DOES exist (`routes/backlog.py:294`) — both
+  as claimed. **But the detector underneath them is insufficient and was never touched.** `check_plan_flip`
+  (`server/verify.py:507`) answers only _"did the verified commit touch the plan-of-record FILE?"_ — its own docstring
+  says exactly that, and the test is a filename match against the commit's file list. It NEVER diffs whether the
+  specific todo's checkbox went `[ ]`->`[x]`. So a `docs(plans): ... re-verified, declining` commit — which appends a
+  Progress Log paragraph to the plan file and deliberately leaves the checkbox unflipped — SATISFIES the gate. That is
+  precisely the `/skip-current-task` pattern this whole doc is about: the fix hard-blocks everything EXCEPT the one case
+  it was built for. **Live reproduction, post-fix**: `l2_book_microstructure_capture-005` and `-007` — two of the exact
+  7 tasks this doc's own Todo 3 audit reopened at ~19:41Z — were back at `status=done` within the same session, citing
+  `done_sha=6edc8325` (19:54Z) and `1e1c2bda8` (19:59Z). Both post-date ALL four fix commits (@87d6fde 19:08, @666c860
+  19:22, @164378c 19:36, @7053dcf 19:53). Both are doc-only commits (33 insertions, plan file ONLY, zero code) whose own
+  messages read "**Checkbox NOT flipped** (still correct)" — and both target checkboxes are STILL `- [ ]` at current LDR
+  HEAD (`l2_book_microstructure_capture_2026_07_13.md:173,213`, re-verified by hand 2026-07-17). **Therefore**: Todo 3's
+  audit was a one-time snapshot that cannot prevent recurrence — and demonstrably did not; the real fix is to make
+  `check_plan_flip` diff the todo's checkbox state across the commit (or match the flip line), not merely detect that
+  the file was touched. No todo in this doc addresses that gap; it was unrecognised until now.
 status: open
 nature: notes
 asset_group: [meta]
@@ -162,6 +183,27 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       3's audit sweep reopens it. Not reopening it myself — that DB/YAML mutation is `[INFRA]`-scoped (Todo 3) and
       outside this `data_engineering` task's remit. (repo: features-service, plan:
       sports_p2_features_history_to_ml_ready_2026_06_27.md) — data_engineering slot-6, 2026-07-16.
+
+- [ ] [BACKEND] P0. **NEW 2026-07-17 — the actual root cause: `check_plan_flip` detects a FILE TOUCH, not a CHECKBOX
+      FLIP. This doc's four shipped commits do not close the bug, and it is reproducing live.** Everything already
+      ticked above is real and stays ticked — the hard-409 (`slots_worker.py:709`) and `/reopen`
+      (`routes/backlog.py:294`) both exist and work. The defect is one layer down: `check_plan_flip`
+      (`server/verify.py:507`) asks only _"did the verified commit touch the plan-of-record file?"_ (its own docstring),
+      implemented as a filename match over the commit's file list. It never diffs the todo's `[ ]`->`[x]`. So the
+      canonical `/skip-current-task` artefact — a `docs(plans):` commit appending a Progress Log paragraph and
+      deliberately NOT flipping the box — passes the gate and is accepted as a `done_sha`. **The gate blocks every case
+      except the one it was built for.** Proof, all post-fix: `l2_book_microstructure_capture-005` (`done_sha=6edc8325`,
+      19:54Z) and `-007` (`1e1c2bda8`, 19:59Z) are 2 of the 7 tasks Todo 3 reopened at 19:41Z, back to false-`done`
+      within the same session; both SHAs post-date all four fix commits; both are plan-file-only (33 insertions, zero
+      code) and say "Checkbox NOT flipped (still correct)" in their own messages; both target boxes are STILL `- [ ]` at
+      LDR HEAD (`l2_book_microstructure_capture_2026_07_13.md:173,213`). **Fix**: make `check_plan_flip` verify the
+      SPECIFIC todo's checkbox transition across the commit — e.g. diff the plan file at `sha^..sha` and require a
+      `-- [ ] …` / `+- [x] …` pair matching the task's `brief`, rather than `found_in_commit = any(f == plan_ref)`.
+      `TaskRow.brief_hash` already pins the exact todo text per task, so the matching key exists. **Gate**: a synthetic
+      doc-only "declining" commit against a plan MUST be REJECTED by `/done` with 409, proven by a regression test that
+      fails on today's code (bug-injection verified), AND no NEW false-`done` row appears in a live 24h window. Also
+      decide the corollary: Todo 3's audit is a one-time snapshot and cannot prevent recurrence, so the reopen sweep
+      must either become periodic or be made unnecessary by this fix.
 
 ## Progress Log
 

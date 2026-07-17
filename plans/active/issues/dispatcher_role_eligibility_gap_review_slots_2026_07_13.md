@@ -15,7 +15,7 @@ summary:
   worker-role task was ever left undone or double-worked, but the dispatcher eligibility check appears to have no
   role-based filter across multiple endpoints, and the accelerating frequency suggests this will keep recurring and
   worsening as backlog volume grows."
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -28,6 +28,16 @@ parent_epic: orchestrator_master
 source: review-agent flags at 08:33, 13:03, 13:17 (main agent session 2026-07-13)
 assigned_vm: NA
 resolved_by:
+  - "agent-orchestrator@962e676 — `review_slot` SLOT-scope filter in the shared `_FILTERS` table (dispatch.py:132
+    `_blocks_review_slot`, registered :199, ctx populated :314). Keys off `config.review_slot_ids()` — deliberately NOT
+    `SlotRow.slot_role`, which is a CRAFT tag that is None for most ordinary workers too and would have broken worker
+    dispatch fleet-wide. Sound because `ensure_review_agents` (autospawn.py:143) is the ONLY path that boots a review
+    agent and only onto slots in that same list, so the gate's slot-set is definitionally identical to the set that can
+    ever run review. Covers all THREE pick_next_task call sites: /boot, /heartbeat and /done
+    (slots_worker.py:204/408/991)"
+  - "VERIFIED 2026-07-17 by independent skeptical audit: SHA reachable; tests/test_dispatch_review_slot_gate.py RUN LIVE
+    at HEAD (5 passed), including the negative control proving a slot_role=None generic worker STILL gets dispatched —
+    direct evidence the dangerous slot_role variant was not shipped"
 locked_by:
 execution_scope: local-only
 assigned_role: backend_engineer

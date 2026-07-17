@@ -12,7 +12,7 @@ summary:
   data_engineering slots and were skipped; 326 per-(slot,task) slot_skips accumulated and persist across respawns,
   starving dispatch; and the monitor agents over-generalized one sports gate to the whole backlog and went passive. This
   doc records the failure mode + the prevention fixes so it does not recur.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -33,6 +33,19 @@ priority: P0
 source: fleet-idle investigation 2026-07-07 (operator-reported no workers running)
 assigned_vm: NA
 resolved_by:
+  - "agent-orchestrator@ff6100ad + @c6a31ed6 — RC-1: `_reconcile_task_fields` propagates a plan retier (model/effort/
+    thinking/assigned_role/priority) onto already-queued tasks, auto-healing the frozen opus/max backlog on the next
+    regen tick (regen_backlog_from_plan.py:1256 call site, :1398 definition)"
+  - "agent-orchestrator@f976b6e4 — RC-2: `_blocks_craft_role` is a live FilterScope.CAPABILITY row in the `_FILTERS`
+    table (dispatch.py:142); a slot with a declared craft never claims a mismatched task"
+  - "agent-orchestrator@07035aba — RC-3: slot_skips hygiene — `slot_skip_ttl_hours` (config.py:643) consumed at
+    dispatch.py:300, plus `clear_slot_skips_for_task` + /unskip-task + /clear-skips routes"
+  - "agent-orchestrator@6ae43b5 — R2: `_spawn_param_plan` resolves per-slot spawn params starved-role-first;
+    `_top_queued_task_params` DELETED (zero hits repo-wide — removed, not shimmed)"
+  - "unified-trading-pm@5a79c4c23 — R3/R4 prompt guards in agents/main.md STEP 2.4/2.6 + monitor.md: never conclude
+    fleet-deadlock from ONE gated task; a stall belief is a HYPOTHESIS until measured per-task"
+  - "VERIFIED 2026-07-17 by independent skeptical audit: all 5 SHAs reachable on origin/live-defi-rollout and every
+    claimed fix confirmed PRESENT at HEAD (not reverted by later refactors)"
 locked_by:
 locked_since:
 execution_scope: local-only
@@ -109,10 +122,15 @@ drift_direction: advance-code
   commit. _(Same RC-1 caveat.)_
 - ✅ Cleared the 145 `slot_skips` rows tied to the 30 queued tasks (backup: VM `/tmp/slot_skips_backup.json`) — fleet
   began resuming (`working` 0→1, `dispatched` 1→2).
-- ⏳ **PENDING OPERATOR DECISION — make the retier/re-home effective on the frozen backlog.** Requires updating the
-  queued tasks' `model`/`effort`/`assigned_role` in `backlog.yaml`, which crosses the **"never hand-edit backlog.yaml"**
-  HARD RULE. Options: (a) one-time scoped correction of the 6 plans' tasks (backed up, reversible); (b) fix RC-1 in
-  regen (below) + reload; (c) delete+regen the tasks (new IDs, lost dispatch state). NOT done autonomously.
+- ✅ **RESOLVED by option (b) — no operator decision needed after all (closed out 2026-07-17).** This item asked the
+  operator to choose how to make the retier effective on the frozen backlog: (a) one-time scoped hand-correction of the
+  6 plans' tasks — which crosses the **"never hand-edit backlog.yaml"** HARD RULE; (b) fix RC-1 in regen + reload; or
+  (c) delete+regen (new IDs, lost dispatch state). **Option (b) shipped** (`agent-orchestrator@ff6100ad` + `@c6a31ed6` —
+  `_reconcile_task_fields`), and it auto-heals the frozen backlog on every regen tick, so (a)'s rule-crossing and (c)'s
+  state loss were both avoided. The marker was simply never cleared: it sat here for 10 days as a phantom decision
+  request that the code had already answered — found by the 2026-07-17 verification audit, not by a reader. **Kept
+  visible rather than deleted**: a stale "PENDING OPERATOR DECISION" is exactly the kind of false signal that makes a
+  doc corpus untrustworthy, so the correction is recorded in place.
 - ✅ Accounts verified HEALTHY (live `/usage` refresh 2026-07-07) — all 4 `unified_status: allowed`, authenticated, not
   rate-limited, subscription headroom. The overage-rejected flags are not a blocker. NO operator action needed on
   accounts.
