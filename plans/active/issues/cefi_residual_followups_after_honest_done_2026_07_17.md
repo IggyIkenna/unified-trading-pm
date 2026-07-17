@@ -369,6 +369,51 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3, orchestrator) — PROD VERIFICATION of the wire bridge: closes BOTH bridge agents' biggest
+  self-declared gap + resolves blueprint open-qs #7, #14, #15.** Both `market-tick-data-service@d302f07a` and
+  `market-data-processing-service@0035f79` shipped with the same honest caveat — "the real GCS catalogue read was never
+  executed against live prod; all tests monkeypatch the map". Closed by running the **actually-shipped code** against the
+  **live prod catalogue** with ADC (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd CLOUD_PROVIDER=gcp
+  CLOUD_MOCK_MODE=false`, `market_tick_data_service.engine.cefi_wire_bridge.get_cefi_wire_map()`):
+  - **The bridge WORKS end-to-end**: `resolve_bucket_name(kind="instruments-store", asset_group="cefi")` resolved →
+    `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`; **424,699 rows loaded**; map built:
+    **423,596 forward keys / 424,465 reverse keys / 439 ambiguous excluded**. So the bucket-resolution + column contract
+    (`venue, instrument_type, raw_symbol, instrument_id`) are PROVEN against the real object, not just synthetic frames.
+  - **open-q #7 RESOLVED — the single honest-unresolved number is `439`** (pinned 3-tuple, pre-rebuild catalogue). The
+    shipped code independently reproduces the orchestrator's earlier pandas measurement EXACTLY, from a different code
+    path. Supersedes the divergent 297 / 777 / 781 figures. **Re-measure after the rebuild lands** (the 9 `:PERP:` fixes
+    may shift it).
+  - **open-q #15 MEASURED — peak RSS `1057 MB`, build time `49.9s`.** The blueprint estimated "~100-150MB". **Reality is
+    7-10× that.** Not a blocker on a 15GB backfill box, but it materially changes the sizing assumption and must be
+    considered where the map coexists with the cached catalogue frame. Recorded, not hand-waved.
+  - **open-q #14 RESOLVED — and it is the OPPOSITE of the blueprint's worry.** The blueprint flagged "decompose ALL
+    types is unproven for per-option and per-expiry-future chains". Measured resolvable 3-tuple keys per type: **OPTION
+    263,378** (by far the largest), **FUTURE 8,362**, **PERPETUAL 5,339**, **SPOT_PAIR 8,374**. OPTION/dated-FUTURE
+    coverage is excellent; no special-casing needed.
+  - **The program's #1 design decision is now PROVEN ON REAL DATA (not a synthetic fixture)**:
+    `canonical_for(BYBIT, SPOT_PAIR, BTCUSDT)` → `BYBIT:SPOT_PAIR:BTC-USDT` and
+    `canonical_for(BYBIT, PERPETUAL, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN`. The 3-tuple genuinely disambiguates the
+    marquee majors that a 2-tuple would have silently excluded → wrapped-wire → non-joining.
+  - **The operator's originating example resolves**:
+    `canonical_for(BITFINEX-FUTURES, PERPETUAL, ADAF0:USTF0)` → **`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`**.
+  - **The UAC agent's case-preservation decision is VINDICATED by prod data** (it was a judgement call at the time):
+    `raw_symbol_for(BINANCE-FUTURES, BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN)` → **`'btcusdt'` (LOWERCASE)**, while the
+    on-disk object is `BTCUSDT.parquet` (uppercase); `raw_symbol_for(BITFINEX-FUTURES, …:ADA-USDT@LIN)` → `'ADAF0:USTF0'`
+    (matches its on-disk stem exactly). Had the reverse map upper-cased, D3's candidate-stem lookup would have **silently
+    missed every BINANCE object**. This is precisely why the D3 stem set must try BOTH the reverse value AND its
+    `.upper()` — now empirically justified, not just specified.
+  - **Still NOT closed**: this ran against the PRE-rebuild catalogue (the `--mode full` rebuild is still running, ~64 min
+    elapsed, CPU climbing) — re-run after it lands. And it proves the MTDS bridge only; the MDPS bridge is a separate
+    module (same shape, same UAC map) whose live read is still unproven.
+
+- **2026-07-17 (slot-3) — HOST SATURATION WARNING (self-inflicted, recorded so it isn't re-learned).** Fanning out
+  concurrent sub-agents drove the shared host to **load average 293 with ~10 concurrent QG runs**. Two agents reported
+  **load-induced false ❌s** (bandit 24.7s vs a 30s limit with 0 findings; a 658s-vs-600s wall-clock budget; a 60s test
+  timeout in a file provably untouched by the change) — all clean when re-run unloaded. The workspace's "shared-host ≤2
+  full QGs" cap is real and I breached it in effect. Mitigation adopted: **one implementation agent at a time** from here.
+  Corollary for anyone reading a QG summary: a red ❌ under load is not necessarily yours — re-run the specific check
+  unloaded before concluding.
+
 - **2026-07-17 (slot-3) — FIX D3 MDPS HALF SHIPPED: the audited cefi silent data-loss is CLOSED on the MDPS side —
   `market-data-processing-service@0035f79`.** Full `bash scripts/quality-gates.sh` GREEN **at the commit SHA**: "ALL
   QUALITY GATES PASSED (218s)", exit 0, **ZERO red (❌) checks in the output** (read the output, not just the exit code
