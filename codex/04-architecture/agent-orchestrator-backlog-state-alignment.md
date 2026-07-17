@@ -61,8 +61,8 @@ PM repo (plans/active/*.md)
     │
     ├─ sorted *.md files
     ├─ skip: INDEX.md, _agent_pings.md, _*.md
-    ├─ [scope filter] skip plans where assigned_vm ≠ this VM's ORCHESTRATOR_VM_ID
-    │  (global plans with no assigned_vm are included by every VM)
+    ├─ [scope filter] skip plans not dispatchable: assigned_vm ≠ planning,
+    │  execution_scope: local-only, or status: draft
     │
     ↓  _parse_open_todos()
     │  - skip YAML frontmatter
@@ -79,7 +79,7 @@ PM repo (plans/active/*.md)
 backlog.yaml (append-only by default)
     │
     └─ [prune_stale=True] also run _prune_stale():
-       - build current_briefs from same scope-filtered plan files
+       - build current_briefs from the same dispatchable plan files
        - any yaml task whose brief ∉ current_briefs = orphan
        - delete orphan yaml entries
        - DELETE orphan state.db rows WHERE status='queued' AND dispatched_to IS NULL
@@ -151,51 +151,43 @@ medium), `tmux_spawn.py` (`--effort` haiku gate), `regen_backlog_from_plan.py` (
 
 ## Invariants
 
-| Invariant                                                             | How enforced                                                                      |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **Dedup by brief**: same description text → same task, not duplicated | `existing_briefs` set; re-runs skip already-seen descriptions                     |
-| **Dedup by task_id**: same slug-NNN → never re-issued                 | `existing_ids` set; `while task_id in existing_ids: next_index += 1`              |
-| **No task steal**: dispatched rows never deleted                      | `prune_stale` filters `status='queued' AND dispatched_to IS NULL` only            |
-| **Audit history preserved**: done rows never deleted                  | Same `prune_stale` filter                                                         |
-| **Idempotent re-runs**: running regen twice produces the same state   | Both dedup sets guarantee this                                                    |
-| **Per-VM scope**: each VM only sees its assigned plans                | `assigned_vm` frontmatter filter; global plans (no `assigned_vm`) seen by all VMs |
+| Invariant                                                             | How enforced                                                           |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Dedup by brief**: same description text → same task, not duplicated | `existing_briefs` set; re-runs skip already-seen descriptions          |
+| **Dedup by task_id**: same slug-NNN → never re-issued                 | `existing_ids` set; `while task_id in existing_ids: next_index += 1`   |
+| **No task steal**: dispatched rows never deleted                      | `prune_stale` filters `status='queued' AND dispatched_to IS NULL` only |
+| **Audit history preserved**: done rows never deleted                  | Same `prune_stale` filter                                              |
+| **Idempotent re-runs**: running regen twice produces the same state   | Both dedup sets guarantee this                                         |
+| **Ingestion scope**: only dispatchable plans are ingested             | `assigned_vm` frontmatter filter (§ below)                             |
 
 ---
 
-## Per-VM scope filter
+## Ingestion scope filter (`assigned_vm`)
 
-```yaml
-# plan frontmatter example
----
-assigned_vm: vm-ml
-title: "features registry versioning"
----
-```
+Since the single-VM migration (2026-06-27) there is ONE orchestrator, so ingestion is a plan-level gate, not a per-VM
+routing decision. `assigned_vm ∈ {planning, NA}` only (enum authority:
+`codex/11-project-management/doc-frontmatter-schema.md`):
 
-- If `assigned_vm: vm-ml` and `ORCHESTRATOR_VM_ID=vm-cefi` → plan skipped.
-- If `assigned_vm: vm-ml` and `ORCHESTRATOR_VM_ID=vm-ml` → plan included.
-- If `assigned_vm` absent → plan included on every VM (global plan).
-- If `ORCHESTRATOR_VM_ID` unset → no filter (backward compatible; all plans ingested).
+- `assigned_vm: planning` (or `human-planning`, a legacy alias) AND not `execution_scope: local-only` AND not
+  `status: draft` → the plan's `- [ ]` todos are ingested into the backlog.
+- `assigned_vm: NA` → not dispatched to anyone (default for new plans).
+- Any `vm-defi`/`vm-cefi`/`vm-ml`/… value is a STALE multi-VM-era artifact — flip to `planning`/`NA` on next touch.
 
-Configure via systemd drop-in:
-
-```ini
-# /etc/systemd/system/orchestrator.service.d/vm-scope.conf
-[Service]
-Environment=ORCHESTRATOR_VM_ID=vm-ml
-```
+The `ORCHESTRATOR_VM_ID` env filter is a retired multi-VM artifact: unset (its only current state) means no per-VM
+filter, which is exactly the single-VM reality. Work routes to slots by **skill** (`assigned_role` / per-task `[TAG]`),
+not by VM — see the single-VM SSOT § "Dispatch".
 
 ---
 
 ## Environment variables
 
-| Variable                                   | Default                 | Purpose                                                             |
-| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------- |
-| `ORCHESTRATOR_PM_REPO_PATH`                | `../unified-trading-pm` | Override PM repo location                                           |
-| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `1800`                  | Tick cadence (30 min; was 6 h/21600); set to `0` to disable         |
-| `ORCHESTRATOR_REGEN_PRUNE_STALE`           | `false`                 | Enable orphan pruning on every tick                                 |
-| `ORCHESTRATOR_REGEN_DB_PATH`               | —                       | state.db path for safe-row deletion (yaml-only prune when unset)    |
-| `ORCHESTRATOR_VM_ID`                       | —                       | VM identifier for `assigned_vm` scope filter (no filter when unset) |
+| Variable                                   | Default                 | Purpose                                                            |
+| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------ |
+| `ORCHESTRATOR_PM_REPO_PATH`                | `../unified-trading-pm` | Override PM repo location                                          |
+| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `1800`                  | Tick cadence (30 min; was 6 h/21600); set to `0` to disable        |
+| `ORCHESTRATOR_REGEN_PRUNE_STALE`           | `false`                 | Enable orphan pruning on every tick                                |
+| `ORCHESTRATOR_REGEN_DB_PATH`               | —                       | state.db path for safe-row deletion (yaml-only prune when unset)   |
+| `ORCHESTRATOR_VM_ID`                       | — (unset)               | Retired multi-VM filter; unset = no filter = the single-VM reality |
 
 ---
 
@@ -249,7 +241,7 @@ Fleet rollout: `unified-trading-pm/scripts/orchestrator/run_fleet_enable_prune.s
 `prune_stale` also cleans state.db (only `status='queued' AND dispatched_to IS NULL`). If orphan rows are in status
 `done` or `dispatched`, they are intentionally kept as audit history — do not delete manually.
 
-### Brief-mutation accumulation (vm-ml/vm-trading-core historical bloat)
+### Brief-mutation accumulation
 
 Root cause: each edit to an unchecked `- [ ] description` line generates a new `brief` that doesn't match the old brief,
 causing a new task ID to be issued while the old one remains as an orphan. Fix: `prune_stale=true` with

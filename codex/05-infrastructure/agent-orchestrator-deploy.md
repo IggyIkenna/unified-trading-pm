@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: agent-orchestrator — deploy + infra reference (central API VM; fleet VMs in worker-topology SSOT)
+title: agent-orchestrator — deploy + infra reference (the single central orchestrator VM)
 summary:
   Deploy + infra reference for the agent-orchestrator central API VM (EC2 13.113.200.22) — SSH access, the systemd-unit
   install script with the KillMode/PrivateTmp/ReadWritePaths flags that must stay, TLS+DNS+CORS setup, and the
@@ -12,16 +12,16 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [orchestrator, infrastructure, aws, ec2, deployment, cloud-run, dns]
-related:
-  [
-    ../04-architecture/agent-orchestrator-overview.md,
-    agent-orchestrator-api-host.md,
-    agent-orchestrator-worker-topology.md,
-    launcher-script-ssot.md,
-  ]
+related: [../04-architecture/agent-orchestrator-overview.md, agent-orchestrator-api-host.md, launcher-script-ssot.md]
 created: 2026-05-19
 authoritative_for: [agent-orchestrator central API VM deploy + infra reference]
-referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-api-host.md, codex/05-infrastructure/agent-orchestrator-dns-cutover.md, codex/05-infrastructure/agent-orchestrator-worker-topology.md, codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/05-infrastructure/agent-orchestrator-api-host.md,
+    codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,19 +31,16 @@ author: ikenna-claude-subagent
 
 # agent-orchestrator — Deploy + Infra Reference
 
-> **Scope (refreshed 2026-05-28)**: This doc covers the **central API VM** — the single TLS-terminating box that the
-> dashboard SPA talks to over HTTPS. It is one node of a larger 11-VM fleet (1 central + 10 epic VMs); the rest of the
-> fleet (the epic VMs at `vm-defi` / `vm-cefi` / …) is documented in
-> [`agent-orchestrator-worker-topology.md`](agent-orchestrator-worker-topology.md). The central VM **also acts as a
-> server-side proxy** to those fleet VMs over the private VPC (`ORCHESTRATOR_USE_PRIVATE_URLS=true`) — see
-> [`agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) § "Connectivity model —
-> centralized API router".
+> **Scope**: This doc covers deploy + infra for the **single central orchestrator VM** — the one TLS-terminating box
+> (EC2 `13.113.200.22`, id `planning`) that runs the backend, serves the dashboard SPA over HTTPS, and hosts all N slot
+> workers as in-process tmux sessions. There are no epic VMs (that fleet was retired 2026-06-27; topology SSOT:
+> [`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md)).
+> The separate `human-planning` VM is interactive-only and never runs backlog work.
 >
-> **Cloud-agnostic posture (codified 2026-05-28)**: today the entire fleet (central VM + 10 epic VMs) runs on AWS EC2
-> ap-northeast-1. The bootstrap, secrets, and launcher pipeline support a `CLOUD_PROVIDER=gcp` toggle to re-spin the
-> fleet on GCE if cost / availability ever forces it; no GCP VMs are running at present, and there is no plan to switch
-> back. The Cloud Run shape documented further below is **historical reference only** — kept so the legacy deploy
-> scripts in `launcher-script-ssot.md` still make sense in context.
+> **Cloud-agnostic posture**: the VM runs on AWS EC2 ap-northeast-1. The bootstrap, secrets, and launcher pipeline
+> support a `CLOUD_PROVIDER=gcp` toggle to re-spin on GCE if cost / availability ever forces it; no GCP VMs run at
+> present and there is no plan to switch back. The Cloud Run shape documented further below is **historical reference
+> only** — kept so the legacy deploy scripts in `launcher-script-ssot.md` still make sense in context.
 >
 > Architecture SSOT:
 > [`../04-architecture/agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) · Operator

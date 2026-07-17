@@ -11,20 +11,22 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, runbook, escalation, self-healing, observability]
-related:
-  [
-    ../04-architecture/agent-orchestrator-overview.md,
-    ../05-infrastructure/agent-orchestrator-deploy.md,
-    ../12-agent-workflow/orchestrator-multi-vm-topology.md,
-  ]
+related: [../04-architecture/agent-orchestrator-overview.md, ../05-infrastructure/agent-orchestrator-deploy.md]
 created: 2026-05-19
-authoritative_for: [agent-orchestrator e2e operator runbook (workspace URL registry + spawn/stale-recovery/escalation procedures)]
+authoritative_for:
+  [agent-orchestrator e2e operator runbook (workspace URL registry + spawn/stale-recovery/escalation procedures)]
 referenced_by:
 owner:
 last_reviewed:
 code_refs:
 author: ikenna-claude-subagent
-execution: {owner: ikenna, cadence: continuous (always-on dashboard), verifier: ikenna + harsh (cross-operator), last_executed: P1 first-deploy 2026-05-19}
+execution:
+  {
+    owner: ikenna,
+    cadence: continuous (always-on dashboard),
+    verifier: ikenna + harsh (cross-operator),
+    last_executed: P1 first-deploy 2026-05-19,
+  }
 ---
 
 # agent-orchestrator — E2E Operator Runbook
@@ -82,8 +84,9 @@ Strict auth is in effect post-2026-05-19 cutover (`ALLOW_ANONYMOUS=False`).
    sign in with the username + password from step 1.
 3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` — central-VM-only secret loaded from
    `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`). The operator JWT validates on the central
-   API only and never leaves that VM — central→worker proxy calls use the separate `ORCHESTRATOR_INTERNAL_SECRET`
-   (codified 2026-05-29; see `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` § "Auth: two-secret model").
+   API only and never leaves that VM — central→worker proxy calls use the separate `ORCHESTRATOR_INTERNAL_SECRET` (see
+   `codex/04-architecture/agent-orchestrator-overview.md` § "Connectivity model — centralized API router" for the
+   two-secret auth model).
 
 Per-backend bootstrap: each backend has its own `data/config/users.json`, but per the centralized-router model
 (2026-05-22) the dashboard only ever logs into the **central** API. Operator JWT is validated there; the central proxies
@@ -317,7 +320,7 @@ runtime state layer.
 | Whose slot is whose?                      | Ikenna's slots live on the EC2 VM (`api.agent-orchestrator.odum-research.com`); Harsh's slots live on his laptop backend (`orch.epiphanytechnologies.com`). Slot IDs CAN collide between sides — there is no global slot ID space. Per Harsh's 2026-05-20 fleet topology: slots 1-20 = main agents (PM-only worktrees), slots 21-30 = workers (all 25 repos) — see `feat(worktrees): role-encode slot branches` in PM (200bbe774) |
 | Branch naming                             | Role-encoded prefix per `setup-tab-worktrees.sh` (200bbe774): `tab/${OPERATOR}m/<N>` for main (e.g. `tab/hkm/3`), `tab/${OPERATOR}/<N>` for worker (e.g. `tab/hk/21`). Ikenna picks his own prefixes — currently `tab/ikenna/<N>` legacy, migrating to role-encoded form                                                                                                                                                          |
 | Both backends visible from dashboard      | `data/config/backends.json` in each backend's repo declares the cross-side URLs. Dashboard dropdown shows both; clicking switches the API the SPA talks to. Login is per-backend — see § "How to log in"                                                                                                                                                                                                                          |
-| Cross-side pings (work coordination)      | Workspace-shared `plans/active/_agent_pings.md` (Ikenna ↔ Harsh, persistent until both ack). Per-slot pings stay intra-side under `<side>_orchestrator/pings/slot_<N>.md`                                                                                                                                                                                                                                                        |
+| Cross-side pings (work coordination)      | Workspace-shared `plans/active/_agent_pings.md` (Ikenna ↔ Harsh, persistent until both ack). Per-slot pings stay intra-side under `<side>_orchestrator/pings/slot_<N>.md`                                                                                                                                                                                                                                                         |
 | Daily work-split                          | Each operator owns `plans/active/work_split_<YYYY_MM_DD>_<side>.md`. Slot 1 main on each side is authoritative for its own work-split; cross-side handoffs via pings                                                                                                                                                                                                                                                              |
 | Mirror events (cross-side via shared LDR) | `.github/workflows/tab-mirror-to-ldr.yml` runs in every repo; both operators' pushes to `tab/**` cascade through. Mirror events from either side land in **both** orchestrator backends if both are reachable (each repo POSTs to the SSOT webhook URL `https://api.agent-orchestrator.odum-research.com/api/mirror-events` — Harsh's backend currently doesn't accept; see Open Items)                                           |
 

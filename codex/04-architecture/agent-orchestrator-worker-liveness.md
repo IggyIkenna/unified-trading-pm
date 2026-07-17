@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — Worker Liveness Watchdog
 summary:
-  WorkerLivenessWatchdog — 60s daemon that KILLS tmux sessions invisible to AutoSpawn on 3 triggers
-  (stuck-at-prompt 180s / heartbeat-silent 900s / context-full immediate); usage-cap context-preserving
-  failover; anti-thrash 5-min cooldown + 20/day cap; AutoSpawn respawns within 60s.
+  WorkerLivenessWatchdog — 60s daemon that KILLS tmux sessions invisible to AutoSpawn on 3 triggers (stuck-at-prompt
+  180s / heartbeat-silent 900s / context-full immediate); usage-cap context-preserving failover; anti-thrash 5-min
+  cooldown + 20/day cap; AutoSpawn respawns within 60s.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,15 +12,16 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, watchdog, slack, infrastructure]
-related:
-  [
-    agent-orchestrator-autospawn.md,
-    agent-orchestrator-overview.md,
-    agent-orchestrator-host-offline-failover.md,
-  ]
+related: [agent-orchestrator-autospawn.md, agent-orchestrator-overview.md, agent-orchestrator-host-offline-failover.md]
 created: 2026-06-01
 authoritative_for: [agent-orchestrator worker-liveness watchdog]
-referenced_by: [codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-autospawn.md,
+    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
+    codex/04-architecture/agent-orchestrator-overview.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed: 2026-06-01
 code_refs:
@@ -181,14 +182,14 @@ infrastructure required.
 
 ## Environment variables
 
-| Variable                                      | Code default | Notes / Purpose                                                                                                                                                                                                                                                                                              |
-| --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`        | `false`      | **Systemd-deployed default: `true` on 10/11 fleet VMs** (drop-in at `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). **Known gap**: `vm-ml` has a broken SSM path — the drop-in has not yet been applied there. Track: `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`. |
-| `ORCHESTRATOR_WATCHDOG_INTERVAL_SECONDS`      | `60`         | Tick cadence                                                                                                                                                                                                                                                                                                 |
-| `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`          | Consecutive frozen ticks before kill (3 × interval = 180s)                                                                                                                                                                                                                                                   |
-| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`        | Heartbeat-silent threshold (15 min)                                                                                                                                                                                                                                                                          |
-| `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`        | Per-slot kill cooldown (5 min)                                                                                                                                                                                                                                                                               |
-| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`         | Per-VM kills before dormancy                                                                                                                                                                                                                                                                                 |
+| Variable                                      | Code default | Notes / Purpose                                                                                                                 |
+| --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`        | `false`      | **Systemd-deployed default: `true`** (drop-in at `/etc/systemd/system/orchestrator.service.d/watchdog.conf` on the central VM). |
+| `ORCHESTRATOR_WATCHDOG_INTERVAL_SECONDS`      | `60`         | Tick cadence                                                                                                                    |
+| `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`          | Consecutive frozen ticks before kill (3 × interval = 180s)                                                                      |
+| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`        | Heartbeat-silent threshold (15 min)                                                                                             |
+| `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`        | Per-slot kill cooldown (5 min)                                                                                                  |
+| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`         | Per-VM kills before dormancy                                                                                                    |
 
 ---
 

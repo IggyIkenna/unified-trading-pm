@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Claude CLI Multi-Account Headless Authentication (SSOT)
 summary:
-  Permanent SSOT for headless multi-account claude CLI auth on orchestrator VMs — use claude setup-token
-  (1-year OAuth token via CLAUDE_CODE_OAUTH_TOKEN, never copy .credentials.json), always unset
-  ANTHROPIC_API_KEY (it silently wins and flips to metered billing), seed a per-session CLAUDE_CONFIG_DIR
-  for interactive TUI, shared-account pool with three rotation triggers, and context-preserving --resume.
+  Permanent SSOT for headless multi-account claude CLI auth on orchestrator VMs — use claude setup-token (1-year OAuth
+  token via CLAUDE_CODE_OAUTH_TOKEN, never copy .credentials.json), always unset ANTHROPIC_API_KEY (it silently wins and
+  flips to metered billing), seed a per-session CLAUDE_CONFIG_DIR for interactive TUI, shared-account pool with three
+  rotation triggers, and context-preserving --resume.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,23 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [orchestrator, authentication, self-healing, monitoring, slack]
-related: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, codex/12-agent-workflow/canonical-plan-flow.md]
+related:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    codex/12-agent-workflow/canonical-plan-flow.md,
+  ]
 created: 2026-05-21
 authoritative_for: [claude CLI multi-account headless setup-token authentication]
-referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/12-agent-workflow/canonical-plan-flow.md,
+    codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    plans/epics/orchestrator_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -440,16 +453,22 @@ plan.
 
 ## Troubleshooting
 
-| Symptom                                                   | Likely cause                                                        | Fix                                                                                                                                                                   |
-| --------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `401 authentication_error` immediately                    | Token invalid or revoked                                            | Regenerate with `claude setup-token`                                                                                                                                  |
-| Billing shows API usage instead of Max                    | `ANTHROPIC_API_KEY` set                                             | `unset ANTHROPIC_API_KEY`, verify with `claude /status`                                                                                                               |
-| `OAuth authentication is currently not supported`         | Known intermittent CLI bug                                          | Wait + retry; verify token wasn't accidentally revoked                                                                                                                |
-| All accounts hit limit simultaneously                     | Rotation logic wrong OR all accounts genuinely exhausted            | `claude /status` per account; if all show limited, wait for 5h window                                                                                                 |
-| Interactive tmux spawn shows "Select login method" wizard | claude 2.1.145+ onboarding wizard ignores `CLAUDE_CODE_OAUTH_TOKEN` | Ensure `tmux_spawn._start_session()` uses `env_file=` path which seeds `CLAUDE_CONFIG_DIR`; verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` |
-| New VM prompts for browser login                          | Token env var not set OR shell didn't source the env file           | `source ~/.claude-accounts/<id>.env` before running `claude`                                                                                                          |
-| Token works locally but not in cron/systemd               | Env vars not inherited                                              | Source env file in cron command OR systemd `EnvironmentFile=`                                                                                                         |
-| Two emails seem to share quota                            | Aliases on same orgId (not distinct subs)                           | Check `claude auth status                                                                                                                                             | grep orgId`; remove the alias from roster |
+| Symptom | Likely cause | Fix | | --------------------------------------------------------- |
+------------------------------------------------------------------- |
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| ----------------------------------------- | | `401 authentication_error` immediately | Token invalid or revoked |
+Regenerate with `claude setup-token` | | Billing shows API usage instead of Max | `ANTHROPIC_API_KEY` set |
+`unset ANTHROPIC_API_KEY`, verify with `claude /status` | | `OAuth authentication is currently not supported` | Known
+intermittent CLI bug | Wait + retry; verify token wasn't accidentally revoked | | All accounts hit limit simultaneously
+| Rotation logic wrong OR all accounts genuinely exhausted | `claude /status` per account; if all show limited, wait for
+5h window | | Interactive tmux spawn shows "Select login method" wizard | claude 2.1.145+ onboarding wizard ignores
+`CLAUDE_CODE_OAUTH_TOKEN` | Ensure `tmux_spawn._start_session()` uses `env_file=` path which seeds `CLAUDE_CONFIG_DIR`;
+verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` | | New VM prompts for browser login | Token
+env var not set OR shell didn't source the env file | `source ~/.claude-accounts/<id>.env` before running `claude` | |
+Token works locally but not in cron/systemd | Env vars not inherited | Source env file in cron command OR systemd
+`EnvironmentFile=` | | Two emails seem to share quota | Aliases on same orgId (not distinct subs) | Check
+`claude auth status                                                                                                                                             | grep orgId`;
+remove the alias from roster |
 
 ## Composes with
 
