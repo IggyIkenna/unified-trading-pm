@@ -133,6 +133,40 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-17 — P2/P3 remaining-work session (`/autonomous`) — working the 13 deprioritized follow-ups
+
+Session working the 13 open P2/P3 todos in the Deferred table below. Journal per unit; each ships commit-push-flip.
+
+**Operating context (READ THIS FIRST if you are a fresh/compressed context):** a **second agent is live in this same
+checkout** right now — confirmed by mtime, not assumed (`deployment-api/deployment_api/services/fixtures_browser.py` +
+`routes/fixtures_browse.py` + `tests/unit/test_fixtures_browser.py` were being edited seconds before this session's
+first tool call; they are extending the fixtures browser with a `team=` filter + absolute `start_date`/`end_date`
+window). Consequences, all of which bite:
+
+1. **`deployment-api`'s full `quality-gates.sh` is RED and not mine to fix** — the LINT stage fails on that agent's live
+   WIP (`fixtures_browse.py` E501, `fixtures_browser.py` RUF100). Every deployment-api unit this session therefore
+   scope-verifies (`ruff check` + `ruff format --check` + `basedpyright` + targeted pytest on MY files only) and cites
+   the carve-out, same precedent as `12c94be`/`e27ba4b`.
+2. **basedpyright is A/B'd against HEAD per unit** rather than trusted absolutely — these files carry pre-existing
+   `reportAny`/`dict[Hashable, Any]` errors, so "0 errors" is unachievable; "**0 NEW** errors vs the HEAD copy of the
+   same file" is the real bar and is what each checkbox cites.
+3. **quickmerge needs `--skip-preflight`** (the flag it documents "for multi-agent use") because deployment-service
+   carries foreign-live `terraform.tfvars` → the dirty-deps pre-flight blocks. Verified safe per unit: that tfvars is a
+   features-service-sports Cloud Run image pin, unrelated to anything shipped here. Same carve-out as `@62cc10f`.
+4. **Post-ship `git show --name-only` is checked EVERY time** to prove quickmerge's whole-file `git add` didn't sweep
+   the foreign hunks (the failure mode that produced `12c94be` + `57d913d`). Zero sweeps so far.
+
+**Shipped this session** (see each checkbox for full evidence): A1 `resolved_date`/`requested_date` on
+`get_honest_coverage` (deployment-api@4e996f8); A3 new-listings false-positive guard (deployment-api@a9b6207 +
+deployment-ui@179c7ce).
+
+**Method note worth keeping**: A3's todo said "quantify the rate (real-GCS query, not a guess)" — doing that FIRST
+changed the outcome. The todo's premise ("legacy rows … inflate 'new'") implied a broad legacy problem; the measurement
+showed the corpus-wide rate (0.87%) is nearly irrelevant to the actual card, which shows a 30-day window where the rate
+is **0.02% and 100% attributable to one venue onboarded 7 days ago**. That reframed the fix from "exclude legacy rows"
+(which would have hidden real listings for no measurable benefit) to "surface a fact about the one real cluster". The
+guard was then re-verified by driving the _shipped service_ against real GCS, not just its fixtures.
+
 ### 2026-07-17 — Playwright re-verification found + fixed a month-old mock-api.ts bug shadowing every /api/data-status/* endpoint
 
 Doing a fresh Playwright pass (mock mode, `VITE_MOCK_API=true`, port 5199) against everything shipped this plan found a
@@ -329,21 +363,21 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 > @62cc10f) is **shipped + flipped**. What remains is 13 lower-priority (P2/P3) follow-ups — none block the page. Rows
 > below map 1:1 onto the open checkboxes above so nothing is lost.
 
-| #   | Remaining item (open `- [ ]` todo)                            | Point         | Pri | Why deferred / next step                                                                           |
-| --- | ------------------------------------------------------------- | ------------- | --- | -------------------------------------------------------------------------------------------------- |
-| 1   | Enrich `mock-api.ts` IS data-status fixtures                  | P5/P7 mock    | P3  | lets local mock-mode render cefi/tradfi/defi cards; LIVE deploy already exercises P4-A/P5/P7.      |
-| 2   | Canonicalise cefi manifest split rows                         | P7 follow-up  | P2  | manifest-drift cleanup on the cefi split rows (display already correct).                           |
-| 3   | Republish instruments-service tarball                         | P1 follow-up  | P2  | so the nightly writer carries the partial-stamping fix — run from a clean tree (tfvars was dirty). |
-| 4   | ~~`resolved_date`/`requested_date` on `get_honest_coverage`~~ | P1 stretch    | P3  | ✅ **DONE 2026-07-17** — deployment-api@4e996f8 (additive fields + 4 new specs).                   |
-| 5   | Distinct `expiry` column in `CATALOG_COLUMNS`                 | P2 clean-LT   | P2  | long-term catalogue schema (expiry currently inferred).                                            |
-| 6   | New-listings false-positive guard                             | P2            | P2  | legacy rows where `available_from == pipeline-first-seen` inflate "new".                           |
-| 7   | Real `question`/`title` column (polymarket/kalshi adapters)   | P3 follow-up  | P3  | upgrade prediction label from slug → human-readable title.                                         |
-| 8   | Root-cause remaining DeFi legacy `instrument_type`            | P4-A (A)      | P2  | grep IS writer for where legacy values still emit (display alias already in place).                |
-| 9   | Drain residual `LENDING`                                      | P4-A (A)      | P2  | finish A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.                                      |
-| 10  | Sports TEAMS data-correctness                                 | P8 (B)        | P2  | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block.               |
-| 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.          |
-| 12  | `/prediction-catalogue` ~39s latency                          | P3 perf       | P3  | pagination/caching/projected read (correct, just slow).                                            |
-| 13  | `/catalogue` unpaginated large-AG cost                        | P6 perf (NEW) | P3  | FIXED@62cc10f but builds all rows (tradfi 1.17M) — push limit/offset into read +/or TTL cache.     |
+| #   | Remaining item (open `- [ ]` todo)                            | Point         | Pri | Why deferred / next step                                                                                   |
+| --- | ------------------------------------------------------------- | ------------- | --- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Enrich `mock-api.ts` IS data-status fixtures                  | P5/P7 mock    | P3  | lets local mock-mode render cefi/tradfi/defi cards; LIVE deploy already exercises P4-A/P5/P7.              |
+| 2   | Canonicalise cefi manifest split rows                         | P7 follow-up  | P2  | manifest-drift cleanup on the cefi split rows (display already correct).                                   |
+| 3   | Republish instruments-service tarball                         | P1 follow-up  | P2  | so the nightly writer carries the partial-stamping fix — run from a clean tree (tfvars was dirty).         |
+| 4   | ~~`resolved_date`/`requested_date` on `get_honest_coverage`~~ | P1 stretch    | P3  | ✅ **DONE 2026-07-17** — deployment-api@4e996f8 (additive fields + 4 new specs).                           |
+| 5   | Distinct `expiry` column in `CATALOG_COLUMNS`                 | P2 clean-LT   | P2  | long-term catalogue schema (expiry currently inferred).                                                    |
+| 6   | ~~New-listings false-positive guard~~                         | P2            | P2  | ✅ **DONE 2026-07-17** — measured 99/439,940 (0.02%, all COINBASE-CDE); provenance flag @a9b6207+@179c7ce. |
+| 7   | Real `question`/`title` column (polymarket/kalshi adapters)   | P3 follow-up  | P3  | upgrade prediction label from slug → human-readable title.                                                 |
+| 8   | Root-cause remaining DeFi legacy `instrument_type`            | P4-A (A)      | P2  | grep IS writer for where legacy values still emit (display alias already in place).                        |
+| 9   | Drain residual `LENDING`                                      | P4-A (A)      | P2  | finish A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.                                              |
+| 10  | Sports TEAMS data-correctness                                 | P8 (B)        | P2  | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block.                       |
+| 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.                  |
+| 12  | `/prediction-catalogue` ~39s latency                          | P3 perf       | P3  | pagination/caching/projected read (correct, just slow).                                                    |
+| 13  | `/catalogue` unpaginated large-AG cost                        | P6 perf (NEW) | P3  | FIXED@62cc10f but builds all rows (tradfi 1.17M) — push limit/offset into read +/or TTL cache.             |
 
 ### 2026-07-16 — Phase A browser-validation of P5/P7/P4-A/P8 (INCONCLUSIVE — mock-fixture gaps, not code bugs)
 
@@ -573,8 +607,38 @@ the exact pattern to clone (it already has a threshold input).
       nice-to-have follow-up, not a blocker.)_
 - [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS`
       (`build_instrument_catalogue.py`) so expiry is stored separately from the overloaded `available_to`; then regen.
-- [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows where `available_from == pipeline-first-seen`
-      (not a real listing), quantify the rate and either show provenance or exclude `available_from == pipeline-start`.
+- [x] [BACKEND] P2. ✅ New-listings false-positive guard — **quantified on real prod GCS first, then chose SHOW
+      PROVENANCE over exclude.** Root cause confirmed by reading the writer (not assumed): `available_from` =
+      `MIN(first_day_observed, declared_from)` (`build_instrument_catalogue.py:1086-1092`), and when a venue declares no
+      listing date that MIN silently degrades to _the day the pipeline first saw the instrument_. **Measured** (all 5
+      AGs, 4,310,720 catalogue rows, 2026-07-17): 37,308 rows (0.87%) corpus-wide carry the signature, but only **99 of
+      the 439,940 rows inside the live 30-day new-listings window (0.02%)** — a SINGLE cluster, `COINBASE-CDE` @
+      2026-07-10, all 99 with `market_created_at` empty (no venue-truth date existed) and expiries running to
+      **2030-12-20**: a long-established venue cannot have listed a 2030 future 7 days ago, so these are
+      pipeline-onboarding artifacts, not listings. **Control proves the signature discriminates**: onboarding floods
+      score high (`BITGET-SPOT` 61% of rows on its first day, `LIGHTER-ZKSYNC` 100%) while established venues are
+      negligible (`DERIBIT` 0.09% of 334,468), and a genuine new listing on an established venue is never tagged.
+      **Decision — surface, don't exclude**: at 0.02%, dropping rows would hide possibly-real listings, and the
+      catalogue stores only the MIN _result_ (not which side won), so a venue that genuinely launched on its first
+      captured day is indistinguishable. The new field `available_from_is_venue_first_day` therefore states a **fact**
+      ("this row's available_from is the earliest date we hold for this venue") and lets the reader judge —
+      honest-absence per this plan's golden rules, not a fabricated verdict. Computed over the WHOLE per-AG catalogue
+      **before** the date window narrows the frame (tagging after windowing would make every row trivially match the
+      window's own min — regression-pinned). Also computed on the expiries path so the shared row type never reports a
+      silent `false`. — deployment-api@a9b6207 + deployment-ui@179c7ce + Evidence: **real-GCS run of the SHIPPED
+      service** (not just fixtures) — `list_new_listings(max_age_days=30, asset_group="cefi")` returns 10,563 rows,
+      flags exactly **99**, all `COINBASE-CDE 2026-07-10` (samples:
+      `COINBASE-CDE:FUTURE:BTC-USD@LIN-20301220 from=2026-07-10 to=2030-12-20`), 0 unflagged CDE rows, and DERIBIT's
+      7,599 in-window rows stay unflagged. Unit: `test_catalogue_lifecycle.py` 8 passed incl. new
+      `TestNewListingFalsePositiveGuard` ×5 (flood tagged / genuine-new-on-established NOT tagged /
+      rows-surfaced-not-excluded / tag-computed-before-windowing / expiries-tag-truthful). UI: `LifecycleCards.test.tsx`
+      8 passed incl. 2 new specs (amber "⚠ listing date unconfirmed" affordance with a full explanatory `title`, row
+      still rendered; established venue unflagged) + full `quality-gates.sh` **green (24s: tsc/eslint/vitest/build)**.
+      `[UI]` + pw:L2 via Vitest per this plan's accepted pattern; mock-api.ts carries a representative COINBASE-CDE
+      flood row so mock mode renders the affordance. basedpyright: **zero new errors** (A/B'd vs HEAD — same 6
+      pre-existing). _(deployment-api's full gate is red on a concurrent agent's live
+      `fixtures_browser`/`fixtures_browse` WIP — zero overlap; my files verified clean in isolation. Same collision +
+      `--skip-preflight` dirty-deps carve-out as A1 above.)_
 
 ## P3 — Prediction markets: category dropdown → human-readable catalogue browser
 
@@ -871,27 +935,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
