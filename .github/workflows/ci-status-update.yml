@@ -42,7 +42,11 @@ permissions:
 
 jobs:
   update-ci-status:
-    runs-on: ubuntu-latest
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
+    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
+    # the job itself. Labels are a SUBSET match, so this never steals a [self-hosted, glue] job.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, Linux, X64, glue-writer]
     outputs:
       skip: ${{ steps.validate.outputs.skip }}
       notify_worthy: ${{ steps.update.outputs.notify_worthy }}
@@ -203,7 +207,11 @@ jobs:
   # ── BUILD MESSAGE BODY (decodes optional failure excerpt) ────────────────────
   build-message:
     name: Build notification message
-    runs-on: ubuntu-latest
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
+    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
+    # the job itself. Labels are a SUBSET match, so this never steals a [self-hosted, glue] job.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, Linux, X64, glue-writer]
     needs: [update-ci-status]
     # Only build/notify on a meaningful TRANSITION (regression to FAILING, or recovery
     # from FAILING). Steady-green + green<->green tier moves are suppressed (anti-spam).

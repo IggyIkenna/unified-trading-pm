@@ -60,7 +60,10 @@ permissions:
 
 jobs:
   check-and-trigger:
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     steps:
       - name: Checkout PM repo
         uses: actions/checkout@v5
@@ -409,7 +412,10 @@ jobs:
   # Checks if the staging lock is dangling (stale > 25 min) and auto-remediates + alerts.
   # Runs in parallel with check-and-trigger; each has its own retry-rebase manifest write loop.
   check-stale-lock:
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     outputs:
       stale: ${{ steps.stale-check.outputs.stale }}
       alert: ${{ steps.stale-check.outputs.alert }}
@@ -512,7 +518,10 @@ jobs:
     name: Auto-remediate — re-trigger SIT for dangling lock
     needs: [check-stale-lock]
     if: always() && needs.check-stale-lock.outputs.stale == 'true'
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     permissions:
       actions: write
       contents: read

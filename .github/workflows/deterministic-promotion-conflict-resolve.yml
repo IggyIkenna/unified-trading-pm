@@ -54,7 +54,10 @@ concurrency:
 jobs:
   resolve:
     name: Deterministic take-LDR resolve (escalate only if genuinely ambiguous)
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     timeout-minutes: 8
     outputs:
       outcome: ${{ steps.run.outputs.outcome }}
@@ -139,8 +142,9 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "Deterministic promotion-conflict resolver: ${{ github.event.client_payload.repo_name || inputs.repo_name }}
-        ${{ github.event.client_payload.target_branch || inputs.target_branch }} → outcome=${{ needs.resolve.outputs.outcome }}"
+        "Deterministic promotion-conflict resolver: ${{ github.event.client_payload.repo_name || inputs.repo_name }} ${{
+        github.event.client_payload.target_branch || inputs.target_branch }} → outcome=${{ needs.resolve.outputs.outcome
+        }}"
       severity: ${{ needs.resolve.outputs.outcome == 'escalated' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.resolve.result }}
       workflow_name: ${{ github.workflow }}

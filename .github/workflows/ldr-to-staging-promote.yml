@@ -55,7 +55,10 @@ concurrency:
 
 jobs:
   promote-ldr-to-staging:
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate
     # (tier_c_promotion_gate._overlay_firestore_ci_status) needs this project env + the SDK
     # installed below, else it silently decides on the STALE manifest ci_status cache.

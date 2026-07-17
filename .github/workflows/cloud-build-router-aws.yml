@@ -44,7 +44,10 @@ jobs:
   defer-on-freeze:
     needs: freeze-check
     if: always() && needs.freeze-check.outputs.blocked == 'true'
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     steps:
       - name: Persist deferred qg-passed payload (AWS)
         env:
@@ -90,7 +93,10 @@ jobs:
     # scripts/cicd/toggle-aws-image-builds.sh; also needs AWS_BUILD_ROLE_ARN provisioned
     # (assigned: Ikenna — plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase 2).
     if: ${{ vars.AWS_BUILDS_ENABLED == 'true' && needs.freeze-check.outputs.blocked != 'true' }}
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     outputs:
       repo: ${{ steps.route.outputs.repo }}
       repo_type: ${{ steps.route.outputs.repo_type }}

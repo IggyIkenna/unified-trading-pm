@@ -56,7 +56,10 @@ jobs:
   t0:
     name: Tier 0 — Core Libraries
     needs: freeze-check
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     timeout-minutes: 90
     if: |
       needs.freeze-check.outputs.blocked != 'true' &&
@@ -208,7 +211,10 @@ jobs:
 
   t0-escalation-issue:
     name: T0 Failure Escalation — GH Issue
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     needs: [t0]
     if: always() && needs.t0.result == 'failure'
 
@@ -246,7 +252,10 @@ jobs:
   # remains as the "core libraries" tier.
   notify-summary:
     name: Slack Morning Summary — Determine conclusion
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     needs: [t0]
     if: always()
     outputs:
