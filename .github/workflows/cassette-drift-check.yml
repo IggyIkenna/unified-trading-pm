@@ -28,7 +28,10 @@ concurrency:
 jobs:
   detect-cassette-drift:
     name: Detect Cassette Schema Drift
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     timeout-minutes: 30
 
     steps:
@@ -45,19 +48,32 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: unified-api-contracts
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+      # No actions/setup-python and no `pip install uv`: this runs on the self-hosted glue pool,
+      # whose python3 IS the slot venv on 3.13 (first on the unit PATH) — the version UAC's
+      # requires-python = ">=3.13,<3.14" demands — and which already provides uv
+      # (scripts/self-hosted-runners/slot-venv-requirements.txt). Re-adding either would
+      # re-download tools that are already resident on a box we pay for 24/7. Provisioning lives
+      # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
+      # THERE, not here. The step this replaced pinned "3.12", which CONTRADICTED UAC's
+      # requires-python and silently made `uv pip install -e .` unresolvable every night.
+      # Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring BOTH steps
+      # (see scripts/self-hosted-runners/hosted-baseline/cassette-drift-check.yml).
 
-      - name: Install uv
-        run: pip install uv
-
-      - name: Install unified-api-contracts dev dependencies
+      - name: Install unified-api-contracts (isolated venv)
         run: |
-          cd unified-api-contracts
-          uv pip install -e . --system 2>/dev/null \
-            || uv pip install pydantic pyyaml --system
+          # The detector ships INSIDE the UAC package (unified_api_contracts.testing.
+          # detect_cassette_drift) since c2e58f200 relocated it out of PM, so an editable
+          # install is REQUIRED — there is no pydantic/pyyaml fallback that can satisfy the
+          # import, and pretending there was is what hid this failure for weeks.
+          #
+          # The venv lives in RUNNER_TEMP, NEVER inside the checkout: the detector does
+          # cassette_dir.rglob("*.yaml"), so a venv under the cassette dir is scanned AS
+          # cassettes — measured locally, it flags .venv/…/markdown_it/port.yaml as drift.
+          # And NEVER `--system`: on the self-hosted glue pool python3 IS the SHARED slot venv
+          # (scripts/self-hosted-runners/slot-venv-requirements.txt), so an editable install
+          # pointing at a _work dir the JIT runner deletes would poison every later job.
+          uv venv "${RUNNER_TEMP}/uac" --python 3.13
+          uv pip install -e ./unified-api-contracts --python "${RUNNER_TEMP}/uac/bin/python"
 
       - name: Run drift detection
         id: drift_check
@@ -67,11 +83,24 @@ jobs:
           DERIBIT_CLIENT_ID: ${{ secrets.DERIBIT_CLIENT_ID_DRIFT }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
         run: |
-          python unified-trading-pm/scripts/dev/detect_cassette_drift.py \
-            --cassette-dir unified-api-contracts \
-            --output-json drift_report.json \
-          && echo "drift_detected=false" >> "$GITHUB_OUTPUT" \
-          || { echo "drift_detected=true" >> "$GITHUB_OUTPUT"; }
+          # Scope = the PACKAGE dir, not the repo root. The root additionally carries ~9
+          # non-cassette yaml (tests/, .github/) plus any venv, and rglob would scan them all.
+          # Measured: root => 188 checked / 29 "drifted" (one a site-packages false positive);
+          # package dir => 179 checked / 28 drifted, all real cassettes.
+          #
+          # Exit contract of detect_cassette_drift.main(): 0 = no drift · 1 = drift · 2 = tool
+          # error (e.g. cassette-dir missing). Do NOT collapse 2 into "drift" — collapsing every
+          # non-zero into drift_detected=true is precisely what let this job run GREEN against a
+          # deleted script, and report a missing file as a positive detection.
+          rc=0
+          "${RUNNER_TEMP}/uac/bin/python" -m unified_api_contracts.testing.detect_cassette_drift \
+            --cassette-dir unified-api-contracts/unified_api_contracts \
+            --output-json drift_report.json || rc=$?
+          case "${rc}" in
+            0) echo "drift_detected=false" >> "$GITHUB_OUTPUT"; echo "No cassette drift." ;;
+            1) echo "drift_detected=true" >> "$GITHUB_OUTPUT"; echo "::warning::Cassette schema drift detected — see the report below." ;;
+            *) echo "::error::detect_cassette_drift FAILED (exit ${rc}) — tool/environment error, NOT drift."; exit "${rc}" ;;
+          esac
 
       - name: Show drift report
         if: always()

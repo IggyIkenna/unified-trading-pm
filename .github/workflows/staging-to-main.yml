@@ -62,7 +62,10 @@ concurrency:
 
 jobs:
   promote-staging-to-main:
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     # Gap 8 (ci_pipeline_self_healing_gaps §"Gap 8", 2026-06-16): the dep-order gate's Firestore
     # ci_status overlay (_fs_overlay → ci_status_store.resolve_ci_status_map) needs this project env
     # AND the SDK installed below; without them it silently fell back to the STALE manifest cache

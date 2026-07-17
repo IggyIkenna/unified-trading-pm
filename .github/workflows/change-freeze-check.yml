@@ -38,7 +38,10 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     outputs:
       blocked: ${{ steps.freeze.outputs.blocked }}
       reason: ${{ steps.freeze.outputs.reason }}

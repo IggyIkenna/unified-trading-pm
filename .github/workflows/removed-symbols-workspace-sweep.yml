@@ -49,7 +49,10 @@ concurrency:
 jobs:
   sweep:
     name: Sweep workspace for removed-symbol references
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     timeout-minutes: 30
 
     steps:
@@ -59,13 +62,19 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: workspace/unified-trading-pm
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+      # No actions/setup-python: this runs on the self-hosted glue pool, whose python3 IS the slot
+      # venv on 3.13 (first on the unit PATH) — the version pyproject requires. Re-adding it would
+      # re-download a Python that is already resident, on a box we pay for 24/7. Provisioning lives
+      # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
+      # THERE, not here. The step this replaced pinned "3.12", which CONTRADICTED the workspace's
+      # requires-python = ">=3.13,<3.14" — the pin was never load-bearing, just stale.
+      # NOTE: this workflow is now self-hosted-ONLY — restoring runs-on: ubuntu-latest requires
+      # restoring setup-python with it.
 
-      - name: Install checker dependency (PyYAML)
-        run: pip install pyyaml
+      # No "Install checker dependency (PyYAML)" step: this job's python3 IS the runner's slot venv,
+      # which already provides pyyaml (scripts/self-hosted-runners/slot-venv-requirements.txt).
+      # Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring this step too
+      # (see scripts/self-hosted-runners/hosted-baseline/removed-symbols-workspace-sweep.yml).
 
       - name: Clone all sibling repositories (shallow)
         env:

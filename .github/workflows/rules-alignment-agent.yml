@@ -34,7 +34,10 @@ concurrency:
 jobs:
   align-rules:
     name: Check and Align Cursor Rules with Plans
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     timeout-minutes: 20
     outputs:
       violations_found: ${{ steps.major-bump-audit.outputs.violations_found }}

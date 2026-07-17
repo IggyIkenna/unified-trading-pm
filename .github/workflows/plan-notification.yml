@@ -26,7 +26,10 @@ jobs:
   # ── Notify on plan change ──────────────────────────────────────────────────
   notify-plan-change:
     name: Notify Slack on plan creation/update
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     if: github.event_name == 'push'
 
     outputs:
@@ -97,7 +100,10 @@ jobs:
   # ── Handle /approve-plan comments ─────────────────────────────────────────
   handle-plan-approval:
     name: Handle /approve-plan comment
-    runs-on: ubuntu-latest
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
     if: |
       github.event_name == 'issue_comment' &&
       startsWith(github.event.comment.body, '/approve-plan')
