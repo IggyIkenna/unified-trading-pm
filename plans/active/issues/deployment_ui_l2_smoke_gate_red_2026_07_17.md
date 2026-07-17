@@ -46,6 +46,7 @@ source:
     deployment-ui/src/lib/mock-api.ts#L1181,
     deployment-ui/src/pages/CostObservability.tsx#L2007,
   ]
+depends_on: []
 ---
 
 # deployment-ui L2 route-smoke gate is RED on LDR (12 failures)

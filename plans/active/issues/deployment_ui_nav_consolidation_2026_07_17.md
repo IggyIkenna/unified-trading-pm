@@ -45,6 +45,7 @@ source:
     deployment-ui/src/App.tsx,
     deployment-ui/src/pages/DeploymentsList.tsx,
   ]
+depends_on: []
 ---
 
 # deployment-ui nav consolidation

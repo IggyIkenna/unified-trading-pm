@@ -40,6 +40,7 @@ source:
     deployment-api/deployment_api/services/data_status/rollup_cache.py,
     deployment-api/deployment_api/routes/health_overview.py#L131,
   ]
+depends_on: []
 ---
 
 # deployment-api mock mode has drifted from live
