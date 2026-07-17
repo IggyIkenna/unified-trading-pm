@@ -106,12 +106,20 @@ the fix is in the deployed tarball) as a normal follow-up backfill pass.
       `pd.to_datetime(fixture["kickoff_utc"], utc=True,     errors="coerce")` (matches the fixtures_history
       normalization 2 lines above). (repo: features-service) — features-service@d878f11a, QG green, shipped via
       quickmerge --agent 2026-07-14.
-- [ ] [DATA] P2. **After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches
+- [x] ✅ [DATA] P2. **After `sports_p2_features_history_to_ml_ready-002` Todo 1 (2015→present compute) reaches
       completion**, identify date-ranges computed BEFORE features-service@d878f11a landed (2026-07-14) whose
       `sports_features/by_date/day=*/feature_group=*` cumulative-travel columns
       (`away_cumulative_travel_30d`/`home_cumulative_travel_30d`/`*_travel_per_game_30d`/`travel_fatigue_ratio`) are
       suspiciously all-NaN for dates with tz-aware `kickoff_utc` fixtures, and gap-fill re-run those with `--force` on
-      the fixed code. (repo: features-service)
+      the fixed code. (repo: features-service) — **Verified NO gap-fill needed**: content-sampled 7,641 real rows across
+      3 independent samples (46 dates spread 2017-2026; the exact 111-date/1,558-shard window matching the documented
+      08:56-12:20:33Z 2026-07-14 crash window; the freshest live day 2026-07-16) — the tz-crash's specific "all 5 travel
+      columns NaN" pattern occurs in **zero** rows. Found a different, bigger, still-open defect instead (home-side
+      venue-coordinate lookup failing near-universally, cumulative-travel hardcoded to 0.0 corpus-wide, including in
+      current-live data) — filed as its own issue doc:
+      `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` (P1, 3 todos). See
+      that doc for full evidence; not absorbing into this issue doc's scope since it's unrelated to the tz-crash this
+      doc tracks. slot-4, 2026-07-17.
 - [x] ✅ [DATA] P3. **Audit whether other sports calculators share the same
       `pd.Timestamp(value, tz="UTC")`-on-possibly-aware-value pattern** — grepped
       `features_service/sports/calculators/*.py` for `tz="UTC"`/`tz=UTC`, found 7 call sites, checked each: -
@@ -798,6 +806,37 @@ checkbox, line 101) contradicts it, same as every one of the last 30+ checks. No
 `/blocked` — the infra issue doc already tracks the fix + audit-sweep todos; this dispatch adds no new information
 beyond confirming both are still open. Declining — no sports/features code touched, Todo 2 checkbox NOT flipped.
 `/skip-current-task`.
+
+### 2026-07-17T12:xxZ UTC — data_engineering slot-4 (39th consecutive dispatch — Todo 1 GENUINELY complete, real Todo 2 work done, verified no gap-fill needed, new issue doc filed)
+
+**Todo 1 confirmed genuinely complete** (not the false-gate bug flagged by slot-13/14/16): parent plan
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` line 118 now reads `[x] ✅` with evidence "10-VM
+`fss-backfill-vm-1..10` fleet (2015-01-01→2026-07-17) all exited rc=0 and self-deleted... 4216/4216 dates fully complete
+(100.0%)". Confirmed via `git log -1`: HEAD is exactly commit `273a7a059` ("docs(plans): flip Todo 1 — sports features
+2015→present compute complete (4216/4216, 100.0%)"), fresh-pulled to `origin/live-defi-rollout` HEAD (`5d3f7b363`), all
+25 slot repos clean. This is real, not the `agent-orchestrator@2d6365f`-related false-`done` bug slot-13/14/16 found on
+the backlog's own status field (that bug was about the BACKLOG task's `status`, not this plan's actual checkbox — the
+checkbox itself is genuinely flipped with real evidence).
+
+**Did the actual Todo 2 work** (identify + gap-fill). Read the sports features availability manifest
+(`gs://features-sports-prd-central-element-323112/_index/availability_index.parquet`, single file, one-time read — not a
+whole-corpus GCS walk) to find `DERIVED_FEATURES`/`captured` shards written before the fix (`features-service@d878f11a`,
+2026-07-14T12:20:33Z): 24,285 rows / 1,845 unique dates pre-fix. Rather than blast a --force re-run across all 1,845
+dates unverified, content-sampled real parquet data first (craft north-star #2: minimum work to move the data correctly)
+— three samples, 7,641 rows total, spanning a broad 2017-2026 stratified sample, the EXACT 111-date/1,558-shard window
+matching the documented 08:56-12:20:33Z crash window (GCS `ls -l` mtimes cross-verified directly against the manifest),
+and the freshest live day (2026-07-16). **Result: zero rows anywhere show the tz-crash's specific all-5-columns-NaN
+pattern.** So Todo 2's originally-recommended action (gap-fill re-run scoped to all-NaN dates) has nothing to act on —
+verified negative, not another decline-for-prereq-reasons.
+
+**Found a different, bigger, still-live defect instead** while sampling: `home_travel_distance_km` NaN in ~100% of rows,
+`away_travel_distance_km` NaN in 86-98.5%, and ALL 5 cumulative-travel columns hardcoded to exactly `0.0` (never NaN,
+never nonzero) in every one of the 7,641 rows checked — including the freshest live day, computed with today's
+fully-patched code. This is unrelated to the tz-crash (traced the mechanism to `_get_team_home_venue_coords` failing to
+resolve venue coordinates almost universally, not the tz exception path) and is NOT something to absorb into this issue
+doc's scope. Filed as its own issue doc:
+`plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` (P1, 3 todos, root-cause
+lead + fix + re-verify). Flipped Todo 2 `[x]` above with this evidence. `/done`.
 
 ### 2026-07-16T18:4xZ UTC — data_engineering slot-14 (37th consecutive dispatch — false-gate dispatch confirmed again, ground truth unchanged, no re-file)
 
