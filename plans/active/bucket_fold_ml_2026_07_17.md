@@ -128,9 +128,18 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       Phase-2 Group-B (signal it unblocked for THIS fold); `-test-` twin gets the test-tier policy. Apply
       STANDARD→COLDLINE@60d whole-bucket in the derived-from-yaml terraform, with a prefix-scoped STANDARD exception for
       `ml-store/configs/` (hot-reloaded config).
+- [ ] [CODE] P1. **SECURITY — gate `CloudModelArtifactStore.load_model` pickle deserialization** (found by the Fold-B
+      UTL adversarial review, security lens). `domain_client/artifact_store.py` `load_model` joblib-deserializes with NO
+      trusted-prefix allowlist and NO sha256 gate — UNLIKE `ModelRegistry` (`_ALLOWED_JOBLIB_PREFIXES` + optional
+      sha256). Pre-existing, but Fold B now CO-LOCATES its objects (`artifacts/`) in the SAME `ml-store` bucket as
+      ModelRegistry (`models/`), so an untrusted object under `artifacts/` becomes a pickle-RCE path through the ungated
+      consumer. Mirror `ModelRegistry._deserialize_model`: enforce keys start with `artifacts/` + optional sha256. NOTE:
+      `artifacts/` is EMPTY today (ml-artifacts was empty) so no live exposure yet — but close before anything writes
+      there. Not a blocker for the UTL scaffold ship (orthogonal to bucket naming).
 - [ ] [CODE] P3. **Alias sunset** — after the reader-fallback window closes and the 5 legacy kinds are grep-clean of any
       resolver caller, hard-remove the `_KIND_ALIASES` entries + retired yaml keys ("no double SSOT"); `terraform plan`
-      stays green. (Deferred to the closeout plan if the window is still open when the other folds land.)
+      stays green. (Deferred to the closeout plan if the window is still open when the other folds land.) ALSO drop the
+      5 shadowed retired ml-* yaml keys (kept during the soft-window) here.
 
 ## Progress Log
 
@@ -228,3 +237,26 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   orphan-key window; buckets already exist so resolution works the instant the key lands). NEXT (Phase C): atomic code
   cutover in dependency order (UTL/yaml T0 → ml-service ∥ deployment), driven as a worktree-isolated workflow,
   QG-green + reader/writer key-parity tests mandatory.
+
+- **2026-07-17, TICK 3 — Phase C Stage 1 (UTL T0 + yaml) IMPLEMENTED + adversarially VERIFIED (workflow
+  `wf_eb976e40-4a6`, 1 impl + 3 verify agents, 0 errors); UNCOMMITTED, remediation in flight.** Impl added: `ml-store`
+  yaml key to all 4 copies (deployment-service/UAC/PM/UTL-fixture, GCP+AWS; 5 legacy keys retained for soft-window); 5
+  `_KIND_ALIASES` → ml-store; `ml-store` in `_OVERRIDE_EXCLUDED_KINDS`; ModelRegistry `models/` prefix +
+  CloudModelArtifactStore `artifacts/` prefix (collision-free); PATH_REGISTRY 4 rows → `ml-store-prd-{pid}` +
+  kind-prefixes; `cloud_interface/constants.py` BUCKET_PREFIXES ml→ml-store; parity tests. **UTL
+  `quality-gates.sh --no-fix` GREEN (302s).** All 3 adversarial reviewers CONFIRMED the core fold correct — verified vs
+  LIVE data (`gcloud storage ls`): `models/model_registry/`, `models/models/{model_id}/training-period-{YYYY-MM}/` exist
+  EXACTLY as ModelRegistry builds; joblib gate admits `models/models/`, rejects siblings; all 5 kinds resolve→ml-store
+  both clouds; 4 yaml copies in sync. 3 verdicts = **CONCERN** (bounded, not FAIL) → remediation agent `a933…`
+  dispatched (no ship):
+  - **FIX 1 (must, in-diff):** `cloud_interface/constants.py get_bucket_name` emitted full-word `-prod-` → non-existent
+    `ml-store-prod-{pid}` (real=`-prd-`) AND the impl agent pinned that phantom name in `test_constants.py` → delegate
+    ml branch to resolver / short-form env + fix test.
+  - **FIX 2 (must, disarms Phase-E landmine):** `core/cloud_constants.py` BUCKET_PREFIXES ml NOT folded (TICK-1 hazard
+    #7) → AWS/override fallback emits old names → BucketNotFound post-delete → fold to ml-store both clouds + test.
+  - **FIX 3 (conditional):** PATH_REGISTRY `training-period=` (equals) vs live/writer `training-period-` (hyphen) → grep
+    liveness; fix only if a live reader reads ModelRegistry artifacts.
+  - **FIX 4 (minor):** UTL fixture "must stay in sync" comment inaccurate → reword.
+  - **CONCERN 4 → new P1 SECURITY todo above:** `CloudModelArtifactStore.load_model` ungated pickle deserialization,
+    amplified by the shared bucket (artifacts/ empty today; NOT a ship-blocker). After remediation re-greens UTL, SHIP
+    UTL + 3 external yaml copies (quickmerge ×4), then Stage 2 (ml-service ∥ deployment ∥ UAC code).
