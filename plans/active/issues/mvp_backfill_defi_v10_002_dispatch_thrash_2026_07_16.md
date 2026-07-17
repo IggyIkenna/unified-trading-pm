@@ -25,7 +25,7 @@ related:
     plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: orchestrator_master
 priority: P1
 source: data_engineering slot-6, dispatched to mvp_backfill_defi_onchain_v10-002 within minutes of slot-15's decline
@@ -125,18 +125,69 @@ the immediate bleed.
       immediately after (gate itself still not met — this todo doesn't flip the G2 checkbox, only stops the redispatch).
       **Still open**: verify it survives the next `PlanRegenLoop` tick (not just `/reload`) per the
       `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` precedent — check back after the next tick. (repo:
-      agent-orchestrator)
+      agent-orchestrator) **CONFIRMED REVERTED 2026-07-17T15:0xZ (data_engineering slot-2, re-dispatched to this task,
+      `already_in_progress:     true`/`dispatch_reason: "resume"`)**: the park did NOT survive. `GET /api/backlog` + the
+      live `agent-orchestrator/data/config/backlog.yaml` both showed `priority: 10` (reverted from `999`),
+      `priority_override` field ABSENT entirely (not even `false`), `prereqs.prerequisites: []` (reverted from
+      `[defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`) — the gating condition itself was untouched
+      (`defi_onchain_v10_universe_v2_seed_or_backfill_progressed=false`,
+      `set_by: data_engineering-slot3,     set_at: 2026-07-16T20:30:56Z`, still live in `/api/state`'s `prerequisites`),
+      only the task's hand-tuning was lost. **Refined root cause — this is NOT a recurrence of Defect A/B from
+      `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` (that doc's fix, `agent-orchestrator@8dd5763`, targets
+      same-id priority re-derivation + docs the `prereqs.prerequisites` field correctly)**: the task's numeric ID
+      SHIFTED from `-002` (what slot-3 parked) to `-001` (what this session was dispatched to) between park-time and now
+      — `mvp_backfill_defi_onchain_v10-003` (the sibling DRIFT-specific todo) was flipped ✅ SUPERSEDED at
+      2026-07-16T13:23Z (BEFORE the 20:3xZ park), so by the time of the NEXT `PlanRegenLoop` tick after the park, only
+      one open checkbox remained in the plan and `regen_backlog_from_plan.py`'s positional numbering (`plan_order`-based
+      suffix assignment across a plan's open todos) reassigned it `-001`. The regen's field-preservation logic (whatever
+      merges hand-tuned `priority`/`priority_override`/`prereqs` across a regen tick) appears to be keyed by task ID —
+      when the ID itself changes, the old `-002` row's hand-tuning has nothing to merge onto and the new `-001` row gets
+      plan-derived defaults. This is a DISTINCT defect from Defect A/B: hand-tuned backlog fields are not durable across
+      a plan-todo-count change that shifts the numeric suffix, even for an id that logically refers to the same checkbox
+      throughout. **Re-applied the park under the current id** (`mvp_backfill_defi_onchain_v10-001`): same condition
+      (already existed, still `false`, reused rather than recreated), `priority: 10→999`,
+      `priority_override: (absent)→true`,
+      `prereqs.prerequisites: []→[defi_onchain_v10_universe_v2_seed_or_backfill_progressed]` directly in the live
+      `agent-orchestrator/data/config/backlog.yaml`, `POST /api/backlog/reload` → `ok:true`, `GET /api/backlog`
+      confirmed `priority: 999` live. Filed a new fix-todo below for the renumbering-drops-hand-tuning defect itself
+      (repo: agent-orchestrator) rather than re-closing this checkbox, since the underlying mechanism is still unfixed
+      and will silently drop this exact park again the next time a sibling todo in this plan resolves (there are none
+      left, but the pattern will recur on ANY multi-todo plan with a parked non-final task). (repo: agent-orchestrator)
 - [ ] [ADMIN] P1. Wire the unpark: whoever owns `data_completion_defi_2026_07_15.md`'s seed-chain progress (or the
       `[INFRA]` VM-relaunch todo) flips `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` → `true` once a chunk
       materially closes the `dex_pool_swaps`/`dex_pool_state` gap, then clears `priority_override`. (repo:
       agent-orchestrator)
 - [ ] [DESIGN] P3. Evaluate the fleet-wide auto-park-on-repeated-skip heuristic described above; write it up as its own
       plan item if the operator agrees it's worth building. (repo: agent-orchestrator)
+- [ ] [CODE] P1. **NEW (2026-07-17, data_engineering slot-2)**: fix `regen_backlog_from_plan.py`'s hand-tuned-field
+      preservation so it survives a task's numeric-suffix renumbering, not just a same-id regen tick. Root cause: task
+      ids are assigned positionally (`<plan-slug>-NNN` over a plan's remaining open todos via `plan_order`), so when a
+      sibling todo in the SAME plan resolves/is removed, every subsequent todo's suffix shifts down — a parked task's
+      hand-tuned `priority`/`priority_override`/`prereqs.prerequisites` are keyed to the OLD id and have nothing to
+      merge onto under the NEW id, silently reverting to plan-derived defaults. Suggested fix direction: key the
+      preservation-merge on a stable identity (e.g. `plan_ref` + a stable per-todo anchor — line-content hash or an
+      explicit todo-id comment in the plan markdown — rather than the positional numeric suffix), or at minimum detect a
+      renumbering (old id disappears + a new id appears at the same `plan_order` position with matching `brief`) and
+      carry the hand-tuning across. Repro: this exact task went `-002` (parked 2026-07-16T20:3xZ) → `-001` (found
+      reverted 2026-07-17T15:0xZ) when its sibling `-003` resolved between those two timestamps. (repo:
+      agent-orchestrator)
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-17** — data_engineering slot-2, re-dispatched to `mvp_backfill_defi_onchain_v10-001`
+  (`already_in_progress: true`/`dispatch_reason: "resume"`, ~19h after the 2026-07-16 park). Fresh
+  `measure_honest_coverage.py --asset-group defi` re-run confirms the gate is still nowhere close on any of the 6
+  data_types (numbers essentially unchanged vs the 2026-07-16T19:47Z reading — `dex_pool_swaps` still ~3.9M
+  `expected_unattempted`) and the seed chain's own remaining work is explicitly "operator/VM, NOT code" per
+  `data_completion_defi_2026_07_15.md`; zero DeFi seed/backfill VMs running for 5 of 6 data_types
+  (`gcloud compute instances list` via the working non-snap SDK). **Found the 2026-07-16 park had been silently
+  reverted**: task id shifted `-002`→`-001` (its sibling `-003` resolved the same evening, shifting the positional
+  numbering), and the hand-tuned `priority`/`priority_override`/`prereqs.prerequisites` did not carry over to the new id
+  — see the refined root-cause note on fix-todo-1 above (a distinct defect from Defect A/B, filed as a new fix-todo).
+  Re-applied the park under `-001` (same pre-existing condition, still `false`); confirmed live via `GET /api/backlog`.
+  No code changes; gate genuinely unmet; checkbox not flipped on the owning plan. `/skip-current-task` after re-parking.
 - **2026-07-16** — Applied fix-todo-1 (data_engineering slot-3, dispatched to `mvp_backfill_defi_onchain_v10-002` at
   20:2xZ). Created prerequisite `defi_onchain_v10_universe_v2_seed_or_backfill_progressed=false`; edited the live
   `agent-orchestrator/data/config/backlog.yaml` entry (`priority→999`, `priority_override→true`,
