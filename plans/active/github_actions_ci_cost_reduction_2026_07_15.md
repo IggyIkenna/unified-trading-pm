@@ -1422,11 +1422,25 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   success on `glue-2`, **`billable: {}`**, and — the part that matters, because green is exactly what a silent no-op
   looks like — `cloud_provider: gcp` → **`Operation completed over 1 objects/339.0 B`**, a real GCS write from the VM.
   Prize re-measured: `ci-status-update` = **14,320 runs/30d ⇒ ~$86/mo**; ~$117/mo across 22 callers.
-  - **① `vars` is NOT available to a composite action — the docs are WRONG, and it cost a run.** Fetching GitHub's
-    contexts doc said "Available"; the Actions YAML schema said `Unrecognized named-value: 'vars'`. I refused to pick a
-    side and measured: the runner **rejects the MANIFEST** — `TemplateValidationException` → `Failed to load action.yml`
-    (run 29565881093). So `CLOUD_PROVIDER`/`CICD_EVENTS_BUCKET`/`AWS_REGION` must be read by the CALLER and passed as
-    inputs. **Same class as `secrets`, which IS documented as unavailable — but nothing warns you about `vars`.**
+  - **① `vars` is NOT available to a composite action — a known, DELIBERATE limitation** (`actions/runner#2551`,
+    `community#43878`, `community#49689`). The runner rejects the **MANIFEST**: `Unrecognized named-value: 'vars'` →
+    `TemplateValidationException` → `Failed to load action.yml` (run 29565881093). **Not a version gap** — our pool runs
+    **v2.335.1, which IS `latest`** (published 2026-06-09). Fix = the documented workaround: the CALLER reads `vars`
+    (where it does resolve) and passes `cloud_provider`/`events_bucket`/`aws_region` as inputs.
+    - **The RULE that makes it make sense, worth more than the fact:** _a composite action gets NOTHING ambient from the
+      repo — only what the caller explicitly hands it._ GitHub withholds **`secrets` AND `vars`** from composite actions
+      for the same stated reason: an untrusted third-party action must not read your org/repo secrets or variables
+      without an explicit opt-in. Two "quirks", one coherent boundary.
+    - **⚠️ CORRECTION — an earlier version of this entry claimed "the docs are WRONG". That was FALSE; it is
+      withdrawn.** The docs' contexts page is **SILENT** on `vars`-in-composite (it states only the `secrets` rule). My
+      WebFetch summary said _"Available… `vars` appears in multiple workflow keys that composite actions utilize"_ —
+      that is the summarizer **INFERRING** from a table about _workflow_ keys, not a quote about actions. I promoted an
+      inference to "the docs say so", then blamed the docs when reality disagreed. **Two lessons, both cheaper than the
+      run they cost:** (a) **when you ask for a verbatim quote and get prose, you got an inference** — and silence in a
+      doc is not a claim; (b) **search the error string FIRST** — `Unrecognized named-value: 'vars'` + composite lands
+      on #2551 immediately, before any theorising. Caught by the operator 2026-07-17: _"github docs would be uptodate i
+      think and if they say it works then we should think if there is something we are not following acc to their docs"_
+      — the right instinct, and the reason the record is now correct.
   - **② THE BIG ONE — a manifest error fails at LOAD time, so `continue-on-error` CANNOT contain it.** I had guarded
     every step, reasoning that persist must never redden a caller's run (plan #220). Useless: validation happens
     **before any step executes**. The broken action **failed `check-secrets` outright**. With 22 callers this means one
