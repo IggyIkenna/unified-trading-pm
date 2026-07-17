@@ -75,11 +75,20 @@ source:
 > `--force` on those 199 dates is no longer a data-loss event** — the derive now yields strictly MORE per horizon
 > (measured: 0 derive rows lost on 1,815/1,815 days).
 >
-> **What still stands**: **fix direction (b) — the per-date loss guard — is STILL P0 and has NOT landed.** The merge
-> removes the known starvation; the guard is what stops the _next_ unknown one from deleting a corpus. Do not read this
-> banner as "historical `--force` is now globally safe": the 1,616 non-merged days were never starved by _this_
-> mechanism, but nothing yet proves they cannot starve by another. **Fix direction (a) remains REFUSED** (the legacy
-> bucket holds nothing unique on those days).
+> **What still stands**: ~~fix direction (b) — the per-date loss guard — is STILL P0 and has NOT landed.~~ **(b) LANDED
+> 2026-07-17 — `market-data-processing-service@6d20fb18`** (features side (c) landed earlier at
+> `features-service@3c15f3ff`). Both re-derive paths are now guarded. The merge removed the known starvation; the guard
+> is what stops the _next_ unknown one from deleting a corpus — and it **immediately earned its keep**: a real `--force`
+> on `day=2023-01-08` was BLOCKED (observations 514 → 61, 2,019 lost), and a 16-date census of 2023-01-05..20 blocked
+> **15/16**. So do NOT read the merge banner as "historical `--force` is now globally safe" — it demonstrably is not;
+> the guard is what makes running it safe. **Fix direction (a) remains REFUSED** (the legacy bucket holds nothing unique
+> on those days).
+>
+> **The second starvation mechanism is now IDENTIFIED** (this doc predicted it existed; `(c)` measured 337 dates of it;
+> `(b)`'s grain work found the cause) — an empty-but-present `fixture_id` column collapses the adapter's dedup key. See
+> the P0 todo in
+> [`./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`](./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md) § "Diagnose
+> the upstream thinning on the 337 guard-aborted dates".
 >
 > _(Superseded banner retained for provenance:)_
 >
@@ -216,9 +225,25 @@ Only T-0 was contaminated. The other seven are real, correctly-bucketed, irrepla
       redundant · 280 (15.4%) add raw keys but 0 derive rows · 199 (11.0%) a real derive gain (742,504 rows) · 0 lose.**
       Gain window 2020-06-14…2024-08-03 (2022: 112 days · 2023: 48 · 2024: 34) — so "2022 truncated / 2024-25 intact" is
       close but not exact. All 199 merged: `market-tick-data-service@75f226e8`.
-- [ ] [CODE] P0. **Add the per-date loss guard to `reprocess_sports_odds.py`** — refuse to write/delete a date whose
-      re-derive yields fewer valid rows per horizon than the corpus holds; emit a loud, countable skip. Must land before
-      any historical sports re-derive is run again by anyone.
+- [x] [CODE] P0. ✅ **(b) Add the per-date loss guard to `reprocess_sports_odds.py` — DONE 2026-07-17,
+      `market-data-processing-service@6d20fb18`.** `app/adapters/sports/odds_loss_guard.py` (pure
+      `evaluate_odds_loss_guard`) + a thin gate in the script, called before EVERY destructive step — the per-shard
+      upload, the `_delete_stale_shards` reconcile, AND the `record_empty` absence claim. 21 unit tests; full QG green
+      (2029 passed). **Observation-SET containment per horizon, NOT the "fewer valid rows per horizon" this todo
+      originally proposed** — a count guard is both too weak and too strong: it waves through a same-count SWAP, and it
+      would abort 100% of dates on the CORRECT post-kickoff fix (which legitimately empties T-0 on every contaminated
+      date). Grain = **(fixture × bookmaker) per horizon** = the adapter's own dedup key; fixture-only would miss
+      bookmaker starvation, and `bookmaker_count_total` is a live downstream feature. **T-0 exemption is SOURCED** from
+      `POST_KICKOFF_CONTAMINATED_HORIZONS` (derived from `TIER1_HORIZONS`, sitting next to the rule it mirrors) so it
+      dissolves automatically if the post-kickoff rule changes — no hardcoded bypass list. Fails CLOSED (unreadable
+      corpus blocks; unresolvable identity blocks rather than passing vacuously). **Proven in the real CLI path**:
+      `--force` on `day=2023-01-08` → `LOSS_GUARD_BLOCKED ... observations 514 -> 61` (2,019 lost); 71 shards
+      byte-identical afterwards — name|mtime|generation|size fingerprint `d85005e9…b61a69` unchanged, mtimes still
+      `2026-07-14`. Census of 2023-01-05..20: **15/16 dates blocked, 1 pass** (`2023-01-12` `no_loss`) — so it is a real
+      discriminator, not a blanket refusal. **Two live dates prove the set-vs-count design**: `2023-01-17` nets MORE
+      observations (46 → 47) yet loses 40 real ones, and `2023-01-19` is 45 → 45 losing 4 — a row-count guard passes
+      both. **⇒ this doc's thesis is CONFIRMED at the MDPS layer too**: the merge fixed 199 days; the hazard is still
+      live and widespread on unmerged historical dates. Anyone running the tool over history is now protected.
 - [x] [DATA] P0. ✅ **Extend the recovery to the ODDS_API raw truncation** — DONE, but NOT via the G1 legacy recovery
       (refused 3x: the legacy bucket holds nothing unique on those days). The rich rows were already INSIDE canonical
       under `pipeline_mode=batch_footystats`; they are now merged into the canonical `batch_odds_api` cells on the 199
