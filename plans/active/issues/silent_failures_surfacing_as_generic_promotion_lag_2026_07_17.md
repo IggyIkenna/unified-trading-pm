@@ -88,15 +88,26 @@ it is currently the only thing that fires, so it absorbs every cause by accident
 
 - **Fault 1 root** — IAM grant added (operator) + `GCP_PROJECT` pinned in `/etc/github-glue-runner.env`; pool restored,
   5/5 runners `Listening for Jobs`, 0 token crashes (was 4,159/2h), queue drained 14 → 4.
-- **Fault 1 silence** — `glue-runner-run.sh` now fails LOUDLY: prints the real gcloud error, redacts token-shaped
-  strings (`gh[ps]_…` → `<REDACTED>`), names the empty-secret case separately, and lists the three likely causes with a
-  copy-pasteable verify command. Verified against simulated PERMISSION_DENIED / token-leak / 0-byte-secret.
+- **Fault 1 silence** — ⚠️ **ATTEMPTED AND REVERTED — still open, see the P0 below.**
 - **Fault 2** — provenance block now carries a stable marker and the lag monitor reports
   `⛔ BLOCKED by the provenance gate — re-ship via quickmerge. Do NOT hand-arm auto-merge`.
 - **Fault 3** — `system-integration-tests` opted into `ldr_main` (fail-OPEN SIT-leaf path, same as `e2e-testing`).
 
 ## Still open — the systemic gap
 
+- [ ] [DEVOPS] P0. **Re-do the `|| true` fix — the first attempt BROKE PROD and was rolled back (2026-07-17).** The
+      replacement block (loud gcloud error + redaction + empty-secret case) passed `bash -n` and passed three
+      simulated-failure unit tests, but on the live runner it died with
+      `glue-runner-run.sh: line 200: GH_TOKEN: unbound variable` — the JIT `generate-jitconfig` curl at ~L195, under the
+      script's `set -euo pipefail`. All 5 runners crash-looped again (~34 restarts) until rollback; service was restored
+      from `${DST}.bak-2026-07-17` within minutes and the repo copy reverted so the SSOT matches the VM. The broken
+      candidate is kept at `/tmp/glue-runner-run.sh.broken-keepme` on the VM for post-mortem. **Why the tests missed
+      it**: they exercised ONLY the changed block in isolation. The failure is an interaction with the REST of the
+      script (~120 lines later, under `set -u`) that no isolated test could see, and `bash -n` checks syntax, not
+      variable binding. **Do not retry without a way to run the whole script end-to-end** — e.g. a
+      `--dry-run`/`--selfcheck` mode that stops before `Runner.Listener`, exercised against a scratch runner slot,
+      before any `systemctl restart`. Roll one unit first and confirm `Listening for Jobs` before touching the other
+      four (the canary DID catch it — but only after the same bad script had already been rolled to all five).
 - [ ] [DEVOPS] P1. **A self-hosted pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness. Cheapest honest signal: alert when a `glue`-labelled job has been `queued` > N minutes while
       `in_progress == 0` — that is unambiguous and needs no VM access. (The `glue-writer` pool stayed healthy

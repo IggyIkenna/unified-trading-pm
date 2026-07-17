@@ -42,42 +42,10 @@ esac
 
 # Token with Administration:write on the repo (JIT config / registration token). Prefer the env
 # (systemd EnvironmentFile); optionally fetch from GCP Secret Manager at runtime so no PAT sits on
-# disk. Set GH_TOKEN_SECRET (+ GCP_PROJECT + gcloud auth for User= on the VM) for the SM path.
-#
-# FAIL LOUDLY (2026-07-17). This block used to end `2>/dev/null || true`, which threw away BOTH the
-# exit code and the reason, leaving GH_TOKEN empty so the `:?` below reported the generic "must be
-# set via EnvironmentFile or GH_TOKEN_SECRET" — a message that describes the SYMPTOM and hides the
-# cause. Cost of that silence, measured: the 2026-07-16 16:19 migration to GH_TOKEN_SECRET=GH_PAT
-# shipped without the secretmanager.secretAccessor grant. Every fetch failed PERMISSION_DENIED, the
-# `|| true` ate it, and all 5 JIT runners crash-looped ~6s apart for 16h (4,159 crashes in a single
-# 2h window) while the pool bled to zero. NOTHING paged: the only visible symptom was a
-# "PROMOTION LAG > 60m" WARNING, which reads identically to normal SIT latency and was initially
-# triaged as such. A credential fetch that fails must SAY SO, in the journal, with the real error.
+# disk. Set GH_TOKEN_SECRET (+ have gcloud ADC on the VM) to use the Secret-Manager path.
 if [ -z "${GH_TOKEN:-}" ] && [ -n "${GH_TOKEN_SECRET:-}" ]; then
-  if ! _sm_out="$(gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
-      ${GCP_PROJECT:+--project="${GCP_PROJECT}"} 2>&1)"; then
-    # Echo the ACTUAL gcloud error (PERMISSION_DENIED / no active account / missing project /
-    # NOT_FOUND). Redact defensively: on the happy path stdout is the token, and a future gcloud
-    # could put a token fragment in an error. Never let a secret reach the journal.
-    echo "[glue-runner] FATAL: could not read secret '${GH_TOKEN_SECRET}' from GCP Secret Manager" \
-      "(project=${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>})." >&2
-    echo "[glue-runner] gcloud said: $(printf '%s' "${_sm_out}" | tr '\n' ' ' | sed -E 's/gh[ps]_[A-Za-z0-9_]+/<REDACTED>/g' | cut -c1-400)" >&2
-    echo "[glue-runner] This runner CANNOT register and will crash-loop until fixed. Likely causes:" >&2
-    echo "[glue-runner]   * the User= identity lacks roles/secretmanager.secretAccessor on the secret" >&2
-    echo "[glue-runner]   * GCP_PROJECT unset in /etc/github-glue-runner.env and no gcloud default" >&2
-    echo "[glue-runner]   * the secret does not exist / has no enabled version" >&2
-    echo "[glue-runner] Verify: sudo -u <User=> gcloud secrets versions access latest --secret=${GH_TOKEN_SECRET} --project=<proj>" >&2
-    exit 1
-  fi
-  GH_TOKEN="${_sm_out}"
-  unset _sm_out
-  # A 0-byte secret authenticates as nothing and produces the same generic `:?` message below —
-  # name it here instead.
-  if [ -z "${GH_TOKEN}" ]; then
-    echo "[glue-runner] FATAL: secret '${GH_TOKEN_SECRET}' resolved but is EMPTY (0 bytes)." \
-      "Its latest version has no payload — check for a botched rotation." >&2
-    exit 1
-  fi
+  GH_TOKEN="$(gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
+    ${GCP_PROJECT:+--project="${GCP_PROJECT}"} 2>/dev/null || true)"
 fi
 : "${GH_TOKEN:?GH_TOKEN (Administration:write on ${OWNER}/${REPO}) must be set via EnvironmentFile or GH_TOKEN_SECRET}"
 
