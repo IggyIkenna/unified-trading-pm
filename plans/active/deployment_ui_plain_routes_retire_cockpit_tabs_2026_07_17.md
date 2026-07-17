@@ -1,12 +1,13 @@
 ---
 doc_type: plan
 title: deployment-ui — one URL scheme — plain routes, retire `?tab=`
-summary:
-  The UI mixes two URL schemes — plain `/vm-deployments` and `/cockpit?tab=deployments` — so the same screen is reachable
-  two ways and which chrome you get depends on which link you clicked. Standardise on PLAIN routes and retire the
-  `?tab=` scheme, using a React Router layout route to keep the cockpit's shared chrome + prefetch context. This also
-  FIXES a real bug the tab scheme caused: because the cockpit shell owns the URL, embedded tabs cannot own their query
-  params, so `DeploymentsContent` abandons the URL for local state when embedded — silently losing filter deep-linking.
+summary: >-
+  The UI mixes two URL schemes — plain `/vm-deployments` and `/cockpit?tab=deployments` — so the same screen is
+  reachable two ways and which chrome you get depends on which link you clicked. Standardise on PLAIN routes and retire
+  the `?tab=` scheme, using a React Router layout route to keep the cockpit's shared chrome + prefetch context. This
+  also FIXES a real bug the tab scheme caused: because the cockpit shell owns the URL, embedded tabs cannot own their
+  query params, so `DeploymentsContent` abandons the URL for local state when embedded — silently losing filter
+  deep-linking.
 status: active
 nature: process
 asset_group: [meta]
@@ -25,7 +26,7 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-assigned_role: frontend_engineer
+assigned_role: ui_developer
 model_tier: opus-required
 drift_direction: advance-code
 sequential: true
@@ -103,8 +104,8 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
       exists — keep, it is canonical), plus `/deploy`, `/fleet`, `/consolidators`, `/ci`, `/alerts`, `/launch`,
       `/chaos`, `/safety-ops`, and `/cockpit` (health). Reuse each existing `*Content` verbatim. Retire
       `searchParams.get("tab")` + `VALID_TABS` + `onTabChange`.
-- [ ] [UI] P1. `NAV_GROUPS` SSOT (`NavMenu.tsx`) → plain routes only; the top bar becomes 15 uniform NavLinks (kills
-      the `cockpit-tab-*` vs `cockpit-navlink-*` split — the very inconsistency that motivated this). Delete the
+- [ ] [UI] P1. `NAV_GROUPS` SSOT (`NavMenu.tsx`) → plain routes only; the top bar becomes 15 uniform NavLinks (kills the
+      `cockpit-tab-*` vs `cockpit-navlink-*` split — the very inconsistency that motivated this). Delete the
       `legacy: true` "Duplicate routes — pending removal" group AND its routes together (orphan-audit rule).
 - [ ] [UI] P1. Delete the now-genuinely-duplicate surfaces: `/ops/live-deployments` (its `LiveDeploymentsContent`
       renders inside `/deployments`) and the dead `pages/DeploymentsList.tsx` + its test (verified 2026-07-17: 0
@@ -129,12 +130,13 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
 
 ## Success criteria
 
-- ONE URL scheme: every screen has exactly one plain canonical URL; `?tab=` resolves nowhere and `searchParams.get("tab")`
-  is gone.
+- ONE URL scheme: every screen has exactly one plain canonical URL; `?tab=` resolves nowhere and
+  `searchParams.get("tab")` is gone.
 - `/deployments?umbrella=batch&status=failed` applies BOTH filters (the deep-link bug is fixed, proven by the existing
   smoke assertions passing unweakened).
 - No `embedded ?` dual-paths remain in `Deployments.tsx` / `DeploymentDetail.tsx`.
-- The shared shell still does NOT remount between screens (layout route), and `/cockpit` still renders the health rollup.
+- The shared shell still does NOT remount between screens (layout route), and `/cockpit` still renders the health
+  rollup.
 - Nav = 15 uniform NavLinks; the legacy quarantine group and its routes are gone together; orphan-audit green.
 - tsc + ESLint + Vitest + Playwright green; pw:L2 ✓ cited.
 
