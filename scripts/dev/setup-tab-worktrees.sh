@@ -453,7 +453,7 @@ copy_workspace_file() {
 # Seed a slot's Claude Code agent symlinks at provision time:
 #   • <slot>/CLAUDE.md             → the startup-load ruleset point for an orchestrator-spawned
 #                                    agent (CWD = the slot root, isolated CLAUDE_CONFIG_DIR).
-#   • <slot>/.claude/skills/<name> → each /<skill> slash-command.
+#   • <slot>/.claude/skills       → cursor-configs/skills/ (ONE dir link → every /<skill> command).
 # Without this, those symlinks first appear only on the slot's FIRST quality-gates.sh run (whose
 # post-gate calls the SAME helper), leaving a freshly-provisioned slot bare until then. We reuse
 # the SSOT linker (no logic fork) so provision-time and QG-time seeding stay byte-identical.

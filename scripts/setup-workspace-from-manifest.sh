@@ -306,10 +306,11 @@ else
     ok "  skip workspace-ROOT CLAUDE.md (non human-planning host — avoids slot double-load)"
 fi
 
-# Claude Code skills: symlink each PM cursor-configs/skills/<name>/ into .claude/skills/<name>/ so
-# the harness discovers them as /<name> slash-commands on every slot/host (no manual wiring).
-# Canonical impl (RELATIVE symlinks, idempotent, CI no-op) is link-claude-skills.sh — the SAME
-# helper PM quality-gates.sh runs post-gates, so init and every QG keep .claude/skills/ fresh.
+# Claude Code skills: point .claude/skills at PM cursor-configs/skills/ as ONE dir symlink, so the
+# harness discovers every /<name> slash-command on every slot/host (no manual wiring, and no
+# re-linking when a skill is added). Canonical impl (RELATIVE symlink, idempotent, CI no-op) is
+# link-claude-skills.sh — the SAME helper PM quality-gates.sh runs post-gates, so init and every QG
+# keep .claude/skills fresh.
 if [ -x "$PM_DEST/scripts/workspace/link-claude-skills.sh" ]; then
     bash "$PM_DEST/scripts/workspace/link-claude-skills.sh" "$WORKSPACE_ROOT"
 fi

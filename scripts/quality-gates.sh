@@ -810,11 +810,12 @@ if [ -f "$FLOW_CHECKER" ]; then
     fi
 fi
 
-# ── Post-gates: ensure Claude `/<skill>` discovery symlinks (.claude/skills/*) ──
-# Best-effort, RELATIVE symlinks, NO-OP in CI. Regenerates the workspace-root .claude/skills/<name>
-# symlinks from cursor-configs/skills/ so every slot surfaces each /<skill> without a manual setup
-# step. The helper always exits 0 and self-skips under CI, so it can never disturb the gate or a
-# GHA runner. SSOT: scripts/workspace/link-claude-skills.sh.
+# ── Post-gates: ensure the Claude `/<skill>` discovery symlink (.claude/skills) ──
+# Best-effort, RELATIVE symlink, NO-OP in CI. Asserts workspace-root .claude/skills as ONE symlink
+# to cursor-configs/skills/ so every slot surfaces each /<skill> without a manual setup step — and
+# so a NEW skill needs no re-linking at all (it just appears through the dir link). The helper
+# always exits 0 and self-skips under CI, so it can never disturb the gate or a GHA runner.
+# SSOT: scripts/workspace/link-claude-skills.sh.
 # NB: the helper ALWAYS exits 0 (CI self-skip + internal best-effort), so the caller needs no
 # error-swallowing suffix here — and such a bypass in quality-gates.sh is itself banned by the
 # codex-compliance ratchet (so do not add one).
