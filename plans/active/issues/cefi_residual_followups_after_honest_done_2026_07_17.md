@@ -378,6 +378,16 @@ pairs stay honest-unresolved (reported, never guessed).
       one carries it (the drain stops WRITERS only; readers keep running against renamed/rewritten objects). Includes an
       **execution-service redeploy** even though it needs no code change. (repos: market-tick-data-service,
       market-data-processing-service, features-service, execution-service)
+- [ ] [INFRA] P1. **Fix the features-service image build — stale base-image UAC (non-cutover-blocking).** features'
+      `6ab22c6` main build FAILS: `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` → ImportError, because features
+      uses `uv pip install --no-sources` and relies on the UAC baked into its pinned `BASE_IMAGE_DIGEST`
+      (unified-trading-library base image predates the symbol) — whereas MTDS/MDPS/execution COPY fresh UAC source and
+      build clean. Fix = bump features' `BASE_IMAGE_DIGEST` to a base image with fresh UAC, OR switch features to
+      COPY-fresh-UAC-source like its siblings. NOT a cutover blocker: features' cefi read is a filename-agnostic bulk
+      day-scan, so the D2/D4 rename can't break it (found 2026-07-18, Phase-B deploy characterization; rebuild
+      `5eb274fa` triggered to confirm). Adjacent: the UAC Artifact-Registry wheel is frozen at 0.72.0 (2026-06-27) —
+      irrelevant to these source/base-image consumers but a fleet-hygiene item for AR-wheel UAC consumers. (repo:
+      features-service)
 - [ ] [SCRIPT] P1. **Fix the one campaign script our rename breaks** —
       `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches the filename LEAF (:294) against hardcoded
       WIRE forms (:273-274) over `asset_group=cefi` → silently mis-matches post-D4-rename. Either make the leaf-match
@@ -426,6 +436,44 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3, /autonomous) — PHASE B (deploy) CHARACTERIZED: the cutover-critical consumers are UAC-fresh +
+  deploy-ready; writers relaunch on a fresh tarball; ONE non-blocking features-service build bug found + tracked.**
+  Deploy topology measured, not assumed:
+  - **Consumers deploy via Cloud Build → Docker image (`:$SHORT_SHA`/`:latest`); they are NOT long-lived Cloud Run
+    services** (only a `trigger-market-tick-cefi-job` appears in Cloud Run) — batch/VM/job workloads that pick up the
+    new image at next invocation. A `^main$` trigger auto-builds each image on main-push, so Phase A's main-merge
+    already kicked image builds.
+  - **Image-readiness on origin/main**: MTDS `bde4880` **SUCCESS** ✅ (write-side + D3 reader bridge — a successful
+    build PROVES its container carries `CeFiWireCanonicalMap`); MDPS `01c06e6` **SUCCESS** ✅; features `6ab22c6`
+    **FAILURE**; execution-service COPIES fresh UAC + sibling source into its build (`Dockerfile:47`, uv local-path dep)
+    so it resolves fresh UAC — needs a redeploy (operator-gated, live trading) but no UAC blocker.
+  - **Writers** (MTDS Tardis + on-chain VMs): re-launch on a FRESH deployment-scripts tarball
+    (`launch-cefi-sharded-backfill.sh` calls `lc_verify_tarball_freshness`, which ABORTS on a stale tarball) → they pick
+    up the Phase-0 3-tuple code at the Phase-E re-launch. This satisfies blueprint blocking-risk #2 (writers re-enabled
+    only onto fixed code) with NO redeploy-now needed — the running writers are drained + relaunched in Phase D/E
+    anyway.
+  - **features-service build FAILURE (diagnosed, NOT a cutover blocker)**: Step-7 QG in the Docker build →
+    `features_service/cross_instrument/engine/cefi_wire_bridge.py:59 from unified_api_contracts import CeFiWireCanonicalMap`
+    → `ImportError` against a STALE UAC. Root cause: features uses `uv pip install --no-sources` and relies on the UAC
+    baked into its pinned `BASE_IMAGE_DIGEST` (unified-trading-library base image), which predates
+    `CeFiWireCanonicalMap` — whereas MTDS/MDPS/execution COPY fresh UAC source. NOT a cutover blocker because features'
+    cefi read is a filename-agnostic BULK day-scan (per the FIX-D-features finding), so the D2/D4 rename cannot break it
+    and the bridge only adds the canonical column-join (degrades to prior behaviour when unavailable). Triggered a fresh
+    rebuild (`5eb274fa`) to confirm cache-vs-real (expected to still fail → the fix is a base-image-digest bump / switch
+    features to COPY-fresh-UAC-source like its siblings; tracked as a Phase-B follow-up todo below). **Rule-11 note**:
+    efd3e038's LOCAL QG was green (editable UAC sibling had the symbol) yet the Docker build resolves a stale base-image
+    UAC — the exact local-green≠fleet-green gap; our import merely surfaced features' latent build-config divergence.
+  - **Adjacent fleet finding (documented, NOT fixed here — semver-agent owns version bumps, manual bump is banned)**:
+    the UAC Artifact-Registry wheel is frozen at **0.72.0 (2026-06-27)**; no `v*` tag cut since
+    (`git describe origin/main` = `v0.71.0`), so any consumer that installs UAC FROM THE AR WHEEL is ~3 weeks stale (no
+    `CeFiWireCanonicalMap`). Mostly irrelevant to these 4 consumers (they resolve UAC from copied source / base image,
+    not the AR wheel) — but a real fleet-hygiene item worth a look for AR-wheel UAC consumers. UAC semver/release
+    workflows exist (`semver-agent.yml`, `request-major-bump.yml`); why no release cut in 3 weeks is a separate CICD
+    question, flagged.
+  - **Net for the cutover**: no UAC blocker on the cutover-critical path — MTDS(writer+reader) + MDPS images ready,
+    execution copies fresh source (redeploy at cutover), writers relaunch on fresh tarball. features = a tracked
+    non-blocking follow-up.
 
 - **2026-07-18 (slot-3, /autonomous resume) — ✅ PHASE A IS ALREADY DONE: all 6 program commits' Phase-0 code is on
   `origin/main`. The "4 provenance strands" self-resolved; NO revert-on-LDR / re-ship / shared-history surgery is needed
