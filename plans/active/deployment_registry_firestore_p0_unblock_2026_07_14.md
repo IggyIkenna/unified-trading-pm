@@ -109,15 +109,48 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       (`docs(plans):`), so the fleet ingests Phase 1. Activate ONLY the immediate next phase, nothing further
       downstream.
 
-## Folded-in scope 2026-07-15 (plan-reconcile §6)
+## Folded-in scope 2026-07-17 (registry-fork discovery — the REAL dual-write blocker)
 
+- [x] ✅ [BACKEND] P0. **Re-land the `deployments_registry` relocation so the VM write path reaches the dual-write
+      registry.** Measured 2026-07-17: prod Firestore `deployments` = **0 docs** (collection absent) while GCS
+      `deployments/active/` held 3 live blobs — because `deployment-service/deployment_service/deployments_registry.py`
+      was a **stale 583-line fork with ZERO Firestore/dual-write**, and the VM writer
+      (`scripts/vm/deployment_heartbeat.py`) imported THAT, not UTL's dual-write-capable
+      `unified_trading_library/deployment_registry.py`. So the flag was never the blocker — flipping it fleet-wide would
+      have produced exactly 0 Firestore docs. Root cause: `deployment-service@b665123` landed the relocation correctly
+      (deleted the fork + repointed all 10 consumers), then `deployment-service@d8695e3` **reverted** it because the UAC
+      invariant test still pinned the old path and UTL's module "was never landed" — but UTL's module HAD landed
+      (`unified-trading-library@5926c6f0`, a slot race), and the invariant test was subsequently repointed at UTL
+      (`unified-api-contracts@de13f4bc`). Both reasons for the revert are now obsolete, so the revert was reverted.
+      Parity diff before re-landing: UTL's module is a strict SUPERSET (identical 28-field dataclass, byte-identical
+      `to_json()` → GCS writes unchanged; PLUS dual-write, `query_by_status`, `max_reap`, true-exit-code reap, more
+      defensive `from_json`). VM bootstrap already ships `unified-trading-library-code` to every VM (`NEEDED_TARBALLS` /
+      `CORE_REPOS` unchanged — comments only), so the import resolves at runtime. — deployment-service@0676ba12,
+      unified-trading-library@7b0dc3be. QG green both repos (deployment-service 2664 passed; UTL 141s fresh, 0 type
+      errors).
+- [x] ✅ [BACKEND] P0. **Harden `_maybe_build_registry_store()` so dual-write can never break a VM's heartbeat.**
+      Exposed by the re-point above: it called `UnifiedCloudConfig()` + `build_deployment_registry_store()` UNGUARDED
+      inside `DeploymentsRegistry.__init__`, which every VM's heartbeat helper constructs at bootstrap — the same
+      bootstrap phase that makes sibling `_resolve_default_bucket()` wrap its own `UnifiedCloudConfig()` in try/except.
+      A raise there would silently cost the fleet its registry writes + lifecycle events (exactly the failure the VM
+      bootstrap comments warn about), and it would fire precisely when the flag is flipped (SDK + client construction
+      start running on VMs). Now degrades to GCS-only with a warning, consistent with `_mirror_firestore`'s best-effort
+      policy. +2 regression tests (config raises → GCS-only; flag-on + store-build raises → GCS-only). —
+      unified-trading-library@7b0dc3be.
 - [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
       last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
       **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3): validated against REAL
       Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
-      (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. Enabling the flag on live VMs needs the
-      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy. (FOLDED IN from
+      (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on live VMs needs the
+      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED 2026-07-17 — that
+      deploy-gated framing was wrong on BOTH counts**: (i) the deploy already happened automatically via the standing
+      LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed 2026-07-15T03:20Z,
+      verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker was never the deploy
+      or the flag but the stale registry fork on the VM write path (see the two P0 todos above) — with the fork in
+      place, flipping the flag fleet-wide would have written 0 Firestore docs. Now genuinely unblocked: the flag is the
+      remaining lever, and it must be set where the writes ORIGINATE (the VM launch env for the heartbeat fleet, plus
+      deployment-api for the reaper), not on Cloud Run alone. (FOLDED IN from
       deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -128,6 +161,45 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-17 (slot 5, Opus — local execution)** — **Found and fixed the REAL dual-write blocker: a stale registry fork
+  on the VM write path.** Prompted by the operator asking "are the VMs writing to Firestore now?", measured rather than
+  assumed:
+  - **Measurements**: prod Firestore `deployments` = **0 docs** (the collection does not exist — absent from the
+    project's 28 top-level collections). GCS `gs://deployment-scripts-central-element-323112/deployments/active/` = **3
+    live blobs** (still the SSOT). `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` unset on deployment-api Cloud Run AND
+    referenced by **zero** VM launchers.
+  - **Root cause (NOT the flag, NOT the deploy)**: two `DeploymentsRegistry` classes existed.
+    `deployment-service/deployment_service/deployments_registry.py` was a stale 583-line fork with **zero** Firestore /
+    dual-write refs, and the VM writer `scripts/vm/deployment_heartbeat.py` imported THAT one — while P1's dual-write
+    (17 refs) lives in UTL's `deployment_registry.py`, which the VMs never touched. Flipping the flag fleet-wide would
+    have produced exactly **0** Firestore docs. This invalidates the earlier "the one lever is enabling the flag" claim
+    recorded in this chain.
+  - **How the fork survived**: `deployment-service@b665123` did the relocation correctly (deleted the fork + repointed
+    all 10 consumers). `deployment-service@d8695e3` **reverted** it, citing (i) "UTL's module was never landed" and (ii)
+    the UAC cross-repo invariant test pinning the old path. Both are now obsolete — UTL's module HAD landed
+    (`unified-trading-library@5926c6f0`; a slot race made (i) look true), and the invariant test was repointed at UTL
+    (`unified-api-contracts@de13f4bc`) by the resolution of
+    [`issues/uac_cross_repo_invariant_incomplete_deployment_service_migration_2026_07_13.md`](issues/uac_cross_repo_invariant_incomplete_deployment_service_migration_2026_07_13.md).
+    Nobody un-reverted, so the fork sat back on the write path for 4 days.
+  - **Parity diff before re-landing** (the gate on doing this safely): UTL's module is a strict **superset** — identical
+    28-field dataclass, **byte-identical `to_json()`** so GCS blobs are unchanged (zero migration risk), plus
+    dual-write, `query_by_status`, `max_reap`, true-exit-code reap, and a more defensive `from_json` (the fork passed
+    raw `object` through for `completed_at`/`exit_code`). VM bootstrap already ships `unified-trading-library-code` to
+    every VM (`NEEDED_TARBALLS` / `CORE_REPOS` unchanged — comments only), so the import resolves at runtime.
+  - **Hazard found + fixed while re-pointing**: `_maybe_build_registry_store()` (my own P1 code) called
+    `UnifiedCloudConfig()` + `build_deployment_registry_store()` **unguarded** inside `DeploymentsRegistry.__init__` —
+    which every VM's heartbeat helper constructs at bootstrap, the exact phase that makes sibling
+    `_resolve_default_bucket()` guard the same call. Latent while only deployment-api constructed it; live on every VM
+    after the re-point, and it would fire precisely when the flag is flipped. Now degrades to GCS-only + warning.
+  - **Shipped**: deployment-service@0676ba12 (re-land: fork + its 694-line duplicate test suite deleted, 10 consumers
+    repointed incl. the VM writer), unified-trading-library@7b0dc3be (hardening + 2 regression tests). QG green both,
+    fresh runs with the content-sentinel cleared first (deployment-service **2664 passed**, 77s; UTL 141s, **0 type
+    errors**).
+  - **Net**: the fleet write path now reaches the dual-write registry. The flag is finally the real remaining lever —
+    and it must be set where writes ORIGINATE (VM launch env for the heartbeat fleet + deployment-api for the reaper),
+    not on Cloud Run alone. No VM has been re-imaged yet, so Firestore stays at 0 docs until the fleet picks up the new
+    tarball AND the flag goes on. The P3 GCS delete remains correctly blocked per the operator's 2026-07-14 ruling.
 
 - **2026-07-14 (local execution, this session)** — Pulled the whole 6-phase chain to local execution (`assigned_vm: NA`
   / `execution_scope: local-only` on all 6 plans) after 6h on AO left 3/6 P0 todos still `queued` with no slot
