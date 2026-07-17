@@ -1977,3 +1977,11 @@ re-read the file, both survived. This stops the guaranteed-no-op redispatch of `
 **Not attempting `-001`/`-002` myself this dispatch** (out of scope for the `-003` task I was actually assigned — one
 task at a time per worker discipline, and slot-8 is already actively driving `-001` per the entry immediately above).
 `/skip-current-task` on `-003` — now correctly gated, won't be redispatched until `-001`+`-002` are genuinely done.
+
+### 2026-07-17T15:24Z — data_engineering slot-11 (Todo `-001` "Full-history enrichment phase" — cheap re-check, unchanged since slot-8's relaunch 9 min ago, decline)
+
+Dispatched to `-001`. Re-checked the fleet slot-8 relaunched above
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) — all 5 still `RUNNING`, only ~9 min elapsed since
+launch, well inside slot-8's own "likely many hours" ETA for the full `2020-06-06→2026-07-17` range. No material change
+to re-derive; not re-running the gate query (would reproduce the same not-green result at real compute cost). Declining
+— no action taken, no code touched. `/skip-current-task`.
