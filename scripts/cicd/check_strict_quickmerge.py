@@ -103,7 +103,54 @@ def _has_skip_ci_literal(sha: str) -> tuple[bool, str]:
     return False, ""
 
 
-def commit_violates(sha: str) -> tuple[bool, str]:
+_REPROVENANCE_RE = re.compile(r"^Reprovenance:\s*([0-9a-fA-F]{8,40})\s*$", re.MULTILINE)
+
+
+def _collect_reprovenanced(shas: list[str]) -> set[str]:
+    """Full SHAs forgiven by a `Reprovenance: <sha>` trailer in a PROVENANCED commit in the range.
+
+    The self-service escape for a MID-HISTORY bypass (2026-07-17). A trailer-less source commit
+    that is not the branch tip cannot be given a `Quickmerge:` trailer without rewriting shared
+    history (banned), and it never becomes `_on_promoted_tip` because the promote it would ride is
+    itself BLOCKED by it — a genuine deadlock (proven: revert leaves the sha in-range and only ADDS
+    a violation; a content-identical re-ship is a no-op). So neither remedy the alert used to name
+    ("re-ship via quickmerge" / "revert") could clear it.
+
+    A re-provenance commit closes that: an EMPTY commit that (a) is itself provenanced (carries a
+    `Quickmerge:` trailer, or is a bot/[skip ci] commit) and (b) carries `Reprovenance: <sha>`
+    naming the bypass. It is created by scripts/cicd/reprovenance_bypass.sh AFTER that script runs
+    the dep-alignment gate — i.e. the same dep-provenance guarantee a fresh quickmerge gives, applied
+    to content that is already on LDR and green. The blessing is explicit and auditable: the commit
+    names exactly the sha it forgives, and only a provenanced commit can bless (a bare bypass cannot
+    self-forgive without ALSO going through quickmerge/being a carve-out empty commit).
+
+    Match is prefix-based (the trailer may carry a short sha), ≥8 hex, against the range's full shas.
+    """
+    blessed: set[str] = set()
+    prefixes: set[str] = set()
+    for sha in shas:
+        msg = _git("show", "-s", "--format=%B", sha)
+        author = _git("show", "-s", "--format=%an", sha).strip()
+        is_provenanced = (
+            "Quickmerge:" in msg
+            or "[skip ci]" in msg
+            or "github-actions" in author.lower()
+            or "[bot]" in author.lower()
+        )
+        if not is_provenanced:
+            continue  # only a provenanced commit may bless — no self-forgiveness by a bare bypass
+        for m in _REPROVENANCE_RE.finditer(msg):
+            prefixes.add(m.group(1).lower())
+    if not prefixes:
+        return blessed
+    for sha in shas:
+        low = sha.lower()
+        if any(low.startswith(p) for p in prefixes):
+            blessed.add(sha)
+    return blessed
+
+
+def commit_violates(sha: str, reprovenanced: set[str] | None = None) -> tuple[bool, str]:
     msg = _git("show", "-s", "--format=%B", sha)
     author = _git("show", "-s", "--format=%an", sha).strip()
     parents = _git("show", "-s", "--format=%P", sha).split()
@@ -111,6 +158,8 @@ def commit_violates(sha: str) -> tuple[bool, str]:
         return False, "merge/reconcile commit"
     if _on_promoted_tip(sha):
         return False, "already promoted (reachable from origin/main|staging — backmerge, not a fresh bypass)"
+    if reprovenanced and sha in reprovenanced:
+        return False, "re-provenanced (a later Quickmerge-provenanced commit carries Reprovenance: <sha>)"
     if "[skip ci]" in msg or "github-actions" in author.lower() or "[bot]" in author.lower():
         return False, "automation/[skip ci]/bot"
     if "Quickmerge:" in msg:
@@ -132,9 +181,10 @@ def main() -> int:
     block = cast(bool, args.block) or os.environ.get("STRICT_QUICKMERGE_BLOCK") == "1"
 
     shas = [s for s in _git("rev-list", rng).splitlines() if s.strip()]
+    reprovenanced = _collect_reprovenanced(shas)
     violations: list[str] = []
     for sha in shas:
-        bad, why = commit_violates(sha)
+        bad, why = commit_violates(sha, reprovenanced)
         if bad:
             subj = _git("show", "-s", "--format=%h %s", sha).strip()
             violations.append(f"{subj}  [{why}]")
