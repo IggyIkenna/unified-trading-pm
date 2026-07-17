@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title:
+title: >-
   "PROMOTION LAG" alert hides its actual cause — 2 repos are provenance-blocked by non-quickmerge code, not slow CI
 summary: |
   The hourly branch-health alert fires "PROMOTION LAG > 60m — 2 branch-pair(s) across 2 repo(s) un-propagated"
@@ -18,7 +18,7 @@ summary: |
 status: open
 nature: process
 asset_group: [cross-cutting]
-stage: [infra]
+stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service, deployment-ui]
 scope: [engineer]
 tags: [cicd, promotion, provenance-gate, quickmerge, alerting, branch-health]
@@ -39,6 +39,11 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: devops
 drift_direction: none
 depends_on: []
+source: >-
+  slot session 2026-07-17 — authored while diagnosing the branch-health PROMOTION-LAG alert; frontmatter repaired (title
+  block-scalar — a wrapped title continuation starting with a quote breaks YAML — stage enum + missing keys) by slot
+  main·harsh_pc to unblock the PM lint-codex gate, content untouched
+resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
