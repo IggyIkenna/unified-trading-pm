@@ -201,7 +201,7 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Phase 0b — Code fixes (MUST land + DEPLOY to every writer AND every narrow-read consumer before any corpus rewrite)
 
-- [ ] [BACKEND] P0. **FIX 0 — ONE shared 3-tuple builder** `CeFiCatalogReader.build_raw_symbol_map()` (3-tuple, reads
+- [x] ✅ [BACKEND] P0. **FIX 0 — ONE shared 3-tuple builder** `CeFiCatalogReader.build_raw_symbol_map()` (3-tuple, reads
       `instrument_id` NOT `canonical_instrument_id`, excludes ambiguous, fail-loud on empty) + UAC
       `CeFiWireCanonicalMap` (pure, fwd + reverse maps). Single source everything else consumes. (repos:
       market-tick-data-service, unified-api-contracts)
@@ -218,23 +218,93 @@ pairs stay honest-unresolved (reported, never guessed).
       (`test_both_bybit_rows_resolve_neither_excluded`): BOTH BYBIT `BTCUSDT` rows resolve by `instrument_type`, NEITHER
       excluded. **MTDS half (`build_raw_symbol_map()`) still OPEN** — parallel agent; do not tick this box until it
       lands.
-  - ⬜ **MTDS half OPEN** — `CeFiCatalogReader.build_raw_symbol_map()` (repo: market-tick-data-service).
-- [ ] [BACKEND] P0. **FIX D1 — Writer decompose ALL venues (3-tuple).** One insertion point in
+  - ✅ **MTDS half DONE — `market-tick-data-service@d302f07a`.** `CeFiCatalogReader.build_wire_map()` (+ the
+    `build_raw_symbol_map()` `(map, excluded)` projection the writer's hot path consumes) on the cached full-lifecycle
+    frame — no MVP gate / no active-date filter, so a DELISTED instrument still resolves at backfill write time; reads
+    `instrument_id`, never the `canonical_instrument_id` trap; memoised (catalogue downloaded ONCE). **Decision: the
+    exclusion/normalisation loop DELEGATES to UAC `from_rows` rather than being re-implemented locally** — the blueprint
+    sketched a local conflict loop, but UAC's `from_rows` already implements byte-identical semantics, so a second copy
+    would be the exact duplicate the "ONE BUILDER" rule exists to delete (and any drift between the copies would
+    silently split the writer's honest-unresolved set from the reader's). `build_raw_symbol_map()` is therefore a
+    projection (`resolve_map is wire_map.canonical_by_wire`), asserted by test. **Evidence**: 14 tests incl.
+    `test_both_bybit_rows_resolve_by_instrument_type_neither_excluded` (the 3-tuple majors proof) + fail-loud on
+    absent/empty/column-missing.
+- [x] ✅ [BACKEND] P0. **FIX D1 — Writer decompose ALL venues (3-tuple).** One insertion point in
       `derive_row_instrument_id` (`tardis_shared.py:455`) resolving via FIX-0; covers the Tardis parquet column AND
       manifest key (both flow through it — zero change to cap-critical `venue_fetch.py`). Miss → honest fallthrough.
-      (repo: market-tick-data-service)
-- [ ] [BACKEND] P0. **FIX D1-live — Live/on-chain COLUMN decomposition** in `PartitionedTickWriter.write_chunk` (the
+      (repo: market-tick-data-service) — **`market-tick-data-service@d302f07a`**. NEW leaf
+      `market_interface/adapters/cefi/catalog_id_resolver.py` (process-global register/resolve + bounded, deduped
+      per-venue miss accounting, `_SAMPLE_CAP=32`); registration in `engine/orchestrator/catalog_registration.py`; miss
+      WARNING wired into `manifest_finalize.py`. **The blueprint's "ZERO change to `venue_fetch.py`" claim HELD —
+      VERIFIED, not assumed**: `_canonicalize_manifest_instrument_id` (`venue_fetch.py:386`) calls the SAME
+      `derive_row_instrument_id` with the SAME `instrument_type`, so column == manifest by construction;
+      `venue_fetch.py` (898/900, cap-critical) is untouched. Proven by
+      `test_manifest_key_is_byte_identical_to_the_parquet_column`, not by inspection. **Evidence**: 18 tests incl. the
+      BYBIT spot-vs-perp disambiguation, shard-atom identity, and the disabled-by-default byte-identity guard
+      (parametrised over the shapes the ~30 pre-existing assertions rely on).
+- [x] ✅ [BACKEND] P0. **FIX D1-live — Live/on-chain COLUMN decomposition** in `PartitionedTickWriter.write_chunk` (the
       live consolidated + on-chain lanes never call `derive_row_instrument_id`; without this, live cefi columns stay
-      non-canonical → batch≠live, ε=0 spine broken). Same shared map. (repo: market-tick-data-service)
-- [ ] [BACKEND] P0. **FIX D2 — Canonical FILENAME stem = full `instrument_id`.** `_file_stem_for` (cefi branch) +
+      non-canonical → batch≠live, ε=0 spine broken). Same shared map. (repo: market-tick-data-service) —
+      **`market-tick-data-service@d302f07a`**. NEW `engine/cefi_wire_bridge.py` `get_cefi_wire_map()` (process-cached;
+      D3 reuses it) + `_normalize_cefi_instrument_id_column()` in `_prepare_write_df`. **Verified the premise**:
+      `finalise_rows_and_path`'s only prod callers are `tardis_cefi_shards.py` (Tardis lane) — the on-chain lanes
+      (`_umi_hyperliquid`/`_umi_extended`/`_umi_lighter`) do go via `write_chunk`, exactly as the blueprint said.
+      Resolves once per unique `(instrument_type, symbol)` pair, not per row. Miss → cell left EXACTLY as stamped;
+      `None` map → frame untouched. Only normalises an EXISTING column (never invents one). **Evidence**: 10 tests
+      (on-chain `BTC-PERP` → canonical, wrapped-wire → canonical, batch==live for both BYBIT majors, non-cefi
+      untouched).
+- [x] ✅ [BACKEND] P0. **FIX D2 — Canonical FILENAME stem = full `instrument_id`.** `_file_stem_for` (cefi branch) +
       `partitioned_writer._resolve_file_symbol` (extend the prediction-only override to cefi). Reuses the column
       D1/D1-live made canonical; writer KEY/bookkeeping stay on bare symbol → shard atom unchanged. Chain bundles
-      untouched. (repo: market-tick-data-service)
+      untouched. (repo: market-tick-data-service) — **`market-tick-data-service@d302f07a`**. Stem = the row's full
+      canonical `instrument_id` (attached at `:792`, BEFORE the stem helper at `:798` → filename == column == manifest
+      by construction); fail-loud on a missing/empty id (no silent placeholder filename). `:`/`@` survive unsanitized
+      (asserted). CHAIN bundles + `is_derivative` `ticks.parquet` + tradfi's own `_file_stem_for` all UNCHANGED
+      (asserted). **Shard atom UNCHANGED — asserted, not claimed**: `partition_counts` still keys on the sanitized BARE
+      symbol (`test_shard_atom_unchanged_writer_key_stays_on_the_bare_symbol`). **Evidence**: 10 stem tests + 4 updated
+      pre-existing path assertions (the OLD bare-symbol filename contract → the LOCKED full-id contract; these 4 are the
+      intended contract change, not a regression).
 - [ ] [BACKEND] P0. **FIX D3 — Reader wire↔canonical bridge (3-tuple; fixes audited silent data-loss).** Candidate-stems
       (canonical + reverse-map wire) in MTDS `reader.py:341`; drop the wire `("symbol","==",id)` pushdown (`:388`);
       normalize-on-read the column via the forward 3-tuple map; MDPS `path_parsing.py` accept both stems; rename + widen
       the TRADFI-only `canonical_writer_shaping.py:259` renormalizer to cover cefi. Handles the MIXED-corpus interim.
       (repos: market-tick-data-service, market-data-processing-service, unified-api-contracts)
+  - ✅ **MDPS half DONE — `market-data-processing-service@0035f79`.** NEW `app/utils/cefi_wire_bridge.py`: module-level
+    `get_cefi_wire_map() -> CeFiWireCanonicalMap | None`, process-cached with a loaded-flag (a `None` is never
+    re-probed); bucket via `resolve_bucket_name(kind="instruments-store", asset_group="cefi")` mirroring
+    `dependency_checker.py`; probes `prod/`→`staging/`→`dev/` `catalog.parquet`; reads ONLY the 4 columns
+    `venue, instrument_type, raw_symbol, instrument_id` (**never `canonical_instrument_id`**) and feeds UAC `from_rows`.
+    `path_parsing.py` — new `blob_matches_canonical_instrument_id_stems()` accepts, for a **cefi** id
+    (`VENUE_TO_ASSET_GROUP` gated), stem ∈
+    `{canonical symbol segment, full instrument_id, raw_symbol, raw_symbol.upper()}` after the unchanged
+    `venue=`/`instrument_type=` axis checks; **non-cefi keeps the single `/{symbol}.parquet` rule** and the DEFAULT
+    full-shard path (`instrument_ids=None`) is untouched. `canonical_writer_shaping.py` — RENAMED
+    `_renormalize_legacy_tradfi_instrument_ids` → `_renormalize_legacy_instrument_ids` (**no shim**; `__all__` + call
+    site updated). **Open-q #17 RESOLVED: no external importer** — grep across the whole workspace found only in-repo
+    MDPS files (`canonical_writer.py` + 2 test modules), so the rename was safe. tradfi branch kept intact (extracted
+    verbatim to `_renormalize_legacy_tradfi`); new cefi branch tries BOTH the `split(":", 2)` tail (wrapped-wire
+    `…:PERPETUAL:ADAF0:USTF0` → `ADAF0:USTF0`) and the whole string (bare on-chain `BTC-PERP`), recovers
+    `instrument_type` via the existing `_infer_instrument_type`, then `canonical_for(...)`; unresolved/ambiguous rows
+    left **UNCHANGED** (honest-unresolved, never guessed). **Decisions made alone**: (1) **fail-SOFT to `None`** (not
+    the writer's fail-loud) — MDPS's consumers are READ-side aids, so a `None` degrades them to exact pre-bridge
+    behaviour with no corruption, whereas raising would take down the scanner including the default full-shard path that
+    never uses the map; every failure still logs WARNING. (2) An EMPTY forward map is reported as unavailable (`None`)
+    rather than handed over as a map resolving nothing. (3) `bucket_arg_typing` is imported **function-level**
+    (`noqa: PLC0415`) — `app.core.__init__` → adapters → `app.utils` makes a module-scope `app.core` import a genuine
+    circular import (caught by QG; 2 test modules ImportError'd). (4) Two pre-existing tests asserted CEFI was a
+    renormalizer no-op — that is no longer true, so they were re-pointed at genuinely-unhandled groups (DEFI/SPORTS)
+    instead of being left to pass incidentally on the map-is-`None` path. **Evidence**: full
+    `bash scripts/quality-gates.sh` GREEN at the commit SHA (exit 0, **zero ❌** in the output — not just the exit code,
+    218s, `.qg_last_passed_sha=0035f79` == HEAD), **2008 passed** / 1 skipped (26 new tests), coverage 85.42%,
+    basedpyright 0 errors on all 5 touched files, no `Any`/`# type: ignore`/`os.getenv`/ inline `gs://`. Blueprint
+    regression guards asserted: wire-named `ADAF0:USTF0.parquet` now matches `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`
+    (**the audited silent drop is closed**), canonical-named object matches too (mixed-corpus both-ways),
+    wrong-venue/wrong-itype → False, and the **3-tuple majors** (BYBIT `BTCUSDT` SPOT_PAIR vs PERPETUAL) resolve to
+    their correctly-typed ids AND do not cross-match. **Shipped via a dirty-deps carve-out direct push** — quickmerge
+    pre-flight blocked on live foreign WIP in `unified-trading-library` + `unified-api-contracts` (other agents active;
+    polled ~17 min, metric flat → their work left untouched). ⬜ **MTDS reader half still OPEN** — parallel agent's
+    scope (`reader.py` candidate-stems, the `symbol` pushdown drop, normalize-on-read); do not tick this box until it
+    lands.
 - [ ] [BACKEND] P0. **FIX D-features — narrow cefi reads (REQUIRED before cutover, not optional).** features
       `raw_data_loader.py:126-179`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
@@ -298,6 +368,75 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-17 (slot-3) — PHASE-0b MTDS WRITE SIDE SHIPPED: FIX 0 (MTDS half) + D1 + D1-live + D2 —
+  `market-tick-data-service@d302f07a`.** Full `bash scripts/quality-gates.sh` GREEN: **"ALL QUALITY GATES PASSED
+  (450s)", exit 0, ZERO red (❌) checks, 6046 passed / 17 skipped, `.qg_last_passed_sha` == HEAD**. 62 new tests across
+  5 new files. The three WRITE surfaces (parquet column, GCS filename, manifest key) now key off ONE 3-tuple catalogue
+  map read as parquet DATA — no service↔service import.
+  - **The blueprint's "ZERO change to `venue_fetch.py`" claim HELD, and was verified rather than assumed.**
+    `_canonicalize_manifest_instrument_id` (`venue_fetch.py:386`) routes through the SAME `derive_row_instrument_id`
+    with the SAME `instrument_type`, so the ONE insertion point makes column == manifest BY CONSTRUCTION.
+    `venue_fetch.py` stays at 898/900. Locked by `test_manifest_key_is_byte_identical_to_the_parquet_column`.
+  - **Decisions made alone (no operator round-trip):**
+    1. **FIX 0 DELEGATES exclusion to UAC `from_rows` instead of re-implementing the blueprint's local conflict loop.**
+       The blueprint sketched a hand-rolled loop, but UAC's shipped `from_rows` already implements byte-identical
+       normalise+exclude semantics — a second copy IS the duplicate the "ONE BUILDER" rule exists to delete, and drift
+       between the copies would silently split the writer's honest-unresolved set from the reader's.
+       `build_raw_symbol_map()` is now a projection of `build_wire_map()` (asserted:
+       `resolve_map is wire_map.canonical_by_wire`). This is the blueprint's stated INTENT taken literally.
+    2. **The builder is registered by reference and returns the FULL `(map, excluded)` tuple** — not the blueprint's
+       `lambda: ...[0]`. The blueprint asked for both (`[0]` in the snippet, "MAY consult `excluded`" in the prose);
+       carrying `excluded` lets a miss be classified ambiguous-honest vs genuinely-unknown in the WARNING, which is what
+       "ONE honest-unresolved set, reported as one number everywhere" needs.
+    3. **`CeFiCatalogUnavailableError` is a `RuntimeError`, deliberately NOT a `ValueError`** — see the bug below.
+    4. **Resolver registration is GATED on catalogue reachability** — see the second bug below.
+  - **TWO REAL BUGS caught and closed during the build (both would have shipped silently):**
+    1. **Fail-loud was silently swallowed → blocking-risk #4 through the back door.**
+       `venue_fetch._canonicalize_manifest_instrument_id` wraps `derive_row_instrument_id` in `except ValueError` (to
+       keep a genuinely-undecomposable symbol honest). A `ValueError` fail-loud — exactly what the blueprint's FIX 0
+       snippet specifies — was therefore CAUGHT there and degraded every row to the raw wire form for the whole run:
+       fail-loud became fail-SILENT at the one call site that matters most. Fixed with a dedicated non-`ValueError`
+       type; regression-locked by `test_fail_loud_is_not_a_valueerror_so_the_manifest_path_cannot_swallow_it`. **The
+       blueprint's `raise ValueError` for the registered prod resolver is therefore WRONG as written** — anyone porting
+       FIX 0 to another surface must use the dedicated type.
+    2. **Unconditional registration turned a tolerated degrade into a hard shard failure.** `CeFiCatalogReader` has a
+       long-standing DELIBERATE tolerance for an absent catalogue (empty iterator → orchestrator falls back to UAC seed
+       instruments). Piggybacking the resolver on that registration made every cefi write hard-fail in any env with no
+       instruments-store (caught as 2 red orchestrator tests). Resolution keeps the blueprint's ACTUAL intent ("never
+       SILENTLY disable"): catalogue absent → do NOT register → decomposition off + LOUD warning + seed-fallback intact;
+       catalogue present → register → any later drift/empty HALTS. Probe costs no extra download (same frame cache the
+       sentinel enumeration uses). Locked by `test_cefi_id_decomposition_registration.py`.
+  - **Test isolation (process-global registries):** the resolver/bridge registries are process-global, so a test that
+    registered readers against a catalogue-less bucket poisoned every LATER test in the same xdist worker — surfacing as
+    **30 failures scattered across files that never touched the catalogue**. The existing autouse conftest fixture
+    (which already resets the catalog-reader guard for this exact bug class) now resets both new registries too.
+  - **Adjacent red fixed to unblock the gate (findings triage — in my tree, same commit):**
+    `market-tick-data-service@2e7c2b5d` moved the default `max_concurrent_downloads` 16 → 32 but left
+    `test_umi_tick_provider_routes.py` asserting 16 — it landed on LDR RED. Confirmed pre-existing by re-running with my
+    changes stashed. Assertion updated to the shipped default.
+  - **Ship route — DIRECT PUSH under the CLAUDE.md dirty-deps carve-out (#1), not quickmerge.** quickmerge's pre-flight
+    audit FAILED: UTL + UAC carry another agent's uncommitted WIP (`cloud-providers.yaml`, `market_data_categories.py`,
+    `test_bucket_naming.py`), **mtime <120s → LIVE → PROTECT** — committing them would steal live foreign work, and
+    quickmerging over dirty deps would lie to CI (my QG green was measured against their uncommitted tree). Verified my
+    only UAC dependency (`CeFiWireCanonicalMap`, `825878f7`) is already committed + pushed on `origin/live-defi-rollout`
+    and untouched by that WIP, so CI resolves the import. Pre-push hook WARNed and named dirty-deps as the carve-out, as
+    designed.
+  - **HONEST GAPS — what is NOT closed by this commit (all out of the 4 fixes' scope, none regressed by it):**
+    1. **The live/on-chain MANIFEST key is still not catalogue-canonicalized.** `_canonicalize_manifest_instrument_id`
+       early-returns for any venue where `_VENUE_TO_DATA_SOURCE[venue] != "tardis"` — measured:
+       `HYPERLIQUID→'hyperliquid'`, `ASTER→'aster'`, `LIGHTER→None`, `EXTENDED-STARKNET→None`. So for on-chain venues
+       D1-live/D2 make the COLUMN + FILENAME canonical while the manifest key stays whatever the bare `symbol` is. If
+       those adapters stamp a raw wire `symbol`, column/filename ↔ manifest can DIVERGE on the live on-chain lane.
+       Belongs to the manifest workstream (Phase-1 Script 3, instruments-service) — flagging it, not silently assuming
+       it. **I did not verify what `symbol` the on-chain adapters actually stamp**, so I cannot say whether this
+       divergence is live today or latent.
+    2. **No prod/ADC run.** Everything above is unit-level against synthetic catalogue frames; the real ~424k-row
+       catalogue was never loaded (per task scope: no migration, no `--apply`, no VMs). Blueprint open-q **#14** (OPTION
+       / dated-FUTURE `raw_symbol` coverage) and **#15** (peak RSS of the real map on the smallest backfill box) are
+       consequently STILL UNVERIFIED — both are Phase -1 / deploy-time gates, not code gates.
+    3. **Deploy gate unchanged:** this code must reach every writer box BEFORE any Phase-1 `--apply`, or the migrated
+       corpus regrows the raw remainder (blueprint blocking-risk #2).
 
 - **2026-07-17 (slot-3) — PHASE -1 GATE: BOTH DEFECTS FIXED AT SOURCE + PROVEN ON LIVE DATA →
   `instruments-service@517b817b`.** Both halves closed in `scripts/build_instrument_catalogue.py`. QG green (4417
