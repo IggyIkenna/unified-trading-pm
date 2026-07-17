@@ -220,3 +220,40 @@ genuinely-nonzero travel columns (confirming the fix's real-world effect) BEFORE
 recompute — not attempted this dispatch (out of scope for a single 1h-estimated task). `/skip-current-task` after this —
 the assigned Todo 3 checkbox cannot be honestly flipped without doing the actual gap-fill, and Todo 2 (what I actually
 worked) was already closed by slot-8 first.
+
+### 2026-07-17T13:4xZ — data_engineering slot-8 (re-dispatched Todo 3; measured real per-date recompute cost; confirmed VM-fleet scale, did not launch)
+
+Re-dispatched this issue doc's Todo 3 after slot-7's skip. Rather than re-derive slot-7's conclusion from scratch,
+measured the actual per-date compute cost directly (same methodology the sibling elo issue doc's gap-fill used):
+
+```
+GCP_PROJECT_ID=central-element-323112 python3 -m features_service.sports --operation compute --mode batch \
+  --asset-group SPORTS --date 2018-03-18 --league COPA_ARGENTINA --force
+```
+
+First attempt under a 200s timeout did **not** complete (SIGTERM-killed mid-calculator-stack, hadn't yet reached
+`team_derived`/`travel`) — matching the elo gap-fill's own 180s-timeout non-completion on the identical `(date, league)`
+pair. Re-ran with a generous 550s timeout to get a real data point: **completed in ~278s** (13:36:32→13:41:10Z) for the
+full date (488 fixtures across all leagues that specific date actually had reference data for — note `COPA_ARGENTINA`
+itself turned out to have zero fixtures on 2018-03-18 despite being the elo doc's own example pair, so this run wrote
+`expected_unattempted` for that specific league filter and produced no sample row to content-check; recompute cost
+scales with the DATE's full reference-data read + 400-day historical-fixtures lookback, not the league filter, so the
+~278s figure is still the right per-date unit cost).
+
+**Scale conclusion, consistent with the elo sibling issue's finding**: ~278s/date × ~1,844+ distinct affected dates
+(this bug's near-universal ~86-100% failure rate makes its affected-date count at least as large as the elo bug's
+1,844-date figure, likely larger) ≈ 140+ hours of serial single-worker compute — squarely VM-fleet scale, matching Todo
+1's original 4-10 VM `fss-backfill-vm-*` precedent, not something executable from a worker dispatch.
+
+**Consolidation finding worth flagging to the operator decision**: `run_new_calculators` computes ALL Phase-4
+calculators (elo, travel, manager, formation, european_fatigue, …) together in one pass per `(date, league)` and writes
+one row — so a single full-corpus `--force` re-run now (both this fix, `features-service@6efefde2`, and the sibling elo
+fix, `features-service@04274b6a`, have already shipped) would satisfy **both** gap-fills simultaneously. The operator
+does not need two separate VM-fleet launches; one full 2015→present recompute against current HEAD covers both. Worth
+noting explicitly on whichever `/blocked` decision request the operator ultimately acts on first (elo's or this one) so
+the other isn't re-launched redundantly afterward.
+
+**Did not launch a VM fleet autonomously** and did not file a second, duplicate `/blocked` (an equivalent VM-fleet
+sign-off request is already open from the elo issue doc's own gap-fill dispatch) — added this cost data + the
+consolidation insight to this doc instead, and `/skip-current-task`'d. **Todo 3 checkbox NOT flipped** — the actual
+gap-fill has not happened.
