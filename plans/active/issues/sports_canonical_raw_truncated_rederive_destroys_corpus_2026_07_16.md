@@ -65,7 +65,27 @@ source:
 
 # Sports canonical raw is truncated — `--force` re-derive destroys the corpus
 
-> # 🔴 CAUSE CORRECTED 2026-07-16 by [`sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md) — **the SYMPTOM below is real and every number reproduces; the DIAGNOSIS and fix direction (a) are wrong.**
+> # 🟢 THE SYMPTOM IS FIXED 2026-07-17 on the days it existed — `market-tick-data-service@75f226e8`.
+>
+> The split population was **merged into the canonical `batch_odds_api` cells** on the **199 days** where it changes the
+> derive (exhaustively scoped: all 1,815 migrated days probed, 0 errors; 1,336 were pure duplicates). **6,304,585 rows
+> added, 0 lost.** This doc's measured day, `day=2022-04-16`, now re-derives through the **UNCHANGED** MDPS reader as
+> **raw 5,626 → 83,916** and reproduces the corpus grid: T-12h=896 · T-6h=898 · T-4h=896 · T-2h=884 · T-1h=270 ·
+> T-10m=870 **all EXACT**, T-24h=894 (richer than 317), T-0=27 (the leak-filtered valid rows per MDPS@3bf56ff). **⇒
+> `--force` on those 199 dates is no longer a data-loss event** — the derive now yields strictly MORE per horizon
+> (measured: 0 derive rows lost on 1,815/1,815 days).
+>
+> **What still stands**: **fix direction (b) — the per-date loss guard — is STILL P0 and has NOT landed.** The merge
+> removes the known starvation; the guard is what stops the _next_ unknown one from deleting a corpus. Do not read this
+> banner as "historical `--force` is now globally safe": the 1,616 non-merged days were never starved by _this_
+> mechanism, but nothing yet proves they cannot starve by another. **Fix direction (a) remains REFUSED** (the legacy
+> bucket holds nothing unique on those days).
+>
+> _(Superseded banner retained for provenance:)_
+>
+> **🔴 CAUSE CORRECTED 2026-07-16 by
+> [`sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md)
+> — the SYMPTOM below is real and every number reproduces; the DIAGNOSIS and fix direction (a) are wrong.**
 >
 > **Canonical raw is NOT truncated. It is SPLIT, and MDPS only reads one half.** The OR-5b G1 recovery leg re-measured
 > `day=2022-04-16` and reproduced this doc's 5,626-vs-79,773 exactly — then found the missing **79,773 rows already
@@ -190,14 +210,20 @@ Only T-0 was contaminated. The other seven are real, correctly-bucketed, irrepla
 
 ## Todos
 
-- [ ] [DATA] P0. **Quantify the raw truncation across the full corpus** — per-day canonical-vs-legacy row comparison for
-      `pipeline_mode=batch_odds_api` (single walk; the processed census is already cached). Establish the date boundary
-      where canonical becomes faithful (2022 is truncated; 2024–2025 are intact) and size the recovery.
+- [x] [DATA] P0. ✅ **Quantify the raw truncation across the full corpus** — DONE 2026-07-17 on the CORRECT axis
+      (consumable-vs-migrated **within** canonical, not canonical-vs-legacy — this todo's original framing was on the
+      wrong axis). Exhaustive: all 1,815 migrated days, real reads + real adapter, **0 errors**. **1,336 (73.6%) fully
+      redundant · 280 (15.4%) add raw keys but 0 derive rows · 199 (11.0%) a real derive gain (742,504 rows) · 0 lose.**
+      Gain window 2020-06-14…2024-08-03 (2022: 112 days · 2023: 48 · 2024: 34) — so "2022 truncated / 2024-25 intact" is
+      close but not exact. All 199 merged: `market-tick-data-service@75f226e8`.
 - [ ] [CODE] P0. **Add the per-date loss guard to `reprocess_sports_odds.py`** — refuse to write/delete a date whose
       re-derive yields fewer valid rows per horizon than the corpus holds; emit a loud, countable skip. Must land before
       any historical sports re-derive is run again by anyone.
-- [ ] [DATA] P0. **Extend the OR-5b(b) option-D G1 recovery to the ODDS_API raw truncation** — the parent cutover issue
-      scoped the row-union to reference entities (player_stats etc.); the odds raw needs it too, and the delete-gate
-      must not clear until it does.
+- [x] [DATA] P0. ✅ **Extend the recovery to the ODDS_API raw truncation** — DONE, but NOT via the G1 legacy recovery
+      (refused 3x: the legacy bucket holds nothing unique on those days). The rich rows were already INSIDE canonical
+      under `pipeline_mode=batch_footystats`; they are now merged into the canonical `batch_odds_api` cells on the 199
+      days that needed it — `market-tick-data-service@75f226e8`. **The MDT delete gate is UNAFFECTED**: it still rests
+      on the genuine 32-day / 550,062-key residue (canonical capture outage 2022-09-07…2022-10-01), which this merge
+      does not touch. MDT remains NOT delete-eligible.
 - [ ] [DOCS] P1. **Correct the cutover runbook's canonical-is-a-superset premise** for raw odds on early dates, and
       cross-reference this issue from the delete-gate section.

@@ -61,7 +61,7 @@ execution:
 > A launcher that does NOT call `lc_write_launch_params()` still gets a best-effort relaunch attempt (ambient env only),
 > **not** an exact-params replay — if you add a new backfill launcher, call `lc_write_launch_params()` or your preempted
 > waves will not resume with their real scope. Shipped `deployment-service@02be72e6`; design + measured evidence:
-> `plans/active/cefi_completion_program_2026_07_15.md` (2026-07-16).
+> `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (2026-07-16).
 
 ## Why (the trigger)
 

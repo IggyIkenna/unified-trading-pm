@@ -811,16 +811,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       with `source=''` or a phantom `instrument_count=0` → STOP; that is the pattern that created the 468 phantom
       residual.
 
-- [ ] [BACKEND] P1. **T2.8 — Delete the stale "ODDS retired to MTDS-only" comment that cost a full Phase-2 stop.**
-      _Mechanism_: `instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:59` reads
-      _"footystats_odds was removed 2026-06-25 (ODDS retired to MTDS-only; UAC@8fb1f54f)"_. That decision (#6) was
-      **REVERSED by the operator on 2026-06-27** (`unified-api-contracts@c75101be`) and the reversal completed at
-      `@57bcc7c5` (2026-07-15), which restored `SOURCE_PRIORITY[("sports","ODDS")]` + `AVAILABILITY_AT_SEMANTICS` and
-      pinned _"footystats PREDICTIVE pre-match ODDS = IS reference data"_ by test. The comment describes a dead decision
-      as live and **directly caused T2.7's blocker (c)** — a prior agent stopped Phase 2 on it. Replace with the current
-      state (ODDS is IS-owned footystats reference data; `_SPORTS_REF_SOURCE_OVERRIDE` is empty because the path key
-      `footystats_odds` already strips to the correct source `footystats`, not because ODDS was removed). _Gate_:
-      comment matches the live registries; `quality-gates.sh` green. _ABORT_: none (comment-only).
+- [x] ✅ [BACKEND] P1. **T2.8 — DONE 2026-07-17 — `instruments-service@49a26387`.** Replaced the stale comment with the
+      current state: `_SPORTS_REF_SOURCE_OVERRIDE` is empty because every sports-ref path key already strips to its
+      correct UAC source (`footystats_odds` → `footystats`), NOT because "ODDS was removed" — that decision (#6) was
+      REVERSED by the operator 2026-06-27 (UAC@c75101be) and completed @57bcc7c5 2026-07-15 (restored
+      `SOURCE_PRIORITY[("sports","ODDS")]` + `AVAILABILITY_AT_SEMANTICS`, pinned by test that footystats pre-match ODDS
+      is IS reference data). `quality-gates.sh --no-fix` GREEN (exit 0). _Original mechanism_:
+      `instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:59` reads _"footystats_odds was
+      removed 2026-06-25 (ODDS retired to MTDS-only; UAC@8fb1f54f)"_. That decision (#6) was **REVERSED by the operator
+      on 2026-06-27** (`unified-api-contracts@c75101be`) and the reversal completed at `@57bcc7c5` (2026-07-15), which
+      restored `SOURCE_PRIORITY[("sports","ODDS")]` + `AVAILABILITY_AT_SEMANTICS` and pinned _"footystats PREDICTIVE
+      pre-match ODDS = IS reference data"_ by test. The comment describes a dead decision as live and **directly caused
+      T2.7's blocker (c)** — a prior agent stopped Phase 2 on it. Replace with the current state (ODDS is IS-owned
+      footystats reference data; `_SPORTS_REF_SOURCE_OVERRIDE` is empty because the path key `footystats_odds` already
+      strips to the correct source `footystats`, not because ODDS was removed). _Gate_: comment matches the live
+      registries; `quality-gates.sh` green. _ABORT_: none (comment-only).
 - [ ] [DATA] P0. **T2.9 — MDT `(sports, odds, trades)` schema contract is DRIFTED from reality (BIG FINDING, T2.7).**
       _Mechanism_: the registered contract requires
       `ts_event, fixture_id, market_type, outcome, odds_decimal, broker,     client, data_source`; the REAL canonical
@@ -844,6 +849,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       fleet — the exact hazard `57bcc7c5` refused for `PLAYER_STATS` and filed for a ruling. **Feeds OR-5b.** _Gate_: a
       written disposition for all 47,253. _ABORT_: purging without the `source` filter → destroys the real `odds_api`
       population → STOP.
+
+> **🔬 SLOT-3 FINDING 2026-07-17 — T2.10 is NOT a T3.1-style merged-index purge; the seed re-introduces the phantoms.
+> STILL BLOCKED (entangled with `_legacy_seed`/OR-4/OR-5b).** Measured directly with DuckDB over fresh downloads of BOTH
+> `market-data-tick-sports-prd` `_index` objects: the phantom `api_football × trades`
+> captured+nonzero-`instrument_count` rows live in the **live `_index/per_vm/_legacy_seed.parquet` shard** (SEED =
+> **37,114**; MERGED-INDEX = **38,329**), and the consolidator re-merges that seed EVERY cycle (index generation was
+> seconds-fresh at measurement). ⇒ a merged-index-only rewrite (T3.1's mechanism, which the todo above says to "mirror")
+> is **NOT durable** here — the next consolidator cycle re-adds the 37,114 from the seed. This is exactly why T3.1's
+> ODDS purge held (`api_football × ODDS` is **0** in BOTH the seed and the merged index — nothing to re-introduce) but a
+> trades purge would **silently regress**. The consolidators are ENABLED (Phase 6 done), so there is no QUIET window now
+> either. **Durable fix must strip the 37,114 phantom captured-trades rows from the SEED itself** (source filter
+> MANDATORY — the seed also holds **211,313** real `odds_api × trades` that must survive), then let the consolidator
+> re-merge — i.e. it must be done as part of the `_legacy_seed.parquet` / R-8 / OR-4 resolution, which is the live OR-5b
+> investigation and gates the MDT-bucket delete. A merged-index purge alone is a **false-progress trap**. _(Not executed
+> — read-only measurement; zero objects mutated.)_
 
 ### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
 
@@ -1072,12 +1092,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       _Gate_: 25/25 resolve and parse with the expected row counts. _ABORT_: any moved object is unreachable via the
       SSOT path derivation → the path mapping is wrong → **STOP** (a copy at a path no reader derives is data loss with
       extra steps).
-- [ ] [DATA] P1. **T4.3 — Rebuild the catalogue on canonical and verify.** _Mechanism_: the catalogue exists **only** in
-      canonical (`prod/catalog.parquet`, 27,221 rows, 435,970 B, mtime 2026-07-16T01:05:55Z); legacy has **no `prod/`
-      tree at all** (`gcloud storage ls -r gs://instruments-store-sports-central-element-323112/prod/` → "matched no
-      objects") — **nothing to migrate, nothing to repoint**; it carries no path/bucket column and zero `gs://` refs.
-      Re-run the regen owner (Cloud Run job `lifecycle-catalogue-regen-sports`, whose 01:00 cron matches the 01:05:55Z
-      mtime exactly). **Argument gap**: its arg is `--by-date-prefix sports_reference/by_date`, which does **not** cover
+- [x] ✅ [DATA] P1. **T4.3 — DONE 2026-07-17 — regen ran post-migration on canonical, gate PASSES (verified by content,
+      not asserted).** The Cloud Run job `lifecycle-catalogue-regen-sports` execution `…-tmbcm` completed
+      **2026-07-17T02:30:52Z SUCCESS** (succeededCount=1) — the FIRST regen after the T5.4 instruments-bucket delete
+      (2026-07-16T19:52Z), so it reflects the final canonical estate. Fresh pyarrow read of
+      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`: **27,240 rows (≥ 27,221 ✓, +19 vs
+      the pre-migration count ⇒ GREW, so no coverage lost), league_id nunique == 94 (≥ 94 ✓), 24 cols, 440,312 B (was
+      435,970), generation 1784255447329216 ⇒ mtime advanced from 2026-07-16T01:05:55Z**. The
+      `--by-date-prefix sports_reference/by_date` arg gap is a non-issue: T2.3 moved class-A objects to existing
+      canonical paths, not a new `sports_reference_v2/`-style prefix. Row count grew (not dropped) ⇒ no ABORT. _Original
+      mechanism_: the catalogue exists **only** in canonical (`prod/catalog.parquet`, 27,221 rows, 435,970 B, mtime
+      2026-07-16T01:05:55Z); legacy has **no `prod/` tree at all**
+      (`gcloud storage ls -r gs://instruments-store-sports-central-element-323112/prod/` → "matched no objects") —
+      **nothing to migrate, nothing to repoint**; it carries no path/bucket column and zero `gs://` refs. Re-run the
+      regen owner (Cloud Run job `lifecycle-catalogue-regen-sports`, whose 01:00 cron matches the 01:05:55Z mtime
+      exactly). **Argument gap**: its arg is `--by-date-prefix sports_reference/by_date`, which does **not** cover
       `sports_reference_v2/` — and would not have covered `sports_reference_v1_archive/by_date` had we moved it (we do
       not: T2.1 deletes it). If T2.3 lands class-A objects under a new prefix, this arg must be updated or the catalogue
       silently under-covers. _Gate_: `prod/catalog.parquet` mtime advances; row count ≥ 27,221; league_id nunique ≥ 94.
@@ -1243,9 +1272,18 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 > genuine absence, not a permission artifact. **No resurrection.** The remaining 24h `tofu plan` re-run is the only open
 > part.
 
-- [ ] [INFRA] P0. **T6.0 — Post-delete resurrection watch.** _Mechanism_: 24h after T5.4, re-run `tofu plan` and
-      `gcloud storage ls gs://instruments-store-sports-central-element-323112`. _Gate_: plan clean; bucket still 404.
-      _ABORT_: bucket exists again → an out-of-band `apply` resurrected it → T5.1 was incomplete → re-open.
+- [x] ✅ [INFRA] P0. **T6.0 — DONE 2026-07-17 by DETERMINISTIC proof, not the 24h passive wait** (operator-directed
+      2026-07-17 _"i dont wanna wait 24h"_ — the active check is strictly stronger than waiting). The gate is _"plan
+      clean; bucket still 404"_ and BOTH are now MEASURED, not awaited: (1) `ENV=prod bash tofu.sh plan` against
+      `terraform/state/prod` ⇒ `Plan: 1 to import, 19 to add, 52 to change, 1 to destroy` and **ZERO of those actions
+      reference `instruments-store-sports-central-element-323112`** (grepped the full plan output — empty set); (2) the
+      flat legacy bucket has **0 live (non-comment) resource declarations** in `deployment-service/terraform/gcp/*.tf`
+      (the only `instruments-sports` reference is the canonical env-tiered `instruments-store-sports-${env}-${project}`)
+      and its state entry was already removed at T4.4 (prod state serial 344→345, block removed ds@4637aed); (3)
+      `gcloud storage buckets describe gs://instruments-store-sports-central-element-323112` ⇒ **404**. Since the HEAD
+      config cannot create the bucket AND the state no longer tracks it, no out-of-band `apply` from the SSOT config can
+      resurrect it — the 24h window existed only to catch an intervening apply, which a clean plan already proves cannot
+      recreate it. _ABORT unchanged_: bucket reappears → T5.1 was incomplete → re-open.
 - [x] ✅ [INFRA] P0. **T6.1 — MERGE DONE 2026-07-17; every delta as predicted. ⚠️ A SILENT DATA-LOSS BUG FIRED AND WAS
       RECOVERED IN-BAND — see the Progress Log entry "✅ T6.1 MERGE COMPLETE" + new issue doc
       [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md).**
@@ -1449,13 +1487,13 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 The restore leg's mission (T6.1 merge → restore → verify each first run → catch-up → report) is **COMPLETE**. What
 remains in Phase 6, with why it was not closed in this session:
 
-| Todo      | State             | Why deferred / next action                                                                                                                                                                                                                                                              |
-| --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **T6.0**  | interim ✅ / open | Bucket 404 re-verified with controls at ~7h (see banner). The **24h `tofu plan` re-run is time-gated to ≥19:52Z 2026-07-17** — cannot be closed earlier. Not a blocker for the restore.                                                                                                 |
-| **T6.9**  | **NEW, P0**       | The UTL consolidator silent-shard-reap fix + regression test. **A code change in `unified-trading-library`, not sports infra** — outside this restore leg's scope, and fleet-wide. Fully specified in `issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`. |
-| **T6.10** | **NEW, P2**       | `…-fast-t1-recon` broken in prod (pre-existing, fails closed, harmless today). Needs an OWNER DECISION on which asset_groups it should reconcile, or deletion — not a call this leg should make silently.                                                                               |
-| **T6.7**  | open, P1          | Post-phase codex audit (3 named codex docs). Review-scope work, safe to do now that the estate is stable and measured.                                                                                                                                                                  |
-| **T6.8**  | open, P2          | Retire the one-offs + the dead `include_legacy_archive` knob + the false-progress tick. Gate is `rg -c 'sports-central-element-323112'` workspace-wide → 0. Large cleanup sweep across ~26 one-offs; independent of the restore.                                                        |
+| Todo      | State                  | Why deferred / next action                                                                                                                                                                                                                                                                                         |
+| --------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **T6.0**  | **✅ DONE 2026-07-17** | Closed by DETERMINISTIC proof (operator-directed, replacing the 24h passive wait): `tofu plan` clean of the legacy bucket + 0 live resource decls + state entry removed (serial 344→345) + bucket 404. The current config structurally cannot recreate it, so the wait added nothing. See the T6.0 checkbox entry. |
+| **T6.9**  | **NEW, P0**            | The UTL consolidator silent-shard-reap fix + regression test. **A code change in `unified-trading-library`, not sports infra** — outside this restore leg's scope, and fleet-wide. Fully specified in `issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`.                            |
+| **T6.10** | **NEW, P2**            | `…-fast-t1-recon` broken in prod (pre-existing, fails closed, harmless today). Needs an OWNER DECISION on which asset_groups it should reconcile, or deletion — not a call this leg should make silently.                                                                                                          |
+| **T6.7**  | open, P1               | Post-phase codex audit (3 named codex docs). Review-scope work, safe to do now that the estate is stable and measured.                                                                                                                                                                                             |
+| **T6.8**  | open, P2               | Retire the one-offs + the dead `include_legacy_archive` knob + the false-progress tick. Gate is `rg -c 'sports-central-element-323112'` workspace-wide → 0. Large cleanup sweep across ~26 one-offs; independent of the restore.                                                                                   |
 
 ## RISK REGISTER — what could lose data at each phase
 

@@ -195,6 +195,20 @@ denominator is the MVP universe, not the full IS catalogue and not all 40/44/100
 | `MVP_SCOPE_CONFIG_VERSION`       | same                                   | Bumped on every content-changing edit to the universe/predicate |
 | `accepted_quotes_for_venue`      | `cefi_instrument_universe.py`          | Per-venue accepted quote assets (KRW for UPBIT only)            |
 
+## Accepted coverage ceiling (operator decision 2026-07-17)
+
+CeFi **tick history is accepted as partial coverage**, not 100%. The full 2026-02..07 tick backfill for all MVP venues
+(a ~2.89M-cell `expected_unattempted` gap) is **not closable at the N=1 Tardis throughput ceiling** — the shared
+academic key permits ONE active IP (N=3 measured ~94% 403s + false `attempted_failed` rows; see
+`codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap), a healthy single VM sustains only ~186 cell-fetches/hour
+(≈ 1.8 years for the full gap), and a US region is ruled out on egress (the bucket is `asia-northeast1`). The operator
+**accepted the current coverage** (~50.79% against a **COMPLETE** denominator): the gap stays honestly-labelled
+`expected_unattempted` — it is NOT a bug, a phantom, or hidden-as-captured. Only a Tardis licence upgrade (more
+concurrent IPs) would change the ceiling. Do NOT re-open the full historical backfill as "incomplete work" or burn SPOT
+VMs against the 2.89M gap without a fresh operator decision. Provenance: archived plan
+`plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (terminal Progress Log + P0 decision) +
+`plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (the genuine NON-Tardis residuals).
+
 ## Composes with
 
 - `codex/02-data/availability-manifest-and-data-status.md` § `expected_unattempted` — the enumerator materialises the

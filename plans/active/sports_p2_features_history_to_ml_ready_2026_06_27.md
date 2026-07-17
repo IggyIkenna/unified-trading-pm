@@ -123,8 +123,14 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       2020-2023 / 2024-present). ✅ VERIFY RAN 2026-06-27 (slot 4) — GATE FAILS: features-sports-service bucket empty
       (0/365 era-1, 0/366 era-2, 0/543 era-3). Upstream IS=100% + MTDS=100% for Jan-2026. Features compute (Todo 1) must
       complete first. BLOCKED-PREREQ. Re-run this check after Todo 1 completes.
-- [ ] [DATA] P1. **Features manifest clean over history** — 0 blank-reason, 0 un-evidenced failed. **Gate**:
-      full-history features-manifest query mirrors the IS/MTDS cleanliness.
+- [x] ✅ [DATA] P1. **Features manifest clean over history** — 0 blank-reason, 0 un-evidenced failed. **Gate**:
+      full-history features-manifest query mirrors the IS/MTDS cleanliness. — features-service@10b9bd23; built the
+      `--check-manifest-clean` mode (didn't exist before) mirroring instruments-service's
+      `run_fixture_completeness_audit_2026_06_25.py` convention; ran fresh over 2015-01-01→2026-07-17: **105
+      `attempted_failed` rows, 0 blank-reason (100% carry a classified `error_reason`, e.g.
+      `AvailableAtStampingError=105`) — GATE PASS.** See Progress Log 2026-07-17 entry for detail; this gate is
+      independent of Todo 1's coverage-completion (it audits rows that already exist, not total coverage), per slot-15's
+      explicit hand-off note above.
 - [x] ✅ [CODE] P1. **Fix `check_pipeline_completeness.py` missing `setup_events()` call** — script raises
       `RuntimeError: Event logging not initialized` when reading IS/MTDS indices. Fix: add
       `setup_events(service_name="check-pipeline-completeness", mode="batch", sink=MockEventSink())` after imports (same
@@ -151,16 +157,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                   GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                   gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                   Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                   LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                   Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                   writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                   Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                   were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                   Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                   on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -4251,3 +4257,39 @@ direct check when this SA class is in play.
 `check_pipeline_completeness.py --start-date 2015-01-01 --end-date 2026-07-17 --services features-sports-service` fresh,
 and if the gate passes (gap dates → 0, non-NULL ≥95%, NaNs trace to honest-absence), flip this Todo 1 checkbox with the
 completeness evidence + flip Todo 3 ("Features manifest clean over history") if its own gate also passes.
+
+### 2026-07-17T08:0xZ — data_engineering slot-4 (Todo 3 dispatch — BUILT the missing `--check-manifest-clean` mode + ran it, GATE PASSES, checkbox flipped; Todo 1 untouched, still open)
+
+Booted fresh into slot 4, dispatched to Todo 3 (`sports_p2_features_history_to_ml_ready-002`). Fresh-pulled all 24 slot
+repos clean. Independently re-confirmed the cutover freeze lifted (T6.1b's `sports-cutover-phase6-consolidator-resumed`
+prerequisite is `true`; `gcloud compute instances list --filter="name~fss-backfill"` → `fss-backfill-vm-4` still
+`RUNNING`, consistent with slot-15's concurrent 07:5xZ entry above — same fleet, not a duplicate launch).
+
+**Found the actual blocker for this todo**: `check_pipeline_completeness.py` had NO `--check-manifest-clean` mode — the
+plan's own expected CLI recipe (line ~438 below) referenced a flag that didn't exist yet (confirmed via Explore
+sub-agent + direct read of the 502-line script). The IS-side reference implementation
+(`instruments-service/scripts/run_fixture_completeness_audit_2026_06_25.py`) defines the convention this gate mirrors:
+every `capture_status == attempted_failed` row must carry a non-blank `error_reason` — "un-evidenced failed" reduces to
+the identical check since the manifest schema has no separate stored evidence column post-hoc (a classified
+`error_reason` IS the evidence; confirmed via `unified-api-contracts`/`unified-trading-library` schema read + the
+sibling IS plan's own definition at `sports_p2_history_apifootball_2015_to_present_2026_06_27.md:656`).
+
+**Shipped**: added `ManifestCleanReport` + `_build_manifest_clean_report` + a `--check-manifest-clean` CLI flag to
+`check_pipeline_completeness.py`, wired through `run_completeness_check`/`main` (adds to the exit-code gate — non-zero
+if any blank-reason rows found), plus a per-service blank-reason breakdown in the printed summary and JSON output. 4 new
+unit tests (blank/non-blank classification, date-range filtering, empty-manifest trivial-clean case) — 7/7 pass. QG
+green (full run, no skip flags, sentinel = committed HEAD). Shipped via `quickmerge --agent` —
+features-service@10b9bd23.
+
+**Ran it for real** over the full 2015-01-01→2026-07-17 range
+(`--services features-sports-service --check-manifest-clean`): **105 `attempted_failed` rows total, 0 with blank
+`error_reason`** (all 105 classified as `AvailableAtStampingError`) — **GATE PASS**. Re-ran a second time a few minutes
+later after re-pulling to confirm stability (108→105 as vm-4 keeps landing real compute; still 0 blank-reason both times
+— the gate is not sensitive to Todo 1's in-progress coverage, since it only audits rows that already exist in the
+manifest, not total date coverage). This matches slot-15's explicit hand-off framing above ("flip Todo 3 ... if its own
+gate also passes", independent of Todo 1). Checkbox flipped `- [x]` with evidence above.
+
+**Todo 1 explicitly NOT touched** — not my task, still gated on `fss-backfill-vm-4` finishing (ETA per slot-15's 07:5xZ
+entry: several more hours) + the newly-filed Elo-calculator gap-fill follow-up
+(`issues/sports_elo_calculator_tz_naive_season_boundary_silent_skip_2026_07_17.md`). No VM launched, no manifest
+mutation — read-only audit + code ship. `/done` this task next.

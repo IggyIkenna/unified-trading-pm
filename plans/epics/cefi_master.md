@@ -32,7 +32,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  - ../active/cefi_completion_program_2026_07_15.md
+  - ../archive/2026_07/cefi_completion_program_2026_07_15.md
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
   - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
@@ -633,9 +633,9 @@ Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`cefi_completion_program_2026_07_15`](../active/cefi_completion_program_2026_07_15.md)
+### [`cefi_completion_program_2026_07_15`](../archive/2026_07/cefi_completion_program_2026_07_15.md)
 
-**status**: active · **estimate**: 11.2 cal AI-days (class: infra) **title**: CeFi Completion Program — close the
+**status**: archived · **estimate**: 11.2 cal AI-days (class: infra) **title**: CeFi Completion Program — close the
 honest-coverage gaps to genuinely-done
 
 ### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)

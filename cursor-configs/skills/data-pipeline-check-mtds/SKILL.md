@@ -101,7 +101,7 @@ gcloud storage buckets create "gs://market-data-tick-${mtds_ag}-test-${PROJECT_I
 > - If a run trips the guard, that is the guard WORKING. Serialise; do not override.
 >
 > SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap ·
-> `plans/active/cefi_completion_program_2026_07_15.md` (the measured N=3-vs-N=1 evidence).
+> `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (the measured N=3-vs-N=1 evidence).
 
 For each MVP `(asset_group, venue, data_type)` cell for `--day` (MVP scope from
 `unified_api_contracts.canonical.crosscutting.mvp_scope.is_mvp()`; enumerate the Sports `league_id` axis as its own

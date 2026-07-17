@@ -1,0 +1,272 @@
+name: Persist CI/CD Event
+description: >
+  Persist a CI/CD event as JSONL to GCS (GCP), S3 (AWS), or logs-only. Runs as STEPS inside the caller's own job, so it
+  adds no extra billed job and lands on the caller's own runner. Event schema matches GitHubWorkflowEvent from
+  unified_api_contracts.internal.
+
+# ┌─ WHY THIS IS AN ACTION AND NOT A REUSABLE WORKFLOW (CI-cost STEP 2c, operator option C 2026-07-16) ─┐
+# │ This was `.github/workflows/persist-cicd-event.yml`, a reusable workflow = a separate JOB. GitHub    │
+# │ bills a 1-MINUTE MINIMUM PER JOB, and this fires on ~every run of 22 callers (ci-status-update alone │
+# │ is ~14.3k runs/30d) — so a ~3s ledger write was costing a full billed minute, ~$117/mo fleet-wide.   │
+# │                                                                                                       │
+# │ It ALSO could not be fixed by flipping its `runs-on`: one reusable has ONE `runs-on`, but 17 of its  │
+# │ callers are now self-hosted and 5 are deliberately GitHub-hosted (KEEP). Hosting it on the VM would  │
+# │ hang the 5 hosted callers during a VM outage; keeping it hosted keeps billing the 17. As STEPS the   │
+# │ question dissolves: it runs on whatever runner the caller already has. Movers -> VM/$0, KEEP ->      │
+# │ hosted, no hang, and no separate job either way.                                                      │
+# │ SSOT: plans/active/github_actions_ci_cost_reduction_2026_07_15.md § STEP 2c                          │
+# └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ CONSTRAINTS THAT SHAPED THIS FILE — all VERIFIED against GitHub's docs, not assumed ────────────────┐
+# │ * `continue-on-error` IS supported on composite steps -> best-effort survives the conversion. This   │
+# │   is load-bearing: the reusable was `continue-on-error: true` at JOB level precisely so a persist    │
+# │   hiccup could never redden a caller's run (the "all jobs green but run=failure" badge, plan #220,   │
+# │   which hit all 24 callers). As steps we are INSIDE the caller's job, so an unguarded failure would  │
+# │   now fail the caller's REAL job — strictly worse than the bug that was fixed. Hence every step is   │
+# │   `continue-on-error: true` AND internally tolerant. Do not remove either layer.                     │
+# │ * `timeout-minutes` is NOT supported on composite steps -> the reusable's `timeout-minutes: 5` has   │
+# │   no equivalent. A hung gsutil would otherwise hang the CALLER's job until ITS timeout. Replaced     │
+# │   with an explicit `timeout` on every network call.                                                   │
+# │ * The `secrets` context is NOT available to composite actions -> cloud creds MUST arrive as inputs.  │
+# │   This is why callers pass `${{ secrets.GCP_SA_KEY }}` explicitly instead of `secrets: inherit`.     │
+# │ * The `vars` context is NOT available to a composite action either — MEASURED, and it cost a run.    │
+# │   GitHub's docs imply it resolves; they are wrong. The runner rejects the MANIFEST outright:         │
+# │   "Unrecognized named-value: 'vars'" -> TemplateValidationException -> Failed to load action.yml     │
+# │   (run 29565881093, 2026-07-17). So CLOUD_PROVIDER / CICD_EVENTS_BUCKET / AWS_REGION must be read    │
+# │   by the CALLER (where `vars` does resolve) and passed in as inputs. Do not "tidy" them back to      │
+# │   `${{ vars.X }}` in here — it does not fail at that step, it fails the WHOLE CALLING JOB.           │
+# │ * THE CONSEQUENCE OF THAT, which outranks every guard below: a manifest error is caught at LOAD      │
+# │   time, BEFORE any step executes, so `continue-on-error` CANNOT contain it. Every per-step guard in  │
+# │   this file is powerless against a bad expression in this file. With 22 callers that means one typo  │
+# │   here fails all of them at once, ci-status-update (the promote critical path) included. Treat any   │
+# │   edit to this manifest as fleet-wide: change it, then prove it on ONE caller before it spreads.     │
+# └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+inputs:
+  repo_name:
+    description: Repository name (e.g. unified-trading-library)
+    required: true
+  workflow_name:
+    description: Name of the workflow that produced this event
+    required: true
+  run_id:
+    description: GitHub Actions run ID
+    required: true
+  conclusion:
+    description: >
+      Event conclusion: success, failure, cancelled, skipped. As a reusable workflow this was passed as
+      needs.<job>.result; as a step inside that same job the equivalent is the job-status context — pass it from the
+      caller together with "if: always()", so it reflects the job's outcome rather than merely recording that execution
+      reached this step.
+    required: true
+  branch:
+    description: Git branch name
+    required: false
+    default: ""
+  commit_sha:
+    description: Git commit SHA
+    required: false
+    default: ""
+  duration_seconds:
+    description: Workflow duration in seconds
+    required: false
+    default: "0"
+  details_json:
+    description: Arbitrary JSON payload for extra context
+    required: false
+    default: "{}"
+  cloud_provider:
+    description: >
+      Where to persist: gcp, aws, or anything else for log-only. The CALLER must pass the CLOUD_PROVIDER repo variable —
+      the vars context does not reach a composite action (measured: it fails manifest validation, not just the
+      expression). Deliberately has NO default: an empty value is reported loudly rather than silently degrading every
+      caller to log-only.
+    required: true
+  events_bucket:
+    description: >
+      Bucket for the JSONL event ledger. Caller passes the CICD_EVENTS_BUCKET repo variable; falls back to
+      unified-trading-cicd-events when the caller passes an empty string.
+    required: false
+    default: ""
+  aws_region:
+    description: AWS region for CLOUD_PROVIDER=aws. Caller passes the AWS_REGION repo variable.
+    required: false
+    default: "ap-northeast-1"
+  gcp_sa_key:
+    description: >
+      GCP service-account key JSON, required for CLOUD_PROVIDER=gcp on GitHub-hosted runners. The caller must pass the
+      GCP_SA_KEY secret explicitly — the secrets context does not reach a composite action. Leave empty on self-hosted
+      runners, which authenticate via the runner user's ambient ADC.
+    required: false
+    default: ""
+  aws_access_key_id:
+    description: AWS access key ID (caller passes the AWS_ACCESS_KEY_ID secret). Required for CLOUD_PROVIDER=aws.
+    required: false
+    default: ""
+  aws_secret_access_key:
+    description:
+      AWS secret access key (caller passes the AWS_SECRET_ACCESS_KEY secret). Required for CLOUD_PROVIDER=aws.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve config and build JSON event
+      id: build-event
+      shell: bash
+      continue-on-error: true
+      env:
+        # Passed in by the caller, NOT read from `vars` here — `vars` is unavailable to a composite
+        # action and fails the whole manifest (measured, run 29565881093). Resolved RAW with no
+        # `|| 'local'` default, so an empty value is announced by the guard below rather than
+        # silently degrading to log-only — the "green run that persists nothing" failure class.
+        RAW_CLOUD_PROVIDER: ${{ inputs.cloud_provider }}
+        RAW_EVENTS_BUCKET: ${{ inputs.events_bucket }}
+        INPUT_REPO_NAME: ${{ inputs.repo_name }}
+        INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+        INPUT_RUN_ID: ${{ inputs.run_id }}
+        INPUT_CONCLUSION: ${{ inputs.conclusion }}
+        INPUT_BRANCH: ${{ inputs.branch }}
+        INPUT_COMMIT_SHA: ${{ inputs.commit_sha }}
+        INPUT_DURATION_SECONDS: ${{ inputs.duration_seconds }}
+        INPUT_DETAILS_JSON: ${{ inputs.details_json }}
+      run: |
+        set -uo pipefail
+
+        # "Unset" and "resolved to nothing" are DIFFERENT states and must not look alike.
+        if [ -z "${RAW_CLOUD_PROVIDER}" ]; then
+          echo "::warning::CLOUD_PROVIDER resolved EMPTY — persisting to the log only, NOT to cloud storage." \
+               "If this repo is meant to persist events, set the CLOUD_PROVIDER repo variable."
+          CLOUD_PROVIDER="local"
+        else
+          CLOUD_PROVIDER="${RAW_CLOUD_PROVIDER}"
+        fi
+        # Deliberately step OUTPUTS, not $GITHUB_ENV: a composite action's GITHUB_ENV writes leak into
+        # the CALLER's job env for every later step. Harmless while persist is last, but that is an
+        # assumption about 22 callers rather than a property of this action. Outputs cannot leak.
+        echo "cloud_provider=${CLOUD_PROVIDER}" >> "$GITHUB_OUTPUT"
+        echo "events_bucket=${RAW_EVENTS_BUCKET:-unified-trading-cicd-events}" >> "$GITHUB_OUTPUT"
+
+        # A malformed details_json must not take the event down with it: --argjson REJECTS invalid
+        # JSON, and a caller interpolating an unescaped value into a string literal is a realistic
+        # way to get here. Validate, and degrade to a payload that records the problem.
+        DETAILS="${INPUT_DETAILS_JSON:-{\}}"
+        if ! echo "${DETAILS}" | jq -e . >/dev/null 2>&1; then
+          echo "::warning::details_json is not valid JSON — recording the raw value under .details_invalid"
+          DETAILS=$(jq -n -c --arg raw "${INPUT_DETAILS_JSON}" '{details_invalid: $raw}')
+        fi
+
+        # duration_seconds feeds `| tonumber`, which is fatal on a non-numeric value.
+        DURATION="${INPUT_DURATION_SECONDS:-0}"
+        case "${DURATION}" in
+          ''|*[!0-9.]*) echo "::warning::duration_seconds='${DURATION}' is not numeric — recording 0"; DURATION=0 ;;
+        esac
+
+        EVENT_JSON=$(jq -n -c \
+          --arg event_type "github_workflow_event" \
+          --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+          --arg repo_name "$INPUT_REPO_NAME" \
+          --arg workflow_name "$INPUT_WORKFLOW_NAME" \
+          --arg run_id "$INPUT_RUN_ID" \
+          --arg conclusion "$INPUT_CONCLUSION" \
+          --arg branch "$INPUT_BRANCH" \
+          --arg commit_sha "$INPUT_COMMIT_SHA" \
+          --arg duration_seconds "$DURATION" \
+          --argjson details "$DETAILS" \
+          '{
+            event_type: $event_type,
+            timestamp: $timestamp,
+            repo_name: $repo_name,
+            workflow_name: $workflow_name,
+            run_id: $run_id,
+            conclusion: $conclusion,
+            branch: $branch,
+            commit_sha: $commit_sha,
+            duration_seconds: ($duration_seconds | tonumber),
+            details: $details
+          }')
+
+        echo "Event JSON:"
+        echo "$EVENT_JSON" | jq .
+
+        echo "event_json=$EVENT_JSON" >> "$GITHUB_OUTPUT"
+        echo "date_partition=$(date -u +"%Y-%m-%d")" >> "$GITHUB_OUTPUT"
+
+    # ── GCP: authenticate and write to GCS ──────────────────────────────────
+    # Skipped entirely when gcp_sa_key is empty: on self-hosted runners the runner user's ambient
+    # ADC already authenticates gsutil, so an auth step there is both pointless and a guaranteed
+    # failure (the action rejects an empty credentials_json).
+    - name: Authenticate to GCP
+      if: steps.build-event.outputs.cloud_provider == 'gcp' && inputs.gcp_sa_key != ''
+      continue-on-error: true
+      uses: google-github-actions/auth@v3
+      with:
+        credentials_json: ${{ inputs.gcp_sa_key }}
+
+    - name: Persist event to GCS
+      if: steps.build-event.outputs.cloud_provider == 'gcp' && steps.build-event.outputs.event_json != ''
+      shell: bash
+      continue-on-error: true
+      env:
+        EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+        DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
+        REPO_NAME: ${{ inputs.repo_name }}
+        CICD_EVENTS_BUCKET: ${{ steps.build-event.outputs.events_bucket }}
+      run: |
+        set -uo pipefail
+        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+        GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
+        LOCAL_FILE="${RUNNER_TEMP}/events.jsonl"
+
+        # `timeout` replaces the reusable's job-level `timeout-minutes: 5`, which composite steps
+        # do not support. Without it a hung transfer hangs the CALLER's job, not just this write.
+        timeout 60 gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
+        echo "$EVENT_JSON" >> "$LOCAL_FILE"
+        timeout 60 gsutil cp "$LOCAL_FILE" "$GCS_URI" || echo "::warning::GCS write failed — event not persisted"
+
+        echo "Persisted event to $GCS_URI"
+
+    # ── AWS: authenticate and write to S3 ───────────────────────────────────
+    - name: Configure AWS credentials
+      if: steps.build-event.outputs.cloud_provider == 'aws' && inputs.aws_access_key_id != ''
+      continue-on-error: true
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key_id }}
+        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Persist event to S3
+      if: steps.build-event.outputs.cloud_provider == 'aws' && steps.build-event.outputs.event_json != ''
+      shell: bash
+      continue-on-error: true
+      env:
+        EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+        DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
+        REPO_NAME: ${{ inputs.repo_name }}
+        CICD_EVENTS_BUCKET: ${{ steps.build-event.outputs.events_bucket }}
+      run: |
+        set -uo pipefail
+        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+        S3_URI="s3://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
+        LOCAL_FILE="${RUNNER_TEMP}/events.jsonl"
+
+        timeout 60 aws s3 cp "$S3_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
+        echo "$EVENT_JSON" >> "$LOCAL_FILE"
+        timeout 60 aws s3 cp "$LOCAL_FILE" "$S3_URI" || echo "::warning::S3 write failed — event not persisted"
+
+        echo "Persisted event to $S3_URI"
+
+    # ── Local/none: log only ────────────────────────────────────────────────
+    - name: Log event (no cloud persistence)
+      if: steps.build-event.outputs.cloud_provider != 'gcp' && steps.build-event.outputs.cloud_provider != 'aws'
+      shell: bash
+      continue-on-error: true
+      env:
+        EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+        CLOUD_PROVIDER: ${{ steps.build-event.outputs.cloud_provider }}
+      run: |
+        echo "CLOUD_PROVIDER=${CLOUD_PROVIDER} — skipping cloud persistence"
+        echo "Event payload (logged to GitHub Actions output only):"
+        echo "$EVENT_JSON" | jq .
