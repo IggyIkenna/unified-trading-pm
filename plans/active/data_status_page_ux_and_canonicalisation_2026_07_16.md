@@ -146,7 +146,7 @@ commit-push-flip in its own turn:
 | P8 UI-P2                  | FIXTURES-only deep-drill note                                                                                                                                                                                | deployment-ui@b0525e5 (+ 12c94be, see incident)                  |
 | P3 UI                     | Prediction Catalogue browser (category → cqg → search)                                                                                                                                                       | deployment-ui@3bdb4e4                                            |
 | P6 backend phase-1        | `mvp_only`+`is_mvp` tag on instrument list/CSV + new `/catalogue`+`/download-catalogue-csv`                                                                                                                  | deployment-api@abcce0b, @1e3c7b4                                 |
-| P6 UI phase-1 (partial)   | MVP-only toggle + badge on `InstrumentsModalStandard`; Catalogue Explorer panel in flight                                                                                                                    | deployment-ui@90eba8c (Explorer panel pending)                   |
+| P6 UI phase-1             | MVP-only toggle + badge on `InstrumentsModalStandard`; Catalogue Explorer panel; + a separately-surfaced InstrumentsModal reachability fix (see checkbox evidence)                                           | deployment-ui@90eba8c, @9648f42, @57d913d (fwd-fix), @8958345    |
 | P1 DATA P2 (column-prune) | Metadata-deferred dictionary-encoded read (not row-group streaming) — 28.5% peak-RSS cut, 2 real correctness footguns found+fixed (categorical `.map()` sort order, `groupby(observed=False)` phantom cells) | instruments-service@6c9f604f                                     |
 | P4-B                      | Live SPOT_ASSET emission at discovery time shipped; defi/cefi `catalog.parquet` full-mode regen running on real infra (2370/2666 day-partitions); backfill script drafted, not yet run                       | instruments-service@ce56d499 (regen + backfill script in flight) |
 
@@ -177,12 +177,13 @@ main-orchestrator dispatch per `CLAUDE.md`'s model-tier rule). Operator explicit
 
 **Still open** (see current `- [ ]` checkboxes throughout): P4-B backfill script needs to actually RUN once the
 defi/cefi regens finish (script existing ≠ script run, per the plan's evidence discipline) + CeFi-spot leg mapping + the
-P4-B UI surface; P6 UI Catalogue Explorer panel (in flight); P1 INFRA tarball republish (BLOCKED — confirmed live
-foreign WIP in `deployment-service/terraform.tfvars`, re-checked multiple times this session, still dirty); P1's "verify
-tomorrow's 00:30 UTC cron" (cannot be checked before 2026-07-17 00:30 UTC — genuinely time-gated, not deferred); several
-P2/P9 DATA follow-ups explicitly marked lower-priority in their own sections. A fresh Playwright verification pass
-(read-only, avoiding collision with the in-flight Catalogue Explorer edit) is running against everything shipped in this
-table.
+P4-B UI surface; P1 INFRA tarball republish (BLOCKED — confirmed live foreign WIP in
+`deployment-service/terraform.tfvars`, re-checked multiple times this session, still dirty); P1's "verify tomorrow's
+00:30 UTC cron" (cannot be checked before 2026-07-17 00:30 UTC — genuinely time-gated, not deferred); several P2/P9 DATA
+follow-ups explicitly marked lower-priority in their own sections. P6 UI phase-1 (toggle + badge + Catalogue Explorer +
+the InstrumentsModal reachability fix) completed in a later continuation of this same session — see its checkbox
+evidence for the foreign-hunk incident/fix + the reachability finding/fix; `pw:L2` deferred both times on
+`.playwright-mcp` contention (code+mock+Vitest evidence stands in per this session's established carve-out).
 
 ### 2026-07-16 — P9 round-2 execution (sports root-cause, TradFi/DeFi migrations, UI relabel) + a side-discovered perf fix
 
@@ -690,9 +691,45 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       deployment-api@1e3c7b4 + Evidence: `test_route_data_status_catalogue.py` (6 tests: de-dupe, mvp_only filter,
       search substring, venue narrow, manifest-read-failure→500, CSV/JSON row-count parity); full `quality-gates.sh`
       green (same run as P1, no incremental failures).
-- [ ] [UI] P2. _(phase 1)_ `InstrumentsModalStandard` (`DataStatusDrilldown.tsx:481`) — add an "MVP only" toggle (mirror
-      `VenueCoverageTable` pills) + MVP badge per row + thread `mvp_only`/`search` into the CSV URL. New "Catalogue
-      Explorer" panel driven by `/data-status/catalogue`. `[UI]` + pw:L2.
+- [x] [UI] P2. ✅ _(phase 1)_ `InstrumentsModalStandard` (`DataStatusDrilldown.tsx:481`) — "MVP only" toggle (checkbox,
+      resets pagination like `debouncedSearch`) + per-row MVP badge + `mvp_only` threaded into
+      `fetchInstrumentsForShard` + `buildCsvDownloadUrl` (CSV/list parity; `search` was already NOT threaded into the
+      CSV builder pre-existing — out of this unit's explicit scope). New `CatalogueExplorer.tsx` panel: asset_group
+      select + debounced venue/instrument_type/data_type/search narrows + MVP toggle + pagination, driven by new
+      `fetchInstrumentCatalogue` +`buildCatalogueCsvDownloadUrl` (+ `InstrumentCatalogueRow`/`Response` types) in
+      `client.ts`; renders the `"captured instruments (availability-derived)"` label verbatim; "Download CSV" carries
+      the SAME filters as the on-screen view. Mock handlers for `/catalogue`+`/download-catalogue-csv` (4 rows spanning
+      captured/empty_confirmed/attempted_failed × mixed `is_mvp`). Mounted IS-only in `DataStatusTab.tsx`, sibling to
+      `PredictionCatalogueCard`. — deployment-ui@90eba8c (toggle+badge), @9648f42 (Catalogue Explorer — this commit ALSO
+      accidentally swept a concurrent agent's uncommitted `FixturesBrowser` hunk into `client.ts`/`mock-api.ts` via
+      quickmerge `--files`'s whole-file `git add`, same failure class as the `12c94be` incident above), @57d913d
+      (forward-fix: surgically reverted exactly those 2 foreign hunks — 87 lines, byte-diffed against the original
+      uncommitted patch to confirm exact scope; the other agent's untracked `FixturesBrowser.tsx`/`.test.tsx` files were
+      never touched).
+
+      **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
+              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+
+              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
       manifest-backed catalogue projection so the explorer can list instruments that EXIST in the catalogue (not just
