@@ -871,27 +871,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                          been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                          date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                          in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                          Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                          truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                          `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                          instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                          guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                          `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                          Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                          `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                          empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                          `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                          `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                          transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                          pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                          `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                          `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                          (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                          carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
@@ -1224,6 +1224,46 @@ search):
 - [x] ~~[UI] P2. (P6 phase-1 UI — NOT done)~~ ✅ RESOLVED — the P6 phase-1 UI (InstrumentsModalStandard "MVP only"
       toggle + per-row badge + CSV threading + Catalogue Explorer panel) DID land after this note was written — see the
       flipped P6 `[UI] P2 _(phase 1)_` checkbox above (`DataStatusDrilldown.tsx`). This note was stale.
+
+---
+
+## P10 — Sports fixtures browser: filter by date / league / team (operator round 3, 2026-07-17)
+
+> Operator: _"for catalogue sports should have all the fixtures broken down by searching by date, league and/or team for
+> filtering"_. The P9 fixtures browser shipped league→day grouping with a `league_id` filter over a **today-relative**
+> window only — so team search did not exist and no historical date was addressable (`days_back` caps at 60).
+
+- [x] ✅ **[BACKEND] P2 — DONE 2026-07-17.** `list_fixtures_by_league_and_day` / `GET /fixtures/browse` gained the two
+      missing axes. **`team=`** — case-insensitive substring across home/away team **name AND id**, matching whichever
+      side the team played; applied POST-parse so it keys on `_row_to_fixture`'s normalized fields rather than the raw
+      split-shard variants (`af_home_name` etc.). **`start_date`/`end_date=`** — an ABSOLUTE `YYYY-MM-DD` window that
+      can address **any** range in history (the relative window could only ever reach 60 days from today); a missing
+      side is filled from the relative default, a reversed range is swapped, and the span is capped at
+      `_MAX_WINDOW_SPAN_DAYS` (120) so the bounded per-day read — and **single-walk discipline** — is unchanged (no new
+      whole-corpus walk, only which days are read). An unparseable date degrades to the relative window rather than
+      500ing. **Cache-key fix**: `_BROWSE_CACHE` now keys on the RESOLVED window + every filter — previously a team
+      narrow would have been served the cached UNFILTERED rows. — deployment-api@5815582 + Evidence: QG green (120s);
+      **real-GCS** — baseline ±3d = 14 leagues/123 fixtures, `team='atlanta'` → 3/3 genuinely match, `league_id='129'` →
+      only 129 returned, absolute `2026-05-01..03` → 354 fixtures across exactly those 3 days (a window the old UI could
+      not reach); +11 tests (`TestTeamFilter` home/away/id/blank-noop/cache-isolation/combined, `TestAbsoluteDateWindow`
+      jump/fill-either-side/reversed/span-cap/unparseable-fallback/cache-isolation).
+- [x] ✅ **[UI] P2 — DONE 2026-07-17.** `FixturesBrowser.tsx` filter bar reworked: the `Days back`/`Days forward` number
+      inputs are REPLACED by real **From date / To date** pickers (prefilled today-7 → today+30, so the default view is
+      unchanged but any range is now selectable), plus a new **Team** input beside **League id**. Text filters run
+      through the house `useDebounce` (300ms) — each distinct value is a fresh windowed GCS read server-side, so a
+      per-keystroke refetch would be genuinely expensive. The window note now states the actual date range + active
+      narrows, and warns when a chosen range exceeds the server's 120-day span cap (rather than silently
+      under-reporting). `mock-api.ts`'s `/fixtures/browse` handler now HONOURS the date/league/team narrows — an
+      unfiltered mock made the new filter bar look broken in local mock mode. — deployment-ui@8cdae0b + Evidence: full
+      UI QG green (tsc/eslint/vitest/build); `FixturesBrowser.test.tsx` 10 tests pass (absolute-default-window shape,
+      league refetch, team refetch, historical-range refetch, combined date+league+team query, span-cap warning). `[UI]`
+      — pw:L2 deferred to the plan's final local full-stack Playwright pass (mirrors the P9 Q4 / fixtures-browser
+      precedent; Vitest + the real-GCS backend proof above are the cited evidence).
+
+> **Scope note (honest bound):** "all the fixtures" is served within a **bounded window** — the reader walks explicit
+> per-day paths, so an unwindowed all-history listing would be a whole-corpus GCS walk (review-blocking, single-walk
+> discipline). The absolute date range makes **any** date reachable (which is what the ask needs); it just reads ≤120
+> days at a time rather than all of history at once.
 
 ---
 
