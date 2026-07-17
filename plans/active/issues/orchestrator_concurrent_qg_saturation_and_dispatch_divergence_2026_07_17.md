@@ -37,6 +37,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
+> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
+> items in the plan and mirror them here. This doc stays the detail/evidence record.
+
 # Orchestrator concurrent-QG box saturation → backend up-but-slow + dispatch-status divergence
 
 > **Filed by main orchestrator (agt-46dce4) at operator request, 2026-07-17 ~14:07Z.** Diagnostic doc — two related

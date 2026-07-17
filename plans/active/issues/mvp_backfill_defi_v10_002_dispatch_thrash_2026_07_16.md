@@ -46,6 +46,11 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
+> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
+> items in the plan and mirror them here. This doc stays the detail/evidence record.
+
 > **NOTIFY-OPERATOR (fleet efficiency, not correctness).** Not data-loss or a wrong-result bug — a dispatch-efficiency
 > defect burning real agent-hours re-deriving the same "not actionable yet" verdict on one task, repeatedly, in a tight
 > loop.

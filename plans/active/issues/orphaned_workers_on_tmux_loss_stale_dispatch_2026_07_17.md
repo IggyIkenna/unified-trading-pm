@@ -28,6 +28,11 @@ depends_on: []
 last_updated: 2026-07-17
 ---
 
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
+> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
+> items in the plan and mirror them here. This doc stays the detail/evidence record.
+
 ## What the operator saw
 
 > "backlog says 3 tasks are dispatched but there is only one active worker running in the fleet? why? there was also a

@@ -70,6 +70,11 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
+> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
+> items in the plan and mirror them here. This doc stays the detail/evidence record.
+
 > **NOTIFY-OPERATOR — fleet efficiency + account-budget burn.** Not a crash. The AO fleet spends the large majority of
 > its spawns booting workers that immediately park on tasks no worker can complete, and the resulting churn is now
 > eroding the usable account pool. This doc records the VERIFIED root cause and cross-references the three existing open
