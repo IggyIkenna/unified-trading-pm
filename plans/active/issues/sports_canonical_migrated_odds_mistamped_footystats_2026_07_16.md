@@ -284,6 +284,88 @@ twin sit on **23** days, and **22 of those 23 are exactly the gate's gap days** 
 
 ## Progress Log
 
+**2026-07-17 (later) — EXECUTION leg: the merge is PROVEN CORRECT IN SIMULATION, and the SCOPE COLLAPSES ~88%. Three
+inherited claims falsified. Zero mutations so far.**
+
+Every number below is measured live this session; nothing inherited. Scratch: `~/tmp-splitmerge/`.
+
+### 1. ✅ The prior leg's pilot arithmetic REPRODUCES exactly
+
+Independent re-read of both populations on `day=2022-04-16`: migrated 17 objects / **167,464** rows · canonical 207
+objects / **5,626** rows · derivation `venue := instrument_id[1].upper()` **100.0000% (167,464/167,464)** · union
+**83,916** · canonical-only **184** · migrated-only **78,290** · schema diff = `data_source` only. **Confirmed.**
+Additionally: the union is **invariant** under poll-key vs tick-identity-key and under venue case ⇒ those numbers are
+robust, not artifacts.
+
+### 2. 🔴 THE ACCEPTANCE TEST IS ALREADY ANSWERED — no GCS mutation needed to evaluate it (the doc said it required one)
+
+The doc states the grid "cannot be checked by row arithmetic … requires **running the MDPS derive** over the merged
+cells, which cannot precede the merge." **That is false.** `reprocess_date` calls
+`adapter.process_to_bucketed_df(raw_df)` — a **pure function of the raw DataFrame**. So the derive can be run locally on
+a merged DataFrame with **zero writes** (`~/tmp-splitmerge/simulate_derive.py`).
+
+**The simulation is VALIDATED against ground truth**: canonical-alone reproduces the known measured baseline **T-24h=317
+and 0 on every other horizon** — exactly what the truncation doc measured from a live `--force` run. A simulation that
+reproduces the real derive's known output is faithful.
+
+| horizon | acceptance (corpus) | merged derive | verdict                          |
+| ------- | ------------------- | ------------- | -------------------------------- |
+| T-12h   | 896                 | **896**       | ✅ exact                         |
+| T-6h    | 898                 | **898**       | ✅ exact                         |
+| T-4h    | 896                 | **896**       | ✅ exact                         |
+| T-2h    | 884                 | **884**       | ✅ exact                         |
+| T-1h    | 270                 | **270**       | ✅ exact                         |
+| T-10m   | 870                 | **870**       | ✅ exact                         |
+| T-24h   | 317                 | **894**       | ✅ strictly RICHER (+577)        |
+| T-0     | 338 (27 valid)      | **27**        | ✅ = the 27 valid (MDPS@3bf56ff) |
+
+**⇒ The merge reproduces 6/7 horizons exactly, is strictly richer on the 7th, and loses nothing.** The gate is met
+**before** any mutation.
+
+### 3. 🔴 FALSIFIED — the migrated population is internally **2× DUPLICATED** (not reported by any prior leg)
+
+167,464 rows carry only **83,732** distinct keys — exactly 2×. Mechanism: the 17th object (the bare
+`data_type=odds/ticks_migrated_*.parquet`, **no `league=` segment**) holds the **same 83,732 ticks** as the 16 league
+objects, with `league_id` **NULL**. Same migration timestamp. The 2× ratio holds in **every** horizon bucket
+(10,214→5,107 · 11,082→5,541 · 18,948→9,474 · 24,594→12,297 · 28,572→14,286 · 11,512→5,756 · 11,126→5,563). The doc's
+"167,464 rows" headline overstates the real payload by 2×; the true payload is **83,732 ticks**. **De-dup on write is
+mandatory** (the adapter's own dedup masks this at the derive layer, so it was invisible to every prior leg).
+
+### 4. 🔴 FALSIFIED — canonical has **≥2 SCHEMA FAMILIES**, and one has NO `venue` column
+
+The doc's "the migrated schema is identical to the consumable schema (22 of 23 columns; only `data_source` differs)" is
+true **only on family-A days**. Measured: `day=2023-01-15` — **all 165** canonical consumable objects carry
+`available_at`/`bookmaker_key`/`fixture_id` and **NO** `venue`/`instrument_type`/`data_source` (family B), at the _same_
+path shape. **8 of 42** sampled days (19%) hit this. This corroborates [[mdt_legacy_canonical_row_gap_2026_07_16]] §
+schema census (4 families; the trio in only 13.4% of cells) — but that was never carried into the merge spec. **A
+`venue`-bearing merge key is broken by construction on family-B days.**
+
+**Fix (measured, not assumed)**: `venue == instrument_id[1].lower()` at **100.0000%** in BOTH populations ⇒ `venue` is
+redundant in the key. The family-agnostic key `(instrument_id, fetch_utc, price, bm_time)` reproduces the pilot day's
+arithmetic **EXACTLY** (83,732/5,626/83,916/184/78,290). That is the key the execution must use.
+
+### 5. 🔴 THE SCOPE COLLAPSES ~88% — most days do NOT need the merge
+
+Cached-inventory scoping (no new whole-corpus walk) reproduces the doc exactly: **16,969** migrated objects / **1,815**
+object-days / **1** non-migrated `batch_footystats` object. But a 42-day stratified probe (real reads + real derive,
+read-only) finds:
+
+| result                               | days                                                        |
+| ------------------------------------ | ----------------------------------------------------------- |
+| migrated adds **0** raw keys         | **30 / 34** clean days — `mig_keys == can_keys` **EXACTLY** |
+| migrated **adds** keys ⇒ needs merge | **4 / 34** — 2022-04-16, 2022-10-07, 2023-03-05, 2024-04-24 |
+| merge **loses** derive rows          | **0 / 34**                                                  |
+
+On the redundant days the migrated keyset **equals** canonical's (6,899==6,899 · 45,768==45,768 · 148,087==148,087 …) —
+i.e. canonical already holds that content under the CORRECT stamp, and the `batch_footystats` copy is a pure duplicate.
+**Merging those days is ~238k object rewrites for ZERO gain** — churn on a live bucket, not a fix. The doc's P0 todo
+"quantify the consumable-vs-migrated split across all 1,815 migrated days" is therefore **load-bearing and must complete
+before the merge** — it is now in flight (full 1,815-day probe, read-only, resumable).
+
+**Consequence for the manifest**: the 42,476 mis-stamped rows are wrong on EVERY day, but the correct remedy is **not
+uniform** — a day whose migrated objects are pure duplicates wants those objects (and their rows) REMOVED, not moved. A
+blanket "move the manifest rows with the objects" would re-home 16,969 objects of which ~88% are duplicates.
+
 **2026-07-17 — RE-STAMP leg (operator ruling = option B, fix the STAMP not the reader). Blast radius COMPLETE. The
 "re-stamp" is MIS-SPECIFIED: it is a read-split-merge. Zero mutations to GCS/manifest.**
 
