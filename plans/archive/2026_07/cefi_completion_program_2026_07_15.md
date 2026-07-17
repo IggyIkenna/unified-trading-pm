@@ -44,6 +44,14 @@ source:
 
 # CeFi Completion Program — close the honest-coverage gaps
 
+> **🔴 CORRECTION 2026-07-17 — THIS ARCHIVAL'S CORE PREMISE IS FALSE. Do not cite it as settled fact.** The "not
+> closable at the N=1 Tardis throughput ceiling ≈ 1.8 years" claim below came from an ERRONEOUS verdict (extrapolating a
+> BROKEN system's throughput and mistaking a regression for physics). Measured from this repo's own manifest
+> `written_at`: **June 2026 captured 2,791,042 rows, peak day 2,157,060 ≈ 89,878/hour** vs **~254/hour now** — a **~350x
+> REGRESSION**, not a ceiling. At June rates the 2.89M-cell gap is ~1-2 days of work. The "timeout diagnosis" this
+> archival marks as _superseded_ is in fact the ROOT CAUSE. Full evidence + reopened P0s:
+> `plans/active/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md`. Whether to un-archive is an operator call.
+>
 > **🗄️ ARCHIVED 2026-07-17 — CLOSED at honest-done.** Operator accepted current CeFi coverage (**50.79%** against a
 > **COMPLETE** denominator; the 2,892,108-cell tick gap is honestly-labelled `expected_unattempted`, not closable at the
 > N=1 Tardis throughput ceiling ≈ 1.8 years). All work achievable inside that ceiling SHIPPED (E liquidations, G/G-code

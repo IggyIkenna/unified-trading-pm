@@ -400,6 +400,10 @@ cmd_install() {
   install -m 0644 "${HERE}/github-glue-runner@.service"       "${UNIT_DIR}/github-glue-runner@.service"
   install -m 0644 "${HERE}/github-glue-slot-refresh.service"  "${UNIT_DIR}/github-glue-slot-refresh.service"
   install -m 0644 "${HERE}/github-glue-slot-refresh.timer"    "${UNIT_DIR}/github-glue-slot-refresh.timer"
+  # Token cache refresher — keeps Secret Manager OFF the runner hot path (see refresh-gh-token.sh).
+  install -m 0755 "${HERE}/refresh-gh-token.sh"               "${RUNNER_BASE}/refresh-gh-token.sh"
+  install -m 0644 "${HERE}/github-glue-token-refresh.service" "${UNIT_DIR}/github-glue-token-refresh.service"
+  install -m 0644 "${HERE}/github-glue-token-refresh.timer"   "${UNIT_DIR}/github-glue-token-refresh.timer"
   systemctl daemon-reload
 
   # 7) enable + start both pools, then the refresh timer
@@ -407,6 +411,12 @@ cmd_install() {
     systemctl enable --now "github-glue-runner@${inst}.service"
   done
   systemctl enable --now github-glue-slot-refresh.timer
+  systemctl enable --now github-glue-token-refresh.timer
+  # Seed the cache synchronously: /run is tmpfs, so it is empty right now, and every runner started
+  # below would otherwise cold-start against Secret Manager — the exact hot-path call we removed.
+  systemctl start github-glue-token-refresh.service || {
+    echo "WARN: token refresh failed at install; runners will fall back to a direct Secret Manager read" >&2
+  }
   log "started ${GLUE_COUNT} ephemeral (glue-*) + ${WRITER_COUNT} long-lived (writer-*) — verify with: $0 status"
 }
 
@@ -415,7 +425,7 @@ cmd_status() {
   systemctl --no-pager --type=service list-units 'github-glue-runner@*' || true
   echo
   log "slot-refresh timer:"
-  systemctl --no-pager list-timers 'github-glue-slot-refresh*' || true
+  systemctl --no-pager list-timers 'github-glue-slot-refresh*' 'github-glue-token-refresh*' || true
   local stamp="${RUNNER_BASE}/repo.refreshed-at" stamp_val=""
   [ -f "${stamp}" ] && stamp_val="$(tr -dc '0-9' < "${stamp}")"
   # Guard the arithmetic: an empty/garbage stamp would make $(( now - "" )) a fatal syntax error
@@ -461,8 +471,10 @@ cmd_teardown() {
     systemctl disable --now "github-glue-runner@${inst}.service" 2>/dev/null || true
   done
   systemctl disable --now github-glue-slot-refresh.timer 2>/dev/null || true
+  systemctl disable --now github-glue-token-refresh.timer 2>/dev/null || true
   rm -f "${UNIT_DIR}/github-glue-runner@.service" "${UNIT_DIR}/github-glue-runner.slice" \
-        "${UNIT_DIR}/github-glue-slot-refresh.service" "${UNIT_DIR}/github-glue-slot-refresh.timer"
+        "${UNIT_DIR}/github-glue-slot-refresh.service" "${UNIT_DIR}/github-glue-slot-refresh.timer" \
+        "${UNIT_DIR}/github-glue-token-refresh.service" "${UNIT_DIR}/github-glue-token-refresh.timer"
   systemctl daemon-reload
   cmd_prune || true
   log "systemd units removed. Runner dirs + slot + ${ENV_FILE} left in place; rm -rf ${RUNNER_BASE} ${ENV_FILE} to fully purge."

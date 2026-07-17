@@ -6,7 +6,7 @@ summary:
   unified-api-contracts@164a3937) vanished from HEAD — git reflog shows "Reset to origin/live-defi-rollout" entries I
   did not issue myself. Both commits were recovered via `git cherry-pick` from reflog; no work was permanently lost this
   time, but the mechanism is unidentified and could silently destroy uncommitted OR committed agent work fleet-wide.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -21,6 +21,20 @@ execution_scope: orchestrator-agent
 priority: P0
 source: [utl_reuse_phase7_low_lint_tail_2026_07_13.md, slot-11 backend-engineer task]
 resolved_by:
+  - "agent-orchestrator@911036c4 — ROOT CAUSE FIXED: `heal_dead_slot_branch_quarantine()` force-realigned slot repos via
+    `git checkout -B <base> origin/<base>`, silently discarding committed-but-unpushed local commits when
+    `classify_maker_liveness()` was called with `recent_edit=False` hardcoded (a false-negative for a genuinely-live
+    worker with a stale .agent-claim). Now `_MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN=900` (_branch_state.py:383,460)
+    REFUSES to touch any stop-state repo whose HEAD commit is <15 min old, leaving it quarantined for a human page
+    instead. Fleet blast radius was 63+ real commits across 8 repos / 10 slots over 3+ weeks."
+  - "agent-orchestrator@5297819 — independent SECOND layer (detection, via the superseded sibling
+    slot6_git_reset_dataloss_2026_07_13): `HeadBackwardCanary`, wired into server.py lifespan"
+  - "DATA RECOVERED: the two named commits are STILL-LOST as literal SHAs (they were the discarded originals) but their
+    CONTENT shipped under recovery SHAs — unified-trading-library@ff387620 and unified-api-contracts@e910e6df, both
+    reachable on origin/live-defi-rollout with identical messages + matching author-dates. No permanent loss."
+  - "VERIFIED 2026-07-17 by independent skeptical audit (data-loss class held to a STRICT bar: a hypothesised root cause
+    would NOT have counted). Root cause IDENTIFIED CONCLUSIVELY by reading the live code path, both claimed unit tests
+    exist and their assertions match the refuse/preserve-and-realign behaviour, and the canary is verifiably running."
 locked_by:
 drift_direction: advance-code
 depends_on: []

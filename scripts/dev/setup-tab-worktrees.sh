@@ -374,7 +374,11 @@ slot_identity_email() {
 # Install the strict-quickmerge pre-push hook into a Path-B clone's own .git/hooks.
 install_strict_quickmerge_hook() {
     local clone_dir="$1"
-    local hook_src="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+    # The ONE canonical pre-push (strict-quickmerge + dep-alignment, chained) — same source as
+    # install-hooks.sh + slot-cron-ff-pull.sh. Was scripts/dev/hooks/pre-push-strict-quickmerge.sh,
+    # which installed the strict guard WITHOUT dep-alignment and only ever reached .tabs/ clones;
+    # main-workspace clones got install-hooks.sh's dep-align-only hook and enforced nothing.
+    local hook_src="${WORKSPACE_ROOT}/unified-trading-pm/scripts/hooks/pre-push"
     local hook_dst="${clone_dir}/.git/hooks/pre-push"
     if [[ -f "${hook_src}" && -d "${clone_dir}/.git/hooks" ]]; then
         cp "${hook_src}" "${hook_dst}" && chmod +x "${hook_dst}"
@@ -449,7 +453,7 @@ copy_workspace_file() {
 # Seed a slot's Claude Code agent symlinks at provision time:
 #   • <slot>/CLAUDE.md             → the startup-load ruleset point for an orchestrator-spawned
 #                                    agent (CWD = the slot root, isolated CLAUDE_CONFIG_DIR).
-#   • <slot>/.claude/skills/<name> → each /<skill> slash-command.
+#   • <slot>/.claude/skills       → cursor-configs/skills/ (ONE dir link → every /<skill> command).
 # Without this, those symlinks first appear only on the slot's FIRST quality-gates.sh run (whose
 # post-gate calls the SAME helper), leaving a freshly-provisioned slot bare until then. We reuse
 # the SSOT linker (no logic fork) so provision-time and QG-time seeding stay byte-identical.

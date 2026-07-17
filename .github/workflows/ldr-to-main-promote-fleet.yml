@@ -774,8 +774,23 @@ jobs:
                 if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
                   echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
                   printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
-                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" \
-                    --body "⛔ **Provenance gate (LDR→main fleet bot)** — this promote carries code that bypassed quickmerge (no \`Quickmerge:\` trailer, not a carve-out). Auto-merge NOT armed. Re-ship via \`quickmerge --agent --files '<paths>'\` or revert on \`live-defi-rollout\`." 2>/dev/null || true
+                  # The HTML marker is a STABLE, machine-readable signal — promotion_lag_monitor.py
+                  # greps for it so a provenance-blocked repo is reported as "BLOCKED: non-quickmerge
+                  # code (re-ship via quickmerge)" instead of an anonymous "PROMOTION LAG > 60m".
+                  # Without it the block is invisible: it lives only in this comment + a workflow log
+                  # line, so mtds sat deliberately blocked ~23h looking exactly like a stuck pipeline,
+                  # and the wrong conclusion ("the bot forgot to arm auto-merge") was acted on
+                  # 2026-07-16 — the gate was manually overridden and 33 bypassed commits reached main.
+                  # KEEP THIS MARKER IN SYNC with _PROVENANCE_MARKER in promotion_lag_monitor.py.
+                  # Body assembled via printf so every line stays INDENTED inside this `run: |`
+                  # block — a col-0 continuation dedents out of the block and makes the whole
+                  # workflow unparseable, which GitHub answers by SILENTLY unscheduling it.
+                  PROV_BODY="$(printf '%s\n' \
+                    '<!-- promote:provenance-blocked -->' \
+                    '⛔ **Provenance gate (LDR→main fleet bot)** — this promote carries code that bypassed quickmerge (no `Quickmerge:` trailer, not a carve-out). Auto-merge NOT armed. Re-ship via `quickmerge --agent --files '"'"'<paths>'"'"'` or revert on `live-defi-rollout`.' \
+                    '' \
+                    '**Do NOT hand-arm auto-merge to "unblock" this** — that promotes the bypassed code AND moves the provenance baseline past it, so the violation is laundered and never flagged again (happened 2026-07-16).')"
+                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "$PROV_BODY" 2>/dev/null || true
                   rm -rf "$PROV_TMP"; _done BLOCKED; return 0
                 elif [ "${PROV_RC:-0}" -ne 0 ]; then
                   echo "  WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. Output: $PROV_OUT"

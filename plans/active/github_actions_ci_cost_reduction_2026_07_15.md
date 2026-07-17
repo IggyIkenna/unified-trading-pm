@@ -14,8 +14,7 @@ summary: >-
   CANARY GREEN on LDR with billable={} (zero billed minutes) and the JIT deregister/re-register lifecycle proven from
   the journal. 1 of 38 movers is flipped; main is UNTOUCHED. Counts corrected 39/17 -> 38/18 (agent-audit is KEEP-U: a
   pure reusable caller with no runs-on). Next action = OPERATOR GATE, then the next 10 (5 simple + 5 complex), then the
-  remaining 26. Two P0s pending: rotate GH_PAT (agent-caused transcript exposure), and quickmerge's --agent sentinel
-  races its own rebase on a busy branch.
+  remaining 26. One P0 pending: quickmerge's --agent sentinel races its own rebase on a busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -69,8 +68,8 @@ drift_direction: advance-code
      (`self-hosted,Linux,X64,glue-writer`, long-lived). Labels **disjoint** → writers cannot steal mover jobs.
    - **Deploy clone** = `/opt/glue-deploy/unified-trading-pm` (fresh; **never** an AO slot clone). Runner root =
      `/opt/github-glue-runners` (root-owned; `venv`/`repo`/`toolcache` runner-owned).
-   - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET=GH_PAT` (the NAME); the wrapper
-     resolves it per start via `ubuntu`'s ADC. Rotation needs no redeploy (everything reads `latest` by name).
+   - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET` (the secret's NAME); the wrapper
+     resolves it per start via `ubuntu`'s ADC. Everything reads `latest` by name, so no redeploy is ever needed.
    - **10 of 38 flipped** (canary + batch 2), **7/7 dispatched GREEN**, incl. BOTH cross-boundary tests (a self-hosted
      caller's `notify-slack` and `persist-cicd-event` jobs ran on GitHub-HOSTED runners, as designed). 2 of the 9 are
      flipped but deliberately un-dispatched (`digest-drift-sweep`, `conflict-resolution-agent` — a dispatch would cause
@@ -111,10 +110,9 @@ drift_direction: advance-code
    capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
    AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
    2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
-7. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
-   exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
-   then checks, so on a busy LDR it can never self-validate; workaround = chain
-   `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
+7. **One P0 is open and is NOT blocked on the gate** — see the todos: the **quickmerge `--agent` sentinel race** (its
+   own STAGE-0.4 rebase invalidates the sentinel STAGE 3 then checks, so on a busy LDR it can never self-validate;
+   workaround = chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
 
 **THE LESSON THAT COST THE MOST — apply it to every remaining flip (2026-07-16):** every verifier written before the
 deploy reported **green on a box that would have failed**, always the same way — the right worry checked in the wrong
@@ -393,25 +391,10 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       account that actually has to do it; (2) a token without `Administration:write` would fail at first start with an
       opaque journal → install probes `registration-token` (expects 201) up front. `status`/`prune` resolve the same way
       (explicit env → the name in the env file), so they survive a secret-path install; `status` degrades to omitting
-      the live listing rather than dying. **Free side effect:** everything reads the secret's `latest` **by name**, so
-      rotation needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL Secret
-      Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on the npm
-      branch); `quality-gates.sh --no-fix` **exit 0**.
-- [ ] [SECURITY] P1. **Rotate `GH_PAT` — agent-caused exposure 2026-07-16. OPERATOR-DEFERRED to after this exercise**
-      (operator 2026-07-16: "dont worry about the GH_PAT for now i will rotate it after we finish this exercise").
-      **Rotation is SAFE whenever you want it — VERIFIED on the box, not assumed:** the PAT is read once at runner START
-      (`glue-runner-run.sh:46-47`) purely to mint a JIT config / registration token; the running runner then
-      authenticates with its OWN `.credentials`, so rotating deregisters nothing. Everything reads the secret's `latest`
-      **by name**, and `glue-*` restarts after every job, so a new version is live within one job cycle (the writers
-      pick it up on their next restart). **The real caution is other consumers** — check `deployment-api` and the other
-      GitHub tokens for anything pinning a version or holding a copy BEFORE disabling the old version. While testing
-      D1's resolver, a harness assertion compared the token **by value** and printed it on mismatch, putting the live
-      `GH_PAT` (fine-grained, `Administration:write`, **never expires**) into the session transcript
-      (`~/.claude/projects/…/03a5cc50-*.jsonl`) + that conversation's API context. Nothing published publicly. **Fix
-      applied to the harness:** secrets are now asserted by PROPERTY (empty / non-empty / length), never by value — a
-      failing assertion can no longer leak. **Operator action:** add a new version to the `GH_PAT` secret; every
-      consumer reads `latest` by name so no redeploy is needed. Check other holders first (`deployment-api` and the
-      other GitHub tokens the operator flagged) for anything pinning a version.
+      the live listing rather than dying. **Free side effect:** everything reads the secret's `latest` **by name**, so a
+      new secret version needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL
+      Secret Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on
+      the npm branch); `quality-gates.sh --no-fix` **exit 0**.
 - [x] ✅ [INFRA] P0. **D2 — `preflight` GREEN on the VM (exit 0) — unified-trading-pm@940a5d673.** Ran via AWS SSM
       against `i-0c9b283b31d6b5ca7`. **It only became meaningful after being rewritten**, and that is the headline of
       this phase: the original checked `command -v` in _the caller's_ shell. Run from a login shell it reported **uv ✓**
@@ -676,6 +659,18 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
     remove it after (true pre-merge canary); or **(b)** promote that one flip to main alone with the runners already
     live and a fast revert ready. Do the workflow_dispatch-capable canary (`reconcile-release-tags`) FIRST regardless,
     to prove the pool.
+- [ ] [REVIEW] P2. **OPERATOR CALL (D2) — the CI/CD event ledger loses rows; decide fix-vs-accept (NEW 2026-07-17).**
+      `persist-cicd-event` appends by downloading the whole `events.jsonl`, appending a line, and re-uploading — an
+      unlocked read-modify-write on ONE object per repo per day. Overlapping writers silently discard each other's rows,
+      and **every writer still logs `Persisted event to gs://…` and exits 0**, so the loss is invisible (the same
+      healthy-output-equals-dead-output shape as the other three findings). ~20 PM callers share a single object;
+      `ci-status-update` is 14,320 runs/30d. **The loss RATE is NOT measured** — code-read + argument only; the issue
+      doc says how to measure it. **The blocking question is WHO READS THIS LEDGER** (the schema claims
+      `GitHubWorkflowEvent` from `unified_api_contracts.internal`, implying a real consumer) — that decides whether
+      one-object-per-event is free or expensive. **Raised with the operator twice in-session, unanswered — do not
+      re-derive it, the analysis is complete.** STEP 2c reproduces the behaviour faithfully and deliberately (fixing it
+      inside a cost refactor would bundle a silent behaviour change into a diff 22 workflows depend on). SSOT:
+      `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.
 - [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** Confirmed
       structure: `ci-status-update.yml` `update-ci-status` job does `actions/checkout@v5` (L54) +
       `google-github-actions/auth@v3` (L82) + `pip install google-cloud-firestore` (L104) — ~15s on a warm VM for a
@@ -1283,9 +1278,9 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `:latest sha256:5122f7ab…`. Born broken in `0d5663d4d` (2026-06-19); `git log -S` proves it was never `GH_PAT` ⇒ ~27
   days × 4/day ≈ **110 green runs that did nothing**. NOT caused by the flip (`23ce709cc` touched only `runs-on:`).
   **Not fixed here — it is a fleet event, not a one-liner**: every repo being stale means the first correct sweep fans
-  `dependency-update` to all 16 at once, `GH_PAT` is pending rotation, and the dispatch POST (:160-176) has the same
-  defect. Issue doc: `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side
-  benefit for this plan: the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
+  `dependency-update` to all 16 at once, and the dispatch POST (:160-176) has the same defect. Issue doc:
+  `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side benefit for this plan:
+  the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
 - 2026-07-17 — **OVERNIGHT VALIDATION: the flip is working. 47 runs, 100% on the glue pool, 0 failures, real work
   proven.** Window 2026-07-16T18:30Z → 2026-07-17T04:49Z, per-JOB evidence: `reconcile-release-tags` 16 ·
   `ci-status- consolidator` 9 · `reconcile-staging-versions` 9 · `staging-conflict-ldr-main-fallback` 9 ·
@@ -1422,11 +1417,25 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   success on `glue-2`, **`billable: {}`**, and — the part that matters, because green is exactly what a silent no-op
   looks like — `cloud_provider: gcp` → **`Operation completed over 1 objects/339.0 B`**, a real GCS write from the VM.
   Prize re-measured: `ci-status-update` = **14,320 runs/30d ⇒ ~$86/mo**; ~$117/mo across 22 callers.
-  - **① `vars` is NOT available to a composite action — the docs are WRONG, and it cost a run.** Fetching GitHub's
-    contexts doc said "Available"; the Actions YAML schema said `Unrecognized named-value: 'vars'`. I refused to pick a
-    side and measured: the runner **rejects the MANIFEST** — `TemplateValidationException` → `Failed to load action.yml`
-    (run 29565881093). So `CLOUD_PROVIDER`/`CICD_EVENTS_BUCKET`/`AWS_REGION` must be read by the CALLER and passed as
-    inputs. **Same class as `secrets`, which IS documented as unavailable — but nothing warns you about `vars`.**
+  - **① `vars` is NOT available to a composite action — a known, DELIBERATE limitation** (`actions/runner#2551`,
+    `community#43878`, `community#49689`). The runner rejects the **MANIFEST**: `Unrecognized named-value: 'vars'` →
+    `TemplateValidationException` → `Failed to load action.yml` (run 29565881093). **Not a version gap** — our pool runs
+    **v2.335.1, which IS `latest`** (published 2026-06-09). Fix = the documented workaround: the CALLER reads `vars`
+    (where it does resolve) and passes `cloud_provider`/`events_bucket`/`aws_region` as inputs.
+    - **The RULE that makes it make sense, worth more than the fact:** _a composite action gets NOTHING ambient from the
+      repo — only what the caller explicitly hands it._ GitHub withholds **`secrets` AND `vars`** from composite actions
+      for the same stated reason: an untrusted third-party action must not read your org/repo secrets or variables
+      without an explicit opt-in. Two "quirks", one coherent boundary.
+    - **⚠️ CORRECTION — an earlier version of this entry claimed "the docs are WRONG". That was FALSE; it is
+      withdrawn.** The docs' contexts page is **SILENT** on `vars`-in-composite (it states only the `secrets` rule). My
+      WebFetch summary said _"Available… `vars` appears in multiple workflow keys that composite actions utilize"_ —
+      that is the summarizer **INFERRING** from a table about _workflow_ keys, not a quote about actions. I promoted an
+      inference to "the docs say so", then blamed the docs when reality disagreed. **Two lessons, both cheaper than the
+      run they cost:** (a) **when you ask for a verbatim quote and get prose, you got an inference** — and silence in a
+      doc is not a claim; (b) **search the error string FIRST** — `Unrecognized named-value: 'vars'` + composite lands
+      on #2551 immediately, before any theorising. Caught by the operator 2026-07-17: _"github docs would be uptodate i
+      think and if they say it works then we should think if there is something we are not following acc to their docs"_
+      — the right instinct, and the reason the record is now correct.
   - **② THE BIG ONE — a manifest error fails at LOAD time, so `continue-on-error` CANNOT contain it.** I had guarded
     every step, reasoning that persist must never redden a caller's run (plan #220). Useless: validation happens
     **before any step executes**. The broken action **failed `check-secrets` outright**. With 22 callers this means one
@@ -1449,33 +1458,58 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
     output, I left **five** consumers reading `env.CLOUD_PROVIDER` — now undefined ⇒ every branch would fall through to
     log-only. A green persist writing nothing, forever. Caught pre-push by asserting every step declares what it
     consumes, not by re-reading the diff.
-  - **PRE-EXISTING BUG found, NOT fixed (needs an operator call):** the persist write is a read-modify-write —
-    `gsutil cp` down → append → `cp` up — on a shared `events.jsonl`, with **no locking**, at ~14.3k events/mo.
-    Concurrent writers silently overwrite each other, so **the CI event ledger is losing rows today**. The fix (one
-    object per event instead of an append) changes the reader's contract ⇒ a design decision, not a cleanup. The
-    conversion neither causes nor worsens it; it is carried across faithfully.
+  - **PRE-EXISTING BUG found, NOT fixed — now filed + todo'd (D2, operator call):** the persist write is a
+    read-modify-write — `gsutil cp` down → append → `cp` up — on a shared `events.jsonl`, **no locking**, ~20 PM callers
+    contending for ONE object per day. Overlapping writers silently discard each other's rows and **both still log
+    `Persisted event to gs://…` and exit 0** ⇒ the CI event ledger is **structurally lossy**. **The loss RATE is NOT
+    measured** — code-read + argument only, and this plan has been bitten before by presenting deduction as measurement,
+    so the issue doc states how to measure it rather than quoting my estimate. **The blocking question is WHO READS THE
+    LEDGER** (schema claims `GitHubWorkflowEvent` from `unified_api_contracts.internal` ⇒ a consumer probably exists);
+    that decides whether one-object-per-event is free. The conversion carries the behaviour across faithfully and
+    deliberately — fixing it inside a cost refactor would bundle a silent behaviour change into a diff 22 workflows
+    depend on. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.
 
 ## Deferred work after 2026-07-17
 
 STEP 2 is **DONE (37/37 movers on the pool, zero-billed, verified)**. Everything below is what remains, why it is not
 done, and what the next session should NOT re-derive.
 
-| #   | Item                                                                   | State / why deferred                                                                                                                                                                                                               | Blocked on           |
-| --- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)                 | **RECOMMENDED NEXT.** P1, the largest remaining real saving, and the only P1 blocked on nothing — not on elapsed time, not on the operator.                                                                                        | nobody — just do it  |
-| 2   | **A1 — docs-only fast-path**                                           | P1, natural follow-on to A2 (same committed-diff machinery).                                                                                                                                                                       | nobody               |
-| 3   | **STEP 2c — `persist-cicd-event` → composite action**                  | P2. This is what finally kills the 1-min-minimum tax on the reusables we watched stay hosted all day. Do NOT flip its `runs-on` (5 KEEP hosted callers would hang).                                                                | nobody               |
-| 4   | **STEP 2b — `ci-status-update` warm-VM trim**                          | P2. Already on `glue-writer`; the trim is the optimisation, not a prerequisite.                                                                                                                                                    | nobody               |
-| 5   | **STEP 2d — assert-not-decorative** (NEW)                              | P2. Born from this plan's audit: 3 of 37 movers were dead. Cheaper than the flip and finds more.                                                                                                                                   | nobody               |
-| 6   | **DELETE `reconcile-release-tags`** (NEW)                              | P2, verdict reached + evidenced. ~48 no-op runs/day. Check nothing dispatches it first.                                                                                                                                            | nobody               |
-| 7   | Re-measure billed minutes (`measure-billed-notify-cost.sh`)            | P1 but **needs 3-5 days of elapsed data**. The flip landed 2026-07-17 — there is nothing to measure yet. Not work; waiting.                                                                                                        | the calendar         |
-| 8   | Two-week billing-ledger comparison vs the Phase-0 baseline             | P3, same reason. Earliest ~2026-07-31.                                                                                                                                                                                             | the calendar         |
-| 9   | **Bootstrap on a bare host** (`PARTIAL`)                               | P1. Container leg passes; systemd / IMDS / GCP ADC / runner registration **structurally cannot** be exercised in a container. Only closes on a real host rebuild.                                                                  | a genuine VM rebuild |
-| 10  | **Rotate `GH_PAT`**                                                    | P1. **Operator-owned and deliberately LAST** (operator 2026-07-16: after the plan completes; assessed as no security risk). If the digest fix lands first, the new PAT must carry cross-repo `contents:read` + `POST /dispatches`. | operator             |
-| 11  | Cassette operator decisions (close 52 false issues / fix UAC matching) | P2. **Ikenna owns cassette-count verification** (operator 2026-07-17) — do not duplicate.                                                                                                                                          | operator / Ikenna    |
-| 12  | Security-posture codex doc                                             | P2 docs.                                                                                                                                                                                                                           | nobody               |
-| 13  | Cron cadence `*/15` → hourly · `ci-status-update` debounce             | P2 / P3, small.                                                                                                                                                                                                                    | nobody               |
-| 14  | `quickmerge.sh --agent` sentinel race                                  | P1, **written up; operator will fix later** (operator 2026-07-16). Workaround in use: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell.                                                                             | operator             |
+**STEP 2c is HALF DONE: the action exists and the pilot is PROVEN (`d0e25fcb6` + fix `1aa26232c`, run 29566057979); the
+remaining 21 callers are deliberately NOT converted** — they are gated on **D1** below, and on the rule finding ②
+forced: _edit the manifest → prove on ONE caller → only then fan out._
+
+### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
+
+| ID     | Decision                                                                | Recommendation + why                                                                                                                                                                                                                                                                                        |
+| ------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | **STEP 2b ↔ STEP 2c checkout collision** — _blocks the STEP 2c rollout_ | **Sparse checkout** (not the `@main` pin). Finding ② is the reason: one bad manifest fails all 22 callers' REAL jobs, so "prove on LDR before main" stops being a nicety — and an `@main` action ref makes that impossible by construction. The collision then mostly dissolves (see the STEP 2b/2c todos). |
+| **D2** | **Event ledger loses rows** — fix vs accept                             | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.                                                                             |
+| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)  | **HELD, nothing done**: delete `reconcile-release-tags`, fix `digest-drift-sweep`, and **STEP 2d is held too** (its design depends on what you decide about those three).                                                                                                                                   |
+| **D4** | **Cassette follow-ups** — close 52 false issues? fix the UAC matching?  | **Ikenna owns the 179/28 count verification** (operator 2026-07-17) — do not duplicate. The workflow itself is already fixed + flipped.                                                                                                                                                                     |
+
+### Not done — blocked on nobody, real work
+
+| #   | Item                                                       | State                                                                                                                                            |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT.** P1, largest remaining saving, fleet-wide (44 callers / ~25 repos), blocked on nothing. Guards are in the todo — read them. |
+| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.     |
+| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                       |
+| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                         |
+| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                  |
+
+### Cannot be done yet — waiting, NOT neglected
+
+| #   | Item                                                        | Blocked on                                                                                                           |
+| --- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 6   | Re-measure billed minutes (`measure-billed-notify-cost.sh`) | the calendar — the flip landed **2026-07-17**; needs 3-5 days ⇒ earliest **~2026-07-20/22**. Nothing to measure yet. |
+| 7   | Two-week billing-ledger comparison vs the Phase-0 baseline  | the calendar — earliest **~2026-07-31**.                                                                             |
+| 8   | **Bootstrap on a bare host** (`PARTIAL`)                    | a genuine VM rebuild — systemd / IMDS / GCP ADC / runner registration **structurally cannot** run in a container.    |
+
+### Operator-owned — do not start
+
+| #   | Item                                  | Note                                                                                                                  |
+| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 9   | `quickmerge.sh --agent` sentinel race | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell. |
 
 ### Findings parked for later — do NOT re-investigate, they are fully written up
 
@@ -1485,6 +1519,7 @@ done, and what the next session should NOT re-derive.
 | `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17`   | **DELETE, do not fix.** The earlier "re-source from the manifest" idea was wrong and would have made it confidently wrong instead of harmlessly dead.                                                                                                                |
 | `d13_orphaned_version_readers_and_manifest_drift_2026_07_17`           | D13 migrated SOME version-readers. `sync-manifest-versions.py` still reads the deleted field; `versions{}` lags the tags for 9/24 repos; `assert_version_coherence.py` exits 1 with 24 violations while QG passes EXIT=0.                                            |
 | `cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17` | **FIXED + FLIPPED.** Residual: the UAC detector's model-matching is a lottery (finding #4) + 52 false issues to close (finding #5).                                                                                                                                  |
+| `persist_cicd_event_ledger_read_modify_write_race_2026_07_17`          | **NEW (D2).** The event ledger is written with an unlocked read-modify-write ⇒ concurrent writers silently drop each other's rows, and every writer reports success. **Loss rate NOT measured** (the doc says how). Find the CONSUMER before choosing a fix.         |
 
 ### Hard-won context the next session should inherit rather than rediscover
 
@@ -1500,4 +1535,28 @@ done, and what the next session should NOT re-derive.
   16/20). Re-check that figure before tuning any cooldown to it.
 - **The security invariant is the TRIGGER AUDIT, not the private flag** — visibility is a settings toggle; "no
   self-hosted workflow carries a `pull_request` trigger" is a property of the workflows and survives it. Re-run it
-  before adding such a trigger to any self-hosted workflow.
+  before adding such a trigger to any self-hosted workflow. **It is one command — a rule with no command is a rule that
+  gets skipped, so here it is** (expect ZERO output; any line is a workflow that would run PR-authored code on our VM):
+  ```bash
+  grep -lE '^\s*runs-on: \[self-hosted' .github/workflows/*.yml \
+    | xargs grep -lE '^\s*(pull_request|pull_request_target):'
+  ```
+- **A composite action gets NOTHING ambient from the repo — only what the caller explicitly hands it.** GitHub withholds
+  **both `secrets` and `vars`** so an untrusted third-party action cannot read org/repo values without an explicit
+  opt-in. The docs state the `secrets` half and are SILENT on `vars`; the silence is not permission.
+  `actions/runner#2551`.
+- **Composite-action manifest errors are NOT containable.** Validation happens at LOAD, before any step runs, so
+  `continue-on-error` on every step buys you nothing — a bad `action.yml` fails the CALLER's real job. With 22 callers
+  that is 22 simultaneous failures. **Edit the manifest → prove on ONE caller → only then fan out.**
+- **MEASUREMENT TRAPS hit this session (same family as the `--arg`/`2>/dev/null` ones above):**
+  - **A compound background command reports the LAST command's exit code, not your tool's.**
+    `qg.sh > log; echo "EXIT=$?"; tail log` → the harness reported **exit 0** for `tail` while QG's real status was in
+    the log. Always print and read an explicit `EXIT=` marker.
+  - **The Bash tool's own ceiling is 10 min (600000ms max).** Wrapping a longer job in `timeout 900` does NOT help — the
+    harness SIGKILLs it first and you get a bare **137** that looks like OOM. PM's full QG exceeds 10 min ⇒ it MUST run
+    `run_in_background`. (Checked: 69 GB free, no competing QG — it was never resource pressure.)
+  - **`grep -rl 'self-hosted, glue'` counts your own COMMENTS.** The flip comment contains both `glue-writer` and
+    `runs-on: ubuntu-latest` as literal strings, so file counts came out 37/22 and did not reconcile against 56. Anchor
+    to `^\s*runs-on:` or you are measuring your own prose.
+  - **A hand-wavy doc summary is an INFERENCE.** When you ask for a verbatim quote and get prose ("X appears in multiple
+    keys that…"), you did not get an answer. **Search the error string first** — it is faster and it is ground truth.

@@ -388,22 +388,43 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       raised.** QG exit 0, **1345 passed**. - **Testing lesson worth keeping**: the dispatch tests all passed with the
       new gate DELETED — they prove the PREDICATE, not the CALL. A tick test now pins the wiring, verified by injection;
       its failure output reproduces the live tick line exactly (`checked=2 spawned=1 skips={'queue_satisfied': 1}`).
-- [ ] [BACKEND] P0. **Runtime verdict for `f8ace1f` — third attempt at proving the churn stops.** **Gate**: `HEAD`
-      contains `f8ace1f` AND the tick reads `spawned=0` with `no_claimable_task_for_slot` as the ATTRIBUTED reason while
-      the queue is entirely prereq-blocked, AND `autospawn_succeeded`/h collapses from ~30 toward ~0. **Two fixes have
-      now each looked sufficient and each left the symptom fully intact.** Do not close this on code, tests, or a deploy
-      — only on the live rate. If it still spawns, the driver is again something else: re-measure which slots are
-      spawned vs which justify the budget (query in the Progress Log), do not re-reason from the code.
-- [ ] [BACKEND] P1. **Durable park for the fleet-skipped task — promoted from the deferred table by today's evidence.**
-      `f8ace1f` stops the phantom SPAWN; it does NOT stop the phantom OFFER.
-      `sports_travel_calculator_tz_aware_kickoff_crash-001` has been dispatched and correctly declined **35+ consecutive
-      times** (each burning a spawn, a boot, an analysis and a progress-log commit), and the 24h skip TTL guarantees it
-      is re-offered forever. The task is gated in PROSE ("After `sports_p2_features_history_to_ml_ready-002` Todo 1…")
-      on an upstream todo that is NOT modelled as a prerequisite — which is why AO reads it "ready (no blockers)". Park
-      it durably (`priority:999` + a real prereq) rather than re-litigating it daily. Owner note: the parking recipe was
-      attempted before and never stuck (slot 8's skip reason, 2026-07-14: _"Parking recipe … never durably applied —
-      priority_override:false, prereqs.prerequisites:[] confirmed"_), so find out WHY it did not stick first. Tracked in
-      `issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`.
+- [x] [BACKEND] P0. ✅ **DONE 2026-07-17 — verdict: `f8ace1f` WORKS. Closed on the LIVE RATE, as the gate demanded.**
+      All three gate conditions met, measured on the central VM's `activity_log` (not on code, tests, or the deploy):
+      (1) `git merge-base --is-ancestor f8ace1f HEAD` → **YES**; (2) `no_claimable_task_for_slot` was the ATTRIBUTED
+      skip reason at measurement (`checked=17 spawned=3 skips={'no_claimable_task_for_slot': 9, …}`, 18:40); (3) the
+      rate collapsed. **`autospawn_succeeded`/h: ~31 → ~0.25** (a 99% collapse). The decisive contrast is spawns vs
+      dispatches per hour, which is what "churn" actually means: | hour (UTC) | spawns | dispatches | | --- | --- | ---
+      | | 07-16 15:00 | 27 | **0** | | 07-16 16:00 | 30 | **0** | | 07-16 17:00 | 30 | **0** | | _18:28 — f8ace1f
+      deployed_ | | | | 07-16 19:00 | 6 | 10 | | 07-16 20:00 | 17 | 19 | | 07-16 21:00 | 8 | 8 | | 07-17 02/03/07 |
+      1/1/1 | 1/1/1 | **Pre-fix 15:00–17:00 = 87 spawns / 0 dispatches (INFINITE waste). Post-fix 19:00–21:00 = 31
+      spawns / 37 dispatches.** Spawns now TRACK dispatches instead of running away from them — the 17-spawn hour at
+      20:00 is a WORKING fleet (19 dispatches), not churn, which is exactly the distinction the two failed fixes could
+      not make. Last 12h: **3 spawns / 3 dispatches = 1.00:1** against the 44:1 baseline; `worker_polling_dead` 11/12h
+      (~0.9/h, down from ~30/h). Note for the next reader: in the quiet state the tick emits **no INFO line at all** —
+      it early-returns at DEBUG (`autospawn.py`, "no dispatchable queued work"), so an absent tick line is healthy idle,
+      NOT a dead loop. **Process failure worth recording**: the fix was proven live at 18:44 on 2026-07-16 and this box
+      was not flipped until 2026-07-17 — a half-1-without-half-2 violation of the commit-push-flip rule, i.e. the plan
+      under-reported real progress for a day.
+- [ ] [BACKEND] P1. 🔵 **DIAGNOSED 2026-07-17 — root cause found; the APPLY step is operator/Ikenna-gated (sports
+      freeze). Not closeable by me.** `f8ace1f` stops the phantom SPAWN; it does NOT stop the phantom OFFER — in the 12h
+      to 2026-07-17, **38 of 49 dispatches were declines**, and `sports_p2_features_history_to_ml_ready-002` alone was
+      handed to **13 different slots**, all declining. **The "find out WHY it did not stick first" question is ANSWERED
+      — and the premise was wrong. The recipe DOES stick.** Control case, verified live:
+      `mvp_backfill_defi_onchain_v10-002` carries `priority:999` + `priority_override:true` + prereq
+      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (value **0**) → dispatch reports "prerequisite … not
+      set", it is correctly parked, and the park **survived the 04:10 backlog regen**. So the recipe is sound and
+      durable. The sports tasks simply never received it, in two DIFFERENT ways: - `sports_p2_..._ml_ready-002` →
+      `prerequisites: []`. **The park was never applied to it at all.** - `sports_p2_..._ml_ready-001` → prereq IS
+      present (`sports-cutover-phase6-consolidator-resumed`) **but the condition was flipped to value=1 (TRUE) by
+      `slot-phase6-restore`** while the consolidator is still frozen. The gate meant to stop the thrash reads SATISFIED,
+      so dispatch says "ready (no blockers)" and keeps offering it, while every worker independently re-checks reality
+      and declines (_"0 VMs, sports launches frozen … hard floor ~2026-07-17T19:52Z"_). **A prematurely-TRUE flag is
+      worse than no flag: it launders a real block into a false all-clear.** **Blocked on**: the sports freeze + that
+      flag are `sports_legacy_bucket_cutover_2026_07_16` Phase 6 — the data-pipeline owner's call (Ikenna). Un-flipping
+      another plan's operator-authorized gate is not mine to do. **Next step when unblocked**: apply the mvp_backfill
+      recipe to `-002`, and set `sports-cutover-phase6-consolidator-resumed` back to false until Phase 6 T6.1 genuinely
+      resumes the consolidator. Tracked in `issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15` +
+      `issues/mvp_backfill_defi_v10_002_dispatch_thrash_2026_07_16`.
 
 ### Phase 4 — close the paper trail (P2)
 

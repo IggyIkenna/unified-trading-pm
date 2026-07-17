@@ -577,3 +577,48 @@ objects are the master superset and their recovery covers **99.98%** of the gap,
 **3,816 derivable / 0 park-only** — `league_id := instrument_id[3]` at **100.0000%** against known ground truth,
 `venue := instrument_id[1].upper()` at **100.0000%** over 1,065,227 rows; the runbook's "fabrication-required" premise
 is disproven (the path's `source=` is the vendor; the venue is in the rows). Zero mutations; scratch data deleted.
+
+**2026-07-17 — OR-5b(c) RULED by operator (via `[slot-3·laptop]` takeover): RECOVER IN-PLAY INTO A DISTINCT POPULATION
+(B-REFINED).** Operator ruling 2026-07-17: the 25,576 in-play keys are recovered (not excluded) into a population
+quarantined from the pre-match T-0 path. **Quarantine mechanism (as the runbook's own correction mandates —
+`_is_consumable_trades_blob` matches on filename `ticks.parquet` only): a non-`ticks.parquet` filename AND a distinct
+`data_type=`, with `pipeline_mode` staying `batch_odds_api` (closed UAC enum).** The pre-match 524,486 keys recover into
+the canonical odds path. Delete gate remains the day-scoped 32-day recovery + T4.1 object-layer unique==0. **Execution
+owner: `[slot-3·laptop]` (reassigned by operator 2026-07-17; `[main·laptop]` idle 5h, confirmed off).** No tooling was
+inherited (the `~/tmp-or5b/` scripts live on another host) → recovery is being rebuilt from spec, re-measuring the 32
+gap days independently before any write (standing "never inherit a classification" rule).
+
+**2026-07-17 — MDT RECOVERY EXECUTION PLAN (slot-3, IN PROGRESS — nothing mutated yet). Ground truth re-established this
+session:**
+
+- **Layout confirmed by direct sampling.** Both buckets: `raw_tick_data/by_date/day=YYYY-MM-DD/…`. LEGACY gap-day
+  objects are **OLD-shape** — `day=2022-10-01/source=ODDS_API/ticks.parquet` and
+  `…/source=ODDS_API/league=<L>/ticks.parquet` (no `asset_group`/`instrument_type`/`data_type` segments). CANONICAL is
+  new-shape (`pipeline_mode=/asset_group=sports/instrument_type=/data_type=/…`). The recovery must derive the canonical
+  path segments from the rows (`build_instrument_id`, the (a) derivation map — re-validated 100.0000%) — NOT copy paths.
+- **Delete gate = the day-scoped 32-day recovery + T4.1 unique==0 + T2.10 seed purge.** (Everything else — the migrated
+  mis-stamp, the T2.6 duplicate population — is a SEPARATE features-recompute issue, ~4-line MDPS fix, NOT the delete
+  gate.)
+- **STEP 1 (read-only) — re-derive the 32 gap days.** Candidate window from the banner (2022-09-07…2022-10-01 dominant +
+  a handful of 2023/2025 days); do NOT inherit the day-list — confirm by whole-day KEY-LEVEL containment (legacy tick
+  keys − canonical tick keys) over the candidate window + probe the rest via the availability index's per-day counts.
+  Expect ~32 days / **550,062** legacy-only keys (524,486 pre-match + 25,576 in-play) / ~2,081 objects.
+- **STEP 2 (build) — day-scoped read-split-merge.** Per gap day: read legacy old-shape objects → extract keys absent
+  from canonical → derive canonical segments via `build_instrument_id` → split pre-match vs in-play by kickoff time.
+  **MERGE, never overwrite** (canonical holds columns legacy lacks: `bookmaker_key`,`fixture_id`,`available_at`); de-dup
+  on the poll key `(event,market,outcome,bm_time,price)` (30/200 canonical objects have poll-key dups — de-dup on
+  write); stamp `available_at` via
+  `unified_trading_library.availability_stamping.stamp_available_at_odds_snapshot(df, source="odds_api")`.
+- **STEP 2b — in-play quarantine (per OR-5b(c) ruling).** In-play rows land in a DISTINCT population:
+  **non-`ticks.parquet` filename AND a distinct `data_type=`** (else `_is_consumable_trades_blob` filename-match sweeps
+  them into T-0); `pipeline_mode` STAYS `batch_odds_api` (closed UAC enum).
+- **STEP 3 — verify by CONTENT** (fresh re-read in a separate process, never the writer's return): recovered keys
+  present in canonical, crc/row-verified; collateral-damage census (group-by (data_type,source) before/after) shows only
+  the intended cells changed.
+- **STEP 4 — T2.10 seed purge**: strip 37,114 phantom `api_football × trades` (captured, nonzero IC) from
+  `_index/per_vm/_legacy_seed.parquet` with the NULL-safe COALESCE source filter (211,313 real `odds_api × trades`
+  survive), back up first, let the consolidator re-merge; verify by content.
+- **STEP 5 — T4.1 MDT object-layer proof** (unique==0 for the legacy bucket) → **STEP 6 — delete the legacy bucket**
+  (backed up first). **⚠️ CHECKPOINT WITH OPERATOR BEFORE STEP 6 (irreversible).**
+- Build as a one-off `market-tick-data-service/scripts/` migration with lifecycle markers. Tooling from `~/tmp-or5b/` is
+  NOT on this host → rebuilt from this spec.

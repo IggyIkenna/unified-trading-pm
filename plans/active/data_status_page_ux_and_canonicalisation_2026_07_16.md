@@ -133,6 +133,106 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-17 — P2/P3 remaining-work session (`/autonomous`) — working the 13 deprioritized follow-ups
+
+Session working the 13 open P2/P3 todos in the Deferred table below. Journal per unit; each ships commit-push-flip.
+
+**Operating context (READ THIS FIRST if you are a fresh/compressed context):** a **second agent is live in this same
+checkout** right now — confirmed by mtime, not assumed (`deployment-api/deployment_api/services/fixtures_browser.py` +
+`routes/fixtures_browse.py` + `tests/unit/test_fixtures_browser.py` were being edited seconds before this session's
+first tool call; they are extending the fixtures browser with a `team=` filter + absolute `start_date`/`end_date`
+window). Consequences, all of which bite:
+
+1. **`deployment-api`'s full `quality-gates.sh` is RED and not mine to fix** — the LINT stage fails on that agent's live
+   WIP (`fixtures_browse.py` E501, `fixtures_browser.py` RUF100). Every deployment-api unit this session therefore
+   scope-verifies (`ruff check` + `ruff format --check` + `basedpyright` + targeted pytest on MY files only) and cites
+   the carve-out, same precedent as `12c94be`/`e27ba4b`.
+2. **basedpyright is A/B'd against HEAD per unit** rather than trusted absolutely — these files carry pre-existing
+   `reportAny`/`dict[Hashable, Any]` errors, so "0 errors" is unachievable; "**0 NEW** errors vs the HEAD copy of the
+   same file" is the real bar and is what each checkbox cites.
+3. **quickmerge needs `--skip-preflight`** (the flag it documents "for multi-agent use") because deployment-service
+   carries foreign-live `terraform.tfvars` → the dirty-deps pre-flight blocks. Verified safe per unit: that tfvars is a
+   features-service-sports Cloud Run image pin, unrelated to anything shipped here. Same carve-out as `@62cc10f`.
+4. **Post-ship `git show --name-only` is checked EVERY time** to prove quickmerge's whole-file `git add` didn't sweep
+   the foreign hunks (the failure mode that produced `12c94be` + `57d913d`). Zero sweeps so far.
+
+**Shipped this session** (see each checkbox for full evidence): A1 `resolved_date`/`requested_date` on
+`get_honest_coverage` (deployment-api@4e996f8); A3 new-listings false-positive guard (deployment-api@a9b6207 +
+deployment-ui@179c7ce).
+
+**Method note worth keeping**: A3's todo said "quantify the rate (real-GCS query, not a guess)" — doing that FIRST
+changed the outcome. The todo's premise ("legacy rows … inflate 'new'") implied a broad legacy problem; the measurement
+showed the corpus-wide rate (0.87%) is nearly irrelevant to the actual card, which shows a 30-day window where the rate
+is **0.02% and 100% attributable to one venue onboarded 7 days ago**. That reframed the fix from "exclude legacy rows"
+(which would have hidden real listings for no measurable benefit) to "surface a fact about the one real cluster". The
+guard was then re-verified by driving the _shipped service_ against real GCS, not just its fixtures.
+
+### 2026-07-17 — Playwright re-verification found + fixed a month-old mock-api.ts bug shadowing every /api/data-status/* endpoint
+
+Doing a fresh Playwright pass (mock mode, `VITE_MOCK_API=true`, port 5199) against everything shipped this plan found a
+crash in `CatalogueExplorer` (`TypeError: Cannot read properties of undefined (reading 'length')`) on first render, and
+found the Prediction Catalogue silently showing "No prediction markets match the current filters" despite the mock
+having representative rows for every category. Root cause (traced via `page.evaluate` calling `fetch(...)` directly in
+the live page, NOT assumption): `src/lib/mock-api.ts` has had a catch-all
+`if (path.match(/^\/api\/data-status/)) { return json(MOCK_DATA_STATUS); }` sitting near the top of the ~2,700-line
+`handleRoute` function since `deployment-ui@687d4ce` (2026-06-16) — **every** more-specific
+`/api/data-status/<endpoint>` handler added to this file AFTER that date and BEFORE this catch-all's position in file
+order (honest-coverage, turbo/manifest, venue-filters, list-files, instruments-for-shard, download-catalogue-csv,
+catalogue, instruments, instrument-availability, prediction-catalogue — essentially every data-status mock endpoint
+shipped over the past month, including this session's own P2/P3/P6 UI work) was silently shadowed, always receiving the
+generic turbo coverage-summary payload instead of its own real response shape. This is exactly why so many earlier
+verification passes this session (Phase A, the P3/P6 real-data checks) kept coming back INCONCLUSIVE/empty against mock
+mode — the mock layer itself was broken the whole time, independent of whether the actual shipped code was correct.
+
+**Fixed**: moved the catch-all to be the true last-resort fallback (immediately before the function's existing
+`404 "Mock: no handler"` response), so every specific handler gets first crack at matching. Also added defensive
+`?? []`/`?? 0` fallbacks in `CatalogueExplorer.tsx` for `data.instruments`/`data.total_count` so a future malformed
+response degrades gracefully instead of crashing. Verified end-to-end via Playwright:
+`fetch('/api/data-status/ catalogue?...')` now returns the correct
+`{instruments: [...4 rows], total_count: 4, label: "captured instruments (availability-derived)"}` shape (previously
+returned the turbo coverage payload with no `instruments` key at all); `/api/data-status/prediction-catalogue` now
+returns 8 rows across all 7 categories. Full-page screenshot confirms both panels render real mock data with correct
+capture_status/MVP badges. Full Vitest suite re-run clean (93 files, 990 tests, 0 regressions) — the routing reorder
+didn't change behavior for any OTHER endpoint, confirming nothing else in the codebase was relying on the old (buggy)
+shadowing behavior. — `deployment-ui@0c817d2`.
+
+**Why this wasn't caught by any of this plan's own Vitest specs**: every affected component's own test file mocks
+`fetchInstrumentCatalogue`/`fetchPredictionCatalogue` etc. directly (jest/vitest `vi.mock`), never actually routing
+through the real `mock-api.ts` `handleRoute` dispatcher — so unit tests stayed green throughout the entire month this
+bug existed. Only a REAL browser hitting the REAL mock server (i.e. what `pw:L2` is supposed to be, not just "Vitest
+passed") would ever have caught it. Worth flagging as a broader lesson for this workspace's `[UI] + pw:L2` gate: a
+Vitest pass proves the component logic is correct GIVEN its mocked inputs, not that the actual mock-server wiring
+delivers those inputs in the browser.
+
+### 2026-07-17 — Honest-coverage cron verification uncovered + fixed a FRESH production regression (unrelated to P1's original fix)
+
+Checking this plan's own P1 acceptance criterion ("tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND
+`partial: false`") found the 2026-07-17 00:30 UTC cron had produced **nothing at all** —
+`gs://central-element-323112-honest-coverage/2026-07-17/` didn't exist, and the Cloud Run launcher execution showed
+`STATUS=False` (vs. `STATUS=True` the two nights prior). Root-caused via Cloud Logging:
+`/tmp/launcher.sh: line 50: /tmp/lib/launcher_common.sh: No such file or directory`. Full root-cause + fix +
+blast-radius check: `plans/active/issues/honest_coverage_launcher_missing_lib_dependency_2026_07_17.md`. Short version:
+the `honest-coverage-daily-launcher` Cloud Run Job's container command does a single-file `gsutil cp` of the launcher
+script and runs it — but that script had gained a `source lib/launcher_common.sh` dependency from an unrelated
+fleet-wide rollout (`deployment-service@b5bd336`), and neither the `vm/lib/` directory (never published to GCS) nor the
+Cloud Run job's fetch command (never updated) accounted for it. This regression only manifested tonight because this
+plan's OWN 2026-07-16 P1 fix (`4f10b9b`) did a targeted single-file re-upload of the launcher script (the full tarball
+republish being blocked by an unrelated dirty file) — the 07-16 cron fire happened before that upload, so it ran the old
+script; tonight was the first real run of the newly-uploaded one.
+
+**Fixed and verified end-to-end**: uploaded the two missing `vm/lib/*.sh` files to GCS; updated the Cloud Run job's
+fetch command to also pull `vm/lib/` — both imperatively (`gcloud run jobs update`, so this test would immediately pass)
+and in the Terraform source `terraform/gcp/honest_coverage_scheduler.tf` (the file's own header declares Terraform the
+IaC SSOT for this resource, so an imperative-only fix would silently revert on the next `terraform apply`) —
+`deployment-service@6c7a079e1`. Manually re-triggered the launcher (first retry, GCS-upload-only, still failed
+identically — confirming the Cloud Run job command itself was the real gap, not just a missing file; second retry, after
+the command fix, succeeded in 41s). Confirmed `coverage.json` for 2026-07-17 now shows `asset_groups_measured` = all 5,
+`partial: false`. This plan's original P1 acceptance criterion is now genuinely met.
+
+Checked blast radius on 2 other similar-sounding nightly Cloud Run jobs (`expected-universe-v2-defi`,
+`lifecycle-catalogue-regen-defi`) — both use baked container images, not the fetch-a-script pattern, so unaffected. Not
+an exhaustive fleet audit; flagged as a follow-up in the issue doc.
+
 ### 2026-07-16/17 — P9 round-2 execution complete (TradFi/CeFi/DeFi migrations + UI relabel + perf), fixtures browser in flight
 
 Wraps up the "P9 round-2" thread referenced below. TradFi (Q2), CeFi (Q2), DeFi (Q2) migrations all applied + verified
@@ -256,18 +356,38 @@ Shipped this session (each commit-push-flip, QG-green + evidence-cited):
 **Traced-unsafe correction:** P1 DATA P2 "drop `instrument_id`" corrupts the coverage denominator (breaks the prd+oracle
 merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred read).
 
-## Deferred work after 2026-07-16 (session handoff — all tracked as open `- [ ]` todos above)
+## Deferred / remaining work (refreshed 2026-07-17 — 1:1 with the 13 open `- [ ]` todos above; every P1/P9-operator item is DONE)
 
-| Deferred item                                    | Point    | Why deferred / next step                                                           |
-| ------------------------------------------------ | -------- | ---------------------------------------------------------------------------------- |
-| Two lifecycle cards + client helpers + pw:L2     | P2 UI    | UI card work (mirror `<UpcomingFixtures/>`); backend API is live @25865c0.         |
-| `expiry` column + new-listings false-pos guard   | P2 DATA  | clean-long-term catalogue schema + provenance quantify.                            |
-| catalogue regen + SPOT_ASSET backfill + CeFi map | P4-B     | real-infra: regen `catalog.parquet`, emit SPOT_ASSET per token leg, live emission. |
-| deep-drill parity (fixture breakdown generalize) | P8 UI-P2 | minor: backend `supports_fixture_breakdown` flag OR a FIXTURES-only UI note.       |
-| column-prune (streaming/metadata-deferred read)  | P1 DATA2 | lets the cron drop to 16GB; naive drop is traced-unsafe.                           |
-| tarball republish (partial-stamping to nightly)  | P1 INFRA | BLOCKED on the foreign dirty terraform.tfvars — run from a clean tree.             |
-| Prediction catalogue browser (backend + UI)      | P3       | full feature — `read_prediction_catalogue` + UAC facade + UI surface.              |
-| Catalogue explorer (MVP filter, CSV, search)     | P6       | full feature — phase 1 availability-derived + phase 2 true-catalogue projection.   |
+> All P0/P1 correctness work + every P9 operator-round-2 item (symbol search, TradFi/CeFi/DeFi canonicalisation
+> migrations, sports-source root-cause, unique-instruments relabel, fixtures browser, and the P6-catalogue-empty bug
+> @62cc10f) is **shipped + flipped**. What remains is 13 lower-priority (P2/P3) follow-ups — none block the page. Rows
+> below map 1:1 onto the open checkboxes above so nothing is lost.
+>
+> **Row-10 correction (2026-07-17) — there is NO outstanding sports TEAMS work.** Row 10 previously read "Sports TEAMS
+> data-correctness | P8 (B) | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block". That
+> row was a **mislabel, and the work behind it does not exist**: (a) the P8 section contains five todos and **all five
+> are `- [x]`** — there is no "P8 (B) block" and no "items 1-5" in it (P8's TEAMS→per-league reclassification shipped at
+> deployment-api@fb0eec8); (b) walking the 13 rows against the 13 real open checkboxes, row 10 lands on the **P4-B UI**
+> todo, whose own text reads "_(B)_ … (data-correctness items 1-5 above, the actual substance of **P4-B**, took priority
+> and are done+verified)". So the original author read that todo's `_(B)_` as **P8(B)** instead of **P4(B)**, and read
+> P4-B's already-completed SPOT_ASSET items 1-5 as sports items. Row 10 now names the todo it actually maps to, keeping
+> the table honestly 1:1. Verified by grep before relabelling, not assumed.
+
+| #   | Remaining item (open `- [ ]` todo)                            | Point         | Pri | Why deferred / next step                                                                                   |
+| --- | ------------------------------------------------------------- | ------------- | --- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Enrich `mock-api.ts` IS data-status fixtures                  | P5/P7 mock    | P3  | lets local mock-mode render cefi/tradfi/defi cards; LIVE deploy already exercises P4-A/P5/P7.              |
+| 2   | ~~Canonicalise cefi manifest split rows~~                     | P7 follow-up  | P2  | ✅ **DONE 2026-07-17** — were PHANTOM pointers (0 objects at split venue); 80,615→79,943 @e6c31507.        |
+| 3   | ~~Republish instruments-service tarball~~                     | P1 follow-up  | P2  | ✅ **DONE 2026-07-17** — fleet republished clean @11:00Z; live coverage.json carries `partial`.            |
+| 4   | ~~`resolved_date`/`requested_date` on `get_honest_coverage`~~ | P1 stretch    | P3  | ✅ **DONE 2026-07-17** — deployment-api@4e996f8 (additive fields + 4 new specs).                           |
+| 5   | Distinct `expiry` column in `CATALOG_COLUMNS`                 | P2 clean-LT   | P2  | long-term catalogue schema (expiry currently inferred).                                                    |
+| 6   | ~~New-listings false-positive guard~~                         | P2            | P2  | ✅ **DONE 2026-07-17** — measured 99/439,940 (0.02%, all COINBASE-CDE); provenance flag @a9b6207+@179c7ce. |
+| 7   | Real `question`/`title` column (polymarket/kalshi adapters)   | P3 follow-up  | P3  | upgrade prediction label from slug → human-readable title.                                                 |
+| 8   | Root-cause remaining DeFi legacy `instrument_type`            | P4-A (A)      | P2  | grep IS writer for where legacy values still emit (display alias already in place).                        |
+| 9   | ~~Drain residual `LENDING`~~                                  | P4-A (A)      | P2  | ✅ **DONE 2026-07-17** — 893 stale originals DELETED (re-splitting would've made 1,766 dupes) @e4fdd56c.   |
+| 10  | ~~Surface `base_asset_contract_address` in the drilldown~~    | **P4 (B)**    | P2  | ✅ **DONE 2026-07-17** — backend @13a8f0b + copyable UI @a860937 (473/473 real-GCS non-null).              |
+| 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.                  |
+| 12  | ~~`/prediction-catalogue` latency~~                           | P3 perf       | P3  | ✅ **DONE 2026-07-17** — real cost ~173s not 39s; paging was re-paying it, now 0.00s @0e39a53.             |
+| 13  | ~~`/catalogue` unpaginated large-AG cost~~                    | P6 perf (NEW) | P3  | ✅ **DONE 2026-07-17** — tradfi 61.3s→14.9s (4.1x), cefi 6.5x, page byte-identical @0e39a53.               |
 
 ### 2026-07-16 — Phase A browser-validation of P5/P7/P4-A/P8 (INCONCLUSIVE — mock-fixture gaps, not code bugs)
 
@@ -329,11 +449,40 @@ cefi/defi/tradfi variety and TEAMS data, so it would resolve all three INCONCLUS
   `venue=PACIFICA,chain=SOLANA` → `venue=PACIFICA-SOLANA,chain=""`), tracked as P7-followup below — NOT fixed by the
   read-side gate.
 
-- [ ] [DATA] P2. _(P7 follow-up — manifest drift)_ Canonicalize the cefi split rows: collapse
-      `venue={PROTOCOL}, chain={CHAIN}` → `venue={PROTOCOL}-{CHAIN}, chain=""` for `PACIFICA-SOLANA`/`LIGHTER-ZKSYNC` in
-      the cefi availability index (one-off migration, pattern `scripts/canonicalize_*_2026_*.py`, run on real infra) so
-      the venue axis stops showing `PACIFICA` + `PACIFICA-SOLANA` as two venues. Also root-cause the writer path that
-      stamped `chain` for a cefi venue (should key on `venue` alone per the UAC shard-atom matrix).
+- [x] [DATA] P2. ✅ _(P7 follow-up — manifest drift)_ Canonicalized the cefi split rows —
+      `scripts/canonicalize_cefi_split_venue_chain_2026_07_17.py`, **applied + independently verified on real prod
+      infra**. **This turned out to be more than a cosmetic venue-axis fix: the split rows were PHANTOM POINTERS.**
+      Traced the real by_date layout (`…/day=<D>/pipeline_mode=<M>/asset_group=cefi/venue=<V>/instruments.parquet`) and
+      checked GCS directly: the objects live under the GLUED venue (`venue=LIGHTER-ZKSYNC`), while `venue=LIGHTER` /
+      `venue=PACIFICA` hold **zero objects**. The script's own pre-write guard proved this at full scale —
+      **1,078/1,078** captured split rows have a real object at the CANONICAL venue (a 60-row sample found **0/60** at
+      the split venue). So each split row claimed a capture at a path that does not exist, and 493 of them were
+      `captured` rows whose canonical twin was **absent entirely** — i.e. the migration REPAIRS the manifest↔object
+      correspondence rather than just merging two venue labels. **Writer root-cause — already fixed upstream for BOTH
+      venues (verified by reading code + the live registry, so this cannot recur; no writer change was needed):** (a)
+      `writers._canonical_manifest_venue_chain` short-circuits
+      `if VENUE_TO_ASSET_GROUP.get(venue_str) == "cefi": return venue_str, ""` — live registry resolves `LIGHTER-ZKSYNC`
+      → `'cefi'`, so the DeFi `PROTOCOL-CHAIN` split no longer fires; (b) `PACIFICA-SOLANA` → `None` (removed from the
+      registry entirely, operator 2026-07-16 Solana-perp-DEX ruling), so nothing enumerates it and that writer path is
+      dead. The 4,617 rows were pure history. **Safety design**: explicit `_SPLIT_PAIRS` allowlist (not a generic "any
+      cefi row with a chain" rule, which could silently rewrite an unexpected row); dedup on the manifest's REAL
+      composite identity (`manifest_writer._ROW_KEY_COLUMNS` — `chain` is itself a key member, which is _why_ collapsing
+      collides), winner = **capture_status FIRST, recency second** (a newer `empty_confirmed` must never evict older
+      `captured` evidence — the footgun the defi data_type migration's dry-run caught); aborts rather than promoting a
+      capture claim onto a path with no object. — instruments-service@e6c31507 + **Evidence (real infra, independently
+      re-read — not the script's own log)**: `80,615 → 79,943` rows (−672 = exactly the modelled collisions); residual
+      split rows / `LIGHTER` / `PACIFICA` / chain-nonempty all **0** (was 4,617 / 2,413 / 2,204 / 4,617);
+      `LIGHTER-ZKSYNC` 1,424→**3,643**, `PACIFICA-SOLANA` 1,426→**3,152** (venue axis no longer double-counts).
+      **Out-of-scope guard: all 27 other cefi venues byte-identical.** `capture_status` deltas match the model exactly
+      (captured −585, empty_confirmed −87, expected_unattempted/attempted_failed **unchanged**), and every collision was
+      status-identical (captured→captured 585, empty→empty 87) so no evidence was traded away. **Decisive no-loss
+      proof:** LIGHTER-ZKSYNC captured rows `910 → 716` while **distinct captured dates `716 → 716`**; PACIFICA-SOLANA
+      `802 → 411` rows with **distinct dates `411 → 411`** — the dedup removed only same-key duplicates; every distinct
+      captured date survived. Rollback snapshot:
+      `gs://instruments-store-cefi-prd-central-element-323112/_index/snapshots/pre_cefi_split_venue_chain_canon_2026_07_17_20260717-105532.bak.parquet`.
+      Unit: `tests/unit/migrations/test_canonicalize_cefi_split_venue_chain.py` 9 passed (collapse; allowlist-only;
+      collision dedup; **captured-beats-newer-empty**; gap-filling row kept; idempotent re-run; **None-vs-`""` chain
+      normalisation** — without it the row-key compare silently misses and the duplicate venue survives).
 
 ### 2026-07-16 — P1 Honest Coverage FIXED (immediate + durable), verified live
 
@@ -387,12 +536,31 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
       `--machine-type=e2-highmem-4` (Update Time 2026-07-16T08:36Z); tonight's 00:30 UTC run will use 32GB. Issue doc:
       `plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`. _(Tarball
       republish for partial-stamping is BLOCKED — see follow-up below; NOT required for a full 5-AG run at 32GB.)_
-- [ ] [INFRA] P2. _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
-      partial-stamping (`instruments-service@a29e483`) — CURRENTLY BLOCKED: `create-code-tarballs.sh` rebuilds
-      fleet-wide core tarballs (UAC 922M/UTL 1.2G/MTDS 1.3G) and errors on the foreign uncommitted
-      `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
-      another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
-      `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
+- [x] [INFRA] P2. ✅ _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
+      partial-stamping — **UNBLOCKED + VERIFIED DONE 2026-07-17; no `--allow-dirty-tarball` was ever used.** Re-checked
+      the blocker as instructed rather than assuming it persisted: the whole CORE fleet was **republished from CLEAN
+      trees at ~10:00–11:00Z today** (`git_status_clean: true` on every manifest) — UAC `@825878f` 10:30:53Z, UTL
+      `@61bf7444` 10:04:17Z, deployment-service `@821250ab` 11:00:55Z, **instruments-service `@e6c31507` 11:00:55Z**.
+      The dirty `terraform.tfvars` that blocked this yesterday was committed/clean during that window, so the republish
+      simply succeeded. (deployment-service is dirty again NOW — 3 foreign files, one touched 9 min before this check —
+      but that is NEW unrelated work and no longer gates this item. Confirmed the constraint was real, not imagined:
+      `deployment-service` is in `CORE_REPOS`, which the script ALWAYS includes, and its dirty check is per-repo
+      `git -C <repo> diff-index --quiet HEAD` — so there is no way to scope it out; waiting was the only correct path,
+      exactly as the todo instructed.) **Evidence — proven by CONTENT and by the live artifact, not by ancestry alone:**
+      (a) `git merge-base --is-ancestor a29e483c e6c31507` → **true**, the published tarball SHA descends from the
+      partial-stamping fix; (b) reading the PUBLISHED SHA's own file,
+      `git show e6c31507:scripts/measure_honest_coverage.py` contains `partial = bool(asset_groups_failed)` +
+      `asset_groups_failed` + `"asset_groups_requested"` (lines ~819-840); (c) **the decisive end-to-end proof** — the
+      LIVE nightly artifact `gs://central-element-323112-honest-coverage/2026-07-17/coverage.json` carries
+      `partial: False`, `asset_groups_failed: []` and `asset_groups_requested` **present**, alongside
+      `asset_groups_measured = ['cefi','defi','tradfi','sports','prediction']` (generated_at 2026-07-17T09:09:21Z).
+      Those three fields can only exist if the writer that produced the file carries `a29e483` — which IS this plan's
+      stated P1 acceptance ("tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND `partial: false`"), now
+      met by the real cron output rather than a manual run. The launcher SSOT drift half was separately resolved earlier
+      today (`deployment-service@6c7a079e1` — Cloud Run job fetch command + the Terraform IaC SSOT both updated; see the
+      2026-07-17 launcher Progress Log entry +
+      `plans/active/issues/honest_coverage_launcher_missing_lib_dependency_2026_07_17.md`), and today's successful 5-AG
+      cron output is the proof it holds.
 - [x] [DATA] P2. ✅ Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **Approach
       taken = metadata-deferred read (Option 2), NOT row-group streaming:** the availability-index parquet already
       stores every `_READ_COLUMNS` column PLAIN_DICTIONARY-encoded per row-group (verified via pyarrow row-group
@@ -418,8 +586,29 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
       this session). Enables downsizing the cron VM back to 16GB — **not done here**, a separate operator/infra
       decision; `deployment-service`'s launcher was not touched (noted in passing: that repo currently carries unrelated
       live foreign WIP in `terraform.tfvars`, left alone).
-- [ ] [BACKEND] P3. _(stretch, optional)_ Add `resolved_date`/`requested_date` to `get_honest_coverage` so the card can
-      distinguish "today's file" from a 14-day fallback precisely. Low priority — the card already infers from `date`.
+- [x] [BACKEND] P3. ✅ _(stretch, optional)_ Added `resolved_date`/`requested_date` to `get_honest_coverage` so the card
+      can distinguish "today's file" from a 14-day fallback precisely. `requested_date` = the day the caller asked for
+      (explicit `?date=`, else today UTC — i.e. `candidate_dates[0]`, true in both branches); `resolved_date` = the day
+      whose file was actually read. Equal ⇒ today's file; `resolved_date < requested_date` ⇒ the walk-back served an
+      older measurement. **Contract change (deliberate, documented in the docstring):** the endpoint previously returned
+      the GCS bytes _verbatim_; it now parses + re-serialises to inject the two fields. Kept honest: the writer's own
+      `date` is NOT overwritten, every pre-existing key passes through untouched (test-pinned), and a payload that is
+      not a JSON object has nothing to hang provenance on so it is still served verbatim rather than reshaped. UI not
+      wired — the todo's scope is the field ("so the card CAN distinguish"); the card's existing `date`-inference still
+      works unchanged. — deployment-api@4e996f8 + Evidence: `test_honest_coverage_route.py` 11 passed
+      (`-p no:randomly`), including new `TestFallbackProvenanceFields` ×4 — direct-hit ⇒ requested==resolved; walk-back
+      ⇒ requested=today / resolved=today-2 (asserts the real fallback pair); additive-and-preserves-payload (every
+      `SAMPLE_COVERAGE` key byte-equal, added keys == exactly the 2); non-object payload served verbatim. ruff clean +
+      `ruff format` clean on both files; basedpyright: **zero new errors** — the file's 7 `reportAny` errors are
+      pre-existing and identical at HEAD (verified by A/B-ing the HEAD copy through basedpyright: same 7, shifted 19
+      lines by this diff), and the `cast("object", …)` + isinstance-narrow avoids the `Any` ban rather than suppressing
+      it. _(Ship notes: full `quality-gates.sh --no-fix` is RED in this tree on a **concurrent agent's live WIP** —
+      `fixtures_browse.py` E501 + `fixtures_browser.py` RUF100, mtimes ~2min old at ship time, zero overlap with this
+      diff; my 2 files verified clean in isolation — same collision carve-out precedent as this plan's
+      `12c94be`/`e27ba4b` entries. Shipped `--skip-preflight` (the flag quickmerge documents "for multi-agent use")
+      because the dirty dep is deployment-service's foreign-live `terraform.tfvars` — a features-service-sports Cloud
+      Run tfvars with zero relationship to this endpoint; same dirty-deps carve-out as `@62cc10f`. Post-ship verified
+      `git show --name-only` landed exactly 2 files and the foreign WIP is still intact + uncommitted.)_
 
 ## P2 — New Listings + Upcoming Expiries (catalogue-derived, user thresholds)
 
@@ -476,8 +665,38 @@ the exact pattern to clone (it already has a threshold input).
       nice-to-have follow-up, not a blocker.)_
 - [ ] [DATA] P2. _(clean long-term)_ Add a distinct `expiry` column to `CATALOG_COLUMNS`
       (`build_instrument_catalogue.py`) so expiry is stored separately from the overloaded `available_to`; then regen.
-- [ ] [BACKEND] P2. New-listings false-positive guard — for legacy rows where `available_from == pipeline-first-seen`
-      (not a real listing), quantify the rate and either show provenance or exclude `available_from == pipeline-start`.
+- [x] [BACKEND] P2. ✅ New-listings false-positive guard — **quantified on real prod GCS first, then chose SHOW
+      PROVENANCE over exclude.** Root cause confirmed by reading the writer (not assumed): `available_from` =
+      `MIN(first_day_observed, declared_from)` (`build_instrument_catalogue.py:1086-1092`), and when a venue declares no
+      listing date that MIN silently degrades to _the day the pipeline first saw the instrument_. **Measured** (all 5
+      AGs, 4,310,720 catalogue rows, 2026-07-17): 37,308 rows (0.87%) corpus-wide carry the signature, but only **99 of
+      the 439,940 rows inside the live 30-day new-listings window (0.02%)** — a SINGLE cluster, `COINBASE-CDE` @
+      2026-07-10, all 99 with `market_created_at` empty (no venue-truth date existed) and expiries running to
+      **2030-12-20**: a long-established venue cannot have listed a 2030 future 7 days ago, so these are
+      pipeline-onboarding artifacts, not listings. **Control proves the signature discriminates**: onboarding floods
+      score high (`BITGET-SPOT` 61% of rows on its first day, `LIGHTER-ZKSYNC` 100%) while established venues are
+      negligible (`DERIBIT` 0.09% of 334,468), and a genuine new listing on an established venue is never tagged.
+      **Decision — surface, don't exclude**: at 0.02%, dropping rows would hide possibly-real listings, and the
+      catalogue stores only the MIN _result_ (not which side won), so a venue that genuinely launched on its first
+      captured day is indistinguishable. The new field `available_from_is_venue_first_day` therefore states a **fact**
+      ("this row's available_from is the earliest date we hold for this venue") and lets the reader judge —
+      honest-absence per this plan's golden rules, not a fabricated verdict. Computed over the WHOLE per-AG catalogue
+      **before** the date window narrows the frame (tagging after windowing would make every row trivially match the
+      window's own min — regression-pinned). Also computed on the expiries path so the shared row type never reports a
+      silent `false`. — deployment-api@a9b6207 + deployment-ui@179c7ce + Evidence: **real-GCS run of the SHIPPED
+      service** (not just fixtures) — `list_new_listings(max_age_days=30, asset_group="cefi")` returns 10,563 rows,
+      flags exactly **99**, all `COINBASE-CDE 2026-07-10` (samples:
+      `COINBASE-CDE:FUTURE:BTC-USD@LIN-20301220 from=2026-07-10 to=2030-12-20`), 0 unflagged CDE rows, and DERIBIT's
+      7,599 in-window rows stay unflagged. Unit: `test_catalogue_lifecycle.py` 8 passed incl. new
+      `TestNewListingFalsePositiveGuard` ×5 (flood tagged / genuine-new-on-established NOT tagged /
+      rows-surfaced-not-excluded / tag-computed-before-windowing / expiries-tag-truthful). UI: `LifecycleCards.test.tsx`
+      8 passed incl. 2 new specs (amber "⚠ listing date unconfirmed" affordance with a full explanatory `title`, row
+      still rendered; established venue unflagged) + full `quality-gates.sh` **green (24s: tsc/eslint/vitest/build)**.
+      `[UI]` + pw:L2 via Vitest per this plan's accepted pattern; mock-api.ts carries a representative COINBASE-CDE
+      flood row so mock mode renders the affordance. basedpyright: **zero new errors** (A/B'd vs HEAD — same 6
+      pre-existing). _(deployment-api's full gate is red on a concurrent agent's live
+      `fixtures_browser`/`fixtures_browse` WIP — zero overlap; my files verified clean in isolation. Same collision +
+      `--skip-preflight` dirty-deps carve-out as A1 above.)_
 
 ## P3 — Prediction markets: category dropdown → human-readable catalogue browser
 
@@ -603,26 +822,142 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
       canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
       for MTDS/MDPS/features — the migration must preserve shard-atom identity across those services, not just IS.
-- [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
+
+      **ROOT-CAUSED 2026-07-17 — the finding reframes this todo; migration IN FLIGHT (dispatched sub-agent).** Measured
+                              every asset group's live `_index/availability_index.parquet` against the UAC `InstrumentType` enum (31 values):
+                              - **Non-canonical VALUES are already GONE** for cefi / defi / tradfi / prediction — **0** each. This todo's original
+                                target (the lowercase/legacy DeFi values) was fully resolved by the P9 round-2 migrations (`@6f87a251` cefi
+                                lowercase, `@66258618` tradfi blanks, `@4d63822d` defi data_type). Nothing left to root-cause there.
+                              - **The REAL residual is BLANK `instrument_type` on CAPTURED rows** — the `__legacy__` sentinel the P9 table logged
+                                as "CEFI `__legacy__` 4.85M / DEFI `__legacy__` 3.85M". Crosstab of `capture_status` × blank on live data:
+                                **tradfi 0** ✅ (P9's migration met its stated bar), but **cefi 13,046** and **defi 65,443** captured rows are
+                                still blank — **78,489 rows** total. Blank on NON-captured rows (empty_confirmed / expected_unattempted /
+                                attempted_failed) is **honest and must stay** (those shards captured zero instruments, so they have no type).
+                              - **Root cause = the same bug P9 already documented, with only PART of the fix applied**: the shared cefi/tradfi/defi
+                                writer `writers.py::_write_venue` hardcoded `instrument_type=""` on `record_captured(...)`. **The WRITER IS
+                                ALREADY FIXED for all three** (`b475ae8e` → `91fc7bd2` `_split_by_instrument_type`, called from `_write_venue`,
+                                shared by every AG — verified by reading it at HEAD; **no writer change needed**). But the **backfill migration
+                                only ever ran for tradfi** (`canonicalize_tradfi_instrument_type_2026_07_16.py` is hardcoded
+                                `asset_group="tradfi"`). So cefi/defi simply never got their history backfilled.
+                              - **Remaining work = generalise that migration to cefi + defi** (targeted per-shard object reads re-deriving the
+                                type from each shard's own `instruments.parquet`; single-walk discipline; honest-blank when an object is
+                                missing). Dispatched to a sub-agent with the full rule set; acceptance = **0 captured blank rows in cefi AND
+                                defi**, non-captured blanks preserved, cross-service shard-atom re-confirmed (P9 established MTDS/MDPS/features
+                                do NOT read `instrument_type` from this IS manifest for their own shard keys — each stamps its own — so the
+                                tradfi migration was safely IS-only; that must be re-confirmed for cefi/defi before applying).
+                              - **Also measured (NEW, out of this todo's scope — sports only):** the ONLY remaining non-canonical values anywhere
+                                are in the **sports** index: `odds` 561,260 rows (BETFAIR/BETMGM…, 561,099 captured), `prediction_market` 1,709,
+                                `prediction` 37, `SPORT` 16 (ODDS_API). Canonical members `EXCHANGE_ODDS` / `FIXED_ODDS` / `PREDICTION_MARKET`
+                                exist, so these look mappable — but sports keys on `("data_type","league_id")` (UAC `SHARD_AXIS_MATRIX`), so
+                                `instrument_type` is display-only there, a different axis and a different blast radius from this (A) todo.
+                                Tracked as its own todo below rather than silently folded in.
+
+- [x] [DATA] P2. ✅ _(A)_ Drained residual `LENDING` — **but NOT by "finishing the split", which would have corrupted
+      the catalogue.** `scripts/drain_residual_lending_rows_2026_07_17.py`, **applied + independently verified on real
+      prod infra**. **Correction to this todo's premise (the important part):** the instruction was to re-run the
+      `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py` pattern "for the remaining 3". Tested that
+      first by running **that script's own pure `migrate()` over live prod data**: it would have written **1,766
+      duplicate `instrument_id`s** (880 A_TOKEN + 880 DEBT_TOKEN) — it has **no dedup at all**, and the split twins
+      **already exist**. Root cause: the 2026-07-13 run ADDED the A_TOKEN/DEBT_TOKEN rows but never REMOVED its LENDING
+      sources (the plan's own P4-B note corroborates: "+904 rows, 9,456→10,360" is the 1:2 split _output_ with sources
+      kept, not a net +452). So the residual was never "unsplit markets" — it was **already-split markets whose stale
+      original was left behind**, and the correct fix is a guarded DELETE. **Also stale in this todo's wording
+      (measured, not assumed):** residual = **893 rows = MORPHO 861 + COMPOUND_V3 26 + FLUID 6**. COMPOUND_V3 is in the
+      residual (not listed in the todo); **AAVE_PLASMA does not exist as a venue in the catalogue at all** (no
+      AAVE/PLASMA venue match); AAVE_V3 is already fully drained (0 LENDING). All 893 are delisted/aged (**0 active**) —
+      no live row was mislabeled — but `LENDING` is **not a real `InstrumentType` enum member**, so historical-identity
+      consumers (backtests, PnL recon) still hit the crash/mislabel class, and the pair falsely reads as "market
+      delisted 2026-06-24, different one listed" when only our labelling changed. **Safety design — delete ONLY where a
+      twin provably supersedes**: per row the required twin id(s) are derived from the row's OWN key shape
+      (`:LENDING_MARKET:<pair>` → BOTH `:A_TOKEN:A<pair>` AND `:DEBT_TOKEN:DEBT<pair>`; `:SUPPLY:<sym>` →
+      `:A_TOKEN:<sym>`; `:BORROW:<sym>` → `:DEBT_TOKEN:<sym>`) and EACH must exist **and** have `available_from <=` the
+      original's. Anything failing is KEPT + reported — losing real lifecycle history is far worse than a stale label. —
+      instruments-service@e4fdd56c + **Evidence (real infra, independently re-read — not the script's own log)**:
+      pre-flight proof that the twins are complete — **867/867** MORPHO/FLUID and **26/26** COMPOUND_V3 LENDING rows
+      have their twin, and **867/867 + 26/26 twins start EARLIER-OR-EQUAL** (0 start later; byte-identical in practice,
+      e.g. `MORPHO-ETHEREUM:LENDING_MARKET:cbBTC-USDT:0x2b8019` from 2023-12-28 vs its `:A_TOKEN:AcbBTC-USDT:0x2b8019`
+      twin from 2023-12-28). Run: `11,776 → 10,883` rows (−893); guard reported
+      `deletable=893, kept_no_twin=0, kept_twin_starts_later=0, kept_unknown_shape=0`. Post-verify (fresh read):
+      **LENDING = 0**, **zero non-enum instrument_type values remain**, all **9 other instrument_types byte-identical**
+      (delete-only, A_TOKEN stays 1,117 / DEBT_TOKEN 1,060), and **all 893 deleted markets are still fully represented
+      by their twins — 0 orphaned**. Rollback:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260717-111412.lendingdrain.defi.bak.parquet`.
+      Unit: `tests/unit/migrations/test_drain_residual_lending_rows.py` 10 passed — each safety branch pinned
+      individually (deleted-when-twins-complete; **KEPT when a required twin is missing**; **KEPT when a twin starts
+      later (history would be lost)**; kept on unknown key shape; wider twin OK; non-LENDING never touched; idempotent).
+- [ ] [DATA] P3. _(NEW — side-discovery 2026-07-17, measured while root-causing the (A) legacy-values todo above)_
+      **Sports is the last asset group carrying non-canonical `instrument_type` values.** Live sports
+      `_index/availability_index.parquet` (5,353,331 rows) holds `odds` **561,260** rows (BETFAIR / BETFAIR_EX_EU /
+      BETFAIR_EX_UK / BETFAIR_SB_UK / BETMGM …; 561,099 of them `captured`), `prediction_market` **1,709**
+      (KALSHI/POLYMARKET), `prediction` **37**, `SPORT` **16** (ODDS_API) — none are UAC `InstrumentType` members, while
+      plausible canonical targets DO exist (`EXCHANGE_ODDS` / `FIXED_ODDS` for exchange-vs-sportsbook venues,
+      `PREDICTION_MARKET`). cefi/defi/tradfi/prediction are all **0** non-canonical, so sports is the only remainder.
+      **Deliberately NOT folded into the (A) todo**: sports keys on `("data_type","league_id")` (UAC
+      `SHARD_AXIS_MATRIX`), so `instrument_type` is a DISPLAY axis there rather than a shard axis — different blast
+      radius, and the `odds` → `EXCHANGE_ODDS` vs `FIXED_ODDS` split is a real per-venue semantic decision (Betfair
+      EXCHANGE vs sportsbook), not a mechanical uppercase. Needs a root-cause of the sports writer's stamping site + an
+      operator-confirmable mapping before any migration.
+- [ ] [DATA] P3. _(NEW — side-discovery 2026-07-17, found while verifying the LENDING drain)_ **DeFi POOL
+      `instrument_id` is not unique across chains.** The live defi catalogue carries **6 duplicated `instrument_id`s (12
+      rows)** where the SAME pool contract address is deployed on TWO chains and both rows key on
+      `instrument_id == pool_address.lower()`: `0x004c167d…` = CURVE on **AVALANCHE + OPTIMISM**; `0x01abc00e…`,
+      `0x03cd191f…`, `0x06df3b2b…`, `0xc6a5032d…`, `0xfeadd389…` = BALANCER on **ETHEREUM + POLYGON** (deterministic EVM
+      deployment puts the same address on multiple chains). Each pair has a DIFFERENT `available_from`, so they are
+      genuinely distinct instruments colliding on one id. Pre-existing and **out of scope for the LENDING drain (left
+      untouched — verified still exactly 6 before and after)**. Blast radius is small (6 of 10,883) but the CLASS is an
+      identity-uniqueness violation: any consumer keying on `instrument_id` alone silently picks one chain's pool. Fix
+      direction: include `chain` in the DeFi POOL identity (or dedupe key) — needs a shard-atom check across
+      MTDS/MDPS/features before changing, same as any identity migration.
 - [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
       below.
-- [ ] [DATA] P1. _(B, enabler)_ **CODE SHIPPED; catalogue regen PENDING (real-infra).** Added
-      `base_asset_contract_address` + `quote_asset_contract_address` + `atoken_address` + `debt_token_address` to
-      `CATALOG_COLUMNS` (`pool_address` was already present) + `_extract_meta` reads them + both row-builders (DeFi +
-      prediction) project them. — instruments-service@77f0fdaa + Evidence: `quality-gates.sh --no-fix` green (exit 0;
-      catalogue tests assert `list(df.columns) == CATALOG_COLUMNS`). UAC `InstrumentRecord` carries all four fields
-      (`instrument.py:221/225/235/239`); live source confirmed (`catalog.20260713-…atokendebttoken.bak`). **REMAINING
-      (real-infra):** regen `catalog.parquet` (projection re-roll, NOT a re-fetch) so historical rows populate the new
-      columns — deferred as a tracked run (needs the catalogue-build VM/job on real infra). Every FUTURE build now
-      carries the columns.
-- [ ] [DATA] P1. _(B)_ SPOT_ASSET backfill/migration — with the address columns in place, derive the unique token set
-      (base + quote legs of every SPOT_PAIR/POOL + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET record
-      per unique (chain, token → contract_address). Reuse LST/A_TOKEN/DEBT_TOKEN addresses (adapters
-      `renzo.py`/`etherfi.py`/ `solend.py` set the LST token address; `curve.py`/`uniswap_v2/v3.py` set base/quote).
-      Idempotent; run on real infra.
-- [ ] [DATA] P1. _(B)_ CeFi-spot leg mapping — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address;
-      map each CeFi spot leg symbol → native-chain canonical `contract_address` (ETH → WETH/native on ethereum) via a
-      symbol→chain→address registry. Flag any symbol with no canonical on-chain address (honest-absence — don't invent).
+- [x] [DATA] P1. ✅ _(B, enabler)_ Catalogue regen **completed on real infra**, safely. `--mode full` was evaluated
+      first and found to CONFLICT with prior direct-patch migrations: the 2026-07-13 atokendebttoken migration alone
+      added 904 non-reproducible rows (9,456→10,360 rows — MORPHO/FLUID 1:2 splits of already-catalogued historical
+      rows; see `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` §Stage 4) that a from-scratch raw walk
+      cannot regenerate (they're not derived from repeatable rollup logic). Confirmed via a real `--mode full` attempt
+      that hit `CATALOGUE_SHRINK_BLOCKED` (new=9,461 < current=10,303) — the monotonic guard correctly refused to
+      promote, which would otherwise have SILENTLY REVERTED that completed migration plus other direct-patch fixes
+      (drift/pacifica removal, etc.). Root-caused (not just retried) and switched to `--mode incremental` instead — safe
+      by construction: loads the previous catalogue, re-walks only a bounded recent window (self-widening, 21 days this
+      run), and preserves the frozen historical tail untouched, so it can only ADD the new columns to recently-active
+      rows, never regress prior migrations. — Evidence (real infra, independently re-verified via a fresh
+      `pd.read_parquet` after the fact, not just the run's own log): defi `catalog.parquet` `10303→10387` rows
+      (monotonic ACCEPT), `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet` new GCS
+      generation confirmed via `gcloud storage ls -l`; 24 columns (was 18); non-null counts `pool_address=7175/10387`,
+      `base_asset_contract_address=8534/10387`, `quote_asset_contract_address=8183/10387`, `atoken_address=181/10387`,
+      `debt_token_address=14/10387` (sparse — only Aave populates it, expected). CeFi needed NO regen for this enabler:
+      cefi rows are centralized-exchange listings with no on-chain address of their own, so all 4 new columns are
+      correctly, honestly blank for all 424,670 cefi rows (verified) — not a gap, the accurate state. **Known limitation
+      (documented, not silently dropped):** the incremental window means historical/delisted defi rows OUTSIDE the last
+      ~21 days (1,455 "frozen-tail" rows per the run's own merge log) still lack the new address columns — a full
+      historical column-backfill without disturbing prior migrations would need a dedicated targeted script (read
+      existing row → look up its own historical by_date snapshot → patch just the 4 columns), not a `--mode full`
+      rebuild; tracked as a follow-up, not blocking SPOT_ASSET population (which only derives from rows that DO have
+      addresses — honest-absence for the rest).
+- [x] [DATA] P1. ✅ _(B)_ SPOT_ASSET backfill/migration — `scripts/backfill_spot_asset_population_2026_07_16.py` derives
+      one SPOT_ASSET row per unique `(chain, address)` from the now-regenerated catalogue: DeFi walks SPOT_PAIR/POOL
+      (base+quote legs)/LST/A_TOKEN (underlying + Aave receipt `atoken_address` when populated)/ DEBT_TOKEN rows;
+      quote-leg symbols (no standalone `quote_asset` column in `CATALOG_COLUMNS`) are parsed best-effort from the
+      DEX-pool `glued_pair_id` projection, honest-absence otherwise. Idempotent (dedups against existing
+      `instrument_id`s — verified: re-running post-apply adds 0 rows). — instruments-service@e66a57b6 (shipped via
+      `quickmerge.sh --agent --files`) + **run on real infra, independently verified**: defi `catalog.parquet`
+      `10387→11776` rows (+1,389 SPOT_ASSET, 100% non-blank `base_asset_contract_address`, 0 duplicate `instrument_id`,
+      9 real chains represented ARBITRUM/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON/SOLANA — Solana addresses
+      independently confirmed correctly base58-formatted, not corrupted EVM hex); pre-existing 10,387 rows byte-for-byte
+      unchanged (instrument_type crosstab sums identically). Backup snapshots:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260717-090927.spotasset.defi.bak.parquet`,
+      `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.20260717-090945.spotasset.cefi.bak.parquet`.
+- [x] [DATA] P1. ✅ _(B)_ CeFi-spot leg mapping — folded into the same backfill script's `derive_cefi_spot_assets`:
+      every distinct cefi `base_asset` symbol mapped through the Ethereum-mainnet `DEFI_MAJOR_ASSET_ADDRESSES` registry
+      (native ETH/BTC redirected to their canonical wrapped WETH/WBTC form first, matching the plan's "ETH → WETH/native
+      on ethereum" spec and `token_wrapping.py`'s wrap-direction convention); a symbol absent from the registry is
+      skipped + logged, never fabricated. — **run on real infra, independently verified**: cefi `catalog.parquet`
+      `424670→424699` rows (+29 SPOT_ASSET, all ETHEREUM chain, 100% non-blank addresses, 0 duplicates); 3,325 distinct
+      cefi symbols had NO registry entry (mostly tokenized-stock/leveraged/exotic long-tail symbols, e.g.
+      `AAPLX`/`BTC3L`/`1000PEPE` — honestly logged as unresolved, not invented). **Known gap (documented, matches the
+      plan's own "if present — check" framing):** `catalog.parquet` has no standalone `quote_asset` column for cefi rows
+      either, so this covers cefi BASE legs only; quote legs (a handful of majors/stables that mostly already resolve
+      via their OWN base_asset row elsewhere) are a follow-up.
 - [x] [BACKEND] P1. ✅ _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so
       the dump is continuous, not a one-off migration. curve/uniswap_v2/uniswap_v3 (pool base+quote legs) and
       renzo/etherfi/solend (LST/A_TOKEN/DEBT_TOKEN's own receipt-token leg) now emit a SPOT_ASSET sibling
@@ -639,8 +974,42 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       `test_renzo_metadata.py`, `test_solend.py` (per-reserve single SPOT_ASSET sibling, not duplicated across the
       A_TOKEN/DEBT_TOKEN pair). _(Shipped via direct push, not quickmerge — self-caught process error, flagging per
       honesty; content verified green per the evidence above.)_
-- [ ] [UI] P2. _(B)_ Surface `base_asset_contract_address` (+ chain) in `ShardDetailModal` / the instrument drilldown
-      for SPOT_ASSET rows (copyable). `[UI]` + pw:L2.
+- [x] [UI] P2. ✅ _(B)_ Surfaced `base_asset_contract_address` as a **copyable** field on the instrument drilldown rows.
+      The prior session's TWO-REPO scoping finding was **re-verified and still held**
+      (`rg base_asset_contract_address     deployment_api/` → 0 hits), so this shipped as backend-then-UI. **Backend**
+      (deployment-api@13a8f0b): the address is a genuine per-row column of the (venue, day) bundle parquet the drilldown
+      ALREADY loads — verified against real prod GCS: a live `UNISWAP_V3-ETHEREUM` day file carries
+      `base_asset_contract_address` **484/484 non-null** with true mainnet addresses. So no new read and nothing
+      invented: extracted a shared `_column_by_symbol(df, symbol_col, value_col)` helper and routed BOTH `base_asset`
+      (pre-existing) and the new address through it, so the two cannot drift on absent/blank handling. **Honest absence
+      is encoded in the shape**: a bundle WITHOUT the column omits the field entirely (all of CeFi — no on-chain address
+      exists), while a present-but-blank cell normalises to `null` — "not applicable" and "we looked and found none"
+      stay distinguishable, and a zero/placeholder address is never emitted. (`chain` deliberately NOT added: it is
+      **not** a bundle column — it lives in the venue name (`UNISWAP_V3-ETHEREUM`) and the UI already holds it on the
+      resolved `detail.coord` for defi, which is a real shard axis there. Deriving a second copy would have been
+      fabrication.) **UI** (deployment-ui@a860937): new `CopyableAddress` button on the standard instrument row — elided
+      `0xa0b8…eb48` display (rows are dense) with the FULL address in both the `title` tooltip and `data-address`, and
+      click-to-copy writing the **full** value, mirroring the house clipboard pattern in `DeploymentResult.tsx` (copy →
+      "✓ copied" → 2s reset). Renders only when the backend actually supplied an address. **Routing verified, not
+      assumed — this nearly bit**: my first specs failed and the investigation showed the modal has TWO row paths
+      (`BundleRow` vs the standard row). Confirmed by reading `_bundling_mode()` that instruments-service resolves to
+      **`per_venue_day_bundle`**, and the UI gates `isBundled` on **`per_underlying`** ONLY — so IS rows genuinely flow
+      through the standard path this change edits. Had it been the other way, the field would have been invisible for
+      exactly the rows that carry addresses. + Evidence: **real-GCS run of the SHIPPED backend** —
+      `_expand_per_venue_day_bundle` over the live `UNISWAP_V3-ETHEREUM` 2026-07-16 bundle returns **473/473 entries
+      carrying `base_asset_contract_address`** with genuine values (`1INCH` →
+      `0x111111111117dc0aa78b770fa6a738034120c302`, the real mainnet address). Backend unit:
+      `test_data_status_drilldown.py` **43 passed** incl. new `TestBaseAssetContractAddress` ×3 (address reaches the
+      entry and is **per-row, not smeared**; a bundle without the column **omits** the field; a blank cell → `None`). UI
+      unit: `DataStatusDrilldown.test.tsx` **19 passed** incl. 3 new specs (renders the affordance + full address
+      reachable via title/data-address; **copies the FULL address, not the elided display**; no affordance at all for a
+      row without one). Full `quality-gates.sh` **green (174s: tsc/eslint/vitest/build)**; backend ruff clean +
+      basedpyright **0 errors (= HEAD's 0)**. `[UI]` + pw:L2 via Vitest per this plan's accepted pattern; mock-api.ts
+      carries a real WETH address on the captured row and deliberately omits it on the other two so mock mode exercises
+      both branches. _(Spec note: the 3 UI specs reuse the test file's existing prediction coord fixture rather than an
+      instruments-service one — the address rendering is service-agnostic (it only checks the field), and the
+      IS-routes-to-the-standard-path question is settled by the `_bundling_mode` analysis above rather than by the
+      fixture.)_
 - [x] **DECIDED (default): summary shows the CANONICAL label with the raw value on hover** — covered by the two (A)
       todos above.
 
@@ -736,27 +1105,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
@@ -1058,16 +1427,116 @@ flipped with evidence, and code is real** (not stubs) — the shipping process w
 local real-GCS run (worth confirming — same "CI-green-with-mocks but slow/empty on real data" class as the Q1 symbol
 search):
 
-- [ ] [PERF] P2. _(P3/P6 endpoints — real-data verification)_ `GET /data-status/prediction-catalogue` (reads the
-      ~1.3M-row prediction `catalog.parquet`) and `GET /data-status/catalogue` (cefi per-venue walk) did **synchronous
-      heavy GCS reads that blocked a single-worker uvicorn event loop** (health + coverage-summary went unresponsive
-      after one call locally) and `/catalogue?asset_group=cefi` returned **`total_count:0` (empty)** on the one backend
-      that answered. Verify on real data / prod (multi-worker): (a) offload the heavy parquet read off the event loop
-      (thread/executor) + paginate/cache so the UI can't hang; (b) confirm `/catalogue` actually returns cefi
-      instruments (the availability-derived walk may be missing the latest-day). Not a proven prod bug — but unverified
-      against real data.
-- [ ] [UI] P2. _(P6 phase-1 UI — NOT done)_ The `InstrumentsModalStandard` "MVP only" toggle + per-row badge + CSV
-      threading (P6 phase-1 UI todo) is still OPEN — the P6 BACKEND landed but its UI half didn't. Finish it.
+- [x] ~~[PERF] P2. (P3/P6 endpoints — real-data verification)~~ ✅ **RE-VERIFIED 2026-07-17** — the hang I flagged was
+      root-caused + fixed by the overnight side-discovered fixes (UAC `OTHER_BUCKET_MEMBER_ADDED` INFO-log flood →
+      `uac@d4523602`; `coverage.py` `pd.NA` crash → `deployment-api@e754a60`; symbol-search parallelized → `@8e1221b`).
+      Fresh local run (deployment-api@d786743): `/prediction-catalogue?category=crypto` returns **correct data**
+      (total=214,532 crypto + full category_counts, real KALSHI/POLYMARKET rows) — but ~39s (reads the ~1.3M-row pred
+      catalog; a caching/pagination perf follow-up remains, tracked as the new PERF todo below).
+- [x] ✅ **[BACKEND] P1 — FIXED 2026-07-17.** `GET /data-status/catalogue` returned `total_count=0` for cefi/defi/tradfi
+      on real data (prediction/sports worked). Root cause: `_load_catalogue_frame` (`routes/data_status/_catalogue.py`)
+      read `_index/availability_index.parquet` and keyed on `instrument_id`, but the cefi/defi/tradfi availability index
+      is VENUE-level (shard atom = venue; NO per-instrument rows — real-GCS confirmed: cefi `_index`=80,615 rows, ZERO
+      non-blank `instrument_id`). Fix: for cefi/defi/tradfi read the per-AG identity catalogue `prod/catalog.parquet`
+      (the SAME file `catalogue_lifecycle`/`read_unique_instrument_count` already read) via `_read_identity_catalogue` —
+      ONE bounded GCS GET (single-walk preserved); `is_mvp` from the catalogue's own precomputed `mvp` column;
+      `capture_status`/`error_reason`/`attempted_at` honestly default (identity catalogue carries no manifest-only
+      per-shard fields). prediction/sports keep the per-entity `_index` path unchanged. — deployment-api@62cc10f +
+      Evidence: real-GCS `_build_catalogue_rows` → cefi=424,465 (e.g. `ASTER:PERP:IPUSDT`), defi=11,770 (Uniswap-V3
+      pools), tradfi=1,173,803 (CBOE COMBO); QG green (106s); +8 `TestIdentityCatalogueSource` tests (parametrized
+      cefi/defi/tradfi regression, asset-group-scoped bucket resolution, mvp-column-not-`is_mvp`, search, venue-narrow,
+      degrade-to-empty-not-500, CSV parity, raw-parquet schema-aware projection). Shipped via dirty-deps carve-out
+      (deployment-service `terraform.tfvars` foreign-live-dirty; strict-quickmerge WARN-only).
+- [x] [PERF] P3. ✅ `/data-status/prediction-catalogue` — **profiled on real GCS BEFORE optimising, which corrected this
+      todo's premise.** Measured cold cost is **~173s, not ~39s**, and it splits ~50/50 into two stages that are BOTH
+      **filter- and page-independent**: the GCS GET of the 184.5 MB pred `catalog.parquet` (**84.5s**) + the ~2.7M-row
+      classification pass in `_build_rows` (**86.0s**); parquet parse is a rounding error (1.8s) and facets 0.35s. So
+      the todo's suggested "pagination/projected read" **would have fixed nothing** — you cannot skip an 84s
+      whole-object download by asking for 50 rows, and the facet counts need the whole corpus by construction. **The
+      actual bug was the cache key**: it included `limit`/`offset`, so every "Next page" click re-paid the entire ~173s.
+      Fixed by re-keying `_CATALOGUE_CACHE` on the FILTER SET only and retaining a **bounded 5,000-row window** (+ the
+      true `total` + facets) per set. **Why bounded and not a corpus/frame cache** (the tempting "obvious" fix): an
+      unfiltered result is ~2.7M rows and the identity frames measure **122–312 MB deep** — caching those would
+      re-create exactly the OOM class this plan's own P1 root-caused on the honest-coverage writer. 5,000 rows = 100
+      pages at the default 50/page; a request past the window logs and falls back to a correct full rebuild rather than
+      silently serving a truncated list. Also pushed the `venue` narrow into the FRAME before classification (pure
+      optimisation — `venue` is a raw column needing no classification, and the caller applied the identical narrow to
+      the built rows immediately after). — deployment-api@0e39a53 + Evidence (**real GCS, shipped code**):
+      `category=crypto` page 1 = 157.18s (total=214,532) → **page 2 = 0.00s**, page 21 = 0.00s, and page1 rows ≠ page2
+      rows (not the cache echoing page 1); `venue=KALSHI` cold **27.88s vs 157.18s unfiltered (5.6x)**, all rows
+      `venues={'KALSHI'}`; `category=sports` correctly rebuilds (157.48s) returning `categories={'sports'}` — proving a
+      different filter set is NOT served from the crypto entry. Unit: `test_prediction_catalogue.py` 9 passed incl. new
+      `TestPagingDoesNotRePayTheCorpusCost` ×5 (second page issues NO second read; paged rows == unpaged ordering; **a
+      different filter set is not served from another set's cache** — the load-bearing risk of dropping limit/offset
+      from the key; `total` is the full count not the window length; venue-pushdown results identical to filtering after
+      build). **Known residual (honest, not deferred silently):** the FIRST request for a new filter set still costs
+      ~157s. That is inherent to reading a 184MB / 2.7M-row corpus per filter set; removing it needs a server-side
+      projection/index rather than a cache — which is precisely the P6 phase-2 "true-catalogue source" item below, where
+      it belongs.
+- [x] [PERF] P3. ✅ _(P6-catalogue follow-up, found 2026-07-17)_ `/data-status/catalogue` — the todo's diagnosis was
+      **confirmed** by profiling here (unlike the prediction one above): download+parse for tradfi is only ~3.3s, so the
+      cost really was building **every** row-dict via `df.iterrows()` before slicing the page. Fixed by splitting the
+      build into `_prepare_catalogue_frame` (vectorised narrow + `is_mvp` tag + order — no dicts) and `_rows_from_frame`
+      (materialises dicts from whatever slice it is handed), so the JSON route (`_build_catalogue_page`) builds only the
+      requested page while `total_count` stays exact via a frame `len()`. The CSV twin keeps the full-list path, and
+      both now share one prepare step so they are **structurally** unable to disagree on rows/order. `is_mvp` is
+      vectorised for the identity catalogues (reads their precomputed `mvp` column — this is what takes tradfi's 1.17M
+      rows off the per-row path); manifest-backed AGs (prediction/sports) keep the per-row predicate, i.e. no regression
+      there. **Operation order preserved exactly** (mvp_only → search-in-frame-order → cap at
+      `MAX_CATALOGUE_SEARCH_RESULTS` → sort): the cap lands BEFORE the sort, so reordering would silently change which
+      rows a capped search returns. Deliberately did **not** add the suggested TTL cache: measured the frames at 311.8
+      MB (tradfi) / 121.7 MB (cefi) deep, and the residual cold time is the transpacific GET (variable), not compute —
+      caching those frames buys little and risks the P1 OOM class. — deployment-api@0e39a53 + Evidence (**real GCS**):
+      tradfi **61.32s → 14.88s (4.1x)** with `total_count=1,173,803`; cefi **18.85s → 2.90s (6.5x)**; **page
+      byte-identical to the old full-build `full[:50]`** for both, plus verified equivalence for `offset=100 limit=20`
+      under `mvp_only=True` (`page == full[100:120]`) and `search=BTC` (`page == full[:10]`, total 500 == 500). All **16
+      pre-existing `test_route_data_status_catalogue.py` specs pass UNCHANGED** (they pin CSV/JSON parity — the
+      refactor's real guard); 25 passed across both perf files. basedpyright A/B'd vs HEAD: I introduced 1 new error (an
+      untyped `.apply` lambda) and **fixed it properly with a typed inner function rather than suppressing it** — back
+      to 4 = HEAD's count; ruff RUF046 likewise fixed, not ignored.
+- [x] ~~[UI] P2. (P6 phase-1 UI — NOT done)~~ ✅ RESOLVED — the P6 phase-1 UI (InstrumentsModalStandard "MVP only"
+      toggle + per-row badge + CSV threading + Catalogue Explorer panel) DID land after this note was written — see the
+      flipped P6 `[UI] P2 _(phase 1)_` checkbox above (`DataStatusDrilldown.tsx`). This note was stale.
+
+---
+
+## P10 — Sports fixtures browser: filter by date / league / team (operator round 3, 2026-07-17)
+
+> Operator: _"for catalogue sports should have all the fixtures broken down by searching by date, league and/or team for
+> filtering"_. The P9 fixtures browser shipped league→day grouping with a `league_id` filter over a **today-relative**
+> window only — so team search did not exist and no historical date was addressable (`days_back` caps at 60).
+
+- [x] ✅ **[BACKEND] P2 — DONE 2026-07-17.** `list_fixtures_by_league_and_day` / `GET /fixtures/browse` gained the two
+      missing axes. **`team=`** — case-insensitive substring across home/away team **name AND id**, matching whichever
+      side the team played; applied POST-parse so it keys on `_row_to_fixture`'s normalized fields rather than the raw
+      split-shard variants (`af_home_name` etc.). **`start_date`/`end_date=`** — an ABSOLUTE `YYYY-MM-DD` window that
+      can address **any** range in history (the relative window could only ever reach 60 days from today); a missing
+      side is filled from the relative default, a reversed range is swapped, and the span is capped at
+      `_MAX_WINDOW_SPAN_DAYS` (120) so the bounded per-day read — and **single-walk discipline** — is unchanged (no new
+      whole-corpus walk, only which days are read). An unparseable date degrades to the relative window rather than
+      500ing. **Cache-key fix**: `_BROWSE_CACHE` now keys on the RESOLVED window + every filter — previously a team
+      narrow would have been served the cached UNFILTERED rows. — deployment-api@5815582 + Evidence: QG green (120s);
+      **real-GCS** — baseline ±3d = 14 leagues/123 fixtures, `team='atlanta'` → 3/3 genuinely match, `league_id='129'` →
+      only 129 returned, absolute `2026-05-01..03` → 354 fixtures across exactly those 3 days (a window the old UI could
+      not reach); +11 tests (`TestTeamFilter` home/away/id/blank-noop/cache-isolation/combined, `TestAbsoluteDateWindow`
+      jump/fill-either-side/reversed/span-cap/unparseable-fallback/cache-isolation).
+- [x] ✅ **[UI] P2 — DONE 2026-07-17.** `FixturesBrowser.tsx` filter bar reworked: the `Days back`/`Days forward` number
+      inputs are REPLACED by real **From date / To date** pickers (prefilled today-7 → today+30, so the default view is
+      unchanged but any range is now selectable), plus a new **Team** input beside **League id**. Text filters run
+      through the house `useDebounce` (300ms) — each distinct value is a fresh windowed GCS read server-side, so a
+      per-keystroke refetch would be genuinely expensive. The window note now states the actual date range + active
+      narrows, and warns when a chosen range exceeds the server's 120-day span cap (rather than silently
+      under-reporting). `mock-api.ts`'s `/fixtures/browse` handler now HONOURS the date/league/team narrows — an
+      unfiltered mock made the new filter bar look broken in local mock mode. — deployment-ui@8cdae0b + Evidence: full
+      UI QG green (tsc/eslint/vitest/build); `FixturesBrowser.test.tsx` 10 tests pass (absolute-default-window shape,
+      league refetch, team refetch, historical-range refetch, combined date+league+team query, span-cap warning). `[UI]`
+      — pw:L2 deferred to the plan's final local full-stack Playwright pass (mirrors the P9 Q4 / fixtures-browser
+      precedent; Vitest + the real-GCS backend proof above are the cited evidence).
+
+> **Scope note (honest bound):** "all the fixtures" is served within a **bounded window** — the reader walks explicit
+> per-day paths, so an unwindowed all-history listing would be a whole-corpus GCS walk (review-blocking, single-walk
+> discipline). The absolute date range makes **any** date reachable (which is what the ask needs); it just reads ≤120
+> days at a time rather than all of history at once.
 
 ---
 

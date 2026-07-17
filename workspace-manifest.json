@@ -1017,6 +1017,7 @@
       }
     },
     "system-integration-tests": {
+      "promotion_model": "ldr_main",
       "type": "test-harness",
       "arch_tier": "integration",
       "status": "scaffolded",

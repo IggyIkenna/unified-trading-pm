@@ -167,12 +167,11 @@ first**, for three reasons:
    `dependency-update` to all 16 simultaneously, each of which opens a digest-refresh commit to LDR and triggers that
    repo's CI. That is a real fleet event and wants to be a deliberate, watched one — not a 6-hourly cron's surprise.
    `force_all` is NOT needed to trigger this; the staleness alone does it.
-2. **`GH_PAT` rotation is deliberately LAST — do NOT sequence it before this fix** (operator, 2026-07-16: rotation
-   happens after the CI-cost plan completes; assessed as no security risk). This is therefore **not** a blocker on
-   fixing the token. It inverts into a **forward dependency instead**: if this fix lands, `digest-drift-sweep` becomes a
-   new `GH_PAT` consumer needing cross-repo `contents: read` **and** `POST /dispatches` on all 16 repos — so the
-   eventual rotation must carry those scopes or it will silently re-break this sweep in exactly the same
-   green-but-doing-nothing way. Add it to the rotation checklist when that work starts.
+2. **The replacement token needs cross-repo scope on all 16 image repos** — `contents: read` **and** `POST /dispatches`.
+   Missing either re-creates this exact failure in the same green-but-doing-nothing way, which is the hardest kind to
+   catch because from the outside it is indistinguishable from the fix having worked. **Verify against a real cross-repo
+   fetch before declaring this fixed** — the `curl` in § "Root cause" returns 200 with scope and 404 without; that is
+   the test.
 3. **The dispatch step has the same defect.** `:160-176` POSTs `/dispatches` with the same `$TOKEN`. Fixing only the
    fetch moves the failure from "silently reports not-found" to "loudly reports HTTP 403/404 at dispatch" — which is
    better, but is a second change, not a side effect of the first.

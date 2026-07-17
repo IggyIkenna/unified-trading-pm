@@ -20,7 +20,7 @@ summary:
   make operator→agent delivery at-least-once with reply-ack (Option A) or add a redeliver-unanswered reconcile loop
   (Option B), plus dashboard visibility for unanswered questions and a loop-hardening so a /compact cannot lose a
   drained-unanswered message.'
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -39,6 +39,20 @@ source:
   agent_poll / agent_reply / send_to_role).'
 assigned_vm: NA
 resolved_by:
+  - "agent-orchestrator@8076257 — at-least-once delivery + reply-ack: `drain_agent_pending` now returns
+    delivered-but-UNANSWERED rows and bumps `redelivery_count` (agents.py:704); `mark_role_messages_answered` (:742)
+    stamps `answered_at` only on an actual reply, called from `agent_reply` (routes/agents.py:629). Delivery is no
+    longer marked on POLL. Idempotent migration + delivered->answered backfill (bootstrap.py:82)"
+  - "agent-orchestrator@62d4da8f — orphaned dispatched-task reclaim (state_store/tasks.py:104 + watchdog wiring)"
+  - "agent-orchestrator@da053a9 — tmux nudge now checks returncode and RAISES instead of silently reporting success
+    (tmux_spawn.py:1424), with bounded retry/backoff"
+  - "agent-orchestrator@fa73b5d — dashboard needs-operator delivery chip (layout.tsx:2465); this doc still marked it
+    `[~] remaining` but it shipped under the sibling ao_dispatch_hardening plan"
+  - "VERIFIED 2026-07-17 by independent skeptical audit: 4 SHAs reachable; regression suites RUN LIVE at HEAD —
+    test_agent_message_redelivery (8 passed, incl. the 641/643 regression), test_orphaned_task_reclaim (7 passed),
+    test_agent_nudge (7 passed), dashboard layout.test.ts (14 passed). NOTE: agents/main.md moved to
+    unified-trading-pm/agents/ on 2026-07-10 (@5eaea29) — the prompt hardening SURVIVED the move; this doc's in-repo
+    path citation is stale, the content is intact"
 locked_by:
 execution_scope: local-only
 model_tier: sonnet-doable

@@ -58,6 +58,16 @@ from urllib.parse import quote
 
 OWNER = "IggyIkenna"
 
+# Stable marker the LDR→main fleet bot puts on a promote PR it REFUSED to arm because the promote
+# range carries code that bypassed quickmerge (its D1 provenance gate). KEEP IN SYNC with
+# ldr-to-main-promote-fleet.yml. A provenance block is a DELIBERATE refusal with a specific remedy
+# (re-ship via quickmerge), not a stuck pipeline — but it used to surface only as an anonymous
+# "PROMOTION LAG > 60m" line, indistinguishable from a wedged promote. Measured 2026-07-16:
+# market-tick-data-service sat blocked ~23h that way, and the misreading ("the bot forgot to arm
+# auto-merge") led to the gate being hand-overridden — promoting 33 bypassed commits and laundering
+# them past the provenance baseline. Naming the block in the alert is what prevents that repeat.
+_PROVENANCE_MARKER = "<!-- promote:provenance-blocked -->"
+
 # Cap on per-file last-touch lookups in _content_delta_age. The oldest last-touch over a
 # 25-file sample is a sound floor for "how long has the delta been waiting" — and the age
 # only has to beat a 60m threshold, not be exact. Bounded so a huge delta cannot fan out
@@ -404,6 +414,34 @@ def _commit_window_age(
     return len(relevant), age, omsg
 
 
+def _provenance_blocked(repo: str) -> bool:
+    """True when this repo has an OPEN promote PR the fleet bot refused to arm on provenance.
+
+    Cheap + only called for a pair that is ALREADY going to page, so a healthy fleet pays nothing.
+    Fail-CLOSED to False: if the lookup fails we report the ordinary lag line rather than claim a
+    block that may not exist.
+    """
+    prs = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&base=main&per_page=20")
+    if not isinstance(prs, list):
+        return False
+    for pr in prs:
+        if not isinstance(pr, dict):
+            continue
+        p = cast("dict[str, object]", pr)
+        if not str(p.get("title") or "").startswith("chore(promote)"):
+            continue
+        num = p.get("number")
+        if not isinstance(num, int):
+            continue
+        comments = _gh_json(f"repos/{OWNER}/{repo}/issues/{num}/comments?per_page=30")
+        if not isinstance(comments, list):
+            continue
+        for c in comments:
+            if isinstance(c, dict) and _PROVENANCE_MARKER in str(cast("dict[str, object]", c).get("body") or ""):
+                return True
+    return False
+
+
 def _write_firestore_promotion_lag(
     repo_lags: dict[str, dict[str, object]],
     now_iso: str,
@@ -472,8 +510,26 @@ def main() -> int:
             res = _lag(repo, base, head, now, thresh_s, skip_ci_counts)
             if res:
                 n, age, omsg = res
-                findings.append(f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"')
-                repo_lags[repo][label] = {"n_commits": n, "age_s": age, "oldest_msg": omsg, "lag": True}
+                # A provenance-blocked forward pair is NOT a wedged pipeline — the bot deliberately
+                # refused to arm it and the remedy is specific. Say so, so nobody "unblocks" it by
+                # hand-arming auto-merge (which promotes the bypassed code AND launders it past the
+                # baseline — 2026-07-16). Only checked on LDR→main, the direction the gate guards.
+                blocked = label == "LDR→main" and _provenance_blocked(repo)
+                if blocked:
+                    findings.append(
+                        f"{repo} {label}: ⛔ BLOCKED by the provenance gate — non-quickmerge CODE on LDR "
+                        f"({n} change(s), oldest {int(age // 60)}m). NOT a stuck pipeline: re-ship via "
+                        f"`quickmerge --agent --files` or revert on live-defi-rollout. Do NOT hand-arm auto-merge."
+                    )
+                else:
+                    findings.append(f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"')
+                repo_lags[repo][label] = {
+                    "n_commits": n,
+                    "age_s": age,
+                    "oldest_msg": omsg,
+                    "lag": True,
+                    "provenance_blocked": blocked,
+                }
             else:
                 repo_lags[repo][label] = {"lag": False}
 

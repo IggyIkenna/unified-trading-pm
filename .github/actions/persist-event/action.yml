@@ -17,7 +17,14 @@ description: >
 # │ SSOT: plans/active/github_actions_ci_cost_reduction_2026_07_15.md § STEP 2c                          │
 # └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 #
-# ┌─ CONSTRAINTS THAT SHAPED THIS FILE — all VERIFIED against GitHub's docs, not assumed ────────────────┐
+# ┌─ THE ONE RULE BEHIND MOST OF THIS FILE ──────────────────────────────────────────────────────────────┐
+# │ A composite action gets NOTHING ambient from the repo — only what the caller explicitly hands it.     │
+# │ GitHub withholds `secrets` AND `vars` from composite actions on purpose, so an untrusted third-party  │
+# │ action cannot read your org/repo secrets or variables without an explicit opt-in. That single rule    │
+# │ explains why both arrive here as inputs; it is a deliberate boundary, not a quirk to work around.     │
+# └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ CONSTRAINTS THAT SHAPED THIS FILE — all VERIFIED, not assumed ───────────────────────────────────────┐
 # │ * `continue-on-error` IS supported on composite steps -> best-effort survives the conversion. This   │
 # │   is load-bearing: the reusable was `continue-on-error: true` at JOB level precisely so a persist    │
 # │   hiccup could never redden a caller's run (the "all jobs green but run=failure" badge, plan #220,   │
@@ -29,12 +36,15 @@ description: >
 # │   with an explicit `timeout` on every network call.                                                   │
 # │ * The `secrets` context is NOT available to composite actions -> cloud creds MUST arrive as inputs.  │
 # │   This is why callers pass `${{ secrets.GCP_SA_KEY }}` explicitly instead of `secrets: inherit`.     │
-# │ * The `vars` context is NOT available to a composite action either — MEASURED, and it cost a run.    │
-# │   GitHub's docs imply it resolves; they are wrong. The runner rejects the MANIFEST outright:         │
-# │   "Unrecognized named-value: 'vars'" -> TemplateValidationException -> Failed to load action.yml     │
-# │   (run 29565881093, 2026-07-17). So CLOUD_PROVIDER / CICD_EVENTS_BUCKET / AWS_REGION must be read    │
-# │   by the CALLER (where `vars` does resolve) and passed in as inputs. Do not "tidy" them back to      │
-# │   `${{ vars.X }}` in here — it does not fail at that step, it fails the WHOLE CALLING JOB.           │
+# │ * `vars` is NOT available to a composite action either — same deliberate boundary as `secrets`, and  │
+# │   a long-known limitation: actions/runner#2551, community#43878, community#49689. The docs' contexts │
+# │   page states the `secrets` rule but is SILENT on `vars`, which is why this is easy to get wrong.    │
+# │   The runner rejects the MANIFEST outright: "Unrecognized named-value: 'vars'" ->                    │
+# │   TemplateValidationException -> Failed to load action.yml (measured, run 29565881093, runner        │
+# │   v2.335.1 = latest, so this is not a version gap). CLOUD_PROVIDER / CICD_EVENTS_BUCKET /            │
+# │   AWS_REGION are therefore read by the CALLER (where `vars` does resolve) and passed as inputs —     │
+# │   the documented workaround. Do not "tidy" them back to `${{ vars.X }}` in here: it does not fail    │
+# │   that step, it fails the WHOLE CALLING JOB.                                                         │
 # │ * THE CONSEQUENCE OF THAT, which outranks every guard below: a manifest error is caught at LOAD      │
 # │   time, BEFORE any step executes, so `continue-on-error` CANNOT contain it. Every per-step guard in  │
 # │   this file is powerless against a bad expression in this file. With 22 callers that means one typo  │

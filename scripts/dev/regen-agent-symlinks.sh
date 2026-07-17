@@ -4,7 +4,7 @@
 # Delete-when: NA
 # regen-agent-symlinks.sh — (re)assert the per-root Claude Code agent symlinks for THIS host:
 #   • top-level   <root>/CLAUDE.md          → unified-trading-pm/cursor-configs/CLAUDE.md
-#   • per-root    <root>/.claude/skills/*   → unified-trading-pm/cursor-configs/skills/*
+#   • per-root    <root>/.claude/skills     → unified-trading-pm/cursor-configs/skills/  (ONE dir link)
 # for the MAIN workspace root AND every slot root (.tabs/<N>/). Thin fan-out over the canonical
 # link-claude-skills.sh helper (which does the actual idempotent, relative, CI-skipping symlinking).
 #
