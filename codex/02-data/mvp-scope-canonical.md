@@ -135,11 +135,15 @@ expected-absent AND skipped by the IS producers (no attempt → no `attempted_fa
 
 ## Config versioning
 
-`MVP_SCOPE_CONFIG_VERSION = 14` (v14 = tradfi OPTION underlier narrowing to `option_underliers={"ES"}`, 2026-07-14; v13
-= DeFi "everything we capture" broadening; v12 = DeFi ROCKETPOOL-ETHEREUM exclusion; v11 = COINBASE-SPOT/-FUTURES
-trades-only, drop book_snapshot_5, Coinbase-only, NO Deribit override) / `MVP_SCOPE_CONFIG_HASH` flips IFF `MVP_SCOPE`
-content changes (a scope-change vs a data-change, surfaced in data-status). The sports-leagues config
-(`SPORTS_LEAGUES_CONFIG_VERSION`) versions `LEAGUE_REGISTRY` independently. Bump the version on any rule-content change
-— keep the predicate deterministic. Full per-version changelog:
+`MVP_SCOPE_CONFIG_VERSION = 16` (v16 = CeFi `COMBO` instrument_type added to `CeFiMvpRule.instrument_types` — tags
+DERIBIT-COMBO rows as `COMBO`, distinct from OPTION, so the 68,847-row DERIBIT-COMBO catalogue is MVP-in without minting
+a phantom `options_chain` cell, 2026-07-16; v15 = `liquidations` restored as a PERPETUAL-leg CeFi MVP data_type (a FULL
+replacement for PERPETUAL cells, venue-gated to the 6 real-feed futures venues
+BINANCE-FUTURES/OKX-SWAP/BYBIT/KRAKEN-FUTURES/BITFINEX-FUTURES/BITGET-FUTURES), 2026-07-15; v14 = tradfi OPTION
+underlier narrowing to `option_underliers={"ES"}`, 2026-07-14; v13 = DeFi "everything we capture" broadening; v12 = DeFi
+ROCKETPOOL-ETHEREUM exclusion; v11 = COINBASE-SPOT/-FUTURES trades-only, drop book_snapshot_5, Coinbase-only, NO Deribit
+override) / `MVP_SCOPE_CONFIG_HASH` flips IFF `MVP_SCOPE` content changes (a scope-change vs a data-change, surfaced in
+data-status). The sports-leagues config (`SPORTS_LEAGUES_CONFIG_VERSION`) versions `LEAGUE_REGISTRY` independently. Bump
+the version on any rule-content change — keep the predicate deterministic. Full per-version changelog:
 `unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py` docstring on
 `MVP_SCOPE_CONFIG_VERSION`.

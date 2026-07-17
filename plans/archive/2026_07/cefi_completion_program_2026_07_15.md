@@ -7,7 +7,7 @@ summary:
   liquidations SSOT fix, DERIBIT-COMBO historical backfill, equity-perp Phase 2, canonicalisation G5, EXTENDED-STARKNET
   book5). LOCAL/autonomous execution — this session drives all workstreams on a loop; the Progress Log is the memory of
   record across context compression.
-status: active
+status: archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,6 +43,15 @@ source:
 ---
 
 # CeFi Completion Program — close the honest-coverage gaps
+
+> **🗄️ ARCHIVED 2026-07-17 — CLOSED at honest-done.** Operator accepted current CeFi coverage (**50.79%** against a
+> **COMPLETE** denominator; the 2,892,108-cell tick gap is honestly-labelled `expected_unattempted`, not closable at the
+> N=1 Tardis throughput ceiling ≈ 1.8 years). All work achievable inside that ceiling SHIPPED (E liquidations, G/G-code
+> equity-perp typing + tracks_equity tags, D dedup/phantom, WS-H catalogue apply → denominator COMPLETE, C alias purge +
+> BYBIT migration + eu-side residuals). The Tardis-gated backfill workstreams (A/B/F/G-tick + af=0 census + timeout
+> diagnosis) are **superseded** by the accept-decision, not deferred. Genuine NON-Tardis residuals migrated to
+> `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`. See the terminal Progress Log entry for the rule-9
+> audit. All 5 archival steps complete; `locked_by` clear.
 
 > **Dispatch**: operator 2026-07-15 — "make the plans then execute yourself /autonomous". Verify-then-**auto-delete**
 > for legacy aliases (workstream C), **excluding DERIBIT-COMBO**. Runs under `AUTONOMOUS_AGENT_RULES.md` (finish to
@@ -117,22 +126,28 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 ### Phase 2 — data / backfill (under the Tardis cap-3 lease; SPOT VMs)
 
-- [ ] [INFRA] P0. **A — recent-tail main-venue backfill (2026-05-24 → now-2).** Launch lease-serialized Tardis backfill
-      for BINANCE(-SPOT/FUTURES), OKX(-SPOT/SWAP/FUTURES), BYBIT, UPBIT, KRAKEN(-SPOT/FUTURES), BITGET(-SPOT/FUTURES),
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17 — Tardis N=1 ceiling; not pursued). [INFRA] P0. **A —
+      recent-tail main-venue backfill (2026-05-24 → now-2).** Launch lease-serialized Tardis backfill for
+      BINANCE(-SPOT/FUTURES), OKX(-SPOT/SWAP/FUTURES), BYBIT, UPBIT, KRAKEN(-SPOT/FUTURES), BITGET(-SPOT/FUTURES),
       BITFINEX(-SPOT/FUTURES), COINBASE-SPOT, DERIBIT. `TARDIS_CONCURRENCY_LEASE=1`, `--provisioning-model=SPOT`, per-VM
       shards. Monitor to STOPPED. Evidence: manifest rows for the tail range, per venue.
-- [ ] [INFRA] P0. **B — 403 re-capture sweep + af-census → 0.** Re-run the MVP `attempted_failed` shards under the lease
-      (clears the stale 403 class), then re-census. Closes `mvp_backfill_cefi_tick_v10` final gate
-      ("attempted_failed=0"). Also clears the blank-instrument_type + lowercase-casing legacy fail rows (forward-write
-      already fixed). Evidence: coverage recompute att_fail delta.
-- [ ] [INFRA] P1. **F — DERIBIT-COMBO historical `by_date` backfill.** Routing bugs already fixed; the historical
-      catalogue is starved — design + run the by_date backfill so `(DERIBIT-COMBO, trades/options_chain)` closes. KEEP
-      this venue (do NOT alias-kill it). Evidence.
-- [ ] [INFRA] P1. **G-tick — equity-perp tick download.** After G-code type-stamp, wire + run the tick capture for the
-      70 equity perps from each instrument's per-instrument `available_from` (pre-listing stays empty_confirmed).
-      Evidence.
-- [ ] [INFRA] P1. **D-tail — HYPERLIQUID tail + phantom re-capture.** Fill HL from ~2026-06-24 → now-2 and re-capture
-      the 1,277 phantom dates to the `@LIN` canonical path. Evidence.
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17 — af=0 not reachable at N=1; partial coverage accepted +
+      honestly labelled). [INFRA] P0. **B — 403 re-capture sweep + af-census → 0.** Re-run the MVP `attempted_failed`
+      shards under the lease (clears the stale 403 class), then re-census. Closes `mvp_backfill_cefi_tick_v10` final
+      gate ("attempted_failed=0"). Also clears the blank-instrument_type + lowercase-casing legacy fail rows
+      (forward-write already fixed). Evidence: coverage recompute att_fail delta.
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17 — DERIBIT-COMBO historical is Tardis-gated, same N=1 ceiling;
+      venue KEPT, not alias-killed). [INFRA] P1. **F — DERIBIT-COMBO historical `by_date` backfill.** Routing bugs
+      already fixed; the historical catalogue is starved — design + run the by_date backfill so
+      `(DERIBIT-COMBO, trades/options_chain)` closes. KEEP this venue (do NOT alias-kill it). Evidence.
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17 — equity-perp tick download is Tardis-gated; G-code type-stamp +
+      tracks_equity tags SHIPPED, only the tick fetch is deferred). [INFRA] P1. **G-tick — equity-perp tick download.**
+      After G-code type-stamp, wire + run the tick capture for the 70 equity perps from each instrument's per-instrument
+      `available_from` (pre-listing stays empty_confirmed). Evidence.
+- [x] → MIGRATED to `issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (residuals #1+#2 — HL is
+      non-Tardis/fillable; phantom re-census needs a 32-64GB box). [INFRA] P1. **D-tail — HYPERLIQUID tail + phantom
+      re-capture.** Fill HL from ~2026-06-24 → now-2 and re-capture the 1,277 phantom dates to the `@LIN` canonical
+      path. Evidence.
 
 ### Phase 3 — cleanup (only after Phase-2 data is verified present under canonical names)
 
@@ -150,37 +165,47 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
       `purge_stale_shape_cefi_expected_unattempted` tool) + bare-COINBASE 318 eu rows still in
       `expected_universe_ranges` (drop bare COINBASE from cefi enumeration → COINBASE-SPOT, else daily re-materializes).
       Original C todo detail ⇩:
-- [~] [DATA] P1. **C — kill legacy venue aliases (verify → migrate → auto-delete), EXCEPT DERIBIT-COMBO.** For
-  OKEX/OKEX-SWAP/OKEX-FUTURES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, bare BINANCE/BITFINEX/BITGET/KRAKEN,
-  CRYPTOFACILITIES, and the lowercase-itype strays (`spot`/`spot_pair`/`perpetual`): (1) verify every aliased shard's
-  data already exists under the canonical venue+UPPERCASE itype; (2) migrate any genuinely-unique data; (3)
-  **auto-delete** the alias manifest rows + GCS objects; (4) re-consolidate the index. Evidence: pre/post row counts +
-  GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.** **TOOL ALREADY BUILT — this is
-  the `expected_unattempted`-side portion of C**:
-  `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` (snapshot-first,
-  dry-run-default, STOP-ON-SURPRISE `[5000,250000]`, post-apply verify gate). Freshly re-confirmed 2026-07-16T09:21Z
-  (dry-run re-run, read-only): **49,732** stale-shape eu rows live right now (42,993 legacy pre-`enumerator_run_id`
-  debris under retired venue strings CRYPTOFACILITIES/OKEX*/BITFINEX-DERIVATIVES/etc + lowercase-raw ids, ~4,951-5,700
-  bundle-grain old-shape duplicates for DERIBIT/OKX-FUTURES `futures_chain`/`options_chain` left over from the
-  pre-`a2468dd9` enumerator run) — essentially unchanged from the 07-15T22:2xZ measurement (49,720), confirming (a)
-  nothing new is accumulating and (b) `--apply` has NOT been run yet. **Still BLOCKED-OPERATOR** — sign-off already
-  requested via `/blocked` in `issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (do
-  not duplicate the ask; this todo's C is the same gated mutation). Exact command once approved:
-  `cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false .venv/bin/python scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`.
-  See 2026-07-16T09:xxZ Progress Log entry below for the full re-verification + why a bare enumerator re-run cannot
-  self-heal this (append-only writer + per-key consolidator dedup never collapses two DIFFERENT `instrument_id` values
-  for what should be the same cell).
+- [x] ✅ DONE — venue-alias half durable (maint window, above); **eu-side completed by the co-manager 2026-07-16**
+      (purge_stale_shape 49,732 stale-shape rows + relabel 2.59M + drop 286k eu → coverage 48.43→50.79%). [DATA] P1. **C
+      — kill legacy venue aliases (verify → migrate → auto-delete), EXCEPT DERIBIT-COMBO.** For
+      OKEX/OKEX-SWAP/OKEX-FUTURES, BYBIT-FUTURES, COINBASE-INTERNATIONAL, bare BINANCE/BITFINEX/BITGET/KRAKEN,
+      CRYPTOFACILITIES, and the lowercase-itype strays (`spot`/`spot_pair`/`perpetual`): (1) verify every aliased
+      shard's data already exists under the canonical venue+UPPERCASE itype; (2) migrate any genuinely-unique data; (3)
+      **auto-delete** the alias manifest rows + GCS objects; (4) re-consolidate the index. Evidence: pre/post row
+      counts + GCS deletion manifest. **DERIBIT-COMBO is a legit distinct venue — never delete it.** **TOOL ALREADY
+      BUILT — this is the `expected_unattempted`-side portion of C**:
+      `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` (snapshot-first,
+      dry-run-default, STOP-ON-SURPRISE `[5000,250000]`, post-apply verify gate). Freshly re-confirmed 2026-07-16T09:21Z
+      (dry-run re-run, read-only): **49,732** stale-shape eu rows live right now (42,993 legacy pre-`enumerator_run_id`
+      debris under retired venue strings CRYPTOFACILITIES/OKEX*/BITFINEX-DERIVATIVES/etc + lowercase-raw ids,
+      ~4,951-5,700 bundle-grain old-shape duplicates for DERIBIT/OKX-FUTURES `futures_chain`/`options_chain` left over
+      from the pre-`a2468dd9` enumerator run) — essentially unchanged from the 07-15T22:2xZ measurement (49,720),
+      confirming (a) nothing new is accumulating and (b) `--apply` has NOT been run yet. **Still BLOCKED-OPERATOR** —
+      sign-off already requested via `/blocked` in
+      `issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md` (do not duplicate the ask;
+      this todo's C is the same gated mutation). Exact command once approved:
+      `cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false .venv/bin/python scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py --apply`.
+      See 2026-07-16T09:xxZ Progress Log entry below for the full re-verification + why a bare enumerator re-run cannot
+      self-heal this (append-only writer + per-key consolidator dedup never collapses two DIFFERENT `instrument_id`
+      values for what should be the same cell).
 
 ### Phase 4 — close + prove
 
-- [ ] [DATA] P0. **H — canonicalisation G5 + final honest-coverage recompute.** Drive `master_data_canonicalisation` G5
-      ("backfill → 100% honest coverage") for cefi; re-enumerate the denominator (`enumerate_expected_universe.py`) so
-      it reflects liquidations + equity perps + the filled tail; run `compute_honest_coverage`; confirm CeFi
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17). G5 "100% honest coverage" is not reachable at the N=1 ceiling;
+      coverage ACCEPTED at 50.79% against a COMPLETE denominator, gap honestly-labelled `expected_unattempted` (NOT
+      af=0/eu=0). The catalogue canonicalisation + denominator-COMPLETE half SHIPPED (WS-H apply). [DATA] P0. **H —
+      canonicalisation G5 + final honest-coverage recompute.** Drive `master_data_canonicalisation` G5 ("backfill → 100%
+      honest coverage") for cefi; re-enumerate the denominator (`enumerate_expected_universe.py`) so it reflects
+      liquidations + equity perps + the filled tail; run `compute_honest_coverage`; confirm CeFi
       `denominator_complete: true`, `expected_unattempted=0`, `attempted_failed=0` (genuine). Evidence: the new
       `coverage.json`.
-- [ ] [REVIEW] P0. **Final audit + report.** Rule-9 report in this plan: verified end-state per venue/data_type, every
-      forced tradeoff, every genuine impossibility. Post-plan codex audit (update cefi-capture-universe /
-      honest-coverage docs on any contract change). Nothing left for the operator to pick up.
+- [x] ✅ DONE — rule-9 terminal report written in the Progress Log ("TERMINAL: CeFi completion program CLOSED at
+      honest-done", 2026-07-17): verified end-state table per WS, the forced tradeoff (N=1 Tardis ceiling), the genuine
+      impossibility (2.89M gap ≈ 1.8yr), and the consciously-not-done residuals (migrated to
+      `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`). Post-plan codex audit done in the archival
+      ritual below. [REVIEW] P0. **Final audit + report.** Rule-9 report in this plan: verified end-state per
+      venue/data_type, every forced tradeoff, every genuine impossibility. Post-plan codex audit (update
+      cefi-capture-universe / honest-coverage docs on any contract change). Nothing left for the operator to pick up.
 
 ---
 
@@ -478,11 +503,12 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
-      expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
-      trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per operator ruling
-      2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after the purge G4
-      counts them zero by construction.**); every absence typed honest (pre-venue-launch / expiry-window /
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17 — af=0/eu=0 not reachable at the N=1 ceiling; partial coverage
+      accepted + honestly labelled). [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe,
+      attempted_failed=0 AND expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain
+      ONLY (0 per-strike trades/book5 cells — **per-strike pre-v10 artifacts: resolution = PURGE (todos below) per
+      operator ruling 2026-07-12 (finding 30, `issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2); after
+      the purge G4 counts them zero by construction.**); every absence typed honest (pre-venue-launch / expiry-window /
       deferred-no-source). Repos: `instruments-service`, `e2e-testing`. **Run:**
       `python scripts/measure_honest_coverage.py --asset-group cefi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`;
@@ -1219,12 +1245,14 @@ collisions), so I did not blind-retry.
 skeleton twin was never dropped — the manifest double-counts them, understating coverage by ~10,368 cells (~0.36% of
 eu). This is the "Phantom reconcile + manifest hygiene" pass this plan already tracks as never-re-run.
 
-- [ ] [DATA] P1. **Drop eu twins of natively-canonical (non-Tardis) captures — 10,368 rows.** The relabel's gate is RED
-      on these and its reconcile structurally cannot fix them (it only reconciles its own relabels). Root: the
-      OnchainPerpBatchHandler lane writes canonical `captured` rows but nothing drops the matching
-      `expected_unattempted` skeleton row, so cells are double-counted. Fix via the phantom-reconcile/manifest-hygiene
-      pass (or extend the reconcile to drop ANY eu row colliding with a captured key, not just relabeled ones).
-      Evidence: 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others; pre-relabel snapshot had 10,335 of them.
+- [x] → MIGRATED to `issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (residual #3 — non-Tardis defect,
+      independent of the accepted ceiling). [DATA] P1. **Drop eu twins of natively-canonical (non-Tardis) captures —
+      10,368 rows.** The relabel's gate is RED on these and its reconcile structurally cannot fix them (it only
+      reconciles its own relabels). Root: the OnchainPerpBatchHandler lane writes canonical `captured` rows but nothing
+      drops the matching `expected_unattempted` skeleton row, so cells are double-counted. Fix via the
+      phantom-reconcile/manifest-hygiene pass (or extend the reconcile to drop ANY eu row colliding with a captured key,
+      not just relabeled ones). Evidence: 9,817 EXTENDED-STARKNET + 518 PACIFICA-SOLANA + ~33 others; pre-relabel
+      snapshot had 10,335 of them.
 
 > **🟢 MAINTENANCE WINDOW CLOSED 2026-07-16T12:50Z — manifest fixed (C purge of 13 stray alias venues, −526,104
 > attempted_failed/eu rows, 0 captured touched; + BYBIT-FUTURES→BYBIT migration, 45 objects moved to canonical path, +45
@@ -1281,13 +1309,16 @@ test a LOW concurrency (8-16) long-lived run and compare captured/hour; (3) the 
 instrument universe) is simply enormous → narrow to ONE venue-week per VM so a wave COMPLETES before dying. **Recommend
 (3) + (1) first**: they are cheap to test and (1) would explain the whole session's throughput mystery.
 
-- [ ] [INFRA] P0. **Diagnose the ConnectionTimeout storm — the backfill is currently incapable of finishing.** Measured:
-      +45 captured rows in 5h15m; cpu 0.4%; 0 403s; timeouts to `s3.us-east-1.wasabisys.com` + `datasets.tardis.dev` at
-      BOTH 64 and 128 streams (~5/min either way). Test in order: (a) region — run one VM in a US region near
-      Tardis/Wasabi us-east-1 vs the current asia-northeast1, compare captured/hour; (b) low concurrency (8-16)
-      long-lived, compare captured/hour (if timeouts are throttle-driven, low concurrency should beat high); (c) narrow
-      scope to one venue-week per VM so a wave completes inside the preemption window. Until this is understood, adding
-      VMs/streams/hours cannot close the 2.89M gap.
+- [x] ⊘ SUPERSEDED (operator accept-decision 2026-07-17). The co-manager's follow-up arithmetic (below) reframed this:
+      not a timeout/region bug but the hard N=1 throughput ceiling (~186 cells/hr ≈ 1.8yr); the operator accepted
+      partial coverage rather than chase it. Diagnosis not pursued further. [INFRA] P0. **Diagnose the ConnectionTimeout
+      storm — the backfill is currently incapable of finishing.** Measured: +45 captured rows in 5h15m; cpu 0.4%; 0
+      403s; timeouts to `s3.us-east-1.wasabisys.com` + `datasets.tardis.dev` at BOTH 64 and 128 streams (~5/min either
+      way). Test in order: (a) region — run one VM in a US region near Tardis/Wasabi us-east-1 vs the current
+      asia-northeast1, compare captured/hour; (b) low concurrency (8-16) long-lived, compare captured/hour (if timeouts
+      are throttle-driven, low concurrency should beat high); (c) narrow scope to one venue-week per VM so a wave
+      completes inside the preemption window. Until this is understood, adding VMs/streams/hours cannot close the 2.89M
+      gap.
 
 ### ⚠️ CORRECTION to the 16:15Z stall entry + THE REAL ARITHMETIC: N=1 cannot close 2.89M — 2026-07-16T16:30Z
 

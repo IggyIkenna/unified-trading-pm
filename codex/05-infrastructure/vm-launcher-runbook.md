@@ -443,14 +443,14 @@ launcher MUST count the running fleet — the shared guard `deployment-service/s
 does this (GCP + best-effort AWS) and refuses when `running + planned > 3`. Agents launching manually MUST run the same
 check.
 
-Empirical basis (2026-07-16, SSOT: `plans/active/cefi_completion_program_2026_07_15.md`): every N>1 datapoint is a
-mutual-403 storm once VMs do REAL fetching. N=6 lease-OFF (2026-07-13): all six starved below the 1800s stall watchdog,
-zero progress. **N=3 lease-ON in the real gap (2026-07-16): 10,300×403 / 912 ok on one VM, 15,034×403 / ZERO ok on
-another, +37,212 FALSE `attempted_failed` rows in 8h, coverage BACKWARD 52.13→48.38.** N=1 (2026-07-16): ZERO 403s, cpu
-104%/1600%, rss 7.8GB/128GB. **The false-af rows matter beyond throughput — self-inflicted 403s are recorded as if the
-venue refused the data, corrupting the manifest** (cleanup = the 403 re-capture sweep). Scale THROUGHPUT on the single
-IP: `SINGLE_VM_QUEUE=1` bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults
-16/4 leave the box ~93% idle; Tardis tolerates ~100-200 concurrent connections, not ~2k) — NEVER more VMs.
+Empirical basis (2026-07-16, SSOT: `plans/archive/2026_07/cefi_completion_program_2026_07_15.md`): every N>1 datapoint
+is a mutual-403 storm once VMs do REAL fetching. N=6 lease-OFF (2026-07-13): all six starved below the 1800s stall
+watchdog, zero progress. **N=3 lease-ON in the real gap (2026-07-16): 10,300×403 / 912 ok on one VM, 15,034×403 / ZERO
+ok on another, +37,212 FALSE `attempted_failed` rows in 8h, coverage BACKWARD 52.13→48.38.** N=1 (2026-07-16): ZERO
+403s, cpu 104%/1600%, rss 7.8GB/128GB. **The false-af rows matter beyond throughput — self-inflicted 403s are recorded
+as if the venue refused the data, corrupting the manifest** (cleanup = the 403 re-capture sweep). Scale THROUGHPUT on
+the single IP: `SINGLE_VM_QUEUE=1` bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT`
+(defaults 16/4 leave the box ~93% idle; Tardis tolerates ~100-200 concurrent connections, not ~2k) — NEVER more VMs.
 
 Overrides: `FORCE=1` on the sharded launchers (operator-only, accepts collapse risk); `TARDIS_MAX_CONCURRENT_VMS=<n>`
 env raises/lowers the cap explicitly. Intra-VM stream concurrency is a separate axis (`TARDIS_MAX_CONCURRENT_DOWNLOADS`,

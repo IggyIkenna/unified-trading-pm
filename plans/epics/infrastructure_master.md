@@ -541,6 +541,11 @@ data source to canonical 100%
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
 reimplementations, strongest-combination merge
 
+### [`ao_host_disk_pressure_2026_07_16`](../active/ao_host_disk_pressure_2026_07_16.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO central-orchestrator host root-disk
+pressure (65→95% cycle) killing worker pytest/QG mid-task
+
 ## P2 — useful; opportunistic
 
 ### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
