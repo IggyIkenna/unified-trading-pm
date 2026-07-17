@@ -25,7 +25,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-14
+last_updated: 2026-07-17
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
@@ -1869,3 +1869,73 @@ by the time I reached this point — left as-is, no duplicate edit needed.
   classes (~5.5k missing/attempted_failed) listed in the per-entity CSVs for the canonical-completion stream. Every
   restamp shrinks the running 2020+ enrichment fleet's remaining work (presence-skip). Remaining loop criteria: (2)
   enrichment fleet completion + parquet-level verify, (3) historical features recompute + final gates.
+
+### 2026-07-17T15:1xZ — data_engineering slot-8 (Todo "Full-history enrichment phase" — fleet-completion check found real residual, relaunched)
+
+Dispatched to this todo (`sports_p2_history_apifootball_2015_to_present-001`). No plan entries existed for 07-16/07-17 —
+the 07-15 04:45Z autonomous-loop tick appears to have died without a final report; picked up cold via the checkbox
+state + `gcloud`.
+
+**2020+ enrichment fleet (launched 2026-07-14 17:24-17:27Z,
+`af-backfill-20260714-172403/-172437/-172532/-172618/-172708`) CONFIRMED COMPLETE**: no longer in
+`gcloud compute instances list` (self-deleted); each VM's GCS `EXIT_STATUS`=0 and `run.log` shows
+`DEPLOYMENT_COMPLETED exit_code=0` — INJURIES 07-14 19:03Z, PLAYER_STATS 07-15 10:01Z, FIXTURE_LINEUPS 07-15 14:23Z,
+FIXTURE_STATS 07-15 16:43Z, FIXTURE_EVENTS 07-15 16:34Z.
+
+**Ran the actual gate query** (single `read_availability_index` read over
+`instruments-store-sports-prd-central-element-323112`, filtered `source==api_football`, per-data_type
+`date >= coverage_start`) — **gate is NOT green**:
+
+| data_type       | in-window rows | pending_fetch | attempted_failed |
+| --------------- | -------------: | ------------: | ---------------: |
+| FIXTURE_EVENTS  |        212,069 |         1,972 |                2 |
+| FIXTURE_LINEUPS |        212,041 |         2,219 |                0 |
+| FIXTURE_STATS   |        212,138 |         2,864 |                1 |
+| PLAYER_STATS    |        218,951 |         1,232 |                0 |
+| INJURIES        |        194,568 |           558 |                0 |
+| STANDINGS       |        297,232 |             0 |              174 |
+| TEAMS           |        462,266 |         2,209 |               22 |
+
+TEAMS is explicitly out of this todo's scope per its own text (blocked on the separate
+`sports_data_sources_canonical_completion_2026_07_13.md` dedup-key fix). STANDINGS is already at 0 pending (174
+`attempted_failed`, a different — smaller — problem class, not chased this dispatch).
+
+**Checked whether the other 5 entities' residual is just daily-pipeline trailing-edge noise before acting** — it is NOT:
+even excluding the last 10 days (< 2026-07-07), FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES still carry
+1,000-2,600 genuinely historical pending cells each, clustered at real dates the 07-14 fleet apparently skipped:
+2020-06/07/08/09, 2020-12, 2021-01, 2021-06/07/08, 2024-12 (188 identically across 4 entity types — same shard set),
+2025-12 (94 identically), plus a growing 2026-05/06/07 tail. Top affected leagues skew toward lower-tier/cup
+competitions (A_LEAGUE, COPA_ARGENTINA, US_OPEN_CUP, NORWEGIAN_CUP, etc.) — consistent with the kind of league-mapping
+edge cases the leg-2/leg-3 write-path bugs (`0d9ffabd`/`86cc71ff`) targeted, though root-causing exactly why these
+specific shards were skipped by a presence-skip re-run was not pursued this dispatch (time-boxed; the residual is ~1-3%
+of in-window rows per entity, nowhere near the elo/travel sibling issues' VM-fleet-scale finding — this is a normal
+gap-fill, not a big finding requiring operator escalation).
+
+**Relaunched the SAME 5-entity fleet over the SAME coverage windows** (presence-skip, no `--force`, so this only
+re-attempts the genuinely-pending cells): `af-backfill-20260717-151237` FIXTURE_EVENTS · `-151335` FIXTURE_LINEUPS ·
+`-151405` FIXTURE_STATS · `-151433` PLAYER_STATS (all `2020-06-06..2026-07-17`) · `-151505` INJURIES
+(`2021-01-01..2026-07-17`). `--skip-lock` (lock-bypass only, no `redo_all`) since no `af-backfill-*`/`af-audit-*` VM was
+running. `--fleet-vms 5`, rate-budget registry math ran cleanly (1200 req/min ÷ 5 → 240/VM, concurrency 16) — required
+`uv sync` in `deployment-service` first (no `.venv` existed in this slot's clone). Live `/status` daily-quota read
+unavailable (`gcloud secrets versions access` PERMISSION_DENIED for this slot's `github-actions-deploy` ADC — known
+limitation, not new); registry fell back to the static daily cap, which is fine since total residual (~10-13k calls) is
+trivial against the 1200/min, 450k/day ceiling — no risk of quota exhaustion.
+
+**Tarball-freshness check false-negative, verified independently**: the launcher's built-in `gsutil`-based freshness
+check reported all 4 tarballs (instruments-service/UAC/UTL/deployment-service) STALE/MISSING-manifest — but this slot's
+`gsutil` binary has a broken credential store (`Your credentials are invalid` even after PATH-ing to the non-snap SDK)
+independent of `gcloud`/`gcloud storage`, which both work. Cross-checked manually via `gcloud storage cat` on the 3
+relevant manifests: instruments-service@`11159f57`, unified-api-contracts@`d090a729`, unified-trading-library@`194db8a`
+— all match this slot's local HEAD exactly, all created ~15:0x-15:05Z today (minutes before launch). Proceeded on this
+independent evidence rather than the broken tool's false warning.
+
+**All 5 VMs verified STARTED** (`gcloud compute instances list`, all `RUNNING` within ~3 min of launch) — no
+fire-and-forget. **Not flipping this checkbox** — the gate requires `pending_fetch == 0`, and this fleet is a fresh
+launch, not a completion. Next dispatch (once the fleet completes, likely many hours given the full-range walk) should:
+(1) confirm all 5 self-deleted `exit_code=0` via GCS `EXIT_STATUS`/`run.log` (no `gcloud compute instances list` entry =
+terminated, matches this session's own verification method for the prior wave); (2) re-run this session's gate query;
+(3) if genuinely 0 pending (excluding TEAMS, excluding a reasonable trailing-few-days daily-pipeline lag) and 0 new
+blank-reason, flip this checkbox with the evidence; (4) if a residual persists, investigate root cause (why does a
+presence-skip re-run still miss these specific shards) before a third blind relaunch. `/skip-current-task` after this
+ships — matching this doc's own established precedent (real, durable progress — fleet-completion verification +
+root-cause-bounded relaunch — is the shippable unit when the underlying compute isn't finished yet).
