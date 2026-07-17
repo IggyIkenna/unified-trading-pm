@@ -35,6 +35,7 @@ source:
   base-service.sh only ever collected tests/unit/
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # MTDS — 77 test files silently ungated
