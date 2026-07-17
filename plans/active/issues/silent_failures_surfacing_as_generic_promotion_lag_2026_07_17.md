@@ -101,13 +101,26 @@ it is currently the only thing that fires, so it absorbs every cause by accident
       `glue-runner-run.sh: line 200: GH_TOKEN: unbound variable` — the JIT `generate-jitconfig` curl at ~L195, under the
       script's `set -euo pipefail`. All 5 runners crash-looped again (~34 restarts) until rollback; service was restored
       from `${DST}.bak-2026-07-17` within minutes and the repo copy reverted so the SSOT matches the VM. The broken
-      candidate is kept at `/tmp/glue-runner-run.sh.broken-keepme` on the VM for post-mortem. **Why the tests missed
-      it**: they exercised ONLY the changed block in isolation. The failure is an interaction with the REST of the
-      script (~120 lines later, under `set -u`) that no isolated test could see, and `bash -n` checks syntax, not
-      variable binding. **Do not retry without a way to run the whole script end-to-end** — e.g. a
-      `--dry-run`/`--selfcheck` mode that stops before `Runner.Listener`, exercised against a scratch runner slot,
-      before any `systemctl restart`. Roll one unit first and confirm `Listening for Jobs` before touching the other
-      four (the canary DID catch it — but only after the same bad script had already been rolled to all five).
+      candidate is kept at `/tmp/glue-runner-run.sh.broken-keepme` on the VM for post-mortem.
+
+      **ROOT CAUSE FOUND (post-mortem, same day) — it was an APOSTROPHE, and the fix is one character.** The block's
+          error text contained `${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>}`.
+          Inside a `${VAR:-word}` expansion bash **re-parses quotes in the default word**, so the `'` in `gcloud's` opened
+          a single-quoted region. In a ~200-line script full of apostrophes it silently **re-paired with a later one** —
+          quotes balanced overall, so `bash -n` saw VALID syntax — while everything between them became a quoted STRING
+          instead of code, swallowing the `GH_TOKEN="${_sm_out}"` assignment. Hence `line 200: GH_TOKEN: unbound variable`
+          at the `generate-jitconfig` curl ~120 lines below the edited block. Verified in isolation: the same construct
+          alone fails `bash -n` with ``unexpected EOF while looking for matching `'``.
+          **Rule to carry forward: never put an apostrophe (or any unbalanced quote) inside a `${VAR:-...}` default word.**
+          Write "gcloud" not "gcloud's", or build the message outside the expansion.
+
+          **Why my tests missed it**: they exercised ONLY the changed block, in a SHORT file with no later apostrophe to
+          re-pair against — so the toy either errored honestly or passed, and could never reproduce the swallow. `bash -n`
+          validates syntax, not binding, and the syntax was genuinely valid. **Still do not retry without whole-script
+          validation**: add a `--selfcheck` mode that runs everything short of exec'ing `Runner.Listener`, exercise it on a
+          scratch slot, then roll ONE unit and confirm `Listening for Jobs` before the other four. (The canary was
+          worthless last time because the same bad script had already been rolled to all five.)
+
 - [ ] [DEVOPS] P1. **A self-hosted pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness. Cheapest honest signal: alert when a `glue`-labelled job has been `queued` > N minutes while
       `in_progress == 0` — that is unambiguous and needs no VM access. (The `glue-writer` pool stayed healthy

@@ -108,8 +108,13 @@ def main() -> int:
         return 0
 
     # CANONICAL manifest form (ensure_ascii=False + indent=2 + trailing "\n") — the form
-    # every other writer (update-repo-version / staging-to-main / sit-unlock / merge-driver
-    # / prettier) emits, guarded by scripts/quality_gates/check_workspace_manifest_canonical.py.
+    # every other writer (update-repo-version / staging-to-main / sit-unlock / merge-driver)
+    # emits, guarded by scripts/quality_gates/check_workspace_manifest_canonical.py.
+    # NOT prettier: this list used to name prettier and that was FALSE — prettier collapses
+    # short arrays (printWidth=120) where canonical always explodes them, so it can never emit
+    # this form. It reformatted the manifest on every local commit that staged it (the
+    # prettier-autostage hook matches `json`) until `workspace-manifest.json` was added to
+    # .prettierignore on 2026-07-17. See that file's entry for the measured incident.
     # The previous ascii-escaped no-newline form oscillated against those writers → an
     # hourly cosmetic-churn commit loop (root-caused 2026-07-02, cicd_mvp local↔CI parity).
     with open(path, "w", encoding="utf-8") as fh:
