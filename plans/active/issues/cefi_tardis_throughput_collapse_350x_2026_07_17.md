@@ -138,3 +138,61 @@ Booted from the verified-current GCS startup script (export present — the earl
   eliminated as a cause; the remaining candidates are (a) a change to our account/tier limits around the 2026-07-12
   window (the renewal is a prime suspect) or (b) server-side shaping/throttling of our key. The 403s we saw on 07-13 and
   07-16 were SELF-inflicted (our own N=6 and N=3 waves), not a third party.
+
+## 🎯 ROOT CAUSE FOUND — aiohttp connection-pool STARVATION. Tardis is fine (125 MB/s). — 2026-07-17T10:15Z
+
+Operator refused the vendor-throttling story: _"I refuse to believe tardis max throughput is 0.45mb/s… check their docs…
+try locally first stopping vm entirely."_ **They were right on every count.** Killed the VM (zero Tardis consumers
+anywhere) and tested the SAME key from AWS Tokyo (52.194.240.144 — a datacenter IP, i.e. the _harder_ case for any
+Cloudflare/IP-reputation theory):
+
+| test                                               | result                                             |
+| -------------------------------------------------- | -------------------------------------------------- |
+| `api.tardis.dev` metadata                          | HTTP 200 in **0.06s** — key valid, account healthy |
+| **1 dataset download** (BTCUSDT trades 2026-02-01) | **55 MB in 1.5s = 38.4 MB/s**                      |
+| **16 parallel downloads**                          | **306 MB in 2.4s = 125.1 MB/s (1,001 Mbps)**       |
+| our VM, same key, same region                      | **0.45 MB/s** → **278x slower**                    |
+
+**Tardis is NOT throttled, NOT quota-capped, NOT Cloudflare-blocking us, and no hidden process holds the key.** Their
+docs (https://docs.tardis.dev/api/rate-limits.md) confirm we are nowhere near any limit: **3,000 requests/minute**
+(Solo/Academic/Professional) vs our measured **~4/minute**; transfer allowance 20 TB/month; and the one-key/one-IP rule
+is long-standing documented policy, not a July change.
+
+**THE BUG (ours), `tardis_base_client.py`:**
+
+```python
+connector = TCPConnector(limit=max_connections,            # 100
+                         limit_per_host=connection_pool_size)  # 16   <-- REAL concurrency cap
+timeout   = ClientTimeout(connect=connect_timeout,         # 30s
+                          total=read_timeout)
+```
+
+Every Tardis dataset request targets the same host, so **`limit_per_host=16` was the true concurrency ceiling** — while
+`TARDIS_MAX_CONCURRENT_DOWNLOADS` defaulted to 16 and operators could raise it to 64/128. In aiohttp, `connect` covers
+**acquiring a connection from the pool**, not merely the TCP handshake. So the surplus tasks queued for a free slot and
+were killed at **30s** with **`ConnectionTimeoutError`** — the storm we spent a day blaming on the network was **POOL
+STARVATION**, self-inflicted. This is why raising concurrency made throughput _worse_ (128 streams → 21 successes/600
+log lines; 64 → 59): more tasks, same 16 slots, more starvation.
+
+**FIXED: `market-tick-data-service@<this quickmerge>` — `connection_pool_size` 16 → **128**, `max_connections` 100 →
+**256**, with the mechanism documented in-code.** (Deliberately NOT changed: the session-level `total=` timeout — the
+streaming path already overrides it with its own `stream_timeout(total=None, sock_read=…)`, so large files were never
+the issue; I reverted that edit after verifying it was not load-bearing rather than shipping a plausible-looking no-op.)
+
+**Every catastrophic conclusion from 2026-07-16/17 is now VOID:**
+
+- ❌ "~186-254 cells/hour is a hard N=1 Tardis ceiling" — no: 125 MB/s measured.
+- ❌ "2.89M-cell gap ≈ 1.8 years, not closable" — at 125 MB/s the ~40-60 TB gap is **~5 days**, and that is with 16
+  streams; the fix allows 128.
+- ❌ "Upgrade the Tardis licence / narrow the MVP scope" — unnecessary; nothing is wrong with the subscription.
+- ❌ The drafted vendor email — **DO NOT SEND**. Its premise ("your API delivers 0.45 MB/s") is false and would have
+  been embarrassing; the fault is entirely ours.
+- ⚠️ The `cefi_completion_program_2026_07_15.md` archival ("CLOSED at honest-done… not closable at the N=1 ceiling ≈ 1.8
+  years") rests on the void premise and should be re-opened — the gap is days of work, not a physical limit.
+- ⚠️ The **N=1 cap** (cap 3→1, 2026-07-16) was calibrated on a starved client. The 403s at N=3/N=6 were real, but the
+  one-IP rule is documented policy — so N=1 stays correct; what changes is that ONE VM can now saturate ~1 Gbps rather
+  than crawl at 0.45 MB/s. Re-verify intra-VM concurrency AFTER the fix deploys before touching the cap.
+
+**Next**: rebuild the MTDS tarball so VMs boot the fixed client (VMs pull `mtds-code.tar.gz` from GCS — a repo/LDR fix
+alone does NOT reach them, exactly the stale-artifact trap hit earlier today), relaunch ONE VM at
+`TARDIS_MAX_CONCURRENT_DOWNLOADS=128`, and measure MB/s against the 0.45 baseline.
