@@ -1230,7 +1230,29 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 - [ ] [INFRA] P0. **T6.0 — Post-delete resurrection watch.** _Mechanism_: 24h after T5.4, re-run `tofu plan` and
       `gcloud storage ls gs://instruments-store-sports-central-element-323112`. _Gate_: plan clean; bucket still 404.
       _ABORT_: bucket exists again → an out-of-band `apply` resurrected it → T5.1 was incomplete → re-open.
-- [ ] [INFRA] P0. **T6.1 — Restore the 3 consolidators FIRST (reverse order 22→20).** _Mechanism_: un-pause
+- [x] ✅ [INFRA] P0. **T6.1 — MERGE DONE 2026-07-17; every delta as predicted. ⚠️ A SILENT DATA-LOSS BUG FIRED AND WAS
+      RECOVERED IN-BAND — see the Progress Log entry "✅ T6.1 MERGE COMPLETE" + new issue doc
+      [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md).**
+      The FIRST instruments consolidator run (`…-4rfp4`) reaped BOTH pending shards **unmerged** and reported
+      `success=True exit(0) rows_in=0 pruned_shards=2` — the cutover's own out-of-band index rewrites (T3.1 purge
+      13:09Z + the 18:45:26Z "frozen-generation witness") had STRIPPED `consolidator_content_write_at`, so the prune
+      cutoff fell back to `blob.updated`=18:45:26.846Z and swallowed shards written at 12:46/17:30. Recovered from this
+      leg's pre-merge downloads (GCS held no versions), re-uploaded with a fresh mtime, re-merged clean. **Verified BY
+      CONTENT (fresh re-read):** instruments **5,342,265 → 5,349,447 (+7,182 new / 3 in-place flips)**, captured
+      **1,692,695 → 1,699,880**, `api_football×ODDS` **0 → 0 (TERMINAL)**, `footystats×ODDS` **140,574 → 142,617 (+2,043
+      — CORRECT, see below)**; MDT **1,958,498 → 1,959,024 (+526 new / 5,584 corrected)**, captured **575,671 →
+      576,197**. Consolidator reports corroborate (`j2rqk` rows_out=5349447 dedup_dropped=3, 328s, no signal 9; `94c2f`
+      rows_out=1959024 dedup_dropped=5584, 85s). MDT supersession proven at the content layer:
+      `service_name=migrate-sports-canonical` × `api_football` **9,208 → 3,624 (−5,584 exactly)**, `odds_api` **167,220
+      → 173,330 (+6,110)**. **CORRECTION — the gate `footystats×ODDS == 140,574 UNTOUCHED` is PHASE-3-ONLY and MUST NOT
+      be asserted at T6.1**: the shard legitimately carries 2,044 footystats×ODDS cells; those rows belong in IS by
+      operator ruling 2026-06-27 (UAC@c75101be), runtime-verified this leg
+      (`is_valid_manifest_source("sports","ODDS","footystats") is True`) — which also **RESOLVES T2.7 blocker (c) =
+      WRITE**. The terminal purge gate is `api_football×ODDS == 0`, which held. **The plan's predicted 142,618 was off
+      by one** (it double-counted the 1 flip row already counted as footystats×ODDS); true value **142,617**. Snapshots:
+      `_index/availability_index.20260717-012712.pre_t6_1.bak.parquet` on both canonical buckets. _Original mechanism_:
+      un-pause
+- [ ] [INFRA] P0. **T6.1b — Consolidator restore + ≥3 clean ticks (the un-pause half of T6.1).** _Mechanism_: un-pause
       `-features-sports-cron`, then `-market-data-sports-cron`, then `-instruments-sports-cron`. _Gate_ (first run):
       exits 0; `_index/availability_index.parquet` mtime advances; row count **≥ the pre-freeze snapshot minus exactly
       123,149** (the T3.1 purge) **plus** the T2.7 moved-cell count — never lower (a drop means the merge clobbered
@@ -1275,6 +1297,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       unexpected skip warnings → re-pause and diagnose.
 - [ ] [INFRA] P1. **T6.6 — Do NOT restore `sports-ref-v3-{1,2,3}-start` (2).** _Mechanism_: their 3 target instances do
       not exist; leave DISABLED or delete per OR-7. _Gate_: absent from the enabled set. _ABORT_: none.
+- [ ] [CODE] P0. **T6.9 — Fix the UTL consolidator's silent shard-reap (NEW 2026-07-17, found by T6.1 — fleet-wide, NOT
+      sports-specific).** _Mechanism_: implement the fix ranked (1) in
+      [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md)
+      — `unified_trading_library/manifest_consolidator.py`: when `_get_content_write_mtime` resolves via the
+      **`blob.updated` fallback** (i.e. neither `consolidator_content_write_at` nor `consolidator_run_at` is present),
+      `_prune_consolidated_shards` MUST prune **nothing** (pruning is an optimisation; merging is the contract). Plus
+      (4) loud-fail the tell: `rows_in=0` together with `pruned_shards>0` is self-contradictory and must never report
+      `success=True`. _Why_: the fallback's documented safety claim (_"can only make the cutoff OLDER … fail toward
+      correctness"_) is FALSE — an out-of-band index write both STRIPS the marker and BUMPS `updated`, moving the cutoff
+      FORWARD past shards no merge ever saw. This destroyed 7,185 sports manifest rows on 2026-07-17 with
+      `success=True`/`exit(0)`; recovery was possible only because the operating agent had downloaded the shards to
+      measure them first. Arms for **every** asset_group whose index is rewritten out-of-band while consolidators are
+      paused — i.e. exactly the freeze/repair/resume runbook shape. _Gate_: a regression test that reproduces the repro
+      in the issue doc (out-of-band rewrite strips marker + newer mtime ⇒ shard MUST survive and MUST merge); UTL
+      `quality-gates.sh` green. _ABORT_: none.
 - [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
       `codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
       `codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
@@ -1696,6 +1733,95 @@ sports odds unfiltered.
 ---
 
 ## Progress Log
+
+### ✅ T6.1 MERGE COMPLETE — both indexes absorbed the pending shards, every delta as predicted (2026-07-17, owner: Phase-6/restore sub-agent)
+
+> **🔴 A REAL DATA-LOSS EVENT FIRED AND WAS RECOVERED IN-BAND. READ THIS BEFORE ANY FUTURE CONSOLIDATOR RESUME.** The
+> first instruments consolidator run **deleted both pending shards without merging them**, and reported `success=True` +
+> `exit(0)`. Recovery was possible ONLY because this leg downloaded the shards to measure them BEFORE executing. **New
+> issue doc:
+> [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md)**
+> — it is a **UTL-wide latent bug**, not a sports quirk.
+
+**The failure (measured, not inferred).** First run `uts-prod-manifest-consolidator-instruments-sports-4rfp4` @
+01:34:31Z:
+
+```
+success=True shards=3 rows_in=0 rows_out=0 dedup_dropped=0 pruned_shards=2 error=-
+ManifestConsolidator: pruned 2 consolidated per-VM shard(s) (cutoff=2026-07-16T18:45:21.846000+00:00, 2 eligible)
+```
+
+**`rows_in=0` + `pruned_shards=2` = both shards reaped unmerged, reported as success.** Root cause chain, each link
+verified:
+
+1. `_prune_consolidated_shards` deems a shard settled iff `mtime <= cutoff`, where `cutoff = content_write_marker − 5s`
+   skew. The invariant is _"the marker carries the last REAL merge's shard-listing start time, so `mtime <= cutoff`
+   proves the shard was visible to that merge's listing"_ (`manifest_consolidator.py:1751-1782`).
+2. `_get_content_write_mtime` (`:1617-1666`) falls back `consolidator_content_write_at` → `consolidator_run_at` →
+   **`blob.updated`**, documented as SAFE because it _"can only make the cutoff OLDER … fail toward correctness"_.
+3. **That safety claim is FALSE when an out-of-band writer STRIPS the marker and bumps `updated`.** Forensic proof from
+   this leg's own backups (`cp` preserves custom metadata): the **08:05 precutover backup** carries a real marker
+   `consolidator_content_write_at=2026-07-16T06:36:46Z`; the **01:27 pre-T6.1 backup** — taken after the T3.1 purge
+   (13:09Z) and the 18:45:26Z rewrite — carries **`metadata: None`**. The cutover's own out-of-band index rewrites
+   destroyed the marker.
+4. Marker gone ⇒ fallback to `blob.updated` = **18:45:26.846Z** (the 18:45 rewrite — i.e. the "frozen-generation
+   witness" `1784227526828259` ITSELF) ⇒ cutoff **18:45:21.846Z** (exactly the logged value) ⇒ both shards (12:46:09,
+   17:30:42) fell under it ⇒ reaped unmerged.
+
+**Recovery (executed, verified).** GCS retained **no** noncurrent versions (`ls -a` on `_index/per_vm/` → only
+`_legacy_seed`). The shards were restored from this leg's pre-merge downloads — integrity re-verified before upload:
+7,183 / 2 / 6,110 rows, **all `captured`, 0 blank-source, 0 zero-`instrument_count`** (the same ABORT-checks T2.7
+applied). Re-uploaded at 01:38:42/43Z (canonical `updated`=01:34:30Z ⇒ cutoff 01:34:25Z ⇒ shards NEWER ⇒ classified
+"changed" ⇒ merged, not pruned). **The marker is now correctly stamped** (`consolidator_content_write_at`
+=2026-07-17T01:39:26Z) so the fallback is no longer in play for this bucket.
+
+**Why MDT was never at risk (verified, not assumed).** MDT's canonical carries a GENUINE marker
+`consolidator_content_write_at=2026-07-15T22:51:06Z` and was never rewritten out-of-band (its `updated` was still frozen
+at 08:18:06Z, the T0.6 freeze). Its shard (07-16 12:54:13Z) is NEWER than that cutoff ⇒ merge-eligible. **Only the
+instruments index was poisoned, and only because the cutover itself rewrote it out-of-band** — a consistent, complete
+explanation.
+
+**The merges (BY CONTENT — fresh re-read, independent of the consolidator's own report).**
+
+| index           | metric   | before    | after         | delta      | predicted     |
+| --------------- | -------- | --------- | ------------- | ---------- | ------------- |
+| **instruments** | total    | 5,342,265 | **5,349,447** | **+7,182** | +7,182 ✅     |
+| instruments     | captured | 1,692,695 | **1,699,880** | **+7,185** | +7,185 ✅     |
+| instruments     | af×ODDS  | 0         | **0**         | 0          | 0 ✅ TERMINAL |
+| instruments     | fs×ODDS  | 140,574   | **142,617**   | **+2,043** | +2,043 ✅     |
+| **mdt**         | total    | 1,958,498 | **1,959,024** | **+526**   | +526 ✅       |
+| mdt             | captured | 575,671   | **576,197**   | **+526**   | +526 ✅       |
+| mdt             | fs×ODDS  | 22,145    | **22,145**    | 0          | flat ✅       |
+
+Consolidator reports corroborate: instruments `rows_in=5349450 rows_out=5349447 dedup_dropped=3` (exec `j2rqk`, 328s, no
+signal 9 — well under the 900s bump); MDT `rows_in=1964608 rows_out=1959024 dedup_dropped=5584` (exec `94c2f`, 85s).
+**MDT's 5,584 supersession proven at the content layer**: `service_name='migrate-sports-canonical'` rows by source went
+`api_football` 9,208 → **3,624 (−5,584 exactly)** and `odds_api` 167,220 → **173,330 (+6,110 = 5,584 superseded + 526
+new)** — exactly T2.7's dedup-key design (`source` is not in the key, so the corrected row supersedes the mis-stamp).
+
+**Two CORRECTIONS to inherited numbers (measured, not accepted).**
+
+- **`footystats × ODDS` does NOT stay 140,574 at T6.1 — it MUST rise to 142,617.** "140,574 UNTOUCHED" was a **Phase-3**
+  gate (the purge must not touch the footystats population while the index is quiet); it is **not** a T6.1 invariant.
+  The cutover shard legitimately carries 2,044 footystats×ODDS cells (2,043 new + 1 in-place flip). These rows BELONG in
+  the instruments index: operator ruling 2026-06-27 (UAC@c75101be) — _footystats pre-match ODDS = IS reference data,
+  stays in IS_ — and **runtime-verified this leg**: `is_valid_manifest_source("sports","ODDS","footystats") is True`,
+  `…("sports","ODDS","api_football") is False`, `get_source_priority("sports","ODDS") == ["footystats"]`. This also
+  **RESOLVES T2.7 blocker (c)** ("write ODDS rows or omit them"): **WRITE** — the "ODDS retired to MTDS-only 2026-06-25"
+  premise was reversed by the operator two days later. The purge gate that IS terminal is **`api_football × ODDS == 0`**
+  (0 before, 0 after).
+- **The plan's predicted 142,618 is off by one — the true value is 142,617.** 142,618 naively adds all 2,044 shard ODDS
+  rows; 1 of them (`2026-05-01 / ODDS / LIGUE_1`) MATCHES an existing index row that was **already** counted as
+  footystats×ODDS (it flips `empty_confirmed`→`captured` in place, adding no row). 140,574 + 2,043 = **142,617**, which
+  is what the live index now reads.
+- Related: the plan's _"+7,182 new / 1 flipped"_ counts the **cutover shard only**; `or9-recover`'s 2 rows are 2 further
+  in-place flips. Total = **7,182 new + 3 flips** = the consolidator's `dedup_dropped=3`. Both figures are consistent;
+  the wording just scopes them differently.
+
+_Evidence_: `~/tmp-restore/{t6_1_measure.py,t6_1_predict.py,t6_1_before.json,t6_1_after.json}`; snapshots
+`_index/availability_index.20260717-012712.pre_t6_1.bak.parquet` on BOTH canonical buckets (rollback substrate, size ==
+source). Shards remain in `_index/per_vm/` and are now legitimately prune-eligible (covered by the real marker) — the
+next tick drains them; their rows are durably in the canonical.
 
 ### ✅ PHASE 5 COMPLETE (instruments half) — **THE BUCKET IS DELETED 2026-07-16T19:52Z** · OR-9 re-verified · R-17 disproven (2026-07-16, owner: Phase-5/delete sub-agent)
 
