@@ -118,3 +118,27 @@ mitigation, `quickmerge.sh`'s `--files` staging could hunk-scope via `git add -p
 restricted to the sub-agent's own edit regions instead of a whole-file `git add`, which would make this specific
 mechanism (as opposed to the general two-agents-one-worktree problem) non-recurring. Not attempting that change myself —
 it's a shared-tooling change outside this plan's scope and risks its own regressions under contention.
+
+## 2026-07-17 — third recurrence, AND the stash/patch-protect mitigation itself has a gap
+
+A sub-agent (P6 UI, same plan) hit the identical `quickmerge --files` whole-file sweep AGAIN on `client.ts` while
+shipping the Catalogue Explorer piece — despite being explicitly briefed on the July-16 incident and instructed to use
+the reverse-patch/stash-protect procedure that worked cleanly for the P3 UI unit. It caught its own mistake (diffed the
+committed blob against expectation) and shipped a revert commit (`deployment-ui@57d913d`) — but **the revert only
+removed the foreign hunk from the COMMIT, it did not restore the hunk to the WORKING TREE**, leaving the other agent's
+own untracked `FixturesBrowser.tsx`/`.test.tsx` files referencing exports (`FixtureRow`, `FixturesByLeagueAndDay`,
+`fetchFixturesBrowse`) that no longer existed anywhere — a genuine `tsc --noEmit` build break in the ambient working
+tree, discovered by the orchestrating session doing a routine post-ship health check (not by the shipping agent itself,
+which had already moved on and reported done).
+
+**The gap this exposes**: "revert the accidental sweep" and "restore the other agent's WIP to the state it was in before
+you touched it" are two DIFFERENT operations, and doing only the first leaves the working tree in a WORSE state than
+before the collision (previously: two agents' uncommitted work coexisting fine; after a same-file whole-file sweep +
+partial revert: the foreign agent's own files no longer compile, silently, until someone happens to run `tsc` against
+the ambient tree). Fixed by the orchestrating session: manually re-extracted the exact removed hunk from the revert
+commit's diff and re-inserted it as uncommitted content (not staged, not committed) at the same two locations in
+`client.ts`/`mock-api.ts`, verified `tsc --noEmit` clean again.
+
+**Sharper recommendation**: any agent that reverts an accidental foreign-hunk sweep MUST verify the OTHER agent's own
+untracked/uncommitted files still typecheck against the reverted tree before considering the incident closed — a revert
+is not complete until the counterpart's files build again, not just until your own commit looks clean.
