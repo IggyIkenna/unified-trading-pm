@@ -49,6 +49,11 @@ on:
         description:
           "true when this run fast-pathed a metadata-only commit (chore(release) version bump OR chore(deps) pin)"
         value: ${{ jobs.quality-gates-v2.outputs.metadata_only }}
+      docs_only:
+        description:
+          "true when this run's changeset was documentation-only (A1 fast-path: tests+typecheck slices skipped,
+          lint-codex ran in full). Callers gate dispatch-cloud-build on it — no image rebuild for a docs change."
+        value: ${{ jobs.quality-gates-v2.outputs.docs_only }}
     secrets:
       GH_PAT:
         required: false
@@ -230,48 +235,90 @@ jobs:
           # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
           fetch-depth: 2
 
-      - name: Detect metadata-only commit (fast-path)
-        # A bot metadata commit whose entire diff is pyproject.toml / uv.lock needs NO gate work:
+      - name: Detect metadata-only / docs-only changeset (fast-paths)
+        # metadata-only (push/dispatch): a bot metadata commit whose entire diff is
+        # pyproject.toml / uv.lock needs NO gate work:
         #   chore(release): bump version to X   (semver-agent — version line)
         #   chore(deps): pin X to Y             (dependency-update minor/patch — dep pin line)
         # Short-circuit every leg to GREEN in seconds (the commit only needs a check to ride the
         # staging→main promotion PR whose HEAD is this commit). SSOT: plan
         # semver_version_bump_skip_ci_promotion_block.
+        #
+        # docs-only (A1, ci-cost plan 2026-07-17; push AND pull_request): a changeset whose EVERY
+        # file has a documentation extension (the EXACT regex the LOCAL gate uses — see
+        # base-service.sh § "DOCS-ONLY changeset") cannot change code behaviour, so the tests +
+        # typecheck slices short-circuit to GREEN. **lint-codex ALWAYS runs in full** — it is the
+        # slice that validates plans/codex (frontmatter schema, todo format, conflict markers):
+        # skipping it on a docs change would skip exactly the checks that exist for docs (the
+        # 2026-07-17 fleet-wide red from two bad issue docs is what that slice catches).
+        # FAIL-SAFE: any doubt (diff base unavailable, PR files API error, empty changeset) ⟹
+        # docs_only=false ⟹ full gate. A missing output evaluates != 'true' ⟹ full gate too.
         id: vcheck
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SLICE: ${{ matrix.slice }}
         run: |
           set -euo pipefail
-          BEFORE="${{ github.event.before }}"
-          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
-          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
-            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
-            echo "base commit unavailable (shallow / multi-commit push) → full QG"
-            exit 0
-          fi
-          MSG="$(git log -1 --format=%s HEAD)"
-          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
           META=false
-          case "${MSG}" in
-            "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
-          esac
-          EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
-          if [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; then
-            echo "metadata_only=true" >> "$GITHUB_OUTPUT"
-            echo "✓ metadata-only commit — skipping heavy gates, reporting GREEN: ${MSG}"
+          CHANGED=""
+          if [ "${EVENT}" = "pull_request" ]; then
+            # The PR's full committed changeset via the files API (paginated) — no fetch-depth
+            # games against a shallow merge-ref checkout. API failure ⟹ CHANGED empty ⟹ full gate.
+            CHANGED="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[] | .filename, (.previous_filename // empty)' 2>/dev/null || true)"
+            echo "pull_request changeset: $(printf '%s\n' "${CHANGED}" | grep -c . || true) file(s) via files API"
           else
-            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
-            echo "not metadata-only (msg='${MSG}', changed='$(printf '%s' "${CHANGED:-none}" | tr '\n' ' ')') → full QG"
+            BEFORE="${{ github.event.before }}"
+            git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+            if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+              echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+              echo "docs_only=false" >> "$GITHUB_OUTPUT"
+              echo "skip_slice=false" >> "$GITHUB_OUTPUT"
+              echo "base commit unavailable (shallow / multi-commit push) → full QG"
+              exit 0
+            fi
+            MSG="$(git log -1 --format=%s HEAD)"
+            CHANGED="$(git diff --no-renames --name-only "${BEFORE}" HEAD)"
+            case "${MSG}" in
+              "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
+            esac
+            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
+            { [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; } || META=false
+          fi
+          DOCS_ONLY=false
+          # Doc-extension allow-list — MUST stay identical to base-service.sh's local docs-only
+          # regex (extension-based: any file with a non-doc extension forces the full gate; .yml,
+          # .lock, .toml, .py are all non-doc by construction).
+          NONDOC="$(printf '%s\n' "${CHANGED}" | grep -vE '^[[:space:]]*$' | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true)"
+          if [ -n "$(printf '%s' "${CHANGED}" | tr -d '[:space:]')" ] && [ -z "${NONDOC}" ]; then
+            DOCS_ONLY=true
+          fi
+          # Consolidated per-slice verdict: metadata-only skips EVERY slice; docs-only skips only
+          # the code slices (tests / typecheck) — lint-codex always runs.
+          SKIP=false
+          [ "${META}" = true ] && SKIP=true
+          [ "${DOCS_ONLY}" = true ] && [ "${SLICE}" != "lint-codex" ] && SKIP=true
+          {
+            echo "metadata_only=${META}"
+            echo "docs_only=${DOCS_ONLY}"
+            echo "skip_slice=${SKIP}"
+          } >> "$GITHUB_OUTPUT"
+          if [ "${SKIP}" = true ]; then
+            echo "✓ fast-path (metadata_only=${META} docs_only=${DOCS_ONLY}, slice=${SLICE}) — skipping this slice's gate work, reporting GREEN"
+          else
+            echo "full gate for slice=${SLICE} (metadata_only=${META} docs_only=${DOCS_ONLY})"
           fi
 
       - name: Set up Python
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
 
       - name: Install uv
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         # Pinned for uv.lock determinism — an unpinned uv reformats the lock (revision bump)
         # even with identical deps, so CI's `uv lock --check` would false-fail.
@@ -280,7 +327,7 @@ jobs:
 
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.local/act-tools
@@ -288,7 +335,7 @@ jobs:
 
       - name: Install ripgrep
         if:
-          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true' &&
           steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -299,7 +346,7 @@ jobs:
 
       - name: Install shellcheck
         if:
-          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true' &&
           steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -310,7 +357,7 @@ jobs:
 
       - name: Install bats-core
         if:
-          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true' &&
           steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -319,7 +366,7 @@ jobs:
 
       - name: Install actionlint
         if:
-          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true' &&
           steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -329,12 +376,12 @@ jobs:
             | tar -xz -C ~/.local/act-tools/bin actionlint
 
       - name: Add tools to PATH
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
 
       - name: Clone unified-trading-pm and dependencies
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
@@ -533,7 +580,7 @@ jobs:
           done
 
       - name: Install dependencies
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         env:
           DEP_REPOS: ${{ inputs.dep_repos }}
@@ -574,7 +621,7 @@ jobs:
           done
 
       - name: Run quality gates (slice ${{ matrix.slice }})
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         env:
           QG_SLICE: ${{ matrix.slice }}
@@ -639,35 +686,53 @@ jobs:
     timeout-minutes: 10
     outputs:
       metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
+      docs_only: ${{ steps.vcheck.outputs.docs_only }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Detect metadata-only commit (mirror of slice fast-path, for caller output)
+      - name: Detect metadata-only / docs-only changeset (mirror of slice fast-path, for caller outputs)
+        # MUST stay logic-identical to the slice vcheck (minus the per-slice verdict): the caller
+        # template gates dispatch-cloud-build on BOTH outputs (no image rebuild for a version bump
+        # OR a docs-only push). metadata stays push/dispatch-only; docs_only also covers PRs.
         id: vcheck
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          BEFORE="${{ github.event.before }}"
-          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
-          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
-            echo "metadata_only=false" >> "$GITHUB_OUTPUT"; exit 0
-          fi
-          MSG="$(git log -1 --format=%s HEAD)"
-          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
           META=false
-          case "${MSG}" in
-            "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
-          esac
-          EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
-          if [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; then
-            echo "metadata_only=true" >> "$GITHUB_OUTPUT"
+          CHANGED=""
+          if [ "${EVENT}" = "pull_request" ]; then
+            CHANGED="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[] | .filename, (.previous_filename // empty)' 2>/dev/null || true)"
           else
-            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+            BEFORE="${{ github.event.before }}"
+            git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+            if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+              echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+              echo "docs_only=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            MSG="$(git log -1 --format=%s HEAD)"
+            CHANGED="$(git diff --no-renames --name-only "${BEFORE}" HEAD)"
+            case "${MSG}" in
+              "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
+            esac
+            EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
+            { [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; } || META=false
           fi
+          DOCS_ONLY=false
+          NONDOC="$(printf '%s\n' "${CHANGED}" | grep -vE '^[[:space:]]*$' | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true)"
+          if [ -n "$(printf '%s' "${CHANGED}" | tr -d '[:space:]')" ] && [ -z "${NONDOC}" ]; then
+            DOCS_ONLY=true
+          fi
+          echo "metadata_only=${META}" >> "$GITHUB_OUTPUT"
+          echo "docs_only=${DOCS_ONLY}" >> "$GITHUB_OUTPUT"
+          echo "caller outputs: metadata_only=${META} docs_only=${DOCS_ONLY}"
 
       - name: Aggregate slice results (gate the required context)
         shell: bash
@@ -697,16 +762,18 @@ jobs:
       # ── Write the green marker so the NEXT byte-identical run (a push/PR re-fire
       # or a staging/main promotion of this same tree) short-circuits to GREEN.
       # ONLY on a real gate-run green (a MISS that actually ran the slices + passed,
-      # not a metadata-only fast-path, and only under a fully-resolved gate version —
-      # gate_known) — never re-save on a content HIT (the marker already exists) so
-      # the marker always certifies a real full-gate pass. BOTH steps best-effort:
+      # not a metadata-only OR docs-only fast-path — those runs skip gate work, so
+      # they must not certify their tree — and only under a fully-resolved gate
+      # version, gate_known) — never re-save on a content HIT (the marker already
+      # exists) so the marker always certifies a real full-gate pass. BOTH steps best-effort:
       # a marker-save hiccup must NEVER redden the required quality-gates-v2 context;
       # the only cost of a failed save is the next identical run paying the full gate.
       - name: Authenticate to GCP (green-marker save)
         id: marker_auth
         if:
           needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
-          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true'
+          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true' &&
+          steps.vcheck.outputs.docs_only != 'true'
         continue-on-error: true
         uses: google-github-actions/auth@v3
         with:
@@ -715,7 +782,8 @@ jobs:
       - name: Save green marker (Firestore)
         if:
           needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
-          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true'
+          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true' &&
+          steps.vcheck.outputs.docs_only != 'true'
         continue-on-error: true
         shell: bash
         env:
