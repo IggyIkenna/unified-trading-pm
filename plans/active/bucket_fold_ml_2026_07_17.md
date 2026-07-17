@@ -103,7 +103,8 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       per design §2.D soft-transition. Provision `ml-store-{prd,test}` on GCP + AWS via the derived-from-yaml `for_each`
       (no dev/stg twins — retired). Verify `terraform plan` shows the new folded buckets as the ONLY creates. UTL QG
       green.
-- [ ] [DATA] P0. **Parity migrate the 3 non-empty sources** — server-side copy `ml-models-store-prd/*` →
+- [x] ✅ [DATA] P0. **Parity migrate the 3 non-empty sources** — DONE 2026-07-17 (bulk server-side copy verified; final
+      rsync at cutover to catch drift — see Progress Log). — server-side copy `ml-models-store-prd/*` →
       `ml-store-prd-{pid}/models/`, `ml-training-artifacts/*` → `ml-store-prd-{pid}/training-artifacts/`, and the legacy
       `ml-models-store/*` (38 obj) → `ml-store-prd-{pid}/models/` (dedup: only objects absent from
       `ml-models-store-prd`; the parent-plan W2 already treats flat `ml-models-store` as legacy-to-delete). Byte-count
@@ -211,3 +212,19 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
      TF lines + gcloud + regen catalog); (E) zero-reads window → delete the 5 source buckets + yaml/TF-key removal. Full
      per-site file:line spec captured in workflow `wf_917a50e0-66f` output (transcript dir) + summarized above — durable
      here.
+
+- **2026-07-17, TICK 2 — Phase A (provision) + Phase B (migrate) DONE + verified.** Provisioned all 4 targets via direct
+  `gcloud/aws` create (NOT tofu apply, per the unsafe-state finding): GCP `ml-store-{prd,test}-central-element-323112`
+  (ASIA-NORTHEAST1, UBLA, default STANDARD, lifecycle STANDARD→COLDLINE@60d matching canonical); AWS
+  `ml-store-{prd,test}-427895769566` (ap-northeast-1, public-access fully blocked). Migrated the 3 non-empty GCP sources
+  server-side (kind-prefix prepended faithfully): `ml-models-store-prd/*`→`ml-store-prd/models/`, `ml-models-store`(flat
+  legacy)`/*`→`ml-store-prd/models/` (no-clobber), `ml-training-artifacts/*`→`ml-store-prd/training-artifacts/`.
+  **Byte-parity verified** (`gcloud storage du -s`): models dst `44,468,944` == src-prd `44,468,944` EXACT;
+  training-artifacts dst `4,420,285` ≈ src `4,420,284` (+1B prefix-marker). **KEY FINDING: dst /models/ == prd EXACTLY ⇒
+  the flat-legacy `ml-models-store` (1,901,625 B / 38 obj) is 100% redundant with prd (0 unique bytes) — its delete
+  loses NOTHING.** predictions/configs/ml-artifacts + all AWS ml buckets asserted EMPTY (tick 1) — no copy. All
+  Phase-A/B actions are ADDITIVE + reversible (sources untouched). NOTE: yaml `ml-store` scaffold (todo 1's second half)
+  intentionally deferred to fold ATOMICALLY into the Phase-C code cutover (§2.D — key + aliases + code ship together, no
+  orphan-key window; buckets already exist so resolution works the instant the key lands). NEXT (Phase C): atomic code
+  cutover in dependency order (UTL/yaml T0 → ml-service ∥ deployment), driven as a worktree-isolated workflow,
+  QG-green + reader/writer key-parity tests mandatory.
