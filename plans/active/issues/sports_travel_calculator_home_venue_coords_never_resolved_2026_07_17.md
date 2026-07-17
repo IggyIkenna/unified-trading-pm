@@ -156,13 +156,24 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
       `venues`. Check `_filter_completed_before`'s scoping
       (`features_service/sports/exporters/     derived_features_helpers.py:365`) and the caller's `completed`
       construction (`derived_new_calculators.py:80-134`) as the leading candidates. (repo: features-service)
-- [ ] [DATA] P1. **Fix the root cause** found above, restoring genuine (non-zero, non-hardcoded) travel-distance and
+- [x] ✅ [DATA] P1. **Fix the root cause** found above, restoring genuine (non-zero, non-hardcoded) travel-distance and
       cumulative-travel computation for fixtures where the data genuinely exists — and make the genuinely-missing case
       (no data available) surface as an honest NaN, not a silent `0.0`, per
       `codex/02-data/honest-absence-downstream-handling.md`. Add/extend a unit test using a real fixture+venue fixture
       pair with actual travel history spanning >0km, asserting a nonzero cumulative-travel result — the existing test
       suite evidently didn't catch this (all current tests must be using either trivial single-fixture cases or
-      synthetic data that happens to avoid the broken path). (repo: features-service)
+      synthetic data that happens to avoid the broken path). (repo: features-service) — features-service@6efefde2. Root
+      cause: `_get_team_home_venue_coords`/`_compute_cumulative_travel` compared `fixtures_history["home_team_id"]`
+      (stringified in production via `gcs_normalizers._to_str_id`) against an `int()`-coerced `team_id` in
+      `compute_travel_batch` — an int-vs-str dtype mismatch that made the lookup fail almost universally. Fixed by
+      comparing as strings (no longer force-casting to `int()`) and by returning honest `NaN` (not `0.0`) from
+      `_compute_cumulative_travel` when a resolvable game window exists but the team's home venue can't be found. Added
+      a production-shaped regression test (stringified ids, real >0km travel history) asserting a nonzero
+      cumulative-travel result, plus a str/int-mismatch regression test on `_get_team_home_venue_coords` directly. Full
+      sports unit suite + whole-service `quality-gates.sh` green (17,641 passed, 0 failed; sentinel `d74f96a5`/HEAD
+      `6efefde2` match). Todo 1 (root-cause investigation) was dispatched separately to slot 4 — not flipped here; this
+      fix subsumes that investigation's findings but the other slot's task record is left for it to close on its own
+      thread.
 - [ ] [DATA] P2. **After the fix ships**, gap-fill re-run the full 2015→present sports history for `derived_features`
       with `--force` (this is now the REAL gap-fill this corpus needs — much larger in scope than the tz-crash gap-fill
       this doc's sibling issue doc originally anticipated) and re-verify via the same content-sampling method used here
