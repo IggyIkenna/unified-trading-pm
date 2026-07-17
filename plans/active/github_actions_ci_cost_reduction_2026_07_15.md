@@ -643,15 +643,31 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       validate against a venue-specific model or the canonical one?). **Ikenna owns the cassette-count verification
       (operator 2026-07-17) — do not duplicate it.** SSOT:
       `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
-- [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C).**
-      Rewrite the reusable workflow as `.github/actions/persist-event/action.yml` (a composite action wrapping the same
-      build-JSON + GCS/S3/log-only write steps), then change all **22 callers** (5 KEEP + 17 MOVE) from
-      `jobs.<id>.uses: ./.github/workflows/persist-cicd-event.yml` (a job) to a **step**
-      `uses: ./.github/actions/persist-event` inside an existing job, and **delete** the old workflow. Effect: persist
-      runs on the **caller's** runner (movers → VM/$0, KEEP callers → hosted, no VM-outage hang) AND stops being a
-      separate 1-min-minimum billed job (the A3/A4 saving, fleet-wide, done properly). Keep it best-effort
-      (`continue-on-error`) exactly as today. Sequence: land with / after the STEP 2 flip (converting before the movers
-      are self-hosted gains nothing). Supersedes options-doc A3 (and the persist half of A4).
+- [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C). ⏳
+      PILOT PROVEN 2026-07-17 (unified-trading-pm@d0e25fcb6 + @1aa26232c) — 1 of 22 callers converted; 21 to go, then
+      delete the old workflow.** Action authored at `.github/actions/persist-event/action.yml`; `secret-health-check`
+      converted as the pilot. **Evidence (run 29566057979):** `check-secrets` → success on `glue-2`; the workflow went
+      **3 jobs → 2** (the `persist` job is gone); **`billable: {}`** = zero billed minutes; and the write is REAL, not a
+      log-only no-op — `cloud_provider: gcp` → `Operation completed over 1 objects/339.0 B` to GCS from the self-hosted
+      runner. **Prize re-measured: `ci-status-update` alone is 14,320 runs/30d ⇒ ~$86/mo; ~$117/mo across all 22.**
+      **The tail is NOT mechanical — read the four findings in the Progress Log before touching the other 21**, in
+      particular: a manifest error fails at LOAD time so `continue-on-error` cannot contain it (one typo here fails all
+      22 callers' REAL jobs at once, incl. `ci-status-update` on the promote critical path) ⇒ change the action, prove
+      on ONE caller, only then fan out. Remaining work: 21 callers (2 need a sparse checkout added —
+      `conflict-resolution-merged`, and `secret-health-check` already has one; 4 pass a hardcoded conclusion and need
+      individual judgment: `fix-approval-timeout`, `overnight-agent-orchestrator`, `overnight-dead-man-switch`,
+      `plan-notification`), then delete `persist-cicd-event.yml`. **⚠️ Resolve the STEP 2b collision first** (below).
+      Supersedes options-doc A3 (and the persist half of A4).
+- [ ] [INFRA] P2. **STEP 2b ↔ STEP 2c COLLISION — needs an operator call (found 2026-07-17).** STEP 2b says trim
+      `ci-status-update` to "pre-stage the script in the runner slot and do **NO checkout at all**". STEP 2c makes it
+      **require** a checkout, because `uses: ./…` resolves a local composite action against the WORKSPACE (a reusable
+      workflow did not — GitHub resolved it from the ref). Both are todos in this plan and they contradict. Options: (a)
+      keep a **sparse checkout** (`sparse-checkout: .github/actions`, ~1s on our own runner) — recommended, keeps the
+      LDR-proves-before-main pattern intact; (b) reference the action as
+      `IggyIkenna/unified-trading-pm/.github/actions/persist-event@main`, which needs no checkout but pins to `main` —
+      **that breaks this plan's whole canary model**, since an action change on LDR would be inert until promoted and
+      could not be proven pre-merge. Decide before converting `ci-status-update` (the 14.3k/mo caller = the bulk of the
+      STEP 2c prize).
   - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
     `ci-status-update`, `cloud-build-router*`, `sit-gate`, `sit-unlock`, `hotfix-mode`, `update-repo-version` **cannot
     be canaried on LDR** — `gh workflow run --ref` needs a `workflow_dispatch` trigger, and dispatch/schedule workflows
@@ -1400,6 +1416,44 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   settings toggle, whereas "no self-hosted workflow runs on PR-authored code" is a property of the workflows themselves
   and survives that toggle. **Re-run the trigger audit before adding a `pull_request` trigger to ANY self-hosted
   workflow** — that, not repo visibility, is the invariant that keeps arbitrary PR code off the VM.
+
+- 2026-07-17 — **STEP 2c PILOT PROVEN, and "mechanical" was wrong four times over** (@d0e25fcb6 fix @1aa26232c; run
+  29566057979). `secret-health-check` now persists via `.github/actions/persist-event`: **3 jobs → 2**, `check-secrets`
+  success on `glue-2`, **`billable: {}`**, and — the part that matters, because green is exactly what a silent no-op
+  looks like — `cloud_provider: gcp` → **`Operation completed over 1 objects/339.0 B`**, a real GCS write from the VM.
+  Prize re-measured: `ci-status-update` = **14,320 runs/30d ⇒ ~$86/mo**; ~$117/mo across 22 callers.
+  - **① `vars` is NOT available to a composite action — the docs are WRONG, and it cost a run.** Fetching GitHub's
+    contexts doc said "Available"; the Actions YAML schema said `Unrecognized named-value: 'vars'`. I refused to pick a
+    side and measured: the runner **rejects the MANIFEST** — `TemplateValidationException` → `Failed to load action.yml`
+    (run 29565881093). So `CLOUD_PROVIDER`/`CICD_EVENTS_BUCKET`/`AWS_REGION` must be read by the CALLER and passed as
+    inputs. **Same class as `secrets`, which IS documented as unavailable — but nothing warns you about `vars`.**
+  - **② THE BIG ONE — a manifest error fails at LOAD time, so `continue-on-error` CANNOT contain it.** I had guarded
+    every step, reasoning that persist must never redden a caller's run (plan #220). Useless: validation happens
+    **before any step executes**. The broken action **failed `check-secrets` outright**. With 22 callers this means one
+    typo in this one file fails all 22 REAL jobs simultaneously — `ci-status-update` (promote critical path) included.
+    **Rule for the tail: edit the manifest → prove on ONE caller → only then fan out.** This is a materially higher
+    blast radius than the plan assumed when it called STEP 2c low-risk.
+  - **③ Local composite actions need a checkout; reusable workflows do not.** `uses: ./…` resolves against the
+    WORKSPACE. Measured: **16 of 20 callers already check out**; `secret-health-check` did not (sparse checkout added).
+    **This collides head-on with STEP 2b**, which wants `ci-status-update` to do NO checkout — new todo above.
+  - **④ The fan-in was the thing I most expected to kill this, and it does not.** persist is a job with
+    `needs: [main-job, notify]` (four jobs on `cascade-qg-ordering`/`staging-to-main`), which a composite step cannot
+    reproduce. But measuring what each caller actually PASSES: **every one records exactly ONE job's result**. The extra
+    `needs:` are ordering, not data ⇒ `job.status` + `if: always()` as the LAST step is faithful. 4 callers pass a
+    hardcoded conclusion and need individual judgment.
+  - **MY OWN FALSE ALARM, owned:** the broken pilot made `check-secrets` fail _after_ it had validated all three secrets
+    and reported healthy — so `notify` fired a **FALSE "Secret Health Check Failed"** to #ci-failures. Exactly the
+    alarm-fatigue this epic keeps cataloguing (52 cassette issues), authored by me. The re-run is green and `notify`
+    correctly **skipped**. Noted because "the fix is green now" does not un-send a page.
+  - **Near-miss of my own:** refactoring `CLOUD_PROVIDER` from `$GITHUB_ENV` (it leaks into the caller's job) to a step
+    output, I left **five** consumers reading `env.CLOUD_PROVIDER` — now undefined ⇒ every branch would fall through to
+    log-only. A green persist writing nothing, forever. Caught pre-push by asserting every step declares what it
+    consumes, not by re-reading the diff.
+  - **PRE-EXISTING BUG found, NOT fixed (needs an operator call):** the persist write is a read-modify-write —
+    `gsutil cp` down → append → `cp` up — on a shared `events.jsonl`, with **no locking**, at ~14.3k events/mo.
+    Concurrent writers silently overwrite each other, so **the CI event ledger is losing rows today**. The fix (one
+    object per event instead of an append) changes the reader's contract ⇒ a design decision, not a cleanup. The
+    conversion neither causes nor worsens it; it is carried across faithfully.
 
 ## Deferred work after 2026-07-17
 
