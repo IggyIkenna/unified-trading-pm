@@ -35,6 +35,7 @@ locked_since:
 source:
   surfaced by the cefi/defi instrument_type backfill (sibling migration) 2026-07-17; independently reproduced before
   filing
+depends_on: []
 ---
 
 # TradFi instrument_type migration read the STALE legacy object → 425,096 instruments' coverage lost
