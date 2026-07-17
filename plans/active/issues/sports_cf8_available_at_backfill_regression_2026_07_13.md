@@ -803,3 +803,64 @@ multi-source at first glance (MDPS `trades`: `api_football` + `odds_api`) turned
 keys, not a same-cell collision. This closes the todo's own open question — the answer is a confirmed negative, not an
 unconfirmed flag. No code changed, no crons touched, no production write. This plan-doc edit ships via the
 `docs(plans):` carve-out.
+
+## Root-caused + repaired the parking-gate churn — 2026-07-17 (slot-4, data_engineering, dispatched onto `sports_manifest_canonicalisation-001`)
+
+Dispatched onto the E8 Verify checkbox (the ~30-plus-th redispatch this plan's own note already warns about). Read this
+doc + the master plan in full before acting. Did **not** re-run `cf_manifest_audit_2026_06_01.py` — every prior touch
+since 2026-07-14 has already established a repeat run reproduces byte-identical RED evidence (CF-8 only) for zero new
+information, and GCS reads at corpus scale are not free.
+
+**Ground-truth check, first time verified directly against the live orchestrator DB rather than trusted from doc text**:
+queried `/var/lib/orchestrator/state.db` (`ORCHESTRATOR_DB_PATH`, read-only `sqlite3` connection) `prerequisites` table
+directly — `sports-cf8-maintenance-window-scheduled = 0`
+(`set_by: "slot-12 (operator-authorized via BLK-c80a05e7 answer: apply the backlog parking gate now)"`,
+`set_at: 2026-07-14 10:44:49`). Confirms the maintenance window has genuinely never been scheduled/run since slot-12's
+parking-gate session — the condition itself is intact and untouched.
+
+**Found why the parking gate kept evaporating**: it was never a DB/condition problem — it's that the gate was never
+actually wired to a _currently-live_ backlog task ID. Checked the live `agent-orchestrator/data/config/backlog.yaml`
+(the ROOT clone's copy — this file is `.gitignore`'d server runtime state, confirmed via `git check-ignore`, so editing
+it directly on root is the correct mechanism, not a root-clone-read-only violation) directly: **both**
+`sports_manifest_canonicalisation-001` **and** `sports_cf8_available_at_backfill_regression-001` currently carry
+`prereqs.prerequisites: []` and `priority: 10`/`20` (no `priority_override`) — i.e. completely unparked, despite
+slot-12's 2026-07-14 session recording the gate as applied-and-verified. The task IDs referenced by that 2026-07-14
+session (`…-007`/`…-008` suffixes) no longer exist in the current backlog at all — `regen_backlog_from_plan.py` derives
+numeric ID suffixes from each plan's live checkbox ordering, so edits to either plan doc's structure since (new
+checkboxes inserted above, items reordered/removed) silently renumbered both tasks down to `-001`, orphaning any
+hand-tuned field that was attached to the old ID string. This is a _different_ failure mode than
+`backlog_regen_drops_handtuned_prereqs_2026_07_12.md` (whose `8dd5763` fix — confirmed present,
+`git merge-base --is-ancestor 8dd5763 HEAD` — addresses `priority_override` surviving a regen tick on a **stable** ID):
+here the ID itself is not stable across plan edits, so no per-tick preservation logic can help — the tuning has to be
+re-applied under whatever ID the task currently holds, checked after every plan edit to either doc, not just after every
+regen tick.
+
+**Re-applied the gate to the CURRENT IDs and verified it survives an actual regen tick** (not just `/reload`, which the
+existing RULES.md guidance already flags as insufficient to exercise the revert path): set
+`prereqs.prerequisites: [sports-cf8-maintenance-window-scheduled]` + `priority: 999` + `priority_override: true` on both
+`sports_manifest_canonicalisation-001` and `sports_cf8_available_at_backfill_regression-001` directly in
+`agent-orchestrator/data/config/backlog.yaml` (root clone, gitignored runtime state) → `POST /api/backlog/reload` (held)
+→ `POST /api/backlog/regen` (a real plan-checkbox rescan, 444 plans scanned, held — verified by re-reading the file
+after each call). Both tasks are parked as of this touch.
+
+**Residual risk this touch does NOT close**: the next time either `sports_manifest_canonicalisation_2026_06_01.md` or
+this issue doc gets a checkbox inserted/reordered above these items, the derived ID will shift again (e.g. `-001` →
+`-002`) and silently drop this same gate a third time — the structural fix (key the gate to something ID-stable, e.g. a
+content hash of the checkbox text, or `plan_ref` + `plan_order`, rather than the regen-derived positional suffix) is an
+agent-orchestrator regen-logic change, out of data_engineering craft scope. Filing as a P1 below for a backend_engineer/
+infra dispatch.
+
+Nothing shipped in a service repo this touch (no code change); the DB read was read-only (`mode=ro` URI); the
+`backlog.yaml` edit is live server config, not a git commit. This plan-doc edit ships via the `docs(plans):` carve-out.
+
+- [ ] [BACKEND] P1. Make backlog parking gates (`prereqs.prerequisites` / `priority_override`) survive plan-checkbox
+      reordering, not just regen ticks on a stable ID. `regen_backlog_from_plan.py` derives each task's numeric ID
+      suffix from checkbox position within its `plan_ref`; inserting/removing/reordering checkboxes above a parked item
+      renumbers it and silently orphans any hand-tuned field attached to the old ID (distinct from — and not fixed by —
+      `8dd5763`'s `priority_override`-survives-a-regen-tick fix, which only covers a _stable_ ID across ticks). Fix
+      candidates: key parking state to a stable identifier (content-hash of the checkbox's own text, or `plan_ref` + an
+      explicit anchor comment in the plan) instead of positional suffix; or have `/api/backlog/reload` warn/alert when a
+      previously-parked condition name has no current task referencing it. Evidence: this touch re-derived and
+      re-applied the gate for `sports_manifest_canonicalisation-001` / `sports_cf8_available_at_backfill_regression-001`
+      after finding both silently unparked despite slot-12's 2026-07-14 session recording the gate as applied. (repo:
+      agent-orchestrator)
