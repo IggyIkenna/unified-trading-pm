@@ -26,6 +26,10 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
 assigned_role: platform_engineer
 drift_direction: neutral
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Orchestrator concurrent-QG box saturation → backend up-but-slow + dispatch-status divergence
