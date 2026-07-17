@@ -16,7 +16,7 @@ summary: |
 status: open
 nature: issue
 asset_group: [cross-cutting]
-stage: [infra]
+stage: [meta]
 repos: [agent-orchestrator, unified-api-contracts, deployment-service, unified-trading-library]
 scope: [engineer]
 tags: [slot-safety, data-loss, branch-heal, self-healing, uncommitted-work, multi-agent]
@@ -37,6 +37,10 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: engineer
 drift_direction: none
 depends_on: []
+source: >-
+  slot session 2026-07-17 — authored while diagnosing the slot-3 dirty-worktree loss; frontmatter completed (stage enum
+  + missing keys) by slot main·harsh_pc to unblock the PM lint-codex gate, content untouched
+resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
