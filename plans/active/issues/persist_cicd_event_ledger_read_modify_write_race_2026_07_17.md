@@ -102,10 +102,21 @@ Three independent reasons, and they compound:
   uniform arrivals that is ~1-2 lost rows/day. **CI completions cluster in bursts** (the whole fleet's CI finishes
   together — the same burst behaviour that sizes the glue runner pool), so the real number is higher and the uniform
   estimate is a floor, not an answer.
+- **MEASURED 2026-07-17 (post-STEP-2c cutover — the first real datapoint, and it is WORSE than the estimate):** at
+  12:40Z, PM's `events.jsonl` for 2026-07-17 held **1 row from the entire pre-cutover day** (00:00→12:11Z), despite the
+  OLD reusable-path persist job firing ~145 times in that window for `repo_name: unified-trading-pm`
+  (`sit-debounce-trigger` alone persists every 5 min). Yesterday looked the same: the pilot's write left a 339 B object
+  ≈ the file was near-empty then too. In the first **26 min** after the composite-action path went live on `main`, the
+  same file gained **14 rows**, including 3 writers landing within 9 s of each other, all surviving. So under the old
+  path the shared PM object was retaining ~nothing — either near-total loss to this race under burst arrival, or the old
+  persist step was failing silently (its `|| true` upload made both indistinguishable, which is this issue's point).
+  Either reading strengthens the case: the ledger's history to date is NOT trustworthy as a record, and the new path's
+  healthier accumulation does NOT close this issue — the read-modify-write is unchanged, only the write reliability
+  improved.
 
-**Do not quote the estimate as a finding.** How to actually measure it, cheaply: count `events.jsonl` rows for a day and
-compare against `gh api` run counts for the same workflows/day; the delta is the floor of the loss. Alternatively, emit
-a per-writer sequence number and look for gaps.
+**Do not quote the estimate as a finding.** How to actually measure it going forward, cheaply: count `events.jsonl` rows
+for a day and compare against `gh api` run counts for the same workflows/day; the delta is the floor of the loss.
+Alternatively, emit a per-writer sequence number and look for gaps.
 
 ## Options
 

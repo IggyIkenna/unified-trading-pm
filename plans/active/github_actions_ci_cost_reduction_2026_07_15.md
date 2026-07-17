@@ -1528,6 +1528,24 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   run shape billed a 1-min minimum for the persist job even when notify was skipped). Only then was
   `persist-cicd-event.yml` deleted, with its hosted-baseline copy (snapshot re-run: 55/55, verify OK). QG_EXIT=0 on both
   shipping commits. Cumulative rollback if ever needed: `git revert 0c845f930 a6057ea36`.
+- 2026-07-17 — **POST-ROLLOUT REGRESSION SWEEP (operator-requested): CLEAN on all four surfaces, plus one D2
+  measurement.** (1) **Converted workflows on natural triggers**: within ~30 min of the merge, 6+ fired on their own
+  cron/push/dispatch and ALL succeeded — `fix-approval-timeout` (schedule — proves the new sparse-checkout + guarded
+  persist live), `plan-notification`, `rules-alignment-agent`, `sit-unlock`, `staging-to-main`, `cloud-build-router-aws`
+  (route skipped ⇒ correctly wrote NO row — the deliberate delta behaving). Not yet exercised post-merge
+  (dormant/not-due, mechanism identical to the proven ones): `cascade-qg-ordering`, `sit-gate`, `update-repo-version`,
+  `publish-package`, `semver-agent`, the overnight pair, `removed-symbols` — re-check with
+  `gh run list --workflow=<wf>.yml --limit 1` after their next natural fire. (2) **Ledger continuity**: 14 rows appended
+  to PM's `events.jsonl` in the first 26 min post-merge, incl. 3 writers within 9s all surviving; 68 repo dirs written
+  today. (3) **Pool**: 8/8 online, labels correct, idle. (4) **Queue**: empty except 4 `queued` zombies from 2026-05-15
+  (pre-date this epic by two months; GitHub's own cancel API 500s on them — display artifacts, not load). **D2 datapoint
+  (recorded in the issue doc)**: PM's shared ledger file held ONE row for the whole pre-merge day despite ~145 old-path
+  persist jobs (sit-debounce alone persists every 5 min) — the old reusable path was either losing nearly everything to
+  the read-modify-write race or failing silently; the composite path demonstrably accumulates. Slack triage (24h of
+  #ci-failures via `SLACK_ALERTS_READER_BOT_TOKEN`): nothing broken traces to this migration; parked with the operator
+  ("later"): MTDS promote PR #601 blocked on a real QG failure · recurring `deployment-api` Cloud Build failures ·
+  `branch-health` PROMOTION-LAG re-fires every 25-60 min (~24/79 messages, hiding a genuinely stuck
+  `system-integration-tests` LDR→main, ~4 days) — that last one folds into the Phase-3 cadence/alert-tuning todo.
 
 ## Deferred work after 2026-07-17
 
