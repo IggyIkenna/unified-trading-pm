@@ -1585,13 +1585,13 @@ prove on ONE caller → only then fan out._
 
 ### Not done — blocked on nobody, real work
 
-| #   | Item                                                       | State                                                                                                                                            |
-| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT.** P1, largest remaining saving, fleet-wide (44 callers / ~25 repos), blocked on nothing. Guards are in the todo — read them. |
-| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.     |
-| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                       |
-| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                         |
-| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                  |
+| #   | Item                                                       | State                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT — recon DONE 2026-07-17, implementation-ready.** Key + skip wiring already exist; only storage is dead. Read the RECON block in the A2 todo (gate-version gap + Firestore creds measured fleet-wide) before writing code. |
+| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.                                                                                                 |
+| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                                                                                                   |
+| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                                                                                                     |
+| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                                                                                                              |
 
 ### Cannot be done yet — waiting, NOT neglected
 
@@ -1603,9 +1603,12 @@ prove on ONE caller → only then fan out._
 
 ### Operator-owned — do not start
 
-| #   | Item                                  | Note                                                                                                                  |
-| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 9   | `quickmerge.sh --agent` sentinel race | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell. |
+| #   | Item                                       | Note                                                                                                                                                                                          |
+| --- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9   | `quickmerge.sh --agent` sentinel race      | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell.                                                                         |
+| 10  | MTDS promote PR #601 blocked on QG failure | From the 2026-07-17 #ci-failures triage (operator: "we will take care of the … repos later"). Real, current, NOT this plan's: market-tick-data-service's own QG fails on its promote path.    |
+| 11  | `deployment-api` Cloud Builds failing      | Same triage: 3+ failures/24h (e.g. build `8b581721` at `deployment-api@8c7811f`). Recurring, outside this plan.                                                                               |
+| 12  | `branch-health` PROMOTION-LAG alert noise  | ~24 of 79 #ci-failures messages/24h are this one warning re-firing; a genuinely stuck `system-integration-tests` LDR→main (~4 days) hides inside it. Overlaps the Phase-3 cadence/alert todo. |
 
 ### Findings parked for later — do NOT re-investigate, they are fully written up
 
@@ -1656,3 +1659,12 @@ prove on ONE caller → only then fan out._
     to `^\s*runs-on:` or you are measuring your own prose.
   - **A hand-wavy doc summary is an INFERENCE.** When you ask for a verbatim quote and get prose ("X appears in multiple
     keys that…"), you did not get an answer. **Search the error string first** — it is faster and it is ground truth.
+- **Reading Slack directly**: `scripts/dev/slack-read-channel.py [channel] [hours]` (operator-directed 2026-07-17; auth
+  = Secret Manager `SLACK_ALERTS_READER_BOT_TOKEN`, resolved in-process, never on disk). Trap it encodes: carrier posts
+  keep the real content in Block Kit `blocks` — the `text` field is only the ":x: CRITICAL — <workflow>" headline, so
+  grepping `text` tells you nothing about WHAT failed.
+- **Session working-state (2026-07-17, slot 1)**: STEP 2c/2b work was done in a git WORKTREE of the slot-1 clone at the
+  session scratchpad (`git worktree list` in `.tabs/1/unified-trading-pm` shows it; local branch `tmp/step2c-rollout`,
+  fully pushed). If the scratchpad is gone, clean the stale registration with `git worktree prune` +
+  `git branch -D tmp/step2c-rollout` — everything it held is on `origin/live-defi-rollout`. The worktree pattern itself
+  is the documented way to work while the slot clone carries someone's live WIP.
