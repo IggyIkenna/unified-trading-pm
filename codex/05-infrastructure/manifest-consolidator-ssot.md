@@ -206,15 +206,60 @@ needed a manual `consolidate(bucket, force=True)`.)
 
 The fix tracks `consolidator_content_write_at` independently: it advances ONLY when a genuine merge writes new rows, so
 an idle `_touch` can no longer move the cutoff past an unmerged shard. The changed-shard predicate AND the prune cutoff
-both read it. **Legacy fallback** (a canonical written before this fix has no content-write marker):
-`consolidator_content_write_at` → `consolidator_run_at` → `blob.updated` — a one-shot, fail-toward-correctness chain (it
-can only make the cutoff OLDER, so it over-includes shards → re-merge, never under-includes → silent drop). The marker
-takes over on the next real merge. Code:
+both read it. Code:
 [`manifest_consolidator.py`](../../../unified-trading-library/unified_trading_library/manifest_consolidator.py)
 `_get_content_write_mtime` + `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY`; regression
 `tests/unit/test_manifest_consolidator.py::test_idle_bucket_shard_written_after_last_merge_is_NOT_skipped` +
 `::test_content_write_marker_stamped_on_real_merge_not_on_idle_touch`. Issue (RESOLVED):
 `plans/active/issues/consolidator_idle_bucket_incremental_trap_2026_06_19.md`.
+
+#### NO fallback chain — a missing marker means MERGE, never prune (2026-07-17, HARD RULE)
+
+**There is NO fallback for the prune cutoff. It reads `consolidator_content_write_at` and NOTHING else**
+(`unified-trading-library@1e995f75`). The old chain — `consolidator_content_write_at` → `consolidator_run_at` →
+`blob.updated`, documented here and in the code as "a one-shot, fail-toward-correctness chain (it can only make the
+cutoff OLDER … never under-includes → silent drop)" — **was WRONG and destroyed real data.** Both fallbacks resolve to
+~NOW on a canonical no merge has touched:
+
+- **`blob.updated`** — ANY out-of-band rewrite of `_index/availability_index.parquet` (a purge, a repair one-off, a
+  manual `cp`/restore; the workspace has ~15 such scripts) does two things AT ONCE: it **strips** the custom metadata (a
+  plain rewrite does not carry it forward) and **bumps `blob.updated` to now**. The fallback then read that unrelated
+  writer's mtime as if it were a merge's shard-listing time → the cutoff jumped **FORWARD** past genuinely-pending
+  shards → they were classified "unchanged → already consolidated" → the no-op branch → `_prune_consolidated_shards`
+  **DELETED them unmerged**, logging `success=True rows_in=0 pruned_shards=N` and exiting 0. **Fired live 2026-07-17**
+  on instruments-store-sports: 7,185 manifest rows (describing ~344k real objects) destroyed by a "successful" run; GCS
+  retained **no** noncurrent versions of per_vm shards. Recovered only because the executing agent happened to have
+  downloaded the shards minutes earlier.
+- **`consolidator_run_at`** — the FRESHNESS marker, which the idle `_touch_canonical_mtime` re-stamps to `now()` every
+  cycle. Once a strip removes both markers, the very next idle touch re-creates `run_at` at now and **re-arms the
+  identical reap** through the second fallback. Closing only the `blob.updated` hole would have left this one live.
+
+**The contract**: a missing/malformed marker means _"I cannot PROVE these shards were merged"_ — **not** _"everything
+older is settled"_. `_get_content_write_mtime` returns `None` (= UNPROVABLE) and `consolidate()` fails **CLOSED**: treat
+every shard as changed (**merge** it — idempotent, dedup collapses anything already present) and **prune NOTHING** (both
+prune call sites are gated on `content_write_mtime is not None`). The merge re-stamps a genuine marker, so normal
+incremental+prune resumes next cycle — **self-healing, one merge of cost, never a silent drop.** _Pruning is an
+optimisation; merging is the contract — never trade a durability invariant for a cleanup._ The recovery merge EXCLUDES
+the legacy seed (same reason the full-rebuild branch does when a canonical exists: the deletion-resurrection gap — the
+out-of-band purge that strips the marker is exactly the shape whose deletions the frozen seed would undo).
+
+**This is why out-of-band index writers do NOT each need to remember to carry the marker** (one fix beats N one-offs
+remembering — a marker strip is now COST, one full merge, never LOSS). Preserving the metadata is still the polite thing
+to do; relying on it is not a safety mechanism. Regressions:
+`::test_out_of_band_index_rewrite_stripping_marker_does_not_reap_pending_shard` (end-to-end; models GCS's
+metadata-replace + mtime-bump semantics) + `::test_get_content_write_mtime_never_falls_back_to_run_at_or_blob_updated`
+(pins BOTH fallbacks). Issue:
+`plans/active/issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`.
+
+> **Diagnostic caveat — `rows_in=0 … pruned_shards=N>0` is NOT a reliable tell of loss.** The issue doc proposed it as
+> the detector; **measured 2026-07-17 it false-positives on normal steady state** (instruments-cefi:
+> `13:33:39 rows_in=93995 pruned=0` → `13:34:43 rows_in=0 pruned=1` — the shard merged, settled, and was pruned
+> correctly one cycle later; that merge-then-prune-next-cycle sequence IS the design). Proving a past firing requires
+> knowing the pruned shard's rows never merged — and the shards are gone with no versioning, so **past firings are
+> generally unprovable after the fact.** The checkable signal is the ARMING condition, not the firing: an index whose
+> `custom_fields.consolidator_content_write_at` is **absent**
+> (`gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet --format="value(custom_fields.consolidator_content_write_at)"`
+> — note `custom_fields`, NOT `metadata`, in current gcloud) while per-VM shards can land.
 
 **schema_version preservation (ties to invariant #5)**: `union_by_name` keeps each source row's `schema_version` — the
 merge never downgrades. A NULL `schema_version` in the consolidated output means the SOURCE shard omitted the column

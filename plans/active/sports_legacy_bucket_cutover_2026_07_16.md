@@ -1355,8 +1355,36 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       now returns NOT_FOUND. **GATE: `jobs list | grep -c sports-ref-v3` → 0** — permanently absent from the enabled
       set. _Original mechanism_: their 3 target instances do not exist; leave DISABLED or delete per OR-7. _Gate_:
       absent from the enabled set. _ABORT_: none.
-- [ ] [CODE] P0. **T6.9 — Fix the UTL consolidator's silent shard-reap (NEW 2026-07-17, found by T6.1 — fleet-wide, NOT
-      sports-specific).** _Mechanism_: implement the fix ranked (1) in
+- [x] ✅ [CODE] P0. **T6.9 — Fix the UTL consolidator's silent shard-reap** — **DONE 2026-07-17,
+      `unified-trading-library@1e995f75`** (QG green 181s; 98/98 tests pass). **REPRODUCED FIRST** (report CONFIRMED,
+      not falsified): `::test_out_of_band_index_rewrite_stripping_marker_does_not_reap_pending_shard` — end-to-end
+      `consolidate()` with the REAL marker-resolution + listing + prune paths (new `_MarkerStrip*` stub family models
+      GCS's metadata-REPLACE + mtime-bump semantics). Measured FAILING on pre-fix code with the incident's exact
+      signature (`pruned 1 … (cutoff=<rewrite−5s>, 1 eligible)`, shard gone, `success=True`), passing after — verified
+      by materialising the pre-fix module from git and re-running both new tests. **Fix = ranked (1), fail CLOSED**:
+      `_get_content_write_mtime` reads `consolidator_content_write_at` and NOTHING else (no fallback chain). `None` now
+      means "cutoff UNPROVABLE" → merge every shard, prune NOTHING → the merge re-stamps a genuine marker → normal
+      incremental+prune resumes (self-healing, one merge of cost). Legacy seed excluded from the recovery merge (else a
+      purge's deletions resurrect). **2026-07-13 prune-race fix preserved** (its regression test still green + a new
+      case pins that a genuine marker still drives the cutoff). **SECOND HOLE FOUND + CLOSED (not in the report)**:
+      `consolidator_run_at` is equally fatal — it is the idle-touch freshness marker re-stamped to `now()` every cycle
+      (`:1499`), so after a strip the next touch re-arms the identical reap through the second fallback. Fixing only
+      `blob.updated` would have left the trap live. **DEVIATION — item (4) deliberately NOT implemented, with
+      evidence**: the spec's tell (`rows_in=0` + `pruned_shards>0` ⇒ never `success=True`) is a **measured FALSE
+      POSITIVE on healthy steady state** — the design merges at cycle N and prunes at N+1, so the tell fires on every
+      healthy bucket every cycle (live instruments-cefi 2026-07-16: `13:33:39 rows_in=93995 pruned=0` →
+      `13:34:43 rows_in=0 pruned=1`, rows verifiably landed). Shipping it would page the fleet continuously — the
+      rule-11 "gate the whole fleet must already pass" trap. The INTENT (make it loud, not silent) is served better and
+      without false alarms: the actual ARMING condition (marker absent) now logs a WARNING naming the remediation, and
+      the reap is **prevented outright**, so there is no longer a firing to detect. **BLAST-RADIUS SWEEP (measured,
+      read-only)**: 9/10 GCP prd consolidator buckets carry a genuine marker; 🔴 **`instruments-store-cefi-prd` has NONE
+      and is CONTINUOUSLY ARMED on the still-deployed pre-fix image** (its `*/1` idle touch bumps `blob.updated` every
+      minute so the fabricated cutoff tracks ~now; no loss yet only because its `per_vm/` holds nothing but the
+      prune-exempt `_legacy_seed.parquet`). Past firings are **UNPROVABLE** (no GCS versioning on per_vm; the proposed
+      tell is unreliable) — no claim made either way. AWS mirrors **unverified** (403 under
+      `uts-orchestrator-epic-role`). **NOT LIVE IN PROD YET** — see the rollout note in the issue doc: the deployed
+      consolidator is the MTDS image, so this needs UTL→main (PR #586, auto-merge armed) → UTL base-image republish →
+      MTDS `BASE_IMAGE_DIGEST` bump → MTDS rebuild. _Original spec below._ _Mechanism_: implement the fix ranked (1) in
       [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md)
       — `unified_trading_library/manifest_consolidator.py`: when `_get_content_write_mtime` resolves via the
       **`blob.updated` fallback** (i.e. neither `consolidator_content_write_at` nor `consolidator_run_at` is present),
