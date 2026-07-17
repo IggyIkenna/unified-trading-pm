@@ -65,6 +65,46 @@ locked_since:
 
 # Sports fixture `round` is never captured → `competition_phase` UNKNOWN everywhere
 
+## ⏭️ HANDOFF — launch the round-FIXTURES backfill when the shared api-football key frees up
+
+> **For the agent running `af-backfill-20260717-151237` (the FIXTURE_EVENTS backfill), or whoever next owns the shared
+> api-football key.** The writer fix is SHIPPED (instruments-service@19ae5890) so new captures are correct; the
+> historical fill is ready but cannot run while your VM holds the key.
+
+**Trigger:** your FIXTURE_EVENTS VM (`--sports-entity FIXTURE_EVENTS`, 2020-06-06→2026-07-17) has STOPPED/completed —
+confirm no api-football VM is running: the launcher will `ERROR: API-Football VM already running` if one is.
+
+**Do NOT `--force` a concurrent VM.** api-football rate-limits per KEY; two VMs thrash on 429s and produce corrupted
+`attempted_failed` rows, not faster data (the 2026-04-19 SFI incident the launcher cites). One VM at a time on this key.
+
+**Steps (from a slot checkout with ADC):**
+
+```bash
+# 1. Bake the writer fix into the VM's code tarball. The launcher verifies the tarball SHA against
+#    origin/live-defi-rollout HEAD and ABORTS if stale — this is what puts @19ae5890 on the VM.
+bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS
+
+# 2. Launch the round backfill. entity=FIXTURES is REQUIRED — that is the schedule grain that carries league.round.
+#    (FIXTURE_EVENTS, what your VM did, is a different grain and does NOT carry round.) SPOT is the default.
+bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2019-01-01 2026-07-17
+```
+
+**Verify (no fire-and-forget):** STARTED <60s; at T+10min tail `run.log` and read a sampled 2019/2020 day-parquet —
+`entity=fixtures/.../fixtures.parquet` should now have `round` populated (e.g. "Regular Season - N", "Quarter-finals").
+The VM re-captures via the live code path, so `round` is written from the raw `af_response` (`league.round`).
+
+**After the VM completes:**
+
+1. Re-run the sports catalogue rollup so the catalogue picks up round across full history:
+   `bash instruments-service/scripts/build_instrument_catalogue.py --asset-group sports --since 2019-01-01` (or wait for
+   the weekly `lifecycle-catalogue-full-sports` job, deployment-service@b48f6a4, Sat 07:00).
+2. Verify downstream (issue todos 5): `competition_phase` distribution stops being ~100% UNKNOWN and
+   `is_promotion_relegation` becomes a real signal, not a constant `False`.
+
+**Alternative (round-ONLY, lower blast radius, if a full re-capture is undesirable):** the surgical script
+`instruments-service/scripts/backfill_sports_fixture_round_2026_07_17.py --apply` (@9d039e47) fills only blank `round`
+cells, snapshots each parquet, idempotent — but it ALSO needs the shared key, so it is blocked by the same VM.
+
 ## What is wrong
 
 `instruments_service/engine/orchestrator/sports.py::_flatten_fixture` builds each `entity=fixtures` parquet row from a
