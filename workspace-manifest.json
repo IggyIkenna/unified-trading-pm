@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 10,
         "large_file_count": 2,
-        "coverage_pct": 72.87,
-        "warn_file_count": 10
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -760,9 +760,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
-        "coverage_pct": 91.25,
+        "warn_file_count": 8,
         "large_file_count": 6,
-        "warn_file_count": 8
+        "coverage_pct": null
       }
     },
     "market-data-processing-service": {
@@ -1263,10 +1263,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.88,
         "qg_red_reason": "pytest",
+        "warn_file_count": 21,
         "large_file_count": 6,
-        "warn_file_count": 21
+        "coverage_pct": 87.87
       }
     },
     "unified-trading-pm": {
@@ -1415,9 +1415,9 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 74.8,
-        "large_file_count": 14,
+        "coverage_pct": 74.84,
         "warn_file_count": 6,
+        "large_file_count": 14,
         "qg_red_reason": null
       }
     },
