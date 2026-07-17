@@ -369,6 +369,41 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — ⚠️ GOTCHA #4: `DEPLOYMENT_ENV=prd` writes the catalogue to a DEAD `prd/` prefix while
+  reporting full success. The rebuild command recorded in this plan was WRONG; corrected to `DEPLOYMENT_ENV=prod`.**
+  The Phase -1 rebuild ran to `exit_code=0` and logged `CATALOGUE_PROMOTED` + `Promoted 425161-row catalogue to
+  gs://instruments-store-cefi-prd-central-element-323112/**prd**/catalog.parquet` — but the LIVE object every consumer
+  reads is `**prod**/catalog.parquet`, which was left untouched at its 09:09:54Z baseline. **The gate stayed RED behind a
+  green exit code.** Confirmed empirically: `prod/catalog.parquet` = 8,666,228 B @ 09:09:54Z (unchanged) vs
+  `prd/catalog.parquet` = 8,688,924 B @ 12:37:16Z (new, stray).
+  - **Why it is a trap**: the BUCKET name legitimately contains `prd`
+    (`instruments-store-**prd**-central-element-323112`), so `DEPLOYMENT_ENV=prd` looks right and `resolve_bucket_name`
+    resolves happily — but the OBJECT PREFIX comes from the same env var and becomes `prd/`. The shipped reader only
+    probes `prod/` → `staging/` → `dev/` (`cefi_catalog_reader.py:191-195`), so `prd/` is unreachable by design.
+  - **The signal I nearly missed**: the run logged `Monotonic guard: new=425161 current=None decision=ACCEPT
+    (no_prior_catalogue)`. `current=None` on a bucket that demonstrably HAS a 424,699-row catalogue is a loud "you are
+    writing somewhere new" tell. The guard did its job; the operator-agent (me) had to read it. **A monotonic guard that
+    reports `no_prior_catalogue` against a populated bucket should be treated as a hard STOP, not an ACCEPT.**
+  - **Corroborating evidence available before the fact**: a concurrent session running the sports rollup used
+    `DEPLOYMENT_ENV=prod`; I observed the divergence from my `prd`, reasoned "the bucket says prd", and dismissed it.
+    That dismissal cost a ~70-minute rebuild. **Convention: `DEPLOYMENT_ENV=prod` (+ `CLOUD_PROVIDER=gcp`,
+    `CLOUD_MOCK_MODE=false`), never `prd`.**
+  - **CORRECTED COMMAND (supersedes the one recorded from `instruments-service@517b817b`'s report):**
+    ```bash
+    cd instruments-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod \
+      CLOUD_MOCK_MODE=false .venv/bin/python scripts/build_instrument_catalogue.py --asset-group cefi --mode full
+    ```
+    (The other two gotchas from that report STAND: there is **no `--apply`** — it writes by default, `--dry-run` is the
+    opt-in; and **`--mode full` is mandatory** because `--mode incremental` carries the frozen tail through unchanged and
+    every defect row is delisted *in that tail*.) Rebuild takes ~70 min (53,116 by_date parquets, workers=16).
+  - **Cleanup owed**: `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet` is a stray 425,161-row
+    object nothing reads. Verified unread (no code references a `prd/` prefix; the guard proved no prior writer). DELETE
+    it once the `prod/` rebuild verifies green — retained until then as the only rebuilt-with-fixes catalogue in
+    existence.
+  - **Also invalidates**: the pre-rebuild prod bridge measurement (439 ambiguous / 424,699 rows) was read from the OLD
+    `prod/` object and therefore still stands as the pre-rebuild baseline — but it must be re-measured once the corrected
+    rebuild lands (the roll-up produced 425,161 rows, +462 vs the live 424,699).
+
 - **2026-07-17 (slot-3, orchestrator) — PROD VERIFICATION of the wire bridge: closes BOTH bridge agents' biggest
   self-declared gap + resolves blueprint open-qs #7, #14, #15.** Both `market-tick-data-service@d302f07a` and
   `market-data-processing-service@0035f79` shipped with the same honest caveat — "the real GCS catalogue read was never
