@@ -201,7 +201,10 @@ A repo genuinely without a Dockerfile must still be a benign skip (not a hard fa
 
 Replicated `digest-drift-sweep.yml`'s sweep step faithfully (same repo list + order, same LDR→main fallback, same
 `^ARG BASE_IMAGE_DIGEST=sha256:<64hex>` extraction, same staleness rule) but with a cross-repo-scoped token and **no
-POST**. Harness: `scratchpad/sim_digest_sweep.sh` (read-only; not promoted — it is a one-off decision aid).
+POST**. Harness: **`scripts/propagation/simulate-digest-drift-sweep.sh`** (read-only; committed 2026-07-17 — originally
+left in a scratchpad and labelled "one-off", which was wrong: **re-run it before acting on this doc**, because the
+answer MOVES. UTL `:latest` advances on every release and repos drift, so the "15" below is a measurement with a date on
+it, not a constant).
 
 ### Result: the first correct run would dispatch to 15 of 16 repos
 
