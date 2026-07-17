@@ -3403,6 +3403,52 @@ it's new adapter work, not a data-audit residual).
     scratch (`check_named.py`/`check_final.py`, ADC token + `cloudscheduler.googleapis.com` / `run.googleapis.com/v2`).
     No regression found in the infra itself; this todo stays open purely on the time-gate. Raised to the operator/main
     via a slot-5 blocked-note (time-gated, recommend park until 2026-07-15 ~01:30 UTC).
+  - **INTERIM STATUS 2026-07-17 15:12 UTC (slot-7, live REST + single-parquet manifest verify — checkbox STILL NOT
+    flipped; the 07-17 overnight window was CONSUMED by the sports bucket cutover freeze, so the post-restore unattended
+    self-fire has not yet happened; next window is 2026-07-18 00:35–01:15 UTC).** Verified via ADC-token REST
+    (`cloudscheduler v1` GET-by-name + `run.googleapis.com/v2` executions list; gcloud snap still broken in-slot —
+    `snap-confine cap_dac_override`) + a single-parquet read of
+    `instruments-store-sports-prd _index/availability_index.parquet` (duckdb 1.5.3 + gcsfs, deployment-service `.venv`).
+    Ground truth is the **Cloud Run execution history** (the scheduler `lastAttemptTime`/`status` REST fields are
+    unreliable here — 4/5 read `lastAttemptTime=<never>` + `status.code=-1` despite proven cron fires; only t1 read a
+    real value). **What actually happened, by run job:**
+    - `t1-recon` (`0 1 * * *`): **FULLY PROVEN — 3 consecutive clean unattended self-fires** 07-15/16/17 all at
+      `01:00:00Z succ=1` (07-17 exec `ltsjq`). slot-5's `status.code=5` NOT_FOUND regression is **CLOSED** (first
+      post-fix fire 07-15 succeeded).
+    - `footystats` (`35 0`): self-fired 07-15 `00:35:00 succ=1` ✅, then 07-16 `00:35:04 fail=1` ❌; **no 07-17 fire.**
+    - `transfermarkt` (`40 0`): 07-15 `00:40:00 succ=1` ✅, 07-16 `00:40:02 fail=1` ❌; **no 07-17 fire.**
+    - `soccer-football-info` (`45 0`): 07-15 ✅ + 07-16 ✅ (both `succ=1`); **no 07-17 fire.**
+    - `mdps-odds-horizon-bucket` (`15 1`): 07-15 `01:15 fail=1` ❌, 07-16 `01:15:04 succ=1` ✅; **no 07-17 fire.**
+    - **Why "no 07-17 fire" for the 4 sports/odds jobs is EXPECTED, not a regression**: they were deliberately PAUSED on
+      2026-07-16 by the bucket-cutover freeze (`sports_legacy_bucket_cutover_2026_07_16.md` T0.4/T0.6) and only
+      RE-ENABLED 2026-07-17 under Phase 6 (T6.1b consolidators, T6.3 writers, **T6.4 the 3 enrichment + 4 fixtures
+      crons**) — the re-enable landed AFTER today's 00:35–01:15 cron windows, so no self-fire opportunity existed today.
+      Restore first-runs were **MANUAL** (T6.3/T6.4 "each first run GREEN ON CANONICAL"), NOT self-fires.
+    - **Manifest freshness confirms the restored path writes canonical data**: fresh 07-17 `captured` rows landed —
+      footystats 14, transfermarkt 32, soccer_football_info 2 (from the manual restore runs); odds_api captured through
+      07-16. So the data path is proven end-to-end; only the _unattended self-fire_ on the restored config is unproven.
+    - **07-18 WATCH-ITEM (the specific thing that makes this flippable)**: the 07-16 footystats + transfermarkt failures
+      both hit the SAME path
+      `instruments-service/instruments_service/cli/instruments_handler.py:310 → engine_orchestrator.process_instruments(...)`
+      (traceback tail sampled out of stdout; only the top frames survive in the ERROR log). That was on the now-dead
+      PRE-cutover config, and the restore re-proved green manually — but the 07-18 00:35/00:40 self-fires are the real
+      test that this failure does NOT recur on the restored config. If either fails again at `:310`, that is a live
+      regression to root-cause (not re-trigger-and-declare-fine).
+    - **Observation (not in this todo's scope, flag only)**: source `mdps_odds_horizon_bucket` reads
+      `latest_captured = 2026-06-20` in the canonical manifest (stale ~1 month) though its Cloud Run executions succeed
+      — consistent with the known venue-grain / 200,259-`expected_unattempted` reconciliation situation (it aggregates
+      into `source=odds_api`, which IS fresh to 07-16), but worth a confirm by whoever owns the mdps-odds recon.
+    - **DISPOSITION**: todo stays OPEN purely on the time-gate (identical class to slot-5's 07-14 hold, re-created by
+      the 07-16 cutover). **Re-check after 2026-07-18 ~01:30 UTC**: all 5 run jobs show a NEW cron-triggered (not
+      manual) execution at their exact cron minute for 07-18 with `succ=1`, + fresh `captured` rows for 07-17/18 per
+      source, + the Tier-3/4 fixture-proximate trigger fires around a real 07-18 kickoff window (the T6.5
+      meta-launcher's first `*/5` tick already fired 6 triggers 07-17 03:00:00Z, so the trigger _system_ is live).
+      REST/duckdb recipe archived in slot-7 scratch (`verify_cron.py` / `verify_manifest.py`). **This todo has NO
+      dispatch gate**, so it will keep redispatching before 07-18 (slot-5 → slot-7 already = 2 slots) — RECOMMEND main
+      add a prereq `sports-cron-overnight-2026-07-18-observable` (false now; POST `/api/prerequisites/<name>`, attach
+      `prereqs.prerequisites` to `sports_data_sources_canonical_completion-001` in `backlog.yaml`,
+      `/api/backlog/reload`, verify it survives a `PlanRegenLoop` tick; flip true after 07-18 ~01:30 UTC) so a 3rd slot
+      doesn't burn a dispatch. A worker cannot hand-edit `backlog.yaml` (HARD RULE), so this gate is main's to add.
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
