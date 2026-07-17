@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [infra, disk-pressure, slot-worktrees, uv-cache, vm-disk-guard, fleet-capacity, agent-orchestrator]
 related:
   [
-    ../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
+    ../issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
     ../../active/qg_host_adaptive_resource_governor_2026_07_14.md,
     ao_dispatch_hardening_2026_07_16.md,
     ../../epics/orchestrator_master.md,
@@ -55,7 +55,7 @@ source:
 > excursion), AutoSpawn disk backstop (`ao@e7f70c8`), cross-host interactive uv-cache env (`pm@86dea79d5`). The close
 > also found + fixed **two false Phase-3 "DONE"s** left by the 2026-07-16 session (edits claimed on
 > `slot_venv_duplication…` that never landed — see the corrected todo bodies). Residual operator-parked item (30G stale
-> cache) lives in `../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`.
+> cache) lives in `../issues/slot_venv_duplication_disk_pressure_2026_06_29.md`.
 
 > **Human plan — I execute it** (`assigned_vm: NA`). **Infra** craft, deliberately split from the backend-craft
 > [`ao_dispatch_hardening_2026_07_16`](ao_dispatch_hardening_2026_07_16.md) so the two run in **parallel** (one plan =
@@ -223,7 +223,7 @@ was the governor plan's own "Net:" summary. The MEASUREMENT was right; the cited
       `/home/hk/.cache/uv` is uv's DEFAULT (`UV_CACHE_DIR` is unset in an interactive shell — `uv cache dir` confirms
       it) and sits on **`nvme0n1p1`, a different filesystem from the `/active` venvs it links into → hardlinks silently
       degrade to COPIES**. That is exactly failure mode **B2** named in
-      [`slot_venv_duplication_disk_pressure_2026_06_29`](../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md).
+      [`slot_venv_duplication_disk_pressure_2026_06_29`](../issues/slot_venv_duplication_disk_pressure_2026_06_29.md).
       QG runs are safe (base-service.sh exports the derived path); **hand-run `uv` is not**. And `nvme0n1p1` is the
       partition under pressure: **`/` at 84% (36G free)** vs `/active` at 53% (104G free). - **Scope kept honest**: the
       plan's disk thesis is about the AO VM (`i-0c9b283b31d6b5ca7`); this todo is the DEV host, so neither finding
@@ -352,5 +352,5 @@ was the governor plan's own "Net:" summary. The MEASUREMENT was right; the cited
 
 | #   | Item                                                                            | Resolution 2026-07-17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Reclaim the stale 30G `/active/uv-cache`**                                    | **Operator ruled: keep for now** (no pressure on `/active`, 53%). Parked as a tracked `- [ ]` BLOCKED-OPERATOR-DECISION todo in `issues/slot_venv_duplication_disk_pressure_2026_06_29.md` — its live home now this plan is archived.                                                                                                                                                                                                                                                                                       |
+| 1   | **Reclaim the stale 30G `/active/uv-cache`**                                    | **Operator ruled: keep for now** (no pressure on `/active`, 53%). Parked as a tracked `- [ ]` BLOCKED-OPERATOR-DECISION todo in `../issues/slot_venv_duplication_disk_pressure_2026_06_29.md`. **Reversed later the same day**: operator ruled delete → `rm -rf` executed, **18G measured freed** (104G→122G on `/active`; the ~12G delta = hardlinked blobs whose venv copies survive, as predicted), todo flipped `[x]` and that doc archived too.                                                                        |
 | 2   | **`UV_CACHE_DIR` unset for interactive shells → cross-fs `/home/hk/.cache/uv`** | **SHIPPED — and operator re-scoped it from "edit my profile" to a cross-host mechanism** ("focused on the planning-vm where the production AO backend runs but it would help all the hosts"). `scripts/dev/install-uv-cache-shell-env.sh` (`pm@86dea79d5`, idempotent, same `${VAR:-...}` derivation as base-service.sh) installed + verified on the planning VM (`i-0c9b283b31d6b5ca7` → `/home/ubuntu/…/.uv-cache`) and the hk dev host (→ `/active/…/.uv-cache`); interactive `uv cache dir` resolves correctly on both. |

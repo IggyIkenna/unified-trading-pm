@@ -560,9 +560,9 @@ Two things worth one check by this plan's owner:
    running at a third of the intended concurrency, which is a real (if quiet) throughput tax on every ship from that VM.
 
 **Provenance / scope**: surfaced by the 2026-07-16 AO issue-doc reconciliation sweep while verifying
-`issues/slot_venv_duplication_disk_pressure_2026_06_29.md`. **Attribution corrected 2026-07-17**: that issue doc's
-banner never mentioned the governor at all (`git log -S 'governor'` over its full history: zero hits) — the "live on the
-current fleet" over-claim was THIS plan's own "Net:" summary above, now corrected in place. The sibling plan
+`../archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`. **Attribution corrected 2026-07-17**: that issue
+doc's banner never mentioned the governor at all (`git log -S 'governor'` over its full history: zero hits) — the "live
+on the current fleet" over-claim was THIS plan's own "Net:" summary above, now corrected in place. The sibling plan
 [`ao_host_disk_pressure_2026_07_16`](../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) (Phase 3, archived
 2026-07-17) recorded the drift here and deliberately did **not** touch governor code — this plan owns it. Also recorded
 there: the governor gates **RAM/CPU admission, not disk**, so it must not be cited as a disk-pressure mitigation.
