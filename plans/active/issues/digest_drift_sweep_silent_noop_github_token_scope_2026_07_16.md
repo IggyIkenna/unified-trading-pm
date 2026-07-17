@@ -194,3 +194,66 @@ must be distinguishable from an unreadable one, and must never be silently repor
 
 A repo genuinely without a Dockerfile must still be a benign skip (not a hard failure), and must be counted in
 `SKIPPED_NO_ARG` — otherwise the fix trades a silent no-op for a noisy false alarm.
+
+---
+
+## UPDATE 2026-07-17 — we MEASURED what the fix would do, before fixing it (operator request)
+
+Replicated `digest-drift-sweep.yml`'s sweep step faithfully (same repo list + order, same LDR→main fallback, same
+`^ARG BASE_IMAGE_DIGEST=sha256:<64hex>` extraction, same staleness rule) but with a cross-repo-scoped token and **no
+POST**. Harness: `scratchpad/sim_digest_sweep.sh` (read-only; not promoted — it is a one-off decision aid).
+
+### Result: the first correct run would dispatch to 15 of 16 repos
+
+```
+Current UTL :latest = sha256:61445152e3587bd9c65279d076f24cfc4a5880136811d0e70e27b50f38f455f9  (UTL 0.55.0)
+
+WOULD-DISPATCH : 15   (11 stuck on sha256:b7e391f8…, plus 9594091a… x2, 56bd0fe5…, be51b33f…)
+fresh          :  1   (market-tick-data-service — already at :latest)
+skipped        :  0
+```
+
+Blast radius = **15 `dependency-update` dispatches ⇒ 15 digest-refresh commits to 15 LDR branches ⇒ 15 CI runs**.
+Verified all 16 repos DO have `update-dependency-version.yml`, so every dispatch would be accepted (204) — the `ERRORS`
+path does not fire. This is a real fleet event; it should be run **once, deliberately, watched, off-hours** — not
+discovered by a 6-hourly cron.
+
+### The 15 is a SYMPTOM — the primary cascade is ALSO dormant
+
+`update-dependency-version.yml` **last ran 2026-06-28** in 5 of 6 sampled consumer repos (`agent-orchestrator`,
+`execution-service`, `ml-service`, `market-tick-data-service`, `features-service`; `instruments-service` last ran
+2026-07-13). So the cascade has not fanned out in ~19 days. **Both mechanisms that move a base-image pin are down**: the
+sweep has never worked, and the cascade stopped. The sweep exists to catch the cascade failing — and it was dead when
+the cascade failed, so the fleet drifted with no signal at all.
+
+⇒ **Fixing the sweep's token treats the symptom.** If the cascade stays dormant, the backstop ends up doing the primary
+path's job on every UTL release, forever. Answer "why has the cascade not fired since 2026-06-28?" BEFORE or ALONGSIDE
+the token fix. That question is the real P1 here.
+
+### Recurrence: `:latest` moves once per UTL release
+
+The registry shows many intermediate untagged builds (7 in ~11h on 2026-07-16/17), but only a **release** carries the
+`latest` tag (`0.55.0,latest`). So the sweep re-dispatches ~15 repos on each UTL release until the cascade is fixed —
+UTL cut v0.48→v0.55 recently, so that is not rare.
+
+### The sweep has NO throttle (add one)
+
+`reconcile-release-tags` self-limits with `--max-creates 5`. `digest-drift-sweep` dispatches **every** stale repo in a
+single run — there is no cap. Add `--max-dispatches` (or an equivalent) as part of the fix so the blast is bounded per
+tick rather than fleet-wide-at-once.
+
+### Also: the QG detector that already sees this is warn-only
+
+PM's own `check_base_image_digest_drift` printed, during an unrelated 2026-07-17 QG run: _"Fleet digest INCONSISTENT — 5
+distinct pins across 16 repos (missed fan-out from update-dependency-version.yml?)"_ + 15 stale repos + _"fleet pin … is
+BEHIND :latest"_. It is **`warn-only, non-blocking`**, so it has scrolled past every QG run for weeks. Two independent
+detectors agree on the state; neither is wired to anything that acts. Once the sweep works, that warn should become an
+assertion — otherwise we keep a third detector nobody reads.
+
+### Revised recommendation
+
+1. Investigate the dormant cascade FIRST (or together) — the sweep is its safety net, not its replacement.
+2. Fix the token (`secrets.GH_PAT`) **and** the silent-failure class (capture the HTTP status; 404 = benign skip;
+   401/403 = fail loudly; assert `dispatched + fresh > 0`) **and** the dispatch POST (:160-176, same token defect).
+3. Add a dispatch cap.
+4. Run once, watched, off-hours, expecting 15 dispatches. Then let the cron take over.

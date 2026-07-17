@@ -155,3 +155,66 @@ reads it is a human who went looking. Both want the same remedy — an assertion
 look" are different states. Worth a codex note under the honest-absence rule
 (`codex/02-data/honest-absence-downstream-handling.md`), which states this principle for data but is evidently a general
 one.
+
+---
+
+## UPDATE 2026-07-17 — RECOMMENDATION CHANGED: **DELETE it, do not fix it**
+
+The original "Fix" section above proposed re-pointing `_main_version()` at the manifest's `versions` map. **That is
+wrong.** Investigating the right version source surfaced that D13's intended model is already written down — in the
+sibling tool that WAS migrated. Three findings kill the reconciler outright.
+
+### 1. Its remedy is backwards under D13
+
+`scripts/cicd/assert_version_coherence.py:206-210` (migrated for D13) states the model verbatim:
+
+> _"Phase-2 (D13) dynamic repo: the version SSOT is the git TAG; `versions{}` is the Firestore-projected cache (the
+> versions-consolidator keeps `versions{}` == Firestore). Coherence = the tag `v{versions{}}` EXISTS, i.e. tag ==
+> Firestore-projection. There is NO pyproject version line to read (dynamic), and staging is not the source. **A
+> manifest version with no matching tag IS the split (the cache claims a version never minted).**"_
+
+So under D13, "a manifest version with no tag" means **the cache is lying**, NOT "a tag is missing". The reconciler's
+whole remedy — mint a release tag because a JSON file says so — would **invent a release that never happened**. It is
+pointed the wrong way, and re-sourcing it from the manifest (the original fix proposal) would have made it _confidently_
+wrong rather than harmlessly dead.
+
+### 2. The detection already exists, done correctly, in a migrated tool
+
+`assert_version_coherence.py` already emits a `tag?` column per repo (`tag-ok` / `tag-MISS`) — exactly the check
+`reconcile-release-tags` was built for, with the correct D13 semantics. Grep evidence of who was migrated and who was
+missed:
+
+| script                        | pyproject refs | git-tag-aware |
+| ----------------------------- | -------------- | ------------- |
+| `assert_version_coherence.py` | 11             | **5** ✅      |
+| `reconcile_release_tags.py`   | 7              | **0** ❌      |
+| `sync-manifest-versions.py`   | 28             | **0** ❌      |
+
+D13 migrated one reader and missed the other two. See the sibling issue doc
+`d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md`.
+
+### 3. Empirically there is nothing for it to do
+
+Ran `assert_version_coherence.py` against the live fleet: **every repo reports `tag-ok`** — the tag for each manifest
+version exists. Independently compared manifest `versions{}` vs the highest real tag across 24 repos:
+
+```
+  in sync: 13    manifest LAGS the tag: 9    manifest AHEAD of the tag: 1
+```
+
+**Exactly ONE repo** (`unified-trading-pm`, `versions=1.2.596` vs highest tag `v1.2.595`) is in the only state the
+reconciler could ever act on — and per D13's model above, that one is a **cache split**, not a missing tag. The real
+drift is the opposite direction (9 repos lagging; see the sibling doc), which this workflow cannot address by design.
+
+### Verdict
+
+`reconcile-release-tags` is (a) impossible as written (reads a field D13 deleted), (b) redundant with a migrated tool
+that performs the same check correctly, and (c) its remedy inverts D13's direction of truth. **Delete the workflow +
+`scripts/cicd/reconcile_release_tags.py`**, per the workspace rule "delete deprecated code (no shims)". That also
+removes **~48 no-op runs/day** (`*/30`) — a larger, cheaper win than moving it to the glue pool was.
+
+If a "heal" action is still wanted, it belongs on the **cache/Firestore** side (make `versions{}` match the tags), NOT
+on the tag-minting side. That is the sibling doc's subject.
+
+**Do NOT delete blindly**: confirm nothing else keys off the `reconcile-release-tags` workflow name (the
+`repository_dispatch: [reconcile-release-tags]` trigger suggests something may dispatch it) before removing.
