@@ -964,26 +964,28 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
   — **still true, and still the reason the fix had to come from the derive side.** > _Provenance: fix-(b) leg
   2026-07-17, `market-data-processing-service@6d20fb18`; fix + blast radius 2026-07-17,
   `market-data-processing-service@9f2560b7`._
-- [ ] [DATA] P0. **RECOMPUTE the 423 collapse-affected dates through MDPS, then re-run `ODDS_FEATURES` on them.** Split
-      out of the todo above (the fix — MDPS@9f2560b7 — is that todo's deliverable; this is the DATA leg it unblocks).
-      **It now runs GUARDED**: the (b) loss guard (`market-data-processing-service@6d20fb18`) is unmodified and
-      demonstrably passes the post-fix derive (`2023-01-08` 514 → 514; census `2023-01-05..20` **16/16 pass, 0
-      blocked**, where pre-fix it blocked **15/16**), so a `--force` over these dates can only add. Do NOT lower the
-      guard; a block on any date = STOP-and-diagnose (a THIRD starvation mechanism), not a nuisance. **Scope (measured,
-      full census — `~/tmp-collapse/blast_radius.jsonl` methodology, real reader + real adapter):** - **MDPS
-      `odds_horizon_bucket`**: **423 dates** whose derive changes (of 448 signature dates; the other 25 are
-      single-fixture days where the collapse is a no-op). Range **2020-06-06 … 2026-06-20**; by year 2020:78 · 2021:50 ·
-      2022:60 · 2023:52 · 2024:51 · 2025:47 · 2026:110. Expected write: **60,517 → 1,173,798 rows** (+1,113,281
-      observations; ~2,800 rows/date avg). **Cost**: measured 27.0s for 16 dates at `--workers 4` dry-run (≈1.7s/date
-      derive+guard); with real per-shard uploads (~71 shards/date) budget **~1-2 h** for all 423 at `--workers 4`.
-      Command: `reprocess_sports_odds.py --start-date <D> --end-date <D> --force --workers 4` (resumable per date;
-      verify each date logs `LOSS_GUARD_PASS`). - **features-service**: re-run `ODDS_FEATURES` (+ `DERIVED_FEATURES`) on
-      the **423 dates** AFTER the MDPS leg lands — they read the bucketed layer, so they must not be recomputed against
-      the collapsed upstream. This also clears the **337 guard-aborted dates**' residual closing-line leak (the 337 ⊂
-      the collapse-affected era), which is the last 18.1% of the leak purge. Feature-side guard =
-      `features-service@3c15f3ff` (fixture-SET containment). - **Sequencing**: MDPS first → verify → features. **Sports
-      must not be mid-freeze/cutover when this runs**; confirm the bucket cutover's state before starting (this issue's
-      own banner + the cutover runbook).
+- [~] [DATA] P0. **RECOMPUTE the collapse-affected dates through MDPS, then re-run `ODDS_FEATURES`. MDPS LEG DONE
+  2026-07-17 (447/449 recomputed, all `LOSS_GUARD_PASS`, 0 blocked, adds-only PROVEN 463,092 → 1,173,942 rows / 0 lost);
+  FEATURES LEG PARTIAL (255 purged + updated, 192 BLOCKED by the (c) guard protecting a blank `''` phantom — recorded +
+  reported, NOT forced per the guard directive). See § "Collapse recompute EXECUTED (2026-07-17)" below + the two new
+  findings.** Split out of the todo above (the fix — MDPS@9f2560b7 — is that todo's deliverable; this is the DATA leg it
+  unblocks). **It now runs GUARDED**: the (b) loss guard (`market-data-processing-service@6d20fb18`) is unmodified and
+  demonstrably passes the post-fix derive (`2023-01-08` 514 → 514; census `2023-01-05..20` **16/16 pass, 0 blocked**,
+  where pre-fix it blocked **15/16**), so a `--force` over these dates can only add. Do NOT lower the guard; a block on
+  any date = STOP-and-diagnose (a THIRD starvation mechanism), not a nuisance. **Scope (measured, full census —
+  `~/tmp-collapse/blast_radius.jsonl` methodology, real reader + real adapter):** - **MDPS `odds_horizon_bucket`**:
+  **423 dates** whose derive changes (of 448 signature dates; the other 25 are single-fixture days where the collapse is
+  a no-op). Range **2020-06-06 … 2026-06-20**; by year 2020:78 · 2021:50 · 2022:60 · 2023:52 · 2024:51 · 2025:47 ·
+  2026:110. Expected write: **60,517 → 1,173,798 rows** (+1,113,281 observations; ~2,800 rows/date avg). **Cost**:
+  measured 27.0s for 16 dates at `--workers 4` dry-run (≈1.7s/date derive+guard); with real per-shard uploads (~71
+  shards/date) budget **~1-2 h** for all 423 at `--workers 4`. Command:
+  `reprocess_sports_odds.py --start-date <D> --end-date <D> --force --workers 4` (resumable per date; verify each date
+  logs `LOSS_GUARD_PASS`). - **features-service**: re-run `ODDS_FEATURES` (+ `DERIVED_FEATURES`) on the **423 dates**
+  AFTER the MDPS leg lands — they read the bucketed layer, so they must not be recomputed against the collapsed
+  upstream. This also clears the **337 guard-aborted dates**' residual closing-line leak (the 337 ⊂ the
+  collapse-affected era), which is the last 18.1% of the leak purge. Feature-side guard = `features-service@3c15f3ff`
+  (fixture-SET containment). - **Sequencing**: MDPS first → verify → features. **Sports must not be mid-freeze/cutover
+  when this runs**; confirm the bucket cutover's state before starting (this issue's own banner + the cutover runbook).
 - [ ] [DATA] P1. **The blank-`fixture_id` raw generation is STILL BEING WRITTEN — fix the upstream writer.** The
       collapse signature reaches the **corpus edge** (last collapsed date **2026-06-20**; 2026-04: 28 dates · 2026-05:
       28 · 2026-06: 8 — only **9** healthy dates in all of 2026), so the current ODDS_API capture path emits
@@ -1008,6 +1010,97 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
       not be merged by anyone else).
 - [ ] [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in place
       as the reference for what the leak produced. Do not promote or cite them.
+- [ ] [CODE] P0. **NEW FINDING (2026-07-17 collapse-recompute leg) — the (c) features loss guard BLOCKS the phantom→real
+      transition on 192 collapse dates because it protects a blank `''` fixture id.** After the MDPS leg un-collapsed
+      the corpus, `odds_features --force` on the 447 recomputed dates gave **255 PASS / 192 BLOCKED**. Every blocked
+      date's EXISTING shard (written in the collapsed-MDPS era) carries a blank `''` fixture cell — exactly ONE per
+      model horizon (measured: 3 blank cells / date across T-10m·T-1h·T-24h). The un-collapsed re-derive emits only REAL
+      fixture ids, so the blank `''` disappears → `fixture_loss` containment fails → block. **PROVEN zero real-data
+      loss**: across all 192 blocks, `max lost = 1 per (date,horizon)` and **0 dates lose >1** (aggregated from every
+      block log), i.e. the lost cell is ALWAYS the single blank — no genuine fixture is ever dropped. This is **NOT the
+      "third starvation mechanism"** the P0 todo warned about (MDPS is now RICH, e.g. 2026-05-17 = 104 fixtures); it is
+      the id-set guard refusing to drop a stale collapse-artifact placeholder (a blank-but-present id — itself an
+      honest-absence violation, `codex/02-data/honest-absence-downstream-handling.md`). **Per the guard directive I did
+      NOT bypass/delete/lower it — reported for an operator decision.** Fix options (operator to pick): (A) make the (c)
+      guard treat a blank/empty `fixture_id` as ABSENT on BOTH the existing-shard and new-derive sides — mirrors the
+      already-shipped MDPS `resolve_fixture_ids` (blank == absent) at `bucket_assignment_adapter.py`; then re-run the
+      192 → they clear with real fixtures still protected [WORKER REC]; (B) delete the 192 phantom `''` shards then
+      re-derive (GCS soft-delete recovers) — band-aid, doesn't fix the guard for next time; (C) fix the FEATURES
+      exporter so it never emits a blank `''` fixture cell in the first place (root cause on the write side).
+      Blocked-date list + per-year split: 2020:78 · 2024:6 · 2026:108.
+- [ ] [CODE] P1. **NEW FINDING (2026-07-17) — MDPS `pivot_mtds_to_wide` empties the whole derive when the raw carries
+      stray mostly-NaN metadata columns.** 2 of the 449 dates (`2025-02-16`, `2026-02-09`) recorded
+      `ADAPTER_RETURNED_EMPTY_OUTPUT` → `attempted_failed` (NON-destructive: 0 shards written, corpus byte-identical
+      before/after — 10,602/71 and 2,696/18 unchanged). Root cause (measured, real reader+adapter): the raw for these
+      dates carries extra columns `venue`/`instrument_type`/`data_source` that are NaN on **12,693/12,702 (99.9%)** of
+      rows; `pivot_mtds_to_wide` builds `group_cols` from EVERY non-excluded column, and `pivot_table(index=group_cols)`
+      **drops every row with NaN in any index level** → the h2h pivot returns empty → "No h2h data found" even though
+      the raw HAS 12,702 well-formed h2h rows (HOME/DRAW/AWAY, price non-null). Fixture identity resolves fine (18/71
+      fixtures) — this is orthogonal to the collapse fix. Fix: exclude stray/redundant GCS-partition metadata columns
+      (`venue`/`instrument_type`/`data_source` — they duplicate `bookmaker_key`/`data_type`/`source`) from the pivot
+      index, or drop all-/mostly-NaN columns before pivoting. Owner: MDPS
+      (`bucket_assignment_adapter.pivot_mtds_to_wide`).
+
+---
+
+## Collapse recompute EXECUTED (2026-07-17) — MDPS 447/449 adds-only; features 255 purged / 192 phantom-blocked
+
+> **Ran, did not inherit.** Regenerated the scope from a fresh signature census (raw walk 2026-07-17), re-verified QG
+> green at MDPS@9f2560b7 (`.qg_last_passed_sha == HEAD`, not exit code), piloted before scaling. Zero code shipped (both
+> repos clean); all drivers were scratch in `~/tmp-rerun`. No date forced past a guard.
+
+### 1. Scope re-verified independently
+
+Fresh signature census over all **1,935** raw dates (sample 3 objects/date, disagreements flagged AMBIGUOUS): **448
+COLLAPSED + 1 AMBIGUOUS (`2025-02-16`, genuinely mixed-generation — some objects blank `fixture_id`, some absent) +
+1,486 HEALTHY** — reproduces the doc's 448/1,486 exactly. **New vs the doc**: the signature now reaches `2026-07-16`
+(the doc's stated last collapsed date was 2026-06-20; the resumed live edge is already collapsed), so target list =
+**449** (448 + the mixed date), today (`2026-07-17`, no raw) excluded.
+
+### 2. MDPS recompute — 447/449, adds-only PROVEN on the real run
+
+Ran the real `reprocess_sports_odds.py --force --workers 1` once per date (per-VM manifest shards, `VM_NAME` per lane,
+to avoid the live-consolidator CAS contention that made a naive single-date manifest flush take ~9 min). **447
+recomputed, all `LOSS_GUARD_PASS`, 0 blocked.** Full before/after corpus census (real reads):
+
+| metric                                         | BEFORE (corpus) | AFTER     | delta        |
+| ---------------------------------------------- | --------------- | --------- | ------------ |
+| rows (447 recomputed dates)                    | 463,092         | 1,173,942 | **+710,850** |
+| dates that grew                                | —               | 424       |              |
+| dates flat (single-fixture)                    | —               | 23        |              |
+| **dates that LOST rows/fixtures/observations** | —               | **0**     | ✅ adds-only |
+
+AFTER total (1,173,942) matches the doc's predicted 1,173,798 (+144 = the new `2026-07-16` date). **Spot-checks match
+the doc's predictions exactly**: `2024-01-15` 240→**746** rows / 3→**5** fixtures (doc: "1 phantom → 5"); `2026-05-17`
+184→**16,938** rows / 0→104 fixtures (doc: "raw supports 16,938" — derive produced EXACTLY 16,938); `2023-01-08`
+2,242→3,734 (T-12h=514, matches the (b)-guard census); `2026-07-16` live edge 0→144, clean.
+
+**2 dates empty-derived** (`2025-02-16`, `2026-02-09`) — NOT a guard block; `ADAPTER_RETURNED_EMPTY_OUTPUT` from the
+stray-NaN-column pivot bug (new P1 finding above). Non-destructive: corpus byte-identical before/after. Recorded
+`attempted_failed`, never forced.
+
+### 3. Features recompute — 255 purged, 192 phantom-blocked
+
+`odds_features --force` on the 447 recomputed dates (per-VM shards): **255 PASS (leak purged + features updated to the
+un-collapsed MDPS; `clv_*` = 0 at pre-match horizons, `CLV features: 0 fixture rows`), 192 BLOCKED**. The 192 blocks are
+the blank-`''` phantom mechanism (new P0 finding above) — proven zero real-fixture loss, reported not forced.
+`2024-01-01` (the doc's canonical 52→3 date) now PASSES 13→13.
+
+### 4. Manifest — absorbed by the live consolidators
+
+Per-VM shards (`mdps-collapse-recompute-20260717-l{0,1,2}` on instruments-store-sports; `feat-collapse-recompute-*` on
+features-sports) were written and are **already GONE from `_index/per_vm/`** — the live `*/1` consolidators
+(instruments-sports / market-data-sports / features-sports all ENABLED) merged them. Content-verified: the 5.35M-row
+`availability_index.parquet` carries the recomputed dates (`2026-05-17` 242 odds_horizon_bucket entries, `2024-01-15`
+140).
+
+### 5. ML-readiness — 80.0% → ~79% (gate NO), tuned nothing
+
+`verify_ml_readiness.py 2020-06-07→2026-06-20`: **passed 177 → 53 · avg non-NULL 80.0% → ~79% · gate NO both sides**.
+The number moved slightly DOWN and passed dropped because un-collapsing replaced thin phantom dates with many real
+pre-match fixtures whose T-24h cells honestly carry NULL for the ~27 closing-derived columns (the leak-purged honest
+matrix). The 95% threshold is miscalibrated against the old leaking matrix (already the P1 re-calibration todo) —
+**nothing was tuned**.
 
 ---
 
