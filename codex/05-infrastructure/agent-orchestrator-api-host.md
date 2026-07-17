@@ -50,24 +50,24 @@ author: ikenna-claude-subagent
 ## Port layout
 
 ```
-Client (browser / worker VM)
+Client (browser)
         │ HTTPS :443
         ▼
 nginx (TLS termination) — 13.113.200.22
         │ HTTP :8765
         ▼
 orchestrator FastAPI backend (uvicorn, listens 127.0.0.1:8765)
-        │ private VPC (172.31.x.x, ORCHESTRATOR_USE_PRIVATE_URLS=true)
+        │  in-process
         ▼
-Fleet VMs — :8026 (no TLS, private only)
+N slot workers (tmux orch-slot-N) on the same VM
 ```
 
 - **:443** — public HTTPS; nginx terminates TLS, proxies to backend at :8765.
 - **:8765** — orchestrator uvicorn, loopback-only (`127.0.0.1`); not reachable from outside.
-- **:8026** — fleet worker VMs only; not open on the central API host.
 
-The API host is a **router, not a worker** — it proxies dashboard requests to per-VM backends over the private VPC.
-Workers never have public IPs; only the central host has a public TLS endpoint.
+Slots are in-process tmux sessions on this same VM, not separate hosts (no epic VMs — retired 2026-06-27). Only the
+central host has a public TLS endpoint. The `/api/vms/<id>/*` proxy endpoints remain as a single-node degenerate case of
+the former multi-VM router.
 
 ---
 
