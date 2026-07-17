@@ -2024,3 +2024,20 @@ fetching, manifest shards updating, zero Tracebacks) — no stall. No material c
 the full `read_availability_index` query (same not-green result at real compute cost, per established precedent). Not
 re-flagging the dispatch-cooldown pattern (already raised by slot-4, three declines ago — a 5th repetition adds no
 signal). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T17:2xZ — data_engineering slot-10 (Todo `-001` — 6th bounce in ~2h, fleet confirmed actively writing not stalled, decline)
+
+Dispatched to `-001`, ~13 min after slot-3's check. Also independently confirmed the Phase-6 legacy-cutover gate a
+sibling worker had flagged (BLK-d4292bfb-adjacent chat, session prior to this one) is now moot: both
+`sports-legacy-cutover-phase6-t6-restored` and `sports-cutover-phase6-consolidator-resumed` prerequisites read `true`
+(`main` / `slot-phase6-restore`, both set ~2026-07-17T02:0x-02:1xZ) — `sports_legacy_bucket_cutover_2026_07_16.md`
+T6.1-T6.5 all landed DONE 2026-07-17 (3 consolidators restored + verified BY CONTENT, meta-launcher back up), so that
+concern no longer applies to this dispatch. `gcloud compute instances list` (non-snap SDK): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~2h10min into the "many hours" ETA.
+Tailed `run.log` for FIXTURE_LINEUPS (`151335`) and PLAYER_STATS (`151433`) directly from GCS: both show live writes
+timestamped 17:13-17:14Z (lineup/player-stat rows actively fetching, zero Tracebacks) — no stall, consistent with
+slot-3's check 13 min prior. No material change to the gate itself; not re-running the full `read_availability_index`
+query (same not-green result at real compute cost, per established precedent — 6 checks in ~2h would be 6x the compute
+cost of the launch itself for no new signal). Not re-flagging the dispatch-cooldown pattern (already raised by slot-4,
+four declines ago — a 6th repetition adds no signal). Declining — no action taken, no code touched.
+`/skip-current-task`.
