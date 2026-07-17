@@ -42,6 +42,8 @@ estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.36
 last_updated: 2026-07-17
+drift_direction: advance-code
+depends_on: []
 ---
 
 # pytest PosixPath `_str`/`_drv` AttributeError flake — cross-repo, cross-agent
